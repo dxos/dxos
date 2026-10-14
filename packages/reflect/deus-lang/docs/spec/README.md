@@ -30,9 +30,6 @@ is fixed, the spec describes what the code does.
 
 Bugs:
 
-- `quoteText` in [`deus/print.deus`](../../deus/print.deus) writes control characters as `\u{<decimal>}`
-  but the lexer reads `\u{…}` as hex, so `deus view` of `"\u{1b}"` prints `"\u{27}"` and an update rehashes
-  the definition ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
 - The wasm compiler compiles `==`, `<` and the other comparisons on constructed values to `i32` compares of
   addresses: `some x == some x` is `0` in wasm and `true` in `deus eval` ([WASM.md](./WASM.md)).
 - The explorer writes builtin definitions as `def/#Bool.json`, but the app requests `def/%23Bool.json`,
@@ -46,8 +43,6 @@ Bugs:
 - Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.
   A file under `bundles/` whose name is not `<level>-<sha256>` makes a pull fail
   ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md)).
-- `deus export` drops attributes (`@[ext …]`, `@[integration]`), `.mdl` spec entries, the `project` file and
-  some doc comments, so a restored codebase is not the same codebase ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
 
 Docs that disagree with the code:
 

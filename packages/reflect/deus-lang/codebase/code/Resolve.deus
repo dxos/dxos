@@ -1,6 +1,7 @@
 --
 -- Expressions.
 --
+/-- Per-definition context for desugaring. -/
 structure Resolve.Ctx where
   names : Names
   scope : Scope

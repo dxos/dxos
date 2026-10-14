@@ -1,3 +1,4 @@
+/-- A term-like definition awaiting its hash. -/
 structure Compile.Pending where
   name : Text
   wrap : Text

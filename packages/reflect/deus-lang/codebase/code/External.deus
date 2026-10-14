@@ -4,9 +4,11 @@ def External.andThen (result : Result e a) (f : a -> {r} Result e b) : {r} Resul
   | Result.err error => Result.err error
 
 /-- The `container` block type. -/
+@[ext "org.dxos.deus.container@1.0"]
 def External.checkContainer (b : Block) : {MdlHost} List Text := problemsOf (containerOf b)
 
 /-- The `requirement` block type. -/
+@[ext "org.dxos.deus.requirement@1.0"]
 def External.checkRequirement (b : Block) : {MdlHost} List Text := problemsOf (requirementOf b)
 
 /-- A `container` block as data. -/

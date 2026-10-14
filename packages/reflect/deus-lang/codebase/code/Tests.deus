@@ -1,3 +1,5 @@
+test Tests.controlCharactersPrintAsHex := quoteText (fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" && tokenValues "\"\\u{1b}\"" == [fromCode 27, ""]
+
 test Tests.externalLowersBlocks :=
   let block := fun kind props => Block.mk kind "x" "" props 1
   containerOf (block
@@ -136,6 +138,7 @@ test Tests.projectAuthorityAndOwnership := authority "https://dxos.org/deus/std"
 
 theorem Tests.quoteRoundTrip (t : Text) : Sexp.read (Sexp.print (Sexp.str t)) == Sexp.str t := by test 200
 
+@[integration]
 test Tests.realFileSystem :=
   IO.writeFile "/tmp/deus-integration-probe.txt" "ok"
   IO.readFile "/tmp/deus-integration-probe.txt" == Option.some "ok"

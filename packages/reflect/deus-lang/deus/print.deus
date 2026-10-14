@@ -114,7 +114,8 @@ def quoteText (t : Text) : Text :=
         else if c == 10 then "\\n"
         else if c == 9 then "\\t"
         else if c == 13 then "\\r"
-        else if c < 32 then "\\u{" ++ Int.toText c ++ "}"
+        -- The lexer reads `\u{…}` as hex, so the printer must write hex.
+        else if c < 32 || c == 127 then "\\u{" ++ Sexp.hexDigit (c / 16) ++ Sexp.hexDigit (Int.mod c 16) ++ "}"
         else Text.fromCode c
       go (i + 1) (piece :: acc)
   "\"" ++ go 0 [] ++ "\""

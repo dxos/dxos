@@ -1,6 +1,8 @@
 --
 -- The environment: what the checker knows about hashes.
 --
+/-- Lookups the checker needs: objects and metadata by hash, schemes of definitions in this batch.
+  Reading the store may fail or perform the caller's abilities, `r`. -/
 structure Types.TypeEnv r where
   object : Text -> {Throw Text | r} Option Sexp
   meta : Text -> {Throw Text | r} Option Sexp

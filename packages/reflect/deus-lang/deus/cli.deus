@@ -361,8 +361,17 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
             | some text => Print.commentLines (Sexp.asText text) 0
             | none => ""
           let notes := Print.notesOf meta
-          (header, lead ++ (match obj with
-            | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") doc
+          -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
+          let docText := match doc with
+            | some d => "/-- " ++ d ++ " -/\n"
+            | none => ""
+          let attrs := List.map (fun a =>
+            match Sexp.asList a with
+            | key :: values => Sexp.asText key ++ Text.concat (List.map (fun v => " " ++ Print.quoteText (Sexp.asText v)) values)
+            | [] => "") (Codebase.metaList meta "attrs")
+          let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
+          (header, lead ++ docText ++ attrText ++ (match obj with
+            | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") none
             | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
             | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
               View.theoremDecl p name types prop proof
@@ -478,17 +487,28 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
       IO.exit 1
   | _ => throw "usage: deus merge <branch>"
 
+/--
+  The branch's first-parent history, newest first, as (causal, message, by), followed by the
+  history imported from exports (D67), so a restored codebase shows what came before it.
+-/
+def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, Text, Text) :=
+  let live := Codebase.history dir (Codebase.currentBranch dir) limit
+  let own := List.map (fun pair =>
+    match pair with
+    | (h, c) => (h, c.message, Option.getOr (producedBy dir h) "")) live
+  let imported := List.concatMap (fun pair => if Text.isEmpty (snd pair).prior then [] else Codebase.recordEntries dir (snd pair).prior) live
+  List.take limit (own ++ imported)
+
 def log (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let limit := Option.getOr (Option.bind (option args "n") Int.fromText) 20
-  let entries := Codebase.history dir (Codebase.currentBranch dir) limit
-  output args (fun _ => Json.arr (List.map (fun pair =>
-      match pair with
-      | (h, c) => Json.obj ([("causal", Json.str h), ("message", Json.str c.message), ("parents", Json.arr (List.map Json.str c.parents))] ++
-        Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir h)) [])) entries))
-    (fun _ => Text.join "\n" (List.map (fun pair =>
-      match pair with
-      | (h, c) => short h ++ "  " ++ c.message ++ Option.getOr (Option.map (fun agent => "  (by " ++ agent ++ ")") (producedBy dir h)) "") entries))
+  let entries := fullLog dir limit
+  output args (fun _ => Json.arr (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) => Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++ (if Text.isEmpty agent then [] else [("by", Json.str agent)]))) entries))
+    (fun _ => Text.join "\n" (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) => short h ++ "  " ++ message ++ (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
 
 /-- Moves the branch back to its first parent; the undone node stays in the store. -/
 def undo (args : Args) : {IO, Throw Text} Unit :=
@@ -1117,6 +1137,15 @@ def export (args : Args) : {IO, Throw Text} Unit :=
       output args (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
         (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++ " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
 
+/-- `deus history import <history.sexp>`: the history of an export, kept under the restore (D67). -/
+def history (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["import", path] =>
+    let n := Export.importHistory dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " changes into the history.")
+  | _ => throw "usage: deus history import <history.sexp>"
+
 def usage : Text :=
   Text.join "\n" [
     "usage: deus <command> [args] [--json] [--codebase <dir>]",
@@ -1140,6 +1169,7 @@ def usage : Text :=
     "  switch <branch>                      change branch",
     "  merge <branch>                       three-way merge into the current branch",
     "  log [--n N] / undo                   history / step the branch back",
+    "  history import <history.sexp>        keep an export's history under a restored codebase",
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "",
     "projects",
@@ -1226,6 +1256,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "explore" then explore args
     else if command == "task" then task args
     else if command == "export" then export args
+    else if command == "history" then history args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 

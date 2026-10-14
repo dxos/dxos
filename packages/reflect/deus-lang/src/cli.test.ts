@@ -716,6 +716,20 @@ describe('deus CLI', () => {
     const hashOf = (args: string[]) =>
       JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
     expect(hashOf(restored)).toBe(hashOf(c));
+
+    // The history comes back as a record under the restore's own changes.
+    expect(deus('history', 'import', join(first, 'history.sexp'), ...restored).code).toBe(0);
+    const messages = (args: string[]) =>
+      JSON.parse(deus('log', '--n', '100', '--json', ...args).stdout).map((row: { message: string }) => row.message);
+    const before = messages(c);
+    const after = messages(restored);
+    expect(after[0]).toMatch(/^history: import \d+ changes$/);
+    expect(after.slice(-before.length)).toEqual(before);
+    const third = join(scratch, 'comments-export-3');
+    deus('export', third, ...restored);
+    expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
+      readFileSync(join(first, 'HISTORY.md'), 'utf8').split('\n\n')[1],
+    );
   });
 
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {

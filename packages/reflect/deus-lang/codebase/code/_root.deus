@@ -1,14 +1,18 @@
+/-- Other objects of the same class, by name: a call is a request served by that object. -/
 ability Actors @"urn:deus:web:Actors" where
   call : Text -> Request -> Response
 
+/-- The object's alarm: `set` schedules one `ALARM /alarm` request after the given milliseconds, replacing any earlier one. -/
 ability Alarm @"urn:deus:web:Alarm" where
   set : Int -> Unit
 
 -- Comments written before a statement or an arm; they become metadata, never Core (D66).
+/-- One `| p, q => body` arm. -/
 structure Arm where
   pats : List Pat
   body : Expr
 
+/-- What a task is about: a definition (its name, and its hash when linked) or a change. -/
 inductive Attachment @"urn:deus:task:Attachment" where
   | definition (name : Text) (hash : Text)
   | change (hash : Text)
@@ -17,6 +21,7 @@ structure Attr where
   attr : Text
   values : List Text
 
+/-- The result of compiling a batch of declarations. -/
 structure Batch where
   objects : List (Text, Sexp)
   entries : List (Text, Entry)
@@ -38,6 +43,7 @@ structure Binder where
     `@[ext "<uri>"]`; `deus mdl` runs every block through the extension its term names. The empty
     list means the block holds; otherwise each text is one problem.
 -/
+/-- One ```mdl block; `props` keeps the document's order, and `lineNo` is its header's line. -/
 structure Block @"urn:deus:mdl:Block" where
   blockType : Text
   blockId : Text
@@ -53,12 +59,14 @@ structure Comment @"urn:deus:task:Comment" where
   author : Text
   note : Text
 
+/-- A container image pinned by digest (`name@sha256:<hex>`) and how to run it. -/
 structure Container @"urn:deus:external:Container" where
   image : Text
   command : List Text
   env : List (Text, Text)
   ports : List (Int, Int)
 
+/-- Starts a container (its id) and stops one by id. -/
 ability Containers @"urn:deus:external:Containers" where
   start : Container -> Result Text Text
   stop : Text -> Unit
@@ -76,11 +84,15 @@ inductive Decl where
   | comment (text : Text)
 
 -- Runs a program with arguments: (exit code, stdout, stderr); 127 if it cannot start.
+/-- Defects: the program is wrong. The kernel raises failed matches, division by zero and
+  `defect` as `Defect.raise`; a boundary may handle it but must not resume it. -/
 ability Defect @"#Defect" where
   raise : Text -> a
 
+/-- An immutable hash map with Text or Int keys, built once: O(1) lookups for indexes. -/
 inductive Dict k v @"#Dict" where
 
+/-- A parsed document: frontmatter, the Extensions table, and the blocks in order. -/
 structure Doc @"urn:deus:mdl:Doc" where
   front : List (Text, Text)
   terms : List (Text, Text)
@@ -96,6 +108,7 @@ structure Doc @"urn:deus:mdl:Doc" where
   3. Terms are grouped into strongly connected components and hashed dependencies-first;
      a recursive group is hashed as one cycle (Unison's scheme, D5).
 -/
+/-- What a name denotes in a namespace. -/
 inductive Entry where
   | term (hash : Text)
   | ctor (type : Text) (tag : Int) (arity : Int)
@@ -106,6 +119,7 @@ inductive Entry where
   | theorem (hash : Text)
   | spec (hash : Text)
 
+/-- What a handler sees. Times come from the handler's clock. -/
 inductive Event where
   | log (level : Text) (message : Text) (fields : List (Text, Text)) (within : Int) (time : Text)
   | span (id : Int) (parent : Int) (name : Text) (attrs : List (Text, Text)) (begin : Text) (finished : Text)
@@ -138,22 +152,27 @@ inductive Expr where
   | proj (e : Expr) (field : Text) (pos : Pos)
   | note (text : Text) (e : Expr)
 
+/-- A checked error with context: what failed, the facts that locate it, and what it wraps. -/
 structure Failure where
   reason : Text
   facts : List (Text, Text)
   cause : Option Failure
 
+/-- Resolves a requirement to a local path, or says why it cannot. -/
 ability Fetch @"urn:deus:external:Fetch" where
   fetch : Requirement -> Result Text Text
 
+/-- An open goal: hypotheses known to be true, the proposition, and the types of free variables. -/
 structure Goal where
   hyps : List Sym
   prop : Sym
   vars : List (Text, Sexp)
 
+/-- Outbound HTTP. -/
 ability Http @"urn:deus:web:Http" where
   fetch : Request -> Response
 
+/-- Host input/output; the kernel handles requests no DEUS handler caught. -/
 ability IO @"#IO" where
   print : Text -> Unit
   eprint : Text -> Unit
@@ -186,6 +205,7 @@ inductive Int @"#Int" where
 /-
   Batch compilation: parsed files plus a base namespace to hashed objects and new names.
 -/
+/-- A declaration together with where it was written. -/
 structure Item where
   decl : Decl
   fqn : Text
@@ -252,6 +272,7 @@ inductive List a @"#List" where
     `metrics.jsonl`, one export request per line (the collector's `otlpjsonfile` format). Each
     event is written when it happens, so telemetry before a defect survives.
 -/
+/-- Structured logging: a level, a message and key–value fields. -/
 ability Log where
   emit : Text -> Text -> List (Text, Text) -> Unit
 
@@ -262,23 +283,31 @@ inductive Map k v where
   | tip
   | node (height : Int) (left : Map k v) (key : k) (value : v) (right : Map k v)
 
+/-- What an extension may ask of the toolchain about the codebase the document is checked against.
+  All take DEUS source: `cost` is the machine steps an expression takes to evaluate, `holds`
+  whether a `Bool` expression is true, and `run` the value of a `Text` expression. A compile error
+  or a defect is an `err`. -/
 ability MdlHost @"urn:deus:mdl:Host" where
   cost : Text -> Result Text Int
   holds : Text -> Result Text Bool
   run : Text -> Result Text Text
 
+/-- Metrics: a counter adds to its total; a gauge records a current value. -/
 ability Metrics where
   counter : Text -> Int -> Unit
   gauge : Text -> Int -> Unit
 
+/-- A mutable hash map with Text or Int keys; like `Ref`, it is not rolled back by resumption. -/
 inductive MutMap k v @"#MutMap" where
 
+/-- A name table with the indexes resolution needs. -/
 structure Names where
   table : Map Text Entry
   index : Dict Text Entry
   bySegment : Dict Text (List Text)
   fieldOwners : Dict Text (List Text)
 
+/-- One `| op args -> k => body` handler clause. -/
 structure OpArm where
   op : Text
   args : List Pat
@@ -344,6 +373,7 @@ structure Project @"urn:deus:project:Project" where
   projectIri : Text
   libs : List Lib
 
+/-- Shared prover state for one theorem. -/
 structure Prover where
   store : Text
   nsMap : Map Text Entry
@@ -362,9 +392,12 @@ structure Prover where
   result can be cached by the hash of what ran. A test marked `@[integration]` runs against the
   real host instead (`deus test --integration`), and its result is never cached.
 -/
+/-- Randomness as an ability, so tests can seed it and production can use real entropy. -/
 ability Random where
   nextInt : Int -> Int
 
+/-- Mutable cells. Not rolled back when a continuation is resumed twice; code that needs
+  backtracking state uses a handler instead. -/
 inductive Ref a @"#Ref" where
 
 /-
@@ -382,6 +415,7 @@ inductive Ref a @"#Ref" where
   - `requirement` and `container` MDL blocks are extensions defined here; both lower to the data
     above and check it.
 -/
+/-- Where artifacts come from: a URL template over `{package}`, `{version}` and `{platform}`. -/
 structure Registry @"urn:deus:external:Registry" where
   registryName : Text
   urlTemplate : Text
@@ -408,6 +442,8 @@ structure Registry @"urn:deus:external:Registry" where
   Locally, `remotes/<name>/url` names the remote, and `remotes/<name>/seen/<bundle>` lists a seen
   bundle's claims and hashes, so a pull reads each bundle once.
 -/
+/-- An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
+  the bundles (the explorer's site) as (path, content) pairs, replacing what was there. -/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
   get : Text -> Option Text
@@ -415,11 +451,28 @@ ability Remote @"urn:deus:replicate:Remote" where
   delete : Text -> Unit
   writeAll : List (Text, Text) -> Unit
 
+/-
+  The web as DEUS data and abilities (P7, D45, D57), independent of where it runs.
+
+  A handler is a function `Request -> {Storage, Http, Actors, Alarm, IO} Response` named by its
+  definition. It serves a named object (a Durable Object, an actor). Its row says what it
+  touches: `Storage` is the object's own storage, `Http` is outbound requests, `Actors` calls
+  other objects by name, and `Alarm` schedules a later request to itself.
+
+  Three runtimes run the same handler:
+  - `Web.simulate` and `Web.simulateMany`: in memory, on a logical clock, for tests.
+  - `deus build <handler> --server` (or `deus serve`): a standalone native binary, serving
+    HTTP with storage on disk (`deus-kernel/src/server.rs`).
+  - `deus build <handler> --worker`: a Cloudflare Worker, with one Durable Object per name
+    (`deus-kernel/embed/worker.mjs`).
+-/
 structure Request @"urn:deus:web:Request" where
   verb : Text
   url : Text
   payload : Text
 
+/-- A pinned artifact. `entry` is the file to use inside an archive (extracted with `tar`), or ""
+  for the downloaded file itself. -/
 structure Requirement @"urn:deus:external:Requirement" where
   registry : Registry
   pkg : Text
@@ -437,6 +490,7 @@ inductive Result e a where
   | ok (value : a)
   | err (error : e)
 
+/-- A rewrite rule: `lhs` (with pattern variables) becomes `rhs` when every condition is `true`. -/
 structure Rule where
   lhs : Sym
   rhs : Sym
@@ -446,6 +500,7 @@ structure Scope where
   ns : List Text
   opens : List Text
 
+/-- A seen bundle: its claims (branch, causal) and the hashes of its objects. -/
 structure Seen @"urn:deus:replicate:Seen" where
   bundleName : Text
   claims : List (Text, Text)
@@ -462,11 +517,13 @@ inductive Sexp where
   | str (value : Text)
   | list (items : List Sexp)
 
+/-- A Durable Object's own transactional storage. -/
 ability Storage @"urn:deus:web:Storage" where
   get : Text -> Option Text
   put : Text -> Text -> Unit
   delete : Text -> Bool
 
+/-- Evaluation that cannot proceed without knowing more (a match on an unknown value). -/
 ability Stuck where
   stuck : Text -> a
 
@@ -499,6 +556,7 @@ ability Stuck where
     auto [l₁, …]       simp, then split / case on stuck variables, recursively (bounded)
     rfl, decide        as before: closed evaluation, exhaustive enumeration
 -/
+/-- Symbolic values: data, free variables, and terms evaluation could not reduce. -/
 inductive Sym where
   | int (value : Int)
   | text (value : Text)
@@ -543,6 +601,7 @@ inductive TType where
   | var (id : Int)
   | row (r : TRow)
 
+/-- An issue. `priority` is Linear's: 0 none, 1 urgent, 2 high, 3 medium, 4 low. `parent` is a task id or `""`. -/
 structure Task @"urn:deus:task:Task" where
   id : Text
   title : Text
@@ -573,6 +632,7 @@ inductive TaskState @"urn:deus:task:State" where
 
 inductive Text @"#Text" where
 
+/-- Checked, expected failure: callers see `Throw e` in the effect row until a handler removes it. -/
 ability Throw e where
   throw : e -> a
 
@@ -584,6 +644,7 @@ structure Token where
   col : Int
   bol : Bool
 
+/-- Tracing: `start` opens a span and returns its id; `finish` closes it. -/
 ability Trace where
   start : Text -> List (Text, Text) -> Int
   finish : Int -> Unit
@@ -596,6 +657,7 @@ inductive Ty where
   | effects (row : List Ty) (result : Ty)
   | row (items : List Ty)
 
+/-- Mutable unification state for one batch. -/
 structure Unifier where
   types : MutMap Int TType
   rows : MutMap Int TRow
@@ -618,11 +680,13 @@ inductive Unit @"#Unit" where
   Results are cached under the hash of what was checked: unchanged code is never rechecked.
   A defect inside a test or a theorem is caught at this boundary and reported as a failure.
 -/
+/-- The outcome of checking one test or theorem. -/
 inductive Verdict where
   | pass (evidence : Text) (cases : Int)
   | fail (reason : Text)
   | unchecked
 
+/-- The state of one simulated run. -/
 structure World where
   files : Ref (Map Text Text)
   dirs : Ref (Map Text Unit)

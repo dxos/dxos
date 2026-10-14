@@ -11,7 +11,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let before :=
     match parentsOf dir causal with
     | p :: _ => readCausal dir p
-    | [] => Causal.mk "" [] "" ""
+    | [] => Causal.mk "" [] "" "" ""
   let nsAfter := readNamespace dir node.snapshot
   let nsBefore := if Text.isEmpty before.snapshot then Map.empty else readNamespace dir before.snapshot
   let visibleNames := fun ns => List.filter visible (Map.toList ns)
@@ -68,7 +68,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let branch := currentBranch dir
   IO.writeFile
     (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("history", Json.arr (List.map (Cli.changeJson dir) (history dir branch 30)))]))
+    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map
     (fun pair => Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str (hash (snd pair)))])
     entries)))
@@ -78,7 +78,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   -- A page per change the app links to: recent history, and every change in a task's history.
   IO.mkdirp (out ++ "/change")
   let linked := concatMap (fun t => List.map fst (historyOf t)) tasks
-  let shown := Set.toList (Set.fromList (List.map fst (history dir branch 30) ++ linked))
+  let shown := Set.toList (Set.fromList (List.map fst (Codebase.history dir branch 30) ++ linked))
   forEach shown (fun c =>
     let path := out ++ "/change/" ++ c ++ ".json"
     -- A change never changes, so a page written once stays right.

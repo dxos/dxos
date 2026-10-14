@@ -21,15 +21,6 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 > claude: First arm built (D65): qa blocks in MDL with do/expect/send/assert steps, run by deus mdl in Web.simulateMany; examples/notes.mdl has two flows. Next: the same steps against deus serve (--integration) and in a browser.
 
-## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: dogfood, replication
-
-A fresh container restored codebase/ (deus add code; task import) and got one new history; R2 credentials were absent, so pull was not an option. Export history as a restorable chain (causal nodes plus the namespace snapshot each names, as text), or append to HISTORY.md instead of replacing it.
-
 ## The codebase explorer app needs to be much better (`861438d2`)
 
 - state: todo
@@ -65,24 +56,6 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 - labels: dogfood, llm
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
-
-## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: bug, dogfood, spec
-
-From docs/spec/README.md, Known divergences.
-
-## view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (`11b93dc9`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: bug, spec
-
-From docs/spec/README.md, Known divergences.
 
 ## wasm compares constructed values by address: some x == some x is 0 (`40cb2f16`)
 
@@ -183,12 +156,31 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 - labels: review, bug
 - links `Build.kernel` (#3a3356fef8)
 
+## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, replication
+- links change #1778b66c03
+
+A fresh container restored codebase/ (deus add code; task import) and got one new history; R2 credentials were absent, so pull was not an option. Export history as a restorable chain (causal nodes plus the namespace snapshot each names, as text), or append to HISTORY.md instead of replacing it.
+
 ## Task viewer in the codebase explorer (`553faf09`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer
+
+## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, dogfood, spec
+
+From docs/spec/README.md, Known divergences.
 
 ## deus view output is cut off when piped (`4a833ce9`)
 
@@ -211,6 +203,15 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - links `Print.definition` (#44b701111a)
 
 > claude: Binder names now follow Resolve.strip's order; colours on a terminal (D61). Long lines are not yet broken.
+
+## view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (`11b93dc9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, spec
+
+From docs/spec/README.md, Known divergences.
 
 ## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
 

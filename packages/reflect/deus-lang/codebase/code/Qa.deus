@@ -1,4 +1,5 @@
 /-- The `qa` block type. -/
+@[ext "org.dxos.deus.qa@1.0"]
 def Qa.check (b : Block) : {MdlHost} List Text :=
   let id := if Text.isEmpty b.blockId then "qa" else b.blockId
   let steps := items (getOr (List.lookup "steps" b.props) "")
@@ -19,6 +20,35 @@ def Qa.excerpt (t : Text) : Text :=
   let flat := replace "\n" " " t
   if Text.length flat > 120 then Text.take 120 flat ++ "…" else flat
 
+/-
+  QA flows for web apps as MDL blocks: one journey that a human tester and an agent run from the
+  same text, after DXOS's QA dialect (`packages/reflect/deus/lang/qa.mdl`).
+
+    ```mdl
+    qa QA-1: a note survives being listed
+      handler: Notes.serve
+      steps:
+        - do: Store a note called hello
+          send: PUT /notes/hello hi there
+          expect: The note is stored
+          assert: status == 201
+        - do: Open the notebook's index page
+          send: GET /
+          expect: hello is listed as a link
+          assert: Text.contains "href=\"/notes/hello\"" content
+    ```
+
+  - `handler:` the web handler under test (`platform/web.deus`).
+  - Each step needs `do:` (the human instruction) and `expect:` (what both testers judge).
+  - `send:` is the agent's binding: `VERB /path [payload]`. A step without one is a human-only
+    step, which simulation skips.
+  - `assert:` a `Bool` expression over `status`, `content` and `response`; without one a step
+    holds when its status is below 400.
+  - `actor:` the object the step's request goes to (default `qa`), for handlers with `Actors`.
+
+  `deus mdl` runs the steps in order in `Web.simulateMany`, so a flow is deterministic and needs
+  no server; the first step that fails is reported with what it got.
+-/
 /-- One step of a flow: its fields in the document's order. -/
 def Qa.fieldsOf (item : List Text) : List (Text, Text) := filterMap (fun line => keyValue (trim line)) item
 

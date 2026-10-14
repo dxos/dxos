@@ -336,7 +336,8 @@ def Print.quoteText (t : Text) : Text :=
   let n := Text.length t
   let rec go i acc := if i >= n then Text.concat (reverse acc) else
     let c := code t i
-    let piece := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 then "\\u{" ++ toText c ++ "}" else fromCode c
+    let piece := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 || c == 127 then "\\u{" ++ hexDigit (c / 16) ++ hexDigit (mod c 16) ++ "}" else fromCode c
+    -- The lexer reads `\u{…}` as hex, so the printer must write hex.
     go (i + 1) (piece :: acc)
   "\"" ++ go 0 [] ++ "\""
 

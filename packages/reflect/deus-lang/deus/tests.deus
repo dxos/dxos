@@ -19,6 +19,10 @@ test sexpRoundTrip :=
   let text := "(def \"a\\nb\" (lam (app (var 0) (int -12) (text \"q\\\"\\u0001\"))))"
   Sexp.print (Sexp.read text) == text
 
+test controlCharactersPrintAsHex :=
+  Print.quoteText (Text.fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" &&
+    tokenValues "\"\\u{1b}\"" == [Text.fromCode 27, ""]
+
 test lexerSymbols := tokenValues "x :: xs ++ [1] |> f" == ["x", "::", "xs", "++", "[", "1", "]", "|>", "f", ""]
 
 test lexerUnicode := tokenValues "fun x → x" == ["fun", "x", "->", "x", ""]

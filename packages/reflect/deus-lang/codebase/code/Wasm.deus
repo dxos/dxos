@@ -1,6 +1,7 @@
 --
 -- The subset.
 --
+/-- A definition in the module: its hash, parameter count and body. -/
 structure Wasm.Fn @"urn:deus:wasm:Fn" where
   fnHash : Text
   fnArity : Int

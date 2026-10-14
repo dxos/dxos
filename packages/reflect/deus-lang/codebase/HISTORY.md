@@ -1,5 +1,11 @@
 # History of main
 
+- `5d148858db` task: set 5fe4c8b1 state (by claude)
+- `404c368e60` task: set 11b93dc9 state (by claude)
+- `501bf19fea` close 5a02d566 by #1778b66c03 (by claude)
+- `1778b66c03` restores keep history; strings escape as hex; export keeps attributes, specs and the project (by claude)
+- `6adb43ae51` history: import 69 changes
+- `d29d46ccb6` export keeps docs, attributes, specs and the project (by claude)
 - `de504398e7` task: open 11a42afd Docs disagree with the code in eight places listed in docs/spec/README.md (by claude)
 - `5cb2f5d914` task: open 5fe4c8b1 deus export drops attributes, .mdl specs, the project file and some doc comments (by claude)
 - `5b3d421650` task: open 7afeaa0c Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (by claude)
@@ -26,9 +32,6 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
-
-Before this container restored the export (history not carried over; task `restore loses history`):
-
 - `5ed10805c0` task: comment on b09507db (by claude)
 - `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
 - `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)

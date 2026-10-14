@@ -1,8 +1,10 @@
+/-- How a de Bruijn variable relates to the parameters: a parameter, or a strict part of one. -/
 inductive Prove.Origin where
   | param (index : Int)
   | part (index : Int)
   | other
 
+/-- A tactic step parsed from the proof tokens. -/
 structure Prove.Step where
   tactic : Text
   stepArgs : List Text

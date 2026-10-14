@@ -19,9 +19,11 @@ Related specs: the store being exported is [CODEBASE-STORE.md](./CODEBASE-STORE.
   README.md            what the export is and how to restore it
   code/<Top>.deus      source of every exported definition whose name starts with <Top>.
   code/_root.deus      source of every exported definition whose name has no dot
+  specs/<doc>.mdl      the identified spec blocks of each document, with its Extensions table
   tasks.sexp           every task on the branch, one object per line
   TASKS.md             the tasks, for reading
-  HISTORY.md           the branch's first-parent history, for reading
+  history.sexp         the branch's history, one entry per line, for `deus history import`
+  HISTORY.md           the same history, for reading
 ```
 
 The export covers the current branch (`HEAD`). It has no version marker; the format is identified by
@@ -189,22 +191,34 @@ Each task is:
 Bracketed lines appear only when the field is non-empty. Details and notes are written as they are, so a
 multi-line note continues outside the `>` quote.
 
-## HISTORY.md
+## history.sexp
 
-For reading only. It starts with `# History of <branch>` and a blank line, then one line per history node
-on the branch's first-parent chain, newest first:
+The branch's history as `deus log` prints it, newest first: the live first-parent chain, then the entries
+of every imported `record` ([CODEBASE-STORE.md](./CODEBASE-STORE.md#history-nodes)). One object per
+line:
 
 ```text
-"- `" causal[0..10] "` " message [ " (by " agent ")" ] "\n"
+"(entry " string(causal) " " string(message) " " string(by) ")\n"
 ```
 
-`by` comes from the node's provenance record. The walk follows the first parent the store has, so a
-shallow store ([D54](../DECISIONS.md)) ends early. Merged branches appear only as their merge node.
+`by` comes from the node's provenance record, or the imported entry, and is `""` when unknown. The walk
+follows the first parent the store has, so a shallow store ([D54](../DECISIONS.md)) ends early. Merged
+branches appear only as their merge node.
+
+## HISTORY.md
+
+For reading only. It starts with `# History of <branch>` and a blank line, then one line per entry of
+`history.sexp`, in the same order:
+
+```text
+"- `" causal[0..10] "` " message [ " (by " by ")" ] "\n"
+```
 
 ## README.md
 
-Fixed text, except the title, which is the project IRI from the store's `project` file or
-`a DEUS codebase` when there is none:
+Fixed text, except three parts. The title is the project IRI from the store's `project` file, or
+`a DEUS codebase` when there is none. The `deus project init` line appears only when there is a project.
+`specs` follows `deus add code` only when the export wrote spec documents. For the toolchain:
 
 ````text
 # https://dxos.org/deus/toolchain
@@ -214,14 +228,17 @@ generated: change the codebase, then export again.
 
 - `code/` holds the source of every definition, one file per top-level namespace.
 - `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.
-- `HISTORY.md` lists the changes on the branch.
+- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.
+- `specs/` holds the `.mdl` spec blocks, one document per name.
 
 To restore it into a fresh codebase:
 
 ```bash
 deus init --empty
-deus add code
+deus project init https://dxos.org/deus/toolchain
+deus add code specs
 deus task import tasks.sexp
+deus history import history.sexp
 ```
 ````
 
@@ -231,8 +248,10 @@ From inside the export directory:
 
 ```bash
 deus init --empty          # no builtins or prelude: code/ already holds them
-deus add code              # every .deus (and .mdl) file under code/, sorted, as one batch
+deus project init <iri>    # only when the README names a project
+deus add code specs        # every .deus and .mdl file, sorted, as one batch (specs/ only if present)
 deus task import tasks.sexp
+deus history import history.sexp
 ```
 
 `deus add` compiles all files as one batch, so definitions may refer to each other across files and in
@@ -241,9 +260,10 @@ any order. The result:
 - The namespace snapshot has the same names bound to the same hashes, so its `ns` object has the same
   hash as the exported branch's snapshot.
 - The tasks snapshot holds the same task objects, so it has the same hash too.
-- History is not replayed. The restored branch has three nodes (`init`, the add, the import), so its
-  causal hashes differ from the original. `HISTORY.md` is the record of the original history; git keeps
-  older exports.
+- History is not replayed. The restored branch has its own nodes (`init`, the add, the two imports), so
+  its causal hashes differ from the original. The last import keeps the original history as a `record`
+  ([D67](../DECISIONS.md)), so `deus log` and the next export list the restore's nodes and then every
+  change before it.
 
 `src/cli.test.ts` checks this: after export and restore, `deus ls --json` and
 `deus task list --all --json` print the same output for both codebases. A second check
