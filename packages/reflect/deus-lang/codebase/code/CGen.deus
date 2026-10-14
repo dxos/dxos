@@ -133,7 +133,7 @@ def CGen.pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw 
   | other => Throw.throw ("the pattern " ++ Sexp.print other ++ " is outside the C subset")
 
 /-
-  A C back end (D79): compiles a definition and the definitions it calls to C, which a C compiler
+  A C back end (D80): compiles a definition and the definitions it calls to C, which a C compiler
   (clang, so LLVM) turns into native code.
 
   It accepts the same first-order subset as the wasm back end (D51) and reuses that back end's

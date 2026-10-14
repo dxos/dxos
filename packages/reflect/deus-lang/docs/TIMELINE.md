@@ -86,6 +86,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 78  | 10-14 19:35 | 12m 00s        | `62a3bad2`  | the codebase catches up with the toolchain sources: stale references that exported as raw hashes renamed, codebase UI added (task b2166fc8)                                             |
 | 79  | 10-14 19:10 | 19m 00s        | `35f63ee2`  | Text.fromCodes surrogate pairs (D76); export names unnamed callees so it always restores (D77)                                                                                          |
 | 80  | 10-14 19:28 | 20m 40s        | `020553a0`  | DEUS in the browser: `deus build --browser`, an in-memory IO host for the wasm kernel, the whole toolchain as a page (D78, task 3b617154)                                               |
-| 81  | 10-14 19:36 | 7m 41s         | this commit | native compilation: a C back end (`deus build --c`) compiled by clang/LLVM, benchmarks of every back end in docs/spec/NATIVE.md (D79, task babdb4f2)                                    |
+| 81  | 10-14 19:45 | 30m 00s        | `bd57d0d3`  | export directories shared by several codebases merge tasks and history instead of overwriting them (D79, task a93aee73)                                                                 |
+| 82  | 10-14 19:50 | 5m 00s         | this commit | native compilation: a C back end (`deus build --c`) compiled by clang/LLVM, benchmarks of every back end in docs/spec/NATIVE.md (D80, task 7ca05fc5)                                    |
 
-Total from stage 1 to stage 81: 10h 51m.
+Total from stage 1 to stage 82: 11h 19m.

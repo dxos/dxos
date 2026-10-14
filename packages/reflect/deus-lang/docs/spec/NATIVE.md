@@ -2,7 +2,7 @@
 
 `deus build <fn> -o <file> --c` compiles one definition, and every definition it calls, from
 [Core](./CORE.md) to C, then runs `$CC` (default `cc`) at `-O2` to make an executable
-([D79](../DECISIONS.md)). With `-o <file>.c` it writes only the C. The compiler is DEUS code,
+([D80](../DECISIONS.md)). With `-o <file>.c` it writes only the C. The compiler is DEUS code,
 [`deus/cgen.deus`](../../deus/cgen.deus). With clang as `$CC`, LLVM does the optimizing, so this is
 also the LLVM path.
 
@@ -104,4 +104,4 @@ it now. The rest of the language needs these, in order of how much code they unl
    than once falls back to copying that stack segment or, as the JIT does (D39), to the CEK
    machine.
 
-Direct LLVM IR, Cranelift and wasm AOT were considered and rejected for now (D79).
+Direct LLVM IR, Cranelift and wasm AOT were considered and rejected for now (D80).

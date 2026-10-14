@@ -1,5 +1,5 @@
 /-
-  Benchmark programs for comparing back ends (D79): each is first-order code over `Int` and
+  Benchmark programs for comparing back ends (D80): each is first-order code over `Int` and
   algebraic data, so the interpreter, the JIT, the wasm compiler and the C compiler all run it.
   `docs/spec/NATIVE.md` has the numbers.
 -/

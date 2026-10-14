@@ -1,3 +1,5 @@
+test Tests.astralEscapes := fromCodes [128512] == "😀" && Text.length (fromCodes [128512]) == 2 && tokenValues "\"😀\"" == ["😀", ""]
+
 test Tests.controlCharactersPrintAsHex := quoteText (fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" && tokenValues "\"\\u{1b}\"" == [fromCode 27, ""]
 
 test Tests.externalLowersBlocks :=

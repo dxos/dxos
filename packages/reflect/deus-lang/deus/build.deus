@@ -95,7 +95,7 @@ def appended (image : Text) (out : Text) (trailer : Text) : {IO, Throw Failure} 
 def native (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended image out "DEUSIMG1"
 
 /--
-  Writes C from the C back end (D79): to `out` itself when it ends in `.c`, else beside it as
+  Writes C from the C back end (D80): to `out` itself when it ends in `.c`, else beside it as
   `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result.
 -/
 def cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
