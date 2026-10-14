@@ -336,7 +336,7 @@ def Replicate.seenToText (s : Seen) : Text := Sexp.print (Sexp.node
 /-- The content type a site file is served with, by the bundled server (`Site.contentType`) and by a
   bucket the explorer is uploaded to: a browser refuses a module script or a stylesheet sent as
   `text/plain`. -/
-def Replicate.siteType (path : Text) : Text := if endsWith ".html" path then "text/html; charset=utf-8" else if endsWith ".json" path then "application/json" else if endsWith ".css" path then "text/css" else if endsWith ".js" path then "text/javascript" else if endsWith ".svg" path then "image/svg+xml" else "text/plain; charset=utf-8"
+def Replicate.siteType (path : Text) : Text := if endsWith ".html" path then "text/html; charset=utf-8" else if endsWith ".json" path then "application/json" else if endsWith ".css" path then "text/css" else if endsWith ".js" path || endsWith ".mjs" path then "text/javascript" else if endsWith ".svg" path then "image/svg+xml" else "text/plain; charset=utf-8"
 
 /-- Every bundle on the remote, importing the ones not seen before. -/
 def Replicate.sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=

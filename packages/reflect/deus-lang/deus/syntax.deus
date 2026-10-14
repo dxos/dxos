@@ -28,7 +28,7 @@ inductive Pat where
   | list (items : List Pat)
   | unit
   | as (name : Text) (pat : Pat)
-  -- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D84).
+  -- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D86).
   | spelled (text : Text) (pat : Pat)
 
 inductive Expr where
@@ -58,7 +58,7 @@ inductive Expr where
   | proj (e : Expr) (field : Text) (pos : Pos)
   -- Comments written before a statement or an arm; they become metadata, never Core (D66).
   | note (text : Text) (e : Expr)
-  -- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D84).
+  -- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D86).
   | spelled (text : Text) (e : Expr)
 
 /-- One `| p, q => body` arm. -/

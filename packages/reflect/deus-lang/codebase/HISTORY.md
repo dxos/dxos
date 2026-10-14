@@ -1,5 +1,8 @@
 # History of main
 
+- `374b38babb` export: merge 4 changes from codebase
+- `bd6bedcbc4` export: merge tasks from codebase
+- `cb1f41b30f` merge #13952's branch: explorer console (D84, D85); spellings and union merge renumbered D86, D87 (by claude)
 - `1e1b206397` export: settle a task a git union merge left on two lines (D85) (by claude)
 - `ebc49e0bde` history: import 68 changes
 - `2dffd26498` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/recover-tasks.sexp
@@ -77,6 +80,10 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
+- `44e512757f` close d2328509 by #0f3089d483 (by claude)
+- `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)
+- `78c160790e` history: import 209 changes
 - `e1fa6d0eb4` task: open c338b56e Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
 - `cda9251c00` task: open 434a6dbc Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
 - `215b405dad` task: open d807958c Native: closure conversion and partial application in the C back end (by claude)

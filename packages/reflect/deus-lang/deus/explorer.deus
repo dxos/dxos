@@ -13,6 +13,9 @@
     tasks.json                    every task, with its links resolved and its history
     comments.json                 comments on definitions and changes, by subject (D82)
     assets/<sha256>               the files comments and tasks attach
+    console/                      with `--console` (D84): the wasm kernel (as base64), its
+                                  drivers, the toolchain image and `codebase.json`, so the page
+                                  runs `deus` against this codebase with no server
 -/
 
 namespace Explorer
@@ -218,5 +221,32 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
         ("verdict", Json.str (verdictOf dir h)),
         ("tasks", Json.arr (List.map (fun t => Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (Tasks.stateText t.state))]) (Tasks.about taskMap name h)))])))
   List.length entries
+
+/-- Directories a console snapshot leaves out: local state, binary files and remote bookkeeping. -/
+def consoleSkips : List Text := ["cache", "artifacts", "assets", "remotes", "exports"]
+
+/--
+  Writes `out/console/` (D84): the wasm kernel (base64) and its drivers, the toolchain image, and the
+  codebase directory as `codebase.json` (path to text), so the explorer can run `deus` against
+  the codebase it shows. The page loads it only when the console opens. Returns the files in the
+  snapshot.
+-/
+def console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let copied := try (fun _ =>
+    let home := Build.require "DEUS_HOME"
+    let crate := home ++ "/../deus-kernel"
+    IO.mkdirp (out ++ "/console")
+    -- The site is text end to end (the bundled server and `Remote.writeAll`), so the kernel ships as base64.
+    IO.writeFile (out ++ "/console/deus_kernel.wasm.b64") (Build.tool "openssl" ["base64", "-in", Build.wasmKernel ()])
+    let _ := Build.tool "cp" [crate ++ "/embed/kernel.mjs", crate ++ "/embed/host.mjs", out ++ "/console/"]
+    Build.tool "cp" [home ++ "/seed/deus.image", out ++ "/console/deus.image"])
+  match copied with
+  | Result.err f => throw (Failure.render f)
+  | Result.ok _ =>
+    let files := List.filter (fun f => not (List.any (fun skip => Text.startsWith (skip ++ "/") f) consoleSkips)) (Cli.filesUnder dir "")
+    IO.writeFile (out ++ "/console/codebase.json") (Json.render (Json.obj (List.map (fun f => (f, Json.str (Option.getOr (IO.readFile (dir ++ "/" ++ f)) ""))) files)))
+    -- The app offers the console when this small file is there, before loading anything large.
+    IO.writeFile (out ++ "/console/info.json") (Json.render (Json.obj [("files", Json.num (List.length files)), ("branch", Json.str (Codebase.currentBranch dir))]))
+    List.length files
 
 end Explorer

@@ -189,7 +189,7 @@ def Print.ifThenElse (p : Printer) (c : Sexp) (yes : Sexp) (no : Sexp) (env : Li
     (if isBlock yes then "\n" ++ spaces ind else " ") ++ "else" ++ Print.body p no env ind
   paren 1 prec text
 
-/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D84) are stored. -/
+/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D86) are stored. -/
 def Print.indexedOf (meta : Option Sexp) (field : Text) : List (Int, Text) := filterMap (fun x =>
   match x with
   | Sexp.list (Sexp.sym "n" :: Sexp.int i :: Sexp.str text :: []) => Option.some (i, text)
@@ -351,7 +351,7 @@ def Print.refName (p : Printer) (key : Text) (env : List Text) : Text :=
   if List.contains name env then getOr (Map.lookup key p.fullNames) name else name
 
 /-- Core with its comments put back as `(note "text" e)`, and number spellings as `(spelled "text" e)`,
-  at the pre-order indices `Resolve.unnote` recorded (D66, D84). -/
+  at the pre-order indices `Resolve.unnote` recorded (D66, D86). -/
 def Print.restore (notes : List (Int, Text)) (spellings : List (Int, Text)) (core : Sexp) : Sexp := if List.isEmpty notes && List.isEmpty spellings then core else
   let byIndex := Map.fromList notes
   let spelledAt := Map.fromList spellings

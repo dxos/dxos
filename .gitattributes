@@ -39,7 +39,7 @@ packages/reflect/deus-lang/codebase/**          linguist-generated=true
 *.spline filter=lfs diff=lfs merge=lfs -text
 *.splinecode filter=lfs diff=lfs merge=lfs -text
 
-# DEUS codebase exports: every line is one entry, so a union merge keeps both sides' changes (D85);
+# DEUS codebase exports: every line is one entry, so a union merge keeps both sides' changes (D87);
 # the next `deus export` settles a task left with two versions.
 packages/reflect/deus-lang/codebase/history.sexp   merge=union
 packages/reflect/deus-lang/codebase/tasks.sexp     merge=union

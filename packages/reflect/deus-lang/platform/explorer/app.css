@@ -1739,3 +1739,96 @@ ul.rows {
     display: none;
   }
 }
+
+/* Console (D84): `deus` on the wasm kernel in the page, docked under the workspace. */
+#console {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  height: 40vh;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 16px rgb(16 24 40 / 0.08);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+#console[hidden] {
+  display: none;
+}
+#console header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+#console header .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#console header .icon-button {
+  margin-left: auto;
+}
+#console-output {
+  flex: 1;
+  margin: 0;
+  padding: 8px 12px;
+  overflow: auto;
+  background: var(--code);
+  font: 13px/1.45 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#console-output .cmd {
+  color: var(--accent);
+  font-weight: 600;
+}
+#console-output .err {
+  color: var(--fail);
+}
+#console-output .meta {
+  color: var(--faint);
+}
+#console-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--line);
+  font: 13px var(--mono);
+}
+#console-prompt label {
+  color: var(--accent);
+  font-weight: 600;
+}
+#console-prompt input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+}
+#console-toggle.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+body.with-console #main,
+body.with-console #sidebar {
+  padding-bottom: 40vh;
+}
+@media (max-width: 760px) {
+  #console {
+    height: 55vh;
+  }
+  body.with-console #main {
+    padding-bottom: 55vh;
+  }
+}

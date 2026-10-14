@@ -833,7 +833,7 @@ describe('deus CLI', () => {
       );
       expect(deus('export', exported, ...c).code).toBe(0);
       expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
-      // A git union merge leaves both versions of a task; the one this codebase has not had wins (D85).
+      // A git union merge leaves both versions of a task; the one this codebase has not had wins (D87).
       const current = readFileSync(join(exported, 'tasks.sexp'), 'utf8');
       writeFileSync(join(exported, 'tasks.sexp'), current + staleTasks);
       expect(deus('export', exported, ...c).code).toBe(0);
@@ -875,7 +875,7 @@ describe('deus CLI', () => {
       .replace('1_000', '1000');
     deus('add', file('uncommented.deus', uncommented), ...bare);
     expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
-    // So are number spellings (D84): `'"'` hashes as `34`, and view prints it as written.
+    // So are number spellings (D86): `'"'` hashes as `34`, and view prints it as written.
     expect(deus('names', 'quoted', '--json', ...bare).stdout).toBe(deus('names', 'quoted', '--json', ...c).stdout);
     expect(deus('view', 'quoted', ...c).stdout).toContain(`c == '"' || c == 0x60 || c == 1_000`);
     const viewed = deus('view', 'area', ...c).stdout;
@@ -931,6 +931,54 @@ describe('deus CLI', () => {
     expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
       readFileSync(join(first, 'HISTORY.md'), 'utf8').split('\n\n')[1],
     );
+  });
+
+  // The console is the toolchain itself on the wasm kernel: run here through the same files the page loads.
+  test('explore --console runs deus against a snapshot of the codebase', { timeout: 300_000 }, async ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'console')];
+    deus('init', '--empty', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    deus(
+      'add',
+      file('console.deus', 'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n'),
+      ...c,
+    );
+    process.env.DEUS_HOME = root;
+    const out = join(scratch, 'console-site');
+    expect(deus('explore', '--out', out, '--console', ...c)).toMatchObject({ stderr: '', code: 0 });
+    const snapshot: Record<string, string> = JSON.parse(readFileSync(join(out, 'console', 'codebase.json'), 'utf8'));
+    expect(Object.keys(snapshot)).toContain('HEAD');
+    expect(Object.keys(snapshot).some((path) => path.startsWith('cache/'))).toBe(false);
+    expect(JSON.parse(readFileSync(join(out, 'console', 'info.json'), 'utf8'))).toEqual({
+      files: Object.keys(snapshot).length,
+      branch: 'main',
+    });
+
+    const host = await import(join(out, 'console', 'host.mjs'));
+    const wasm = Buffer.from(readFileSync(join(out, 'console', 'deus_kernel.wasm.b64'), 'utf8'), 'base64');
+    const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
+    const page = await host.createDeus({
+      wasm: new Uint8Array(wasm),
+      fs: host.createFiles(files),
+      env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
+    });
+    const image = readFileSync(join(out, 'console', 'deus.image'), 'utf8');
+    expect(await page.run(image, { args: ['view', 'Shapes.square'], cwd: '/work' })).toMatchObject({
+      code: 0,
+      stdout: expect.stringContaining('side * side'),
+    });
+    expect(await page.run(image, { args: ['eval', 'Shapes.square 7'], cwd: '/work' })).toMatchObject({
+      code: 0,
+      stdout: '49\n',
+    });
+
+    // A site that has a console keeps it, refreshed with the codebase each push.
+    deus('remote', 'add', 'origin', join(scratch, 'console-remote'), ...c);
+    deus('explore', '--out', out, '--publish', 'origin', ...c);
+    deus('add', file('console-more.deus', 'def Shapes.unit : Int := 1\n'), ...c);
+    expect(deus('push', 'origin', ...c).code).toBe(0);
+    const published = readFileSync(join(scratch, 'console-remote', 'site', 'console', 'codebase.json'), 'utf8');
+    expect(Object.keys(JSON.parse(published)).length).toBeGreaterThan(Object.keys(snapshot).length);
   });
 
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {

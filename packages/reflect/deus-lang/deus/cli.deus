@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -693,6 +693,8 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
       let out := dir ++ "/cache/site-" ++ name
       let _ := Explorer.generate dir out
+      -- A site published with its console keeps it, on the codebase as pushed (D84).
+      let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir name)) "") then Explorer.console dir out else 0
       some (snd (publishSite dir name out false))
     else none
   let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
@@ -975,14 +977,16 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
   (List.length sums, List.length changed)
 
 /--
-  `deus explore [--out dir] [--port n] [--publish remote]` (D58): writes the codebase explorer
-  for the current branch, then serves it locally, or uploads it next to a remote's bundles
-  (`<prefix>/site/`), where a public bucket serves it.
+  `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase
+  explorer for the current branch, then serves it locally, or uploads it next to a remote's bundles
+  (`<prefix>/site/`), where a public bucket serves it. `--console` adds a console that runs `deus`
+  in the page (D84); a site that has one keeps it.
 -/
 def explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let out := Option.getOr (option args "out") (dir ++ "/cache/site")
   let pages := Explorer.generate dir out
+  let _ := if flag args "console" || IO.exists (out ++ "/console/codebase.json") then Explorer.console dir out else 0
   match (option args "publish", option args "out") with
   | (some name, _) =>
     match publishSite dir name out (flag args "force") with
@@ -1357,7 +1361,7 @@ def usage : Text :=
     "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel",
     "  build <handler> -o <file> --server   write a standalone native web server for a handler",
     "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)",
-    "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote",
+    "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote",
     "",
     "tasks",
     "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]",

@@ -164,7 +164,7 @@ def isBlock (t : Sexp) : Bool :=
 
 /--
   Core with its comments put back as `(note "text" e)`, and number spellings as `(spelled "text" e)`,
-  at the pre-order indices `Resolve.unnote` recorded (D66, D84).
+  at the pre-order indices `Resolve.unnote` recorded (D66, D86).
 -/
 def restore (notes : List (Int, Text)) (spellings : List (Int, Text)) (core : Sexp) : Sexp :=
   if List.isEmpty notes && List.isEmpty spellings then core
@@ -191,7 +191,7 @@ def restore (notes : List (Int, Text)) (spellings : List (Int, Text)) (core : Se
       | _ => (x, count)
     fst (go core 0)
 
-/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D84) are stored. -/
+/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D86) are stored. -/
 def indexedOf (meta : Option Sexp) (field : Text) : List (Int, Text) :=
   List.filterMap (fun x =>
     match x with

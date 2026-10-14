@@ -194,7 +194,7 @@ An export directory is often shared: each container restores from it, works, and
   even when several records hold it.
 - After writing, the export records the branch's tasks snapshot as the base.
 - In git, `history.sexp`, `tasks.sexp` and `HISTORY.md` merge with `merge=union`
-  ([D85](../DECISIONS.md)). A union can leave a task on two lines; the reader keeps the version the
+  ([D87](../DECISIONS.md)). A union can leave a task on two lines; the reader keeps the version the
   branch has never had, else the later line.
 
 Code is not merged: `code/` is the exporting branch's, as before. Share code through a remote; the
