@@ -7,35 +7,45 @@ locally running EDGE stack. Design: [plugin-agent `docs/DISCORD.md`](../../plugi
 ## Setup
 
 You need a dxos checkout (this repo, `<dxos>` below), an edge checkout (`<edge>` below), Chrome, and access to the
-`eng` 1Password vault with the 1Password app's CLI integration on (Settings → Developer).
+`eng` and `CI` 1Password vaults with the 1Password app's CLI integration on (Settings → Developer).
 
-### 1. The Discord app (Kai)
+### 1. The Discord apps
 
-Kai is application `1555777706459660288`
-([Developer Portal](https://discord.com/developers/applications/1555777706459660288/information)). Its secrets are in
-the 1Password item `op://eng/com.discord.bot.kai`, and edge's `secrets.jsonc` files already refer to them:
+Two kinds of Discord app take part, and each EDGE environment has its own Kai:
 
-| Field | What | Used by |
+| App | Job | Where EDGE configures it |
 | --- | --- | --- |
-| `credential` | bot token | discord-service (`DISCORD_BOT_TOKEN_DEV`), the EDGE bot |
-| `CLIENT_SECRET` | OAuth2 client secret | kms-service (`DISCORD_CLIENT_SECRET`), for **Connect Discord** |
-| `APPLICATION_ID` | application id | `.env.tpl` (`DISCORD_KAI_APPLICATION_ID`) |
+| Composer (`1135690429833171105`) | **Connect Discord**: the OAuth sign-in that lists your servers | kms-service `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` |
+| Kai | The bot you install and mention | discord-service `DISCORD_KAI_APPLICATION_ID` and `DISCORD_KAI_BOT_TOKEN` |
 
-In the portal, once:
+| EDGE | Kai app | Application id |
+| --- | --- | --- |
+| local | Kai Local | `1559967387972009984` |
+| dev | Kai Dev | `1559736753990926390` |
+| preview | Kai Preview | `1559967457274372126` |
+| staging | Kai Staging | `1559968567775072356` |
+| production | Kai | `1555777706459660288` |
 
-1. **OAuth2 → Redirects → Add Redirect:** `http://localhost:8787/oauth/callback`, then **Save Changes**. Local EDGE
-   issues this callback for sign-ins started from `localhost:8787`.
-2. **Bot → Message Content Intent:** on. Without it, messages arrive with empty content.
-3. **Bot → Requires OAuth2 Code Grant:** off. Leave **Public Bot** as is; it only needs to be on once other teams'
-   servers install Kai.
-4. Do not **Reset Secret** or **Reset Token** unless the 1Password values are lost: a reset invalidates the stored
-   ones.
+The story picks the Kai of the EDGE its toolbar targets (`KAI_APPLICATION_IDS` in `src/testing/discord.ts`). Each
+Kai's bot token is the `DISCORD_KAI_BOT_TOKEN` field of `op://CI/hub.dxos.network/discord-service-<env>` (the
+unprefixed `discord-service` section for local).
+
+In each Kai app's portal, once:
+
+1. **Bot → Message Content Intent:** on. Without it, follow-ups in a Kai thread arrive with empty content.
+2. **Bot → Requires OAuth2 Code Grant:** off. **Public Bot** is on for Kai only.
+3. **Installation:** Guild Install only, install link None. Composer builds the install link itself.
+4. Do not **Reset Token** unless the 1Password value is lost: a reset invalidates the stored one.
+
+The Composer app's **OAuth2 → Redirects** must include `http://localhost:8787/oauth/callback`, which local EDGE
+issues for sign-ins started from `localhost:8787`.
 
 ### 2. Local EDGE
 
 From `<edge>`:
 
-1. Write every worker's `.env`, including Kai's bot token and client secret. 1Password asks you to unlock:
+1. Write every worker's `.env`, including Kai Local's bot token and the Composer app's client secret. 1Password
+   asks you to unlock:
 
    ```bash
    pnpm dev:env
@@ -83,8 +93,9 @@ In the **Setup** story:
 
 ### 5. Check the bot
 
-With the bot token in your shell (`export DISCORD_BOT_TOKEN="$(op read -n op://eng/com.discord.bot.kai/credential)"`),
-each of these prints without revealing the token:
+With Kai Local's bot token in your shell
+(`export DISCORD_BOT_TOKEN="$(op read -n op://CI/hub.dxos.network/discord-service/DISCORD_KAI_BOT_TOKEN)"`), each of
+these prints without revealing the token:
 
 ```bash
 curl -s -H "Authorization: Bot $DISCORD_BOT_TOKEN" https://discord.com/api/v10/applications/@me | jq '{id, name, message_content_intent: (((.flags // 0) / 262144 | floor) % 4 > 0)}'
@@ -104,8 +115,9 @@ The first must show `message_content_intent: true`; the second lists the servers
 | **Could not reach EDGE** with a 403 | Another space owns the bot (the last tab to bind or start it). |
 | **Could not reach EDGE**, every request failing | The stack is down: `node scripts/stack.mjs status`, then `start`. |
 | The story never finishes loading, "coordinator worker error" | Opened in the Claude desktop app's browser; use Chrome. |
-| **Connect Discord** fails at Discord | The redirect URL (§1.1) is missing, or `pnpm dev:env` has not run (§2.1). |
+| **Connect Discord** fails at Discord | The Composer app lacks the localhost redirect (§1), or `pnpm dev:env` has not run (§2.1). |
+| **Install** opens a different Kai, or the bot never starts | The profile predates per-environment Kai apps and records the old app id; **Reset** it. |
 | **Connect channels** is greyed out | No channel is connected yet (§4.3). |
 | Agent messages fail with "No process is hosted by this object" | The space outlived the EDGE state its agent ran on; clear the site data for `localhost:9009` and reload. |
 | The bot never reaches ready | discord-service has no bot token: re-run `pnpm dev:env` (§2.1). |
-| Messages arrive with no text | Message Content Intent is off (§1.2). |
+| Messages arrive with no text | Message Content Intent is off on that Kai app (§1). |

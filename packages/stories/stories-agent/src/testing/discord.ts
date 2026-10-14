@@ -15,6 +15,7 @@ import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
+import { type EdgeEnvironment } from './story-settings.ts';
 import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 
 //
@@ -24,8 +25,16 @@ import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 
 export const AGENT_NAME = 'Kai';
 
-/** Kai's Discord application id (see the package README). */
-export const KAI_APPLICATION_ID = '1555777706459660288';
+/**
+ * Each EDGE environment's Kai, one Discord app apiece (see the package README); each must match that environment's
+ * `DISCORD_KAI_APPLICATION_ID` in edge's discord-service, which holds the token.
+ */
+export const KAI_APPLICATION_IDS: Record<EdgeEnvironment, string> = {
+  local: '1559967387972009984',
+  dev: '1559736753990926390',
+  preview: '1559967457274372126',
+  production: '1555777706459660288',
+};
 
 /** The Discord ids the story's channel config is seeded with; empty values keep what the space already holds. */
 export type DiscordBotArgs = {
