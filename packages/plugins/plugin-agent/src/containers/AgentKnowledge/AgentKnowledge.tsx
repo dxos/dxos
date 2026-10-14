@@ -65,7 +65,7 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
     >
       <AgentKnowledgeComponent.Memories memories={memories} />
       <AgentKnowledgeComponent.Facts facts={facts} />
-      <AgentKnowledgeComponent.Predicates predicates={predicates} turtle={ontology} />
+      <AgentKnowledgeComponent.Predicates predicates={predicates} trig={ontology} />
       <AgentKnowledgeComponent.Goals goals={goals} />
       <AgentKnowledgeComponent.Graph nodes={nodes} edges={edges} />
     </AgentKnowledgeComponent.Root>

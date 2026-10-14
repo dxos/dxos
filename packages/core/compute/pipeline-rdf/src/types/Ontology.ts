@@ -131,9 +131,20 @@ export class Ontology {
     return this.#byIri.get(iri);
   }
 
+  /** The entry an IRI stands for: a merged-away predicate's survivor, else its own entry. */
+  canonical(iri: string): Entry | undefined {
+    let entry = this.get(iri);
+    const seen = new Set<string>();
+    while (entry?.replacedBy !== undefined && !seen.has(entry.iri)) {
+      seen.add(entry.iri);
+      entry = this.get(entry.replacedBy) ?? entry;
+    }
+    return entry;
+  }
+
   /** The IRIs a query for this predicate matches: its own and every equivalent, either way round. */
   equivalents(iri: string): Set<string> {
-    const entry = this.get(iri);
+    const entry = this.canonical(iri);
     const iris = new Set([iri]);
     if (entry) {
       iris.add(entry.iri);

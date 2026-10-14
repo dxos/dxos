@@ -293,7 +293,7 @@ const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
     <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
       <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
-      <AgentKnowledge.Predicates predicates={PREDICATES} turtle={RDF.Graph.ontologyToTriG(SEED)} />
+      <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />
       <AgentKnowledge.Goals goals={scenario === 'empty' ? [] : GOALS} />
       <AgentKnowledge.Graph nodes={nodes} edges={edges} />
     </AgentKnowledge.Root>

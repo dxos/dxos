@@ -157,15 +157,20 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
       );
 
     const clear: FactStoreApi['clear'] = () =>
-      Effect.gen(function* () {
-        yield* sql`DELETE FROM triples`;
-        yield* sql`DELETE FROM entities`;
-        yield* sql`DELETE FROM cursors`;
-        yield* seed;
-      }).pipe(
-        Effect.asVoid,
-        Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to clear store', cause })),
-      );
+      // One transaction, so a store is never left without its seed vocabulary.
+      sql
+        .withTransaction(
+          Effect.gen(function* () {
+            yield* sql`DELETE FROM triples`;
+            yield* sql`DELETE FROM entities`;
+            yield* sql`DELETE FROM cursors`;
+            yield* seed;
+          }),
+        )
+        .pipe(
+          Effect.asVoid,
+          Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to clear store', cause })),
+        );
 
     // Structured query runs directly over the `triples` table (no SPARQL engine), so the SQLite
     // path works everywhere (browser worker / node / CF DO) — Comunica does not bundle for browser

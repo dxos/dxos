@@ -23,7 +23,7 @@ type View = 'list' | 'ontology' | 'trig';
 
 const VIEWS: ReadonlyArray<{ id: View; label: string }> = [
   { id: 'list', label: 'List' },
-  { id: 'ontology', label: 'Ontology (Turtle)' },
+  { id: 'ontology', label: 'Ontology (TriG)' },
   { id: 'trig', label: 'Facts (TriG)' },
 ];
 
@@ -48,7 +48,7 @@ export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>
       const counts = new Map<string, number>();
       for (const fact of facts) {
         const iri = RDF.Mapping.predicateOf(fact, ontology);
-        const canonical = ontology.get(iri)?.iri ?? iri;
+        const canonical = ontology.canonical(iri)?.iri ?? iri;
         counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
       }
       return counts;

@@ -39,7 +39,7 @@ const isView = (value: string): value is AgentKnowledgeView => VIEWS.some((view)
 
 type AgentKnowledgeContextValue = {
   view: AgentKnowledgeView;
-  /** Whether the Facts view shows each fact's triple and metadata, and the Predicates view the ontology as Turtle. */
+  /** Whether the Facts view shows each fact's triple and metadata, and the Predicates view the ontology as TriG. */
   raw: boolean;
   brain: AgentKnowledgeBrainStatus;
 };
@@ -339,12 +339,12 @@ type AgentKnowledgePredicate = {
 type AgentKnowledgePredicatesProps = {
   /** The brain's predicates: the seed vocabulary, then those its extractor minted. */
   predicates: readonly AgentKnowledgePredicate[];
-  /** The ontology graph as Turtle, shown in place of the list when the view asks for raw. */
-  turtle?: string;
+  /** The ontology graph as TriG, shown in place of the list when the view asks for raw. */
+  trig?: string;
 };
 
 /** The predicates the agent's brain knows: the seed vocabulary every brain starts with, and those it minted. */
-const AgentKnowledgePredicates = ({ predicates, turtle }: AgentKnowledgePredicatesProps) => {
+const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicatesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { view, raw } = useContext(AgentKnowledgeContext);
   if (view !== 'predicates') {
@@ -356,12 +356,12 @@ const AgentKnowledgePredicates = ({ predicates, turtle }: AgentKnowledgePredicat
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport asChild>
           <Layout.Container>
-            {raw && turtle ? (
+            {raw && trig ? (
               <pre
-                data-testid='agent-knowledge-predicates-turtle'
+                data-testid='agent-knowledge-predicates-trig'
                 className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
               >
-                {turtle}
+                {trig}
               </pre>
             ) : (
               <Listbox.Root

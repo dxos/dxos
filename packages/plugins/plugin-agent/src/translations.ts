@@ -66,7 +66,7 @@ export const translations = [
         'agent-knowledge-actions.label': 'Knowledge actions',
         'agent-knowledge-reset.label': 'Reset (forget all memories and goals)',
         'agent-knowledge-raw-facts.label': 'Show facts as triples',
-        'agent-knowledge-raw-predicates.label': 'Show predicates as Turtle',
+        'agent-knowledge-raw-predicates.label': 'Show predicates as TriG',
         'activity-error.label': 'That did not work',
         'activity-start.label': 'Connect channels',
         'activity-stop.label': 'Disconnect channels',

@@ -68,6 +68,9 @@ describe('Ontology', () => {
     expect(merged.resolve('on the payroll of').iri).toBe('https://schema.org/worksFor');
     expect(merged.get(minted.iri)?.replacedBy).toBe('https://schema.org/worksFor');
     expect(merged.equivalents('https://schema.org/worksFor').has(minted.iri)).toBe(true);
+    // Either way round: a query by the merged-away IRI matches the survivor.
+    expect(merged.equivalents(minted.iri).has('https://schema.org/worksFor')).toBe(true);
+    expect(merged.canonical(minted.iri)?.iri).toBe('https://schema.org/worksFor');
   });
 
   test('round-trips an entry through the ontology graph', ({ expect }) => {

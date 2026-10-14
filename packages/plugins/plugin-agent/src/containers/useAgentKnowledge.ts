@@ -34,7 +34,7 @@ export type AgentKnowledgeData = {
   memories: Knowledge.Memory[];
   facts: AgentKnowledgeFact[];
   predicates: AgentKnowledgePredicate[];
-  /** The brain's ontology graph as Turtle. */
+  /** The brain's ontology graph as TriG. */
   ontology: string;
   goals: AgentKnowledgeGoal[];
   nodes: AgentKnowledgeNode[];
@@ -159,7 +159,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     const counts = new Map<string, number>();
     for (const fact of all) {
       const iri = RDF.Mapping.predicateOf(fact, known);
-      const canonical = known.get(iri)?.iri ?? iri;
+      const canonical = known.canonical(iri)?.iri ?? iri;
       counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
     }
     const items = known.entries
