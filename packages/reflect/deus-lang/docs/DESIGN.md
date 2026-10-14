@@ -20,7 +20,7 @@ and the toolchain; [`DECISIONS.md`](./DECISIONS.md) records why each choice was 
 | Deterministic simulation for tests; `@[integration]` tests                         | done ([D32](./DECISIONS.md))                                                        |
 | Observability: `Log`, `Trace`, `Metrics` abilities; NDJSON and OTLP sinks          | done ([D31](./DECISIONS.md), [D35](./DECISIONS.md))                                 |
 | Standalone executables (`deus build`)                                              | done ([D38](./DECISIONS.md))                                                        |
-| `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS and `perf` requirements planned                    |
+| `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS (`@[ext]`), `perf` requirements, `deus mdl`        |
 | Rust kernel (native, byte-identical) and wasm kernel (`wasm32-wasip1`)             | done ([D40](./DECISIONS.md), [D41](./DECISIONS.md)); compiling Core to wasm planned |
 | Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md)); actor-to-actor calls planned                          |
 | Projects/subgraphs, external requirements, replication, layers, containers         | designed ([PROPOSALS.md](./PROPOSALS.md)); not built                                |
@@ -146,14 +146,34 @@ as source with current names, and `update` takes the edited source back. See
 
 ## Specifications
 
-`.mdl` documents carry DEUS code in ```deus fences; the CLI reads them like `.deus` files, with
-error positions pointing into the document. Two extensions are in progress:
+`.mdl` documents carry DEUS code in ``deus fences; the CLI reads them like `.deus` files, with
+error positions pointing into the document. Typed ``mdl blocks are checked by `deus mdl`
+(D46):
 
-- **MDL extensions defined in DEUS.** An MDL block kind is declared by a DEUS definition that
-  parses and checks its fields and turns them into obligations (theorems, tests).
-- **Performance requirements.** A `perf` block bounds the cost of an operation as a function of
-  its input size, measured in kernel steps (`Code.steps`), which are deterministic, so a bound
-  can be tested like a property.
+- **The document as data.** `Mdl.parse` (`deus/mdl.deus`) reads the frontmatter, the Extensions
+  table (term → URI) and each block (`<type> [<id>][: <title>]`, then `key: value` lines) into
+  `Doc` and `Block` values. `Mdl.validate` applies the core rules: every block type is declared,
+  and block ids are unique.
+- **Extensions are DEUS definitions.** An extension is a function `Block -> {MdlHost} List Text`
+  published with `@[ext "<uri>"]`; it returns the block's problems, none when it holds.
+  `deus mdl` finds the definition whose `ext` attribute matches the URI the Extensions table
+  gives the block's term, and reports a block whose extension the codebase lacks as unchecked.
+- **The host is an ability.** `MdlHost.cost` and `MdlHost.holds` evaluate DEUS source against
+  the codebase (compiled as `eval` compiles it), so an extension asks questions about code without
+  depending on the CLI.
+- **Performance requirements.** The `perf` extension (`platform/perf.deus`) takes `run:`, an
+  optional `budget:` in steps and, with `sizes:`, an `order:` (`1`, `log n`, `n`, `n log n`,
+  `n^2`) that bounds how cost grows between sizes. Cost is `Code.cost`: the machine steps a
+  thunk takes, with the JIT off. Steps are deterministic and equal on both kernels, so a bound is
+  a test with a verdict, not a benchmark. `examples/perf.mdl` states the sorting example's.
+
+```mdl
+perf P-1: insertion sort is quadratic on reversed input
+  run: fun n => Sort.isort (List.reverse (List.range 0 n))
+  sizes: 20 | 40 | 80
+  order: n^2
+  budget: 100000
+```
 
 ## Proofs
 

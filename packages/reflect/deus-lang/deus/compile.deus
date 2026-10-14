@@ -321,7 +321,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
     let ctx := Ctx.mk names (bodyScope item) (item.path ++ ": " ++ item.fqn)
     let fqn := item.fqn
     match item.decl with
-    | Decl.defn _ binders type body arms doc _ pos =>
+    | Decl.defn _ binders type body arms doc attributes pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
       let named := Resolve.lambda ctx params (fun locals =>
         match (body, arms) with
@@ -331,7 +331,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       match Resolve.strip named with
       | (core, locals) =>
         Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
-        addMeta ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals
+        addMetaWith ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals attributes
     | Decl.check _ body doc attributes _ =>
       match Resolve.strip (Resolve.expr ctx body []) with
       | (core, locals) =>

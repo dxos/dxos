@@ -77,6 +77,27 @@ fn defects_and_budgets_exit_with_the_kernel_codes() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// The same image in `deus-lang/src/kernel/machine.test.ts` must report the same count.
+#[test]
+fn code_cost_counts_the_same_steps_as_the_typescript_kernel() {
+    let dir = std::env::temp_dir().join(format!("deus-kernel-cost-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let image = dir.join("cost.image");
+    std::fs::write(
+        &image,
+        "(def \"loop\" (lam (lam (if (app (prim \"eq\") (var 0) (int 0)) (var 1) (app (ref \"loop\") (app (prim \"Int.add\") (var 1) (var 0)) (app (prim \"Int.sub\") (var 0) (int 1)))))))
+         (def \"main\" (lam (app (op \"#IO\" 0 1) (app (prim \"show\") (app (prim \"Code.cost\") (lam (app (ref \"loop\") (int 0) (int 10))))))))
+         (main \"main\")",
+    )
+    .unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_deus-kernel"))
+        .env("DEUS_SEED", &image)
+        .output()
+        .unwrap();
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "23");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn runs_an_image_appended_to_its_executable() {
     let dir = std::env::temp_dir().join(format!("deus-kernel-native-{}", std::process::id()));

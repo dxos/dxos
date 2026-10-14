@@ -87,6 +87,24 @@ test mutualRecursionHashesAsCycle :=
 
 test mdlFencesKeepLines := Mdl.deusSource "# Doc\n```deus\ndef a := 1\n```\ntext" == "\n\ndef a := 1\n\n"
 
+def mdlSample : Text :=
+  Text.join "\n" [
+    "---", "id: org.example.doc", "---", "# Doc", "## Extensions", "| Term | URI |", "| --- | --- |",
+    "| `perf` | `org.example.perf@1.0` |", "## Body", "```mdl", "perf P-1: fast enough", "  Prose first.",
+    "  run: f 1  # a comment", "  sizes:", "  - 1", "  - 2", "```", "```deus", "def x := 1", "```",
+    "```mdl", "ext note", "  uri: org.example.note@1.0", "```", "```mdl", "note P-1", "```", "```mdl", "todo", "```"]
+
+test mdlParsesDocuments :=
+  let doc := Mdl.parse mdlSample
+  doc.front == [("id", "org.example.doc")] &&
+    doc.terms == [("perf", "org.example.perf@1.0")] &&
+    List.map (fun b => (b.blockType, b.blockId, b.blockTitle, b.lineNo)) doc.blocks ==
+      [("perf", "P-1", "fast enough", 11), ("ext", "note", "", 22), ("note", "P-1", "", 26), ("todo", "", "", 29)] &&
+    Option.map (fun b => b.props) (List.head? doc.blocks) == some [("prose", "Prose first."), ("run", "f 1"), ("sizes", "1\n2")]
+
+test mdlValidatesDeclarations :=
+  Mdl.validate (Mdl.parse mdlSample) == ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
+
 test simulatedFileSystem :=
   match Sim.run 7 (fun _ =>
     IO.writeFile "a/b.txt" "hello"

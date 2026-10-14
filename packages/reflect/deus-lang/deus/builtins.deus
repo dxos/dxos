@@ -152,4 +152,6 @@ def run : Text -> a := prim "Code.run"
 def steps : Unit -> Int := prim "Code.steps"
 /-- Hashes of the definitions on the stack when the last defect was raised, innermost first. -/
 def defectTrace : Unit -> List Text := prim "Code.defectTrace"
+/-- Machine steps a pure computation takes; its operations must be handled inside it. -/
+def cost : (Unit -> a) -> Int := prim "Code.cost"
 end Code

@@ -402,20 +402,99 @@ def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
         IO.exit 70
     | _ => throw (name ++ " is not a term")
 
-/-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it. -/
-def eval (args : Args) : {IO, Throw Text} Unit :=
-  let dir := openCodebase args
-  let ns := Codebase.current dir
-  let source := "def it := " ++ Text.join " " args.positional
-  let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" source]
+/-- Compiles `def it := <source>` against the codebase and loads it; returns its hash. -/
+def compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Text :=
+  let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" ("def it := " ++ source)]
   match List.lookup "it" batch.entries with
   | some (Entry.term h) =>
     let objects := Map.fromList batch.objects
     Image.load (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) [h]
-    let value := Code.run h
-    let text := Print.expr (Print.printer ns []) (Sexp.read (Code.quote value)) [] 0 0
-    output args (fun _ => Json.obj [("value", Json.str text)]) (fun _ => text)
-  | _ => throw "eval failed"
+    h
+  | _ => throw ("cannot compile " ++ source)
+
+/-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it. -/
+def eval (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let value := Code.run (compileExpr dir ns (Text.join " " args.positional))
+  let text := Print.expr (Print.printer ns []) (Sexp.read (Code.quote value)) [] 0 0
+  output args (fun _ => Json.obj [("value", Json.str text)]) (fun _ => text)
+
+--
+-- Commands: documents.
+--
+
+/-- Runs `f ()` and turns a defect into `err`. -/
+def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
+  handle Result.ok (f ()) with
+  | Defect.raise message -> _ => Result.err message
+
+/-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them. -/
+def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+  let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
+  handle body () with
+  | MdlHost.cost source -> k =>
+    k (match compiled ("fun (u : Unit) => " ++ source) with
+      | Result.ok h => guardDefect (fun _ => Code.cost (Code.run h))
+      | Result.err message => Result.err message)
+  | MdlHost.holds source -> k =>
+    k (match compiled source with
+      | Result.ok h => guardDefect (fun _ => Code.run h)
+      | Result.err message => Result.err message)
+
+/-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
+def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
+  Map.fromList (List.concatMap (fun pair =>
+    match snd pair with
+    | Entry.term h =>
+      List.filterMap (fun a =>
+        match a with
+        | Sexp.list [Sexp.str "ext", Sexp.str uri] => some (uri, h)
+        | _ => none) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
+    | _ => []) (Map.toList ns))
+
+/-- One block's outcome: `ok`, `fail` with its problems, or `unchecked` when no extension is found. -/
+structure Outcome where
+  place : Text
+  verdict : Text
+  problems : List Text
+
+/-- Checks one document: the core rules, then each block through its extension. -/
+def checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
+  let doc := Mdl.parse (readSource path)
+  let core := Mdl.validate doc
+  let declared := Mdl.declared doc
+  let blocks := List.filter (fun b => b.blockType != "ext") doc.blocks
+  let outcomes := List.map (fun b =>
+    let at := path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b
+    match Option.bind (List.lookup b.blockType declared) (fun uri => Map.lookup uri byUri) with
+    | none => Outcome.mk at "unchecked" []
+    | some h =>
+      Image.load (fetcher dir) [h]
+      let check := Code.run h
+      match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
+      | Result.ok [] => Outcome.mk at "ok" []
+      | Result.ok problems => Outcome.mk at "fail" problems
+      | Result.err message => Outcome.mk at "fail" ["defect: " ++ message]) blocks
+  if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
+
+/--
+  `deus mdl <files|dirs…>`: checks MDL documents. Each block goes to the extension its term's URI
+  names in the codebase; a block whose extension the codebase lacks is reported unchecked.
+-/
+def mdl (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let byUri := extensions dir ns
+  let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths args.positional)
+  let outcomes := List.concatMap (fun path => checkDoc dir ns byUri path) paths
+  let count := fun (v : Text) => List.length (List.filter (fun o => o.verdict == v) outcomes)
+  output args
+    (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
+    (fun _ => Text.join "\n" (List.map (fun o =>
+      Text.padRight 10 o.verdict ++ o.place ++ Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++
+      [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked"]))
+  if count "fail" > 0 then IO.exit 1 else ()
 
 /-- `deus image <name> -o <file>`: the kernel image of a definition. -/
 def image (args : Args) : {IO, Throw Text} Unit :=
@@ -471,6 +550,8 @@ def usage : Text :=
     "running",
     "  run <name> [args…]                   run name () with IO.args = args",
     "  eval <expr>                          evaluate an expression",
+    "  mdl <files|dirs…>                    check .mdl documents: each block runs through the",
+    "                                       @[ext \"<uri>\"] term its Extensions table names",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",
     "  check [prefix]                       check theorems and report their evidence",
@@ -506,6 +587,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "undo" then undo args
     else if command == "run" then run (parseArgs (List.take 0 rest)) rest
     else if command == "eval" then eval args
+    else if command == "mdl" then mdl args
     else if command == "test" then Check.tests args
     else if command == "check" then Check.theorems args
     else if command == "image" then image args

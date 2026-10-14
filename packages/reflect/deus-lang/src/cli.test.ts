@@ -142,6 +142,53 @@ describe('deus CLI', () => {
     expect(view[0].source).toContain('def quadruple (n : Int) : Int :=');
   });
 
+  test(
+    'checks performance requirements in an mdl document through a DEUS extension',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'mdl')];
+      deus('init', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), join(root, 'deus/mdl.deus'), ...c);
+      expect(deus('add', join(root, 'examples/sort.deus'), join(root, 'platform/perf.deus'), ...c).code).toBe(0);
+
+      const passing = deus('mdl', join(root, 'examples/perf.mdl'), '--json', ...c);
+      expect(passing.code).toBe(0);
+      expect(JSON.parse(passing.stdout).map((row: { status: string }) => row.status)).toEqual(['ok', 'ok', 'ok']);
+
+      // Claiming linear growth for a quadratic sort, a budget it exceeds, and an undeclared block type.
+      const doc = join(scratch, 'claims.mdl');
+      writeFileSync(
+        doc,
+        [
+          '## Extensions',
+          '| Term | URI |',
+          '| --- | --- |',
+          '| `perf` | `org.dxos.deus.perf@1.0` |',
+          '```mdl',
+          'perf P-1',
+          '  run: fun n => Sort.isort (List.reverse (List.range 0 n))',
+          '  sizes: 20 | 40',
+          '  order: n',
+          '```',
+          '```mdl',
+          'perf P-2',
+          '  run: Sort.isort (List.range 0 50)',
+          '  budget: 10',
+          '```',
+          '```mdl',
+          'todo',
+          '```',
+          '',
+        ].join('\n'),
+      );
+      const failing = deus('mdl', doc, ...c);
+      expect(failing.code).toBe(1);
+      expect(failing.stdout).toContain('line 17: block type `todo` is not in the Extensions table');
+      expect(failing.stdout).toContain('cost grew x3.72 from n=20 to n=40 (1378 -> 5138 steps); order n allows x2.50');
+      expect(failing.stdout).toContain('took 508 steps; the budget is 10');
+    },
+  );
+
   test('builds a standalone executable', { timeout: 180_000 }, ({ expect }) => {
     process.env.DEUS_HOME = root;
     process.env.DEUS_NODE = process.execPath;

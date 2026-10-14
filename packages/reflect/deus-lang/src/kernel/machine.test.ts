@@ -123,6 +123,25 @@ describe('kernel', () => {
     expect(stdout).toBe('(2, 1)');
   });
 
+  // The same image in `deus-kernel/tests/seed.rs` must report the same count.
+  test('Code.cost counts machine steps, compiled or not, and refuses operations', ({ expect }) => {
+    const loop =
+      '(def "loop" (lam (lam (if (app (prim "eq") (var 0) (int 0)) (var 1) (app (ref "loop") (app (prim "Int.add") (var 1) (var 0)) (app (prim "Int.sub") (var 0) (int 1)))))))';
+    const image = `${loop}
+      (def "main" (lam ${print('(app (prim "Code.cost") (lam (app (ref "loop") (int 0) (int 10))))')}))
+      (main "main")`;
+    for (const jit of [true, false]) {
+      expect([jit, run(image, { jit }).stdout]).toEqual([jit, '23']);
+    }
+    const { code, stderr } = run(`
+      (def "main" (lam (app (prim "Code.cost") (lam ${print('(int 1)')}))))
+      (main "main")`);
+    expect([code, stderr.split('\n')[0]]).toEqual([
+      70,
+      'defect: Code.cost: the measured function performs an operation it does not handle',
+    ]);
+  });
+
   test('a global whose evaluation was aborted is evaluated again, not reported as a cycle', ({ expect }) => {
     const caught = '(handle (ref "bad") (on "#Defect" 0 1 (var 1)))';
     const { stdout } = run(`

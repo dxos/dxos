@@ -24,7 +24,7 @@ structure Token where
 namespace Lexer
 
 def keywords : Dict Text Unit :=
-  Set.dict ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "open", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "sorry", "where", "do", "prim", "true", "false", "perf", "ext"]
+  Set.dict ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "open", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "sorry", "where", "do", "prim", "true", "false"]
 
 def twoCharSymbols : Dict Text Unit :=
   Set.dict [":=", "=>", "->", "<-", "::", "++", "==", "!=", "<=", ">=", "&&", "||", "|>", "<|", "@["]

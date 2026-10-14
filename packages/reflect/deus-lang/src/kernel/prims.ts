@@ -6,7 +6,9 @@ import { createHash } from 'node:crypto';
 
 import {
   Cell,
+  Closure,
   Con,
+  DEOPT,
   DeusDefect,
   DeusPanic,
   HashTable,
@@ -14,6 +16,7 @@ import {
   NIL,
   NONE,
   Prim,
+  UNIT,
   type Value,
   compare,
   equal,
@@ -252,6 +255,26 @@ export const createPrims = (): Map<string, Prim> => {
   def('Code.has', 1, ([hash], machine) => machine.globals.has(text(hash)));
   def('Code.steps', 1, (_args, machine) => machine.steps);
   def('Code.defectTrace', 1, (_args, machine) => listFrom(machine.defectTrace));
+  // Steps on the machine alone: compiled code counts calls, not steps, and both kernels must agree.
+  def('Code.cost', 1, ([thunk], machine) => {
+    if (!(thunk instanceof Closure) || thunk.lam.i !== 1) {
+      throw new DeusDefect(`Code.cost takes a function of Unit, got ${show(thunk)}`);
+    }
+    const compiler = machine.compiler;
+    const before = machine.steps;
+    machine.compiler = undefined;
+    try {
+      machine.runClosure(thunk, [UNIT]);
+    } catch (err) {
+      if (err === DEOPT) {
+        throw new DeusDefect('Code.cost: the measured function performs an operation it does not handle');
+      }
+      throw err;
+    } finally {
+      machine.compiler = compiler;
+    }
+    return machine.steps - before;
+  });
   prims.set(
     'Code.run',
     new Prim(

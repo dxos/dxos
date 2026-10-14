@@ -176,6 +176,8 @@ pub struct Machine {
     pub trace: Option<Vec<u32>>,
     pub profile: Option<(Vec<u32>, HashMap<u32, u64>)>,
     pub defect_trace: Vec<Rc<str>>,
+    /// Nested `Code.cost` runs in progress; their unhandled operations are defects.
+    measuring: u32,
     /// The run in progress, kept while it is suspended on the embedder.
     current: Option<Run>,
     /// IRIs of the user types and abilities an image uses, by hash (its `(type …)` and
@@ -242,6 +244,7 @@ impl Machine {
             host,
             steps: 0,
             max_steps: options.max_steps.unwrap_or(u64::MAX),
+            measuring: 0,
             trace: options.trace.then(Vec::new),
             profile: options.profile.then(|| (Vec::new(), HashMap::new())),
             defect_trace: Vec::new(),
@@ -853,6 +856,11 @@ impl Machine {
         if self.handle_request(run, ability, index, &args) {
             return Ok(false);
         }
+        if self.measuring > 0 {
+            return defect(
+                "Code.cost: the measured function performs an operation it does not handle",
+            );
+        }
         let name = self.symbols.name(ability).to_string();
         if self.host.suspends() {
             return Err(Fail::Suspend {
@@ -1276,6 +1284,25 @@ impl Machine {
             .into_iter()
             .map(|owner| self.hash_of(owner))
             .collect()
+    }
+
+    /// Steps `thunk ()` takes, in a nested run (`Code.cost`).
+    pub fn measure(&mut self, thunk: &Value) -> Result<u64, Fail> {
+        let closure = match thunk {
+            Value::Closure(closure) if self.nodes[closure.lam as usize].i == 1 => closure.clone(),
+            other => {
+                return defect(format!(
+                    "Code.cost takes a function of Unit, got {}",
+                    self.show(other)
+                ))
+            }
+        };
+        let body = self.nodes[closure.lam as usize].a;
+        let before = self.steps;
+        self.measuring += 1;
+        let result = self.run(body, push(&closure.env, unit()));
+        self.measuring -= 1;
+        result.map(|_| self.steps - before)
     }
 
     pub fn run(&mut self, start: TermId, env: Env) -> Result<Value, Fail> {

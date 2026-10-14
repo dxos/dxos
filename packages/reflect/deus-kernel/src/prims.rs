@@ -311,5 +311,6 @@ prims! {
     "Code.quote", 1, |m, a| Ok(Value::Text(text::text(&print(&quote_value(m, &a[0])))));
     "Code.has", 1, |m, a| bool_of(m.has(&string(&txt(m, &a[0])?)));
     "Code.steps", 1, |m, a| Ok(Value::Int(m.steps as i32));
+    "Code.cost", 1, |m, a| Ok(Value::Int(m.measure(&a[0])? as i32));
     "Code.defectTrace", 1, |m, a| Ok(list_from(m.defect_trace.iter().map(|hash| Value::Text(text::text(hash))).collect()));
 }
