@@ -93,6 +93,9 @@ export class DiagnosticsChannel {
             break;
           } else if (request.instanceTag != null && request.instanceTag !== manager.instanceTag) {
             break;
+          } else if (!manager.registry.has(request.id)) {
+            // Every instance on the channel sees the request; only those holding the diagnostic answer.
+            break;
           }
 
           const data = await manager.fetch(request);
