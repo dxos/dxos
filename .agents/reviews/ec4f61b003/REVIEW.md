@@ -22,13 +22,6 @@ _1 error(s), 4 warning(s)._
 - ec4f61b003-4 - ignored - test-real-scenario-not-narrower-proxy - packages/core/compute/pipeline-rdf/src/testing/harness/generate-facts.test.ts:42
 - ec4f61b003-5 - ignored - no-module-level-object-caches - packages/core/compute/sparql-sqlite/src/testing/w3c/harness.ts:134
 
-All five are ignored as false positives or code this PR did not introduce:
-
-- 1, 2: wa-sqlite's emscripten build is only reachable by its `dist/` path, and the package already imports it the same way under the same disable in `OpfsWorker.ts`, `opfs-client.ts` and `sqlite-module.node.test.ts`.
-- 3: `described` is rebuilt per `putFacts` call from the store's own predicates; it is not a collection of live entities.
-- 4: the diff only swaps the test's store layer for `FactStoreLive.layerMemory`; the stubbed AI payloads predate this PR.
-- 5: the dataset-keyed `WeakMap` is test-harness code from the already-merged sparql-sqlite PR; this PR only changes how each engine's storage is opened.
-
 ## Issues
 
 # WARN ec4f61b003-1 no-lint-suppression-to-pass `packages/common/sql-sqlite/src/platform/sql-storage-browser.ts:19`
@@ -52,6 +45,15 @@ System One judges this a likely violation of `test-real-scenario-not-narrower-pr
 System One judges this a likely violation of `no-module-level-object-caches` (Scope a WeakMap cache or FinalizationRegistry to its owner, never the module), p=0.93. The likeliest place is lines 134-146 (`try {`, location confidence 0.90). This is a single-shot classifier: confirm against the rule before acting.
 
 ## Appendix
+
+### Dismissals
+
+All five are ignored as false positives or code this PR did not introduce:
+
+- 1, 2: wa-sqlite's emscripten build is only reachable by its `dist/` path, and the package already imports it the same way under the same disable in `OpfsWorker.ts`, `opfs-client.ts` and `sqlite-module.node.test.ts`.
+- 3: `described` is rebuilt per `putFacts` call from the store's own predicates; it is not a collection of live entities.
+- 4: the diff only swaps the test's store layer for `FactStoreLive.layerMemory`; the stubbed AI payloads predate this PR.
+- 5: the dataset-keyed `WeakMap` is test-harness code from the already-merged sparql-sqlite PR; this PR only changes how each engine's storage is opened.
 
 ### System One pass
 
