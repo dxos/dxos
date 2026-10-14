@@ -22,6 +22,7 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   change/<causal>.json            one per history node the app links to
   comments.json                   comments on definitions and changes, by subject (D82)
   assets/<sha256>                 the files comments and tasks attach
+  console/                        with --console: the console's kernel, toolchain and codebase (D84)
 ```
 
 A definition's `<page>` is its hash, except that a builtin's `#` becomes `_` (`#Bool` is `def/_Bool.json`),
@@ -271,6 +272,28 @@ secrets `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (a GitHub OAuth app whose cal
 `https://<host>/auth/callback`) and `SESSION_SECRET`. Without the three secrets, sign-in is off and
 `api/me` says so.
 
+## Console
+
+`deus explore --console` adds a console to the site ([D84](../DECISIONS.md)): the toolchain itself, running
+in the page on the embeddable wasm kernel ([EMBEDDING.md](./EMBEDDING.md)) against a snapshot of the
+codebase, so a reader can `view`, `eval`, `test` or `log` with no server. It writes:
+
+| File                             | Contents                                                                                                                    |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `console/info.json`              | `{"files": n, "branch": b}`; the app offers the console when it is present                                                  |
+| `console/deus_kernel.wasm.b64`   | the wasm kernel, base64 (wrapped lines), so every site file is text                                                         |
+| `console/kernel.mjs`, `host.mjs` | the kernel's driver and the in-memory `IO` host from `deus-kernel/embed/`                                                   |
+| `console/deus.image`             | the toolchain image, `$DEUS_HOME/seed/deus.image`                                                                           |
+| `console/codebase.json`          | every file of the codebase directory as `{path: text}`, except `cache/`, `artifacts/`, `assets/`, `remotes/` and `exports/` |
+
+The app loads nothing but `info.json` until the console is first opened (the top bar's Console button,
+`` ` ``, or a definition card's `›_` button, which runs `view <name>`, or `test <name>` for a test, and
+leaves `eval <name> ` in the prompt for a term). It then mounts the snapshot at `/codebase` with
+`DEUS_CODEBASE=/codebase` and runs each command line as the image's arguments, split as a POSIX shell
+would. Commands that change the codebase change only the page's copy, which a reload discards. A site
+published with a console keeps it: `deus push` regenerates it when the remote's manifest lists
+`console/codebase.json`.
+
 ## App state in the URL
 
 The app keeps its open cards in the URL fragment as a comma-separated list, in the order they are shown, and
@@ -290,7 +313,7 @@ open namespaces are not kept; the source dialect (DEUS or TS) is kept per viewer
 
 Any static file server works if it maps `/` to `index.html`, serves the files under their paths and
 percent-decodes request paths. The bundled server gives `.html` `text/html; charset=utf-8`, `.json`
-`application/json`, `.css` `text/css`, `.js` `text/javascript`, `.svg`
+`application/json`, `.css` `text/css`, `.js` and `.mjs` `text/javascript`, `.svg`
 `image/svg+xml`, and other files `text/plain; charset=utf-8`. With no `--out` or `--publish`, `deus explore` starts it on `--port` (default
 8080).
 
