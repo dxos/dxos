@@ -31,6 +31,13 @@ type Channel = {
   release: () => Promise<void>;
 };
 
+/** Runs one teardown step, logging its failure so the next step still runs. */
+const attempt = async (step: string, run: () => unknown): Promise<void> => {
+  await Promise.resolve()
+    .then(run)
+    .catch((err) => log.warn('recording teardown step failed', { step, err }));
+};
+
 /**
  * A recording in progress. The microphone and the system audio each get their own transcription
  * manager writing into the meeting's one transcript feed, so every message keeps its speaker: the
@@ -78,24 +85,17 @@ export class MeetingSession {
   /** Stops capture, transcribing the audio still buffered before the managers close. */
   async stop(): Promise<void> {
     const channels = this.#channels.splice(0);
-    const results = await Promise.allSettled(
+    // Every step runs even when an earlier one fails, so the device is always released; failures are
+    // logged rather than thrown because the meeting is already saved and Stop still has to summarize it.
+    await Promise.all(
       channels.map(async ({ manager, monitor, release }) => {
-        try {
-          await monitor.close();
-          manager.setRecording(false);
-          await manager.flush().catch((err) => log.warn('final transcription failed', { err }));
-          await manager.close();
-        } finally {
-          // Always let go of the device, or a failed close would leave the microphone (or tap) live.
-          await release();
-        }
+        await attempt('close speaking monitor', () => monitor.close());
+        await attempt('pause transcription', () => manager.setRecording(false));
+        await attempt('final transcription', () => manager.flush());
+        await attempt('close transcription manager', () => manager.close());
+        await attempt('release audio device', release);
       }),
     );
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        log.warn('failed to stop a recording channel', { err: result.reason });
-      }
-    }
   }
 
   async #startSystemAudio(feed: Feed.Feed, othersLabel: string): Promise<void> {
@@ -139,22 +139,29 @@ export class MeetingSession {
     release: () => Promise<void>,
   ): Promise<void> {
     const { provider, db } = this.#options;
-    const manager = provider(props);
-    const monitor = new SpeakingMonitor(track);
+    let manager: TranscriptionCapabilities.TranscriptionManager | undefined;
+    let monitor: SpeakingMonitor | undefined;
     try {
-      manager.setFeed(db, feed);
-      await manager.open();
-      await manager.setEnabled(true);
-      await manager.setAudioTrack(track);
-      monitor.speakingChanged.on((speaking) => manager.setRecording(speaking));
-      await monitor.open();
+      // Constructed inside the guard, so a provider that throws still releases the device.
+      const channelManager = provider(props);
+      manager = channelManager;
+      const channelMonitor = new SpeakingMonitor(track);
+      monitor = channelMonitor;
+      channelManager.setFeed(db, feed);
+      await channelManager.open();
+      await channelManager.setEnabled(true);
+      await channelManager.setAudioTrack(track);
+      channelMonitor.speakingChanged.on((speaking) => channelManager.setRecording(speaking));
+      await channelMonitor.open();
+      this.#channels.push({ manager: channelManager, monitor: channelMonitor, release });
     } catch (err) {
       // Not yet in `#channels`, so `stop` would never release it.
-      await monitor.close().catch(() => {});
-      await manager.close().catch(() => {});
-      await release();
+      const failedMonitor = monitor;
+      const failedManager = manager;
+      await attempt('close speaking monitor', () => failedMonitor?.close());
+      await attempt('close transcription manager', () => failedManager?.close());
+      await attempt('release audio device', release);
       throw err;
     }
-    this.#channels.push({ manager, monitor, release });
   }
 }
