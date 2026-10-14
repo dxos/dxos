@@ -33,6 +33,7 @@ The CLI picks the directory in this order: the `--codebase <dir>` option, then `
   provenance/<causal>          who produced history node <causal>
   remotes/<name>/url           a configured remote
   remotes/<name>/seen/<bundle> what a remote bundle held, so a pull reads it once
+  exports/<key>                tasks snapshot last exchanged with an export directory (D79)
   artifacts/<key>              built executables and servers; local only
   cache/…                      re-computable data; local only
 ```

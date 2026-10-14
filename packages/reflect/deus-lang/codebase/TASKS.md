@@ -9,6 +9,12 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+
+- state: todo
+- priority: high
+- labels: native, perf
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -77,21 +83,30 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: closure conversion and partial application in the C back end (`610b2785`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: bug, replication, spec
-
-From docs/spec/README.md, Known divergences.
-
-## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, kernel, spec
 
 From docs/spec/README.md, Known divergences.
 
@@ -205,6 +220,16 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
 
+## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, export, replication
+- links change #8159bef4fa
+
+Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
+
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
 - state: done
@@ -231,6 +256,15 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 - links change #a37df20cc0
 
 Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
+
+## Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (`7ca05fc5`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #9aa115afc5
+
+deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is within 1.4x of or faster than wasm in V8 and 12-26x faster than the JIT. Numbers and roadmap in docs/spec/NATIVE.md (D80).
 
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 
@@ -266,6 +300,17 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - links change #e7f95e998b
 
 From docs/spec/README.md, Known divergences.
+
+## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, dogfood, export
+
+Reported by the explorer thread on #13952's branch (code/Cli.deus line 45). The printer writes unnamed references as #hash.
+
+> claude: The explorer thread repaired the committed export (62a3bad2, its task b2166fc8). The exporter now names unnamed callees Unnamed.h<hash> (D77), with a round-trip test, so it cannot write #hash references again.
 
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
@@ -355,6 +400,16 @@ Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-
 view of 1061 definitions plus update of all of them; profile which half dominates.
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
+
+## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, kernel, spec
+- links change #fa20112443
+
+From docs/spec/README.md, Known divergences.
 
 ## deus explore is quadratic in names: aliases scan the whole namespace per definition (`a75452c4`)
 

@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "native", "worker", "server", "browser"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -517,7 +517,14 @@ def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, Text, Text
     match pair with
     | (h, c) => (h, c.message, Option.getOr (producedBy dir h) "")) live
   let imported := List.concatMap (fun pair => if Text.isEmpty (snd pair).prior then [] else Codebase.recordEntries dir (snd pair).prior) live
-  List.take limit (own ++ imported)
+  -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => List.reverse acc
+    | entry :: rest =>
+      match entry with
+      | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (List.reverse (unique (List.reverse (own ++ imported)) Set.empty []))
 
 def log (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1001,6 +1008,10 @@ def build (args : Args) : {IO, Throw Text} Unit :=
         match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
+      else if flag args "c" then
+        match try (fun _ => CGen.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        | Result.ok source => Build.cExecutable source out
+        | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
       else if flag args "browser" then Build.browser image out
       else if flag args "server" then Build.server image out
@@ -1241,6 +1252,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
+    "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 
