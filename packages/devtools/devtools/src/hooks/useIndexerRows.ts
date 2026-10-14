@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { scheduleTask } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
@@ -18,6 +18,9 @@ import { countUnindexed } from './indexer-heads.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
 const POLL_INTERVAL = 5_000;
+
+/** The poll backs off to this: each one fetches every document's heads for every space from EDGE. */
+const MAX_POLL_INTERVAL = 60_000;
 
 export type IndexerRow = {
   spaceId: SpaceId;
@@ -83,11 +86,16 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
 
   useEffect(() => {
     const ctx = new Context();
+    let interval = POLL_INTERVAL;
+    const poll = async () => {
+      await fetchRows();
+      scheduleTask(ctx, poll, interval);
+      interval = Math.min(interval * 2, MAX_POLL_INTERVAL);
+    };
     scheduleTask(ctx, async () => {
       client.edge.http.setIdentity(createEdgeIdentity(client));
-      await fetchRows();
+      await poll();
     });
-    scheduleTaskInterval(ctx, fetchRows, POLL_INTERVAL);
     return () => {
       generationRef.current++;
       void ctx.dispose();
