@@ -40,6 +40,7 @@ const get = (path) => {
 /** A string as a DEUS s-expression string; control characters become spaces. */
 const str = (text) =>
   `"${String(text ?? '')
+    // oxlint-disable-next-line no-control-regex -- matching control characters is the point: they become spaces.
     .replace(/[\u0000-\u001f]/g, ' ')
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')}"`;
