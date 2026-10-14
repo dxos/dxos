@@ -6,7 +6,7 @@ import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { describe, test } from 'vitest';
 
-import { insidePartition, startPartitionProxy } from './partition.ts';
+import { insidePartition, isProductionEdgeHost, startPartitionProxy } from './partition.ts';
 
 /** Sends one request through the proxy and resolves with the status it answered. */
 const through = (port: number, options: { method: string; path: string; host?: string }): Promise<number> =>
@@ -58,6 +58,16 @@ describe('network partition', () => {
       await proxy.close();
       upstream.close();
     }
+  });
+
+  test('production EDGE is never allowed, under any of its hostnames', async ({ expect }) => {
+    for (const host of ['dxos.network', 'hub.dxos.network', 'edge-production.dxos.workers.dev']) {
+      expect(isProductionEdgeHost(host)).toBe(true);
+    }
+    for (const host of ['dev.dxos.network', 'hub.dev.dxos.network', 'composer.preview.dxos.network']) {
+      expect(isProductionEdgeHost(host)).toBe(false);
+    }
+    await expect(startPartitionProxy({ allow: ['hub.dxos.network'] })).rejects.toThrow(/production EDGE/);
   });
 
   test('only loopback and allowed hosts count as inside the partition', ({ expect }) => {

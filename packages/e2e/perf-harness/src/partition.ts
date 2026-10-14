@@ -24,11 +24,27 @@ export type PartitionOptions = {
 
 const FORBIDDEN = 'HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n';
 
+/** The environments under `dxos.network` that are not production. */
+const NON_PRODUCTION_EDGE = new Set(['dev.dxos.network', 'preview.dxos.network', 'staging.dxos.network']);
+
+/**
+ * Whether `host` is production EDGE: `dxos.network`, a service directly under it (`hub.dxos.network`)
+ * or a `*-production` worker. Other environments sit a level down (`hub.dev.dxos.network`).
+ */
+export const isProductionEdgeHost = (host: string): boolean =>
+  host === 'dxos.network' ||
+  (host.endsWith('.dxos.network') && host.split('.').length === 3 && !NON_PRODUCTION_EDGE.has(host)) ||
+  /-production\.dxos\.workers\.dev$/.test(host);
+
 /**
  * A loopback HTTP proxy that refuses every request except TLS tunnels to the allowed hosts, so a
  * browser pointed at it reaches nothing else off the machine.
  */
 export const startPartitionProxy = async ({ allow = [] }: PartitionOptions = {}): Promise<PartitionProxy> => {
+  const production = allow.filter(isProductionEdgeHost);
+  if (production.length > 0) {
+    throw new Error(`a partition never tunnels to production EDGE: ${production.join(', ')}`);
+  }
   const allowed = new Set(allow);
   const denied: DeniedRequest[] = [];
   const tunnelled: DeniedRequest[] = [];

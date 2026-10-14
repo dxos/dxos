@@ -33,7 +33,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
-import { startPartitionProxy, startTelemetrySink } from '@dxos/perf-harness';
+import { isProductionEdgeHost, startPartitionProxy, startTelemetrySink } from '@dxos/perf-harness';
 
 import { servePreview } from './preview.ts';
 
@@ -63,7 +63,7 @@ if (!values.host || !values.archive || !values.dist || !values.edge) {
   throw new Error('usage: system-webkit-soak.ts --host <wkapp> --archive <file> --dist <bundle> --edge <url>');
 }
 const edgeHost = URL.canParse(values.edge) ? new URL(values.edge).hostname : undefined;
-if (!edgeHost || edgeHost === 'dxos.network') {
+if (!edgeHost || isProductionEdgeHost(edgeHost)) {
   throw new Error(`--edge must name a non-production EDGE URL, not "${values.edge}"`);
 }
 const dist = path.resolve(values.dist);

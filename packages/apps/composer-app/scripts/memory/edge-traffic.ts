@@ -18,7 +18,14 @@ import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
-import { type Attached, attachAll, detachAll, partitionArgs, startPartitionProxy } from '@dxos/perf-harness';
+import {
+  type Attached,
+  attachAll,
+  detachAll,
+  isProductionEdgeHost,
+  partitionArgs,
+  startPartitionProxy,
+} from '@dxos/perf-harness';
 
 import { invokeInPage, waitForReady } from '../../src/playwright/perf/page.ts';
 import { importProfileArchive } from '../../src/playwright/scenarios/memory-soak.ts';
@@ -40,7 +47,7 @@ if (!values.archive || !values.dist || !values.edge) {
   throw new Error('usage: edge-traffic.ts --archive <file> --dist <bundle> --edge <url>');
 }
 const edgeHost = new URL(values.edge).hostname;
-if (edgeHost === 'dxos.network') {
+if (isProductionEdgeHost(edgeHost)) {
   throw new Error('--edge must name a non-production EDGE');
 }
 const dist = path.resolve(values.dist);
