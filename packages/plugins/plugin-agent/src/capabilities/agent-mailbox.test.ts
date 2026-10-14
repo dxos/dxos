@@ -62,7 +62,7 @@ describe('EDGE agent mailbox', () => {
   it.effect('an answer that is not a mailbox status fails with the mailbox error', ({ expect }) =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(makeEdgeAgentMailbox(new MockEdgeHttpClient({ nope: true })).status('kai'));
-      expect(error.message).toBe('Unexpected mailbox answer from EDGE.');
+      expect(error.message).toBe('Unexpected mailbox status from EDGE.');
     }),
   );
 });
