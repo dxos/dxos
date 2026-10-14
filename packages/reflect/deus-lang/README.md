@@ -71,6 +71,9 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
 - [`examples/react/`](./examples/react) — a React todo app written in DEUS and compiled with
   `deus build --js` ([D97](./docs/DECISIONS.md), [JsGen.Spec](./codebase/specs/JsGen.Spec.mdl)); the bindings are
   [`platform/js/js.deus`](./platform/js/js.deus) and [`platform/js/react.deus`](./platform/js/react.deus).
+- [`examples/composer/`](./examples/composer) — a Composer plugin written in DEUS ([D102](./docs/DECISIONS.md)): a small
+  codebase explorer with ECHO pins and assistant tools, on the bindings in
+  [`platform/js/composer.deus`](./platform/js/composer.deus). `build.sh` builds it; Composer loads its `manifest.json` by URL.
 - [`editors/vscode/`](./editors/vscode) — syntax highlighting for VS Code and TextMate renderers.
 
 ## Docs

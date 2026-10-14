@@ -1,5 +1,13 @@
 # Tasks
 
+## A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec (`1e8dee8b`)
+
+- state: todo
+- priority: high
+- labels: js, codebase
+
+Js.text and Js.list with body Js.import "js" "id" collapsed into one definition, and Js.list encoded with the text codec. platform/js/js.deus works around it with distinct paths js.as.<name>. Fix: hash a binding together with its declared type, or refuse two bindings with the same body.
+
 ## Catch the R2 remote up with the git export and push it, so threads can start from deus pull (`e76e36b0`)
 
 - state: doing
@@ -8,19 +16,7 @@
 
 From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D101. The remote r2://agent-artifacts/deus/explorer-demo was at #5ed10805c0 (stage 65). Pulling it, then update codebase/code codebase/specs, task import and history import gives exactly the export (1727 definitions, 0 differ); the push failed with 403 from this session's network policy for <account>.r2.cloudflarestorage.com. Run that catch-up from a session that can reach R2.
 
-## Composer assistant skills for writing DEUS and using the codebase (`5d6c67b4`)
-
-- state: todo
-- priority: high
-- labels: js, composer, llm
-
-## Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL (`771e6f9e`)
-
-- state: doing
-- priority: high
-- labels: js, composer
-
-Surfaces and ECHO access written in DEUS, compiled with --js, loaded into Composer by URL; autocue demo.
+> claude: The JS target thread could not reach R2 either: its deus pull origin was refused by the session's permission policy before any request. It restored from the git export and exported back (D102).
 
 ## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
 
@@ -181,6 +177,14 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: native, perf
 
+## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
+
+- state: todo
+- priority: medium
+- labels: js, composer, llm
+
+The tools searchDefinitions and viewDefinition were checked with composer.invoke only; the test identity had no account. Add an autocue step where the assistant answers a DEUS question with the tools.
+
 ## Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (`2a2b87a2`)
 
 - state: todo
@@ -193,6 +197,14 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
+
+## Test that the JS back end refuses Js.import inside an expression (`05658284`)
+
+- state: todo
+- priority: medium
+- labels: js
+
+JsGen.gather throws '<name> uses Js.import inside an expression'. Add a test beside the multi-shot refusal test (task 508d9443).
 
 ## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (`7ef8bf45`)
 
@@ -366,6 +378,24 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 - links change #cf0f719d6e
 
 Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
+
+## Composer assistant skills for writing DEUS and using the codebase (`5d6c67b4`)
+
+- state: done
+- priority: high
+- labels: js, composer, llm
+
+> claude: Done (D102): skill org.dxos.deus.skill.deus with a DEUS syntax guide and the operations searchDefinitions and viewDefinition; both return correct text through composer.invoke. Not run through the assistant's model: the test identity has no account (401/403).
+
+## Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL (`771e6f9e`)
+
+- state: done
+- priority: high
+- labels: js, composer
+
+Surfaces and ECHO access written in DEUS, compiled with --js, loaded into Composer by URL; autocue demo.
+
+> claude: Done (D102): examples/composer loads by URL in a production Composer; creates a DEUS codebase object, searches 1922 definitions, reads source with Uses/Used by, pins on the ECHO object. Autocue flow examples/composer/autocue/deus-plugin.mjs passes all 7 steps.
 
 ## Declarations without a body: def f with a full signature and no implementation (`cf5e187f`)
 

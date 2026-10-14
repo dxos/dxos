@@ -23,26 +23,39 @@ export const steps = [
     name: 'Prep (off camera): dismiss notices and the help panel',
     setup: true,
     run: async ({ page }) => {
-      const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))');
+      const notice = page.locator(
+        '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
+      );
       if (await notice.count()) {
         await notice.first().click();
       }
       const help = page.locator('[data-testid="deck.companion"] button:has(svg[data-icon="ph--x--regular"])');
       if (await help.count()) {
-        await help.first().click().catch(() => {});
+        await help
+          .first()
+          .click()
+          .catch(() => {});
       }
     },
   },
   {
     name: 'Load the DEUS plugin by URL',
-    done: ({ page }) => page.evaluate(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.deus.explorer')),
+    done: ({ page }) =>
+      page.evaluate(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.deus.explorer')),
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'A Composer plugin written in DEUS', subtitle: 'compiled with deus build --js, loaded by URL' });
+      await demo.caption({
+        value: 'A Composer plugin written in DEUS',
+        subtitle: 'compiled with deus build --js, loaded by URL',
+      });
       // The rail item toggles the sidebar, and a closed sidebar leaves the action in the DOM under the app menu.
       const reachable = () => {
         const button = document.querySelector('button[aria-label="Load from URL"]');
         const box = button?.getBoundingClientRect();
-        return !!box && box.width > 0 && !!button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+        return (
+          !!box &&
+          box.width > 0 &&
+          !!button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))
+        );
       };
       if (!(await page.evaluate(reachable))) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
@@ -51,7 +64,11 @@ export const steps = [
       await demo.click({ selector: 'button[aria-label="Load from URL"]', label: 'Load from URL' });
       await demo.fill({ selector: 'input[placeholder="https://example.com/manifest.json"]', value: MANIFEST });
       await demo.click({ selector: 'button:text-is("Load Plugin")', label: 'Load Plugin' });
-      await page.waitForFunction(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.deus.explorer' && plugin.enabled), null, { timeout: 30_000 });
+      await page.waitForFunction(
+        () => composer.plugins().some((plugin) => plugin.id === 'org.dxos.deus.explorer' && plugin.enabled),
+        null,
+        { timeout: 30_000 },
+      );
     },
   },
   {
@@ -64,7 +81,10 @@ export const steps = [
         await demo.click({ selector: 'button:visible:has-text("Open sidebar")', label: 'Open sidebar' });
       }
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
-      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.deus.type.codebase"]', label: 'DEUS codebase' });
+      await demo.click({
+        selector: '[data-testid="create-object-form.type.org.dxos.deus.type.codebase"]',
+        label: 'DEUS codebase',
+      });
       await page.locator(SEARCH).waitFor({ timeout: 15_000 });
       await page.locator('.deus-row').first().waitFor({ timeout: 15_000 });
     },

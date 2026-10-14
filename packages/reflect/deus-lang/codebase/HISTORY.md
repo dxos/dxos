@@ -1,5 +1,16 @@
 # History of main
 
+- `44545eb04d` task: comment on e76e36b0 (by claude)
+- `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
+- `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
+- `5682baf33c` task: open 1e8dee8b A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec
+- `92327e0846` task: set 5d6c67b4 state
+- `51a90a44c7` task: comment on 5d6c67b4 (by claude)
+- `f4563342df` task: set 771e6f9e state
+- `e9b5cdc855` task: comment on 771e6f9e (by claude)
+- `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
+- `26b25952c4` history: import 507 changes
+- `ce1b500e79` task: import from tasks.sexp
 - `880640eb13` task: set e76e36b0 state (by claude)
 - `ea44281ed7` task: set e76e36b0 details (by claude)
 - `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
