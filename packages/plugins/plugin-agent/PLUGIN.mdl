@@ -1024,7 +1024,7 @@ test QA-4: An agent invited into another space keeps one conversation and one br
     walks it and records the demo.
   actors: human
   covers: [F-1.4, F-6.1, F-6.4, F-6.5]
-  status: passing             # 2026-10-13, recorded by autocue/agent-across-spaces.mjs against EDGE preview
+  status: passing             # 2026-10-14, recorded by autocue/agent-across-spaces.mjs against EDGE preview
   given:
     - an identity exists, with the display name "Mykola"
     - space: "My Space" is open and SPACE_READY, with no agent
@@ -1073,8 +1073,9 @@ test QA-4: An agent invited into another space keeps one conversation and one br
 ```mdl
 test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own space, where it recalls what Alice told it
   desc: |
-    Admins are an agent's space's members. Alice creates an agent, which mints its identity and its own space on
-    EDGE; she adds Bob to that space the way she would add him to any space, and both find the agent in Profile ›
+    An agent's admins are the members who can edit its own space. Alice creates an agent, which mints its identity and
+    its own space on EDGE and joins hers as a member; she adds Bob to the agent's space the way she would add him to any
+    space, and both find the agent in Profile ›
     Agents. Alice then tells the agent about the team offsite, and Bob, who cannot reach Alice's space, adds the agent
     to his own space from its Members panel and asks it what is planned: it answers from its brain. The autocue flow
     `autocue/agent-admins.mjs` walks it side by side, one browser per person.
@@ -1084,6 +1085,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
   given:
     - alice: an identity with the display name "Alice", on one device
     - bob: an identity with the display name "Bob", on another device
+    - home: Alice's own space "Studio"
     - other: Bob's own space "Offsite team"
     - plugin-agent is enabled for both
     - EDGE with brain identities (`POST /compute/brain`) is reachable — ABORT without it
@@ -1094,7 +1096,10 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       invoke: [op:createAgent] { name: "Kai" }
       capture: agent
       expect: Kai's chat opens at once, and a space named Kai appears in Alice's space list once EDGE has minted it
-      note: Alice's space is her personal one, which is locked; its owner still admits Kai as a member (F-7.6).
+    - name: Alice sees Kai among her space's members
+      do: In Alice's space open Settings › Members.
+      expect: the members list Kai beside Alice
+      note: Kai is admitted once EDGE has minted its identity (op:ensureIdentity), so the row can follow its space by a few seconds.
     - name: Alice finds Kai in Profile › Agents
       do: Open Alice's profile and its Agents panel, listed after Devices.
       expect: Kai is listed with "Admins: Alice (you)"

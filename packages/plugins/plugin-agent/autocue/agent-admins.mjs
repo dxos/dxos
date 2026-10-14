@@ -3,8 +3,8 @@
 //
 
 /**
- * An agent's admins are the members of its own space. Alice creates Kai, finds it in Profile › Agents, and
- * invites Bob into Kai's space from its Members panel; Bob joins with the code and finds Kai in his own Agents
+ * An agent's admins are the members who can edit its own space. Alice creates Kai, sees it join her space as a member,
+ * finds it in Profile › Agents, and invites Bob into Kai's space from its Members panel; Bob joins with the code and finds Kai in his own Agents
  * panel, and Alice's panel now lists Bob beside her. Alice then tells Kai about the team offsite in Lisbon, and Bob,
  * as Kai's admin, adds Kai to his own space from its Members panel, as he would a person, and asks it what is planned:
  * Kai answers there from what Alice told it — recorded side by side, one browser per person.
@@ -19,11 +19,14 @@
  *     --flow packages/plugins/plugin-agent/autocue/agent-admins.mjs --out /tmp/pair --mp4 on
  *
  * Setup and the invitation follow `two-people-one-agent.mjs`, the conversation `agent-across-spaces.mjs`. The
- * replies come from a live model, so the steps wait for each reply to settle rather than for its words. Keep the
- * file free of imports, since it is loaded from outside the workspace.
+ * replies come from a live model, so the steps wait for each reply to settle rather than for its words. Creating Kai is
+ * timed off camera and logged as `[timing]`. Keep the file free of imports, since it is loaded from outside the
+ * workspace.
  */
 
 const AGENT = 'Kai';
+/** Alice's shared space, where she creates Kai; a personal space has no members list to show it in. */
+const HOME = 'Studio';
 /** Bob's own space, which he adds Kai to. */
 const OTHER = 'Offsite team';
 const MESSAGES = [
@@ -47,6 +50,9 @@ const FEED = `${PLANK} [data-testid="feed.message"]`;
 /** Rendered only while a turn runs. */
 const ACTIVITY = `${PLANK} [data-testid="assistant.chat-activity"]`;
 const TOOL_ROW = '[data-testid^="assistant.tool-"]';
+
+/** Milliseconds from the click on Create to each milestone of making Kai, logged rather than shown. */
+const timing = {};
 
 const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
   const deadline = Date.now() + timeout;
@@ -254,13 +260,18 @@ export const steps = [
         await page.getByTestId('spacePlugin.space').first().click();
         await page.getByTestId('deck.plank').first().waitFor({ timeout: TIMEOUT });
       }
-      // Bob's own space, which he later adds Kai to.
-      const { bob } = peers;
-      await bob.page.getByTestId('spacePlugin.addSpace').first().click();
-      await bob.page.getByRole('menuitem', { name: 'Create space' }).click();
-      await bob.page.locator('[data-testid="create-space-dialog"] input[placeholder="Name"]').fill(OTHER);
-      await bob.page.locator('[data-testid="create-space-dialog"] button:has-text("Create")').last().click();
-      await spaceTab(bob.page, OTHER).waitFor({ timeout: TIMEOUT });
+      // Alice's space, where she creates Kai, and Bob's, which he later adds Kai to.
+      for (const [{ page }, spaceName] of [
+        [peers.alice, HOME],
+        [peers.bob, OTHER],
+      ]) {
+        await page.getByTestId('spacePlugin.addSpace').first().click();
+        await page.getByRole('menuitem', { name: 'Create space' }).click();
+        await page.locator('[data-testid="create-space-dialog"] input[placeholder="Name"]').fill(spaceName);
+        await page.locator('[data-testid="create-space-dialog"] button:has-text("Create")').last().click();
+        await spaceTab(page, spaceName).waitFor({ timeout: TIMEOUT });
+      }
+      await openSpace(peers.alice, HOME);
       await peers.alice.page.waitForTimeout(2_000);
       await Promise.all([clearChrome(peers.alice), clearChrome(peers.bob)]);
       await Promise.all([peers.alice.page.mouse.move(500, 500), peers.bob.page.mouse.move(500, 500)]);
@@ -285,6 +296,16 @@ export const steps = [
       await alice.click(name);
       await alice.type(AGENT);
       await alice.click(page.locator('[role="dialog"] [data-testid="save-button"]'));
+      const created = Date.now();
+      // Kai is admitted to Alice's space in the background, after EDGE mints its identity.
+      timing.membership = waitFor(() => listsAgentAsMember(page), {
+        timeout: PROVISION_TIMEOUT,
+        what: `${AGENT} to be a member of Alice's space`,
+      }).then(() => (timing.member = Date.now() - created));
+      const prompt = page.locator(PROMPT).first();
+      await prompt.waitFor({ timeout: TIMEOUT });
+      await waitFor(() => prompt.isEditable(), { what: `${AGENT}'s prompt to take a message` });
+      timing.prompt = Date.now() - created;
       await currentWorkspace(page)
         .getByTestId('treeItem.heading')
         .filter({ hasText: AGENT })
@@ -292,19 +313,40 @@ export const steps = [
         .waitFor({ timeout: TIMEOUT });
       // The membership EDGE returns, written to Alice's HALO, brings Kai's space into her space list.
       await spaceTab(page, AGENT).waitFor({ timeout: PROVISION_TIMEOUT });
+      timing.space = Date.now() - created;
+      console.log(`[timing] ${JSON.stringify({ promptReadyMs: timing.prompt, agentSpaceMs: timing.space })}`);
       await clearChrome(alice);
     },
   },
   {
+    name: `Alice opens her space's members: ${AGENT} is one of them`,
+    subtitle: 'QA-5 step 2: its identity is admitted to the space it was created in',
+    run: async ({ peers: { alice } }) => {
+      const { page } = alice;
+      await expandRow(alice, currentWorkspace(page).getByTestId('spacePlugin.settings').first());
+      await alice.click(
+        currentWorkspace(page).getByTestId('spacePlugin.members').first().getByTestId('treeItem.heading').first(),
+      );
+      const members = page.getByTestId('space-members-list').first();
+      await waitFor(async () => (await members.innerText().catch(() => '')).includes(AGENT), {
+        timeout: PROVISION_TIMEOUT,
+        what: `the members to list ${AGENT}`,
+      });
+      await timing.membership;
+      console.log(`[timing] ${JSON.stringify({ memberMs: timing.member })}`);
+      await page.waitForTimeout(3_000);
+    },
+  },
+  {
     name: `Alice opens Profile › Agents: ${AGENT}, with her as its admin`,
-    subtitle: 'QA-5 step 2: the agents she administers, read from her own spaces',
+    subtitle: 'QA-5 step 3: the agents she administers, read from her own spaces',
     run: async ({ peers: { alice } }) => {
       await openAgentsPanel(alice, 'Alice (you)');
     },
   },
   {
     name: `Alice invites Bob into ${AGENT}'s space`,
-    subtitle: "QA-5 step 3: Kai's space from its row, then Settings › Members",
+    subtitle: "QA-5 step 4: Kai's space from its row, then Settings › Members",
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
       await alice.click(agentRow(page).getByTestId('agent-list.space'));
@@ -326,7 +368,7 @@ export const steps = [
   },
   {
     name: `Bob joins ${AGENT}'s space with the code and the PIN`,
-    subtitle: 'QA-5 step 4: an ordinary space invitation',
+    subtitle: 'QA-5 step 5: an ordinary space invitation',
     run: async ({ peers: { alice, bob } }) => {
       const agentWorkspace = workspaceOf(alice.page);
       const invitationCode = alice.nextConsoleValue('invitationCode');
@@ -354,7 +396,7 @@ export const steps = [
   },
   {
     name: `Bob opens Profile › Agents: ${AGENT}, administered by Alice and him`,
-    subtitle: 'QA-5 step 5: a member of the space is an admin of the agent',
+    subtitle: "QA-5 step 6: whoever can edit the agent's space administers the agent",
     run: async ({ peers: { bob } }) => {
       await openAgentsPanel(bob, 'Bob (you)');
       await waitFor(async () => (await agentRow(bob.page).innerText()).includes('Alice'), {
@@ -364,7 +406,7 @@ export const steps = [
   },
   {
     name: `Alice's Agents panel now lists Bob among ${AGENT}'s admins`,
-    subtitle: "QA-5 step 6: being Kai's admin is being a member of Kai's space",
+    subtitle: "QA-5 step 7: being Kai's admin is being an editor of Kai's space",
     run: async ({ peers: { alice } }) => {
       await openAgentsPanel(alice, 'Alice (you), Bob');
       await alice.page.waitForTimeout(3_000);
@@ -372,11 +414,9 @@ export const steps = [
   },
   {
     name: `Alice tells ${AGENT} about the team offsite in Lisbon`,
-    subtitle: "QA-5 step 7: Kai's turns run on EDGE, which keeps what it learns in Kai's brain",
+    subtitle: "QA-5 step 8: Kai's turns run on EDGE, which keeps what it learns in Kai's brain",
     run: async ({ peers: { alice } }) => {
-      const { page } = alice;
-      // Kai lives in Alice's own space, first on the rail.
-      await alice.click(page.getByTestId('spacePlugin.space').first());
+      await openSpace(alice, HOME);
       await openAgent(alice);
       await clearChrome(alice);
       await send(alice, MESSAGES[0]);
@@ -384,7 +424,7 @@ export const steps = [
   },
   {
     name: 'Alice adds the budget',
-    subtitle: 'QA-5 step 8',
+    subtitle: 'QA-5 step 9',
     run: async ({ peers: { alice } }) => {
       await send(alice, MESSAGES[1]);
       await alice.page.waitForTimeout(2_000);
@@ -392,7 +432,7 @@ export const steps = [
   },
   {
     name: `Bob adds ${AGENT} to "${OTHER}" from Members › Add from contacts`,
-    subtitle: "QA-5 step 9: as Kai's admin he can, and Kai becomes a member of the space; EDGE checks it",
+    subtitle: "QA-5 step 10: as Kai's admin he can, and Kai becomes a member of the space; EDGE checks it",
     run: async ({ peers: { bob } }) => {
       const { page } = bob;
       await openSpace(bob, OTHER);
@@ -411,7 +451,7 @@ export const steps = [
   },
   {
     name: `Bob opens ${AGENT} in "${OTHER}"`,
-    subtitle: 'QA-5 step 10: his own conversation with Kai, which Alice cannot read',
+    subtitle: 'QA-5 step 11: his own conversation with Kai, which Alice cannot read',
     run: async ({ peers: { bob } }) => {
       await openAgent(bob);
       await clearChrome(bob);
@@ -419,7 +459,7 @@ export const steps = [
   },
   {
     name: `Bob asks ${AGENT} what is planned for the offsite`,
-    subtitle: 'QA-5 step 11: Kai answers from its brain, with what Alice told it in her space',
+    subtitle: 'QA-5 step 12: Kai answers from its brain, with what Alice told it in her space',
     narration:
       "Kai keeps one brain across its spaces: Bob's question in Offsite team is answered from Alice's conversation in her own space.",
     run: async ({ peers: { bob } }) => {
