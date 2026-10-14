@@ -6,6 +6,8 @@ tags:
   - ts-test
   - ts-test-workerd
   - pack
+  - storybook
+  - ts-test-storybook
 
 tasks:
   test:

@@ -6,10 +6,12 @@ import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
-import { Action, TextInput } from '../components/index.ts';
 import { translationKey } from '../translations.ts';
 import { type StepProps } from './StepProps.ts';
 
@@ -80,32 +82,38 @@ export const ConfirmReset = ({
 
   return (
     <>
-      <Banner.Root valence='error'>
-        <Banner.Title>{resolvedTitle}</Banner.Title>
-        <Banner.Body>{resolvedMessage}</Banner.Body>
-      </Banner.Root>
-      <TextInput
-        {...{ validationMessage }}
-        disabled={disabled}
-        data-testid={`${testIdAffix}.reset-identity-input`}
-        placeholder={t('confirmation.placeholder', { confirmationValue })}
-        onChange={({ target: { value } }) => setInputValue(value)}
-      />
-      <Dialog.Footer classNames='grid grid-cols-2 gap-2'>
+      <Dialog.Body gap='md'>
+        <Banner.Root valence='error'>
+          <Banner.Title>{resolvedTitle}</Banner.Title>
+          <Banner.Body>{resolvedMessage}</Banner.Body>
+        </Banner.Root>
+        {/* An error shows only on an invalid field. */}
+        <Field.Root {...(validationMessage && { validationValence: 'error' })}>
+          <Field.Label srOnly>{t('confirmation.placeholder', { confirmationValue })}</Field.Label>
+          <Input.Root
+            disabled={disabled}
+            data-testid={`${testIdAffix}.reset-identity-input`}
+            placeholder={t('confirmation.placeholder', { confirmationValue })}
+            onChange={({ target: { value } }) => setInputValue(value)}
+          />
+          {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+        </Field.Root>
+      </Dialog.Body>
+      <Dialog.Footer>
         {onCancel && (
-          <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
+          <Button.Root disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {resolvedCancelLabel}
-          </Action>
+          </Button.Root>
         )}
         {onConfirm && (
-          <Action
+          <Button.Root
             variant='destructive'
             disabled={disabled || pending || inputValue !== confirmationValue}
             onClick={handleConfirm}
             data-testid={`${testIdAffix}.reset-identity-confirm`}
           >
             {pending ? resolvedPendingLabel : resolvedConfirmLabel}
-          </Action>
+          </Button.Root>
         )}
       </Dialog.Footer>
     </>

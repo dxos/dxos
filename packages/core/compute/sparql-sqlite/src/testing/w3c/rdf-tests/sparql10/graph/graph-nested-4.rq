@@ -1,0 +1,9 @@
+PREFIX : <http://example.com/>
+
+SELECT * {
+  GRAPH <data-nested-g1.ttl> {
+    GRAPH ?g {
+      ?s :p ?o
+    }
+  }
+}

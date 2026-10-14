@@ -9,6 +9,8 @@ import { AgentCompanionModule, type AgentCompanionModuleData } from './AgentComp
 import { ConversationModule } from './ConversationModule.tsx';
 import { DiscordBotModule } from './DiscordBotModule.tsx';
 
+export { StorySettingsToolbar } from './StorySettingsToolbar.tsx';
+
 /** Story panels with no plugin surface of their own. */
 export const StoryRole = {
   AgentCompanion: Role.make<AgentCompanionModuleData>('org.dxos.storybook.role.agentCompanion'),
