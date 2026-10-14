@@ -16,6 +16,7 @@
 // with origin/main for a full-project review), --threshold=0.8, --uncertain=0.15, --lift=0.15,
 // --need=0.35, --chunk=15 (files per follow-up batch),
 // --rounds=2, --model=jev-latest, --concurrency=16, --dry-run (plan and price, no API calls),
+// --approve-cost=<usd> (the user's approval for a projected cost over $5; see lib/cost-guard.ts),
 // --json (probe mode: print raw verdicts).
 //
 // Needs TYPESAFE_API_KEY. In store mode it appends diagnostics to groups/NN.md, records the run in
@@ -26,6 +27,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, writeF
 import { join, relative } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { assertCostApproved, isCostApproved, parseApprovedCost } from '../lib/cost-guard.ts';
 import { discoverRules, listRepoFiles, matchRuleFiles } from '../lib/discover.ts';
 import { mainMergeBase, repoRoot } from '../lib/git.ts';
 import { type Rule } from '../lib/mdl.ts';
@@ -41,6 +43,7 @@ import {
 import {
   classify,
   DEFAULTS,
+  PRICE_PER_MILLION,
   diagnosticBody,
   diagnosticLine,
   followUpBatches,
@@ -74,6 +77,7 @@ const { values } = parseArgs({
     'dry-run': { type: 'boolean', default: false },
     'json': { type: 'boolean', default: false },
     'chunk': { type: 'string', default: '15' },
+    'approve-cost': { type: 'string' },
   },
 });
 
@@ -95,6 +99,31 @@ const client = values['dry-run']
       model: values.model,
       concurrency: Number.parseInt(values.concurrency ?? '16', 10),
     });
+const approvedCostUsd = parseApprovedCost(values['approve-cost']);
+
+/**
+ * Round two re-asks a share of round one; in the first full-repo run it sent 47,353 requests
+ * after round one's 136,590, so round one's cost is scaled by this to project the whole run.
+ */
+const ROUND_TWO_SHARE = 0.35;
+
+/** Planned input tokens per round, so round two's check covers what round one already spent. */
+const plannedTokens = { 1: 0, 2: 0 };
+
+/** Stop before a round whose projected run cost the user has not approved; a dry run only reports it. */
+const beforeRound = (round: 1 | 2, estimatedTokens: number): void => {
+  plannedTokens[round] = estimatedTokens;
+  const tokens = round === 1 ? estimatedTokens * (1 + ROUND_TWO_SHARE) : plannedTokens[1] + estimatedTokens;
+  const projectedUsd = (tokens / 1_000_000) * PRICE_PER_MILLION;
+  if (values['dry-run']) {
+    log(
+      `projected cost $${projectedUsd.toFixed(2)}${isCostApproved(projectedUsd, approvedCostUsd) ? '' : ' (needs --approve-cost)'}`,
+    );
+    return;
+  }
+  assertCostApproved(projectedUsd, approvedCostUsd);
+};
+
 const rulesById = new Map(discoverRules(root).map((rule) => [rule.id, rule]));
 
 /** A review with a prepared, not-yet-finalized store, as the default target. */
@@ -175,7 +204,7 @@ if (values.file?.length) {
     pairs.push(...matched.map((file) => ({ rule, file })));
   }
   const base = reviewBase(null);
-  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log });
+  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log, beforeRound });
   if (values.json) {
     console.log(
       JSON.stringify(
@@ -223,7 +252,7 @@ if (values.file?.length) {
     }
     pairs.push(...group.files.map((file) => ({ rule, file, nn })));
   }
-  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log });
+  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log, beforeRound });
 
   const groupOf = (ruleId: string, file: string): string | undefined =>
     Object.entries(manifest).find(([, group]) => group.ruleId === ruleId && group.files.includes(file))?.[0];

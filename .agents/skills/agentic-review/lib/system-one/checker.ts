@@ -446,6 +446,8 @@ export type RunReviewOptions = {
   prTargets: PrTarget[];
   settings: Settings;
   log?: (message: string) => void;
+  /** Called with each round's planned input tokens before any request is sent; throw to stop the run. */
+  beforeRound?: (round: 1 | 2, estimatedTokens: number) => void;
 };
 
 /**
@@ -460,6 +462,7 @@ export const runReview = async ({
   prTargets,
   settings,
   log = () => {},
+  beforeRound = () => {},
 }: RunReviewOptions): Promise<ReviewResult> => {
   const stats: Stats = {
     requests: 0,
@@ -473,8 +476,10 @@ export const runReview = async ({
   const oversized: Oversized[] = [];
 
   const execute = async (plan: Plan, round: 1 | 2): Promise<Verdict[]> => {
+    const planned = plan.requests.reduce((sum, request) => sum + request.estimatedTokens, 0);
+    beforeRound(round, planned);
     stats.requests += plan.requests.length;
-    stats.estimatedTokens += plan.requests.reduce((sum, request) => sum + request.estimatedTokens, 0);
+    stats.estimatedTokens += planned;
     oversized.push(...plan.oversized);
     if (!client) {
       return [];

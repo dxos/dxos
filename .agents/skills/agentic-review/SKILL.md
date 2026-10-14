@@ -153,6 +153,11 @@ How it works:
 - **Scale.** A 202-file change against about a hundred rules took under four
   minutes and $2.73, reported 312 violations and routed 13% of pairs onward
   (`.agents/projects/architecture-rules/TRIAL.md`).
+- **Cost approval.** Before each round, `system-one.ts` projects the run's cost. Above $5 it
+  stops before sending anything unless `--approve-cost=<usd>` covers the projection
+  (`lib/cost-guard.ts`). Run `--dry-run` first: it prints the projection and whether approval is
+  needed. Then ask the user to approve that amount and pass it through. Never pick the amount
+  yourself.
 - **Failures.** A request that fails leaves its pairs unanswered, and they are
   listed for follow-up like uncertain ones. An account failure (401, 402, 403:
   a bad key or no credits) stops the run at once, since every request would fail
