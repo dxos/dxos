@@ -223,7 +223,8 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
       let deps := List.filter (fun d => Map.contains d index && d != h) (Option.getOr (Map.lookup h depsOf) [])
       -- References in the source print under their display names; those names link to the definitions.
       let links := Map.fromList (List.map (fun d => (Print.nameFor printer d, d)) deps)
-      let users := List.dedup (List.sort (Option.getOr (Map.lookup h dependents) []))
+      -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
+      let users := List.filter (fun u => u != h) (List.dedup (List.sort (Option.getOr (Map.lookup h dependents) [])))
       let named := fun (hs : List Text) => Json.arr (List.map (fun x => refJson (Option.getOr (Map.lookup x index) (Cli.short x)) x) hs)
       let meta := metaFor h
       let sig := signature meta

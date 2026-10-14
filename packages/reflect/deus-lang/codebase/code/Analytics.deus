@@ -1,3 +1,110 @@
+test Analytics.Spec.builtinRefs := pinned Spec.projectIri "Bool" "#Bool" == "https://example.org/p/Bool#Bool" && Analytics.hashOf "https://example.org/p/Bool#Bool" == "#Bool" && Analytics.hashOf "#Bool" == "#Bool" && Analytics.hashOf ("#" ++ hex "x") == hex "x" && Analytics.hashOf "#67c7d5a614" == "67c7d5a614"
+
+test Analytics.Spec.countsByHash := inStore (fun dir =>
+  let ns := Map.fromList [("A.f", Entry.term (hex "now"))]
+  let mk := fun ref => [("what", Cell.text ref), ("count", Cell.int 1), ("ok", Cell.bool true), ("note", Cell.text "")]
+  Analytics.record dir demo "a" (mk (pinned Spec.projectIri "A.f" (hex "old")))
+  Analytics.record dir demo "a" (mk (nameIri Spec.projectIri "A.f"))
+  Analytics.record dir demo "a" (mk ("#" ++ hex "now"))
+  let counts := byDefinition dir Spec.projectIri ns [demo]
+  Map.lookup (hex "old") counts == Option.some [("Demo.Seen", "what", 1)] && Map.lookup (hex "now") counts == Option.some [("Demo.Seen", "what", 2)])
+
+theorem Analytics.Spec.decimalRoundTrip (n : Int) (m : Int) : le64Decimal (decimalLE64 (digitsOf n m)) == trimZeros (digitsOf n m) == true := by test 100
+
+def Analytics.Spec.demo : EventType := EventType.mk
+  "Demo.Seen"
+  "d3m0"
+  [Column.mk "what" "ref", Column.mk "count" "int", Column.mk "ok" "bool", Column.mk "note" "text"]
+
+/-- Up to 17 decimal digits from two generated Ints, with leading zeros when the first is 0. -/
+def Analytics.Spec.digitsOf (n : Int) (m : Int) : Text := toText (and n 2147483647) ++ toText (and m 1048575)
+
+test Analytics.Spec.emptyPushUploadsNothing := inStore (fun dir =>
+  match uploads dir [demo] with
+  | ([], []) => true
+  | _ => false)
+
+def Analytics.Spec.hex (seed : Text) : Text := Text.sha256 seed
+
+test Analytics.Spec.onlyFlatColumns := Analytics.columnTypeOf (Sexp.read "(tref \"#Int\")") == Option.some "int" && Analytics.columnTypeOf (Sexp.read "(tref \"#Bool\")") == Option.some "bool" && Analytics.columnTypeOf (Sexp.read "(tref \"#Text\")") == Option.some "text" && Analytics.columnTypeOf (Sexp.read "(tref \"urn:deus:analytics:CodeRef\")") == Option.some "ref" && Analytics.columnTypeOf (Sexp.read "(tapp (tref \"#List\") (tref \"#Int\"))") == Option.none && Analytics.columnTypeOf (Sexp.read "(tref \"#Option\")") == Option.none
+
+test Analytics.Spec.parquetFraming :=
+  let file := Parquet.write demo (rowsOf ["a", "b"] 1 true)
+  let n := List.length file
+  let footer := readLE32 (toArray file) (n - 8)
+  List.take 4 file == magic && List.drop (n - 4) file == magic && footer > 0 && footer < n - 12
+
+theorem Analytics.Spec.parquetRoundTrip (words : List Text) (n : Int) (flag : Bool) : Parquet.read (Parquet.write demo (rowsOf words n flag)) == ((demo).columns, rowsOf words n flag) ==
+    true := by test 40
+
+theorem Analytics.Spec.pinnedRoundTrip (words : List Text) : List.all (fun w =>
+    let name := "A." ++ replace "#" "" w
+    let ref := pinned Spec.projectIri name (hex w)
+    Analytics.hashOf ref == hex w && Analytics.nameOf Spec.projectIri ref == name && Analytics.hashOf (nameIri Spec.projectIri name) == "") words == true := by test 30
+
+def Analytics.Spec.projectIri : Text := "https://example.org/p"
+
+test Analytics.Spec.pushOnlyUploads := inStore (fun dir =>
+  Analytics.record dir demo "a" (seen ())
+  Analytics.record dir demo "b" (seen ())
+  match uploads dir [demo] with
+  | ((name, 2, key) :: [], schema :: file :: []) => name == "Demo.Seen" && key == file && startsWith "events/Demo.Seen/d3m0/" key && endsWith ".parquet" key && (if schema == "events/Demo.Seen/d3m0/schema.json" then
+      match Analytics.rows dir demo with
+      | ([], _ :: _ :: []) => true
+      | _ => false
+    else false)
+  | _ => false)
+
+test Analytics.Spec.recordReadsBack := inStore (fun dir =>
+  let id := Analytics.record dir demo "claude" (seen ())
+  match Analytics.rows dir demo with
+  | (r :: [], []) => r.eventId == id && Text.length id == 16 && r.recordedBy == "claude" && r.cells == [Cell.text (hex "a"), Cell.int 3, Cell.bool true, Cell.text "é\n\""]
+  | _ => false)
+
+test Analytics.Spec.recordRefusesBadRows := inStore (fun dir => Analytics.Spec.refused dir (List.drop 1 (seen ())) && Analytics.Spec.refused dir (seen () ++ [("extra", Cell.int 1)]) && (if Analytics.Spec.refused
+  dir
+  [("what", Cell.text "x"), ("count", Cell.text "3"), ("ok", Cell.bool true), ("note", Cell.text "")] then
+  match Analytics.rows dir demo with
+  | ([], []) => true
+  | _ => false
+else false))
+
+def Analytics.Spec.refused (dir : Text) (values : List (Text, Cell)) : {IO} Bool :=
+  match try (fun _ => Analytics.record dir demo "x" values) with
+  | Result.ok _ => false
+  | Result.err _ => true
+
+def Analytics.Spec.rowsOf (words : List Text) (n : Int) (flag : Bool) : List Row := mapIndexed (fun i w => Row.mk
+  (hex w)
+  (toText (i * 1000 + 1))
+  w
+  [Cell.text ("#" ++ hex w), Cell.int (n * i - i), Cell.bool (flag == (mod i 2 == 0)), Cell.text (w ++ "😀")]) words
+
+def Analytics.Spec.seen (u : Unit) : List (Text, Cell) := [("what", Cell.text (hex "a")), ("count", Cell.int 3), ("ok", Cell.bool true), ("note", Cell.text "é\n\"")]
+
+/-- Constructing each toolchain event type from scalars and a `CodeRef` type-checks only while their fields stay flat. -/
+test Analytics.Spec.toolchainEventTypes :=
+  let ref := CodeRef.mk "#x"
+  (TestRun.mk ref "test" true false true "test" 1 "" 5).ms == 5 && (CiRun.mk "Check" "success" true "abc" 13952 60 "https://ci").pr == 13952 && AgentChange.agent (AgentChange.mk ref "claude" "update" "msg") == "claude" && (AgentWrote.mk ref "claude" "add").via == "add" && AgentStage.seconds (AgentStage.mk 1 "abc" 30 "s") == 30
+
+/-- Runs a push, answering only uploads; any other remote operation fails the test. -/
+def Analytics.Spec.uploads (dir : Text) (ts : List EventType) : {IO, Throw Text} (List (Text, (Int, Text)), List Text) :=
+  let keys := Ref.new []
+  let pushed :=
+    handle Analytics.push dir ts with
+    | Remote.upload key x0 x1 -> k =>
+        Ref.set keys (key :: Ref.get keys)
+        k ()
+    | Remote.list x2 -> x3 => Throw.throw "list"
+    | Remote.get x4 -> x5 => Throw.throw "get"
+    | Remote.keys x6 -> x7 => Throw.throw "keys"
+    | Remote.download x8 x9 -> x10 => Throw.throw "download"
+    | Remote.put x11 x12 -> x13 => Throw.throw "put"
+    | Remote.delete x14 -> x15 => Throw.throw "delete"
+    | Remote.writeAll x16 -> x17 => Throw.throw "writeAll"
+    | Remote.drop x18 -> x19 => Throw.throw "drop"
+  (pushed, reverse (Ref.get keys))
+
 --
 -- Backfills from the codebase's own records.
 --

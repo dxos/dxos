@@ -34,17 +34,17 @@ Recorders write the pinned form.
 ```mdl
 api A-1: event types and the local store
   signatures:
-  - Analytics.types : Text -> Map Text Entry -> {IO, Throw Text} List analytics:EventType
-  - Analytics.record : Text -> analytics:EventType -> Text -> List (Text, analytics:Cell) -> {IO, Throw Text} Text
-  - Analytics.rows : Text -> analytics:EventType -> {IO} (List analytics:Row, List analytics:Row)
-  - Analytics.push : Text -> List analytics:EventType -> {replicate:Remote, IO, Throw Text} List (Text, (Int, Text))
+  - Analytics.types : Text -> Map Text Entry -> {IO, Throw Text} List EventType
+  - Analytics.record : Text -> EventType -> Text -> List (Text, Cell) -> {IO, Throw Text} Text
+  - Analytics.rows : Text -> EventType -> {IO} (List Row, List Row)
+  - Analytics.push : Text -> List EventType -> {Remote, IO, Throw Text} List (Text, (Int, Text))
 ```
 
 ```mdl
 api A-2: Parquet files
   signatures:
-  - Parquet.write : analytics:EventType -> List analytics:Row -> List Int
-  - Parquet.read : List Int -> (List analytics:Column, List analytics:Row)
+  - Parquet.write : EventType -> List Row -> List Int
+  - Parquet.read : List Int -> (List Column, List Row)
 ```
 
 ```mdl
@@ -54,7 +54,7 @@ api A-3: references and counts
   - Analytics.hashOf : Text -> Text
   - Analytics.nameOf : Text -> Text -> Text
   - Analytics.refHash : Text -> Map Text Entry -> Text -> Text
-  - Analytics.byDefinition : Text -> Text -> Map Text Entry -> List analytics:EventType -> {IO} Map Text (List (Text, (Text, Int)))
+  - Analytics.byDefinition : Text -> Text -> Map Text Entry -> List EventType -> {IO} Map Text (List (Text, (Text, Int)))
   - Analytics.siteJson : Text -> Text -> Map Text Entry -> Int -> {IO, Throw Text} Json
 ```
 

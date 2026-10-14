@@ -104,12 +104,14 @@ same file in name order, so the file carries the alphabetically last of them in 
 | `html`      | string       | the source as `deus view` prints it, without its `-- ` header lines, as highlighted HTML                               |
 | `ts`        | string       | the same in the TypeScript-like dialect ([DIALECT-TS.md](./DIALECT-TS.md)), highlighted                                |
 | `deps`      | ref[]        | what the definition refers to, types in its signature included, limited to hashes the namespace names, itself excluded |
-| `users`     | ref[]        | visible definitions that refer to it, sorted by hash                                                                   |
+| `users`     | ref[]        | visible definitions that refer to it, sorted by hash, itself excluded                                                  |
 | `verdict`   | string       | the cached test or theorem verdict, or `""`; see below                                                                 |
 | `tasks`     | object[]     | `{"id","title","state"}` of each task linked to the name or the hash                                                   |
 
 In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and its first 10 characters when
-it has none.
+it has none. The two agree: `B` is among `A`'s `users` exactly when `A` is among `B`'s `deps`, so the graph
+view draws an edge from either page ([Explorer.Spec](../../codebase/specs/Explorer.Spec.mdl) R-13). A recursive definition refers to
+itself, but is not its own user (D107).
 
 `html` uses `<span class=K>` around each run of kind `K`: `kw` (keyword), `ty` (a capitalized name), `str`
 (a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<` and `>` are escaped; `"` is not, since it is safe in text and the app inserts the HTML as content. A name
@@ -308,6 +310,27 @@ would. Commands that change the codebase change only the page's copy, which a re
 published with a console keeps it: `deus push` regenerates it when the remote's manifest lists
 `console/codebase.json`.
 
+## Graph view
+
+The open cards can be shown as a list (the default) or as a graph ([D107](../DECISIONS.md)): the top bar's
+List / Graph switch, or `v`, toggles them, and the URL keeps `v:graph`. The graph is drawn from the same
+`def/<page>.json` files; it needs no file of its own.
+
+- **Nodes** are code cards. Each open definition is a large card with its kind, name, type and doc summary,
+  and around it up to 12 of its neighbours as small cards, its dependencies first, then its users;
+  `+N more in the list` counts the rest. Open cards that are not definitions (tasks, namespaces, changes)
+  show only in the list.
+- **Edges** point from a definition to what it uses, between any two cards on the graph. An edge to an open
+  card is drawn stronger than one between two neighbours, and an edge to the focused card in the accent
+  colour.
+- **Layout** is force-directed: cards repel, edges pull to a rest length, overlapping cards push apart. It
+  settles before the first paint, keeps every card where it was when another opens, and is laid out the same
+  way on every visit (a neighbour's start angle comes from its hash).
+- **Clicking** a neighbour opens it in the graph, with its own neighbours. Clicking an open card shows it in
+  the list, focused. Dragging a card moves and pins it; dragging the background or scrolling pans; ⌘ or Ctrl
+  with the wheel, a pinch, or the − and + buttons zoom; Fit centres the graph. On a phone the graph stays
+  readable and centres on the focused card instead of shrinking to fit.
+
 ## App state in the URL
 
 The app keeps its open cards in the URL fragment as a comma-separated list, in the order they are shown, and
@@ -315,7 +338,7 @@ the view when it is not the code workspace:
 
 ```text
 fragment = key ("," key)*
-key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks") | "v:" ("tasks" | "history")
+key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks") | "v:" ("tasks" | "history" | "graph")
 ```
 
 For example `index.html#d:595ca8a5…,n:List,t:e0757e4e`. A card opened from another card goes right after it;

@@ -1,5 +1,9 @@
 # History of main
 
+- `1cf702b82d` export: merge 32 changes from codebase
+- `f599a785ab` export: merge tasks from codebase
+- `b7051d6a4f` merge #13952's branch; View fix renumbered D108 (by claude)
+- `c7a47c3993` import #13952's export (analytics, Composer plugin, graph view) (by claude)
 - `ef3734357f` export: merge 21 changes from codebase
 - `14e27c9c0a` export: merge tasks from codebase
 - `3de400a062` merge #13952's branch; View fix renumbered D106 (by claude)
@@ -147,6 +151,38 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
+- `c1094317db` users exclude the definition itself (D101) (by claude)
+- `6ca942925a` history: import 586 changes
+- `b2dd88f2c9` task: import from tasks.sexp
+- `9d9673a128` merge: the explorer's graph view (D99) (by claude)
+- `219688316c` history: import 448 changes
+- `dcd5501500` task: import from tasks.sexp
+- `e95740510c` add code specs
+- `2efffdfa02` close 55a3e9d5 by #3899aa8081 (by claude)
+- `3899aa8081` the explorer's graph view; users exclude the definition itself (D96) (by claude)
+- `bd968a8e7b` task: open 55a3e9d5 Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (by claude)
+- `68fd7c720d` history: import 408 changes
+- `817e132bb0` task: import from tasks.sexp
+- `09cc7dae97` add code specs
+- `4e23b5e485` task: comment on 771e6f9e (by claude)
+- `3815cceaee` history: import 558 changes (by claude)
+- `845a8ce02c` task: import from tasks.sexp
+- `059bcafd6c` add code specs
+- `cf058fac29` export: merge tasks from codebase
+- `1a7a8cb1c2` task: comment on 771e6f9e (by claude)
+- `0798d17c17` history: import 532 changes (by claude)
+- `f7be59b176` task: import from tasks.sexp
+- `7cfe0a41ea` add code specs
+- `44545eb04d` task: comment on e76e36b0 (by claude)
+- `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
+- `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
+- `5682baf33c` task: open 1e8dee8b A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec
+- `92327e0846` task: set 5d6c67b4 state
+- `51a90a44c7` task: comment on 5d6c67b4 (by claude)
+- `f4563342df` task: set 771e6f9e state
+- `e9b5cdc855` task: comment on 771e6f9e (by claude)
+- `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
 - `e55740c728` analytics decisions renumbered D104, D105 (by claude)
 - `43a62f2c19` history: import 540 changes
 - `c769c10b59` task: import from tasks.sexp

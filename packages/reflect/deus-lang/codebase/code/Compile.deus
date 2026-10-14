@@ -58,7 +58,7 @@ def Compile.Spec.compileFiles (files : List Text) : Result Text (List (Text, Ent
 
 test Compile.Spec.declarationsCheckCallers :=
   let parse := "def parse (t : Text) : Int\n"
-  not (refused (parse ++ "def twice (t : Text) : Int := parse t * 2\n")) && refused (parse ++ "def wrong (t : Text) : Text := parse t\n") && refused (parse ++ "def wrong (n : Int) : Int := parse n\n")
+  not (Compile.Spec.refused (parse ++ "def twice (t : Text) : Int := parse t * 2\n")) && Compile.Spec.refused (parse ++ "def wrong (t : Text) : Text := parse t\n") && Compile.Spec.refused (parse ++ "def wrong (n : Int) : Int := parse n\n")
 
 theorem Compile.Spec.declarationsHashTheirName (i : Int) (j : Int) : Compile.Spec.hashOf ("def " ++ Spec.local i ++ " (a : Int) : Int\n") (Spec.local i) ==
     Compile.Spec.hashOf ("def " ++ Spec.local j ++ " (a : Int) : Int\n") (Spec.local j) == (Spec.local i == Spec.local j) := by test 64
@@ -136,14 +136,14 @@ def Compile.Spec.refused (source : Text) : Bool :=
   | Result.ok _ => false
   | Result.err _ => true
 
-test Compile.Spec.refusesIllTyped := refused "def f : Int := \"x\"\n" && refused "def g (a : Int) : Text := a\n" && not (refused "def h (a : Int) : Int := a\n")
+test Compile.Spec.refusesIllTyped := Compile.Spec.refused "def f : Int := \"x\"\n" && Compile.Spec.refused "def g (a : Int) : Text := a\n" && not (Compile.Spec.refused "def h (a : Int) : Int := a\n")
 
-test Compile.Spec.refusesIncompleteDeclarations := refused "def f (a) : Int\n" && refused "def f (a : Int)\n" && refused "def f\n" && not (refused "def f (a : Int) : Int\n") && not (refused "def k : Int\n") && not (refused "def f (a b : Int) : {} Int\ndef g : Int := 1\n")
+test Compile.Spec.refusesIncompleteDeclarations := Compile.Spec.refused "def f (a) : Int\n" && Compile.Spec.refused "def f (a : Int)\n" && Compile.Spec.refused "def f\n" && not (Compile.Spec.refused "def f (a : Int) : Int\n") && not (Compile.Spec.refused "def k : Int\n") && not (Compile.Spec.refused "def f (a b : Int) : {} Int\ndef g : Int := 1\n")
 
 /-- A written row is closed (`{}` is pure); an arrow without braces has a fresh row and constrains nothing. -/
 test Compile.Spec.refusesUndeclaredAbility :=
   let abilities := "ability A where\n  op : Int -> Int\nability B where\n  other : Int -> Int\n"
-  refused (abilities ++ "def f (u : Unit) : {} Int := A.op 1\n") && refused (abilities ++ "def f (u : Unit) : {B} Int := A.op 1\n") && not (refused (abilities ++ "def f (u : Unit) : {A} Int := A.op 1\n")) && not (refused (abilities ++ "def f (u : Unit) : Int := A.op 1\n"))
+  Compile.Spec.refused (abilities ++ "def f (u : Unit) : {} Int := A.op 1\n") && Compile.Spec.refused (abilities ++ "def f (u : Unit) : {B} Int := A.op 1\n") && not (Compile.Spec.refused (abilities ++ "def f (u : Unit) : {A} Int := A.op 1\n")) && not (Compile.Spec.refused (abilities ++ "def f (u : Unit) : Int := A.op 1\n"))
 
 test Compile.Spec.renamedDeclarationsRoundTrip := inStore (fun dir =>
   addSource "def parse (t : Text) : Int\n" false

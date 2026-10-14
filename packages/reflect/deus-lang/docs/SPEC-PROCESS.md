@@ -97,7 +97,7 @@ theorem can still state them (`inStore (fun dir => …) = true`) and `by test n`
   end by `src/cli.test.ts`; the new laws confirm what the code does and pin it down at the level a
   regression would break first (a namespace node splitting past 64 items, merge cases, the order of
   definitions in a batch, metadata surviving an export).
-- **Backfilling the explorer's writing and console** (D82, D84, D93) added an API block of six signatures, five requirements and two laws to [EXPLORER.mdl](spec/EXPLORER.mdl): comments reach
+- **Backfilling the explorer's writing and console** (D82, D84, D93) added an API block of six signatures, five requirements and two laws to [Explorer.Spec](../codebase/specs/Explorer.Spec.mdl): comments reach
   `comments.json`, the inbox opens a member's task with its labels and refuses anyone else, the
   console snapshot leaves out local state, and `meta.json` names the console. To state R-10 as a
   test, the snapshot's file list became its own function (`Explorer.snapshotFiles`). No new bug; the

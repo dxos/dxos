@@ -62,4 +62,5 @@ theorem Checking.Spec.letFunctionResult : checks "def f (x : Int) : Int :=\n  le
 /-- R-4: a pattern binder's type is checked. -/
 theorem Checking.Spec.patternBinderChecked : checks "def f (x : Int) : Int :=\n  match x with\n  | (n : Bool) => 1\n" == false := by rfl
 
+/-- The builtin types the sources use, declared by IRI as `deus/builtins.deus` does. -/
 def Checking.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"

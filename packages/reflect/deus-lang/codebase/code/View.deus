@@ -17,6 +17,7 @@ theorem View.Spec.pathIri : iriName "urn:deus:task:Task" == "Task" := by rfl
 /-- R-2: a plain `urn:deus:` IRI is its name. -/
 theorem View.Spec.plainIri : iriName "urn:deus:Tree" == "Tree" := by rfl
 
+/-- The builtin types the sources use, declared by IRI as `deus/builtins.deus` does. -/
 def View.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
 
 /-- The theorem `name` in `source`, compiled alone: its hash and its printed declaration. -/

@@ -357,3 +357,7 @@ oh, nonono, threads MUST use the codebase as primary VCS, and git as backup
 ---
 
 are woktrees not pushing the codebase, or is this explorer not getting updated
+
+---
+
+this displays code as list, but there might be another view: a force-graph with code-cards as nodes

@@ -1,0 +1,260 @@
+/-
+  Composer bindings for the js target (D97): enough of `@dxos/app-framework`, `@dxos/app-toolkit`,
+  `@dxos/echo` and `@dxos/compute` to write a Composer plugin in DEUS. Every module named here is
+  in Composer's import map, so a plugin compiled with `deus build --js` and bundled with these
+  imports left external loads into a running Composer by URL (`manifest.json` + `index.mjs`).
+
+  The plugin itself is data: `Composer.plugin meta modules` is
+  `Plugin.define(meta).pipe(Plugin.addModule(m₁), …, Plugin.make)`, and a module is a record of an
+  id, the event that activates it and an `Effect` of its contributions.
+-/
+
+namespace Composer
+
+--
+-- Effect.
+--
+
+/-- `Effect.succeed`. -/
+def succeed : Js -> Js := Js.import "effect/Effect" "succeed"
+
+/-- `Effect.sync`: the value of `f ()` when the effect runs. -/
+def sync : (Unit -> Js) -> Js := Js.import "effect/Effect" "sync"
+
+/-- `Effect.promise`: an effect of the promise `f ()` returns. -/
+def promise : (Unit -> Js) -> Js := Js.import "effect/Effect" "promise"
+
+/-- The `effect/Schema` module: `Schema.String`, `Schema.Struct`, … through `Js.get`. -/
+def schemaModule : Js := Js.import "effect/Schema" ""
+
+def schemaString : Js := Js.get schemaModule "String"
+
+/-- `Schema.Struct({ … })`. -/
+def struct (fields : List (Text, Js)) : Js := Js.call (Js.get schemaModule "Struct") [Js.obj fields]
+
+def optional (schema : Js) : Js := Js.call (Js.get schemaModule "optional") [schema]
+
+def arrayOf (schema : Js) : Js := Js.call (Js.get schemaModule "Array") [schema]
+
+/-- A schema with a description, which the assistant reads as a tool parameter's help. -/
+def described (text : Text) (schema : Js) : Js := Js.method schema "annotate" [Js.obj [("description", Js.text text)]]
+
+--
+-- The app framework.
+--
+
+def pluginModule : Js := Js.import "@dxos/app-framework/Plugin" ""
+
+def capability : Js := Js.import "@dxos/app-framework/Capability" ""
+
+def capabilities : Js := Js.import "@dxos/app-framework/Capabilities" ""
+
+def activationEvents : Js := Js.import "@dxos/app-framework/ActivationEvents" ""
+
+def surfaceModule : Js := Js.import "@dxos/app-framework/Surface" ""
+
+def appSurface : Js := Js.import "@dxos/app-toolkit/AppSurface" ""
+
+def appCapability : Js := Js.import "@dxos/app-toolkit/AppCapability" ""
+
+def appCapabilities : Js := Js.import "@dxos/app-toolkit/AppCapabilities" ""
+
+def appActivationEvents : Js := Js.import "@dxos/app-toolkit/AppActivationEvents" ""
+
+def operationHandlerSet : Js := Js.import "@dxos/compute/OperationHandlerSet" ""
+
+/-- `Capability.contribute(tag, value)`. -/
+def contribute (tag : Js) (value : Js) : Js := Js.call (Js.get capability "contribute") [tag, value]
+
+/-- A capability tag by its NSID, for a capability whose package is not shared with plugins. -/
+def tag (nsid : Text) : Js := Js.call (Js.get capability "make") [Js.text nsid]
+
+/-- An activation event by its NSID. -/
+def activationEvent : Js := Js.import "@dxos/app-framework/ActivationEvent" ""
+
+def event (nsid : Text) : Js := Js.call (Js.get activationEvent "make") [Js.text nsid]
+
+/-- The event Composer fires when a surface of `role` first renders. -/
+def surfacesRequested (role : Js) : Js := Js.call (Js.get activationEvents "SurfacesRequested") [Js.get role "role"]
+
+/-- A module: `id`, the event that activates it, and the effect of its contributions. -/
+structure Module @"urn:deus:composer:Module" where
+  moduleId : Text
+  activatesOn : Option Js
+  provides : List Js
+  activate : Unit -> Js
+
+def moduleJs (m : Module) : Js :=
+  Js.obj (("id", Js.text m.moduleId) :: ("provides", Js.list m.provides) :: ("activate", Js.fn (fun _ => m.activate ())) ::
+    (match m.activatesOn with
+      | some e => [("activatesOn", e)]
+      | none => []))
+
+/-- `Plugin.define(meta).pipe(Plugin.addModule(…), …, Plugin.make)`. -/
+def plugin (meta : Js) (modules : List Js) : Js :=
+  let addModule := Js.get pluginModule "addModule"
+  Js.method (Js.call (Js.get pluginModule "define") [meta]) "pipe"
+    (List.map (fun m => Js.call addModule [m]) modules ++ [Js.get pluginModule "make"])
+
+/-- A plugin's meta: its key (an NSID), name, description and Phosphor icon. -/
+def meta (key : Text) (name : Text) (description : Text) (icon : Text) (hue : Text) : Js :=
+  Js.obj [("profile", Js.obj [
+    ("key", Js.text key),
+    ("name", Js.text name),
+    ("description", Js.text description),
+    ("icon", Js.obj [("key", Js.text icon), ("hue", Js.text hue)])])]
+
+/-- A module contributing one React surface. -/
+def surface (id : Text) (role : Js) (filter : Js) (component : Js) : Js :=
+  moduleJs {
+    moduleId := "surface",
+    activatesOn := some (surfacesRequested role),
+    provides := [Js.get capabilities "ReactSurface"],
+    activate := fun _ =>
+      succeed (contribute (Js.get capabilities "ReactSurface") (Js.call (Js.get surfaceModule "create") [Js.obj [
+        ("id", Js.text id),
+        ("filter", filter),
+        ("component", component),
+        ("props", Js.fn (fun args => Js.obj [
+          ("role", Js.get args "role"),
+          ("subject", Js.path args ["data", "subject"]),
+          ("attendableId", Js.path args ["data", "attendableId"])]))]]))
+  }
+
+/-- The article role. -/
+def article : Js := Js.get appSurface "Article"
+
+/-- A surface filter: `role` showing an object of `type`. -/
+def objectOf (role : Js) (type : Js) : Js := Js.call (Js.get appSurface "object") [role, type]
+
+/-- A module registering ECHO types. -/
+def schemas (types : List Js) : Js := Js.call (Js.get appCapability "schema") [Js.list types]
+
+/-- A module of English labels: `(namespace, [(key, text)])`, such as a typename's `typename.label`. -/
+def translations (labels : List (Text, List (Text, Text))) : Js :=
+  Js.call (Js.get appCapability "translations") [Js.list [Js.obj [("en-US",
+    Js.obj (List.map (fun ns => (fst ns, Js.obj (List.map (fun l => (fst l, Js.text (snd l))) (snd ns)))) labels))]]]
+
+/-- A module contributing assistant skills (`{ key, make }` each). -/
+def skills (id : Text) (definitions : List Js) : Js :=
+  moduleJs {
+    moduleId := id,
+    activatesOn := some (Js.get appActivationEvents "AssistantStart"),
+    provides := [Js.get appCapabilities "SkillDefinition"],
+    activate := fun _ => succeed (Js.list (List.map (fun d => contribute (Js.get appCapabilities "SkillDefinition") d) definitions))
+  }
+
+/-- A module contributing operation handlers. -/
+def operations (id : Text) (handlers : List Js) : Js :=
+  moduleJs {
+    moduleId := id,
+    activatesOn := some (Js.get activationEvents "Startup"),
+    provides := [Js.get capabilities "OperationHandler"],
+    activate := fun _ =>
+      succeed (contribute (Js.get capabilities "OperationHandler")
+        (Js.call (Js.get operationHandlerSet "make") handlers))
+  }
+
+/-- The tag of plugin-space's create-object entries, which plugins do not share as a package. -/
+def createObjectEntry : Js := tag "org.dxos.plugin.space.capability.createObject"
+
+/--
+  A module that lets people create objects of `type` from Composer's create menu: `make db` builds
+  the object, which is added to the space.
+-/
+def creatable (id : Text) (type : Js) (make : Js -> Js) : Js :=
+  moduleJs {
+    moduleId := id,
+    activatesOn := some (event "org.dxos.plugin.space.event.createObjectRequested"),
+    provides := [createObjectEntry],
+    activate := fun _ =>
+      succeed (contribute createObjectEntry (Js.obj [
+        ("id", Js.call (Js.get typeNs "getTypename") [type]),
+        ("createObject", Js.fn2 (fun props options => sync (fun _ =>
+          let db := Js.get options "db"
+          let object := Js.method db "add" [make props]
+          Js.obj [("id", Js.get object "id"), ("object", object)])))]))
+  }
+
+--
+-- ECHO.
+--
+
+def echo : Js := Js.import "@dxos/echo" ""
+
+def typeNs : Js := Js.get echo "Type"
+
+def obj : Js := Js.get echo "Obj"
+
+/--
+  An ECHO object type: `typename` at `version`, with the fields of `fields`, an icon, and listed
+  among the types people create.
+-/
+def objectType (typename : Text) (version : Text) (fields : List (Text, Js)) (icon : Text) (hue : Text) : Js :=
+  let annotation := Js.get echo "Annotation"
+  let schema := Js.method (struct fields) "pipe" [
+    Js.method (Js.get annotation "IconAnnotation") "set" [Js.obj [("icon", Js.text icon), ("hue", Js.text hue)]],
+    Js.method (Js.get annotation "UserType") "set" []]
+  let dxn := Js.call (Js.get (Js.get echo "DXN") "make") [Js.text typename, Js.text version]
+  Js.call (Js.call (Js.get typeNs "makeObject") [dxn]) [schema]
+
+/-- `Obj.make(type, props)`. -/
+def make (type : Js) (props : Js) : Js := Js.call (Js.get obj "make") [type, props]
+
+/-- `Obj.update(object, draft => …)`. -/
+def update (object : Js) (change : Js -> Unit) : Unit :=
+  let _ := Js.call (Js.get obj "update") [object, Js.fn1 change]
+  ()
+
+def useObjectValueJs : Js -> Js := Js.import "@dxos/echo-react" "useObjectValue"
+
+/-- A snapshot of `object` that re-renders the component when it changes. -/
+def useObjectValue (object : Js) : {React.Hooks} Js := React.Hooks.useJs (fun _ => useObjectValueJs object)
+
+--
+-- Assistant skills and operations.
+--
+
+def skillModule : Js := Js.import "@dxos/compute/Skill" ""
+
+def template : Js := Js.import "@dxos/compute/Template" ""
+
+/-- A skill definition: `{ key, make }`, whose skill reads `instructions` and may call `tools`. -/
+def skill (key : Text) (name : Text) (description : Text) (instructions : Text) (tools : List Js) : Js :=
+  Js.obj [
+    ("key", Js.text key),
+    ("make", Js.fn (fun _ => Js.call (Js.get skillModule "make") [Js.obj [
+      ("key", Js.text key),
+      ("name", Js.text name),
+      ("description", Js.text description),
+      ("instructions", Js.call (Js.get template "make") [Js.obj [("source", Js.text instructions)]]),
+      ("tools", Js.call (Js.get skillModule "toolDefinitions") [Js.obj [("operations", Js.list tools)]])]]))]
+
+def operationModule : Js := Js.import "@dxos/compute/Operation" ""
+
+/-- An operation definition the assistant can call as a tool. -/
+def operation (key : Text) (name : Text) (description : Text) (input : List (Text, Js)) : Js :=
+  Js.call (Js.get operationModule "make") [Js.obj [
+    ("meta", Js.obj [
+      ("key", Js.call (Js.get (Js.get echo "DXN") "make") [Js.text key]),
+      ("name", Js.text name),
+      ("description", Js.text description)]),
+    ("input", struct input),
+    ("output", schemaString)]]
+
+/-- `definition` with a handler from its input to a promise of text. -/
+def handler (definition : Js) (run : Js -> Js) : Js :=
+  Js.method definition "pipe" [Js.call (Js.get operationModule "withHandler") [Js.fn (fun input => promise (fun _ => run input))]]
+
+--
+-- Promises.
+--
+
+/-- `fetch(url).then(r => r.json())`. -/
+def fetchJson (url : Text) : Js :=
+  Js.method (Js.call (Js.global "fetch") [Js.text url]) "then" [Js.fn (fun response => Js.method response "json" [])]
+
+/-- `promise.then(f)`. -/
+def andThen (p : Js) (f : Js -> Js) : Js := Js.method p "then" [Js.fn f]
+
+end Composer
