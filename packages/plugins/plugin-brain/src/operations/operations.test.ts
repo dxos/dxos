@@ -74,7 +74,8 @@ describe('QueryFacts', () => {
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-3']);
-    expect(facts[0]).toMatchObject({ subject: 'alice', predicate: 'works-at', object: 'acme', factuality: 'CT+' });
+    // `works-at` is the seeded `schema:worksFor`, read back under its label.
+    expect(facts[0]).toMatchObject({ subject: 'alice', predicate: 'works for', object: 'acme', factuality: 'CT+' });
   });
 
   test('applies minConfidence and limit bounds', async ({ expect }) => {

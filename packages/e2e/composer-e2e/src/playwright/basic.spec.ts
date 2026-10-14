@@ -55,6 +55,7 @@ test.describe('Basic tests', () => {
     });
     await expect.poll(() => host.getWorkspaceOrder()).toEqual([second, first]);
 
+    await host.waitForSaved();
     await host.page.reload();
     await expect(host.getWorkspaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 30_000 });
     await expect.poll(() => host.getWorkspaceOrder()).toEqual([second, first]);
@@ -145,6 +146,9 @@ test.describe('Basic tests', () => {
       await host.openUserSecurity();
       const recoveryCode = await host.createRecoveryCode();
       const document = await host.markDocument();
+      // Only this device can admit the EDGE agent that notarizes a recovered device, so it must be in
+      // before the device is deleted; the wait also lets the agent register the recovery code.
+      await host.waitForAgentInSpaces();
 
       await host.showUserDevices();
       await host.recoverIdentity(recoveryCode);

@@ -72,6 +72,7 @@
     "opener:allow-open-url",
     "opener:default",
     "updater:default",
+    "meeting-capture:default",
     "allow-cache-plugin-assets",
     "allow-evict-plugin",
     "allow-resolve-cached-url",

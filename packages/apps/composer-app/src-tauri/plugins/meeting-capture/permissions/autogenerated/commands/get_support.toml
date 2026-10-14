@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-support"
+description = "Enables the get_support command without any pre-configured scope."
+commands.allow = ["get_support"]
+
+[[permission]]
+identifier = "deny-get-support"
+description = "Denies the get_support command without any pre-configured scope."
+commands.deny = ["get_support"]

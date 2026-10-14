@@ -361,9 +361,8 @@ export class Client {
 
     {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc, 'QueryService.reindex', undefined, {
         timeout: 30_000,
-        label: 'QueryService.reindex',
       });
     }
 
@@ -466,13 +465,6 @@ export class Client {
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
-    log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list.ts');
-    const { HaloProxy } = await import('../halo/halo-proxy.ts');
-    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
-    const { Shell } = await import('../services/index.ts');
-    log('client._open: proxy modules loaded');
-
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
@@ -492,13 +484,23 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    log('client._open: opening services...');
-    await this._services.open();
+    // The services open alongside the proxy imports rather than after them: the worker handshake is
+    // the long pole, and each sequential import waits out a main thread busy with plugin activation.
+    log('client._open: importing proxy modules and opening services...');
+    invariant(this._config, 'Client not initialized.');
+    const edgeUrl = this._config.get('runtime.services.edge.url');
+    const [{ SpaceList }, { HaloProxy }, { MeshProxy }, { Shell }, edgeClientModule] = await Promise.all([
+      import('../echo/space-list.ts'),
+      import('../halo/halo-proxy.ts'),
+      import('../mesh/mesh-proxy.ts'),
+      import('../services/index.ts'),
+      edgeUrl ? import('@dxos/edge-client') : undefined,
+      this._services.open(),
+    ]);
     log('client._open: services opened');
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
-      const { EdgeHttpClient } = await import('@dxos/edge-client');
+    if (edgeUrl && edgeClientModule) {
+      const { EdgeHttpClient } = edgeClientModule;
       const clientTag = resolveTelemetryTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
@@ -729,13 +731,9 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    await runServiceCall(
-      this._effectRuntime,
-      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
-      {
-        label: 'SystemService.updateStatus',
-      },
-    );
+    await runServiceCall(this._effectRuntime, this.services.rpc, 'SystemService.updateStatus', {
+      status: SystemStatus.ACTIVE,
+    });
   }
 
   /**
@@ -752,9 +750,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
-      label: 'SystemService.reset',
-    }).catch((err) => {
+    await runServiceCall(this._effectRuntime, this._services.rpc, 'SystemService.reset', undefined).catch((err) => {
       if (!isHostShutDownByReset(err)) {
         throw err;
       }

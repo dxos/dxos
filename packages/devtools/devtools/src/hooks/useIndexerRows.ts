@@ -62,7 +62,7 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
           ]);
           return { row: compareHeads(space, heads, remote), raw: { local: heads, indexer: remote } };
         } catch (err) {
-          log.catch(err);
+          log.warn('indexer heads comparison failed', { spaceId: space.id, err });
           const error = err instanceof Error ? err.message : String(err);
           const row: IndexerRow = {
             spaceId: space.id,

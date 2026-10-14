@@ -94,7 +94,7 @@ export const SyncStatusIndicator = ({
   return (
     <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
-        <StatusBar.Item>
+        <StatusBar.Item data-testid='spacePlugin.syncStatus' data-saved={save === 'saved'}>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <Button.Root variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>

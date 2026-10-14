@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { generateAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
@@ -35,7 +36,7 @@ describe('DocHandleProxy', () => {
 
     const docsSynchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
     await openAndClose(docsSynchronizer);
-    await docsSynchronizer.addDocuments([documentId]);
+    await docsSynchronizer.addDocuments([{ documentId }]);
 
     const mutation = clientHandle._getPendingChanges()!;
     await docsSynchronizer.update(Context.default(), [{ documentId, mutation }]);
@@ -60,7 +61,7 @@ describe('DocHandleProxy', () => {
       },
     });
     await openAndClose(docsSynchronizer);
-    await docsSynchronizer.addDocuments([workerHandle.documentId]);
+    await docsSynchronizer.addDocuments([{ documentId: workerHandle.documentId }]);
     workerHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
@@ -95,7 +96,7 @@ describe('DocHandleProxy', () => {
     // Send foreign mutation to client.
     const clientReceiveChange = new Trigger();
     clientHandle.once('change', () => clientReceiveChange.wake());
-    await synchronizer.addDocuments([workerHandle.documentId]);
+    await synchronizer.addDocuments([{ documentId: workerHandle.documentId }]);
     await clientReceiveChange.wait();
 
     // Send client mutation to foreign peer.
@@ -106,6 +107,33 @@ describe('DocHandleProxy', () => {
       expect(handle.doc()?.clientText).to.equal(clientText);
       expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }
+  });
+
+  test('every write of a scope applies at the heads shown, and the stored changes after them fold in as it closes', () => {
+    const base = A.from<{ tags: string[] }>({ tags: ['a', 'b'] });
+    const stored = A.change(A.clone(base), (doc) => {
+      doc.tags.unshift('host');
+    });
+    const handle = new DocHandleProxy<{ tags: string[] }>({
+      documentId: DOCUMENT_ID,
+      passive: { bytes: A.save(stored), heads: A.getHeads(base) },
+      onDelete: () => {},
+    });
+
+    handle.batch(() => {
+      handle.change((doc) => {
+        doc.tags.splice(0, 1);
+      });
+      handle.change((doc) => {
+        doc.tags.splice(0, 1);
+      });
+      expect([...handle.doc().tags]).toEqual([]);
+      handle.on('change', () => {
+        throw new Error('listener failed');
+      });
+    });
+    expect([...handle.doc().tags]).toEqual(['host']);
+    expect(handle._getPendingChanges()).toEqual(A.saveSince(handle.doc(), A.getHeads(stored)));
   });
 
   test('a document the host cannot produce fails its waiters', async () => {

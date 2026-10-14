@@ -41,7 +41,14 @@ import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ListenHandle, RpcClosedError, decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import {
+  type ListenHandle,
+  RpcClosedError,
+  decodeError,
+  runServiceCall,
+  runServiceEffect,
+  subscribeStream,
+} from '@dxos/protocols';
 import { fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
@@ -539,8 +546,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _openInternal(ctx: Context): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.updateSpace']({ spaceKey: this.key, state: SpaceState.SPACE_ACTIVE }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.updateSpace' },
+      this._clientServices.rpc,
+      'SpacesService.updateSpace',
+      { spaceKey: this.key, state: SpaceState.SPACE_ACTIVE },
+      { timeout: RPC_TIMEOUT },
     );
   }
 
@@ -555,8 +564,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
     await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.updateSpace']({ spaceKey: this.key, state: SpaceState.SPACE_INACTIVE }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.updateSpace' },
+      this._clientServices.rpc,
+      'SpacesService.updateSpace',
+      { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
+      { timeout: RPC_TIMEOUT },
     );
   }
 
@@ -571,8 +582,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
     await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.updateSpace']({ spaceKey: this.key, state: SpaceState.SPACE_DELETED }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.updateSpace' },
+      this._clientServices.rpc,
+      'SpacesService.updateSpace',
+      { spaceKey: this.key, state: SpaceState.SPACE_DELETED },
+      { timeout: RPC_TIMEOUT },
     );
   }
 
@@ -590,12 +603,14 @@ export class SpaceProxy implements Space, CustomInspectable {
   async postMessage(channel: string, message: JsonObject): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.postMessage']({
+      this._clientServices.rpc,
+      'SpacesService.postMessage',
+      {
         spaceKey: this.key,
         channel,
         message: packJson(message),
-      }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.postMessage' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
   }
 
@@ -649,15 +664,11 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   async admitContact(contact: Contact, role: SpaceMember_Role = SpaceMember_Role.EDITOR): Promise<void> {
-    await runServiceCall(
-      this._runtime,
-      this._clientServices.rpc['SpacesService.admitContact']({
-        spaceKey: this.key,
-        role,
-        contact,
-      }),
-      { label: 'SpacesService.admitContact' },
-    );
+    await runServiceCall(this._runtime, this._clientServices.rpc, 'SpacesService.admitContact', {
+      spaceKey: this.key,
+      role,
+      contact,
+    });
   }
 
   /**
@@ -665,15 +676,11 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
     this._throwIfNotInitialized();
-    return runServiceCall(
-      this._runtime,
-      this._clientServices.rpc['SpacesService.updateMemberRole']({
-        spaceKey: this.key,
-        memberKey: request.memberKey,
-        newRole: request.newRole,
-      }),
-      { label: 'SpacesService.updateMemberRole' },
-    );
+    return runServiceCall(this._runtime, this._clientServices.rpc, 'SpacesService.updateMemberRole', {
+      spaceKey: this.key,
+      memberKey: request.memberKey,
+      newRole: request.newRole,
+    });
   }
 
   /**
@@ -685,15 +692,11 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _removeMember(memberKey: PublicKey): Promise<void> {
-    return runServiceCall(
-      this._runtime,
-      this._clientServices.rpc['SpacesService.updateMemberRole']({
-        spaceKey: this.key,
-        memberKey,
-        newRole: SpaceMember_Role.REMOVED,
-      }),
-      { label: 'SpacesService.updateMemberRole' },
-    );
+    return runServiceCall(this._runtime, this._clientServices.rpc, 'SpacesService.updateMemberRole', {
+      spaceKey: this.key,
+      memberKey,
+      newRole: SpaceMember_Role.REMOVED,
+    });
   }
 
   private async _createEpoch({
@@ -720,12 +723,14 @@ export class SpaceProxy implements Space, CustomInspectable {
     log('create epoch', { migration, automergeRootUrl });
     const { controlTimeframe } = await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.createEpoch']({
+      this._clientServices.rpc,
+      'SpacesService.createEpoch',
+      {
         spaceKey: this.key,
         migration,
         automergeRootUrl,
-      }),
-      { timeout: EPOCH_CREATION_TIMEOUT, label: 'SpacesService.createEpoch' },
+      },
+      { timeout: EPOCH_CREATION_TIMEOUT },
     );
     const targetTimeframe = toTimeframe(controlTimeframe);
 
@@ -740,12 +745,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _getCredentials(): Promise<Credential[]> {
-    const credentials = await runServiceCall(
+    const credentials = await runServiceEffect(
       this._runtime,
       this._clientServices.rpc['SpacesService.queryCredentials']({
         spaceKey: this.key,
         noTail: true,
       }).pipe(EffectStream.runCollect),
+      { label: 'SpacesService.queryCredentials' },
     );
     return [...credentials];
   }
@@ -773,11 +779,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.updateSpace']({
+      this._clientServices.rpc,
+      'SpacesService.updateSpace',
+      {
         spaceKey: this.key,
         edgeReplication: setting,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.updateSpace' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
     // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
     // Budgeted like the RPC it confirms, because the setting is already committed on the host and this
@@ -859,14 +867,10 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _export(options?: ExportSpaceOptions): Promise<SpacesService.SpaceArchive> {
     await this._db.flush();
-    const { archive } = await runServiceCall(
-      this._runtime,
-      this._clientServices.rpc['SpacesService.exportSpace']({
-        spaceId: this.id,
-        format: options?.format ?? SpacesService.SpaceArchiveFormat.enums.BINARY,
-      }),
-      { label: 'SpacesService.exportSpace' },
-    );
+    const { archive } = await runServiceCall(this._runtime, this._clientServices.rpc, 'SpacesService.exportSpace', {
+      spaceId: this.id,
+      format: options?.format ?? SpacesService.SpaceArchiveFormat.enums.BINARY,
+    });
     return archive;
   }
 }

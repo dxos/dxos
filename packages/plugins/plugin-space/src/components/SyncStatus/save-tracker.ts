@@ -6,7 +6,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { type EchoDatabase, type SaveStateChangedEvent } from '@dxos/echo-client';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -62,37 +62,42 @@ export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: Save
       let hasUnsavedChanges = false;
       let failing = false;
       let lastFlushPromise: Promise<void> | undefined;
-      space.db.saveStateChanged.on(ctx, ({ unsavedDocuments, pendingCreations, failing: sendFailing }) => {
+      const reportUnsaved = ({ unsavedDocuments, pendingCreations, failing: sendFailing }: SaveStateChangedEvent) => {
         hasUnsavedChanges = unsavedDocuments.length > 0 || pendingCreations > 0;
         failing = sendFailing;
-      });
-      space.db.saveStateChanged.debounce(500).on(ctx, () => {
         if (failing) {
           lastFlushPromise = undefined;
           cb('failing');
         } else if (hasUnsavedChanges) {
           lastFlushPromise = undefined;
           cb('saving');
-        } else {
-          // Indexing is not saving: a lagging index must not read as changes failing to reach disk.
-          const flushPromise = space.db.flush({ indexes: false });
-          lastFlushPromise = flushPromise;
-          void flushPromise.then(
-            () => {
-              if (lastFlushPromise === flushPromise) {
-                cb('saved');
-              }
-            },
-            (error: unknown) => {
-              // The failed write is logged where it failed; here it only means the space is not saved.
-              log.verbose('space flush failed', { error });
-              if (lastFlushPromise === flushPromise) {
-                cb('failing');
-              }
-            },
-          );
         }
-      });
+      };
+      const confirmSavedAfterFlush = () => {
+        if (failing || hasUnsavedChanges) {
+          return;
+        }
+
+        // Indexing is not saving: a lagging index must not read as changes failing to reach disk.
+        const flushPromise = space.db.flush({ indexes: false });
+        lastFlushPromise = flushPromise;
+        void flushPromise.then(
+          () => {
+            if (lastFlushPromise === flushPromise) {
+              cb('saved');
+            }
+          },
+          (error: unknown) => {
+            // The failed write is logged where it failed; here it only means the space is not saved.
+            log.verbose('space flush failed', { error });
+            if (lastFlushPromise === flushPromise) {
+              cb('failing');
+            }
+          },
+        );
+      };
+      space.db.saveStateChanged.on(ctx, reportUnsaved);
+      space.db.saveStateChanged.debounce(500).on(ctx, confirmSavedAfterFlush);
     })
     .catch((err) => log.catch(err));
 

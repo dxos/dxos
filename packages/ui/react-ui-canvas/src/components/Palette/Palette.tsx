@@ -24,8 +24,11 @@ const BASE: Entry[] = [
 
 const TOOLS_GROUP = 'Tools';
 
-/** A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room. */
-export type PaletteGroup = { name: string; entries: Entry[]; collapsible: boolean };
+/**
+ * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
+ * a `folded` group always does.
+ */
+export type PaletteGroup = { name: string; entries: Entry[]; collapsible: boolean; folded?: boolean };
 
 /** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
 const nodeGroups = (nodes: NodeRegistry): PaletteGroup[] => {
@@ -42,7 +45,8 @@ const nodeGroups = (nodes: NodeRegistry): PaletteGroup[] => {
 
 /**
  * Palette groups: the fixed tools, then the node types by group, then a link per link type; a group the projection
- * cannot apply (`create`, `link`) is left out rather than offered and silently dropped. Only node groups fold.
+ * cannot apply (`create`, `link`) is left out rather than offered and silently dropped. Node groups fold when the rail
+ * runs out of room; the link types always share one flyout, since a drawing mostly uses one of them.
  */
 export const paletteGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): PaletteGroup[] =>
   [
@@ -58,7 +62,8 @@ export const paletteGroups = (nodes: NodeRegistry, links: LinkRegistry, capabili
             key: def.key,
           }))
         : [],
-      collapsible: false,
+      collapsible: true,
+      folded: true,
     },
   ].filter((group) => group.entries.length > 0);
 
@@ -100,7 +105,7 @@ export type PaletteProps = {
 
 /** The height the rail would take flat: each button, the gaps between them, and each group's padding and divider. */
 const flatHeight = (groups: readonly PaletteGroup[], button: number): number =>
-  groups.reduce((height, group) => height + group.entries.length * (button + 4) - 4 + 9, 0);
+  groups.reduce((height, group) => height + (group.folded ? 1 : group.entries.length) * (button + 4) - 4 + 9, 0);
 
 /**
  * Whether the rail folds its node groups: always, never, or (`auto`) when the flat rail would overflow its parent,
@@ -159,7 +164,7 @@ export const Palette = ({
       data-collapsed={collapsed || undefined}
     >
       {groups.map((group) =>
-        collapsed && group.collapsible ? (
+        group.folded || (collapsed && group.collapsible) ? (
           <div key={group.name} className='flex flex-col p-1'>
             <PaletteFlyout group={group} tool={tool} layout={flyout} onToolChange={onToolChange} />
           </div>
@@ -265,7 +270,8 @@ const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps
           onPointerEnter={hover.enter}
           onPointerLeave={hover.leave}
         >
-          <PaletteButton entry={shown} active={active !== undefined} onToolChange={onToolChange} />
+          {/* No tooltip: hovering opens the flyout, which names every tool, and a tooltip would sit over it. */}
+          <PaletteButton entry={shown} active={active !== undefined} tooltip={false} onToolChange={onToolChange} />
           <Popover.Trigger asChild>
             <button
               type='button'
@@ -309,10 +315,13 @@ const PaletteButton = ({
   entry,
   active,
   labelled,
+  tooltip = true,
   onToolChange,
 }: {
   entry: Entry;
   active: boolean;
+  /** Shows the label as a tooltip on an icon-only button. */
+  tooltip?: boolean;
   /** Shows the tool's name beside its icon (a flyout's list), rather than the icon alone. */
   labelled?: boolean;
   onToolChange: (tool: Tool) => void;
@@ -330,15 +339,27 @@ const PaletteButton = ({
       onGenerateDragPreview: ({ nativeSetDragImage }) => disableNativeDragPreview({ nativeSetDragImage }),
     });
   }, [nodeType]);
-  return (
+  const testId = `palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`;
+  return labelled ? (
     <Button.Root
       ref={ref}
       variant='ghost'
-      iconOnly={!labelled}
       icon={entry.icon}
-      label={labelled ? entry.label : entry.key ? `${entry.label} (${entry.key})` : entry.label}
-      classNames={mx(labelled && 'w-full justify-start', active && 'bg-primary-500/20')}
-      data-testid={`palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`}
+      label={entry.label}
+      classNames={mx('w-full justify-start', active && 'bg-primary-500/20')}
+      data-testid={testId}
+      onClick={() => onToolChange(entry.tool)}
+    />
+  ) : (
+    <Button.Root
+      ref={ref}
+      variant='ghost'
+      iconOnly
+      showTooltip={tooltip}
+      icon={entry.icon}
+      label={entry.key ? `${entry.label} (${entry.key})` : entry.label}
+      classNames={mx(active && 'bg-primary-500/20')}
+      data-testid={testId}
       onClick={() => onToolChange(entry.tool)}
     />
   );

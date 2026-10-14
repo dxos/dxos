@@ -466,6 +466,7 @@ encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only sme
 | `--action-timeout` | `5000`          | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
 | `--cadence`        | `600`           | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
 | `--log`            | `<out>/app.log` | NDJSON of the app's `@dxos/log` output (page and dedicated workers); `off` to skip                                                |
+| `--chromium-args`  | none            | extra Chromium flags, comma-separated — e.g. a fake microphone playing a voice file (see `plugin-meeting-recorder/autocue`)       |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames

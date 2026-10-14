@@ -17,6 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { type RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
@@ -28,7 +29,6 @@ import {
   BrainService,
   ChatParticipant,
   Goal,
-  Memory,
   MemoryOperation,
   Mode,
   Relay,
@@ -96,7 +96,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Person.Person,
         Organization.Organization,
         HasSubject.HasSubject,
-        Memory.Memory,
         Goal.Goal,
         Mode.Mode,
         Relay.Relay,
@@ -151,7 +150,14 @@ describe('ReadSource', () => {
           source: Obj.getURI(document),
         });
         // A member named in a fact is keyed by their DID; the name stays the label.
-        expect(owns?.assertion.subject).toEqual({ kind: 'entity', entity: TEST_MEMBERS.dima, label: 'Dima' });
+        expect(owns?.assertion.subject).toEqual({
+          kind: 'entity',
+          entity: TEST_MEMBERS.dima,
+          label: 'Dima',
+          type: 'person',
+        });
+        // Each statement lives in a named graph that carries its speaker's provenance.
+        expect(owns?.graph).toMatch(/^https:\/\/dxos\.org\/semantic\/graph\//);
         expect(owns?.attribution.generatedAtTime).toBeTypeOf('string');
         expect(facts.find((fact) => fact.assertion.predicate === 'reviews')?.illocution?.force).toBe('commissive');
 
@@ -368,6 +374,62 @@ describe('ReadSource', () => {
           Effect.exit,
         );
         expect(Exit.isFailure(exit)).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'recall finds facts minted under a person’s accounts in other sources, tied by strong identifiers only',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const dmytro = yield* Database.add(Person.make({ fullName: 'Dmytro Maretskyi' }));
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const fact = (
+          id: string,
+          subject: string,
+          predicate: string,
+          object: RDF.Fact['assertion']['object'],
+          source: string,
+        ): RDF.Fact => ({
+          id,
+          assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
+          factuality: { value: 'CT+', polarity: '+' },
+          attribution: { source, generatedAtTime: '2026-10-14T10:00:00.000Z' },
+          recordedAt: '2026-10-14T10:00:00.000Z',
+          extractor: { id: 'test', model: 'test', version: '1' },
+          sourceHash: id,
+        });
+        const brain = yield* BrainService.BrainService;
+        yield* brain.push(agent.id, [
+          // The roster resolved the name to the Person and named their Discord account.
+          fact(
+            'r1',
+            Obj.getURI(dmytro),
+            'has-account',
+            { kind: 'entity', entity: 'dmaretskyi' },
+            'https://dxos.org/team',
+          ),
+          // Discord keyed the speaker by their handle; they said where they are and gave their email address.
+          fact('d1', 'dmaretskyi', 'located-in', { kind: 'entity', entity: 'bangkok' }, 'discord'),
+          fact('d2', 'dmaretskyi', 'has-account', { kind: 'literal', literal: 'dmytro@braneframe.com' }, 'discord'),
+          // Someone else's account: no identifier ties it to Dmytro, so it is left out.
+          fact('o1', 'rich', 'has-account', { kind: 'entity', entity: 'richburdon' }, 'discord'),
+          // A stranger whose handle is Dmytro's first name: the name matches that fact directly, but never widens
+          // recall to the stranger's other facts.
+          fact('s1', 'stranger', 'has-account', { kind: 'entity', entity: 'dmytro' }, 'discord'),
+          fact('s2', 'stranger', 'located-in', { kind: 'entity', entity: 'lisbon' }, 'discord'),
+        ]);
+
+        const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dmytro) });
+        expect(recalled.facts.map(({ fact }) => fact).sort()).toEqual([
+          'dmaretskyi has account dmytro@braneframe.com',
+          'dmaretskyi located in bangkok',
+          `${Obj.getURI(dmytro)} has account dmaretskyi`,
+          'stranger has account dmytro',
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

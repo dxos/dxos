@@ -159,7 +159,9 @@ pub fn run() {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init());
+        .plugin(tauri_plugin_process::init())
+        // Meeting detection and system-audio capture for plugin-meeting-recorder.
+        .plugin(tauri_plugin_meeting_capture::init());
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]

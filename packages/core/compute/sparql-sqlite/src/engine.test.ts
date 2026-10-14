@@ -2,21 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { beforeAll, describe, test } from 'vitest';
+
+import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SqlSparqlEngine } from './engine.ts';
 import { UnsupportedSparqlError } from './errors.ts';
 import { XSD, iri, lit } from './terms.ts';
-import {
-  ORACLE,
-  PROBES,
-  QUERIES,
-  checksumRows,
-  createNodeSqlStorage,
-  generateCode,
-  generateFacts,
-  queryById,
-} from './testing/index.ts';
+import { ORACLE, PROBES, QUERIES, checksumRows, generateCode, generateFacts, queryById } from './testing/index.ts';
 
 const EX = 'http://example.com/';
 const PREFIXES = `PREFIX ex: <${EX}> PREFIX sx: <https://dxos.org/sx#> `;
@@ -58,7 +52,7 @@ describe('SqlSparqlEngine', () => {
   });
 
   test('selectivity hints change plans only and are refreshed on writes', ({ expect }) => {
-    const engine = new SqlSparqlEngine(createNodeSqlStorage());
+    const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
     engine.init();
     const typed = (from: number, count: number, type: string) =>
       Array.from({ length: count }, (_, index) => ({
@@ -89,7 +83,7 @@ describe('SqlSparqlEngine', () => {
   });
 
   test('update round trip', ({ expect }) => {
-    const engine = new SqlSparqlEngine(createNodeSqlStorage());
+    const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
     engine.init();
     engine.insert(generateFacts(0, 100));
     const before = engine.count();
@@ -114,7 +108,7 @@ describe('SqlSparqlEngine', () => {
   });
 
   test('ASK and CONSTRUCT', ({ expect }) => {
-    const engine = new SqlSparqlEngine(createNodeSqlStorage());
+    const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
     engine.init();
     engine.insert([
       { s: iri(`${EX}a`), p: iri(`${EX}p`), o: lit('x') },
@@ -128,7 +122,7 @@ describe('SqlSparqlEngine', () => {
   });
 
   test('unsupported constructs throw typed errors', ({ expect }) => {
-    const engine = new SqlSparqlEngine(createNodeSqlStorage());
+    const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
     engine.init();
     expect(() => engine.query(`SELECT ?s WHERE { ?s ?p ?o FILTER(REGEX(?o, "a+")) }`)).toThrow(UnsupportedSparqlError);
     expect(() => engine.query(`SELECT ?s WHERE { SERVICE <${EX}s> { ?s ?p ?o } }`)).toThrow(UnsupportedSparqlError);
@@ -138,7 +132,7 @@ describe('SqlSparqlEngine', () => {
 
 /** Fresh in-memory engine loaded in `batch`-sized inserts, as a DO would ingest. */
 const loadEngine = (count: number, generate: typeof generateFacts, batch: number): SqlSparqlEngine => {
-  const engine = new SqlSparqlEngine(createNodeSqlStorage());
+  const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
   engine.init();
   for (let start = 0; start < count; start += batch) {
     engine.insert(generate(start, Math.min(batch, count - start)));

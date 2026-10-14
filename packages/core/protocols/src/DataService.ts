@@ -28,11 +28,22 @@ export const UpdateSubscriptionRequest = Schema.Struct({
    */
   subscriptionId: Schema.String,
   /**
-   * Automerge document ids to subscribe for updates.
+   * Automerge documents to subscribe for updates, with the heads the client already holds for any it
+   * got stored changes for, so the host starts their sync there and sends only what came after.
+   * `passive` asks for each update with the object's JSON (see {@link DocumentUpdate.passive}), for a
+   * document the client holds unloaded. Adding a subscribed document again switches it to the given mode.
    * Used for already existing documents.
    * To add new document use `write` rpc.
    */
-  addIds: Schema.optional(mutableArray(Schema.String)),
+  add: Schema.optional(
+    mutableArray(
+      Schema.Struct({
+        id: Schema.String,
+        heads: Schema.optional(mutableArray(Schema.String)),
+        passive: Schema.optional(Schema.Boolean),
+      }),
+    ),
+  ),
   /**
    * Automerge document ids to unsubscribe from.
    */
@@ -94,6 +105,19 @@ export const DocumentUpdate = Schema.Struct({
    * returns the handle to `'ready'`.
    */
   unavailable: Schema.optional(Schema.Boolean),
+  /**
+   * Sent for a document the client subscribed to as `passive`: the client keeps the mutation with the
+   * stored changes it holds, unloaded, and shows the document's one object from `json`, read at `heads`.
+   * Without `json` the object cannot be shown that way (it outgrew the size limit, or the document no
+   * longer holds just it), and the client loads the document.
+   */
+  passive: Schema.optional(
+    Schema.Struct({
+      heads: mutableArray(Schema.String),
+      json: Schema.optional(Schema.String),
+      updatedAt: Schema.optional(Schema.Number),
+    }),
+  ),
 });
 export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate> {}
 

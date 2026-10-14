@@ -322,6 +322,13 @@ Deeper conventions:
 
 ## Handing an agent a credential
 
+**Absence is a claim; check it before you make it.** Never report a credential or tool missing (in a reply,
+a PR body, a comment) without a direct check: `printenv NAME` presence (`[ -n "$(printenv NAME)" ]`, never the
+value) or `command -v tool`. The `SessionStart` environment inventory (`.claude/hooks/env-inventory.sh`) lists every
+credential name; when a session starts outside the repo (a parent directory holding several checkouts) that hook does
+not run, so run it yourself from the checkout root (`bash <checkout>/.claude/hooks/env-inventory.sh`). A `env | grep` you filtered for one task is not an
+inventory.
+
 **In the cloud sandbox, prefer the 1Password CLI.** When `OP_SERVICE_ACCOUNT_TOKEN` is set, read the
 credential with `op run` / `op read` before asking the user for anything, since the value then never
 passes through the conversation → `1password` skill. **In a local session (no token) never run
@@ -379,6 +386,14 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill
   (`.agents/skills/simplified-technical-english/SKILL.md`).
+- **Performance** — `perf` skill (`.agents/skills/perf/SKILL.md`). Perf numbers come only from
+  `pnpm perf` output (verdict, interval, rounds), never a one-off timing or a devtools recording.
+  - Did this change make it faster or slower? `pnpm perf compare --base main --metric '<id>'`.
+  - Where does the time go? `pnpm perf summarize`, then `pnpm perf expand <handle>`.
+  - Users say X is slow? `pnpm perf capture`, then `pnpm perf scenario new` and `scenario check`.
+  - Memory grows, or boot loads too much? The skill's `MEMORY.md` and `BOOT.md`; `pnpm perf gate`
+    runs the boot budget locally, the same target CI runs as `moon run composer-app:check-boot-budget`.
+  - A node test suite is slow or leaks? `test-perf-leaks` skill.
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).

@@ -4,47 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { HasSubject } from '@dxos/types';
 
-import { BrainService, Goal, Memory, MemoryOperation, Profile } from '#types';
+import { BrainService, Goal, Knowledge, MemoryOperation, Profile } from '#types';
 
-import { personDid } from './members.ts';
-
-/** pipeline-rdf's entity id for a surface form (`normalizeEntityId`), restated to keep its query engine out of this module. */
-const slug = (label: string): string =>
-  label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-
-/** The entity ids a fact about the subject may use: a person's member id, and its names for facts no roster resolved. */
-const entityIds = (entity: Obj.Unknown): Set<string> => {
-  const name = (field: string): string | undefined => {
-    const value = Reflect.get(entity, field);
-    return typeof value === 'string' && value.length > 0 ? value : undefined;
-  };
-  const fullName = name('fullName');
-  const names = [fullName, fullName?.split(/\s+/)[0], name('preferredName'), name('nickname'), name('name')]
-    .filter((value) => value !== undefined)
-    .map(slug)
-    .filter((value) => value.length > 0);
-  const did = personDid(entity);
-  return new Set(did ? [did, ...names] : names);
-};
-
-/** Every fact in the brains of the space's agents, each once: two agents reading one document store the same facts. */
-const spaceFacts = Effect.gen(function* () {
-  const brain = yield* BrainService.BrainService;
-  const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-  const facts = yield* Effect.forEach(agents, (agent) => brain.query(agent.id, {}));
-  return [...new Map(facts.flat().map((fact) => [fact.id, fact])).values()];
-});
+import { canonicalKey, expandKeys, identityGroups } from './identity.ts';
+import { entityKeys, knownIdentities, spaceFacts, strongEntityKeys } from './knowledge.ts';
 
 /** The names of the facts' sources that are objects in the space (documents); a chat message is a feed item, so has none. */
 const sourceNames = Effect.fnUntraced(function* (facts: readonly RDF.Fact[]) {
@@ -78,17 +46,23 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, query, limit }) {
       const entity = subject ? yield* Database.load(subject) : undefined;
-      const candidates = entity
-        ? (yield* Database.query(Query.select(Filter.id(entity.id)).targetOf(HasSubject.HasSubject)).run)
-            .map((relation) => Relation.getSource(relation))
-            .filter(Obj.instanceOf(Memory.Memory))
-        : yield* Database.query(Filter.type(Memory.Memory)).run;
-      const activeMemories = candidates.filter((memory) => memory.status === 'active').sort(Profile.byNewest);
+      const allFacts = yield* spaceFacts;
+      // The subject's own keys, widened to the entities strong identifiers tie it to (its Discord account, its email
+      // address), which facts from other sources were minted under.
+      const groups = identityGroups(allFacts, yield* knownIdentities);
+      const ownKeys = entity ? entityKeys(entity) : undefined;
+      // Only strong keys widen: a name of the subject's that happens to be someone else's handle must not pull them in.
+      const ids =
+        entity && ownKeys ? new Set([...ownKeys, ...expandKeys(strongEntityKeys(entity), groups)]) : undefined;
+      const isSubjectKey = (key: string): boolean => ids !== undefined && (ids.has(key) || ids.has(canonicalKey(key)));
+      const activeMemories = Knowledge.fromFacts(allFacts)
+        .filter((memory) => memory.status === 'active' && (!ids || Knowledge.isAbout(memory, ids)))
+        .sort(Knowledge.byNewest);
 
-      // Expired facts stay in the brain as history; recall leaves them out.
+      // Expired facts stay in the brain as history; recall leaves them out. Memories are listed as memories.
       const now = new Date().toISOString();
-      const ids = entity ? entityIds(entity) : undefined;
-      const subjectFacts = (yield* spaceFacts)
+      const subjectFacts = allFacts
+        .filter((fact) => fact.kind === undefined)
         .filter((fact) => !fact.assertion.validTo || fact.assertion.validTo > now)
         .filter((fact) => {
           if (!ids) {
@@ -96,7 +70,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
           }
           const { subject, object } = fact.assertion;
           const entities = [subject, object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
-          return [...entities, fact.attribution.agent].some((id) => id !== undefined && ids.has(id));
+          return [...entities, fact.attribution.agent].some((id) => id !== undefined && isSubjectKey(id));
         })
         .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime));
 
@@ -119,11 +93,12 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
       return {
         ...(queryMatched ? {} : { queryMatched: false }),
         memories: memories.map((memory) => ({
-          memory: Ref.make(memory),
+          memory: memory.id,
           content: memory.content,
           kind: memory.kind,
           origin: memory.origin,
           observedAt: memory.observedAt,
+          ...(memory.source ? { source: memory.source } : {}),
         })),
         facts: facts.map((fact) => ({
           fact: BrainService.factText(fact),
