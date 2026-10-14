@@ -1,3 +1,7 @@
+(entry "211fc54767b263b4d503ab2480829a9b1751d9d381e8d7e1fbc88f35760d68b6" "C back end: a local passed as an argument moves there when later arguments only read it (D98)" "claude")
+(entry "5abc62eac7d9eed61e09d53877ba9fd613fb74bee5a8b97272b029df1c00fb43" "history: import 438 changes" "")
+(entry "5460cc4043f3f6826eb6af3d75fc2f08390fd2cea87ea9ac6e24823de13dff14" "task: import from tasks.sexp" "")
+(entry "dd19da2a63734c46a15416ceec74d404ce1d1a5810510c492eb74fed05caafd4" "add code specs" "")
 (entry "c53158568a0497532159bbeab2eac1872668c2bf3882a817001ebd8ecaf35a13" "Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97" "claude")
 (entry "65aa9a06c5c952d010c0d4de711a4965bbf36d7e6edbe41c22831613b7ccf62a" "history: import 434 changes" "")
 (entry "fc3475b4c1745161b11d891d66810c07a8d45cda96ed9b5b31a96738044e52d8" "task: import from tasks.sexp" "")

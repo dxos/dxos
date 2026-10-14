@@ -1,5 +1,9 @@
 # History of main
 
+- `211fc54767` C back end: a local passed as an argument moves there when later arguments only read it (D98) (by claude)
+- `5abc62eac7` history: import 438 changes
+- `5460cc4043` task: import from tasks.sexp
+- `dd19da2a63` add code specs
 - `c53158568a` Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97 (by claude)
 - `65aa9a06c5` history: import 434 changes
 - `fc3475b4c1` task: import from tasks.sexp
