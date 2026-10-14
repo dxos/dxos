@@ -12,7 +12,6 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Viewport } from '../../components/index.ts';
 import { ConfirmReset } from '../../steps/index.ts';
-import { stepStyles } from '../../styles/index.ts';
 import { JoinHeading } from './JoinHeading.tsx';
 import { useJoinMachine } from './joinMachine.ts';
 import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps.ts';
@@ -25,7 +24,9 @@ import {
   InvitationRescuer,
 } from './steps/index.ts';
 
-// TODO(burdon): Needs to be reimplemented.
+/**
+ * The Dialog.Content's parts for joining: the heading, then one view per step, each a Dialog.Body and Dialog.Footer.
+ */
 export const JoinPanelImpl = ({
   titleId,
   activeView,
@@ -40,7 +41,6 @@ export const JoinPanelImpl = ({
   send,
   onExit,
   onHaloDone,
-  // onSpaceDone,
   exitActionParent,
   doneActionParent,
   onHaloInvitationCancel,
@@ -54,13 +54,13 @@ export const JoinPanelImpl = ({
 }: JoinPanelImplProps) => {
   return (
     <>
-      {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
+      <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View classNames={stepStyles} id='addition-method-chooser'>
+          <Viewport.View id='addition-method-chooser'>
             <AdditionMethodChooser send={send} active={activeView === 'addition-method-chooser'} />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='reset-storage-confirmation'>
+          <Viewport.View id='reset-storage-confirmation'>
             <ConfirmResetComponent
               send={send}
               active={activeView === 'reset-storage-confirmation'}
@@ -68,21 +68,21 @@ export const JoinPanelImpl = ({
               onConfirm={onConfirmResetStorage}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='create-identity-input'>
+          <Viewport.View id='create-identity-input'>
             <IdentityInputComponent
               send={send}
               method='create identity'
               active={activeView === 'create-identity-input'}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='recover-identity-input'>
+          <Viewport.View id='recover-identity-input'>
             <IdentityInputComponent
               send={send}
               method='recover identity'
               active={activeView === 'recover-identity-input'}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo-invitation-input'>
+          <Viewport.View id='halo-invitation-input'>
             <InvitationInput
               send={send}
               Kind='Halo'
@@ -91,7 +91,7 @@ export const JoinPanelImpl = ({
               {...(succeededKeys?.Halo && { succeededKeys: succeededKeys.Halo })}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo-invitation-rescuer'>
+          <Viewport.View id='halo-invitation-rescuer'>
             <InvitationRescuer
               send={send}
               Kind='Halo'
@@ -101,7 +101,7 @@ export const JoinPanelImpl = ({
               failReason={failReasons?.Halo}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo-invitation-authenticator'>
+          <Viewport.View id='halo-invitation-authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Halo'
@@ -113,23 +113,12 @@ export const JoinPanelImpl = ({
               {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
-          {/* <Viewport.View classNames={stepStyles} id='halo-invitation-accepted'>
-            <InvitationAccepted
-              {...{
-                send,
-                Kind: 'Halo',
-                active: activeView === 'halo-invitation-accepted',
-                doneActionParent,
-                onDone: onHaloDone,
-              }}
-            />
-          </Viewport.View> */}
-          <Viewport.View classNames={stepStyles} id='identity-added'>
+          <Viewport.View id='identity-added'>
             <IdentityAdded
               {...{ send, mode, active: activeView === 'identity-added', doneActionParent, onDone: onHaloDone }}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space-invitation-input'>
+          <Viewport.View id='space-invitation-input'>
             <InvitationInput
               send={send}
               Kind='Space'
@@ -140,7 +129,7 @@ export const JoinPanelImpl = ({
               exitActionParent={exitActionParent}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space-invitation-rescuer'>
+          <Viewport.View id='space-invitation-rescuer'>
             <InvitationRescuer
               send={send}
               Kind='Space'
@@ -150,7 +139,7 @@ export const JoinPanelImpl = ({
               failReason={failReasons?.Space}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space-invitation-authenticator'>
+          <Viewport.View id='space-invitation-authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Space'
@@ -162,17 +151,6 @@ export const JoinPanelImpl = ({
               {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
-          {/* <Viewport.View classNames={stepStyles} id='space-invitation-accepted'>
-            <InvitationAccepted
-              {...{
-                send,
-                Kind: 'Space',
-                active: activeView === 'space-invitation-accepted',
-                doneActionParent,
-                onDone: onSpaceDone,
-              }}
-            />
-          </Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
     </>

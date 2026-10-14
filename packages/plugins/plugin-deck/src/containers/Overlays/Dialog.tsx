@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { addEventListener } from '@dxos/async';
 import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import * as UiDialog from '@dxos/react-ui/Dialog';
 
@@ -38,6 +39,25 @@ export const Dialog = () => {
   // zag's dismiss layer looks for the content once on open, so the Root opens only after a lazily loaded content mounts.
   const [pending, setPending] = useState(false);
 
+  // Focus returns to where it was before the dialog opened. Zag records the element focused when its trap starts, but a
+  // field's `autoFocus` inside the content has already taken focus by then, and that field is gone once the dialog is.
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  useEffect(
+    () =>
+      addEventListener(
+        document,
+        'focusin',
+        (event) => {
+          if (event.target instanceof HTMLElement && !event.target.closest('[role="dialog"], [role="alertdialog"]')) {
+            returnFocusRef.current = event.target;
+          }
+        },
+        { capture: true },
+      ),
+    [],
+  );
+  const getReturnFocus = useCallback(() => (returnFocusRef.current?.isConnected ? returnFocusRef.current : null), []);
+
   const handleOpenChange = useCallback(
     ({ open }: { open: boolean }) => {
       if (!open) {
@@ -64,6 +84,7 @@ export const Dialog = () => {
       modal={dialogBlockAlign !== 'end'}
       placement={dialogBlockAlign}
       open={dialogOpen && !pending}
+      finalFocusEl={getReturnFocus}
       onOpenChange={handleOpenChange}
     >
       {hostRendersOverlay ? (

@@ -56,16 +56,18 @@ export const Main = () => {
 
   return (
     <Listbox.Root items={plugins.map((plugin) => ({ value: plugin.meta.profile.key, label: plugin.meta.profile.key }))}>
-      <Listbox.Content aria-label='Plugins'>
-        {plugins.map((plugin) => (
-          <Item
-            key={plugin.meta.profile.key}
-            id={plugin.meta.profile.key}
-            disabled={core.includes(plugin.meta.profile.key)}
-            onRemove={handleRemove}
-          />
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Plugins'>
+          {plugins.map((plugin) => (
+            <Item
+              key={plugin.meta.profile.key}
+              id={plugin.meta.profile.key}
+              disabled={core.includes(plugin.meta.profile.key)}
+              onRemove={handleRemove}
+            />
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

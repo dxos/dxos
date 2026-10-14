@@ -85,7 +85,7 @@ export type Inference = {
   parentSpanId?: string;
   /** Provider span name, e.g. `LanguageModel.streamText`. */
   spanName: string;
-  /** `gen_ai.system` — the serving product, not the wire dialect. */
+  /** `gen_ai.provider.name` — the serving product, not the wire dialect. */
   provider?: string;
   model?: string;
   /** Conversation the call belongs to, when the call site named one. */

@@ -162,6 +162,10 @@ export type RefOption = {
   label: string;
   /** Optional secondary line shown beneath the label in the picker list. */
   description?: string;
+  /** Optional leading icon in the picker list (e.g. the object's type icon). */
+  icon?: string;
+  /** The icon's hue name (e.g. a type's `IconAnnotation` hue); a name that is no hue is ignored. */
+  iconHue?: string;
   hue?: Palette;
 };
 

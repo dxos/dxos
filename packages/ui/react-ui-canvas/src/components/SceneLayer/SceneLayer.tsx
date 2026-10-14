@@ -589,7 +589,9 @@ const NodeFrame = memo(
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...fade,
     };
-    const frameLook = props.opening ? frameClasses(drawn, false).slice(1) : frameClasses(drawn, selected, hovered);
+    const frameLook = props.opening
+      ? frameClasses(drawn, false, false, def?.ellipse).slice(1)
+      : frameClasses(drawn, selected, hovered, def?.ellipse);
     return (
       <>
         <div

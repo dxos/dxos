@@ -13,7 +13,7 @@ import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
-import { seedSupportTeam } from './support-team.ts';
+import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 
 //
 // The Discord stories: one agent (Kai) in Support mode, the DXOS team it escalates to, and the Discord app (bot)
@@ -55,8 +55,13 @@ export type SetupDiscordAgentProps = DiscordBotArgs & SetupAgentProps;
 /** The agent, in Support mode, with the team it escalates to; reuses what a previous run left in the space. */
 export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProps): Promise<Agent.Agent> => {
   const agent = await ensureAgent(db, invoker, remote);
-  await seedSupportTeam({ db, invoker, agent });
+  await seedSupportTeam({ db, invoker, agent, remote });
   await enableSupport(db, invoker, agent);
+  // Facts need a model, which only a story on EDGE has. Not awaited: the model call outlasts the setup plugin's
+  // activation timeout, and the Facts panel picks the facts up when they land.
+  if (remote) {
+    void seedSupportFacts({ db, invoker, agent, remote });
+  }
   return agent;
 };
 
@@ -206,7 +211,7 @@ export type FakeDiscordBot = {
   restore: () => void;
 };
 
-const BOT_PATH = /\/compute\/discord\/bots\/([^/?]+)/;
+const BOT_PATH = /\/discord\/bots\/([^/?]+)/;
 
 /**
  * How long a started gateway reports `connecting` before `ready`: longer than the monitor's poll interval, so the
@@ -218,7 +223,7 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify({ success: true, data }), { status, headers: { 'Content-Type': 'application/json' } });
 
 /**
- * Stands in for EDGE's Discord bot routes (`/compute/discord/bots/<applicationId>`) by wrapping `fetch`:
+ * Stands in for EDGE's Discord bot routes (`/discord/bots/<applicationId>`) by wrapping `fetch`:
  * PUT starts the bot (connecting for {@link CONNECTING_MS}, then ready), DELETE stops it, GET reports. EDGE's
  * `/auth` challenge answers 404 so the client proceeds unauthenticated instead of reaching a real EDGE.
  */

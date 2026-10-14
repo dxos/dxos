@@ -1,0 +1,360 @@
+@prefix : <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/bindings/manifest#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
+@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
+@prefix dawgt:  <http://www.w3.org/2001/sw/DataAccess/tests/test-dawg#> .
+@prefix sparql: <http://www.w3.org/ns/sparql#> .
+
+<>  rdf:type mf:Manifest ;
+    mf:specVersion sparql:version-1.1 ;
+    rdfs:comment "Bindings" ;
+    mf:entries
+    ( 
+        :values1
+        :values2
+        :values3
+        :values4
+        :values5
+        :values6
+        :values7
+        :values8
+        :inline1
+        :inline2
+        :graph
+        :graph-no-var
+        :graph-from-named-1
+        :graph-from-named-2
+        :graph-from-named-3
+        :values-order-by
+        :values-offset-limit
+        :values-distinct
+        :values-group-order-by
+        :values-select-star
+        :values-no-vars-no-rows
+        :values-no-vars-two-rows
+        :values-subquery-offset-limit
+        :values-ask
+        :values-construct
+        :values-construct-group-by
+        :values-construct-limit
+        :values-group-by-projection
+        :values-group-by-select-expression
+        :values-group-by-join
+    ).
+
+
+:values1 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with subj-var, 1 row" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values01.rq> ;
+        qt:data   <data01.ttl>
+    ] ;
+    mf:result  <values01.srx> .
+
+:values2 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with obj-var, 1 row" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values02.rq> ;
+        qt:data   <data02.ttl>
+    ] ;
+    mf:result  <values02.srx> .  
+
+:values3 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with 2 obj-vars, 1 row" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values03.rq> ;
+        qt:data   <data03.ttl>
+    ] ;
+    mf:result  <values03.srx> . 
+
+:values4 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with 2 obj-vars, 1 row with UNDEF" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values04.rq> ;
+        qt:data   <data04.ttl>
+    ] ;
+    mf:result  <values04.srx> .   
+
+:values5 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with 2 obj-vars, 2 rows with UNDEF" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values05.rq> ;
+        qt:data   <data05.ttl>
+    ] ;
+    mf:result  <values05.srx> .  
+
+:values6 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with pred-var, 1 row" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values06.rq> ;
+        qt:data   <data06.ttl>
+    ] ;
+    mf:result  <values06.srx> .   
+
+:values7 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with (OPTIONAL) obj-var, 1 row" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-05-24#resolution_4> ;
+    mf:action
+    [
+        qt:query  <values07.rq> ;
+        qt:data   <data07.ttl>
+    ] ;
+    mf:result  <values07.srx> .   
+
+:values8 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with subj/obj-vars, 2 rows with UNDEF" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <values08.rq> ;
+        qt:data   <data08.ttl>
+    ] ;
+    mf:result  <values08.srx> .   
+
+
+:inline1 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Inline VALUES graph pattern" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <inline01.rq> ;
+        qt:data   <data01.ttl>
+    ] ;
+    mf:result  <inline01.srx> .   
+
+:inline2 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-subquery VALUES" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2012-08-07#resolution_2> ;
+    mf:action
+    [
+        qt:query  <inline02.rq> ;
+        qt:data   <data02.ttl>
+    ] ;
+    mf:result  <inline02.srx> .   
+
+:graph rdf:type mf:QueryEvaluationTest ;
+    mf:name    "VALUES inside GRAPH binding the same variable as the graph name" ;
+    mf:action
+    [
+        qt:query  <graph.rq> ;
+        qt:data   <empty.ttl> ;
+        qt:graphData   <data01.ttl> ;
+        qt:graphData   <data02.ttl>
+    ] ;
+    mf:result  <graph.ttl> .
+
+:graph-no-var rdf:type mf:QueryEvaluationTest ;
+    mf:name    "VALUES inside GRAPH not mentioning the graph name variable" ;
+    rdfs:comment "Each VALUES row is joined with every named graph" ;
+    mf:action
+    [
+        qt:query  <graph-no-var.rq> ;
+        qt:data   <empty.ttl> ;
+        qt:graphData   <data01.ttl> ;
+        qt:graphData   <data02.ttl>
+    ] ;
+    mf:result  <graph-no-var.ttl> .
+
+:graph-from-named-1 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "VALUES inside GRAPH binding the graph name variable, with FROM NAMED" ;
+    rdfs:comment "Only graphs named by FROM NAMED are iterated; rows binding the graph variable to a graph excluded by FROM NAMED (ex:g2) or to an IRI that is no graph name at all (ex:unknown) are removed" ;
+    mf:action
+    [
+        qt:query  <graph-from-named-1.rq> ;
+        qt:data   <graph-from-named.trig>
+    ] ;
+    mf:result  <graph-from-named-1.srx> .
+
+:graph-from-named-2 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Graph name variable bound outside GRAPH to graphs outside the dataset, with FROM NAMED" ;
+    rdfs:comment "GRAPH ?g does not produce solutions for graph names outside the dataset, even if they are bound by a joined pattern and the inner pattern contains no triple patterns" ;
+    mf:action
+    [
+        qt:query  <graph-from-named-2.rq> ;
+        qt:data   <graph-from-named.trig>
+    ] ;
+    mf:result  <graph-from-named-2.srx> .
+
+:graph-from-named-3 rdf:type mf:QueryEvaluationTest ;
+    mf:name    "GRAPH with a fixed IRI outside the dataset around VALUES, with FROM NAMED" ;
+    rdfs:comment "GRAPH <iri> evaluates to the empty multiset if <iri> is not a graph name of the dataset, even if the inner pattern contains no triple patterns" ;
+    mf:action
+    [
+        qt:query  <graph-from-named-3.rq> ;
+        qt:data   <graph-from-named.trig>
+    ] ;
+    mf:result  <graph-from-named-3.srx> .
+
+:values-order-by rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with ORDER BY" ;
+    rdfs:comment "ORDER BY sorts by a variable that only the trailing VALUES clause binds" ;
+    mf:action
+    [
+        qt:query  <values-order-by.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-order-by.srx> .
+
+:values-offset-limit rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with OFFSET and LIMIT" ;
+    rdfs:comment "OFFSET and LIMIT apply after the join with the trailing VALUES clause" ;
+    mf:action
+    [
+        qt:query  <values-offset-limit.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-offset-limit.srx> .
+
+:values-distinct rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with DISTINCT" ;
+    rdfs:comment "DISTINCT applies after the join with the trailing VALUES clause, which duplicates each solution" ;
+    mf:action
+    [
+        qt:query  <values-distinct.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-distinct.srx> .
+
+:values-group-order-by rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with GROUP BY and ORDER BY" ;
+    rdfs:comment "The trailing VALUES clause is joined after grouping, so ORDER BY can use an expression over a variable that only the trailing VALUES clause binds" ;
+    mf:action
+    [
+        qt:query  <values-group-order-by.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-group-order-by.srx> .
+
+:values-select-star rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with SELECT *" ;
+    rdfs:comment "SELECT * includes the variables of the trailing VALUES clause" ;
+    mf:action
+    [
+        qt:query  <values-select-star.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-select-star.srx> .
+
+:values-no-vars-no-rows rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES without variables and without rows" ;
+    rdfs:comment "A trailing VALUES clause without rows makes the result empty" ;
+    mf:action
+    [
+        qt:query  <values-no-vars-no-rows.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-no-vars-no-rows.srx> .
+
+:values-no-vars-two-rows rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES without variables and with two rows" ;
+    rdfs:comment "A trailing VALUES clause with two empty rows duplicates each solution" ;
+    mf:action
+    [
+        qt:query  <values-no-vars-two-rows.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-no-vars-two-rows.srx> .
+
+:values-subquery-offset-limit rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-subquery VALUES with OFFSET and LIMIT" ;
+    rdfs:comment "OFFSET and LIMIT of the subquery apply after the join with its trailing VALUES clause" ;
+    mf:action
+    [
+        qt:query  <values-subquery-offset-limit.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-subquery-offset-limit.srx> .
+
+:values-ask rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with ASK" ;
+    rdfs:comment "The trailing VALUES clause removes all solutions, so the answer is false" ;
+    mf:action
+    [
+        qt:query  <values-ask.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-ask.srx> .
+
+:values-construct rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with CONSTRUCT" ;
+    rdfs:comment "The template uses a variable that only the trailing VALUES clause binds" ;
+    mf:action
+    [
+        qt:query  <values-construct.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-construct.ttl> .
+
+:values-construct-group-by rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with CONSTRUCT and GROUP BY" ;
+    rdfs:comment "The trailing VALUES clause is joined after grouping, so the template can use a variable that only the trailing VALUES clause binds" ;
+    mf:action
+    [
+        qt:query  <values-construct-group-by.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-construct-group-by.ttl> .
+
+:values-construct-limit rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with CONSTRUCT and LIMIT" ;
+    rdfs:comment "The trailing VALUES clause is joined before LIMIT. The template has a single triple, so LIMIT gives the same result whether it applies to the solutions or to the constructed triples" ;
+    mf:action
+    [
+        qt:query  <values-construct-limit.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-construct-limit.ttl> .
+
+:values-group-by-projection rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with GROUP BY and projected VALUES variable" ;
+    rdfs:comment "The trailing VALUES clause is joined after grouping, so the projection can use a variable that only the trailing VALUES clause binds" ;
+    mf:action
+    [
+        qt:query  <values-group-by-projection.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-group-by-projection.srx> .
+
+:values-group-by-select-expression rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with GROUP BY and VALUES variable in SELECT expression" ;
+    rdfs:comment "The trailing VALUES clause is joined after grouping, so a SELECT expression can use a variable that only the trailing VALUES clause binds" ;
+    mf:action
+    [
+        qt:query  <values-group-by-select-expression.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-group-by-select-expression.srx> .
+
+:values-group-by-join rdf:type mf:QueryEvaluationTest ;
+    mf:name    "Post-query VALUES with GROUP BY joined on the grouping variable" ;
+    rdfs:comment "The trailing VALUES clause is joined with the grouped solutions on the grouping variable" ;
+    mf:action
+    [
+        qt:query  <values-group-by-join.rq> ;
+        qt:data   <data-modifiers.ttl>
+    ] ;
+    mf:result  <values-group-by-join.srx> .

@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors.ts';
-import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, FactualityValue, Ontology } from '../../types/index.ts';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -57,6 +57,7 @@ const softEnum = <const A extends string>(...values: readonly A[]) =>
   );
 
 const Nature = softEnum('epistemic', 'aleatory');
+const Kind = softEnum('person', 'org', 'place', 'event', 'concept', 'thing');
 // Illocutionary force + sentence mood — the speech act the author performs (see pipeline-rdf
 // `Illocution`). Soft enums so a stray value never discards the fact; default (absent) is assertive.
 const Force = softEnum('assertive', 'directive', 'commissive', 'expressive');
@@ -81,6 +82,10 @@ export const ExtractedFact = Schema.Struct({
   force: Force,
   mood: Mood,
   quote: OptionalString,
+  subjectType: Kind,
+  objectType: Kind,
+  /** A short name for the group of statements this one belongs to. */
+  graph: OptionalString,
 });
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
@@ -90,7 +95,14 @@ export const ExtractPayload = Schema.Struct({
 export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload> {}
 
 const BASE_PROMPT = `You extract atomic propositions from a message as structured facts.
-For each proposition output: subject, predicate (a short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), the speech act as force (assertive|directive|commissive|expressive) and mood (declarative|interrogative|imperative), and the source quote.`;
+For each proposition output: subject, predicate (a short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), the speech act as force (assertive|directive|commissive|expressive) and mood (declarative|interrogative|imperative), the source quote, optional subjectType/objectType (person|org|place|event|concept|thing), and graph (a short name for the group of propositions it belongs to).`;
+
+/** The ontology's predicates as a prompt rule, so the extractor reuses them rather than inventing variants. */
+const ontologyRule = (ontology: Ontology.Ontology): string =>
+  `Use one of these predicates when it fits the relation, spelled exactly as given: ${ontology.entries
+    .filter((entry) => entry.description)
+    .map((entry) => `"${entry.label}" (${entry.description})`)
+    .join('; ')}. Otherwise use a short verb phrase.`;
 
 /**
  * The default extraction rules, one self-contained constraint per entry. Callers extend the set via
@@ -100,7 +112,9 @@ For each proposition output: subject, predicate (a short verb phrase), object, o
 export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
   'Capture uncertainty in factuality ("probably" => PR+, "might" => PS+).',
   'Keep prepositions and particles that bind to the verb in the predicate, not the object: passive voice "X was created by Y" => predicate "created by", object "Y" (just the agent). Likewise "moved to", "depends on", "reported by".',
-  'Use the exact predicate "is-a" for class membership: "Socrates is a man" => subject "Socrates", predicate "is-a", object "man". Never use bare "is" or "was" as the membership predicate.',
+  ontologyRule(Ontology.DEFAULT),
+  'Use the predicate "is a" for class membership: "Socrates is a man" => subject "Socrates", predicate "is a", object "man". A job title or role is "has role" instead: "Rich is the founder" => subject "Rich", predicate "has role", object "founder". Never use bare "is" or "was".',
+  'Give propositions from the same sentence the same graph name, and propositions from another sentence a different one.',
   'Keep every predicate in timeless present form and express tense through validFrom/validTo instead: "Alice worked at Acme until 2020" => predicate "works at" with validTo set from the stated end. Past tense alone — without an explicit date or an end cue such as "until", "former", or "no longer" — does NOT set validTo.',
   'Prefer short, reusable predicates and reuse the SAME predicate for the same relation throughout ("works for" / "employed by" => pick one, e.g. "works at"). Never invent a synonym variant of a predicate you have already emitted.',
   'The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value — never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.',

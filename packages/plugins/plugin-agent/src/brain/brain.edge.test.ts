@@ -36,7 +36,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import { BrainService, ChatParticipant, Goal, Memory, Mode, Relay, type Trigger } from '#types';
+import { BrainService, ChatParticipant, Goal, Mode, Relay, type Trigger } from '#types';
 
 import { baseInstructions } from '../instructions.ts';
 import { ensureParticipantChat } from '../operations/ensure-participant-chat.ts';
@@ -72,7 +72,6 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
     Person.Person,
     Organization.Organization,
     HasSubject.HasSubject,
-    Memory.Memory,
     Goal.Goal,
     Mode.Mode,
     Relay.Relay,

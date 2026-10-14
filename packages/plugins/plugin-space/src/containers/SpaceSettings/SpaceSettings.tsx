@@ -90,23 +90,25 @@ export const SpaceSettings = ({
                   label: Theme.toLocalizedString(getSpaceDisplayName(space), t),
                 }))}
               >
-                <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
-                  {spaces?.map((space) => (
-                    <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
-                      {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
-                      <Listbox.ItemText classNames='min-h-0!'>
-                        {Theme.toLocalizedString(getSpaceDisplayName(space), t)}
-                      </Listbox.ItemText>
-                      <Button.Root
-                        icon='ph--faders--regular'
-                        iconOnly
-                        label={t('settings.open-settings.label')}
-                        disabled={!onOpenSpaceSettings}
-                        onClick={() => onOpenSpaceSettings?.(space)}
-                      />
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
+                <Listbox.Viewport>
+                  <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
+                    {spaces?.map((space) => (
+                      <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
+                        {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
+                        <Listbox.ItemText classNames='min-h-0!'>
+                          {Theme.toLocalizedString(getSpaceDisplayName(space), t)}
+                        </Listbox.ItemText>
+                        <Button.Root
+                          icon='ph--faders--regular'
+                          iconOnly
+                          label={t('settings.open-settings.label')}
+                          disabled={!onOpenSpaceSettings}
+                          onClick={() => onOpenSpaceSettings?.(space)}
+                        />
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Viewport>
               </Listbox.Root>
             </Form.Field>
           </Form.FieldSet>

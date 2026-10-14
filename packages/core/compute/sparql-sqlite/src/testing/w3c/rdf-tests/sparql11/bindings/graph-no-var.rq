@@ -1,0 +1,5 @@
+SELECT ?x ?g WHERE {
+    GRAPH ?g {
+        VALUES ?x { 1 2 }
+    }
+}

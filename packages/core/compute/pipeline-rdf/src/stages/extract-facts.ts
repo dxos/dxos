@@ -12,22 +12,31 @@ import { type SemanticIndexError } from '../errors.ts';
 import { chunk } from '../internal/stages/chunk.ts';
 import { DEFAULT_MODEL, extractChunk } from '../internal/stages/extract.ts';
 import { hashText } from '../internal/stages/reconcile.ts';
-import { type ExtractDocument, type ExtractOptions } from '../types/index.ts';
-import { type Fact } from '../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, type Fact, Graph } from '../types/index.ts';
 
-// PROVISIONAL v1 entity resolution: distinct surface forms that normalize identically will merge,
-// and there is no linking to real ECHO objects yet. Not the final identity scheme.
+const EMAIL = /^(?:mailto:)?([^\s@]+@[^\s@]+\.[^\s@]+)$/i;
+const URL_PATTERN = /^https?:\/\/\S+$/i;
+
+// Distinct surface forms that slug identically merge; linking a slug to an ECHO object is `resolveEntity`'s job.
 /**
- * Normalize a surface form (subject/object label, or an author token) to its canonical entity id.
- * Consumers that join against `attribution.agent` / entity ids MUST apply this — the stored value is
- * the normalized form, not the raw label (e.g. `discord-user:123` → `discord-user-123`). Idempotent.
+ * Normalize a surface form (subject/object label, or an author token) to its canonical entity id: an email address
+ * as its `mailto:` IRI, a web address as itself, anything else as a slug. Consumers that join against
+ * `attribution.agent` / entity ids MUST apply this — the stored value is the normalized form, not the raw label
+ * (e.g. `discord-user:123` → `discord-user-123`). Idempotent.
  */
 export const normalizeEntityId = (label: string) => {
-  const normalized = label.trim().toLowerCase();
+  const trimmed = label.trim();
+  const email = EMAIL.exec(trimmed);
+  if (email) {
+    return `mailto:${email[1].toLowerCase()}`;
+  }
+  if (URL_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+  const normalized = trimmed.toLowerCase();
   const value = normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   return value || `entity-${hashText(normalized)}`;
 };
-const factId = (source: string, hash: string, index: number) => `${source}#${hash}#${index}`;
 
 /**
  * Whether a subject/object label is groundable. The model emits the literal `unknown` (or an empty
@@ -54,8 +63,9 @@ export const extractDocFacts = (
     const recordedAt = new Date(yield* Clock.currentTimeMillis).toISOString();
     const hash = hashText(doc.text);
     const chunks = chunk(doc.text);
-    let index = 0;
     const docFacts: Fact[] = [];
+    // The graph label the model gave each statement; statements that also share provenance share a graph.
+    const labels = new Map<Fact, string>();
     for (const chunkText of chunks) {
       const payload = yield* extractChunk({ ...doc, text: chunkText }, options);
       for (const candidate of payload.facts) {
@@ -74,11 +84,22 @@ export const extractDocFacts = (
               : undefined;
 
         const fact: Fact = {
-          id: factId(doc.source, hash, index++),
+          // Replaced by the statement's id once the facts are placed in their graphs below.
+          id: '',
           assertion: {
-            subject: { kind: 'entity', entity: normalizeEntityId(candidate.subject), label: candidate.subject.trim() },
+            subject: {
+              kind: 'entity',
+              entity: normalizeEntityId(candidate.subject),
+              label: candidate.subject.trim(),
+              ...(candidate.subjectType ? { type: candidate.subjectType } : {}),
+            },
             predicate: candidate.predicate,
-            object: { kind: 'entity', entity: normalizeEntityId(candidate.object), label: candidate.object.trim() },
+            object: {
+              kind: 'entity',
+              entity: normalizeEntityId(candidate.object),
+              label: candidate.object.trim(),
+              ...(candidate.objectType ? { type: candidate.objectType } : {}),
+            },
             ...(candidate.validFrom ? { validFrom: candidate.validFrom } : {}),
             ...(candidate.validTo ? { validTo: candidate.validTo } : {}),
             ...(candidate.quote ? { quote: candidate.quote } : {}),
@@ -100,9 +121,10 @@ export const extractDocFacts = (
           sourceHash: hash,
         };
         docFacts.push(fact);
+        labels.set(fact, candidate.graph ?? '');
       }
     }
-    return docFacts;
+    return Graph.assign(docFacts, { name: (fact) => `${doc.source}#${hash}#${labels.get(fact) ?? ''}` });
   });
 
 /**

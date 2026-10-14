@@ -1,0 +1,26 @@
+{
+  "spo,pos": {
+    "ingestMs": 2679,
+    "triples": 101441,
+    "dbBytes": 6418432,
+    "bytesPerTriple": 63.3
+  },
+  "spo,pos,osp": {
+    "ingestMs": 3690,
+    "triples": 101441,
+    "dbBytes": 7897088,
+    "bytesPerTriple": 77.8
+  },
+  "spo,pos,osp,gspo": {
+    "ingestMs": 2080,
+    "triples": 101441,
+    "dbBytes": 9424896,
+    "bytesPerTriple": 92.9
+  },
+  "pipelineRdfText": {
+    "ingestMs": 4322,
+    "triples": 101441,
+    "dbBytes": 41074688,
+    "bytesPerTriple": 404.9
+  }
+}

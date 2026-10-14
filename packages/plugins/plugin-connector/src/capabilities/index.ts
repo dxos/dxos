@@ -13,9 +13,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { ConnectorCoordination, ConnectorEvents, ConnectorSpec } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export * from './connector-coordinator/index.ts';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
@@ -60,6 +57,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
