@@ -214,3 +214,23 @@ Calls between objects and alarms followed (D52): the `Actors` ability calls anot
 the class by name, and `Alarm` schedules an `ALARM /alarm` request. `Cloudflare.simulateMany`
 runs named objects on a logical clock. `examples/tally.deus` uses both, and
 `scripts/worker-test.sh` checks it on workerd, alarm included.
+
+## P8. The codebase as the toolchain's source of truth
+
+**Proposal (from dogfooding, codebase task `b09507db`):** develop the toolchain in its codebase
+and generate `deus/*.deus` from it, instead of adding the files to the codebase. Today that loses
+every ordinary `--` comment, since only doc comments survive `add`. Those comments say why code
+is the way it is, so the codebase cannot yet replace the files.
+
+| Approach                                                                                                                                                                                                                                                         | Strengths                                                                                                                                              | Weaknesses                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. Comments as metadata on Core positions: the lexer keeps comments, attaches each to the next node, and the printer emits them                                                                                                                                  | Comments follow the code through renames and rehashes                                                                                                  | Core has no positions to attach to; a large change to the parser, resolver and printer                                                                               |
+| B. Each definition keeps its source text, file and namespace context as metadata. `view` prints that text while every name it uses still names the hash it named when added, and prints from Core otherwise. `export` rebuilds the files in their original order | Keeps comments and layout exactly; small (`add` and `view` only); propagation keeps the text valid, because a rehashed dependent's names do not change | A rename makes the text stale, so `view` falls back to the printer for those definitions until the text is rewritten; text and Core are two copies of one definition |
+| C. Keep the files as the source of truth, and add them to the codebase (today)                                                                                                                                                                                   | Nothing to build                                                                                                                                       | The codebase is a mirror, not where work happens                                                                                                                     |
+| D. Allow only doc comments in the toolchain: move each why-comment into the declaration's doc comment                                                                                                                                                            | No machinery                                                                                                                                           | Loses the comments that sit next to the line they explain                                                                                                            |
+
+**Recommendation: B.** `deus mv` would also rewrite the stored text of the definitions that use
+the renamed name, so that only edits from outside the codebase leave text stale. The seed's
+fixpoint test then compiles the export instead of `deus/`.
+
+**Status.** Proposed; waiting on a choice.

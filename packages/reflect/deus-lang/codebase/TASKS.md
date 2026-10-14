@@ -10,6 +10,8 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 
 > claude: Design question before building: storing each definition's source text in its metadata keeps comments, but that text depends on its file's namespace and open lines, and goes stale when a dependency is renamed. A workable rule: print the stored text only while every name in it still resolves to the hash it had when added, and keep namespace and opens with it; otherwise print from Core as now.
 
+> claude: Written up as P8 in docs/PROPOSALS.md, four options; recommending B (source text as metadata while it still resolves, export rebuilds the files). Waiting on a choice before building.
+
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
