@@ -162,8 +162,9 @@ op ensureIdentity
   note: |
     `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and its
     default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
-    caller to that space as ADMIN. The members of the default space are the agent's admins and the caller, its
-    creator, is the owner; admins come and go through the space's Members panel like any space's members. The
+    caller to that space as ADMIN. The members who may write to the default space are the agent's admins (a reader
+    is not one) and the caller, its creator, is the owner; admins come and go through the space's Members panel like
+    any space's members. The caller must be able to write to `homeSpaceId`. The
     caller's `SpaceMember` credential is written to their HALO, which is what makes the client join the space, and
     only then does the agent take the brain's DID. An agent with a DID already is left alone, and without an EDGE
     client (a headless host) nothing changes. A refusal, or a membership the HALO did not take, fails the operation
@@ -663,9 +664,9 @@ feat F-6: An agent in several spaces
 ```mdl
 feat F-7: An agent's own space
 
-  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member is one of the agent's admins.
-  req F-7.2: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is a current member of. It asks nothing of EDGE.
-  req F-7.3: `AgentSpace.admins` lists an agent's admins, every current member of its space but the agent, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead (op:inviteAgent).
+  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member who may write to it (an admin or an editor, not a reader) is one of the agent's admins, as EDGE decides it.
+  req F-7.2: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is an admin of. It asks nothing of EDGE.
+  req F-7.3: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead (op:inviteAgent).
   req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
   req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
   req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent and marked as an agent (`SpaceMember.agent`). A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no other members after its genesis, but its owner admits an agent and manages its role, short of admin. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails before EDGE registers the space. The client refuses an admission the space would drop (`AuthorizationError`) rather than writing it.
@@ -766,10 +767,10 @@ scenario T-9: An invited agent keeps one brain   # invite-agent.test.ts
 ```mdl
 scenario T-10: Agent spaces list their admins   # AgentSpace.test.ts
   # covers [F-7.2, F-7.3, F-7.5]
-  given: an agent space owned by the agent, with an admin and an editor; an agent space the identity was removed from; an untagged space
+  given: an agent space owned by the agent, with an admin, an editor and a reader; an agent space the identity was removed from; an untagged space
   then:
-    - agentOf is the owner, and the admins are the admin and the editor
-    - the identity administers only the first space, and another identity none
+    - agentOf is the owner, and the admins are the admin and the editor, not the reader
+    - the identity administers only the first space, and a reader of it none
     - administeredAgents reads the name, DID, identity key and home URI an open agent space records, and only the DID and identity key of one still opening
 ```
 

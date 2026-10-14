@@ -62,7 +62,7 @@ export const translations = [
         'create-agent.label': 'Add agent',
         'agents-panel.label': 'Agents',
         'agents-panel.description':
-          'The agents you administer. Every agent has a space of its own, and its members are its admins.',
+          'The agents you administer. Every agent has a space of its own, and the members who can edit it are its admins.',
         'agents-panel-empty.message':
           "You don't administer any agents yet. Create one in a space, or ask an agent's admin to add you to its space.",
         'agents-panel-no-match.message': 'No agents match.',

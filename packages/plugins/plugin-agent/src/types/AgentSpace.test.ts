@@ -34,13 +34,14 @@ describe('AgentSpace', () => {
   const me = PublicKey.random();
   const other = PublicKey.random();
 
-  test('the agent owns its space and every other current member is an admin', ({ expect }) => {
+  test('the agent owns its space and the other members who may write to it are its admins', ({ expect }) => {
     const kai = space(
       [AppSpace.AGENT_SPACE_TAG],
       [
         member(agent, SpaceMember_Role.OWNER),
         member(me, SpaceMember_Role.ADMIN),
         member(other, SpaceMember_Role.EDITOR),
+        member(PublicKey.random(), SpaceMember_Role.READER),
       ],
     );
     expect(AgentSpace.isAgentSpace(kai)).toBe(true);
@@ -51,10 +52,14 @@ describe('AgentSpace', () => {
     ]);
   });
 
-  test('an identity administers the agent spaces it is still a member of', ({ expect }) => {
+  test('an identity administers the agent spaces it may still write to', ({ expect }) => {
     const kai = space(
       [AppSpace.AGENT_SPACE_TAG],
-      [member(agent, SpaceMember_Role.OWNER), member(me, SpaceMember_Role.ADMIN)],
+      [
+        member(agent, SpaceMember_Role.OWNER),
+        member(me, SpaceMember_Role.ADMIN),
+        member(other, SpaceMember_Role.READER),
+      ],
     );
     const left = space(
       [AppSpace.AGENT_SPACE_TAG],

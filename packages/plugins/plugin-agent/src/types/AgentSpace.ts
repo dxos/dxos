@@ -15,9 +15,9 @@ import * as AgentPresence from './AgentPresence.ts';
 
 /**
  * An agent's default space: the space its own identity owns, minted with that identity on EDGE and tagged
- * `AppSpace.AGENT_SPACE_TAG`. Its members are the agent's admins. Every membership carries the tag, and a client
- * opens every space its HALO holds a membership of, so the agents an identity administers are among its own spaces
- * and finding them needs nothing from EDGE.
+ * `AppSpace.AGENT_SPACE_TAG`. Its members who may write to it are the agent's admins, as EDGE decides it. Every
+ * membership carries the tag, and a client opens every space its HALO holds a membership of, so the agents an
+ * identity administers are among its own spaces and finding them needs nothing from EDGE.
  */
 export type Space = {
   readonly id: SpaceId;
@@ -39,13 +39,13 @@ export const isAgentSpace = (space: Pick<Space, 'tags'>): boolean => space.tags.
 export const agentOf = (space: Space): SpaceMember | undefined =>
   space.members.get().find((member) => member.role === SpaceMember_Role.OWNER);
 
-/** The agent's admins: every current member of its space but the agent itself. */
+/** The agent's admins: the members who may write to its space but the agent, which owns it; a reader is not one. */
 export const admins = (space: Space): SpaceMember[] =>
   space.members
     .get()
-    .filter((member) => member.role !== SpaceMember_Role.OWNER && member.role !== SpaceMember_Role.REMOVED);
+    .filter((member) => member.role === SpaceMember_Role.ADMIN || member.role === SpaceMember_Role.EDITOR);
 
-/** The agent spaces among `spaces` that `identityKey` is a current member of: the agents it administers. */
+/** The agent spaces among `spaces` that `identityKey` is an admin of: the agents it administers. */
 export const administeredBy = <S extends Space>(spaces: readonly S[], identityKey: PublicKey): S[] =>
   spaces.filter(
     (space) =>
