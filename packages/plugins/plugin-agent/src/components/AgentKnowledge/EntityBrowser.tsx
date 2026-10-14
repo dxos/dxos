@@ -4,6 +4,7 @@
 
 import React, { type KeyboardEvent, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useComposedRefs } from '@dxos/react-hooks';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Field from '@dxos/react-ui/Field';
 import * as Focus from '@dxos/react-ui/Focus';
@@ -50,6 +51,24 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
   ({ stack, selection, icons, onChoose, onClose, onNavigate }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const [filter, setFilter] = useState('');
+    const [stackElement, setStackElement] = useState<HTMLDivElement | null>(null);
+    const stackRef = useComposedRefs<HTMLDivElement>(forwardedRef, setStackElement);
+
+    // Focus chooses the card it lands on (as in Finder); a card already chosen keeps its finer choice (a row, a chip).
+    useEffect(() => {
+      if (!stackElement) {
+        return;
+      }
+      const handleFocusIn = (event: FocusEvent) => {
+        const card = event.target instanceof Element ? event.target.closest('[data-entity-id]') : null;
+        const id = card?.getAttribute('data-entity-id');
+        if (id && id !== selection?.cardId) {
+          onChoose({ cardId: id });
+        }
+      };
+      stackElement.addEventListener('focusin', handleFocusIn);
+      return () => stackElement.removeEventListener('focusin', handleFocusIn);
+    }, [stackElement, selection?.cardId, onChoose]);
     const menuActions = useMenuBuilder(() => {
       const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: meta.profile.key }] });
       if (onClose) {
@@ -94,7 +113,7 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
         <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
-              <Focus.Group asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
+              <Focus.Group asChild onKeyDown={handleKeyDown} ref={stackRef}>
                 <Layout.Flex column gap='sm' classNames='p-2'>
                   {stack
                     .filter((card) => matches(card, filter))
@@ -105,8 +124,6 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
                           key={card.id}
                           asChild
                           current={chosen}
-                          // Focus chooses the card, but a card already chosen keeps its finer choice (a row, a chip).
-                          onFocus={() => !chosen && onChoose({ cardId: card.id })}
                           onCurrentChange={() => onChoose({ cardId: card.id })}
                         >
                           <EntityCard

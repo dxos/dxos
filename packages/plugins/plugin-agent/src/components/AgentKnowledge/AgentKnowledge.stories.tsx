@@ -6,12 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
+import { Editor } from '@dxos/react-ui-editor';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { createBasicExtensions, createThemeExtensions, turtle } from '@dxos/ui-editor';
 
 import { translations } from '#translations';
 
@@ -143,22 +145,32 @@ const RESOLVED = {
   predicates: { 'is-a': 'hasRole', 'member of': 'memberOf', 'own': 'owns' },
 };
 
-const Source = ({ title, children }: { title: string; children: string }) => (
-  <Panel.Root>
-    <Panel.Header>
-      <Toolbar.Root>
-        <Toolbar.Text>{title}</Toolbar.Text>
-      </Toolbar.Root>
-    </Panel.Header>
-    <Panel.Body asChild>
-      <ScrollArea.Root orientation='all'>
-        <ScrollArea.Viewport>
-          <pre className='m-0 p-2 whitespace-pre text-xs font-mono select-text'>{children}</pre>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Panel.Body>
-  </Panel.Root>
-);
+/** Read-only Turtle/TriG in the editor, highlighted by the `turtle` language. */
+const Source = ({ title, children }: { title: string; children: string }) => {
+  const themeMode = UiHooks.useThemeMode();
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ readOnly: true, lineNumbers: true, lineWrapping: false }),
+      createThemeExtensions({ themeMode, monospace: true, syntaxHighlighting: true }),
+      turtle(),
+    ],
+    [themeMode],
+  );
+  return (
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>{title}</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        <Editor.Root>
+          <Editor.View classNames='dx-fill' value={children} extensions={extensions} />
+        </Editor.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
 
 /** The stored reification beside the named-graph form `docs/QUESTIONS.md` §1 proposes, for the same facts. */
 const NamedGraphsStory = () => {
@@ -189,12 +201,20 @@ const PROFILE_FACTS: RDF.Fact[] = [
 
 const CARD_OPTIONS = {
   types: {
+    ...Object.fromEntries(COLLEAGUES.map((name) => [slugOf(name), 'Person'])),
     'alice': 'Person',
     'bob': 'Person',
+    'carol': 'Person',
     'david': 'Person',
     'emma': 'Person',
     'rich-burdon': 'Person',
     'dima': 'Person',
+    'acme': 'Organization',
+    'dxos': 'Organization',
+    'paper-a': 'Document',
+    'paper-b': 'Document',
+    'founder': 'Role',
+    'indexer': 'Project',
   },
   inverses: {
     'know': 'known-by',

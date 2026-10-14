@@ -5,7 +5,9 @@
 import { RDF } from '@dxos/pipeline-rdf';
 
 /** One value of a property: an entity is a chip that links to its own card, a literal is text. */
-export type EntityCardValue = { kind: 'entity'; id: string; label: string } | { kind: 'literal'; label: string };
+export type EntityCardValue =
+  | { kind: 'entity'; id: string; label: string; /** The entity's class, which colours its chip. */ type?: string }
+  | { kind: 'literal'; label: string };
 
 export type EntityCardProperty = {
   /** The normalized predicate, so a property can be keyed and an inverse looked up. */
@@ -36,9 +38,9 @@ export type EntityCardOptions = {
   objects?: boolean;
 };
 
-const valueOf = (term: RDF.Term): EntityCardValue =>
+const valueOf = (term: RDF.Term, types: EntityCardOptions['types']): EntityCardValue =>
   term.kind === 'entity'
-    ? { kind: 'entity', id: term.entity, label: term.label ?? term.entity }
+    ? { kind: 'entity', id: term.entity, label: term.label ?? term.entity, type: types?.[term.entity] }
     : { kind: 'literal', label: term.literal };
 
 /** Appends `value` to the property for `predicate`, in first-seen order, without repeating a value. */
@@ -82,7 +84,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     const predicate = RDF.Predicate.normalize(assertion.predicate);
     const label = RDF.Predicate.label(options.labels?.[predicate] ?? assertion.predicate);
     const subject = card(assertion.subject.entity, assertion.subject.label);
-    add(subject.properties, predicate, label, valueOf(assertion.object));
+    add(subject.properties, predicate, label, valueOf(assertion.object, options.types));
 
     if (assertion.object.kind === 'entity') {
       // Collected for every object; without `objects`, an object gets a card only if it is also a subject.
@@ -91,7 +93,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
         card(assertion.object.entity, assertion.object.label).inverse,
         predicate,
         inverseLabel,
-        valueOf(assertion.subject),
+        valueOf(assertion.subject, options.types),
       );
     }
   }

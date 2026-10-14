@@ -9,6 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
+import { getHashHue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -60,7 +61,8 @@ const Values = ({ values, onSelect }: { values: readonly EntityCardValue[]; onSe
         value.kind === 'entity' ? (
           <Tag.Tag
             key={value.id}
-            hue='sky'
+            // One hue per class, so a card's people, places and papers read apart at a glance.
+            hue={getHashHue(value.type)}
             onClick={
               onSelect
                 ? (event) => {
@@ -138,7 +140,15 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
     const { t } = Hooks.useTranslation(meta.profile.key);
     const rows = { icons, currentProperty, onSelectProperty, onSelect };
     return (
-      <Card.Root {...props} grid selected={selected} onClick={onClick} data-testid='entity-card' ref={forwardedRef}>
+      <Card.Root
+        {...props}
+        grid
+        selected={selected}
+        onClick={onClick}
+        data-testid='entity-card'
+        data-entity-id={card.id}
+        ref={forwardedRef}
+      >
         <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
           <KeyValue label={t('entity-card-type.label')}>
             <Card.Text truncate>{card.type ?? '—'}</Card.Text>
