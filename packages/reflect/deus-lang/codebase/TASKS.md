@@ -15,13 +15,6 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
-## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
-
-- state: todo
-- priority: high
-- labels: perf
-- links `Array.set` (#b3d7fa0dc1)
-
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -174,12 +167,25 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: native, perf
 
-## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D83) (`a1b73fb8`)
+## Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (`2a2b87a2`)
+
+- state: todo
+- priority: medium
+- labels: spec
+
+## TS kernel JIT: Ref.set journals a closure on every write; journal only when a deoptimisation can replay the entry (Array.set no longer journals, D96) (`a1b73fb8`)
 
 - state: todo
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
+
+## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (`7ef8bf45`)
+
+- state: todo
+- priority: medium
+- labels: prover
+- links `Check.generate` (#ba17124ee9)
 
 ## Theorem view prints P -> Q as prim "implies" (P) (Q) (`4f7f9e40`)
 
@@ -644,6 +650,14 @@ Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end fol
 - labels: native, perf, wasm
 - links change #9081760a10
 
+## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
+
+- state: done
+- priority: high
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
+- links change #034fda7dc8
+
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 
 - state: done
@@ -671,7 +685,7 @@ Measured in docs/IMMUTABILITY.md (D83): seven sorts on both kernels, wasm, C and
 - assignee: claude
 - labels: spec, mdl, codebase
 
-From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D96.
+From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D97.
 
 ## Task viewer in the codebase explorer (`553faf09`)
 

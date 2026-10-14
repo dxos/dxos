@@ -28,7 +28,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | Log, trace and metric output: NDJSON and OTLP JSON lines                               |
 
 The checked specs (`Codebase.Spec`, `Compile.Spec` and the other `*.Spec` rows) live in the codebase, not
-in this directory ([D96](../DECISIONS.md)): `deus view Compile.Spec` prints one, `deus mdl Compile.Spec` checks it,
+in this directory ([D97](../DECISIONS.md)): `deus view Compile.Spec` prints one, `deus mdl Compile.Spec` checks it,
 and the links go to the copies `deus export` writes to [`codebase/specs/`](../../codebase/specs).
 
 How they fit together: source ([LANGUAGE](./LANGUAGE.md)) compiles to [Core](./CORE.md); Core objects live

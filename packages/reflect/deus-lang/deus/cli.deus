@@ -213,7 +213,7 @@ def baseName (path : Text) : Text :=
 /--
   The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
-  The document's prose is kept in each block's metadata (D96): its order, the text before it,
+  The document's prose is kept in each block's metadata (D97): its order, the text before it,
   and on the first block the frontmatter and on the last the text after it, so the codebase holds
   the whole document and the export writes it back.
 -/
@@ -416,7 +416,7 @@ def view (args : Args) : {IO, Throw Text} Unit :=
   let printer := Print.printer ns []
   let dialect := if flag args "core" then "core" else Option.getOr (option args "dialect") "deus"
   if dialect == "deus" || dialect == "ts" || dialect == "core" then () else throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
-  -- A spec document's name prints the whole document from its blocks (D96).
+  -- A spec document's name prints the whole document from its blocks (D97).
   let documents := Export.specDocuments ns
   -- (name, kind, hash, text); a document has no hash.
   let shownFor := fun (name : Text) =>
@@ -945,7 +945,7 @@ def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (docum
         | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
 
 /--
-  `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D96), MDL
+  `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D97), MDL
   files, or with no arguments every spec document the codebase holds. Each block goes to the
   extension its term's URI names in the codebase; a block whose extension the codebase lacks is
   reported unchecked.

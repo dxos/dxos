@@ -169,7 +169,7 @@ def trimLines (lines : List Text) : Text :=
   Text.join "\n" (List.reverse (leading (List.reverse (leading lines))))
 
 /--
-  A document's prose as the codebase keeps it with the blocks (D96): the text before each stored
+  A document's prose as the codebase keeps it with the blocks (D97): the text before each stored
   block, in order, and the text after the last. A ```deus fence is left out, since its code is
   stored as definitions; one opening with `namespace N` leaves a line naming `N`. The Extensions
   table's rows are left out too, since the export writes them from the blocks' URIs. Everything

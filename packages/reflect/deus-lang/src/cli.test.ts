@@ -81,7 +81,7 @@ describe('deus CLI', () => {
     expect(deus('update', file('printed.deus', source), '--codebase', codebase).stdout).toBe('Nothing changed.\n');
   });
 
-  // The specs live in the codebase (D96), so its export in git is where CI finds them: restoring it
+  // The specs live in the codebase (D97), so its export in git is where CI finds them: restoring it
   // must give the toolchain as `deus/` compiles it, and every spec document must hold.
   test('restores the codebase export, which matches deus/ and whose specs hold', { timeout: 180_000 }, ({ expect }) => {
     const restored = join(scratch, 'restored');
@@ -578,7 +578,7 @@ describe('deus CLI', () => {
       const out = join(scratch, `${name}.wasm`);
       expect(deus('build', name, '-o', out, '--wasm', ...c).code).toBe(0);
       const exports = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out)))).exports;
-      const fn = exports[name];
+      const fn = exports[name.split('.').pop() ?? name];
       return typeof fn === 'function' ? fn(...args) : undefined;
     };
     // A million-deep recursion runs in constant stack (`return_call`) and wraps at 32 bits.
@@ -610,6 +610,12 @@ describe('deus CLI', () => {
     );
     expect(String(call('sortedSum', 300))).toBe(deus('eval', 'sortedSum 300', ...c).stdout.trim());
 
+    // The pure `Array` (D96): compiled code copies where an old array is still read, and writes in
+    // place where it is not, so every aliasing case gives the kernel's answer.
+    deus('add', join(root, 'examples/aliasing.deus'), ...c);
+    expect(String(call('Aliasing.all', 3))).toBe(deus('eval', 'Aliasing.all 3', ...c).stdout.trim());
+    expect(String(call('Aliasing.chain', 100_000))).toBe('704982704');
+
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
 
@@ -639,7 +645,6 @@ describe('deus CLI', () => {
         ['Sorting.benchQuick', [300, 7]],
         ['Sorting.benchHeap', [300, 7]],
         ['Sorting.benchArray', [300, 7]],
-        ['Sorting.benchPersistent', [300, 7]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -650,6 +655,15 @@ describe('deus CLI', () => {
         expect(run.stdout).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
         expect(run.stderr).toContain(', 0 live,');
       }
+      deus('add', join(root, 'examples/aliasing.deus'), ...c);
+      expect(deus('build', 'Aliasing.all', '-o', join(scratch, 'aliasing'), '--c', ...c).code).toBe(0);
+      // Pure `Array.set` (D96) writes in place at a count of one and copies a shared array.
+      const aliasing = spawnSync(join(scratch, 'aliasing'), ['3'], {
+        encoding: 'utf8',
+        env: { ...process.env, DEUS_HEAP_STATS: '1' },
+      });
+      expect(aliasing.stdout).toBe(deus('eval', 'Aliasing.all 3', ...c).stdout);
+      expect(aliasing.stderr).toContain(', 0 live,');
       deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
       expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
       expect(spawnSync(join(scratch, 'wrap'), ['3'], { encoding: 'utf8' }).stdout).toBe(

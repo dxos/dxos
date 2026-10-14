@@ -114,21 +114,16 @@ fn table(machine: &Machine, value: &Value, mutable: bool) -> Result<Rc<RefCell<T
     }
 }
 
-/// The array in `value` and `index` checked against its bounds.
-fn array(
-    machine: &Machine,
-    value: &Value,
-    index: &Value,
-    name: &str,
-) -> Result<(Rc<RefCell<Vec<Value>>>, usize), Fail> {
+/// The array in `value` and `index` checked against its length.
+fn array(machine: &Machine, value: &Value, index: &Value, name: &str) -> Result<(Rc<Version>, usize), Fail> {
     let i = int(machine, index)?;
     match value {
-        Value::Array(items) => {
-            let len = items.borrow().len();
+        Value::Array(version) => {
+            let len = version.with(|items| items.len());
             if i < 0 || i as usize >= len {
                 defect(format!("{name}: index {i} out of bounds 0 .. {len}"))
             } else {
-                Ok((items.clone(), i as usize))
+                Ok((version.clone(), i as usize))
             }
         }
         other => defect(format!("expected Array, got {}", machine.show(other))),
@@ -288,21 +283,19 @@ prims! {
         if n < 0 {
             return defect(format!("Array.make: negative length {n}"));
         }
-        Ok(Value::Array(Rc::new(RefCell::new(vec![a[1].clone(); n as usize]))))
+        Ok(Value::Array(Version::new(vec![a[1].clone(); n as usize])))
     };
     "Array.length", 1, |m, a| match &a[0] {
-        Value::Array(items) => Ok(Value::Int(items.borrow().len() as i32)),
+        Value::Array(version) => Ok(Value::Int(version.with(|items| items.len()) as i32)),
         other => defect(format!("expected Array, got {}", m.show(other))),
     };
     "Array.get", 2, |m, a| {
-        let (items, i) = array(m, &a[0], &a[1], "Array.get")?;
-        let value = items.borrow()[i].clone();
-        Ok(value)
+        let (version, i) = array(m, &a[0], &a[1], "Array.get")?;
+        Ok(version.with(|items| items[i].clone()))
     };
     "Array.set", 3, |m, a| {
-        let (items, i) = array(m, &a[0], &a[1], "Array.set")?;
-        items.borrow_mut()[i] = a[2].clone();
-        Ok(unit())
+        let (version, i) = array(m, &a[0], &a[1], "Array.set")?;
+        Ok(Value::Array(version.set(i, a[2].clone())))
     };
 
     "Dict.fromList", 1, |m, a| {
