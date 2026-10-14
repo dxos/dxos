@@ -417,6 +417,9 @@ describe('ReadSource', () => {
           fact('d2', 'dmaretskyi', 'has-account', { kind: 'literal', literal: 'dmytro@braneframe.com' }, 'discord'),
           // Someone else's account: no identifier ties it to Dmytro, so it is left out.
           fact('o1', 'rich', 'has-account', { kind: 'entity', entity: 'richburdon' }, 'discord'),
+          // A stranger whose handle is Dmytro's first name: a name never widens recall to their account.
+          fact('s1', 'stranger', 'has-account', { kind: 'entity', entity: 'dmytro' }, 'discord'),
+          fact('s2', 'stranger', 'located-in', { kind: 'entity', entity: 'lisbon' }, 'discord'),
         ]);
 
         const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dmytro) });

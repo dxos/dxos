@@ -36,13 +36,15 @@ const termKey = (term: RDF.Fact['assertion']['subject']): string =>
   term.kind === 'entity' ? term.entity : term.literal;
 
 /**
- * Groups entity keys that name one entity, by strong identifiers only: the subject and object of an identifying fact,
- * and each set of keys passed in `known` (an ECHO object's URI, its DID and its account identities). Names alone never
- * merge: two people may share one. Returns, for each canonical key, every canonical key in its group.
+ * Groups entity keys that name one entity, by strong identifiers only: the subject and object of an identifying fact
+ * that holds (affirmed, not expired by `now`), and each set of keys passed in `known` (an ECHO object's URI, its
+ * DID and its account identities). Names alone never merge: two people may share one. Returns, for each canonical
+ * key, every canonical key in its group.
  */
 export const identityGroups = (
   facts: readonly RDF.Fact[],
   known: Iterable<readonly string[]> = [],
+  now: string = new Date().toISOString(),
 ): Map<string, ReadonlySet<string>> => {
   const parent = new Map<string, string>();
   const find = (key: string): string => {
@@ -61,7 +63,9 @@ export const identityGroups = (
   };
 
   for (const fact of facts) {
-    if (identifying(fact.assertion.predicate)) {
+    // Only an affirmed, current account link ties: a denied, uncertain or lapsed one says nothing about who holds it.
+    const holds = fact.factuality.polarity === '+' && (!fact.assertion.validTo || fact.assertion.validTo > now);
+    if (holds && identifying(fact.assertion.predicate)) {
       const subject = canonicalKey(termKey(fact.assertion.subject));
       const object = canonicalKey(termKey(fact.assertion.object));
       if (subject.length > 0 && object.length > 0) {

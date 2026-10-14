@@ -62,14 +62,17 @@ export const identityValues = (entity: Obj.Unknown): string[] => {
     : [];
 };
 
+/** An object's strong identifiers: its URI, its DID and its account identities, never its names. */
+export const strongEntityKeys = (entity: Obj.Unknown): string[] => {
+  const did = personDid(entity);
+  return [Obj.getURI(entity), ...(did ? [did] : []), ...identityValues(entity)];
+};
+
 /** The strong identifiers of the space's people and organizations, one list each: what identity groups start from. */
 export const knownIdentities = Effect.gen(function* () {
   const entities = yield* Database.query(Filter.or(Filter.type(Person.Person), Filter.type(Organization.Organization)))
     .run;
-  return entities.map((entity) => {
-    const did = personDid(entity);
-    return [Obj.getURI(entity), ...(did ? [did] : []), ...identityValues(entity)];
-  });
+  return entities.map(strongEntityKeys);
 });
 
 /** Every fact in the brains of the space's agents, each once: two agents reading one document store the same facts. */
