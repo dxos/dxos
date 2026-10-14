@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { invariant } from '@dxos/invariant';
 import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
@@ -25,6 +27,46 @@ export type SpaceState = {
  */
 export type EntityProp = string;
 export type EntityPropPath = EntityProp[];
+
+/**
+ * Escaped property path within an object.
+ *
+ * Escaping rules:
+ *
+ * - '.' -> '\.'
+ * - '\' -> '\\'
+ * - contact with .
+ */
+export const EscapedPropPath: Schema.Codec<string, string> & {
+  escape: (path: EntityPropPath) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => EntityPropPath;
+} = class extends Schema.String.annotate({ title: 'EscapedPropPath' }) {
+  static escape(path: EntityPropPath): EscapedPropPath {
+    return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
+  }
+
+  static unescape(path: EscapedPropPath): EntityPropPath {
+    const parts: string[] = [];
+    let current = '';
+
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] === '\\') {
+        invariant(i + 1 < path.length && (path[i + 1] === '.' || path[i + 1] === '\\'), 'Malformed escaping.');
+        current = current + path[i + 1];
+        i++;
+      } else if (path[i] === '.') {
+        parts.push(current);
+        current = '';
+      } else {
+        current += path[i];
+      }
+    }
+    parts.push(current);
+
+    return parts;
+  }
+};
+export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;
 
 /**
  * Link to all documents that hold objects in the space.
