@@ -8,7 +8,8 @@ import { EntityKind } from './Entity.ts';
 
 /**
  * A reference to an entity: `entity` is its key, `label` the surface form. The key is an absolute IRI where one is
- * known (`echo://…`, `did:…`, `mailto:…`, a URL) and otherwise a normalized slug, stored under `Vocab.ENTITY`.
+ * known (`echo://…`, `did:…`, `mailto:…`, a URL), which is the same entity in every graph; otherwise it is a
+ * normalized slug, stored as an IRI local to the graph that mentions it (`Vocab.localEntityIri`).
  */
 export const EntityTerm = Schema.Struct({
   kind: Schema.Literal('entity'),
@@ -44,6 +45,11 @@ export const Assertion = Schema.Struct({
   predicate: Schema.String,
   /** The predicate's IRI; resolved from `predicate` through the ontology when absent. */
   predicateIri: Schema.optional(Schema.String),
+  /**
+   * What a predicate the ontology does not define means, as the extractor that minted it defined it; stored as its
+   * `rdfs:comment` in the ontology graph, not in the statement's graph.
+   */
+  predicateDescription: Schema.optional(Schema.String),
   object: Term,
   /** ISO date when the asserted state holds. */
   validFrom: Schema.optional(Schema.String),

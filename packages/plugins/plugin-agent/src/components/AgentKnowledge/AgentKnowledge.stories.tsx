@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import { Editor } from '@dxos/react-ui-editor';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -28,7 +28,7 @@ import {
 import { EntityBrowser } from './EntityBrowser.tsx';
 import { EntityCard } from './EntityCard.tsx';
 import { type EntityCardModel, toEntityCards } from './subgraph.ts';
-import { TRIG_PREFIXES, formatNamedGraphs, formatRawFact } from './trig.ts';
+import { TRIG_PREFIXES, curie, formatNamedGraphs, formatRawFact } from './trig.ts';
 
 const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).toISOString();
 
@@ -274,6 +274,18 @@ type StoryProps = {
   brain?: AgentKnowledgeBrainStatus;
 };
 
+/** The seed vocabulary, as the Predicates view lists it for a brain that has minted nothing yet. */
+const SEED = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace('story-agent'));
+const PREDICATES = SEED.entries.map((entry) => ({
+  iri: entry.iri,
+  curie: curie(entry.iri, SEED.namespace),
+  label: entry.label,
+  vocabulary: curie(entry.iri, SEED.namespace).split(':')[0],
+  ...(entry.description ? { description: entry.description } : {}),
+  ...(entry.synonyms?.length ? { synonyms: entry.synonyms } : {}),
+  count: 0,
+}));
+
 const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
   const knowledge = useMemo(() => SCENARIOS[scenario](), [scenario]);
   const { nodes, edges } = useMemo(() => toGraph(knowledge), [knowledge]);
@@ -281,6 +293,7 @@ const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
     <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
       <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
+      <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />
       <AgentKnowledge.Goals goals={scenario === 'empty' ? [] : GOALS} />
       <AgentKnowledge.Graph nodes={nodes} edges={edges} />
     </AgentKnowledge.Root>
@@ -328,6 +341,14 @@ export const Facts: Story = {
   args: {
     scenario: 'default',
     defaultView: 'facts',
+  },
+};
+
+export const Predicates: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: {
+    scenario: 'default',
+    defaultView: 'predicates',
   },
 };
 

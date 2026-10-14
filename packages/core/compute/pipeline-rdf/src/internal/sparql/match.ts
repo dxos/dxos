@@ -25,7 +25,7 @@ export const matchingPredicates = (
   ontology: Ontology.Ontology = Ontology.DEFAULT,
 ): Set<string> => {
   if (Vocab.isIri(surface)) {
-    return new Set([surface]);
+    return ontology.equivalents(surface);
   }
   const needle = Ontology.key(surface);
   const matches = new Set([ontology.resolve(surface).iri]);
@@ -36,7 +36,8 @@ export const matchingPredicates = (
       matches.add(iri);
     }
   }
-  return matches;
+  // Merged predicates match each other, so statements made before a merge still answer.
+  return new Set([...matches].flatMap((iri) => [...ontology.equivalents(iri)]));
 };
 
 /**

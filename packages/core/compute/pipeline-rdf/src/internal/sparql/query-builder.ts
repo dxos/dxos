@@ -22,7 +22,10 @@ export type SemanticQuery = {
 export const predicateIri = (predicate: string, ontology: Ontology.Ontology = Ontology.DEFAULT): string =>
   Vocab.isIri(predicate) ? predicate : ontology.resolve(predicate).iri;
 
-/** Build a SELECT returning each named graph that holds a matching statement (`?g`). */
+/**
+ * Build a SELECT returning each named graph that holds a matching statement (`?g`). An entity slug names its
+ * `entity:` IRI here, so it matches no graph-local entity: {@link FactStoreApi.query} matches those.
+ */
 export const buildSparql = (query: SemanticQuery, ontology: Ontology.Ontology = Ontology.DEFAULT): string => {
   const patterns: string[] = [];
   if (query.subjectEntity) {
