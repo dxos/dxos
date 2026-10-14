@@ -47,6 +47,10 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
     | _ => m) Map.empty (Map.toList ns)
   Printer.mk display typeNames fieldNames (Ref.new locals) (Ref.new 0)
 
+/-- A printer sharing `base`'s name tables (built once per namespace) with its own locals. -/
+def withLocals (base : Printer) (locals : List Text) : Printer :=
+  Printer.mk base.display base.typeNames base.fieldNames (Ref.new locals) (Ref.new 0)
+
 def nameFor (p : Printer) (key : Text) : Text :=
   match Map.lookup key p.display with
   | some name => name

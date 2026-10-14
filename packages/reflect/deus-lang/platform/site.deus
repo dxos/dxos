@@ -1,0 +1,26 @@
+/-
+  Serves a directory of static files (D58): the codebase explorer's site under `deus explore`.
+  The directory is `$DEUS_SITE`; `/` is `index.html`.
+-/
+
+namespace Site
+
+def contentType (path : Text) : Text :=
+  if Text.endsWith ".html" path then "text/html; charset=utf-8"
+  else if Text.endsWith ".json" path then "application/json"
+  else if Text.endsWith ".css" path then "text/css"
+  else if Text.endsWith ".js" path then "text/javascript"
+  else "text/plain; charset=utf-8"
+
+def serve (request : Request) : {IO} Response :=
+  let root := Option.getOr (IO.getEnv "DEUS_SITE") "site"
+  let path := Option.getOr (List.head? (Text.split request.url "?")) "/"
+  let file := if path == "/" then "/index.html" else path
+  -- A path that climbs out of the site is not served.
+  if Text.contains ".." file then Web.notFound path
+  else
+    match IO.readFile (root ++ file) with
+    | some content => Response.mk 200 content [("content-type", contentType file)]
+    | none => Web.notFound path
+
+end Site

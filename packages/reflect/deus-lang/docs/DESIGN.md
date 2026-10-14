@@ -237,6 +237,15 @@ remote's heads, which are merged as local branches are. Compaction is determinis
 clients compacting the same history write the same bundles. `deus compact --keep n` collects
 garbage: n generations from each head survive, and older history becomes shallow (D54).
 
+## Exploring
+
+`deus explore` writes the current branch as static pages (D58). Namespaces get index pages.
+Each definition has a page named by its hash, with its signature, highlighted source, test
+results, and links to its dependencies and dependents; a search box covers every name. Without
+flags it serves the pages on the native server (`--port`, default 8080). `--out dir` only writes
+them. `--publish origin` uploads them under the remote's `site/`, so a public bucket hosts them
+at `<bucket URL>/<prefix>/site/index.html`.
+
 ## The outside world
 
 Code that needs something outside the codebase says so in its effect row (D47):

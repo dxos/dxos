@@ -34,6 +34,8 @@ deus add src/ --by agent-x                                   # .deus files and .
 deus test && deus check && deus mdl                          # tests, theorems, spec blocks
 deus remote add origin r2://agent-artifacts/deus/app         # or a directory
 deus push && deus pull && deus compact                       # immutable bundles, compacted
+deus explore                                                 # browse the codebase on :8080
+deus explore --publish origin                                # …or host it beside the bundles
 ```
 
 `deus help` lists every command; [`docs/LLM.md`](./docs/LLM.md) is the agent's guide.

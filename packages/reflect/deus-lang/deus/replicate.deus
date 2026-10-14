@@ -21,12 +21,16 @@
   bundle's claims and hashes, so a pull reads each bundle once.
 -/
 
-/-- An object store holding bundles by name; `put` never overwrites. -/
+/--
+  An object store holding bundles by name; `put` never overwrites. `write` stores a file beside
+  the bundles (the explorer's site), replacing what was there.
+-/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
   get : Text -> Option Text
   put : Text -> Text -> Unit
   delete : Text -> Unit
+  write : Text -> Text -> Unit
 
 /-- A seen bundle: its claims (branch, causal) and the hashes of its objects. -/
 structure Seen @"urn:deus:replicate:Seen" where
@@ -230,6 +234,9 @@ def directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
   | Remote.delete name -> k =>
     IO.remove (root ++ "/bundles/" ++ name)
     k ()
+  | Remote.write path text -> k =>
+    IO.writeFile (root ++ "/" ++ path) text
+    k ()
 
 /-- The `<Key>` values of an S3 ListObjectsV2 response. -/
 def xmlValues (tag : Text) (xml : Text) : List Text :=
@@ -274,5 +281,14 @@ def bucket (endpoint : Text) (name : Text) (prefix : Text) (config : Text) (body
   | Remote.delete key -> k =>
     curl ["-X", "DELETE", base ++ "/" ++ folder ++ key]
     k ()
+  | Remote.write path text -> k =>
+    let staged := config ++ ".write"
+    IO.writeFile staged text
+    let kind := if Text.endsWith ".html" path then "text/html; charset=utf-8" else if Text.endsWith ".json" path then "application/json" else "text/plain; charset=utf-8"
+    let result := curl ["-X", "PUT", "-H", "content-type: " ++ kind, "--data-binary", "@" ++ staged, base ++ "/" ++ prefix ++ "/" ++ path]
+    IO.remove staged
+    match result with
+    | (0, _, _) => k ()
+    | (_, out, err) => defect ("writing " ++ path ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
 
 end Replicate

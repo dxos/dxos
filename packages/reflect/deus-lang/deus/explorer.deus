@@ -1,0 +1,197 @@
+/-
+  The codebase explorer (D58): a static site generated from a codebase, in the spirit of Unison
+  Share. Static pages need no server logic, so the same files are served locally
+  (`deus explore`, by the native web runtime and `platform/site.deus`) and hosted from the
+  bucket that already holds the codebase's bundles (`deus explore --publish <remote>`).
+
+    index.html            the project: branches, namespaces, recent history, layers, search
+    ns/<namespace>.html   a namespace: its children with kinds, signatures and summaries
+    def/<hash>.html       a definition: names, signature, docs, source, dependencies,
+                          dependents, verdicts and provenance
+    names.json            the search index: name, kind, hash, signature
+-/
+
+namespace Explorer
+
+def escape (t : Text) : Text := Text.replace ">" "&gt;" (Text.replace "<" "&lt;" (Text.replace "&" "&amp;" t))
+
+def attr (t : Text) : Text := Text.replace "\"" "&quot;" (escape t)
+
+def style : Text :=
+  Text.join "\n" [
+    ":root { --bg: #fdfdfc; --fg: #1d1d1b; --muted: #6b6b66; --line: #e4e4df; --accent: #3b5bdb; --kw: #a3297a; --str: #2b8a3e; --ty: #1864ab; --code: #f4f4f1; }",
+    "@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #e8e8e3; --muted: #9a9a93; --line: #2e2e2b; --accent: #91a7ff; --kw: #f783ac; --str: #8ce99a; --ty: #74c0fc; --code: #1f1f1d; } }",
+    "* { box-sizing: border-box; } body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 system-ui, sans-serif; }",
+    "header { border-bottom: 1px solid var(--line); padding: 12px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }",
+    "header a.home { font-weight: 600; color: var(--fg); text-decoration: none; } main { max-width: 980px; margin: 0 auto; padding: 20px; }",
+    "a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; } h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 28px 0 8px; }",
+    "pre, code { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; } pre { background: var(--code); padding: 14px 16px; border-radius: 8px; overflow-x: auto; }",
+    "table { border-collapse: collapse; width: 100%; } td { padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; } td.kind { color: var(--muted); width: 1%; white-space: nowrap; }",
+    ".kw { color: var(--kw); } .str { color: var(--str); } .ty { color: var(--ty); } .cm { color: var(--muted); font-style: italic; } .muted { color: var(--muted); } .hash { color: var(--muted); font-size: 12px; }",
+    ".pass { color: var(--str); } .fail { color: var(--kw); } input#q { flex: 1; min-width: 160px; max-width: 360px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }",
+    ".search { position: relative; flex: 1; max-width: 360px; } .search input { width: 100%; } #results { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; max-height: 60vh; overflow: auto; z-index: 1; } #results a { display: block; padding: 4px 10px; }"]
+
+/-- Search over `names.json`, relative to the page's depth. -/
+def search (root : Text) : Text :=
+  "<div class=search><input id=q placeholder=\"Search names\" autocomplete=off><div id=results></div></div><script>" ++
+  "let names=null;const q=document.getElementById('q'),r=document.getElementById('results');" ++
+  "q.addEventListener('input',async()=>{names??=await (await fetch('" ++ root ++ "names.json')).json();" ++
+  "const t=q.value.toLowerCase();r.innerHTML=t?names.filter(n=>n.name.toLowerCase().includes(t)).slice(0,40)" ++
+  ".map(n=>`<a href=\"" ++ root ++ "def/${n.hash}.html\">${n.name} <span class=muted>${n.kind}</span></a>`).join(''):'';});</script>"
+
+def page (root : Text) (project : Text) (title : Text) (body : Text) : Text :=
+  "<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content=\"width=device-width, initial-scale=1\"><title>" ++ escape title ++
+  "</title><style>" ++ style ++ "</style></head><body><header><a class=home href=\"" ++ root ++ "index.html\">" ++ escape project ++ "</a>" ++
+  search root ++ "</header><main>" ++ body ++ "</main></body></html>"
+
+def keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
+
+def isWordChar (c : Int) : Bool := Text.isAlpha c || Text.isDigit c || c == '_' || c == '.' || c == '?'
+
+/-- Printed source as HTML: keywords, strings, comments and capitalized names get classes. -/
+def highlight (source : Text) : Text :=
+  let n := Text.length source
+  let rec scan i acc :=
+    if i >= n then Text.concat (List.reverse acc)
+    else
+      let c := Text.code source i
+      if c == '"' then
+        let rec close j := if j >= n then n else if Text.code source j == '\\' then close (j + 2) else if Text.code source j == '"' then j + 1 else close (j + 1)
+        let j := close (i + 1)
+        scan j (("<span class=str>" ++ escape (Text.slice source i j) ++ "</span>") :: acc)
+      else if c == '/' && i + 1 < n && Text.code source (i + 1) == '-' then
+        let stop := Text.indexOf source "-/" (i + 2)
+        let j := if stop < 0 then n else stop + 2
+        scan j (("<span class=cm>" ++ escape (Text.slice source i j) ++ "</span>") :: acc)
+      else if c == '-' && i + 1 < n && Text.code source (i + 1) == '-' then
+        let stop := Text.indexOf source "\n" i
+        let j := if stop < 0 then n else stop
+        scan j (("<span class=cm>" ++ escape (Text.slice source i j) ++ "</span>") :: acc)
+      else if Text.isAlpha c || c == '_' then
+        let rec word j := if j < n && isWordChar (Text.code source j) then word (j + 1) else j
+        let j := word i
+        let w := Text.slice source i j
+        let html := if Map.contains w keywords then "<span class=kw>" ++ w ++ "</span>"
+          else if c >= 'A' && c <= 'Z' then "<span class=ty>" ++ escape w ++ "</span>"
+          else escape w
+        scan j (html :: acc)
+      else scan (i + 1) (escape (Text.fromCode c) :: acc)
+  scan 0 []
+
+/-- Directories of a dotted name: `List.map` is in `List`. -/
+def parentOf (name : Text) : Text :=
+  let parts := Text.split name "."
+  Text.join "." (List.take (List.length parts - 1) parts)
+
+def lastOf (name : Text) : Text := Option.getOr (List.last? (Text.split name ".")) name
+
+def defLink (root : Text) (name : Text) (h : Text) : Text := "<a href=\"" ++ root ++ "def/" ++ attr h ++ ".html\">" ++ escape name ++ "</a>"
+
+def nsLink (root : Text) (ns : Text) : Text :=
+  "<a href=\"" ++ root ++ (if Text.isEmpty ns then "index" else "ns/" ++ attr ns) ++ ".html\">" ++ escape (if Text.isEmpty ns then "(root)" else ns) ++ "</a>"
+
+/-- The first line of a doc comment. -/
+def summary (doc : Option Text) : Text :=
+  match doc with
+  | some d => escape (Option.getOr (List.head? (List.filter (fun l => not (Text.isEmpty l)) (List.map Text.trim (Text.lines d)))) "")
+  | none => ""
+
+def signature (dir : Text) (h : Text) : {IO} Text :=
+  Option.getOr (Option.map (fun s => Types.displayScheme s) (Codebase.metaField (Codebase.readMeta dir h) "scheme")) ""
+
+def docOf (dir : Text) (h : Text) : {IO} Option Text := Option.map Sexp.asText (Codebase.metaField (Codebase.readMeta dir h) "doc")
+
+/-- Names that are not hidden: not constructors' and operations' own pages, not `lib` mounts' internals. -/
+def visible (pair : (Text, Entry)) : Bool :=
+  match snd pair with
+  | Entry.ctor _ _ _ => false
+  | Entry.op _ _ _ => false
+  | _ => true
+
+def namespaceRows (dir : Text) (root : Text) (entries : List (Text, Entry)) (children : List Text) : {IO} Text :=
+  let nsRows := List.map (fun c => "<tr><td class=kind>namespace</td><td>" ++ nsLink root c ++ "</td><td></td></tr>") children
+  let defRows := List.map (fun pair =>
+    match pair with
+    | (name, e) =>
+      let h := Entry.hash e
+      let sig := signature dir h
+      "<tr><td class=kind>" ++ Entry.kind e ++ "</td><td>" ++ defLink root (lastOf name) h ++
+        (if Text.isEmpty sig then "" else " <code class=muted>: " ++ escape sig ++ "</code>") ++
+        "</td><td class=muted>" ++ summary (docOf dir h) ++ "</td></tr>") entries
+  "<table>" ++ Text.concat (nsRows ++ defRows) ++ "</table>"
+
+def verdictOf (dir : Text) (h : Text) : {IO} Text :=
+  match IO.readFile (dir ++ "/results/" ++ h) with
+  | some text =>
+    let v := Text.trim text
+    if Text.startsWith "(pass" v then "<span class=pass>" ++ escape v ++ "</span>" else "<span class=fail>" ++ escape v ++ "</span>"
+  | none => "<span class=muted>not checked</span>"
+
+/-- Writes the site for the current branch to `out`; returns the number of pages. -/
+def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let ns := Codebase.current dir
+  let entries := List.filter visible (Map.toList ns)
+  let index := Codebase.nameIndex ns
+  let nameOf := fun (h : Text) => Option.getOr (Map.lookup h index) (Cli.short h)
+  let printer := Print.printer ns []
+  let project := match Project.read dir with
+    | some p => p.projectIri
+    | none => "codebase"
+  -- Namespaces: every proper prefix of a name.
+  let namespaces := List.dedup (List.sort (List.concatMap (fun pair =>
+    let parts := Text.split (fst pair) "."
+    List.map (fun k => Text.join "." (List.take k parts)) (List.range 1 (List.length parts))) entries))
+  let childrenOf := fun (parent : Text) =>
+    List.filter (fun n => parentOf n == parent) namespaces
+  let membersOf := fun (parent : Text) =>
+    List.filter (fun pair => parentOf (fst pair) == parent) entries
+  -- Dependents, inverted once from every definition's dependencies.
+  let dependents := List.foldl (fun m pair =>
+    let h := Entry.hash (snd pair)
+    match Codebase.readObject dir h with
+    | some obj => List.foldl (fun m2 d => Map.insert d (h :: Option.getOr (Map.lookup d m2) []) m2) m (Codebase.dependencies obj)
+    | none => m) Map.empty entries
+  IO.mkdirp (out ++ "/ns")
+  IO.mkdirp (out ++ "/def")
+  let history := Codebase.history dir (Codebase.currentBranch dir) 15
+  let historyRows := Text.concat (List.map (fun pair =>
+    match pair with
+    | (h, c) => "<tr><td class=hash>" ++ Cli.short h ++ "</td><td>" ++ escape c.message ++ Option.getOr (Option.map (fun agent => " <span class=muted>by " ++ escape agent ++ "</span>") (Cli.producedBy dir h)) "" ++ "</td></tr>") history)
+  let branches := Text.join ", " (List.map (fun b => if b == Codebase.currentBranch dir then "<b>" ++ escape b ++ "</b>" else escape b) (Codebase.branches dir))
+  IO.writeFile (out ++ "/index.html") (page "" project project (
+    "<h1>" ++ escape project ++ "</h1><p class=muted>" ++ Int.toText (List.length entries) ++ " definitions · branches: " ++ branches ++ "</p>" ++
+    "<h2>Namespace</h2>" ++ namespaceRows dir "" (membersOf "") (childrenOf "") ++
+    "<h2>History</h2><table>" ++ historyRows ++ "</table>"))
+  List.forEach namespaces (fun n =>
+    IO.writeFile (out ++ "/ns/" ++ n ++ ".html") (page "../" project n (
+      "<p class=muted>" ++ nsLink "../" (parentOf n) ++ "</p><h1>" ++ escape n ++ "</h1>" ++ namespaceRows dir "../" (membersOf n) (childrenOf n))))
+  List.forEach entries (fun pair =>
+    match pair with
+    | (name, e) =>
+      let h := Entry.hash e
+      let source := match try (fun _ => Cli.viewEntryWith printer dir ns name e false) with
+        | Result.ok text => Text.join "\n" (List.filter (fun l => not (Text.startsWith "-- " l)) (Text.lines text))
+        | Result.err message => "-- " ++ message
+      let deps := match Codebase.readObject dir h with
+        | some obj => List.filter (fun d => Map.contains d index) (Codebase.dependencies obj)
+        | none => []
+      let users := List.dedup (List.sort (Option.getOr (Map.lookup h dependents) []))
+      let links := fun (hs : List Text) => if List.isEmpty hs then "<p class=muted>none</p>" else "<p>" ++ Text.join " · " (List.map (fun x => defLink "../" (nameOf x) x) hs) ++ "</p>"
+      let sig := signature dir h
+      let checked := match e with
+        | Entry.test _ => "<h2>Verdict</h2><p>" ++ verdictOf dir h ++ "</p>"
+        | Entry.theorem _ => "<h2>Verdict</h2><p>" ++ verdictOf dir h ++ "</p>"
+        | _ => ""
+      let aliases := List.filter (fun other => other != name) (Codebase.namesOf ns h)
+      IO.writeFile (out ++ "/def/" ++ h ++ ".html") (page "../" project name (
+        "<p class=muted>" ++ nsLink "../" (parentOf name) ++ " · " ++ Entry.kind e ++ "</p><h1>" ++ escape name ++ "</h1>" ++
+        "<p class=hash>#" ++ escape h ++ "</p>" ++
+        (if Text.isEmpty sig then "" else "<pre>" ++ highlight (lastOf name ++ " : " ++ sig) ++ "</pre>") ++
+        (if List.isEmpty aliases then "" else "<p class=muted>also named " ++ escape (Text.join ", " aliases) ++ "</p>") ++
+        "<h2>Source</h2><pre>" ++ highlight source ++ "</pre>" ++ checked ++
+        "<h2>Depends on</h2>" ++ links deps ++ "<h2>Used by</h2>" ++ links users)))
+  IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
+    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str (Entry.hash (snd pair)))]) entries)))
+  1 + List.length namespaces + List.length entries
+
+end Explorer

@@ -46,6 +46,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 38  | 10-14 14:58 | 11m 12s        | `c9f7dcfd`  | deterministic replication test; scoped env in the fetch test; review refresh                |
 | 39  | 10-14 15:01 | 2m 19s         | `2632d259`  | fix the type error and format break that failed Check                                       |
 | 40  | 10-14 15:06 | 5m 39s         | `8f6c8a02`  | wasm compiler — algebraic data on a linear-memory heap                                      |
-| 41  | 10-14 15:15 | 8m 31s         | this commit | web layer: one handler on simulation, native server and Cloudflare                          |
+| 41  | 10-14 15:15 | 8m 32s         | `e74fdcf6`  | web layer — one handler on simulation, a native server and Cloudflare                       |
+| 42  | 10-14 15:26 | 11m 18s        | this commit | D58: codebase explorer (deus explore: static pages, local server, publish to R2)            |
 
-Total from stage 1 to stage 41: 5h 32m.
+Total from stage 1 to stage 42: 5h 43m.

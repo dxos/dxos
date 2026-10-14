@@ -270,6 +270,10 @@ def names (args : Args) : {IO, Throw Text} Unit :=
 
 /-- Source text of one entry (a definition, a type, an ability). -/
 def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+  viewEntryWith (Print.printer ns []) dir ns name e core
+
+/-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
+def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
   let h := Entry.hash e
   let meta := Codebase.readMeta dir h
   let typeLine := match Codebase.metaField meta "scheme" with
@@ -286,7 +290,7 @@ def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core
       if core then header ++ Sexp.print obj
       else
         let locals := List.map Sexp.asText (Codebase.metaList meta "locals")
-        let p := Print.printer ns locals
+        let p := Print.withLocals base locals
         let doc := Option.map Sexp.asText (Codebase.metaField meta "doc")
         let display := Names.lastSegment name
         match obj with
@@ -780,6 +784,58 @@ def serve (args : Args) : {IO, Throw Text} Unit :=
         if code == 0 then () else IO.exit code
   | _ => throw "usage: deus serve <handler> [--port n]"
 
+/-- The image of the static-site handler (`platform/site.deus`), compiled from the toolchain's sources. -/
+def siteImage (u : Unit) : {IO, Throw Text} Text :=
+  let home := match IO.getEnv "DEUS_HOME" with
+    | some h => h
+    | none => throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+  let files := List.map (fun f => home ++ "/" ++ f) ["deus/builtins.deus", "deus/prelude.deus", "platform/web.deus", "platform/site.deus"]
+  let result := Compile.batch Map.empty (fun _ => none) (fun _ => none) (checkTypes ()) (parseFiles files)
+  match List.lookup "Site.serve" result.entries with
+  | some (Entry.term h) =>
+    let objects := Map.fromList result.objects
+    Image.build (fun x => Map.lookup x objects) h
+  | _ => throw "platform/site.deus has no Site.serve"
+
+/-- Every file under `dir`, as paths relative to it. -/
+def filesUnder (dir : Text) (prefix : Text) : {IO} List Text :=
+  List.concatMap (fun f =>
+    let path := if Text.isEmpty prefix then f else prefix ++ "/" ++ f
+    if IO.isDir (dir ++ "/" ++ path) then filesUnder dir path else [path]) (IO.listDir (if Text.isEmpty prefix then dir else dir ++ "/" ++ prefix))
+
+/--
+  `deus explore [--out dir] [--port n] [--publish remote]` (D58): writes the codebase explorer
+  for the current branch, then serves it locally, or uploads it next to a remote's bundles
+  (`<prefix>/site/`), where a public bucket serves it.
+-/
+def explore (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let out := Option.getOr (option args "out") (dir ++ "/cache/site")
+  let pages := Explorer.generate dir out
+  match (option args "publish", option args "out") with
+  | (some name, _) =>
+    let files := filesUnder out ""
+    withRemote dir name (fun _ => List.forEach files (fun f => Remote.write ("site/" ++ f) (Option.getOr (IO.readFile (out ++ "/" ++ f)) "")))
+    output args (fun _ => Json.obj [("pages", Json.num pages), ("remote", Json.str name), ("files", Json.num (List.length files))])
+      (fun _ => "Published " ++ Int.toText (List.length files) ++ " files to " ++ name ++ " under site/ (open site/index.html at the bucket's public URL).")
+  | (none, some _) =>
+    output args (fun _ => Json.obj [("pages", Json.num pages), ("out", Json.str out)]) (fun _ => "Wrote " ++ Int.toText pages ++ " pages to " ++ out ++ ".")
+  | (none, none) =>
+    let image := siteImage ()
+    let server := dir ++ "/artifacts/site-server-" ++ Text.sha256 image
+    let built := if IO.exists server then Result.ok () else try (fun _ =>
+      IO.mkdirp (dir ++ "/artifacts")
+      Build.server image server)
+    match built with
+    | Result.err f => throw (Failure.render f)
+    | Result.ok _ =>
+      let port := Option.getOr (option args "port") "8080"
+      IO.eprint ("Wrote " ++ Int.toText pages ++ " pages; exploring on http://127.0.0.1:" ++ port ++ "\n")
+      match IO.exec "env" ["PORT=" ++ port, "DEUS_SITE=" ++ out, server] with
+      | (code, _, err) =>
+        IO.eprint err
+        if code == 0 then () else IO.exit code
+
 /-- `deus build <term> -o <file> [--native]`: a standalone executable that runs `term ()`. -/
 def build (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -851,6 +907,7 @@ def usage : Text :=
     "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object",
     "  build <handler> -o <file> --server   write a standalone native web server for a handler",
     "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)",
+    "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
@@ -893,6 +950,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "image" then image args
     else if command == "build" then build args
     else if command == "serve" then serve args
+    else if command == "explore" then explore args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 

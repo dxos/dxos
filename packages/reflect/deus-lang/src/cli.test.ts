@@ -449,6 +449,47 @@ describe('deus CLI', () => {
     ]);
   });
 
+  test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'explore')];
+    deus('init', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    const shapes = [
+      'namespace Shapes',
+      'def square (side : Int) : Int := side * side',
+      '/-- The area of a square. -/',
+      'def area (side : Int) : Int := square side',
+      'end Shapes',
+    ];
+    deus('add', file('shapes.deus', shapes.join('\n')), ...c);
+    const out = join(scratch, 'explore-site');
+    const written = deus('explore', '--out', out, '--json', ...c);
+    expect(written.stderr).toBe('');
+    expect(JSON.parse(written.stdout).pages).toBeGreaterThan(10);
+
+    const names: { name: string; kind: string; hash: string }[] = JSON.parse(
+      readFileSync(join(out, 'names.json'), 'utf8'),
+    );
+    const area = names.find((entry) => entry.name === 'Shapes.area');
+    const square = names.find((entry) => entry.name === 'Shapes.square');
+    const map = names.find((entry) => entry.name === 'List.map');
+    expect(area?.kind).toBe('term');
+    const page = readFileSync(join(out, 'def', `${area?.hash}.html`), 'utf8');
+    expect(page).toContain('<span class=cm>/-- The area of a square. -/</span>');
+    expect(page).toContain(`href="../def/${square?.hash}.html"`);
+    expect(readFileSync(join(out, 'def', `${square?.hash}.html`), 'utf8')).toContain(
+      `href="../def/${area?.hash}.html"`,
+    );
+    expect(readFileSync(join(out, 'ns', 'Shapes.html'), 'utf8')).toContain(`../def/${area?.hash}.html`);
+    expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('ns/List.html');
+    expect(map?.kind).toBe('term');
+
+    const remote = join(scratch, 'explore-remote');
+    deus('remote', 'add', 'origin', remote, ...c);
+    const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
+    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'ns')).length + 2);
+    expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.html`), 'utf8')).toBe(page);
+  });
+
   test(
     'serves web handlers from a standalone native server',
     { timeout: 240_000 },
