@@ -325,41 +325,78 @@ def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core
 
 /-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
 def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+  viewEntryIn base dir ns name e (if core then "core" else "deus")
+
+/-- One entry in a dialect (D70): `deus` (the primary syntax), `ts` (TypeScript-like) or `core`. -/
+def viewEntryIn (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} Text :=
+  match viewParts base dir ns name e dialect with
+  | (header, source) => header ++ source
+
+/-- The header comment lines, and the source (empty for a constructor, an operation or a field). -/
+def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} (Text, Text) :=
+  let core := dialect == "core"
+  let ts := dialect == "ts"
   let h := Entry.hash e
   let meta := Codebase.readMeta dir h
+  let comment := if ts then "// " else "-- "
   let typeLine := match Codebase.metaField meta "scheme" with
-    | some scheme => "-- : " ++ Types.displayScheme scheme ++ "\n"
+    | some scheme => comment ++ ": " ++ Types.displayScheme scheme ++ "\n"
     | none => ""
-  let header := "-- " ++ name ++ " " ++ short h ++ "\n" ++ typeLine
+  let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
-  | Entry.ctor _ _ _ => header ++ "-- a constructor of " ++ Text.join ", " (Codebase.namesOf ns h)
-  | Entry.op _ _ _ => header ++ "-- an operation of " ++ Text.join ", " (Codebase.namesOf ns h)
+  | Entry.ctor _ _ _ => (header ++ comment ++ "a constructor of " ++ Text.join ", " (Codebase.namesOf ns h), "")
+  | Entry.op _ _ _ => (header ++ comment ++ "an operation of " ++ Text.join ", " (Codebase.namesOf ns h), "")
   | _ =>
     -- A field accessor comes with its structure, so it prints as a note, as constructors do.
     let owner := Text.join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
     let isField := match Map.lookup owner ns with
       | some (Entry.type _ _ fields) => List.contains (Names.lastSegment name) fields
       | _ => false
-    if isField then header ++ "-- a field of structure " ++ owner
+    if isField then (header ++ comment ++ "a field of structure " ++ owner, "")
     else
       match Codebase.readObject dir h with
-      | none => if Text.startsWith "#" h then header ++ "-- builtin" else throw ("missing object " ++ h)
+      | none => if Text.startsWith "#" h then (header ++ comment ++ "builtin", "") else throw ("missing object " ++ h)
       | some obj =>
-        if core then header ++ Sexp.print obj
+        if core then (header, Sexp.print obj)
         else
           let locals := List.map Sexp.asText (Codebase.metaList meta "locals")
           let p := Print.withSelf (Print.withLocals base locals) h name
           let doc := Option.map Sexp.asText (Codebase.metaField meta "doc")
           let display := Names.lastSegment name
-          match obj with
-          | Sexp.list [Sexp.sym "term", c] => header ++ Print.definition p name c (Codebase.metaField meta "sig") doc
-          | Sexp.list [Sexp.sym "test", c] => header ++ "test " ++ name ++ " :=" ++ Print.body p c [] 0
-          | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
-            header ++ View.theoremDecl p name types prop proof
-          | Sexp.list (Sexp.sym "type" :: _) => header ++ View.typeDecl p ns name e obj meta
-          | Sexp.list (Sexp.sym "ability" :: _) => header ++ View.abilityDecl p ns name e obj meta
-          | Sexp.list (Sexp.sym "spec" :: _) => header ++ Mdl.render (snd (Mdl.fromSexp obj))
-          | _ => header ++ Sexp.print obj
+          if ts then
+            (header, match obj with
+              | Sexp.list [Sexp.sym "term", c] => Ts.definition p name c (Codebase.metaField meta "sig") doc
+              | Sexp.list [Sexp.sym "test", c] => Ts.testDecl p name c
+              | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+                Ts.theoremDecl p name types prop proof
+              | Sexp.list (Sexp.sym "type" :: _) => Ts.typeDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "ability" :: _) => Ts.abilityDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+              | _ => Sexp.print obj)
+          else
+            -- Comments come back from metadata: the lead above the declaration, notes inside it (D66).
+            let lead := match Codebase.metaField meta "lead" with
+              | some text => Print.commentLines (Sexp.asText text) 0
+              | none => ""
+            let notes := Print.notesOf meta
+            -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
+            let docText := match doc with
+              | some d => "/-- " ++ d ++ " -/\n"
+              | none => ""
+            let attrs := List.map (fun a =>
+              match Sexp.asList a with
+              | key :: values => Sexp.asText key ++ Text.concat (List.map (fun v => " " ++ Print.quoteText (Sexp.asText v)) values)
+              | [] => "") (Codebase.metaList meta "attrs")
+            let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
+            (header, lead ++ docText ++ attrText ++ (match obj with
+              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") none
+              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
+              | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+                View.theoremDecl p name types prop proof
+              | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "ability" :: _) => View.abilityDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+              | _ => Sexp.print obj))
 
 def view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -367,8 +404,10 @@ def view (args : Args) : {IO, Throw Text} Unit :=
   let entries := List.map (fun name => lookupName ns name) args.positional
   -- One printer for all entries: its name tables cost more to build than printing one definition.
   let printer := Print.printer ns []
-  let texts := List.map (fun pair => viewEntryWith printer dir ns (fst pair) (snd pair) (flag args "core")) entries
-  let shown := Highlight.forTerminal (Text.join "\n\n" texts)
+  let dialect := if flag args "core" then "core" else Option.getOr (option args "dialect") "deus"
+  if dialect == "deus" || dialect == "ts" || dialect == "core" then () else throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
+  let texts := List.map (fun pair => viewEntryIn printer dir ns (fst pair) (snd pair) dialect) entries
+  let shown := Highlight.forTerminalIn dialect (Text.join "\n\n" texts)
   output args
     (fun _ => Json.arr (List.map (fun pair =>
       match pair with
@@ -468,17 +507,28 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
       IO.exit 1
   | _ => throw "usage: deus merge <branch>"
 
+/--
+  The branch's first-parent history, newest first, as (causal, message, by), followed by the
+  history imported from exports (D67), so a restored codebase shows what came before it.
+-/
+def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, Text, Text) :=
+  let live := Codebase.history dir (Codebase.currentBranch dir) limit
+  let own := List.map (fun pair =>
+    match pair with
+    | (h, c) => (h, c.message, Option.getOr (producedBy dir h) "")) live
+  let imported := List.concatMap (fun pair => if Text.isEmpty (snd pair).prior then [] else Codebase.recordEntries dir (snd pair).prior) live
+  List.take limit (own ++ imported)
+
 def log (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let limit := Option.getOr (Option.bind (option args "n") Int.fromText) 20
-  let entries := Codebase.history dir (Codebase.currentBranch dir) limit
-  output args (fun _ => Json.arr (List.map (fun pair =>
-      match pair with
-      | (h, c) => Json.obj ([("causal", Json.str h), ("message", Json.str c.message), ("parents", Json.arr (List.map Json.str c.parents))] ++
-        Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir h)) [])) entries))
-    (fun _ => Text.join "\n" (List.map (fun pair =>
-      match pair with
-      | (h, c) => short h ++ "  " ++ c.message ++ Option.getOr (Option.map (fun agent => "  (by " ++ agent ++ ")") (producedBy dir h)) "") entries))
+  let entries := fullLog dir limit
+  output args (fun _ => Json.arr (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) => Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++ (if Text.isEmpty agent then [] else [("by", Json.str agent)]))) entries))
+    (fun _ => Text.join "\n" (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) => short h ++ "  " ++ message ++ (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
 
 /-- Moves the branch back to its first parent; the undone node stays in the store. -/
 def undo (args : Args) : {IO, Throw Text} Unit :=
@@ -492,7 +542,7 @@ def undo (args : Args) : {IO, Throw Text} Unit :=
   | [] => throw "nothing to undo"
 
 /--
-  `deus migrate`: rewrites history so every snapshot is a namespace tree (D70). Causal hashes
+  `deus migrate`: rewrites history so every snapshot is a namespace tree (D71). Causal hashes
   change, so a remote that already holds the old history should be replaced by a new one.
 -/
 def migrate (args : Args) : {IO, Throw Text} Unit :=
@@ -654,13 +704,13 @@ def pull (args : Args) : {IO, Throw Text} Unit :=
 
 /--
   `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
-  bundles. It never drops history: a bundle goes only once strata hold all its objects (D71).
+  bundles. It never drops history: a bundle goes only once strata hold all its objects (D72).
 -/
 def compact (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
-  if Map.contains "keep" args.options then throw "compact keeps the whole history (D71); there is no --keep"
+  if Map.contains "keep" args.options then throw "compact keeps the whole history (D72); there is no --keep"
   else
     match withRemote dir name (fun _ => Replicate.compact dir name level) with
     | (written, deleted) =>
@@ -751,6 +801,10 @@ def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a)
       | Result.ok h => guardDefect (fun _ => Code.cost (Code.run h))
       | Result.err message => Result.err message)
   | MdlHost.holds source -> k =>
+    k (match compiled source with
+      | Result.ok h => guardDefect (fun _ => Code.run h)
+      | Result.err message => Result.err message)
+  | MdlHost.run source -> k =>
     k (match compiled source with
       | Result.ok h => guardDefect (fun _ => Code.run h)
       | Result.err message => Result.err message)
@@ -944,7 +998,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
       if flag args "wasm" then
-        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
@@ -1111,6 +1165,15 @@ def export (args : Args) : {IO, Throw Text} Unit :=
       output args (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
         (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++ " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
 
+/-- `deus history import <history.sexp>`: the history of an export, kept under the restore (D67). -/
+def history (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["import", path] =>
+    let n := Export.importHistory dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " changes into the history.")
+  | _ => throw "usage: deus history import <history.sexp>"
+
 def usage : Text :=
   Text.join "\n" [
     "usage: deus <command> [args] [--json] [--codebase <dir>]",
@@ -1124,6 +1187,7 @@ def usage : Text :=
     "  ls [prefix]                          list names",
     "  find <text>                          names containing text",
     "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
+    "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax",
     "  names <name|#hash>                   every name of a hash",
     "  deps <name> / dependents <name>      what a definition uses / what uses it",
     "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name",
@@ -1134,6 +1198,7 @@ def usage : Text :=
     "  switch <branch>                      change branch",
     "  merge <branch>                       three-way merge into the current branch",
     "  log [--n N] / undo                   history / step the branch back",
+    "  history import <history.sexp>        keep an export's history under a restored codebase",
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "  migrate                              rewrite history with namespace-tree snapshots",
     "",
@@ -1221,6 +1286,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "explore" then explore args
     else if command == "task" then task args
     else if command == "export" then export args
+    else if command == "history" then history args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 

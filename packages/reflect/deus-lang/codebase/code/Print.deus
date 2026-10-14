@@ -29,6 +29,9 @@ def Print.bind (p : Printer) (env : List Text) : Text :=
 /-- A body after `:=`, `=>`, `then` or `else`: inline, or a block on the next lines. -/
 def Print.body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text := if isBlock t then "\n" ++ spaces (ind + 2) ++ Print.stmts p t env (ind + 2) else " " ++ Print.expr p t env ind 0
 
+/-- A comment's lines at indentation `ind`, each followed by a new line at `ind`. -/
+def Print.commentLines (text : Text) (ind : Int) : Text := Text.concat (List.map (fun l => (if Text.isEmpty l then "" else l) ++ "\n" ++ spaces ind) (lines text))
+
 def Print.conName (p : Printer) (t : Text) (tag : Int) : Text := if t == "#Bool" then if tag == 1 then "true" else "false" else if t == "#Unit" then "()" else if t == "#List" then if tag == 0 then "[]" else "List.cons" else nameFor p (t ++ "#" ++ toText tag)
 
 /-- A whole definition: `def name (x : A) : B := body`. -/
@@ -78,14 +81,19 @@ def Print.equationScrutinee (scrut : Sexp) (count : Int) : Bool := if count == 1
 
 def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
   match t with
+  | Sexp.list (Sexp.sym "note" :: _ :: inner :: []) =>
+      -- Only statements and arms carry comments, and those print through `stmts`.
+      Print.expr p inner env ind prec
   | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) => getOr (get? env i) ("$" ++ toText i)
   | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => refName p h env
   | Sexp.list (Sexp.sym "int" :: Sexp.int v :: []) => if v < 0 then paren 99 prec (toText v) else toText v
   | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => quoteText v
   | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => paren 90 prec ("prim " ++ quoteText name)
-  | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: _ :: []) => conName p ty tag
+  | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: _ :: []) => Print.conName p ty tag
   | Sexp.list (Sexp.sym "op" :: Sexp.str a :: Sexp.int index :: _ :: []) => nameFor p (a ++ "!" ++ toText index)
-  | Sexp.list (Sexp.sym "if" :: a :: b :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 0 :: _ :: []) :: []) => if isBlock a || isBlock b then ifThenElse p a b (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 0, Sexp.int 0]) env ind prec else paren 35 prec (Print.expr p a env ind 36 ++ " && " ++ Print.expr p b env ind 35)
+  | Sexp.list (Sexp.sym "if" :: a :: b :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 0 :: _ :: []) :: []) =>
+      -- `&&` and `||` only when both sides are expressions; a block side keeps `if … then … else`.
+      if isBlock a || isBlock b then ifThenElse p a b (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 0, Sexp.int 0]) env ind prec else paren 35 prec (Print.expr p a env ind 36 ++ " && " ++ Print.expr p b env ind 35)
   | Sexp.list (Sexp.sym "if" :: a :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 1 :: _ :: []) :: b :: []) => if isBlock a || isBlock b then ifThenElse p a (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 1, Sexp.int 0]) b env ind prec else paren 30 prec (Print.expr p a env ind 31 ++ " || " ++ Print.expr p b env ind 30)
   | Sexp.list (Sexp.sym "if" :: c :: yes :: no :: []) => ifThenElse p c yes no env ind prec
   | Sexp.list (Sexp.sym "lam" :: _) =>
@@ -98,11 +106,13 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
       match params t env [] with
       | (names, b, env2) =>
           let rendered := Print.body p b env2 ind
+          -- A generated name (`x0`) the body never mentions was `_` in the source.
           let shown := List.map
             (fun x => if isGenerated x && not (Print.mentions x rendered) then "_" else x)
             names
           paren 1 prec ("fun " ++ join " " shown ++ " =>" ++ rendered)
   | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
+      -- Binder names come in pre-order (`Resolve.strip`), so the scrutinee is printed before the arms.
       let scrutText := Print.expr p scrut env ind 0
       let arms := List.map (fun c =>
         match c with
@@ -144,12 +154,13 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
               | _ => "(" ++ Print.expr p a env ind 0 ++ ")." ++ field
           | Option.none => Print.application p f args env ind prec
       | (Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []), a :: b :: []) =>
-          match infixOf name with
+          match Print.infixOf name with
           | Option.some (op, level) =>
               let supply := Ref.get p.supply
               let fresh := Ref.get p.fresh
               let flat := Print.expr p a env ind level ++ " " ++ op ++ " " ++ Print.expr p b env ind (level + 1)
               if fits ind flat then paren level prec flat else
+                -- Too long: break after the operator; a chain of one operator breaks at each.
                 Ref.set p.supply supply
                 Ref.set p.fresh fresh
                 let left := Print.expr p a env ind level
@@ -182,7 +193,7 @@ def Print.infixOf (name : Text) : Option (Text, Int) := if name == "Int.add" the
 /-- Whether a term prints as several lines (so it needs a block). -/
 def Print.isBlock (t : Sexp) : Bool :=
   let h := head t
-  h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle"
+  h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle" || h == "note"
 
 /-- Whether a name is one `bind` made up (`x` and digits). -/
 def Print.isGenerated (name : Text) : Bool := startsWith "x" name && Text.length name > 1 && isSome (fromText (Text.drop 1 name))
@@ -218,6 +229,12 @@ def Print.nameFor (p : Printer) (key : Text) : Text :=
   match Map.lookup key p.display with
   | Option.some name => name
   | Option.none => "#" ++ Text.take 10 key
+
+/-- Notes from metadata: `(notes (n i "text") …)`. -/
+def Print.notesOf (meta : Option Sexp) : List (Int, Text) := filterMap (fun x =>
+  match x with
+  | Sexp.list (Sexp.sym "n" :: Sexp.int i :: Sexp.str text :: []) => Option.some (i, text)
+  | _ => Option.none) (metaList meta "notes")
 
 /-- Parenthesizes text of precedence `level` printed in a context that binds tighter (`ctx`). -/
 def Print.paren (level : Int) (ctx : Int) (t : Text) : Text := if level < ctx then "(" ++ t ++ ")" else t
@@ -264,7 +281,7 @@ def Print.patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : 
             | (text, env3) => go more env3 (text :: acc)
       match go subs env [] with
       | (texts, env2) =>
-          let name := conName p ty tag
+          let name := Print.conName p ty tag
           if List.isEmpty texts then (name, env2) else (paren 90 prec (name ++ " " ++ join " " texts), env2)
   | _ => (Sexp.print pat, env)
 
@@ -292,6 +309,7 @@ def Print.plainDefinition (p : Printer) (name : Text) (docText : Text) (names : 
 def Print.printer (ns : Map Text Entry) (locals : List Text) : Printer :=
   let bySegment := (Names.build ns).bySegment
   let index := nameIndex ns
+  -- Constructors and operations keep their owner (`Result.ok`, `Prices.priceOf`): a bare `ok` reads as a variable in a pattern.
   let display := Map.fromList (List.map (fun pair =>
     match pair with
     | (key, fqn) => (key, suffixifyAtLeast
@@ -303,6 +321,7 @@ def Print.printer (ns : Map Text Entry) (locals : List Text) : Printer :=
     | (name, Entry.type _ iri _) => Map.insert iri (suffixify bySegment name) m
     | (name, Entry.ability _ iri) => Map.insert iri (suffixify bySegment name) m
     | _ => m) Map.empty (Map.toList ns)
+  -- Accessors print as `e.field` when the field name is unique among structures.
   let names := Names.build ns
   let fieldNames := foldl (fun m pair =>
     match pair with
@@ -317,7 +336,8 @@ def Print.quoteText (t : Text) : Text :=
   let n := Text.length t
   let rec go i acc := if i >= n then Text.concat (reverse acc) else
     let c := code t i
-    let piece := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 then "\\u{" ++ toText c ++ "}" else fromCode c
+    let piece := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 || c == 127 then "\\u{" ++ hexDigit (c / 16) ++ hexDigit (mod c 16) ++ "}" else fromCode c
+    -- The lexer reads `\u{…}` as hex, so the printer must write hex.
     go (i + 1) (piece :: acc)
   "\"" ++ go 0 [] ++ "\""
 
@@ -325,6 +345,27 @@ def Print.quoteText (t : Text) : Text :=
 def Print.refName (p : Printer) (key : Text) (env : List Text) : Text :=
   let name := nameFor p key
   if List.contains name env then getOr (Map.lookup key p.fullNames) name else name
+
+/-- Core with its comments put back as `(note "text" e)` at the pre-order indices `Resolve.unnote` recorded (D66). -/
+def Print.restore (notes : List (Int, Text)) (core : Sexp) : Sexp := if List.isEmpty notes then core else
+  let byIndex := Map.fromList notes
+  let rec go x count :=
+    match x with
+    | Sexp.list items =>
+        let rec each rest out c :=
+          match rest with
+          | [] => (reverse out, c)
+          | y :: more =>
+              match go y c with
+              | (y2, c2) => each more (y2 :: out) c2
+        match each items [] (count + 1) with
+        | (children, next) =>
+            let rebuilt := Sexp.list children
+            match Map.lookup count byIndex with
+            | Option.some text => (Sexp.node "note" [Sexp.str text, rebuilt], next)
+            | Option.none => (rebuilt, next)
+    | _ => (x, count)
+  fst (go core 0)
 
 def Print.spaces (n : Int) : Text := repeat n " "
 
@@ -342,6 +383,7 @@ def Print.splitSig (sig : Sexp) (n : Int) : (List Sexp, Option Sexp) := if n == 
 def Print.stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
   let nl := "\n" ++ spaces ind
   match t with
+  | Sexp.list (Sexp.sym "note" :: Sexp.str text :: inner :: []) => commentLines text ind ++ Print.stmts p inner env ind
   | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
       let name := Print.bind p env
       let value := Print.body p v env ind
@@ -375,6 +417,9 @@ def Print.tupleItems (t : Sexp) : List Sexp :=
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []) :: a :: rest :: []) => a :: Print.tupleItems rest
   | _ => [t]
 
+--
+-- Types.
+--
 def Print.ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
   match t with
   | Sexp.list (Sexp.sym "tref" :: Sexp.str iri :: []) => if startsWith "#" iri then Text.drop 1 iri else getOr (Map.lookup iri p.typeNames) iri

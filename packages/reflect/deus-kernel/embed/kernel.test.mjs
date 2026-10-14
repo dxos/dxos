@@ -63,10 +63,10 @@ test('an embedded program awaits its host for every unhandled operation', async 
       }
       if (ability === 'urn:deus:test:Kv' && op === 0) {
         return store.has(args[0])
-          ? { $: '#Option', tag: 1, fields: [store.get(args[0])] }
-          : { $: '#Option', tag: 0, fields: [] };
+          ? { $: 'urn:deus:builtin:Option', tag: 1, fields: [store.get(args[0])] }
+          : { $: 'urn:deus:builtin:Option', tag: 0, fields: [] };
       }
-      if (ability === '#IO' && op === 0) {
+      if (ability === 'urn:deus:builtin:IO' && op === 0) {
         printed.push(args[0]);
         return null;
       }
@@ -74,7 +74,7 @@ test('an embedded program awaits its host for every unhandled operation', async 
     },
   });
   assert.deepEqual(result, { state: 'done', value: 'hello world' });
-  assert.deepEqual(requests, ['urn:deus:test:Kv/1', '#IO/0', 'urn:deus:test:Kv/0']);
+  assert.deepEqual(requests, ['urn:deus:test:Kv/1', 'urn:deus:builtin:IO/0', 'urn:deus:test:Kv/0']);
   assert.deepEqual(printed, ['stored\n']);
 });
 

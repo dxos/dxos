@@ -1,0 +1,112 @@
+/-- The `qa` block type. -/
+@[ext "org.dxos.deus.qa@1.0"]
+def Qa.check (b : Block) : {MdlHost} List Text :=
+  let id := if Text.isEmpty b.blockId then "qa" else b.blockId
+  let steps := items (getOr (List.lookup "steps" b.props) "")
+  let places := mapIndexed (fun i fields => (id ++ "." ++ toText (i + 1), fields)) steps
+  let problems := concatMap (fun p => stepProblems (fst p) (snd p)) places
+  match List.lookup "handler" b.props with
+  | Option.none => "qa needs handler:" :: problems
+  | Option.some handler => if List.isEmpty steps then ["qa needs steps:"] else if not (List.isEmpty problems) then problems else
+      let runnable := filterMap (fun p => stepSource (fst p) (snd p)) places
+      if List.isEmpty runnable then [] else
+        match MdlHost.run ("Qa.simulate " ++ handler ++ " [" ++ join ", " runnable ++ "]") with
+        | Result.err message => [message]
+        | Result.ok "" => []
+        | Result.ok failure => [failure]
+
+/-- The first `n` characters of a response body, on one line. -/
+def Qa.excerpt (t : Text) : Text :=
+  let flat := replace "\n" " " t
+  if Text.length flat > 120 then Text.take 120 flat ++ "…" else flat
+
+/-
+  QA flows for web apps as MDL blocks: one journey that a human tester and an agent run from the
+  same text, after DXOS's QA dialect (`packages/reflect/deus/lang/qa.mdl`).
+
+    ```mdl
+    qa QA-1: a note survives being listed
+      handler: Notes.serve
+      steps:
+        - do: Store a note called hello
+          send: PUT /notes/hello hi there
+          expect: The note is stored
+          assert: status == 201
+        - do: Open the notebook's index page
+          send: GET /
+          expect: hello is listed as a link
+          assert: Text.contains "href=\"/notes/hello\"" content
+    ```
+
+  - `handler:` the web handler under test (`platform/web.deus`).
+  - Each step needs `do:` (the human instruction) and `expect:` (what both testers judge).
+  - `send:` is the agent's binding: `VERB /path [payload]`. A step without one is a human-only
+    step, which simulation skips.
+  - `assert:` a `Bool` expression over `status`, `content` and `response`; without one a step
+    holds when its status is below 400.
+  - `actor:` the object the step's request goes to (default `qa`), for handlers with `Actors`.
+
+  `deus mdl` runs the steps in order in `Web.simulateMany`, so a flow is deterministic and needs
+  no server; the first step that fails is reported with what it got.
+-/
+/-- One step of a flow: its fields in the document's order. -/
+def Qa.fieldsOf (item : List Text) : List (Text, Text) := filterMap (fun line => keyValue (trim line)) item
+
+/-- A `steps:` value split into items: a line without leading spaces starts one. -/
+def Qa.items (value : Text) : List (List (Text, Text)) :=
+  let rec go lines current acc :=
+    match lines with
+    | [] => reverse (if List.isEmpty current then acc else reverse current :: acc)
+    | line :: rest => if startsWith "  " line then go rest (line :: current) acc else go rest [line] (if List.isEmpty current then acc else reverse current :: acc)
+  List.map fieldsOf (go (lines value) [] [])
+
+/-- DEUS source for a text literal. -/
+def Qa.literal (t : Text) : Text := "\"" ++ replace "\n" "\\n" (replace "\"" "\\\"" (replace "\\" "\\\\" t)) ++ "\""
+
+/-- `VERB /path [payload]` as source for a `Request`; none when it has no path. -/
+def Qa.request (send : Text) : Option Text :=
+  let t := trim send
+  let space := indexOf t " " 0
+  if space <= 0 then Option.none else
+    let verb := Text.take space t
+    let rest := trim (Text.drop (space + 1) t)
+    let gap := indexOf rest " " 0
+    let url := if gap < 0 then rest else Text.take gap rest
+    let payload := if gap < 0 then "" else trim (Text.drop (gap + 1) rest)
+    if startsWith "/" url then Option.some ("(Request.mk " ++ literal verb ++ " " ++ literal url ++ " " ++ literal payload ++ ")") else Option.none
+
+/-- Runs `steps` against `handler` in simulation and returns the first failure, or "" when every
+  step holds. The steps after a failure ran but are not judged, since they assumed it held. -/
+def Qa.simulate (handler : Request -> {Storage, Http, Actors, Alarm | r} Response) (steps : List (Text, (Text, (Request, Int -> Text -> Response -> Bool)))) : {r} Text :=
+  match simulateMany handler (List.map (fun s =>
+    match s with
+    | (_, actor, req, _) => (actor, req)) steps) with
+  | (responses, _, _) =>
+      let rec judge pairs :=
+        match pairs with
+        | [] => ""
+        | ((label, _, req, holds), response) :: rest => if holds response.status response.content response then judge rest else label ++ " failed: " ++ req.verb ++ " " ++ req.url ++ " answered " ++
+            toText response.status ++ " " ++ excerpt response.content
+      judge (zip steps responses)
+
+/-- The problems with a step's fields, numbered as `QA-1.2`. -/
+def Qa.stepProblems (place : Text) (fields : List (Text, Text)) : List Text :=
+  let missing := filterMap
+    (fun key => if isNone (List.lookup key fields) then Option.some (place ++ " needs " ++ key ++ ":") else Option.none)
+    ["do", "expect"]
+  let badSend :=
+    match List.lookup "send" fields with
+    | Option.some send => if isNone (request send) then [place ++ ": send: " ++ send ++ " is not VERB /path [payload]"] else []
+    | Option.none => []
+  missing ++ badSend
+
+/-- Source for one step the agent can run: `(label, actor, request, judge)`. -/
+def Qa.stepSource (place : Text) (fields : List (Text, Text)) : Option Text :=
+  match Option.bind (List.lookup "send" fields) request with
+  | Option.none => Option.none
+  | Option.some req =>
+      let label := place ++ " (" ++ getOr (List.lookup "do" fields) "" ++ "; expect: " ++
+        getOr (List.lookup "expect" fields) "" ++ ")"
+      let assert := getOr (List.lookup "assert" fields) "status < 400"
+      Option.some ("(" ++ literal label ++ ", " ++ literal (getOr (List.lookup "actor" fields) "qa") ++ ", " ++
+        req ++ ", fun (status : Int) (content : Text) (response : Response) => " ++ assert ++ ")")

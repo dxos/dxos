@@ -10,6 +10,9 @@ def Tasks.attachmentFromSexp (form : Sexp) : Attachment :=
   | ("change", h :: []) => Attachment.change (asText h)
   | _ => defect ("bad task link " ++ Sexp.print form)
 
+--
+-- Objects.
+--
 def Tasks.attachmentToSexp (a : Attachment) : Sexp :=
   match a with
   | Attachment.definition name h => Sexp.node "def" [Sexp.str name, Sexp.node "ref" [Sexp.str h]]
@@ -18,6 +21,9 @@ def Tasks.attachmentToSexp (a : Attachment) : Sexp :=
 /-- A new task with only an id and a title. -/
 def Tasks.blank (id : Text) (title : Text) : Task := Task.mk id title TaskState.todo 0 "" [] "" "" [] []
 
+--
+-- History.
+--
 /-- The changes on the current branch (first parents, newest first) where `changedAt parent node` holds. -/
 def Tasks.changesWhere (dir : Text) (limit : Int) (changedAt : Causal -> Causal -> {IO, Throw Text} Bool) : {IO, Throw Text} List (Text, Causal) :=
   let rec walk h n acc := if n <= 0 then reverse acc else
@@ -97,6 +103,7 @@ def Tasks.histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List
     | p :: _ =>
         let parent := readCausal dir p
         walk p (n - 1) (((h, node), touched parent node) :: acc)
+  -- `walk` leaves the oldest change first, so prepending each one leaves every list newest first.
   foldl
     (fun m change => foldl (fun m2 id => Map.insert id (fst change :: getOr (Map.lookup id m2) []) m2) m (snd change))
     Map.empty
@@ -254,6 +261,9 @@ def Tasks.setField (t : Task) (field : Text) (value : Text) : {Throw Text} Task 
   t.links
   t.comments else if field == "parent" then Task.mk t.id t.title t.state t.priority t.assignee t.labels value t.details t.links t.comments else if field == "details" then Task.mk t.id t.title t.state t.priority t.assignee t.labels t.parent value t.links t.comments else Throw.throw ("unknown task field " ++ field)
 
+--
+-- Snapshots.
+--
 /-- The tasks snapshot of a history node: task id -> task hash. -/
 def Tasks.snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := if Text.isEmpty c.tasks then Map.empty else
   match readObject dir c.tasks with
@@ -272,6 +282,9 @@ def Tasks.stateText (s : TaskState) : Text :=
 
 def Tasks.states : List (Text, TaskState) := [("todo", TaskState.todo), ("doing", TaskState.doing), ("done", TaskState.done), ("canceled", TaskState.canceled)]
 
+--
+-- Merging.
+--
 /-- A three-way choice: one side's change wins, and changes on both sides must agree. -/
 def Tasks.three (b : a) (o : a) (t : a) : Option a := if o == t then Option.some o else if b == o then Option.some t else if b == t then Option.some o else Option.none
 

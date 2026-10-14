@@ -1,3 +1,20 @@
+/-
+  Exporting a codebase as text (D64), so a git repository can back it up and review its changes.
+  The export holds the layers that cannot be recomputed, and leaves out the cache and artifacts:
+
+    code/<Namespace>.deus   source of every definition, test, theorem, type and ability, one file
+                            per top-level namespace (`_root.deus` for names without one). It is
+                            what `deus view` prints, which compiles back to the same hashes.
+    tasks.sexp              every task object, one per line, for `deus task import`
+    TASKS.md                the tasks to read: open first, with their links and comments
+    history.sexp            the branch's changes, newest first, for `deus history import`
+    HISTORY.md              the same changes to read, with who made them
+    README.md               what the export is and how to restore it
+
+  `deus add <dir>/code`, `deus task import <dir>/tasks.sexp` and `deus history import
+  <dir>/history.sexp` restore it in a fresh codebase. The history comes back as a record that
+  `deus log` shows after the restore's own changes (D67); it is not replayed.
+-/
 /-- Kinds written as source; constructors, operations and accessors come with their declarations. -/
 def Export.exported (e : Entry) : Bool :=
   match e with
@@ -7,6 +24,18 @@ def Export.exported (e : Entry) : Bool :=
   | Entry.type _ _ _ => true
   | Entry.ability _ _ => true
   | _ => false
+
+/-- Records an export's `history.sexp` on the current branch (D67); returns how many changes. -/
+def Export.importHistory (dir : Text) (path : Text) : {IO, Throw Text} Int :=
+  match IO.readFile path with
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let entries := List.filter (fun form => head form == "entry") (readAll text)
+      commitPrior
+        dir
+        (Sexp.node "record" entries)
+        ("history: import " ++ toText (List.length entries) ++ " changes")
+      List.length entries
 
 /-- Saves tasks from an export's `tasks.sexp` as one change; returns how many. -/
 def Export.importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
@@ -41,9 +70,31 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
   let sources := filterMap (fun pair =>
     match pair with
     | (name, e) =>
-        let text := viewEntryWith printer dir ns name e false
-        let body := join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
+        let body := snd (viewParts printer dir ns name e "deus")
         if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
+  -- Spec blocks go back into `.mdl` documents, one per document name, so `deus add` restores them.
+  let specs := filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) =>
+        match readObject dir h with
+        | Option.some obj =>
+            match Mdl.fromSexp obj with
+            | (uri, b) => Option.some (Text.take (Text.length name - Text.length b.blockId - 1) name, b.blockType, uri, Mdl.render b)
+        | Option.none => Option.none
+    | _ => Option.none) (Map.toList ns)
+  let documents := dedup (sort (List.map fst specs))
+  if List.isEmpty documents then () else IO.mkdirp (out ++ "/specs")
+  forEach documents (fun d =>
+    let mine := filterMap (fun pair => if fst pair == d then Option.some (snd pair) else Option.none) specs
+    let terms := dedup (sort (List.map (fun x =>
+      match x with
+      | (term, uri, _) => "| `" ++ term ++ "` | `" ++ uri ++ "` |") mine))
+    IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (join
+      "\n"
+      (["---", "name: " ++ d, "---", "", "## Extensions", "", "| Term | URI |", "| --- | --- |"] ++
+        terms ++ ["", "## Blocks", ""] ++ List.map (fun x =>
+        match x with
+        | (_, _, text) => text ++ "\n") mine)))
   let files := dedup (sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")
   forEach files (fun f => IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (join
@@ -58,11 +109,23 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     match Project.read dir with
     | Option.some p => p.projectIri
     | Option.none => "a DEUS codebase"
+  let projectStep :=
+    match Project.read dir with
+    | Option.some p => ["deus project init " ++ p.projectIri]
+    | Option.none => []
   IO.writeFile (out ++ "/README.md") (join
     "\n"
-    ["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `HISTORY.md` lists the changes on the branch.", "", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty", "deus add code", "deus task import tasks.sexp", "```", ""])
-  let history := history dir (currentBranch dir) 100000
-  IO.writeFile (out ++ "/HISTORY.md") ("# History of " ++ currentBranch dir ++ "\n\n" ++
-    Text.concat (List.map (fun pair => "- `" ++ Text.take 10 (fst pair) ++ "` " ++ (snd pair).message ++
-      getOr (Option.map (fun agent => " (by " ++ agent ++ ")") (producedBy dir (fst pair))) "" ++ "\n") history))
+    (["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.", "- `specs/` holds the `.mdl` spec blocks, one document per name.", "", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++
+      projectStep ++
+      ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp", "deus history import history.sexp", "```", ""]))
+  let history := fullLog dir 100000
+  IO.writeFile (out ++ "/history.sexp") (Text.concat (List.map (fun entry =>
+    match entry with
+    | (h, message, agent) => Sexp.print (Sexp.node "entry" [Sexp.s h, Sexp.s message, Sexp.s agent]) ++ "\n") history))
+  IO.writeFile
+    (out ++ "/HISTORY.md")
+    ("# History of " ++ currentBranch dir ++ "\n\n" ++ Text.concat (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) => "- `" ++ Text.take 10 h ++ "` " ++ message ++
+          (if Text.isEmpty agent then "" else " (by " ++ agent ++ ")") ++ "\n") history))
   (List.length files, List.length sources, List.length tasks)

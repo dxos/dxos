@@ -75,7 +75,8 @@ A `task` has the fields of the explorer's task object without `history`
 In `add` and `update`, `updated` lists names that now point at a new hash (with that hash) and
 `propagated` the dependents that were rehashed because of them. `view`'s `source` is the text `deus view`
 prints, header comments included (`-- <name> #<hash prefix>`, `-- : <type>`); with `--core` it is the
-stored Core instead. In `deps` and `dependents`, `name` is the hash's name, or `#` and its first 10
+stored Core instead, and with `--dialect ts` the TypeScript-like dialect, whose header lines start with
+`// ` ([DIALECT-TS.md](./DIALECT-TS.md)). In `deps` and `dependents`, `name` is the hash's name, or `#` and its first 10
 characters when the namespace has none.
 
 ```json

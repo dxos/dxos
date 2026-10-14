@@ -195,6 +195,51 @@ perhaps add an alarm to remind you of that every 30 minutes
 
 ---
 
+- if you ever run-out of tasks, just find things to work on yourself keeping the spirit
+
+---
+
+- some ideas: figure out qa flows for web-apps. use knowledge from dxos, autocue skill, etc...
+
+---
+
+- \* codebase explorer app needs to be much better
+
+---
+
+- \* continue thinking about dogfooding and working without git
+
+---
+
+- \* embedding files in codebase -- they shouldn't ever go to git + a though: an artifact is just a const defined in codebase with cached value. i.e. you can have something like: let deus_cli = Deus.toBinary Cli.main -- you can change the naming... then this expr can be evaluated and cached
+
+---
+
+- \* dogfooding idea: `deus eval` that model calls with deus snippet that has ability to mutate codebase
+
+---
+
+- i instructed to be autonomous yet a session is blocking on me -- fix this systemically
+
+---
+
+- also remember about timeline and decision log
+
+---
+
+- \* one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself
+
+---
+
+- > defect trace holds definition hashes (or the #… names of builtins),
+  > sgould builtins also be proper uris?
+
+---
+
+- - unison authors mentioned different dialects with shared codebase format -- you can write code in one, and then render with another. lets experiment with that -- still keep deus as the primary -- that best for models, but add minimal rendering to other dialects -- what about something more JS, TS -like?
+
+---
+
 - how does the compaction work -- normal subduction sedimetree chunks the graph, but our graph doesn't grow the same way, automerge grows vertically (each commit builds on previous one), but ours is more horizontal: new definitions added, old ones replaced
 
 ---
@@ -208,3 +253,7 @@ I might be wrong though
 > Retention GC (level 99)
 
 as git, we should be able to keep entire code history without trimming, artifacts and caches might get deleted though. lets make sure compaction allows that
+
+---
+
+- standing instructions: all sessions should be merging changes directly into https://github.com/dxos/dxos/pull/13952 ; close all extra PRs that were openend

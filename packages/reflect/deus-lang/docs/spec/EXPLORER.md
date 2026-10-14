@@ -86,6 +86,7 @@ same file in name order, so the file carries the alphabetically last of them in 
 | `signature` | string       | `<last name segment> : <type scheme>`, or `""` when the metadata has no scheme           |
 | `doc`       | string\|null | the doc comment                                                                          |
 | `html`      | string       | the source as `deus view` prints it, without its `-- ` header lines, as highlighted HTML |
+| `ts`        | string       | the same in the TypeScript-like dialect ([DIALECT-TS.md](./DIALECT-TS.md)), highlighted  |
 | `deps`      | ref[]        | what the definition refers to, limited to hashes the namespace names, itself excluded    |
 | `users`     | ref[]        | visible definitions that refer to it, sorted by hash                                     |
 | `verdict`   | string       | the cached test or theorem verdict, or `""`; see below                                   |

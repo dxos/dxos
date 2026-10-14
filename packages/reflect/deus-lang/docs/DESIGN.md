@@ -235,8 +235,8 @@ can only come from that library.
 and nothing is overwritten. A pull imports new bundles and sets `origin.<branch>` to the
 remote's heads, which are merged as local branches are. Compaction is deterministic, so two
 clients compacting the same history write the same bundles. Compaction never trims history: the
-remote keeps every change, as git does (D71). Namespace snapshots are trees, so each commit
-adds only the nodes on the changed names' paths (D70); `deus migrate` rewrites older history.
+remote keeps every change, as git does (D72). Namespace snapshots are trees, so each commit
+adds only the nodes on the changed names' paths (D71); `deus migrate` rewrites older history.
 
 ## Exploring
 

@@ -1,3 +1,5 @@
+test Tests.controlCharactersPrintAsHex := quoteText (fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" && tokenValues "\"\\u{1b}\"" == [fromCode 27, ""]
+
 test Tests.externalLowersBlocks :=
   let block := fun kind props => Block.mk kind "x" "" props 1
   containerOf (block
@@ -123,6 +125,10 @@ test Tests.parserRejectsIndentedDecl := not (parses "  def f := 1\n")
 
 test Tests.parserTypeApplicationField := parses "inductive W where\n  | wrap (List Int)\n  | pair (x y : Int)\n"
 
+/-
+  Tests and theorems about the toolchain itself, run by `deus test` and `deus check` on a
+  codebase built from `deus/` (src/cli.test.ts does that in CI).
+-/
 def Tests.parses (source : Text) : Bool :=
   match try (fun _ => Parser.parse source) with
   | Result.ok _ => true
@@ -132,6 +138,7 @@ test Tests.projectAuthorityAndOwnership := authority "https://dxos.org/deus/std"
 
 theorem Tests.quoteRoundTrip (t : Text) : Sexp.read (Sexp.print (Sexp.str t)) == Sexp.str t := by test 200
 
+@[integration]
 test Tests.realFileSystem :=
   IO.writeFile "/tmp/deus-integration-probe.txt" "ok"
   IO.readFile "/tmp/deus-integration-probe.txt" == Option.some "ok"

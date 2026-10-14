@@ -1,5 +1,5 @@
 test Notes.indexIsHtml :=
-  match simulate Notes.serve [Request.mk "PUT" "/notes/hello" "hi", Request.mk "GET" "/" ""] with
+  match Web.simulate Notes.serve [Request.mk "PUT" "/notes/hello" "hi", Request.mk "GET" "/" ""] with
   | (_ :: index :: [], _) => List.lookup "content-type" index.headers == Option.some "text/html; charset=utf-8" && Text.contains "<a href=\"/notes/hello\">hello</a>" index.content
   | _ => false
 

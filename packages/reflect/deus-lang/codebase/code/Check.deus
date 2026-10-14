@@ -51,6 +51,7 @@ def Check.checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp
           | Option.none => Verdict.pass "test" count
           | Option.some reason => Verdict.fail reason
       | _ =>
+          -- A tactic proof. Binder names come from metadata (the author's names, in order).
           let locals := List.map asText (metaList (readMeta dir h) "locals")
           let names := mapIndexed (fun i _ => getOr (get? locals i) ("x" ++ toText i)) types
           let pr := Prover.mk
@@ -62,6 +63,7 @@ def Check.checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp
             (Ref.new 0)
             (Ref.new [])
             (Ref.new [])
+          -- Lemmas must be checked first; one that is only tested weakens this verdict.
           let lemmas := filterMap (fun x =>
             match x with
             | Sexp.list (Sexp.sym "ref" :: Sexp.str l :: []) => Option.some l
@@ -97,7 +99,7 @@ def Check.enumerate (types : Map Text Sexp) (t : Sexp) : Option (List Sexp) :=
     else
       match Map.lookup iri types with
       | Option.some decl =>
-          let ctors := typeArgs decl
+          let ctors := View.typeArgs decl
           if all (fun c => List.length (Sexp.args c) == 1) ctors then
             let hash := hashFor iri decl
             Option.some (mapIndexed (fun i _ => Check.con hash i []) ctors)
@@ -149,7 +151,7 @@ def Check.generate (types : Map Text Sexp) (state : Ref Int) (t : Sexp) (depth :
       match Map.lookup iri types with
       | Option.some decl =>
           let hash := hashFor iri decl
-          let ctors := typeArgs decl
+          let ctors := View.typeArgs decl
           let nullary := List.filter
             (fun pair => List.length (Sexp.args (snd pair)) == 1)
             (mapIndexed (fun i c => (i, c)) ctors)
@@ -195,6 +197,9 @@ def Check.lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verd
               v
       | Option.none => Verdict.fail "missing lemma"
 
+--
+-- Generators: values of a binder type, as Core terms.
+--
 /-- A deterministic generator: xorshift over a 32-bit state. -/
 def Check.nextRandom (state : Ref Int) : Int :=
   let x1 := Ref.get state
@@ -234,6 +239,7 @@ def Check.run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     | (name, e) =>
         let h := hash e
         let integration := not wantTheorems && hasAttr dir h "integration"
+        -- An integration test talks to the real world, so its result is never reused.
         match if integration then Option.none else cached dir h with
         | Option.some v => (name, v, true)
         | Option.none =>

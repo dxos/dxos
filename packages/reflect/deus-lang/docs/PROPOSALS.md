@@ -98,8 +98,8 @@ work against a directory or `r2://<bucket>/<prefix>`. Uploads are conditional
 (`If-None-Match: *`), so an existing bundle is never replaced. One push and pull round trip was
 run against the `agent-artifacts` bucket and then deleted. Garbage collection under a retention
 policy came next (D54): `deus compact --keep n`. Snapshots then became trees, so history grows by
-the change rather than by the whole namespace (D70), and history is never trimmed, so `--keep` is
-gone (D71).
+the change rather than by the whole namespace (D71), and history is never trimmed, so `--keep` is
+gone (D72).
 
 ## P4. Layers of the codebase
 
@@ -235,4 +235,11 @@ is the way it is, so the codebase cannot yet replace the files.
 the renamed name, so that only edits from outside the codebase leave text stale. The seed's
 fixpoint test then compiles the export instead of `deus/`.
 
-**Status.** Proposed; waiting on a choice.
+**Status.** The user chose A, comments on Core, and it is implemented (D66). The lexer keeps
+comments as tokens beside the others. The parser attaches the comments before a statement or an arm
+to that node, and those before a declaration to the declaration. The resolver carries them as
+`(note …)` nodes, which `Resolve.stripNoted` removes before hashing and records by pre-order index.
+The printer puts them back. `deus view` and `deus export` therefore keep every comment, and an
+export restored into an empty codebase exports the same text. A comment between a type's
+constructors moves to the next declaration. Character literals still print as numbers (task
+`0d21d8d5`).

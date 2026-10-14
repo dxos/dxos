@@ -55,6 +55,7 @@ def Web.simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Resp
         Ref.set alarms (Map.insert name (Ref.get clock + delay) (Ref.get alarms))
         k ()
   let responses := List.map (fun pair => serve (fst pair) (snd pair)) requests
+  -- An alarm may set another; a bound keeps a self-rescheduling actor from running forever.
   let rec fire count acc :=
     let due := sortBy (fun a b => compare (snd a, fst a) (snd b, fst b)) (Map.toList (Ref.get alarms))
     match due with

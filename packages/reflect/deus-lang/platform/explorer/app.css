@@ -107,12 +107,18 @@ button {
   color: var(--fg);
 }
 
-#views {
+#views,
+#dialects {
   display: flex;
   gap: 6px;
 }
 
-#views button.active {
+#dialects button {
+  font-size: 12px;
+}
+
+#views button.active,
+#dialects button.active {
   border-color: var(--accent);
   color: var(--accent);
 }

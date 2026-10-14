@@ -27,6 +27,14 @@ def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text
   if mac then Build.tool "codesign" ["--sign", "-", out] else ""
   IO.remove work
 
+/-
+  `deus build`: a standalone executable for a term (D38), with `--native` a small one made from
+  the Rust kernel (D42), or with `--worker` a Cloudflare Worker serving an actor (D45).
+
+  The executable is a Node single-executable application: the kernel, bundled into one script,
+  plus the term's image as an asset. The tools are pinned by version and run through `npx`, so
+  a build needs only Node and the registry.
+-/
 def Build.esbuild : Text := "esbuild@0.28.2"
 
 /-- Writes `out`, an executable that runs the image's main with its command-line arguments. The

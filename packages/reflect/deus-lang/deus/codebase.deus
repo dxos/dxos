@@ -19,7 +19,7 @@
   policy (replicate, delete) is a directory. Code may depend only on code.
 
   A namespace snapshot maps names to entries, stored as a tree split at the first dot of each
-  name (D70). A causal node records a snapshot, its parents, a message and, once there are tasks,
+  name (D71). A causal node records a snapshot, its parents, a message and, once there are tasks,
   a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and merging two
   branches is a three-way merge of their snapshots.
 -/
@@ -84,7 +84,7 @@ def layerOf (form : Sexp) : Text :=
   else if kind == "test" then "tests"
   else if kind == "theorem" then "proofs"
   else if kind == "task" then "tasks"
-  else if kind == "ns" || kind == "causal" || kind == "tasks" then "history"
+  else if kind == "ns" || kind == "causal" || kind == "tasks" || kind == "record" then "history"
   else "code"
 
 /-- Layers a layer may depend on; the rest are refused when adding. -/
@@ -131,7 +131,7 @@ def putNode (dir : Text) (items : List (Text, Sexp)) (depth : Int) : {IO} Text :
     put dir (Sexp.node "ns" (List.map (fun bucket => Sexp.node "part" [Sexp.str (putNode dir (snd bucket) (depth + 1))]) (Map.toList buckets)))
 
 /--
-  Stores a namespace as a tree split at each name's first dot (D70): `List.map` is `map` in the
+  Stores a namespace as a tree split at each name's first dot (D71): `List.map` is `map` in the
   `List` node, which its parent names by hash, and wide nodes split into parts. Changing one
   definition rewrites only the nodes on its path, so history grows by the change rather than by
   the whole namespace. Returns the root hash.
@@ -149,25 +149,30 @@ def putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
     let subs := List.map (fun pair => (fst pair, Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (putNamespace dir (snd pair))])) (Map.toList groups)
     putNode dir (entries ++ subs) 0
 
-/-- A history node: a namespace snapshot, its parents, why it was made, and its tasks snapshot (`""` for none). -/
+/--
+  A history node: a namespace snapshot, its parents, why it was made, its tasks snapshot, and the
+  record of history imported from an export (D67). `""` means none for the last two.
+-/
 structure Causal where
   snapshot : Text
   parents : List Text
   message : Text
   tasks : Text
+  prior : Text
 
-/-- A node without tasks prints as it did before tasks existed, so its hash is unchanged. -/
+/-- A node without tasks or a prior record prints as it did before those existed, so its hash is unchanged. -/
 def causalToSexp (c : Causal) : Sexp :=
   let tasks := if Text.isEmpty c.tasks then [] else [Sexp.node "tasks" [Sexp.str c.tasks]]
-  Sexp.node "causal" ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++ tasks)
+  let prior := if Text.isEmpty c.prior then [] else [Sexp.node "prior" [Sexp.str c.prior]]
+  Sexp.node "causal" ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++ tasks ++ prior)
 
 def causalFromSexp (form : Sexp) : Causal :=
   let field := fun key => Option.getOr (List.find (fun x => Sexp.head x == key) (Sexp.args form)) (Sexp.list [])
   let first := fun key => Sexp.asText (Option.getOr (List.head? (Sexp.args (field key))) (Sexp.str ""))
-  Causal.mk (first "ns") (List.map Sexp.asText (Sexp.args (field "parents"))) (first "msg") (first "tasks")
+  Causal.mk (first "ns") (List.map Sexp.asText (Sexp.args (field "parents"))) (first "msg") (first "tasks") (first "prior")
 
-/-- The snapshots a history node points at: its namespace and its tasks. -/
-def snapshotsOf (c : Causal) : List Text := if Text.isEmpty c.tasks then [c.snapshot] else [c.snapshot, c.tasks]
+/-- The objects a history node points at besides its parents: its namespace, its tasks, its prior record. -/
+def snapshotsOf (c : Causal) : List Text := List.filter (fun h => not (Text.isEmpty h)) [c.snapshot, c.tasks, c.prior]
 
 def readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   match readObject dir h with
@@ -291,7 +296,7 @@ def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text
   let snapshot := putNamespace dir ns
   if snapshot == previous.snapshot then parent
   else
-    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks))
+    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks ""))
     setBranch dir branch c
     c
 
@@ -302,9 +307,31 @@ def commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Throw Text} 
   let previous := readCausal dir parent
   if tasks == previous.tasks then parent
   else
-    let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message tasks))
+    let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message tasks ""))
     setBranch dir branch c
     c
+
+/--
+  Records history imported from an export (D67) on the current branch: a node whose `prior` is a
+  `(record (entry "causal" "message" "by") …)` object, newest first. The namespace is unchanged.
+-/
+def commitPrior (dir : Text) (record : Sexp) (message : Text) : {IO, Throw Text} Text :=
+  let branch := currentBranch dir
+  let parent := headOf dir branch
+  let previous := readCausal dir parent
+  let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message previous.tasks (put dir record)))
+  setBranch dir branch c
+  c
+
+/-- The entries of a prior record: (causal, message, by). -/
+def recordEntries (dir : Text) (h : Text) : {IO} List (Text, Text, Text) :=
+  match readObject dir h with
+  | some form =>
+    List.filterMap (fun x =>
+      match x with
+      | Sexp.list [Sexp.sym "entry", Sexp.str c, Sexp.str m, Sexp.str agent] => some (c, m, agent)
+      | _ => none) (Sexp.args form)
+  | none => []
 
 def init (dir : Text) : {IO, Throw Text} Unit :=
   if isCodebase dir then throw ("a codebase already exists at " ++ dir)
@@ -316,12 +343,12 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.mkdirp (dir ++ "/provenance")
     IO.mkdirp (dir ++ "/cache")
     let snapshot := putNamespace dir Map.empty
-    let c := put dir (causalToSexp (Causal.mk snapshot [] "init" ""))
+    let c := put dir (causalToSexp (Causal.mk snapshot [] "init" "" ""))
     setBranch dir "main" c
     IO.writeFile (dir ++ "/HEAD") "main\n"
 
 /--
-  The parents of a causal node that the store has. History a remote trimmed before D71 is
+  The parents of a causal node that the store has. History a remote trimmed before D72 is
   shallow: its oldest nodes have parents nobody keeps, and they act as roots.
 -/
 def parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text :=
@@ -412,7 +439,7 @@ def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
     match (List.foldl step (oursNs, [], []) names, tasks) with
     | ((ns, changed, []), (merged, [])) =>
       let snapshot := putNamespace dir ns
-      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged)))
+      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged) ""))
       setBranch dir branch c
       MergeResult.merged c (List.reverse changed)
     | ((_, _, conflicts), (_, taskConflicts)) => MergeResult.conflicts (List.reverse conflicts ++ taskConflicts)
@@ -425,7 +452,7 @@ def changeLinks (form : Sexp) : List Text :=
   | _ => []
 
 /--
-  Rewrites history so every snapshot is a namespace tree (D70). Each causal node is rebuilt after
+  Rewrites history so every snapshot is a namespace tree (D71). Each causal node is rebuilt after
   its parents and the changes its tasks link, so links follow the rewrite; branches and provenance
   follow too. A node already in tree form keeps its hash, so a second run changes nothing. Parents
   that shallow history lacks stay as they are. Returns (nodes rewritten, branches moved).
@@ -446,7 +473,7 @@ def migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
           | some form =>
             let links := changeLinks form
             put dir (rewrite form (Map.fromList (List.map (fun l => (l, node l)) links)))) (Tasks.snapshotOf dir c))
-        let moved := put dir (causalToSexp (Causal.mk (putNamespace dir (readNamespace dir c.snapshot)) parents c.message tasks))
+        let moved := put dir (causalToSexp (Causal.mk (putNamespace dir (readNamespace dir c.snapshot)) parents c.message tasks c.prior))
         MutMap.set memo h moved
         moved
   let moves := List.filterMap (fun branch =>

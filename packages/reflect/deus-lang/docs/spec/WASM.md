@@ -66,9 +66,13 @@ block  = tag:i32 field₀:i32 … fieldₙ₋₁:i32      at address a, field i 
 The type of a block is not stored. A host that builds an argument or reads a result must know the type
 from the definition's signature.
 
-`eq`, `neq`, `lt`, `gt`, `le` and `ge` compare the `i32`s, so on constructed values they compare addresses,
-not structure. The interpreter compares structurally, so `some x == some x` is `true` under `deus eval`
-and 0 in the compiled module. Only use them on `Int` and `Bool` in code meant for this back end.
+`eq`, `neq`, `lt`, `gt`, `le` and `ge` compare the `i32`s, which is structural only for `Int` and `Bool`.
+On constructed values it would compare addresses, while the interpreter compares structure, so the
+compiler refuses a comparison unless it can see that one side is an `Int` or a `Bool`
+([D69](../DECISIONS.md)). It sees types from each definition's stored scheme (or signature) for its
+parameters, from call results, from `let` values, and from the data type's constructor fields for what a
+pattern binds. `some x == some x` is refused with
+`eq on values that are not known to be Int or Bool is outside the wasm subset, …`.
 
 ## Module layout
 

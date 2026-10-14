@@ -7,6 +7,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | Spec                                   | Format                                                                                 |
 | -------------------------------------- | -------------------------------------------------------------------------------------- |
 | [LANGUAGE.md](./LANGUAGE.md)           | `.deus` source: lexical structure, layout, grammar, static and dynamic semantics       |
+| [DIALECT-TS.md](./DIALECT-TS.md)       | The TypeScript-like dialect `deus view --dialect ts` and the explorer print            |
 | [CORE.md](./CORE.md)                   | Core IR: canonical S-expressions, terms, patterns, objects, hashing                    |
 | [IMAGE.md](./IMAGE.md)                 | Images (`seed/deus.image`) and the executables that carry one                          |
 | [CODEBASE-STORE.md](./CODEBASE-STORE.md) | The codebase directory (`~/.deus`): objects, metadata, branches, layers, tasks        |
@@ -30,11 +31,6 @@ is fixed, the spec describes what the code does.
 
 Bugs:
 
-- `quoteText` in [`deus/print.deus`](../../deus/print.deus) writes control characters as `\u{<decimal>}`
-  but the lexer reads `\u{…}` as hex, so `deus view` of `"\u{1b}"` prints `"\u{27}"` and an update rehashes
-  the definition ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
-- The wasm compiler compiles `==`, `<` and the other comparisons on constructed values to `i32` compares of
-  addresses: `some x == some x` is `0` in wasm and `true` in `deus eval` ([WASM.md](./WASM.md)).
 - The explorer writes builtin definitions as `def/#Bool.json`, but the app requests `def/%23Bool.json`,
   which the local server does not decode; the bucket upload puts a raw `#` in the URL. Bucket uploads also
   send `.js` and `.css` as `text/plain` ([EXPLORER.md](./EXPLORER.md)).
@@ -46,8 +42,6 @@ Bugs:
 - Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.
   A file under `bundles/` whose name is not `<level>-<sha256>` makes a pull fail
   ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md)).
-- `deus export` drops attributes (`@[ext …]`, `@[integration]`), `.mdl` spec entries, the `project` file and
-  some doc comments, so a restored codebase is not the same codebase ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
 
 Docs that disagree with the code:
 

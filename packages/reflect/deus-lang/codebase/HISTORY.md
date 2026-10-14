@@ -1,5 +1,42 @@
 # History of main
 
+- `4e18596be8` merge the TypeScript-like dialect (D70) from #13952 (by claude)
+- `2d1240fb34` task: import 2 tasks
+- `2aa065727b` task: open 186feaf2 wasm: structural equality on constructed values (by claude)
+- `e4901e522a` close 40cb2f16 by #c08af3d400 (by claude)
+- `c08af3d400` wasm: compare by type, refuse address compares (D69) (by claude)
+- `5d148858db` task: set 5fe4c8b1 state (by claude)
+- `404c368e60` task: set 11b93dc9 state (by claude)
+- `501bf19fea` close 5a02d566 by #1778b66c03 (by claude)
+- `1778b66c03` restores keep history; strings escape as hex; export keeps attributes, specs and the project (by claude)
+- `6adb43ae51` history: import 69 changes
+- `d29d46ccb6` export keeps docs, attributes, specs and the project (by claude)
+- `de504398e7` task: open 11a42afd Docs disagree with the code in eight places listed in docs/spec/README.md (by claude)
+- `5cb2f5d914` task: open 5fe4c8b1 deus export drops attributes, .mdl specs, the project file and some doc comments (by claude)
+- `5b3d421650` task: open 7afeaa0c Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (by claude)
+- `f081f7d7e5` task: open a03fdfb6 Type ascriptions are erased before checking; a row on a definition without binders is not checked (by claude)
+- `e609a8401c` task: open bf5681bf The prover ignores tactic names it does not know (by claude)
+- `1ba1623224` task: open 2bbc3445 Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (by claude)
+- `28ae9efd13` task: open 40cb2f16 wasm compares constructed values by address: some x == some x is 0 (by claude)
+- `f5613514d3` task: open 11b93dc9 view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (by claude)
+- `30e21b3285` task: open 0d21d8d5 Character literals print as numbers ('"' becomes 34) (by claude)
+- `a6bce7d29d` task: comment on b09507db (by claude)
+- `2ff94c39f7` close b09507db by #c1f5fb9764 (by claude)
+- `c1f5fb9764` Ordinary comments kept as metadata on Core (D66) (by claude)
+- `f23a0544a3` task: open 5a02d566 Restoring the git export loses history, so the next export rewrites HISTORY.md (by claude)
+- `35f036f799` task: link 9428f054 to Qa.check (by claude)
+- `1c5eda1dc1` task: comment on 9428f054 (by claude)
+- `284e7679a0` task: set 9428f054 state (by claude)
+- `c12c31e45e` add examples/notes.mdl (by claude)
+- `aa83cb54dc` QA flows for web apps as MDL qa blocks (D65) (by claude)
+- `8cb4d36100` task: open 10b95384 deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (by claude)
+- `419db4fb56` task: open 88004c30 Embed files in the codebase, never in git, and make artifacts cached constants (by claude)
+- `36e16d03e0` task: open 86d7b02a Work without git: the codebase is where the toolchain is developed, git only backs it up (by claude)
+- `ec51f12cdc` task: open 861438d2 The codebase explorer app needs to be much better (by claude)
+- `0e7a5bfb2c` task: open 9428f054 QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (by claude)
+- `7453b3a1b7` task: import 18 tasks
+- `bff1b8d98b` add code
+- `67c7d5a614` init
 - `5ed10805c0` task: comment on b09507db (by claude)
 - `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
 - `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)

@@ -98,19 +98,21 @@ order shown; a reader should not depend on the order.
 | `panic`   | the input was malformed or the machine reached an impossible state: an unparsable image, an image with no `(main …)` and an empty `entry`, bad JSON, a `resume` with no suspended run |
 | `exit`    | reserved. `IO.exit` suspends like every other operation, so the current kernel never produces this state                                                                              |
 
-In a `suspend` result, `ability` is the ability's IRI when the image has an `(ability "hash" "iri")`
-form for it, and otherwise its hash; builtin abilities have IRIs that start with `#`
-and are their own hash (`#IO`). `hash` is always the hash. Embedders dispatch on `ability`.
+Every identity an embedder sees is a URI ([D68](../DECISIONS.md)). In a `suspend` result, `ability`
+is the ability's IRI when the image has an `(ability "hash" "iri")` form for it. A builtin, whose
+Core identity is `#Name`, appears as `urn:deus:builtin:Name` (`urn:deus:builtin:IO`). `hash` is always
+the Core identity (`#IO` for a builtin). Embedders dispatch on `ability`. The `$` of a value follows
+the same rule, and the kernel reads both `urn:deus:builtin:Option` and the older `#Option` back.
 
-A defect trace holds definition hashes (or the `#…` names of builtins), at most 32, with a tail call
-leaving no entry. A tool maps them to names with a codebase, as `deus run` does
+A defect trace holds definition hashes (a builtin's as its `urn:deus:builtin:` URI), at most 32, with
+a tail call leaving no entry. A tool maps them to names with a codebase, as `deus run` does
 ([OBSERVABILITY.md](./OBSERVABILITY.md#defects)).
 
 Real results from the test program in [`embed/kernel.test.mjs`](../../../deus-kernel/embed/kernel.test.mjs):
 
 ```json
 {"state":"suspend","ability":"urn:deus:test:Kv","hash":"2edfb6e96b0dac115ac0b092c21aa417b42a0e97934870a71374e4ad1e330579","op":1,"args":["greeting","hello"]}
-{"state":"suspend","ability":"#IO","hash":"#IO","op":0,"args":["stored\n"]}
+{"state":"suspend","ability":"urn:deus:builtin:IO","hash":"#IO","op":0,"args":["stored\n"]}
 {"state":"done","value":"hello world"}
 {"state":"defect","message":"division by zero","trace":["main"]}
 {"state":"panic","message":"resume without a suspended run"}

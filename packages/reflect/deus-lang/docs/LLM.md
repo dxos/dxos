@@ -93,6 +93,15 @@ working as tasks (`deus task new … --labels dogfood`). `deus push origin` send
 remote and refreshes its explorer. `deus export <dir>` writes the codebase as text for a git
 commit (D64).
 
+## Deciding without waiting
+
+An agent working on DEUS does not wait on its user. When a design forks, it picks the option it
+would recommend, records it in [`DECISIONS.md`](./DECISIONS.md) with the alternatives it
+rejected, builds it, and names the choice in its next report so the user can overturn it. A
+proposal in [`PROPOSALS.md`](./PROPOSALS.md) is never left "waiting on a choice". Only steps
+nobody can undo (a production deploy, deleting data, a message outside the project) wait for
+the user's word.
+
 ## Tasks
 
 Issues live in the codebase beside the code (D59), so they branch and merge with it:
