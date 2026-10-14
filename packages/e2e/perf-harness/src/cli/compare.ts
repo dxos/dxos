@@ -92,17 +92,40 @@ const noBudget = (ids: ReadonlyArray<string>): string[] =>
       ]
     : [];
 
-/** Why a verdict between `base` and HEAD would compare two measurements rather than two apps. */
-const voidReasons = (root: string, target: Target, base: string, head: string): string[] => {
+/**
+ * Why a verdict between `base` and HEAD would compare two measurements rather than two apps:
+ * `between` the arms, which `--allow-harness-change` admits, and since a `frozen` harness, which it never does.
+ */
+const voidReasons = (
+  root: string,
+  target: Target,
+  base: string,
+  head: string,
+): { between: string[]; frozen: string[] } => {
   const changed = harnessChanges(root, base, head, target.harness);
-  const frozen = readFreeze(root);
-  const current = frozen ? harnessHash(root, target.harness) : undefined;
-  return [
-    ...(changed.length > 0 ? [`the harness differs between the arms: ${changed.join(', ')}`] : []),
-    ...(frozen && frozen.hash !== current
-      ? [`the harness changed since \`pnpm perf freeze\` (${frozen.hash} → ${current})`]
-      : []),
-  ];
+  const freeze = readFreeze(root);
+  const current = freeze ? harnessHash(root, target.harness) : undefined;
+  return {
+    between: changed.length > 0 ? [`the harness differs between the arms: ${changed.join(', ')}`] : [],
+    frozen:
+      freeze && freeze.hash !== current
+        ? [`the harness changed since \`pnpm perf freeze\` (${freeze.hash} → ${current})`]
+        : [],
+  };
+};
+
+/** A void verdict, as text or as the one JSON line a `--json` caller parses. */
+const writeVoid = (reasons: string[], json: boolean): number => {
+  process.stdout.write(
+    json
+      ? JSON.stringify({ verdict: 'void', exitCode: EXIT_CODE.error, reasons }) + '\n'
+      : [
+          ...reasons.map((reason) => `void: ${reason}`),
+          'A verdict needs both arms measured the same way. Change the app, and land a harness change as its own PR.',
+          `verdict void (exit ${EXIT_CODE.error})`,
+        ].join('\n') + '\n',
+  );
+  return EXIT_CODE.error;
 };
 
 /**
@@ -113,9 +136,13 @@ export const compare = async (options: CompareOptions): Promise<number> => {
   const root = workspaceRoot();
   const baseCommit = git(root, ['rev-parse', '--verify', `${options.base}^{commit}`]);
   const headCommit = git(root, ['rev-parse', 'HEAD']);
-  const reasons = TARGETS[options.target] ? voidReasons(root, TARGETS[options.target], baseCommit, headCommit) : [];
+  const { between, frozen } = TARGETS[options.target]
+    ? voidReasons(root, TARGETS[options.target], baseCommit, headCommit)
+    : { between: [], frozen: [] };
+  const blocking = [...frozen, ...(options.allowHarnessChange ? [] : between)];
+  const reasons = options.allowHarnessChange ? between : [];
   // Checked before the lock: a void run measures nothing, so it should not wait behind one that does.
-  if (reasons.length > 0 && !options.allowHarnessChange) {
+  if (blocking.length > 0) {
     appendLedger(root, {
       id: `void-${Date.now().toString(36)}`,
       time: new Date().toISOString(),
@@ -126,17 +153,10 @@ export const compare = async (options: CompareOptions): Promise<number> => {
       harness: '',
       rounds: '0',
       verdict: 'void',
-      summary: reasons.join('; '),
+      summary: blocking.join('; '),
       dir: '',
     });
-    process.stdout.write(
-      [
-        ...reasons.map((reason) => `void: ${reason}`),
-        'A verdict needs both arms measured the same way. Change the app, and land a harness change as its own PR.',
-        `verdict void (exit ${EXIT_CODE.error})`,
-      ].join('\n') + '\n',
-    );
-    return EXIT_CODE.error;
+    return writeVoid(blocking, options.json);
   }
 
   const session = await openSession({
@@ -162,6 +182,8 @@ export const compare = async (options: CompareOptions): Promise<number> => {
     });
   try {
     progress(`run ${path.relative(root, dir)}`);
+    // Both arms run the working tree's specs, so a check that rewrites one would move both yardsticks.
+    const harnessBeforeChecks = harnessHash(root, target.harness);
     for (const check of options.checks) {
       session.checkInterrupted();
       const logFile = path.join(dir, 'checks.log');
@@ -170,6 +192,11 @@ export const compare = async (options: CompareOptions): Promise<number> => {
         throw new HarnessError(`check failed, nothing measured: ${check}; log: ${logFile}`);
       }
       progress(`check passed: ${check}`);
+    }
+    if (options.checks.length > 0 && harnessHash(root, target.harness) !== harnessBeforeChecks) {
+      const reason = 'a `--check` command changed the harness';
+      record('void', reason, baseCommit, headCommit);
+      return writeVoid([reason], options.json);
     }
 
     const candidate = await buildArm({ root, target, ref: 'HEAD', logFile: path.join(dir, 'build.log') });
@@ -237,9 +264,16 @@ export const compare = async (options: CompareOptions): Promise<number> => {
     );
     record(verdict, `${aa ? 'A/A: ' : ''}${summarize(targets)}`, base.commit, candidate.commit, roundCount);
 
-
     if (options.json) {
-      process.stdout.write(JSON.stringify({ verdict, exitCode: EXIT_CODE[verdict], dir, comparisons: targets }) + '\n');
+      process.stdout.write(
+        JSON.stringify({
+          verdict,
+          exitCode: EXIT_CODE[verdict],
+          dir,
+          comparisons: targets,
+          allowedHarnessChanges: reasons,
+        }) + '\n',
+      );
     } else {
       const lines = [
         `perf compare ${target.name}${aa ? ' (A/A: both arms are the same tree)' : ''}`,
