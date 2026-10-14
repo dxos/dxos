@@ -2,6 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import { type Budget, parseBudgets } from '../score/score.ts';
+import { HarnessError } from './workspace.ts';
+
 /** An app the CLI can build, serve and measure. Paths are workspace-relative unless noted. */
 export type Target = {
   name: string;
@@ -17,6 +23,14 @@ export type Target = {
   };
   /** Playwright config, relative to `appDir`. */
   config: string;
+  /** The spec that drives `flow`, relative to `appDir`; the config alone runs every perf spec. */
+  spec: string;
+  /** Environment the flow's Playwright run needs on top of the measurement's own. */
+  env?: Record<string, string>;
+  /** Where reproductions of field reports live, relative to `appDir`; `perf scenario new` writes them. */
+  scenarios?: string;
+  /** Set on a scenario resolved from this target. */
+  scenario?: string;
   /** Budgets the run is scored against, relative to `appDir`. */
   budgets: string;
   /** Files whose content defines the measurement; hashed into every ledger row. */
@@ -33,6 +47,8 @@ export const TARGETS: Readonly<Record<string, Target>> = {
     // PWA is decided at build time; on, a service worker precaches ~30 MB mid-run.
     build: { moonTarget: 'composer-app:bundle', env: { DX_PWA: 'false' }, outDir: 'out/composer' },
     config: 'src/playwright/playwright-perf.config.ts',
+    spec: 'src/playwright/perf-projects.spec.ts',
+    scenarios: 'src/playwright/scenarios',
     budgets: 'src/playwright/perf/budgets.json',
     harness: [
       'packages/e2e/perf-harness/src',
@@ -47,4 +63,37 @@ export const TARGETS: Readonly<Record<string, Target>> = {
     ],
     gate: { moonTarget: 'composer-app:check-boot-budget', report: 'out/boot-budget.json' },
   },
+};
+
+/**
+ * A target, or one of its scenarios: the same build and server, with the scenario's own spec, flow
+ * and budgets, and the spec file counted as harness.
+ */
+export const resolveTarget = (name: string, scenario?: string): Target => {
+  const target = TARGETS[name];
+  if (!target) {
+    throw new HarnessError(`unknown target "${name}"; known: ${Object.keys(TARGETS).join(', ')}`);
+  }
+  if (!scenario) {
+    return target;
+  }
+  if (!target.scenarios) {
+    throw new HarnessError(`target "${name}" has no scenarios`);
+  }
+  const spec = path.join(target.scenarios, `perf-${scenario}.spec.ts`);
+  return {
+    ...target,
+    flow: scenario,
+    spec,
+    budgets: path.join(target.scenarios, `budgets-${scenario}.json`),
+    harness: [...target.harness, path.join(target.appDir, spec)],
+    env: { DX_PERF_SCENARIOS: '1' },
+    scenario,
+  };
+};
+
+/** The target's budgets, or none for a scenario not calibrated yet. */
+export const readBudgets = (root: string, target: Target): Record<string, Budget> => {
+  const file = path.join(root, target.appDir, target.budgets);
+  return existsSync(file) ? parseBudgets(JSON.parse(readFileSync(file, 'utf8'))) : {};
 };

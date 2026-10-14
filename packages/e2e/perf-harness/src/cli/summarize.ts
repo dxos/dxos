@@ -8,22 +8,26 @@ import path from 'node:path';
 
 import { formatValue } from '../score/render.ts';
 import { readStageEvents } from '../score/run.ts';
-import { type DigestRow, digestRows, groupCosts } from '../summarize/digest.ts';
+import { type DigestRow, digestRows, groupCosts, topFunctions } from '../summarize/digest.ts';
 import { type FunctionCost, type Resolve, sourceMappedId, unmappedId } from '../summarize/profile.ts';
 import { createFrameResolver } from '../summarize/sourcemap.ts';
-import { type Target, TARGETS } from './targets.ts';
+import { type Target, resolveTarget } from './targets.ts';
 import { HarnessError, perfDir, workspaceRoot } from './workspace.ts';
 
 /** Written beside a run's results: which bundle each arm served, so its profiles map back to source. */
-export type ArmsRecord = { target: string; base?: string; candidate: string };
+export type ArmsRecord = { target: string; scenario?: string; base?: string; candidate: string };
 
 export const ARMS_FILE = 'arms.json';
+
+/** A capture's one profiled window, named like a stage so the digest reads it the same way. */
+export const CAPTURE_STAGE = 'capture';
 
 const isArmsRecord = (value: unknown): value is ArmsRecord =>
   typeof value === 'object' &&
   value !== null &&
   typeof Reflect.get(value, 'target') === 'string' &&
-  typeof Reflect.get(value, 'candidate') === 'string';
+  typeof Reflect.get(value, 'candidate') === 'string' &&
+  ['undefined', 'string'].includes(typeof Reflect.get(value, 'scenario'));
 
 type Handle = { stage: string; realm: string; key: string; label: string };
 
@@ -78,10 +82,7 @@ const loadRun = (root: string, runDir: string): LoadedRun => {
   if (!isArmsRecord(arms)) {
     throw new HarnessError(`${runDir} has no ${ARMS_FILE}; it predates summaries or did not finish building`);
   }
-  const target = TARGETS[arms.target];
-  if (!target) {
-    throw new HarnessError(`unknown target "${arms.target}" in ${file}`);
-  }
+  const target = resolveTarget(arms.target, arms.scenario);
   const resolverFor = (armDir: string): Resolve => {
     const assets = path.join(armDir, 'assets');
     return existsSync(assets)
@@ -98,7 +99,7 @@ const loadRun = (root: string, runDir: string): LoadedRun => {
     rounds.map((round) => path.join(runDir, round, label)).filter((dir) => existsSync(dir));
   const comparing = arms.base !== undefined;
   const candidateDirs = comparing ? dirsOf('candidate') : [path.join(runDir, 'results')];
-  const stages = [
+  const measured = [
     ...new Set(
       candidateDirs.flatMap((dir) =>
         readStageEvents(dir, target.flow).flatMap(({ properties }) =>
@@ -107,6 +108,8 @@ const loadRun = (root: string, runDir: string): LoadedRun => {
       ),
     ),
   ];
+  // A capture has no rows, only the profiles of its one window.
+  const stages = measured.length > 0 ? measured : [CAPTURE_STAGE];
   return {
     target,
     stages,
@@ -288,4 +291,10 @@ export const touchedSelfMs = (
     }
   }
   return totals;
+};
+
+/** The functions with the most self time in a run's candidate arm (a capture, a run, or a compare's candidate). */
+export const runTopFunctions = (runDir: string, limit: number): Array<{ identity: string; selfMs: number }> => {
+  const loaded = loadRun(workspaceRoot(), runDir);
+  return topFunctions(groupCosts({ candidate: loaded.candidate }, loaded.stages), limit);
 };

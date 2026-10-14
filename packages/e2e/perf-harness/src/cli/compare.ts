@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { renderComparison } from '../compare/render.ts';
@@ -13,23 +13,25 @@ import {
   type MetricComparison,
   type RoundReadings,
   type Threshold,
+  type Verdict,
   compareRounds,
   metricMatcher,
   overallVerdict,
   toRoundReadings,
 } from '../compare/verdict.ts';
 import { readFreeze } from '../score/freeze.ts';
-import { parseBudgets } from '../score/score.ts';
 import { WORK_GROUP, groupOfId } from '../score/stages.ts';
 import { type Arm, buildArm, runFlow, runLogged, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { type Session, elapsedMinutes, openSession, settle } from './session.ts';
 import { ARMS_FILE, type ArmsRecord, touchedSelfMs } from './summarize.ts';
-import { type Target, TARGETS } from './targets.ts';
+import { type Target, readBudgets, resolveTarget } from './targets.ts';
 import { HarnessError, git, harnessChanges, harnessHash, machineLoad, workspaceRoot } from './workspace.ts';
 
 export type CompareOptions = {
   target: string;
+  /** A reproduction under the target's `scenarios`, measured instead of the target's own flow. */
+  scenario?: string;
   base: string;
   /** Metric id patterns the verdict rests on; empty means every work counter. */
   metrics: string[];
@@ -46,6 +48,8 @@ export type CompareOptions = {
   checks: string[];
   /** Measure even though the harness differs between the arms; the verdict then covers both changes. */
   allowHarnessChange: boolean;
+  /** Environment for the candidate arm only: `scenario check` injects a known slowdown with it. */
+  candidateEnv?: Record<string, string>;
 };
 
 type Label = 'base' | 'candidate';
@@ -65,7 +69,13 @@ const summarize = (targets: ReadonlyArray<MetricComparison>): string => {
   return [...counts].map(([verdict, count]) => `${count} ${verdict}`).join(', ') + ` of ${targets.length} targets`;
 };
 
-const measureRound = async (session: Session, arm: Arm, label: Label, round: number): Promise<RoundReadings> => {
+const measureRound = async (
+  session: Session,
+  arm: Arm,
+  label: Label,
+  round: number,
+  env?: Record<string, string>,
+): Promise<RoundReadings> => {
   const { root, target, ports, dir } = session;
   const server = await serveArm({ root, target, dir: arm.dir, port: ports.http, logFile: path.join(dir, 'serve.log') });
   try {
@@ -76,6 +86,7 @@ const measureRound = async (session: Session, arm: Arm, label: Label, round: num
       iterations: 1,
       dir: path.join(dir, `round-${round + 1}`, label),
       logFile: path.join(dir, `round-${round + 1}`, `${label}.log`),
+      ...(env ? { env } : {}),
     });
     const status = result.exitCode === 0 ? 'ok' : `flow exited ${result.exitCode}, ${result.events.length} rows`;
     session.progress(`round ${round + 1} ${label.padEnd(9)} ${String(result.seconds).padStart(4)}s ${status}`);
@@ -159,17 +170,31 @@ const writeVoid = (reasons: string[], json: boolean): number => {
   return EXIT_CODE.error;
 };
 
+export type CompareResult = {
+  exitCode: number;
+  verdict: Verdict | 'void';
+  /** The run directory; absent when the comparison was void before anything ran. */
+  dir?: string;
+  targets: MetricComparison[];
+};
+
 /**
  * Paired, interleaved A/B: each round measures both arms back to back in a random order, so drift
  * and order effects land on both. Stops once every target metric is decided, or at the round or time cap.
  */
-export const compare = async (options: CompareOptions): Promise<number> => {
+export const compare = async (options: CompareOptions): Promise<number> => (await compareRun(options)).exitCode;
+
+/** {@link compare}, returning the run and its target comparisons for a caller that reads them. */
+export const compareRun = async (options: CompareOptions): Promise<CompareResult> => {
   const root = workspaceRoot();
   const baseCommit = git(root, ['rev-parse', '--verify', `${options.base}^{commit}`]);
   const headCommit = git(root, ['rev-parse', 'HEAD']);
-  const { between, frozen } = TARGETS[options.target]
-    ? voidReasons(root, TARGETS[options.target], baseCommit, headCommit)
-    : { between: [], frozen: [] };
+  const { between, frozen } = voidReasons(
+    root,
+    resolveTarget(options.target, options.scenario),
+    baseCommit,
+    headCommit,
+  );
   const blocking = [...frozen, ...(options.allowHarnessChange ? [] : between)];
   const reasons = options.allowHarnessChange ? between : [];
   // Checked before the lock: a void run measures nothing, so it should not wait behind one that does.
@@ -187,12 +212,13 @@ export const compare = async (options: CompareOptions): Promise<number> => {
       summary: blocking.join('; '),
       dir: '',
     });
-    return writeVoid(blocking, options.json);
+    return { exitCode: writeVoid(blocking, options.json), verdict: 'void', targets: [] };
   }
 
   const session = await openSession({
     command: `perf compare --base ${options.base}`,
     target: options.target,
+    scenario: options.scenario,
     ignoreLoad: options.ignoreLoad,
     lockWaitMinutes: options.lockWaitMinutes,
   });
@@ -227,7 +253,7 @@ export const compare = async (options: CompareOptions): Promise<number> => {
     if (options.checks.length > 0 && harnessHash(root, target.harness) !== harnessBeforeChecks) {
       const reason = 'a `--check` command changed the harness';
       record('void', reason, baseCommit, headCommit);
-      return writeVoid([reason], options.json);
+      return { exitCode: writeVoid([reason], options.json), verdict: 'void', dir, targets: [] };
     }
 
     const candidate = await buildArm({ root, target, ref: 'HEAD', logFile: path.join(dir, 'build.log') });
@@ -238,16 +264,25 @@ export const compare = async (options: CompareOptions): Promise<number> => {
     const aa = base.dir === candidate.dir;
     writeFileSync(
       path.join(dir, ARMS_FILE),
-      JSON.stringify({ target: target.name, base: base.dir, candidate: candidate.dir } satisfies ArmsRecord),
+      JSON.stringify({
+        target: target.name,
+        ...(target.scenario ? { scenario: target.scenario } : {}),
+        base: base.dir,
+        candidate: candidate.dir,
+      } satisfies ArmsRecord),
     );
     await settle(session);
 
-    // By default the work counters the nightly budgets: calibration kept only those steady run to run.
-    const budgets = parseBudgets(JSON.parse(readFileSync(path.join(root, target.appDir, target.budgets), 'utf8')));
+    // By default the work counters the nightly budgets, which calibration kept because they hold steady;
+    // a scenario without budgets yet is judged on its stages' wall time.
+    const budgets = readBudgets(root, target);
+    const budgetedWork = Object.keys(budgets).filter((id) => groupOfId(id) === WORK_GROUP);
     const isTarget =
       options.metrics.length > 0
         ? metricMatcher(options.metrics)
-        : (id: string) => budgets[id] !== undefined && groupOfId(id) === WORK_GROUP;
+        : budgetedWork.length > 0
+          ? (id: string) => budgetedWork.includes(id)
+          : (id: string) => id.startsWith('wall > ') && id !== 'wall > boot';
     const thresholds = thresholdsFor(options.threshold);
     const random = seededRandom(options.seed);
     const rounds: Record<Label, RoundReadings[]> = { base: [], candidate: [] };
@@ -258,7 +293,13 @@ export const compare = async (options: CompareOptions): Promise<number> => {
       const order: Label[] = random() < 0.5 ? ['base', 'candidate'] : ['candidate', 'base'];
       for (const label of order) {
         session.checkInterrupted();
-        rounds[label][round] = await measureRound(session, arms[label], label, round);
+        rounds[label][round] = await measureRound(
+          session,
+          arms[label],
+          label,
+          round,
+          label === 'candidate' ? options.candidateEnv : undefined,
+        );
       }
       comparisons = compareRounds({
         base: rounds.base,
@@ -315,7 +356,13 @@ export const compare = async (options: CompareOptions): Promise<number> => {
       );
     } else {
       const lines = [
-        `perf compare ${target.name}${aa ? ' (A/A: both arms are the same tree)' : ''}`,
+        `perf compare ${target.name}${target.scenario ? ` scenario ${target.scenario}` : ''}${aa ? ' (A/A: both arms are the same tree)' : ''}${
+          options.candidateEnv
+            ? `, candidate with ${Object.entries(options.candidateEnv)
+                .map(([key, value]) => `${key}=${value}`)
+                .join(' ')}`
+            : ''
+        }`,
         `base ${options.base} ${base.commit.slice(0, 9)} → HEAD ${candidate.commit.slice(0, 9)}  harness ${session.harness}`,
         `${roundCount} rounds, ${elapsedMinutes(session)} min, load ${load.toFixed(1)}/${cores}  ${path.relative(root, dir)}`,
         ...reasons.map((reason) => `harness change allowed, so the verdict covers it too: ${reason}`),
@@ -326,7 +373,7 @@ export const compare = async (options: CompareOptions): Promise<number> => {
       ];
       process.stdout.write(lines.join('\n') + '\n');
     }
-    return EXIT_CODE[verdict];
+    return { exitCode: EXIT_CODE[verdict], verdict, dir, targets };
   } finally {
     session.release();
   }
