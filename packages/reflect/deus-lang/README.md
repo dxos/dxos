@@ -45,6 +45,8 @@ deus push && deus pull && deus compact                       # immutable bundles
 - [`examples/counter.deus`](./examples/counter.deus) — a Cloudflare Durable Object, tested in
   simulation and served on local workerd (`scripts/worker-test.sh`); the platform's ontology is
   [`platform/cloudflare.deus`](./platform/cloudflare.deus).
+- [`examples/tally.deus`](./examples/tally.deus) — Durable Objects that call each other by name and
+  set alarms, simulated deterministically and served on workerd.
 - [`examples/perf.mdl`](./examples/perf.mdl) — performance requirements on the sort, checked by
   the `perf` extension ([`platform/perf.deus`](./platform/perf.deus)) in machine steps.
 - [`editors/vscode/`](./editors/vscode) — syntax highlighting for VS Code and TextMate renderers.

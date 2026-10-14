@@ -209,3 +209,8 @@ Worker; local `workerd` (through `wrangler`) and a temporary account test it.
 `examples/counter.deus` served by a Durable Object on local workerd (`scripts/worker-test.sh`).
 Not yet: `Actor.call` between objects, alarms, and a multi-actor simulation with seeded
 message ordering.
+
+Calls between objects and alarms followed (D52): the `Actors` ability calls another object of
+the class by name, and `Alarm` schedules an `ALARM /alarm` request. `Cloudflare.simulateMany`
+runs named objects on a logical clock. `examples/tally.deus` uses both, and
+`scripts/worker-test.sh` checks it on workerd, alarm included.

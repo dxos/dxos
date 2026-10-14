@@ -1,10 +1,12 @@
 /-
   Cloudflare Workers and Durable Objects (P7, D45): the platform as DEUS data and abilities.
 
-  An actor is a function `Request -> {Storage, Http, IO} Response` named by its definition; a
-  Durable Object runs it on the wasm kernel (`deus build --worker`). Its row says what it
-  touches: `Storage` is the object's own transactional storage, `Http` is outbound `fetch`.
-  `Cloudflare.simulate` runs an actor against in-memory storage, deterministically, for tests.
+  An actor is a function `Request -> {Storage, Http, Actors, Alarm, IO} Response` named by its
+  definition; a Durable Object runs it on the wasm kernel (`deus build --worker`). Its row says
+  what it touches: `Storage` is the object's own transactional storage, `Http` is outbound
+  `fetch`, `Actors` calls other objects of the class by name, and `Alarm` schedules a later
+  request to itself. `Cloudflare.simulate` and `Cloudflare.simulateMany` run actors against
+  in-memory storage and a logical clock, deterministically, for tests.
 -/
 
 structure Request @"urn:deus:cloudflare:Request" where
@@ -25,6 +27,14 @@ ability Storage @"urn:deus:cloudflare:Storage" where
 /-- Outbound HTTP. -/
 ability Http @"urn:deus:cloudflare:Http" where
   fetch : Request -> Response
+
+/-- Other objects of the same class, by name: a call is a request served by that object. -/
+ability Actors @"urn:deus:cloudflare:Actors" where
+  call : Text -> Request -> Response
+
+/-- The object's alarm: `set` schedules one `ALARM /alarm` request after the given milliseconds, replacing any earlier one. -/
+ability Alarm @"urn:deus:cloudflare:Alarm" where
+  set : Int -> Unit
 
 namespace Cloudflare
 
@@ -49,5 +59,51 @@ def simulate (actor : Request -> {Storage, Http | r} Response) (requests : List 
     | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation")
   let responses := List.map serve requests
   (responses, Ref.get store)
+
+/-- The request an alarm delivers. -/
+def alarmRequest : Request := Request.mk "ALARM" "/alarm" ""
+
+/--
+  Serves `(object, request)` pairs on named objects of one class, each with its own storage.
+  `Actors.call` is served at once on the named object; `Alarm.set` schedules on a logical clock,
+  and once the requests are served, due alarms run in time order (ties by name). Returns the
+  responses to `requests`, every object's storage, and the alarms that ran as (object, time).
+-/
+def simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Response) (requests : List (Text, Request)) : {r} (List Response, Map Text (Map Text Text), List (Text, Int)) :=
+  let stores := Ref.new Map.empty
+  let alarms := Ref.new Map.empty
+  let clock := Ref.new 0
+  let storeOf := fun (name : Text) => Option.getOr (Map.lookup name (Ref.get stores)) Map.empty
+  let update := fun (name : Text) (f : Map Text Text -> Map Text Text) => Ref.set stores (Map.insert name (f (storeOf name)) (Ref.get stores))
+  let rec serve name request :=
+    handle actor request with
+    | Storage.get key -> k => k (Map.lookup key (storeOf name))
+    | Storage.put key value -> k =>
+      update name (fun m => Map.insert key value m)
+      k ()
+    | Storage.delete key -> k =>
+      let had := Map.contains key (storeOf name)
+      update name (fun m => Map.remove key m)
+      k had
+    | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation")
+    | Actors.call other inner -> k => k (serve other inner)
+    | Alarm.set delay -> k =>
+      Ref.set alarms (Map.insert name (Ref.get clock + delay) (Ref.get alarms))
+      k ()
+  let responses := List.map (fun pair => serve (fst pair) (snd pair)) requests
+  -- An alarm may set another; a bound keeps a self-rescheduling actor from running forever.
+  let rec fire count acc :=
+    let due := List.sortBy (fun a b => compare (snd a, fst a) (snd b, fst b)) (Map.toList (Ref.get alarms))
+    match due with
+    | [] => List.reverse acc
+    | (name, at) :: _ =>
+      if count >= 1000 then defect "alarms kept rescheduling past 1000 runs"
+      else
+        Ref.set alarms (Map.remove name (Ref.get alarms))
+        Ref.set clock at
+        serve name alarmRequest
+        fire (count + 1) ((name, at) :: acc)
+  let fired := fire 0 []
+  (responses, Ref.get stores, fired)
 
 end Cloudflare

@@ -4,20 +4,24 @@
 
 import image from './app.image';
 import wasm from './deus_kernel.wasm';
-// A Cloudflare Worker that serves a DEUS actor (`Request -> {Storage, Http, IO} Response`) from a
+// A Cloudflare Worker that serves a DEUS actor (`Request -> {Storage, Http, Actors, Alarm, IO} Response`) from a
 // Durable Object (P7, D45). `deus build --worker` writes this file next to the kernel and the
 // actor's image; the actor's abilities are answered here, by IRI.
 import { createKernel, run } from './kernel.mjs';
 
 const STORAGE = 'urn:deus:cloudflare:Storage';
 const HTTP = 'urn:deus:cloudflare:Http';
+const ACTORS = 'urn:deus:cloudflare:Actors';
+const ALARM = 'urn:deus:cloudflare:Alarm';
 const REQUEST = 'urn:deus:cloudflare:Request';
 const RESPONSE = 'urn:deus:cloudflare:Response';
 const IO = '#IO';
 const none = { $: '#Option', tag: 0, fields: [] };
 const some = (value) => ({ $: '#Option', tag: 1, fields: [value] });
 
-let kernel;
+// Idle kernels. A run suspended on an operation keeps its kernel, and another run (this object's
+// or, on one isolate, another object's) may start meanwhile, so each run takes its own.
+const idle = [];
 
 export class DeusActor {
   constructor(ctx, env) {
@@ -27,17 +31,29 @@ export class DeusActor {
 
   async fetch(request) {
     const url = new URL(request.url);
+    url.searchParams.delete('actor');
     const payload = request.method === 'GET' || request.method === 'HEAD' ? '' : await request.text();
-    kernel ??= await createKernel(wasm);
-    const result = await run(kernel, image, {
-      argument: { $: REQUEST, tag: 0, fields: [request.method, url.pathname + url.search, payload] },
-      handle: (ability, op, args) => this.handle(ability, op, args),
-    });
-    if (result.state !== 'done') {
-      return Response.json(result, { status: 500 });
-    }
-    const [status, content] = result.value.fields;
+    const [status, content] = await this.serve([request.method, url.pathname + url.search, payload]);
     return new Response(content, { status });
+  }
+
+  /** Delivers the alarm `Alarm.set` scheduled as an `ALARM /alarm` request. */
+  async alarm() {
+    await this.serve(['ALARM', '/alarm', '']);
+  }
+
+  /** Runs the actor on one request's fields; returns the response's (status, content). */
+  async serve(fields) {
+    const kernel = idle.pop() ?? (await createKernel(wasm));
+    try {
+      const result = await run(kernel, image, {
+        argument: { $: REQUEST, tag: 0, fields },
+        handle: (ability, op, args) => this.handle(ability, op, args),
+      });
+      return result.state === 'done' ? result.value.fields : [500, JSON.stringify(result)];
+    } finally {
+      idle.push(kernel);
+    }
   }
 
   async handle(ability, op, args) {
@@ -58,6 +74,17 @@ export class DeusActor {
       const [method, url, payload] = args[0].fields;
       const response = await fetch(url, { method, body: method === 'GET' || method === 'HEAD' ? undefined : payload });
       return { $: RESPONSE, tag: 0, fields: [response.status, await response.text()] };
+    }
+    if (ability === ACTORS && op === 0) {
+      // Another object of this class, by name; the request goes to its `fetch`.
+      const [method, url, payload] = args[1].fields;
+      const stub = this.env.ACTOR.get(this.env.ACTOR.idFromName(args[0]));
+      const response = await stub.fetch(new Request(`https://actor${url}`, { method, body: method === 'GET' || method === 'HEAD' ? undefined : payload }));
+      return { $: RESPONSE, tag: 0, fields: [response.status, await response.text()] };
+    }
+    if (ability === ALARM && op === 0) {
+      await this.ctx.storage.setAlarm(Date.now() + args[0]);
+      return null;
     }
     if (ability === IO && (op === 0 || op === 1)) {
       console.log(args[0]);

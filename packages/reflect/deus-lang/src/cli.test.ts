@@ -361,6 +361,25 @@ describe('deus CLI', () => {
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
   });
 
+  test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'cloudflare')];
+    deus('init', ...c);
+    const sources = [
+      'deus/builtins.deus',
+      'deus/prelude.deus',
+      'platform/cloudflare.deus',
+      'examples/counter.deus',
+      'examples/tally.deus',
+    ];
+    expect(deus('add', ...sources.map((path) => join(root, path)), ...c).code).toBe(0);
+    const tests = deus('test', '--json', ...c);
+    expect(JSON.parse(tests.stdout).map((row: { name: string; status: string }) => [row.name, row.status])).toEqual([
+      ['Counter.countsAcrossRequests', 'pass'],
+      ['Tally.alarmsFireInOrder', 'pass'],
+      ['Tally.objectsCallEachOther', 'pass'],
+    ]);
+  });
+
   test('fetches a pinned tool by hash, caches it, and refuses a mismatch', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'external')];
     deus('init', ...c);
