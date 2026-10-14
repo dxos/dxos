@@ -34,9 +34,11 @@ pnpm perf compare --base main --metric '<id>'     # did HEAD change <id>? exit c
 pnpm perf compare --base HEAD                     # A/A: this machine's noise floor
 pnpm perf summarize [<run>]                       # where the CPU went, or what changed between arms
 pnpm perf expand <handle>                         # one summary row's callers and callees
-pnpm perf capture --attach <port>                 # profile an app someone is running
-pnpm perf scenario new|check <name>               # a reproduction of a field report
-pnpm perf freeze / thaw                           # pin the harness for a loop
+pnpm perf capture --attach <port> --seconds 30    # profile an app someone is running
+pnpm perf scenario new <name> --reproduces '<text>'  # scaffold a reproduction of a field report
+pnpm perf scenario check <name> --capture <run>   # prove it before using it
+pnpm perf freeze                                  # pin the harness for a loop
+pnpm perf thaw                                    # end the loop
 pnpm perf ledger                                  # what this worktree measured before
 ```
 

@@ -385,7 +385,7 @@ Do not paste real credential values into any shell command, and do not paste the
   - Where does the time go? `pnpm perf summarize`, then `pnpm perf expand <handle>`.
   - Users say X is slow? `pnpm perf capture`, then `pnpm perf scenario new` and `scenario check`.
   - Memory grows, or boot loads too much? The skill's `MEMORY.md` and `BOOT.md`; `pnpm perf gate`
-    is the boot budget CI runs.
+    runs the boot budget locally, the same target CI runs as `moon run composer-app:check-boot-budget`.
   - A node test suite is slow or leaks? `test-perf-leaks` skill.
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
