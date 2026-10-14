@@ -46,6 +46,9 @@ type ColumnProps = Pick<EntityBrowserProps, 'icons' | 'hues'> & {
 
 const CARD_SELECTOR = '[data-testid="entity-card"]';
 
+/** Columns share the width, so one column fills the panel; past their minimum the row scrolls instead. */
+const COLUMN_TRACK = 'minmax(24rem, 1fr)';
+
 /**
  * One column: a filter and the close action in its toolbar, over a stack of cards that up and down arrows move through
  * (each card focused is chosen, as in Finder) and left and right leave.
@@ -196,7 +199,7 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
     return (
       <ScrollArea.Root {...props} orientation='horizontal' autoHide={false} ref={forwardedRef}>
         <ScrollArea.Viewport ref={viewportRef}>
-          <Layout.Grid cols={columns.map(() => '24rem')} rows={['fill']} classNames='h-full'>
+          <Layout.Grid cols={columns.map(() => COLUMN_TRACK)} rows={['fill']} classNames='h-full'>
             {columns.map((stack, column) => (
               <EntityBrowserColumn
                 ref={(element) => {
