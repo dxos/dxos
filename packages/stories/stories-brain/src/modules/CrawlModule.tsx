@@ -12,7 +12,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
-import { FactPipeline } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as DiscordSource from '@dxos/plugin-discord/DiscordSource';
 import { type Space } from '@dxos/react-client/echo';
@@ -88,7 +88,7 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
         }).pipe(
           Effect.provide(
             Layer.mergeAll(
-              registry.layerFor(space.id),
+              Layer.succeed(FactStore, registry.forSpace(space.id)),
               DiscordSource.layer(options.token),
               Layer.fresh(AiServiceTestingPreset('edge-remote')),
             ),
@@ -117,7 +117,10 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
         await EffectEx.runPromise(
           FactPipeline.run([{ text, source: `file:${name}` }]).pipe(
             Effect.provide(
-              Layer.provideMerge(registry.layerFor(space.id), Layer.fresh(AiServiceTestingPreset('edge-remote'))),
+              Layer.provideMerge(
+                Layer.succeed(FactStore, registry.forSpace(space.id)),
+                Layer.fresh(AiServiceTestingPreset('edge-remote')),
+              ),
             ),
           ),
         );
