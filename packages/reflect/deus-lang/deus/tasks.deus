@@ -20,9 +20,21 @@ inductive Attachment @"urn:deus:task:Attachment" where
   | definition (name : Text) (hash : Text)
   | change (hash : Text)
 
+/--
+  A file attached to a comment (D79): its bytes are in the codebase's asset store under their
+  SHA-256, never in an object, so a screenshot does not bloat bundles or the git export.
+-/
+structure Asset @"urn:deus:task:Asset" where
+  hash : Text
+  mediaType : Text
+  fileName : Text
+
+/-- A note by someone; `written` is when (RFC 3339 or nanoseconds since the epoch, or `""`), `assets` what it attaches. -/
 structure Comment @"urn:deus:task:Comment" where
   author : Text
   note : Text
+  written : Text
+  assets : List Asset
 
 /-- An issue. `priority` is Linear's: 0 none, 1 urgent, 2 high, 3 medium, 4 low. `parent` is a task id or `""`. -/
 structure Task @"urn:deus:task:Task" where
@@ -98,6 +110,26 @@ def comment (t : Task) (c : Comment) : Task := Task.mk t.id t.title t.state t.pr
 -- Objects.
 --
 
+def assetToSexp (a : Asset) : Sexp := Sexp.node "asset" [Sexp.str a.hash, Sexp.str a.mediaType, Sexp.str a.fileName]
+
+def assetFromSexp (form : Sexp) : Asset :=
+  match Sexp.args form with
+  | [h, kind, name] => Asset.mk (Sexp.asText h) (Sexp.asText kind) (Sexp.asText name)
+  | _ => defect ("bad asset " ++ Sexp.print form)
+
+/-- A comment without a time or assets prints as `(comment author note)`, so older objects keep their hashes. -/
+def commentToSexp (c : Comment) : Sexp :=
+  let at := if Text.isEmpty c.written then [] else [Sexp.node "at" [Sexp.str c.written]]
+  let assets := if List.isEmpty c.assets then [] else [Sexp.node "assets" (List.map assetToSexp c.assets)]
+  Sexp.node "comment" ([Sexp.str c.author, Sexp.str c.note] ++ at ++ assets)
+
+def commentFromSexp (c : Sexp) : Comment :=
+  match Sexp.args c with
+  | author :: note :: rest =>
+    let at := Option.getOr (Option.map Sexp.asText (Codebase.metaField (some c) "at")) ""
+    Comment.mk (Sexp.asText author) (Sexp.asText note) at (List.map assetFromSexp (Codebase.metaList (some c) "assets"))
+  | _ => defect ("bad comment " ++ Sexp.print c)
+
 def attachmentToSexp (a : Attachment) : Sexp :=
   match a with
   | Attachment.definition name h => Sexp.node "def" [Sexp.str name, Sexp.node "ref" [Sexp.str h]]
@@ -112,21 +144,17 @@ def attachmentFromSexp (form : Sexp) : Attachment :=
 /-- A task as an object. A linked definition is a `(ref …)`, so replication keeps the version a task was about. -/
 def toSexp (t : Task) : Sexp :=
   let text := fun (key : Text) (value : Text) => Sexp.node key [Sexp.str value]
-  let comments := List.map (fun c => Sexp.node "comment" [Sexp.str c.author, Sexp.str c.note]) t.comments
+  let comments := List.map commentToSexp t.comments
   Sexp.node "task" [text "id" t.id, text "title" t.title, text "state" (stateText t.state), Sexp.node "priority" [Sexp.int t.priority],
     text "assignee" t.assignee, Sexp.node "labels" (List.map Sexp.str t.labels), text "parent" t.parent, text "details" t.details,
     Sexp.node "links" (List.map attachmentToSexp t.links), Sexp.node "comments" comments]
 
 def fromSexp (form : Sexp) : Task :=
   let text := fun (key : Text) => Option.getOr (Option.map Sexp.asText (Codebase.metaField (some form) key)) ""
-  let comment := fun (c : Sexp) =>
-    match Sexp.args c with
-    | [author, note] => Comment.mk (Sexp.asText author) (Sexp.asText note)
-    | _ => defect ("bad task comment " ++ Sexp.print c)
   Task.mk (text "id") (text "title") (Option.getOr (List.lookup (text "state") states) TaskState.todo)
     (Option.getOr (Option.map Sexp.asInt (Codebase.metaField (some form) "priority")) 0) (text "assignee")
     (List.map Sexp.asText (Codebase.metaList (some form) "labels")) (text "parent") (text "details")
-    (List.map attachmentFromSexp (Codebase.metaList (some form) "links")) (List.map comment (Codebase.metaList (some form) "comments"))
+    (List.map attachmentFromSexp (Codebase.metaList (some form) "links")) (List.map commentFromSexp (Codebase.metaList (some form) "comments"))
 
 def read (dir : Text) (h : Text) : {IO, Throw Text} Task :=
   match Codebase.readObject dir h with

@@ -20,6 +20,8 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   tasks.json                      every task, with links resolved and its history
   def/<page>.json                 one per visible definition
   change/<causal>.json            one per history node the app links to
+  comments.json                   comments on definitions and changes, by subject (D79)
+  assets/<sha256>                 the files comments and tasks attach
 ```
 
 A definition's `<page>` is its hash, except that a builtin's `#` becomes `_` (`#Bool` is `def/_Bool.json`),
@@ -150,7 +152,7 @@ An array of every task, open tasks first, then by priority (urgent, high, medium
 | `parent`   | string   | the parent task's id, or `""`                                              |
 | `details`  | string   |                                                                            |
 | `links`    | object[] | see below                                                                  |
-| `comments` | object[] | `{"author","note"}`, oldest first                                          |
+| `comments` | object[] | comments, oldest first (see [comments.json](#commentsjson))                |
 | `history`  | change[] | the changes that touched the task, newest first, from the last 200 changes |
 
 A link is either a definition or a change:
@@ -217,6 +219,58 @@ and the app then shows only the two hashes.
 Hashes in a change page are those of that moment; `def/` files exist only for current hashes, so the app
 opens a name's current page.
 
+## comments.json
+
+An object from subject to its comments, oldest first. A subject is `def:<name>` or `change:<causal>`
+([CODEBASE-STORE.md](./CODEBASE-STORE.md#comments)). A comment, here and in `tasks.json`:
+
+| Field    | Type     | Content                                                                        |
+| -------- | -------- | ------------------------------------------------------------------------------ |
+| `author` | string   | who wrote it: `github:<login>` for comments filed in the hosted explorer       |
+| `note`   | string   | the text, may be `""` when it only attaches files                              |
+| `at`     | string   | when: RFC 3339, nanoseconds since the epoch, or `""` for older comments        |
+| `assets` | object[] | `{"hash","type","name"}`: SHA-256, media type and file name of each attachment |
+
+Generation copies every asset that a comment or task names into `assets/<sha256>`, so the app links them
+as `assets/<sha256>` relative to the site.
+
+## Writing
+
+The hosted explorer lets members comment and file tasks ([D79](../DECISIONS.md)). The app asks
+`api/me`; when that answers, it shows sign-in, a comment box on definition, change and task cards (`m`
+focuses it), and a New task form (`n`) that links the focused definition. Without it (a local `deus
+explore`, a bare bucket), the app is read-only as before.
+
+The Worker in [`platform/explorer-worker/`](../../platform/explorer-worker) answers these routes:
+
+| Route                           | Who     | Does                                                                                    |
+| ------------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `GET /auth/login?return=<path>` | anyone  | starts GitHub OAuth (scope `read:org`), then returns to the path                        |
+| `GET /auth/callback`            | GitHub  | checks the state, reads the user and their membership of `GITHUB_ORG`, sets the session |
+| `GET /auth/logout`              | anyone  | clears the session                                                                      |
+| `GET /api/me`                   | anyone  | `{"signIn","login","avatar","member","org"}`                                            |
+| `GET /api/inbox`                | anyone  | the requests not yet applied, so the app can show them as pending                       |
+| `POST /api/asset`               | members | stores the body (PNG, JPEG, GIF, WebP or PDF, under 10 MB) as `assets/<sha256>`         |
+| `POST /api/comment`             | members | `{"subject","note","assets"}` → an inbox request                                        |
+| `POST /api/task`                | members | `{"title","details","link","assets"}` → an inbox request                                |
+| `POST /api/task-comment`        | members | `{"task","note","assets"}` → an inbox request                                           |
+| `GET /assets/<sha256>`          | anyone  | an asset, cached as immutable                                                           |
+
+A member is a GitHub user whose membership of `GITHUB_ORG` (default `dxos`) is `active`. The session is
+a cookie holding the login, avatar, membership and expiry (7 days) with an HMAC-SHA256 of them under
+`SESSION_SECRET`; no GitHub token is kept. Posts must carry `x-deus: 1` and, when the browser sends one,
+an `Origin` equal to the site's, so another site cannot post for a signed-in member.
+
+The Worker cannot run DEUS, so a write is a request in the remote's inbox
+([CODEBASE-BINARY.md](./CODEBASE-BINARY.md#remote-layout)) and its files are assets there. `deus inbox
+<remote>` applies the requests to the current branch, each as a change by `github:<login>`; the next
+`deus push` publishes them and regenerates the site, and the app stops showing them as pending.
+
+Settings: `PREFIX` (the remote's prefix in the bucket), `GITHUB_ORG`, the R2 binding `BUCKET`, and the
+secrets `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (a GitHub OAuth app whose callback URL is
+`https://<host>/auth/callback`) and `SESSION_SECRET`. Without the three secrets, sign-in is off and
+`api/me` says so.
+
 ## App state in the URL
 
 The app keeps its open cards in the URL fragment as a comma-separated list, in the order they are shown, and
@@ -240,7 +294,7 @@ percent-decodes request paths. The bundled server gives `.html` `text/html; char
 `image/svg+xml`, and other files `text/plain; charset=utf-8`. With no `--out` or `--publish`, `deus explore` starts it on `--port` (default
 8080).
 
-The Worker in `platform/explorer-worker/` proxies a published site: it maps `/` to `/index.html`, fetches
+The Worker in `platform/explorer-worker/` proxies a published site (and adds [writing](#writing)): it maps `/` to `/index.html`, fetches
 `ORIGIN + path` (ignoring the query), and caches successful responses for 60 seconds with
 `cache-control: public, max-age=60`.
 

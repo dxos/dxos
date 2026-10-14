@@ -34,6 +34,8 @@
       <button id="find" class="finder-trigger" title="Find a definition (/ or ⌘K)">
         <span>Find definitions, types and tasks</span><kbd>/</kbd>
       </button>
+      <button id="new-task" class="primary-button" title="File a task (n)" hidden>New task</button>
+      <div id="account" hidden></div>
       <button id="help" class="icon-button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
     </header>
     <div id="layout">
@@ -63,6 +65,24 @@
         </footer>
       </div>
     </div>
+    <div id="task-dialog" class="overlay" hidden>
+      <form id="task-form" class="modal task-form" aria-label="New task">
+        <h2>New task</h2>
+        <label>Title <input id="task-title" name="title" required maxlength="300" autocomplete="off" /></label>
+        <label
+          >Details
+          <textarea id="task-details" name="details" rows="6" placeholder="What is wrong or wanted. Paste or drop screenshots here."></textarea>
+        </label>
+        <label>About <input id="task-link" name="link" placeholder="A definition, such as List.map" autocomplete="off" /></label>
+        <div class="attachments"></div>
+        <footer>
+          <label class="attach-button">Attach image<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf" multiple hidden /></label>
+          <span class="muted">Filed tasks join the codebase when the inbox is next applied.</span>
+          <button type="button" class="plain-button" data-dismiss>Cancel</button>
+          <button type="submit" class="primary-button">File task</button>
+        </footer>
+      </form>
+    </div>
     <div id="shortcuts" class="overlay" hidden>
       <div class="modal shortcuts" role="dialog" aria-label="Keyboard shortcuts">
         <h2>Keyboard shortcuts</h2>
@@ -81,6 +101,10 @@
           <dd>Show or hide the namespace tree</dd>
           <dt><kbd>g</kbd> then <kbd>c</kbd> / <kbd>t</kbd> / <kbd>h</kbd></dt>
           <dd>Go to code, tasks or history</dd>
+          <dt><kbd>m</kbd></dt>
+          <dd>Comment on the focused card (members)</dd>
+          <dt><kbd>n</kbd></dt>
+          <dd>File a new task (members)</dd>
           <dt><kbd>esc</kbd></dt>
           <dd>Close this dialog or the finder</dd>
         </dl>

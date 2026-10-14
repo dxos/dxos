@@ -109,6 +109,329 @@ const resolve = (name, namespace) => {
 };
 
 //
+// Writing (D79): signed-in members of the GitHub org comment and file tasks through the hosted
+// explorer's worker. Its requests wait in the remote's inbox until `deus inbox` applies them, so
+// the app shows them as pending until the pages are regenerated. Without the worker (a local
+// `deus explore`, a bare bucket) `api/me` is missing and the explorer stays read-only.
+//
+
+const account = { signIn: false, login: null, avatar: null, member: false, org: '' };
+
+/** Comments by subject (`def:<name>`, `change:<causal>`), from `comments.json`. */
+let comments = {};
+
+/** Requests filed here that the codebase does not have yet. */
+let pending = [];
+
+const ASSET_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+
+const getJson = async (path) => {
+  try {
+    const response = await fetch(path, { credentials: 'same-origin' });
+    return response.ok && (response.headers.get('content-type') ?? '').includes('json') ? await response.json() : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const loadWriting = async () => {
+  const [me, inbox, saved] = await Promise.all([getJson('api/me'), getJson('api/inbox'), load('comments.json')]);
+  comments = saved ?? {};
+  if (me) {
+    Object.assign(account, me);
+  }
+  // A request stays in the inbox until applied; once the pages carry it, it is shown from them.
+  pending = Array.isArray(inbox) ? inbox : [];
+  renderAccount();
+};
+
+const canWrite = () => account.signIn && account.member;
+
+const signInHref = () => `auth/login?return=${encodeURIComponent(location.pathname + location.hash)}`;
+
+const renderAccount = () => {
+  const node = element('account');
+  node.hidden = !account.signIn;
+  element('new-task').hidden = !canWrite();
+  if (!account.signIn) {
+    return;
+  }
+  node.innerHTML = account.login
+    ? `${account.avatar ? `<img class="avatar" src="${escape(account.avatar)}" alt="" />` : ''}` +
+      `<span class="login" title="${account.member ? `Member of ${escape(account.org)}` : `Not a member of ${escape(account.org)}: read only`}">@${escape(account.login)}</span>` +
+      `${account.member ? '' : '<span class="chip">read only</span>'}<a class="plain-button" href="auth/logout">Sign out</a>`
+    : `<a class="plain-button sign-in" href="${escape(signInHref())}">Sign in<span class="wide-only"> with GitHub</span></a>`;
+};
+
+const authorHtml = (author) =>
+  author.startsWith('github:')
+    ? `<a class="author" href="https://github.com/${escape(author.slice(7))}" target="_blank" rel="noopener">@${escape(author.slice(7))}</a>`
+    : `<b class="author">${escape(author)}</b>`;
+
+/** `written` is RFC 3339 from the worker, or nanoseconds since the epoch from the CLI. */
+const whenHtml = (written) => {
+  if (!written) {
+    return '';
+  }
+  const date = /^\d+$/.test(written) ? new Date(Number(written.slice(0, -6))) : new Date(written);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : `<time datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))}</time>`;
+};
+
+const assetHtml = (asset) => {
+  const href = `assets/${escape(asset.hash)}`;
+  return asset.type.startsWith('image/')
+    ? `<a class="asset" href="${href}" target="_blank" rel="noopener" title="${escape(asset.name)}"><img src="${href}" alt="${escape(asset.name)}" loading="lazy" /></a>`
+    : `<a class="asset file" href="${href}" target="_blank" rel="noopener">${escape(asset.name)}</a>`;
+};
+
+const commentHtml = (comment, isPending = false) =>
+  `<div class="comment${isPending ? ' pending' : ''}"><div class="comment-head">${authorHtml(comment.author ?? comment.by ?? '')}${whenHtml(comment.at)}` +
+  `${isPending ? '<span class="chip pending-chip" title="Filed here; it joins the codebase when the inbox is next applied">pending</span>' : ''}</div>` +
+  `${comment.note ? `<div class="doc">${docHtml(comment.note, '')}</div>` : ''}` +
+  `${comment.assets?.length ? `<div class="assets">${comment.assets.map(assetHtml).join('')}</div>` : ''}</div>`;
+
+/** Requests this page filed or found in the inbox that are not in the generated pages yet. */
+const pendingFor = (match) => pending.filter(match).map((request) => ({ ...request, author: request.by }));
+
+/** The form members write in; others see how to get there. `target` is `subject` or `task` with its value. */
+const composerHtml = (target, value) => {
+  if (!account.signIn) {
+    return '';
+  }
+  if (!account.login) {
+    return `<p class="composer-note muted"><a href="${escape(signInHref())}">Sign in with GitHub</a> to comment.</p>`;
+  }
+  if (!account.member) {
+    return `<p class="composer-note muted">Only members of the ${escape(account.org)} GitHub organization can comment.</p>`;
+  }
+  return (
+    `<form class="composer" data-${target}="${escape(value)}">` +
+    `<textarea name="note" rows="2" placeholder="Comment. Paste or drop an image to attach it." aria-label="Comment"></textarea>` +
+    `<div class="attachments"></div><footer>` +
+    `<label class="attach-button">Attach image<input type="file" accept="${ASSET_TYPES.join(',')}" multiple hidden /></label>` +
+    `<span class="muted hint">⌘↵ sends</span><button type="submit" class="primary-button">Comment</button></footer></form>`
+  );
+};
+
+/** A thread: saved comments, then pending ones, then the composer. */
+const threadSection = (saved, waiting, composer) => {
+  const count = saved.length + waiting.length;
+  if (count === 0 && !composer) {
+    return '';
+  }
+  return section(
+    'Comments',
+    count,
+    saved.map((comment) => commentHtml(comment)).join('') + waiting.map((comment) => commentHtml(comment, true)).join('') + composer,
+  );
+};
+
+const subjectThread = (subject) =>
+  threadSection(
+    comments[subject] ?? [],
+    pendingFor((request) => request.kind === 'comment' && request.subject === subject),
+    composerHtml('subject', subject),
+  );
+
+const taskThread = (task) =>
+  threadSection(
+    task.comments,
+    pendingFor((request) => request.kind === 'task-comment' && request.task === task.id),
+    composerHtml('task', task.id),
+  );
+
+/** Uploads one file to the asset store; the worker names it by its SHA-256. */
+const upload = async (file) => {
+  if (!ASSET_TYPES.includes(file.type)) {
+    throw new Error(`${file.name}: attach a PNG, JPEG, GIF, WebP image or a PDF`);
+  }
+  const response = await fetch('api/asset', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': file.type, 'x-file-name': encodeURIComponent(file.name || 'pasted.png'), 'x-deus': '1' },
+    body: file,
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.error ?? `upload failed (${response.status})`);
+  }
+  return body;
+};
+
+const post = async (path, body) => {
+  const response = await fetch(path, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', 'x-deus': '1' },
+    body: JSON.stringify(body),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error ?? `request failed (${response.status})`);
+  }
+  return result;
+};
+
+/** What each form has uploaded, in order. */
+const attached = new WeakMap();
+
+const attach = async (form, files) => {
+  const list = form.querySelector('.attachments');
+  for (const file of files) {
+    const chip = document.createElement('span');
+    chip.className = 'attachment uploading';
+    chip.textContent = file.name || 'image';
+    list.append(chip);
+    try {
+      const asset = await upload(file);
+      attached.set(form, [...(attached.get(form) ?? []), asset]);
+      chip.className = 'attachment';
+      chip.dataset.hash = asset.hash;
+      chip.innerHTML =
+        (asset.type.startsWith('image/') ? `<img src="${URL.createObjectURL(file)}" alt="" />` : '') +
+        `<span>${escape(asset.name)}</span><button type="button" class="icon-button" data-detach="${escape(asset.hash)}" aria-label="Remove">✕</button>`;
+    } catch (error) {
+      chip.remove();
+      notify(error.message);
+    }
+  }
+};
+
+/** Re-renders the cards a new pending request shows up in. */
+const refreshCards = () => {
+  for (const [key, node] of cardElements) {
+    node.remove();
+    cardElements.delete(key);
+  }
+  return render();
+};
+
+const submit = async (form) => {
+  const button = form.querySelector('[type=submit]');
+  const assets = attached.get(form) ?? [];
+  if (form.querySelector('.attachment.uploading')) {
+    notify('Wait for the images to upload');
+    return;
+  }
+  button.disabled = true;
+  try {
+    if (form.id === 'task-form') {
+      const entry = await post('api/task', {
+        title: form.title.value,
+        details: form.details.value,
+        link: form.link.value.trim(),
+        assets,
+      });
+      pending.push(entry);
+      closeOverlays();
+      form.reset();
+      form.querySelector('.attachments').innerHTML = '';
+      attached.delete(form);
+      notify('Filed. The task joins the codebase when the inbox is next applied.');
+      if (ui.view === 'tasks') {
+        renderTasks();
+      }
+      return;
+    }
+    const note = form.note.value;
+    const entry = form.dataset.task
+      ? await post('api/task-comment', { task: form.dataset.task, note, assets })
+      : await post('api/comment', { subject: form.dataset.subject, note, assets });
+    pending.push(entry);
+    const key = form.closest('.card')?.dataset.key;
+    await refreshCards();
+    if (key) {
+      setFocus(key, false);
+    }
+  } catch (error) {
+    notify(error.message);
+  } finally {
+    button.disabled = false;
+  }
+};
+
+const openTaskForm = () => {
+  if (!canWrite()) {
+    return;
+  }
+  const focused = ui.focus?.startsWith('d:') ? index.byHash.get(ui.focus.slice(2))?.name : undefined;
+  if (focused && !element('task-link').value) {
+    element('task-link').value = focused;
+  }
+  element('task-dialog').hidden = false;
+  element('task-title').focus();
+};
+
+/** `m`: the focused card's comment box. */
+const focusComposer = () => {
+  const node = ui.focus && cardElements.get(ui.focus);
+  const box = node?.querySelector('.composer textarea');
+  if (box) {
+    node.classList.remove('folded');
+    box.focus();
+  }
+};
+
+const onWriteEvents = () => {
+  document.addEventListener('submit', (event) => {
+    if (event.target.matches('.composer, #task-form')) {
+      event.preventDefault();
+      void submit(event.target);
+    }
+  });
+  document.addEventListener('change', (event) => {
+    if (event.target.matches('.attach-button input[type=file]')) {
+      void attach(event.target.closest('form'), [...event.target.files]);
+      event.target.value = '';
+    }
+  });
+  document.addEventListener('paste', (event) => {
+    const form = event.target.closest?.('.composer, #task-form');
+    const files = [...(event.clipboardData?.files ?? [])];
+    if (form && files.length > 0) {
+      event.preventDefault();
+      void attach(form, files);
+    }
+  });
+  document.addEventListener('dragover', (event) => {
+    if (event.target.closest?.('.composer, #task-form')) {
+      event.preventDefault();
+    }
+  });
+  document.addEventListener('drop', (event) => {
+    const form = event.target.closest?.('.composer, #task-form');
+    if (form && event.dataTransfer?.files.length) {
+      event.preventDefault();
+      void attach(form, [...event.dataTransfer.files]);
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    const form = event.target.closest?.('.composer, #task-form');
+    if (form && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      void submit(form);
+    }
+  });
+  document.addEventListener('click', (event) => {
+    const detach = event.target.closest('[data-detach]');
+    if (detach) {
+      const form = detach.closest('form');
+      attached.set(
+        form,
+        (attached.get(form) ?? []).filter((asset) => asset.hash !== detach.dataset.detach),
+      );
+      detach.closest('.attachment').remove();
+    } else if (event.target.closest('[data-dismiss]')) {
+      closeOverlays();
+    }
+  });
+  element('new-task').addEventListener('click', openTaskForm);
+  element('tasks-view').addEventListener('click', (event) => event.target.closest('[data-new-task]') && openTaskForm());
+};
+
+//
 // Workspace state: the open cards are the URL fragment; the focused card and folds are local.
 //
 
@@ -349,6 +672,7 @@ const definitionCard = (key, def) => {
             `<ul class="rows">${def.tasks.map((task) => `<li class="entry-row">${stateChip(task.state)}${taskLink(task)}</li>`).join('')}</ul>`,
           )
         : '') +
+      subjectThread(`def:${def.name}`) +
       `<div class="relations">${section('Depends on', def.deps.length, rowList(def.deps.map(refRow), 'Nothing in this codebase.'), def.deps.length <= LIST_LIMIT)}` +
       `${section('Used by', def.users.length, rowList(def.users.map(refRow), 'Nothing yet.'), def.users.length <= LIST_LIMIT)}</div>` +
       (entry ? '' : '<p class="muted">This hash no longer has a name on this branch.</p>'),
@@ -454,18 +778,7 @@ const taskCard = (key, task) => {
             `<ul class="rows">${children.map((child) => `<li class="entry-row">${stateChip(child.state)}${taskLink(child)}</li>`).join('')}</ul>`,
           )
         : '') +
-      (task.comments.length > 0
-        ? section(
-            'Comments',
-            task.comments.length,
-            task.comments
-              .map(
-                (comment) =>
-                  `<div class="comment"><b>${escape(comment.author)}</b><div>${docHtml(comment.note, '')}</div></div>`,
-              )
-              .join(''),
-          )
-        : '') +
+      taskThread(task) +
       section('History', task.history.length, changeRows(task.history), task.history.length <= 8),
   });
 };
@@ -510,7 +823,8 @@ const changeCard = (key, change) => {
       (added.length + changed.length + removed.length + tasks.length === 0
         ? '<p class="muted">No visible names or tasks changed.</p>'
         : '') +
-      `<p class="parents"><span class="label">Parents</span> ${change.parents.map((parent) => changeLink(parent)).join(' ') || '<span class="muted">none: the first change</span>'}</p>`,
+      `<p class="parents"><span class="label">Parents</span> ${change.parents.map((parent) => changeLink(parent)).join(' ') || '<span class="muted">none: the first change</span>'}</p>` +
+      subjectThread(`change:${change.causal}`),
   });
 };
 
@@ -767,7 +1081,17 @@ const renderTasks = () => {
       '</div>'
     );
   });
-  element('tasks-view').innerHTML = `<h1 class="view-title">Tasks</h1><div class="board">${columns.join('')}</div>`;
+  const filed = pending.filter((request) => request.kind === 'task');
+  const waiting =
+    filed.length > 0
+      ? `<section class="pending-tasks"><h3>Waiting for the inbox <span class="count">${filed.length}</span></h3>` +
+        filed
+          .map((request) => `<div class="task-card pending"><span class="task-title">${escape(request.title)}</span><span class="task-meta">${authorHtml(request.by)}<span class="chip pending-chip">pending</span></span></div>`)
+          .join('') +
+        '</section>'
+      : '';
+  const action = canWrite() ? '<button class="primary-button" data-new-task>New task</button>' : '';
+  element('tasks-view').innerHTML = `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${waiting}<div class="board">${columns.join('')}</div>`;
 };
 
 const renderHistory = async () => {
@@ -1122,6 +1446,7 @@ const openFinder = () => {
 const closeOverlays = () => {
   element('finder').hidden = true;
   element('shortcuts').hidden = true;
+  element('task-dialog').hidden = true;
 };
 
 const choose = (hit) => {
@@ -1262,6 +1587,14 @@ const onKey = (event) => {
     case 'g':
       pendingG = true;
       break;
+    case 'm':
+      event.preventDefault();
+      focusComposer();
+      break;
+    case 'n':
+      event.preventDefault();
+      openTaskForm();
+      break;
     default:
   }
 };
@@ -1370,6 +1703,8 @@ const main = async () => {
   }
   renderTree();
   showDialect();
+  await loadWriting();
+  onWriteEvents();
 
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKey);

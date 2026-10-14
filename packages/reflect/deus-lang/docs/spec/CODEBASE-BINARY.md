@@ -214,13 +214,41 @@ hash and seen-record the plain text.
 ## Remote layout
 
 The `Remote` ability is the whole interface: `list`, `get`, `put` (never overwrites), `delete`, and
-`writeAll` for files beside the bundles. A remote URL is stored locally in `remotes/<name>/url`.
+`writeAll` for files beside the bundles, and four byte-for-byte file operations under a folder beside
+them ([D79](../DECISIONS.md)): `keys folder`, `download key file`, `upload key file mediaType` and
+`drop key`. A remote URL is stored locally in `remotes/<name>/url`.
 
-| Remote URL                | Bundles at                                  | Other files                |
-| ------------------------- | ------------------------------------------- | -------------------------- |
-| a directory path `<root>` | `<root>/bundles/<name>`                     | `<root>/site/…` (explorer) |
-| `r2://<bucket>/<prefix>`  | key `<prefix>/bundles/<name>` in `<bucket>` | keys `<prefix>/site/…`     |
-| `r2://<bucket>`           | prefix defaults to `deus`                   |                            |
+| Remote URL                | Bundles at                                  | Other files                                                     |
+| ------------------------- | ------------------------------------------- | --------------------------------------------------------------- |
+| a directory path `<root>` | `<root>/bundles/<name>`                     | `<root>/site/…` (explorer), `assets/<sha256>`, `inbox/<name>`   |
+| `r2://<bucket>/<prefix>`  | key `<prefix>/bundles/<name>` in `<bucket>` | keys `<prefix>/site/…`, `<prefix>/assets/…`, `<prefix>/inbox/…` |
+| `r2://<bucket>`           | prefix defaults to `deus`                   |                                                                 |
+
+`assets/<sha256>` holds the files comments and tasks attach, named by the SHA-256 of their bytes
+([CODEBASE-STORE.md](./CODEBASE-STORE.md#assets)). `deus push` uploads the store's assets the remote
+lacks, and `deus pull` downloads the remote's assets the store lacks, checking each one's hash. Assets are
+never deleted.
+
+`inbox/<name>.sexp` holds requests from the hosted explorer ([EXPLORER.md](./EXPLORER.md#writing)):
+comments and tasks that signed-in members filed, waiting for `deus inbox` to apply them. A name starts
+with the time it was filed (`2026-10-14T19-30-00-000Z-<8 hex>.sexp`), so name order is filing order.
+Each file holds one form:
+
+```text
+request = "(request" { " (" field " " string ")" } " (assets" { " (asset " sha256 " " media-type " " file-name ")" } "))"
+field   = "kind" | "by" | "at" | "subject" | "note" | "title" | "details" | "link" | "task"
+```
+
+| `kind`         | Fields used                        | Applied as                                                                                   |
+| -------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| `comment`      | `subject`, `note`, assets          | a comment on `def:<name>` or `change:<causal>`                                               |
+| `task`         | `title`, `details`, `link`, assets | a new task linked to the definition `link` names, if it exists; assets go in a first comment |
+| `task-comment` | `task`, `note`, assets             | a comment on the task with that id or unique id prefix                                       |
+
+`by` must be `github:<login>`, and it is recorded as the change's provenance; `at` is the time filed, in
+RFC 3339. `deus inbox` applies the requests to the current branch in name order, one change each, and
+drops each request it applied or refused (a refusal is reported with its reason: an unknown kind, a bad
+subject, an unknown task, or an asset the remote does not have).
 
 There is no manifest, index or heads file on the remote. The bundle names are the whole state, and
 heads are computed from claims (next section). The explorer site under `site/` is described in
@@ -236,12 +264,16 @@ S3-compatible bucket (Cloudflare R2), path-style URLs `$DEUS_R2_ENDPOINT/<bucket
 SigV4 by `curl --aws-sigv4 aws:amz:auto:s3`. Credentials come from `$R2_ACCESS_KEY_ID` and
 `$R2_SECRET_ACCESS_KEY` and go in a mode-600 curl config file, never on a command line.
 
-| Op       | Request                                                                                                                                                     |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `list`   | `GET ?list-type=2&prefix=<prefix>/bundles/[&continuation-token=<t>]`; names are the `<Key>` values with the prefix removed; follows `NextContinuationToken` |
-| `get`    | `GET <prefix>/bundles/<name>`, then `gzip -dcf`; a failed request reads as absent                                                                           |
-| `put`    | `PUT <prefix>/bundles/<name>` with `If-None-Match: *` and the gzip body; `PreconditionFailed` is success                                                    |
-| `delete` | `DELETE <prefix>/bundles/<name>`; the result is not checked                                                                                                 |
+| Op         | Request                                                                                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list`     | `GET ?list-type=2&prefix=<prefix>/bundles/[&continuation-token=<t>]`; names are the `<Key>` values with the prefix removed; follows `NextContinuationToken` |
+| `get`      | `GET <prefix>/bundles/<name>`, then `gzip -dcf`; a failed request reads as absent                                                                           |
+| `put`      | `PUT <prefix>/bundles/<name>` with `If-None-Match: *` and the gzip body; `PreconditionFailed` is success                                                    |
+| `delete`   | `DELETE <prefix>/bundles/<name>`; the result is not checked                                                                                                 |
+| `keys`     | the `list` request with `prefix=<prefix>/<folder>/`                                                                                                         |
+| `download` | `GET <prefix>/<key>` into the file; a failed request reads as absent                                                                                        |
+| `upload`   | `PUT <prefix>/<key>` with the file's bytes and `content-type: <mediaType>`                                                                                  |
+| `drop`     | `DELETE <prefix>/<key>`; the result is not checked                                                                                                          |
 
 Note: the continuation token is not URL-encoded, and the `PUT` body carries curl's default
 `--data-binary` content type (`application/x-www-form-urlencoded`).
