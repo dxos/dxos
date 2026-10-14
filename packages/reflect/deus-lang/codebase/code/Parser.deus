@@ -239,7 +239,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
     else if word == "inductive" then
       skip p
       let name := Parser.ident p
-      let params := typeParams p
+      let params := Parser.typeParams p
       let iri := iriOf p
       expect p "where"
       let rec ctors acc := if is p "|" then
@@ -253,7 +253,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
     else if word == "structure" || word == "ability" then
       skip p
       let name := Parser.ident p
-      let params := typeParams p
+      let params := Parser.typeParams p
       let iri := iriOf p
       expect p "where"
       let rec fields acc :=

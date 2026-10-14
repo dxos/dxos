@@ -15,6 +15,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Replication bundles: naming, contents, the `DEUSCOL1` columnar encoding, gzip      |
 | [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
+| [BINDINGS.md](./BINDINGS.md)           | TypeScript modules written by `deus bindings`: the type and value mapping              |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
 | [CLI-JSON.md](./CLI-JSON.md)           | `deus … --json` output and exit codes                                                  |

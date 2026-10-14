@@ -1,5 +1,18 @@
 # History of main
 
+- `6bf2adb8ab` delete Geometry.Color Geometry.Log Geometry.Point Geometry.Point.x Geometry.Point.y Geometry.Shape Geometry.Tree Geometry.area Geometry.firstOf Geometry.greet Geometry.insert Geometry.lookup Geometry.mean Geometry.move Geometry.paint Geometry.ratio Geometry.sorted Geometry.stats Geometry.total
+- `45a408e0d4` task: open eea32f23 TypeScript bindings: run in-process on the TypeScript kernel too
+- `24083cded2` task: open de710f29 TypeScript bindings: pass functions across (callbacks and closures)
+- `17759b3b47` task: open 091e43c0 TypeScript bindings: export polymorphic functions with codec parameters
+- `e18c04f0fa` task: comment on db71c327 (by claude)
+- `e05dcb4087` close db71c327 by #c564461f42 (by claude)
+- `c564461f42` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D79) (by claude)
+- `28ea0c91cd` task: set db71c327 state (by claude)
+- `5eab0fe7ba` task: open db71c327 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `9ba4d92091` history: import 146 changes
+- `073671715e` task: import 47 tasks
+- `c648f7f874` add code specs
+- `67c7d5a614` init
 - `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
 - `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
 - `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)

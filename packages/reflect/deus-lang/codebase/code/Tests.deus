@@ -39,10 +39,10 @@ test Tests.externalSimulatesFetch := simulateFetch
   | Requirement.mk x1 x2 x3 x4 x5 x6 => Requirement.mk x1 x2 x3 x4 (repeat 64 "b") x6))) == (Result.ok "/sim/wasmtime", Result.err "not fetched: https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.0/wasmtime.tar.xz")
 
 test Tests.failureContextChains :=
-  let load := fun u => context
+  let load := fun u => Failure.context
     "loading config"
     [("path", "a.toml")]
-    (fun _ => context "parsing" [("line", "3")] (fun _ => Throw.throw (of "unexpected '='" [])))
+    (fun _ => Failure.context "parsing" [("line", "3")] (fun _ => Throw.throw (of "unexpected '='" [])))
   match try load with
   | Result.err f => Failure.render f ==
       "loading config (path=a.toml)\n  caused by: parsing (line=3)\n  caused by: unexpected '='"
@@ -112,7 +112,7 @@ test Tests.mutualRecursionHashesAsCycle :=
 theorem Tests.notInvolutive (b : Bool) : not (not b) == b := by decide
 
 test Tests.observeNestsSpans :=
-  let traced := fun u => Trace.span "outer" [] (fun _ => Trace.span "inner" [("k", "v")] (fun _ => info "hi" []))
+  let traced := fun u => Trace.span "outer" [] (fun _ => Trace.span "inner" [("k", "v")] (fun _ => Log.info "hi" []))
   match Observe.collect traced with
   | (_, events) => events ==
       [Event.log "info" "hi" [] 2 "3", Event.span 2 1 "inner" [("k", "v")] "2" "4", Event.span 1 0 "outer" [] "1" "5"]

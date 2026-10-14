@@ -12,10 +12,10 @@ inductive Tour.Shape where
 /-- Pattern matching must cover every constructor. -/
 def Tour.area (shape : Shape) : Int :=
   match shape with
-  | Shape.circle r => 3 * r * r
-  | Shape.rect w h => w * h
+  | Tour.Shape.circle r => 3 * r * r
+  | Tour.Shape.rect w h => w * h
 
-test Tour.areas := List.map area [Shape.circle 2, Shape.rect 3 4] == [12, 12]
+test Tour.areas := List.map area [Tour.Shape.circle 2, Tour.Shape.rect 3 4] == [12, 12]
 
 test Tour.errors := try (fun _ => parseQuantity "-1") == Result.err "negative quantity -1"
 

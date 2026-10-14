@@ -100,16 +100,22 @@ def native (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended im
 -/
 def server (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended image out "DEUSSRV1"
 
+/-- The embeddable wasm kernel (EMBEDDING.md), built with cargo when it is missing. -/
+def wasmKernel (u : Unit) : {IO, Throw Failure} Text :=
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
+  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
+  let _ := if IO.exists wasm then ""
+    else Failure.context "building the wasm kernel" [] (fun _ =>
+      tool "cargo" ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
+  wasm
+
 /--
   Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript
   driver to the directory `out`; returns the kernel crate's directory.
 -/
 def embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
   let crate := require "DEUS_HOME" ++ "/../deus-kernel"
-  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
-  let _ := if IO.exists wasm then ""
-    else Failure.context "building the wasm kernel" [] (fun _ =>
-      tool "cargo" ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
+  let wasm := wasmKernel ()
   IO.mkdirp out
   IO.writeFile (out ++ "/app.image") image
   let _ := tool "cp" [wasm, out ++ "/deus_kernel.wasm"]

@@ -104,6 +104,24 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
+## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`de710f29`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (EMBEDDING.md has {"$fn":true} output only).
+
 ## wasm: structural equality on constructed values (`186feaf2`)
 
 - state: todo
@@ -137,6 +155,15 @@ From docs/spec/README.md, Known divergences.
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`eea32f23`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -266,6 +293,18 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - links change #e7f95e998b
 
 From docs/spec/README.md, Known divergences.
+
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`db71c327`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #c564461f42
+
+From Dmytro: explore interop with ts and generating typescript binding types.
+
+> claude: Done (D79): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
 
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
