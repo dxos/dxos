@@ -26,11 +26,5 @@ export {
   buildTypeDxnCondition,
 } from './indexes/entity-meta-index.ts';
 export { localEntityId } from './entity-ids.ts';
-export {
-  type Referrer,
-  type ReverseRef,
-  ReverseRefIndex,
-  type ReverseRefQuery,
-  referenceIndexKey,
-} from './indexes/reverse-ref-index.ts';
-export { type EntityPropPath, EscapedPropPath, SQL_MAX_BOUND_VARIABLES, normalizePropPath } from './utils.ts';
+export { type Referrer, type ReverseRef, ReverseRefIndex, type ReverseRefQuery } from './indexes/reverse-ref-index.ts';
+export { type EntityPropPath, SQL_MAX_BOUND_VARIABLES, normalizePropPath } from './utils.ts';

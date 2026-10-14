@@ -76,9 +76,8 @@ export const Setup: Story = {
   }),
   args: {
     layout: [
-      [companion('discord'), StoryRole.DiscordBot],
+      [companion('discord'), companion('activity'), StoryRole.DiscordBot],
       [StoryRole.AgentProperties, StoryRole.EmailChannel],
-      [companion('activity')],
       [StoryRole.Conversation],
       [companion('brain')],
     ],
