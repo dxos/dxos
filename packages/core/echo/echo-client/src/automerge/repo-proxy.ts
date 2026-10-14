@@ -318,9 +318,13 @@ export class RepoProxy extends Resource {
       const documentIds = [...this._unflushedIds];
       this._unflushedIds.clear();
       if (documentIds.length > 0) {
-        const saved = runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
-          timeout: RPC_TIMEOUT,
-        }).catch((err) => {
+        const saved = runServiceCall(
+          this._runtime,
+          this._dataService,
+          'DataService.flush',
+          { documentIds },
+          { timeout: RPC_TIMEOUT },
+        ).catch((err) => {
           documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
           throw err;
         });
@@ -692,12 +696,14 @@ export class RepoProxy extends Resource {
     const request = () => {
       const creation: Promise<void> = runServiceCall(
         this._runtime,
-        this._dataService['DataService.createDocument']({
+        this._dataService,
+        'DataService.createDocument',
+        {
           spaceId: this._spaceId,
           // A doc's declared type is an interface without an index signature, which the Struct
           // field's `Record` type does not accept; the value is a plain JSON object at runtime.
           initialValue: initialValue as Record<string, unknown>,
-        }),
+        },
         { timeout: RPC_TIMEOUT },
       )
         .then(
@@ -877,11 +883,13 @@ export class RepoProxy extends Resource {
       if (add.length > 0 || removeIds.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService['DataService.updateSubscription']({
+          this._dataService,
+          'DataService.updateSubscription',
+          {
             subscriptionId: this._subscriptionId,
             add,
             removeIds,
-          }),
+          },
           { timeout: RPC_TIMEOUT },
         );
       }
@@ -908,7 +916,9 @@ export class RepoProxy extends Resource {
       if (updates.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
+          this._dataService,
+          'DataService.update',
+          { subscriptionId: this._subscriptionId, updates },
           { timeout: RPC_TIMEOUT },
         );
         updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
