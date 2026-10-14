@@ -767,7 +767,9 @@ const kindCard = (key, kind) => {
     .sort((a, b) => (isChecks ? (rank[a.status] ?? 1) - (rank[b.status] ?? 1) : 0) || a.name.localeCompare(b.name));
   const failing = entries.filter((entry) => entry.status === 'fail').length;
   return card(key, {
-    iconHtml: isChecks ? `<span class="icon ${failing > 0 ? 'k-fail' : 'k-test'}">${failing > 0 ? '✗' : '✓'}</span>` : icon(kind),
+    iconHtml: isChecks
+      ? `<span class="icon ${failing > 0 ? 'k-fail' : 'k-test'}">${failing > 0 ? '✗' : '✓'}</span>`
+      : icon(kind),
     title: isChecks ? 'Checks' : escape(KINDS[kind].plural),
     meta: `<span class="count">${isChecks ? `${entries.length - failing} of ${entries.length} pass` : entries.length}</span>`,
     body: rowList(entries.map((entry) => entryRow(entry))),

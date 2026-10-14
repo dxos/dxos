@@ -779,6 +779,16 @@ Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
 
 Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
 
+## Explorer overview: count tiles and recent changes should be clickable (`20dbe121`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer
+- parent: 861438d2
+
+Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing first), the open-tasks tile opens the board, change messages open their change.
+
 ## Explorer report tool: signed-in members file a screenshot of the current view as a task (`e4a19978`)
 
 - state: done

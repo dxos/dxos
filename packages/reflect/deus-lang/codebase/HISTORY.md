@@ -1,11 +1,13 @@
 # History of main
 
+- `32d6c2d287` task: set 20dbe121 state (by claude)
+- `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
+- `7829722c1b` history: import 351 changes
+- `ae69cbd311` task: import from tasks.sexp
+- `08e90dab62` add code specs
 - `438184d11a` close e4a19978 by #458d0633bd (by claude)
 - `458d0633bd` the explorer's report tool: a screenshot filed as a labelled task (D90) (by claude)
 - `993938b5c3` task: open e4a19978 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
-- `74c2b4296d` history: import 313 changes
-- `eb9b7f4404` task: import from tasks.sexp
-- `617221bcb6` add code specs
 - `089232a06c` task: set 6ffdc230 details (by claude)
 - `b1615b9a4a` history: import 347 changes (by claude)
 - `4d335b2648` task: import from tasks.sexp
