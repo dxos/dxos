@@ -1,10 +1,13 @@
+/-- A record. Field names are global, so they are specific. -/
 structure Tour.Line where
   item : Text
   quantity : Int
 
+/-- An ability: the program asks for a price; a handler decides where prices come from. -/
 ability Tour.Prices where
   priceOf : Text -> Int
 
+/-- An algebraic data type: a shape is a circle or a rectangle. -/
 inductive Tour.Shape where
   | circle Int
   | rect Int Int

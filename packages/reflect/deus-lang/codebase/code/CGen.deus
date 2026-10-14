@@ -143,7 +143,7 @@ def CGen.form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (t
         | Option.some _ => Option.none
         | Option.none => token
       let value := CGen.expr ctx env false mine first a
-      let consumed := if uncounted (typeOf ctx.cScope env a) then "(void)" ++ value ++ "; " else "deus_drop(" ++ value ++ "); "
+      let consumed := if uncounted (Wasm.typeOf ctx.cScope env a) then "(void)" ++ value ++ "; " else "deus_drop(" ++ value ++ "); "
       before tail consumed (CGen.expr ctx env tail rest second b)
   | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
       let later := freeLocals (-1 :: env) b
@@ -155,7 +155,7 @@ def CGen.form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (t
         | Option.some _ => Option.none
         | Option.none => token
       let l := CGen.fresh ctx
-      setType ctx.cScope l (typeOf ctx.cScope env v)
+      setType ctx.cScope l (Wasm.typeOf ctx.cScope env v)
       before
         tail
         ("V " ++ CGen.local l ++ " = " ++ CGen.expr ctx env false mine first v ++ "; ")
@@ -248,7 +248,7 @@ def CGen.matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List In
     | Option.none => true
   match named with
   | Option.some _ => ()
-  | Option.none => setType ctx.cScope v (typeOf ctx.cScope env scrutinee)
+  | Option.none => setType ctx.cScope v (Wasm.typeOf ctx.cScope env scrutinee)
   let r := CGen.fresh ctx
   let done := "m" ++ toText r
   let arms := List.map (fun c =>
@@ -408,10 +408,10 @@ def CGen.primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Op
     match CGen.sequence ctx env owned token [] xs with
     | (decls, values, _) => (decls, values, false)
   -- What a read returns is counted again, unless it is an `Int` or a `Bool`.
-  let share := if uncounted (typeOf ctx.cScope env e) then "" else "deus_dup"
+  let share := if uncounted (Wasm.typeOf ctx.cScope env e) then "" else "deus_dup"
   let item :=
     match xs with
-    | a :: _ => Wasm.typeArgs (typeOf ctx.cScope env a)
+    | a :: _ => Wasm.typeArgs (Wasm.typeOf ctx.cScope env a)
     | [] => []
   let dropOld := if List.all uncounted item && not (List.isEmpty item) then "" else "deus_drop(old); "
   match evaluated with
@@ -435,7 +435,7 @@ def CGen.primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Op
       | ("Ref.get", r :: [], _) => block ("V v = " ++ share ++ "(UNBOX(" ++ r ++ ")[0]); " ++ release ++ "v")
       | ("Ref.set", r :: x :: [], _) => block ("V old = UNBOX(" ++ r ++ ")[0]; UNBOX(" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++
           unit)
-      | (_, ca :: cb :: [], a :: b :: []) => if isComparison p && not (isScalar (typeOf ctx.cScope env a) || isScalar (typeOf ctx.cScope env b)) then Throw.throw (p ++
+      | (_, ca :: cb :: [], a :: b :: []) => if isComparison p && not (isScalar (Wasm.typeOf ctx.cScope env a) || isScalar (Wasm.typeOf ctx.cScope env b)) then Throw.throw (p ++
           " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e)) else
           match (macro p, infix p) with
           | (Option.some m, _) => block (m ++ "(" ++ ca ++ ", " ++ cb ++ ")")
@@ -471,7 +471,7 @@ def CGen.sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Opt
         | Option.some l => ("", CGen.local l, if isIn mine l then dropLocal ctx l else "")
         | Option.none =>
             let l := CGen.fresh ctx
-            setType ctx.cScope l (typeOf ctx.cScope env x)
+            setType ctx.cScope l (Wasm.typeOf ctx.cScope env x)
             ("V " ++ CGen.local l ++ " = " ++ CGen.expr ctx env false mine tok x ++ "; ", CGen.local l, if borrowsAt borrows k then dropLocal ctx l else "")) (zip (zip xs shares) tokens)
   (Text.concat (List.map (fun t =>
     match t with

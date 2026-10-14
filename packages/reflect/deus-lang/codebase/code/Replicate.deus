@@ -91,7 +91,7 @@ def Replicate.bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Te
   let metas := filterMap
     (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (readMeta dir h))
     sorted
-  encode [Sexp.node "bundle" (claimForms ++ objects ++ metas)]
+  Columnar.encode [Sexp.node "bundle" (claimForms ++ objects ++ metas)]
 
 /-- Causal nodes, snapshots, and everything their entries reach, from the given heads. -/
 def Replicate.closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=

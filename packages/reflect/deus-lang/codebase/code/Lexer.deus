@@ -47,19 +47,24 @@ def Lexer.lex (source : Text) : {Throw Text} List Token :=
       let col := i - lineStart
       if c == '\n' then go (i + 1) (line + 1) (i + 1) true acc else if c == ' ' || c == '\t' || c == '\r' then go (i + 1) line lineStart bol acc else if c == '-' && at (i + 1) == '-' then
         let j := lineEnd i
-        go j line lineStart bol (Token.mk Kind.comment (slice source i j) line col bol "" :: acc)
+        go
+          j
+          line
+          lineStart
+          bol
+          (Token.mk Kind.comment (Text.slice source i j) line col bol "" :: acc)
       else if c == '/' && at (i + 1) == '-' then
         let isDoc := at (i + 2) == '-' && at (i + 3) != '/'
         match commentEnd i 0 line lineStart with
         | (j, line2, lineStart2) => if isDoc then
-            let body := trim (slice source (i + 3) (j - 2))
+            let body := trim (Text.slice source (i + 3) (j - 2))
             go j line2 lineStart2 bol (Token.mk Kind.doc body line col bol "" :: acc)
           else go
             j
             line2
             lineStart2
             bol
-            (Token.mk Kind.comment (slice source i j) line col bol "" :: acc)
+            (Token.mk Kind.comment (Text.slice source i j) line col bol "" :: acc)
       else if c == '"' then
         match stringEnd (i + 1) [] line lineStart with
         | (value, j, line2, lineStart2) => go j line2 lineStart2 false (tok Kind.text value i)
@@ -72,15 +77,15 @@ def Lexer.lex (source : Text) : {Throw Text} List Token :=
           line
           lineStart
           false
-          (spelled Kind.int (toText code) (slice source i (close + 1)) i)
+          (spelled Kind.int (toText code) (Text.slice source i (close + 1)) i)
       else if isDigit c then if c == '0' && at (i + 1) == 'x' then
         let j := hexEnd (i + 2)
         let digits := List.filter (fun d => d != '_') (List.map at (range (i + 2) j))
         let value := foldl (fun v d => v * 16 + Lexer.hexValue d) 0 digits
-        go j line lineStart false (spelled Kind.int (toText value) (slice source i j) i)
+        go j line lineStart false (spelled Kind.int (toText value) (Text.slice source i j) i)
       else
         let j := digitsEnd i
-        let written := slice source i j
+        let written := Text.slice source i j
         let value := replace "_" "" written
         go
           j
@@ -91,17 +96,17 @@ def Lexer.lex (source : Text) : {Throw Text} List Token :=
         let j := identEnd (i + 1)
         -- `(e).field` and `xs[i].field`: a dot right after a closing bracket projects.
         let kind := if at (i - 1) == ')' || at (i - 1) == ']' then Kind.proj else Kind.dot
-        go j line lineStart false (tok kind (slice source (i + 1) j) i)
+        go j line lineStart false (tok kind (Text.slice source (i + 1) j) i)
       else if isIdentStart c && not (c == '_' && not (isIdentPart (at (i + 1)))) then
         let j := identEnd i
-        let word := slice source i j
+        let word := Text.slice source i j
         if word == "λ" then go j line lineStart false (tok Kind.kw "fun" i) else if Dict.contains word Lexer.keywords then go j line lineStart false (tok Kind.kw word i) else go j line lineStart false (tok Kind.ident word i)
       else
         let mapped := unicode c
         if mapped != "" then go (i + 1) line lineStart false (tok Kind.sym mapped i) else
-          let two := slice source i (i + 2)
+          let two := Text.slice source i (i + 2)
           if Dict.contains two twoCharSymbols then go (i + 2) line lineStart false (tok Kind.sym two i) else
-            let one := slice source i (i + 1)
+            let one := Text.slice source i (i + 1)
             if Dict.contains one oneCharSymbols then go (i + 1) line lineStart false (tok Kind.sym one i) else Lexer.fail line col ("unexpected character " ++ one)
   go 0 1 0 true []
 

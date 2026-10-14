@@ -19,42 +19,42 @@ def Inbox.apply (dir : Text) : {Remote, IO, Throw Text} List Text :=
 
 /-- Applies one request; returns a line saying what it did. A request that names nothing it can apply to throws. -/
 def Inbox.applyOne (dir : Text) (form : Sexp) : {IO, Throw Text} Text :=
-  let author := field form "by"
-  let at := field form "at"
+  let author := Inbox.field form "by"
+  let at := Inbox.field form "at"
   let assets := List.map assetFromSexp (metaList (Option.some form) "assets")
   let missing := List.filter (fun a => not (Assets.has dir a.hash)) assets
   if not (startsWith "github:" author) then Throw.throw "a request must be by github:<login>" else if not (List.isEmpty missing) then Throw.throw ("missing asset " ++ join ", " (List.map (fun a => a.hash) missing)) else
-    let kind := field form "kind"
+    let kind := Inbox.field form "kind"
     let done := fun causal line =>
       recordBy dir causal author at
       line
     if kind == "comment" then
-      let subject := field form "subject"
+      let subject := Inbox.field form "subject"
       if not (isSubject subject) then Throw.throw ("bad subject " ++ subject) else done (Comments.add
         dir
-        [(subject, Comment.mk author (field form "note") at assets)]
+        [(subject, Comment.mk author (Inbox.field form "note") at assets)]
         ("comment on " ++ subject)) ("comment on " ++ subject ++ " by " ++ author)
     else if kind == "task" then
-      let title := trim (field form "title")
+      let title := trim (Inbox.field form "title")
       if Text.isEmpty title then Throw.throw "a task needs a title" else
         let t := setField
-          (setField (blank (freshId dir title author) title) "details" (field form "details"))
+          (setField (blank (freshId dir title author) title) "details" (Inbox.field form "details"))
           "labels"
-          (field form "labels")
+          (Inbox.field form "labels")
         let ns := Codebase.current dir
         let linked :=
-          match Map.lookup (field form "link") ns with
-          | Option.some e => link t (Attachment.definition (field form "link") (Entry.hash e))
+          match Map.lookup (Inbox.field form "link") ns with
+          | Option.some e => link t (Attachment.definition (Inbox.field form "link") (Entry.hash e))
           | Option.none => t
         let withAssets := if List.isEmpty assets then linked else Tasks.comment linked (Comment.mk author "" at assets)
         done
           (save dir [withAssets] ("task: open " ++ t.id ++ " " ++ title))
           ("task " ++ t.id ++ " " ++ title ++ " by " ++ author)
     else if kind == "task-comment" then
-      let t := Tasks.find (Tasks.current dir) (field form "task")
+      let t := Tasks.find (Tasks.current dir) (Inbox.field form "task")
       done (save
         dir
-        [Tasks.comment t (Comment.mk author (field form "note") at assets)]
+        [Tasks.comment t (Comment.mk author (Inbox.field form "note") at assets)]
         ("task: comment on " ++ t.id)) ("comment on task " ++ t.id ++ " by " ++ author)
     else Throw.throw ("unknown request kind " ++ kind)
 

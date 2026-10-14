@@ -150,14 +150,15 @@ def Wasm.eqBody (scope : Wasm.Scope) (t : Sexp) : {Throw Text} List Int :=
     match fields with
     | [] => [65, 1]
     | f :: [] => both (4 + 4 * i) ++ compare f true
-    | f :: rest => both (4 + 4 * i) ++ compare f false ++ [4, i32] ++ fieldsEqual (i + 1) rest ++ [5, 65, 0, 11]
+    | f :: rest => both (4 + 4 * i) ++ compare f false ++ [4, Wasm.i32] ++ fieldsEqual (i + 1) rest ++
+        [5, 65, 0, 11]
   let rec dispatch tag ctors :=
     match ctors with
     | [] => [65, 1]
     | [] :: rest => dispatch (tag + 1) rest
-    | fields :: rest => localGet 0 ++ Wasm.load 0 ++ 65 :: sleb tag ++ [70, 4, i32] ++
+    | fields :: rest => localGet 0 ++ Wasm.load 0 ++ 65 :: sleb tag ++ [70, 4, Wasm.i32] ++
         fieldsEqual 0 (List.map (Wasm.instantiate args) fields) ++ [5] ++ dispatch (tag + 1) rest ++ [11]
-  List.concat [localGet 0 ++ localGet 1 ++ [70, 4, i32, 65, 1, 5], both 0 ++ [71, 4, i32, 65, 0, 5], dispatch 0 (Wasm.ctorFields form), [11, 11, 11]]
+  List.concat [localGet 0 ++ localGet 1 ++ [70, 4, Wasm.i32, 65, 1, 5], both 0 ++ [71, 4, Wasm.i32, 65, 0, 5], dispatch 0 (Wasm.ctorFields form), [11, 11, 11]]
 
 /-- The function index of `t`'s equality function, registering it on first use: after `alloc`. -/
 def Wasm.eqIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
@@ -181,7 +182,7 @@ def Wasm.expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Boo
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int n :: []) :: args) => if n != List.length args || t == "#Bool" then Throw.throw ("partial application of a constructor of " ++ t ++ " is outside the wasm subset") else construct scope env next tag args
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
       let v := Wasm.fresh next
-      setType scope v (typeOf scope env scrutinee)
+      setType scope v (Wasm.typeOf scope env scrutinee)
       -- One block per case: a failed test leaves it for the next; a match leaves the outer block.
       let arms := concatMap (fun c =>
         match c with
@@ -189,18 +190,18 @@ def Wasm.expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Boo
             match Wasm.pattern scope next v env pat with
             | (guard, bound) => [2, 64] ++ guard ++ Wasm.expr scope bound next tail body ++ [12, 1, 11]
         | other => Throw.throw ("outside the wasm subset: " ++ Sexp.print other)) cases
-      sub scrutinee ++ localSet v ++ [2, i32] ++ arms ++ [0, 11]
+      sub scrutinee ++ localSet v ++ [2, Wasm.i32] ++ arms ++ [0, 11]
   | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) =>
       match get? env i with
       | Option.some local => 32 :: uleb local
       | Option.none => Throw.throw ("unbound variable " ++ toText i)
-  | Sexp.list (Sexp.sym "if" :: c :: t :: f :: []) => sub c ++ [4, i32] ++ Wasm.expr scope env next tail t ++ [5] ++ Wasm.expr scope env next tail f ++
-      [11]
+  | Sexp.list (Sexp.sym "if" :: c :: t :: f :: []) => sub c ++ [4, Wasm.i32] ++ Wasm.expr scope env next tail t ++ [5] ++
+      Wasm.expr scope env next tail f ++ [11]
   | Sexp.list (Sexp.sym "seq" :: a :: b :: []) => sub a ++ [26] ++ Wasm.expr scope env next tail b
   | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
       let local := Ref.get next
       Ref.set next (local + 1)
-      setType scope local (typeOf scope env v)
+      setType scope local (Wasm.typeOf scope env v)
       sub v ++ 33 :: uleb local ++ Wasm.expr scope (local :: env) next tail b
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []) :: a :: []) => [65, 0] ++ sub a ++ [107]
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: args) => if startsWith "Array." p || startsWith "Ref." p then array scope next p (List.map sub args) else Wasm.primitive scope env next e p args
@@ -312,11 +313,11 @@ def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) 
       eqs
     let code := Wasm.expr scope env next true f.fnBody ++ [11]
     let extra := Ref.get next - f.fnArity
-    let locals := if extra == 0 then vec [] else vec [uleb extra ++ [i32]]
+    let locals := if extra == 0 then vec [] else vec [uleb extra ++ [Wasm.i32]]
     let entry := locals ++ code
     uleb (List.length entry) ++ entry) fns
   let alloc := List.length fns
-  let allocEntry := vec [[2, i32]] ++ allocBody
+  let allocEntry := vec [[2, Wasm.i32]] ++ allocBody
   -- Generating one equality function can register another (a field's type), so this runs to a fixpoint.
   let eqScope := Wasm.Scope.mk fns datatypes (Ref.new []) eqs
   let rec equalities j acc :=
@@ -326,11 +327,11 @@ def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) 
         equalities (j + 1) (acc ++ [uleb (List.length entry) ++ entry])
     | Option.none => acc
   let eqCodes := equalities 0 []
-  let eqTypes := if List.isEmpty eqCodes then [] else [[96] ++ vec [[i32], [i32]] ++ vec [[i32]]]
-  let types := List.map (fun f => [96] ++ vec (replicate f.fnArity [i32]) ++ vec [[i32]]) fns ++
-    [[96] ++ vec [[i32]] ++ vec [[i32]]] ++ eqTypes
+  let eqTypes := if List.isEmpty eqCodes then [] else [[96] ++ vec [[Wasm.i32], [Wasm.i32]] ++ vec [[Wasm.i32]]]
+  let types := List.map (fun f => [96] ++ vec (replicate f.fnArity [Wasm.i32]) ++ vec [[Wasm.i32]]) fns ++
+    [[96] ++ vec [[Wasm.i32]] ++ vec [[Wasm.i32]]] ++ eqTypes
   List.concat [[0, 97, 115, 109, 1, 0, 0, 0], section 1 (vec types), section 3 (vec (mapIndexed (fun i _ => uleb i) (fns ++ [Fn.mk "" 1 unknown unknown]) ++
-    List.map (fun _ => uleb (alloc + 1)) eqCodes)), section 5 (vec [[0, 1]]), section 6 (vec [[i32, 1, 65, 8, 11]]), section
+    List.map (fun _ => uleb (alloc + 1)) eqCodes)), section 5 (vec [[0, 1]]), section 6 (vec [[Wasm.i32, 1, 65, 8, 11]]), section
     7
     (vec [Wasm.name export ++ [0, 0], Wasm.name "memory" ++ [2, 0], Wasm.name "alloc" ++ 0 :: uleb alloc]), section 10 (uleb (List.length codes + 1 + List.length eqCodes) ++ List.concat codes ++
     uleb (List.length allocEntry) ++ allocEntry ++ List.concat eqCodes)]
@@ -382,8 +383,8 @@ def Wasm.primitive (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (e : S
   match (binary p, args) with
   | (Option.some op, a :: b :: []) =>
       let operands := Wasm.expr scope env next false a ++ Wasm.expr scope env next false b
-      let left := typeOf scope env a
-      let right := typeOf scope env b
+      let left := Wasm.typeOf scope env a
+      let right := Wasm.typeOf scope env b
       if not (isComparison p) || isScalar left || isScalar right then operands ++ [op] else
         let data := if isData scope left then Option.some left else if isData scope right then Option.some right else Option.none
         match data with

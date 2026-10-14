@@ -1,5 +1,5 @@
 /-
-  The analytics store (D101): events about the codebase, kept beside it.
+  The analytics store (D102): events about the codebase, kept beside it.
 
   - An event type is a `structure` marked `@[event]`, so it lives in the codebase like any
     definition. Its fields are flat: `Int`, `Bool`, `Text` or `CodeRef`, a reference into the
@@ -14,7 +14,7 @@
   `events/pushed/…` the rows already pushed, one `(row id at by value…)` per line, so counts
   never need the remote.
 
-  A `CodeRef` holds one of three forms (D102): a name IRI `<project>/<name>` (follows the name),
+  A `CodeRef` holds one of three forms (D103): a name IRI `<project>/<name>` (follows the name),
   a pinned `<project>/<name>#<hash>` (fixed, and names the definition), or a bare `#<hash>`.
   Recorders write the pinned form; a builtin's fragment is its name (`…/Bool#Bool`).
 -/
@@ -504,7 +504,7 @@ def find (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} Eve
     | more => throw ("ambiguous event type " ++ name ++ ": " ++ Text.join ", " (List.map (fun t => t.typeName) more))
 
 --
--- References (D102).
+-- References (D103).
 --
 
 /-- The name IRI of a definition: `<project>/<name>`, or the bare name in a codebase without a project. -/
@@ -722,7 +722,7 @@ def definitionJson (index : Map Text (List Text)) (h : Text) (tallies : List (Te
     ("count", Json.num (List.sum (List.map tallyCount tallies))), ("events", Json.arr (List.map tallyJson tallies))]
 
 /--
-  The explorer's `events.json` (D101): every event type with its columns, counts and latest rows
+  The explorer's `events.json` (D102): every event type with its columns, counts and latest rows
   (at most `limit`), and the counts per definition hash.
 -/
 def siteJson (dir : Text) (project : Text) (ns : Map Text Entry) (limit : Int) : {IO, Throw Text} Json :=

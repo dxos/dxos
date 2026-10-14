@@ -1,5 +1,16 @@
 # History of main
 
+- `6ad8d8e787` analytics decisions renumbered D102, D103 (by claude)
+- `731819a207` task: set 87707577 state (by claude)
+- `5e0af148e7` task: set 87707577 details (by claude)
+- `ae13da09a7` task: open 72207dc1 The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (by claude)
+- `182ea2fa92` close 3c8a311c by #d3d028011c (by claude)
+- `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
+- `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
+- `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `77337bc6cf` history: import 501 changes
+- `1e220da057` task: import from tasks.sexp
+- `3c07f87183` add code specs
 - `dbfeb70ff7` export: merge 21 changes from codebase
 - `1ec8ae9075` export: merge tasks from codebase
 - `d2758d5ca1` specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in (by claude)
