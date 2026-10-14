@@ -414,6 +414,9 @@ describe('deus CLI', () => {
       expect(deus('push', ...a).stdout).toBe('origin already has main.\n');
       deus('pull', ...b);
       expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
+      // Builtin objects travel with the bundle, so the clone types constructor patterns.
+      expect(existsSync(join(scratch, 'replica-b', 'objects', '#O', '#Option'))).toBe(true);
+      expect(deus('eval', 'match List.head? [41] with | some g => g + 1 | none => 0', ...b).stdout).toBe('42\n');
 
       // A pull ignores files that are not bundles and skips a bundle whose text does not hash to its name (D91).
       const fake = `0-${createHash('sha256').update('real').digest('hex')}`;
