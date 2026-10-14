@@ -467,6 +467,7 @@ def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
       fns
       datatypes
       (Ref.new (mapIndexed (fun j t => (j, t)) (fst (peel f.fnArity f.fnType))))
+      (Ref.new [])
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow
     let env := reverse (range 0 f.fnArity)
     "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ CGen.params f.fnArity ++

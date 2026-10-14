@@ -9,12 +9,6 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`932f4034`)
-
-- state: todo
-- priority: high
-- labels: native, perf
-
 ## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
 
 - state: todo
@@ -138,12 +132,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 
 D90 widens values to 64 bits so blocks and integers can be told apart in wasm32; this doubles block size and makes list sorts 1.1-1.8x slower than the never-freeing --wasm back end (docs/spec/NATIVE.md#wasm-through-c). A low tag bit on Int (or on pointers) keeps 32-bit words but changes every arithmetic op in both back ends.
 
-## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
 - state: todo
@@ -151,18 +139,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - labels: native, perf
 
 ## Native: closure conversion and partial application in the C back end (`610b2785`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-## Native: closure conversion and partial application in the C back end (`d807958c`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`c338b56e`)
 
 - state: todo
 - priority: medium
@@ -190,15 +166,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 
 Found writing law statements (D91): deus view Sort.insertSorted.
 
-## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: interop, typescript
-
-Follow-up of db71c327: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
-
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
@@ -207,15 +174,6 @@ Follow-up of db71c327: a function generic in a (firstOf : List a -> Option a) is
 - labels: interop, typescript
 
 Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
-
-## TypeScript bindings: export polymorphic functions with codec parameters (`e84ff062`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: interop, typescript
-
-Follow-up of 207cac21: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
 
 ## TypeScript bindings: pass functions across (callbacks and closures) (`1474b99e`)
 
@@ -226,39 +184,12 @@ Follow-up of 207cac21: a function generic in a (firstOf : List a -> Option a) is
 
 Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
-## TypeScript bindings: pass functions across (callbacks and closures) (`de710f29`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: interop, typescript
-
-Follow-up of db71c327: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (EMBEDDING.md has {"$fn":true} output only).
-
-## TypeScript bindings: pass functions across (callbacks and closures) (`ef597118`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: interop, typescript
-
-Follow-up of 207cac21: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
-
 ## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: mdl, spec
-
-## wasm: structural equality on constructed values (`186feaf2`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: wasm
-
-D69 refuses == on data; generate per-type compare functions from the type objects so it compiles.
 
 ## BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (`b4d7a440`)
 
@@ -273,15 +204,6 @@ D69 refuses == on data; generate per-type compare functions from the type object
 - priority: low
 - assignee: claude
 - labels: browser
-
-## Docs disagree with the code in eight places listed in docs/spec/README.md (`11a42afd`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: docs, spec
-
-From docs/spec/README.md, Known divergences.
 
 ## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
 
@@ -315,24 +237,6 @@ Found writing api blocks (D91): deus view Export.taskMarkdown shows task:Task ->
 - labels: interop, typescript
 
 Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
-
-## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: interop, typescript
-
-Follow-up of 207cac21: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
-
-## TypeScript bindings: run in-process on the TypeScript kernel too (`eea32f23`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: interop, typescript
-
-Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -628,6 +532,14 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 
 Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end follows as its own task.
 
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`932f4034`)
+
+- state: canceled
+- priority: high
+- labels: native, perf
+
+> claude: Duplicate of 62d1bdda: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
 ## Native: reference counting with reuse in the wasm back end (D86's scheme) (`ef46861c`)
 
 - state: done
@@ -817,6 +729,30 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
+
+- state: canceled
+- priority: medium
+- labels: native, perf
+
+> claude: Duplicate of 72a1f2fb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: closure conversion and partial application in the C back end (`d807958c`)
+
+- state: canceled
+- priority: medium
+- labels: native, perf
+
+> claude: Duplicate of 610b2785: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`c338b56e`)
+
+- state: canceled
+- priority: medium
+- labels: native, perf
+
+> claude: Duplicate of e1cf2c6c: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
 ## One specification per format under docs/spec (`1a316e76`)
 
 - state: done
@@ -877,6 +813,50 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
+## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
+
+- state: canceled
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
+> claude: Duplicate of b6907aeb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## TypeScript bindings: export polymorphic functions with codec parameters (`e84ff062`)
+
+- state: canceled
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 207cac21: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
+> claude: Duplicate of b6907aeb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`de710f29`)
+
+- state: canceled
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (EMBEDDING.md has {"$fn":true} output only).
+
+> claude: Duplicate of 1474b99e: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`ef597118`)
+
+- state: canceled
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 207cac21: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
+
+> claude: Duplicate of 1474b99e: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
 ## deus explore is quadratic in names: aliases scan the whole namespace per definition (`a75452c4`)
 
 - state: done
@@ -887,6 +867,48 @@ From docs/spec/README.md, Known divergences.
 - links change #87b9ac35c4
 
 Profile: Map.foldr 2.0M and Entry.hash 1.7M entries of 8 s, from Codebase.namesOf per definition. Invert the namespace once.
+
+## wasm: structural equality on constructed values (`186feaf2`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: wasm
+- links change #4b89319b5e
+
+D69 refuses == on data; generate per-type compare functions from the type objects so it compiles.
+
+## Docs disagree with the code in eight places listed in docs/spec/README.md (`11a42afd`)
+
+- state: done
+- priority: low
+- assignee: claude
+- labels: docs, spec
+- links change #387eb2652a
+
+From docs/spec/README.md, Known divergences.
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
+
+- state: canceled
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 207cac21: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
+
+> claude: Duplicate of 353444f7: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`eea32f23`)
+
+- state: canceled
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
+
+> claude: Duplicate of 353444f7: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
 
 ## Break long lines in deus view output (`d7eba020`)
 
