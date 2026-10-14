@@ -127,6 +127,8 @@ const PropertyRows = ({
       <Card.Row
         key={key}
         icon={icons?.[property.predicate] ?? icon}
+        // A value can wrap onto several lines (a run of chips), so the icon stays with the key's line.
+        align='start'
         current={currentProperty === key}
         onClick={
           onSelectProperty
@@ -172,19 +174,13 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
             <Card.Text truncate>{card.type ?? '—'}</Card.Text>
           </EntityCardField>
         </Card.Row>
-        <Layout.Separator />
         <Card.Row icon={NAME_ICON}>
           <EntityCardField label={t('entity-card-name.label')}>
             <Card.Text truncate>{card.label}</Card.Text>
           </EntityCardField>
         </Card.Row>
         <PropertyRows direction='out' properties={card.properties} icon={PROPERTY_ICON} {...rows} />
-        {card.inverse.length > 0 && (
-          <>
-            <Layout.Separator />
-            <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
-          </>
-        )}
+        <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
       </Card.Root>
     );
   },
