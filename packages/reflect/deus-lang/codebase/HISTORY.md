@@ -1,5 +1,13 @@
 # History of main
 
+- `d2411251ec` task: set a7a44f7d details (by claude)
+- `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
+- `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)
+- `a37df20cc0` codebase: namespace-tree snapshots, deus migrate, full history on the remote (D72-D74) (by claude)
+- `ae188264ee` history: import 118 changes
+- `aa8672c1cf` task: import 39 tasks
+- `a289e87b7a` add code specs
+- `67c7d5a614` init
 - `d5df8ec2b7` task: comment on be4c4645 (by claude)
 - `3153eb0b41` task: comment on 9428f054 (by claude)
 - `4c3293900d` task: comment on 861438d2 (by claude)
