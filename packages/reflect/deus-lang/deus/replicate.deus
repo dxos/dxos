@@ -46,17 +46,19 @@ def levelOf (name : Text) : Int := Option.getOr (Int.fromText (Text.take (Text.i
 
 def nameOf (level : Int) (text : Text) : Text := Int.toText level ++ "-" ++ Text.sha256 text
 
-/-- The canonical bundle text for branch claims and objects (with their metadata). -/
+/-- The canonical bundle text for branch claims and objects (with their metadata), in columns (D60). -/
 def bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO} Text :=
   let sorted := List.dedup (List.sort hashes)
   let claimForms := List.map (fun c => Sexp.node "branch" [Sexp.str (fst c), Sexp.str (snd c)]) (List.dedup (List.sort claims))
   let objects := List.filterMap (fun h => Option.map (fun form => Sexp.node "obj" [Sexp.str h, form]) (Codebase.readObject dir h)) sorted
   let metas := List.filterMap (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (Codebase.readMeta dir h)) sorted
-  Sexp.print (Sexp.node "bundle" (claimForms ++ objects ++ metas))
+  Columnar.encode [Sexp.node "bundle" (claimForms ++ objects ++ metas)]
 
 /-- Writes a bundle's objects and metadata into the store; returns what it holds. -/
 def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
-  let items := Sexp.args (Sexp.read text)
+  let items := match Columnar.read text with
+    | [form] => Sexp.args form
+    | _ => defect ("bundle " ++ name ++ " is not one form")
   let claims := List.filterMap (fun item =>
     match item with
     | Sexp.list [Sexp.sym "branch", Sexp.str branch, Sexp.str causal] => some (branch, causal)
@@ -224,14 +226,34 @@ def collect (dir : Text) (remote : Text) (keep : Int) : {Remote, IO, Throw Text}
 -- Remotes.
 --
 
-/-- A remote in a local directory (another disk, a mounted share, or tests). -/
+/-- Compresses `text` into the file `out` with gzip; `-n` leaves out the name and time, so equal texts give equal files. -/
+def gzipTo (text : Text) (out : Text) : {IO} Unit :=
+  let staged := out ++ ".tmp"
+  IO.writeFile staged text
+  match IO.exec "gzip" ["-n", "-9", "-f", staged] with
+  | (0, _, _) =>
+    IO.exec "mv" [staged ++ ".gz", out]
+    ()
+  | (_, _, err) => defect ("gzip failed: " ++ Text.trim err)
+
+/-- A file's text, decompressed if gzip compressed it (`-f` passes other files through unchanged). -/
+def gunzip (path : Text) : {IO} Option Text :=
+  if not (IO.exists path) then none
+  else
+    match IO.exec "gzip" ["-dcf", path] with
+    | (0, text, _) => some text
+    | _ => none
+
+/-- A remote in a local directory (another disk, a mounted share, or tests). Bundles are stored gzipped. -/
 def directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
   handle body () with
-  | Remote.list _ -> k => k (if IO.isDir (root ++ "/bundles") then IO.listDir (root ++ "/bundles") else [])
-  | Remote.get name -> k => k (IO.readFile (root ++ "/bundles/" ++ name))
+  | Remote.list _ -> k => k (if IO.isDir (root ++ "/bundles") then List.filter (fun n => not (Text.endsWith ".tmp" n)) (IO.listDir (root ++ "/bundles")) else [])
+  | Remote.get name -> k => k (gunzip (root ++ "/bundles/" ++ name))
   | Remote.put name text -> k =>
     let path := root ++ "/bundles/" ++ name
-    if IO.exists path then () else IO.writeFile path text
+    if IO.exists path then () else
+      IO.mkdirp (root ++ "/bundles")
+      gzipTo text path
     k ()
   | Remote.delete name -> k =>
     IO.remove (root ++ "/bundles/" ++ name)
@@ -268,12 +290,15 @@ def bucket (endpoint : Text) (name : Text) (prefix : Text) (config : Text) (body
       | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
     k (page "" [])
   | Remote.get key -> k =>
-    k (match curl [base ++ "/" ++ folder ++ key] with
-      | (0, text, _) => some text
-      | _ => none)
+    let staged := config ++ "." ++ key
+    let text := match curl ["-o", staged, base ++ "/" ++ folder ++ key] with
+      | (0, _, _) => gunzip staged
+      | _ => none
+    IO.exec "rm" ["-f", staged]
+    k text
   | Remote.put key text -> k =>
     let staged := config ++ "." ++ key
-    IO.writeFile staged text
+    gzipTo text staged
     -- `If-None-Match: *` makes the write conditional: an existing bundle is never replaced.
     let result := curl ["-X", "PUT", "-H", "If-None-Match: *", "--data-binary", "@" ++ staged, base ++ "/" ++ folder ++ key]
     IO.remove staged

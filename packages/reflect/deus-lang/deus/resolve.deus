@@ -110,16 +110,24 @@ def lastSegment (name : Text) : Text :=
   let rec go i := if i < 0 then name else if Text.code name i == '.' then Text.drop (i + 1) name else go (i - 1)
   go (Text.length name - 1)
 
+/-- Pairs grouped by key, each group's values in descending order; sorting once is cheaper than a map insert per pair. -/
+def groups (pairs : List (Text, Text)) : List (Text, List Text) :=
+  let rec go xs key acc out :=
+    match xs with
+    | [] => if List.isEmpty acc then out else (key, acc) :: out
+    | pair :: rest =>
+      if fst pair == key then go rest key (snd pair :: acc) out
+      else go rest (fst pair) [snd pair] (if List.isEmpty acc then out else (key, acc) :: out)
+  go (List.sort pairs) "" [] []
+
 def build (table : Map Text Entry) : Names :=
   let entries := Map.toList table
-  let bySegment := List.foldl (fun m pair =>
+  let bySegment := groups (List.map (fun pair => (lastSegment (fst pair), fst pair)) entries)
+  let fieldOwners := groups (List.concatMap (fun pair =>
     match pair with
-    | (fqn, _) => Map.update (lastSegment fqn) (fun old => fqn :: Option.getOr old []) m) Map.empty entries
-  let fieldOwners := List.foldl (fun m pair =>
-    match pair with
-    | (fqn, Entry.type _ _ fields) => List.foldl (fun m2 f => Map.update f (fun old => fqn :: Option.getOr old []) m2) m fields
-    | _ => m) Map.empty entries
-  Names.mk table (Dict.fromList entries) (Dict.fromList (Map.toList bySegment)) (Dict.fromList (Map.toList fieldOwners))
+    | (fqn, Entry.type _ _ fields) => List.map (fun f => (f, fqn)) fields
+    | _ => []) entries)
+  Names.mk table (Dict.fromList entries) (Dict.fromList bySegment) (Dict.fromList fieldOwners)
 
 def joinName (prefix : List Text) (name : Text) : Text := Text.join "." (prefix ++ [name])
 

@@ -138,3 +138,11 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - add human-targeted GETTING_STARTED guide: how would they install, run, language basics, feature-overview. have couple receipies: lang, proofs, http, clouflare -- whatever showcases language best
+
+---
+
+- open PR!
+
+---
+
+- lets keep pr asdraft

@@ -113,7 +113,17 @@ fn runs_an_image_appended_to_its_executable() {
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755)).unwrap();
     }
-    let output = Command::new(&binary).output().unwrap();
+    // A test thread that forks while the binary is open for writing holds it until its exec, so a spawn can briefly see ETXTBSY.
+    let mut attempts = 0;
+    let output = loop {
+        match Command::new(&binary).output() {
+            Err(err) if err.kind() == std::io::ErrorKind::ExecutableFileBusy && attempts < 50 => {
+                attempts += 1;
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            result => break result.unwrap(),
+        }
+    };
     assert_eq!(String::from_utf8_lossy(&output.stdout), "hello");
     assert_eq!(output.status.code(), Some(0));
     let _ = std::fs::remove_dir_all(&dir);
