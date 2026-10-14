@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
+
+import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SqlSparqlEngine } from './engine.ts';
 import { UnsupportedSparqlError } from './errors.ts';
 import { type Quad, XSD, iri, lit } from './terms.ts';
-import { createNodeSqlStorage } from './testing/index.ts';
 
 // Regression tests for the bugs the W3C suite and the differential runs found (docs/CONFORMANCE.md).
 
@@ -15,7 +17,7 @@ const EX = 'http://example.com/';
 const PREFIXES = `PREFIX ex: <${EX}> PREFIX xsd: <${XSD}> `;
 
 const engineWith = (quads: Quad[]): SqlSparqlEngine => {
-  const engine = new SqlSparqlEngine(createNodeSqlStorage());
+  const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
   engine.init();
   engine.insert(quads);
   return engine;

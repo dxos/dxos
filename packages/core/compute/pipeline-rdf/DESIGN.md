@@ -135,33 +135,34 @@ independently without re-extracting. Three layers, by increasing cost and contex
 
 ## Storage & query engine
 
-One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
-`Source`. `FactStore.query` → `buildSparql` → Comunica → `Source.match()` in every
-configuration below; only the backend differs.
+One engine everywhere: **`@dxos/sparql-sqlite`** (`SqlSparqlEngine`), which compiles each SPARQL query to one
+SQL statement over an interned quad store. It runs on any synchronous SQLite behind its `SqlStorage`
+interface (`exec(query, ...bindings)`), the shape of a Durable Object's `ctx.storage.sql`.
 
-| Config                 | Source                                              | Persistence | Platform          |
-| ---------------------- | --------------------------------------------------- | ----------- | ----------------- |
-| **N3**                 | N3 `Store` (in-memory)                              | memory only | browser or node   |
-| **SQLite (OPFS)**      | `makeSqliteSource` — wa-sqlite + OPFS (worker)      | persistent  | browser           |
-| **SQLite (file / DO)** | `makeSqliteSource` — better-sqlite3 / Cloudflare DO | persistent  | node / Cloudflare |
+| Constructor                                                 | SQLite                                                                 | Persistence | Platform        |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- | ----------- | --------------- |
+| `FactStoreLive.layer(ctx.storage.sql, { transactionSync })` | Durable Object SQLite                                                  | persistent  | Cloudflare      |
+| `FactStoreLive.layer(database)` / `make(database)`          | `@dxos/sql-sqlite/SqlStorage` `makeFile` (`node:sqlite`)               | persistent  | node            |
+| `FactStoreLive.makeMemory()` / `layerMemory`                | `@dxos/sql-sqlite/SqlStorage` `makeMemory` (`node:sqlite` / wa-sqlite) | memory only | node or browser |
 
-For SQLite, persistence is the database itself — no whole-graph snapshot, no in-memory size
-ceiling. N3 is fast and dependency-light but ephemeral (optionally snapshotted to
-localStorage/IndexedDB).
-
-Why Comunica over an embeddable store (e.g. Oxigraph): Oxigraph's WASM build is in-memory
-with a fixed backend, so it cannot persist to or stream from storage we control. Comunica
-queries any `Source` we implement, which is what makes the SQLite backend possible. The
-trade is performance (a constant factor; our queries are simple per-entity/per-source/as-of
-lookups, not heavy joins).
+- `putFacts` reifies each fact (`Mapping.factToTriples`) and inserts the quads in batches inside
+  `transactionSync`.
+- `query(SemanticQuery)` selects the matching fact nodes' triples with one SPARQL query (entity / subject /
+  source constraints), then matches the predicate by normalized relation key and the minimum confidence in JS,
+  since SPARQL cannot express the relation-key normalization.
+- `select(sparql)` runs a raw `SELECT ?fact ?p ?o` through the compiler; a construct it does not translate
+  fails with `SemanticIndexError` (cause `UnsupportedSparqlError`), see sparql-sqlite's `docs/CONFORMANCE.md`.
+- Ingest cursors live in a `fact_cursors` table in the same database. Opening a store drops the tables of the
+  earlier text-triples schema (`triples`, `entities`, `cursors`, `rdf_migrations`); their data is not migrated.
+- The engine's tables (`terms`, `quads`, `dts`, `meta`) are unprefixed, so a database shared with other stores
+  must not use those names.
 
 ### Reification (storage shape)
 
 Each Fact is stored as **plain RDF reification**: a Fact node with `sx:subject` /
 `sx:predicate` / `sx:object` plus PROV-O attribution and `sx:` factuality/metadata triples.
 This is equivalent to the RDF-star quoted-triple form (used only as an export shape) but
-avoids RDF-star vs RDF-1.2 version fragility and keeps the SQLite `Source` a simple
-`(subject, predicate, object, objectType, graph)` table.
+avoids RDF-star vs RDF-1.2 version fragility: every fact is plain triples in the quad store.
 
 `sx:` is this package's namespace; PROV-O terms (`prov:wasAttributedTo`,
 `prov:generatedAtTime`, `prov:wasDerivedFrom`) are reused verbatim, so the graph is valid
@@ -288,5 +289,5 @@ Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide 
   cursor: an unchanged source is a no-op, a changed one re-extracts.
 - **as-of / according-to** — the two query-time conflict-resolution axes (state _at a time_ × _per a
   source_); conflicts are never merged at write time.
-- **Comunica / Source** — the SPARQL engine (`@comunica/query-sparql-rdfjs`) and the swappable RDF/JS
-  backend it queries (N3 in-memory, or SQLite over OPFS / file / Durable Object).
+- **sparql-sqlite** — the SPARQL engine (`@dxos/sparql-sqlite`): each query compiles to one SQL statement
+  over a quad store in synchronous SQLite (Durable Object, `node:sqlite`, or in-memory wa-sqlite).

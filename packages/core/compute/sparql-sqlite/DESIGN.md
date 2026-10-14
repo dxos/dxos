@@ -2,7 +2,7 @@
 
 A SPARQL 1.1 engine for a single SQLite database. It is built for Cloudflare Durable Object SQLite
 (`ctx.storage.sql`) and also runs on any synchronous SQLite behind the `SqlStorage` interface
-(`node:sqlite` in tests). Each SPARQL request is parsed with `sparqljs` and compiled into **one**
+(`node:sqlite` and wa-sqlite through `@dxos/sql-sqlite/SqlStorage`). Each SPARQL request is parsed with `sparqljs` and compiled into **one**
 SQL statement. SQLite runs every join, filter, aggregate, sort and recursive path in C, and JS only
 decodes the result rows.
 
@@ -21,15 +21,15 @@ ingest: quads ─encode + hash53, dedupe, key→id cache─▶ ① INSERT OR IGN
 
 ## Modules
 
-| file             | role                                                                                 |
-| ---------------- | ------------------------------------------------------------------------------------ |
-| `terms.ts`       | `Term` / `Quad` / `Row` plain-data model.                                            |
-| `sql-storage.ts` | `SqlStorage`: the subset of DO `ctx.storage.sql` used (`exec` → `toArray` / `raw`).  |
-| `store.ts`       | `TermStore`: schema, term encoding and interning, set-oriented insert/delete.        |
-| `parser.ts`      | `parseSparql`: sparqljs's generated parser alone, with a minimal term factory.       |
-| `compiler.ts`    | `Compiler`: sparqljs AST → SQL text.                                                 |
-| `engine.ts`      | `SqlSparqlEngine`: parse, plan cache, run, decode, ASK / CONSTRUCT / UPDATE.         |
-| `testing/`       | `node:sqlite` adapter, deterministic data generator, query set, probes, oracle JSON. |
+| file             | role                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `terms.ts`       | `Term` / `Quad` / `Row` plain-data model.                                           |
+| `sql-storage.ts` | `SqlStorage`: the subset of DO `ctx.storage.sql` used (`exec` → `toArray` / `raw`). |
+| `store.ts`       | `TermStore`: schema, term encoding and interning, set-oriented insert/delete.       |
+| `parser.ts`      | `parseSparql`: sparqljs's generated parser alone, with a minimal term factory.      |
+| `compiler.ts`    | `Compiler`: sparqljs AST → SQL text.                                                |
+| `engine.ts`      | `SqlSparqlEngine`: parse, plan cache, run, decode, ASK / CONSTRUCT / UPDATE.        |
+| `testing/`       | Deterministic data generator, query set, probes, oracle JSON.                       |
 
 ## Schema
 

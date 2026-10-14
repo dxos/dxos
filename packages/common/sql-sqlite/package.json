@@ -46,6 +46,12 @@
     "./SqlMigrations": {
       "types": "./dist/types/src/SqlMigrations.d.ts",
       "default": "./dist/lib/SqlMigrations.mjs"
+    },
+    "./SqlStorage": {
+      "types": "./dist/types/src/platform/sql-storage-browser.d.ts",
+      "browser": "./dist/lib/platform/sql-storage-browser.mjs",
+      "node": "./dist/lib/platform/sql-storage-node.mjs",
+      "default": "./dist/lib/platform/sql-storage-browser.mjs"
     }
   },
   "files": [

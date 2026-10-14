@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/sql/SqlClient';
 import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
+import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from './errors.ts';
 import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract.ts';
@@ -86,15 +85,9 @@ const QUESTION_OUTPUT = {
   ],
 };
 
-const TestLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-  Layer.provideMerge(mockAiService(LLM_OUTPUT)),
-);
+const TestLayer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(mockAiService(LLM_OUTPUT)));
 
-const FailingLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-  Layer.provideMerge(failingAiService()),
-);
+const FailingLayer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(failingAiService()));
 
 describe('FactPipeline', () => {
   it('composes extraction rules, appending caller rules after the defaults', ({ expect }) => {
@@ -267,14 +260,13 @@ describe('FactPipeline', () => {
       const ai = countingAiService({
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
-      const layer = FactStoreLive.layer.pipe(
-        Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-        Layer.provideMerge(ai.layer),
-      );
+      const database = yield* Effect.acquireRelease(SqlStorage.makeMemory(), (opened) =>
+        Effect.sync(() => opened.close()),
+      ).pipe(Effect.orDie);
+      const layer = FactStoreLive.layer(database).pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
         const triplesCount = () =>
-          sql<{ n: number }>`SELECT COUNT(*) AS n FROM triples`.pipe(Effect.map((rows) => rows[0].n));
+          Effect.sync(() => Number(database.exec('SELECT COUNT(*) AS n FROM quads').toArray()[0].n));
 
         const doc = { text: 'going to Paris', source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
         yield* FactPipeline.run([doc]);
@@ -297,7 +289,7 @@ describe('FactPipeline', () => {
           }
         });
       }).pipe(Effect.provide(layer));
-    }),
+    }, Effect.scoped),
   );
 
   it.effect(

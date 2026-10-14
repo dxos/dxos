@@ -2,10 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { type Fact } from '../types/index.ts';
 import * as FactStoreLive from './fact-store-live.ts';
@@ -25,7 +23,7 @@ const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   ...over,
 });
 
-const TestLayer = FactStoreLive.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = FactStoreLive.layerMemory;
 
 describe('FactStore', () => {
   it.effect(
