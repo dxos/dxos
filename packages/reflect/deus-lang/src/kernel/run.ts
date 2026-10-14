@@ -24,12 +24,13 @@ export const runImage = (image: string, options: HostOptions): RunResult => {
     return { code: 71, steps: 0 };
   }
   const machine = new Machine(createPrims(), createHost(options));
-  machine.load(forms);
   const entry = forms.find((form) => Array.isArray(form) && form[0] === 'main');
   if (!Array.isArray(entry) || !(entry[1] instanceof Str)) {
-    throw new Error('image has no (main "hash") form');
+    stderrOf('panic: malformed image: no (main "hash") form\n');
+    return { code: 71, steps: 0 };
   }
-  const stderr = options.stderr ?? ((chunk: string) => process.stderr.write(chunk));
+  const main = entry[1].value;
+  const stderr = stderrOf;
   const report = () => {
     if (machine.profile) {
       const top = [...machine.profile.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40);
@@ -37,7 +38,8 @@ export const runImage = (image: string, options: HostOptions): RunResult => {
     }
   };
   try {
-    machine.call(entry[1].value, [UNIT]);
+    machine.load(forms);
+    machine.call(main, [UNIT]);
     report();
     return { code: 0, steps: machine.steps };
   } catch (err) {

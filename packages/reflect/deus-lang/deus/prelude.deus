@@ -242,7 +242,11 @@ def intersperse (sep : a) : List a -> List a
 
 def sum (xs : List Int) : Int := foldl (fun a b => a + b) 0 xs
 
-def maximum (xs : List Int) : Int := foldl max 0 xs
+/-- The largest element; 0 for the empty list. -/
+def maximum (xs : List Int) : Int :=
+  match xs with
+  | [] => 0
+  | x :: rest => foldl max x rest
 
 end List
 

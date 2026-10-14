@@ -87,9 +87,12 @@ def lex (source : Text) : {Throw Text} List Token :=
     else if c == '\\' then
       let e := at (i + 1)
       if e == 'u' && at (i + 2) == '{' then
-        let close := Text.indexOf source "}" i
-        let code := List.foldl (fun v d => v * 16 + hexValue d) 0 (List.map at (List.range (i + 3) close))
-        stringEnd (close + 1) (code :: acc) line lineStart
+        let rec digitsEnd j := if isHex (at j) then digitsEnd (j + 1) else j
+        let close := digitsEnd (i + 3)
+        if close == i + 3 || at close != '}' then fail line 0 "malformed \\u{} escape"
+        else
+          let code := List.foldl (fun v d => v * 16 + hexValue d) 0 (List.map at (List.range (i + 3) close))
+          stringEnd (close + 1) (code :: acc) line lineStart
       else stringEnd (i + 2) (escape e :: acc) line lineStart
     else if c == '\n' then stringEnd (i + 1) (c :: acc) (line + 1) (i + 1)
     else stringEnd (i + 1) (c :: acc) line lineStart

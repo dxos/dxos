@@ -64,5 +64,17 @@ describe('kernel', () => {
   test('an unhandled defect exits 70; a broken image panics with 71', ({ expect }) => {
     expect(run('(def "main" (lam (match (int 1) (case (pint 2) (int 0))))) (main "main")').code).toBe(70);
     expect(run('(def "main" (lam (ref "missing"))) (main "main")').code).toBe(71);
+    expect(run('(def "main" (lam (int 0)))').code).toBe(71);
+    expect(run('(def "main" (lam (bogus))) (main "main")').code).toBe(71);
+    expect(run('(def "main"').code).toBe(71);
+  });
+
+  test('a global whose evaluation was aborted is evaluated again, not reported as a cycle', ({ expect }) => {
+    const caught = '(handle (ref "bad") (on "#Defect" 0 1 (var 1)))';
+    const { stdout } = run(`
+      (def "bad" (app (prim "Int.div") (int 1) (int 0)))
+      (def "main" (lam (seq ${print(caught)} ${print(caught)})))
+      (main "main")`);
+    expect(stdout).toBe('"division by zero""division by zero"');
   });
 });

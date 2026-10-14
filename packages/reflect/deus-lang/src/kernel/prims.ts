@@ -8,6 +8,7 @@ import {
   Cell,
   Con,
   DeusDefect,
+  DeusPanic,
   HashTable,
   Machine,
   NIL,
@@ -131,7 +132,15 @@ export const createPrims = (): Map<string, Prim> => {
   def('Text.indexOf', 3, ([s, sub, from]) => text(s).indexOf(text(sub), int(from)));
   def('Text.trim', 1, ([s]) => text(s).trim());
   def('Text.sha256', 1, ([s]) => createHash('sha256').update(text(s), 'utf8').digest('hex'));
-  def('Text.fromCodes', 1, ([codes]) => String.fromCharCode(...listTo(codes).map(int)));
+  def('Text.fromCodes', 1, ([codes]) => {
+    // Chunked because spreading a long list into one call overflows V8's argument limit.
+    const values = listTo(codes).map(int);
+    let out = '';
+    for (let start = 0; start < values.length; start += 8192) {
+      out += String.fromCharCode(...values.slice(start, start + 8192));
+    }
+    return out;
+  });
   def('Text.utf8', 1, ([s]) => listFrom(Array.from(Buffer.from(text(s), 'utf8'))));
 
   def('Ref.new', 1, ([v]) => new Cell(v));
@@ -205,7 +214,13 @@ export const createPrims = (): Map<string, Prim> => {
   // Reflection: the DEUS CLI loads compiled definitions into this same machine and runs them, so
   // user programs share the caller's handlers (including IO).
   def('Code.load', 1, ([source], machine) => {
-    machine.load(readAll(text(source)));
+    let forms;
+    try {
+      forms = readAll(text(source));
+    } catch (err) {
+      throw new DeusPanic(`Code.load: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    machine.load(forms);
     return new Con('#Unit', 0, []);
   });
   def('Code.quote', 1, ([v]) => print(quoteValue(v)));

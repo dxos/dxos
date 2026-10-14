@@ -180,7 +180,6 @@ export class Global {
   readonly form: Sexp;
   term: Term | null = null;
   value: Value | undefined = undefined;
-  evaluating = false;
 
   constructor(form: Sexp) {
     this.form = form;
@@ -871,10 +870,10 @@ export class Machine {
                 evaluating = false;
                 break;
               }
-              if (global.evaluating) {
+              // The live stack, not a flag, so a handler that discards the frame cannot leave a stale cycle.
+              if (stack.some((pending) => pending.k === F_GLOBAL && pending.g === global)) {
                 throw new DeusDefect(`definition ${node.h} depends on its own value`);
               }
-              global.evaluating = true;
               const frame = new Frame(F_GLOBAL, node, null, NO_ARGS);
               frame.g = global;
               stack.push(frame);
@@ -1042,7 +1041,6 @@ export class Machine {
           }
           case F_GLOBAL:
             frame.g.value = value;
-            frame.g.evaluating = false;
             break;
           case F_REST:
             evaluating = !apply(value, frame.args);

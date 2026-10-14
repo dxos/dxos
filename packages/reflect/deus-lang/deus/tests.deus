@@ -28,6 +28,17 @@ test lexerProjection :=
   | Result.ok tokens => List.any (fun t => t.kind == Kind.proj && t.value == "y") tokens
   | Result.err _ => false
 
+test lexerCodePointEscape := tokenValues "\"\\u{41}x\"" == ["Ax", ""]
+
+test lexerRejectsUnclosedEscape :=
+  match try (fun _ => Lexer.lex "\"\\u{41\" }") with
+  | Result.ok _ => false
+  | Result.err _ => true
+
+test parserTypeApplicationField := parses "inductive W where\n  | wrap (List Int)\n  | pair (x y : Int)\n"
+
+test maximumOfNegatives := List.maximum [0 - 3, 0 - 5] == 0 - 3 && List.maximum [] == 0
+
 test parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 2\n"
 
 test parserRejectsIndentedDecl := not (parses "  def f := 1\n")
