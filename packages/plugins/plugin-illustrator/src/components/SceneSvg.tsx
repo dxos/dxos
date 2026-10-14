@@ -8,12 +8,11 @@ import { Diagnostics, Scene } from '@dxos/diagram';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { COLOR_CLASS, type Rect, partiallyRoundedRect, resolveScene, wrapLines } from '#model';
+
 const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
 const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
 
-const MARGIN = 40;
-
-type Rect = { x: number; y: number; w: number; h: number };
 type Point = Scene.Point;
 
 const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): Rect => {
@@ -28,50 +27,7 @@ const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotte
 
 const CHAR_EM = Diagnostics.CHAR_EM;
 
-/** Greedy word wrap per input line; SVG text has no native wrapping. */
-const wrapLines = (text: string, maxChars: number): string[] =>
-  text.split('\n').flatMap((line) => {
-    if (line.length <= maxChars) {
-      return [line];
-    }
-    const lines: string[] = [];
-    let current = '';
-    for (const word of line.split(' ')) {
-      const candidate = current ? `${current} ${word}` : word;
-      if (candidate.length > maxChars && current) {
-        lines.push(current);
-        current = word;
-      } else {
-        current = candidate;
-      }
-    }
-    return [...lines, current];
-  });
-
 const RADIUS = 8;
-
-/** Rect path rounding only the top or bottom corners; the opposite edge stays square. */
-const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corners: 'top' | 'bottom'): string => {
-  // Clamp so small rects cannot produce self-overlapping path segments.
-  const radius = Math.min(cornerRadius, w / 2, h / 2);
-  return corners === 'top'
-    ? `M ${x} ${y + h} L ${x} ${y + radius} Q ${x} ${y} ${x + radius} ${y} L ${x + w - radius} ${y} ` +
-        `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
-    : `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h - radius} Q ${x + w} ${y + h} ${x + w - radius} ${y + h} ` +
-        `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
-};
-
-/** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
-/** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
-const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
-  'grey': 'text-neutral-400 dark:text-neutral-500',
-  'light-blue': 'text-sky-500',
-  'light-green': 'text-emerald-500',
-  'yellow': 'text-amber-500',
-  'light-violet': 'text-violet-500',
-  'orange': 'text-orange-500',
-  'light-red': 'text-rose-500',
-};
 
 const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
 
@@ -79,42 +35,6 @@ const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
 /** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
 const TINT = { fill: 'color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))' };
-
-type Resolved = {
-  viewBox: string;
-  /** Absolute box rects keyed by `objectId/elementId`, for arrow binding. */
-  registry: Map<string, Rect>;
-  objects: readonly Scene.WorldObject[];
-};
-
-const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
-  const registry = Diagnostics.bindTargets(objects);
-  const points: Point[] = [...registry.values()].flatMap((rect) => [rect, { x: rect.x + rect.w, y: rect.y + rect.h }]);
-  for (const object of objects) {
-    const { x = 0, y = 0 } = object.origin ?? {};
-    const scale = object.scale ?? 1;
-    for (const element of object.elements) {
-      if (element.kind === 'line' || element.kind === 'curve') {
-        points.push(...element.points.map((point) => ({ x: x + point.x * scale, y: y + point.y * scale })));
-      } else if (element.kind === 'arrow') {
-        points.push(...(Diagnostics.arrowPoints(object, element, registry) ?? []));
-      }
-    }
-  }
-
-  const xs = points.map((point) => point.x);
-  const ys = points.map((point) => point.y);
-  const minX = Math.min(0, ...xs) - MARGIN;
-  const minY = Math.min(0, ...ys) - MARGIN;
-  const maxX = Math.max(MARGIN, ...xs) + MARGIN;
-  const maxY = Math.max(MARGIN, ...ys) + MARGIN;
-
-  return {
-    objects,
-    registry,
-    viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}`,
-  };
-};
 
 type MultilineTextProps = {
   cx: number;
@@ -386,7 +306,7 @@ export type SceneSvgProps = Util.ThemedClassName<{
  * with the variant that holds the canvas.
  */
 export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
-  const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
+  const { registry, viewBox } = useMemo(() => resolveScene(objects), [objects]);
   // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
   const instanceId = useId();
   const markers: MarkerIds = {

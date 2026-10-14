@@ -39,7 +39,8 @@ import {
 } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
+import { toSvgFile } from '#model';
+
 import { IMAGE_NOTE, type Judge, decisionModel, isJudge, seesImages } from './judges.ts';
 import { toPngs } from './render.tsx';
 
