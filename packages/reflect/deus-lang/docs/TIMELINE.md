@@ -23,6 +23,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 15  | 10-14 11:33 | 6m 41s         | `88a24b20`  | sound effect rows for rethrow; Failure context chains                                       |
 | 16  | 10-14 11:45 | 11m 45s        | `d0e33d51`  | `deus build` writes a standalone executable                                                 |
 | 17  | 10-14 11:55 | 10m 25s        | `fc077d42`  | JIT-compile handler-free lambdas to JavaScript                                              |
-| 18  | 10-14 11:58 | 3m 13s         | this commit | Charge deoptimizations to the innermost call: self-compile 3.3 s                            |
+| 18  | 10-14 11:58 | 3m 14s         | `beb703a9`  | charge JIT deoptimizations to the innermost call                                            |
+| 19  | 10-14 11:59 | 0m 52s         | `3052ae66`  | sort JIT imports                                                                            |
+| 20  | 10-14 12:03 | 3m 37s         | this commit | Agentic review worked; step budget enforced under the JIT                                   |
 
-Total from stage 1 to stage 18: 2h 15m.
+Total from stage 1 to stage 20: 2h 20m.

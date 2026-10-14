@@ -34,6 +34,7 @@ import {
   UNIT,
   type Value,
   VAR,
+  exhaustBudget,
   isDeopt,
   lookupIn,
   pair,
@@ -346,7 +347,7 @@ export const createCompiler = (machine: Machine) => {
       'return function (env, args) {',
       ...params.map((param, i) => `let ${param} = args[${i}];`),
       'for (;;) {',
-      'if (++M.steps > M.maxSteps) throw new DeusDefect("step budget exhausted");',
+      'if (++M.steps > M.maxSteps) throw exhaustBudget(M);',
       ...generator.lines,
       '}',
       '};',
@@ -365,9 +366,23 @@ export const createCompiler = (machine: Machine) => {
       'UNIT',
       'pair',
       'show',
+      'exhaustBudget',
       source,
     );
-    return factory(generator.constants, machine, ref, call, lookupIn, Closure, Con, DeusDefect, UNIT, pair, show);
+    return factory(
+      generator.constants,
+      machine,
+      ref,
+      call,
+      lookupIn,
+      Closure,
+      Con,
+      DeusDefect,
+      UNIT,
+      pair,
+      show,
+      exhaustBudget,
+    );
   };
 
   const ref = (node: Term): Value => {

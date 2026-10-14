@@ -4,7 +4,7 @@
 
 import { ExitSignal, type HostOptions, createHost } from './host.ts';
 import { createCompiler } from './jit.ts';
-import { DeusDefect, DeusPanic, Machine, UNIT } from './machine.ts';
+import { DeusDefect, DeusPanic, Machine, type MachineOptions, UNIT } from './machine.ts';
 import { createPrims } from './prims.ts';
 import { Str, readAll } from './sexp.ts';
 
@@ -14,7 +14,10 @@ export type RunResult = { code: number; steps: number };
  * Loads a Core image (a seed or a compiled program) and calls its `(main "hash")` with `()`.
  * Returns the process exit code instead of exiting, so tests can run images in-process.
  */
-export const runImage = (image: string, options: HostOptions): RunResult => {
+/** How to run an image: host IO, machine diagnostics, and whether to compile lambdas to JS. */
+export type RunOptions = HostOptions & { machine?: MachineOptions; jit?: boolean };
+
+export const runImage = (image: string, options: RunOptions): RunResult => {
   const stderrOf = options.stderr ?? ((chunk: string) => process.stderr.write(chunk));
   let forms;
   try {
@@ -24,9 +27,9 @@ export const runImage = (image: string, options: HostOptions): RunResult => {
     stderrOf(`panic: malformed image: ${err instanceof Error ? err.message : String(err)}\n`);
     return { code: 71, steps: 0 };
   }
-  const machine = new Machine(createPrims(), createHost(options));
+  const machine = new Machine(createPrims(), createHost(options), options.machine);
   // Profiles and traces count the machine's own steps, so they run without compiled code.
-  if (process.env.DEUS_JIT !== '0' && !machine.profile && !machine.trace) {
+  if (options.jit !== false && !machine.profile && !machine.trace) {
     machine.compiler = createCompiler(machine);
   }
   const entry = forms.find((form) => Array.isArray(form) && form[0] === 'main');

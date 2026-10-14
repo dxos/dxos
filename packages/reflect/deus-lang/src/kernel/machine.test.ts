@@ -4,13 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { runImage } from './run.ts';
+import { type RunOptions, runImage } from './run.ts';
 
 /** Runs a hand-written Core image and returns what it printed. */
-const run = (image: string) => {
+const run = (image: string, options: Pick<RunOptions, 'machine' | 'jit'> = {}) => {
   let stdout = '';
   let stderr = '';
   const { code } = runImage(image, {
+    ...options,
     args: [],
     stdout: (chunk) => {
       stdout += chunk;
@@ -39,6 +40,17 @@ describe('kernel', () => {
       (def "main" (lam ${print('(app (ref "loop") (int 1000000) (int 0))')}))
       (main "main")`);
     expect(stdout).toBe('1000000');
+  });
+
+  test('the step budget stops a loop, compiled or not', ({ expect }) => {
+    const image = `
+      (def "loop" (lam (lam (if (app (prim "eq") (var 1) (int 0)) (var 0) (app (ref "loop") (app (prim "Int.sub") (var 1) (int 1)) (app (prim "Int.add") (var 0) (int 1)))))))
+      (def "main" (lam ${print('(app (ref "loop") (int 1000000) (int 0))')}))
+      (main "main")`;
+    for (const jit of [true, false]) {
+      const { code, stderr } = run(image, { jit, machine: { maxSteps: 10_000 } });
+      expect([jit, code, stderr.split('\n')[0]]).toEqual([jit, 70, 'defect: step budget of 10000 exhausted']);
+    }
   });
 
   test('a deep handler resumes its continuation more than once', ({ expect }) => {

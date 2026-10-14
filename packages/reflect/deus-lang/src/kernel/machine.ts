@@ -152,6 +152,16 @@ export const listTo = (list: Value): Value[] => {
  */
 export class DeusDefect extends Error {}
 
+/** The step budget ran out: a defect, but never a reason to replay, since a replay would spend more. */
+export class StepBudget extends DeusDefect {}
+
+/** Ends the run's budget, so a boundary that observes the defect can still finish its own work. */
+export const exhaustBudget = (machine: Machine): StepBudget => {
+  const budget = machine.maxSteps;
+  machine.maxSteps = Infinity;
+  return new StepBudget(`step budget of ${budget} exhausted`);
+};
+
 /** Thrown by compiled code that needs the machine (an operation, a handler, a continuation). */
 class Deopt extends Error {}
 
@@ -169,7 +179,7 @@ const DEOPT_LIMIT = 8;
 
 /** Whether an error thrown by compiled code makes the machine replay the call. */
 export const isDeopt = (err: unknown): boolean =>
-  err === DEOPT || err instanceof DeusDefect || err instanceof RangeError;
+  err === DEOPT || (err instanceof DeusDefect && !(err instanceof StepBudget)) || err instanceof RangeError;
 
 const DEOPTED: unique symbol = Symbol('deopted');
 
@@ -613,18 +623,28 @@ const bind = (pat: Pattern, value: Value, env: Env): Env | undefined => {
 /** Handles requests for abilities no DEUS handler caught (the built-in `IO`). */
 export type HostHandler = (ability: string, index: number, args: Value[]) => Value;
 
+/** Diagnostics a run opts into; the entry point decides them (`options.ts` reads them from the environment). */
+export type MachineOptions = {
+  /** Keep the most recently referenced definitions, to report them with a defect. */
+  trace?: boolean;
+  /** Count entries per definition. */
+  profile?: boolean;
+  /** Raise a defect past this many steps. */
+  maxSteps?: number;
+};
+
 /** CEK machine with an explicit frame stack; effects capture stack segments as continuations. */
 export class Machine {
   readonly globals = new Map<string, Global>();
   steps = 0;
   /** Recently referenced definitions, kept when `DEUS_TRACE` is set, for diagnosing defects. */
-  trace: string[] | undefined = process.env.DEUS_TRACE ? [] : undefined;
+  trace: string[] | undefined;
   /** The definitions on the stack when the last defect was raised, innermost first. */
   defectTrace: string[] = [];
   /** A defect is raised past this many steps (`DEUS_MAX_STEPS`), so a runaway program cannot hang. */
-  maxSteps: number = Number(process.env.DEUS_MAX_STEPS ?? Infinity);
+  maxSteps: number;
   /** Entries per definition, kept when `DEUS_PROFILE` is set. */
-  profile: Map<string, number> | undefined = process.env.DEUS_PROFILE ? new Map() : undefined;
+  profile: Map<string, number> | undefined;
   /** Compiles lambdas to JavaScript; absent, everything runs on the machine. */
   compiler: Compiler | undefined = undefined;
   /** How many compiled calls are running, and undo actions for the mutations they made. */
@@ -636,9 +656,16 @@ export class Machine {
   readonly prims: Map<string, Prim>;
   readonly host: HostHandler;
 
-  constructor(prims: Map<string, Prim>, host: HostHandler) {
+  constructor(
+    prims: Map<string, Prim>,
+    host: HostHandler,
+    { trace = false, profile = false, maxSteps = Infinity }: MachineOptions = {},
+  ) {
     this.prims = prims;
     this.host = host;
+    this.trace = trace ? [] : undefined;
+    this.profile = profile ? new Map() : undefined;
+    this.maxSteps = maxSteps;
   }
 
   /** Registers every `(def "hash" term)` form; other forms are ignored by the kernel. */
@@ -992,8 +1019,7 @@ export class Machine {
       while (true) {
         if (evaluating) {
           if (++steps > this.maxSteps) {
-            this.maxSteps = Infinity;
-            throw new DeusDefect(`step budget of ${steps - 1} exhausted`);
+            throw exhaustBudget(this);
           }
           switch (node.t) {
             case VAR:
