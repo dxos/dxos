@@ -78,6 +78,11 @@
       "types": "./dist/types/src/types/AgentChannels.d.ts",
       "import": "./dist/lib/AgentChannels.mjs"
     },
+    "./AgentEmail": {
+      "source": "./src/types/AgentEmail.ts",
+      "types": "./dist/types/src/types/AgentEmail.d.ts",
+      "import": "./dist/lib/AgentEmail.mjs"
+    },
     "./AgentKnowledge": {
       "source": "./src/AgentKnowledge.ts",
       "types": "./dist/types/src/AgentKnowledge.d.ts",
@@ -216,6 +221,9 @@
       "AgentChannels": [
         "dist/types/src/types/AgentChannels.d.ts"
       ],
+      "AgentEmail": [
+        "dist/types/src/types/AgentEmail.d.ts"
+      ],
       "AgentKnowledge": [
         "dist/types/src/AgentKnowledge.d.ts"
       ],
@@ -288,14 +296,18 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/brain": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
@@ -314,7 +326,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",

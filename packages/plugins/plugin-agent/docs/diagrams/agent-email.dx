@@ -1,0 +1,18 @@
+diagram flow=down
+group app "Composer" {
+  node Agent "plugin-agent" ref="packages/plugins/plugin-agent/src/AgentPlugin.ts"
+  node Thread "plugin-thread" ref="packages/plugins/plugin-thread/src/types/ThreadCapabilities.ts"
+  node Client "plugin-client" ref="packages/plugins/plugin-client"
+}
+group sdk "SDK" {
+  node Echo "@dxos/echo" ref="packages/core/echo/echo"
+  node EdgeClient "@dxos/edge-client" ref="packages/core/mesh/edge-client"
+}
+group edge "EDGE" {
+  node Email "email-service (new)" ref="packages/services/email-service"
+}
+edge Agent -> Thread
+edge Agent -> Echo
+edge Agent -> Client "added"
+edge Agent -> EdgeClient "added"
+edge EdgeClient -> Email "added"

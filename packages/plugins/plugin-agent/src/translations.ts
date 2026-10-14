@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-import { AgentChannels, Goal, Memory } from '#types';
+import { AgentChannels, AgentEmail, Goal, Memory } from '#types';
 
 export const translations = [
   {
@@ -17,6 +17,13 @@ export const translations = [
         'typename.label_one': 'Agent channels',
         'typename.label_other': 'Agent channels',
         'object-name.placeholder': 'New agent channels',
+      },
+      [Type.getTypename(AgentEmail.AgentEmail)]: {
+        'typename.label': 'Agent email',
+        'typename.label_zero': 'Agent emails',
+        'typename.label_one': 'Agent email',
+        'typename.label_other': 'Agent emails',
+        'object-name.placeholder': 'New agent email',
       },
       [Type.getTypename(Memory.Memory)]: {
         'typename.label': 'Memory',
@@ -34,6 +41,16 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Agent',
+        'email-channel.label': 'Email address',
+        'email-channel.description':
+          'The agent answers mail to this address; each email thread is its own conversation. Reconnect to apply changes.',
+        'email-mailbox-actions.label': 'Mailbox actions',
+        'email-mailbox-connect.label': 'Connect',
+        'email-mailbox-update.label': 'Update',
+        'email-mailbox-disconnect.label': 'Disconnect',
+        'email-mailbox-connected.label': 'Receiving mail',
+        'email-mailbox-disconnected.label': 'Not connected',
+        'email-mailbox-error.label': 'Mailbox error',
         'brain-companion.label': 'Brain',
         'activity-companion.label': 'Activity',
         'agent.heading': 'Agent',
