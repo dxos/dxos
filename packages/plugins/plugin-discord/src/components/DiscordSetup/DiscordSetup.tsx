@@ -136,7 +136,7 @@ const DiscordSetupList = ({ ids, value, onValueChange, children }: DiscordSetupL
     items={ids.map((id) => ({ value: id, label: id }))}
     {...(onValueChange ? { value, onValueChange } : {})}
   >
-    <Listbox.Content scroll={false}>{children}</Listbox.Content>
+    <Listbox.Content>{children}</Listbox.Content>
   </Listbox.Root>
 );
 

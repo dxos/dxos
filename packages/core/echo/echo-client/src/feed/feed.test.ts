@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
 
 import { Event, Trigger, waitForCondition } from '@dxos/async';
 import { Database, Entity, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -23,6 +23,7 @@ import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 import { EchoClientError } from '../errors.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
+import { FeedHandle } from './feed-handle.ts';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;
@@ -670,6 +671,43 @@ describe('Feed', () => {
       const resolved = yield* Effect.promise(() => ref.load());
       expect((resolved as any).name).toBe('alice');
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  // Regression: a reference to a deleted object fell through to the feed fallback, which downloads every
+  // feed in the space whole to look for it. On EDGE a large mailbox feed failed that download at the
+  // 32 MiB RPC cap on every sync run.
+  test('ref.load of a deleted database object reads no feed', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({
+      types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
+    });
+    await using db1 = await peer.createDatabase(spaceKey);
+
+    let containerId = '';
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'mail' }));
+      yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'in the feed' })]);
+      const deleted = yield* Database.add(Obj.make(TestSchema.Person, { name: 'deleted' }));
+      const container = yield* Database.add(Obj.make(TestSchema.Container, { objects: [Ref.make(deleted)] }));
+      containerId = container.id;
+      yield* Database.flush({ indexes: true });
+      yield* Database.remove(deleted);
+      yield* Database.flush({ indexes: true });
+    }).pipe(Effect.provide(Database.layer(db1)), EffectEx.runAndForwardErrors);
+
+    // Fresh client: nothing resolves from a warm cache.
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl);
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, rootUrl, { client: client2 });
+    const [container] = await db2.query(Filter.id(containerId)).run();
+    const ref = container.objects?.[0];
+    invariant(ref);
+
+    const fetchFeed = vi.spyOn(FeedHandle.prototype, 'fetchObjectsJSON');
+    onTestFinished(() => fetchFeed.mockRestore());
+    expect(await ref.tryLoad()).toBeUndefined();
+    expect(fetchFeed).not.toHaveBeenCalled();
   });
 
   test('ref.load resolves queue item when feed queue is not in knownQueues', async ({ expect }) => {

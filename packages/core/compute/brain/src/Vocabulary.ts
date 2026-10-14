@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Predicate } from '@dxos/pipeline-rdf/types';
+import { Ontology, Predicate } from '@dxos/pipeline-rdf/types';
 
 /** A canonical predicate and the surface forms extraction maps onto it. */
 export type Entry = {
@@ -70,19 +70,13 @@ export class Vocabulary {
 export const make = (entries: ReadonlyArray<Entry>, reserved: ReadonlyArray<string> = []): Vocabulary =>
   new Vocabulary(entries, reserved);
 
-/** A starter vocabulary covering the example goals; extraction grows it. */
-export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
-  { predicate: 'helps_with', synonyms: ['will-help-with', 'helping-with'] },
-  { predicate: 'works_on', synonyms: ['working-on', 'will-work-on', 'working_on'] },
-  { predicate: 'completed', synonyms: ['finished', 'done'] },
-  { predicate: 'shipped', synonyms: ['ships', 'released'] },
-  { predicate: 'proposes', synonyms: ['suggests'] },
-  { predicate: 'received' },
-  { predicate: 'archived' },
-  { predicate: 'deleted' },
-  { predicate: 'filed' },
-  { predicate: 'drafted' },
-  { predicate: 'notified' },
-  { predicate: 'relayed' },
-  { predicate: 'awaiting', synonyms: ['waiting-for'] },
-];
+/** Entries for an ontology's predicates, so rules use the same predicates the brain stores facts with. */
+export const fromOntology = (ontology: Ontology.Ontology): ReadonlyArray<Entry> =>
+  ontology.entries.map(({ name, label, synonyms = [], description }) => ({
+    predicate: name,
+    synonyms: [label, ...synonyms].filter((surface) => normalize(surface) !== normalize(name)),
+    ...(description ? { description } : {}),
+  }));
+
+/** The starter vocabulary: pipeline-rdf's default ontology, which extraction grows. */
+export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = fromOntology(Ontology.DEFAULT);

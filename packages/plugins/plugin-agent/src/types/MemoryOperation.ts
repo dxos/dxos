@@ -6,12 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 
 import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
-import * as Memory from './Memory.ts';
+import * as Knowledge from './Knowledge.ts';
 
 /** A handle on an external identity, e.g. `{ label: 'discord', value: '1234' }` or `{ label: 'did', value: 'did:halo:…' }`. */
 export const Handle = Schema.Struct({
@@ -47,30 +48,35 @@ export const ResolveEntity = Operation.make({
   }),
 });
 
-/** Records one atomic claim about one or more entities. */
+/** Records one atomic claim about one or more entities, as a named graph in the agent's brain. */
 export const Remember = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.recordMemory'),
     name: 'Remember',
     description:
-      'Records one atomic third-person claim about the given subjects. To correct an earlier memory, pass it as supersedes.',
+      'Records one atomic third-person claim about the given subjects. To correct an earlier memory, pass its id as supersedes.',
     icon: 'ph--brain--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
+    agent: Schema.optional(
+      Ref.Ref(Agent.Agent).annotate({ description: "The agent you run as; defaults to the space's only agent." }),
+    ),
     content: Schema.String.annotate({
       description: 'One atomic third-person claim, e.g. "Rich prefers async updates."',
     }),
-    kind: Memory.Kind,
+    kind: Knowledge.Kind,
     origin: Schema.optional(
-      Memory.Origin.annotate({ description: 'stated if the person said it; inferred otherwise.' }),
+      Knowledge.Origin.annotate({ description: 'stated if the person said it; inferred otherwise.' }),
     ),
     subjects: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
       description: 'The entities the claim is about (at least one).',
     }),
     confidence: Schema.optional(Schema.Number.annotate({ description: 'Confidence from 0 to 1.' })),
     source: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The message or chat it came from.' })),
-    supersedes: Schema.optional(Ref.Ref(Memory.Memory).annotate({ description: 'The memory this one corrects.' })),
+    supersedes: Schema.optional(
+      Schema.String.annotate({ description: 'The id of the memory this one corrects, as Recall returned it.' }),
+    ),
     body: Schema.optional(
       Schema.String.annotate({
         description: 'Markdown body, for kind "note": the full notes, with content as their one-line summary.',
@@ -78,16 +84,40 @@ export const Remember = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    memory: Ref.Ref(Memory.Memory),
+    memory: Schema.String.annotate({ description: "The memory's id." }),
+  }),
+});
+
+/** Withdraws memories: a mistake, or everything the agent remembers when its knowledge is reset. */
+export const Forget = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.revokeMemories'),
+    name: 'Forget',
+    description:
+      'Withdraws memories that were wrong, by the ids Recall returned. To correct a memory instead, Remember the correction with supersedes.',
+    icon: 'ph--eraser--regular',
+  },
+  services: [Database.Service, BrainService.BrainService],
+  input: Schema.Struct({
+    agent: Schema.optional(
+      Ref.Ref(Agent.Agent).annotate({ description: "The agent you run as; defaults to the space's only agent." }),
+    ),
+    memories: Schema.optional(
+      Schema.Array(Schema.String).annotate({ description: 'The ids of the memories to withdraw; all if omitted.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    forgotten: Schema.Number,
   }),
 });
 
 export const RecalledMemory = Schema.Struct({
-  memory: Ref.Ref(Memory.Memory),
+  memory: Schema.String.annotate({ description: "The memory's id, to pass as supersedes when correcting it." }),
   content: Schema.String,
-  kind: Memory.Kind,
-  origin: Memory.Origin,
+  kind: Knowledge.Kind,
+  origin: Knowledge.Origin,
   observedAt: Schema.String,
+  source: Schema.optional(Schema.String.annotate({ description: 'URI of the message or chat it came from.' })),
 });
 
 export const RecalledGoal = Schema.Struct({
@@ -119,10 +149,22 @@ export const Recall = Operation.make({
   services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     subject: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The entity to recall; all if omitted.' })),
-    query: Schema.optional(Schema.String.annotate({ description: 'Only memories and facts containing this text.' })),
-    limit: Schema.optional(Schema.Number.annotate({ description: 'Maximum number of memories, and of facts.' })),
+    query: Schema.optional(
+      Schema.String.annotate({ description: 'Only memories and facts containing every word of this text.' }),
+    ),
+    // Models often pass a number as a string; refusing it fails the whole call with a schema error.
+    limit: Schema.optional(
+      Schema.Union([Schema.Number, Schema.NumberFromString]).annotate({
+        description: 'Maximum number of memories, and of facts.',
+      }),
+    ),
   }),
   output: Schema.Struct({
+    queryMatched: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'False when the query matched nothing and everything about the subject is returned instead.',
+      }),
+    ),
     memories: Schema.Array(RecalledMemory),
     facts: Schema.Array(RecalledFact),
     goals: Schema.Array(RecalledGoal),
@@ -180,7 +222,7 @@ export const UpdateProfile = Operation.make({
     description: "Rewrites the subject's profile document from its goals and active memories.",
     icon: 'ph--identification-card--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The person or organization.' }),
   }),

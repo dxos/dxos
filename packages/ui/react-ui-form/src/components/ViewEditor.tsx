@@ -292,7 +292,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
         readonly={!!readonly || schemaReadonly}
       >
         {({ items }) => (
-          <OrderedList.Content scroll={false} gutter='inherit' aria-label={t('fields.label')}>
+          <OrderedList.Content gutter='inherit' aria-label={t('fields.label')}>
             {items.map((field) => {
               const hidden = field.visible === false;
               return (

@@ -44,6 +44,7 @@ export const make = ({
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'ollama',
+    provider: 'ollama',
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 

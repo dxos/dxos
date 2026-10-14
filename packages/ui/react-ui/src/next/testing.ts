@@ -101,32 +101,63 @@ export const expectAnchoredBelow = async (
   });
 };
 
+type ArrowSide = 'top' | 'right' | 'bottom' | 'left';
+
+const ARROW_SIDES: readonly ArrowSide[] = ['top', 'right', 'bottom', 'left'];
+
+const isArrowSide = (value: string | null): value is ArrowSide => ARROW_SIDES.some((side) => side === value);
+
 /**
- * Asserts `popup` shows an arrow in its own surface colour on the side facing `anchor`, within the anchor's span and
- * with its tip 0–3px (the gutter) from it; the popup body keeps the arrow's half-size further off.
+ * Per side a popup opens on: a box's distance from the anchor (`gap`), its edge facing the anchor (`edge`), and the
+ * axis along which the arrow is centred on the anchor (`across`).
+ */
+const ARROW_AXIS: Record<
+  ArrowSide,
+  { gap: (anchor: DOMRect, box: DOMRect) => number; edge: (box: DOMRect) => number; across: 'x' | 'y' }
+> = {
+  bottom: { gap: (anchor, box) => box.top - anchor.bottom, edge: (box) => box.top, across: 'x' },
+  top: { gap: (anchor, box) => anchor.top - box.bottom, edge: (box) => box.bottom, across: 'x' },
+  right: { gap: (anchor, box) => box.left - anchor.right, edge: (box) => box.left, across: 'y' },
+  left: { gap: (anchor, box) => anchor.left - box.right, edge: (box) => box.right, across: 'y' },
+};
+
+/**
+ * Asserts `popup` shows an arrow in its own surface colour on the side facing `anchor` (any of the four), within the
+ * anchor's span and with its tip 0–3px (the gutter) from it; the popup body keeps the arrow's half-size further off.
+ * The arrow sits under the popup's content but over its surface, so the popup must be a stacking context: otherwise
+ * the surface and its ring paint over the arrow's base and leave only a sliver of it.
  */
 export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
   const arrow = arrowOf(popup);
   await expect(arrow, 'arrow').not.toBeNull();
+  const frame = popupFrame(popup);
   const tip = arrow?.querySelector<HTMLElement>('[data-part="arrow-tip"]');
-  await expect(tip && getComputedStyle(tip).backgroundColor).toBe(getComputedStyle(popupFrame(popup)).backgroundColor);
+  await expect(tip && getComputedStyle(tip).backgroundColor).toBe(getComputedStyle(frame).backgroundColor);
+  await expect(arrow?.parentElement && getComputedStyle(arrow.parentElement).isolation, 'arrow stacking context').toBe(
+    'isolate',
+  );
   await waitFor(async () => {
     const anchorRect = anchor.getBoundingClientRect();
-    const popupRect = popupFrame(popup).getBoundingClientRect();
+    const popupRect = frame.getBoundingClientRect();
     const arrowRect = arrow?.getBoundingClientRect() ?? popupRect;
-    const below = popupRect.top >= anchorRect.bottom;
-    const tipGap = below ? arrowRect.top - anchorRect.bottom : anchorRect.top - arrowRect.bottom;
-    const bodyGap = below ? popupRect.top - anchorRect.bottom : anchorRect.top - popupRect.bottom;
-    const where = `arrow ${JSON.stringify(arrowRect)}, popup ${JSON.stringify(popupRect)}, anchor ${JSON.stringify(anchorRect)}`;
+    const dataSide = popup.getAttribute('data-side');
+    const side = isArrowSide(dataSide) ? dataSide : popupRect.top >= anchorRect.bottom ? 'bottom' : 'top';
+    const { gap, edge, across } = ARROW_AXIS[side];
+    const tipGap = gap(anchorRect, arrowRect);
+    const bodyGap = gap(anchorRect, popupRect);
+    const half = (across === 'x' ? arrowRect.height : arrowRect.width) / 2;
+    const where = `${side}: arrow ${JSON.stringify(arrowRect)}, popup ${JSON.stringify(popupRect)}, anchor ${JSON.stringify(anchorRect)}`;
     await expect(tipGap >= 0 && tipGap <= 3, `tip gap ${tipGap}: ${where}`).toBe(true);
-    await expect(bodyGap - tipGap, `arrow overhang: ${where}`).toBeCloseTo(arrowRect.height / 2, 0);
+    await expect(bodyGap - tipGap, `arrow overhang: ${where}`).toBeCloseTo(half, 0);
     // The rotated tip's corners touch the arrow box, so it overhangs neither the box nor the gutter.
     const tipRect = tip?.getBoundingClientRect();
-    await expect(Math.abs((tipRect?.top ?? Number.NaN) - arrowRect.top) <= 0.5, `tip overhang: ${where}`).toBe(true);
-    const centre = centreX(arrowRect);
-    await expect(centre >= anchorRect.left && centre <= anchorRect.right, `arrow centre ${centre}: ${where}`).toBe(
-      true,
-    );
+    await expect(
+      Math.abs((tipRect ? edge(tipRect) : Number.NaN) - edge(arrowRect)) <= 0.5,
+      `tip overhang: ${where}`,
+    ).toBe(true);
+    const centre = across === 'x' ? centreX(arrowRect) : centreY(arrowRect);
+    const [start, end] = across === 'x' ? [anchorRect.left, anchorRect.right] : [anchorRect.top, anchorRect.bottom];
+    await expect(centre >= start && centre <= end, `arrow centre ${centre}: ${where}`).toBe(true);
   });
 };
 

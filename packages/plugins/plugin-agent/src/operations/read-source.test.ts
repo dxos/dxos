@@ -28,7 +28,6 @@ import {
   BrainService,
   ChatParticipant,
   Goal,
-  Memory,
   MemoryOperation,
   Mode,
   Relay,
@@ -96,7 +95,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Person.Person,
         Organization.Organization,
         HasSubject.HasSubject,
-        Memory.Memory,
         Goal.Goal,
         Mode.Mode,
         Relay.Relay,
@@ -151,7 +149,14 @@ describe('ReadSource', () => {
           source: Obj.getURI(document),
         });
         // A member named in a fact is keyed by their DID; the name stays the label.
-        expect(owns?.assertion.subject).toEqual({ kind: 'entity', entity: TEST_MEMBERS.dima, label: 'Dima' });
+        expect(owns?.assertion.subject).toEqual({
+          kind: 'entity',
+          entity: TEST_MEMBERS.dima,
+          label: 'Dima',
+          type: 'person',
+        });
+        // Each statement lives in a named graph that carries its speaker's provenance.
+        expect(owns?.graph).toMatch(/^https:\/\/dxos\.org\/semantic\/graph\//);
         expect(owns?.attribution.generatedAtTime).toBeTypeOf('string');
         expect(facts.find((fact) => fact.assertion.predicate === 'reviews')?.illocution?.force).toBe('commissive');
 
@@ -313,6 +318,42 @@ describe('ReadSource', () => {
           source: Ref.make<Obj.Unknown>(chat),
         });
         expect(reread.facts).toBe(1);
+        expect((yield* Operation.invoke(MemoryOperation.Recall, {})).facts.map(({ fact }) => fact)).toEqual([
+          'Dima owns indexer',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    "reads a prompt the feed holds twice once, and takes no facts from the agent's own replies",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const chat = yield* Agent.loadChat(agent);
+        if (!chat) {
+          return expect.unreachable('The agent has a chat.');
+        }
+        const said = (role: 'user' | 'assistant', name: string, text: string) =>
+          Message.make({ sender: { role, name }, blocks: [{ _tag: 'text', text }] });
+        const feed = yield* Database.load(chat.feed);
+        yield* Feed.append(feed, [
+          // As a prompt queued for a running agent: once as queued, once as the turn's own copy.
+          said('user', 'Dima', 'I own the indexer.'),
+          said('user', 'Dima', 'I own the indexer.'),
+          said('assistant', 'Kai', 'The race is in the v12 index migration.'),
+        ]);
+        yield* Database.flush();
+
+        const read = yield* Operation.invoke(AgentOperation.ReadSource, {
+          agent: agentRef,
+          source: Ref.make<Obj.Unknown>(chat),
+        });
+        expect(read.facts).toBe(1);
         expect((yield* Operation.invoke(MemoryOperation.Recall, {})).facts.map(({ fact }) => fact)).toEqual([
           'Dima owns indexer',
         ]);

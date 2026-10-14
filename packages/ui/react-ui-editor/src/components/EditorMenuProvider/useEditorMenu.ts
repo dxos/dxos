@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { modalStateEffect } from '@dxos/ui-editor';
@@ -29,9 +29,22 @@ export type UseEditorMenuProps = {
    * Triggers whose menu is rendered as a combobox: the popover owns a search input and the query is
    * typed there rather than into the document.
    */
+  // TODO(wittjosiah): Remove? Prefer inline instead.
   searchTriggers?: string[];
   getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
-} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping' | 'activateOnDelimiters'>;
+} & Pick<
+  PopoverOptions,
+  'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping' | 'activateOnDelimiters' | 'multiWordTriggers'
+>;
+
+type MenuContext = {
+  view: EditorView;
+  pos: number;
+  text: string;
+  trigger?: string;
+  /** The trigger's query may hold spaces; see {@link PopoverOptions.multiWordTriggers}. */
+  multiWord?: boolean;
+};
 
 export type UseEditorMenu = {
   groupsRef: RefObject<EditorMenuGroup[]>;
@@ -67,6 +80,7 @@ export const useEditorMenu = ({
   placeholder,
   activateOnTyping,
   activateOnDelimiters,
+  multiWordTriggers,
   filter = true,
   searchTriggers,
   getMenu,
@@ -81,17 +95,24 @@ export const useEditorMenu = ({
 
   // The document range only supplies the trigger-relative prefix (e.g. the second "@" of a block
   // embed); in search mode the rest of the query comes from the popover's input.
-  const contextRef = useRef<{ view: EditorView; pos: number; text: string; trigger?: string } | null>(null);
+  const contextRef = useRef<MenuContext | null>(null);
 
   // Monotonic token identifying the latest menu query; bumped per request and on close.
   const requestRef = useRef(0);
+
+  // The latest `getMenu`, read when the menu opens: it changes whenever the caller's data does, and the extension
+  // built from it would otherwise rebuild the view, blurring the editor mid-keystroke.
+  const getMenuRef = useRef(getMenu);
+  useLayoutEffect(() => {
+    getMenuRef.current = getMenu;
+  }, [getMenu]);
 
   /**
    * Get filtered options.
    */
   const getMenuOptions = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger, ...props }) => {
-      const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
+      const groups = (await getMenuRef.current?.({ text, trigger, ...props })) ?? [];
       // The "@" menu can use "@@" as syntax for block embeds, so it owns its own query filtering.
       return filter && trigger !== '@'
         ? filterMenuGroups(groups, (item) =>
@@ -99,37 +120,7 @@ export const useEditorMenu = ({
           )
         : groups;
     },
-    [getMenu, filter],
-  );
-
-  /**
-   * Recompute the menu and preselect the first item.
-   */
-  const updateGroups = useCallback(
-    async ({ view, pos, text, trigger }: { view: EditorView; pos: number; text: string; trigger?: string }) => {
-      const request = ++requestRef.current;
-      const groups = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
-      // Queries resolve out of order, so a slower earlier one must not overwrite a newer result
-      // (or repopulate the menu after it closed).
-      if (request !== requestRef.current) {
-        return;
-      }
-
-      groupsRef.current = groups;
-      const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
-      if (firstItem) {
-        setCurrentItem(firstItem.id);
-        currentRef.current = firstItem;
-      } else {
-        // No matches: clear the selection so Enter falls through instead of
-        // selecting a stale item from a previous query.
-        setCurrentItem(undefined);
-        currentRef.current = null;
-      }
-
-      refresh({});
-    },
-    [getMenuOptions],
+    [filter],
   );
 
   const handleOpenChange = useCallback<NonNullable<UseEditorMenu['onOpenChange']>>(
@@ -161,6 +152,36 @@ export const useEditorMenu = ({
     [getMenuOptions],
   );
 
+  /**
+   * Recompute the menu and preselect the first item.
+   */
+  const updateGroups = useCallback(
+    async ({ view, pos, text, trigger }: MenuContext) => {
+      const request = ++requestRef.current;
+      const groups = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
+      // Queries resolve out of order, so a slower earlier one must not overwrite a newer result
+      // (or repopulate the menu after it closed).
+      if (request !== requestRef.current) {
+        return;
+      }
+
+      groupsRef.current = groups;
+      const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
+      if (firstItem) {
+        setCurrentItem(firstItem.id);
+        currentRef.current = firstItem;
+      } else {
+        // No matches: clear the selection so Enter falls through instead of
+        // selecting a stale item from a previous query.
+        setCurrentItem(undefined);
+        currentRef.current = null;
+      }
+
+      refresh({});
+    },
+    [getMenuOptions],
+  );
+
   const handleActivate = useCallback<NonNullable<UseEditorMenu['onActivate']>>(
     async ({ view, trigger }) => {
       const item = getMenuItem(groupsRef.current, currentItem);
@@ -186,9 +207,9 @@ export const useEditorMenu = ({
   }, []);
 
   const handleCancel = useCallback<NonNullable<UseEditorMenu['onCancel']>>(({ view }) => {
-    // Delete trigger.
+    // Delete trigger; a multi-word query may be a sentence the user wants to keep.
     const { range, trigger } = view.state.field(popoverStateField) ?? {};
-    if (range && trigger) {
+    if (range && trigger && !contextRef.current?.multiWord) {
       view.dispatch({
         changes: { ...range, insert: '' },
       });
@@ -224,17 +245,21 @@ export const useEditorMenu = ({
 
   // Array props are compared by CONTENT, not identity: a caller writing `trigger={['#']}` inline
   // hands over a new array every render, and a changed extension destroys and recreates the view —
-  // blurring the editor mid-keystroke.
-  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const serializedSearchTriggers = searchTriggers?.join(',');
-  const serializedDelimiters = activateOnDelimiters?.join(',');
+  // blurring the editor mid-keystroke. The memo reads them back from the key, so the React Compiler keys it the
+  // same way.
+  const arraysKey = JSON.stringify({ trigger, searchTriggers, activateOnDelimiters, multiWordTriggers });
   const extension = useMemo<Extension>(() => {
+    const arrays: Pick<
+      UseEditorMenuProps,
+      'trigger' | 'searchTriggers' | 'activateOnDelimiters' | 'multiWordTriggers'
+    > = JSON.parse(arraysKey);
     return popover({
-      trigger,
+      trigger: arrays.trigger,
       triggerKey,
       placeholder,
       activateOnTyping,
-      activateOnDelimiters,
+      activateOnDelimiters: arrays.activateOnDelimiters,
+      multiWordTriggers: arrays.multiWordTriggers,
       onClose: ({ view }) => handleOpenChange({ view, open: false }),
       onEnter: ({ view }) => {
         if (currentRef.current) {
@@ -246,23 +271,21 @@ export const useEditorMenu = ({
       onArrowUp: () => handleNavigate('up'),
       onArrowDown: () => handleNavigate('down'),
       onTextChange: async ({ view, pos, text, trigger }) => {
-        contextRef.current = { view, pos, text, trigger };
+        const context: MenuContext = {
+          view,
+          pos,
+          text,
+          trigger,
+          multiWord: !!trigger && !!arrays.multiWordTriggers?.includes(trigger),
+        };
+        contextRef.current = context;
         // The input is remounted per activation, so the query always starts empty.
-        setSearch(!!trigger && !!searchTriggers?.includes(trigger));
+        setSearch(!!trigger && !!arrays.searchTriggers?.includes(trigger));
         setQuery('');
-        await updateGroups({ view, pos, text, trigger });
+        await updateGroups(context);
       },
     });
-  }, [
-    handleOpenChange,
-    handleNavigate,
-    updateGroups,
-    serializedTrigger,
-    serializedSearchTriggers,
-    serializedDelimiters,
-    placeholder,
-    activateOnTyping,
-  ]);
+  }, [handleOpenChange, handleNavigate, updateGroups, arraysKey, triggerKey, placeholder, activateOnTyping]);
 
   return {
     groupsRef,

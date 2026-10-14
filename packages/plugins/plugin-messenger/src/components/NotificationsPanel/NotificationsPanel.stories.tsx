@@ -48,7 +48,9 @@ const DefaultStory = ({ onOpen, inboxStatus, empty }: StoryProps) => {
       containers={empty ? NO_CONTAINERS : containers}
       inboxStatus={inboxStatus}
       renderInvitation={({ data, sender }) => (
-        <Card.Text>{`${sender.name} invited you to ${data.spaceName}.`}</Card.Text>
+        <Card.Row icon='ph--envelope-simple--regular'>
+          <Card.Text>{`${sender.name} invited you to ${data.spaceName}.`}</Card.Text>
+        </Card.Row>
       )}
       onOpen={onOpen}
     />

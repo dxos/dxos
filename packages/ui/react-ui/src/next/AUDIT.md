@@ -628,7 +628,9 @@ bundled on purpose (rule 9) and omitted below. Blast radius counts files from `g
 | Tree                    | none yet                                                                                                                                                | TreeView: Root, Tree, Item, ItemText, ItemIndicator, Branch, BranchControl, BranchTrigger, BranchContent, …                                                                  | deferred (point 2)                                                                                                                                                                                 | follow rules 6–8 when built                                                |
 
 25. **Adopt the rules.** DESIGN.md "Part naming (proposed)" 1–12. Recommendation: adopt, then apply 26–39.
-26. **`OrderedList.Viewport` → `OrderedList.Content scroll`.** Content takes `scroll` (and binds the drag
+26. **`OrderedList.Viewport` → `OrderedList.Content scroll`.** Reversed 2026-10-12: both lists compose a `Viewport`
+    to scroll and their Content never scrolls itself (DESIGN.md part-naming rule 3).
+    Originally: Content takes `scroll` (and binds the drag
     auto-scroll ref when it scrolls), matching `Listbox.Content`. Options: (1) default `true`, as Listbox, (2) default
     `false`, as OrderedList behaves today. Recommendation: 1, one default for both lists. Blast: react-ui-list
     `next/OrderedList/OrderedList.tsx`, `OrderedList.stories.tsx` (2 refs); no plugin. Migration: the current

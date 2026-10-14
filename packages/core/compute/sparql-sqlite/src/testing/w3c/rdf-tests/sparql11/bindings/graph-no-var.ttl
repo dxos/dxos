@@ -1,0 +1,16 @@
+@prefix rs:      <http://www.w3.org/2001/sw/DataAccess/tests/result-set#> .
+
+[]  a rs:ResultSet ;
+    rs:resultVariable "x" , "g" ;
+    rs:solution [ rs:binding [ rs:value "1"^^<http://www.w3.org/2001/XMLSchema#integer> ; rs:variable "x" ] ;
+                  rs:binding [ rs:value <data01.ttl> ; rs:variable "g" ]
+                ] ;
+    rs:solution [ rs:binding [ rs:value "1"^^<http://www.w3.org/2001/XMLSchema#integer> ; rs:variable "x" ] ;
+                  rs:binding [ rs:value <data02.ttl> ; rs:variable "g" ]
+                ] ;
+    rs:solution [ rs:binding [ rs:value "2"^^<http://www.w3.org/2001/XMLSchema#integer> ; rs:variable "x" ] ;
+                  rs:binding [ rs:value <data01.ttl> ; rs:variable "g" ]
+                ] ;
+    rs:solution [ rs:binding [ rs:value "2"^^<http://www.w3.org/2001/XMLSchema#integer> ; rs:variable "x" ] ;
+                  rs:binding [ rs:value <data02.ttl> ; rs:variable "g" ]
+                ] .

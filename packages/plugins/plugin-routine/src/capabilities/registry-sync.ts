@@ -65,7 +65,9 @@ export default Capability.makeModule(
     const operationHandlersAtom = yield* Capability.atom(Capabilities.OperationHandler);
     const prevOperationKeys = new Set<string>();
 
-    let syncing = Promise.resolve();
+    // Serializing every operation costs ~150ms of main thread; nothing reads the records during boot,
+    // so the first sync waits for the browser to go idle rather than competing with first render.
+    let syncing = whenIdle();
     atomRegistry.subscribe(
       operationHandlersAtom,
       (handlerSets) => {
@@ -97,12 +99,13 @@ export default Capability.makeModule(
                 continue;
               }
               try {
-                batch.push(Operation.serialize(handler));
+                // Built from typed definitions, so schema validation would only re-check the compiler.
+                batch.push(Operation.serialize(handler, { skipValidation: true }));
               } catch {
                 log.verbose('skipping operation with unserializable schema', { key });
                 prevOperationKeys.add(key);
               }
-              await yieldOrContinue('smooth');
+              await yieldOrContinue('idle');
             }
             if (batch.length > 0) {
               client.graph.registry.add(batch);
@@ -124,3 +127,11 @@ export default Capability.makeModule(
     return [];
   }),
 );
+
+const IDLE_TIMEOUT_MS = 10_000;
+
+/** Resolves on the next idle period where the host has `requestIdleCallback` (browsers), at once otherwise. */
+const whenIdle = (): Promise<void> =>
+  typeof requestIdleCallback === 'function'
+    ? new Promise((resolve) => requestIdleCallback(() => resolve(), { timeout: IDLE_TIMEOUT_MS }))
+    : Promise.resolve();

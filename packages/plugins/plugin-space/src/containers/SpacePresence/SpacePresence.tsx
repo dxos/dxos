@@ -149,20 +149,22 @@ export const FullPresence = (props: MemberPresenceProps) => {
               <Listbox.Root
                 items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}
               >
-                <Listbox.Content aria-label='members'>
-                  {members.map((member) => (
-                    <Listbox.Item
-                      key={member.identityKey}
-                      id={member.identityKey ?? ''}
-                      classNames='flex gap-2 items-center cursor-pointer mb-2'
-                      onClick={() => onMemberClick?.(member)}
-                      data-testid='identity-list-item'
-                    >
-                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                      <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
+                <Listbox.Viewport>
+                  <Listbox.Content aria-label='members'>
+                    {members.map((member) => (
+                      <Listbox.Item
+                        key={member.identityKey}
+                        id={member.identityKey ?? ''}
+                        classNames='flex gap-2 items-center cursor-pointer mb-2'
+                        onClick={() => onMemberClick?.(member)}
+                        data-testid='identity-list-item'
+                      >
+                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                        <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Viewport>
               </Listbox.Root>
             </Popover.Body>
           </Popover.Content>

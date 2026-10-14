@@ -469,10 +469,8 @@ export const constructSpaceNode = ({
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
       onRearrange = (nextOrder: string[]) => {
-        AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
-        Obj.update(spacesOrder, (spacesOrder: any) => {
-          spacesOrder.order = nextOrder;
-        });
+        AppGraph.sortEdges(graph, GraphNode.RootId, AppGraphNode.child, nextOrder);
+        SpaceSchema.setSpacesOrder(spacesOrder, nextOrder);
       };
       spaceRearrangeCache.set(space.id, onRearrange);
     }

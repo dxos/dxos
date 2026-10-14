@@ -45,21 +45,23 @@ export const FrameStack = <T extends FrameStackItem>({
       {({ items }) => (
         // `select-none`: a pointer drag across the previews would otherwise start a native text
         // selection drag, whose ghost is the whole column.
-        <OrderedList.Content classNames={['flex flex-col gap-3 p-3 select-none', classNames]}>
-          {items.map((item, index) => (
-            <OrderedList.Item
-              key={item.id}
-              id={item.id}
-              highlightOnHover
-              classNames='p-1 rounded-sm cursor-pointer aria-selected:ring-2 aria-selected:ring-accent-bg'
-            >
-              {/* The preview itself is the handle: the thumbnail is what a reader expects to grab. */}
-              <OrderedList.DragHandle asChild>
-                <div className='min-w-0 cursor-grab data-[disabled]:cursor-default'>{children(item, index)}</div>
-              </OrderedList.DragHandle>
-            </OrderedList.Item>
-          ))}
-        </OrderedList.Content>
+        <OrderedList.Viewport>
+          <OrderedList.Content classNames={['flex flex-col gap-3 p-3 select-none', classNames]}>
+            {items.map((item, index) => (
+              <OrderedList.Item
+                key={item.id}
+                id={item.id}
+                highlightOnHover
+                classNames='p-1 rounded-sm cursor-pointer aria-selected:ring-2 aria-selected:ring-accent-bg'
+              >
+                {/* The preview itself is the handle: the thumbnail is what a reader expects to grab. */}
+                <OrderedList.DragHandle asChild>
+                  <div className='min-w-0 cursor-grab data-[disabled]:cursor-default'>{children(item, index)}</div>
+                </OrderedList.DragHandle>
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        </OrderedList.Viewport>
       )}
     </OrderedList.Root>
   );

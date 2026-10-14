@@ -25,8 +25,7 @@ import {
 } from './stages/index.ts';
 import { FactStore, FactStoreLive } from './store/index.ts';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
-import { type ExtractDocument } from './types/index.ts';
-import { type Fact } from './types/index.ts';
+import { type ExtractDocument, type Fact, Ontology, Vocab } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -101,8 +100,9 @@ describe('FactPipeline', () => {
     const prompt = buildExtractionPrompt();
     // Questions and requests are extracted as directive facts, tagged by speech act.
     expect(prompt).toContain('Classify each proposition by speech act');
-    // Class membership uses the distinguished `is-a` predicate (rdf:type-like), never bare "is"/"was".
-    expect(prompt).toContain('Use the exact predicate "is-a" for class membership');
+    // Class membership and roles use the ontology's predicates, never bare "is"/"was".
+    expect(prompt).toContain('Use the predicate "is a" for class membership');
+    expect(prompt).toContain('"has role" (The role or job title the subject holds.)');
     // Predicates are atemporal: tense flows into valid-time, and past tense alone does not end a fact.
     expect(prompt).toContain('timeless present form');
     expect(prompt).toContain('does NOT set validTo');
@@ -192,6 +192,42 @@ describe('FactPipeline', () => {
         const predicates = collected[0].facts.map((fact) => fact.assertion.predicate);
         if (predicates.join('|') !== 'works at|works at|is-a') {
           throw new Error(`unexpected predicates: ${predicates.join('|')}`);
+        }
+      });
+    }),
+  );
+
+  it.effect(
+    'normalizeFactsStage maps onto the ontology, keeping each statement in its graph',
+    Effect.fnUntraced(function* () {
+      const input: DocumentFacts = {
+        doc: { text: 'irrelevant', source: 'test:doc' },
+        facts: [testFact('is on the team as'), testFact('likes')],
+      };
+      const collected: DocumentFacts[] = [];
+      yield* Stream.fromIterable([input]).pipe(
+        normalizeFactsStage({ ontology: Ontology.DEFAULT }),
+        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+      );
+      yield* Effect.sync(() => {
+        const [role, likes] = collected[0].facts;
+        if (role.assertion.predicate !== 'has role' || role.assertion.predicateIri !== `${Vocab.DX}hasRole`) {
+          throw new Error(`unexpected predicate: ${role.assertion.predicate}`);
+        }
+        if (likes.assertion.predicateIri !== `${Vocab.DX}like` || role.graph !== likes.graph) {
+          throw new Error('expected a minted predicate in the shared graph');
+        }
+      });
+    }),
+  );
+
+  it.effect(
+    'normalizeEntityId keys an email by its mailto IRI and a URL as itself',
+    Effect.fnUntraced(function* () {
+      yield* Effect.sync(() => {
+        const keys = ['Alice@Enron.com', 'https://dxos.org/team', 'Rich Burdon'].map(normalizeEntityId);
+        if (keys.join('|') !== 'mailto:alice@enron.com|https://dxos.org/team|rich-burdon') {
+          throw new Error(`unexpected keys: ${keys.join('|')}`);
         }
       });
     }),
@@ -435,7 +471,9 @@ describe('FactPipeline', () => {
 
         // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.
         const byEntity = yield* store.query({ entity: 'composer' });
-        const all = yield* store.select('SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }');
+        const all = yield* store.select(
+          'SELECT ?g WHERE { ?g <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://dxos.org/semantic#Graph> }',
+        );
         // Fuzzy predicate: "discussed" is a substring of the stored "discussedIn".
         const byFuzzyPredicate = yield* store.query({ predicate: 'discussed' });
 

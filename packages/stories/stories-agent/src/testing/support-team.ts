@@ -5,9 +5,10 @@
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
+import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import { Organization, Person } from '@dxos/types';
 
 //
@@ -25,6 +26,8 @@ export type SupportTeamMember = {
   expertise: readonly string[];
   /** Their Discord user id, which lets a relay open a DM with them. */
   discordId: string;
+  /** Their Discord username, which is how people name them in a channel. */
+  discordUsername: string;
 };
 
 /** The `Person.identities` label plugin-discord reads a person's Discord user id from. */
@@ -34,6 +37,7 @@ const DISCORD_IDENTITY = 'discord';
 export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   {
     fullName: 'Rich Burdon',
+    discordUsername: 'richburdon',
     discordId: '242308925523755008',
     preferredName: 'Rich',
     jobTitle: 'Founder; product and UI',
@@ -45,6 +49,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Josiah Witt',
+    discordUsername: 'wittjosiah',
     discordId: '332330209858813952',
     preferredName: 'Josiah',
     jobTitle: 'Engineer; Composer app and integrations',
@@ -56,6 +61,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Dmytro Maretskyi',
+    discordUsername: 'dmaretskyi',
     discordId: '389106806086959104',
     preferredName: 'Dmytro',
     jobTitle: 'Engineer; ECHO, compute and agents',
@@ -67,6 +73,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Mykola Veremchuk',
+    discordUsername: 'mykola_vrmchk',
     discordId: '985848421195862056',
     preferredName: 'Mykola',
     jobTitle: 'Engineer; sync, networking and storage',
@@ -80,29 +87,35 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
 
 /**
  * Adds the team, its members and their expertise, unless a previous run already did; gives each member a chat with
- * the agent so an escalation delivers somewhere visible in the story.
+ * the agent so an escalation delivers somewhere visible in the story. The memories go to the agent's brain, which is
+ * EDGE's when its chats run there.
  */
 export const seedSupportTeam = async ({
   db,
   invoker,
   agent,
+  remote = false,
 }: {
   db: Database.Database;
   invoker: Capabilities.OperationInvoker;
   agent: Agent.Agent;
+  remote?: boolean;
 }): Promise<void> => {
   const team =
     (await db.query(Filter.type(Organization.Organization)).run()).find(({ name }) => name === SUPPORT_TEAM_NAME) ??
     db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
-  const existing = new Set((await db.query(Filter.type(Memory.Memory)).run()).map(({ content }) => content));
+  await db.flush({ indexes: true });
+  const brainOptions = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
+  const { data: recalled } = await invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions);
+  const existing = new Set((recalled?.memories ?? []).map(({ content }) => content));
   const remember = async (content: string, subjects: Ref.Ref<Obj.Unknown>[]) => {
     if (existing.has(content)) {
       return;
     }
     const { error } = await invoker.invokePromise(
       MemoryOperation.Remember,
-      { content, kind: 'fact', origin: 'stated', subjects },
-      { spaceId: db.spaceId },
+      { agent: Ref.make(agent), content, kind: 'fact', origin: 'stated', subjects },
+      brainOptions,
     );
     if (error) {
       throw error;
@@ -120,7 +133,7 @@ export const seedSupportTeam = async ({
     // A space seeded before the team had Discord ids gets them now.
     if (existing && !existing.identities?.some(({ label }) => label === DISCORD_IDENTITY)) {
       Obj.update(existing, (existing) => {
-        existing.identities = [...(existing.identities ?? []), identity];
+        (existing.identities ??= []).push(identity);
       });
     }
     // One memory per person, so the list shows each member once with every area they cover.
@@ -138,4 +151,60 @@ export const seedSupportTeam = async ({
     }
   }
   await db.flush({ indexes: true });
+};
+
+/** Where the roster the facts are read from claims to come from; facts are attributed to it. */
+const ROSTER_URL = 'https://dxos.org/team';
+
+/** The team as prose, for the agent to read into facts: who each member is, their Discord account and what they know. */
+const rosterText = (): string =>
+  [
+    `${SUPPORT_TEAM_NAME} is the support team for the community channel. Its members:`,
+    ...SUPPORT_TEAM.map(
+      ({ fullName, preferredName, jobTitle, expertise, discordUsername, discordId }) =>
+        `${fullName} (${preferredName}) is on the ${SUPPORT_TEAM_NAME} team as ${jobTitle}. ` +
+        `On Discord, ${preferredName} is @${discordUsername} (user id ${discordId}). ` +
+        `${preferredName} knows ${expertise.join('; ')}.`,
+    ),
+  ].join('\n\n');
+
+/**
+ * Reads the team roster into the agent's brain, so its Facts hold the team (with Discord usernames) as well as its
+ * memories; skipped once the brain holds any fact other than a memory. A model call on the brain where the agent's chats run, so the
+ * caller does not wait for it, and a failure is only logged.
+ */
+export const seedSupportFacts = async ({
+  db,
+  invoker,
+  agent,
+  remote,
+}: {
+  db: Database.Database;
+  invoker: Capabilities.OperationInvoker;
+  agent: Agent.Agent;
+  remote: boolean;
+}): Promise<void> => {
+  const options = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
+  const { data: brain, error: inspectError } = await invoker.invokePromise(
+    TriggerOperation.InspectBrain,
+    { agent: Ref.make(agent) },
+    options,
+  );
+  if (inspectError) {
+    log.warn('reading the brain before seeding the support facts failed', { error: inspectError });
+    return;
+  }
+  if ((brain?.facts ?? []).some((fact) => fact.kind === undefined)) {
+    return;
+  }
+  const { data, error } = await invoker.invokePromise(
+    AgentOperation.ReadSource,
+    { agent: Ref.make(agent), url: ROSTER_URL, text: rosterText() },
+    options,
+  );
+  if (error) {
+    log.warn('seeding the support facts failed', { error });
+    return;
+  }
+  log.info('seeded the support facts', { facts: data?.facts });
 };

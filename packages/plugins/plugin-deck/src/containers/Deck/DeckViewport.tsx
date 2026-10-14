@@ -674,17 +674,21 @@ const usePlankTiles = (stackRef: RefObject<HTMLDivElement | null>) =>
  * the front therefore spans precisely up to where the trailing pile begins.
  *
  * A layout effect, so the cap lands before first paint — no flash of full-width planks on load.
+ * `fullscreen` re-runs it because the viewport unmounts under the overlay, and observing the detached
+ * element would pin the width at zero after the overlay closes.
  */
 const useMaxPlankWidth = ({
   viewportRef,
   stackRef,
   isSliding,
   plankCount,
+  fullscreen,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
+  fullscreen: boolean;
 }): { maxPlankWidthPx: number; viewportWidthPx: number; pairWidthPx: number | undefined } => {
   const [measured, setMeasured] = useState<{
     maxPlankWidthPx: number;
@@ -730,7 +734,7 @@ const useMaxPlankWidth = ({
     const observer = new ResizeObserver(measure);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [isSliding, plankCount, viewportRef, stackRef]);
+  }, [isSliding, plankCount, fullscreen, viewportRef, stackRef]);
 
   return measured;
 };
@@ -1454,6 +1458,7 @@ export const DeckPlanks = () => {
     stackRef,
     isSliding,
     plankCount: planks.length,
+    fullscreen,
   });
   usePreservedScroll({ viewportRef, isSliding });
   // The plank a select/Enter exit committed to, consumed by `useExposeScroll` on the way out.

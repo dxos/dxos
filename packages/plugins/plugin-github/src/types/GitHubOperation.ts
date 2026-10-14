@@ -329,6 +329,8 @@ export type CheckOutcome = Schema.Schema.Type<typeof CheckOutcome>;
 
 /** One check run on the head commit, as the article lists it. */
 export const CheckRun = Schema.Struct({
+  /** GitHub's id for the run; two runs can share a name and a URL. */
+  id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   outcome: CheckOutcome,
   /** GitHub's own `conclusion` (`timed_out`, `cancelled`, …), kept for the label when it says more than the outcome. */

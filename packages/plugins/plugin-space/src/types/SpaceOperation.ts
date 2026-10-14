@@ -525,13 +525,20 @@ export const AddType = Operation.make({
     // Typed as a record so the tool parameter advertises `type: object`, forcing the model to emit
     // the JSON Schema as an object rather than a JSON-encoded string.
     jsonSchema: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
-      description: 'JSON Schema (draft-07) describing the fields of the new type.',
+      description:
+        'JSON Schema (draft-07) describing the fields of the new type; `id` is added when left out. ' +
+        'For a relation type, set `entityKind: "relation"` and name the ends as ' +
+        '`relationSource: { $ref: "dxn:<typename>" }` and `relationTarget`, as `queryTypes` reports them.',
     }),
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the type.' }),
     typename: Schema.optional(Schema.String).annotate({
       description: 'Typename in reverse-domain form (e.g. com.example.type.project); required with `jsonSchema`.',
     }),
-    version: Schema.optional(Schema.String),
+    version: Schema.optional(Schema.String).annotate({
+      description:
+        'Semver of the type (default 0.1.0). Adding a typename at a version the space already holds ' +
+        'returns the stored type unchanged; pass a new version to store a revised definition.',
+    }),
     show: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({
