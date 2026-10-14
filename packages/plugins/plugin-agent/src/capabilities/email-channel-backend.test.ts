@@ -39,6 +39,7 @@ const fakeMailbox = (spaceId: () => string) => {
       calls.push({ op: 'status', handle });
       return answer(handle);
     },
+    send: () => Effect.die('Not sent by the channel backend.'),
   };
   return { calls, layer: () => Layer.succeed(AgentMailbox.AgentMailboxService, service) };
 };

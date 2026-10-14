@@ -6,8 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
+
+/** Key of the skill an agent acts in Discord with; a plain key, so the config type need not import the skill. */
+export const SKILL_KEY = 'org.dxos.skill.discord';
 
 /** `Channel.backend.kind` of a channel that talks through a Discord bot. */
 export const BACKEND_KIND = 'org.dxos.channel.backend.discord';
@@ -57,6 +61,8 @@ export class DiscordChannel extends Type.makeObject<DiscordChannel>(DXN.make('or
   Properties.pipe(
     Annotation.LabelAnnotation.set(['applicationId']),
     Annotation.IconAnnotation.set({ icon: 'ph--discord-logo--regular', hue: 'indigo' }),
+    // Bound to every conversation of the channel's agent: its written text is not posted, so these are how it speaks.
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
 
