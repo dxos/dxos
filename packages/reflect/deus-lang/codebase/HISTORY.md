@@ -1,5 +1,12 @@
 # History of main
 
+- `30b9cf5cac` Text programs renamed so no name or hash is shared with Sorting or the toolchain (D113) (by claude)
+- `bfb444796f` delete Texts.all Texts.appended Texts.insert Texts.keys Texts.keysGo Texts.kind Texts.kinds Texts.lengths Texts.numbers Texts.occurrences Texts.orderedGo Texts.parseLoop Texts.parsed Texts.phrase Texts.searched Texts.shown Texts.sortTexts Texts.sorted Texts.step Texts.sumParsed Texts.textsSmall
+- `32c632dc0b` task: open f9cd5624 Native: structural equality and ordering of data in the C back end
+- `2ebc88ebd1` task: open 4c9147ce Replication keeps the first scheme of a shared hash; merge schemes as the store does since D114
+- `77b64e330d` task: comment on 72a1f2fb (by claude)
+- `702d8b68ad` Text programs for the C back end (D113) (by claude)
+- `06b414aaec` C back end compiles Text with a runtime ported from the Rust kernel (D113); a hash keeps a scheme that fits every name (D114) (by claude)
 - `f84f1e8092` history: import 702 changes
 - `2b352668f1` task: import from tasks.sexp
 - `753edf4687` history: import 646 changes

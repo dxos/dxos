@@ -1,0 +1,92 @@
+/-
+  Text in the C back end (D113): literals, `++`, `Text.join`, `Text.split`, `Text.indexOf`,
+  `Int.toText` and `Int.fromText`, and ordering texts. Every loop is first-order and specialised
+  to `Text`, so the same definitions run on the interpreter and compile to C and to wasm.
+
+    deus add examples/texts.deus && deus build Texts.parseLoop -o parse --c
+-/
+
+namespace Texts
+
+/-- `0,1,…,n-1`. -/
+def numerals (n : Int) : Text := Text.join "," (List.map Int.toText (List.range 0 n))
+
+def sumParsed (xs : List Text) (acc : Int) : Int :=
+  match xs with
+  | [] => acc
+  | x :: rest => sumParsed rest (acc + Option.getOr (Int.fromText x) 0)
+
+/-- Prints, joins, splits and parses back `0 … n-1`: their sum. -/
+def parsed (n : Int) : Int := sumParsed (Text.split (numerals n) ",") 0
+
+def parseLoop (k : Int) (n : Int) (acc : Int) : Int := if k == 0 then acc else parseLoop (k - 1) n (acc + parsed n)
+
+def occurrences (t : Text) (needle : Text) (from : Int) (acc : Int) : Int :=
+  let i := Text.indexOf t needle from
+  if i < 0 then acc else occurrences t needle (i + 1) (acc + 1)
+
+def phrase (n : Int) (acc : Text) : Text := if n == 0 then acc else phrase (n - 1) (acc ++ "deus " ++ Int.toText n ++ "; ")
+
+/-- Builds a text of `n` phrases by `++` and counts a word in it. -/
+def searched (n : Int) : Int := occurrences (phrase n "") "us 1" 0 0
+
+/-- A linear congruential generator, so every back end orders the same keys. -/
+def step (s : Int) : Int := Int.and (s * 1664525 + 1013904223) 0x7FFFFFFF
+
+def genKeysGo (acc : List Text) (k : Int) (s : Int) : List Text :=
+  if k == 0 then acc else genKeysGo (("key-" ++ Int.toText (Int.ushr s 12)) :: acc) (k - 1) (step s)
+
+def genKeys (n : Int) : List Text := genKeysGo [] n (step 7)
+
+def insertText (x : Text) (xs : List Text) : List Text :=
+  match xs with
+  | [] => [x]
+  | y :: rest => if x <= y then x :: xs else y :: insertText x rest
+
+def sortTexts (xs : List Text) (acc : List Text) : List Text :=
+  match xs with
+  | [] => acc
+  | x :: rest => sortTexts rest (insertText x acc)
+
+/-- The length of `xs` if it is in order, else -1. -/
+def orderedGo (prev : Text) (n : Int) (xs : List Text) : Int :=
+  match xs with
+  | [] => n
+  | x :: rest => if prev > x then -1 else orderedGo x (n + 1) rest
+
+def lengths (xs : List Text) (acc : Int) : Int :=
+  match xs with
+  | [] => acc
+  | x :: rest => lengths rest (acc + Text.length x)
+
+/-- Sorts `n` keys by insertion: the count if in order, plus their total length. -/
+def sortedKeys (n : Int) : Int :=
+  match sortTexts (genKeys n) [] with
+  | [] => 0
+  | x :: rest => orderedGo x 1 rest + lengths (x :: rest) 0
+
+/-- A text result, so the native entry prints Text as the interpreter shows it. -/
+def shown (n : Int) : Text :=
+  Text.trim ("  " ++ Text.join " | " (List.map (fun k => Text.slice k 4 9) (genKeys n)) ++ " \"q\" é ✓ \n")
+
+/-- A `match` on text literals. -/
+def textKind (t : Text) : Int :=
+  match t with
+  | "x" => 1
+  | "yz" => 2
+  | _ => 0
+
+def textKinds (xs : List Text) (acc : Int) : Int :=
+  match xs with
+  | [] => acc
+  | x :: rest => textKinds rest (acc + textKind x)
+
+/-- `++` on lists, written in place over a unique first list. -/
+def listJoined (n : Int) : Int :=
+  let xs := List.map Int.toText (List.range 0 n) ++ ["x", "yz"]
+  lengths xs 0 + textKinds xs 0
+
+/-- Every program here, summed into one number: what the tests compare across back ends. -/
+def all (n : Int) : Int := parsed n + searched n + sortedKeys n + listJoined n + Text.length (shown 5)
+
+test textsSmall := all 30 == 871

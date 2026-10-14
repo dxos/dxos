@@ -270,6 +270,23 @@ def Codebase.diffNamespaces (dir : Text) (a : Text) (b : Text) : {IO, Throw Text
     match pair with
     | (name, before, after) => if before == after then Option.none else Option.some (name, before, after)) (Map.toList joined)
 
+/-- The least general type that both `a` and `b` are instances of: where they differ, a type
+  variable, the same one for the same pair of differences. -/
+def Codebase.generalize (a : Sexp) (b : Sexp) (pairs : Ref (List ((Sexp, Sexp), Sexp))) : Sexp :=
+  let fresh := fun _ =>
+    match List.lookup (a, b) (Ref.get pairs) with
+    | Option.some v => v
+    | Option.none =>
+        let v := Sexp.node "tvar" [Sexp.str ("g" ++ toText (List.length (Ref.get pairs)))]
+        Ref.set pairs (((a, b), v) :: Ref.get pairs)
+        v
+  if a == b then a else
+    match (a, b) with
+    | (Sexp.list (Sexp.sym x :: xs), Sexp.list (Sexp.sym y :: ys)) => if x == y && x == "eff" && List.length xs != List.length ys then Sexp.node "eff" [fresh ()] else if x == y && x != "tvar" && x != "tref" && List.length xs == List.length ys && List.all
+        (fun pair => fst pair == snd pair || isNode (fst pair) && isNode (snd pair))
+        (zip xs ys) then Sexp.list (Sexp.sym x :: List.map (fun pair => Codebase.generalize (fst pair) (snd pair) pairs) (zip xs ys)) else fresh ()
+    | _ => fresh ()
+
 def Codebase.headOf (dir : Text) (branch : Text) : {IO, Throw Text} Text :=
   match branchHead dir branch with
   | Option.some h => h
@@ -297,6 +314,11 @@ def Codebase.init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then
   IO.writeFile (dir ++ "/HEAD") "main\n"
 
 def Codebase.isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
+
+def Codebase.isNode (s : Sexp) : Bool :=
+  match s with
+  | Sexp.list _ => true
+  | _ => false
 
 --
 -- Layers.
@@ -403,6 +425,17 @@ def Codebase.mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Opt
     | [] => Option.none
     | x :: rest => if Set.contains x mine then Option.some x else if Set.contains x seen then go rest seen else go (rest ++ parentsOf dir x) (Set.insert x seen)
   go [b] Map.empty
+
+/-- Metadata for a hash that already has some: names with different annotations can share a hash,
+  since Core has no types, so the stored scheme becomes one that fits every name (D114). -/
+def Codebase.mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
+  match (metaField old "scheme", metaField (Option.some new) "scheme") with
+  | (Option.some a, Option.some b) => if a == b then new else
+      let general := generalize a b (Ref.new [])
+      Sexp.list (Sexp.sym "meta" :: List.map
+        (fun item => if head item == "scheme" then Sexp.node "scheme" [general] else item)
+        (Sexp.args new))
+  | _ => new
 
 /-- A metadata field, e.g. `metaField m "doc"`. -/
 def Codebase.metaField (form : Option Sexp) (key : Text) : Option Sexp :=
@@ -648,7 +681,9 @@ def Codebase.splitName (name : Text) : Option (Text, Text) :=
 /-- Writes a compiled batch's objects and metadata. -/
 def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
   forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
-  forEach b.metas (fun pair => writeMeta dir (fst pair) (snd pair))
+  forEach
+    b.metas
+    (fun pair => writeMeta dir (fst pair) (mergeMeta (readMeta dir (fst pair)) (snd pair)))
 
 --
 -- Branches.

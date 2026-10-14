@@ -537,10 +537,49 @@ def nameIndex (ns : Map Text Entry) : Map Text Text :=
       | some old => if Text.length name < Text.length old then Map.insert key name m else m
       | none => Map.insert key name m) Map.empty (Map.toList ns)
 
+def isNode (s : Sexp) : Bool :=
+  match s with
+  | Sexp.list _ => true
+  | _ => false
+
+/--
+  The least general type that both `a` and `b` are instances of: where they differ, a type
+  variable, the same one for the same pair of differences.
+-/
+def generalize (a : Sexp) (b : Sexp) (pairs : Ref (List ((Sexp, Sexp), Sexp))) : Sexp :=
+  let fresh := fun (_ : Unit) =>
+    match List.lookup (a, b) (Ref.get pairs) with
+    | some v => v
+    | none =>
+      let v := Sexp.node "tvar" [Sexp.str ("g" ++ Int.toText (List.length (Ref.get pairs)))]
+      let _ := Ref.set pairs (((a, b), v) :: Ref.get pairs)
+      v
+  if a == b then a
+  else
+    match (a, b) with
+    | (Sexp.list (Sexp.sym x :: xs), Sexp.list (Sexp.sym y :: ys)) =>
+      if x == y && x == "eff" && List.length xs != List.length ys then Sexp.node "eff" [fresh ()]
+      else if x == y && x != "tvar" && x != "tref" && List.length xs == List.length ys && List.all (fun pair => fst pair == snd pair || (isNode (fst pair) && isNode (snd pair))) (List.zip xs ys) then Sexp.list (Sexp.sym x :: List.map (fun pair => generalize (fst pair) (snd pair) pairs) (List.zip xs ys))
+      else fresh ()
+    | _ => fresh ()
+
+/--
+  Metadata for a hash that already has some: names with different annotations can share a hash,
+  since Core has no types, so the stored scheme becomes one that fits every name (D114).
+-/
+def mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
+  match (metaField old "scheme", metaField (some new) "scheme") with
+  | (some a, some b) =>
+    if a == b then new
+    else
+      let general := generalize a b (Ref.new [])
+      Sexp.list (Sexp.sym "meta" :: List.map (fun item => if Sexp.head item == "scheme" then Sexp.node "scheme" [general] else item) (Sexp.args new))
+  | _ => new
+
 /-- Writes a compiled batch's objects and metadata. -/
 def store (dir : Text) (b : Batch) : {IO} Unit :=
   List.forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
-  List.forEach b.metas (fun pair => writeMeta dir (fst pair) (snd pair))
+  List.forEach b.metas (fun pair => writeMeta dir (fst pair) (mergeMeta (readMeta dir (fst pair)) (snd pair)))
 
 /-- Hashes that `form` references: definitions (terms and types alike) and namespace tree nodes. -/
 def dependencies (form : Sexp) : List Text :=

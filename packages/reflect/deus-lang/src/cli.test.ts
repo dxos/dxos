@@ -577,7 +577,32 @@ describe('deus CLI', () => {
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
-      deus('add', join(root, 'examples/closures.deus'), ...c);
+      deus('add', join(root, 'examples/closures.deus'), join(root, 'examples/texts.deus'), ...c);
+      // Definitions that differ only in their annotations share a hash: its stored scheme fits both
+      // (D114), and their comparisons are decided at run time.
+      deus(
+        'add',
+        file(
+          'shared.deus',
+          [
+            'def beforeInt (x : Int) (y : Int) : Bool := x < y',
+            'def beforeText (x : Text) (y : Text) : Bool := x < y',
+            'def useInt (n : Int) : Int := if beforeInt n 3 then 1 else 0',
+            'def useText (n : Int) : Int := if beforeText (Int.toText n) "3" then 1 else 0',
+            '',
+          ].join('\n'),
+        ),
+        ...c,
+      );
+      expect(deus('view', 'beforeText', ...c).stdout).toContain('-- : a -> a -> Bool\n');
+      for (const name of ['useInt', 'useText']) {
+        expect(deus('build', name, '-o', join(scratch, name), '--c', ...c).code).toBe(0);
+        for (const n of [2, 5]) {
+          expect(spawnSync(join(scratch, name), [String(n)], { encoding: 'utf8' }).stdout).toBe(
+            deus('eval', `${name} ${n}`, ...c).stdout,
+          );
+        }
+      }
       // Mutual recursion, tail loops, data on the heap, nullary constructors, 32-bit wrapping,
       // arrays and refs. Reference counting frees every block by the end of the run (D86).
       for (const [name, args] of [
@@ -592,6 +617,9 @@ describe('deus CLI', () => {
         // Closures, partial application and lambda-lifted prelude letrecs (D111).
         ['Closures.closureLoop', [20, 0]],
         ['Closures.hofLoop', [5, 200, 0]],
+        // Text, `++` on lists, and a Text result printed as the interpreter shows it (D113).
+        ['Texts.all', [30]],
+        ['Texts.shown', [5]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -649,6 +677,7 @@ describe('deus CLI', () => {
 
       const refused = deus('build', 'Text.length', '-o', join(scratch, 'length'), '--c', ...c);
       expect(refused.code).toBe(1);
+      expect(refused.stderr).toContain('length is a primitive, not a definition the C back end compiles');
     },
   );
 
@@ -660,9 +689,10 @@ describe('deus CLI', () => {
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
-      deus('add', join(root, 'examples/closures.deus'), ...c);
+      deus('add', join(root, 'examples/closures.deus'), join(root, 'examples/texts.deus'), ...c);
       for (const [name, args] of [
         ['Closures.hofLoop', [5, 200, 0]],
+        ['Texts.all', [30]],
         ['Bench.trees', [2]],
         ['Bench.queens', [6]],
         ['Sorting.benchMerge', [300, 7]],

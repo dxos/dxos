@@ -128,6 +128,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 118 | 10-14 23:11 | 0h 01m | `22d58083` | JsGen.Spec has no gaps: tests that the js target refuses multi-shot handlers (R-2) and `Js.import` inside an expression (R-3); written in the codebase, whose R2 push was refused (403) from this session, so git carries it |
 | 119 | 10-14 23:02 | 14m 00s | `9fb29946` | devex: the test suite runs in 151 s instead of 315 s; the dogfood and restore tests run in files of their own, so vitest runs them in parallel with the rest (shared `cliHarness`); six devex tasks filed from measured agent wall time |
 | 120 | 10-14 23:30 | 28m 00s | `7350c2dc` | task audit against every exported `tasks.sexp` in git: one done task (82d2d7a2, D95) had been dropped by an export at `b2023784` and is restored; container devex task filed |
-| 121 | 10-14 23:35 | 0h 05m | this commit | CI: the dogfood test took 192 s on a CI shard once it ran in parallel with the rest (stage 119) and hit its 180 s timeout; the dogfood and restore tests now allow 360 s |
+| 121 | 10-14 23:35 | 0h 05m | `5b3ad98b` | CI: the dogfood test took 192 s on a CI shard once it ran in parallel with the rest (stage 119) and hit its 180 s timeout; the dogfood and restore tests now allow 360 s |
+| 122 | 10-14 23:45 | 10m 00s | this commit | C back end compiles `Text`: a C runtime ported from the Rust kernel, `++` in place on unique texts and lists, text patterns, Text results printed as JSON; 4–6× faster than the JIT, 0 live words (D113, task 72a1f2fb); a hash two names share keeps a scheme that fits both, which had crashed `Sorting.checkGo` (D114); landed in the R2 codebase first |
 
-Total from stage 1 to stage 121: 21h 52m.
+Total from stage 1 to stage 122: 22h 02m.

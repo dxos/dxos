@@ -13,9 +13,12 @@ accepts its first-order subset: literals, locals, `let`, `seq`, `if`, `match`, c
 integer and comparison primitives, `Array` and `Ref`, and calls of other such definitions. On top of
 that it compiles higher-order code ([D111](../DECISIONS.md)): lambdas, partial and over-application,
 definitions used as values, calls of unknown functions, and `letrec`, so the prelude's `List.map`,
-`List.filter`, `List.foldl`, `List.zip`, `Option.map` and the like compile. Primitives outside the
-list above (`append`, `Text`, maps) are refused. Error messages for refused forms name the C subset,
-except the ones raised while gathering definitions, which name the wasm subset.
+`List.filter`, `List.foldl`, `List.zip`, `Option.map` and the like compile. A C runtime adds `Text`
+([D113](../DECISIONS.md)): literals, `++` on texts and on lists, `Text.length`, `code`, `slice`,
+`fromCode`, `concat`, `join`, `split`, `indexOf`, `trim`, `Int.toText`, `Int.fromText`, text
+patterns, and `==`, `<`, `compare` on texts. Maps, `show`, `Text.sha256`, `Text.utf8`,
+`Text.fromCodes` and structural equality of data are still refused. Error messages for refused forms
+name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
 
@@ -37,10 +40,20 @@ except the ones raised while gathering definitions, which name the wasm subset.
 | call of an unknown function       | `deus_apply(f, x)`: the code borrows the closure, which reads its captures without counting them   |
 | `fⱼ` applied to too few arguments | the arguments bound, then one lambda per missing parameter around the full call                    |
 | `(letrec (f…) b)`                 | each `f` lifted to a top-level function taking its captures first; uses become direct calls        |
+| `(text "…")`                      | a block made on first use and kept: a count no program brings to one, not counted as live          |
+| a `Text` primitive                | a runtime function (`deus_text_slice` …) that borrows its arguments; owned ones are dropped after  |
+| `a ++ b` on texts                 | `deus_text_extend`: a unique `a` grows in place, doubling its capacity when full                   |
+| `a ++ b` on lists                 | `deus_list_append`: the unique prefix of `a` is relinked in place, the shared rest copied          |
+| `<`, `==` of untyped values       | `deus_cmp_any`, `deus_eq_any`: texts by their units, integers by value; any other block traps      |
 
 The named definition is also exported as `int32_t <name>(int32_t …)`, and `-DDEUS_MAIN` (which
 `deus build` passes) adds a `main` that reads each argument as an integer and prints the result as
-one. A constructed result prints as its address.
+one, or, for a `Text` result, as the interpreter shows it (JSON, in UTF-8). Another constructed result
+prints as its address.
+
+`Text` is a block `[length, capacity, UTF-16 units…]`, so lengths, indices, slicing and ordering
+agree with both kernels unit for unit (JavaScript string semantics). `Int.fromText` wraps to 32 bits
+as `Number(t) | 0` does, exactly for numerals below 2^53.
 
 ## Memory
 
@@ -150,8 +163,35 @@ times ten. A call of an unknown function costs an indirect call; a lambda costs 
 captures. Both are 7–19× faster than the JIT here.
 
 `letrec` functions are lambda-lifted, so their parameters have no stored type. A comparison of two
-values the compiler cannot type checks at run time that neither is a block (and traps if one is)
-rather than compare addresses.
+values the compiler cannot type is decided at run time: texts compare by their units, integers by
+value, and any other block traps rather than compare addresses.
+
+## Text
+
+[`examples/texts.deus`](../../examples/texts.deus) prints, joins, splits and parses numbers
+(`parseLoop`), builds a text by `++` in a loop and searches it (`searched`), and sorts generated keys
+by insertion with `<=` (`sorted`). Every program agrees with the interpreter and ends with 0 live
+words, natively and in wasm built through C.
+
+| Program (best of three)      | CEK interpreter | TS kernel with JIT | wasm in V8 | C, clang -O2 | C, gcc -O2 |
+| ---------------------------- | --------------: | -----------------: | ---------: | -----------: | ---------: |
+| `Texts.parseLoop 200 5000 0` |        1,640 ms |             268 ms |     107 ms |        47 ms |      40 ms |
+| `Texts.searched 200000`      |          250 ms |              76 ms |      29 ms |        18 ms |      17 ms |
+| `Texts.sorted 3000`          |          969 ms |             138 ms |      44 ms |        37 ms |      29 ms |
+
+Native code is 4–6× faster than the JIT here, less than on integers, because the JIT's strings are
+V8's, whose operations are already native.
+
+Interpreter and JIT times are a `deus eval` minus a `deus eval 1`, which removes start-up; wasm
+times are the call alone, in Node. Appending to a unique text writes in place, so the loop that builds
+a text of 200,000 phrases is linear: before that, each `++` copied the whole text, and 5,000 phrases
+took 514 ms natively.
+
+Core has no types, so two definitions that differ only in their annotations share a hash
+(`Sorting.checkGo` on `Int`, `Texts.orderedGo` on `Text`). The store keeps one scheme per hash, and
+it was the last one added, so the C back end compiled the other's comparisons wrongly. Now the stored
+scheme fits both (`a -> Int -> List a -> Int`, [D114](../DECISIONS.md)), and comparisons on a type
+variable are decided at run time.
 
 ## Benchmarks
 
@@ -212,8 +252,9 @@ it now. The rest of the language needs these, in order of how much code they unl
 2. **Closures and partial application:** done (D111). Lambdas are flat closures, known calls
    stay direct C calls, and `letrec` is lambda-lifted, so recursion never builds a closure that
    holds itself.
-3. **Text and the other primitives:** a C runtime with the kernels' semantics (UTF-16 text,
-   insertion-ordered maps), ported from the Rust kernel's `text.rs` and `prims.rs`.
+3. **Text and the other primitives:** `Text` done (D113), with the kernels' UTF-16 semantics,
+   ported from the Rust kernel's `text.rs`. Insertion-ordered maps (`Dict`, `MutMap`), `show` and
+   structural equality of data remain.
 4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an
    operation. Functions with an empty row compile as they do now. Handlers compile by evidence
    passing (Koka): a handler is a record passed to the code under it. An operation whose handler

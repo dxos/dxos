@@ -21,6 +21,9 @@
   mutual recursion in tail position runs in constant stack too.
 
   `Int.div` and `Int.mod` by zero trap, as in wasm.
+
+  `Text` is a block of UTF-16 units with a C runtime ported from the Rust kernel (D113); a unique
+  text that is appended to grows in place.
 -/
 
 namespace CGen
@@ -81,17 +84,18 @@ def prelude (nullary : Int) : Text :=
     "/* A block's header, the word before it: its count times 256, plus its kind. */",
     "#define PHDR(p) ((p)[-1])",
     "#define HDR(v) PHDR(UNBOX(v))",
+    "#define K_TEXT 253",
     "#define K_REF 254",
     "#define K_ARRAY 255",
     "#define UNIQUE(v) (HDR(v) < 512)",
     "static inline V *deus_block(V kind, V body) { V words = body + 1; V *h; deus_live += words; if (deus_live > deus_peak) deus_peak = deus_live; if (words <= 256 && (h = deus_free_lists[words])) deus_free_lists[words] = (V *)(uintptr_t)h[0]; else if (words <= 256 || !(h = deus_big_take(words))) h = deus_raw(words); h[0] = 256 | kind; return h + 1; }",
-    "static inline V deus_body(V *p) { V k = PHDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k + 1; }",
+    "static inline V deus_body(V *p) { V k = PHDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k == K_TEXT ? 2 + (p[1] + 3) / 4 : k + 1; }",
     "static inline void deus_release(V *p) { V words = deus_body(p) + 1; deus_live -= words; if (words <= 256) { p[-1] = (V)(uintptr_t)deus_free_lists[words]; deus_free_lists[words] = p - 1; } else { p[-1] = (V)(uintptr_t)deus_big; p[0] = words; deus_big = p - 1; } }",
     "static V *deus_stack, deus_sp, deus_cap;",
     "static void deus_push(V v) { if (deus_sp == deus_cap) { V cap = deus_cap ? 2 * deus_cap : 1024; V *bigger = deus_raw(cap); for (V i = 0; i < deus_sp; i++) bigger[i] = deus_stack[i]; deus_stack = bigger; deus_cap = cap; } deus_stack[deus_sp++] = v; }",
     "static void deus_free(V *p) {",
     "  for (;;) {",
-    "    V k = PHDR(p) & 255; V *from = k == K_REF ? p : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k;",
+    "    V k = PHDR(p) & 255; V *from = k == K_REF ? p : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k == K_TEXT ? 0 : k;",
     "    for (V i = 0; i < n; i++) { V c = from[i]; if (IS_PTR(c)) { if (!UNIQUE(c)) HDR(c) -= 256; else deus_push(c); } }",
     "    deus_release(p);",
     "    if (deus_sp == 0) return;",
@@ -114,6 +118,44 @@ def prelude (nullary : Int) : Text :=
     "#define AT(a, i) ({ V *a_ = UNBOX(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
     "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
       ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
+    "/* Text is a block [length, capacity, UTF-16 units…] (D113). These borrow their arguments. */",
+    "#define TLEN(v) (UNBOX(v)[0])",
+    "#define TCAP(v) (UNBOX(v)[1])",
+    "#define TU(v) ((uint16_t *)(UNBOX(v) + 2))",
+    "static V deus_text_cap(V n, V cap) { cap = (cap + 3) & ~(V)3; V *p = deus_block(K_TEXT, 2 + cap / 4); p[0] = n; p[1] = cap; return BOX(p); }",
+    "static V deus_text(V n) { return deus_text_cap(n, n); }",
+    "static void deus_units(uint16_t *d, const uint16_t *s, V n) { for (V i = 0; i < n; i++) d[i] = s[i]; }",
+    "static V deus_text_of(const uint16_t *s, V n) { V r = deus_text(n); deus_units(TU(r), s, n); return r; }",
+    "static V deus_text_append(V a, V b) { V m = TLEN(a), n = TLEN(b); if (n == 0) return deus_dup(a); if (m == 0) return deus_dup(b); V r = deus_text(m + n); deus_units(TU(r), TU(a), m); deus_units(TU(r) + m, TU(b), n); return r; }",
+    "/* `a ++ b` that consumes `a`: a unique `a` grows in place, doubling its capacity when it is full, so a loop that appends to its text is linear. */",
+    "static V deus_text_extend(V a, V b) { V m = TLEN(a), n = TLEN(b); if (n == 0) return a; if (IS_PTR(a) && UNIQUE(a)) { if (m + n <= TCAP(a)) { deus_units(TU(a) + m, TU(b), n); TLEN(a) = m + n; return a; } V r = deus_text_cap(m + n, 2 * (m + n)); deus_units(TU(r), TU(a), m); deus_units(TU(r) + m, TU(b), n); deus_release(UNBOX(a)); return r; } V r = deus_text_append(a, b); deus_drop(a); return r; }",
+    "static V deus_text_cmp(V a, V b) { V m = TLEN(a), n = TLEN(b); uint16_t *x = TU(a), *y = TU(b); for (V i = 0; i < m && i < n; i++) if (x[i] != y[i]) return x[i] < y[i] ? -1 : 1; return m < n ? -1 : m > n ? 1 : 0; }",
+    "static V deus_text_eq(V a, V b) { if (a == b) return 1; V n = TLEN(a); if (n != TLEN(b)) return 0; uint16_t *x = TU(a), *y = TU(b); for (V i = 0; i < n; i++) if (x[i] != y[i]) return 0; return 1; }",
+    "static V deus_text_code(V t, V i) { return (uint32_t)i < (uint32_t)TLEN(t) ? (V)TU(t)[i] : -1; }",
+    "static V deus_clamp(V i, V n) { return i < 0 ? (n + i < 0 ? 0 : n + i) : i > n ? n : i; }",
+    "static V deus_text_slice(V t, V s, V e) { V n = TLEN(t), from = deus_clamp(s, n), to = deus_clamp(e, n); if (from == 0 && to == n) return deus_dup(t); return deus_text_of(TU(t) + from, from < to ? to - from : 0); }",
+    "static V deus_text_from_code(V c) { uint16_t u = (uint16_t)c; return deus_text_of(&u, 1); }",
+    "static V deus_text_index(V t, V needle, V from) { V n = TLEN(t), m = TLEN(needle), i = from < 0 ? 0 : from > n ? n : from; uint16_t *x = TU(t), *y = TU(needle); for (; i + m <= n; i++) { V j = 0; while (j < m && x[i + j] == y[j]) j++; if (j == m) return i; } return -1; }",
+    "static int deus_space(uint16_t u) { return (u >= 9 && u <= 13) || u == 32 || u == 0xa0 || u == 0x1680 || (u >= 0x2000 && u <= 0x200a) || u == 0x2028 || u == 0x2029 || u == 0x202f || u == 0x205f || u == 0x3000 || u == 0xfeff; }",
+    "static V deus_text_trim(V t) { V n = TLEN(t), s = 0, e = n; uint16_t *x = TU(t); while (s < n && deus_space(x[s])) s++; while (e > s && deus_space(x[e - 1])) e--; return deus_text_slice(t, s, e); }",
+    "/* A list is nil, the static block [0], or a block [1, head, tail]. */",
+    "static V deus_text_join(V sep, V xs) { V n = 0, k = 0; for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2], k++) n += TLEN(UNBOX(c)[1]); if (k == 1) return deus_dup(UNBOX(xs)[1]); if (k > 1) n += (k - 1) * TLEN(sep); V r = deus_text(n); uint16_t *d = TU(r); for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { if (c != xs) { deus_units(d, TU(sep), TLEN(sep)); d += TLEN(sep); } V h = UNBOX(c)[1]; deus_units(d, TU(h), TLEN(h)); d += TLEN(h); } return r; }",
+    "static V deus_cons(V h, V t) { V *p = deus_block(2, 3); p[0] = 1; p[1] = h; p[2] = t; return BOX(p); }",
+    "static V deus_text_split(V t, V sep) { V n = TLEN(t), m = TLEN(sep), r, *slot = &r; uint16_t *x = TU(t), *y = TU(sep); if (m == 0) { for (V i = 0; i < n; i++) { V c = deus_cons(deus_text_of(x + i, 1), 0); *slot = c; slot = &UNBOX(c)[2]; } } else { V start = 0, i = 0; while (i + m <= n) { V j = 0; while (j < m && x[i + j] == y[j]) j++; if (j == m) { V c = deus_cons(deus_text_of(x + start, i - start), 0); *slot = c; slot = &UNBOX(c)[2]; i += m; start = i; } else i++; } V c = deus_cons(deus_text_of(x + start, n - start), 0); *slot = c; slot = &UNBOX(c)[2]; } *slot = STATIC(&deus_nullary[0]); return r; }",
+    "static V deus_int_text(V v) { uint16_t u[12]; int k = 12; uint32_t m = (int32_t)v < 0 ? 0u - (uint32_t)v : (uint32_t)v; do { u[--k] = (uint16_t)('0' + m % 10); m /= 10; } while (m); if ((int32_t)v < 0) u[--k] = '-'; return deus_text_of(u + k, 12 - k); }",
+    "/* `/^-?[0-9]+$/`, then wrapped to 32 bits as `Number(t) | 0` is (exactly, below 2^53). */",
+    "static V deus_text_int(V t) { V n = TLEN(t), i = 0; uint16_t *x = TU(t); int neg = n > 0 && x[0] == '-'; if (neg) i = 1; if (i == n) return STATIC(&deus_nullary[0]); uint32_t m = 0; for (; i < n; i++) { if (x[i] < '0' || x[i] > '9') return STATIC(&deus_nullary[0]); m = m * 10 + (x[i] - '0'); } V *p = deus_block(1, 2); p[0] = 1; p[1] = W(neg ? 0u - m : m); return BOX(p); }",
+    "/* A literal is made once, on first use, with a count no program brings to one, and is not counted as live. */",
+    "static V deus_literal(const uint16_t *u, V n) { V r = deus_text_of(u, n); HDR(r) = ((V)1 << 48) | K_TEXT; deus_live -= deus_body(UNBOX(r)) + 1; return r; }",
+    "/* Values whose type the compiler does not know: a text is a heap block of kind K_TEXT, an Int is not a block. */",
+    "#define IS_TEXT(v) (IS_PTR(v) && (HDR(v) & 255) == K_TEXT)",
+    "static V deus_cmp_any(V a, V b) { if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_cmp(a, b); if (IS_PTR(a) || IS_PTR(b)) __builtin_trap(); return (a > b) - (a < b); }",
+    "static V deus_eq_any(V a, V b) { if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_eq(a, b); if (IS_PTR(a) || IS_PTR(b)) __builtin_trap(); return a == b; }",
+    "static V deus_text_concat(V xs) { static struct { V h, n, cap; } empty = {0, 0, 0}; return deus_text_join(STATIC(&empty.n), xs); }",
+    "static inline V deus_int_cmp(V x, V y) { return (x > y) - (x < y); }",
+    "/* `++` on lists: the unique prefix of the first list is relinked in place, the rest copied (D113). Consumes both. */",
+    "static V deus_list_append(V a, V b) { V r, *slot = &r, c = a; int mine = 1; while (UNBOX(c)[0]) { V *p = UNBOX(c); if (mine && UNIQUE(c)) { *slot = c; slot = &p[2]; } else { if (mine) HDR(c) -= 256; mine = 0; V n = deus_cons(deus_dup(p[1]), 0); *slot = n; slot = &UNBOX(n)[2]; } c = p[2]; } *slot = b; return r; }",
+    "static V deus_append_any(V a, V b) { if (IS_TEXT(a)) { V r = deus_text_extend(a, b); deus_drop(b); return r; } return deus_list_append(a, b); }",
     ""]
 
 /-- A C integer literal; the most negative `Int` has no literal of its own. -/
@@ -312,6 +354,7 @@ def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text}
   | Sexp.list [Sexp.sym "pvar"] => ("", v :: env, [])
   | Sexp.list [Sexp.sym "pas", p] => pattern ctx v (v :: env) p
   | Sexp.list [Sexp.sym "pint", Sexp.int n] => ("if (" ++ local v ++ " != " ++ lit n ++ ") break; ", env, [])
+  | Sexp.list [Sexp.sym "ptext", Sexp.str t] => ("if (!deus_text_eq(" ++ local v ++ ", " ++ textLiteral t ++ ")) break; ", env, [])
   | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => ("if (" ++ local v ++ " != " ++ Int.toText tag ++ ") break; ", env, [])
   | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
     let tagTest := "if (UNBOX(" ++ local v ++ ")[0] != " ++ Int.toText tag ++ ") break; "
@@ -453,6 +496,12 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
   let ret := fun (x : Text) => if tail then "return " ++ x ++ ";" else x
   match e with
   | Sexp.list [Sexp.sym "int", Sexp.int n] => ret (lit n)
+  | Sexp.list [Sexp.sym "text", Sexp.str t] => ret (textLiteral t)
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] =>
+    -- A primitive used as a value is its eta-expansion: one lambda per parameter.
+    let arity := primArity p
+    if arity <= 0 then throw ("the primitive " ++ p ++ " as a value is outside the C subset")
+    else form ctx env tail owned token (List.foldl (fun body _ => Sexp.node "lam" [body]) (Sexp.node "app" (Sexp.node "prim" [Sexp.str p] :: List.map (fun i => Sexp.node "var" [Sexp.int i]) (List.reverse (List.range 0 arity)))) (List.range 0 arity))
   | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => ret ("(V)" ++ Int.toText tag)
   | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int tag, Sexp.int 0] => ret ("STATIC(&deus_nullary[" ++ Int.toText tag ++ "])")
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int n] :: xs) =>
@@ -504,7 +553,10 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
     let _ := Wasm.setType ctx.cScope l (Wasm.typeOf ctx.cScope env v)
     before tail ("V " ++ local l ++ " = " ++ expr ctx env false mine first v ++ "; ") (expr ctx (l :: env) tail (l :: rest) second b)
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ expr ctx env false owned none a ++ ")")
-  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) => ret (primitive ctx env owned token e p xs)
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) =>
+    match runtime ctx env owned token p xs with
+    | some code => ret code
+    | none => ret (primitive ctx env owned token e p xs)
   | Sexp.list [Sexp.sym "lam", b] => ret (lambdaClosure ctx env owned b)
   | Sexp.list [Sexp.sym "ref", Sexp.str h] => form ctx env tail owned token (partial h (arityOf ctx h) [])
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
@@ -535,6 +587,71 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
         ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })")
       | _ => throw "an application without arguments"
   | other => throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
+
+/-- A Text literal (D113): made on first use and kept, so it is a heap block like any other text. -/
+def textLiteral (t : Text) : Text :=
+  let n := Text.length t
+  let units := if n == 0 then "0" else Text.join ", " (List.map (fun i => Int.toText (Text.code t i)) (List.range 0 n))
+  "({ static V s_; static const uint16_t u_[" ++ Int.toText (larger n 1) ++ "] = {" ++ units ++ "}; s_ ? s_ : (s_ = deus_literal(u_, " ++ Int.toText n ++ ")); })"
+
+/-- A call of a runtime function that borrows the arguments `borrows` marks: each is passed as it is, and dropped after if owned. -/
+def lending (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (borrows : List Bool) (call : List Text -> Text) (xs : List Sexp) : {Throw Text} Text :=
+  match sequence ctx env owned token borrows xs with
+  | (decls, values, after) => "({ " ++ decls ++ "V r = " ++ call values ++ "; " ++ after ++ "r; })"
+
+/-- The runtime function of a primitive on `Text` (D113). -/
+def textFunction (p : Text) : Option Text :=
+  List.lookup p [
+    ("Text.length", "TLEN"), ("Text.code", "deus_text_code"), ("Text.slice", "deus_text_slice"),
+    ("Text.fromCode", "deus_text_from_code"), ("Text.concat", "deus_text_concat"), ("Text.join", "deus_text_join"),
+    ("Text.split", "deus_text_split"), ("Text.indexOf", "deus_text_index"), ("Text.trim", "deus_text_trim"),
+    ("Int.toText", "deus_int_text"), ("Int.fromText", "deus_text_int")]
+
+/-- How many arguments a primitive the C back end compiles takes, or 0. -/
+def primArity (p : Text) : Int :=
+  if List.any (fun x => x == p) ["Text.length", "Text.fromCode", "Text.concat", "Text.trim", "Int.toText", "Int.fromText"] then 1
+  else if List.any (fun x => x == p) ["Text.slice", "Text.indexOf"] then 3
+  else if Option.isSome (macro p) || Option.isSome (infix p) || List.any (fun x => x == p) ["Text.code", "Text.join", "Text.split", "append", "compare"] then 2
+  else 0
+
+/--
+  A primitive the C runtime implements (D113): those on `Text`, `++` on texts and on lists, and
+  comparisons of texts by their UTF-16 units, as JavaScript orders strings. None for the others.
+-/
+def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (p : Text) (xs : List Sexp) : {Throw Text} Option Text :=
+  let types := List.map (Wasm.typeOf ctx.cScope env) xs
+  let isText := List.any (fun t => t == Wasm.tref "#Text") types
+  let isList := List.any (fun t => Wasm.headName t == some "#List") types
+  -- Unknown (a lifted function's parameter) or a type variable (a hash whose names differ in type, D114).
+  let isDynamic := not (List.isEmpty types) && List.all (fun t => t == Wasm.unknown || Sexp.head t == "tvar") types
+  let lend := fun (call : List Text -> Text) => some (lending ctx env owned token (List.map (fun _ => true) xs) call xs)
+  match textFunction p with
+  | some f => lend (fun vs => f ++ args vs)
+  | none =>
+    if p == "append" && isText then some (lending ctx env owned token [false, true] (fun vs => "deus_text_extend" ++ args vs) xs)
+    else if p == "append" && isList then
+      match sequence ctx env owned token [] xs with
+      | (decls, values, _) => some ("({ " ++ decls ++ "deus_list_append" ++ args values ++ "; })")
+    else if p == "append" && isDynamic then
+      match sequence ctx env owned token [] xs with
+      | (decls, values, _) => some ("({ " ++ decls ++ "deus_append_any" ++ args values ++ "; })")
+    else if p == "append" then throw "++ on values not known to be Text or a List is outside the C subset"
+    else if p == "compare" && isText then lend (fun vs => "deus_text_cmp" ++ args vs)
+    else if p == "compare" && List.all Wasm.isScalar types then lend (fun vs => "deus_int_cmp" ++ args vs)
+    else if p == "eq" && isText then lend (fun vs => "deus_text_eq" ++ args vs)
+    else if p == "neq" && isText then lend (fun vs => "!deus_text_eq" ++ args vs)
+    else if p == "compare" && isDynamic then lend (fun vs => "deus_cmp_any" ++ args vs)
+    else if p == "eq" && isDynamic then lend (fun vs => "deus_eq_any" ++ args vs)
+    else if p == "neq" && isDynamic then lend (fun vs => "!deus_eq_any" ++ args vs)
+    else if isDynamic && Wasm.isComparison p then
+      match infix p with
+      | some op => lend (fun vs => "(V)(deus_cmp_any" ++ args vs ++ " " ++ op ++ " 0)")
+      | none => none
+    else if isText && Wasm.isComparison p then
+      match infix p with
+      | some op => lend (fun vs => "(V)(deus_text_cmp" ++ args vs ++ " " ++ op ++ " 0)")
+      | none => none
+    else none
 
 /--
   A primitive. `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83). Their
@@ -586,12 +703,7 @@ def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option 
     | (_, [ca, cb], [a, b]) =>
       let ta := Wasm.typeOf ctx.cScope env a
       let tb := Wasm.typeOf ctx.cScope env b
-      if Wasm.isComparison p && ta == Wasm.unknown && tb == Wasm.unknown then
-        -- Untyped (a lifted function's parameters): integers compare; a block traps rather than compare addresses.
-        match infix p with
-        | some op => block ("V x = " ++ ca ++ ", y = " ++ cb ++ "; if (IS_PTR(x) || IS_PTR(y)) __builtin_trap(); (V)(x " ++ op ++ " y)")
-        | none => throw ("the primitive " ++ p ++ " is outside the C subset")
-      else if Wasm.isComparison p && not (Wasm.isScalar ta || Wasm.isScalar tb) then
+      if Wasm.isComparison p && not (Wasm.isScalar ta || Wasm.isScalar tb) then
         throw (p ++ " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
       else
         match (macro p, infix p) with
@@ -689,14 +801,23 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
   let inputs := List.range 0 arity
   let entry := "EXPORT(\"" ++ export ++ "\") int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
+  let result := match List.head? fns with
+    | some f => snd (Wasm.peel f.fnArity f.fnType)
+    | none => Wasm.unknown
+  let argv := List.map (fun i => "(int32_t)atol(argv[" ++ Int.toText (i + 1) ++ "])") inputs
+  -- A Text result prints as the interpreter shows it: JSON, in UTF-8.
+  let run := if result == Wasm.tref "#Text" then
+      "  deus_init(); V r = f0" ++ args (List.map (fun a => "(V)" ++ a) argv) ++ "; deus_print_text(r); deus_drop(r);"
+    else "  printf(\"%d\\n\", " ++ export ++ args argv ++ ");"
   let main := Text.join "\n" [
     "#ifdef __wasm__",
     "EXPORT(\"deus_live\") int32_t deus_live_words(void) { return (int32_t)deus_live; }",
     "#elif defined(DEUS_MAIN)",
     "#include <stdio.h>",
+    "static void deus_print_text(V t) { V n = TLEN(t); uint16_t *x = TU(t); putchar('\"'); for (V i = 0; i < n; i++) { uint32_t u = x[i]; if (u == '\"' || u == '\\\\') { putchar('\\\\'); putchar(u); } else if (u == '\\n') fputs(\"\\\\n\", stdout); else if (u == '\\r') fputs(\"\\\\r\", stdout); else if (u == '\\t') fputs(\"\\\\t\", stdout); else if (u == 8) fputs(\"\\\\b\", stdout); else if (u == 12) fputs(\"\\\\f\", stdout); else if (u < 32) printf(\"\\\\u%04x\", u); else if (u >= 0xd800 && u < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000) { uint32_t c = 0x10000 + ((u - 0xd800) << 10) + (x[++i] - 0xdc00); putchar(0xf0 | c >> 18); putchar(0x80 | (c >> 12 & 63)); putchar(0x80 | (c >> 6 & 63)); putchar(0x80 | (c & 63)); } else if (u >= 0xd800 && u < 0xe000) printf(\"\\\\u%04x\", u); else if (u < 0x80) putchar(u); else if (u < 0x800) { putchar(0xc0 | u >> 6); putchar(0x80 | (u & 63)); } else { putchar(0xe0 | u >> 12); putchar(0x80 | (u >> 6 & 63)); putchar(0x80 | (u & 63)); } } puts(\"\\\"\"); }",
     "int main(int argc, char **argv) {",
     "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++ Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }",
-    "  printf(\"%d\\n\", " ++ export ++ args (List.map (fun i => "(int32_t)atol(argv[" ++ Int.toText (i + 1) ++ "])") inputs) ++ ");",
+    run,
     "  if (getenv(\"DEUS_HEAP_STATS\")) fprintf(stderr, \"heap: %ld words bumped, %ld live, %ld peak\\n\", (long)(deus_hp - deus_base), (long)deus_live, (long)deus_peak);",
     "  return 0;",
     "}",
@@ -797,6 +918,8 @@ def liftAll (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
   let fns := liftAll (Wasm.gather fetch meta main)
   let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody) fns)
-  unit fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
+  -- A definition that is only a primitive is inlined at its calls and gathers to nothing.
+  if List.isEmpty fns then throw (export ++ " is a primitive, not a definition the C back end compiles")
+  else unit fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 
 end CGen

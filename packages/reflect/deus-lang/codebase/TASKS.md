@@ -243,11 +243,29 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - priority: medium
 - labels: native, perf
 
+> claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
 - priority: medium
 - labels: native, perf
+
+## Native: structural equality and ordering of data in the C back end (`f9cd5624`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+eq, compare and < on constructed values are refused in C (and wasm compares only some data types); the runtime can walk blocks by kind as the kernels' equal and compare do.
+
+## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D114 (`4c9147ce`)
+
+- state: todo
+- priority: medium
+- labels: codebase, bug
+
+Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D114. Merge the scheme with Codebase.mergeMeta on import.
 
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
