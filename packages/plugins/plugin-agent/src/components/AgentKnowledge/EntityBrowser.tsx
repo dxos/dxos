@@ -35,10 +35,8 @@ const matches = (card: EntityCardModel, filter: string): boolean => {
   return !text || card.label.toLowerCase().includes(text) || !!card.type?.toLowerCase().includes(text);
 };
 
-/** What a column stacks: entity cards, or the statements (a memory's claims) a text-valued property holds. */
-type Column =
-  | { kind: 'entities'; cards: readonly EntityCardModel[] }
-  | { kind: 'statements'; texts: readonly string[] };
+/** What a column stacks: entity cards, then the statements (a memory's claims) of the property that opened it. */
+type Column = { cards: readonly EntityCardModel[]; texts: readonly string[] };
 
 type ColumnProps = Pick<EntityBrowserProps, 'icons' | 'hues'> & {
   column: Column;
@@ -127,42 +125,40 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
             <ScrollArea.Viewport>
               <Focus.Group asChild onKeyDown={handleKeyDown} ref={stackRef}>
                 <Layout.Flex column gap='sm' classNames='p-2'>
-                  {column.kind === 'statements' &&
-                    column.texts
-                      .filter((text) => text.toLowerCase().includes(filter.trim().toLowerCase()))
-                      .map((text) => (
-                        <KnowledgeCard
-                          key={text}
-                          icon='ph--quotes--regular'
-                          title={text}
-                          rows={[]}
-                          testId='entity-statement'
-                        />
-                      ))}
-                  {column.kind === 'entities' &&
-                    column.cards
-                      .filter((card) => matches(card, filter))
-                      .map((card) => {
-                        const chosen = selection?.cardId === card.id;
-                        return (
-                          <Focus.Item
-                            key={card.id}
-                            asChild
-                            current={chosen}
-                            onCurrentChange={() => onChoose({ cardId: card.id })}
-                          >
-                            <EntityCard
-                              card={card}
-                              icons={icons}
-                              hues={hues}
-                              selected={chosen}
-                              currentProperty={chosen ? selection?.property : undefined}
-                              onSelectProperty={(property) => onChoose({ cardId: card.id, property })}
-                              onSelect={(entity, property) => onChoose({ cardId: card.id, property, entity })}
-                            />
-                          </Focus.Item>
-                        );
-                      })}
+                  {column.cards
+                    .filter((card) => matches(card, filter))
+                    .map((card) => {
+                      const chosen = selection?.cardId === card.id;
+                      return (
+                        <Focus.Item
+                          key={card.id}
+                          asChild
+                          current={chosen}
+                          onCurrentChange={() => onChoose({ cardId: card.id })}
+                        >
+                          <EntityCard
+                            card={card}
+                            icons={icons}
+                            hues={hues}
+                            selected={chosen}
+                            currentProperty={chosen ? selection?.property : undefined}
+                            onSelectProperty={(property) => onChoose({ cardId: card.id, property })}
+                            onSelect={(entity, property) => onChoose({ cardId: card.id, property, entity })}
+                          />
+                        </Focus.Item>
+                      );
+                    })}
+                  {column.texts
+                    .filter((text) => text.toLowerCase().includes(filter.trim().toLowerCase()))
+                    .map((text) => (
+                      <KnowledgeCard
+                        key={text}
+                        icon='ph--quotes--regular'
+                        title={text}
+                        rows={[]}
+                        testId='entity-statement'
+                      />
+                    ))}
                 </Layout.Flex>
               </Focus.Group>
             </ScrollArea.Viewport>
@@ -198,20 +194,20 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
     };
 
     const columns = useMemo(() => {
-      const result: Column[] = [{ kind: 'entities', cards }];
+      const result: Column[] = [{ cards, texts: [] }];
       for (const selection of path) {
         const card = byId.get(selection.cardId);
         const next = card ? related(card, selection).flatMap((id) => byId.get(id) ?? []) : [];
-        if (next.length > 0) {
-          result.push({ kind: 'entities', cards: next });
-          continue;
-        }
-        // A statement links to nothing further, so a column of them ends the chain.
+        // A property can hold entities and text alike, so its column shows both.
         const texts = card ? statements(card, selection) : [];
-        if (texts.length > 0) {
-          result.push({ kind: 'statements', texts });
+        if (next.length === 0 && texts.length === 0) {
+          break;
         }
-        break;
+        result.push({ cards: next, texts });
+        // A statement links to nothing further, so a column of only statements ends the chain.
+        if (next.length === 0) {
+          break;
+        }
       }
       return result;
     }, [cards, byId, path]);
