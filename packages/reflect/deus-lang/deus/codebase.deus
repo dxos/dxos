@@ -2,13 +2,13 @@
   The codebase: a content-addressed store in a `.deus` directory (Unison's model).
 
     objects/<h[0..2]>/<h>   every hashed object: types, abilities, terms, tests, theorems,
-                            namespace snapshots and causal history nodes
+                            namespace snapshots, causal history nodes, and tasks with their
+                            snapshots (D59, `deus/tasks.deus`)
     meta/<h>                metadata of an object (signature, doc, local names); not hashed
     branches/<name>         the causal hash a branch points at
     HEAD                    the current branch name
     results/<h>             test and proof verdicts, keyed by the hash of what was checked
     provenance/<causal>     who or what produced a change (an agent, a prompt digest)
-    tasks                   issues, as hashed objects beside the code (D59, `deus/tasks.deus`)
     artifacts/<h>           built executables, by the hash of their inputs; local only
     cache/                  re-computable data (fetched artifacts); never replicated
 
@@ -95,10 +95,13 @@ def mayDependOn (layer : Text) : List Text :=
   else if layer == "proofs" then ["code", "proofs"]
   else ["code", "tests", "proofs", "history"]
 
-/-- Every layer with where it lives and whether it is replicated. -/
+/--
+  Every layer with where it lives and whether `push` and `pull` carry it: bundles hold objects
+  and metadata, and assets travel beside them; verdicts and provenance stay on the machine.
+-/
 def layers : List (Text, Text, Bool) :=
   [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true),
-    ("results", "results/", true), ("provenance", "provenance/", true), ("assets", "assets/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
+    ("results", "results/", false), ("provenance", "provenance/", false), ("assets", "assets/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
 
 /-- Hashes of every object in the store. -/
 def allObjects (dir : Text) : {IO} List Text :=

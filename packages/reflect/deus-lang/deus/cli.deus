@@ -213,19 +213,29 @@ def baseName (path : Text) : Text :=
 /--
   The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
+  The document's prose is kept in each block's metadata (D99): its order, the text before it,
+  and on the first block the frontmatter and on the last the text after it, so the codebase holds
+  the whole document and the export writes it back.
 -/
 def specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) :=
   List.concatMap (fun path =>
     if not (Text.endsWith ".mdl" path) then []
     else
-      let doc := Mdl.parse (readSource path)
+      let text := readSource path
+      let doc := Mdl.parse text
       let prefix := Option.getOr (List.lookup "name" doc.front) (baseName path)
       let declared := Mdl.declared doc
-      List.filterMap (fun b =>
-        if Text.isEmpty b.blockId || b.blockType == "ext" then none
-        else
+      let blocks := List.filter Mdl.stored doc.blocks
+      let last := List.length blocks - 1
+      match Mdl.prose text with
+      | (leads, tail) =>
+        List.mapIndexed (fun i b =>
           let uri := Option.getOr (List.lookup b.blockType declared) ""
-          some (prefix ++ "." ++ b.blockId, Entry.spec (Codebase.put dir (Mdl.toSexp uri b)))) doc.blocks) (expandPaths paths)
+          let h := Codebase.put dir (Mdl.toSexp uri b)
+          let front := if i == 0 then [Sexp.node "front" (List.map (fun kv => Sexp.list [Sexp.str (fst kv), Sexp.str (snd kv)]) doc.front)] else []
+          let after := if i == last && not (Text.isEmpty tail) then [Sexp.node "tail" [Sexp.str tail]] else []
+          Codebase.writeMeta dir h (Sexp.node "meta" ([Sexp.node "document" [Sexp.str prefix], Sexp.node "order" [Sexp.int i], Sexp.node "lead" [Sexp.str (Option.getOr (List.get? leads i) "")]] ++ front ++ after))
+          (prefix ++ "." ++ b.blockId, Entry.spec h)) blocks) (expandPaths paths)
 
 /-- A type error's `(calling #<hash prefix>)` with the definition's name, since the checker sees only hashes. -/
 def nameCallee (ns : Map Text Entry) (message : Text) : Text :=
@@ -402,17 +412,26 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
 def view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let entries := List.map (fun name => lookupName ns name) args.positional
   -- One printer for all entries: its name tables cost more to build than printing one definition.
   let printer := Print.printer ns []
   let dialect := if flag args "core" then "core" else Option.getOr (option args "dialect") "deus"
   if dialect == "deus" || dialect == "ts" || dialect == "core" then () else throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
-  let texts := List.map (fun pair => viewEntryIn printer dir ns (fst pair) (snd pair) dialect) entries
-  let shown := Highlight.forTerminalIn dialect (Text.join "\n\n" texts)
+  -- A spec document's name prints the whole document from its blocks (D99).
+  let documents := Export.specDocuments ns
+  -- (name, kind, hash, text); a document has no hash.
+  let shownFor := fun (name : Text) =>
+    if not (Map.contains name ns) && List.contains name documents then (name, "document", "", Export.document dir ns name)
+    else
+      match lookupName ns name with
+      | (full, e) => (full, Entry.kind e, Entry.hash e, viewEntryIn printer dir ns full e dialect)
+  let views := List.map shownFor args.positional
+  let shown := Text.join "\n\n" (List.map (fun v =>
+    match v with
+    | (_, kind, _, text) => if kind == "document" then text else Highlight.forTerminalIn dialect text) views)
   output args
-    (fun _ => Json.arr (List.map (fun pair =>
-      match pair with
-      | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e)), ("source", Json.str text)]) (List.zip entries texts)))
+    (fun _ => Json.arr (List.map (fun v =>
+      match v with
+      | (name, kind, h, text) => Json.obj ([("name", Json.str name), ("kind", Json.str kind)] ++ (if Text.isEmpty h then [] else [("hash", Json.str h)]) ++ [("source", Json.str text)])) views))
     (fun _ => shown)
 
 def deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
@@ -904,27 +923,44 @@ def checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (path : 
     (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
-/-- Checks the spec objects the codebase names. -/
-def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) : {IO, Throw Text} List Outcome :=
-  List.filterMap (fun pair =>
-    match pair with
-    | (name, Entry.spec h) =>
-      Option.map (fun form =>
-        match Mdl.fromSexp form with
-        | (uri, b) => checkBlock dir ns byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h)
-    | _ => none) (Map.toList ns)
+/-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
+def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+  let wanted := if List.isEmpty documents then Export.specDocuments ns else documents
+  let orderOf := fun (h : Text) =>
+    match Codebase.metaField (Codebase.readMeta dir h) "order" with
+    | some (Sexp.int k) => k
+    | _ => 1000000
+  List.concatMap (fun d =>
+    let mine := List.filterMap (fun pair =>
+      match pair with
+      | (name, Entry.spec h) => if Export.documentOf name == d then some (orderOf h, name, h) else none
+      | _ => none) (Map.toList ns)
+    List.filterMap (fun x =>
+      match x with
+      | (_, name, h) =>
+        Option.map (fun form =>
+          match Mdl.fromSexp form with
+          | (uri, b) => checkBlock dir ns byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h))
+      (List.sortBy (fun a b =>
+        match (a, b) with
+        | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
 
 /--
-  `deus mdl [files|dirs…]`: checks MDL documents, or with no files the spec objects the codebase
-  names. Each block goes to the extension its term's URI names in the codebase; a block whose
-  extension the codebase lacks is reported unchecked.
+  `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D99), MDL
+  files, or with no arguments every spec document the codebase holds. Each block goes to the
+  extension its term's URI names in the codebase; a block whose extension the codebase lacks is
+  reported unchecked.
 -/
 def mdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
-  let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths args.positional)
-  let outcomes := if List.isEmpty args.positional then checkSpecs dir ns byUri else List.concatMap (fun path => checkDoc dir ns byUri path) paths
+  let stored := Export.specDocuments ns
+  let documents := List.filter (fun a => List.contains a stored && not (IO.exists a)) args.positional
+  let files := List.filter (fun a => not (List.contains a documents)) args.positional
+  let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths files)
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns byUri documents else []
+  let outcomes := fromCodebase ++ List.concatMap (fun path => checkDoc dir ns byUri path) paths
   let count := fun (v : Text) => List.length (List.filter (fun o => o.verdict == v) outcomes)
   output args
     (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
@@ -1077,7 +1113,13 @@ def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Tex
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
       if flag args "wasm" then
-        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        -- A signature names a type by IRI; the back end reads the type's object to compare its values (D100).
+        let byIri := Map.fromList (List.filterMap (fun pair =>
+          match snd pair with
+          | Entry.type th iri _ => some (iri, th)
+          | _ => none) (Map.toList ns))
+        let fetch := fun (x : Text) => Option.orElse (Codebase.readObject dir x) (fun _ => Option.bind (Map.lookup x byIri) (Codebase.readObject dir))
+        match try (fun _ => Wasm.compile fetch (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
       else if flag args "c" then
@@ -1497,7 +1539,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)",
-    "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
+    "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",

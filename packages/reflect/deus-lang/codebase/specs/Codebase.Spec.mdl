@@ -1,6 +1,17 @@
 ---
+id: org.dxos.deus.spec.codebase-store
 name: Codebase.Spec
+version: 1.0
 ---
+
+# Codebase store: checked spec
+
+The checkable half of [CODEBASE-STORE.md](../../docs/spec/CODEBASE-STORE.md), which explains each point, written
+in the order of the process (D92): requirements, then the APIs and laws they rest on, then the
+tests and theorems. Every requirement names its evidence. `deus add` compiles the
+[Laws](#laws) section next to [`deus/codebase.deus`](../../deus/codebase.deus), and
+`deus mdl Codebase.Spec` checks that the APIs exist with these types, that every
+law and test it names passes, and that each law states what the spec says.
 
 ## Extensions
 
@@ -10,7 +21,7 @@ name: Codebase.Spec
 | `law` | `org.dxos.deus.law@1.0` |
 | `req` | `org.dxos.deus.req@1.0` |
 
-## Blocks
+## APIs
 
 ```mdl
 api A-1: the object store
@@ -41,11 +52,25 @@ api A-3: history and branches
   - Codebase.merge : Text -> Text -> {IO, Throw Text} MergeResult
 ```
 
+## Hashes and object files
+
 ```mdl
 law L-1: an object is stored under the SHA-256 of its canonical text
   theorem: Codebase.Spec.putNamesByHash
   evidence: test
 ```
+
+```mdl
+req R-1: a file under objects/ is the canonical text and a new line, at objects/<first two>/<hash>
+  by: Codebase.Spec.putNamesByHash
+```
+
+```mdl
+req R-2: builtin hashes (starting with #) are never dependencies
+  by: Codebase.Spec.builtinsAreNotDependencies
+```
+
+## Namespace snapshots
 
 ```mdl
 law L-2: a namespace reads back as written, as a whole and name by name
@@ -59,36 +84,6 @@ law L-3: a snapshot's hash depends only on its names and entries
 ```
 
 ```mdl
-law L-4: a history node reads back as written
-  theorem: Codebase.Spec.causalRoundTrip
-```
-
-```mdl
-req R-1: a file under objects/ is the canonical text and a new line, at objects/<first two>/<hash>
-  by: Codebase.Spec.putNamesByHash
-```
-
-```mdl
-req R-10: tasks merge field by field; labels and links merge as sets
-  gap: task 823f7b83
-```
-
-```mdl
-req R-11: each layer depends only on the layers the table allows
-  by: Codebase.Spec.layersFollowTheTable
-```
-
-```mdl
-req R-12: add and update refuse a batch that crosses layers
-  gap: task 823f7b83
-```
-
-```mdl
-req R-2: builtin hashes (starting with #) are never dependencies
-  by: Codebase.Spec.builtinsAreNotDependencies
-```
-
-```mdl
 req R-3: nodes past 64 items split into parts, and still read back
   by: Codebase.Spec.wideNamespaceRoundTrip
 ```
@@ -96,6 +91,13 @@ req R-3: nodes past 64 items split into parts, and still read back
 ```mdl
 req R-4: the empty namespace hashes to f126eadc…
   by: Codebase.Spec.emptyNamespaceHash
+```
+
+## History nodes and branches
+
+```mdl
+law L-4: a history node reads back as written
+  theorem: Codebase.Spec.causalRoundTrip
 ```
 
 ```mdl
@@ -107,6 +109,8 @@ req R-5: deus init always writes the same first node
 req R-6: a commit whose snapshot equals its parent's leaves the branch where it was
   by: Codebase.Spec.unchangedCommitWritesNothing
 ```
+
+## Merge
 
 ```mdl
 req R-7: a name changed on one side takes that side, a removal included
@@ -122,3 +126,27 @@ req R-8: a name changed differently on both sides is a conflict, and nothing is 
 req R-9: when ours is an ancestor of theirs, the merge fast-forwards
   by: Codebase.Spec.mergeFastForwards
 ```
+
+```mdl
+req R-10: tasks merge field by field; labels and links merge as sets
+  gap: task 823f7b83
+```
+
+## Layers
+
+```mdl
+req R-11: each layer depends only on the layers the table allows
+  by: Codebase.Spec.layersFollowTheTable
+```
+
+```mdl
+req R-12: add and update refuse a batch that crosses layers
+  gap: task 823f7b83
+```
+
+## Laws
+
+Laws about pure functions are theorems; laws about the store run it in the deterministic
+simulation, so they read and write no real files.
+
+The laws are the definitions under `Codebase.Spec`: `deus ls Codebase.Spec.` lists them and `deus view` prints them.

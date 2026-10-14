@@ -89,7 +89,7 @@ def Unique.copy (e : Sexp) : Sexp := applyPrim "Array.copy" [e]
 
 /-- The data types `fns` construct or take apart, by hash, as `(type …)` objects. -/
 def Unique.datatypesOf (fetch : Text -> {Throw Text | r} Option Sexp) (fns : List Fn) : {Throw Text | r} List (Text, Sexp) :=
-  let names := dedup (concatMap (fun f => patternTypes f.fnBody ++ constructed f.fnBody) fns)
+  let names := dedup (concatMap (fun f => patternTypes f.fnBody ++ Unique.constructed f.fnBody) fns)
   filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names
 
 /-- `e` used as `need` asks, once its value is known to be fresh or not. -/
@@ -293,7 +293,7 @@ def Unique.rewriteAll (fns : List Fn) (datatypes : List (Text, Sexp)) : List Fn 
   List.map (fun pair =>
     match pair with
     | (f, i) =>
-        let scope := Wasm.Scope.mk fns datatypes (Ref.new [])
+        let scope := Wasm.Scope.mk fns datatypes (Ref.new []) (Ref.new [])
         let cx := Unique.Cx.mk infos scope i.resultType (Ref.new f.fnArity)
         let owned := filterMap
           (fun k => if isArray (getOr (get? i.params k) unknown) && not (getOr (get? i.borrowed k) false) then Option.some k else Option.none)

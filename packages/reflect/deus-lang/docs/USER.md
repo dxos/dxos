@@ -330,6 +330,8 @@ for composer thread -> can we have some smaller version of explorer as composer 
 
 ---
 
+---
+
 about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase
 
 ---

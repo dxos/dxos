@@ -2,8 +2,9 @@
 
 Agents use the same `deus` CLI as people. There is no separate API: read definitions with
 `view`, change them by writing source and running `update`, and check the result with `test`
-and `check`. Add `--json` to any command for one machine-readable JSON document on stdout;
-errors go to stderr with a non-zero exit code.
+and `check`. Add `--json` to a command for one machine-readable JSON document on stdout
+([CLI-JSON.md](./spec/CLI-JSON.md)); `compile`, `image`, `run`, `serve` and `help` ignore it. Errors go to
+stderr with a non-zero exit code.
 
 ```bash
 deus() { node packages/reflect/deus-lang/bin/deus.mjs "$@"; }

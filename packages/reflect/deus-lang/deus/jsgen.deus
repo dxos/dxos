@@ -1,5 +1,5 @@
 /-
-  A JavaScript back end (D97, docs/spec/JS.mdl): compiles definitions, and every definition they
+  A JavaScript back end (D97, the codebase's JsGen.Spec): compiles definitions, and every definition they
   reach, to one ES module with no kernel.
 
   Each definition is a JavaScript function of its parameters, named after the DEUS name, so a
@@ -729,7 +729,7 @@ def structureOf (mod : JsModule) (iri : Text) : Option (Text, List Text, List Se
     | _ => none
   | _ => none
 
-/-- The codec descriptor of a type (docs/spec/JS.mdl#foreign-imports), as JavaScript. -/
+/-- The codec descriptor of a type (the codebase's JsGen.Spec#foreign-imports), as JavaScript. -/
 def codec (mod : JsModule) (seen : List Text) (t : Sexp) : Text :=
   match t with
   | Sexp.list [Sexp.sym "tref", Sexp.str "#Int"] => "['int']"
@@ -877,7 +877,7 @@ def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Thro
   (Text.join "\n" (List.map snd lines) ++ "\n", map)
 
 --
--- The `js` MDL extension (docs/spec/JS.mdl).
+-- The `js` MDL extension (the codebase's JsGen.Spec).
 --
 
 /-- A `js` block: `run:` must print the same on the JS target as on the kernel (and as `expect:`, when given). -/

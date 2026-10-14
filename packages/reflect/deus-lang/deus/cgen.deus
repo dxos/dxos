@@ -586,7 +586,7 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let borrow := inferBorrow fns
   let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
   let bodies := List.mapIndexed (fun i f =>
-    let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType))))
+    let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) (Ref.new [])
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow
     let env := List.reverse (List.range 0 f.fnArity)
     "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns

@@ -1,6 +1,17 @@
 ---
+id: org.dxos.deus.spec.compile
 name: Compile.Spec
+version: 1.0
 ---
+
+# Compiling and resolving: checked spec
+
+What the compiler promises about hashes, the property everything else in a content-addressed
+codebase rests on: two programs that mean the same get the same hash, two that differ do not,
+and what the printer shows compiles back to what was stored. [CORE.md](../../docs/spec/CORE.md) defines Core and
+its text form; [LANGUAGE.md](../../docs/spec/LANGUAGE.md) the surface syntax. The process (D92): requirements,
+then the APIs and laws, then the evidence in [Laws](#laws). `deus mdl Compile.Spec`
+checks it.
 
 ## Extensions
 
@@ -10,7 +21,7 @@ name: Compile.Spec
 | `law` | `org.dxos.deus.law@1.0` |
 | `req` | `org.dxos.deus.req@1.0` |
 
-## Blocks
+## APIs
 
 ```mdl
 api A-1: parsing and batch compilation
@@ -20,6 +31,8 @@ api A-1: parsing and batch compilation
   - Resolve.strip : Sexp -> (Sexp, List Text)
   - Resolve.hashFor : Text -> Sexp -> Text
 ```
+
+## Hashes follow meaning
 
 ```mdl
 law L-1: renaming a local never changes a hash
@@ -32,9 +45,55 @@ law L-2: changing what a definition computes changes its hash
 ```
 
 ```mdl
+req R-1: comments, doc comments and layout never change a hash (D66)
+  by: Compile.Spec.commentsDoNotChangeHashes
+```
+
+```mdl
 law L-3: the order of definitions in a file and of files in a batch never changes a hash
   theorem: Compile.Spec.orderDoesNotChangeHashes
 ```
+
+```mdl
+req R-2: mutually recursive definitions hash as one cycle, member i addressed as h.i
+  by: Tests.mutualRecursionHashesAsCycle
+```
+
+```mdl
+req R-3: resolution strips local names out of Core into metadata
+  by: Tests.resolveStripsNames
+```
+
+## Resolution
+
+```mdl
+req R-4: a name in a definition resolves in its own namespace first (Lean's rule)
+  by: Compile.Spec.namesResolveInTheirNamespace
+```
+
+```mdl
+req R-5: batch names shadow names of the base namespace
+  by: Compile.Spec.batchShadowsBase
+```
+
+## Checking
+
+```mdl
+req R-6: an ill-typed definition is refused
+  by: Compile.Spec.refusesIllTyped
+```
+
+```mdl
+req R-7: performing an ability a written row does not declare is refused; an arrow without braces constrains nothing
+  by: Compile.Spec.refusesUndeclaredAbility
+```
+
+```mdl
+req R-9: a row written on a definition with no binders is checked
+  gap: task a03fdfb6 (LANGUAGE.md notes it is not)
+```
+
+## Printing
 
 ```mdl
 law L-4: printed source compiles back to the same hashes
@@ -42,14 +101,14 @@ law L-4: printed source compiles back to the same hashes
 ```
 
 ```mdl
-law L-5: a declaration's hash covers its name, so two declarations alias only when they share name and type
-  theorem: Compile.Spec.declarationsHashTheirName
+req R-8: every definition of the toolchain prints back to its own hash
+  gap: task a2da28e2; the vitest "adds the compiler to a codebase…" in src/cli.test.ts covers it
 ```
 
-```mdl
-req R-1: comments, doc comments and layout never change a hash (D66)
-  by: Compile.Spec.commentsDoNotChangeHashes
-```
+## Declarations without a body
+
+`def parse (t : Text) : Int` with no `:=` declares a definition before it has an implementation
+(D93). Callers compile against the signature; running it is a defect.
 
 ```mdl
 req R-10: a declaration with a full signature and no body compiles, and its callers are checked against the signature
@@ -64,6 +123,11 @@ req R-11: a declaration needs a result type and a type on every parameter
 ```mdl
 req R-12: calling a declaration raises the defect "not implemented: <name>"
   by: Compile.Spec.declarationsRaiseADefect
+```
+
+```mdl
+law L-5: a declaration's hash covers its name, so two declarations alias only when they share name and type
+  theorem: Compile.Spec.declarationsHashTheirName
 ```
 
 ```mdl
@@ -86,42 +150,8 @@ req R-16: updating a declaration with an implementation rehashes its callers, wh
   by: Compile.Spec.implementingRehashesCallers
 ```
 
-```mdl
-req R-2: mutually recursive definitions hash as one cycle, member i addressed as h.i
-  by: Tests.mutualRecursionHashesAsCycle
-```
+## Laws
 
-```mdl
-req R-3: resolution strips local names out of Core into metadata
-  by: Tests.resolveStripsNames
-```
+The sources compile against a small prelude of builtin types, so they need no codebase.
 
-```mdl
-req R-4: a name in a definition resolves in its own namespace first (Lean's rule)
-  by: Compile.Spec.namesResolveInTheirNamespace
-```
-
-```mdl
-req R-5: batch names shadow names of the base namespace
-  by: Compile.Spec.batchShadowsBase
-```
-
-```mdl
-req R-6: an ill-typed definition is refused
-  by: Compile.Spec.refusesIllTyped
-```
-
-```mdl
-req R-7: performing an ability a written row does not declare is refused; an arrow without braces constrains nothing
-  by: Compile.Spec.refusesUndeclaredAbility
-```
-
-```mdl
-req R-8: every definition of the toolchain prints back to its own hash
-  gap: task a2da28e2; the vitest "adds the compiler to a codebase…" in src/cli.test.ts covers it
-```
-
-```mdl
-req R-9: a row written on a definition with no binders is checked
-  gap: task a03fdfb6 (LANGUAGE.md notes it is not)
-```
+The laws are the definitions under `Compile.Spec`: `deus ls Compile.Spec.` lists them and `deus view` prints them.
