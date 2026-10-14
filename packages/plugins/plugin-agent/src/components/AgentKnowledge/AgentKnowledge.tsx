@@ -22,6 +22,9 @@ import { meta } from '#meta';
 import { type Goal, type Knowledge } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
+import { EntityBrowser } from './EntityBrowser.tsx';
+import { type EntityCardProps } from './EntityCard.tsx';
+import { type EntityCardModel } from './subgraph.ts';
 import { TRIG_PREFIXES, formatRawFact } from './trig.ts';
 import { TurtleSnippet } from './TurtleSnippet.tsx';
 
@@ -29,7 +32,7 @@ import { TurtleSnippet } from './TurtleSnippet.tsx';
 // Root
 //
 
-const VIEWS = ['memories', 'facts', 'goals', 'graph'] as const;
+const VIEWS = ['memories', 'facts', 'entities', 'goals', 'graph'] as const;
 
 type AgentKnowledgeView = (typeof VIEWS)[number];
 
@@ -122,6 +125,9 @@ const AgentKnowledgeRoot = ({
                   </Tabs.Trigger>
                   <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
                     {t('agent-knowledge-facts.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
+                    {t('agent-knowledge-entities.label')}
                   </Tabs.Trigger>
                   <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
                     {t('agent-knowledge-goals.label')}
@@ -311,6 +317,44 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
 AgentKnowledgeFacts.displayName = 'AgentKnowledge.Facts';
 
 //
+// Entities
+//
+
+/** One hue per entity type the brain assigns, chosen rather than hashed so no two types share one. */
+const ENTITY_HUES: EntityCardProps['hues'] = {
+  Person: 'amber',
+  Organization: 'indigo',
+  Place: 'emerald',
+  Event: 'pink',
+  Concept: 'violet',
+  Thing: 'neutral',
+};
+
+type AgentKnowledgeEntitiesProps = {
+  /** One card per entity in the agent's brain (see `toEntityCards`). */
+  cards: readonly EntityCardModel[];
+};
+
+/** The agent's brain as entity cards in Finder-style columns: choosing a card or a chip opens what it relates to. */
+const AgentKnowledgeEntities = ({ cards }: AgentKnowledgeEntitiesProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const status = useBrainStatusMessage();
+  if (useContext(AgentKnowledgeContext).view !== 'entities') {
+    return null;
+  }
+
+  return cards.length === 0 || status ? (
+    <Status>{status ?? t('agent-knowledge-entities-empty.message')}</Status>
+  ) : (
+    <Panel.Body asChild>
+      <EntityBrowser cards={cards} hues={ENTITY_HUES} />
+    </Panel.Body>
+  );
+};
+
+AgentKnowledgeEntities.displayName = 'AgentKnowledge.Entities';
+
+//
 // Goals
 //
 
@@ -470,6 +514,7 @@ export const AgentKnowledge = {
   Root: AgentKnowledgeRoot,
   Memories: AgentKnowledgeMemories,
   Facts: AgentKnowledgeFacts,
+  Entities: AgentKnowledgeEntities,
   Goals: AgentKnowledgeGoals,
   Graph: AgentKnowledgeGraph,
 };
@@ -477,6 +522,7 @@ export const AgentKnowledge = {
 export type {
   AgentKnowledgeBrainStatus,
   AgentKnowledgeEdge,
+  AgentKnowledgeEntitiesProps,
   AgentKnowledgeFact,
   AgentKnowledgeFactsProps,
   AgentKnowledgeGoal,

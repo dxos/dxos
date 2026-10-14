@@ -121,6 +121,8 @@ export const translations = [
         'agent-state-channel-mode.label': 'Mode: {{mode}}',
         'agent-knowledge-facts.label': 'Facts',
         'agent-knowledge-facts-empty.message': 'Nothing read yet.',
+        'agent-knowledge-entities.label': 'Entities',
+        'agent-knowledge-entities-empty.message': 'No entities known yet.',
         'agent-knowledge-goals.label': 'Goals',
         'entity-card-type.label': 'type',
         'entity-card-name.label': 'name',
