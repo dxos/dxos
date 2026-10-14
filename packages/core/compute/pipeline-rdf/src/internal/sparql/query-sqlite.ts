@@ -9,89 +9,85 @@ import type * as Statement from 'effect/sql/Statement';
 import { SemanticIndexError } from '../../errors.ts';
 import { type Fact } from '../../types/index.ts';
 import * as Mapping from '../../types/Mapping.ts';
-import * as Predicate from '../../types/Predicate.ts';
+import * as Ontology from '../../types/Ontology.ts';
 import * as Vocab from '../../types/Vocab.ts';
 import { type Row, rowToQuad } from '../source/sqlite-source.ts';
+import { matchingPredicates, statementMatches } from './match.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 /**
  * Execute a structured {@link SemanticQuery} directly over the SQLite `triples` table — no SPARQL
- * engine (no Comunica). The SQLite-backed analogue of {@link queryMemory}: find the fact-node
- * subjects matching each constraint, intersect them, then fetch and reassemble each node's triples.
+ * engine (no Comunica). The SQLite-backed analogue of {@link queryMemory}: find the named graphs holding
+ * a statement that matches each constraint, intersect them, then fetch and reassemble those graphs.
  */
 export const querySqlite = (
   sql: SqlClient.SqlClient,
   query: SemanticQuery,
+  ontology: Ontology.Ontology = Ontology.DEFAULT,
 ): Effect.Effect<Fact[], SemanticIndexError> =>
   Effect.gen(function* () {
-    const subjects = (where: Statement.Fragment) =>
-      sql<{ s: string }>`SELECT DISTINCT s FROM triples WHERE ${where}`.pipe(
-        Effect.map((rows) => new Set(rows.map((row) => row.s))),
+    // Rows that are statements, not provenance, predicate metadata, or an entity's label or kind.
+    const statement = sql`g <> '' AND g <> ${Vocab.ONTOLOGY_GRAPH} AND p <> ${Vocab.RDFS_LABEL} AND p <> ${Vocab.RDF_TYPE}`;
+    const graphsWhere = (where: Statement.Fragment) =>
+      sql<{ g: string }>`SELECT DISTINCT g FROM triples WHERE ${statement} AND ${where}`.pipe(
+        Effect.map((rows) => new Set(rows.map((row) => row.g))),
       );
 
-    let nodes: Set<string> | undefined;
+    let graphs: Set<string> | undefined;
     const restrict = (set: Set<string>) => {
-      nodes = nodes ? new Set([...nodes].filter((iri) => set.has(iri))) : set;
+      graphs = graphs ? new Set([...graphs].filter((iri) => set.has(iri))) : set;
     };
 
     if (query.subjectEntity) {
-      restrict(
-        yield* subjects(
-          sql`p = ${Vocab.sx('subject').value} AND o = ${Vocab.entityIri(query.subjectEntity).value} AND oType = 'iri'`,
-        ),
-      );
+      restrict(yield* graphsWhere(sql`s = ${Vocab.entityNode(query.subjectEntity).value}`));
     }
+    let predicates: Set<string> | undefined;
     if (query.predicate) {
-      // Match on the normalized relation key (same as queryMemory), with a substring fallback — the
-      // LLM rarely reproduces the stored verb phrase verbatim.
-      const needle = Predicate.normalize(query.predicate);
-      const rows = yield* sql<{
-        s: string;
-        o: string;
-      }>`SELECT s, o FROM triples WHERE p = ${Vocab.sx('predicate').value}`;
-      const matches = rows.filter((row) => {
-        const value = Predicate.normalize(row.o);
-        return value === needle || value.includes(needle) || needle.includes(value);
-      });
-      restrict(new Set(matches.map((row) => row.s)));
+      const stored = yield* sql<{ p: string }>`SELECT DISTINCT p FROM triples WHERE ${statement}`;
+      const labels = yield* sql<{ s: string; o: string }>`
+        SELECT s, o FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH} AND p = ${Vocab.RDFS_LABEL}`;
+      const labelOf = new Map(labels.map((row) => [row.s, row.o]));
+      predicates = matchingPredicates(
+        query.predicate,
+        new Map(
+          stored.map(({ p }) => [p, labelOf.get(p) ?? ontology.get(p)?.label ?? Ontology.labelFromIri(p)] as const),
+        ),
+        ontology,
+      );
+      restrict(yield* graphsWhere(sql.in('p', [...predicates])));
     }
     if (query.source) {
-      restrict(
-        yield* subjects(sql`p = ${Vocab.prov('wasDerivedFrom').value} AND o = ${query.source} AND oType = 'literal'`),
-      );
+      const rows = yield* sql<{ s: string }>`
+        SELECT s FROM triples WHERE g = '' AND p = ${Vocab.prov('wasDerivedFrom').value}
+          AND o = ${query.source} AND oType = 'literal'`;
+      restrict(new Set(rows.map((row) => row.s)));
     }
     if (query.entity) {
-      const iri = Vocab.entityIri(query.entity).value;
-      restrict(
-        yield* subjects(
-          sql`(p = ${Vocab.sx('subject').value} OR p = ${Vocab.sx('object').value}) AND o = ${iri} AND oType = 'iri'`,
-        ),
-      );
+      const node = Vocab.entityNode(query.entity).value;
+      restrict(yield* graphsWhere(sql`(s = ${node} OR (o = ${node} AND oType = 'iri'))`));
     }
 
-    // No constraints → every fact node (subjects under the fact IRI namespace).
-    const factNodes =
-      nodes ??
-      (yield* sql<{ s: string }>`SELECT DISTINCT s FROM triples WHERE s LIKE ${Vocab.FACT + '%'}`.pipe(
+    // No constraints → every stored graph.
+    const candidates =
+      graphs ??
+      (yield* sql<{ s: string }>`
+        SELECT s FROM triples WHERE g = '' AND p = ${Vocab.RDF_TYPE} AND o = ${Vocab.SX_GRAPH}`.pipe(
         Effect.map((rows) => new Set(rows.map((row) => row.s))),
       ));
 
-    if (factNodes.size === 0) {
+    if (candidates.size === 0) {
       return [];
     }
 
-    const ids = [...factNodes];
-    const rows = yield* sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE ${sql.in('s', ids)}`;
+    const ids = [...candidates];
+    const rows = yield* sql<Row>`
+      SELECT s, p, o, oType, g FROM triples
+      WHERE ${sql.in('g', ids)} OR (g = '' AND ${sql.in('s', ids)}) OR g = ${Vocab.ONTOLOGY_GRAPH}`;
     const facts = yield* Effect.try({
-      try: () => Mapping.triplesToFacts(rows.map(rowToQuad)),
+      try: () => Mapping.triplesToFacts(rows.map(rowToQuad), ontology),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),
     });
-
-    if (query.minConfidence === undefined) {
-      return facts;
-    }
-    const min = query.minConfidence;
-    return facts.filter((fact) => (fact.factuality.confidence ?? 0) >= min);
+    return facts.filter((fact) => statementMatches(fact, query, predicates));
   }).pipe(
     Effect.mapError((cause) =>
       cause instanceof SemanticIndexError ? cause : new SemanticIndexError({ message: 'Failed to query facts', cause }),

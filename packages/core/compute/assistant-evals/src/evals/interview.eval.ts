@@ -10,12 +10,13 @@ import { evalite } from 'evalite';
 
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as InterviewSkill from '@dxos/plugin-agent/InterviewSkill';
-import * as Memory from '@dxos/plugin-agent/Memory';
+import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
@@ -232,10 +233,9 @@ const liveGoals = Scorer.shared(
   ),
 );
 
+/** The active memories, from the agent's brain. */
 const memories = Scorer.shared(
-  Database.query(Filter.type(Memory.Memory)).run.pipe(
-    Effect.map((memories) => memories.filter((memory) => memory.status === 'active')),
-  ),
+  Operation.invoke(MemoryOperation.Recall, {}).pipe(Effect.map(({ memories }) => memories)),
 );
 
 const people = Scorer.shared(Database.query(Filter.type(Person.Person)).run);
@@ -469,7 +469,7 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   skills: () => [Ref.make(InterviewSkill.make())],
   plugins: [MarkdownPlugin.make(), AgentPlugin.make()],
-  types: [Memory.Memory, Goal.Goal, HasSubject.HasSubject, Markdown.Document, ProfileOf.ProfileOf],
+  types: [Goal.Goal, HasSubject.HasSubject, Markdown.Document, ProfileOf.ProfileOf],
   conversation: {
     opening: (input) => personaOf(input).opening,
     reply: ({ input, transcript }) => simulateUser(personaOf(input), transcript),

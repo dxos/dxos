@@ -27,8 +27,7 @@ import {
 import { EntityBrowser } from './EntityBrowser.tsx';
 import { EntityCard } from './EntityCard.tsx';
 import { type EntityCardModel, toEntityCards } from './subgraph.ts';
-import { formatNamedGraphs } from './trig.ts';
-import { TURTLE_PREFIXES, formatRawFact } from './turtle.ts';
+import { TRIG_PREFIXES, formatNamedGraphs, formatRawFact } from './trig.ts';
 
 const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).toISOString();
 
@@ -172,13 +171,13 @@ const Source = ({ title, children }: { title: string; children: string }) => {
   );
 };
 
-/** The stored reification beside the named-graph form `docs/QUESTIONS.md` §1 proposes, for the same facts. */
+/** The named graphs the store writes beside the fuller form `docs/BRAIN.md` describes (graph-scoped entities), for the same facts. */
 const NamedGraphsStory = () => {
-  const stored = useMemo(() => [TURTLE_PREFIXES, ...RDF_FACTS.map(formatRawFact)].join('\n\n'), []);
+  const stored = useMemo(() => [TRIG_PREFIXES, ...RDF_FACTS.map(formatRawFact)].join('\n\n'), []);
   const proposed = useMemo(() => formatNamedGraphs(RDF_FACTS, RESOLVED), []);
   return (
     <Layout.Grid cols={2} grow>
-      <Source title='Stored: reified facts (Turtle)'>{stored}</Source>
+      <Source title='Stored: named graphs (TriG)'>{stored}</Source>
       <Source title='Proposed: named graphs (TriG)'>{proposed}</Source>
     </Layout.Grid>
   );
