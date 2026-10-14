@@ -77,7 +77,7 @@ inductive Cell @"urn:deus:analytics:Cell" where
   | text (value : Text)
 
 /-
-  The analytics store (D103): events about the codebase, kept beside it.
+  The analytics store (D104): events about the codebase, kept beside it.
 
   - An event type is a `structure` marked `@[event]`, so it lives in the codebase like any
     definition. Its fields are flat: `Int`, `Bool`, `Text` or `CodeRef`, a reference into the
@@ -92,7 +92,7 @@ inductive Cell @"urn:deus:analytics:Cell" where
   `events/pushed/…` the rows already pushed, one `(row id at by value…)` per line, so counts
   never need the remote.
 
-  A `CodeRef` holds one of three forms (D104): a name IRI `<project>/<name>` (follows the name),
+  A `CodeRef` holds one of three forms (D105): a name IRI `<project>/<name>` (follows the name),
   a pinned `<project>/<name>#<hash>` (fixed, and names the definition), or a bare `#<hash>`.
   Recorders write the pinned form; a builtin's fragment is its name (`…/Bool#Bool`).
 -/

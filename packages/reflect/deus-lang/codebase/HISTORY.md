@@ -1,5 +1,9 @@
 # History of main
 
+- `e55740c728` analytics decisions renumbered D104, D105 (by claude)
+- `43a62f2c19` history: import 540 changes
+- `c769c10b59` task: import from tasks.sexp
+- `8be1d54ed3` add code specs
 - `f8f410ac05` export: merge tasks from codebase
 - `4b59911ace` analytics decisions renumbered D103, D104 (by claude)
 - `44f4b80a35` history: import 526 changes
@@ -17,6 +21,15 @@
 - `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
 - `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
 - `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
+- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
+- `e468baa69b` task: comment on 12663f55 (by claude)
+- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
+- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
+- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
+- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
+- `616c10e45e` history: import 511 changes
+- `a5ec773714` task: import from tasks.sexp
 - `3796ba0f06` task: set 38603468 state details (by claude)
 - `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
 - `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)

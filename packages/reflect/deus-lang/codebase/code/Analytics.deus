@@ -393,7 +393,7 @@ def Analytics.isEvent (dir : Text) (h : Text) : {IO} Bool := any (fun a => if he
 def Analytics.isHex (t : Text) : Bool := not (Text.isEmpty t) && List.all (fun c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f') (utf8 t)
 
 --
--- References (D104).
+-- References (D105).
 --
 /-- The name IRI of a definition: `<project>/<name>`, or the bare name in a codebase without a project. -/
 def Analytics.nameIri (project : Text) (name : Text) : Text := if Text.isEmpty project then name else project ++ "/" ++ name
@@ -561,7 +561,7 @@ def Analytics.seconds (wall : Text) : Int := foldl (fun total word =>
   let n := getOr (fromText (Text.take (Text.length word - 1) word)) 0
   if endsWith "h" word then total + 3600 * n else if endsWith "m" word then total + 60 * n else if endsWith "s" word then total + n else total) 0 (Text.split (trim wall) " ")
 
-/-- The explorer's `events.json` (D103): every event type with its columns, counts and latest rows
+/-- The explorer's `events.json` (D104): every event type with its columns, counts and latest rows
   (at most `limit`), and the counts per definition hash. -/
 def Analytics.siteJson (dir : Text) (project : Text) (ns : Map Text Entry) (limit : Int) : {IO, Throw Text} Json :=
   let ts := Analytics.types dir ns

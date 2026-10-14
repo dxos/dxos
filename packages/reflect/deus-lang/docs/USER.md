@@ -353,3 +353,7 @@ codebase ui should be able to show events, and at least display their count
 ---
 
 oh, nonono, threads MUST use the codebase as primary VCS, and git as backup
+
+---
+
+are woktrees not pushing the codebase, or is this explorer not getting updated
