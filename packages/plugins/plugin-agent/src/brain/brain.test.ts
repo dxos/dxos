@@ -22,7 +22,7 @@ import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Relay, type Trigger, TriggerOperation } from '#types';
+import { AgentOperation, ChatParticipant, Goal, Mode, Relay, type Trigger, TriggerOperation } from '#types';
 
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
@@ -120,7 +120,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Person.Person,
         Organization.Organization,
         HasSubject.HasSubject,
-        Memory.Memory,
         Goal.Goal,
         Mode.Mode,
         Relay.Relay,

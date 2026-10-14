@@ -7,7 +7,6 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import { Organization, Person } from '@dxos/types';
@@ -88,29 +87,35 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
 
 /**
  * Adds the team, its members and their expertise, unless a previous run already did; gives each member a chat with
- * the agent so an escalation delivers somewhere visible in the story.
+ * the agent so an escalation delivers somewhere visible in the story. The memories go to the agent's brain, which is
+ * EDGE's when its chats run there.
  */
 export const seedSupportTeam = async ({
   db,
   invoker,
   agent,
+  remote = false,
 }: {
   db: Database.Database;
   invoker: Capabilities.OperationInvoker;
   agent: Agent.Agent;
+  remote?: boolean;
 }): Promise<void> => {
   const team =
     (await db.query(Filter.type(Organization.Organization)).run()).find(({ name }) => name === SUPPORT_TEAM_NAME) ??
     db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
-  const existing = new Set((await db.query(Filter.type(Memory.Memory)).run()).map(({ content }) => content));
+  await db.flush({ indexes: true });
+  const brainOptions = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
+  const { data: recalled } = await invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions);
+  const existing = new Set((recalled?.memories ?? []).map(({ content }) => content));
   const remember = async (content: string, subjects: Ref.Ref<Obj.Unknown>[]) => {
     if (existing.has(content)) {
       return;
     }
     const { error } = await invoker.invokePromise(
       MemoryOperation.Remember,
-      { content, kind: 'fact', origin: 'stated', subjects },
-      { spaceId: db.spaceId },
+      { agent: Ref.make(agent), content, kind: 'fact', origin: 'stated', subjects },
+      brainOptions,
     );
     if (error) {
       throw error;
@@ -165,7 +170,7 @@ const rosterText = (): string =>
 
 /**
  * Reads the team roster into the agent's brain, so its Facts hold the team (with Discord usernames) as well as its
- * Memories; skipped once the brain holds any fact. A model call on the brain where the agent's chats run, so the
+ * memories; skipped once the brain holds any fact other than a memory. A model call on the brain where the agent's chats run, so the
  * caller does not wait for it, and a failure is only logged.
  */
 export const seedSupportFacts = async ({
@@ -189,7 +194,7 @@ export const seedSupportFacts = async ({
     log.warn('reading the brain before seeding the support facts failed', { error: inspectError });
     return;
   }
-  if ((brain?.facts.length ?? 0) > 0) {
+  if ((brain?.facts ?? []).some((fact) => fact.kind === undefined)) {
     return;
   }
   const { data, error } = await invoker.invokePromise(

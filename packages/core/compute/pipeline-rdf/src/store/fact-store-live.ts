@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { type Quad } from 'n3';
+import { DataFactory, type Quad } from 'n3';
 
 import { SemanticIndexError } from '../errors.ts';
 import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source.ts';
-import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source.ts';
+import { type Row, insertQuads, makeSqliteSource, rowToQuad } from '../internal/source/sqlite-source.ts';
 import type * as Engine from '../internal/sparql/engine.ts';
-import { queryMemory } from '../internal/sparql/query-memory.ts';
+import { graphQuads, queryMemory } from '../internal/sparql/query-memory.ts';
 import { querySqlite } from '../internal/sparql/query-sqlite.ts';
 import { migrate } from '../internal/sqlite/schema.ts';
 import { type Fact } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
+import * as Vocab from '../types/Vocab.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
 
 //
@@ -32,8 +33,12 @@ const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
   });
 
 // Raw SPARQL execution via Comunica, imported on first use: Comunica does not run in the browser or a
-// Worker, so the persist and structured-query paths must not load it at all.
-const makeSelect = (source: Parameters<typeof Engine.selectTriples>[1]): FactStoreApi['select'] => {
+// Worker, so the persist and structured-query paths must not load it at all. The query names graphs; `load`
+// fetches what is stored in them.
+const makeSelect = (
+  source: Parameters<typeof Engine.selectGraphs>[1],
+  load: (graphs: string[]) => Effect.Effect<Quad[], SemanticIndexError>,
+): FactStoreApi['select'] => {
   let engine: Promise<{ module: typeof Engine; engine: ReturnType<typeof Engine.makeEngine> }> | undefined;
   // A failed load is forgotten, so the next query retries instead of replaying the same rejection.
   const getEngine = () =>
@@ -48,7 +53,8 @@ const makeSelect = (source: Parameters<typeof Engine.selectTriples>[1]): FactSto
       try: getEngine,
       catch: (cause) => new SemanticIndexError({ message: 'Failed to load the SPARQL engine', cause }),
     }).pipe(
-      Effect.flatMap(({ module, engine }) => module.selectTriples(engine, source, sparql)),
+      Effect.flatMap(({ module, engine }) => module.selectGraphs(engine, source, sparql)),
+      Effect.flatMap(load),
       Effect.flatMap(reassemble),
     );
 };
@@ -62,9 +68,10 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     const source = makeSqliteSource(sql);
 
     const putFacts: FactStoreApi['putFacts'] = (facts) =>
-      insertQuads(sql, facts.flatMap(Mapping.factToTriples)).pipe(
-        Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause })),
-      );
+      insertQuads(
+        sql,
+        facts.flatMap((fact) => Mapping.factToTriples(fact)),
+      ).pipe(Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause })));
 
     const cursor: FactStoreApi['cursor'] = (src) =>
       sql<{ hash: string }>`SELECT hash FROM cursors WHERE source = ${src}`.pipe(
@@ -94,7 +101,17 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     // or Workers. `select` (raw SPARQL via Comunica) stays for node-only callers/tests.
     const query: FactStoreApi['query'] = (q) => querySqlite(sql, q);
 
-    return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
+    const load = (graphs: string[]): Effect.Effect<Quad[], SemanticIndexError> =>
+      graphs.length === 0
+        ? Effect.succeed([])
+        : sql<Row>`
+            SELECT s, p, o, oType, g FROM triples
+            WHERE ${sql.in('g', graphs)} OR (g = '' AND ${sql.in('s', graphs)}) OR g = ${Vocab.ONTOLOGY_GRAPH}`.pipe(
+            Effect.map((rows) => rows.map(rowToQuad)),
+            Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to load graphs', cause })),
+          );
+
+    return { putFacts, cursor, setCursor, query, select: makeSelect(source, load), clear };
   }),
 );
 
@@ -108,7 +125,11 @@ export const makeMemory = (): FactStoreApi => {
 
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
     Effect.try({
-      try: () => insertQuadsMemory(source, facts.flatMap(Mapping.factToTriples)),
+      try: () =>
+        insertQuadsMemory(
+          source,
+          facts.flatMap((fact) => Mapping.factToTriples(fact)),
+        ),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause }),
     });
 
@@ -127,7 +148,13 @@ export const makeMemory = (): FactStoreApi => {
       cursors.clear();
     });
 
-  return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
+  const load = (graphs: string[]) =>
+    Effect.sync(() => [
+      ...graphQuads(source, graphs),
+      ...source.getQuads(null, null, null, DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH)),
+    ]);
+
+  return { putFacts, cursor, setCursor, query, select: makeSelect(source, load), clear };
 };
 
 /**

@@ -8,7 +8,6 @@ import { type Database, type Type } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
@@ -49,7 +48,6 @@ const TYPES: Type.AnyEntity[] = [
   Organization.Organization,
   HasSubject.HasSubject,
   ProfileOf.ProfileOf,
-  Memory.Memory,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,

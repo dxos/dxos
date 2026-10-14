@@ -11,11 +11,12 @@ describe('parseSparqlToQuery', () => {
   test('round-trips buildSparql for each query field', ({ expect }) => {
     const cases: SemanticQuery[] = [
       { subjectEntity: 'alice' },
-      { predicate: 'travelsTo' },
+      { predicate: 'https://dxos.org/ontology/travelTo' },
       { source: 'dxn:queue:space:m1' },
       { entity: 'alice' },
       { minConfidence: 0.5 },
-      { subjectEntity: 'alice', predicate: 'travelsTo' },
+      { subjectEntity: 'alice', predicate: 'https://dxos.org/ontology/travelTo' },
+      { entity: 'did:key:z6Mk' },
     ];
     for (const query of cases) {
       expect(parseSparqlToQuery(buildSparql(query))).toEqual(query);
@@ -24,14 +25,12 @@ describe('parseSparqlToQuery', () => {
 
   test('parses a hand-written SELECT', ({ expect }) => {
     const query = parseSparqlToQuery(`
-      PREFIX sx: <https://dxos.org/semantic#>
-      SELECT ?fact ?p ?o WHERE {
-        ?fact sx:subject <https://dxos.org/semantic/entity/sarah-johnson> .
-        ?fact sx:predicate "leads" .
-        ?fact ?p ?o .
+      PREFIX dx: <https://dxos.org/ontology/>
+      SELECT ?g WHERE {
+        GRAPH ?g { <https://dxos.org/semantic/entity/sarah-johnson> dx:leads ?team }
       }
     `);
-    expect(query).toEqual({ subjectEntity: 'sarah-johnson', predicate: 'leads' });
+    expect(query).toEqual({ subjectEntity: 'sarah-johnson', predicate: 'https://dxos.org/ontology/leads' });
   });
 
   test('parses source + minConfidence filter', ({ expect }) => {
@@ -39,9 +38,9 @@ describe('parseSparqlToQuery', () => {
       PREFIX sx:   <https://dxos.org/semantic#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
       PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-      SELECT ?fact WHERE {
-        ?fact prov:wasDerivedFrom "dxn:queue:space:m1" .
-        ?fact sx:confidence ?conf .
+      SELECT ?g WHERE {
+        ?g prov:wasDerivedFrom "dxn:queue:space:m1" .
+        ?g sx:confidence ?conf .
         FILTER(xsd:decimal(?conf) >= 0.7)
       }
     `);
