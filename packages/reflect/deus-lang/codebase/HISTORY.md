@@ -1,5 +1,11 @@
 # History of main
 
+- `880640eb13` task: set e76e36b0 state (by claude)
+- `ea44281ed7` task: set e76e36b0 details (by claude)
+- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
+- `77337bc6cf` history: import 501 changes
+- `1e220da057` task: import from tasks.sexp
+- `3c07f87183` add code specs
 - `dbfeb70ff7` export: merge 21 changes from codebase
 - `1ec8ae9075` export: merge tasks from codebase
 - `d2758d5ca1` specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in (by claude)
