@@ -357,6 +357,14 @@ Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/
 - assignee: claude
 - labels: mdl, spec
 
+## deus task set ignores an unknown field (--status) instead of refusing it (`cb6c9a43`)
+
+- state: todo
+- priority: none
+- labels: cli, bug
+
+Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
+
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -410,6 +418,16 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 - links change #cf0f719d6e
 
 Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
+
+## Declarations without a body: def f with a full signature and no implementation (`cf5e187f`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: language, spec
+- links `Resolve.stub` (#7f17ed75ac)
+
+From Dmytro: I think deus should allow declaring a definition with a type but no impl. Spec: docs/spec/COMPILE.mdl R-10 to R-16 (D94).
 
 ## Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (`6ffdc230`)
 
@@ -759,6 +777,15 @@ From docs/spec/README.md, Known divergences.
 - links change #c08af3d400
 
 From docs/spec/README.md, Known divergences.
+
+## Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (`c50cd76e`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, spec
+- parent: 861438d2
+- links change #9cee717581
 
 ## Builtins are URIs at the embedding boundary (urn:deus:builtin:IO) (`279f2266`)
 

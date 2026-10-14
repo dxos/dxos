@@ -1,5 +1,17 @@
 # History of main
 
+- `d90027cba3` close c50cd76e by #9cee717581 (by claude)
+- `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
+- `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
+- `99b512f359` history: import 359 changes
+- `7b6f241c41` task: import from tasks.sexp
+- `b878c25ce1` add code specs
+- `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
+- `aad1732770` task: link cf5e187f to Resolve.stub
+- `c52516022a` task: set cf5e187f state
+- `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
+- `135f9abba9` task: set cf5e187f assignee
+- `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
 - `32d6c2d287` task: set 20dbe121 state (by claude)
 - `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
 - `7829722c1b` history: import 351 changes

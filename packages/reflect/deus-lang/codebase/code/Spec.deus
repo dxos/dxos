@@ -60,7 +60,7 @@ def Spec.signatureProblems (line : Text) : {MdlHost} List Text :=
       | Result.err message => [message]
       | Result.ok facts =>
           let actual := prop0 facts "type"
-          if Text.isEmpty stated || squash stated == squash actual then [] else [name ++ " has type " ++ actual ++ ", the spec says " ++ stated]
+          if not (Text.isEmpty stated || squash stated == squash actual) then [name ++ " has type " ++ actual ++ ", the spec says " ++ stated] else if prop0 facts "implemented" == "false" then ["gap: " ++ name ++ " is declared but not implemented"] else []
 
 /-- Collapses runs of spaces and new lines to one space, so layout never makes a mismatch. -/
 def Spec.squash (t : Text) : Text := join " " (List.filter (fun w => not (Text.isEmpty w)) (Text.split (replace "\n" " " t) " "))

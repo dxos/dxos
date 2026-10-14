@@ -394,6 +394,7 @@ export const requestToSexp = (request) => {
 
 /** A string as Core text prints it: `"`, `\` and control characters escaped. */
 export const quote = (value) =>
+  // oxlint-disable-next-line no-control-regex -- matching control characters is the point: they are escaped.
   `"${String(value).replace(/[\\"\u0000-\u001f\u007f]/g, (char) => {
     if (char === '"' || char === '\\') {
       return `\\${char}`;

@@ -510,6 +510,10 @@ def plainDefinition (p : Printer) (name : Text) (docText : Text) (names : List T
             | (x, t) => if Sexp.head t == "tvar" && Sexp.args t == [Sexp.str "?"] then " " ++ x else " (" ++ x ++ " : " ++ ty p t 0 ++ ")") (List.zip names types)) ++ (if Sexp.args result == [Sexp.str "?"] then "" else " : " ++ ty p result 0)
         else Text.concat (List.map (fun x => " " ++ x) names)
       | _ => Text.concat (List.map (fun x => " " ++ x) names)
-    docText ++ "def " ++ name ++ header ++ " :=" ++ body p b env 0
+    -- A declaration prints without a body only when it compiles back to this hash (D93).
+    let declared := match (Resolve.stubOf b, sig) with
+      | (some (stubName, sigText), some s) => stubName == name && sigText == Sexp.print s
+      | _ => false
+    docText ++ "def " ++ name ++ header ++ (if declared then "" else " :=" ++ body p b env 0)
 
 end Print

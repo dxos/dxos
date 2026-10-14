@@ -201,6 +201,26 @@ def nilCon : Sexp := node "con" [s "#List", n 0, n 0]
 
 def app (f : Sexp) (args : List Sexp) : Sexp := node "app" (f :: args)
 
+/--
+  The body of a declaration without one (D93): the defect `not implemented: <name>`, under a lambda
+  applied to the printed signature, so the hash covers the name and the type.
+-/
+def stub (fqn : Text) (signature : Sexp) : Sexp :=
+  app (node "lam" [s "", app (node "prim" [s "defect"]) [node "text" [s ("not implemented: " ++ fqn)]]]) [node "text" [s (Sexp.print signature)]]
+
+/-- The name and printed signature of a stripped `stub` body, after its parameters' lambdas. -/
+def stubOf (body : Sexp) : Option (Text, Text) :=
+  match body with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "lam", Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], Sexp.list [Sexp.sym "text", Sexp.str message]]], Sexp.list [Sexp.sym "text", Sexp.str signature]] =>
+    if Text.startsWith "not implemented: " message then some (Text.drop 17 message, signature) else none
+  | _ => none
+
+/-- Whether stripped Core is a declaration without a body. -/
+def isStub (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] => isStub b
+  | _ => Option.isSome (stubOf core)
+
 def binopPrim (op : Text) : Text :=
   if op == "+" then "Int.add"
   else if op == "-" then "Int.sub"

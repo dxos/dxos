@@ -427,6 +427,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Thr
             [("statement", trim (Text.drop
               (Text.length ("theorem " ++ name))
               (if stop < 0 then decl else Text.take stop decl)))]
+        | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => if isStub core then [("implemented", "false")] else []
         | _ => []
       [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (printer ns []) dir ns name e "deus"))] ++
         typed ++

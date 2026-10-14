@@ -838,6 +838,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw T
         let decl := View.theoremDecl full name types prop proof
         let stop := Text.indexOf decl " := " 0
         [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
+      | some (Sexp.list [Sexp.sym "term", core]) => if Resolve.isStub core then [("implemented", "false")] else []
       | _ => []
     [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.printer ns []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
 

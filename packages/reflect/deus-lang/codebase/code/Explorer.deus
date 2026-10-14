@@ -7,7 +7,21 @@ test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
       startsWith "{\"name\":\"zArea\"" page && Text.contains "\"aliases\":[\"area\"]" page
   | Option.none => false)
 
+theorem Explorer.Spec.assetNamesAreLong (t : Text) : prim "implies" (Assets.isHash t == true) (Text.length t == 64) := by test 100
+
 theorem Explorer.Spec.builtinPagesHaveNoHash (t : Text) : pageOf ("#" ++ t) == "_" ++ t := by test 100
+
+test Explorer.Spec.commentsAreListed := inSite (fun _ =>
+  Comments.add
+    "cb"
+    [(Comments.definition "area", Comment.mk "github:o" "why area?" "t" [])]
+    "comment"
+  regenerate ()
+  match Map.lookup "def:area" (Comments.current "cb") with
+  | Option.some (c :: []) => c.note == "why area?" && Text.contains
+      "\"def:area\":[{\"author\":\"github:o\",\"note\":\"why area?\""
+      (Spec.file "comments.json")
+  | _ => false)
 
 test Explorer.Spec.everyDefinitionHasAPage := inSite (fun _ =>
   let entries := List.filter visible (Map.toList (Codebase.current "cb"))
@@ -32,6 +46,24 @@ def Explorer.Spec.inSite (body : Unit -> {IO, Throw Text} Bool) : Bool := inStor
   site Spec.sample
   body ())
 
+test Explorer.Spec.inboxOpensTasks := inSite (fun _ =>
+  applyOne "cb" (Spec.request "github:o")
+  any
+    (fun t => t.title == "Wrap long lines" && t.labels == ["explorer", "report"] && not (List.isEmpty t.links))
+    (Map.values (Tasks.current "cb")))
+
+test Explorer.Spec.inboxRefusesStrangers := inSite (fun _ =>
+  match try (fun _ => applyOne "cb" (Spec.request "agent")) with
+  | Result.ok _ => false
+  | Result.err _ => not (any (fun t => t.title == "Wrap long lines") (Map.values (Tasks.current "cb"))))
+
+test Explorer.Spec.metaNamesTheConsole := inSite (fun _ =>
+  let without := Text.contains "\"console\":false" (Spec.file "meta.json")
+  IO.mkdirp "site/console"
+  IO.writeFile "site/console/info.json" "{}"
+  regenerate ()
+  without && Text.contains "\"console\":true" (Spec.file "meta.json"))
+
 test Explorer.Spec.namesAreTheVisibleNames := inSite (fun _ =>
   let listed := namesIn (Spec.file "names.json")
   listed == visibleNames () && listed == sort listed && List.contains "Shape" listed && not (List.contains "Shape.circle" listed) && not (List.contains "Ask.ask" listed))
@@ -45,6 +77,9 @@ theorem Explorer.Spec.otherPagesAreTheHash (t : Text) : prim "implies" (startsWi
 
 def Explorer.Spec.regenerate (u : Unit) : {IO, Throw Text} Int := withHome (fun _ => Explorer.generate "cb" "site")
 
+def Explorer.Spec.request (author : Text) : Sexp := Sexp.read ("(request (kind \"task\") (by \"" ++ author ++
+  "\") (at \"t\") (title \"Wrap long lines\") (details \"\") (link \"area\") (labels \"explorer,report\") (assets))")
+
 /-- A codebase from `source` and its site in `site/`. -/
 def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
   forEach appFiles (fun f => IO.writeFile ("home/platform/explorer/" ++ f) ("app " ++ f))
@@ -52,6 +87,15 @@ def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
   IO.writeFile "src/a.deus" (Spec.prelude ++ source)
   deus "cb" ["src"] (fun a => addOrUpdate a false)
   regenerate ()
+
+test Explorer.Spec.snapshotSkipsLocalState := inSite (fun _ =>
+  forEach ["cache/site/x", "artifacts/a", "assets/0", "remotes/origin/url", "exports/k"] (fun f =>
+    IO.mkdirp (join "/" (reverse (List.drop 1 (reverse (Text.split ("cb/" ++ f) "/")))))
+    IO.writeFile ("cb/" ++ f) "x")
+  let files := snapshotFiles "cb"
+  List.contains "HEAD" files && any (fun f => startsWith "objects/" f) files && not (any (fun f => any (fun skip => startsWith (skip ++ "/") f) consoleSkips) files))
+
+theorem Explorer.Spec.subjectsNameSomething (t : Text) : isSubject (Comments.definition t) == not (Text.isEmpty t) := by test 100
 
 test Explorer.Spec.usersInvertDependencies := inSite (fun _ =>
   let ns := Codebase.current "cb"
@@ -145,9 +189,7 @@ def Explorer.console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   match copied with
   | Result.err f => Throw.throw (Failure.render f)
   | Result.ok _ =>
-      let files := List.filter
-        (fun f => not (any (fun skip => startsWith (skip ++ "/") f) consoleSkips))
-        (filesUnder dir "")
+      let files := snapshotFiles dir
       IO.writeFile
         (out ++ "/console/codebase.json")
         (Json.render (Json.obj (List.map (fun f => (f, Json.str (getOr (IO.readFile (dir ++ "/" ++ f)) ""))) files)))
@@ -296,6 +338,11 @@ def Explorer.refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.
                                   runs `deus` against this codebase with no server
 -/
 def Explorer.signature (meta : Option Sexp) : Text := getOr (Option.map (fun s => displayScheme s) (metaField meta "scheme")) ""
+
+/-- The codebase files a console snapshot holds: all of them but those under `consoleSkips`. -/
+def Explorer.snapshotFiles (dir : Text) : {IO} List Text := List.filter
+  (fun f => not (any (fun skip => startsWith (skip ++ "/") f) consoleSkips))
+  (filesUnder dir "")
 
 /-- A definition's source as `deus view` prints it, without its `-- ` header lines. -/
 def Explorer.sourceOf (printer : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO} Text :=
