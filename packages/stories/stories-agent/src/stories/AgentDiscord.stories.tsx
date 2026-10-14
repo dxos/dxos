@@ -136,7 +136,7 @@ export const Scripted: Story = {
     const monitor = await canvas.findByTestId('discord-bot-monitor', {}, { timeout: 60_000 });
     await findEntry(monitor, 'stopped · idle');
     // Setup put the agent in Support mode after the Activity panel mounted, so its skill list must follow the bindings.
-    const skills = await canvas.findByRole('region', { name: 'Skills' }, { timeout: 30_000 });
+    const skills = await canvas.findByRole('group', { name: 'Skills' }, { timeout: 30_000 });
     await within(skills).findByText('Community support', {}, { timeout: 30_000 });
     // Setup recorded each team member's expertise, which the skill reads to choose who to offer.
     await canvas.findByText(/Dmytro Maretskyi \(DXOS\) is the one to ask about ECHO/, {}, { timeout: 30_000 });
