@@ -154,3 +154,21 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - forget it
+
+---
+
+- I've done getting started guide -- everything worked. left comments along the way. read them, record them ,ack the, and revert my commit
+
+  Comments left in docs/GETTING_STARTED.md (commit f84eae1c, reverted), verbatim:
+
+  - (after `deus init`) Shouldn't builtins come by default?
+  - (before `deus add deus`) How is "deus" resolved here?
+  - (after `deus ls Tour`) not formatted correcly, also would be good to have colors in terminals that support them
+  - (before `deus build Notes.serve -o notes-worker --worker`) got "deus: $DEUS_HOME is not set; run deus through bin/deus.mjs"
+  - (before `deus explore`) great start, but unison had much better UI, I think it needs to be an SPA, and we will develop it into proper editing env, but for now I at least wanna be able to view multiple definitions on screen.
+  - (before the published explorer URL) do temp wrangler deplloy of a worker to a specific url, so that it stays updated as the codebase get synced to r2 -- I'll give it a proper home later
+  - More:
+
+    .deus dit not gitignored
+
+    it should prob go into user's home dir by default too, no reason to have multiple
