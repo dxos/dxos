@@ -5,6 +5,7 @@
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './0001_init.sql?raw';
+import { migrateNamedGraphs } from './0002_named_graphs.ts';
 
 /**
  * RDF pipeline migrations, keyed `<id>_<name>` as `Migrator.fromRecord` expects.
@@ -16,6 +17,7 @@ import init from './0001_init.sql?raw';
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
+  '0002_named_graphs': migrateNamedGraphs,
 };
 
 /**

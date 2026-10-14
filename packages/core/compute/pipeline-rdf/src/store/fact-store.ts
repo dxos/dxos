@@ -16,11 +16,11 @@ import { type Fact } from '../types/index.ts';
 //
 
 export interface FactStoreApi {
-  /** Reify and persist facts as RDF triples (idempotent appends; no write-time merge). */
+  /** Persist facts as statements in their named graphs (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
-  /** Run a structured query over the stored facts via SPARQL and reassemble matching Facts. */
+  /** Run a structured query over the stored statements and reassemble the matching Facts. */
   readonly query: (query: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
-  /** Execute a raw SPARQL `SELECT ?fact ?p ?o` and reassemble matching Facts (used for LLM-authored queries). */
+  /** Execute a raw SPARQL `SELECT ?g` and reassemble every statement in the graphs it binds. */
   readonly select: (sparql: string) => Effect.Effect<Fact[], SemanticIndexError>;
   /** Read the ingest cursor (last processed source hash) keyed by source DXN. */
   readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;

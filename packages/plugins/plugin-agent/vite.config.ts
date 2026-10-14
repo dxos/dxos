@@ -34,7 +34,7 @@ export default defineConfig({
     NoteTakerSkill: 'src/skills/NoteTakerSkill.ts',
     RelaySkill: 'src/skills/RelaySkill.ts',
     SupportSkill: 'src/skills/SupportSkill.ts',
-    Memory: 'src/types/Memory.ts',
+    Knowledge: 'src/types/Knowledge.ts',
     MemoryOperation: 'src/types/MemoryOperation.ts',
     Mode: 'src/types/Mode.ts',
     ModeOperation: 'src/types/ModeOperation.ts',

@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-import { AgentChannels, AgentEmail, Goal, Memory } from '#types';
+import { AgentChannels, AgentEmail, Goal } from '#types';
 
 export const translations = [
   {
@@ -24,13 +24,6 @@ export const translations = [
         'typename.label_one': 'Agent email',
         'typename.label_other': 'Agent emails',
         'object-name.placeholder': 'New agent email',
-      },
-      [Type.getTypename(Memory.Memory)]: {
-        'typename.label': 'Memory',
-        'typename.label_zero': 'Memories',
-        'typename.label_one': 'Memory',
-        'typename.label_other': 'Memories',
-        'object-name.placeholder': 'New memory',
       },
       [Type.getTypename(Goal.Goal)]: {
         'typename.label': 'Goal',
@@ -107,7 +100,7 @@ export const translations = [
         'agent-state-skills-empty.label': 'No skills bound',
         'agent-state-state.heading': 'State',
         'agent-state-memories.label': 'Memories',
-        'agent-state-memories.description': '{{active}} active · {{expired}} expired',
+        'agent-state-memories.description': '{{active}} active · {{superseded}} superseded',
         'agent-state-facts.label': 'Facts',
         'agent-state-facts.description': 'said by {{speakers}} speakers',
         'agent-state-goals.label': 'Goals',
