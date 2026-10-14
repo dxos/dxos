@@ -39,6 +39,7 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  LensStoredDXN,
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
@@ -359,7 +360,9 @@ export const objectStructureFromJson = (
           ? EntityKind.Relation
           : type?.['/'] === TypeMetaSchemaDXN.toString()
             ? EntityKind.Type
-            : EntityKind.Object,
+            : type?.['/'] === LensStoredDXN.toString()
+              ? EntityKind.Lens
+              : EntityKind.Object,
       ...(type && { type }),
       ...(parent && { parent }),
       ...(source && { source }),

@@ -5,12 +5,10 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
-
 import * as Annotation from '../../Annotation.ts';
 import * as Type from '../../Type.ts';
 import { EntityKind, type KindId, getEntityKindBrand } from '../common/types/index.ts';
-import { EchoLensKindSchema } from '../Entity/index.ts';
+import { EchoLensKindSchema, LensStoredDXN } from '../Entity/index.ts';
 import { createObject } from '../Obj/create-object.ts';
 import { make } from './codec.ts';
 import { hasCodec } from './codecs.ts';
@@ -100,10 +98,7 @@ export const StoredData = Schema.Struct({
 });
 
 /** The schema of a stored lens. */
-export const Stored = StoredData.pipe(
-  Annotation.LabelAnnotation.set(['name']),
-  EchoLensKindSchema(DXN.make('org.dxos.type.lens', '0.1.0')),
-);
+export const Stored = StoredData.pipe(Annotation.LabelAnnotation.set(['name']), EchoLensKindSchema(LensStoredDXN));
 
 /** A lens stored in a space. */
 export type Stored = Schema.Schema.Type<typeof StoredData> & {
