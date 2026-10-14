@@ -273,7 +273,7 @@ def Print.patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : 
           | (at, env2) =>
               match Print.patternAt p b env2 0 with
               | (bt, env3) =>
-                  let inner := if startsWith "(" bt && endsWith ")" bt && head b == "pcon" then slice bt 1 (Text.length bt - 1) else bt
+                  let inner := if startsWith "(" bt && endsWith ")" bt && head b == "pcon" then Text.slice bt 1 (Text.length bt - 1) else bt
                   ("(" ++ at ++ ", " ++ inner ++ ")", env3)
       | _ => ("?", env)
     else

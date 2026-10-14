@@ -341,7 +341,7 @@ def Resolve.stripAcc (form : Sexp) (acc : List Text) : (Sexp, List Text) :=
           match Resolve.stripAcc body a1 with
           | (body2, a2) => (Sexp.list [Sexp.sym "letrec", vs2, body2], a2)
   | Sexp.list (Sexp.sym "letrec" :: vs :: body :: []) =>
-      match Resolve.stripAcc vs (replicate (List.length (asList vs)) "" ++ acc) with
+      match Resolve.stripAcc vs (replicate (List.length (Sexp.asList vs)) "" ++ acc) with
       | (vs2, a1) =>
           match Resolve.stripAcc body a1 with
           | (body2, a2) => (Sexp.list [Sexp.sym "letrec", vs2, body2], a2)
@@ -472,7 +472,7 @@ def Resolve.valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option
   let index := localIndex locals name
   if index >= 0 then Compile.node "var" [i index] else
     let dot := indexOf name "." 0
-    let headIndex := if dot > 0 then localIndex locals (slice name 0 dot) else -1
+    let headIndex := if dot > 0 then localIndex locals (Text.slice name 0 dot) else -1
     if headIndex >= 0 then
       -- `p.x.y`: field access on a local.
       let fields := Text.split (Text.drop (dot + 1) name) "."

@@ -336,6 +336,22 @@ about mdl-first approach --- I want agents to record specs in codebase, not in g
 
 ---
 
+idea: we need analytical db associated with codebase. cloudflare has something about indexing parquet uploaded to r2 and allowing to run analytical queries over it. here's what im thinking. analytical events are synced together with codebase, but clients generally only push, dont pull. each event type is defeined in the codebase. analytical db entires reference event types, and otherwise have flat structure: scalars, and refs to codebase.
+
+here we will store things like results for non-determentistic tests, ci results, agent analytics, etc...
+
+codebase cannot referece into analytical events, but events referece into codebase.
+
+to make sure my understanding is right, there's 3 way to reference a codebase item
+
+via name via iri <https://...> -- can mutate
+via name and hash <https://....#123123> -- fixed, and name immediatelly avialable (in case same has has multiple names) -- most specific
+via hash #123123 --- has but no name, name can be infered but might be multiple
+
+codebase ui should be able to show events, and at least display their count
+
+---
+
 oh, nonono, threads MUST use the codebase as primary VCS, and git as backup
 
 ---

@@ -195,7 +195,7 @@ def Check.interestingInts : List Int := [0, 1, -1, 2, 7, -100, 2147483647, -2147
 
 /-- A lemma's verdict, checking (and caching) it first if needed. -/
 def Check.lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
-  match cached dir h with
+  match Check.cached dir h with
   | Option.some v => v
   | Option.none =>
       match readObject dir h with
@@ -236,7 +236,7 @@ def Check.run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let prefix := getOr (head? args.positional) ""
-  let runIntegration := flag args "integration"
+  let runIntegration := Cli.flag args "integration"
   let selected := List.filter
     (fun pair => startsWith prefix (fst pair) && (if wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration") then
       match snd pair with
@@ -245,23 +245,48 @@ def Check.run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
       | _ => false
     else false))
     (Map.toList ns)
+  let eventTypes := typesNow dir
   let results := List.map (fun pair =>
     match pair with
     | (name, e) =>
         let h := Entry.hash e
         let integration := not wantTheorems && hasAttr dir h "integration"
+        let started := IO.time ()
         -- An integration test talks to the real world, so its result is never reused.
-        match if integration then Option.none else cached dir h with
-        | Option.some v => (name, v, true)
-        | Option.none =>
-            Image.load (fetcher dir) [h]
-            let v := if wantTheorems then
-              match readObject dir h with
-              | Option.some obj => checkTheorem dir ns h obj
-              | Option.none => Verdict.fail "missing object"
-            else checkTest h integration
-            if integration then () else remember dir h v
-            (name, v, false)) selected
+        let outcome :=
+          match if integration then Option.none else Check.cached dir h with
+          | Option.some v => (name, v, true)
+          | Option.none =>
+              Image.load (fetcher dir) [h]
+              let v := if wantTheorems then
+                match readObject dir h with
+                | Option.some obj => checkTheorem dir ns h obj
+                | Option.none => Verdict.fail "missing object"
+              else checkTest h integration
+              if integration then () else remember dir h v
+              (name, v, false)
+        match outcome with
+        | (_, v, wasCached) =>
+            let fields :=
+              match v with
+              | Verdict.pass evidence cases => (true, evidence, cases, "")
+              | Verdict.fail reason => (false, "", 0, reason)
+              | Verdict.unchecked => (false, "sorry", 0, "unchecked")
+            match fields with
+            | (passed, evidence, cases, failure) => recordRun
+                dir
+                eventTypes
+                ns
+                name
+                (if wantTheorems then "theorem" else "test")
+                passed
+                wasCached
+                (not integration)
+                evidence
+                cases
+                failure
+                (IO.time () - started)
+        outcome) selected
   let failed := List.filter (fun r =>
     match r with
     | (_, Verdict.fail _, _) => true
@@ -335,7 +360,7 @@ def Check.verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option
   | Entry.theorem h => Option.some (lemmaVerdict dir ns h)
   | Entry.test h =>
       let integration := hasAttr dir h "integration"
-      match if integration then Option.none else cached dir h with
+      match if integration then Option.none else Check.cached dir h with
       | Option.some v => Option.some v
       | Option.none =>
           let v :=

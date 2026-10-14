@@ -1,5 +1,14 @@
 # Tasks
 
+## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
+
+- state: todo
+- priority: urgent
+- assignee: claude
+- labels: dogfood, codebase
+
+> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
+
 ## Composer assistant skills for writing DEUS and using the codebase (`5d6c67b4`)
 
 - state: todo
@@ -22,6 +31,20 @@ Surfaces and ECHO access written in DEUS, compiled with --js, loaded into Compos
 - labels: dogfood, artifacts
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
+
+## Explorer: show events and their counts per definition from events.json (Analytics.siteJson) (`381f55f3`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: explorer, analytics
+
+## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: analytics, cloudflare
 
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
@@ -80,6 +103,13 @@ Bisected while writing jsgen.deus: (1) closed-row {IO} callbacks passed where {T
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
 
+## deus compile runs for minutes instead of reporting a type error (Array.set's result passed to List.forEach; siteJson's nested tuple matches) (`a99bf01d`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: bug, devex, perf
+
 ## deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (`10b95384`)
 
 - state: todo
@@ -108,6 +138,13 @@ Gap R-8 in docs/spec/COMPILE.mdl.
 
 Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's OAuth app and wrangler secrets; publishing to the public bucket needs his named approval.
 
+## CI checks that pyarrow, DuckDB and an Iceberg catalog read pushed event files (Analytics.Spec R-6; checked by hand with scripts/analytics-publish.py --local) (`1ad89782`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: analytics, ci
+
 ## Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (`1ab6c044`)
 
 - state: todo
@@ -130,6 +167,13 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
+
+## Field names are global: two structures with a field of the same name make every unannotated access ambiguous, so event types had to rename kind, reason, url and command (`31d3c1cd`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: types, devex
 
 ## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
 
@@ -172,6 +216,13 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - state: todo
 - priority: medium
 - labels: native, perf
+
+## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: analytics, perf
 
 ## Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (`2a2b87a2`)
 
@@ -280,6 +331,15 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - labels: cli, bug
 
 Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
+
+## Analytics store: event types defined in the codebase, flat event rows (scalars and pinned refs), push-only sync as Parquet beside the codebase, queryable with Basin SQL (`87707577`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: analytics, dogfood
+
+Done in this change: @[event] structures (Analytics.Spec R-1, R-2), a local store under events/ (R-3, R-4), a Parquet writer and reader (L-1, L-2, R-5), push-only sync to events/<Type>/<hash>/<batch>.parquet (R-7, R-8), deus event types|record|import|list|stats|push|backfill, TestRun from deus test/check, AgentWrote from add/update --by, AgentChange and AgentStage backfills, CiRun from scripts/analytics-ci.mjs, scripts/analytics-publish.py for Iceberg (local catalog run end to end). Open: 1ad89782 (CI reads with pyarrow), c5955f97 (Basin, needs go-ahead), 821dd13d (statistics), 381f55f3 (explorer).
 
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
@@ -608,6 +668,14 @@ Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end fol
 - labels: js, react
 
 platform/js/react.deus: a Hooks ability handled by React's hooks; examples/react/todo.deus, verified in Chromium.
+
+## Reference forms: name IRI <project>/<name>, pinned <project>/<name>#<hash>, bare #<hash>; deus view accepts all three and an ambiguous #prefix is an error, not the first match (`3c8a311c`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: analytics, codebase
+- links change #d3d028011c
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 

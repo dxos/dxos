@@ -580,7 +580,7 @@ def Codebase.putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
   rewrites one part per change, not all of it. -/
 def Codebase.putNode (dir : Text) (items : List (Text, Sexp)) (depth : Int) : {IO} Text := if List.length items <= nodeLimit || depth >= 64 then Codebase.put dir (Sexp.node "ns" (List.map snd items)) else
   let buckets := List.foldr (fun item m =>
-    let digit := slice (Text.sha256 (fst item)) depth (depth + 1)
+    let digit := Text.slice (Text.sha256 (fst item)) depth (depth + 1)
     Map.insert digit (item :: getOr (Map.lookup digit m) []) m) Map.empty items
   Codebase.put dir (Sexp.node "ns" (List.map
     (fun bucket => Sexp.node "part" [Sexp.str (Codebase.putNode dir (snd bucket) (depth + 1))])

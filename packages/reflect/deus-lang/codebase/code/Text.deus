@@ -5,12 +5,12 @@ def Text.concat : List Text -> Text := prim "Text.concat"
 
 def Text.contains (part : Text) (t : Text) : Bool := indexOf t part 0 >= 0
 
-def Text.drop (n : Int) (t : Text) : Text := slice t n (Text.length t)
+def Text.drop (n : Int) (t : Text) : Text := Text.slice t n (Text.length t)
 
 def Text.endsWith (suffix : Text) (t : Text) : Bool :=
   let n := Text.length t
   let m := Text.length suffix
-  m <= n && slice t (n - m) n == suffix
+  m <= n && Text.slice t (n - m) n == suffix
 
 def Text.fromCode : Int -> Text := prim "Text.fromCode"
 
@@ -49,9 +49,9 @@ def Text.slice : Text -> Int -> Int -> Text := prim "Text.slice"
 /-- `split t sep`: the text first, then the separator. -/
 def Text.split : Text -> Text -> List Text := prim "Text.split"
 
-def Text.startsWith (prefix : Text) (t : Text) : Bool := Text.length prefix <= Text.length t && slice t 0 (Text.length prefix) == prefix
+def Text.startsWith (prefix : Text) (t : Text) : Bool := Text.length prefix <= Text.length t && Text.slice t 0 (Text.length prefix) == prefix
 
-def Text.take (n : Int) (t : Text) : Text := slice t 0 n
+def Text.take (n : Int) (t : Text) : Text := Text.slice t 0 n
 
 /-- ASCII letters to lower case; every other character is unchanged. -/
 def Text.toLower (t : Text) : Text := fromCodes (List.map (fun i =>
