@@ -13,15 +13,17 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import * as ConnectorCoordination from '@dxos/plugin-connector/ConnectorCoordination';
-import { Section } from '@dxos/react-ui-components';
+import { useConfig } from '@dxos/react-client';
 import * as Button from '@dxos/react-ui/Button';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { DiscordChannelForm, DiscordSetup } from '#components';
 import { meta } from '#meta';
 import { DiscordAdminOperation, DiscordChannel } from '#types';
 
-import { DISCORD_USER_PROVIDER_ID } from '../../constants.ts';
+import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl } from '../../constants.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -196,6 +198,9 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
     [managed, installed],
   );
 
+  const config = useConfig();
+  const consoleUrl = edgeConsoleUrl(config.values.runtime?.services?.edge?.url);
+
   return (
     <DiscordSetup.Root
       role={role}
@@ -208,15 +213,16 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
           onConnect={handleConnect}
           onSignOut={handleSignOut}
           onRefresh={handleRefresh}
+          consoleUrl={consoleUrl}
         />
       }
     >
       {!bot && <BotForm db={db} />}
 
-      <Section.Root>
-        <Section.Label>{t('discord-setup-servers.label')}</Section.Label>
+      <Fieldset.Root>
+        <Fieldset.Legend>{t('discord-setup-servers.label')}</Fieldset.Legend>
         {guilds.length === 0 ? (
-          <Section.Empty>{t('discord-setup-servers-empty.label')}</Section.Empty>
+          <Typography.Text tone='muted'>{t('discord-setup-servers-empty.label')}</Typography.Text>
         ) : (
           <DiscordSetup.List
             ids={guilds.map(({ id }) => id)}
@@ -252,14 +258,14 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             })}
           </DiscordSetup.List>
         )}
-      </Section.Root>
+      </Fieldset.Root>
 
       {guildId && (
         <>
-          <Section.Root>
-            <Section.Label>{t('discord-setup-connected.label')}</Section.Label>
+          <Fieldset.Root>
+            <Fieldset.Legend>{t('discord-setup-connected.label')}</Fieldset.Legend>
             {connected.length === 0 ? (
-              <Section.Empty>{t('discord-setup-connected-empty.label')}</Section.Empty>
+              <Typography.Text tone='muted'>{t('discord-setup-connected-empty.label')}</Typography.Text>
             ) : (
               <DiscordSetup.List ids={connected.map(({ id }) => id)}>
                 {connected.map((channel) => (
@@ -276,10 +282,10 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                 ))}
               </DiscordSetup.List>
             )}
-          </Section.Root>
+          </Fieldset.Root>
 
-          <Section.Root>
-            <Section.Label>{t('discord-setup-channels.label')}</Section.Label>
+          <Fieldset.Root>
+            <Fieldset.Legend>{t('discord-setup-channels.label')}</Fieldset.Legend>
             <DiscordSetup.List ids={available.map(({ id }) => id)}>
               {available.map((channel) => {
                 const elsewhere = bindings.some(({ discordChannelId }) => discordChannelId === channel.id);
@@ -303,7 +309,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                 );
               })}
             </DiscordSetup.List>
-          </Section.Root>
+          </Fieldset.Root>
         </>
       )}
     </DiscordSetup.Root>

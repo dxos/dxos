@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+export * from '../../layout/Columns/Columns.tsx';
 export * from '../../layout/Flex/Flex.tsx';
 export * from '../../layout/Grid/Grid.tsx';
 export * from '../components/Block/Block.tsx';

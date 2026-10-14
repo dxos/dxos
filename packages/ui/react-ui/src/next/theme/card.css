@@ -211,6 +211,10 @@
   .dx-card-row[data-align='start'] .dx-card-row-trailing {
     min-height: var(--dx-block-size);
   }
+  /* A tag is a line box shorter than a block, so it insets onto one and centres on the first line as text does. */
+  .dx-card-row[data-align='start'] .dx-tag {
+    margin-block: calc((var(--dx-block-size) - var(--dx-label-line-height)) / 2);
+  }
   .dx-card-row > [data-rail='start'] {
     grid-column: full-start / content-start;
   }
