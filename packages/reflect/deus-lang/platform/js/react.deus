@@ -31,6 +31,8 @@ ability Hooks @"urn:deus:react:Hooks" where
   useRef : a -> Ref a
   useContext : Js -> Js
   useId : Unit -> Text
+  -- Any other hook, such as a library's `useQuery`: `f ()` runs as the component renders.
+  useJs : (Unit -> a) -> a
 
 def createElement : Js := Js.import "react" "createElement"
 
@@ -56,6 +58,7 @@ def withHooks (body : Unit -> {Hooks | r} a) : {r} a :=
   | Hooks.useRef init -> k => k (useRefJs init)
   | Hooks.useContext c -> k => k (useContextJs c)
   | Hooks.useId u -> k => k (useIdJs u)
+  | Hooks.useJs f -> k => k (f ())
 
 /-- Names a JavaScript function (`displayName` too, for React's devtools and warnings). -/
 def named : Text -> Js -> Js := Js.import "deus:runtime" "js.component"

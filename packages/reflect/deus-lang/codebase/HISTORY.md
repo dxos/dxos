@@ -1,5 +1,23 @@
 # History of main
 
+- `4e23b5e485` task: comment on 771e6f9e (by claude)
+- `3815cceaee` history: import 558 changes (by claude)
+- `845a8ce02c` task: import from tasks.sexp
+- `059bcafd6c` add code specs
+- `cf058fac29` export: merge tasks from codebase
+- `1a7a8cb1c2` task: comment on 771e6f9e (by claude)
+- `0798d17c17` history: import 532 changes (by claude)
+- `f7be59b176` task: import from tasks.sexp
+- `7cfe0a41ea` add code specs
+- `44545eb04d` task: comment on e76e36b0 (by claude)
+- `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
+- `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
+- `5682baf33c` task: open 1e8dee8b A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec
+- `92327e0846` task: set 5d6c67b4 state
+- `51a90a44c7` task: comment on 5d6c67b4 (by claude)
+- `f4563342df` task: set 771e6f9e state
+- `e9b5cdc855` task: comment on 771e6f9e (by claude)
+- `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
 - `e55740c728` analytics decisions renumbered D104, D105 (by claude)
 - `43a62f2c19` history: import 540 changes
 - `c769c10b59` task: import from tasks.sexp
