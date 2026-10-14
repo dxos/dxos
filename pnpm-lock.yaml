@@ -8007,6 +8007,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8041,9 +8044,6 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

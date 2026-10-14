@@ -14,11 +14,59 @@ export const TRIG_PREFIXES = Object.entries(RDF.Graph.PREFIXES)
  * graph's provenance (pipeline-rdf's `factToTriples`).
  */
 export const formatRawFact = (fact: RDF.Fact): string =>
-  RDF.Graph.toTriG([fact])
-    .split('\n')
-    .filter((line) => !line.startsWith('@prefix'))
-    .join('\n')
-    .trim();
+  layoutTriG(
+    RDF.Graph.toTriG([fact])
+      .split('\n')
+      .filter((line) => !line.startsWith('@prefix'))
+      .join('\n'),
+  );
+
+/**
+ * Lays out n3's compact TriG for reading: graph bodies indented, a space before each `;` and `.`, every statement
+ * terminated (n3 leaves the last one in a graph bare) and a blank line between top-level blocks.
+ */
+const layoutTriG = (trig: string): string => {
+  const blocks: string[][] = [];
+  let block: string[] = [];
+  let inGraph = false;
+  const close = () => {
+    if (block.length > 0) {
+      blocks.push(block);
+      block = [];
+    }
+  };
+  for (const raw of trig.split('\n')) {
+    const line = raw.trimEnd();
+    if (line.trim().length === 0) {
+      continue;
+    }
+    if (!inGraph && line.endsWith('{')) {
+      close();
+      block.push(line);
+      inGraph = true;
+      continue;
+    }
+    if (inGraph && line === '}') {
+      // The statement before a graph's closing brace needs no terminator in TriG; one keeps every line alike.
+      const last = block.length - 1;
+      if (last > 0 && !/ [.;,]$/.test(block[last])) {
+        block[last] = `${block[last]} .`;
+      }
+      block.push('}');
+      close();
+      inGraph = false;
+      continue;
+    }
+    const spaced = line.replace(/([^ ])([.;,])$/, '$1 $2');
+    // A subject starts at the margin; its continuation lines are already indented by n3.
+    if (!inGraph && !raw.startsWith(' ')) {
+      close();
+    }
+    block.push(inGraph ? `  ${spaced}` : spaced);
+  }
+  close();
+  return blocks.map((lines) => lines.join('\n')).join('\n\n');
+};
 
 /** The ontology namespace the proposed predicates and classes live in. */
 const DX = 'https://dxos.org/ontology/';

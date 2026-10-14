@@ -3,7 +3,7 @@
 //
 
 import { LanguageSupport, StreamLanguage, type StringStream } from '@codemirror/language';
-import { type Tag, tags } from '@lezer/highlight';
+import { type Highlighter, type Tag, highlightCode, tags } from '@lezer/highlight';
 
 /** Token names emitted by the tokenizer, mapped to standard tags so the editor's highlight style colours them. */
 const tokenTable = {
@@ -159,3 +159,25 @@ export const turtleLanguage = StreamLanguage.define<TurtleState>({
 
 /** Turtle (and TriG) language support; pair with the theme's syntax highlighting to colour it. */
 export const turtle = (): LanguageSupport => new LanguageSupport(turtleLanguage);
+
+/** A run of source text and the classes the highlighter gave it (empty when unstyled). */
+export type HighlightedSpan = { text: string; classes: string };
+
+/**
+ * Highlights Turtle or TriG without an editor, one array of spans per line, for read-only snippets where mounting
+ * a CodeMirror view per snippet would cost too much.
+ */
+export const highlightTurtle = (
+  source: string,
+  highlighter: Highlighter | readonly Highlighter[],
+): HighlightedSpan[][] => {
+  const lines: HighlightedSpan[][] = [[]];
+  highlightCode(
+    source,
+    turtleLanguage.parser.parse(source),
+    highlighter,
+    (text, classes) => lines[lines.length - 1].push({ text, classes }),
+    () => lines.push([]),
+  );
+  return lines;
+};

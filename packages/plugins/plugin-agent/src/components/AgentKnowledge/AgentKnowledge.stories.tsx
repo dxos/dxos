@@ -20,6 +20,7 @@ import { translations } from '#translations';
 import { NOW, SCENARIOS, toGraph } from '../AgentState/testing.ts';
 import {
   AgentKnowledge,
+  type AgentKnowledgeBrainStatus,
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
   type AgentKnowledgeView,
@@ -270,13 +271,14 @@ type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
   scenario: keyof typeof SCENARIOS;
   defaultView?: AgentKnowledgeView;
+  brain?: AgentKnowledgeBrainStatus;
 };
 
-const DefaultStory = ({ scenario, defaultView }: StoryProps) => {
+const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
   const knowledge = useMemo(() => SCENARIOS[scenario](), [scenario]);
   const { nodes, edges } = useMemo(() => toGraph(knowledge), [knowledge]);
   return (
-    <AgentKnowledge.Root defaultView={defaultView}>
+    <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
       <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
       <AgentKnowledge.Goals goals={scenario === 'empty' ? [] : GOALS} />
@@ -310,6 +312,14 @@ export const Empty: Story = {
   decorators: [withLayout({ layout: 'column' })],
   args: {
     scenario: 'empty',
+  },
+};
+
+export const Loading: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: {
+    scenario: 'empty',
+    brain: { state: 'loading' },
   },
 };
 

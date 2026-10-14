@@ -11,7 +11,7 @@ import { type Fact } from '../../types/index.ts';
 import * as Mapping from '../../types/Mapping.ts';
 import * as Ontology from '../../types/Ontology.ts';
 import * as Vocab from '../../types/Vocab.ts';
-import { type Row, rowToQuad } from '../source/sqlite-source.ts';
+import { loadGraphRows, rowToQuad, selectChunked } from '../source/sqlite-source.ts';
 import { matchingPredicates, statementMatches } from './match.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
@@ -54,7 +54,10 @@ export const querySqlite = (
         ),
         ontology,
       );
-      restrict(yield* graphsWhere(sql.in('p', [...predicates])));
+      const matched = yield* selectChunked([...predicates], (chunk) =>
+        graphsWhere(sql.in('p', chunk)).pipe(Effect.map((set) => [...set])),
+      );
+      restrict(new Set(matched));
     }
     if (query.source) {
       const rows = yield* sql<{ s: string }>`
@@ -79,10 +82,7 @@ export const querySqlite = (
       return [];
     }
 
-    const ids = [...candidates];
-    const rows = yield* sql<Row>`
-      SELECT s, p, o, oType, g FROM triples
-      WHERE ${sql.in('g', ids)} OR (g = '' AND ${sql.in('s', ids)}) OR g = ${Vocab.ONTOLOGY_GRAPH}`;
+    const rows = yield* loadGraphRows(sql, [...candidates]);
     const facts = yield* Effect.try({
       try: () => Mapping.triplesToFacts(rows.map(rowToQuad), ontology),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),
