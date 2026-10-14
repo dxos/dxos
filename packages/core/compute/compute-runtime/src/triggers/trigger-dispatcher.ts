@@ -343,20 +343,14 @@ const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 const DEFAULT_STALE_REFERENCE_RETRY_INTERVAL = Duration.minutes(15);
 
 /**
- * Errors that mean a stored trigger reference no longer resolves: its target object is deleted, or
- * no handler is registered for its operation (e.g. the plugin that contributed it was disabled).
- * Matched by name so an error rebuilt across the process boundary still counts.
+ * Whether a stored trigger reference no longer resolves: its target object is deleted, or no handler
+ * is registered for its operation (e.g. the plugin that contributed it was disabled).
+ * Walks the `cause` chain, since the process boundary wraps the originating error.
  */
-const STALE_REFERENCE_ERROR_NAMES: ReadonlySet<string> = new Set([
-  EchoError.EntityNotFoundError.name,
-  Operation.NoHandlerError.name,
-]);
-
-/** Walks the `cause` chain, since the process boundary wraps the originating error. */
 const isStaleReferenceError = (value: unknown): boolean => {
   let current: unknown = value;
   while (current instanceof Error) {
-    if (STALE_REFERENCE_ERROR_NAMES.has(current.name)) {
+    if (EchoError.EntityNotFoundError.is(current) || Operation.NoHandlerError.is(current)) {
       return true;
     }
     current = current.cause;

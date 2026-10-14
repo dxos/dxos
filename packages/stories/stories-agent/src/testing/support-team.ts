@@ -18,6 +18,22 @@ import { Organization, Person } from '@dxos/types';
 
 export const SUPPORT_TEAM_NAME = 'DXOS';
 
+/** How long a brain call on EDGE is retried: EDGE cannot open a space created moments ago until it replicates. */
+const EDGE_RETRY_MS = 60_000;
+const EDGE_RETRY_INTERVAL_MS = 2_000;
+
+/** Repeats an operation call on EDGE while it fails, until {@link EDGE_RETRY_MS}; a local call runs once. */
+const untilOnEdge = async <T extends { error?: unknown }>(remote: boolean, call: () => Promise<T>): Promise<T> => {
+  const deadline = Date.now() + EDGE_RETRY_MS;
+  for (;;) {
+    const result = await call();
+    if (!result.error || !remote || Date.now() > deadline) {
+      return result;
+    }
+    await new Promise((resolve) => setTimeout(resolve, EDGE_RETRY_INTERVAL_MS));
+  }
+};
+
 export type SupportTeamMember = {
   fullName: string;
   preferredName: string;
@@ -100,26 +116,28 @@ export const seedSupportTeam = async ({
   invoker: Capabilities.OperationInvoker;
   agent: Agent.Agent;
   remote?: boolean;
-}): Promise<{ seeded: boolean }> => {
+}): Promise<void> => {
   const existingTeam = (await db.query(Filter.type(Organization.Organization)).run()).find(
     ({ name }) => name === SUPPORT_TEAM_NAME,
   );
   const team = existingTeam ?? db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
   await db.flush({ indexes: true });
-  // A persistent space that already holds the team had its brain seeded on an earlier load, and every brain call
-  // on EDGE takes seconds, so the brain is seeded only with a new team.
-  const seeded = !existingTeam;
+  // The brain, not the team object, says what is already remembered: a load whose seed failed is retried by the next.
   const brainOptions = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
-  const recalled = seeded ? (await invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions)).data : undefined;
+  const { data: recalled } = await untilOnEdge(remote, () =>
+    invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions),
+  );
   const existing = new Set((recalled?.memories ?? []).map(({ content }) => content));
   const remember = async (content: string, subjects: Ref.Ref<Obj.Unknown>[]) => {
-    if (!seeded || existing.has(content)) {
+    if (existing.has(content)) {
       return;
     }
-    const { error } = await invoker.invokePromise(
-      MemoryOperation.Remember,
-      { agent: Ref.make(agent), content, kind: 'fact', origin: 'stated', subjects },
-      brainOptions,
+    const { error } = await untilOnEdge(remote, () =>
+      invoker.invokePromise(
+        MemoryOperation.Remember,
+        { agent: Ref.make(agent), content, kind: 'fact', origin: 'stated', subjects },
+        brainOptions,
+      ),
     );
     if (error) {
       throw error;
@@ -155,7 +173,6 @@ export const seedSupportTeam = async ({
     }
   }
   await db.flush({ indexes: true });
-  return { seeded };
 };
 
 /** Where the roster the facts are read from claims to come from; facts are attributed to it. */
@@ -190,10 +207,8 @@ export const seedSupportFacts = async ({
   remote: boolean;
 }): Promise<void> => {
   const options = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
-  const { data: brain, error: inspectError } = await invoker.invokePromise(
-    TriggerOperation.InspectBrain,
-    { agent: Ref.make(agent) },
-    options,
+  const { data: brain, error: inspectError } = await untilOnEdge(remote, () =>
+    invoker.invokePromise(TriggerOperation.InspectBrain, { agent: Ref.make(agent) }, options),
   );
   if (inspectError) {
     log.warn('reading the brain before seeding the support facts failed', { error: inspectError });

@@ -106,7 +106,7 @@ registerErrorMessageContext('TimeoutError', TimeoutError);
 // General protocol error.
 export class ProtocolError extends BaseError.extend('ProtocolError') {}
 
-registerErrorMessageContext(ProtocolError.name, ProtocolError);
+registerErrorMessageContext('ProtocolError', ProtocolError);
 
 // General connectivity errors.
 export class ConnectivityError extends BaseError.extend('ConnectivityError') {}
@@ -120,7 +120,7 @@ registerErrorMessageContext('RateLimitExceededError', RateLimitExceededError);
 // TODO(nf): Rename? the protocol isn't what's unknown...
 export class UnknownProtocolError extends BaseError.extend('UnknownProtocolError') {}
 
-registerError(UnknownProtocolError.name, (message, context) => new UnknownProtocolError({ message, context }));
+registerError('UnknownProtocolError', (message, context) => new UnknownProtocolError({ message, context }));
 
 export class InvalidStorageVersionError extends BaseError.extend(
   'InvalidStorageVersionError',

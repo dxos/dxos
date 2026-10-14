@@ -128,7 +128,7 @@ describe('channel operations', () => {
         .pipe(Effect.provideService(Capability.Service, capabilities(feedChannelBackend)), Effect.exit);
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        expect(String(exit.cause)).toContain(ChannelBackend.ChannelBackendNotFoundError.name);
+        expect(String(exit.cause)).toContain('ChannelBackendNotFoundError');
       }
     }).pipe(Effect.provide(testLayer())),
   );
@@ -234,8 +234,8 @@ describe('channel operations', () => {
         .pipe(withFeed, Effect.exit);
       const connect = yield* connectChannel.handler({ channel: Ref.make(channel) }).pipe(withFeed, Effect.exit);
       expect([failureOf(direct), failureOf(connect)]).toEqual([
-        expect.stringContaining(ChannelBackend.ChannelBackendUnsupportedError.name),
-        expect.stringContaining(ChannelBackend.ChannelBackendUnsupportedError.name),
+        expect.stringContaining('ChannelBackendUnsupportedError'),
+        expect.stringContaining('ChannelBackendUnsupportedError'),
       ]);
     }).pipe(Effect.provide(testLayer())),
   );
