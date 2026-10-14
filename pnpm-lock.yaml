@@ -759,9 +759,6 @@ catalogs:
     astro:
       specifier: ^6.4.6
       version: 6.4.6
-    asynciterator:
-      specifier: 3.9.0
-      version: 3.9.0
     autoprefixer:
       specifier: ^10.5.0
       version: 10.5.0
@@ -5558,9 +5555,6 @@ importers:
 
   packages/core/compute/pipeline-rdf:
     dependencies:
-      '@comunica/query-sparql-rdfjs':
-        specifier: 'catalog:'
-        version: 5.2.3
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
@@ -5582,15 +5576,15 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../pipeline
+      '@dxos/sparql-sqlite':
+        specifier: workspace:*
+        version: link:../sparql-sqlite
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      asynciterator:
-        specifier: 'catalog:'
-        version: 3.9.0
       n3:
         specifier: 'catalog:'
         version: 2.1.0
@@ -5598,9 +5592,6 @@ importers:
         specifier: 'catalog:'
         version: 3.7.4
     devDependencies:
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 4.0.4(effect@4.0.4)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
@@ -5684,12 +5675,18 @@ importers:
       '@comunica/query-sparql-rdfjs':
         specifier: 'catalog:'
         version: 5.2.3
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@types/n3':
         specifier: 'catalog:'
         version: 1.26.1
       '@types/sparqljs':
         specifier: 'catalog:'
         version: 3.1.12
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
       esbuild:
         specifier: '>=0.28.0'
         version: 0.28.2
@@ -35824,9 +35821,6 @@ packages:
   asynciterator@3.10.0:
     resolution: {integrity: sha512-eDOBoUf2m+4ht0ETVn2SCfuBIZZ6UWyyQbP++LRPKoK7PmrCQq37pJ6vRvyef4o1Pn+CwWnzMlkXxGdh/krVIw==}
 
-  asynciterator@3.9.0:
-    resolution: {integrity: sha512-bwLLTAnoE6Ap6XdjK/j8vDk2Vi9p3ojk0PFwM0SwktAG1k8pfRJF9ng+mmkaRFKdZCQQlOxcWnvOmX2NQ1HV0g==}
-
   asyncjoin@1.2.4:
     resolution: {integrity: sha512-7/1g5uV2/iTDQteJ/pxqZq6qkO5406V+vNyOCYtHJ+mo6bmvvQHHrZgd7AtU/rx+cnz08NPWlwk8daW61thnlA==}
 
@@ -58537,8 +58531,6 @@ snapshots:
   asynciterator@3.10.0:
     dependencies:
       tiny-set-immediate: 1.0.2
-
-  asynciterator@3.9.0: {}
 
   asyncjoin@1.2.4:
     dependencies:

@@ -134,25 +134,30 @@ independently without re-extracting. Three layers, by increasing cost and contex
 
 ## Storage & query engine
 
-One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
-`Source`. `FactStore.query` → `buildSparql` → Comunica → `Source.match()` in every
-configuration below; only the backend differs.
+One engine everywhere: **`@dxos/sparql-sqlite`** (`SqlSparqlEngine`), which compiles each SPARQL query to one
+SQL statement over an interned quad store. It runs on any synchronous SQLite behind its `SqlStorage`
+interface (`exec(query, ...bindings)`), the shape of a Durable Object's `ctx.storage.sql`.
 
-| Config                 | Source                                              | Persistence | Platform          |
-| ---------------------- | --------------------------------------------------- | ----------- | ----------------- |
-| **N3**                 | N3 `Store` (in-memory)                              | memory only | browser or node   |
-| **SQLite (OPFS)**      | `makeSqliteSource` — wa-sqlite + OPFS (worker)      | persistent  | browser           |
-| **SQLite (file / DO)** | `makeSqliteSource` — better-sqlite3 / Cloudflare DO | persistent  | node / Cloudflare |
+| Constructor                                                 | SQLite                                                                 | Persistence | Platform        |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- | ----------- | --------------- |
+| `FactStoreLive.layer(ctx.storage.sql, { transactionSync })` | Durable Object SQLite                                                  | persistent  | Cloudflare      |
+| `FactStoreLive.layer(database)` / `make(database)`          | `@dxos/sql-sqlite/SqlStorage` `makeFile` (`node:sqlite`)               | persistent  | node            |
+| `FactStoreLive.makeMemory()` / `layerMemory`                | `@dxos/sql-sqlite/SqlStorage` `makeMemory` (`node:sqlite` / wa-sqlite) | memory only | node or browser |
 
-For SQLite, persistence is the database itself — no whole-graph snapshot, no in-memory size
-ceiling. N3 is fast and dependency-light but ephemeral (optionally snapshotted to
-localStorage/IndexedDB).
-
-Why Comunica over an embeddable store (e.g. Oxigraph): Oxigraph's WASM build is in-memory
-with a fixed backend, so it cannot persist to or stream from storage we control. Comunica
-queries any `Source` we implement, which is what makes the SQLite backend possible. The
-trade is performance (a constant factor; our queries are simple per-entity/per-source/as-of
-lookups, not heavy joins).
+- `putFacts` expands each fact into its named-graph quads (`Mapping.factToTriples`) and inserts them in
+  batches inside `transactionSync`.
+- `query(SemanticQuery)` finds the candidate graphs with one SPARQL query (`GRAPH ?g` statement patterns for
+  entity / subject / predicate, `prov:wasDerivedFrom` on the graph for source), then loads those graphs, their
+  provenance and the ontology graph with a second, and re-checks each statement in JS (`match.ts`): a graph
+  found by one statement may hold others. The predicate's matching IRIs are resolved in JS
+  (`matchingPredicates`), since SPARQL cannot express the ontology's relation key.
+- `select(sparql)` runs a raw SELECT binding `?g` (or `?fact`) through the compiler, then loads and reassembles
+  every statement in the bound graphs; a construct the compiler does not translate fails with
+  `SemanticIndexError` (cause `UnsupportedSparqlError`), see sparql-sqlite's `docs/CONFORMANCE.md`.
+- Ingest cursors live in a `fact_cursors` table in the same database. Opening a store drops the tables of the
+  earlier text-triples schema (`triples`, `entities`, `cursors`, `rdf_migrations`); their data is not migrated.
+- The engine's tables (`terms`, `quads`, `dts`, `meta`) are unprefixed, so a database shared with other stores
+  must not use those names.
 
 ### Named graphs (storage shape)
 
@@ -160,8 +165,7 @@ Each statement is a real triple inside a **named graph**, and the graph's proven
 about the graph, in the default graph: PROV-O attribution plus `sx:` factuality and metadata. Statements
 that share their provenance (source, speaker, time, quote, factuality, extraction pass) share a graph
 (`RDF.Graph.assign`); a statement that differs in any of it starts another. This is standard RDF 1.1
-(TriG, N-Quads, SPARQL `GRAPH`), needs no RDF-star, and keeps the SQLite `Source` a simple
-`(subject, predicate, object, objectType, graph)` table.
+(TriG, N-Quads, SPARQL `GRAPH`), needs no RDF-star, and is stored as-is in the engine's quads.
 
 - **Predicates** are IRIs from an extensible ontology (`RDF.Ontology`), seeded from established
   vocabularies under their own IRIs (`is on the team as` → `schema:jobTitle`, `is a` → `rdf:type`,
@@ -183,8 +187,8 @@ that share their provenance (source, speaker, time, quote, factuality, extractio
   the graph named by its fact IRI, so its id is unchanged; a statement in a named graph is identified by
   the graph and the triple.
 
-Migration `0002_named_graphs` rewrote the earlier reified facts (a fact node with `sx:subject` /
-`sx:predicate` / `sx:object`) as one-statement graphs.
+Facts stored in the earlier reified shape (a fact node with `sx:subject` / `sx:predicate` / `sx:object`) lived
+in the text-triples tables, which opening the store drops.
 
 `sx:` is this package's namespace; PROV-O terms (`prov:wasAttributedTo`,
 `prov:generatedAtTime`, `prov:wasDerivedFrom`) are reused verbatim, so the graph is valid
@@ -311,5 +315,5 @@ Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide 
   cursor: an unchanged source is a no-op, a changed one re-extracts.
 - **as-of / according-to** — the two query-time conflict-resolution axes (state _at a time_ × _per a
   source_); conflicts are never merged at write time.
-- **Comunica / Source** — the SPARQL engine (`@comunica/query-sparql-rdfjs`) and the swappable RDF/JS
-  backend it queries (N3 in-memory, or SQLite over OPFS / file / Durable Object).
+- **sparql-sqlite** — the SPARQL engine (`@dxos/sparql-sqlite`): each query compiles to one SQL statement
+  over a quad store in synchronous SQLite (Durable Object, `node:sqlite`, or in-memory wa-sqlite).

@@ -11,6 +11,9 @@
     },
     {
       "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
     }
   ]
 }
