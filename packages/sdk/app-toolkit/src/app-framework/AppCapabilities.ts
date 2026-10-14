@@ -321,8 +321,8 @@ export type Invitee = Readonly<{
 }>;
 
 /**
- * Invitees beside contacts, offered by the contact picker of a space's members panel. Agents come this way:
- * they are not HALO identities yet, so they cannot be admitted as members.
+ * Invitees beside contacts, offered by the contact picker of a space's members panel. Agents come this way, since
+ * adding one is more than admitting its identity: it is registered with EDGE and gets a presence in the space.
  */
 export type InviteeSource = Readonly<{
   /** Who `space` can add; listed again after each add. */

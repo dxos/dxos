@@ -18,10 +18,9 @@
  *   node .agents/skills/autocue/scripts/pair.mjs \
  *     --flow packages/plugins/plugin-agent/autocue/agent-admins.mjs --out /tmp/pair --mp4 on
  *
- * Setup and the invitation follow `two-people-one-agent.mjs`, the conversation `agent-across-spaces.mjs`. The
- * replies come from a live model, so the steps wait for each reply to settle rather than for its words. Creating Kai is
- * timed off camera and logged as `[timing]`. Keep the file free of imports, since it is loaded from outside the
- * workspace.
+ * Setup and the invitation follow `two-people-one-agent.mjs`. The replies come from a live model, so the steps wait for
+ * each reply to settle rather than for its words. Creating Kai is timed off camera and logged as `[timing]`. Keep the
+ * file free of imports, since it is loaded from outside the workspace.
  */
 
 const AGENT = 'Kai';

@@ -92,7 +92,8 @@ const entryOf = (space: AgentSpace.Space & { readonly id: string }, viewer: Publ
   const agent = AgentSpace.agentOf(space);
   return {
     spaceId: space.id,
-    name: agent?.identity?.profile?.displayName ?? '',
+    // EDGE names the agent's space after the agent, which stands in until the agent's profile reaches the client.
+    name: agent?.identity?.profile?.displayName ?? (space.isOpen ? space.properties?.name : undefined) ?? '',
     identityKey: toPublicKey(agent?.identity?.identityKey)?.toHex(),
     did: agent?.identity?.did || undefined,
     admins: AgentSpace.admins(space).map((member) => adminOf(member, viewer)),

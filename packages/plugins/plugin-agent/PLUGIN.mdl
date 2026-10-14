@@ -1040,61 +1040,6 @@ test QA-3: Two people, one agent — a watch fires across private chats
 ```
 
 ```mdl
-test QA-4: An agent invited into another space keeps one conversation and one brain
-  desc: |
-    The cross-space journey: an agent made in one space learns about something in conversation, is added to
-    a second space from its Members panel the way a contact is, and there continues the same conversation and
-    reads what it learned from its brain with a tool call. The autocue flow `autocue/agent-across-spaces.mjs`
-    walks it and records the demo.
-  actors: human
-  covers: [F-1.4, F-6.1, F-6.4, F-6.5]
-  status: passing             # 2026-10-14, recorded by autocue/agent-across-spaces.mjs against EDGE preview
-  given:
-    - an identity exists, with the display name "Mykola"
-    - space: "My Space" is open and SPACE_READY, with no agent
-    - other: a second space "Offsite team" exists, which Mykola owns
-    - plugin-agent is enabled
-    - a live model is available to the assistant (EDGE's AI service) — ABORT without one
-  steps:
-    - name: Create the agent
-      do: In My Space click + ("Add to space"), pick Agent, name it "Kai" and click Create.
-      invoke: [op:createAgent] { name: "Kai" }
-      capture: agent
-      expect: Kai is listed under Assistant › Agents and its empty chat opens
-    - name: Tell Kai about the offsite
-      do: Send "Hi Kai, I'm Mykola. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue."
-      expect: Kai acknowledges the place, the date and the headcount in a short reply
-      note: NO `invoke` — the model replies; the turn's facts are read into Kai's brain after it.
-    - name: Add the budget
-      do: Send "The budget is 8,000 euros, and flights are still open."
-      expect: Kai acknowledges the budget
-      note: NO `invoke` — model-driven.
-    - name: Add Kai to the other space from its Members panel
-      do: In Offsite team open Settings › Members; under "Add from contacts" pick Kai and click Add.
-      invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other
-      capture: presence
-      expect: Offsite team lists Kai under Assistant › Agents, and the picker no longer offers Kai
-      assert: return $result.created === true
-    - name: Open Kai in the other space
-      do: Click Kai under Offsite team's Agents.
-      expect: the same conversation as in My Space opens — Mykola's two messages and Kai's replies; there is one conversation, not one per space
-    - name: Ask Kai to check its memory
-      do: Send "Check your memory: what do we have so far for the offsite?"
-      expect: |
-        Kai calls Recall (shown as a tool row) and answers from its brain — Lisbon, November 14, 12 people,
-        Dima on the venue, the 8,000 euro budget, flights open
-      note: NO `invoke` — model-driven; the facts come from Kai's brain through op:retrieveMemories.
-    - name: Read Kai's brain from the other space
-      do: Open Kai's Brain companion and its Facts tab.
-      expect: the facts Kai read from the My Space conversation are listed, attributed to Mykola
-  after:
-    - name: Delete Kai in both spaces
-      do: Delete Kai in Offsite team, then in My Space.
-      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($presence.agent)] }   # then [Obj($agent.agent)] in $given.space
-      expect: neither space lists Kai
-```
-
-```mdl
 test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own space, where it recalls what Alice told it
   desc: |
     An agent's admins are the members who can edit its own space. Alice creates an agent, which mints its identity and
@@ -1104,8 +1049,8 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     to his own space from its Members panel and asks it what is planned: it answers from its brain. The autocue flow
     `autocue/agent-admins.mjs` walks it side by side, one browser per person.
   actors: human
-  covers: [F-6.1, F-6.5, F-6.7, F-7.1, F-7.2, F-7.4, F-7.5, F-7.6, F-7.7]
-  status: passing             # 2026-10-13, recorded by autocue/agent-admins.mjs against a local EDGE (dxos/edge#1293)
+  covers: [F-1.4, F-6.1, F-6.4, F-6.5, F-6.7, F-7.1, F-7.2, F-7.4, F-7.5, F-7.6, F-7.7]
+  status: passing             # 2026-10-14, recorded by autocue/agent-admins.mjs against a local EDGE (dxos/edge#1293)
   given:
     - alice: an identity with the display name "Alice", on one device
     - bob: an identity with the display name "Bob", on another device
