@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { EDGE_URLS } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
@@ -26,7 +27,11 @@ const EDGE_LABELS: Record<EdgeEnvironment, string> = {
   production: 'Production',
 };
 
-const EDGE_ITEMS = EDGE_ENVIRONMENTS.map((value) => ({ value, label: EDGE_LABELS[value] }));
+/** Each environment with the host it reaches (`dev.dxos.network`), so the choice names where the client connects. */
+const EDGE_ITEMS = EDGE_ENVIRONMENTS.map((value) => ({
+  value,
+  label: `${EDGE_LABELS[value]} · ${new URL(EDGE_URLS[value]).host}`,
+}));
 
 /** The client's EDGE connection as it reports it, about once a second while connected; `undefined` until the first report. */
 const useEdgeStatus = (): EdgeStatus | undefined => {
