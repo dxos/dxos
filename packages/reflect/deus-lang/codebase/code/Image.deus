@@ -52,8 +52,9 @@ def Image.nominalForms (fetch : Text -> {Throw Text | r} Option Sexp) (defs : Li
     | _ => Option.none) hashes
 
 /-
-  Images: the closure of a definition as `(def "hash" core)` forms plus `(main "hash")`,
-  sorted by hash so the same code always yields the same bytes. The kernel loads images.
+  Images: the closure of a definition as `(def "hash" core)` forms sorted by hash, then a
+  `(type "hash" "iri")` or `(ability "hash" "iri")` line for each user type and ability they use,
+  then `(main "hash")`, so the same code always yields the same bytes. The kernel loads images.
 -/
 /-- Hashes referenced by `(ref …)` in a form. -/
 def Image.refs (form : Sexp) (acc : List Text) : List Text :=

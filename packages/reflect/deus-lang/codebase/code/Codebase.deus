@@ -306,8 +306,9 @@ def Codebase.layerOf (form : Sexp) : Text :=
   let kind := head form
   if kind == "spec" then "spec" else if kind == "test" then "tests" else if kind == "theorem" then "proofs" else if kind == "task" || kind == "thread" then "tasks" else if kind == "ns" || kind == "causal" || kind == "tasks" || kind == "record" || kind == "comments" then "history" else "code"
 
-/-- Every layer with where it lives and whether it is replicated. -/
-def Codebase.layers : List (Text, (Text, Bool)) := [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true), ("results", "results/", true), ("provenance", "provenance/", true), ("assets", "assets/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
+/-- Every layer with where it lives and whether `push` and `pull` carry it: bundles hold objects
+  and metadata, and assets travel beside them; verdicts and provenance stay on the machine. -/
+def Codebase.layers : List (Text, (Text, Bool)) := [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true), ("results", "results/", false), ("provenance", "provenance/", false), ("assets", "assets/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
 
 /-- One name's entry in a snapshot, reading only the nodes on its path. -/
 def Codebase.lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option Entry :=
@@ -517,13 +518,13 @@ def Codebase.nsToSexp (ns : Map Text Entry) : Sexp := Sexp.node
   The codebase: a content-addressed store in a `.deus` directory (Unison's model).
 
     objects/<h[0..2]>/<h>   every hashed object: types, abilities, terms, tests, theorems,
-                            namespace snapshots and causal history nodes
+                            namespace snapshots, causal history nodes, and tasks with their
+                            snapshots (D59, `deus/tasks.deus`)
     meta/<h>                metadata of an object (signature, doc, local names); not hashed
     branches/<name>         the causal hash a branch points at
     HEAD                    the current branch name
     results/<h>             test and proof verdicts, keyed by the hash of what was checked
     provenance/<causal>     who or what produced a change (an agent, a prompt digest)
-    tasks                   issues, as hashed objects beside the code (D59, `deus/tasks.deus`)
     artifacts/<h>           built executables, by the hash of their inputs; local only
     cache/                  re-computable data (fetched artifacts); never replicated
 

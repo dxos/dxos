@@ -621,11 +621,45 @@ describe('deus CLI', () => {
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
 
-    // `==` on constructed values would compare addresses (D69): refused rather than answered wrong.
-    deus('add', file('same.deus', 'def same (x : Int) : Bool := some x == some x\n'), ...c);
-    const compared = deus('build', 'same', '-o', join(scratch, 'same.wasm'), '--wasm', ...c);
-    expect(compared.code).toBe(1);
-    expect(compared.stderr).toContain('eq on values that are not known to be Int or Bool is outside the wasm subset');
+    // `==` on data calls a generated equality function per type (D100), not an address compare; a long
+    // list compares in constant stack.
+    deus(
+      'add',
+      file(
+        'same.deus',
+        [
+          'inductive Tree (a : Type) where',
+          '  | leaf',
+          '  | node (l : Tree a) (v : a) (r : Tree a)',
+          'def grow (n : Int) (k : Int) : Tree Int := if n == 0 then Tree.leaf else Tree.node (grow (n - 1) k) (n * k) (grow (n - 1) k)',
+          'def sameTree (n : Int) (k : Int) : Bool := grow n 1 == grow n k',
+          'def upto (n : Int) (acc : List Int) : List Int := if n == 0 then acc else upto (n - 1) (n :: acc)',
+          'def sameList (n : Int) (k : Int) : Bool := upto n [] != upto k []',
+          'def sameNested (x : Int) (y : Int) : Bool := some (some x) == some (if y == 0 then none else some y)',
+          'def less (x : Int) : Bool := some x < some x',
+          '',
+        ].join('\n'),
+      ),
+      ...c,
+    );
+    for (const [name, args] of [
+      ['sameTree', [4, 1]],
+      ['sameTree', [4, 2]],
+      ['sameList', [100_000, 100_000]],
+      ['sameList', [5, 6]],
+      ['sameNested', [3, 3]],
+      ['sameNested', [3, 0]],
+      ['sameNested', [3, 4]],
+    ] as const) {
+      expect(call(name, ...args) === 1 ? 'true' : 'false').toBe(
+        deus('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim(),
+      );
+    }
+    const ordered = deus('build', 'less', '-o', join(scratch, 'less.wasm'), '--wasm', ...c);
+    expect([ordered.code, ordered.stderr]).toEqual([
+      1,
+      'deus: lt on constructed values is outside the wasm subset, which has no structural order: (app (prim "lt") (app (con "#Option" 1 1) (var 0)) (app (con "#Option" 1 1) (var 0)))\n',
+    ]);
   });
 
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(

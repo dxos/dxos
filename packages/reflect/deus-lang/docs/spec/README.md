@@ -21,6 +21,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [Bindings.Spec](../../codebase/specs/Bindings.Spec.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
 | [Checking.Spec](../../codebase/specs/Checking.Spec.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
 | [JsGen.Spec](../../codebase/specs/JsGen.Spec.mdl)                  | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
+| [WasmEquality.Spec](../../codebase/specs/WasmEquality.Spec.mdl) | `==` on data in the wasm back end: requirements, layout of the equality functions, theorems |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
@@ -43,15 +44,4 @@ is fixed, the spec describes what the code does.
 
 Bugs: none open.
 
-Docs that disagree with the code:
-
-- `Codebase.layers` says `results` and `provenance` replicate; bundles carry only objects and metadata.
-- D51 and `deus help` say the wasm compiler is first-order `Int`/`Bool`; it handles data since D56.
-- D62 lists four explorer JSON kinds; the explorer also writes `change/<causal>.json`.
-- D63 says `deus view` keeps lines within 100 columns; only some forms break.
-- D31 says spans identify code by hash; only defect traces carry hashes.
-- LLM.md says `--json` works on any command; `compile`, `image`, `run`, `serve` and `help` ignore it.
-- GETTING_STARTED.md says a `match` must cover every case; nothing checks exhaustiveness, and a missed
-  case is a defect at run time.
-- The header comments of [`deus/codebase.deus`](../../deus/codebase.deus) (a top-level `tasks` entry) and
-  [`deus/image.deus`](../../deus/image.deus) (no nominal lines) are stale.
+Docs that disagree with the code: none open.

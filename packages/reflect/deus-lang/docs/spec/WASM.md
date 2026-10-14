@@ -70,13 +70,14 @@ block  = tag:i32 field₀:i32 … fieldₙ₋₁:i32      at address a, field i 
 The type of a block is not stored. A host that builds an argument or reads a result must know the type
 from the definition's signature.
 
-`eq`, `neq`, `lt`, `gt`, `le` and `ge` compare the `i32`s, which is structural only for `Int` and `Bool`.
-On constructed values it would compare addresses, while the interpreter compares structure, so the
-compiler refuses a comparison unless it can see that one side is an `Int` or a `Bool`
-([D69](../DECISIONS.md)). It sees types from each definition's stored scheme (or signature) for its
-parameters, from call results, from `let` values, and from the data type's constructor fields for what a
-pattern binds. `some x == some x` is refused with
-`eq on values that are not known to be Int or Bool is outside the wasm subset, …`.
+`eq`, `neq`, `lt`, `gt`, `le` and `ge` compare the `i32`s when the compiler can see that one side is an
+`Int` or a `Bool`. On a constructed value that would compare addresses, while the interpreter compares
+structure, so `eq` and `neq` on a data type the compiler can see call that type's generated equality
+function instead ([Equality](#equality), [D100](../DECISIONS.md)), and the order comparisons are refused.
+The compiler sees types from each definition's stored scheme (or signature) for its parameters, from call
+results, from `let` values, from a constructor's arguments, and from the data type's constructor fields
+for what a pattern binds. `some x < some x` is refused with
+`lt on constructed values is outside the wasm subset, which has no structural order: …`.
 
 ## Module layout
 
@@ -84,14 +85,14 @@ The module is wasm version 1 with these sections, in order, and no others (no im
 element or data section). Let `F₀ … Fₖ₋₁` be the definitions in the order they were reached, with `F₀` the
 named one.
 
-| Section      | Content                                                                       |
-| ------------ | ----------------------------------------------------------------------------- |
-| type (1)     | `k + 1` types: type `i` is `(i32 × arity(Fᵢ)) → i32`; type `k` is `i32 → i32` |
-| function (3) | `k + 1` functions; function `i` has type `i`. Function `k` is `alloc`         |
-| memory (5)   | one memory, minimum 1 page, no maximum                                        |
-| global (6)   | one mutable `i32`, the heap pointer, initialized to 8                         |
-| export (7)   | `<name>` → function 0, `memory` → memory 0, `alloc` → function `k`            |
-| code (10)    | the `k` compiled bodies, then `alloc`                                         |
+| Section      | Content                                                                                                                                        |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| type (1)     | `k + 1` types: type `i` is `(i32 × arity(Fᵢ)) → i32`; type `k` is `i32 → i32`; with equality functions, type `k + 1` is `(i32 i32) → i32`      |
+| function (3) | `k + 1 + q` functions; function `i` has type `i`. Function `k` is `alloc`; functions `k + 1 …` are the `q` equality functions, of type `k + 1` |
+| memory (5)   | one memory, minimum 1 page, no maximum                                                                                                         |
+| global (6)   | one mutable `i32`, the heap pointer, initialized to 8                                                                                          |
+| export (7)   | `<name>` → function 0, `memory` → memory 0, `alloc` → function `k`                                                                             |
+| code (10)    | the `k` compiled bodies, then `alloc`, then the equality functions                                                                             |
 
 `<name>` is the last dot-separated segment of the name given on the command line: `deus build M.sumTo
 --wasm` exports `sumTo`. Each definition is one function, so calls between them are direct.
@@ -134,6 +135,30 @@ value no case matches traps.
 | `(pcon "T" tag p …)`             | word 0 `≠` `tag` leaves the case; then each field that is not `(pany)` is loaded into a fresh local and tested against its sub-pattern |
 
 Bindings follow Core's order: left to right, the last one bound is `(var 0)`.
+
+## Equality
+
+`a == b` on a data type `T` compiles to `a`, `b`, `call eq_T`, and `a != b` adds `i32.eqz`. The compiler
+generates one function per instantiated type, in the order the code first compares one: `Option Int` and
+`Option (Option Int)` are two functions, and every comparison of `Option Int` shares one. The function
+takes the two blocks as locals 0 and 1:
+
+1. The same address is equal (1).
+2. Different tags are not (0).
+3. Otherwise the fields of that constructor compare left to right, each with `i32.eq` when the field is an
+   `Int` or a `Bool` and with a `call` of its own type's function otherwise; the first unequal field
+   answers 0. A constructor without fields answers 1.
+
+The last field is compared with `return_call`, so comparing two long lists runs in constant stack. A
+field's type is the constructor's field type with the type's arguments substituted. The type must be
+complete: a type with a type variable left in it (`Option a`), a function field, an `Array`, a `Ref` or a
+`Text` has no comparison in the subset and is refused with `eq on <type> is outside the wasm subset: it has
+a field of type <field type>`, or, at the comparison itself, with `eq on values that are not known to be
+Int, Bool or a data type is outside the wasm subset, …`.
+
+`Wasm.compile`'s `fetch` answers a type's IRI as well as a hash, because a signature names a type by IRI
+(`(tref "urn:deus:Tree")`) while Core names its constructors by the type's hash. The checked spec is
+[WasmEquality.Spec](../../codebase/specs/WasmEquality.Spec.mdl).
 
 ## Arrays and cells
 
@@ -218,6 +243,3 @@ The compiler stops at the first form outside the subset. `deus build` then write
 
 `<hash prefix>` is the first 10 characters of the hash. Example: a definition returning `"hi"` fails with
 `deus: outside the wasm subset: (text "hi")`.
-
-Note: the usage line in `deus help` says the subset is "first-order Int/Bool" functions; it also covers
-algebraic data since D56.

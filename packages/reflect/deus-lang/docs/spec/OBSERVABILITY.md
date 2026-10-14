@@ -209,5 +209,5 @@ defect: division by zero
 with two spaces and `#` before each hash, and exits 70. The embeddable kernel returns the hashes as the
 `trace` array of a `defect` result ([EMBEDDING.md](./EMBEDDING.md#results)).
 
-Note: [D31](../DECISIONS.md) says spans identify code by hash. Spans carry only the name and attributes
-the program gives; definition hashes appear only in defect traces.
+Spans carry only the name and attributes the program gives; definition hashes appear only in defect
+traces.

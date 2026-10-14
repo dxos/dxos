@@ -1135,7 +1135,13 @@ def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Tex
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
       if flag args "wasm" then
-        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        -- A signature names a type by IRI; the back end reads the type's object to compare its values (D100).
+        let byIri := Map.fromList (List.filterMap (fun pair =>
+          match snd pair with
+          | Entry.type th iri _ => some (iri, th)
+          | _ => none) (Map.toList ns))
+        let fetch := fun (x : Text) => Option.orElse (Codebase.readObject dir x) (fun _ => Option.bind (Map.lookup x byIri) (Codebase.readObject dir))
+        match try (fun _ => Wasm.compile fetch (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
       else if flag args "c" then
@@ -1564,7 +1570,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)",
-    "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
+    "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
