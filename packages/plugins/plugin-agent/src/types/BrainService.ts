@@ -118,6 +118,12 @@ export interface Service {
   /** The agent's facts matching the query. */
   readonly query: (agent: string, query: FactQuery) => Effect.Effect<RDF.Fact[], BrainError>;
 
+  /**
+   * Forgets everything the agent's brain holds — facts, read cursors and queued events — so sources are read
+   * afresh; its subscriptions stay, with their rule state started over.
+   */
+  readonly reset: (agent: string) => Effect.Effect<void, BrainError>;
+
   /** The URI of the last item of the source read into the agent's facts ({@link PushOptions.read}), if any. */
   readonly readThrough: (agent: string, source: string) => Effect.Effect<string | undefined, BrainError>;
 

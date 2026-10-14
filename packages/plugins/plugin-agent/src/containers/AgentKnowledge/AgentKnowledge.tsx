@@ -9,7 +9,7 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { Filter, Obj, Ref } from '@dxos/echo';
 
 import { AgentKnowledge as AgentKnowledgeComponent } from '#components';
-import { Goal, MemoryOperation } from '#types';
+import { Goal, TriggerOperation } from '#types';
 
 import { useAgentKnowledge } from '../useAgentKnowledge.ts';
 import { useRemoteBrain } from '../useBrainLocation.ts';
@@ -25,18 +25,18 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const remote = useRemoteBrain(agent);
 
-  // Forgets what the space has taught the agent: every memory in its brain, and every goal.
+  // Wipes what the space has taught the agent: its whole brain (memories, facts, read cursors), and every goal.
   const handleReset = useCallback(async () => {
     const db = Obj.getDatabase(agent);
     if (!db) {
       return;
     }
     const { error } = await invokePromise(
-      MemoryOperation.Forget,
+      TriggerOperation.ResetBrain,
       { agent: Ref.make(agent) },
       { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) },
     );
-    // A reset that could not forget the memories keeps the goals too, rather than half-reset the agent.
+    // A reset that could not wipe the brain keeps the goals too, rather than half-reset the agent.
     if (error) {
       return;
     }
