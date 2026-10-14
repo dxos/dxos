@@ -13,6 +13,7 @@ import { EID } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
 import {
+  type AgentKnowledgeBrainStatus,
   type AgentKnowledgeEdge,
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
@@ -32,6 +33,7 @@ export type AgentKnowledgeData = {
   goals: AgentKnowledgeGoal[];
   nodes: AgentKnowledgeNode[];
   edges: AgentKnowledgeEdge[];
+  brain: AgentKnowledgeBrainStatus;
 };
 
 /** The name of a fact's source when it is an object in the space (a document); a chat message is a feed item, so has none. */
@@ -53,7 +55,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   const triggers = useTriggers(agent);
 
   // Facts and memories live only in the agent's brain (EDGE's for an agent whose chats run there), never in the space.
-  const { inspection } = useBrainStore(agent);
+  const { inspection, error } = useBrainStore(agent);
   const memories = useMemo(
     () =>
       Knowledge.fromFacts((inspection?.facts ?? []).map(({ fact }) => fact))
@@ -140,5 +142,12 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, db],
   );
 
-  return { memories, facts, goals: goalItems, nodes, edges };
+  // A failed re-read keeps the last snapshot on screen, so an error stands in only before anything was read.
+  const brain = useMemo(
+    (): AgentKnowledgeBrainStatus =>
+      inspection ? { state: 'ready' } : error ? { state: 'error', error } : { state: 'loading' },
+    [inspection, error],
+  );
+
+  return { memories, facts, goals: goalItems, nodes, edges, brain };
 };

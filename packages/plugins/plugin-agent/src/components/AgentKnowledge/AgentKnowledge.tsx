@@ -32,25 +32,43 @@ const VIEWS = ['memories', 'facts', 'goals', 'graph'] as const;
 
 type AgentKnowledgeView = (typeof VIEWS)[number];
 
+const READY: AgentKnowledgeBrainStatus = { state: 'ready' };
+
 const isView = (value: string): value is AgentKnowledgeView => VIEWS.some((view) => view === value);
 
 type AgentKnowledgeContextValue = {
   view: AgentKnowledgeView;
   /** Whether the Facts view shows each fact's triple and metadata under it. */
   raw: boolean;
+  brain: AgentKnowledgeBrainStatus;
 };
 
-const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({ view: 'memories', raw: false });
+/** Memories and facts are read from the agent's brain, so an empty list means nothing only once a read has returned. */
+type AgentKnowledgeBrainStatus = { state: 'loading' } | { state: 'ready' } | { state: 'error'; error: string };
+
+const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({
+  view: 'memories',
+  raw: false,
+  brain: { state: 'ready' },
+});
 
 type AgentKnowledgeRootProps = PropsWithChildren<{
   role?: string;
   defaultView?: AgentKnowledgeView;
   /** Forgets everything the agent knows; the toolbar shows Reset only when given. */
   onReset?: () => void;
+  /** Whether the brain's memories and facts have been read; ready when omitted. */
+  brain?: AgentKnowledgeBrainStatus;
 }>;
 
 /** What the agent knows, one view at a time: its memories, the facts it read, the goals it serves and its knowledge graph. */
-const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children }: AgentKnowledgeRootProps) => {
+const AgentKnowledgeRoot = ({
+  role,
+  defaultView = 'memories',
+  onReset,
+  brain = READY,
+  children,
+}: AgentKnowledgeRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
   const [raw, setRaw] = useState(false);
@@ -82,7 +100,7 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children 
     }
     return builder.build();
   }, [view, raw, onReset]);
-  const context = useMemo(() => ({ view, raw }), [view, raw]);
+  const context = useMemo(() => ({ view, raw, brain }), [view, raw, brain]);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
@@ -122,6 +140,28 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children 
 
 AgentKnowledgeRoot.displayName = 'AgentKnowledge.Root';
 
+const Status = ({ children }: PropsWithChildren) => (
+  <Panel.Body>
+    <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
+      {children}
+    </Layout.Flex>
+  </Panel.Body>
+);
+
+/** The loading or error status in place of a brain-backed view's empty message, or undefined once read. */
+const useBrainStatusMessage = (): string | undefined => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { brain } = useContext(AgentKnowledgeContext);
+  switch (brain.state) {
+    case 'loading':
+      return t('agent-knowledge-loading.message');
+    case 'error':
+      return t('agent-knowledge-error.message', { error: brain.error });
+    default:
+      return undefined;
+  }
+};
+
 //
 // Memories
 //
@@ -138,16 +178,13 @@ type AgentKnowledgeMemoriesProps = {
 /** The agent's active memories, newest first. */
 const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const status = useBrainStatusMessage();
   if (useContext(AgentKnowledgeContext).view !== 'memories') {
     return null;
   }
 
   return memories.length === 0 ? (
-    <Panel.Body>
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('agent-knowledge-memories-empty.message')}
-      </Layout.Flex>
-    </Panel.Body>
+    <Status>{status ?? t('agent-knowledge-memories-empty.message')}</Status>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
@@ -210,16 +247,13 @@ type AgentKnowledgeFactsProps = {
 const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { view, raw } = useContext(AgentKnowledgeContext);
+  const status = useBrainStatusMessage();
   if (view !== 'facts') {
     return null;
   }
 
   return facts.length === 0 ? (
-    <Panel.Body>
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('agent-knowledge-facts-empty.message')}
-      </Layout.Flex>
-    </Panel.Body>
+    <Status>{status ?? t('agent-knowledge-facts-empty.message')}</Status>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
@@ -435,6 +469,7 @@ export const AgentKnowledge = {
 };
 
 export type {
+  AgentKnowledgeBrainStatus,
   AgentKnowledgeEdge,
   AgentKnowledgeFact,
   AgentKnowledgeFactsProps,

@@ -21,7 +21,7 @@ export type AgentKnowledgeProps = {
 
 /** What the agent knows: its active memories, the facts it read, the goals it watches for and its knowledge graph. */
 export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
-  const { memories, facts, goals, nodes, edges } = useAgentKnowledge(agent);
+  const { memories, facts, goals, nodes, edges, brain } = useAgentKnowledge(agent);
   const { invokePromise } = Hooks.useOperationInvoker();
   const remote = useRemoteBrain(agent);
 
@@ -45,7 +45,7 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
   }, [agent, invokePromise, remote]);
 
   return (
-    <AgentKnowledgeComponent.Root role={role} onReset={() => void handleReset()}>
+    <AgentKnowledgeComponent.Root role={role} brain={brain} onReset={() => void handleReset()}>
       <AgentKnowledgeComponent.Memories memories={memories} />
       <AgentKnowledgeComponent.Facts facts={facts} />
       <AgentKnowledgeComponent.Goals goals={goals} />
