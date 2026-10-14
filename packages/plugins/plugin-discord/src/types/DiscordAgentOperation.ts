@@ -10,7 +10,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import { DiscordBotService } from './DiscordBot.ts';
+import * as DiscordBot from './DiscordBot.ts';
 
 //
 // How an agent acts in Discord. Its written text is not posted anywhere: these are the only ways it speaks there.
@@ -27,13 +27,13 @@ const Posted = Schema.Struct({
 /** Posts in a Discord channel or thread. */
 export const Reply = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.reply'),
+    key: DXN.make('org.dxos.operation.discord.sendMessage'),
     name: 'Reply in Discord',
     description:
       'Posts a message in a Discord channel or thread: the one a message came from, or any other the agent is in.',
     icon: 'ph--chat-circle-text--regular',
   },
-  services: [Database.Service, DiscordBotService],
+  services: [Database.Service, DiscordBot.DiscordBotService],
   input: Schema.Struct({
     agent,
     channel: Schema.String.annotate({
@@ -50,12 +50,12 @@ export const Reply = Operation.make({
 /** Sends a Discord direct message. */
 export const DirectMessage = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.directMessage'),
+    key: DXN.make('org.dxos.operation.discord.sendDirectMessage'),
     name: 'Direct message in Discord',
     description: 'Sends a person a Discord direct message.',
     icon: 'ph--paper-plane-tilt--regular',
   },
-  services: [Database.Service, DiscordBotService],
+  services: [Database.Service, DiscordBot.DiscordBotService],
   input: Schema.Struct({
     agent,
     to: Schema.String.annotate({
@@ -69,12 +69,12 @@ export const DirectMessage = Operation.make({
 /** Reacts to a Discord message. */
 export const React = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.react'),
+    key: DXN.make('org.dxos.operation.discord.addReaction'),
     name: 'React in Discord',
     description: 'Adds an emoji reaction to a Discord message, e.g. 👍 to acknowledge it without replying.',
     icon: 'ph--smiley--regular',
   },
-  services: [Database.Service, DiscordBotService],
+  services: [Database.Service, DiscordBot.DiscordBotService],
   input: Schema.Struct({
     agent,
     channel: Schema.String.annotate({ description: 'The Discord channel or thread id of the message.' }),
