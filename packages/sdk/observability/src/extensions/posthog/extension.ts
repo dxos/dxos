@@ -161,6 +161,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             // Cookies stay scoped to the exact host; the cross-subdomain dmn_chk_* probe fails on public-suffix hosts (e.g. *.pages.dev) and spams the console.
             cross_subdomain_cookie: false,
             ...posthogConfig,
+            session_recording: {
+              // The recorder never releases a cross-origin iframe removed with an ancestor, and that
+              // iframe pins the whole detached tree; children of a blocked element are never recorded.
+              blockSelector: ':has(> iframe)',
+              ...posthogConfig?.session_recording,
+            },
             before_send: [dropBenignExceptions, ...[posthogConfig?.before_send ?? []].flat()],
             ...(recordingStart ? { disable_session_recording: true } : {}),
           });
