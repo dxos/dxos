@@ -256,6 +256,28 @@ def changesWhere (dir : Text) (limit : Int) (changedAt : Causal -> Causal -> {IO
 def historyOf (dir : Text) (id : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
   changesWhere dir limit (fun parent node => parent.tasks != node.tasks && Map.lookup id (snapshotOf dir parent) != Map.lookup id (snapshotOf dir node))
 
+/-- `historyOf` for every task in one walk of the branch: id → changes that touched it, newest first. -/
+def histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List (Text, Causal)) :=
+  let touched := fun (parent : Causal) (node : Causal) =>
+    if parent.tasks == node.tasks then []
+    else
+      let before := snapshotOf dir parent
+      let after := snapshotOf dir node
+      List.filter (fun id => Map.lookup id before != Map.lookup id after) (List.dedup (List.sort (Map.keys before ++ Map.keys after)))
+  let rec walk h n acc :=
+    if n <= 0 then acc
+    else
+      let node := Codebase.readCausal dir h
+      match Codebase.parentsOf dir h with
+      | [] => acc
+      | p :: _ =>
+        let parent := Codebase.readCausal dir p
+        walk p (n - 1) (((h, node), touched parent node) :: acc)
+  -- `walk` leaves the oldest change first, so prepending each one leaves every list newest first.
+  List.foldl (fun m change =>
+    List.foldl (fun m2 id => Map.insert id (fst change :: Option.getOr (Map.lookup id m2) []) m2) m (snd change)) Map.empty
+    (walk (Codebase.headOf dir (Codebase.currentBranch dir)) limit [])
+
 /-- Changes that rebound a name. -/
 def historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
   changesWhere dir limit (fun parent node => parent.snapshot != node.snapshot && Map.lookup name (Codebase.readNamespace dir parent.snapshot) != Map.lookup name (Codebase.readNamespace dir node.snapshot))
