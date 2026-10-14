@@ -4,7 +4,7 @@
 
 import { createHash } from 'node:crypto';
 
-import { Con, DeusDefect, Machine, NIL, NONE, Prim, type Value, compare, equal, listFrom, listTo, refTerm, show, some } from './machine.ts';
+import { Cell, Con, DeusDefect, Machine, NIL, NONE, Prim, type Value, compare, equal, listFrom, listTo, refTerm, show, some } from './machine.ts';
 import { readAll } from './sexp.ts';
 
 const int = (value: Value): number => {
@@ -97,6 +97,21 @@ export const createPrims = (): Map<string, Prim> => {
   def('Text.sha256', 1, ([s]) => createHash('sha256').update(text(s), 'utf8').digest('hex'));
   def('Text.fromCodes', 1, ([codes]) => String.fromCharCode(...listTo(codes).map(int)));
   def('Text.utf8', 1, ([s]) => listFrom(Array.from(Buffer.from(text(s), 'utf8'))));
+
+  def('Ref.new', 1, ([v]) => new Cell(v));
+  def('Ref.get', 1, ([cell]) => {
+    if (!(cell instanceof Cell)) {
+      throw new DeusDefect(`expected Ref, got ${show(cell)}`);
+    }
+    return cell.value;
+  });
+  def('Ref.set', 2, ([cell, v]) => {
+    if (!(cell instanceof Cell)) {
+      throw new DeusDefect(`expected Ref, got ${show(cell)}`);
+    }
+    cell.value = v;
+    return new Con('#Unit', 0, []);
+  });
 
   def('show', 1, ([v]) => show(v));
   def('trace', 2, ([label, v]) => {

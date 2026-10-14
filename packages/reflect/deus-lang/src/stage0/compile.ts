@@ -82,7 +82,8 @@ export const compileImage = (sources: { path: string; text: string }[], main: st
       throw new CompileError(`${path}:${(err as Error).message}`);
     }
     const ns: string[] = [];
-    const opens: string[][] = [[]];
+    // `Option` is open everywhere so bare `none`/`some` patterns are constructors, as in Lean.
+    const opens: string[][] = [['Option']];
     for (const decl of decls) {
       const scope = (): Scope => ({ ns: [...ns], opens: opens.flat() });
       const qualify = (name: string) => [...ns, name].join('.');
@@ -525,6 +526,13 @@ export const compileImage = (sources: { path: string; text: string }[], main: st
           return record(e, locals);
         case 'ann':
           return expr(e.e, locals);
+        case 'proj': {
+          const owners = fieldOwners.get(e.field) ?? [];
+          if (owners.length !== 1) {
+            fail(owners.length === 0 ? `unknown field ${e.field}` : `ambiguous field ${e.field}: ${owners.join(', ')}`, e.pos);
+          }
+          return ['app', ['ref', s(`${owners[0]}.${e.field}`)], expr(e.e, locals)];
+        }
       }
     };
 

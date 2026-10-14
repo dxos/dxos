@@ -90,6 +90,15 @@ export class Pap {
   }
 }
 
+/** A mutable cell (`Ref.new`); compared by identity. */
+export class Cell {
+  value: Value;
+
+  constructor(value: Value) {
+    this.value = value;
+  }
+}
+
 /** A captured, re-entrant stack segment (deep handler included). */
 export class Continuation {
   readonly frames: Frame[];
@@ -99,7 +108,7 @@ export class Continuation {
   }
 }
 
-export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation;
+export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation | Cell;
 
 export const UNIT = new Con('#Unit', 0, []);
 export const NIL = new Con('#List', 0, []);

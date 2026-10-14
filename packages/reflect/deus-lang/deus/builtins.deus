@@ -97,6 +97,18 @@ def trace : Text -> a -> a := prim "trace"
 /-- Raises a defect: the program reached a state its author ruled out. -/
 def defect : Text -> a := prim "defect"
 
+/--
+  Mutable cells. Not rolled back when a continuation is resumed twice; code that needs
+  backtracking state uses a handler instead.
+-/
+inductive Ref (a : Type) @"#Ref" where
+
+namespace Ref
+def new : a -> Ref a := prim "Ref.new"
+def get : Ref a -> a := prim "Ref.get"
+def set : Ref a -> a -> Unit := prim "Ref.set"
+end Ref
+
 namespace Code
 /-- Loads `(def "hash" term)` forms into the running machine. -/
 def load : Text -> Unit := prim "Code.load"

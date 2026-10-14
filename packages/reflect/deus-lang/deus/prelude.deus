@@ -1,0 +1,408 @@
+/-
+  Prelude: lists, options, results, maps and text helpers.
+
+  There are no type classes yet, so equality and ordering are the structural primitives
+  `eq` and `compare` (see docs/DECISIONS.md D10).
+-/
+
+def id (x : a) : a := x
+
+def const (x : a) (y : b) : a := x
+
+def not (b : Bool) : Bool := if b then false else true
+
+def min (a : Int) (b : Int) : Int := if a < b then a else b
+
+def max (a : Int) (b : Int) : Int := if a < b then b else a
+
+def fst (p : (a, b)) : a :=
+  match p with
+  | (x, _) => x
+
+def snd (p : (a, b)) : b :=
+  match p with
+  | (_, y) => y
+
+def println (t : Text) : {IO} Unit := IO.print (t ++ "\n")
+
+def eprintln (t : Text) : {IO} Unit := IO.eprint (t ++ "\n")
+
+/-- Checked, expected failure: callers see `Throw e` in the effect row until a handler removes it. -/
+ability Throw (e : Type) where
+  throw : e -> a
+
+inductive Result (e a : Type) where
+  | ok (value : a)
+  | err (error : e)
+
+/-- Runs `body`, turning a `throw` into `Result.err`. -/
+def try (body : Unit -> {Throw e} a) : Result e a :=
+  handle body () with
+  | return x => Result.ok x
+  | throw e -> _ => Result.err e
+
+/-- Runs `body`, recovering from a `throw` with `onError`. -/
+def catch (body : Unit -> {Throw e} a) (onError : e -> a) : a :=
+  handle body () with
+  | throw e -> _ => onError e
+
+namespace Option
+
+def map (f : a -> b) : Option a -> Option b
+  | none => none
+  | some x => some (f x)
+
+def bind (o : Option a) (f : a -> Option b) : Option b :=
+  match o with
+  | none => none
+  | some x => f x
+
+def getOr (o : Option a) (fallback : a) : a :=
+  match o with
+  | none => fallback
+  | some x => x
+
+def isSome : Option a -> Bool
+  | none => false
+  | some _ => true
+
+def isNone (o : Option a) : Bool := not (isSome o)
+
+def orElse (o : Option a) (other : Unit -> Option a) : Option a :=
+  match o with
+  | none => other ()
+  | some x => some x
+
+end Option
+
+namespace List
+
+def isEmpty : List a -> Bool
+  | [] => true
+  | _ => false
+
+def length (xs : List a) : Int :=
+  let rec go acc ys :=
+    match ys with
+    | [] => acc
+    | _ :: rest => go (acc + 1) rest
+  go 0 xs
+
+def reverse (xs : List a) : List a :=
+  let rec go acc ys :=
+    match ys with
+    | [] => acc
+    | y :: rest => go (y :: acc) rest
+  go [] xs
+
+def foldl (f : b -> a -> b) (init : b) (xs : List a) : b :=
+  match xs with
+  | [] => init
+  | x :: rest => foldl f (f init x) rest
+
+def foldr (f : a -> b -> b) (init : b) (xs : List a) : b := foldl (fun acc x => f x acc) init (reverse xs)
+
+/-- Map without growing the stack: builds in reverse, then flips. -/
+def map (f : a -> b) (xs : List a) : List b :=
+  let rec go acc ys :=
+    match ys with
+    | [] => reverse acc
+    | y :: rest => go (f y :: acc) rest
+  go [] xs
+
+def mapIndexed (f : Int -> a -> b) (xs : List a) : List b :=
+  let rec go i acc ys :=
+    match ys with
+    | [] => reverse acc
+    | y :: rest => go (i + 1) (f i y :: acc) rest
+  go 0 [] xs
+
+def forEach (xs : List a) (f : a -> Unit) : Unit :=
+  match xs with
+  | [] => ()
+  | x :: rest =>
+    f x
+    forEach rest f
+
+def filter (p : a -> Bool) (xs : List a) : List a :=
+  let rec go acc ys :=
+    match ys with
+    | [] => reverse acc
+    | y :: rest => if p y then go (y :: acc) rest else go acc rest
+  go [] xs
+
+def filterMap (f : a -> Option b) (xs : List a) : List b :=
+  let rec go acc ys :=
+    match ys with
+    | [] => reverse acc
+    | y :: rest =>
+      match f y with
+      | some z => go (z :: acc) rest
+      | none => go acc rest
+  go [] xs
+
+def concat (xss : List (List a)) : List a := foldr (fun xs acc => xs ++ acc) [] xss
+
+def concatMap (f : a -> List b) (xs : List a) : List b := concat (map f xs)
+
+def any (p : a -> Bool) : List a -> Bool
+  | [] => false
+  | x :: rest => if p x then true else any p rest
+
+def all (p : a -> Bool) : List a -> Bool
+  | [] => true
+  | x :: rest => if p x then all p rest else false
+
+def contains (x : a) (xs : List a) : Bool := any (fun y => y == x) xs
+
+def find (p : a -> Bool) : List a -> Option a
+  | [] => none
+  | x :: rest => if p x then some x else find p rest
+
+def findIndex (p : a -> Bool) (xs : List a) : Int :=
+  let rec go i ys :=
+    match ys with
+    | [] => -1
+    | y :: rest => if p y then i else go (i + 1) rest
+  go 0 xs
+
+def head? : List a -> Option a
+  | [] => none
+  | x :: _ => some x
+
+def last? : List a -> Option a
+  | [] => none
+  | [x] => some x
+  | _ :: rest => last? rest
+
+def get? (xs : List a) (i : Int) : Option a :=
+  match xs with
+  | [] => none
+  | x :: rest => if i == 0 then some x else get? rest (i - 1)
+
+def take (n : Int) (xs : List a) : List a :=
+  let rec go acc k ys :=
+    match ys with
+    | [] => reverse acc
+    | y :: rest => if k <= 0 then reverse acc else go (y :: acc) (k - 1) rest
+  go [] n xs
+
+def drop (n : Int) (xs : List a) : List a :=
+  match xs with
+  | [] => []
+  | _ :: rest => if n <= 0 then xs else drop (n - 1) rest
+
+def zip (xs : List a) (ys : List b) : List (a, b) :=
+  let rec go acc l r :=
+    match l, r with
+    | x :: xt, y :: yt => go ((x, y) :: acc) xt yt
+    | _, _ => reverse acc
+  go [] xs ys
+
+def range (lo : Int) (hi : Int) : List Int :=
+  let rec go acc i := if i < lo then acc else go (i :: acc) (i - 1)
+  go [] (hi - 1)
+
+def replicate (n : Int) (x : a) : List a :=
+  let rec go acc k := if k <= 0 then acc else go (x :: acc) (k - 1)
+  go [] n
+
+def lookup (key : k) : List (k, v) -> Option v
+  | [] => none
+  | (k2, v) :: rest => if k2 == key then some v else lookup key rest
+
+def partition (p : a -> Bool) (xs : List a) : (List a, List a) := (filter p xs, filter (fun x => not (p x)) xs)
+
+def merge (cmp : a -> a -> Int) (xs : List a) (ys : List a) : List a :=
+  let rec go acc l r :=
+    match l, r with
+    | [], _ => reverse acc ++ r
+    | _, [] => reverse acc ++ l
+    | x :: xt, y :: yt => if cmp x y <= 0 then go (x :: acc) xt r else go (y :: acc) l yt
+  go [] xs ys
+
+/-- Stable merge sort by a comparison returning -1, 0 or 1. -/
+def sortBy (cmp : a -> a -> Int) (xs : List a) : List a :=
+  let n := length xs
+  if n <= 1 then xs else
+    let half := n / 2
+    merge cmp (sortBy cmp (take half xs)) (sortBy cmp (drop half xs))
+
+def sort (xs : List a) : List a := sortBy compare xs
+
+/-- Removes adjacent duplicates (all duplicates, on a sorted list). -/
+def dedup : List a -> List a
+  | x :: y :: rest => if x == y then dedup (y :: rest) else x :: dedup (y :: rest)
+  | xs => xs
+
+def intersperse (sep : a) : List a -> List a
+  | [] => []
+  | [x] => [x]
+  | x :: rest => x :: sep :: intersperse sep rest
+
+def sum (xs : List Int) : Int := foldl (fun a b => a + b) 0 xs
+
+def maximum (xs : List Int) : Int := foldl max 0 xs
+
+end List
+
+namespace Text
+
+def isEmpty (t : Text) : Bool := Text.length t == 0
+
+def startsWith (prefix : Text) (t : Text) : Bool :=
+  Text.length prefix <= Text.length t && Text.slice t 0 (Text.length prefix) == prefix
+
+def endsWith (suffix : Text) (t : Text) : Bool :=
+  let n := Text.length t
+  let m := Text.length suffix
+  m <= n && Text.slice t (n - m) n == suffix
+
+def contains (part : Text) (t : Text) : Bool := Text.indexOf t part 0 >= 0
+
+def drop (n : Int) (t : Text) : Text := Text.slice t n (Text.length t)
+
+def take (n : Int) (t : Text) : Text := Text.slice t 0 n
+
+def lines (t : Text) : List Text := Text.split t "\n"
+
+def repeat (n : Int) (t : Text) : Text := Text.concat (List.replicate n t)
+
+def padRight (n : Int) (t : Text) : Text := t ++ repeat (n - Text.length t) " "
+
+def padLeft (n : Int) (t : Text) : Text := repeat (n - Text.length t) " " ++ t
+
+/-- Replaces every occurrence of `old` with `new`. -/
+def replace (old : Text) (new : Text) (t : Text) : Text := Text.join new (Text.split t old)
+
+def isDigit (c : Int) : Bool := c >= '0' && c <= '9'
+
+def isAlpha (c : Int) : Bool := (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+
+def isSpace (c : Int) : Bool := c == ' ' || c == '\n' || c == '\t' || c == '\r'
+
+end Text
+
+/-
+  Map: an AVL tree ordered by the structural `compare`.
+-/
+inductive Map (k v : Type) where
+  | tip
+  | node (height : Int) (left : Map k v) (key : k) (value : v) (right : Map k v)
+
+namespace Map
+
+def empty : Map k v := Map.tip
+
+def height : Map k v -> Int
+  | tip => 0
+  | node h _ _ _ _ => h
+
+def mk (l : Map k v) (key : k) (value : v) (r : Map k v) : Map k v :=
+  Map.node (1 + max (height l) (height r)) l key value r
+
+def rotateRight : Map k v -> Map k v
+  | node _ (node _ ll lk lv lr) key value r => mk ll lk lv (mk lr key value r)
+  | t => t
+
+def rotateLeft : Map k v -> Map k v
+  | node _ l key value (node _ rl rk rv rr) => mk (mk l key value rl) rk rv rr
+  | t => t
+
+def balance (l : Map k v) (key : k) (value : v) (r : Map k v) : Map k v :=
+  let hl := height l
+  let hr := height r
+  if hl > hr + 1 then
+    match l with
+    | node _ ll _ _ lr =>
+      if height ll >= height lr then rotateRight (mk l key value r)
+      else rotateRight (mk (rotateLeft l) key value r)
+    | tip => mk l key value r
+  else if hr > hl + 1 then
+    match r with
+    | node _ rl _ _ rr =>
+      if height rr >= height rl then rotateLeft (mk l key value r)
+      else rotateLeft (mk l key value (rotateRight r))
+    | tip => mk l key value r
+  else mk l key value r
+
+def insert (key : k) (value : v) (m : Map k v) : Map k v :=
+  match m with
+  | tip => Map.node 1 Map.tip key value Map.tip
+  | node h l k2 v2 r =>
+    let c := compare key k2
+    if c < 0 then balance (insert key value l) k2 v2 r
+    else if c > 0 then balance l k2 v2 (insert key value r)
+    else Map.node h l key value r
+
+def lookup (key : k) (m : Map k v) : Option v :=
+  match m with
+  | tip => none
+  | node _ l k2 v2 r =>
+    let c := compare key k2
+    if c < 0 then lookup key l else if c > 0 then lookup key r else some v2
+
+def contains (key : k) (m : Map k v) : Bool := Option.isSome (lookup key m)
+
+def removeMin : Map k v -> (k, v, Map k v)
+  | node _ tip key value r => (key, value, r)
+  | node _ l key value r =>
+    match removeMin l with
+    | (mk2, mv, l2) => (mk2, mv, balance l2 key value r)
+  | tip => defect "Map.removeMin: empty"
+
+def remove (key : k) (m : Map k v) : Map k v :=
+  match m with
+  | tip => Map.tip
+  | node _ l k2 v2 r =>
+    let c := compare key k2
+    if c < 0 then balance (remove key l) k2 v2 r
+    else if c > 0 then balance l k2 v2 (remove key r)
+    else
+      match r with
+      | tip => l
+      | _ =>
+        match removeMin r with
+        | (mk2, mv, r2) => balance l mk2 mv r2
+
+def foldr (f : k -> v -> b -> b) (init : b) (m : Map k v) : b :=
+  match m with
+  | tip => init
+  | node _ l key value r => foldr f (f key value (foldr f init r)) l
+
+def toList (m : Map k v) : List (k, v) := foldr (fun key value acc => (key, value) :: acc) [] m
+
+def keys (m : Map k v) : List k := foldr (fun key _ acc => key :: acc) [] m
+
+def values (m : Map k v) : List v := foldr (fun _ value acc => value :: acc) [] m
+
+def size (m : Map k v) : Int := foldr (fun _ _ n => n + 1) 0 m
+
+def fromList (pairs : List (k, v)) : Map k v := List.foldl (fun m p => insert (fst p) (snd p) m) Map.tip pairs
+
+def update (key : k) (f : Option v -> v) (m : Map k v) : Map k v := insert key (f (lookup key m)) m
+
+def mapValues (f : v -> w) (m : Map k v) : Map k w :=
+  match m with
+  | tip => Map.tip
+  | node h l key value r => Map.node h (mapValues f l) key (f value) (mapValues f r)
+
+def filter (p : k -> v -> Bool) (m : Map k v) : Map k v :=
+  fromList (List.filter (fun pair => p (fst pair) (snd pair)) (toList m))
+
+end Map
+
+/-- A set is a map to unit. -/
+namespace Set
+
+def empty : Map a Unit := Map.tip
+
+def insert (x : a) (s : Map a Unit) : Map a Unit := Map.insert x () s
+
+def contains (x : a) (s : Map a Unit) : Bool := Map.contains x s
+
+def fromList (xs : List a) : Map a Unit := List.foldl (fun s x => insert x s) Map.tip xs
+
+def toList (s : Map a Unit) : List a := Map.keys s
+
+end Set

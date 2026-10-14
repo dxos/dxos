@@ -4,7 +4,7 @@
 
 // Stage0 (bootstrap only): mirrors deus/lexer.deus; deleted once the seed reproduces itself.
 
-export type TokenKind = 'ident' | 'dot' | 'int' | 'text' | 'sym' | 'kw' | 'doc' | 'eof';
+export type TokenKind = 'ident' | 'dot' | 'proj' | 'int' | 'text' | 'sym' | 'kw' | 'doc' | 'eof';
 
 export type Token = {
   kind: TokenKind;
@@ -237,7 +237,8 @@ export const lex = (source: string): Token[] => {
       while (pos < len && (isIdentPart(source[pos]) || (source[pos] === '.' && isIdentStart(source[pos + 1] ?? '')))) {
         pos++;
       }
-      push('dot', source.slice(start + 1, pos), start, startLine, col);
+      const prev = source[start - 1];
+      push(prev === ')' || prev === ']' ? 'proj' : 'dot', source.slice(start + 1, pos), start, startLine, col);
       continue;
     }
     if (isIdentStart(c) && !(c === '_' && !isIdentPart(source[pos + 1] ?? ' '))) {

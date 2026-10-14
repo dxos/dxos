@@ -53,7 +53,8 @@ export type Expr =
   | { k: 'list'; items: Expr[] }
   | { k: 'prim'; name: string }
   | { k: 'record'; base: Expr | null; fields: { name: string; value: Expr }[]; pos: Pos }
-  | { k: 'ann'; e: Expr; type: Type };
+  | { k: 'ann'; e: Expr; type: Type }
+  | { k: 'proj'; e: Expr; field: string; pos: Pos };
 
 export type Binder = { name: string; type: Type | null };
 export type Attr = { name: string; args: string[] };
@@ -242,8 +243,8 @@ class Parser {
         const ctors: { name: string; fields: Type[] }[] = [];
         while (this.is('|')) {
           this.next();
-          // `true`/`false` are keywords but also Bool's constructor names.
-          const ctorName = this.is('true') || this.is('false') ? this.next().value : this.ident();
+          // Constructor names may be keywords (`true`, `prim`); qualified uses lex as identifiers.
+          const ctorName = this.peek().kind === 'kw' ? this.next().value : this.ident();
           const fields: Type[] = [];
           this.withStop(0, () => {
             while (!this.offside() && !this.is('|') && !this.is(':')) {
@@ -577,6 +578,15 @@ class Parser {
   }
 
   atom(): Expr {
+    let e = this.atomBase();
+    while (this.peek().kind === 'proj') {
+      const token = this.next();
+      e = { k: 'proj', e, field: token.value, pos: this.pos(token) };
+    }
+    return e;
+  }
+
+  atomBase(): Expr {
     const token = this.peek();
     const pos = this.pos(token);
     switch (token.kind) {
@@ -858,6 +868,11 @@ class Parser {
             }
             return this.withStop(-1, () => {
               const first = this.pat();
+              if (this.is(':')) {
+                // `(x : T)`: an ascribed binder; the type is erased.
+                this.next();
+                this.type();
+              }
               if (this.is(',')) {
                 const items = [first];
                 while (this.is(',')) {
