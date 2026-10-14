@@ -7,8 +7,8 @@ import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@auto
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
-import { runInCommit } from '@dxos/echo/internal';
 import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
+import { runInCommit } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

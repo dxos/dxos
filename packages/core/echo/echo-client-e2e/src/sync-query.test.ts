@@ -414,8 +414,8 @@ describe('synchronous query propagation', () => {
       expect([first, second, third].map((member) => member?.name)).toEqual(['a', 'b', 'c']);
       const baseline = updates.length;
 
-      Obj.update(second, (member) => {
-        member.username = 'former';
+      Obj.update(second, (second) => {
+        second.username = 'former';
       });
       expect(ids(query.results)).toEqual([first.id, third.id]);
       expect(updates).toHaveLength(baseline + 1);
