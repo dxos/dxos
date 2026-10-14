@@ -101,13 +101,14 @@ Compiling `deus/` with the seed MUST reproduce the seed byte for byte (`src/seed
 `deus build <term> -o <out>` packages the term's image (`term` applied to `()` is `main`). Each target carries
 the image text unchanged.
 
-| Flag       | Output                                      | Decision                                       |
-| ---------- | ------------------------------------------- | ---------------------------------------------- |
-| (none)     | a Node single-executable application        | [D38](../DECISIONS.md), [D53](../DECISIONS.md) |
-| `--native` | the Rust kernel with the image appended     | [D42](../DECISIONS.md)                         |
-| `--server` | the Rust kernel with a web handler appended | [D57](../DECISIONS.md)                         |
-| `--worker` | a directory for a Cloudflare Worker         | [D45](../DECISIONS.md), [D57](../DECISIONS.md) |
-| `--wasm`   | a WebAssembly module compiled from Core     | see [WASM.md](./WASM.md)                       |
+| Flag        | Output                                      | Decision                                       |
+| ----------- | ------------------------------------------- | ---------------------------------------------- |
+| (none)      | a Node single-executable application        | [D38](../DECISIONS.md), [D53](../DECISIONS.md) |
+| `--native`  | the Rust kernel with the image appended     | [D42](../DECISIONS.md)                         |
+| `--server`  | the Rust kernel with a web handler appended | [D57](../DECISIONS.md)                         |
+| `--worker`  | a directory for a Cloudflare Worker         | [D45](../DECISIONS.md), [D57](../DECISIONS.md) |
+| `--browser` | a directory holding a static web page       | [D78](../DECISIONS.md)                         |
+| `--wasm`    | a WebAssembly module compiled from Core     | see [WASM.md](./WASM.md)                       |
 
 ### Native executable
 
@@ -189,6 +190,32 @@ The actor name is the term's name in lower case with `.` replaced by `-`. The `T
 importable as a string. `worker.mjs` imports the image and the wasm module, calls the image's `main` with each
 request as a `urn:deus:web:Request` value, and answers the requests the actor leaves unhandled by IRI. Only
 `app.image` and the name in `wrangler.toml` depend on the actor.
+
+### Browser page
+
+`deus build <term> -o <dir> --browser` writes a directory any static file server can host
+([D78](../DECISIONS.md)):
+
+| File                              | Content                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------- |
+| `app.image`                       | the term's image                                                              |
+| `deus_kernel.wasm`, `kernel.mjs`  | the embeddable kernel and its driver, as for the Worker                       |
+| `host.mjs`                        | the browser host ([EMBEDDING.md](./EMBEDDING.md#the-browser-host))            |
+| `index.html`, `app.js`, `app.css` | the page, copied from [`platform/browser/`](../../platform/browser)           |
+| `deus.json`                       | the page's configuration: `{"cwd":"/work","env":{"HOME":"/home"},"files":{}}` |
+
+The page is a terminal: each command line is split into words as a POSIX shell splits them and runs the
+image's `main` with them as `IO.args`. Beside it, an editor shows and changes the in-memory files.
+`deus.json` may also give `hide` (path prefixes left out of the file list), `open` (a file to show)
+and `run` (command lines to run on load). [`platform/browser/playground.mjs`](../../platform/browser/playground.mjs)
+turns a page built from `Cli.main` into the playground: it adds the builtins and prelude for `deus init`,
+a sample program, and with `--codebase <dir>` every file of that codebase under `/codebase`.
+
+| Part                                    | Bytes     | Gzipped |
+| --------------------------------------- | --------- | ------- |
+| `deus_kernel.wasm`                      | 274,251   | 99 KB   |
+| the seed as `app.image`                 | 1,426,122 | 264 KB  |
+| the toolchain's codebase in `deus.json` | 2,450,835 | 549 KB  |
 
 ### Artifacts cache
 

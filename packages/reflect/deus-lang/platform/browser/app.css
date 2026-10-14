@@ -1,0 +1,147 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --fg: #1c1e24;
+  --muted: #6a6f7b;
+  --line: #e3e5ea;
+  --accent: #4c6ef5;
+  --err: #e03131;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121317;
+    --surface: #1a1c21;
+    --fg: #e6e8ec;
+    --muted: #9ba1ad;
+    --line: #2b2e36;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    14px system-ui,
+    sans-serif;
+}
+header {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+#status {
+  color: var(--muted);
+  font-size: 12px;
+}
+#layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 220px 1fr 1fr;
+  min-height: 0;
+}
+@media (max-width: 800px) {
+  #layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr 1fr;
+  }
+}
+.title {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+}
+#files {
+  border-right: 1px solid var(--line);
+  overflow: auto;
+}
+#file-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  font: 12px var(--mono);
+}
+#file-list li {
+  padding: 2px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#file-list li.active {
+  background: var(--accent);
+  color: white;
+}
+#editor-pane {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  min-height: 0;
+}
+#editor {
+  flex: 1;
+  border: 0;
+  padding: 12px;
+  resize: none;
+  background: var(--surface);
+  color: var(--fg);
+  font: 13px/1.5 var(--mono);
+  outline: none;
+}
+#terminal {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+}
+#output {
+  flex: 1;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  font: 12px/1.5 var(--mono);
+  white-space: pre-wrap;
+}
+#output .cmd {
+  color: var(--accent);
+}
+#output .err {
+  color: var(--err);
+}
+#output .meta {
+  color: var(--muted);
+}
+#prompt {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  font: 13px var(--mono);
+}
+#command {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  outline: none;
+}
+button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+}

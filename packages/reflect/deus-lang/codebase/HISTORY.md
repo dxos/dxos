@@ -1,5 +1,17 @@
 # History of main
 
+- `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
+- `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
+- `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
+- `e9736e3585` task: open d2328509 Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (by claude)
+- `5ffb35ed9a` close 3b617154 by #96cf462d73 (by claude)
+- `96cf462d73` deus build --browser: a static page running an image on the wasm kernel with an in-memory file system (D78) (by claude)
+- `86f256e943` task: set 3b617154 state (by claude)
+- `a476baf0f1` task: open 3b617154 Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (by claude)
+- `24bf075943` history: import 134 changes
+- `a1aac3aaba` task: import 42 tasks
+- `a613239c2d` add code specs
+- `67c7d5a614` init
 - `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
 - `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
 - `e11ebf252d` task: set b2166fc8 priority assignee labels details
