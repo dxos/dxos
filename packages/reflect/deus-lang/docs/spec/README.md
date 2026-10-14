@@ -16,6 +16,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
 | [BINDINGS.mdl](./BINDINGS.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
+| [CHECKING.mdl](./CHECKING.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
@@ -31,10 +32,7 @@ in the [store](./CODEBASE-STORE.md); the store is backed up as [text](./CODEBASE
 Writing the specs against the code found these. Each is also marked with a "Note:" in its spec. Until one
 is fixed, the spec describes what the code does.
 
-Bugs:
-
-- Type ascriptions (`(e : T)`, `let x : T := …`) are erased before checking, and a row written on a
-  definition with no binders is not checked ([LANGUAGE.md](./LANGUAGE.md#static-semantics)).
+Bugs: none open.
 
 Docs that disagree with the code:
 

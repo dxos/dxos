@@ -323,6 +323,7 @@ def simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Text) :=
   match p with
   | Pat.wild => some none
   | Pat.unit => some none
+  | Pat.ann q _ => simpleBinder ctx q
   | Pat.id name [] _ =>
     if Text.contains "." name then none
     else if Option.isSome (ctorOf ctx name false) then none
@@ -334,6 +335,9 @@ def pat (ctx : Ctx) (p : Pat) (binds : List (Option Text)) : {Throw Text} (Sexp,
   match p with
   | Pat.wild => (node "pany" [], binds)
   | Pat.int v => (node "pint" [n v], binds)
+  | Pat.ann q t =>
+    match pat ctx q binds with
+    | (core, binds2) => (node "ann" [tyCore ctx.names ctx.scope [] t, core], binds2)
   | Pat.spelled text q =>
     match pat ctx q binds with
     | (core, binds2) => (node "spelled" [s text, core], binds2)
@@ -384,7 +388,13 @@ def lambda (ctx : Ctx) (params : List Pat) (body : List (Option Text) -> {Throw 
   | [] => body locals
   | first :: rest =>
     match simpleBinder ctx first with
-    | some name => node "lam" [s (Option.getOr name ""), lambda ctx rest body (name :: locals)]
+    | some name =>
+      let inner := lambda ctx rest body (name :: locals)
+      -- A binder's ascription types local 0 for the checker (D92); `unnote` removes it.
+      let checked := match first with
+        | Pat.ann _ t => node "annlocal" [tyCore ctx.names ctx.scope [] t, inner]
+        | _ => inner
+      node "lam" [s (Option.getOr name ""), checked]
     | none =>
       match pat ctx first [] with
       | (core, binds) => node "lam" [node "match" [node "var" [n 0], node "case" [core, lambda ctx rest body (binds ++ (none :: locals))]]]
@@ -513,7 +523,8 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.tuple items => tuple (List.map go items)
   | Expr.list items => List.foldr (fun x acc => app consCon [go x, acc]) nilCon items
   | Expr.record base fields pos => record ctx base fields pos locals
-  | Expr.ann x _ => go x
+  -- Checked (D92), then removed before hashing by `unnote`.
+  | Expr.ann x t => node "ann" [tyCore ctx.names ctx.scope [] t, go x]
   | Expr.proj x field pos => app (fieldAccessor ctx pos field) [go x]
   | Expr.note text x => node "note" [s text, go x]
   | Expr.spelled text x => node "spelled" [s text, go x]
@@ -550,19 +561,30 @@ def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text
 /-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
 def strip (form : Sexp) : (Sexp, List Text) :=
   match stripNoted form with
-  | (core, names, _, _) => (core, names)
+  | (core, names, _, _, _) => (core, names)
 
-/-- `strip`, also returning the comments (D66) and number spellings (D88) it removed. -/
-def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Text)) :=
+/--
+  `strip`, also returning the comments (D66) and number spellings (D88) it removed, and the Core the
+  checker reads: the same, with its ascriptions still in place as `(ann T e)` (D92).
+-/
+def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Text), Sexp) :=
   match stripAcc form [] with
   | (named, names) =>
     match unnote named with
-    | (core, notes, spellings) => (core, List.reverse names, notes, spellings)
+    | (core, notes, spellings) => (core, List.reverse names, notes, spellings, unmark named)
+
+/-- Removes comments and number spellings, keeping ascriptions: the Core the checker reads (D92). -/
+def unmark (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list [Sexp.sym "note", Sexp.str _, inner] => unmark inner
+  | Sexp.list [Sexp.sym "spelled", Sexp.str _, inner] => unmark inner
+  | Sexp.list items => Sexp.list (List.map (fun x => unmark x) items)
+  | _ => form
 
 /--
   Removes `(note "text" e)` and `(spelled "text" e)` nodes. Each is returned with the pre-order
   index of `e` among the list nodes of the result, the position `Print.restore` puts it back at
-  (D66, D88): comments first, then spellings.
+  (D66, D88): comments first, then spellings. Ascriptions `(ann T e)` go without a trace (D92).
 -/
 def unnote (form : Sexp) : (Sexp, List (Int, Text), List (Int, Text)) :=
   let rec go x count acc spellings :=
@@ -572,6 +594,8 @@ def unnote (form : Sexp) : (Sexp, List (Int, Text), List (Int, Text)) :=
       | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) spellings else go inner count ((count, text) :: acc) spellings
       | [] => go inner count [(count, text)] spellings
     | Sexp.list [Sexp.sym "spelled", Sexp.str text, inner] => go inner count acc ((count, text) :: spellings)
+    | Sexp.list [Sexp.sym "ann", _, inner] => go inner count acc spellings
+    | Sexp.list [Sexp.sym "annlocal", _, inner] => go inner count acc spellings
     | Sexp.list items =>
       let rec each rest out c a sp :=
         match rest with

@@ -3,6 +3,7 @@ structure Compile.Pending where
   name : Text
   wrap : Text
   core : Sexp
+  checked : Sexp
 
 def Compile.accessorCore (hash : Text) (count : Int) (index : Int) : Sexp := Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
   "case"
@@ -70,7 +71,9 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
         let accessors := mapIndexed (fun index field =>
           let name := fqn ++ "." ++ fst field
           claim name
-          Ref.set pending (Pending.mk name "term" (accessorCore h count index) :: Ref.get pending)
+          Ref.set
+            pending
+            (Pending.mk name "term" (accessorCore h count index) (accessorCore h count index) :: Ref.get pending)
           (name, Entry.term ("@" ++ name))) fields
         (fqn, Entry.type h i (List.map fst fields)) :: (fqn ++ ".mk", Entry.ctor h 0 count) :: accessors
     | Decl.effect _ params iri ops doc _ =>
@@ -116,8 +119,8 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
           | (_, Option.some list) => equations ctx list locals
           | _ => Resolve.fail ctx "definition has no body") []
         match stripNoted named with
-        | (core, locals, notes, spellings) =>
-            Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
+        | (core, locals, notes, spellings, checked) =>
+            Ref.set pending (Pending.mk fqn "term" core checked :: Ref.get pending)
             addMetaWith
               ("@" ++ fqn)
               doc
@@ -127,8 +130,8 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
               (commentMeta item.lead notes spellings)
     | Decl.check _ body doc attributes _ =>
         match stripNoted (Resolve.expr ctx body []) with
-        | (core, locals, notes, spellings) =>
-            Ref.set pending (Pending.mk fqn "test" core :: Ref.get pending)
+        | (core, locals, notes, spellings, checked) =>
+            Ref.set pending (Pending.mk fqn "test" core checked :: Ref.get pending)
             addMetaWith
               ("@" ++ fqn)
               doc
@@ -147,7 +150,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
             let form := Compile.node
               "theorem"
               [Sexp.list (Sexp.sym "binders" :: types), core, Compile.node "proof" (proofTokens names (bodyScope item) proof)]
-            Ref.set pending (Pending.mk fqn "theorem" form :: Ref.get pending)
+            Ref.set pending (Pending.mk fqn "theorem" form form :: Ref.get pending)
             addMeta ("@" ++ fqn) doc Option.none locals (commentMeta item.lead [] [])
     | _ => ())
   -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
@@ -340,6 +343,7 @@ def Compile.n (k : Int) : Sexp := Sexp.int k
 
 def Compile.node (head : Text) (items : List Sexp) : Sexp := Sexp.node head items
 
+-- What the checker reads: `core` with its ascriptions in place (D92).
 /-- Wraps Core in its object form: `(term c)`, `(test c)`, or a theorem's full form. -/
 def Compile.objectOf (p : Pending) (core : Sexp) : Sexp := if p.wrap == "theorem" then core else Compile.node p.wrap [core]
 
@@ -459,11 +463,19 @@ def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf 
       let key := "@" ++ p.name
       catch (fun _ =>
         let core :=
-          match p.core with
+          match p.checked with
           | Sexp.list (Sexp.sym "theorem" :: _ :: prop :: _) => prop
           | c => c
         let t := getOr (Map.lookup key vars) (freshType u)
         match metaField (metaOf key) "sig" with
+        | Option.some (Sexp.list (Sexp.sym "teff" :: Sexp.list (Sexp.sym "eff" :: effs) :: result :: [])) =>
+            -- A definition with no binders: its row bounds the body itself (D92).
+            let sigVars := Ref.new Map.empty
+            let sigRows := Ref.new Map.empty
+            let declared := signatureType u result sigVars sigRows
+            Types.unify u t declared
+            checkAgainst u env core declared [] (signatureRow u effs sigVars sigRows)
+            checkRigid u sigVars sigRows
         | Option.some sig =>
             -- Checked against its signature, so parameters have their declared types and rows.
             let sigVars := Ref.new Map.empty

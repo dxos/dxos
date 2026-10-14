@@ -26,6 +26,12 @@ def Parser.arms (p : Parser) : {Throw Text} List Arm :=
   let result := go []
   if List.isEmpty result then Parser.error p "expected '|'" else result
 
+/-- `e`, checked against the type a `let` writes (D92). -/
+def Parser.ascribed (e : Expr) (annotation : Option Ty) : Expr :=
+  match annotation with
+  | Option.some t => Expr.ann e t
+  | Option.none => e
+
 /-- An atom followed by any `(e).field` projections. -/
 def Parser.atom (p : Parser) : {Throw Text} Expr :=
   let rec projections e :=
@@ -503,23 +509,22 @@ def Parser.patAtom (p : Parser) : {Throw Text} Pat :=
     Pat.unit
   else withStop p (-1) (fun _ =>
     let first := patt p
-    if is p ":" then
-      -- `(x : T)`: an ascribed binder; the type is erased.
+    -- `(x : T)`: an ascribed binder, checked (D92).
+    let first1 := if is p ":" then
       skip p
-      Parser.ty p
-      ()
-    else ()
+      Pat.ann first (Parser.ty p)
+    else first
     if is p "," then
       let rec go acc := if is p "," then
         skip p
         go (patt p :: acc)
       else reverse acc
-      let items := go [first]
+      let items := go [first1]
       expect p ")"
       Pat.tuple items
     else
       expect p ")"
-      first) else if isTok t "[" then withStop p (-1) (fun _ =>
+      first1) else if isTok t "[" then withStop p (-1) (fun _ =>
     let rec go acc := if is p "]" then
       skip p
       reverse acc
@@ -596,23 +601,21 @@ def Parser.statement (p : Parser) (col : Int) : {Throw Text} Expr := if is p "le
     let name := Parser.ident p
     let rec params acc := if is p ":=" || is p ":" then reverse acc else params (patAtom p :: acc)
     let ps := params []
-    if is p ":" then
+    let result := if is p ":" then
       skip p
-      Parser.ty p
-      ()
-    else ()
+      Option.some (Parser.ty p)
+    else Option.none
     expect p ":="
-    let value := Parser.body p
+    let value := ascribed (Parser.body p) result
     if not (continues p col) then errorAt letTok "a let needs a body on the next line" else Expr.letFun name ps value (Parser.stmts p col) isRec
   else if isRec then Parser.error p "let rec needs a function" else
     let pat := patt p
-    if is p ":" then
+    let annotation := if is p ":" then
       skip p
-      Parser.ty p
-      ()
-    else ()
+      Option.some (Parser.ty p)
+    else Option.none
     expect p ":="
-    let value := Parser.body p
+    let value := ascribed (Parser.body p) annotation
     if not (continues p col) then errorAt letTok "a let needs a body on the next line" else Expr.letPat pat value (Parser.stmts p col)
 else
   let first := Parser.expr p

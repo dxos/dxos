@@ -1,3 +1,7 @@
+(entry "8a8f8bc6e27af56a7eab75125dc2df8967cdb5598f63db7bedd365af1d7b7d3a" "add docs/spec/CHECKING.mdl" "claude")
+(entry "ab6a7be3767bb5cae0f94b75096f5bebf881b5bb30c9a7ed782e21b129b460b4" "close a03fdfb6 by #a40db3f119" "claude")
+(entry "a40db3f11970676182fa43f3d00decc8ae1ac957f973ac707a45d18248b0b6de" "check ascriptions, binder types and bare rows (D92)" "claude")
+(entry "bc7cfd4401fbd7a8b1866e15eaf4ba131fa8c2f418e018a5a1f62f46f2b2ff6e" "update docs/spec/CHECKING.mdl" "")
 (entry "d3c92c98f92594311865b5ffa24119db1226d6f752b090d06554e46b97ce6b25" "export: merge 6 changes from codebase" "")
 (entry "c610f5d907a263c0b9ec835d35e3d479a55951d2b76ce3e3eb622d219b32496e" "export: merge tasks from codebase" "")
 (entry "634f0cce36e4cc2922841ba25072ed74421ac681a14c0696e3e1c109c14b19f7" "merge #13952's branch (wasm refcounting, D90); pull verification renumbered D91" "claude")

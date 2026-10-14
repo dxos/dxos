@@ -279,6 +279,18 @@ def Types.infer (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (locals : List TTyp
         (zip fns vars)
         (fun pair => Types.unify u (snd pair) (Types.infer u env (fst pair) inner row))
       Types.infer u env b inner row
+  | Sexp.list (Sexp.sym "ann" :: ty :: e :: []) =>
+      -- An ascription (D92): its variables are its own and flexible, and `e` is checked against it.
+      let declared := signatureType u ty (Ref.new Map.empty) (Ref.new Map.empty)
+      checkAgainst u env e declared locals row
+      declared
+  | Sexp.list (Sexp.sym "annlocal" :: ty :: e :: []) =>
+      -- A lambda binder's ascription (D92): local 0 has the written type.
+      Types.unify
+        u
+        (getOr (get? locals 0) (freshType u))
+        (signatureType u ty (Ref.new Map.empty) (Ref.new Map.empty))
+      Types.infer u env e locals row
   | Sexp.list (Sexp.sym "if" :: c :: yes :: no :: []) =>
       Types.unify u (Types.infer u env c locals row) Types.bool
       let ty := Types.infer u env yes locals row
@@ -370,6 +382,9 @@ def Types.pattern (u : Unifier) (env : TypeEnv {r}) (pat : Sexp) (t : TType) (bi
   match pat with
   | Sexp.list (Sexp.sym "pany" :: []) => binds
   | Sexp.list (Sexp.sym "pvar" :: []) => t :: binds
+  | Sexp.list (Sexp.sym "ann" :: ty :: p :: []) =>
+      Types.unify u t (signatureType u ty (Ref.new Map.empty) (Ref.new Map.empty))
+      Types.pattern u env p t binds
   | Sexp.list (Sexp.sym "pas" :: p :: []) => Types.pattern u env p t (t :: binds)
   | Sexp.list (Sexp.sym "pint" :: _ :: []) =>
       Types.unify u t Types.int
@@ -555,6 +570,19 @@ def Types.showTypeWith (t : TType) (seen : Ref (Map Text Text)) (prec : Int) (sh
         (if rowText == "" then "" else rowText ++ " ") ++ Types.showTypeWith b seen 10 shared)
   | TType.row r => rowArgument (showRow r seen) (resolveTail r) seen
 
+/-- A written row: closed, unless it ends in a named tail (`{IO | r}`), which the signature shares. -/
+def Types.signatureRow (u : Unifier) (effs : List Sexp) (vars : Ref (Map Text TType)) (rowVars : Ref (Map Text TRow)) : TRow :=
+  match effs with
+  | [] => TRow.empty
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.str name :: []) :: [] =>
+      match Map.lookup name (Ref.get rowVars) with
+      | Option.some r => r
+      | Option.none =>
+          let r := freshRow u
+          Ref.set rowVars (Map.insert name r (Ref.get rowVars))
+          r
+  | e :: rest => TRow.extend (signatureType u e vars rowVars) (Types.signatureRow u rest vars rowVars)
+
 /-- A written signature: arrows without braces constrain nothing; written rows are closed. -/
 def Types.signatureType (u : Unifier) (s : Sexp) (vars : Ref (Map Text TType)) (rowVars : Ref (Map Text TRow)) : TType :=
   match s with
@@ -562,22 +590,10 @@ def Types.signatureType (u : Unifier) (s : Sexp) (vars : Ref (Map Text TType)) (
       (Types.signatureType u a vars rowVars)
       (freshRow u)
       (Types.signatureType u b vars rowVars)
-  | Sexp.list (Sexp.sym "tfun" :: a :: b :: Sexp.list (Sexp.sym "eff" :: effs) :: []) =>
-      let rec row es :=
-        match es with
-        | [] => TRow.empty
-        | Sexp.list (Sexp.sym "tvar" :: Sexp.str name :: []) :: [] =>
-            match Map.lookup name (Ref.get rowVars) with
-            | Option.some r => r
-            | Option.none =>
-                let r := freshRow u
-                Ref.set rowVars (Map.insert name r (Ref.get rowVars))
-                r
-        | e :: rest => TRow.extend (Types.signatureType u e vars rowVars) (row rest)
-      TType.fn
-        (Types.signatureType u a vars rowVars)
-        (row effs)
-        (Types.signatureType u b vars rowVars)
+  | Sexp.list (Sexp.sym "tfun" :: a :: b :: Sexp.list (Sexp.sym "eff" :: effs) :: []) => TType.fn
+      (Types.signatureType u a vars rowVars)
+      (signatureRow u effs vars rowVars)
+      (Types.signatureType u b vars rowVars)
   | Sexp.list (Sexp.sym "trow" :: effs) => TType.row (rowFromSexp u effs vars rowVars [] false)
   | Sexp.list (Sexp.sym "tapp" :: Sexp.list (Sexp.sym "tref" :: Sexp.str iri :: []) :: args) => TType.con iri (List.map (fun x => Types.signatureType u x vars rowVars) args)
   | _ => Types.fromSexp u s vars rowVars [] true

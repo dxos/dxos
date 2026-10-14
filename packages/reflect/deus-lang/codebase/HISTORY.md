@@ -1,5 +1,9 @@
 # History of main
 
+- `8a8f8bc6e2` add docs/spec/CHECKING.mdl (by claude)
+- `ab6a7be376` close a03fdfb6 by #a40db3f119 (by claude)
+- `a40db3f119` check ascriptions, binder types and bare rows (D92) (by claude)
+- `bc7cfd4401` update docs/spec/CHECKING.mdl
 - `d3c92c98f9` export: merge 6 changes from codebase
 - `c610f5d907` export: merge tasks from codebase
 - `634f0cce36` merge #13952's branch (wasm refcounting, D90); pull verification renumbered D91 (by claude)

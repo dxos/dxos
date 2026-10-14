@@ -487,7 +487,7 @@ def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
       Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }", "  printf(\"%d\\n\", " ++ export ++
       CGen.args (List.map (fun i => "(int32_t)atol(argv[" ++ toText (i + 1) ++ "])") inputs) ++ ");", "  if (getenv(\"DEUS_HEAP_STATS\")) fprintf(stderr, \"heap: %ld words bumped, %ld live, %ld peak\\n\", (long)(deus_hp - deus_base), (long)deus_live, (long)deus_peak);", "  return 0;", "}", "#endif"]
   let nullary := foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
-  join "\n" ([prelude nullary] ++ decls ++ [""] ++ bodies ++ ["", entry, main, ""])
+  join "\n" ([CGen.prelude nullary] ++ decls ++ [""] ++ bodies ++ ["", entry, main, ""])
 
 /-- Whether `e` builds a block of `n` fields, which a dead block of that size can become. -/
 def CGen.wants (n : Int) (e : Sexp) : Bool :=
