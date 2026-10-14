@@ -1,5 +1,11 @@
 # History of main
 
+- `922cec2bc5` task: link 62f3f4d0 to Codebase.mergeMeta
+- `2ee07a4da0` task: link f4afc2c0 to Replicate.import
+- `bbdf5cd081` task: open 62f3f4d0 Names that share a hash keep only the last name's doc, comments and parameter names (by claude)
+- `aa666ea0fa` task: comment on f4afc2c0 (by claude)
+- `0b3045184c` task: set f4afc2c0 title priority labels (by claude)
+- `daac5bc3f2` history: import 696 changes
 - `9db52bfe04` task: comment on 72a1f2fb (by claude)
 - `f86efb6645` task: set 4c9147ce details
 - `07d08fc81a` task: set 4c9147ce title
