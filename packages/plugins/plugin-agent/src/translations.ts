@@ -38,6 +38,7 @@ export const translations = [
         'email-channel.description':
           'The agent answers mail to this address; each email thread is its own conversation. Reconnect to apply changes.',
         'email-mailbox-actions.label': 'Mailbox actions',
+        'email-mailbox.title': 'Email',
         'email-mailbox-connect.label': 'Connect',
         'email-mailbox-update.label': 'Update',
         'email-mailbox-disconnect.label': 'Disconnect',
