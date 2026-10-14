@@ -28,13 +28,15 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
     return error;
   }
 
-  public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
+  /** Reads the response body, unless `text` is the body already read. */
+  public static async fromHttpFailure(response: Response, text?: string): Promise<EdgeCallFailedError> {
     return new EdgeCallFailedError({
       message: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
       status: response.status,
-      cause: await EdgeHttpErrorCodec.decode(response),
+      cause:
+        text === undefined ? await EdgeHttpErrorCodec.decode(response) : EdgeHttpErrorCodec.decodeText(response, text),
     });
   }
 
