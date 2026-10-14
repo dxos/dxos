@@ -88,6 +88,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-mermaid"
+    },
+    {
       "path": "../plugin-testing"
     }
   ]

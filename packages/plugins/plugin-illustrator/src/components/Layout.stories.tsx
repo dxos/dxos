@@ -250,6 +250,8 @@ const meta = {
   title: 'plugins/plugin-illustrator/components/Layout',
   render: Bench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  // A bench for looking at layouts, not a test: the large diagrams take 30–40 s each to lay out headless.
+  tags: ['!test'],
   parameters: { layout: 'fullscreen' },
   args: { lattice: 0, arrangement: 'auto', layering: 'auto', alignment: 'auto' },
   argTypes: {
