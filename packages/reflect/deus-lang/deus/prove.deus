@@ -14,6 +14,11 @@
   - Case splits on `Bool` conditions (excluded middle for terminating computations).
   - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
     order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
+  - The `Array` laws (D96, the codebase's `Array.Spec`): `length (make n x) = n` for `0 <= n`;
+    `get (make n x) i = x` and `get (set a i v) j = if i == j then v else get a j`, with `length`
+    of a `set` unchanged, when the index is in bounds; `set (set a i v) i w = set a i w`; and
+    `set a i (get a i) = a` in bounds. An index out of bounds is a defect, so a term whose bound
+    is undecided stays folded under an `if` on the bound.
   - Rewriting with hypotheses and with lemmas that are themselves proved. A lemma that is
     only tested downgrades the verdict and says so.
 
@@ -100,7 +105,7 @@ def lambdas (core : Sexp) : (Int, Sexp) :=
 
 /-- Primitives with no effects and a meaning the prover models or can compute. -/
 def purePrims : Map Text Unit :=
-  Set.fromList ["Int.add", "Int.sub", "Int.mul", "Int.div", "Int.mod", "Int.neg", "Int.and", "Int.or", "Int.xor", "Int.shl", "Int.shr", "Int.ushr", "Int.toText", "eq", "neq", "compare", "lt", "le", "gt", "ge", "append", "implies", "Text.length", "Text.code", "Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.indexOf", "Text.trim", "Text.sha256"]
+  Set.fromList ["Int.add", "Int.sub", "Int.mul", "Int.div", "Int.mod", "Int.neg", "Int.and", "Int.or", "Int.xor", "Int.shl", "Int.shr", "Int.ushr", "Int.toText", "eq", "neq", "compare", "lt", "le", "gt", "ge", "append", "implies", "Text.length", "Text.code", "Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.indexOf", "Text.trim", "Text.sha256", "Array.make", "Array.length", "Array.get", "Array.set"]
 
 /-- No ability operations, handlers or impure primitives anywhere in a body. -/
 def pure (core : Sexp) : Bool :=
@@ -324,7 +329,26 @@ def primitiveDirect (name : Text) (args : List Sym) : Sym :=
     if isTrue a then b else if isFalse a then trueSym else if isTrue b then trueSym else Sym.prim "implies" [a, b]
   | ("Text.length", [Sym.text a]) => Sym.int (Text.length a)
   | ("Int.toText", [Sym.int a]) => Sym.text (Int.toText a)
+  | ("Array.length", [Sym.prim "Array.make" [n, _]]) => guard (primitive "le" [Sym.int 0, n]) n (outOfBounds name args)
+  | ("Array.length", [Sym.prim "Array.set" [a, i, _]]) => guard (inBounds a i) (primitive "Array.length" [a]) (outOfBounds name args)
+  | ("Array.get", [Sym.prim "Array.make" [n, x], i]) => guard (primitive "le" [Sym.int 0, i]) (guard (primitive "lt" [i, n]) x (outOfBounds name args)) (outOfBounds name args)
+  | ("Array.get", [Sym.prim "Array.set" [a, i, v], j]) =>
+    guard (inBounds a i) (guard (primitive "eq" [i, j]) v (primitive "Array.get" [a, j])) (outOfBounds name args)
+  | ("Array.set", [Sym.prim "Array.set" [a, i, _], j, w]) => if i == j then primitive "Array.set" [a, i, w] else Sym.prim name args
+  | ("Array.set", [a, i, Sym.prim "Array.get" [b, j]]) => if a == b && i == j then guard (inBounds a i) a (outOfBounds name args) else Sym.prim name args
   | _ => Sym.prim name args
+
+/-- `if c then yes else no`, decided when `c` is. -/
+def guard (c : Sym) (yes : Sym) (no : Sym) : Sym := if isTrue c then yes else if isFalse c then no else Sym.ite c yes no
+
+/--
+  An array primitive whose index may be out of bounds, so it may be a defect: a term of its own
+  (`Array.get!`) that is never reduced again, so `norm` reaches a fixpoint.
+-/
+def outOfBounds (name : Text) (args : List Sym) : Sym := Sym.prim (name ++ "!") args
+
+/-- `0 <= i && i < Array.length a`, the condition under which index `i` of `a` is not a defect. -/
+def inBounds (a : Sym) (i : Sym) : Sym := guard (primitive "le" [Sym.int 0, i]) (primitive "lt" [i, primitive "Array.length" [a]]) falseSym
 
 def fuelLeft (pr : Prover) : Bool :=
   let f := Ref.get pr.fuel
@@ -425,7 +449,7 @@ def apply (pr : Prover) (f : Sym) (args : List Sym) : {Stuck, IO} Sym :=
       else Sym.data ty tag all
     | Sym.primFn name prev =>
       let all := prev ++ args
-      let arity := if name == "Int.neg" || name == "Text.length" || name == "Int.toText" || name == "Text.trim" || name == "Text.sha256" || name == "Text.fromCode" || name == "Text.concat" then 1 else if name == "Text.slice" || name == "Text.indexOf" then 3 else 2
+      let arity := if name == "Int.neg" || name == "Text.length" || name == "Int.toText" || name == "Text.trim" || name == "Text.sha256" || name == "Text.fromCode" || name == "Text.concat" || name == "Array.length" then 1 else if name == "Text.slice" || name == "Text.indexOf" || name == "Array.set" then 3 else 2
       if List.length all < arity then Sym.primFn name all
       else apply pr (primitive name (List.take arity all)) (List.drop arity all)
     | Sym.call h prev => Sym.call h (prev ++ args)

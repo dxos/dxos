@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The sorting case study (D83, docs/IMMUTABILITY.md): times examples/sorting.deus on the
+// The sorting case study (D83, D96, docs/IMMUTABILITY.md): times examples/sorting.deus on the
 // TypeScript kernel, the Rust kernel and compiled wasm, against JavaScript baselines.
 //
 //   node scripts/sort-bench.mjs [--sizes 10000,100000] [--wasm-sizes 10000,100000,1000000]
@@ -23,8 +23,8 @@ const arg = (name, fallback) => {
 const sizes = arg('--sizes', '10000,100000');
 const wasmSizes = arg('--wasm-sizes', '10000,100000,1000000');
 const runs = 3;
-const benches = ['Merge', 'Quick', 'Heap', 'Array', 'Persistent', 'Prelude', 'Map'];
-const compiled = ['Merge', 'Quick', 'Heap', 'Array', 'Persistent'];
+const benches = ['Merge', 'Quick', 'Heap', 'Array', 'Prelude', 'Map'];
+const compiled = ['Merge', 'Quick', 'Heap', 'Array'];
 
 const best = (fn) => {
   let min = Infinity;

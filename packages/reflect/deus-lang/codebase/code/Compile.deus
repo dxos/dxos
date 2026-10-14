@@ -5,6 +5,175 @@ structure Compile.Pending where
   core : Sexp
   checked : Sexp
 
+/-- Adds `source` after the prelude to the simulated codebase `cb`. -/
+def Compile.Spec.addSource (source : Text) (isUpdate : Bool) : {IO, Throw Text} Unit :=
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (if isUpdate then source else Compile.Spec.prelude ++ source)
+  deus "cb" ["src"] (fun a => addOrUpdate a isUpdate)
+
+test Compile.Spec.apiReportsDeclarationsAsGaps := inStore (fun _ =>
+  addSource "def parse (t : Text) : Int\ndef twice (t : Text) : Int := parse t * 2\n" false
+  let ns := Codebase.current "cb"
+  let api := fun line => withHost "cb" ns (fun _ => checkApi (Block.mk "api" "A-1" "t" [("signatures", line)] 0))
+  api "parse : Text -> Int" == ["gap: parse is declared but not implemented"] && api "twice : Text -> Int" == [] && api "parse : Text -> Text" == ["parse has type Text -> Int, the spec says Text -> Text"])
+
+test Compile.Spec.batchShadowsBase :=
+  match try (fun _ =>
+    let first := batch
+      Map.empty
+      (fun _ => Option.none)
+      (fun _ => Option.none)
+      "strict"
+      [parseFile "a.deus" (Compile.Spec.prelude ++ "def k : Int := 1\ndef user : Int := k\n")]
+    let base := Map.fromList first.entries
+    let second := batch
+      base
+      (fun h => List.lookup h first.objects)
+      (fun h => List.lookup h first.metas)
+      "strict"
+      [parseFile "b.deus" "def k : Int := 2\ndef user : Int := k\n"]
+    (List.lookup "user" first.entries, List.lookup "user" second.entries, Compile.Spec.hashOf "def k : Int := 2\ndef user : Int := k\n" "user")) with
+  | Result.ok (before, after, expected) => before != after && after == expected
+  | Result.err _ => false
+
+theorem Compile.Spec.bodiesChangeHashes (k : Int) : Compile.Spec.hashOf ("def f (a : Int) : Int := a + " ++ toText k ++ "\n") "f" ==
+    Compile.Spec.hashOf "def f (a : Int) : Int := a + 7\n" "f" == (k == 7) := by test 64
+
+test Compile.Spec.commentsDoNotChangeHashes :=
+  let plain := Compile.Spec.hashOf "def f (a : Int) : Int :=\n  let b := a + 1\n  b * 2\n" "f"
+  isSome plain && plain == Compile.Spec.hashOf
+    "-- lead\n/-- Doubles one more. -/\ndef f (a : Int) : Int :=\n  -- a note\n  let b := a + 1\n  b * 2 -- trailing\n"
+    "f" && plain == Compile.Spec.hashOf "def f (a : Int) : Int :=\n    let b := a + 1\n    b * 2\n" "f"
+
+/-- Compiles files after the prelude; the entries in name order, or the error. -/
+def Compile.Spec.compileFiles (files : List Text) : Result Text (List (Text, Entry)) :=
+  match try (fun _ => batch
+    Map.empty
+    (fun _ => Option.none)
+    (fun _ => Option.none)
+    "strict"
+    (mapIndexed (fun i f => parseFile ("f" ++ toText i ++ ".deus") f) (Compile.Spec.prelude :: files))) with
+  | Result.ok b => Result.ok (Map.toList (Map.fromList b.entries))
+  | Result.err message => Result.err message
+
+test Compile.Spec.declarationsCheckCallers :=
+  let parse := "def parse (t : Text) : Int\n"
+  not (refused (parse ++ "def twice (t : Text) : Int := parse t * 2\n")) && refused (parse ++ "def wrong (t : Text) : Text := parse t\n") && refused (parse ++ "def wrong (n : Int) : Int := parse n\n")
+
+theorem Compile.Spec.declarationsHashTheirName (i : Int) (j : Int) : Compile.Spec.hashOf ("def " ++ Spec.local i ++ " (a : Int) : Int\n") (Spec.local i) ==
+    Compile.Spec.hashOf ("def " ++ Spec.local j ++ " (a : Int) : Int\n") (Spec.local j) == (Spec.local i == Spec.local j) := by test 64
+
+test Compile.Spec.declarationsHashTheirType :=
+  let declared := Compile.Spec.hashOf "def f (a : Int) : Int\n" "f"
+  isSome declared && declared != Compile.Spec.hashOf "def f (a : Int) : Text\n" "f" && declared != Compile.Spec.hashOf "def f (a : Text) : Int\n" "f" && declared != Compile.Spec.hashOf "def f (a : Int) : Int := a\n" "f" && declared == Compile.Spec.hashOf "def f (b : Int) : Int\n" "f"
+
+test Compile.Spec.declarationsRaiseADefect := inStore (fun _ =>
+  addSource "def parse (t : Text) : Int\ntest usesParse := parse \"1\" == 1\n" false
+  startsWith "defect: not implemented: parse" (verdictText "usesParse"))
+
+def Compile.Spec.hashOf (source : Text) (name : Text) : Option Entry :=
+  match compileFiles [source] with
+  | Result.ok entries => List.lookup name entries
+  | Result.err _ => Option.none
+
+test Compile.Spec.implementingRehashesCallers := inStore (fun _ =>
+  addSource
+    "def parse (t : Text) : Int\ndef twice (t : Text) : Int := parse t * 2\ntest usesParse := twice \"1\" == 4\n"
+    false
+  let before := Map.lookup "twice" (Codebase.current "cb")
+  let failed := verdictText "usesParse"
+  addSource "def parse (t : Text) : Int := 2\n" true
+  before != Map.lookup "twice" (Codebase.current "cb") && Text.contains "not implemented" failed && verdictText "usesParse" == "pass")
+
+/-- Identifiers to rename with, chosen by a generated number, since generated text is rarely an identifier. -/
+def Compile.Spec.local (i : Int) : Text := getOr (get? ["x", "y", "n", "value", "acc", "x2", "fooBar", "k_1"] (i % 8)) "x"
+
+theorem Compile.Spec.localNamesDoNotChangeHashes (i : Int) (j : Int) : Compile.Spec.hashOf
+    ("def f (" ++ Spec.local i ++ " : Int) (" ++ Spec.local j ++ "z : Int) : Int := " ++ Spec.local i ++
+      " + " ++
+      Spec.local j ++
+      "z\n")
+    "f" == Compile.Spec.hashOf "def f (a : Int) (b : Int) : Int := a + b\n" "f" := by test 64
+
+test Compile.Spec.namesResolveInTheirNamespace :=
+  match compileFiles ["def one : Int := 1\nnamespace N\ndef one : Int := 2\ndef two : Int := one + one\nend N\ndef three : Int := one + N.two\n"] with
+  | Result.ok entries =>
+      let inner := Compile.Spec.hashOf "def one : Int := 2\ndef two : Int := one + one\n" "two"
+      isSome inner && List.lookup "N.two" entries == inner
+  | Result.err _ => false
+
+/-- Two definitions, one using the other, compiled in every order and split. -/
+def Compile.Spec.orderAgnostic (k : Int) : Bool :=
+  let a := "def a (n : Int) : Int := b n + " ++ toText k ++ "\n"
+  let b := "def b (n : Int) : Int := n * 2\n"
+  compileFiles [a ++ b] == compileFiles [b ++ a] && compileFiles [a, b] == compileFiles [b, a] && compileFiles [a ++ b] == compileFiles [b, a]
+
+theorem Compile.Spec.orderDoesNotChangeHashes (k : Int) : orderAgnostic k == true := by test 16
+
+def Compile.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Text @\"#Text\" where\ninductive Unit @\"#Unit\" where\n  | unit\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
+
+theorem Compile.Spec.printedSourceCompilesBack (i : Int) : inStore (fun dir =>
+    let source := getOr (get? Spec.roundTrips (i % List.length Spec.roundTrips)) ""
+    let first := batch
+      Map.empty
+      (fun h => readObject dir h)
+      (fun h => readMeta dir h)
+      "strict"
+      [parseFile "a.deus" (Compile.Spec.prelude ++ source)]
+    Codebase.store dir first
+    let ns := Map.fromList first.entries
+    let printed := join "\n\n" (List.map (fun pair => viewEntry dir ns (fst pair) (snd pair) false) first.entries)
+    let again := batch
+      Map.empty
+      (fun h => readObject dir h)
+      (fun h => readMeta dir h)
+      "strict"
+      [parseFile "b.deus" printed]
+    Map.toList (Map.fromList again.entries) == Map.toList ns) == true := by test 24
+
+def Compile.Spec.refused (source : Text) : Bool :=
+  match compileFiles [source] with
+  | Result.ok _ => false
+  | Result.err _ => true
+
+test Compile.Spec.refusesIllTyped := refused "def f : Int := \"x\"\n" && refused "def g (a : Int) : Text := a\n" && not (refused "def h (a : Int) : Int := a\n")
+
+test Compile.Spec.refusesIncompleteDeclarations := refused "def f (a) : Int\n" && refused "def f (a : Int)\n" && refused "def f\n" && not (refused "def f (a : Int) : Int\n") && not (refused "def k : Int\n") && not (refused "def f (a b : Int) : {} Int\ndef g : Int := 1\n")
+
+/-- A written row is closed (`{}` is pure); an arrow without braces has a fresh row and constrains nothing. -/
+test Compile.Spec.refusesUndeclaredAbility :=
+  let abilities := "ability A where\n  op : Int -> Int\nability B where\n  other : Int -> Int\n"
+  refused (abilities ++ "def f (u : Unit) : {} Int := A.op 1\n") && refused (abilities ++ "def f (u : Unit) : {B} Int := A.op 1\n") && not (refused (abilities ++ "def f (u : Unit) : {A} Int := A.op 1\n")) && not (refused (abilities ++ "def f (u : Unit) : Int := A.op 1\n"))
+
+test Compile.Spec.renamedDeclarationsRoundTrip := inStore (fun dir =>
+  addSource "def parse (t : Text) : Int\n" false
+  deus "cb" ["parse", "read"] (fun a => mv a false)
+  let ns := Codebase.current "cb"
+  match Map.lookup "read" ns with
+  | Option.some e =>
+      let printed := viewEntry "cb" ns "read" e false
+      let again := batch
+        ns
+        (fun h => readObject "cb" h)
+        (fun h => readMeta "cb" h)
+        "strict"
+        [parseFile "b.deus" printed]
+      not (Text.contains "def read (t : Text) : Int\n" (printed ++ "\n")) && List.lookup "read" again.entries == Option.some e
+  | Option.none => false)
+
+/-- Every program here prints back to the hashes it compiled to. -/
+def Compile.Spec.roundTrips : List Text := ["def f (a : Int) : Int := if a == 0 then 1 else a * 2\n", "inductive Shape @\"urn:spec:Shape\" where\n  | circle (r : Int)\n  | rect (w : Int) (h : Int)\ndef area (s : Shape) : Int :=\n  match s with\n  | Shape.circle r => 3 * r * r\n  | Shape.rect w h => w * h\n", "structure P @\"urn:spec:P\" where\n  x : Int\n  y : Int\ndef moved (p : P) : P := { p with x := p.x + 1 }\n", "ability Ask where\n  ask : Int -> Int\ndef twice (u : Unit) : {Ask} Int := Ask.ask 1 + Ask.ask 2\ndef answered (u : Unit) : Int :=\n  handle twice () with\n  | return v => v\n  | Ask.ask n -> k => k (n * 10)\n", "def even (n : Int) : Bool := if n == 0 then true else odd (n - 1)\ndef odd (n : Int) : Bool := if n == 0 then false else even (n - 1)\n", "def s : Text := \"tab\\tquote\\\"\\u{1F600}\"\ndef g (a : Int) : Int :=\n  let h := fun (b : Int) => b + a\n  h (h a)\n", "test t := 1 + 1 == 2\ntheorem th (b : Bool) : (if b then b else b) = b := by decide\n", "/-- Parses a number. -/\ndef parse (t : Text) : Int\ndef k : Int\ndef twice (t : Text) : Int := parse t * k\n"]
+
+def Compile.Spec.verdictText (name : Text) : {IO, Throw Text} Text :=
+  let ns := Codebase.current "cb"
+  match Map.lookup name ns with
+  | Option.some e =>
+      match Check.verdictOf "cb" ns e with
+      | Option.some (Verdict.pass _ _) => "pass"
+      | Option.some (Verdict.fail reason) => reason
+      | _ => "none"
+  | Option.none => "none"
+
 def Compile.accessorCore (hash : Text) (count : Int) (index : Int) : Sexp := Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
   "case"
   [Compile.node "pcon" ([Sexp.s hash, i 0] ++ replicate count (Compile.node "pvar" [])), Compile.node "var" [i (count - 1 - index)]]]]
@@ -486,7 +655,7 @@ def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf 
             checkAgainst u env core declared [] (freshRow u)
             checkRigid u sigVars sigRows
         | Option.none =>
-            Types.unify u t (infer u env core [] (freshRow u))
+            Types.unify u t (Types.infer u env core [] (freshRow u))
             if p.wrap == "test" then Types.unify u t Types.bool else ()) (fun e => if warnOnly then Ref.set warnings ((p.name ++ ": " ++ e) :: Ref.get warnings) else Throw.throw (p.name ++ ": " ++ e)))
     forEach members (fun p =>
       let key := "@" ++ p.name

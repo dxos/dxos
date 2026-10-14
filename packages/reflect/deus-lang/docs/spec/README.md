@@ -20,6 +20,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
 | [BINDINGS.mdl](./BINDINGS.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
 | [CHECKING.mdl](./CHECKING.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
+| [JS.mdl](./JS.mdl)                     | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
 | [WASM-EQUALITY.mdl](./WASM-EQUALITY.mdl) | `==` on data in the wasm back end: requirements, layout of the equality functions, theorems |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |

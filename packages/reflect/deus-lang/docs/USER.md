@@ -314,3 +314,20 @@ how much of .mdl are you dogfooding? the general process should be mdl spec > ap
 ---
 
 I think deus should allow declaring a definition with a type but no impl
+
+---
+
+impl recomendation
+
+- js as compilation target: without wasm, source-mapped, doesnt need to be super legible, but at least clear stacks -- good for iterop with dom and existing js libs (what wasm struggles with)
+- find way to introp with external js libs: like react and effect, how do we express those bindings in the language
+- react bindings with ability for hooks access that compoennts get + example react web app in deus
+- build a full composer plugin (at least surfaces + echo access) and dynamically load it in composer -- autocue demo
+
+---
+
+for composer thread -> can we have some smaller version of explorer as composer plugin, also matching composer design system + skills so composer assistant can program in deus and use codebase
+
+---
+
+about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase

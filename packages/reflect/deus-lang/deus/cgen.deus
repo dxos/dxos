@@ -101,6 +101,9 @@ def prelude (nullary : Int) : Text :=
     "static inline V *deus_con(V *token, V fields) { if (token) { token[-1] = 256 | fields; return token; } return deus_block(fields, fields + 1); }",
     "static inline void deus_unused(V *token) { if (token) deus_release(token); }",
     "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return BOX(p); }",
+    "/* A pure `Array.set` (D96) writes into a unique array and copies a shared one, counting each item again. */",
+    "static V deus_array_copy(V a) { V *q = UNBOX(a); V n = q[0]; V *p = deus_block(K_ARRAY, n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = deus_dup(q[i]); return BOX(p); }",
+    "static inline V deus_array_unique(V a) { if (UNIQUE(a)) return a; V r = deus_array_copy(a); HDR(a) -= 256; return r; }",
     "#define AT(a, i) ({ V *a_ = UNBOX(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
     "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
       ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
@@ -240,7 +243,7 @@ def consumes (borrow : List (Int, List Bool)) (fns : List Wasm.Fn) (self : Int) 
       | Sexp.list [Sexp.sym "case", pat, b] => consumes borrow fns self param (List.replicate (binders pat) (-1) ++ env) l b
       | _ => false) cases
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: x :: rest) =>
-    let container := (Text.startsWith "Array." p || Text.startsWith "Ref." p) && p != "Array.make" && p != "Ref.new" && isLocal env l x
+    let container := (Text.startsWith "Array." p || Text.startsWith "Ref." p) && p != "Array.make" && p != "Array.set" && p != "Ref.new" && isLocal env l x
     (not container && again x) || List.any again rest
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
     let index := List.findIndex (fun f => f.fnHash == h) fns
@@ -342,8 +345,11 @@ def sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option T
   let parts := List.mapIndexed (fun k triple =>
     match triple with
     | ((x, mine), tok) =>
+      -- A borrowed local is passed as it is, unless a later argument consumes it first.
+      let consumedLater := List.concat (List.drop (k + 1) shares)
       let direct := match x with
-        | Sexp.list [Sexp.sym "var", Sexp.int i] => if borrowsAt borrows k then List.get? env i else none
+        | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+          if borrowsAt borrows k then Option.bind (List.get? env i) (fun l => if isIn consumedLater l then none else some l) else none
         | _ => none
       match direct with
       | some l => ("", local l, if isIn mine l then dropLocal ctx l else "")
@@ -431,7 +437,8 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
   A primitive. `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83). Their
   first argument is borrowed when it is a local used again later, so a read does not touch its
   count; otherwise it is dropped after the access. Reads `deus_dup` what they return; the writes
-  drop what they overwrite and return `()`.
+  drop what they overwrite. `Ref.set` returns `()`; `Array.set` is pure (D96) and returns the
+  array, written in place when the code holds its only reference, else a copy.
 -/
 def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (e : Sexp) (p : Text) (xs : List Sexp) : {Throw Text} Text :=
   -- The container is a local the code still needs afterwards: borrow it rather than count it.
@@ -466,7 +473,10 @@ def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option 
     | ("Array.make", [n, x], _) => block ("deus_array(" ++ n ++ ", " ++ x ++ ")")
     | ("Array.length", [a], _) => block ("V r = UNBOX(" ++ a ++ ")[0]; " ++ release ++ "r")
     | ("Array.get", [a, i], _) => block ("V r = " ++ share ++ "(*AT(" ++ a ++ ", " ++ i ++ ")); " ++ release ++ "r")
-    | ("Array.set", [a, i, x], _) => block ("V *s = AT(" ++ a ++ ", " ++ i ++ "); V old = *s; *s = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
+    | ("Array.set", [a, i, x], _) =>
+      -- An array the code owns passes its reference to the result; a borrowed one is copied.
+      let target := if isBorrowed then "deus_array_copy(" ++ a ++ ")" else "deus_array_unique(" ++ a ++ ")"
+      block ("V r = " ++ target ++ "; V *s = AT(r, " ++ i ++ "); V old = *s; *s = " ++ x ++ "; " ++ dropOld ++ "r")
     | ("Ref.new", [x], _) => block ("V *r = deus_block(K_REF, 1); r[0] = " ++ x ++ "; BOX(r)")
     | ("Ref.get", [r], _) => block ("V v = " ++ share ++ "(UNBOX(" ++ r ++ ")[0]); " ++ release ++ "v")
     | ("Ref.set", [r, x], _) => block ("V old = UNBOX(" ++ r ++ ")[0]; UNBOX(" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++ unit)

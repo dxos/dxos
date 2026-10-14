@@ -68,6 +68,9 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
   set alarms, simulated deterministically and served on workerd.
 - [`examples/perf.mdl`](./examples/perf.mdl) — performance requirements on the sort, checked by
   the `perf` extension ([`platform/perf.deus`](./platform/perf.deus)) in machine steps.
+- [`examples/react/`](./examples/react) — a React todo app written in DEUS and compiled with
+  `deus build --js` ([D97](./docs/DECISIONS.md), [JS.mdl](./docs/spec/JS.mdl)); the bindings are
+  [`platform/js/js.deus`](./platform/js/js.deus) and [`platform/js/react.deus`](./platform/js/react.deus).
 - [`editors/vscode/`](./editors/vscode) — syntax highlighting for VS Code and TextMate renderers.
 
 ## Docs
@@ -80,7 +83,7 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
   (store, text export, binary bundles), MDL and the rest.
 - [`docs/PRIOR-ART.md`](./docs/PRIOR-ART.md) — what was taken from Unison, Lean, Koka, Effect-TS and others.
 - [`docs/PROPOSALS.md`](./docs/PROPOSALS.md) — the user's proposals, evaluated against alternatives.
-- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study, and the mutable `Array` (D83).
+- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study (D83), and the pure `Array` that compiled code updates in place (spec in the codebase as [`Array.Spec`](./codebase/specs/Array.Spec.mdl), D96).
 - [`docs/LLM.md`](./docs/LLM.md) — how an agent drives the CLI.
 
 ## Changing the compiler

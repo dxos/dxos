@@ -10,7 +10,7 @@ structure Wasm.Fn @"urn:deus:wasm:Fn" where
 
 /-- What compiling one definition sees: the module's functions, the data types it names (`(type …)`
   objects by hash or IRI), the type known for each local so far, and the types whose equality
-  function the module needs, in function order (D96). -/
+  function the module needs, in function order (D98). -/
 structure Wasm.Scope @"urn:deus:wasm:Scope" where
   fns : List Fn
   datatypes : List (Text, Sexp)
@@ -22,9 +22,11 @@ structure Wasm.Scope @"urn:deus:wasm:Scope" where
   of times. Locals: 1 the block, 2 the pages missing. -/
 def Wasm.allocBody : List Int := List.concat [[35, 0, 33, 1], [35, 0, 32, 0, 106, 36, 0], [35, 0, 63, 0, 65, 16, 116, 75, 4, 64], [35, 0, 65, 16, 118, 65, 1, 106, 63, 0, 107, 33, 2], [32, 2, 63, 0, 32, 2, 63, 0, 74, 27, 64, 0, 26, 11], [32, 1, 11]]
 
-/-- `Array` primitives (D83) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
-  is the code for each argument. An index outside the array, or a negative length, traps.
-  `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`. -/
+/-- `Array` primitives (D83, D96) on a block `[length, item…]`, and `Ref` on a block `[value]`;
+  `args` is the code for each argument. An index outside the array, or a negative length, traps.
+  `Array.set` copies the block and writes into the copy; `Array.setInPlace` and `Array.copy` come
+  from `Unique.rewriteAll`, which proved the array unique or needs a second one. `Ref.set` returns
+  address 0, whose word is 0, so it reads as `()`. -/
 def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
   let unreachableIf := fun cond => cond ++ [4, 64, 0, 11]
   let address := fun a i => localGet a ++ localGet i ++ [65, 2, 116, 106]
@@ -41,11 +43,22 @@ def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (Li
       let la := Wasm.fresh next
       let li := Wasm.fresh next
       a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ Wasm.load 4
-  | ("Array.set", a :: i :: v :: []) =>
+  | ("Array.setInPlace", a :: i :: v :: []) =>
       let la := Wasm.fresh next
       let li := Wasm.fresh next
       a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ Wasm.store 4 ++
-        [65, 0]
+        localGet la
+  | ("Array.set", a :: i :: v :: []) =>
+      let la := Wasm.fresh next
+      let li := Wasm.fresh next
+      let lv := Wasm.fresh next
+      let lc := Wasm.fresh next
+      a ++ localSet la ++ i ++ localSet li ++ v ++ localSet lv ++ checked la li ++
+        copyBlock scope la lc ++ address lc li ++ localGet lv ++ Wasm.store 4 ++ localGet lc
+  | ("Array.copy", a :: []) =>
+      let la := Wasm.fresh next
+      let lc := Wasm.fresh next
+      a ++ localSet la ++ copyBlock scope la lc ++ localGet lc
   | ("Array.make", n :: x :: []) =>
       let ln := Wasm.fresh next
       let lx := Wasm.fresh next
@@ -62,7 +75,8 @@ def Wasm.binary (name : Text) : Option Int := if name == "Int.add" then Option.s
 /-- Compiles `main` and what it calls to a wasm module exporting it as `export`. `fetch` answers a
   hash, and a type's IRI with the type's object, since signatures name types by IRI. -/
 def Wasm.compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
-  let fns := gather fetch meta main
+  let gathered := Wasm.gather fetch meta main
+  let fns := rewriteAll gathered (datatypesOf fetch gathered)
   -- The types the code names, and the types their fields name, which an equality function walks.
   let rec close pending seen acc :=
     match pending with
@@ -107,6 +121,12 @@ def Wasm.constructed (scope : Wasm.Scope) (t : Text) (tag : Int) (argTypes : Lis
         (fun k => getOr (List.lookup (Sexp.list [Sexp.sym "tvar", Sexp.int k]) bound) unknown)
         (range 0 arity))
   | _ => tref t
+
+/-- Copies the array block at local `a` into a new block, whose address goes to local `c` (`memory.copy`). -/
+def Wasm.copyBlock (scope : Wasm.Scope) (a : Int) (c : Int) : List Int :=
+  let size := localGet a ++ Wasm.load 0 ++ [65, 2, 116, 65, 4, 106]
+  size ++ 16 :: uleb (List.length scope.fns) ++ localSet c ++ localGet c ++ localGet a ++ size ++
+    [252, 10, 0, 0]
 
 /-- A type object's constructors, each as its field types. -/
 def Wasm.ctorFields (form : Sexp) : List (List Sexp) :=
@@ -219,10 +239,10 @@ def Wasm.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {
         match fetch h with
         | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: p :: []) :: [])) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
-            match unlam core with
+            match Wasm.unlam core with
             | (0, _) => Throw.throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
             | (n, b) => go
-                (rest ++ refsOf b)
+                (rest ++ Wasm.refsOf b)
                 (h :: seen)
                 (Fn.mk h n b (Wasm.storedType (meta h)) :: acc)
                 prims
@@ -279,7 +299,7 @@ def Wasm.matchType (pattern : Sexp) (actual : Sexp) : List (Sexp, Sexp) :=
   | _ => []
 
 /-- The module: one type and one function per definition, then `alloc`, then an equality function
-  per data type compared (D96); `main` is exported as `export`. -/
+  per data type compared (D98); `main` is exported as `export`. -/
 def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
   let eqs := Ref.new []
   let codes := List.map (fun f =>
@@ -357,7 +377,7 @@ def Wasm.peel (n : Int) (t : Sexp) : (List Sexp, Sexp) := if n == 0 then ([], t)
   | _ => (replicate n unknown, unknown)
 
 /-- A binary integer or comparison primitive applied to `args`. `==` and `!=` on a data type call
-  its generated equality function (D96); other comparisons need an `Int` or a `Bool`. -/
+  its generated equality function (D98); other comparisons need an `Int` or a `Bool`. -/
 def Wasm.primitive (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : Text) (args : List Sexp) : {Throw Text} List Int :=
   match (binary p, args) with
   | (Option.some op, a :: b :: []) =>
@@ -433,8 +453,8 @@ def Wasm.typeObject (scope : Wasm.Scope) (t : Text) : Option Sexp :=
 def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
   match e with
   | Sexp.list (Sexp.sym "int" :: _ :: []) => tref "#Int"
-  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: _ :: []) => constructed scope t tag []
-  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: _ :: []) :: args) => constructed scope t tag (List.map (Wasm.typeOf scope env) args)
+  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: _ :: []) => Wasm.constructed scope t tag []
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: _ :: []) :: args) => Wasm.constructed scope t tag (List.map (Wasm.typeOf scope env) args)
   | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) =>
       match get? env i with
       | Option.some local => typeOfLocal scope local
@@ -446,7 +466,9 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
       match Wasm.typeArgs (Wasm.typeOf scope env a) with
       | t :: [] => t
       | _ => unknown
-  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.set" :: []) :: _ :: _ :: _ :: []) => tref "#Unit"
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.set" :: []) :: a :: _ :: _ :: []) => Wasm.typeOf scope env a
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.setInPlace" :: []) :: a :: _ :: _ :: []) => Wasm.typeOf scope env a
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.copy" :: []) :: a :: []) => Wasm.typeOf scope env a
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Ref.get" :: []) :: r :: []) =>
       match Wasm.typeArgs (Wasm.typeOf scope env r) with
       | t :: [] => t

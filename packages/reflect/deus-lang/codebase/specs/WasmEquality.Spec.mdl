@@ -1,0 +1,44 @@
+---
+name: WasmEquality.Spec
+---
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## Blocks
+
+```mdl
+api A-1: the wasm back end
+  signatures: Wasm.compile : (Text -> {Throw Text | e} Option Sexp) -> (Text -> {Throw Text | e} Option Sexp) -> Text -> Text -> {Throw Text | e} List Int
+```
+
+```mdl
+law L-1: a comparison on Int or Bool compiles as before, with no added function
+  theorem: WasmEquality.Spec.scalarAddsNothing
+  evidence: proof
+```
+
+```mdl
+req R-1: == on a constructed value whose type is known compiles
+  by: WasmEquality.Spec.optionEquality | WasmEquality.Spec.constructorAgainstNullary | WasmEquality.Spec.userTypeParameter
+```
+
+```mdl
+req R-2: != on a constructed value compiles as the negation of ==
+  by: WasmEquality.Spec.optionInequality
+```
+
+```mdl
+req R-3: each instantiated type gets one function, shared by every comparison and by its own recursion
+  by: WasmEquality.Spec.oneFunctionPerType | WasmEquality.Spec.nestedTypeTwoFunctions | WasmEquality.Spec.recursiveTypeOneFunction
+```
+
+```mdl
+req R-4: order on data, a type with a type variable left in it, and a function field stay refused
+  by: WasmEquality.Spec.orderRefused | WasmEquality.Spec.variableRefused | WasmEquality.Spec.functionFieldRefused
+```

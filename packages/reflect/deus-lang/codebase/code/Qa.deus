@@ -2,7 +2,7 @@
 @[ext "org.dxos.deus.qa@1.0"]
 def Qa.check (b : Block) : {MdlHost} List Text :=
   let id := if Text.isEmpty b.blockId then "qa" else b.blockId
-  let steps := items (getOr (List.lookup "steps" b.props) "")
+  let steps := Qa.items (getOr (List.lookup "steps" b.props) "")
   let places := mapIndexed (fun i fields => (id ++ "." ++ toText (i + 1), fields)) steps
   let problems := concatMap (fun p => stepProblems (fst p) (snd p)) places
   match List.lookup "handler" b.props with
@@ -96,13 +96,13 @@ def Qa.stepProblems (place : Text) (fields : List (Text, Text)) : List Text :=
     ["do", "expect"]
   let badSend :=
     match List.lookup "send" fields with
-    | Option.some send => if isNone (request send) then [place ++ ": send: " ++ send ++ " is not VERB /path [payload]"] else []
+    | Option.some send => if isNone (Qa.request send) then [place ++ ": send: " ++ send ++ " is not VERB /path [payload]"] else []
     | Option.none => []
   missing ++ badSend
 
 /-- Source for one step the agent can run: `(label, actor, request, judge)`. -/
 def Qa.stepSource (place : Text) (fields : List (Text, Text)) : Option Text :=
-  match Option.bind (List.lookup "send" fields) request with
+  match Option.bind (List.lookup "send" fields) Qa.request with
   | Option.none => Option.none
   | Option.some req =>
       let label := place ++ " (" ++ getOr (List.lookup "do" fields) "" ++ "; expect: " ++
