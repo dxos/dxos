@@ -4,6 +4,7 @@ ability Actors @"urn:deus:web:Actors" where
 ability Alarm @"urn:deus:web:Alarm" where
   set : Int -> Unit
 
+-- Comments written before a statement or an arm; they become metadata, never Core (D66).
 structure Arm where
   pats : List Pat
   body : Expr
@@ -26,6 +27,17 @@ structure Binder where
   binder : Text
   annot : Option Ty
 
+/-
+  `.mdl` documents (D46).
+
+  - DEUS code lives in ```deus fences. `deusSource` blanks the lines outside fences rather than
+    removing them, so positions in errors point into the document.
+  - Typed blocks live in ```mdl fences: a header `<type> [<id>][: <title>]`, then `key: value`
+    lines. `parse` reads them, the frontmatter and the Extensions table (term → URI) into data.
+  - An extension is a DEUS function `Block -> {MdlHost} List Text` published with
+    `@[ext "<uri>"]`; `deus mdl` runs every block through the extension its term names. The empty
+    list means the block holds; otherwise each text is one problem.
+-/
 structure Block @"urn:deus:mdl:Block" where
   blockType : Text
   blockId : Text
@@ -61,7 +73,9 @@ inductive Decl where
   | ns (name : Text)
   | endNs (name : Option Text)
   | openNs (names : List Text)
+  | comment (text : Text)
 
+-- Runs a program with arguments: (exit code, stdout, stderr); 127 if it cannot start.
 ability Defect @"#Defect" where
   raise : Text -> a
 
@@ -72,6 +86,16 @@ structure Doc @"urn:deus:mdl:Doc" where
   terms : List (Text, Text)
   blocks : List Block
 
+/-
+  Resolver: declarations to Core, then to content-addressed objects.
+
+  1. Types and abilities are hashed first. They refer to other types by IRI, never by hash,
+     so their hashes need no ordering (docs/DECISIONS.md D6).
+  2. Bodies are desugared to Core. A reference to a definition in the same batch is a
+     placeholder `(ref "@Fully.Qualified")`; one to the codebase is `(ref "<hash>")`.
+  3. Terms are grouped into strongly connected components and hashed dependencies-first;
+     a recursive group is hashed as one cycle (Unison's scheme, D5).
+-/
 inductive Entry where
   | term (hash : Text)
   | ctor (type : Text) (tag : Int) (arity : Int)
@@ -112,6 +136,7 @@ inductive Expr where
   | record (base : Option Expr) (fields : List (Text, Expr)) (pos : Pos)
   | ann (e : Expr) (type : Ty)
   | proj (e : Expr) (field : Text) (pos : Pos)
+  | note (text : Text) (e : Expr)
 
 structure Failure where
   reason : Text
@@ -149,14 +174,28 @@ ability IO @"#IO" where
   appendFile : Text -> Text -> Unit
   exec : Text -> List Text -> (Int, (Text, Text))
 
+/-
+  Builtins: the types, abilities and primitives the kernel implements.
+
+  An IRI that starts with `#` is a builtin identity: the kernel constructs and matches these
+  values itself (src/kernel/machine.ts), so their constructor order is fixed. Everything else
+  in DEUS is ordinary source.
+-/
 inductive Int @"#Int" where
 
+/-
+  Batch compilation: parsed files plus a base namespace to hashed objects and new names.
+-/
 structure Item where
   decl : Decl
   fqn : Text
   declScope : Scope
   path : Text
+  lead : Text
 
+/-
+  JSON output, for agents driving the CLI with `--json`.
+-/
 inductive Json where
   | null
   | bool (value : Bool)
@@ -165,6 +204,10 @@ inductive Json where
   | arr (items : List Json)
   | obj (fields : List (Text, Json))
 
+/-
+  Lexer: source text to tokens. Each token records its column and whether it starts a line,
+  which is all the parser's offside rule needs.
+-/
 inductive Kind where
   | ident
   | dot
@@ -175,7 +218,20 @@ inductive Kind where
   | kw
   | doc
   | eof
+  | comment
 
+/-
+  Projects (P1, D49): a codebase is one project, named globally by an IRI whose authority and
+  leading path say who owns it (`https://dxos.org/deus/std`). Its dependencies are pinned
+  releases of other projects (a causal hash), mounted under `lib.<name>` as in UCM, with their
+  objects copied into this store (identical hashes deduplicate).
+
+  A project's subgraph is inferred, not tagged: the definitions its own names reach, minus those
+  its libraries reach. A hash two projects share therefore belongs to the library that provides
+  it. A type whose IRI lies under a library's IRI may be minted only by that library.
+
+    project   (project (iri "<iri>") (lib "<name>" "<iri>" "<causal>")…)
+-/
 structure Lib @"urn:deus:project:Lib" where
   libName : Text
   libIri : Text
@@ -185,9 +241,23 @@ inductive List a @"#List" where
   | nil
   | cons (head : a) (tail : List a)
 
+/-
+  Observability as abilities (D31): code logs, opens spans and records metrics through effects
+  in its row, and a handler chooses where they go.
+
+  - `Observe.collect` keeps events in a list, stamped by a logical clock, so tests can assert on
+    them deterministically.
+  - `Observe.ndjson` prints one JSON object per event to stderr.
+  - `Observe.otlp` appends OpenTelemetry JSON to `traces.jsonl`, `logs.jsonl` and
+    `metrics.jsonl`, one export request per line (the collector's `otlpjsonfile` format). Each
+    event is written when it happens, so telemetry before a defect survives.
+-/
 ability Log where
   emit : Text -> Text -> List (Text, Text) -> Unit
 
+/-
+  Map: an AVL tree ordered by the structural `compare`.
+-/
 inductive Map k v where
   | tip
   | node (height : Int) (left : Map k v) (key : k) (value : v) (right : Map k v)
@@ -224,10 +294,18 @@ structure Pair a b @"#Pair" where
   fst : a
   snd : b
 
+/-
+  Parser: tokens to declarations, with Lean's offside rule.
+
+  `stop` is the offside column: a token that starts a line at or left of it ends the current
+  expression. A body that starts on a new line is a block whose statements share a column.
+-/
 structure Parser where
   toks : Ref (List Token)
   stop : Ref Int
+  notes : Ref (List Token)
 
+-- A row as a type argument, for a type with a row parameter: `Box {IO | r}`.
 inductive Pat where
   | wild
   | id (name : Text) (args : List Pat) (pos : Pos)
@@ -241,10 +319,19 @@ inductive Pat where
   | unit
   | as (name : Text) (pat : Pat)
 
+/-
+  Surface syntax tree produced by the parser and consumed by the resolver.
+  Constructor names avoid keywords (`let`, `if`, `match`…), hence `letPat`, `ite`, `matchOn`.
+-/
 structure Pos where
   atLine : Int
   atCol : Int
 
+/-
+  Printer: Core back to DEUS source, as Unison's `view` does. Dependencies print under their
+  current names (so a rename shows up everywhere at once); locals print under the author's
+  names, kept as metadata in binder order (see `Resolve.strip`).
+-/
 structure Printer where
   display : Map Text Text
   fullNames : Map Text Text
@@ -267,15 +354,60 @@ structure Prover where
   lemmaRules : Ref (List Rule)
   assumptions : Ref (List Text)
 
+/-
+  Deterministic simulation: the abilities a program uses, implemented in memory.
+
+  Tests run under `Sim.run` by default: `IO` reads and writes an in-memory file system, time is
+  a counter, output is captured, and `Random` is seeded. The same seed gives the same run, so a
+  result can be cached by the hash of what ran. A test marked `@[integration]` runs against the
+  real host instead (`deus test --integration`), and its result is never cached.
+-/
 ability Random where
   nextInt : Int -> Int
 
 inductive Ref a @"#Ref" where
 
+/-
+  The outside world as pinned data (P2, P5; D47).
+
+  - A `Requirement` names an artifact in a `Registry` and the SHA-256 its bytes must have, as a
+    Nix fixed-output derivation does. Requirements are definitions, so the codebase is the
+    lockfile: changing a version or a hash changes the hash of everything that uses it.
+  - `Fetch` gives a requirement's local path; a function that needs a binary has it in its row.
+    `External.fetching` downloads, verifies and caches under `<cache>/<sha256>`, and refuses a
+    mismatch; `External.simulateFetch` answers from memory for deterministic tests.
+  - A `Container` is an image pinned by digest plus how to run it; `Containers` starts and stops
+    one. `External.docker` shells out to the host's runtime; `External.simulateContainers`
+    records what would run.
+  - `requirement` and `container` MDL blocks are extensions defined here; both lower to the data
+    above and check it.
+-/
 structure Registry @"urn:deus:external:Registry" where
   registryName : Text
   urlTemplate : Text
 
+/-
+  Replication through an object store (P3, D50).
+
+  A remote holds immutable bundles under `bundles/<level>-<sha256>`. A bundle is one canonical
+  S-expression: branch claims, then objects and metadata, each sorted by hash:
+
+    (bundle (branch "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+
+  - `push` uploads one level-0 bundle with the objects the remote lacks and a claim for the
+    branch head. Names are content hashes, so writes never conflict and nothing is overwritten.
+  - `pull` imports bundles not seen before and sets the tracking branch `<remote>.<branch>` to the
+    claimed heads that no other claim descends from. Two concurrent pushes leave two heads,
+    `<remote>.<branch>` and `<remote>.<branch>.2`, to merge as local branches are.
+  - `compact` collects history into strata (sedimentree): a causal node whose hash starts with `k`
+    zeros closes a level-k stratum, which holds what that node reaches and no earlier boundary
+    does. Boundaries come from hashes and bundles are canonical, so clients compacting the same
+    history write byte-identical bundles. A smaller bundle is deleted once compacted bundles hold
+    all its objects; claims that are still heads move to a claims-only bundle first.
+
+  Locally, `remotes/<name>/url` names the remote, and `remotes/<name>/seen/<bundle>` lists a seen
+  bundle's claims and hashes, so a pull reads each bundle once.
+-/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
   get : Text -> Option Text
@@ -319,6 +451,11 @@ structure Seen @"urn:deus:replicate:Seen" where
   claims : List (Text, Text)
   hashes : List Text
 
+/-
+  Canonical S-expressions: the format of Core terms, codebase objects and images.
+  The printer must agree byte-for-byte with src/kernel/sexp.ts, because hashes are taken
+  over this text.
+-/
 inductive Sexp where
   | int (value : Int)
   | sym (name : Text)
@@ -333,6 +470,35 @@ ability Storage @"urn:deus:web:Storage" where
 ability Stuck where
   stuck : Text -> a
 
+/-
+  The prover: Lean-style tactic proofs over DEUS definitions.
+
+  A theorem's proposition is a `Bool` expression over its binders; `P -> Q` is `implies P Q`.
+  Proving it means showing it evaluates to `true` for every value of the binders.
+
+  Trusted base (what a "proved" verdict relies on):
+
+  - Symbolic evaluation of Core. A definition is unfolded only if it is pure (no abilities,
+    no mutable or reflective primitives) and every recursive call is on a strict subterm of a
+    matched parameter (structural recursion), so the equations used hold for all inputs.
+    A `match` whose scrutinee is not yet a constructor blocks the unfolding instead of guessing.
+  - Structural induction over finite data (DEUS values are finite).
+  - Case splits on `Bool` conditions (excluded middle for terminating computations).
+  - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
+    order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
+  - Rewriting with hypotheses and with lemmas that are themselves proved. A lemma that is
+    only tested downgrades the verdict and says so.
+
+  Tactics (applied to every open goal, separated by `;` or `<;>`):
+
+    intro              move `P ->` hypotheses into the context (also done implicitly)
+    induction x        structural induction on a binder of an inductive type
+    cases x            case analysis on a binder
+    simp [l₁, …]       evaluate and rewrite with hypotheses and the given lemmas
+    split              case split on the first undecided `if` condition
+    auto [l₁, …]       simp, then split / case on stuck variables, recursively (bounded)
+    rfl, decide        as before: closed evaluation, exhaustive enumeration
+-/
 inductive Sym where
   | int (value : Int)
   | text (value : Text)
@@ -348,11 +514,29 @@ inductive Sym where
   | clo (env : List Sym) (body : Sexp)
   | app (f : Sym) (args : List Sym)
 
+-- The argument of a row parameter (D55): `Box {IO | r}`.
 inductive TRow where
   | empty
   | extend (label : TType) (rest : TRow)
   | var (id : Int)
 
+/-
+  Types: Hindley–Milner inference with row-polymorphic ability sets (Leijen's scoped
+  labels, as in Koka), over resolved Core.
+
+  - `a -> {E | r} b`: a function whose call may perform the abilities in its row. Rows are
+    inferred; an arrow written without braces in a signature has a fresh row (it constrains no
+    effects), and a written row such as `{IO, Throw Text}` is closed.
+  - A handler removes the ability it handles from the row of its body; anything else flows
+    out. So a `Throw e` the caller does not handle stays in the caller's type: errors are
+    checked (D14). Defects are not in types.
+  - Top-level definitions are generalized; locals are monomorphic. A recursive group is
+    inferred together.
+  - A type parameter used as a row inside a field (`run : Unit -> {r} Int`) is a row parameter
+    (D55): the type is applied to a row, `Box {IO | r}`, and the field's effects are the row's.
+    Field arrows are closed, and one written without braces is pure, so a function stored in
+    data keeps its effects.
+-/
 inductive TType where
   | con (iri : Text) (args : List TType)
   | fn (from : TType) (row : TRow) (to : TType)
@@ -371,6 +555,16 @@ structure Task @"urn:deus:task:Task" where
   links : List Attachment
   comments : List Comment
 
+/-
+  Tasks (D59): issues kept in the codebase, attached to the definitions and changes they are
+  about, as Linear or GitHub issues are attached to files and commits.
+
+  A task is a hashed object in the `tasks` layer, named by a short id. Every history node points
+  at a tasks snapshot (id -> task hash) beside its namespace snapshot, so tasks branch, merge
+  and replicate with the code: a task closed on a fix branch is closed where the branch merges.
+  A task links definitions by name, with the hash each had when linked, and changes by causal
+  hash. Its own history, and that of what it links, is read from the branch's history.
+-/
 inductive TaskState @"urn:deus:task:State" where
   | todo
   | doing
@@ -382,6 +576,7 @@ inductive Text @"#Text" where
 ability Throw e where
   throw : e -> a
 
+-- An ordinary comment, `-- …` or `/- … -/`; the parser keeps it beside the tokens (D66).
 structure Token where
   kind : Kind
   value : Text
@@ -409,6 +604,20 @@ structure Unifier where
 inductive Unit @"#Unit" where
   | unit
 
+/-
+  Tests and theorems.
+
+  A test is a `Bool` expression. A theorem is a proposition over typed binders plus the
+  evidence its author claims (docs/DECISIONS.md D13):
+
+    sorry       stated, not checked
+    by rfl      no binders; the proposition evaluates to `true`
+    by decide   every value of finite binder types is checked
+    by test n   n generated cases pass (seeded by the theorem's hash, so reruns are identical)
+
+  Results are cached under the hash of what was checked: unchanged code is never rechecked.
+  A defect inside a test or a theorem is caught at this boundary and reported as a failure.
+-/
 inductive Verdict where
   | pass (evidence : Text) (cases : Int)
   | fail (reason : Text)
@@ -450,6 +659,12 @@ def ge : a -> a -> Bool := prim "ge"
 
 def gt : a -> a -> Bool := prim "gt"
 
+/-
+  Prelude: lists, options, results, maps and text helpers.
+
+  There are no type classes yet, so equality and ordering are the structural primitives
+  `eq` and `compare` (see docs/DECISIONS.md D10).
+-/
 def id (x : a) : a := x
 
 /-- `a -> b` in a theorem's statement. -/

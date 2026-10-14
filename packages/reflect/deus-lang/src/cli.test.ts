@@ -668,6 +668,56 @@ describe('deus CLI', () => {
     },
   );
 
+  test('keeps ordinary comments as metadata through view and export', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'comments')];
+    deus('init', '--empty', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    const source = [
+      '-- Shapes measured in whole units.',
+      '',
+      '-- Squares only, for now.',
+      'def area (side : Int) : Int :=',
+      '  -- Negative sides are measured as positive.',
+      '  let s := if side < 0 then 0 - side else side',
+      '  match s with',
+      '  -- A point has no area.',
+      '  | 0 => 0',
+      '  | n => n * n',
+      '',
+      'def plain (side : Int) : Int := side * side',
+    ].join('\n');
+    deus('add', file('comments.deus', source), ...c);
+    // Comments are metadata: the definition hashes as it does without them.
+    const bare = ['--codebase', join(scratch, 'comments-bare')];
+    deus('init', '--empty', ...bare);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...bare);
+    const uncommented = source
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('--'))
+      .join('\n');
+    deus('add', file('uncommented.deus', uncommented), ...bare);
+    expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
+    const viewed = deus('view', 'area', ...c).stdout;
+    expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
+    expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
+    expect(viewed).toContain('-- A point has no area.');
+
+    // An export restored into an empty codebase exports the same text again.
+    const first = join(scratch, 'comments-export');
+    deus('export', first, ...c);
+    const restored = ['--codebase', join(scratch, 'comments-restored')];
+    deus('init', '--empty', ...restored);
+    expect(deus('add', join(first, 'code'), ...restored).code).toBe(0);
+    const second = join(scratch, 'comments-export-2');
+    deus('export', second, ...restored);
+    const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
+    expect(text(second)).toBe(text(first));
+    expect(text(first)).toContain('-- A point has no area.');
+    const hashOf = (args: string[]) =>
+      JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
+    expect(hashOf(restored)).toBe(hashOf(c));
+  });
+
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'explore')];
     deus('init', '--empty', ...c);

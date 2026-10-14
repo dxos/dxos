@@ -13,6 +13,8 @@ inductive Kind where
   | kw
   | doc
   | eof
+  -- An ordinary comment, `-- …` or `/- … -/`; the parser keeps it beside the tokens (D66).
+  | comment
 
 structure Token where
   kind : Kind
@@ -104,7 +106,9 @@ def lex (source : Text) : {Throw Text} List Token :=
       let col := i - lineStart
       if c == '\n' then go (i + 1) (line + 1) (i + 1) true acc
       else if c == ' ' || c == '\t' || c == '\r' then go (i + 1) line lineStart bol acc
-      else if c == '-' && at (i + 1) == '-' then go (lineEnd i) line lineStart bol acc
+      else if c == '-' && at (i + 1) == '-' then
+        let j := lineEnd i
+        go j line lineStart bol (Token.mk Kind.comment (Text.slice source i j) line col bol :: acc)
       else if c == '/' && at (i + 1) == '-' then
         let isDoc := at (i + 2) == '-' && at (i + 3) != '/'
         match commentEnd i 0 line lineStart with
@@ -112,7 +116,7 @@ def lex (source : Text) : {Throw Text} List Token :=
           if isDoc then
             let body := Text.trim (Text.slice source (i + 3) (j - 2))
             go j line2 lineStart2 bol (Token.mk Kind.doc body line col bol :: acc)
-          else go j line2 lineStart2 bol acc
+          else go j line2 lineStart2 bol (Token.mk Kind.comment (Text.slice source i j) line col bol :: acc)
       else if c == '"' then
         match stringEnd (i + 1) [] line lineStart with
         | (value, j, line2, lineStart2) => go j line2 lineStart2 false (tok Kind.text value i)

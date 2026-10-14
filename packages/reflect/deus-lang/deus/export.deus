@@ -53,8 +53,7 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
   let sources := List.filterMap (fun pair =>
     match pair with
     | (name, e) =>
-      let text := Cli.viewEntryWith printer dir ns name e false
-      let body := Text.join "\n" (List.filter (fun l => not (Text.startsWith "-- " l)) (Text.lines text))
+      let body := snd (Cli.viewParts printer dir ns name e false)
       if Text.isEmpty (Text.trim body) then none else some (topOf name, body)) entries
   let files := List.dedup (List.sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")

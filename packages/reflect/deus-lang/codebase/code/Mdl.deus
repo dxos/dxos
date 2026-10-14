@@ -89,6 +89,7 @@ def Mdl.keyValue (line : Text) : Option (Text, Text) :=
 def Mdl.parse (doc : Text) : Doc :=
   match frontmatter (mapIndexed (fun i l => (i + 1, l)) (lines doc)) with
   | (front, lines) =>
+      -- fence: none outside; some (start, isMdl, lines reversed) inside.
       let rec go rest section fence terms blocks :=
         match rest with
         | [] => Doc.mk front (reverse terms) (reverse blocks)

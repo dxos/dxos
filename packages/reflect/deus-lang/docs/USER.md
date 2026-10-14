@@ -220,3 +220,7 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - i instructed to be autonomous yet a session is blocking on me -- fix this systemically
+
+---
+
+- also remember about timeline and decision log

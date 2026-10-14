@@ -48,6 +48,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     match Project.read dir with
     | Option.some p => p.projectIri
     | Option.none => "codebase"
+  -- Each definition's object is read once: its dependencies, and dependents inverted from them.
   let depsOf := Map.fromList (List.map (fun pair =>
     let h := hash (snd pair)
     (h, getOr (Option.map Codebase.dependencies (readObject dir h)) [])) entries)
@@ -74,11 +75,13 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))
+  -- A page per change the app links to: recent history, and every change in a task's history.
   IO.mkdirp (out ++ "/change")
   let linked := concatMap (fun t => List.map fst (historyOf t)) tasks
   let shown := Set.toList (Set.fromList (List.map fst (history dir branch 30) ++ linked))
   forEach shown (fun c =>
     let path := out ++ "/change/" ++ c ++ ".json"
+    -- A change never changes, so a page written once stays right.
     if IO.exists path then () else IO.writeFile path (Json.render (changePage dir c)))
   forEach entries (fun pair =>
     match pair with
@@ -89,6 +92,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
           | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
           | Result.err message => "-- " ++ message
         let deps := List.filter (fun d => Map.contains d index && d != h) (getOr (Map.lookup h depsOf) [])
+        -- References in the source print under their display names; those names link to the definitions.
         let links := Map.fromList (List.map (fun d => (nameFor printer d, d)) deps)
         let users := dedup (sort (getOr (Map.lookup h dependents) []))
         let named := fun hs => Json.arr (List.map (fun x => refJson (getOr (Map.lookup x index) (short x)) x) hs)
@@ -107,6 +111,20 @@ def Explorer.lastOf (name : Text) : Text := getOr (last? (Text.split name ".")) 
 
 def Explorer.refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.str name), ("hash", Json.str h)]
 
+/-
+  The codebase explorer (D58): a single-page app over JSON written from a codebase, in the spirit
+  of Unison Share. Definitions and tasks open as cards in one workspace, so several can be read
+  at once, and a task board shows every task by state. The app is static files, so the same
+  output is served locally (`deus explore`, by the native web runtime and `platform/site.deus`)
+  and hosted from the bucket that holds the codebase's bundles (`deus explore --publish <remote>`).
+
+    index.html, app.js, app.css   the app (`platform/explorer/`), copied as they are
+    meta.json                     the project, branches, counts and recent history
+    names.json                    every visible name: name, kind, hash
+    def/<hash>.json               a definition: names, signature, highlighted source with its
+                                  references linked, dependencies, dependents, verdict, tasks
+    tasks.json                    every task, with its links resolved and its history
+-/
 def Explorer.signature (meta : Option Sexp) : Text := getOr (Option.map (fun s => displayScheme s) (metaField meta "scheme")) ""
 
 def Explorer.taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, Causal)) (t : Task) : {IO, Throw Text} Json :=

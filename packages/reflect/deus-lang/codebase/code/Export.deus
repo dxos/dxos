@@ -1,3 +1,18 @@
+/-
+  Exporting a codebase as text (D64), so a git repository can back it up and review its changes.
+  The export holds the layers that cannot be recomputed, and leaves out the cache and artifacts:
+
+    code/<Namespace>.deus   source of every definition, test, theorem, type and ability, one file
+                            per top-level namespace (`_root.deus` for names without one). It is
+                            what `deus view` prints, which compiles back to the same hashes.
+    tasks.sexp              every task object, one per line, for `deus task import`
+    TASKS.md                the tasks to read: open first, with their links and comments
+    HISTORY.md              the branch's changes, newest first, with who made them
+    README.md               what the export is and how to restore it
+
+  `deus add <dir>/code` and `deus task import <dir>/tasks.sexp` restore the code and tasks in a
+  fresh codebase; the history is a record, kept by git, not replayed.
+-/
 /-- Kinds written as source; constructors, operations and accessors come with their declarations. -/
 def Export.exported (e : Entry) : Bool :=
   match e with
@@ -41,8 +56,7 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
   let sources := filterMap (fun pair =>
     match pair with
     | (name, e) =>
-        let text := viewEntryWith printer dir ns name e false
-        let body := join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
+        let body := snd (viewParts printer dir ns name e false)
         if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
   let files := dedup (sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")

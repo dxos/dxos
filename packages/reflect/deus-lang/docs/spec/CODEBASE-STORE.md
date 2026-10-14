@@ -126,15 +126,17 @@ signatures as written, binder names, inferred types. The file is `(meta field �
 plus `\n`. Unlike objects, metadata can be rewritten (an `update` copies a definition's metadata to its
 new hash). The fields:
 
-| Field    | Form                           | On                     | Meaning                                                        |
-| -------- | ------------------------------ | ---------------------- | -------------------------------------------------------------- |
-| `sig`    | `(sig type)`                   | terms                  | the signature the author wrote                                 |
-| `doc`    | `(doc "text")`                 | any definition         | the `/-- … -/` comment                                         |
-| `locals` | `(locals "x" …)`               | terms, tests, theorems | binder names, in the order the printer draws them              |
-| `attrs`  | `(attrs ("attr" "value" …) …)` | terms                  | attributes such as `@[ext "<uri>"]` and `@[integration]`       |
-| `scheme` | `(scheme type)`                | terms, tests, theorems | the inferred type                                              |
-| `params` | `(params "a" …)`               | types, abilities       | the author's parameter names                                   |
-| `fields` | `(fields (c "name" …) …)`      | types                  | constructor field names, one `c` per constructor, `""` unnamed |
+| Field    | Form                           | On                     | Meaning                                                                                                               |
+| -------- | ------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `sig`    | `(sig type)`                   | terms                  | the signature the author wrote                                                                                        |
+| `doc`    | `(doc "text")`                 | any definition         | the `/-- … -/` comment                                                                                                |
+| `locals` | `(locals "x" …)`               | terms, tests, theorems | binder names, in the order the printer draws them                                                                     |
+| `attrs`  | `(attrs ("attr" "value" …) …)` | terms                  | attributes such as `@[ext "<uri>"]` and `@[integration]`                                                              |
+| `scheme` | `(scheme type)`                | terms, tests, theorems | the inferred type                                                                                                     |
+| `params` | `(params "a" …)`               | types, abilities       | the author's parameter names                                                                                          |
+| `fields` | `(fields (c "name" …) …)`      | types                  | constructor field names, one `c` per constructor, `""` unnamed                                                        |
+| `lead`   | `(lead "text")`                | any definition         | the ordinary comments written before the declaration (D66)                                                            |
+| `notes`  | `(notes (n i "text") …)`       | terms, tests           | comments before a statement or an arm; `i` is the pre-order index of that node among the list nodes of the Core (D66) |
 
 Sample (`meta/595ca8…`, the term above):
 

@@ -70,6 +70,24 @@ def Columnar.encode (forms : List Sexp) : Text :=
     "\n"
     [Columnar.header, Text.concat (reverse (Ref.get shape)), dictionary symbols, dictionary strings, Text.concat (reverse (Ref.get hashes)), numbers symbolRefs, numbers stringRefs, numbers hashRefs, numbers ints]
 
+/-
+  A columnar text encoding for s-expressions (D60), used for replication bundles.
+
+  A bundle is mostly the same few symbols, a few thousand distinct strings and under a thousand
+  distinct hashes, repeated: the toolchain's bundle has 11,193 hash occurrences of 925 hashes.
+  The encoding splits a form into columns, so each value is written once and the rest are small
+  references, and so that like values sit together for the compressor:
+
+    DEUSCOL1
+    <shape>     one character per token: ( ) s(ymbol) t(ext) h(ash) i(nteger)
+    <symbols>   the distinct symbols, as one s-expression list of strings
+    <strings>   the distinct strings that are not hashes, likewise
+    <hashes>    the distinct 64-hex-digit strings, concatenated
+    <refs>      four lines of space-separated numbers: symbol, string and hash indexes, then integers
+
+  Dictionaries are numbered in order of first use, so encoding is deterministic. Measured on the
+  toolchain's bundle (1.67 MB as text), gzip gives 358 KB on the text and 174 KB on the columns.
+-/
 def Columnar.header : Text := "DEUSCOL1"
 
 /-- The index of `x` in a dictionary, adding it at the end when new. -/

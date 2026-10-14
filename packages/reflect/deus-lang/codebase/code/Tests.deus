@@ -123,6 +123,10 @@ test Tests.parserRejectsIndentedDecl := not (parses "  def f := 1\n")
 
 test Tests.parserTypeApplicationField := parses "inductive W where\n  | wrap (List Int)\n  | pair (x y : Int)\n"
 
+/-
+  Tests and theorems about the toolchain itself, run by `deus test` and `deus check` on a
+  codebase built from `deus/` (src/cli.test.ts does that in CI).
+-/
 def Tests.parses (source : Text) : Bool :=
   match try (fun _ => Parser.parse source) with
   | Result.ok _ => true

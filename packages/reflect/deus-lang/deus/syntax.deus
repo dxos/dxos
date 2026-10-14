@@ -54,6 +54,8 @@ inductive Expr where
   | record (base : Option Expr) (fields : List (Text, Expr)) (pos : Pos)
   | ann (e : Expr) (type : Ty)
   | proj (e : Expr) (field : Text) (pos : Pos)
+  -- Comments written before a statement or an arm; they become metadata, never Core (D66).
+  | note (text : Text) (e : Expr)
 
 /-- One `| p, q => body` arm. -/
 structure Arm where
@@ -86,3 +88,5 @@ inductive Decl where
   | ns (name : Text)
   | endNs (name : Option Text)
   | openNs (names : List Text)
+  -- Comments before a declaration, kept as the next declaration's `lead` metadata (D66).
+  | comment (text : Text)

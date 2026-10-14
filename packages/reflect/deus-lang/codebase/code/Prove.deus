@@ -123,11 +123,13 @@ def Prove.decreasing (self : Text) (body : Sexp) (arity : Int) : Option (List In
     | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) => getOr (get? env i) Origin.other
     | _ => Origin.other
   let rec patBinds pat env self1 inside :=
+    -- A variable binding the scrutinee itself has its origin; under a constructor it is a strict part.
     match pat with
     | Sexp.list (Sexp.sym "pvar" :: []) => self1 :: env
     | Sexp.list (Sexp.sym "pas" :: p :: []) => patBinds p (self1 :: env) self1 inside
     | Sexp.list (Sexp.sym "pcon" :: _ :: _ :: subs) => foldl (fun e p => patBinds p e inside inside) env subs
     | _ => env
+  -- Collects, for each recursive call, the set of positions where it decreases.
   let rec walk s env :=
     match s with
     | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: args) =>
@@ -223,14 +225,19 @@ def Prove.evalCore (pr : Prover) (t : Sexp) (env : List Sym) : {Stuck, IO} Sym :
 /-- Facts a true hypothesis yields, as rules. A false one closes the goal (returned as `none`). -/
 def Prove.factsOf (h : Sym) : Option (List Rule) := if isTrue h then Option.some [] else if isFalse h then Option.none else
   match h with
-  | Sym.ite a b c => if isFalse c then Option.bind (Prove.factsOf a) (fun fa => Option.map (fun fb => fa ++ fb) (Prove.factsOf b)) else if isFalse b && isTrue c then negated a else Option.some [Rule.mk h trueSym []]
+  | Sym.ite a b c => if isFalse c then
+      -- a && b
+      Option.bind (Prove.factsOf a) (fun fa => Option.map (fun fb => fa ++ fb) (Prove.factsOf b))
+    else if isFalse b && isTrue c then negated a else Option.some [Rule.mk h trueSym []]
   | Sym.prim "implies" (a :: b :: []) =>
       let unwrap := fun c =>
         match c with
         | Sym.prim "eq" (l :: r :: []) => if isTrue l then r else if isTrue r then l else c
         | _ => c
       Option.some [Rule.mk (unwrap b) trueSym [unwrap a]]
-  | Sym.prim "eq" (l :: r :: []) => if isTrue l then Prove.factsOf r else if isTrue r then Prove.factsOf l else if isFalse l then negated r else if isFalse r then negated l else Option.some (Rule.mk h trueSym [] :: orient l r)
+  | Sym.prim "eq" (l :: r :: []) =>
+      -- `X = true` and `X = false` say what X is: use X's own facts.
+      if isTrue l then Prove.factsOf r else if isTrue r then Prove.factsOf l else if isFalse l then negated r else if isFalse r then negated l else Option.some (Rule.mk h trueSym [] :: orient l r)
   | Sym.prim "le" (a :: b :: []) => Option.some [Rule.mk h trueSym [], Rule.mk (Sym.prim "lt" [b, a]) falseSym []]
   | Sym.prim "lt" (a :: b :: []) => Option.some [Rule.mk h trueSym [], Rule.mk (Sym.prim "le" [b, a]) falseSym [], Rule.mk (Sym.prim "le" [a, b]) trueSym []]
   | _ => Option.some [Rule.mk h trueSym []]
@@ -281,6 +288,7 @@ def Prove.induct (pr : Prover) (g : Goal) (name : Text) (withIh : Bool) : {IO} O
       match constructors pr type with
       | Option.none => Option.none
       | Option.some (typeHash, ctors) =>
+          -- The induction predicate generalizes over the hypotheses that mention the variable.
           let mentioning := List.filter (fun h => Prove.mentions h name) g.hyps
           let others := List.filter (fun h => not (Prove.mentions h name)) g.hyps
           let predicate := List.foldr (fun h acc => Sym.prim "implies" [h, acc]) g.prop mentioning
@@ -322,6 +330,9 @@ def Prove.isArithmetic (name : Text) : Bool := name == "Int.add" || name == "Int
 
 def Prove.isFalse (s : Sym) : Bool := s == falseSym
 
+--
+-- Evaluation.
+--
 def Prove.isNeutral (s : Sym) : Bool :=
   match s with
   | Sym.int _ => false
@@ -335,8 +346,14 @@ def Prove.isNeutral (s : Sym) : Bool :=
 
 def Prove.isTrue (s : Sym) : Bool := s == trueSym
 
+--
+-- Arithmetic: linear normal form over Int (a commutative ring modulo 2³²).
+--
 def Prove.key (s : Sym) : Text := show s
 
+--
+-- Which definitions may be unfolded.
+--
 /-- Strips `n` leading lambdas: (arity, body). -/
 def Prove.lambdas (core : Sexp) : (Int, Sexp) :=
   match core with
@@ -400,6 +417,7 @@ def Prove.linear (s : Sym) : (Int, List (Sym, Int)) :=
 
 /-- Match a Core pattern against a symbolic value: bindings (innermost first), no, or unknown. -/
 def Prove.matchPat (pat : Sexp) (v : Sym) (binds : List Sym) : Option (Option (List Sym)) :=
+  -- Outer option: `none` when undecided. Inner: `none` when it definitely does not match.
   match pat with
   | Sexp.list (Sexp.sym "pany" :: []) => Option.some (Option.some binds)
   | Sexp.list (Sexp.sym "pvar" :: []) => Option.some (Option.some (v :: binds))
@@ -428,7 +446,9 @@ def Prove.negated (a : Sym) : Option (List Rule) := if isTrue a then Option.none
   match a with
   | Sym.prim "le" (x :: y :: []) => Option.some [Rule.mk a falseSym [], Rule.mk (Sym.prim "lt" [y, x]) trueSym [], Rule.mk (Sym.prim "le" [y, x]) trueSym []]
   | Sym.prim "lt" (x :: y :: []) => Option.some [Rule.mk a falseSym [], Rule.mk (Sym.prim "le" [y, x]) trueSym []]
-  | Sym.ite p q r => if isTrue q then Option.bind (Prove.negated p) (fun fp => Option.map (fun fq => fp ++ fq) (Prove.negated r)) else Option.some [Rule.mk a falseSym []]
+  | Sym.ite p q r =>
+      -- not (p || q) gives not p and not q.
+      if isTrue q then Option.bind (Prove.negated p) (fun fp => Option.map (fun fq => fp ++ fq) (Prove.negated r)) else Option.some [Rule.mk a falseSym []]
   | _ => Option.some [Rule.mk a falseSym []]
 
 /-- Re-reduces a symbolic value after a substitution or a rewrite. -/
@@ -469,6 +489,7 @@ def Prove.orient (l : Sym) (r : Sym) : List Rule :=
     | Sym.data _ _ [] => true
     | _ => false
   if isValue l && isValue r then [] else if isValue l then [Rule.mk r l []] else if isValue r then [Rule.mk l r []] else
+    -- As written, as Lean's `simp` uses an equation; a variable is never rewritten into a term containing it.
     match l with
     | Sym.fv x => if Prove.mentions r x then [] else [Rule.mk l r []]
     | _ => [Rule.mk l r []]
@@ -587,6 +608,7 @@ def Prove.rewrite (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {I
     | Sym.prim n args => Sym.prim n (List.map (fun x => Prove.rewrite pr rules x depth) args)
     | Sym.ite c y n =>
         let c2 := Prove.rewrite pr rules c depth
+        -- Inside a branch the condition's value is known.
         let yes := Prove.rewrite pr (getOr (factsOf c2) [] ++ rules) y depth
         let no := Prove.rewrite pr (getOr (negated c2) [] ++ rules) n depth
         Sym.ite c2 yes no
@@ -611,6 +633,9 @@ def Prove.rewrite (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {I
         | Option.none => tryRules rest
   tryRules rules
 
+--
+-- Goals and tactics.
+--
 /-- Rules from a goal's hypotheses and the lemmas in scope; `none` if the hypotheses contradict. -/
 def Prove.rulesOf (pr : Prover) (g : Goal) : Option (List Rule) := foldl
   (fun acc h => Option.bind acc (fun rs => Option.map (fun fs => fs ++ rs) (factsOf h)))
@@ -623,6 +648,7 @@ def Prove.simp (pr : Prover) (g : Goal) : {IO} List Goal :=
   match rulesOf pr g2 with
   | Option.none => []
   | Option.some rules =>
+      -- Re-simplify each hypothesis with the others (never itself, which would make it `true`).
       let hyps := mapIndexed (fun i h =>
         let others := filterMap
           (fun pair => if fst pair == i then Option.none else Option.some (snd pair))
@@ -701,11 +727,15 @@ def Prove.unfold (pr : Prover) (h : Text) (args : List Sym) : {IO} Sym :=
   | Option.some (arity, body) => if not (fuelLeft pr) then Sym.call h args else
       handle Prove.evalCore pr body (reverse args) with
       | Stuck.stuck x0 -> x1 =>
+          -- A total function distributes over an undecided `if` in its arguments.
           match liftIf args with
           | Option.some (c, yes, no) => Sym.ite c (Prove.unfold pr h yes) (Prove.unfold pr h no)
           | Option.none => Sym.call h args
   | Option.none => Sym.call h args
 
+--
+-- Rewriting.
+--
 /-- First-order matching of a rule side against a term; pattern variables bind consistently. -/
 def Prove.unify (pat : Sym) (s : Sym) (binds : Map Text Sym) : Option (Map Text Sym) :=
   match pat with

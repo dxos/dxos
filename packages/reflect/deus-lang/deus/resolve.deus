@@ -512,6 +512,7 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.record base fields pos => record ctx base fields pos locals
   | Expr.ann x _ => go x
   | Expr.proj x field pos => app (fieldAccessor ctx pos field) [go x]
+  | Expr.note text x => node "note" [s text, go x]
 
 /-- A handler clause: arguments in order, then the continuation, as Core's `on` expects. -/
 def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text} Sexp :=
@@ -544,8 +545,38 @@ def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text
 
 /-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
 def strip (form : Sexp) : (Sexp, List Text) :=
+  match stripNoted form with
+  | (core, names, _) => (core, names)
+
+/-- `strip`, also returning the comments it removed (D66). -/
+def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text)) :=
   match stripAcc form [] with
-  | (core, names) => (core, List.reverse names)
+  | (named, names) =>
+    match unnote named with
+    | (core, notes) => (core, List.reverse names, notes)
+
+/--
+  Removes `(note "text" e)` nodes. Each comment is returned with the pre-order index of `e` among
+  the list nodes of the result, the position `Notes.restore` puts it back at (D66).
+-/
+def unnote (form : Sexp) : (Sexp, List (Int, Text)) :=
+  let rec go x count acc :=
+    match x with
+    | Sexp.list [Sexp.sym "note", Sexp.str text, inner] =>
+      match acc with
+      | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) else go inner count ((count, text) :: acc)
+      | [] => go inner count [(count, text)]
+    | Sexp.list items =>
+      let rec each rest out c a :=
+        match rest with
+        | [] => (Sexp.list (List.reverse out), c, a)
+        | y :: more =>
+          match go y c a with
+          | (y2, c2, a2) => each more (y2 :: out) c2 a2
+      each items [] (count + 1) acc
+    | _ => (x, count, acc)
+  match go form 0 [] with
+  | (core, _, notes) => (core, List.reverse notes)
 
 def nameOf (x : Sexp) : Text :=
   match x with

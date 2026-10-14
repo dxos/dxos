@@ -116,6 +116,9 @@ def External.problemsOf (r : Result (List Text) a) : List Text :=
   | Result.ok _ => []
   | Result.err found => found
 
+--
+-- MDL blocks.
+--
 def External.prop (b : Block) (key : Text) : Text := getOr (List.lookup key b.props) ""
 
 def External.registries : List Registry := [npm, crates, github, External.url]

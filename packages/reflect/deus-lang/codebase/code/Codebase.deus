@@ -109,6 +109,9 @@ def Codebase.init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then
 
 def Codebase.isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
 
+--
+-- Layers.
+--
 /-- An object's layer, from its kind. -/
 def Codebase.layerOf (form : Sexp) : Text :=
   let kind := head form
@@ -154,6 +157,7 @@ def Codebase.merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
           let o := Map.lookup name oursNs
           let t := Map.lookup name theirsNs
           if o == t then state else if b == o then
+            -- Only theirs changed this name.
             let ns2 :=
               match t with
               | Option.some e => Map.insert name e ns
@@ -214,6 +218,9 @@ def Codebase.namesByHash (ns : Map Text Entry) : Map Text (List Text) := Map.fol
   Map.empty
   ns
 
+--
+-- Reading definitions.
+--
 /-- Names of every entry whose hash is `h` (aliases included). -/
 def Codebase.namesOf (ns : Map Text Entry) (h : Text) : List Text := List.map fst (List.filter (fun pair => hash (snd pair) == h) (Map.toList ns))
 
@@ -224,12 +231,39 @@ def Codebase.nsFromSexp (form : Sexp) : Map Text Entry := Map.fromList (List.map
   | name :: entry :: [] => (asText name, Entry.fromSexp entry)
   | _ => defect "bad namespace entry") (Sexp.args form))
 
+--
+-- Namespaces.
+--
 def Codebase.nsToSexp (ns : Map Text Entry) : Sexp := Sexp.node
   "ns"
   (List.map
     (fun pair => Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)])
     (Map.toList ns))
 
+/-
+  The codebase: a content-addressed store in a `.deus` directory (Unison's model).
+
+    objects/<h[0..2]>/<h>   every hashed object: types, abilities, terms, tests, theorems,
+                            namespace snapshots and causal history nodes
+    meta/<h>                metadata of an object (signature, doc, local names); not hashed
+    branches/<name>         the causal hash a branch points at
+    HEAD                    the current branch name
+    results/<h>             test and proof verdicts, keyed by the hash of what was checked
+    provenance/<causal>     who or what produced a change (an agent, a prompt digest)
+    tasks                   issues, as hashed objects beside the code (D59, `deus/tasks.deus`)
+    artifacts/<h>           built executables, by the hash of their inputs; local only
+    cache/                  re-computable data (fetched artifacts); never replicated
+
+  Every object belongs to a layer (P4, D48), a function of its kind: `code` (types, abilities,
+  terms), `tests`, `proofs` and `history` (snapshots, causal nodes). Hashed layers share
+  `objects/` because they share a policy (`spec` holds the identified blocks of `.mdl`
+  documents); the derived layers have their own directories, so a
+  policy (replicate, delete) is a directory. Code may depend only on code.
+
+  A namespace snapshot maps names to entries. A causal node records a snapshot, its
+  parents, a message and, once there are tasks, a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and
+  merging two branches is a three-way merge of their snapshots.
+-/
 /-- Objects read so far, per process; objects are immutable so the cache never goes stale. -/
 def Codebase.objectCache : MutMap Text Sexp := MutMap.new ()
 
@@ -288,6 +322,9 @@ def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
   forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
   forEach b.metas (fun pair => writeMeta dir (fst pair) (snd pair))
 
+--
+-- Branches.
+--
 def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && all (fun c => isAlpha c || isDigit c || c == 45 || c == 95 || c == 46) (utf8 name)
 
 def Codebase.writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")

@@ -13,6 +13,7 @@ def Parser.arms (p : Parser) : {Throw Text} List Arm :=
   let first := peek p
   let col := if first.bol then Option.some first.col else Option.none
   let rec go acc := if moreArms p col then
+    let note := notesBefore p (peek p).line
     skip p
     let rec pats ps := if is p "," then
       skip p
@@ -20,7 +21,7 @@ def Parser.arms (p : Parser) : {Throw Text} List Arm :=
     else reverse ps
     let ps := pats [patt p]
     expect p "=>"
-    go (Arm.mk ps (armBody p col) :: acc)
+    go (Arm.mk ps (noted note (armBody p col)) :: acc)
   else reverse acc
   let result := go []
   if List.isEmpty result then Parser.error p "expected '|'" else result
@@ -147,6 +148,7 @@ def Parser.binder (p : Parser) : {Throw Text} List Binder :=
 
 def Parser.binders (p : Parser) : {Throw Text} List Binder :=
   let rec go acc := if (peek p).kind == Kind.ident then go (Binder.mk (Parser.ident p) Option.none :: acc) else if is p "(" then go (reverse (Parser.binder p) ++ acc) else if is p "{" then
+    -- Implicit binders name type variables; they are erased.
     Parser.binder p
     go acc
   else reverse acc
@@ -157,6 +159,9 @@ def Parser.binop (op : Text) : Option (Int, Bool) := if op == "|>" then Option.s
 
 def Parser.block (p : Parser) (col : Int) : {Throw Text} Expr := withStop p col (fun _ => Parser.stmts p col)
 
+--
+-- Expressions.
+--
 /-- A body: a block when it starts on a new line, else one expression. -/
 def Parser.body (p : Parser) : {Throw Text} Expr :=
   let t := peek p
@@ -208,6 +213,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
       let name := Parser.ident p
       let bs := binders p
       expect p ":"
+      -- `P -> Q -> R`: hypotheses then the conclusion.
       let rec props acc := if is p "->" then
         skip p
         props (Parser.expr p :: acc)
@@ -238,6 +244,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
       expect p "where"
       let rec ctors acc := if is p "|" then
         skip p
+        -- Constructor names may be keywords (`true`, `prim`); qualified uses lex as identifiers.
         let ctorName := if (peek p).kind == Kind.kw then (Parser.next p).value else Parser.ident p
         let fields := withStop p 0 (fun _ => Parser.ctorFields p)
         ctors ((ctorName, fields) :: acc)
@@ -274,6 +281,15 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
       Decl.openNs (names [])
     else Parser.error p "expected a declaration"
 
+/-- A comment's lines with the indentation of its first line removed from the later ones. -/
+def Parser.dedent (t : Token) : Text :=
+  match lines t.value with
+  | [] => ""
+  | first :: rest => join "\n" (first :: List.map (fun l =>
+      let rec lead i := if i < t.col && i < Text.length l && code l i == 32 then lead (i + 1) else i
+      Text.drop (lead 0) l) rest)
+
+-- Comments not yet attached, in source order; `notesBefore` hands them to the next statement.
 def Parser.eofToken : Token := Token.mk Kind.eof "" 0 0 true
 
 def Parser.error (p : Parser) (message : Text) : {Throw Text} a := errorAt (peek p) message
@@ -287,8 +303,17 @@ def Parser.expect (p : Parser) (value : Text) : {Throw Text} Token := if is p va
 
 def Parser.expr (p : Parser) : {Throw Text} Expr := if is p "let" then Parser.stmts p (peek p).col else Parser.op p 0
 
+--
+-- Declarations.
+--
 def Parser.file (p : Parser) : {Throw Text} List Decl :=
-  let rec go acc := if (peek p).kind == Kind.eof then reverse acc else go (Parser.decl p :: acc)
+  let rec go acc :=
+    let t := peek p
+    let lead :=
+      match notesBefore p (if t.kind == Kind.eof then t.line + 1 else t.line) with
+      | Option.some text => [Decl.comment text]
+      | Option.none => []
+    if t.kind == Kind.eof then reverse (lead ++ acc) else go (Parser.decl p :: lead ++ acc)
   go []
 
 def Parser.funExpr (p : Parser) : {Throw Text} Expr :=
@@ -308,6 +333,7 @@ def Parser.handleExpr (p : Parser) : {Throw Text} Expr :=
   let first := peek p
   let col := if first.bol then Option.some first.col else Option.none
   let rec go ret ops := if moreArms p col then
+    let note := notesBefore p (peek p).line
     skip p
     if is p "return" then
       skip p
@@ -370,6 +396,7 @@ def Parser.kindName : Kind -> Text
 | Kind.kw => "kw"
 | Kind.doc => "doc"
 | Kind.eof => "eof"
+| Kind.comment => "comment"
 
 def Parser.matchExpr (p : Parser) : {Throw Text} Expr :=
   expect p "match"
@@ -399,6 +426,30 @@ def Parser.next (p : Parser) : Token :=
       Ref.set p.toks rest
       t
 
+def Parser.noted (note : Option Text) (e : Expr) : Expr :=
+  match note with
+  | Option.some text => Expr.note text e
+  | Option.none => e
+
+/-- The comments written before `line`, one per line, removed from the queue; none if there are none. -/
+def Parser.notesBefore (p : Parser) (line : Int) : Option Text :=
+  let rec split ts acc :=
+    match ts with
+    | t :: rest => if t.line < line then split rest (t :: acc) else (reverse acc, ts)
+    | [] => (reverse acc, [])
+  -- A blank line between two comments is kept, so separate paragraphs stay separate.
+  let rec join ts previousEnd acc :=
+    match ts with
+    | [] => Text.concat (reverse acc)
+    | t :: rest =>
+        let gap := if previousEnd < 0 then "" else if t.line > previousEnd + 1 then "\n\n" else "\n"
+        join rest (t.line + List.length (lines t.value) - 1) (dedent t :: gap :: acc)
+  match split (Ref.get p.notes) [] with
+  | ([], _) => Option.none
+  | (taken, rest) =>
+      Ref.set p.notes rest
+      Option.some (join taken (-1) [])
+
 def Parser.offside (p : Parser) : Bool := offsideTok p (peek p)
 
 def Parser.offsideTok (p : Parser) (t : Token) : Bool := t.kind == Kind.eof || t.bol && t.col <= Ref.get p.stop
@@ -417,7 +468,11 @@ def Parser.op (p : Parser) (min : Int) : {Throw Text} Expr :=
 
 /-- Parses a whole source file. -/
 def Parser.parse (source : Text) : {Throw Text} List Decl :=
-  let p := Parser.mk (Ref.new (lex source)) (Ref.new 0)
+  let tokens := lex source
+  let p := Parser.mk
+    (Ref.new (List.filter (fun t => t.kind != Kind.comment) tokens))
+    (Ref.new 0)
+    (Ref.new (List.filter (fun t => t.kind == Kind.comment) tokens))
   Parser.file p
 
 def Parser.patApp (p : Parser) : {Throw Text} Pat :=
@@ -444,6 +499,7 @@ def Parser.patAtom (p : Parser) : {Throw Text} Pat :=
   else withStop p (-1) (fun _ =>
     let first := patt p
     if is p ":" then
+      -- `(x : T)`: an ascribed binder; the type is erased.
       skip p
       Parser.ty p
       ()
@@ -471,6 +527,9 @@ def Parser.patAtom (p : Parser) : {Throw Text} Pat :=
       go (item :: acc)
     Pat.list (go [])) else errorAt t "expected a pattern"
 
+--
+-- Patterns.
+--
 def Parser.patt (p : Parser) : {Throw Text} Pat :=
   let head := patApp p
   if is p "::" then
@@ -522,8 +581,7 @@ def Parser.startsPatAtom (p : Parser) : Bool :=
   let t := peek p
   t.kind == Kind.ident || t.kind == Kind.dot || t.kind == Kind.int || t.kind == Kind.text || is p "_" || is p "(" || is p "[" || is p "true" || is p "false" || is p "-"
 
-/-- Statements at column `col`: `let` lines and expressions; the last one is the value. -/
-def Parser.stmts (p : Parser) (col : Int) : {Throw Text} Expr := if is p "let" then
+def Parser.statement (p : Parser) (col : Int) : {Throw Text} Expr := if is p "let" then
   let letTok := Parser.next p
   let isRec := if is p "rec" then
     skip p
@@ -555,6 +613,14 @@ else
   let first := Parser.expr p
   if continues p col then Expr.seq first (Parser.stmts p col) else first
 
+/-- Statements at column `col`: `let` lines and expressions; the last one is the value. -/
+def Parser.stmts (p : Parser) (col : Int) : {Throw Text} Expr :=
+  let note := notesBefore p (peek p).line
+  noted note (statement p col)
+
+--
+-- Types.
+--
 def Parser.ty (p : Parser) : {Throw Text} Ty :=
   let a := tyApp p
   if is p "->" && not (offside p) then
@@ -573,6 +639,7 @@ def Parser.tyApp (p : Parser) : {Throw Text} Ty :=
   | _ => head
 
 def Parser.tyAtom (p : Parser) : {Throw Text} Ty := if (peek p).kind == Kind.ident then Ty.named (Parser.ident p) [] else if is p "{" then
+  -- A result that performs abilities: `{IO, Throw Text} a`.
   let effs := Parser.row p
   Ty.effects effs (tyApp p)
 else

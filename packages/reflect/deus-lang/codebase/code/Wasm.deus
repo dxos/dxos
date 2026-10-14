@@ -1,3 +1,6 @@
+--
+-- The subset.
+--
 structure Wasm.Fn @"urn:deus:wasm:Fn" where
   fnHash : Text
   fnArity : Int
@@ -36,6 +39,7 @@ def Wasm.expr (fns : List Fn) (env : List Int) (next : Ref Int) (tail : Bool) (e
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int n :: []) :: args) => if n != List.length args || t == "#Bool" then Throw.throw ("partial application of a constructor of " ++ t ++ " is outside the wasm subset") else construct fns env next tag args
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
       let v := Wasm.fresh next
+      -- One block per case: a failed test leaves it for the next; a match leaves the outer block.
       let arms := concatMap (fun c =>
         match c with
         | Sexp.list (Sexp.sym "case" :: pat :: body :: []) =>
@@ -155,11 +159,36 @@ def Wasm.sleb (n : Int) : List Int :=
 
 def Wasm.store (offset : Int) : List Int := [54, 2] ++ uleb offset
 
+/-
+  A WebAssembly back end (D51): compiles a definition and the definitions it calls to a binary
+  wasm module, written byte by byte in DEUS.
+
+  The subset is first-order code over integers and algebraic data: every definition is a
+  function of values to a value, built from literals, locals, `let`, `seq`, `if`, `match`,
+  constructors, integer and comparison primitives, and saturated calls of other such
+  definitions. A call in tail position is a `return_call`, so recursion that loops runs in
+  constant stack. Anything else (closures, text, effects) is refused with the form that is out
+  of the subset; such programs run on the wasm kernel instead (D41).
+
+  Values are `i32`s. `Int` and `Bool` (0, 1) are themselves; any other constructed value
+  (D56) points at a block `[tag, field…]` in linear memory, allocated by bumping a heap pointer
+  that grows memory as needed and never frees. The module exports `memory` and `alloc`, so a host
+  can build arguments and read results.
+
+  `Int.div` and `Int.mod` by zero trap rather than raise a defect.
+-/
+
+--
+-- Encoding.
+--
 def Wasm.uleb (n : Int) : List Int :=
   let byte := and n 127
   let rest := ushr n 7
   if rest == 0 then [byte] else or byte 128 :: Wasm.uleb rest
 
+--
+-- Which definitions may be unfolded.
+--
 /-- Strips `n` leading lambdas: (arity, body). -/
 def Wasm.unlam (core : Sexp) : (Int, Sexp) :=
   match core with

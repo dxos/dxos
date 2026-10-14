@@ -41,6 +41,11 @@ def Highlight.htmlLinked (links : Map Text Text) (source : Text) : Text := Text.
 
 def Highlight.isWordChar (c : Int) : Bool := isAlpha c || isDigit c || c == 95 || c == 46 || c == 63
 
+/-
+  Syntax highlighting of printed source, shared by the explorer (HTML) and the CLI (ANSI colours
+  on a terminal). Source splits into runs of one kind: kw(keyword), str(ing), cm (comment),
+  ty(pe or other capitalized name) and plain text.
+-/
 def Highlight.keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
 
 /-- The source as (kind, text) runs, in order. -/

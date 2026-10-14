@@ -159,7 +159,41 @@ def conName (p : Printer) (t : Text) (tag : Int) : Text :=
 /-- Whether a term prints as several lines (so it needs a block). -/
 def isBlock (t : Sexp) : Bool :=
   let h := Sexp.head t
-  h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle"
+  h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle" || h == "note"
+
+/-- Core with its comments put back as `(note "text" e)` at the pre-order indices `Resolve.unnote` recorded (D66). -/
+def restore (notes : List (Int, Text)) (core : Sexp) : Sexp :=
+  if List.isEmpty notes then core
+  else
+    let byIndex := Map.fromList notes
+    let rec go x count :=
+      match x with
+      | Sexp.list items =>
+        let rec each rest out c :=
+          match rest with
+          | [] => (List.reverse out, c)
+          | y :: more =>
+            match go y c with
+            | (y2, c2) => each more (y2 :: out) c2
+        match each items [] (count + 1) with
+        | (children, next) =>
+          let rebuilt := Sexp.list children
+          match Map.lookup count byIndex with
+          | some text => (Sexp.node "note" [Sexp.str text, rebuilt], next)
+          | none => (rebuilt, next)
+      | _ => (x, count)
+    fst (go core 0)
+
+/-- Notes from metadata: `(notes (n i "text") …)`. -/
+def notesOf (meta : Option Sexp) : List (Int, Text) :=
+  List.filterMap (fun x =>
+    match x with
+    | Sexp.list [Sexp.sym "n", Sexp.int i, Sexp.str text] => some (i, text)
+    | _ => none) (Codebase.metaList meta "notes")
+
+/-- A comment's lines at indentation `ind`, each followed by a new line at `ind`. -/
+def commentLines (text : Text) (ind : Int) : Text :=
+  Text.concat (List.map (fun l => (if Text.isEmpty l then "" else l) ++ "\n" ++ spaces ind) (Text.lines text))
 
 /-- A body after `:=`, `=>`, `then` or `else`: inline, or a block on the next lines. -/
 def body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
@@ -170,6 +204,7 @@ def body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
 def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
   let nl := "\n" ++ spaces ind
   match t with
+  | Sexp.list [Sexp.sym "note", Sexp.str text, inner] => commentLines text ind ++ stmts p inner env ind
   | Sexp.list [Sexp.sym "let", v, b] =>
     let name := bind p env
     let value := body p v env ind
@@ -197,6 +232,8 @@ def lambdaHead (p : Printer) (fn : Sexp) (env : List Text) (ind : Int) : Text :=
 
 def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
   match t with
+  -- Only statements and arms carry comments, and those print through `stmts`.
+  | Sexp.list [Sexp.sym "note", _, inner] => expr p inner env ind prec
   | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? env i) ("$" ++ Int.toText i)
   | Sexp.list [Sexp.sym "ref", Sexp.str h] => refName p h env
   | Sexp.list [Sexp.sym "int", Sexp.int v] => if v < 0 then paren 99 prec (Int.toText v) else Int.toText v

@@ -325,6 +325,11 @@ def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core
 
 /-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
 def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+  match viewParts base dir ns name e core with
+  | (header, source) => header ++ source
+
+/-- The `-- name hash` header lines, and the source (empty for a constructor, an operation or a field). -/
+def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} (Text, Text) :=
   let h := Entry.hash e
   let meta := Codebase.readMeta dir h
   let typeLine := match Codebase.metaField meta "scheme" with
@@ -332,34 +337,39 @@ def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
     | none => ""
   let header := "-- " ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
-  | Entry.ctor _ _ _ => header ++ "-- a constructor of " ++ Text.join ", " (Codebase.namesOf ns h)
-  | Entry.op _ _ _ => header ++ "-- an operation of " ++ Text.join ", " (Codebase.namesOf ns h)
+  | Entry.ctor _ _ _ => (header ++ "-- a constructor of " ++ Text.join ", " (Codebase.namesOf ns h), "")
+  | Entry.op _ _ _ => (header ++ "-- an operation of " ++ Text.join ", " (Codebase.namesOf ns h), "")
   | _ =>
     -- A field accessor comes with its structure, so it prints as a note, as constructors do.
     let owner := Text.join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
     let isField := match Map.lookup owner ns with
       | some (Entry.type _ _ fields) => List.contains (Names.lastSegment name) fields
       | _ => false
-    if isField then header ++ "-- a field of structure " ++ owner
+    if isField then (header ++ "-- a field of structure " ++ owner, "")
     else
       match Codebase.readObject dir h with
-      | none => if Text.startsWith "#" h then header ++ "-- builtin" else throw ("missing object " ++ h)
+      | none => if Text.startsWith "#" h then (header ++ "-- builtin", "") else throw ("missing object " ++ h)
       | some obj =>
-        if core then header ++ Sexp.print obj
+        if core then (header, Sexp.print obj)
         else
           let locals := List.map Sexp.asText (Codebase.metaList meta "locals")
           let p := Print.withSelf (Print.withLocals base locals) h name
           let doc := Option.map Sexp.asText (Codebase.metaField meta "doc")
           let display := Names.lastSegment name
-          match obj with
-          | Sexp.list [Sexp.sym "term", c] => header ++ Print.definition p name c (Codebase.metaField meta "sig") doc
-          | Sexp.list [Sexp.sym "test", c] => header ++ "test " ++ name ++ " :=" ++ Print.body p c [] 0
-          | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
-            header ++ View.theoremDecl p name types prop proof
-          | Sexp.list (Sexp.sym "type" :: _) => header ++ View.typeDecl p ns name e obj meta
-          | Sexp.list (Sexp.sym "ability" :: _) => header ++ View.abilityDecl p ns name e obj meta
-          | Sexp.list (Sexp.sym "spec" :: _) => header ++ Mdl.render (snd (Mdl.fromSexp obj))
-          | _ => header ++ Sexp.print obj
+          -- Comments come back from metadata: the lead above the declaration, notes inside it (D66).
+          let lead := match Codebase.metaField meta "lead" with
+            | some text => Print.commentLines (Sexp.asText text) 0
+            | none => ""
+          let notes := Print.notesOf meta
+          (header, lead ++ (match obj with
+            | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") doc
+            | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
+            | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+              View.theoremDecl p name types prop proof
+            | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
+            | Sexp.list (Sexp.sym "ability" :: _) => View.abilityDecl p ns name e obj meta
+            | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+            | _ => Sexp.print obj))
 
 def view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args

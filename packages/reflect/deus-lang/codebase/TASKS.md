@@ -9,20 +9,6 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
-
-- state: todo
-- priority: high
-- labels: dogfood, design
-
-Only doc comments survive add; the -- comments that explain why are lost, so deus/*.deus cannot yet be regenerated from the codebase. Store them as metadata and print them back.
-
-> claude: Design question before building: storing each definition's source text in its metadata keeps comments, but that text depends on its file's namespace and open lines, and goes stale when a dependency is renamed. A workable rule: print the stored text only while every name in it still resolves to the hash it had when added, and keep namespace and opens with it; otherwise print from Core as now.
-
-> claude: Written up as P8 in docs/PROPOSALS.md, four options; recommending B (source text as metadata while it still resolves, export rebuilds the files). Waiting on a choice before building.
-
-> claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
-
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -53,6 +39,15 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
+## The prover ignores tactic names it does not know (`bf5681bf`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: bug, proofs, spec
+
+From docs/spec/README.md, Known divergences.
+
 ## Work without git: the codebase is where the toolchain is developed, git only backs it up (`86d7b02a`)
 
 - state: todo
@@ -70,6 +65,78 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 - labels: dogfood, llm
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
+
+## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: bug, dogfood, spec
+
+From docs/spec/README.md, Known divergences.
+
+## view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (`11b93dc9`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: bug, spec
+
+From docs/spec/README.md, Known divergences.
+
+## wasm compares constructed values by address: some x == some x is 0 (`40cb2f16`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: bug, wasm, spec
+
+From docs/spec/README.md, Known divergences.
+
+## Character literals print as numbers ('"' becomes 34) (`0d21d8d5`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: dogfood, cli
+
+Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
+
+## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: bug, replication, spec
+
+From docs/spec/README.md, Known divergences.
+
+## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: bug, kernel, spec
+
+From docs/spec/README.md, Known divergences.
+
+## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: bug, types, spec
+
+From docs/spec/README.md, Known divergences.
+
+## Docs disagree with the code in eight places listed in docs/spec/README.md (`11a42afd`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: docs, spec
+
+From docs/spec/README.md, Known divergences.
 
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
@@ -90,6 +157,23 @@ deus export: source per namespace, tasks and history as text, committed to the r
 - assignee: claude
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
+
+## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
+
+- state: done
+- priority: high
+- labels: dogfood, design
+- links change #c1f5fb9764
+
+Only doc comments survive add; the -- comments that explain why are lost, so deus/*.deus cannot yet be regenerated from the codebase. Store them as metadata and print them back.
+
+> claude: Design question before building: storing each definition's source text in its metadata keeps comments, but that text depends on its file's namespace and open lines, and goes stale when a dependency is renamed. A workable rule: print the stored text only while every name in it still resolves to the hash it had when added, and keep namespace and opens with it; otherwise print from Core as now.
+
+> claude: Written up as P8 in docs/PROPOSALS.md, four options; recommending B (source text as metadata while it still resolves, export rebuilds the files). Waiting on a choice before building.
+
+> claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
+
+> claude: Built as comments on Core, the user's choice (D66): lead and notes metadata, restored by the printer. Character literals still print as numbers; filed separately.
 
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 

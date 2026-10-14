@@ -1,3 +1,6 @@
+--
+-- Expressions.
+--
 structure Resolve.Ctx where
   names : Names
   scope : Scope
@@ -123,6 +126,7 @@ def Resolve.expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw T
   | Expr.record base fields pos => Resolve.record ctx base fields pos locals
   | Expr.ann x _ => go x
   | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field) [go x]
+  | Expr.note text x => Compile.node "note" [Sexp.s text, go x]
 
 def Resolve.fail (ctx : Ctx) (message : Text) : {Throw Text} a := Throw.throw (ctx.origin ++ ": " ++ message)
 
@@ -181,6 +185,7 @@ def Resolve.node (head : Text) (items : List Sexp) : Sexp := Sexp.node head item
 def Resolve.opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text} Sexp :=
   match Names.lookup ctx.names o.op ctx.scope isOp true with
   | Option.some (_, Entry.op a index arity) => if arity != List.length o.args then failAt ctx o.at (o.op ++ " takes " ++ toText arity ++ " arguments") else
+      -- Simple arguments bind names; others bind nothing and are matched inside the clause.
       let argNames := List.map (fun p => getOr (simpleBinder ctx p) Option.none) o.args
       let inner := o.resume :: reverse argNames ++ locals
       let complex := List.filter
@@ -192,6 +197,7 @@ def Resolve.opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Th
         | (index1, p) :: more =>
             match pat ctx p [] with
             | (core, binds) =>
+                -- The argument sits below the continuation and the later arguments.
                 let depth := List.length l - (List.length locals + index1) - 1
                 Compile.node
                   "match"
@@ -275,6 +281,7 @@ def Resolve.record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr))
   | [] => failAt ctx pos ("no structure has fields " ++ join ", " given)
   | _ => failAt ctx pos ("ambiguous record " ++ join ", " given)
 
+-- The comments written before the declaration (D66).
 def Resolve.s (t : Text) : Sexp := Sexp.str t
 
 /-- A pattern that only binds a name (or nothing): returns the bound name. -/
@@ -285,10 +292,15 @@ def Resolve.simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Tex
   | Pat.id name [] _ => if Text.contains "." name then Option.none else if isSome (ctorOf ctx name false) then Option.none else Option.some (Option.some name)
   | _ => Option.none
 
+/-
+  Named Core: the resolver writes binder names into Core (`(lam "x" body)`, `(pvar "x")`…).
+  `strip` removes them before hashing and returns them in pre-order, so renaming a local never
+  changes a hash, and `view` can still print the author's names (stored as metadata).
+-/
 /-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
 def Resolve.strip (form : Sexp) : (Sexp, List Text) :=
-  match stripAcc form [] with
-  | (core, names) => (core, reverse names)
+  match stripNoted form with
+  | (core, names, _) => (core, names)
 
 def Resolve.stripAcc (form : Sexp) (acc : List Text) : (Sexp, List Text) :=
   let rebuild := fun head prefix children names =>
@@ -330,6 +342,13 @@ def Resolve.stripList (items : List Sexp) (acc : List Text) : (List Sexp, List T
         match stripAcc x a with
         | (y, a2) => go more (y :: out) a2
   go items [] acc
+
+/-- `strip`, also returning the comments it removed (D66). -/
+def Resolve.stripNoted (form : Sexp) : (Sexp, (List Text, List (Int, Text))) :=
+  match stripAcc form [] with
+  | (named, names) =>
+      match unnote named with
+      | (core, notes) => (core, reverse names, notes)
 
 def Resolve.structFields (ctx : Ctx) (fqn : Text) : List Text :=
   match Dict.lookup fqn (ctx.names).index with
@@ -379,12 +398,34 @@ def Resolve.tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty)
 
 def Resolve.unitCore : Sexp := Compile.node "con" [Sexp.s "#Unit", i 0, i 0]
 
+/-- Removes `(note "text" e)` nodes. Each comment is returned with the pre-order index of `e` among
+  the list nodes of the result, the position `Notes.restore` puts it back at (D66). -/
+def Resolve.unnote (form : Sexp) : (Sexp, List (Int, Text)) :=
+  let rec go x count acc :=
+    match x with
+    | Sexp.list (Sexp.sym "note" :: Sexp.str text :: inner :: []) =>
+        match acc with
+        | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) else go inner count ((count, text) :: acc)
+        | [] => go inner count [(count, text)]
+    | Sexp.list items =>
+        let rec each rest out c a :=
+          match rest with
+          | [] => (Sexp.list (reverse out), c, a)
+          | y :: more =>
+              match go y c a with
+              | (y2, c2, a2) => each more (y2 :: out) c2 a2
+        each items [] (count + 1) acc
+    | _ => (x, count, acc)
+  match go form 0 [] with
+  | (core, _, notes) => (core, reverse notes)
+
 def Resolve.valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
   let index := localIndex locals name
   if index >= 0 then Compile.node "var" [i index] else
     let dot := indexOf name "." 0
     let headIndex := if dot > 0 then localIndex locals (slice name 0 dot) else -1
     if headIndex >= 0 then
+      -- `p.x.y`: field access on a local.
       let fields := Text.split (Text.drop (dot + 1) name) "."
       foldl
         (fun acc field => Resolve.app (fieldAccessor ctx pos field) [acc])

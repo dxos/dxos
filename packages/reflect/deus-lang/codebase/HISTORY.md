@@ -1,5 +1,17 @@
 # History of main
 
+- `de504398e7` task: open 11a42afd Docs disagree with the code in eight places listed in docs/spec/README.md (by claude)
+- `5cb2f5d914` task: open 5fe4c8b1 deus export drops attributes, .mdl specs, the project file and some doc comments (by claude)
+- `5b3d421650` task: open 7afeaa0c Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (by claude)
+- `f081f7d7e5` task: open a03fdfb6 Type ascriptions are erased before checking; a row on a definition without binders is not checked (by claude)
+- `e609a8401c` task: open bf5681bf The prover ignores tactic names it does not know (by claude)
+- `1ba1623224` task: open 2bbc3445 Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (by claude)
+- `28ae9efd13` task: open 40cb2f16 wasm compares constructed values by address: some x == some x is 0 (by claude)
+- `f5613514d3` task: open 11b93dc9 view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (by claude)
+- `30e21b3285` task: open 0d21d8d5 Character literals print as numbers ('"' becomes 34) (by claude)
+- `a6bce7d29d` task: comment on b09507db (by claude)
+- `2ff94c39f7` close b09507db by #c1f5fb9764 (by claude)
+- `c1f5fb9764` Ordinary comments kept as metadata on Core (D66) (by claude)
 - `f23a0544a3` task: open 5a02d566 Restoring the git export loses history, so the next export rewrites HISTORY.md (by claude)
 - `35f036f799` task: link 9428f054 to Qa.check (by claude)
 - `1c5eda1dc1` task: comment on 9428f054 (by claude)
