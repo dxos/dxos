@@ -9,15 +9,6 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
-
-- state: doing
-- priority: high
-- assignee: claude
-- labels: replication, design
-
-Owned by the Codebase compaction design thread; merging into #13952.
-
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -160,6 +151,16 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 > claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
 
 > claude: Built as comments on Core, the user's choice (D66): lead and notes metadata, restored by the printer. Character literals still print as numbers; filed separately.
+
+## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: replication, design
+- links change #a37df20cc0
+
+Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
 
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 

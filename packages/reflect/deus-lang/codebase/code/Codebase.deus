@@ -48,12 +48,19 @@ def Codebase.causalToSexp (c : Causal) : Sexp :=
       tasks ++
       prior)
 
+/-- The causal hashes a task links as changes. -/
+def Codebase.changeLinks (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "change" :: Sexp.str h :: []) => [h]
+  | Sexp.list items => concatMap Codebase.changeLinks items
+  | _ => []
+
 /-- Records a new snapshot on the current branch, keeping its tasks. Returns the new causal hash. -/
 def Codebase.commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text} Text :=
   let branch := currentBranch dir
   let parent := headOf dir branch
   let previous := readCausal dir parent
-  let snapshot := Codebase.put dir (nsToSexp ns)
+  let snapshot := putNamespace dir ns
   if snapshot == previous.snapshot then parent else
     let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks ""))
     setBranch dir branch c
@@ -86,11 +93,13 @@ def Codebase.current (dir : Text) : {IO, Throw Text} Map Text Entry := namespace
 
 def Codebase.currentBranch (dir : Text) : {IO} Text := trim (getOr (IO.readFile (dir ++ "/HEAD")) "main")
 
-/-- Hashes the definitions that `form` references (terms and types alike). -/
+/-- Hashes that `form` references: definitions (terms and types alike) and namespace tree nodes. -/
 def Codebase.dependencies (form : Sexp) : List Text :=
   let rec go x acc :=
     match x with
     | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => h :: acc
+    | Sexp.list (Sexp.sym "sub" :: Sexp.str _ :: Sexp.str h :: []) => h :: acc
+    | Sexp.list (Sexp.sym "part" :: Sexp.str h :: []) => h :: acc
     | Sexp.list (Sexp.sym "con" :: Sexp.str h :: _) => if startsWith "#" h then acc else h :: acc
     | Sexp.list (Sexp.sym "pcon" :: Sexp.str h :: rest) => foldl (fun a y => go y a) (if startsWith "#" h then acc else h :: acc) rest
     | Sexp.list (Sexp.sym "op" :: Sexp.str h :: _) => if startsWith "#" h then acc else h :: acc
@@ -98,6 +107,42 @@ def Codebase.dependencies (form : Sexp) : List Text :=
     | Sexp.list items => foldl (fun a y => go y a) acc items
     | _ => acc
   dedup (sort (go form []))
+
+/-- The names whose entries differ between two snapshots (`""` is the empty one), as (name,
+  before, after) in name order. Subtrees with equal hashes are skipped, so the cost follows the
+  change, not the namespace. -/
+def Codebase.diffNamespaces (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} List (Text, (Option Entry, Option Entry)) :=
+  let index := fun h => if Text.isEmpty h then Map.empty else Map.fromList (List.map (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "sub" :: Sexp.str seg :: _ :: []) => ("s" ++ seg, item)
+    | Sexp.list (Sexp.sym "n" :: name :: _ :: []) => ("n" ++ asText name, item)
+    | _ => defect "bad namespace entry") (nodeItems dir h))
+  let childOf := fun item =>
+    match item with
+    | Option.some (Sexp.list (_ :: _ :: Sexp.str child :: [])) => child
+    | _ => ""
+  let entryOf := fun item =>
+    match item with
+    | Sexp.list (_ :: _ :: e :: []) => Entry.fromSexp e
+    | _ => defect "bad namespace entry"
+  let rec go prefix x y := if x == y then [] else
+    let xs := index x
+    let ys := index y
+    concatMap (fun key =>
+      let before := Map.lookup key xs
+      let after := Map.lookup key ys
+      if before == after then [] else if startsWith "s" key then go (prefix ++ Text.drop 1 key ++ ".") (childOf before) (childOf after) else [(prefix ++ Text.drop 1 key, Option.map entryOf before, Option.map entryOf after)]) (Set.toList (Set.fromList (Map.keys xs ++ Map.keys ys)))
+  -- A flat snapshot names `List.map` directly and a tree one under `List`, so one name can come
+  -- back twice across the two forms; joining its sides leaves only real changes.
+  let joined := foldl (fun m change =>
+    match change with
+    | (name, before, after) =>
+        match Map.lookup name m with
+        | Option.some (b0, a0) => Map.insert name (orElse b0 (fun _ => before), orElse a0 (fun _ => after)) m
+        | Option.none => Map.insert name (before, after) m) Map.empty (go "" a b)
+  filterMap (fun pair =>
+    match pair with
+    | (name, before, after) => if before == after then Option.none else Option.some (name, before, after)) (Map.toList joined)
 
 def Codebase.headOf (dir : Text) (branch : Text) : {IO, Throw Text} Text :=
   match branchHead dir branch with
@@ -120,7 +165,7 @@ def Codebase.init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then
   IO.mkdirp (dir ++ "/results")
   IO.mkdirp (dir ++ "/provenance")
   IO.mkdirp (dir ++ "/cache")
-  let snapshot := Codebase.put dir (nsToSexp Map.empty)
+  let snapshot := putNamespace dir Map.empty
   let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" "" ""))
   setBranch dir "main" c
   IO.writeFile (dir ++ "/HEAD") "main\n"
@@ -137,6 +182,24 @@ def Codebase.layerOf (form : Sexp) : Text :=
 
 /-- Every layer with where it lives and whether it is replicated. -/
 def Codebase.layers : List (Text, (Text, Bool)) := [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true), ("results", "results/", true), ("provenance", "provenance/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
+
+/-- One name's entry in a snapshot, reading only the nodes on its path. -/
+def Codebase.lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option Entry :=
+  let items := nodeItems dir h
+  let entry := head? (filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "n" :: Sexp.str n :: e :: []) => if n == name then Option.some (Entry.fromSexp e) else Option.none
+    | _ => Option.none) items)
+  match (entry, splitName name) with
+  | (Option.some e, _) => Option.some e
+  | (Option.none, Option.some (seg, rest)) =>
+      match head? (filterMap (fun item =>
+        match item with
+        | Sexp.list (Sexp.sym "sub" :: Sexp.str s :: Sexp.str child :: []) => if s == seg then Option.some child else Option.none
+        | _ => Option.none) items) with
+      | Option.some child => Codebase.lookupName dir child rest
+      | Option.none => Option.none
+  | (Option.none, Option.none) => Option.none
 
 /-- Layers a layer may depend on; the rest are refused when adding. -/
 def Codebase.mayDependOn (layer : Text) : List Text := if layer == "spec" then ["spec"] else if layer == "code" then ["code"] else if layer == "tests" then ["code", "tests"] else if layer == "proofs" then ["code", "proofs"] else ["code", "tests", "proofs", "history"]
@@ -184,7 +247,7 @@ def Codebase.merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
           else if b == t then state else (ns, changed, name :: conflicts)
     match (foldl step (oursNs, [], []) names, tasks) with
     | ((ns, changed, []), merged, []) =>
-        let snapshot := Codebase.put dir (nsToSexp ns)
+        let snapshot := putNamespace dir ns
         let c := Codebase.put dir (causalToSexp (Causal.mk
           snapshot
           [ours, theirs]
@@ -218,6 +281,50 @@ def Codebase.metaList (form : Option Sexp) (key : Text) : List Sexp :=
       | Option.some x => Sexp.args x
       | Option.none => []
 
+/-- Rewrites history so every snapshot is a namespace tree (D72). Each causal node is rebuilt after
+  its parents and the changes its tasks link, so links follow the rewrite; branches and provenance
+  follow too. A node already in tree form keeps its hash, so a second run changes nothing. Parents
+  that shallow history lacks stay as they are. Returns (nodes rewritten, branches moved). -/
+def Codebase.migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
+  let memo := MutMap.new ()
+  let rec node h :=
+    match MutMap.get memo h with
+    | Option.some moved => moved
+    | Option.none => if not (IO.exists (objectPath dir h)) then h else
+        let c := readCausal dir h
+        let parents := List.map (fun p => node p) c.parents
+        let tasks := putSnapshot dir (mapValues (fun task =>
+          match readObject dir task with
+          | Option.none => task
+          | Option.some form =>
+              let links := changeLinks form
+              Codebase.put
+                dir
+                (Codebase.rewrite form (Map.fromList (List.map (fun l => (l, node l)) links)))) (snapshotOf dir c))
+        let moved := Codebase.put
+          dir
+          (causalToSexp (Causal.mk
+            (putNamespace dir (readNamespace dir c.snapshot))
+            parents
+            c.message
+            tasks
+            c.prior))
+        MutMap.set memo h moved
+        moved
+  let moves := filterMap (fun branch =>
+    let head := headOf dir branch
+    let moved := node head
+    if moved == head then Option.none else
+      setBranch dir branch moved
+      Option.some branch) (branches dir)
+  let rewritten := List.filter (fun h => getOr (MutMap.get memo h) h != h) (MutMap.keys memo)
+  forEach rewritten (fun h =>
+    let from := dir ++ "/provenance/" ++ h
+    match IO.readFile from with
+    | Option.some text => IO.writeFile (dir ++ "/provenance/" ++ getOr (MutMap.get memo h) h) text
+    | Option.none => ())
+  (List.length rewritten, List.length moves)
+
 /-- Hash → shortest unique display name, for printing. -/
 def Codebase.nameIndex (ns : Map Text Entry) : Map Text Text := foldl (fun m pair =>
   match pair with
@@ -245,19 +352,17 @@ def Codebase.namesOf (ns : Map Text Entry) (h : Text) : List Text := List.map fs
 
 def Codebase.namespaceOf (dir : Text) (branch : Text) : {IO, Throw Text} Map Text Entry := readNamespace dir (readCausal dir (headOf dir branch)).snapshot
 
-def Codebase.nsFromSexp (form : Sexp) : Map Text Entry := Map.fromList (List.map (fun item =>
-  match Sexp.args item with
-  | name :: entry :: [] => (asText name, Entry.fromSexp entry)
-  | _ => defect "bad namespace entry") (Sexp.args form))
+/-- A namespace node's items, with its parts expanded: `(n name entry)` and `(sub segment hash)` forms. -/
+def Codebase.nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp :=
+  match readObject dir h with
+  | Option.none => Throw.throw ("missing namespace #" ++ h)
+  | Option.some form => concatMap (fun item =>
+      match item with
+      | Sexp.list (Sexp.sym "part" :: Sexp.str child :: []) => Codebase.nodeItems dir child
+      | _ => [item]) (Sexp.args form)
 
---
--- Namespaces.
---
-def Codebase.nsToSexp (ns : Map Text Entry) : Sexp := Sexp.node
-  "ns"
-  (List.map
-    (fun pair => Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)])
-    (Map.toList ns))
+/-- Items a namespace node holds before it splits into parts. -/
+def Codebase.nodeLimit : Int := 64
 
 /-
   The codebase: a content-addressed store in a `.deus` directory (Unison's model).
@@ -279,17 +384,18 @@ def Codebase.nsToSexp (ns : Map Text Entry) : Sexp := Sexp.node
   documents); the derived layers have their own directories, so a
   policy (replicate, delete) is a directory. Code may depend only on code.
 
-  A namespace snapshot maps names to entries. A causal node records a snapshot, its
-  parents, a message and, once there are tasks, a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and
-  merging two branches is a three-way merge of their snapshots.
+  A namespace snapshot maps names to entries, stored as a tree split at the first dot of each
+  name (D72). A causal node records a snapshot, its parents, a message and, once there are tasks,
+  a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and merging two
+  branches is a three-way merge of their snapshots.
 -/
 /-- Objects read so far, per process; objects are immutable so the cache never goes stale. -/
 def Codebase.objectCache : MutMap Text Sexp := MutMap.new ()
 
 def Codebase.objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
 
-/-- The parents of a causal node that the store has. History pruned by replication's retention
-  (D54) is shallow: its oldest kept nodes have parents nobody keeps, and they act as roots. -/
+/-- The parents of a causal node that the store has. History a remote trimmed before D73 is
+  shallow: its oldest nodes have parents nobody keeps, and they act as roots. -/
 def Codebase.parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text := List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents
 
 /-- Stores a form under the hash of its text and returns the hash. -/
@@ -298,6 +404,38 @@ def Codebase.put (dir : Text) (form : Sexp) : {IO} Text :=
   writeObject dir h form
   h
 
+/-- Stores a namespace as a tree split at each name's first dot (D72): `List.map` is `map` in the
+  `List` node, which its parent names by hash, and wide nodes split into parts. Changing one
+  definition rewrites only the nodes on its path, so history grows by the change rather than by
+  the whole namespace. Returns the root hash. -/
+def Codebase.putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
+  let split := Map.foldr (fun name e acc =>
+    match acc with
+    | (leaves, groups) =>
+        match splitName name with
+        | Option.some (seg, rest) => (leaves, Map.insert seg (Map.insert rest e (getOr (Map.lookup seg groups) Map.empty)) groups)
+        | Option.none => ((name, e) :: leaves, groups)) ([], Map.empty) ns
+  match split with
+  | (leaves, groups) =>
+      let entries := List.map
+        (fun pair => (fst pair, Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)]))
+        leaves
+      let subs := List.map
+        (fun pair => (fst pair, Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (Codebase.putNamespace dir (snd pair))]))
+        (Map.toList groups)
+      putNode dir (entries ++ subs) 0
+
+/-- One namespace node over (key, item) pairs in key order. Past `nodeLimit` items it splits into
+  parts by the `depth`-th hex digit of each key's hash, so a wide node (the root, a big namespace)
+  rewrites one part per change, not all of it. -/
+def Codebase.putNode (dir : Text) (items : List (Text, Sexp)) (depth : Int) : {IO} Text := if List.length items <= nodeLimit || depth >= 64 then Codebase.put dir (Sexp.node "ns" (List.map snd items)) else
+  let buckets := List.foldr (fun item m =>
+    let digit := slice (Text.sha256 (fst item)) depth (depth + 1)
+    Map.insert digit (item :: getOr (Map.lookup digit m) []) m) Map.empty items
+  Codebase.put dir (Sexp.node "ns" (List.map
+    (fun bucket => Sexp.node "part" [Sexp.str (Codebase.putNode dir (snd bucket) (depth + 1))])
+    (Map.toList buckets)))
+
 def Codebase.readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   match readObject dir h with
   | Option.some form => causalFromSexp form
@@ -305,10 +443,14 @@ def Codebase.readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
 
 def Codebase.readMeta (dir : Text) (h : Text) : {IO} Option Sexp := Option.map Sexp.read (IO.readFile (dir ++ "/meta/" ++ h))
 
+/-- The names under a namespace node, flat (`List.map`); reads tree nodes and older flat snapshots alike. -/
 def Codebase.readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
-  match readObject dir h with
-  | Option.some form => nsFromSexp form
-  | Option.none => Throw.throw ("missing namespace #" ++ h)
+  let rec go prefix node acc := foldl (fun m item =>
+    match item with
+    | Sexp.list (Sexp.sym "sub" :: Sexp.str seg :: Sexp.str child :: []) => go (prefix ++ seg ++ ".") child m
+    | Sexp.list (Sexp.sym "n" :: name :: entry :: []) => Map.insert (prefix ++ asText name) (Entry.fromSexp entry) m
+    | _ => defect "bad namespace entry") acc (nodeItems dir node)
+  go "" h Map.empty
 
 def Codebase.readObject (dir : Text) (h : Text) : {IO} Option Sexp :=
   match MutMap.get objectCache h with
@@ -344,6 +486,14 @@ def Codebase.setBranch (dir : Text) (branch : Text) (causal : Text) : {IO} Unit 
 
 /-- The objects a history node points at besides its parents: its namespace, its tasks, its prior record. -/
 def Codebase.snapshotsOf (c : Causal) : List Text := List.filter (fun h => not (Text.isEmpty h)) [c.snapshot, c.tasks, c.prior]
+
+--
+-- Namespaces.
+--
+/-- `List.map` splits into ("List", "map"); a name without an inner dot has no namespace. -/
+def Codebase.splitName (name : Text) : Option (Text, Text) :=
+  let i := indexOf name "." 1
+  if i < 1 || i + 1 >= Text.length name then Option.none else Option.some (Text.take i name, Text.drop (i + 1) name)
 
 /-- Writes a compiled batch's objects and metadata. -/
 def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=

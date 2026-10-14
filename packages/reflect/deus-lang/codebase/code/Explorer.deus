@@ -12,15 +12,19 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
     match parentsOf dir causal with
     | p :: _ => readCausal dir p
     | [] => Causal.mk "" [] "" "" ""
-  let nsAfter := readNamespace dir node.snapshot
-  let nsBefore := if Text.isEmpty before.snapshot then Map.empty else readNamespace dir before.snapshot
-  let visibleNames := fun ns => List.filter visible (Map.toList ns)
-  let added := List.filter (fun pair => isNone (Map.lookup (fst pair) nsBefore)) (visibleNames nsAfter)
-  let changed := filterMap (fun pair =>
-    match Map.lookup (fst pair) nsBefore with
-    | Option.some old => if hash old == hash (snd pair) then Option.none else Option.some (fst pair, hash old, hash (snd pair))
-    | Option.none => Option.none) (visibleNames nsAfter)
-  let removed := List.filter (fun pair => isNone (Map.lookup (fst pair) nsAfter)) (visibleNames nsBefore)
+  let diff := diffNamespaces dir before.snapshot node.snapshot
+  let added := filterMap (fun change =>
+    match change with
+    | (name, Option.none, Option.some e) => if visible (name, e) then Option.some (name, e) else Option.none
+    | _ => Option.none) diff
+  let changed := filterMap (fun change =>
+    match change with
+    | (name, Option.some old, Option.some new) => if hash old == hash new || not (visible (name, new)) then Option.none else Option.some (name, hash old, hash new)
+    | _ => Option.none) diff
+  let removed := filterMap (fun change =>
+    match change with
+    | (name, Option.some e, Option.none) => if visible (name, e) then Option.some (name, e) else Option.none
+    | _ => Option.none) diff
   let tasksAfter := snapshotOf dir node
   let tasksBefore := snapshotOf dir before
   let touched := List.filter

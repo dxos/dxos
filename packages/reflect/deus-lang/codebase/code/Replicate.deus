@@ -81,37 +81,8 @@ def Replicate.bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Te
 def Replicate.closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=
   let nodes := foldl (fun acc h => union acc (ancestors dir h)) Map.empty heads
   let causals := List.map (fun c => readCausal dir c) (Map.keys nodes)
-  let snapshots := List.map (fun c => c.snapshot) causals
-  let entryRoots := concatMap (fun s => rootsOf (Map.toList (readNamespace dir s))) snapshots
-  union nodes (reachable dir (concatMap snapshotsOf causals ++ entryRoots))
-
-/-- Garbage collection under a retention policy (D54): keeps the history within `keep` generations
-  of every head, with everything its snapshots reach, as one bundle, and deletes every other
-  bundle. Older history becomes shallow. The result depends only on the heads and `keep`, so
-  clients collecting with the same policy write the same bundle. Returns (bundle, deleted,
-  objects dropped). -/
-def Replicate.collect (dir : Text) (remote : Text) (keep : Int) : {Remote, IO, Throw Text} (Text, (List Text, Int)) :=
-  let seen := sync dir remote
-  let claims := concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
-  let kept := recent dir (List.map snd claims) keep
-  let causals := List.map (fun c => readCausal dir c) kept
-  let snapshots := List.map (fun c => c.snapshot) causals
-  let entryRoots := concatMap (fun s => rootsOf (Map.toList (readNamespace dir s))) snapshots
-  let live := union (Set.fromList kept) (reachable dir (concatMap snapshotsOf causals ++ entryRoots))
-  let text := bundle dir claims (Map.keys live)
-  let name := Replicate.nameOf 99 text
-  let existing := List.map (fun s => s.bundleName) seen
-  if any (fun n => n == name) existing then () else
-    Remote.put name text
-    IO.writeFile
-      (seenDir dir remote ++ "/" ++ name)
-      (seenToText (Seen.mk name claims (Map.keys live)))
-  let stale := List.filter (fun s => s.bundleName != name) seen
-  forEach stale (fun s =>
-    Remote.delete s.bundleName
-    IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
-  let before := Set.fromList (concatMap (fun s => s.hashes) seen)
-  (name, List.map (fun s => s.bundleName) stale, List.length (List.filter (fun h => not (Map.contains h live)) (Map.keys before)))
+  let entryRoots := concatMap (fun c => rootsOf (Map.toList (readNamespace dir c.snapshot))) causals
+  union nodes (#89e57906df dir (concatMap snapshotsOf causals ++ entryRoots))
 
 /-- Compacts the remote's history at `level`: writes one bundle per stratum, then deletes the
   bundles of lower levels that compacted bundles cover. Returns (written, deleted). -/
@@ -251,14 +222,6 @@ def Replicate.push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, T
       (seenDir dir remote ++ "/" ++ name)
       (seenToText (Seen.mk name [(branch, head)] missing))
     Option.some name
-
-/-- Causal nodes at most `depth` parent links from `heads`. -/
-def Replicate.recent (dir : Text) (heads : List Text) (depth : Int) : {IO, Throw Text} List Text :=
-  let rec go frontier d seen :=
-    let fresh := List.filter (fun h => not (Map.contains h seen)) (dedup (sort frontier))
-    let seen2 := foldl (fun m h => Map.insert h () m) seen fresh
-    if d >= depth || List.isEmpty fresh then Map.keys seen2 else go (concatMap (fun h => parentsOf dir h) fresh) (d + 1) seen2
-  go heads 0 Map.empty
 
 def Replicate.seenDir (dir : Text) (remote : Text) : Text := dir ++ "/remotes/" ++ remote ++ "/seen"
 
