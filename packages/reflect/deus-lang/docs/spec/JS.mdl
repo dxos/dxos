@@ -1,0 +1,220 @@
+---
+id: org.dxos.deus.spec.js
+name: JsSpec
+version: 1.0
+---
+
+# The JavaScript back end
+
+`deus build <name…> -o <file.js> --js` compiles definitions, and everything they reach, from
+[Core](./CORE.md) to one ES module ([D84](../DECISIONS.md)). There is no wasm and no kernel: each
+DEUS definition is a JavaScript function named after it, so a defect or a JavaScript exception has
+a stack trace of DEUS names, and a source map points each function at its definition's source.
+The target is for programs that live next to JavaScript: the DOM, React, Effect, Composer. The
+compiler is [`deus/jsgen.deus`](../../deus/jsgen.deus); the runtime the module imports is
+[`platform/js/runtime.mjs`](../../platform/js/runtime.mjs); the libraries for writing bindings are
+[`platform/js/js.deus`](../../platform/js/js.deus) and [`platform/js/react.deus`](../../platform/js/react.deus).
+
+This document is the spec in the order the work follows: the API a program sees, the rules the
+compiler keeps, then executable requirements. Every `js` block below compiles an expression with
+the JS back end, runs it in Node, and requires the value to print exactly as the kernel prints it.
+`deus mdl docs/spec/JS.mdl` checks them.
+
+## Extensions
+
+| Term | URI                    |
+| ---- | ---------------------- |
+| `js` | `org.dxos.deus.js@1.0` |
+
+## Output
+
+| File             | Content                                                                         |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `<file.js>`      | the module: imports, one function per definition, exports, `sourceMappingURL`   |
+| `<file.js>.map`  | a source map (version 3): one source per definition, its `deus view` text       |
+| `deus-runtime.mjs` | a copy of `platform/js/runtime.mjs`: values, primitives, handlers, codecs     |
+
+Each name on the command line is exported under its last segment (`App.main` is `main`), through
+the codec of its stored type (below). `raw` is also exported: an object of the same functions
+without codecs, for DEUS-aware callers.
+
+## Values
+
+| DEUS                      | JavaScript inside the module                              |
+| ------------------------- | --------------------------------------------------------- |
+| `Int`                     | a number, kept to 32 bits with `\| 0` and `Math.imul`      |
+| `Text`                    | a string (UTF-16 code units, as in DEUS)                  |
+| `Bool`                    | `true` / `false`                                          |
+| `Unit`                    | `undefined`                                               |
+| any other data            | `rt.Con { type, tag, fields }`, as the TypeScript kernel  |
+| a function                | a JavaScript function whose `length` is its arity         |
+| `Ref`, `Array`            | `{ value }`, a JavaScript array                           |
+| `Dict`, `MutMap`          | a `Map`                                                   |
+| a foreign type (no constructors) | whatever the import returned, untouched            |
+
+Equality, ordering and `show` are the kernel's: structural on data, never on functions.
+
+## Definitions and calls
+
+- A definition `(lam … (lam b))` with `n` lambdas is a JavaScript function of `n` parameters.
+  Parameters and locals take the author's names from the `locals` metadata.
+- A call of a definition with exactly its arity is a direct call. Anything else (a local function,
+  too few or too many arguments) goes through `rt.ap`, which applies by `length`: fewer arguments
+  make a partial application, more apply the result to the rest.
+- A call to itself in tail position is a jump to the top of the function, so a loop written as
+  tail recursion runs in constant stack. Other calls use the JavaScript stack.
+- A definition that is not a function is a constant, computed once on first use.
+- Constructors and operations used as values are functions of their arity.
+
+## Handlers
+
+The module runs in direct style: there are no generators and no continuations in the output. A
+handler is a frame on a stack the runtime keeps, and each operation clause is compiled by how it
+uses its continuation `k` ([D84](../DECISIONS.md)):
+
+| Clause                                       | Compiled as                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| `k e`, with `k` not free in `e` (resumptive)  | a call at the request: `e` runs outside the handler, its value returns |
+| `k` not used (abortive)                       | an exception the `handle` catches; the clause's value is the result |
+| anything else                                 | refused: `the handler for <op> uses its continuation in a way the js target does not support` |
+
+That covers `Throw`, `Defect`, readers, writers, logging and every host-style ability. Handlers that
+resume twice or after more work (generators, backtracking) run on the kernels instead.
+
+A request no handler in the module catches goes to the host: `IO` operations are answered by the
+runtime (`print`, `eprint`, `time`, `wallClock`, `getEnv`, `exit`), and any other ability by the
+handler registered with `rt.handle(iri, { op: … })`, else it is the defect
+`unhandled ability <iri> operation <index>`. A defect is a `DeusDefect` exception; a `handle` with a
+`Defect.raise` clause catches it, and also any JavaScript exception raised below it, by its message.
+
+## Foreign imports
+
+A binding is a definition whose body is `Js.import "<module>" "<path>"` and whose signature says
+the type:
+
+```text
+def React.useState : a -> (a, a -> Unit) := Js.import "react" "useState"
+def Dom.title : Unit -> Text := Js.import "" "document.title"
+```
+
+The module is imported once (`import * as m0 from "react"`); `""` is `globalThis`. The path is a
+dotted property path. Arguments and results cross through codecs chosen by the signature:
+
+| DEUS type              | JavaScript at the boundary                                     |
+| ---------------------- | -------------------------------------------------------------- |
+| `Int`, `Text`, `Bool`  | number, string, boolean                                        |
+| `Unit`                 | `undefined`                                                    |
+| `List a`               | an array                                                       |
+| `Option a`             | the value, or `undefined` (from JavaScript also `null`)        |
+| `(a, b, …)`            | an array                                                       |
+| a structure            | an object with its field names                                 |
+| `a -> b`               | a function; its arity is the number of arrows                  |
+| a type variable, a foreign type, anything else | the value untouched              |
+
+A binding that is not a function (`: Js`) reads the value at first use. The same codecs serve the
+exports. Calling a binding on a kernel is the defect `Js.import <module> <path>: JavaScript imports
+run only on the js target`.
+
+## Source maps
+
+Each definition is one source, `deus:<Name>`, whose content is its `deus view` text. Every line of
+a definition's function maps to the first line of its source, so a stack frame names the DEUS
+definition and the source map opens its text. Mapping is per definition, not per expression.
+
+## Refusals
+
+The compiler stops at the first form it cannot compile and names it: a handler clause above,
+`Code.*` primitives (`the primitive Code.run is outside the js target`), and a definition the
+codebase does not hold.
+
+## Requirements
+
+Small programs whose value on the JS target must print as the kernel prints it.
+
+```deus
+namespace JsSpec
+
+def sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else sumTo (n - 1) (acc + n)
+
+inductive Shape where
+  | circle (r : Int)
+  | rect (w : Int) (h : Int)
+
+def area (s : Shape) : Int :=
+  match s with
+  | Shape.circle r => 3 * r * r
+  | Shape.rect w h => w * h
+
+ability Ask where
+  ask : Unit -> Int
+
+def twice (u : Unit) : {Ask} Int := Ask.ask () + Ask.ask ()
+
+def answer (body : Unit -> {Ask | r} a) : {r} a :=
+  handle body () with
+  | Ask.ask _ -> k => k 21
+
+def safeDiv (a : Int) (b : Int) : {Throw Text} Int := if b == 0 then throw "zero" else a / b
+
+def counter (n : Int) : Int :=
+  let cell := Ref.new 0
+  List.forEach (List.range 0 n) (fun i => Ref.set cell (Ref.get cell + i))
+  Ref.get cell
+
+end JsSpec
+```
+
+```mdl
+js JS-1: arithmetic wraps at 32 bits
+  run: (2147483647 + 1, 7 / -2, -7 % 3, Int.ushr (-1) 28)
+```
+
+```mdl
+js JS-2: a self tail call loops in constant stack
+  run: JsSpec.sumTo 100000 0
+```
+
+```mdl
+js JS-3: data, matching and the prelude
+  run: List.map JsSpec.area [JsSpec.Shape.circle 2, JsSpec.Shape.rect 3 4]
+```
+
+```mdl
+js JS-4: text is UTF-16 code units
+  run: (Text.length "😀", Text.split "a,b,,c" ",", Int.fromText "-12", Text.code "é" 0)
+```
+
+```mdl
+js JS-5: a resumptive handler answers the request where it is made
+  run: JsSpec.answer JsSpec.twice
+```
+
+```mdl
+js JS-6: an abortive handler is the result of the handle
+  run: (try (fun _ => JsSpec.safeDiv 1 0), try (fun _ => JsSpec.safeDiv 9 3))
+```
+
+```mdl
+js JS-7: partial application and closures
+  run: List.map (Int.add 10) (List.filter (fun x => x % 2 == 0) (List.range 0 7))
+```
+
+```mdl
+js JS-8: mutable cells
+  run: JsSpec.counter 10
+```
+
+```mdl
+js JS-9: structural equality and order
+  run: (some [1, 2] == some [1, 2], compare (1, "b") (1, "a"), List.sort [3, 1, 2])
+```
+
+```mdl
+js JS-10: a defect is caught by a Defect handler
+  run: handle Int.toText (Int.div 1 0) with | Defect.raise m -> _ => m
+```
+
+```mdl
+js JS-11: maps and dictionaries
+  run: Map.toList (Map.fromList [("b", 2), ("a", 1)])
+```
