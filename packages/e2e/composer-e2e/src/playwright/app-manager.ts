@@ -275,6 +275,10 @@ export class AppManager {
       .toBe(true);
   }
 
+  async waitForSaved(timeout = 30_000): Promise<void> {
+    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-saved', 'true', { timeout });
+  }
+
   /** Fails unless the page still holds the document {@link markDocument} tagged. */
   async expectSameDocument(tag: string): Promise<void> {
     expect(await this.page.evaluate(() => globalThis.e2eDocumentTag), 'the page reloaded').toBe(tag);
