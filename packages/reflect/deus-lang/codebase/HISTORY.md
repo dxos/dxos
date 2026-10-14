@@ -1,5 +1,17 @@
 # History of main
 
+- `e1fa6d0eb4` task: open c338b56e Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
+- `cda9251c00` task: open 434a6dbc Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
+- `215b405dad` task: open d807958c Native: closure conversion and partial application in the C back end (by claude)
+- `cf05f0f744` task: open 932f4034 Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
+- `9dedf7f070` task: set babdb4f2 details (by claude)
+- `d4211dd9fb` close babdb4f2 by #83dbe4c096 (by claude)
+- `83dbe4c096` C back end compiled by clang/LLVM (deus build --c) and benchmarks of every back end (D79) (by claude)
+- `cb399207a1` task: open babdb4f2 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
+- `9ba4d92091` history: import 146 changes
+- `073671715e` task: import 47 tasks
+- `c648f7f874` add code specs
+- `67c7d5a614` init
 - `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
 - `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
 - `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)

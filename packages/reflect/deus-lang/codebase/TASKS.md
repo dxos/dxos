@@ -9,6 +9,12 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`932f4034`)
+
+- state: todo
+- priority: high
+- labels: native, perf
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -76,6 +82,24 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 - labels: explorer, browser, wasm
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
+
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: closure conversion and partial application in the C back end (`d807958c`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`c338b56e`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
 
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
@@ -231,6 +255,15 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 - links change #a37df20cc0
 
 Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
+
+## Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (`babdb4f2`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #83dbe4c096
+
+deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is within 1.4x of or faster than wasm in V8 and 12-26x faster than the JIT. Numbers and roadmap in docs/spec/NATIVE.md (D79).
 
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 

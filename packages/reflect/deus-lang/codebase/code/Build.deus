@@ -41,6 +41,13 @@ def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text
   if mac then Build.tool "codesign" ["--sign", "-", out] else ""
   IO.remove work
 
+/-- Writes C from the C back end (D79): to `out` itself when it ends in `.c`, else beside it as
+  `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result. -/
+def Build.cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit := if endsWith ".c" out then IO.writeFile out source else
+  IO.writeFile (out ++ ".c") source
+  Build.tool (getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
+  ()
+
 /-- Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript
   driver to the directory `out`; returns the kernel crate's directory. -/
 def Build.embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
