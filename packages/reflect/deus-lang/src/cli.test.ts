@@ -58,12 +58,19 @@ describe('deus CLI', () => {
     const add = deus('add', join(root, 'deus'), '--codebase', codebase);
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
+    // The checked specs (D91): their laws compile next to the code, and `deus mdl` checks every block.
+    const specs = deus('add', join(root, 'platform/spec.deus'), join(root, 'docs/spec'), '--codebase', codebase);
+    expect(specs.stderr).toBe('');
+    expect(specs.code).toBe(0);
     const tests = deus('test', '--codebase', codebase);
     expect(tests.stdout).toMatch(/ 0 failed/);
     expect(tests.code).toBe(0);
     const theorems = deus('check', '--codebase', codebase);
     expect(theorems.stdout).toMatch(/proved by decide/);
     expect(theorems.code).toBe(0);
+    const checked = deus('mdl', join(root, 'docs/spec'), '--codebase', codebase);
+    expect(checked.stdout).toMatch(/ 0 failed, 0 unchecked/);
+    expect(checked.code).toBe(0);
 
     // `view` prints source that compiles back to the same hashes: every definition, test, type and
     // ability of the toolchain, printed together so that mutually recursive ones are re-added as a group.

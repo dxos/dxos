@@ -298,3 +298,7 @@ can you confirm that all codebase changes are stil backed-up to git
 ---
 
 make sure the thread that's picking up open tasks doesnt stop and picks up next task when its done with prev
+
+---
+
+how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it

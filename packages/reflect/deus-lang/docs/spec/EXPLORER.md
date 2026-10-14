@@ -111,7 +111,7 @@ In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and it
 it has none.
 
 `html` uses `<span class=K>` around each run of kind `K`: `kw` (keyword), `ty` (a capitalized name), `str`
-(a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<`, `>` and `"` are escaped. A name
+(a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<` and `>` are escaped; `"` is not, since it is safe in text and the app inserts the HTML as content. A name
 that refers to one of `deps` is wrapped in `<a class=ref data-open="d:<hash>">…</a>`.
 
 `verdict` is the text of `<codebase>/results/<hash>` with surrounding whitespace removed: an S-expression

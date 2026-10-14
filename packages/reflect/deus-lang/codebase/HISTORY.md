@@ -1,5 +1,22 @@
 # History of main
 
+- `74b97aebd0` close 6ffdc230 by #10e77371ec (by claude)
+- `10e77371ec` checked specs for the codebase store, compile, export and explorer; req, api and law blocks (D91) (by claude)
+- `3f7d3447c4` task: open 1ab6c044 Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (by claude)
+- `6ed8a2b666` task: open b4d7a440 BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (by claude)
+- `22fa7745e5` task: open 908495a0 deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (by claude)
+- `165385e432` task: open 0d7b0142 law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (by claude)
+- `83f2d1149c` task: open 1cbfdd30 Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (by claude)
+- `fc3b0088f4` task: open 6a3b0ebe MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (by claude)
+- `33a1f4c824` task: open f6a2c2ff Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (by claude)
+- `c4d35b8416` task: open 4f7f9e40 Theorem view prints P -> Q as prim "implies" (P) (Q) (by claude)
+- `c36de0222a` task: open a2da28e2 A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (by claude)
+- `ef4bb40a88` task: open 823f7b83 Laws for task, comment and history-record merges, and for add/update refusing layer crossings (by claude)
+- `6370cf7401` task: open 6ffdc230 Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (by claude)
+- `192a0b9794` toolchain sources at #13952's head (by claude)
+- `41879b7d7e` history: import 319 changes
+- `ffc6ea6551` task: import from tasks.sexp
+- `3b48b9e68d` add code specs
 - `57f679f52c` close ef46861c by #9081760a10 (by claude)
 - `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
 - `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)

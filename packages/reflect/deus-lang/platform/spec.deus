@@ -1,0 +1,121 @@
+/-
+  Specifications as MDL blocks (D91): the process is spec, then APIs and laws, then the
+  implementation, proofs and tests. A spec document states requirements; `deus mdl` checks that
+  each is backed by passing evidence in the codebase, that the stated APIs exist with the stated
+  types, and that each law is a theorem that holds with at least the stated evidence.
+
+    ```mdl
+    req R-1: an object is named by the hash of its text
+      by: Codebase.Laws.putNamesByHash
+    ```
+
+    ```mdl
+    api A-1: the object store
+      signatures:
+      - Codebase.put : Text -> Sexp -> {IO} Text
+      - Codebase.readObject : Text -> Text -> {IO} Option Sexp
+    ```
+
+    ```mdl
+    law L-1: a causal node reads back as written
+      theorem: Codebase.Laws.causalRoundTrip
+      statement: (c : Causal) : Codebase.causalFromSexp (Codebase.causalToSexp c) = c
+      evidence: test
+    ```
+
+  - `req`: `by:` tests or theorems that must pass, separated by `|` or one per `- ` line. A
+    requirement without evidence names the task that will add it in `gap:`; `deus mdl` reports
+    it as a known gap, which does not fail the document.
+  - `api`: `signatures:` lines `Name : Type`; the type is compared with the one the codebase
+    displays, spaces ignored. A line without `: Type` only checks that the name exists.
+  - `law`: `theorem:` one theorem (or test); `statement:` its binders and proposition, every
+    name in full and `=` read as `==`, compared with what the codebase prints; `evidence:` the least evidence accepted, `test` (default) or `proof`
+    (a tactic proof, `decide` or `rfl`, with no lemma that is only tested).
+-/
+
+namespace Spec
+
+def prop (b : Block) (key : Text) : Text := Option.getOr (List.lookup key b.props) ""
+
+def prop0 (facts : List (Text, Text)) (key : Text) : Text := Option.getOr (List.lookup key facts) ""
+
+/-- Collapses runs of spaces and new lines to one space, so layout never makes a mismatch. -/
+def squash (t : Text) : Text :=
+  Text.join " " (List.filter (fun w => not (Text.isEmpty w)) (Text.split (Text.replace "\n" " " t) " "))
+
+/-- Items of a list property: separated by `|` or by lines. -/
+def items (t : Text) : List Text :=
+  List.filter (fun w => not (Text.isEmpty w)) (List.map Text.trim (Text.split (Text.replace "\n" "|" t) "|"))
+
+/-- How strong a verdict's evidence is: 2 for a complete check (a proof, `decide`, `rfl`), 1 for tested cases, 0 otherwise. -/
+def strength (evidence : Text) : Int :=
+  if evidence == "proof" || evidence == "decide" || evidence == "rfl" then 2
+  else if evidence == "test" || evidence == "integration" || evidence == "proof assuming tested lemmas" then 1
+  else 0
+
+/-- Problems with one piece of evidence: it must be a test or a theorem that passes. -/
+def evidenceProblems (name : Text) : {MdlHost} List Text :=
+  match MdlHost.describe name with
+  | Result.err message => [message]
+  | Result.ok facts =>
+    let verdict := prop0 facts "verdict"
+    if Text.isEmpty verdict then [name ++ " is a " ++ prop0 facts "kind" ++ ", not a test or a theorem"]
+    else if verdict == "pass" then []
+    else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"]
+    else [name ++ " fails: " ++ prop0 facts "reason"]
+
+/-- The `req` block type. -/
+@[ext "org.dxos.deus.req@1.0"]
+def checkReq (b : Block) : {MdlHost} List Text :=
+  match items (prop b "by") with
+  | [] => if Text.isEmpty (prop b "gap") then ["no evidence: name passing tests or theorems in by:, or the task that adds them in gap:"] else ["gap: " ++ prop b "gap"]
+  | names => List.concatMap evidenceProblems names
+
+/-- `Name : Type` as (name, type); the type is empty when the line has none. -/
+def signature (line : Text) : (Text, Text) :=
+  let i := Text.indexOf line " : " 0
+  if i < 0 then (Text.trim line, "") else (Text.trim (Text.take i line), Text.trim (Text.drop (i + 3) line))
+
+def signatureProblems (line : Text) : {MdlHost} List Text :=
+  match signature line with
+  | (name, stated) =>
+    match MdlHost.describe name with
+    | Result.err message => [message]
+    | Result.ok facts =>
+      let actual := prop0 facts "type"
+      if Text.isEmpty stated || squash stated == squash actual then []
+      else [name ++ " has type " ++ actual ++ ", the spec says " ++ stated]
+
+/-- The `api` block type. -/
+@[ext "org.dxos.deus.api@1.0"]
+def checkApi (b : Block) : {MdlHost} List Text :=
+  match List.filter (fun l => not (Text.isEmpty l)) (List.map Text.trim (Text.lines (prop b "signatures"))) with
+  | [] => ["api needs signatures:"]
+  | lines => List.concatMap signatureProblems lines
+
+/-- The `law` block type. -/
+@[ext "org.dxos.deus.law@1.0"]
+def checkLaw (b : Block) : {MdlHost} List Text :=
+  let name := Text.trim (prop b "theorem")
+  let wanted := if Text.isEmpty (prop b "evidence") then "test" else Text.trim (prop b "evidence")
+  if Text.isEmpty name then ["law needs theorem:"]
+  else if wanted != "test" && wanted != "proof" then ["evidence: " ++ wanted ++ " is not one of test, proof"]
+  else
+    match MdlHost.describe name with
+    | Result.err message => [message]
+    | Result.ok facts =>
+      let kind := prop0 facts "kind"
+      let stated := squash (Text.replace " = " " == " (prop b "statement"))
+      let actual := squash (prop0 facts "statement")
+      let statement := if kind != "theorem" || Text.isEmpty stated || stated == actual then []
+        else ["the theorem states " ++ actual ++ ", the spec says " ++ stated]
+      let verdict := prop0 facts "verdict"
+      let evidence := prop0 facts "evidence"
+      let held := if Text.isEmpty verdict then [name ++ " is a " ++ kind ++ ", not a theorem"]
+        else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"]
+        else if verdict != "pass" then [name ++ " fails: " ++ prop0 facts "reason"]
+        else if wanted == "proof" && strength evidence < 2 then [name ++ " holds by " ++ evidence ++ "; the spec asks for a proof"]
+        else []
+      statement ++ held
+
+end Spec

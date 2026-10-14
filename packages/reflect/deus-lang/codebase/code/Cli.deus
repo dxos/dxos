@@ -9,7 +9,7 @@ structure Cli.Args where
   positional : List Text
   options : Map Text Text
 
-/-- One block's outcome: `ok`, `fail` with its problems, or `unchecked` when no extension is found. -/
+/-- One block's outcome: `ok`, `fail` with its problems, `gap` when every problem is a known gap, or `unchecked` when no extension is found. -/
 structure Cli.Outcome where
   place : Text
   verdict : Text
@@ -231,7 +231,12 @@ def Cli.checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (p
       let check := Code.run h
       match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
       | Result.ok [] => Outcome.mk place "ok" []
-      | Result.ok problems => Outcome.mk place "fail" problems
+      | Result.ok problems =>
+          -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
+          Outcome.mk
+            place
+            (if List.all (fun p => startsWith "gap: " p) problems then "gap" else "fail")
+            problems
       | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
@@ -243,7 +248,7 @@ def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (pat
     dir
     ns
     byUri
-    (path ++ ":" ++ toText b.lineNo ++ " " ++ describe b)
+    (path ++ ":" ++ toText b.lineNo ++ " " ++ Mdl.describe b)
     (List.lookup b.blockType declared)
     b) (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
@@ -388,6 +393,45 @@ def Cli.deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
         args
         (fun _ => Json.obj [("name", Json.str name), (if reverse then "dependents" else "dependencies", Json.arr (List.map (fun x => Json.obj [("hash", Json.str x), ("name", Json.str (display x))]) found))])
         (fun _ => join "\n" (List.map display found))
+
+/-- What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
+  source, and for a test or a theorem its verdict (checked now unless a result is cached). -/
+def Cli.describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+  match Map.lookup name ns with
+  | Option.none => Throw.throw (name ++ " is not in the codebase")
+  | Option.some e =>
+      let h := Entry.hash e
+      let meta := readMeta dir h
+      let typed :=
+        match metaField meta "scheme" with
+        | Option.some scheme => [("type", displayScheme scheme)]
+        | Option.none => []
+      let verdict :=
+        match Check.verdictOf dir ns e with
+        | Option.some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", toText cases)]
+        | Option.some (Verdict.fail reason) => [("verdict", "fail"), ("reason", reason)]
+        | Option.some Verdict.unchecked => [("verdict", "unchecked")]
+        | Option.none => []
+      -- Specs name things in full, so the statement prints every reference by its full name.
+      let statement :=
+        match readObject dir h with
+        | Option.some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
+            let base := printer ns (List.map asText (metaList meta "locals"))
+            let full := Printer.mk base.fullNames base.fullNames (Map.fromList (filterMap (fun pair =>
+              match pair with
+              | (n, Entry.type _ iri _) => Option.some (iri, n)
+              | (n, Entry.ability _ iri) => Option.some (iri, n)
+              | _ => Option.none) (Map.toList ns))) Map.empty base.supply base.fresh
+            let decl := View.theoremDecl full name types prop proof
+            let stop := indexOf decl " := " 0
+            [("statement", trim (Text.drop
+              (Text.length ("theorem " ++ name))
+              (if stop < 0 then decl else Text.take stop decl)))]
+        | _ => []
+      [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (printer ns []) dir ns name e "deus"))] ++
+        typed ++
+        statement ++
+        verdict
 
 def Cli.die (message : Text) : {IO} a :=
   eprintln ("deus: " ++ message)
@@ -740,7 +784,7 @@ def Cli.mdl (args : Args) : {IO, Throw Text} Unit :=
     (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))])
     outcomes)) (fun _ => join "\n" (List.map (fun o => padRight 10 o.verdict ++ o.place ++
     Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++ [toText (count "ok") ++ " ok, " ++ toText (count "fail") ++ " failed, " ++
-    toText (count "unchecked") ++ " unchecked"]))
+    toText (count "unchecked") ++ " unchecked" ++ (if count "gap" > 0 then ", " ++ toText (count "gap") ++ " known gaps" else "")]))
   if count "fail" > 0 then IO.exit 1 else ()
 
 def Cli.merge (args : Args) : {IO, Throw Text} Unit :=
@@ -1380,6 +1424,9 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO
     | Result.err message => Result.err message)
   | MdlHost.run source -> k => k (match compiled source with
     | Result.ok h => guardDefect (fun _ => Code.run h)
+    | Result.err message => Result.err message)
+  | MdlHost.describe name -> k => k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
+    | Result.ok r => r
     | Result.err message => Result.err message)
 
 --
