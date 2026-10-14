@@ -7,6 +7,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
+import { log } from '@dxos/log';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
@@ -59,14 +60,16 @@ export type SetupDiscordAgentProps = DiscordBotArgs & SetupAgentProps;
 /** The agent, in Support mode, with the team it escalates to; reuses what a previous run left in the space, brain included. */
 export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProps): Promise<Agent.Agent> => {
   const agent = await ensureAgent(db, invoker, remote);
-  const { seeded } = await seedSupportTeam({ db, invoker, agent, remote });
   await enableSupport(db, invoker, agent);
-  // Facts need a model, which only a story on EDGE has. Not awaited: the model call outlasts the setup plugin's
-  // activation timeout, and the Facts panel picks the facts up when they land.
-  if (remote && seeded) {
-    void seedSupportFacts({ db, invoker, agent, remote });
-  }
   await attachChannels(db, agent, [await ensureEmailChannel(db)]);
+  // Not awaited: seeding calls the brain on EDGE, seconds per call and past the setup plugin's activation timeout,
+  // and a space created moments ago may not have reached EDGE yet; the panels pick the seed up when it lands.
+  void seedSupportTeam({ db, invoker, agent, remote })
+    .then(({ seeded }) =>
+      // Facts need a model, which only a story on EDGE has.
+      remote && seeded ? seedSupportFacts({ db, invoker, agent, remote }) : undefined,
+    )
+    .catch((error) => log.warn('seeding the support team failed', { error }));
   return agent;
 };
 
