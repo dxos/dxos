@@ -9,13 +9,14 @@
 //
 // Usage:
 //   bun prepare.ts [--chunk=15] [--max-groups=20] [--base=<ref>] [--main=origin/main]
-//                    [--slug=<slug>] [--pr-only] [--fast]
+//                    [--slug=<slug>] [--pr-only] [--fast] [--full]
 //
 // Default: no prior finalized review → every rule scans the whole project; a
 // rule never seen in a prior ancestor review also gets a full first pass.
 // `--pr-only` restores diff-only mode (last review on this branch, or merge-base with main); its
 // changed set ignores merges, so files that only arrived from main are not reviewed.
 // `--fast` is `--pr-only` recorded as `mode: fast`, for a run System One judges alone (`fast.ts`).
+// `--full` ignores prior reviews, so every rule scans the whole project (a scheduled repo-wide sweep).
 // Groups are capped at `--max-groups` (default 20; 0 = unlimited): all matched
 // files are still covered — chunk sizes grow so the file set fits the budget.
 //
@@ -66,6 +67,7 @@ const { values } = parseArgs({
     'slug': { type: 'string' },
     'pr-only': { type: 'boolean', default: false },
     'fast': { type: 'boolean', default: false },
+    'full': { type: 'boolean', default: false },
   },
 });
 
@@ -73,6 +75,11 @@ const chunkSize = Math.max(1, Number.parseInt(values.chunk, 10) || 15);
 const maxGroups = Number.parseInt(values['max-groups'], 10);
 const fast = values.fast === true;
 const prOnly = fast || values['pr-only'] === true;
+const full = values.full === true;
+if (full && (prOnly || values.base)) {
+  console.error('prepare: --full cannot be combined with --pr-only, --fast or --base.');
+  process.exit(1);
+}
 const root = repoRoot();
 const head = headCommit();
 const short = shortSha(head);
@@ -164,7 +171,9 @@ const resolveDiffBase = (priorCommit: string | null): string => {
   return mainBase ?? head;
 };
 
-const { newest: prior, seenRuleIds } = scanPriorReviews(prOnly ? mainBase : null);
+const { newest: prior, seenRuleIds } = full
+  ? { newest: null, seenRuleIds: new Set<string>() }
+  : scanPriorReviews(prOnly ? mainBase : null);
 const priorCommit = prior?.commit ?? null;
 const projectFiles = listRepoFiles();
 

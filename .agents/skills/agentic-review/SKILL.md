@@ -73,6 +73,8 @@ each) and `## Appendix` (how the run was made — System One stats, notes; never
 bun .agents/skills/agentic-review/scripts/prepare.ts
 # PR / diff-only (previous default):
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
+# Whole repo, ignoring prior reviews (a "full-repo scan" request):
+bun .agents/skills/agentic-review/scripts/prepare.ts --full
 ```
 
 It prints the STAGING.md / REVIEW.md paths, the resolved base (`full` or a
@@ -87,7 +89,8 @@ Useful flags: `--chunk=<N>` (max files per group when uncapped, default 15),
 across the budget by growing chunk sizes; `0` = unlimited), `--pr-only` (diff
 against last review or merge-base with main), `--base=<ref>` (override the diff
 base for delta rules), `--main=<ref>` (main-like ref for `--pr-only` fallback),
-`--slug=<slug>` (override the store dir name).
+`--slug=<slug>` (override the store dir name), `--full` (every rule scans the
+whole project even when a prior review exists; without it a repeat run is incremental).
 
 ### 2. Spawn one Sonnet subagent per group
 
@@ -319,7 +322,7 @@ definition.
 
 ## Notes
 
-- **Default is full then incremental.** With no finalized ancestor review, every
+- **Default is full then incremental.** Pass `--full` to force a whole-project pass. With no finalized ancestor review, every
   rule scans git-visible files matching its globs (`base: full`). After that,
   known rules review only the delta since the newest finalized ancestor; a **new**
   rule (absent from prior runs' `rules:` / `groups.json`) still gets a one-time
