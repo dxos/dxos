@@ -2,7 +2,7 @@
 
 From Dmytro: "the general process should be mdl spec > apis + theorems > impls and proofs and tests.
 maybe backfill this for existing code and keep using this process as you go, eval it." This page says
-how the process works in DEUS, what the backfill covered, and what it found and cost (D91).
+how the process works in DEUS, what the backfill covered, and what it found and cost (D92).
 
 ## How to write a spec
 

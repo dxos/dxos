@@ -8,7 +8,7 @@ version: 1.0
 
 The checkable half of [EXPLORER.md](EXPLORER.md), which documents every file of a generated site. The
 app reads only these files, so the requirements are about them: which names appear, which pages
-exist, and that the links between pages agree. Written in the order of the process (D91);
+exist, and that the links between pages agree. Written in the order of the process (D92);
 `deus mdl docs/spec/EXPLORER.mdl` checks it against the evidence in [Laws](#laws).
 
 ## Extensions

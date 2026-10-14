@@ -7,7 +7,7 @@ version: 1.0
 # Codebase store: checked spec
 
 The checkable half of [CODEBASE-STORE.md](CODEBASE-STORE.md), which explains each point, written
-in the order of the process (D91): requirements, then the APIs and laws they rest on, then the
+in the order of the process (D92): requirements, then the APIs and laws they rest on, then the
 tests and theorems. Every requirement names its evidence. `deus add` compiles the
 [Laws](#laws) section next to [`deus/codebase.deus`](../../deus/codebase.deus), and
 `deus mdl docs/spec/CODEBASE-STORE.mdl` checks that the APIs exist with these types, that every

@@ -1,5 +1,5 @@
 /-
-  Specifications as MDL blocks (D91): the process is spec, then APIs and laws, then the
+  Specifications as MDL blocks (D92): the process is spec, then APIs and laws, then the
   implementation, proofs and tests. A spec document states requirements; `deus mdl` checks that
   each is backed by passing evidence in the codebase, that the stated APIs exist with the stated
   types, and that each law is a theorem that holds with at least the stated evidence.

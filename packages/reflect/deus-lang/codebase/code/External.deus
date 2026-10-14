@@ -118,40 +118,9 @@ def External.problemsOf (r : Result (List Text) a) : List Text :=
   | Result.ok _ => []
   | Result.err found => found
 
-/-
-  Specifications as MDL blocks (D91): the process is spec, then APIs and laws, then the
-  implementation, proofs and tests. A spec document states requirements; `deus mdl` checks that
-  each is backed by passing evidence in the codebase, that the stated APIs exist with the stated
-  types, and that each law is a theorem that holds with at least the stated evidence.
-
-    ```mdl
-    req R-1: an object is named by the hash of its text
-      by: Codebase.Laws.putNamesByHash
-    ```
-
-    ```mdl
-    api A-1: the object store
-      signatures:
-      - Codebase.put : Text -> Sexp -> {IO} Text
-      - Codebase.readObject : Text -> Text -> {IO} Option Sexp
-    ```
-
-    ```mdl
-    law L-1: a causal node reads back as written
-      theorem: Codebase.Laws.causalRoundTrip
-      statement: (c : Causal) : Codebase.causalFromSexp (Codebase.causalToSexp c) = c
-      evidence: test
-    ```
-
-  - `req`: `by:` tests or theorems that must pass, separated by `|` or one per `- ` line. A
-    requirement without evidence names the task that will add it in `gap:`; `deus mdl` reports
-    it as a known gap, which does not fail the document.
-  - `api`: `signatures:` lines `Name : Type`; the type is compared with the one the codebase
-    displays, spaces ignored. A line without `: Type` only checks that the name exists.
-  - `law`: `theorem:` one theorem (or test); `statement:` its binders and proposition, every
-    name in full and `=` read as `==`, compared with what the codebase prints; `evidence:` the least evidence accepted, `test` (default) or `proof`
-    (a tactic proof, `decide` or `rfl`, with no lemma that is only tested).
--/
+--
+-- MDL blocks.
+--
 def External.prop (b : Block) (key : Text) : Text := getOr (List.lookup key b.props) ""
 
 def External.registries : List Registry := [npm, crates, github, External.url]

@@ -174,15 +174,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: native, perf
 
-## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, replication, spec
-
-From docs/spec/README.md, Known divergences.
-
 ## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D83) (`a1b73fb8`)
 
 - state: todo
@@ -428,7 +419,7 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 - labels: dogfood, spec, mdl
 - links change #10e77371ec
 
-From Dmytro: how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it. See docs/SPEC-PROCESS.md (D91).
+From Dmytro: how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it. See docs/SPEC-PROCESS.md (D92).
 
 ## Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (`3b617154`)
 
@@ -806,6 +797,16 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - labels: docs, spec
 
 Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
+
+## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, replication, spec
+- links change #1efeb3fb7d
+
+From docs/spec/README.md, Known divergences.
 
 ## Render the codebase in a TypeScript-like dialect (`655b148a`)
 

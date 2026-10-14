@@ -39,9 +39,6 @@ Bugs:
 
 - Type ascriptions (`(e : T)`, `let x : T := …`) are erased before checking, and a row written on a
   definition with no binders is not checked ([LANGUAGE.md](./LANGUAGE.md#static-semantics)).
-- Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.
-  A file under `bundles/` whose name is not `<level>-<sha256>` makes a pull fail
-  ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md)).
 
 Docs that disagree with the code:
 

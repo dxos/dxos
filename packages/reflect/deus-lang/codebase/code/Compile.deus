@@ -403,7 +403,7 @@ def Compile.hashCycle (members : List Pending) (hashes : Map Text Text) (objects
     | (p, h) => Map.insert p.name h m) hashes (zip ordered memberHashes)
   let objs := List.map (fun pair =>
     match pair with
-    | (form, h) => (h, unself form memberHashes)) (zip forms memberHashes)
+    | (form, h) => (h, Compile.unself form memberHashes)) (zip forms memberHashes)
   (named, reverse objs ++ objects)
 
 /-- Hashes term-like definitions in dependency order; returns name to hash and the objects. -/

@@ -1,5 +1,9 @@
 # History of main
 
+- `089232a06c` task: set 6ffdc230 details (by claude)
+- `b1615b9a4a` history: import 347 changes (by claude)
+- `4d335b2648` task: import from tasks.sexp
+- `e373ff3964` add code specs
 - `74b97aebd0` close 6ffdc230 by #10e77371ec (by claude)
 - `10e77371ec` checked specs for the codebase store, compile, export and explorer; req, api and law blocks (D91) (by claude)
 - `3f7d3447c4` task: open 1ab6c044 Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (by claude)
@@ -17,12 +21,11 @@
 - `41879b7d7e` history: import 319 changes
 - `ffc6ea6551` task: import from tasks.sexp
 - `3b48b9e68d` add code specs
-- `57f679f52c` close ef46861c by #9081760a10 (by claude)
-- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
-- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
-- `74c2b4296d` history: import 313 changes
-- `eb9b7f4404` task: import from tasks.sexp
-- `617221bcb6` add code specs
+- `d3c92c98f9` export: merge 6 changes from codebase
+- `c610f5d907` export: merge tasks from codebase
+- `634f0cce36` merge #13952's branch (wasm refcounting, D90); pull verification renumbered D91 (by claude)
+- `6603ee130b` close 7afeaa0c by #1efeb3fb7d (by claude)
+- `1efeb3fb7d` pull: verify bundle names, bundle and object hashes, cycle members included (D90) (by claude)
 - `83474d34b9` export: merge 19 changes from codebase
 - `aabff4cf3c` export: merge tasks from codebase
 - `63e3914ad2` merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89 (by claude)
@@ -106,6 +109,12 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `57f679f52c` close ef46861c by #9081760a10 (by claude)
+- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
+- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
+- `74c2b4296d` history: import 313 changes
+- `eb9b7f4404` task: import from tasks.sexp
+- `617221bcb6` add code specs
 - `8fefe275fc` task: comment on 27d2d190 (by claude)
 - `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
 - `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)

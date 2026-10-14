@@ -8,7 +8,7 @@ version: 1.0
 
 The checkable half of [CODEBASE-TEXT.md](CODEBASE-TEXT.md). The export is the codebase's backup in
 git, so its one promise is that restoring it gives back the same codebase: the same names bound to
-the same hashes, with the metadata people read. Written in the order of the process (D91);
+the same hashes, with the metadata people read. Written in the order of the process (D92);
 `deus mdl docs/spec/CODEBASE-TEXT.mdl` checks it against the evidence in [Laws](#laws).
 
 ## Extensions

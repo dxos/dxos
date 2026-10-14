@@ -9,7 +9,7 @@ version: 1.0
 What the compiler promises about hashes, the property everything else in a content-addressed
 codebase rests on: two programs that mean the same get the same hash, two that differ do not,
 and what the printer shows compiles back to what was stored. [CORE.md](CORE.md) defines Core and
-its text form; [LANGUAGE.md](LANGUAGE.md) the surface syntax. The process (D91): requirements,
+its text form; [LANGUAGE.md](LANGUAGE.md) the surface syntax. The process (D92): requirements,
 then the APIs and laws, then the evidence in [Laws](#laws). `deus mdl docs/spec/COMPILE.mdl`
 checks it.
 

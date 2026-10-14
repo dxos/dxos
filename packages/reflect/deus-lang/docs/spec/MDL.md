@@ -235,7 +235,7 @@ same contract and are not described here.
 ## The `req`, `api` and `law` extensions
 
 [`platform/spec.deus`](../../platform/spec.deus) checks a spec written in the order of the process
-(D91): requirements, then the APIs and laws they rest on, then tests and theorems. A spec document
+(D92): requirements, then the APIs and laws they rest on, then tests and theorems. A spec document
 keeps its laws in ` ```deus ` fences, so `deus add` compiles them next to the code they are about.
 [CODEBASE-STORE.mdl](CODEBASE-STORE.mdl) is a full example.
 

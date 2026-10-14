@@ -305,7 +305,7 @@ any order. The result:
 
 Attributes, doc comments, ordinary comments (D66), spec blocks and string literals with control
 characters all come back: the laws in [CODEBASE-TEXT.mdl](CODEBASE-TEXT.mdl) restore an export in the
-simulation and compare (D91). Hashes do not depend on the rest, so it does not break the guarantee
+simulation and compare (D92). Hashes do not depend on the rest, so it does not break the guarantee
 above, but a restored codebase lacks it:
 
 - The `project` file: the project IRI appears only as the README title, and library pins are lost.
