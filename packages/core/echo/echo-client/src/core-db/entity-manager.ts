@@ -36,9 +36,11 @@ import {
 import {
   type RefResolver,
   type RefResolverRequest,
+  afterCommit,
   batchEvents,
   objectStructureFromJson,
   objectStructureToJson,
+  runInCommit,
 } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -191,6 +193,8 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Events ──────────────────────────────────────────────────────────────
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
+  /** Objects a local commit wrote, emitted synchronously after the commit and before {@link _updateEvent}. */
+  readonly _localCommitEvent = new Event<ItemsUpdatedEvent>();
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /** Fires when the database has finished loading its initial space root document. */
@@ -230,6 +234,11 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Update scheduling ────────────────────────────────────────────────────
   private _objectsForNextDbUpdate = new Set<string>();
+  /** Objects the current local commit wrote, emitted by {@link #flushLocalCommit} once it ends. */
+  readonly #objectsForLocalCommit = new Set<string>();
+  /** Objects written locally since the last flush that reached the index, with the sequence of their last write. */
+  readonly #unindexedWrites = new Map<string, number>();
+  #writeSequence = 0;
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
@@ -456,6 +465,8 @@ export class EntityManager implements IDatabaseBinding {
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
     this._objectsForNextDbUpdate.clear();
+    this.#objectsForLocalCommit.clear();
+    this.#unindexedWrites.clear();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
   }
@@ -488,6 +499,19 @@ export class EntityManager implements IDatabaseBinding {
   /** @deprecated Return only loaded objects. */
   allObjectCores(): ObjectCore[] {
     return Array.from(this._objects.values());
+  }
+
+  /**
+   * Objects written locally that the index may not reflect yet: everything written since the last flush that waited
+   * for indexing. Only these can disagree with an index answer, since the index holds everything else this client has.
+   */
+  unindexedWrites(): Iterable<string> {
+    return this.#unindexedWrites.keys();
+  }
+
+  /** Where the object falls in {@link allObjectCores} order, comparable across ids; undefined when absent. */
+  objectSequence(id: string): number | undefined {
+    return this._objects.sequenceOf(id);
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
@@ -1006,6 +1030,11 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
+    // One commit: live queries must see the object bound and available, not the link written before it.
+    runInCommit(() => this.#addCore(core, opts));
+  }
+
+  #addCore(core: ObjectCore, opts?: AddCoreOptions): void {
     if (core.entityManager) {
       if (core.entityManager !== this) {
         throw new Error('Object already belongs to another database');
@@ -1077,6 +1106,11 @@ export class EntityManager implements IDatabaseBinding {
    * @returns Ids of the objects dropped from the directory.
    */
   retainObjects(keep: Iterable<string>): string[] {
+    // One commit: live queries are notified after the dropped objects are evicted, not between the write and the eviction.
+    return runInCommit(() => this.#retainObjects(keep));
+  }
+
+  #retainObjects(keep: Iterable<string>): string[] {
     const root = this.getSpaceRootDocHandle();
     const doc = root.doc();
     const retained = new Set(keep);
@@ -1168,6 +1202,7 @@ export class EntityManager implements IDatabaseBinding {
     updates = false,
   }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, secondaryIndexes, updates });
+    const watermark = this.#writeSequence;
     await this._waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush({ disk: true });
@@ -1175,6 +1210,14 @@ export class EntityManager implements IDatabaseBinding {
 
     if (indexes || secondaryIndexes) {
       await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']({ secondaryIndexes }));
+      // Only a flush that pushed local changes to the host knows they reached the index.
+      if (disk) {
+        for (const [id, sequence] of this.#unindexedWrites) {
+          if (sequence <= watermark) {
+            this.#unindexedWrites.delete(id);
+          }
+        }
+      }
     }
 
     if (updates) {
@@ -2301,9 +2344,40 @@ export class EntityManager implements IDatabaseBinding {
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._markBodiesAvailable(documentChanges.updatedObjectIds);
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
-    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
-      coalesce: event.patchInfo.source === 'bulk',
-    });
+    // A local write reaches live queries before the writing call returns; host deliveries keep the scheduler,
+    // in a separate set so a local commit neither re-labels nor hurries the host updates waiting to coalesce.
+    if (event.patchInfo.source === 'change') {
+      for (const id of documentChanges.updatedObjectIds) {
+        this.#objectsForLocalCommit.add(id);
+        this.#unindexedWrites.set(id, ++this.#writeSequence);
+      }
+      afterCommit(this.#flushLocalCommit);
+    } else {
+      this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
+        coalesce: event.patchInfo.source === 'bulk',
+      });
+    }
+  };
+
+  /**
+   * Emits the db update a local commit produced, once that commit has ended. Object-level notifications
+   * queued by other paths (satisfaction, availability) stay on the scheduler: the written objects already
+   * notified inside the commit, and anything else is not this commit's to deliver early.
+   */
+  readonly #flushLocalCommit = (): void => {
+    if (this.#closed || this.#objectsForLocalCommit.size === 0) {
+      return;
+    }
+    const ids = [...this.#objectsForLocalCommit];
+    this.#objectsForLocalCommit.clear();
+    // Mid root-document swap there is nothing to emit against; the scheduler re-emits after the swap.
+    if (!this._spaceRootDocHandle) {
+      this._scheduleThrottledDbUpdate(ids);
+      return;
+    }
+    const event: ItemsUpdatedEvent = { spaceId: this.spaceId, itemsUpdated: ids.map((id) => ({ id })) };
+    this._localCommitEvent.emit(event);
+    batchEvents(() => this._updateEvent.emit(event));
   };
 
   /**

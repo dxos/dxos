@@ -121,6 +121,17 @@ export type IndexQuerySourceProps = {
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
+  readonly kind = 'index';
+
+  /** Host responses received for the current reactive query. */
+  #responses = 0;
+
+  /** Host responses whose content is integrated into {@link getResults}; the source's answer count. */
+  #integrated = 0;
+
+  /** Whether the current reactive stream failed. */
+  #failed = false;
+
   private _query?: QueryAST.Query = undefined;
   private _results?: SourceEntry[] = [];
   /** Cleanup for the active reactive query subscription. */
@@ -162,6 +173,12 @@ export class IndexQuerySource implements QuerySource {
   /** Subscription to local object-load updates (plumbed from `DatabaseImpl`). */
   private _updateSubscription?: CleanupFn = undefined;
 
+  /** Keys of {@link _lastRemoteResults}, rebuilt when that array is replaced. */
+  #recordKeys?: { records: readonly QueryService.QueryResult[]; keys: ReadonlySet<string> } = undefined;
+
+  /** Whether a hydration pass requested by an object update is waiting for its microtask. */
+  #hydrateQueued = false;
+
   constructor(private readonly _params: IndexQuerySourceProps) {}
 
   open(): void {
@@ -172,6 +189,9 @@ export class IndexQuerySource implements QuerySource {
   close(): void {
     this._open = false;
     this._answered = false;
+    this.#responses = 0;
+    this.#integrated = 0;
+    this.#failed = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -185,6 +205,18 @@ export class IndexQuerySource implements QuerySource {
 
   getResults(): SourceEntry[] {
     return this._results ?? [];
+  }
+
+  isServing(): boolean {
+    return this._open && this._query !== undefined && queryTargetsSpacesOrFeeds(this._query);
+  }
+
+  answers(): number {
+    return this.#integrated;
+  }
+
+  isFailed(): boolean {
+    return this.#failed;
   }
 
   /** Index results are produced asynchronously from the host query stream. */
@@ -225,6 +257,9 @@ export class IndexQuerySource implements QuerySource {
     this._hydrationCtx = undefined;
     this._results = [];
     this._answered = false;
+    this.#responses = 0;
+    this.#integrated = 0;
+    this.#failed = false;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -325,6 +360,7 @@ export class IndexQuerySource implements QuerySource {
       return;
     }
     this._answered = true;
+    this.#failed = true;
     this.changed.emit();
   }
 
@@ -349,6 +385,15 @@ export class IndexQuerySource implements QuerySource {
       {
         onData: (response) => {
           try {
+            this.#responses++;
+            if (response.unchanged) {
+              // The host re-ran and kept its last answer. A pass in flight publishes this count when it lands.
+              if (!this._hydrating) {
+                this.#integrated = this.#responses;
+                this.changed.emit();
+              }
+              return;
+            }
             this._assertResultSpaces(query, response);
             // Remember the raw host records so a later local object load can re-hydrate them.
             this._lastRemoteResults = response.results ?? [];
@@ -386,15 +431,25 @@ export class IndexQuerySource implements QuerySource {
       return;
     }
 
-    // Re-hydrate only when an updated object is among the records the host returned.
-    const updated = new Set(event.objectIds);
-    const affectsResults = records.some((record) => record.spaceId === event.spaceId && updated.has(record.id));
-    if (!affectsResults) {
+    // Re-hydrate only when an updated object is among the records the host returned. Every local write
+    // reaches here, so the check costs the update rather than the record count.
+    if (this.#recordKeys?.records !== records) {
+      this.#recordKeys = { records, keys: new Set(records.map((record) => recordKey(record.spaceId, record.id))) };
+    }
+    const keys = this.#recordKeys.keys;
+    if (!event.objectIds.some((objectId) => keys.has(recordKey(event.spaceId, objectId)))) {
       return;
     }
 
     log('re-hydrating index results after object update', { queryId: this._reactiveQueryId, spaceId: event.spaceId });
-    this._scheduleHydrate();
+    // A pass is asynchronous anyway; starting it a microtask later lets a burst of synchronous writes share one.
+    if (!this.#hydrateQueued) {
+      this.#hydrateQueued = true;
+      queueMicrotask(() => {
+        this.#hydrateQueued = false;
+        this._scheduleHydrate();
+      });
+    }
   }
 
   /**
@@ -426,6 +481,8 @@ export class IndexQuerySource implements QuerySource {
           break;
         }
         const records = this._lastRemoteResults ?? [];
+        // Only host responses count as answers; a pass re-run by a local object load answers nothing new.
+        const responses = this.#responses;
 
         const ctx = new Context();
         this._hydrationCtx = ctx;
@@ -444,8 +501,9 @@ export class IndexQuerySource implements QuerySource {
 
         this._results = results;
         this._answered = true;
+        this.#integrated = Math.max(this.#integrated, responses);
         this.changed.emit();
-      } while (this._hydratePending);
+      } while (this._hydratePending || this.#integrated < this.#responses);
     } catch (err: any) {
       log.catch(err);
       this._fail(passQueryId);
@@ -819,6 +877,8 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+const recordKey = (spaceId: string, objectId: string): string => `${spaceId}:${objectId}`;
 
 /** Loads the object of a document row. */
 type RowLoader = (row: QueryService.QueryResult) => Promise<Entity.Unknown | undefined>;
