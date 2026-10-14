@@ -99,6 +99,17 @@ export class Cell {
   }
 }
 
+/** A hash map from primitive keys (Text or Int): `Dict` (built once, immutable) and `MutMap`. */
+export class HashTable {
+  readonly map: Map<string | number, Value>;
+  readonly mutable: boolean;
+
+  constructor(map: Map<string | number, Value>, mutable: boolean) {
+    this.map = map;
+    this.mutable = mutable;
+  }
+}
+
 /** A captured, re-entrant stack segment (deep handler included). */
 export class Continuation {
   readonly frames: Frame[];
@@ -108,7 +119,7 @@ export class Continuation {
   }
 }
 
-export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation | Cell;
+export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation | Cell | HashTable;
 
 export const UNIT = new Con('#Unit', 0, []);
 export const NIL = new Con('#List', 0, []);
@@ -148,7 +159,8 @@ export class DeusPanic extends Error {}
 export const DEFECT = '#Defect';
 
 //
-// Terms.
+// Terms. Every node is one class with fixed fields, so the machine's property accesses stay
+// monomorphic for V8; a child slot a variant does not use points back at the node itself.
 //
 
 const VAR = 0;
@@ -163,25 +175,74 @@ const IF = 8;
 const MATCH = 9;
 const HANDLE = 10;
 
-export type LamTerm = { t: typeof LAM; n: number; body: Term };
-type Clause = { arity: number; body: Term };
-type Case = { pat: Pat; guard: Term | null; body: Term };
+/** A loaded definition: its Core form, compiled lazily, and its value once evaluated. */
+export class Global {
+  readonly form: Sexp;
+  term: Term | null = null;
+  value: Value | undefined = undefined;
+  evaluating = false;
 
-export type Term =
-  | { t: typeof VAR; i: number }
-  | { t: typeof CONST; v: Value }
-  | { t: typeof REF; h: string }
-  | LamTerm
-  | { t: typeof APP; f: Term; args: Term[] }
-  | { t: typeof LET; v: Term; b: Term }
-  | { t: typeof SEQ; a: Term; b: Term }
-  | { t: typeof LETREC; vs: LamTerm[]; b: Term }
-  | { t: typeof IF; c: Term; th: Term; el: Term }
-  | { t: typeof MATCH; s: Term; cases: Case[] }
-  | { t: typeof HANDLE; b: Term; ret: Term | null; clauses: Map<string, Clause> };
+  constructor(form: Sexp) {
+    this.form = form;
+  }
+}
 
-/** A reference to a global definition. */
-export const refTerm = (hash: string): Term => ({ t: REF, h: hash });
+export class Term {
+  readonly t: number;
+  /** VAR: de Bruijn index; LAM: arity. */
+  i = 0;
+  /** CONST: the value. */
+  v: Value = 0;
+  /** REF: the hash, and the global once resolved. */
+  h = '';
+  g: Global | null = null;
+  /** APP: function; LET: value; SEQ: first; IF: condition; MATCH: scrutinee; HANDLE, LAM: body. */
+  a: Term;
+  /** LET, SEQ, LETREC: body; IF: then. */
+  b: Term;
+  /** IF: else. */
+  c: Term;
+  /** HANDLE: the return clause. */
+  ret: Term | null = null;
+  /** APP: arguments; LETREC: the bound lambdas. */
+  args: Term[] = [];
+  cases: Case[] = [];
+  clauses: Map<string, Clause> | null = null;
+  /** APP: a saturated primitive or constructor call on quick operands. */
+  q = false;
+
+  constructor(t: number) {
+    this.t = t;
+    this.a = this;
+    this.b = this;
+    this.c = this;
+  }
+}
+
+/** Kept for callers that name the lambda variant; every term is a `Term`. */
+export type LamTerm = Term;
+
+class Clause {
+  readonly arity: number;
+  readonly body: Term;
+
+  constructor(arity: number, body: Term) {
+    this.arity = arity;
+    this.body = body;
+  }
+}
+
+class Case {
+  readonly pat: Pattern;
+  readonly guard: Term | null;
+  readonly body: Term;
+
+  constructor(pat: Pattern, guard: Term | null, body: Term) {
+    this.pat = pat;
+    this.guard = guard;
+    this.body = body;
+  }
+}
 
 const P_ANY = 0;
 const P_VAR = 1;
@@ -189,12 +250,56 @@ const P_AS = 2;
 const P_LIT = 3;
 const P_CON = 4;
 
-type Pat =
-  | { k: typeof P_ANY }
-  | { k: typeof P_VAR }
-  | { k: typeof P_AS; p: Pat }
-  | { k: typeof P_LIT; v: number | string }
-  | { k: typeof P_CON; type: string; tag: number; ps: Pat[] };
+class Pattern {
+  readonly k: number;
+  /** P_AS: the inner pattern. */
+  p: Pattern;
+  /** P_LIT: the literal. */
+  v: number | string = 0;
+  /** P_CON: constructor and sub-patterns. */
+  type = '';
+  tag = 0;
+  ps: Pattern[] = [];
+
+  constructor(k: number) {
+    this.k = k;
+    this.p = this;
+  }
+}
+
+const term = (t: number): Term => new Term(t);
+
+/** Terms the machine can evaluate directly, without pushing frames. */
+const isQuick = (node: Term): boolean => node.t === VAR || node.t === CONST || node.t === REF || node.q;
+
+/** A reference to a global definition. */
+export const refTerm = (hash: string): Term => {
+  const node = term(REF);
+  node.h = hash;
+  return node;
+};
+
+const constTerm = (value: Value): Term => {
+  const node = term(CONST);
+  node.v = value;
+  return node;
+};
+
+/** Signals that a quick evaluation needs the full machine (an unevaluated global). */
+const SLOW: unique symbol = Symbol('slow');
+
+const lookupIn = (env: Env, index: number): Value => {
+  let e = env;
+  let i = index;
+  while (e !== null) {
+    if (i === 0) {
+      return e.value;
+    }
+    e = e.next;
+    i--;
+  }
+  throw new DeusPanic('unbound variable');
+};
 
 const str = (form: Sexp): string => {
   if (form instanceof Str) {
@@ -236,21 +341,31 @@ const conValue = (type: string, tag: number, arity: number): Value => {
   return new Con(type, tag, []);
 };
 
-const compilePat = (form: Sexp): Pat => {
+const compilePat = (form: Sexp): Pattern => {
   const parts = list(form);
   switch (parts[0]) {
     case 'pany':
-      return { k: P_ANY };
+      return new Pattern(P_ANY);
     case 'pvar':
-      return { k: P_VAR };
-    case 'pas':
-      return { k: P_AS, p: compilePat(parts[1]) };
+      return new Pattern(P_VAR);
+    case 'pas': {
+      const pat = new Pattern(P_AS);
+      pat.p = compilePat(parts[1]);
+      return pat;
+    }
     case 'pint':
-      return { k: P_LIT, v: int(parts[1]) };
-    case 'ptext':
-      return { k: P_LIT, v: str(parts[1]) };
-    case 'pcon':
-      return { k: P_CON, type: str(parts[1]), tag: int(parts[2]), ps: parts.slice(3).map(compilePat) };
+    case 'ptext': {
+      const pat = new Pattern(P_LIT);
+      pat.v = parts[0] === 'pint' ? int(parts[1]) : str(parts[1]);
+      return pat;
+    }
+    case 'pcon': {
+      const pat = new Pattern(P_CON);
+      pat.type = str(parts[1]);
+      pat.tag = int(parts[2]);
+      pat.ps = parts.slice(3).map(compilePat);
+      return pat;
+    }
     default:
       throw new Error(`core: unknown pattern ${print(form)}`);
   }
@@ -261,14 +376,17 @@ export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
   const go = (form: Sexp): Term => compileTerm(form, prims);
   const parts = list(form);
   switch (parts[0]) {
-    case 'var':
-      return { t: VAR, i: int(parts[1]) };
+    case 'var': {
+      const node = term(VAR);
+      node.i = int(parts[1]);
+      return node;
+    }
     case 'ref':
-      return { t: REF, h: str(parts[1]) };
+      return refTerm(str(parts[1]));
     case 'int':
-      return { t: CONST, v: int(parts[1]) };
+      return constTerm(int(parts[1]));
     case 'text':
-      return { t: CONST, v: str(parts[1]) };
+      return constTerm(str(parts[1]));
     case 'lam': {
       // Nested unary lambdas become one n-ary lambda; currying is preserved by `apply`.
       let n = 1;
@@ -277,62 +395,86 @@ export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
         n++;
         body = body[1];
       }
-      return { t: LAM, n, body: go(body) };
+      const node = term(LAM);
+      node.i = n;
+      node.a = go(body);
+      return node;
     }
-    case 'app':
-      return { t: APP, f: go(parts[1]), args: parts.slice(2).map(go) };
+    case 'app': {
+      const node = term(APP);
+      node.a = go(parts[1]);
+      node.args = parts.slice(2).map(go);
+      // A saturated primitive or constructor call on quick operands evaluates without frames.
+      const callee = node.a.t === CONST ? node.a.v : undefined;
+      const saturated =
+        (callee instanceof Prim && !callee.control && callee.arity === node.args.length) ||
+        (callee instanceof ConFn && callee.arity === node.args.length);
+      node.q = saturated && node.args.every(isQuick);
+      return node;
+    }
     case 'let':
-      return { t: LET, v: go(parts[1]), b: go(parts[2]) };
-    case 'seq':
-      return { t: SEQ, a: go(parts[1]), b: go(parts[2]) };
+    case 'seq': {
+      const node = term(parts[0] === 'let' ? LET : SEQ);
+      node.a = go(parts[1]);
+      node.b = go(parts[2]);
+      return node;
+    }
     case 'letrec': {
-      const vs: LamTerm[] = [];
-      for (const binding of list(parts[1])) {
-        const v = go(binding);
-        if (v.t !== LAM) {
+      const node = term(LETREC);
+      node.args = list(parts[1]).map((binding) => {
+        const fn = go(binding);
+        if (fn.t !== LAM) {
           throw new Error('core: letrec binds lambdas only');
         }
-        vs.push(v);
-      }
-      return { t: LETREC, vs, b: go(parts[2]) };
+        return fn;
+      });
+      node.b = go(parts[2]);
+      return node;
     }
-    case 'if':
-      return { t: IF, c: go(parts[1]), th: go(parts[2]), el: go(parts[3]) };
+    case 'if': {
+      const node = term(IF);
+      node.a = go(parts[1]);
+      node.b = go(parts[2]);
+      node.c = go(parts[3]);
+      return node;
+    }
     case 'con':
-      return { t: CONST, v: conValue(str(parts[1]), int(parts[2]), int(parts[3])) };
+      return constTerm(conValue(str(parts[1]), int(parts[2]), int(parts[3])));
     case 'op':
-      return { t: CONST, v: new OpFn(str(parts[1]), int(parts[2]), int(parts[3])) };
+      return constTerm(new OpFn(str(parts[1]), int(parts[2]), int(parts[3])));
     case 'prim': {
       const name = str(parts[1]);
       const prim = prims.get(name);
       if (!prim) {
         throw new Error(`core: unknown primitive ${name}`);
       }
-      return { t: CONST, v: prim };
+      return constTerm(prim);
     }
-    case 'match':
-      return {
-        t: MATCH,
-        s: go(parts[1]),
-        cases: parts.slice(2).map((form) => {
-          const c = list(form);
-          return c[0] === 'gcase'
-            ? { pat: compilePat(c[1]), guard: go(c[2]), body: go(c[3]) }
-            : { pat: compilePat(c[1]), guard: null, body: go(c[2]) };
-        }),
-      };
+    case 'match': {
+      const node = term(MATCH);
+      node.a = go(parts[1]);
+      node.cases = parts.slice(2).map((form) => {
+        const c = list(form);
+        return c[0] === 'gcase'
+          ? new Case(compilePat(c[1]), go(c[2]), go(c[3]))
+          : new Case(compilePat(c[1]), null, go(c[2]));
+      });
+      return node;
+    }
     case 'handle': {
-      let ret: Term | null = null;
+      const node = term(HANDLE);
       const clauses = new Map<string, Clause>();
       for (const form of parts.slice(2)) {
         const c = list(form);
         if (c[0] === 'ret') {
-          ret = go(c[1]);
+          node.ret = go(c[1]);
         } else {
-          clauses.set(`${str(c[1])}/${int(c[2])}`, { arity: int(c[3]), body: go(c[4]) });
+          clauses.set(`${str(c[1])}/${int(c[2])}`, new Clause(int(c[3]), go(c[4])));
         }
       }
-      return { t: HANDLE, b: go(parts[1]), ret, clauses };
+      node.a = go(parts[1]);
+      node.clauses = clauses;
+      return node;
     }
     default:
       throw new Error(`core: unknown term ${print(form).slice(0, 80)}`);
@@ -340,7 +482,7 @@ export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
 };
 
 //
-// Frames.
+// Frames: one class, as for terms.
 //
 
 const F_APP = 0;
@@ -353,22 +495,43 @@ const F_GLOBAL = 6;
 const F_REST = 7;
 const F_GUARD = 8;
 
-export type Frame =
-  | { k: typeof F_APP; term: Extract<Term, { t: typeof APP }>; env: Env; fn: Value | undefined; args: Value[] }
-  | { k: typeof F_LET; b: Term; env: Env }
-  | { k: typeof F_SEQ; b: Term; env: Env }
-  | { k: typeof F_IF; th: Term; el: Term; env: Env }
-  | { k: typeof F_MATCH; cases: Case[]; env: Env }
-  | { k: typeof F_HANDLE; h: Extract<Term, { t: typeof HANDLE }>; env: Env }
-  | { k: typeof F_GLOBAL; g: Global }
-  | { k: typeof F_REST; args: Value[] }
-  | { k: typeof F_GUARD; value: Value; cases: Case[]; index: number; bound: Env; env: Env };
+const NO_GLOBAL = new Global(0);
 
-const cloneFrame = (frame: Frame): Frame => (frame.k === F_APP ? { ...frame, args: frame.args.slice() } : frame);
+export class Frame {
+  readonly k: number;
+  /** The term the frame belongs to (APP, LET, SEQ, IF, MATCH, HANDLE). */
+  readonly term: Term;
+  readonly env: Env;
+  /** APP: the evaluated function, then arguments; REST: arguments still to apply. */
+  fn: Value | undefined = undefined;
+  args: Value[];
+  /** GLOBAL: the definition being evaluated. */
+  g: Global = NO_GLOBAL;
+  /** GUARD: the scrutinee, the case being tried, and its bindings. */
+  value: Value = 0;
+  index = 0;
+  bound: Env = null;
 
-type Global = { form: Sexp; term: Term | null; value: Value | undefined; evaluating: boolean };
+  constructor(k: number, node: Term, env: Env, args: Value[]) {
+    this.k = k;
+    this.term = node;
+    this.env = env;
+    this.args = args;
+  }
+}
 
-const bind = (pat: Pat, value: Value, env: Env): Env | undefined => {
+const NO_ARGS: Value[] = [];
+
+const cloneFrame = (frame: Frame): Frame => {
+  if (frame.k !== F_APP) {
+    return frame;
+  }
+  const copy = new Frame(F_APP, frame.term, frame.env, frame.args.slice());
+  copy.fn = frame.fn;
+  return copy;
+};
+
+const bind = (pat: Pattern, value: Value, env: Env): Env | undefined => {
   switch (pat.k) {
     case P_ANY:
       return env;
@@ -378,18 +541,26 @@ const bind = (pat: Pat, value: Value, env: Env): Env | undefined => {
       return bind(pat.p, value, { value, next: env });
     case P_LIT:
       return value === pat.v ? env : undefined;
-    case P_CON: {
+    default: {
       if (typeof value === 'boolean') {
         return value === (pat.tag === 1) ? env : undefined;
       }
       if (!(value instanceof Con) || value.tag !== pat.tag || value.type !== pat.type) {
         return undefined;
       }
+      const ps = pat.ps;
+      const fields = value.fields;
       let out: Env | undefined = env;
-      for (let i = 0; i < pat.ps.length; i++) {
-        out = bind(pat.ps[i], value.fields[i], out);
-        if (out === undefined) {
-          return undefined;
+      for (let i = 0; i < ps.length; i++) {
+        const sub = ps[i];
+        // Variables and wildcards are by far the most common sub-patterns: bind them inline.
+        if (sub.k === P_VAR) {
+          out = { value: fields[i], next: out };
+        } else if (sub.k !== P_ANY) {
+          out = bind(sub, fields[i], out);
+          if (out === undefined) {
+            return undefined;
+          }
         }
       }
       return out;
@@ -423,7 +594,7 @@ export class Machine {
       if (Array.isArray(form) && form[0] === 'def') {
         const hash = str(form[1]);
         if (!this.globals.has(hash)) {
-          this.globals.set(hash, { form: form[2], term: null, value: undefined, evaluating: false });
+          this.globals.set(hash, new Global(form[2]));
         }
       }
     }
@@ -431,36 +602,105 @@ export class Machine {
 
   /** Evaluates the global `hash` applied to `args`. */
   call(hash: string, args: Value[]): Value {
-    const term: Term = { t: REF, h: hash };
-    return this.run(args.length === 0 ? term : { t: APP, f: term, args: args.map((v) => ({ t: CONST, v })) }, null);
+    const ref = refTerm(hash);
+    if (args.length === 0) {
+      return this.run(ref, null);
+    }
+    const app = term(APP);
+    app.a = ref;
+    app.args = args.map(constTerm);
+    return this.run(app, null);
+  }
+
+  /** The global a REF names, resolved once and cached on the term. */
+  resolve(node: Term): Global {
+    const cached = node.g;
+    if (cached !== null) {
+      return cached;
+    }
+    const global = this.globals.get(node.h);
+    if (!global) {
+      throw new DeusPanic(`unknown definition ${node.h}`);
+    }
+    node.g = global;
+    return global;
+  }
+
+  /** A global's value if it can be had without evaluating (functions are values at once). */
+  ready(global: Global): Value | undefined {
+    if (global.value !== undefined) {
+      return global.value;
+    }
+    if (!global.term) {
+      global.term = compileTerm(global.form, this.prims);
+    }
+    if (global.term.t === LAM) {
+      global.value = new Closure(global.term, null);
+      return global.value;
+    }
+    return undefined;
+  }
+
+  /** Evaluates a quick term directly, or returns SLOW when a global still needs evaluating. */
+  quick(node: Term, env: Env): Value | typeof SLOW {
+    switch (node.t) {
+      case VAR:
+        return lookupIn(env, node.i);
+      case CONST:
+        return node.v;
+      case REF: {
+        const value = this.ready(this.resolve(node));
+        return value === undefined ? SLOW : value;
+      }
+      case APP: {
+        if (!node.q) {
+          return SLOW;
+        }
+        const callee = node.a.v;
+        const operands = node.args;
+        const args: Value[] = new Array(operands.length);
+        for (let i = 0; i < operands.length; i++) {
+          const v = this.quick(operands[i], env);
+          if (v === SLOW) {
+            return SLOW;
+          }
+          args[i] = v;
+        }
+        if (callee instanceof Prim) {
+          return callee.fn(args, this);
+        }
+        if (callee instanceof ConFn) {
+          return callee.type === '#Pair' && callee.arity === 2
+            ? pair(args[0], args[1])
+            : new Con(callee.type, callee.tag, args);
+        }
+        return SLOW;
+      }
+      default:
+        return SLOW;
+    }
   }
 
   run(start: Term, startEnv: Env): Value {
     const stack: Frame[] = [];
-    let term: Term = start;
+    let node: Term = start;
     let env: Env = startEnv;
     let value: Value = UNIT;
-    // true: evaluate `term` in `env`; false: return `value` to the top frame.
+    // true: evaluate `node` in `env`; false: return `value` to the top frame.
     let evaluating = true;
     let steps = this.steps;
 
-    const lookup = (i: number): Value => {
-      let e = env;
-      while (e !== null) {
-        if (i === 0) {
-          return e.value;
-        }
-        e = e.next;
-        i--;
-      }
-      throw new DeusPanic('unbound variable');
+    // Quick evaluation may call primitives that read the step count (`Code.steps`).
+    const quickAt = (q: Term, at: Env): Value | typeof SLOW => {
+      this.steps = steps;
+      return this.quick(q, at);
     };
 
     // Sets up the machine to apply `fn` to `args`; returns true if the result is in `value`.
     const apply = (fn: Value, args: Value[]): boolean => {
       while (true) {
         if (fn instanceof Closure) {
-          const n = fn.lam.n;
+          const n = fn.lam.i;
           if (args.length < n) {
             value = new Pap(fn, args);
             return true;
@@ -470,9 +710,9 @@ export class Machine {
             e = { value: args[i], next: e };
           }
           if (args.length > n) {
-            stack.push({ k: F_REST, args: args.slice(n) });
+            stack.push(new Frame(F_REST, fn.lam, null, args.slice(n)));
           }
-          term = fn.lam.body;
+          node = fn.lam.a;
           env = e;
           return false;
         }
@@ -488,16 +728,15 @@ export class Machine {
           }
           const rest = args.length > fn.arity ? args.slice(fn.arity) : null;
           const own = rest ? args.slice(0, fn.arity) : args;
+          this.steps = steps;
           if (fn.control) {
             if (rest) {
-              stack.push({ k: F_REST, args: rest });
+              stack.push(new Frame(F_REST, start, null, rest));
             }
-            this.steps = steps;
-            term = fn.control(own, this);
+            node = fn.control(own, this);
             env = null;
             return false;
           }
-          this.steps = steps;
           const result = fn.fn(own, this);
           if (rest) {
             fn = result;
@@ -512,13 +751,10 @@ export class Machine {
             value = new Pap(fn, args);
             return true;
           }
-          value =
-            fn.type === '#Pair' && fn.arity === 2
-              ? pair(args[0], args[1])
-              : new Con(fn.type, fn.tag, args.slice(0, fn.arity));
           if (args.length > fn.arity) {
             throw new DeusDefect('constructor applied to too many arguments');
           }
+          value = fn.type === '#Pair' && fn.arity === 2 ? pair(args[0], args[1]) : new Con(fn.type, fn.tag, args);
           return true;
         }
         if (fn instanceof OpFn) {
@@ -527,13 +763,13 @@ export class Machine {
             return true;
           }
           if (args.length > fn.arity) {
-            stack.push({ k: F_REST, args: args.slice(fn.arity) });
+            stack.push(new Frame(F_REST, start, null, args.slice(fn.arity)));
           }
-          return perform(fn, args.slice(0, fn.arity));
+          return perform(fn, args.length > fn.arity ? args.slice(0, fn.arity) : args);
         }
         if (fn instanceof Continuation) {
           if (args.length > 1) {
-            stack.push({ k: F_REST, args: args.slice(1) });
+            stack.push(new Frame(F_REST, start, null, args.slice(1)));
           }
           for (const frame of fn.frames) {
             stack.push(cloneFrame(frame));
@@ -559,7 +795,7 @@ export class Machine {
       for (let i = stack.length - 1; i >= 0; i--) {
         const frame = stack[i];
         if (frame.k === F_HANDLE) {
-          const clause = frame.h.clauses.get(key);
+          const clause = frame.term.clauses?.get(key);
           if (clause) {
             const k = new Continuation(stack.slice(i));
             stack.length = i;
@@ -568,7 +804,7 @@ export class Machine {
               e = { value: arg, next: e };
             }
             env = { value: k, next: e };
-            term = clause.body;
+            node = clause.body;
             return true;
           }
         }
@@ -576,121 +812,164 @@ export class Machine {
       return false;
     };
 
+    // Chooses the first case (from `from`) whose pattern matches; sets up its guard or body.
+    const select = (match: Term, scrutinee: Value, base: Env, from: number): void => {
+      const cases = match.cases;
+      for (let i = from; i < cases.length; i++) {
+        const bound = bind(cases[i].pat, scrutinee, base);
+        if (bound !== undefined) {
+          const guard = cases[i].guard;
+          if (guard) {
+            const frame = new Frame(F_GUARD, match, base, NO_ARGS);
+            frame.value = scrutinee;
+            frame.index = i;
+            frame.bound = bound;
+            stack.push(frame);
+            node = guard;
+          } else {
+            node = cases[i].body;
+          }
+          env = bound;
+          return;
+        }
+      }
+      throw new DeusDefect(`no match for ${show(scrutinee)}`);
+    };
+
     const loop = (): Value => {
       while (true) {
         if (evaluating) {
           steps++;
-          switch (term.t) {
+          switch (node.t) {
             case VAR:
-              value = lookup(term.i);
+              value = lookupIn(env, node.i);
               evaluating = false;
               break;
             case CONST:
-              value = term.v;
+              value = node.v;
               evaluating = false;
               break;
             case REF: {
               if (this.profile) {
-                this.profile.set(term.h, (this.profile.get(term.h) ?? 0) + 1);
+                this.profile.set(node.h, (this.profile.get(node.h) ?? 0) + 1);
               }
               if (this.trace) {
-                this.trace.push(term.h);
+                this.trace.push(node.h);
                 if (this.trace.length > 40) {
                   this.trace.shift();
                 }
               }
-              const global = this.globals.get(term.h);
-              if (!global) {
-                throw new DeusPanic(`unknown definition ${term.h}`);
-              }
-              if (global.value !== undefined) {
-                value = global.value;
-                evaluating = false;
-                break;
-              }
-              if (!global.term) {
-                global.term = compileTerm(global.form, this.prims);
-              }
-              if (global.term.t === LAM) {
-                global.value = new Closure(global.term, null);
-                value = global.value;
+              const global = this.resolve(node);
+              const ready = this.ready(global);
+              if (ready !== undefined) {
+                value = ready;
                 evaluating = false;
                 break;
               }
               if (global.evaluating) {
-                throw new DeusDefect(`definition ${term.h} depends on its own value`);
+                throw new DeusDefect(`definition ${node.h} depends on its own value`);
               }
               global.evaluating = true;
-              stack.push({ k: F_GLOBAL, g: global });
-              term = global.term;
+              const frame = new Frame(F_GLOBAL, node, null, NO_ARGS);
+              frame.g = global;
+              stack.push(frame);
+              node = global.term ?? node;
               env = null;
               break;
             }
             case LAM:
-              value = new Closure(term, env);
+              value = new Closure(node, env);
               evaluating = false;
               break;
             case APP: {
-              // Fast path: every operand is a variable or constant, so no frame is needed.
-              const f = term.f;
-              if (f.t === CONST || f.t === VAR) {
-                const operands = term.args;
-                let simple = true;
-                for (let i = 0; i < operands.length; i++) {
-                  const operand = operands[i];
-                  if (operand.t !== VAR && operand.t !== CONST) {
-                    simple = false;
+              // Fast path: the function and every operand are quick, so no frame is needed.
+              const callee = node.a;
+              if (callee.t === VAR || callee.t === CONST || callee.t === REF || callee.q) {
+                const fn = quickAt(callee, env);
+                if (fn !== SLOW) {
+                  const operands = node.args;
+                  const args: Value[] = new Array(operands.length);
+                  let ok = true;
+                  for (let i = 0; i < operands.length; i++) {
+                    const operand = operands[i];
+                    const v =
+                      operand.t === VAR
+                        ? lookupIn(env, operand.i)
+                        : operand.t === CONST
+                          ? operand.v
+                          : isQuick(operand)
+                            ? quickAt(operand, env)
+                            : SLOW;
+                    if (v === SLOW) {
+                      ok = false;
+                      break;
+                    }
+                    args[i] = v;
+                  }
+                  if (ok) {
+                    evaluating = !apply(fn, args);
                     break;
                   }
                 }
-                if (simple) {
-                  const args: Value[] = new Array(operands.length);
-                  for (let i = 0; i < operands.length; i++) {
-                    const operand = operands[i];
-                    args[i] = operand.t === VAR ? lookup(operand.i) : operand.t === CONST ? operand.v : UNIT;
-                  }
-                  evaluating = !apply(f.t === VAR ? lookup(f.i) : f.v, args);
-                  break;
-                }
               }
-              stack.push({ k: F_APP, term, env, fn: undefined, args: [] });
-              term = term.f;
+              stack.push(new Frame(F_APP, node, env, []));
+              node = callee;
               break;
             }
-            case LET:
-              stack.push({ k: F_LET, b: term.b, env });
-              term = term.v;
+            case LET: {
+              const v = isQuick(node.a) ? quickAt(node.a, env) : SLOW;
+              if (v !== SLOW) {
+                env = { value: v, next: env };
+                node = node.b;
+                break;
+              }
+              stack.push(new Frame(F_LET, node, env, NO_ARGS));
+              node = node.a;
               break;
+            }
             case SEQ:
-              stack.push({ k: F_SEQ, b: term.b, env });
-              term = term.a;
+              stack.push(new Frame(F_SEQ, node, env, NO_ARGS));
+              node = node.a;
               break;
             case LETREC: {
+              const fns = node.args;
               const cells: { value: Value; next: Env }[] = [];
               let e = env;
-              for (let i = 0; i < term.vs.length; i++) {
-                const cell = { value: UNIT as Value, next: e };
+              for (let i = 0; i < fns.length; i++) {
+                const cell: { value: Value; next: Env } = { value: UNIT, next: e };
                 cells.push(cell);
                 e = cell;
               }
-              for (let i = 0; i < term.vs.length; i++) {
-                cells[i].value = new Closure(term.vs[i], e);
+              for (let i = 0; i < fns.length; i++) {
+                cells[i].value = new Closure(fns[i], e);
               }
               env = e;
-              term = term.b;
+              node = node.b;
               break;
             }
-            case IF:
-              stack.push({ k: F_IF, th: term.th, el: term.el, env });
-              term = term.c;
+            case IF: {
+              const c = isQuick(node.a) ? quickAt(node.a, env) : SLOW;
+              if (c !== SLOW) {
+                node = c === true ? node.b : node.c;
+                break;
+              }
+              stack.push(new Frame(F_IF, node, env, NO_ARGS));
+              node = node.a;
               break;
-            case MATCH:
-              stack.push({ k: F_MATCH, cases: term.cases, env });
-              term = term.s;
+            }
+            case MATCH: {
+              const scrutinee = isQuick(node.a) ? quickAt(node.a, env) : SLOW;
+              if (scrutinee !== SLOW) {
+                select(node, scrutinee, env, 0);
+                break;
+              }
+              stack.push(new Frame(F_MATCH, node, env, NO_ARGS));
+              node = node.a;
               break;
+            }
             case HANDLE:
-              stack.push({ k: F_HANDLE, h: term, env });
-              term = term.b;
+              stack.push(new Frame(F_HANDLE, node, env, NO_ARGS));
+              node = node.a;
               break;
           }
           continue;
@@ -708,9 +987,10 @@ export class Machine {
             } else {
               frame.args.push(value);
             }
-            if (frame.args.length < frame.term.args.length) {
+            const operands = frame.term.args;
+            if (frame.args.length < operands.length) {
               stack.push(frame);
-              term = frame.term.args[frame.args.length];
+              node = operands[frame.args.length];
               env = frame.env;
               evaluating = true;
             } else {
@@ -720,64 +1000,41 @@ export class Machine {
           }
           case F_LET:
             env = { value, next: frame.env };
-            term = frame.b;
+            node = frame.term.b;
             evaluating = true;
             break;
           case F_SEQ:
             env = frame.env;
-            term = frame.b;
+            node = frame.term.b;
             evaluating = true;
             break;
           case F_IF:
             env = frame.env;
-            term = value === true ? frame.th : frame.el;
+            node = value === true ? frame.term.b : frame.term.c;
             evaluating = true;
             break;
           case F_MATCH:
-          case F_GUARD: {
-            const cases = frame.cases;
-            const scrutinee = frame.k === F_GUARD ? frame.value : value;
-            let i = frame.k === F_GUARD ? frame.index : 0;
-            if (frame.k === F_GUARD) {
-              if (value === true) {
-                env = frame.bound;
-                term = cases[i].body;
-                evaluating = true;
-                break;
-              }
-              i++;
-            }
-            const base = frame.env;
-            let matched = false;
-            for (; i < cases.length; i++) {
-              const bound = bind(cases[i].pat, scrutinee, base);
-              if (bound !== undefined) {
-                const guard = cases[i].guard;
-                if (guard) {
-                  stack.push({ k: F_GUARD, value: scrutinee, cases, index: i, bound, env: base });
-                  env = bound;
-                  term = guard;
-                } else {
-                  env = bound;
-                  term = cases[i].body;
-                }
-                matched = true;
-                break;
-              }
-            }
-            if (!matched) {
-              throw new DeusDefect(`no match for ${show(scrutinee)}`);
+            select(frame.term, value, frame.env, 0);
+            evaluating = true;
+            break;
+          case F_GUARD:
+            if (value === true) {
+              env = frame.bound;
+              node = frame.term.cases[frame.index].body;
+            } else {
+              select(frame.term, frame.value, frame.env, frame.index + 1);
             }
             evaluating = true;
             break;
-          }
-          case F_HANDLE:
-            if (frame.h.ret) {
+          case F_HANDLE: {
+            const ret = frame.term.ret;
+            if (ret) {
               env = { value, next: frame.env };
-              term = frame.h.ret;
+              node = ret;
               evaluating = true;
             }
             break;
+          }
           case F_GLOBAL:
             frame.g.value = value;
             frame.g.evaluating = false;

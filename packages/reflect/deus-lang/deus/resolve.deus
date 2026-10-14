@@ -95,8 +95,9 @@ structure Scope where
 /-- A name table with the indexes resolution needs. -/
 structure Names where
   table : Map Text Entry
-  bySegment : Map Text (List Text)
-  fieldOwners : Map Text (List Text)
+  index : Dict Text Entry
+  bySegment : Dict Text (List Text)
+  fieldOwners : Dict Text (List Text)
 
 namespace Names
 
@@ -113,7 +114,7 @@ def build (table : Map Text Entry) : Names :=
     match pair with
     | (fqn, Entry.type _ _ fields) => List.foldl (fun m2 f => Map.update f (fun old => fqn :: Option.getOr old []) m2) m fields
     | _ => m) Map.empty entries
-  Names.mk table bySegment fieldOwners
+  Names.mk table (Dict.fromList entries) (Dict.fromList (Map.toList bySegment)) (Dict.fromList (Map.toList fieldOwners))
 
 def joinName (prefix : List Text) (name : Text) : Text := Text.join "." (prefix ++ [name])
 
@@ -122,9 +123,9 @@ def joinName (prefix : List Text) (name : Text) : Text := Text.join "." (prefix 
   unique fully qualified name ending in `.name`, as Unison's suffix-based names.
 -/
 def lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) (suffix : Bool) : {Throw Text} Option (Text, Entry) :=
-  let table := names.table
+  let index := names.index
   let probe := fun fqn =>
-    match Map.lookup fqn table with
+    match Dict.lookup fqn index with
     | some e => if want e then some (fqn, e) else none
     | none => none
   let rec chain prefix :=
@@ -149,7 +150,7 @@ def lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) 
     | none =>
       if not suffix then none
       else
-        let candidates := Option.getOr (Map.lookup (lastSegment name) names.bySegment) []
+        let candidates := Option.getOr (Dict.lookup (lastSegment name) names.bySegment) []
         let matches := List.filter (fun fqn => (fqn == name || Text.endsWith ("." ++ name) fqn) && Option.isSome (probe fqn)) candidates
         match matches with
         | [] => none
@@ -275,9 +276,9 @@ def coreOfEntry (ctx : Ctx) (pos : Pos) (fqn : Text) (e : Entry) : {Throw Text} 
   | _ => failAt ctx pos (fqn ++ " is not a value")
 
 def fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) : {Throw Text} Sexp :=
-  match Option.getOr (Map.lookup field ctx.names.fieldOwners) [] with
+  match Option.getOr (Dict.lookup field ctx.names.fieldOwners) [] with
   | [owner] =>
-    match Map.lookup (owner ++ "." ++ field) ctx.names.table with
+    match Dict.lookup (owner ++ "." ++ field) ctx.names.index with
     | some e => coreOfEntry ctx pos (owner ++ "." ++ field) e
     | none => failAt ctx pos ("missing accessor " ++ owner ++ "." ++ field)
   | [] => failAt ctx pos ("unknown field " ++ field)
@@ -392,12 +393,12 @@ def equations (ctx : Ctx) (list : List Arm) (locals : List (Option Text)) : {Thr
   wrap count (arms ctx scrut list inner)
 
 def structFields (ctx : Ctx) (fqn : Text) : List Text :=
-  match Map.lookup fqn ctx.names.table with
+  match Dict.lookup fqn ctx.names.index with
   | some (Entry.type _ _ fields) => fields
   | _ => []
 
 def structHash (ctx : Ctx) (fqn : Text) : Text :=
-  match Map.lookup fqn ctx.names.table with
+  match Dict.lookup fqn ctx.names.index with
   | some (Entry.type h _ _) => h
   | _ => ""
 
@@ -406,7 +407,7 @@ def record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr)) (pos : 
   let given := List.map fst fields
   let owners := match given with
     | [] => []
-    | f :: _ => Option.getOr (Map.lookup f ctx.names.fieldOwners) []
+    | f :: _ => Option.getOr (Dict.lookup f ctx.names.fieldOwners) []
   let fits := fun owner =>
     let have := structFields ctx owner
     List.all (fun g => List.contains g have) given && (Option.isSome base || List.length have == List.length given)

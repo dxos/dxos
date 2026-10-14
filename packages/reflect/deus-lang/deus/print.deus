@@ -14,14 +14,14 @@ structure Printer where
 namespace Print
 
 /-- Shortest suffix of `fqn` that names nothing else in the namespace. -/
-def suffixify (all : Map Text (List Text)) (fqn : Text) : Text :=
+def suffixify (all : Dict Text (List Text)) (fqn : Text) : Text :=
   let segments := Text.split fqn "."
   let count := List.length segments
   let rec go k :=
     if k >= count then fqn
     else
       let candidate := Text.join "." (List.drop (count - k) segments)
-      let clashes := List.filter (fun other => other == candidate || Text.endsWith ("." ++ candidate) other) (Option.getOr (Map.lookup (Names.lastSegment fqn) all) [])
+      let clashes := List.filter (fun other => other == candidate || Text.endsWith ("." ++ candidate) other) (Option.getOr (Dict.lookup (Names.lastSegment fqn) all) [])
       if List.length clashes <= 1 then candidate else go (k + 1)
   go 1
 
@@ -41,7 +41,7 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
     match pair with
     | (owner, Entry.type _ _ fields) =>
       List.foldl (fun m2 f =>
-        match (Map.lookup (owner ++ "." ++ f) ns, Map.lookup f names.fieldOwners) with
+        match (Map.lookup (owner ++ "." ++ f) ns, Dict.lookup f names.fieldOwners) with
         | (some (Entry.term h), some [_]) => Map.insert h f m2
         | _ => m2) m fields
     | _ => m) Map.empty (Map.toList ns)

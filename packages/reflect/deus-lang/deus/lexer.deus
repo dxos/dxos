@@ -23,14 +23,14 @@ structure Token where
 
 namespace Lexer
 
-def keywords : Map Text Unit :=
-  Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "open", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "sorry", "where", "do", "prim", "true", "false", "perf", "ext"]
+def keywords : Dict Text Unit :=
+  Set.dict ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "open", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "sorry", "where", "do", "prim", "true", "false", "perf", "ext"]
 
-def twoCharSymbols : Map Text Unit :=
-  Set.fromList [":=", "=>", "->", "<-", "::", "++", "==", "!=", "<=", ">=", "&&", "||", "|>", "<|", "@["]
+def twoCharSymbols : Dict Text Unit :=
+  Set.dict [":=", "=>", "->", "<-", "::", "++", "==", "!=", "<=", ">=", "&&", "||", "|>", "<|", "@["]
 
-def oneCharSymbols : Map Text Unit :=
-  Set.fromList ["(", ")", "[", "]", "{", "}", ",", ":", "|", "@", "+", "-", "*", "/", "%", "<", ">", "=", "!", "_", ";"]
+def oneCharSymbols : Dict Text Unit :=
+  Set.dict ["(", ")", "[", "]", "{", "}", ",", ":", "|", "@", "+", "-", "*", "/", "%", "<", ">", "=", "!", "_", ";"]
 
 /-- Unicode spellings of ASCII symbols. -/
 def unicode (c : Int) : Text :=
@@ -137,17 +137,17 @@ def lex (source : Text) : {Throw Text} List Token :=
         let j := identEnd i
         let word := Text.slice source i j
         if word == "λ" then go j line lineStart false (tok Kind.kw "fun" i)
-        else if Set.contains word keywords then go j line lineStart false (tok Kind.kw word i)
+        else if Dict.contains word keywords then go j line lineStart false (tok Kind.kw word i)
         else go j line lineStart false (tok Kind.ident word i)
       else
         let mapped := unicode c
         if mapped != "" then go (i + 1) line lineStart false (tok Kind.sym mapped i)
         else
           let two := Text.slice source i (i + 2)
-          if Set.contains two twoCharSymbols then go (i + 2) line lineStart false (tok Kind.sym two i)
+          if Dict.contains two twoCharSymbols then go (i + 2) line lineStart false (tok Kind.sym two i)
           else
             let one := Text.slice source i (i + 1)
-            if Set.contains one oneCharSymbols then go (i + 1) line lineStart false (tok Kind.sym one i)
+            if Dict.contains one oneCharSymbols then go (i + 1) line lineStart false (tok Kind.sym one i)
             else fail line col ("unexpected character " ++ one)
   go 0 1 0 true []
 

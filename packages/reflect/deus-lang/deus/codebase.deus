@@ -16,21 +16,21 @@
 namespace Codebase
 
 /-- Objects read so far, per process; objects are immutable so the cache never goes stale. -/
-def objectCache : Ref (Map Text Sexp) := Ref.new Map.empty
+def objectCache : MutMap Text Sexp := MutMap.new ()
 
 def objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
 
 def isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
 
 def readObject (dir : Text) (h : Text) : {IO} Option Sexp :=
-  match Map.lookup h (Ref.get objectCache) with
+  match MutMap.get objectCache h with
   | some form => some form
   | none =>
     match IO.readFile (objectPath dir h) with
     | none => none
     | some text =>
       let form := Sexp.read text
-      Ref.set objectCache (Map.insert h form (Ref.get objectCache))
+      MutMap.set objectCache h form
       some form
 
 def writeObject (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=

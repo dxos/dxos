@@ -354,7 +354,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
   let metaMap := Map.fromList (Ref.get metas)
   let objectOf := fun (h : Text) => Option.orElse (Map.lookup h typeObjectMap) (fun _ => store h)
   let metaOf := fun (h : Text) => if Text.startsWith "@" h then Map.lookup h metaMap else storeMeta h
-  let prims := primTypes (Ref.get pending) metaMap base store storeMeta
+  let prims := primTypes (Ref.get pending) metaMap base storeMeta
   let warnings := Ref.new []
   let schemes := if typeMode == "off" then Map.empty else typecheck objectOf metaOf prims (Ref.get pending) (typeMode == "warn") warnings
   Ref.set metas (List.map (fun pair =>
@@ -376,25 +376,25 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
     let finalMetas := List.map (fun pair => (resolveHash (fst pair), snd pair)) (Ref.get metas)
     Batch.mk (List.reverse (Ref.get typeObjects) ++ termObjects) finalEntries finalMetas (List.reverse (Ref.get warnings))
 
-/-- Types of primitives, from the builtin definitions whose body is `prim "name"`. -/
-def primTypes (pending : List Pending) (metaMap : Map Text Sexp) (base : Map Text Entry) (store : Text -> Option Sexp) (storeMeta : Text -> Option Sexp) : Map Text Sexp :=
-  let fromBatch := List.filterMap (fun p =>
+/--
+  The type of a primitive: builtins name each primitive's definition after it (`Int.add` is
+  `prim "Int.add"`), so the definition's signature is found by name, in the batch or the base.
+-/
+def primTypes (pending : List Pending) (metaMap : Map Text Sexp) (base : Map Text Entry) (storeMeta : Text -> {Throw Text | r} Option Sexp) : Text -> {Throw Text | r} Option Sexp :=
+  let inBatch := Map.fromList (List.filterMap (fun p =>
     match p.core with
-    | Sexp.list [Sexp.sym "prim", Sexp.str name] =>
-      Option.map (fun sig => (name, sig)) (Codebase.metaField (Map.lookup ("@" ++ p.name) metaMap) "sig")
-    | _ => none) pending
-  let fromBase := List.filterMap (fun pair =>
-    match snd pair with
-    | Entry.term h =>
-      match store h with
-      | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", Sexp.str name]]) =>
-        Option.map (fun sig => (name, sig)) (Codebase.metaField (storeMeta h) "sig")
+    | Sexp.list [Sexp.sym "prim", Sexp.str name] => Option.map (fun sig => (name, sig)) (Codebase.metaField (Map.lookup ("@" ++ p.name) metaMap) "sig")
+    | _ => none) pending)
+  fun name =>
+    match Map.lookup name inBatch with
+    | some sig => some sig
+    | none =>
+      match Map.lookup name base with
+      | some (Entry.term h) => Codebase.metaField (storeMeta h) "sig"
       | _ => none
-    | _ => none) (List.filter (fun pair => not (Text.contains "." (fst pair)) || List.length (Text.split (fst pair) ".") == 2) (Map.toList base))
-  Map.fromList (fromBase ++ fromBatch)
 
 /-- Infers every pending definition's type, dependencies first; returns "@name" to scheme. -/
-def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Map Text Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) : {Throw Text | r} Map Text Sexp :=
+def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Text -> {Throw Text | r} Option Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) : {Throw Text | r} Map Text Sexp :=
   let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
   let deps := fun name =>
     match Map.lookup name byName with

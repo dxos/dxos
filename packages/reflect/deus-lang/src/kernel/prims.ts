@@ -8,6 +8,7 @@ import {
   Cell,
   Con,
   DeusDefect,
+  HashTable,
   Machine,
   NIL,
   NONE,
@@ -147,6 +148,50 @@ export const createPrims = (): Map<string, Prim> => {
     cell.value = v;
     return new Con('#Unit', 0, []);
   });
+
+  const key = (value: Value): string | number => {
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
+    throw new DeusDefect(`hash map keys are Text or Int, got ${show(value)}`);
+  };
+  const table = (value: Value, mutable: boolean): Map<string | number, Value> => {
+    if (!(value instanceof HashTable) || value.mutable !== mutable) {
+      throw new DeusDefect(`expected ${mutable ? 'MutMap' : 'Dict'}, got ${show(value)}`);
+    }
+    return value.map;
+  };
+  const optional = (value: Value | undefined): Value => (value === undefined ? NONE : some(value));
+
+  // Dict: built once from pairs (later keys win), then only read, so it stays pure.
+  def('Dict.fromList', 1, ([pairs]) => {
+    const map = new Map<string | number, Value>();
+    for (const item of listTo(pairs)) {
+      if (item instanceof Con && item.fields.length === 2) {
+        map.set(key(item.fields[0]), item.fields[1]);
+      }
+    }
+    return new HashTable(map, false);
+  });
+  def('Dict.lookup', 2, ([k, d]) => optional(table(d, false).get(key(k))));
+  def('Dict.contains', 2, ([k, d]) => table(d, false).has(key(k)));
+  def('Dict.size', 1, ([d]) => table(d, false).size);
+  def('Dict.keys', 1, ([d]) => listFrom([...table(d, false).keys()]));
+
+  // MutMap: a mutable hash map, like Ref (not rolled back on multi-shot resumption).
+  def('MutMap.new', 1, () => new HashTable(new Map(), true));
+  def('MutMap.get', 2, ([m, k]) => optional(table(m, true).get(key(k))));
+  def('MutMap.has', 2, ([m, k]) => table(m, true).has(key(k)));
+  def('MutMap.set', 3, ([m, k, v]) => {
+    table(m, true).set(key(k), v);
+    return new Con('#Unit', 0, []);
+  });
+  def('MutMap.delete', 2, ([m, k]) => {
+    table(m, true).delete(key(k));
+    return new Con('#Unit', 0, []);
+  });
+  def('MutMap.size', 1, ([m]) => table(m, true).size);
+  def('MutMap.keys', 1, ([m]) => listFrom([...table(m, true).keys()]));
 
   def('show', 1, ([v]) => show(v));
   def('trace', 2, ([label, v]) => {

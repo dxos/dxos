@@ -111,6 +111,30 @@ def get : Ref a -> a := prim "Ref.get"
 def set : Ref a -> a -> Unit := prim "Ref.set"
 end Ref
 
+/-- An immutable hash map with Text or Int keys, built once: O(1) lookups for indexes. -/
+inductive Dict (k v : Type) @"#Dict" where
+
+namespace Dict
+def fromList : List (k, v) -> Dict k v := prim "Dict.fromList"
+def lookup : k -> Dict k v -> Option v := prim "Dict.lookup"
+def contains : k -> Dict k v -> Bool := prim "Dict.contains"
+def size : Dict k v -> Int := prim "Dict.size"
+def keys : Dict k v -> List k := prim "Dict.keys"
+end Dict
+
+/-- A mutable hash map with Text or Int keys; like `Ref`, it is not rolled back by resumption. -/
+inductive MutMap (k v : Type) @"#MutMap" where
+
+namespace MutMap
+def new : Unit -> MutMap k v := prim "MutMap.new"
+def get : MutMap k v -> k -> Option v := prim "MutMap.get"
+def has : MutMap k v -> k -> Bool := prim "MutMap.has"
+def set : MutMap k v -> k -> v -> Unit := prim "MutMap.set"
+def delete : MutMap k v -> k -> Unit := prim "MutMap.delete"
+def size : MutMap k v -> Int := prim "MutMap.size"
+def keys : MutMap k v -> List k := prim "MutMap.keys"
+end MutMap
+
 namespace Code
 /-- Loads `(def "hash" term)` forms into the running machine. -/
 def load : Text -> Unit := prim "Code.load"

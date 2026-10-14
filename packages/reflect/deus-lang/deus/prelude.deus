@@ -405,4 +405,7 @@ def fromList (xs : List a) : Map a Unit := List.foldl (fun s x => insert x s) Ma
 
 def toList (s : Map a Unit) : List a := Map.keys s
 
+/-- A set of Text or Int for fast membership tests (built once). -/
+def dict (xs : List a) : Dict a Unit := Dict.fromList (List.map (fun x => (x, ())) xs)
+
 end Set

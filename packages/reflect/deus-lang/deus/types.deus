@@ -24,13 +24,13 @@ inductive TRow where
 
 /-- Mutable unification state for one batch. -/
 structure Unifier where
-  types : Ref (Map Int TType)
-  rows : Ref (Map Int TRow)
+  types : MutMap Int TType
+  rows : MutMap Int TRow
   next : Ref Int
 
 namespace Types
 
-def newUnifier (u : Unit) : Unifier := Unifier.mk (Ref.new Map.empty) (Ref.new Map.empty) (Ref.new 0)
+def newUnifier (u : Unit) : Unifier := Unifier.mk (MutMap.new ()) (MutMap.new ()) (Ref.new 0)
 
 def fresh (u : Unifier) : Int :=
   let k := Ref.get u.next
@@ -53,10 +53,10 @@ def unitT : TType := TType.con "#Unit" []
 def resolve (u : Unifier) (t : TType) : TType :=
   match t with
   | TType.var id =>
-    match Map.lookup id (Ref.get u.types) with
+    match MutMap.get u.types id with
     | some bound =>
       let r := resolve u bound
-      Ref.set u.types (Map.insert id r (Ref.get u.types))
+      MutMap.set u.types id r
       r
     | none => t
   | _ => t
@@ -64,7 +64,7 @@ def resolve (u : Unifier) (t : TType) : TType :=
 def resolveRow (u : Unifier) (r : TRow) : TRow :=
   match r with
   | TRow.var id =>
-    match Map.lookup id (Ref.get u.rows) with
+    match MutMap.get u.rows id with
     | some bound => resolveRow u bound
     | none => r
   | _ => r
@@ -156,9 +156,9 @@ def mismatch (u : Unifier) (a : TType) (b : TType) : {Throw Text} x :=
 
 def unify (u : Unifier) (a : TType) (b : TType) : {Throw Text} Unit :=
   match (resolve u a, resolve u b) with
-  | (TType.var x, TType.var y) => if x == y then () else Ref.set u.types (Map.insert x (TType.var y) (Ref.get u.types))
-  | (TType.var x, t) => if occurs u x t then throw "infinite type" else Ref.set u.types (Map.insert x t (Ref.get u.types))
-  | (t, TType.var y) => if occurs u y t then throw "infinite type" else Ref.set u.types (Map.insert y t (Ref.get u.types))
+  | (TType.var x, TType.var y) => if x == y then () else MutMap.set u.types x (TType.var y)
+  | (TType.var x, t) => if occurs u x t then throw "infinite type" else MutMap.set u.types x t
+  | (t, TType.var y) => if occurs u y t then throw "infinite type" else MutMap.set u.types y t
   | (TType.con i1 a1, TType.con i2 a2) =>
     if i1 != i2 || List.length a1 != List.length a2 then mismatch u a b
     else List.forEach (List.zip a1 a2) (fun pair => unify u (fst pair) (snd pair))
@@ -179,7 +179,7 @@ def rewriteRow (u : Unifier) (r : TRow) (label : TType) : {Throw Text} (TType, T
   | TRow.var id =>
     let tail := freshRow u
     let l := label
-    Ref.set u.rows (Map.insert id (TRow.extend l tail) (Ref.get u.rows))
+    MutMap.set u.rows id (TRow.extend l tail)
     (l, tail)
   | TRow.empty => throw ("unhandled ability " ++ showType (zonk u label) (Ref.new Map.empty) 0)
 
@@ -190,9 +190,9 @@ def rowMismatch (u : Unifier) (a : TRow) (b : TRow) : {Throw Text} x :=
 def unifyRow (u : Unifier) (a : TRow) (b : TRow) : {Throw Text} Unit :=
   match (resolveRow u a, resolveRow u b) with
   | (TRow.empty, TRow.empty) => ()
-  | (TRow.var x, TRow.var y) => if x == y then () else Ref.set u.rows (Map.insert x (TRow.var y) (Ref.get u.rows))
-  | (TRow.var x, r) => if rowTailIs u x r then rowMismatch u a b else Ref.set u.rows (Map.insert x r (Ref.get u.rows))
-  | (r, TRow.var y) => if rowTailIs u y r then rowMismatch u a b else Ref.set u.rows (Map.insert y r (Ref.get u.rows))
+  | (TRow.var x, TRow.var y) => if x == y then () else MutMap.set u.rows x (TRow.var y)
+  | (TRow.var x, r) => if rowTailIs u x r then rowMismatch u a b else MutMap.set u.rows x r
+  | (r, TRow.var y) => if rowTailIs u y r then rowMismatch u a b else MutMap.set u.rows y r
   | (TRow.extend l rest, other) =>
     match rewriteRow u other l with
     | (found, other2) =>
@@ -271,7 +271,7 @@ structure TypeEnv where
   meta : Text -> Option Sexp
   group : Ref (Map Text TType)
   schemes : Ref (Map Text Sexp)
-  prims : Map Text Sexp
+  prims : Text -> Option Sexp
 
 /-- A definition's type: in this batch (monomorphic while its group is inferred), stored, or unknown. -/
 def globalType (u : Unifier) (env : TypeEnv) (h : Text) : TType :=
@@ -340,7 +340,7 @@ def infer (u : Unifier) (env : TypeEnv) (t : Sexp) (locals : List TType) (row : 
   | Sexp.list [Sexp.sym "int", _] => int
   | Sexp.list [Sexp.sym "text", _] => text
   | Sexp.list [Sexp.sym "prim", Sexp.str name] =>
-    match Map.lookup name env.prims with
+    match env.prims name with
     | some scheme => instantiate u scheme
     | none => freshType u
   | Sexp.list [Sexp.sym "con", Sexp.str ty, Sexp.int tag, _] => ctorType u env ty tag
