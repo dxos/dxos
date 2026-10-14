@@ -19,10 +19,10 @@ import {
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
-  type EntityCardModel,
-  toEntityCards,
   type AgentKnowledgePredicate,
+  type EntityCardModel,
   curie,
+  toEntityCards,
 } from '#components';
 import { Goal, Knowledge, Profile } from '#types';
 
