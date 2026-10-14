@@ -386,9 +386,7 @@ def write (t : EventType) (rows : List Row) : List Int :=
       | (bytes, _, _) => bytes) parts ++ footer ++ le32 (List.length footer) ++ magic
 
 def toArray (bytes : List Int) : Array Int :=
-  let a := Array.make (List.length bytes) 0
-  List.forEach (List.zip (List.range 0 (List.length bytes)) bytes) (fun pair => Array.set a (fst pair) (snd pair))
-  a
+  List.foldl (fun a pair => Array.set a (fst pair) (snd pair)) (Array.make (List.length bytes) 0) (List.zip (List.range 0 (List.length bytes)) bytes)
 
 /-- The column type a schema element was written with. -/
 def columnTypeOf (e : Thrift) : Text :=

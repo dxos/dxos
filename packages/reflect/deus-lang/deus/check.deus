@@ -124,6 +124,13 @@ def generate (types : Map Text Sexp) (state : Ref Int) (t : Sexp) (depth : Int) 
     else if iri == "#Option" then
       if below state 3 == 0 || depth <= 0 then con "#Option" 0 []
       else con "#Option" 1 [generate types state (Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])) (depth - 1)]
+    else if iri == "#Array" then
+      -- `Array.make` then one `Array.set` per index, so each item is drawn on its own.
+      let elem := Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])
+      let count := if depth <= 0 then 0 else below state 6
+      let applyPrim := fun (p : Text) (xs : List Sexp) => Sexp.list (Sexp.sym "app" :: Sexp.node "prim" [Sexp.str p] :: xs)
+      let made := applyPrim "Array.make" [Sexp.node "int" [Sexp.int count], generate types state elem (depth - 1)]
+      List.foldl (fun acc i => applyPrim "Array.set" [acc, Sexp.node "int" [Sexp.int i], generate types state elem (depth - 1)]) made (List.range 0 count)
     else if iri == "#Pair" then
       match args with
       | [a, b] => con "#Pair" 0 [generate types state a depth, generate types state b depth]

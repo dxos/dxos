@@ -12,7 +12,7 @@ structure Types.TypeEnv r where
 
 /-- An application `f a₁ … aₙ`. -/
 def Types.application (u : Unifier) (env : TypeEnv {r}) (f : Sexp) (args : List Sexp) (locals : List TType) (row : TRow) : {Throw Text | r} TType :=
-  let tf := infer u env f locals row
+  let tf := Types.infer u env f locals row
   -- Bidirectional: when the callee's arrows are known, check plain arguments (they may bind the
   -- callee's row variables), link the rows to the context, then check lambdas against the
   -- parameter types so a callback runs in its caller's row.
@@ -33,7 +33,7 @@ def Types.application (u : Unifier) (env : TypeEnv {r}) (f : Sexp) (args : List 
         (fun pair => checkAgainst u env (snd pair) (fst (fst pair)) locals row)
       result
   | Option.none => foldl (fun acc arg =>
-      let ta := infer u env arg locals row
+      let ta := Types.infer u env arg locals row
       Types.call u acc ta row) tf args
 
 def Types.bool : TType := TType.con "#Bool" []
@@ -54,7 +54,7 @@ def Types.call (u : Unifier) (callee : TType) (arg : TType) (row : TRow) : {Thro
 def Types.checkAgainst (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (expected : TType) (locals : List TType) (row : TRow) : {Throw Text | r} Unit :=
   match (t, Types.resolve u expected) with
   | (Sexp.list (Sexp.sym "lam" :: b :: []), TType.fn a r result) => Types.checkAgainst u env b result (a :: locals) r
-  | _ => Types.unify u expected (infer u env t locals row)
+  | _ => Types.unify u expected (Types.infer u env t locals row)
 
 /-- The signature's type and row variables must still be distinct variables: the definition is as
   general as declared, and performs no ability its written rows leave out. -/
@@ -209,13 +209,13 @@ def Types.handler (u : Unifier) (env : TypeEnv {r}) (body : Sexp) (clauses : Lis
     | Option.some (Sexp.list (Sexp.sym "ability" :: Sexp.str iri :: Sexp.int count :: _)) => (a, TType.con iri (List.map (fun _ => freshType u) (range 0 count)))
     | _ => (a, TType.con a [])) abilities
   let bodyRow := List.foldr (fun pair acc => TRow.extend (snd pair) acc) row labels
-  let tb := infer u env body locals bodyRow
+  let tb := Types.infer u env body locals bodyRow
   let result := freshType u
   let hasReturn := any (fun c => head c == "ret") clauses
   if hasReturn then () else Types.unify u result tb
   forEach clauses (fun c =>
     match c with
-    | Sexp.list (Sexp.sym "ret" :: rb :: []) => Types.unify u result (infer u env rb (tb :: locals) row)
+    | Sexp.list (Sexp.sym "ret" :: rb :: []) => Types.unify u result (Types.infer u env rb (tb :: locals) row)
     | Sexp.list (Sexp.sym "on" :: Sexp.str a :: Sexp.int index :: Sexp.int arity :: hb :: []) =>
         let params :=
           match List.lookup a labels with
@@ -229,7 +229,7 @@ def Types.handler (u : Unifier) (env : TypeEnv {r}) (body : Sexp) (clauses : Lis
         match args (fst (opType u env a index params)) arity [] with
         | (argTypes, opResult) =>
             let k := TType.fn opResult row result
-            Types.unify u result (infer u env hb (k :: reverse argTypes ++ locals) row)
+            Types.unify u result (Types.infer u env hb (k :: reverse argTypes ++ locals) row)
     | _ => ())
   result
 
@@ -342,7 +342,7 @@ def Types.occurs (u : Unifier) (id : Int) (t : TType) : Bool :=
 
 def Types.occursInRow (u : Unifier) (id : Int) (r : TRow) : Bool :=
   match resolveRow u r with
-  | TRow.extend l rest => occurs u id l || Types.occursInRow u id rest
+  | TRow.extend l rest => Types.occurs u id l || Types.occursInRow u id rest
   | TRow.var other => other == id
   | TRow.empty => false
 
@@ -634,8 +634,8 @@ def Types.typeToSexp (t : TType) : Sexp :=
 def Types.unify (u : Unifier) (a : TType) (b : TType) : {Throw Text} Unit :=
   match (Types.resolve u a, Types.resolve u b) with
   | (TType.var x, TType.var y) => if x == y then () else MutMap.set u.types x (TType.var y)
-  | (TType.var x, t) => if occurs u x t then Throw.throw "infinite type" else MutMap.set u.types x t
-  | (t, TType.var y) => if occurs u y t then Throw.throw "infinite type" else MutMap.set u.types y t
+  | (TType.var x, t) => if Types.occurs u x t then Throw.throw "infinite type" else MutMap.set u.types x t
+  | (t, TType.var y) => if Types.occurs u y t then Throw.throw "infinite type" else MutMap.set u.types y t
   | (TType.con i1 a1, TType.con i2 a2) => if i1 != i2 || List.length a1 != List.length a2 then mismatch u a b else forEach (zip a1 a2) (fun pair => Types.unify u (fst pair) (snd pair))
   | (TType.fn a1 r1 b1, TType.fn a2 r2 b2) =>
       Types.unify u a1 a2

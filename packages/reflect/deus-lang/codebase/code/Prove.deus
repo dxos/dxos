@@ -26,7 +26,7 @@ def Prove.apply (pr : Prover) (f : Sym) (args : List Sym) : {Stuck, IO} Sym := i
       if List.length all < arity then Sym.ctorFn ty tag arity all else Sym.data ty tag all
   | Sym.primFn name prev =>
       let all := prev ++ args
-      let arity := if name == "Int.neg" || name == "Text.length" || name == "Int.toText" || name == "Text.trim" || name == "Text.sha256" || name == "Text.fromCode" || name == "Text.concat" then 1 else if name == "Text.slice" || name == "Text.indexOf" then 3 else 2
+      let arity := if name == "Int.neg" || name == "Text.length" || name == "Int.toText" || name == "Text.trim" || name == "Text.sha256" || name == "Text.fromCode" || name == "Text.concat" || name == "Array.length" then 1 else if name == "Text.slice" || name == "Text.indexOf" || name == "Array.set" then 3 else 2
       if List.length all < arity then Sym.primFn name all else Prove.apply pr (Prove.primitive name (List.take arity all)) (List.drop arity all)
   | Sym.call h prev => Sym.call h (prev ++ args)
   | _ => Sym.app f args
@@ -178,7 +178,7 @@ def Prove.definitionOf (pr : Prover) (h : Text) : {IO} Option (Int, Sexp) :=
       let result :=
         match readObject pr.store h with
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
-            match unlam core with
+            match Wasm.unlam core with
             | (arity, body) => if not (pure body) then Option.none else
                 match decreasing h body arity with
                 | Option.some _ => Option.some (arity, body)
@@ -281,6 +281,15 @@ def Prove.goalText (pr : Prover) (g : Goal) : Text :=
   let p := printer pr.nsMap []
   let hyps := mapIndexed (fun i h => "      h" ++ toText i ++ " : " ++ symText p h 0) g.hyps
   join "\n" (hyps ++ ["      ⊢ " ++ symText p g.prop 0])
+
+/-- `if c then yes else no`, decided when `c` is. -/
+def Prove.guard (c : Sym) (yes : Sym) (no : Sym) : Sym := if isTrue c then yes else if isFalse c then no else Sym.ite c yes no
+
+/-- `0 <= i && i < Array.length a`, the condition under which index `i` of `a` is not a defect. -/
+def Prove.inBounds (a : Sym) (i : Sym) : Sym := guard
+  (Prove.primitive "le" [Sym.int 0, i])
+  (Prove.primitive "lt" [i, Prove.primitive "Array.length" [a]])
+  falseSym
 
 /-- Structural induction (`withIh`) or case analysis on a variable. -/
 def Prove.induct (pr : Prover) (g : Goal) (name : Text) (withIh : Bool) : {IO} Option (List Goal) :=
@@ -496,6 +505,10 @@ def Prove.orient (l : Sym) (r : Sym) : List Rule :=
     | Sym.fv x => if Prove.mentions r x then [] else [Rule.mk l r []]
     | _ => [Rule.mk l r []]
 
+/-- An array primitive whose index may be out of bounds, so it may be a defect: a term of its own
+  (`Array.get!`) that is never reduced again, so `norm` reaches a fixpoint. -/
+def Prove.outOfBounds (name : Text) (args : List Sym) : Sym := Sym.prim (name ++ "!") args
+
 def Prove.parseSteps (tokens : List Sexp) : List Step :=
   let rec go rest current acc inBrackets lemmas :=
     let flush := fun u =>
@@ -560,6 +573,18 @@ def Prove.primitiveDirect (name : Text) (args : List Sym) : Sym :=
   | ("implies", a :: b :: []) => if isTrue a then b else if isFalse a then trueSym else if isTrue b then trueSym else Sym.prim "implies" [a, b]
   | ("Text.length", Sym.text a :: []) => Sym.int (Text.length a)
   | ("Int.toText", Sym.int a :: []) => Sym.text (toText a)
+  | ("Array.length", Sym.prim "Array.make" (n :: _ :: []) :: []) => guard (Prove.primitive "le" [Sym.int 0, n]) n (outOfBounds name args)
+  | ("Array.length", Sym.prim "Array.set" (a :: i :: _ :: []) :: []) => guard (inBounds a i) (Prove.primitive "Array.length" [a]) (outOfBounds name args)
+  | ("Array.get", Sym.prim "Array.make" (n :: x :: []) :: i :: []) => guard
+      (Prove.primitive "le" [Sym.int 0, i])
+      (guard (Prove.primitive "lt" [i, n]) x (outOfBounds name args))
+      (outOfBounds name args)
+  | ("Array.get", Sym.prim "Array.set" (a :: i :: v :: []) :: j :: []) => guard
+      (inBounds a i)
+      (guard (Prove.primitive "eq" [i, j]) v (Prove.primitive "Array.get" [a, j]))
+      (outOfBounds name args)
+  | ("Array.set", Sym.prim "Array.set" (a :: i :: _ :: []) :: j :: w :: []) => if i == j then Prove.primitive "Array.set" [a, i, w] else Sym.prim name args
+  | ("Array.set", a :: i :: Sym.prim "Array.get" (b :: j :: []) :: []) => if a == b && i == j then guard (inBounds a i) a (outOfBounds name args) else Sym.prim name args
   | _ => Sym.prim name args
 
 /-- Runs a tactic script on a theorem; `ok` with the steps used, or the goals left. -/
@@ -604,7 +629,7 @@ def Prove.pure (core : Sexp) : Bool :=
   | _ => true
 
 /-- Primitives with no effects and a meaning the prover models or can compute. -/
-def Prove.purePrims : Map Text Unit := Set.fromList ["Int.add", "Int.sub", "Int.mul", "Int.div", "Int.mod", "Int.neg", "Int.and", "Int.or", "Int.xor", "Int.shl", "Int.shr", "Int.ushr", "Int.toText", "eq", "neq", "compare", "lt", "le", "gt", "ge", "append", "implies", "Text.length", "Text.code", "Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.indexOf", "Text.trim", "Text.sha256"]
+def Prove.purePrims : Map Text Unit := Set.fromList ["Int.add", "Int.sub", "Int.mul", "Int.div", "Int.mod", "Int.neg", "Int.and", "Int.or", "Int.xor", "Int.shl", "Int.shr", "Int.ushr", "Int.toText", "eq", "neq", "compare", "lt", "le", "gt", "ge", "append", "implies", "Text.length", "Text.code", "Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.indexOf", "Text.trim", "Text.sha256", "Array.make", "Array.length", "Array.get", "Array.set"]
 
 /-- Rewrites bottom-up with rules (conditions proved recursively, bounded), then re-normalizes. -/
 def Prove.rewrite (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {IO} Sym :=
@@ -628,7 +653,7 @@ def Prove.rewrite (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {I
     match rs with
     | [] =>
         match reduced with
-        | Sym.prim "le" (a :: c :: []) => if chain rules a c then trueSym else reduced
+        | Sym.prim "le" (a :: c :: []) => if Prove.chain rules a c then trueSym else reduced
         | _ => reduced
     | r :: rest =>
         match Prove.unify r.lhs reduced Map.empty with

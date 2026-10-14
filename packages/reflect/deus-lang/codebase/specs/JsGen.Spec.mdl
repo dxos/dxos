@@ -1,0 +1,98 @@
+---
+name: JsGen.Spec
+---
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `js` | `org.dxos.deus.js@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## Blocks
+
+```mdl
+api A-1: the compiler and its text helpers
+  signatures:
+  - JsGen.compile : (Text -> {Throw Text | e} Option Sexp) -> (Text -> {Throw Text | e} Option Sexp) -> (Text -> {Throw Text | e} Text -> {Throw Text | e} Text) -> Map Text Entry -> Text -> List (Text, Text) -> Text -> Text -> {Throw Text | e} (Text, Text)
+  - JsGen.mangle : Text -> Text
+  - JsGen.vlq : Int -> Text
+  - JsGen.unvlq : Text -> Int
+```
+
+```mdl
+js JS-1: arithmetic wraps at 32 bits
+  run: (2147483647 + 1, 7 / -2, -7 % 3, Int.ushr (-1) 28)
+```
+
+```mdl
+js JS-10: a defect is caught by a Defect handler
+  run: handle Int.toText (Int.div 1 0) with | Defect.raise m -> _ => m
+```
+
+```mdl
+js JS-11: maps and dictionaries
+  run: Map.toList (Map.fromList [("b", 2), ("a", 1)])
+```
+
+```mdl
+js JS-2: a self tail call loops in constant stack
+  run: JsGen.Spec.sumTo 100000 0
+```
+
+```mdl
+js JS-3: data, matching and the prelude
+  run: List.map JsGen.Spec.figureArea [JsGen.Spec.Figure.circle 2, JsGen.Spec.Figure.rect 3 4]
+```
+
+```mdl
+js JS-4: text is UTF-16 code units
+  run: (Text.length "😀", Text.split "a,b,,c" ",", Int.fromText "-12", Text.code "é" 0)
+```
+
+```mdl
+js JS-5: a resumptive handler answers the request where it is made
+  run: JsGen.Spec.answer JsGen.Spec.twice
+```
+
+```mdl
+js JS-6: an abortive handler is the result of the handle
+  run: (try (fun _ => JsGen.Spec.safeDiv 1 0), try (fun _ => JsGen.Spec.safeDiv 9 3))
+```
+
+```mdl
+js JS-7: partial application and closures
+  run: List.map (Int.add 10) (List.filter (fun x => x % 2 == 0) (List.range 0 7))
+```
+
+```mdl
+js JS-8: mutable cells
+  run: JsGen.Spec.counter 10
+```
+
+```mdl
+js JS-9: structural equality and order
+  run: (some [1, 2] == some [1, 2], compare (1, "b") (1, "a"), List.sort [3, 1, 2])
+```
+
+```mdl
+law L-1: every name mangles to a JavaScript identifier
+  theorem: JsGen.Spec.mangleIsIdent
+```
+
+```mdl
+law L-2: source map numbers decode to what was encoded
+  theorem: JsGen.Spec.vlqRoundTrip
+```
+
+```mdl
+req R-1: each definition is a JavaScript function named after it, so stacks read as DEUS
+  by: JsGen.Spec.namesAreIdentifiers
+```
+
+```mdl
+req R-2: a handler whose clause resumes twice, or after more work, is refused by name
+  gap: task 508d9443
+```

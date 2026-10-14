@@ -37,6 +37,7 @@ ability MdlHost @"urn:deus:mdl:Host" where
   holds : Text -> Result Text Bool
   run : Text -> Result Text Text
   describe : Text -> Result Text (List (Text, Text))
+  js : Text -> Result Text (Text, Text)
 
 namespace Mdl
 

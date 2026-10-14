@@ -12,7 +12,7 @@ def Sort.insert (x : Int) (x0 : List Int) : List Int :=
   | [] => [x]
   | y :: rest => if x <= y then x :: y :: rest else y :: Sort.insert x rest
 
-theorem Sort.insertCount (y : Int) (x : Int) (xs : List Int) : count y (Sort.insert x xs) == (if y == x then 1 else 0) + count y xs := by induction xs ; auto
+theorem Sort.insertCount (y : Int) (x : Int) (xs : List Int) : Sort.count y (Sort.insert x xs) == (if y == x then 1 else 0) + Sort.count y xs := by induction xs ; auto
 
 theorem Sort.insertLength (x : Int) (xs : List Int) : Sort.len (Sort.insert x xs) == 1 + Sort.len xs := by induction xs ; auto
 
@@ -23,7 +23,7 @@ def Sort.isort : List Int -> List Int
 | [] => []
 | x :: rest => Sort.insert x (Sort.isort rest)
 
-theorem Sort.isortCount (y : Int) (xs : List Int) : count y (isort xs) == count y xs := by induction xs ; simp [insertCount]
+theorem Sort.isortCount (y : Int) (xs : List Int) : Sort.count y (isort xs) == Sort.count y xs := by induction xs ; simp [insertCount]
 
 theorem Sort.isortLength (xs : List Int) : Sort.len (isort xs) == Sort.len xs := by induction xs ; simp [insertLength]
 

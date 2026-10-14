@@ -14,8 +14,10 @@ structure Arm where
   pats : List Pat
   body : Expr
 
-/-- A mutable array of fixed length (D83). Like `Ref`, writes are not rolled back when a
-  continuation is resumed twice. An index outside `0 .. length` is a defect. -/
+/-- An immutable array of fixed length (D96). `set` returns a new array and leaves the old one as
+  it was, but costs O(1) when the old one is not used again: the kernels keep versions (reading
+  an old one is slower), and the compiled back ends write in place when the array is unique. An
+  index outside `0 .. length` is a defect. -/
 inductive Array a @"#Array" where
 
 /-- A file attached to a comment (D82): its bytes are in the codebase's asset store under their
@@ -314,6 +316,7 @@ ability MdlHost @"urn:deus:mdl:Host" where
   holds : Text -> Result Text Bool
   run : Text -> Result Text Text
   describe : Text -> Result Text (List (Text, Text))
+  js : Text -> Result Text (Text, Text)
 
 /-- Metrics: a counter adds to its total; a gauge records a current value. -/
 ability Metrics where
@@ -577,6 +580,11 @@ ability Stuck where
   - Case splits on `Bool` conditions (excluded middle for terminating computations).
   - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
     order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
+  - The `Array` laws (D96, the codebase's `Array.Spec`): `length (make n x) = n` for `0 <= n`;
+    `get (make n x) i = x` and `get (set a i v) j = if i == j then v else get a j`, with `length`
+    of a `set` unchanged, when the index is in bounds; `set (set a i v) i w = set a i w`; and
+    `set a i (get a i) = a` in bounds. An index out of bounds is a defect, so a term whose bound
+    is undecided stays folded under an `if` on the bound.
   - Rewriting with hypotheses and with lemmas that are themselves proved. A lemma that is
     only tested downgrades the verdict and says so.
 

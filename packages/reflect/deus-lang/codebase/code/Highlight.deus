@@ -2,7 +2,7 @@
 def Highlight.ansi (source : Text) : Text := ansiIn "deus" source
 
 def Highlight.ansiIn (dialect : Text) (source : Text) : Text :=
-  let paint := fun code t => esc ++ "[" ++ code ++ "m" ++ t ++ esc ++ "[0m"
+  let paint := fun code t => Highlight.esc ++ "[" ++ code ++ "m" ++ t ++ Highlight.esc ++ "[0m"
   Text.concat (List.map (fun run =>
     match run with
     | ("kw", t) => paint "35" t
@@ -12,7 +12,7 @@ def Highlight.ansiIn (dialect : Text) (source : Text) : Text :=
     | (_, t) => t) (runsWith (keywordsFor dialect) source))
 
 /-- Text dimmed on a terminal, as is. -/
-def Highlight.dim (t : Text) : {IO} Text := if enabled () then esc ++ "[2m" ++ t ++ esc ++ "[0m" else t
+def Highlight.dim (t : Text) : {IO} Text := if enabled () then Highlight.esc ++ "[2m" ++ t ++ Highlight.esc ++ "[0m" else t
 
 /-- Whether output goes to a terminal that wants colour: the kernel sets `DEUS_TTY`, and `NO_COLOR` turns it off. -/
 def Highlight.enabled (u : Unit) : {IO} Bool := isSome (IO.getEnv "DEUS_TTY") && isNone (IO.getEnv "NO_COLOR")

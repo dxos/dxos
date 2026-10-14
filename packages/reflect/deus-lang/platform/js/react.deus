@@ -1,0 +1,112 @@
+/-
+  React for the js target (D97). Components are DEUS functions from props to an element that
+  may perform `Hooks`; the type checker then keeps hooks inside components, which is React's rule
+  of hooks as a type. `React.component` turns such a function into a React component: each render
+  runs it under a handler that answers `Hooks` with React's own hooks, resuming at once, so the
+  hooks run in the order the function performs them.
+
+    def counter (start : Int) : {Hooks} Element :=
+      let (n, setN) := Hooks.useState start
+      React.h "button" [React.onClick (fun _ => setN (n + 1))] [React.text (Int.toText n)]
+
+    def Counter : React.Component Int := React.component "Counter" counter
+
+  Props of a DEUS component are DEUS values (`React.el Counter 3`); a component React or other
+  JavaScript renders gets JavaScript props (`React.jsComponent`).
+-/
+
+namespace React
+
+/-- A React element. -/
+inductive Element @"urn:deus:react:Element" where
+
+/-- A component whose props are a DEUS value of type `p`. -/
+inductive Component (p : Type) @"urn:deus:react:Component" where
+
+/-- What a component may do while it renders: React's hooks. -/
+ability Hooks @"urn:deus:react:Hooks" where
+  useState : a -> (a, a -> Unit)
+  useEffect : (Unit -> Unit) -> List Js -> Unit
+  useMemo : (Unit -> a) -> List Js -> a
+  useRef : a -> Ref a
+  useContext : Js -> Js
+  useId : Unit -> Text
+
+def createElement : Js := Js.import "react" "createElement"
+
+def useStateJs : a -> (a, a -> Unit) := Js.import "react" "useState"
+
+def useEffectJs : (Unit -> Unit) -> List Js -> Unit := Js.import "react" "useEffect"
+
+def useMemoJs : (Unit -> a) -> List Js -> a := Js.import "react" "useMemo"
+
+def useContextJs : Js -> Js := Js.import "react" "useContext"
+
+def useIdJs : Unit -> Text := Js.import "react" "useId"
+
+/-- One `Ref` per component instance, made on the first render. -/
+def useRefJs (init : a) : Ref a := useMemoJs (fun _ => Ref.new init) []
+
+/-- Runs `body` with `Hooks` answered by React; call it only while React renders a component. -/
+def withHooks (body : Unit -> {Hooks | r} a) : {r} a :=
+  handle body () with
+  | Hooks.useState init -> k => k (useStateJs init)
+  | Hooks.useEffect f deps -> k => k (useEffectJs f deps)
+  | Hooks.useMemo f deps -> k => k (useMemoJs f deps)
+  | Hooks.useRef init -> k => k (useRefJs init)
+  | Hooks.useContext c -> k => k (useContextJs c)
+  | Hooks.useId u -> k => k (useIdJs u)
+
+/-- Names a JavaScript function (`displayName` too, for React's devtools and warnings). -/
+def named : Text -> Js -> Js := Js.import "deus:runtime" "js.component"
+
+/-- A React component from a DEUS view of its props. -/
+def component (name : Text) (view : p -> {Hooks} Element) : Component p :=
+  Js.unwrap (named name (Js.fn (fun props => Js.wrap (withHooks (fun _ => view (Js.unwrap (Js.get props "deus")))))))
+
+/-- A React component that JavaScript renders with JavaScript props. -/
+def jsComponent (name : Text) (view : Js -> {Hooks} Element) : Js :=
+  named name (Js.fn (fun props => Js.wrap (withHooks (fun _ => view props))))
+
+/-- An element of a DEUS component. -/
+def el (c : Component p) (props : p) : Element := Js.unwrap (Js.call createElement [Js.wrap c, Js.obj [("deus", Js.wrap props)]])
+
+/-- `el` with a React `key`, for an element in a list. -/
+def keyed (k : Text) (c : Component p) (props : p) : Element :=
+  Js.unwrap (Js.call createElement [Js.wrap c, Js.obj [("deus", Js.wrap props), ("key", Js.text k)]])
+
+/-- An element of a component defined in JavaScript, with JavaScript props. -/
+def jsEl (c : Js) (props : List (Text, Js)) (children : List Element) : Element :=
+  Js.unwrap (Js.call createElement (c :: Js.obj props :: List.map Js.wrap children))
+
+/-- A DOM element: `h "div" [className "row"] [text "hi"]`. -/
+def h (tag : Text) (props : List (Text, Js)) (children : List Element) : Element := jsEl (Js.text tag) props children
+
+def text (t : Text) : Element := Js.unwrap (Js.text t)
+
+def fragmentType : Js := Js.import "react" "Fragment"
+
+def fragment (children : List Element) : Element := jsEl fragmentType [] children
+
+def className (c : Text) : (Text, Js) := ("className", Js.text c)
+
+def key (k : Text) : (Text, Js) := ("key", Js.text k)
+
+def attr (name : Text) (value : Text) : (Text, Js) := (name, Js.text value)
+
+def onClick (f : Unit -> Unit) : (Text, Js) := ("onClick", Js.fn1 (fun _ => f ()))
+
+/-- `onChange` of an input, with its new value. -/
+def onInput (f : Text -> Unit) : (Text, Js) := ("onChange", Js.fn1 (fun event => f (Js.toText (Js.path event ["target", "value"]))))
+
+def style (pairs : List (Text, Text)) : (Text, Js) := ("style", Js.obj (List.map (fun p => (fst p, Js.text (snd p))) pairs))
+
+def createRoot : Js -> Js := Js.import "react-dom/client" "createRoot"
+
+/-- Renders `root` into the element with id `id` of the page. -/
+def mount (id : Text) (root : Element) : Unit :=
+  let container := Js.method (Js.global "document") "getElementById" [Js.text id]
+  let _ := Js.method (createRoot container) "render" [Js.wrap root]
+  ()
+
+end React

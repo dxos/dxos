@@ -1,46 +1,80 @@
 # History of main
 
+- `211fc54767` C back end: a local passed as an argument moves there when later arguments only read it (D98) (by claude)
+- `5abc62eac7` history: import 438 changes
+- `5460cc4043` task: import from tasks.sexp
+- `dd19da2a63` add code specs
+- `c53158568a` Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97 (by claude)
+- `65aa9a06c5` history: import 434 changes
+- `fc3475b4c1` task: import from tasks.sexp
+- `3f2af1b29d` add code specs
+- `efb62b2ac7` Merge #13952's branch (explorer spec backfill) into the JS target (by claude)
+- `31a71813bc` history: import 410 changes
+- `3487bc898b` history: import 442 changes
+- `797c4cd451` task: import from tasks.sexp
+- `cedb78ea51` add code specs
+- `280dd114dc` Merge #13952's branch into the JS target (D96) (by claude)
+- `c8547225d9` history: import 426 changes
+- `bdfda4a33d` task: import from tasks.sexp
+- `dd81587487` add code specs
+- `489553f1e8` delete JsGen.Spec.Shape.circle JsGen.Spec.Shape.rect
+- `0c44e5f6ba` delete JsGen.Spec.Shape JsGen.Spec.area
+- `0f628d8efe` JsGen.Spec: names that do not clash with the tour (by claude)
+- `a76744d439` task: set c06f5905 state (by claude)
+- `91e117df73` task: set 78c17e2d state (by claude)
+- `1593c56b87` close 86ef7d80 by #a3b91d88c1 (by claude)
+- `a3b91d88c1` JS back end: deus build --js, direct style, source-mapped, spec-first in JS.mdl (D94) (by claude)
+- `d899edd608` task: set 5d6c67b4 priority labels (by claude)
+- `cc9f3cc6b1` task: open 5d6c67b4 Composer assistant skills for writing DEUS and using the codebase
+- `16dd2a7243` task: set 771e6f9e state (by claude)
+- `8d0b1cf442` task: set 771e6f9e details (by claude)
+- `2372949034` task: set 771e6f9e priority labels (by claude)
+- `1bb9f66932` task: open 771e6f9e Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL
+- `abb86679f0` task: set 1854b55d details (by claude)
+- `b79db127bf` task: set 1854b55d priority labels (by claude)
+- `f10a720bbc` task: open 1854b55d Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it
+- `7f4e2ad7d6` task: set 508d9443 details (by claude)
+- `ce83aa6993` task: set 508d9443 priority labels (by claude)
+- `882f13afdd` task: open 508d9443 JS back end refuses multi-shot handlers by name: a test for the refusal
+- `92835e5e18` task: set c06f5905 details (by claude)
+- `555e0b0b80` task: set c06f5905 priority labels (by claude)
+- `2952318075` task: open c06f5905 React bindings: hooks as an ability, a todo app in DEUS (D94)
+- `e710870ece` task: set 78c17e2d details (by claude)
+- `26c4a3df9d` task: set 78c17e2d priority labels (by claude)
+- `3d882093bf` task: open 78c17e2d JS interop: Js.import bindings with codecs from the signature (D94)
+- `9440cb0c70` task: set 86ef7d80 details (by claude)
+- `01bdc803df` task: set 86ef7d80 priority labels (by claude)
+- `6c41a3a2d6` task: open 86ef7d80 JS back end: deus build --js, direct style, source maps (D94)
+- `ccf54ad86f` history: import 353 changes
+- `f13276e40e` task: import from tasks.sexp
+- `32032ea1fa` task: open 2a2b87a2 Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (by claude)
+- `4840de1a1a` the explorer's writing and console in its checked spec (from #13952's branch) (by claude)
+- `916dd946a8` history: import 408 changes
+- `b85fb6bdf9` task: import from /tmp/claude-0/-home-user-dxos/7218d591-3085-5d07-8746-c4ab5dbc3b34/scratchpad/theirs/codebase/tasks.sexp
+- `724f14b2e7` history: import 382 changes
+- `2d3f491949` task: import from tasks.sexp
+- `ac74022d77` add code specs
 - `d90027cba3` close c50cd76e by #9cee717581 (by claude)
 - `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
 - `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
 - `99b512f359` history: import 359 changes
 - `7b6f241c41` task: import from tasks.sexp
 - `b878c25ce1` add code specs
-- `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
-- `aad1732770` task: link cf5e187f to Resolve.stub
-- `c52516022a` task: set cf5e187f state
-- `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
-- `135f9abba9` task: set cf5e187f assignee
-- `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
-- `32d6c2d287` task: set 20dbe121 state (by claude)
-- `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
-- `7829722c1b` history: import 351 changes
-- `ae69cbd311` task: import from tasks.sexp
-- `08e90dab62` add code specs
-- `438184d11a` close e4a19978 by #458d0633bd (by claude)
-- `458d0633bd` the explorer's report tool: a screenshot filed as a labelled task (D90) (by claude)
-- `993938b5c3` task: open e4a19978 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
-- `089232a06c` task: set 6ffdc230 details (by claude)
-- `b1615b9a4a` history: import 347 changes (by claude)
-- `4d335b2648` task: import from tasks.sexp
-- `e373ff3964` add code specs
-- `74b97aebd0` close 6ffdc230 by #10e77371ec (by claude)
-- `10e77371ec` checked specs for the codebase store, compile, export and explorer; req, api and law blocks (D91) (by claude)
-- `3f7d3447c4` task: open 1ab6c044 Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (by claude)
-- `6ed8a2b666` task: open b4d7a440 BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (by claude)
-- `22fa7745e5` task: open 908495a0 deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (by claude)
-- `165385e432` task: open 0d7b0142 law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (by claude)
-- `83f2d1149c` task: open 1cbfdd30 Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (by claude)
-- `fc3b0088f4` task: open 6a3b0ebe MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (by claude)
-- `33a1f4c824` task: open f6a2c2ff Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (by claude)
-- `c4d35b8416` task: open 4f7f9e40 Theorem view prints P -> Q as prim "implies" (P) (Q) (by claude)
-- `c36de0222a` task: open a2da28e2 A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (by claude)
-- `ef4bb40a88` task: open 823f7b83 Laws for task, comment and history-record merges, and for add/update refusing layer crossings (by claude)
-- `6370cf7401` task: open 6ffdc230 Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (by claude)
-- `192a0b9794` toolchain sources at #13952's head (by claude)
-- `41879b7d7e` history: import 319 changes
-- `ffc6ea6551` task: import from tasks.sexp
-- `3b48b9e68d` add code specs
+- `66bce7945c` task: open 7ef8bf45 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (by claude)
+- `99e026a5cf` task: set a1b73fb8 title (by claude)
+- `afaebd5eba` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `a1a75cd968` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `96333fa979` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `758744e3a8` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `616fe2a423` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `ab1c356e8d` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `99ac1e29bb` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `a2774f99ed` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `0e439a4fad` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `4916079850` close 95ca184f by #034fda7dc8 (by claude)
+- `034fda7dc8` history: import 367 changes (by claude)
+- `ab089e6fd9` task: import from tasks.sexp
+- `4589165e18` add code specs
 - `4fa0ad8131` export: merge 35 changes from codebase
 - `e8b6a8fb9d` export: merge tasks from codebase
 - `2c40570335` update docs/spec/CHECKING.mdl (by claude)

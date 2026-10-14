@@ -37,7 +37,7 @@ def Project.install (dir : Text) (ns : Map Text Entry) (name : Text) (from : Tex
     | Option.some p => p.projectIri
     | Option.none => Throw.throw (from ++ " is not a project; run `deus project init <iri>` there")
   let own := List.filter (fun pair => not (isLibName (fst pair))) (Map.toList theirs)
-  forEach (Map.keys (reachable from (rootsOf own))) (fun h => copy from dir h)
+  forEach (Map.keys (reachable from (rootsOf own))) (fun h => Project.copy from dir h)
   let mount := "lib." ++ name ++ "."
   let kept := Map.fromList (List.filter (fun pair => not (startsWith mount (fst pair))) (Map.toList ns))
   (Lib.mk name iri release, foldl (fun m pair => Map.insert (mount ++ fst pair) (snd pair) m) kept own)
