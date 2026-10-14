@@ -4,7 +4,16 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, test } from 'vitest';
@@ -407,22 +416,87 @@ describe('deus CLI', () => {
       deus('merge', 'origin.main', ...fresh);
       expect(deus('eval', 'v70 + v3 + x + y', ...fresh).stdout).toBe('76\n');
 
-      // Retention: only recent generations survive, in one bundle; the history left is shallow.
-      const collected = JSON.parse(deus('compact', '--keep', '3', '--json', ...a).stdout);
-      expect(readdirSync(join(remote, 'bundles'))).toEqual([collected.bundle]);
-      expect(collected.dropped).toBeGreaterThan(0);
-      deus('pull', ...b);
-      expect(JSON.parse(deus('compact', '--keep', '3', '--json', ...b).stdout)).toMatchObject({
-        bundle: collected.bundle,
-        deleted: [],
-        dropped: 0,
-      });
-      const shallow = ['--codebase', join(scratch, 'replica-d')];
-      deus('init', '--empty', ...shallow);
-      deus('remote', 'add', 'origin', remote, ...shallow);
-      deus('pull', ...shallow);
-      deus('merge', 'origin.main', ...shallow);
-      expect(deus('eval', 'v70 + v3 + x + y', ...shallow).stdout).toBe('76\n');
+      // Compaction never trims history: a clone of the compacted remote has every change, as git does.
+      const history = (c: string[]) => deus('log', '--n', '1000', ...c).stdout;
+      expect(history(fresh)).toBe(history(a));
+      expect(history(a).split('\n').length).toBeGreaterThan(70);
+      const refused = deus('compact', '--keep', '3', ...a);
+      expect(refused.code).toBe(1);
+      expect(refused.stderr).toContain('compact keeps the whole history');
+    },
+  );
+
+  test(
+    'migrates flat snapshots to namespace trees, links and provenance included',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const dir = join(scratch, 'migrate');
+      const c = ['--codebase', dir];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), ...c);
+      deus(
+        'add',
+        file('m1.deus', 'def A.x : Int := 1\ndef A.y : Int := 2\ndef z : Int := 3\n'),
+        '--message',
+        'one',
+        ...c,
+      );
+      const bug = JSON.parse(deus('task', 'new', 'Fix', 'x', '--link', 'A.x', '--json', ...c).stdout);
+      deus('update', file('m1.deus', 'def A.x : Int := 10\n'), '--closes', bug.id, ...c);
+      deus('add', file('m2.deus', 'def A.w : Int := 4\n'), '--message', 'two', '--by', 'agent-m', ...c);
+      const head = readFileSync(join(dir, 'branches/main'), 'utf8').trim();
+
+      // Rewrite history as an older codebase stored it: every snapshot one flat `ns` of full names.
+      const path = (h: string) => join(dir, 'objects', h.slice(0, 2), h);
+      const put = (text: string) => {
+        const h = createHash('sha256').update(text.trimEnd()).digest('hex');
+        mkdirSync(join(dir, 'objects', h.slice(0, 2)), { recursive: true });
+        writeFileSync(path(h), text);
+        return h;
+      };
+      const items = (h: string): string[] =>
+        [
+          ...readFileSync(path(h), 'utf8').matchAll(
+            /\((n "[^"]*" \((?:[^()]|\([^()]*\))*\))\)|\(sub "([^"]*)" "([0-9a-f]{64})"\)|\(part "([0-9a-f]{64})"\)/g,
+          ),
+        ].flatMap((m) =>
+          m[1] ? [m[1]] : m[2] ? items(m[3]).map((item) => item.replace(/^n "/, `n "${m[2]}.`)) : items(m[4]),
+        );
+      const moved = new Map<string, string>();
+      const flatten = (h: string): string => {
+        const text = readFileSync(path(h), 'utf8');
+        const kind = text.slice(1, text.search(/[ )]/));
+        if (!moved.has(h)) {
+          moved.set(
+            h,
+            kind === 'ns'
+              ? put(
+                  `(ns${items(h)
+                    .map((item) => ` (${item})`)
+                    .join('')})\n`,
+                )
+              : ['causal', 'tasks', 'task'].includes(kind)
+                ? put(text.replace(/[0-9a-f]{64}/g, (ref) => (existsSync(path(ref)) ? flatten(ref) : ref)))
+                : h,
+          );
+        }
+        return moved.get(h) ?? h;
+      };
+      writeFileSync(join(dir, 'branches/main'), `${flatten(head)}\n`);
+      writeFileSync(join(dir, 'provenance', flatten(head)), readFileSync(join(dir, 'provenance', head)));
+      rmSync(join(dir, 'provenance', head));
+      expect(flatten(head)).not.toBe(head);
+      const names = deus('ls', ...c).stdout;
+
+      const migrated = JSON.parse(deus('migrate', '--json', ...c).stdout);
+      expect(migrated).toEqual({ rewritten: 6, branches: 1 });
+      // Tree snapshots are canonical, so the migrated history is exactly the one first written.
+      expect(readFileSync(join(dir, 'branches/main'), 'utf8').trim()).toBe(head);
+      expect(deus('ls', ...c).stdout).toBe(names);
+      expect(JSON.parse(deus('migrate', '--json', ...c).stdout)).toEqual({ rewritten: 0, branches: 0 });
+      expect(deus('eval', 'A.x + A.w + z', ...c).stdout).toBe('17\n');
+      expect(JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout)[0].by).toBe('agent-m');
+      expect(JSON.parse(deus('task', 'show', bug.id, '--json', ...c).stdout).task.state).toBe('done');
     },
   );
 

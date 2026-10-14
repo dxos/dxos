@@ -87,7 +87,7 @@ The head symbol of an object names its kind, and the kind decides its layer (see
 | `type`    | a type                          | `(type "iri" params (ctor arity field-type …) …)`                            | [CORE.md](./CORE.md#objects)  |
 | `ability` | an ability                      | `(ability "iri" params (op arity type) …)`                                   | [CORE.md](./CORE.md#objects)  |
 | `spec`    | an identified `.mdl` block      | `(spec "block-type" "uri" "id" "title" ("key" "value") …)`                   | [MDL.md](./MDL.md)            |
-| `ns`      | a namespace snapshot            | `(ns (n "name" entry) …)`                                                    | [below](#namespace-snapshots) |
+| `ns`      | a namespace tree node           | `(ns (n "name" entry) … (sub "seg" "h") … \| (part "h") …)`                  | [below](#namespace-snapshots) |
 | `causal`  | a history node                  | `(causal (ns "h") (parents "h" …) (msg "text") [(tasks "h")] [(prior "h")])` | [below](#history-nodes)       |
 | `record`  | history imported from an export | `(record (entry "causal" "message" "by") …)`                                 | [below](#history-nodes)       |
 | `tasks`   | a tasks snapshot                | `(tasks (t "id" (ref "h")) …)`                                               | [below](#tasks)               |
@@ -111,14 +111,17 @@ the layer check all use this rule ([`Codebase.dependencies`](../../deus/codebase
 
 ```text
 (ref "h")            ; any object, including a task's linked definition and a tasks snapshot entry
+(sub "seg" "h")      ; a namespace node's child namespace
+(part "h")           ; a namespace node's part
 (con "h" …)          ; unless h starts with "#"
 (pcon "h" …)         ; unless h starts with "#"
 (op "h" …)           ; unless h starts with "#"
 (on "h" …)           ; unless h starts with "#"
 ```
 
-A namespace snapshot and a history node name hashes as plain strings, not in these positions; readers
-that walk history follow `ns`, `parents`, `tasks` and each entry's hash explicitly.
+A namespace node reaches its child nodes through `sub` and `part`, but its entries and a history node
+name hashes as plain strings, not in these positions; readers that walk history follow `ns`, `parents`,
+`tasks` and each entry's hash explicitly.
 
 ## Metadata
 
@@ -150,12 +153,31 @@ metadata.
 
 ## Namespace snapshots
 
-A namespace maps full names (dot-separated, such as `Demo.Shape.circle`) to entries. A snapshot is an `ns`
-object with one `n` item per name, sorted by name. Names compare by UTF-16 code unit, as JavaScript
-compares strings, so `Demo.Shape` sorts before `Demo.double`.
+A namespace maps full names (dot-separated, such as `Demo.Shape.circle`) to entries. A snapshot is a
+tree of `ns` nodes, and its hash is the root's hash ([D72](../DECISIONS.md)). A changed name rewrites
+only the nodes on its path, so a one-definition commit adds about 6 KB to history in the toolchain's
+codebase of 1,392 names, where a flat snapshot added 133 KB.
+
+A node is written from (key, item) pairs:
+
+1. Split each name at its first dot that is neither its first nor its last character: `Demo.Shape.circle`
+   is `Shape.circle` under `Demo`. A name with no such dot is an item `(n "name" entry)` keyed by name.
+2. The names under each first segment become a child node, written recursively. Each child is an item
+   `(sub "segment" "child-hash")` keyed by the segment.
+3. Order the items: `n` items by name, then `sub` items by segment. Names and segments compare by UTF-16
+   code unit, as JavaScript compares strings, so `Demo.Shape` sorts before `Demo.double`.
+4. If there are at most 64 items, the node is `(ns item …)`. Otherwise group the items by the hex digit
+   of `sha256(key)` at the node's depth (0 at first), write each group as a node at depth + 1 by this
+   step, and make the node `(ns (part "h") …)` with one part per digit, in digit order. A node at depth
+   64 does not split.
+
+A reader expands `part` items in place and prefixes the names under a `sub` item with its segment and a
+dot. A reader MUST also accept a flat snapshot, one `ns` node holding full names, which codebases wrote
+before D72; `deus migrate` rewrites such history into trees.
 
 ```text
-snapshot = "(ns" { " (n " string " " entry ")" } ")"
+node     = "(ns" { " (n " string " " entry ")" } { " (sub " string " " hash ")" } ")"
+         | "(ns" { " (part " hash ")" } ")"
 entry    = "(term " hash ")"
          | "(test " hash ")"
          | "(theorem " hash ")"
@@ -168,12 +190,12 @@ entry    = "(term " hash ")"
 
 Hashes and IRIs are strings. `tag`, `index` and `arity` are integers. The `type` entry's third item is a
 bare list of field-name strings, empty for an inductive type. A constructor and an operation name their
-type's or ability's hash. Several names may share a hash (aliases). Sample:
+type's or ability's hash. Several names may share a hash (aliases). Sample, the `Demo` node and the
+`Shape` node under it:
 
 ```text
-(n "Demo.Shape" (type "8f4c54219803442bdfd9b5040affc510aa6b1209ba9f317e0d651ceffcd9cf06" "urn:demo:Shape" ()))
-(n "Demo.Shape.circle" (ctor "8f4c54219803442bdfd9b5040affc510aa6b1209ba9f317e0d651ceffcd9cf06" 0 1))
-(n "Demo.double" (term "595ca8a5a3d6042d684a1ac6bd7e6900e71f5b2633cf8dca1d6d24ad6edfb09f"))
+(ns (n "Shape" (type "8f4c54219803442bdfd9b5040affc510aa6b1209ba9f317e0d651ceffcd9cf06" "urn:demo:Shape" ())) (n "double" (term "595ca8a5a3d6042d684a1ac6bd7e6900e71f5b2633cf8dca1d6d24ad6edfb09f")) (sub "Shape" "<hash of the node below>"))
+(ns (n "circle" (ctor "8f4c54219803442bdfd9b5040affc510aa6b1209ba9f317e0d651ceffcd9cf06" 0 1)))
 ```
 
 The empty namespace is `(ns)`, hash `f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595`.
@@ -218,8 +240,8 @@ A commit writes a new snapshot and a new node only when something changed: a cha
 equals the parent's leaves the branch where it was. A code change keeps the parent's tasks hash; a task
 change keeps the parent's namespace hash.
 
-History may be shallow. After retention GC ([D54](../DECISIONS.md)) a node can name parents the store
-does not have; readers MUST treat those parents as absent, so such a node acts as a root. "First-parent
+History may be shallow. A remote collected by the retention GC that D73 removed ([D54](../DECISIONS.md)),
+or a pull cut short, leaves nodes that name parents the store does not have; readers MUST treat those parents as absent, so such a node acts as a root. "First-parent
 history" (`deus log`, `HISTORY.md`) follows the first parent the store has.
 
 A `record` holds history that this store never had as nodes: the first-parent history of the codebase an

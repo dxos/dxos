@@ -1,7 +1,7 @@
 # Explorer site format
 
 `deus explore` writes the current branch of a codebase as a static site: a single-page app and the JSON
-files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md), [D72](../DECISIONS.md)). The writer is
+files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md), [D75](../DECISIONS.md)). The writer is
 [`deus/explorer.deus`](../../deus/explorer.deus); the uploader is `publishSite` in
 [`deus/cli.deus`](../../deus/cli.deus). Readers are the app in [`platform/explorer/`](../../platform/explorer)
 (`app.js`), which any static file server can host: the native server running
