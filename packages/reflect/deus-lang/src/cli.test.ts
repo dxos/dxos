@@ -561,6 +561,46 @@ describe('deus CLI', () => {
     expect(compared.stderr).toContain('eq on values that are not known to be Int or Bool is outside the wasm subset');
   });
 
+  test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
+    'compiles first-order functions to C that agree with the interpreter',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'c')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus('add', join(root, 'examples/bench.deus'), ...c);
+      // Mutual recursion, tail loops, data on the heap, nullary constructors and 32-bit wrapping.
+      for (const [name, arg] of [
+        ['Bench.fib', 20],
+        ['Bench.collatz', 1000],
+        ['Bench.trees', 2],
+        ['Bench.queens', 6],
+      ] as const) {
+        const out = join(scratch, name);
+        expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
+        const run = spawnSync(out, [String(arg)], { encoding: 'utf8' });
+        expect(run.stdout).toBe(deus('eval', `${name} ${arg}`, ...c).stdout);
+      }
+      deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
+      expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
+      expect(spawnSync(join(scratch, 'wrap'), ['3'], { encoding: 'utf8' }).stdout).toBe(
+        deus('eval', 'wrap 3', ...c).stdout,
+      );
+
+      // A self tail call is a jump, so a million-deep loop runs in constant stack.
+      deus(
+        'add',
+        file('loop.deus', 'def loop (n : Int) (acc : Int) : Int := if n == 0 then acc else loop (n - 1) (acc + n)\n'),
+        ...c,
+      );
+      expect(deus('build', 'loop', '-o', join(scratch, 'loop.c'), '--c', ...c).code).toBe(0);
+      expect(readFileSync(join(scratch, 'loop.c'), 'utf8')).toContain('goto top;');
+
+      const refused = deus('build', 'Text.length', '-o', join(scratch, 'length'), '--c', ...c);
+      expect(refused.code).toBe(1);
+    },
+  );
+
   test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'cloudflare')];
     deus('init', '--empty', ...c);
@@ -793,6 +833,11 @@ describe('deus CLI', () => {
       );
       expect(deus('export', exported, ...c).code).toBe(0);
       expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
+      // A git union merge leaves both versions of a task; the one this codebase has not had wins (D85).
+      const current = readFileSync(join(exported, 'tasks.sexp'), 'utf8');
+      writeFileSync(join(exported, 'tasks.sexp'), current + staleTasks);
+      expect(deus('export', exported, ...c).code).toBe(0);
+      expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
     },
   );
 
@@ -939,8 +984,8 @@ describe('deus CLI', () => {
     const remote = join(scratch, 'explore-remote');
     deus('remote', 'add', 'origin', remote, ...c);
     const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
-    // The app's three files, meta, names and tasks, and one file per definition and per change.
-    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 6);
+    // The app's three files, meta, names, tasks and comments, and one file per definition and per change.
+    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 7);
     expect(published.uploaded).toBe(published.files);
     expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.json`), 'utf8')).toBe(page);
     // Republishing sends only what changed.

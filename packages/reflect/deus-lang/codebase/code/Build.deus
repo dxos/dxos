@@ -22,12 +22,12 @@ def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text
   let work := out ++ ".build"
   IO.mkdirp work
   IO.writeFile (work ++ "/deus.image") image
-  context "bundling the kernel" [] (fun _ => Build.tool
+  Failure.context "bundling the kernel" [] (fun _ => Build.tool
     "npx"
     ["--yes", esbuild, home ++ "/src/bin/standalone.ts", "--bundle", "--platform=node", "--format=cjs", "--log-level=warning", "--outfile=" ++ work ++ "/main.cjs"])
   let config := Json.obj [("main", Json.str (work ++ "/main.cjs")), ("output", Json.str (work ++ "/sea.blob")), ("disableExperimentalSEAWarning", Json.bool true), ("assets", Json.obj [("image", Json.str (work ++ "/deus.image"))])]
   IO.writeFile (work ++ "/sea.json") (Json.render config)
-  context
+  Failure.context
     "preparing the application blob"
     []
     (fun _ => Build.tool node ["--experimental-sea-config", work ++ "/sea.json"])
@@ -35,20 +35,24 @@ def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text
   let mac := trim (Build.tool "uname" []) == "Darwin"
   if mac then Build.tool "codesign" ["--remove-signature", out] else ""
   let macho := if mac then ["--macho-segment-name", "NODE_SEA"] else []
-  context "injecting the application blob" [] (fun _ => Build.tool
+  Failure.context "injecting the application blob" [] (fun _ => Build.tool
     "npx"
     (["--yes", postject, out, "NODE_SEA_BLOB", work ++ "/sea.blob", "--sentinel-fuse", fuse] ++ macho))
   if mac then Build.tool "codesign" ["--sign", "-", out] else ""
   IO.remove work
 
+/-- Writes C from the C back end (D80): to `out` itself when it ends in `.c`, else beside it as
+  `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result. -/
+def Build.cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit := if endsWith ".c" out then IO.writeFile out source else
+  IO.writeFile (out ++ ".c") source
+  Build.tool (getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
+  ()
+
 /-- Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript
   driver to the directory `out`; returns the kernel crate's directory. -/
 def Build.embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
   let crate := require "DEUS_HOME" ++ "/../deus-kernel"
-  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
-  if IO.exists wasm then "" else context "building the wasm kernel" [] (fun _ => Build.tool
-    "cargo"
-    ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
+  let wasm := wasmKernel ()
   IO.mkdirp out
   IO.writeFile (out ++ "/app.image") image
   Build.tool "cp" [wasm, out ++ "/deus_kernel.wasm"]
@@ -100,7 +104,7 @@ def Build.fuse : Text := "NODE_SEA_FUSE_" ++ "fce680ab2cc467b6e072b8b5df1996b2"
 def Build.kernel (u : Unit) : {IO, Throw Failure} Text :=
   let crate := require "DEUS_HOME" ++ "/../deus-kernel"
   let path := getOr (IO.getEnv "DEUS_KERNEL") (crate ++ "/target/release/deus-kernel")
-  if IO.exists path then "" else context
+  if IO.exists path then "" else Failure.context
     "building the Rust kernel"
     []
     (fun _ => Build.tool "cargo" ["build", "--release", "--quiet", "--manifest-path", crate ++ "/Cargo.toml"])
@@ -127,6 +131,15 @@ def Build.tool (program : Text) (arguments : List Text) : {IO, Throw Failure} Te
   | (code, out, err) => Throw.throw (of
       (program ++ " exited with " ++ toText code)
       [("args", join " " arguments), ("stderr", trim err), ("stdout", trim out)])
+
+/-- The embeddable wasm kernel (EMBEDDING.md), built with cargo when it is missing. -/
+def Build.wasmKernel (u : Unit) : {IO, Throw Failure} Text :=
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
+  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
+  if IO.exists wasm then "" else Failure.context "building the wasm kernel" [] (fun _ => Build.tool
+    "cargo"
+    ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
+  wasm
 
 /-- Writes a Cloudflare Worker to the directory `out` (D45): the wasm kernel, the actor's image,
   the Durable Object that serves it (`deus-kernel/embed/worker.mjs`) and `wrangler.toml`.

@@ -114,6 +114,27 @@ fn table(machine: &Machine, value: &Value, mutable: bool) -> Result<Rc<RefCell<T
     }
 }
 
+/// The array in `value` and `index` checked against its bounds.
+fn array(
+    machine: &Machine,
+    value: &Value,
+    index: &Value,
+    name: &str,
+) -> Result<(Rc<RefCell<Vec<Value>>>, usize), Fail> {
+    let i = int(machine, index)?;
+    match value {
+        Value::Array(items) => {
+            let len = items.borrow().len();
+            if i < 0 || i as usize >= len {
+                defect(format!("{name}: index {i} out of bounds 0 .. {len}"))
+            } else {
+                Ok((items.clone(), i as usize))
+            }
+        }
+        other => defect(format!("expected Array, got {}", machine.show(other))),
+    }
+}
+
 fn optional(value: Option<Value>) -> Value {
     value.map_or_else(none, some)
 }
@@ -260,6 +281,28 @@ prims! {
             Ok(unit())
         }
         other => defect(format!("expected Ref, got {}", m.show(other))),
+    };
+
+    "Array.make", 2, |m, a| {
+        let n = int(m, &a[0])?;
+        if n < 0 {
+            return defect(format!("Array.make: negative length {n}"));
+        }
+        Ok(Value::Array(Rc::new(RefCell::new(vec![a[1].clone(); n as usize]))))
+    };
+    "Array.length", 1, |m, a| match &a[0] {
+        Value::Array(items) => Ok(Value::Int(items.borrow().len() as i32)),
+        other => defect(format!("expected Array, got {}", m.show(other))),
+    };
+    "Array.get", 2, |m, a| {
+        let (items, i) = array(m, &a[0], &a[1], "Array.get")?;
+        let value = items.borrow()[i].clone();
+        Ok(value)
+    };
+    "Array.set", 3, |m, a| {
+        let (items, i) = array(m, &a[0], &a[1], "Array.set")?;
+        items.borrow_mut()[i] = a[2].clone();
+        Ok(unit())
     };
 
     "Dict.fromList", 1, |m, a| {

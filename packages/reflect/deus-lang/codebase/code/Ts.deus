@@ -12,12 +12,12 @@ def Ts.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry)
         let oname := getOr (List.lookup index opNames) ("op" ++ toText index)
         match Sexp.args op with
         | _ :: t :: [] =>
-            match arrows t with
+            match Ts.arrows t with
             | ([], result) => "  " ++ oname ++ ": " ++ Ts.ty p result 0 ++ ";"
             | (args, result) => "  " ++ oname ++ "(" ++ join ", " (List.map (fun x => Ts.ty p x 3) args) ++ "): " ++
                 Ts.ty p result 0 ++ ";"
         | _ => "  " ++ oname ++ ";") ops
-      decorator iri name ++ "ability " ++ name ++ generics names ++ " {\n" ++ join "\n" lines ++
+      decorator iri name ++ "ability " ++ name ++ Ts.generics names ++ " {\n" ++ join "\n" lines ++
         "\n}"
   | _ => Sexp.print obj
 
@@ -60,14 +60,14 @@ def Ts.definition (p : Printer) (name : Text) (core : Sexp) (sig : Option Sexp) 
         match split with
         | Option.some (types, Option.some result) => if List.length types == count then Option.some (types, result) else Option.none
         | _ => Option.none
-      let gen := generics (getOr (Option.map typeVars sig) [])
+      let gen := Ts.generics (getOr (Option.map typeVars sig) [])
       let annotate := fun t => if isUnknown t then "" else ": " ++ Ts.ty p t 3
       if count == 0 then
         let typeText :=
           match typed with
           | Option.some (_, result) => annotate result
           | Option.none => ""
-        docComment doc ++ "const " ++ name ++ typeText ++ " = " ++ Ts.expr p b env 0 0 ++ ";"
+        Ts.docComment doc ++ "const " ++ name ++ typeText ++ " = " ++ Ts.expr p b env 0 0 ++ ";"
       else
         let paramText :=
           match typed with
@@ -83,7 +83,7 @@ def Ts.definition (p : Printer) (name : Text) (core : Sexp) (sig : Option Sexp) 
         let flat := "function " ++ name ++ gen ++ "(" ++ join ", " paramText ++ ")" ++ resultText
         let header := if fits 0 flat then flat else "function " ++ name ++ gen ++ "(" ++
           Text.concat (List.map (fun x => "\n  " ++ x ++ ",") paramText) ++ "\n)" ++ resultText
-        docComment doc ++ header ++ " " ++ functionBody p b env 0
+        Ts.docComment doc ++ header ++ " " ++ functionBody p b env 0
 
 /-- A block in expression position: `do { … }`, whose last statement is its value. -/
 def Ts.doBlock (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text := "do {\n" ++ spaces (ind + 2) ++ Ts.stmts p t env (ind + 2) false ++ "\n" ++ spaces ind ++ "}"
@@ -142,7 +142,7 @@ def Ts.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) 
                   Ts.expr p b env (ind + 2) (level + 1))
           | Option.none => Ts.application p f args env ind prec
       | (Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []), a :: []) => paren 95 prec ("-" ++ Ts.expr p a env ind 100)
-      | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => sequence p "#[" (tupleItems t) env ind
+      | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => sequence p "#[" (Print.tupleItems t) env ind
       | (Sexp.list (Sexp.sym "con" :: Sexp.str "#List" :: Sexp.int 1 :: Sexp.int 2 :: []), h :: rest :: []) =>
           match listItems t with
           | Option.some items => sequence p "[" items env ind
@@ -164,7 +164,7 @@ test Ts.functionWithReturn :=
     (Option.some (Sexp.read "(tfun (tref \"#Int\") (tref \"#Int\"))"))
     Option.none == "function f(n: Int): Int {\n  return n + 1;\n}"
 
-def Ts.generics (names : List Text) : Text := if List.isEmpty names then "" else "<" ++ join ", " names ++ ">"
+def Ts.generics (args : List Text) : Text := if List.isEmpty args then "" else "<" ++ join ", " args ++ ">"
 
 /-- Whether a function type's result carries effects: `uses` lists them with commas, so in a list the type needs parentheses. -/
 def Ts.hasUses (result : Sexp) : Bool :=
@@ -358,7 +358,7 @@ def Ts.ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
   | Sexp.list (Sexp.sym "tapp" :: Sexp.list (Sexp.sym "tref" :: Sexp.str "#Pair" :: []) :: args) => "#[" ++ join ", " (List.map (fun x => Ts.ty p x 3) args) ++ "]"
   | Sexp.list (Sexp.sym "tapp" :: f :: args) => Ts.ty p f 100 ++ "<" ++ join ", " (List.map (fun x => Ts.ty p x 3) args) ++ ">"
   | Sexp.list (Sexp.sym "tfun" :: _) =>
-      match arrows t with
+      match Ts.arrows t with
       | (args, result) =>
           -- `Unit -> a` reads as `() => a`, as `f(())` reads as `f()`.
           let argText := if args == [Sexp.node "tref" [Sexp.str "#Unit"]] then "" else join ", " (List.map (fun x => Ts.ty p x 3) args)
@@ -382,7 +382,7 @@ def Ts.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (o
         let lines := List.map (fun pair =>
           match pair with
           | (f, t) => "  " ++ f ++ ": " ++ Ts.ty p t 0 ++ ";") (zip fields (List.drop 1 types))
-        decorator iri name ++ "interface " ++ name ++ generics names ++ " {\n" ++ join "\n" lines ++
+        decorator iri name ++ "interface " ++ name ++ Ts.generics names ++ " {\n" ++ join "\n" lines ++
           "\n}"
       else
         let ctorNames := filterMap (fun pair =>
@@ -399,7 +399,7 @@ def Ts.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (o
             | fieldName => fieldName ++ ": " ++ Ts.ty p (snd pair) 3
           let args := List.map field (mapIndexed (fun i t => (i, t)) fieldTypes)
           "  | " ++ cname ++ (if List.isEmpty args then "" else "(" ++ join ", " args ++ ")")) ctors
-        decorator iri name ++ "type " ++ name ++ generics names ++ " =" ++
+        decorator iri name ++ "type " ++ name ++ Ts.generics names ++ " =" ++
           (if List.isEmpty lines then " never;" else "\n" ++ join "\n" lines ++ ";")
   | _ => Sexp.print obj
 
@@ -410,7 +410,7 @@ def Ts.typeVars (t : Sexp) : List Text :=
     | Sexp.list (Sexp.sym "tvar" :: Sexp.str "?" :: []) => acc
     | Sexp.list (Sexp.sym "tvar" :: Sexp.str n :: []) => if List.contains n acc then acc else acc ++ [n]
     | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) =>
-        let n := fromCode (97 + i)
+        let n := fromCode ('a' + i)
         if List.contains n acc then acc else acc ++ [n]
     | Sexp.list items => foldl (fun a2 item => go item a2) acc items
     | _ => acc

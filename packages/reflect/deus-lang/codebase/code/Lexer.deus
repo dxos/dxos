@@ -1,16 +1,17 @@
-def Lexer.escape (e : Int) : Int := if e == 110 then 10 else if e == 116 then 9 else if e == 114 then 13 else if e == 48 then 0 else e
+def Lexer.escape (e : Int) : Int := if e == 'n' then 10 else if e == 't' then 9 else if e == 'r' then 13 else if e == '0' then 0 else e
 
 /-- Lexer failures are checked errors: callers handle `Throw Text`. -/
 def Lexer.fail (line : Int) (col : Int) (message : Text) : {Throw Text} a := Throw.throw (toText line ++ ":" ++ toText col ++ ": " ++ message)
 
-def Lexer.hexValue (c : Int) : Int := if isDigit c then c - 48 else if c >= 97 && c <= 102 then c - 97 + 10 else c - 65 + 10
+def Lexer.hexValue (c : Int) : Int := if isDigit c then c - '0' else if c >= 'a' && c <= 'f' then c - 'a' + 10 else c - 'A' + 10
 
-def Lexer.isHex (c : Int) : Bool := isDigit c || c >= 97 && c <= 102 || c >= 65 && c <= 70
+def Lexer.isHex (c : Int) : Bool := isDigit c || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F'
 
-def Lexer.isIdentPart (c : Int) : Bool := isIdentStart c || isDigit c || c == 39 || c == 63 || c == 33
+def Lexer.isIdentPart (c : Int) : Bool := isIdentStart c || isDigit c || c == '\'' || c == '?' || c == '!'
 
-def Lexer.isIdentStart (c : Int) : Bool := isAlpha c || c == 95 || c >= 880 && c <= 1023
+def Lexer.isIdentStart (c : Int) : Bool := isAlpha c || c == '_' || c >= 880 && c <= 1023
 
+-- How the source wrote a number whose decimal `value` reads differently (`'a'`, `0xFF`, `1_000`); `""` otherwise.
 def Lexer.keywords : Dict Text Unit := dict ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "open", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "sorry", "where", "do", "prim", "true", "false"]
 
 def Lexer.lex (source : Text) : {Throw Text} List Token :=
@@ -19,61 +20,79 @@ def Lexer.lex (source : Text) : {Throw Text} List Token :=
   -- End of an identifier: letters, digits and dots that are followed by a letter.
   let rec identEnd i :=
     let c := at i
-    if isIdentPart c then identEnd (i + 1) else if c == 46 && isIdentStart (at (i + 1)) then identEnd (i + 1) else i
-  let rec digitsEnd i := if isDigit (at i) || at i == 95 then digitsEnd (i + 1) else i
-  let rec hexEnd i := if Lexer.isHex (at i) || at i == 95 then hexEnd (i + 1) else i
-  let rec lineEnd i := if i >= n || at i == 10 then i else lineEnd (i + 1)
+    if isIdentPart c then identEnd (i + 1) else if c == '.' && isIdentStart (at (i + 1)) then identEnd (i + 1) else i
+  let rec digitsEnd i := if isDigit (at i) || at i == '_' then digitsEnd (i + 1) else i
+  let rec hexEnd i := if Lexer.isHex (at i) || at i == '_' then hexEnd (i + 1) else i
+  let rec lineEnd i := if i >= n || at i == '\n' then i else lineEnd (i + 1)
   -- Block comment `/- … -/`, nested; returns (end index, line, lineStart).
-  let rec commentEnd i depth line lineStart := if i >= n then (i, line, lineStart) else if at i == 47 && at (i + 1) == 45 then commentEnd (i + 2) (depth + 1) line lineStart else if at i == 45 && at (i + 1) == 47 then if depth == 1 then (i + 2, line, lineStart) else commentEnd (i + 2) (depth - 1) line lineStart else if at i == 10 then commentEnd (i + 1) depth (line + 1) (i + 1) else commentEnd (i + 1) depth line lineStart
+  let rec commentEnd i depth line lineStart := if i >= n then (i, line, lineStart) else if at i == '/' && at (i + 1) == '-' then commentEnd (i + 2) (depth + 1) line lineStart else if at i == '-' && at (i + 1) == '/' then if depth == 1 then (i + 2, line, lineStart) else commentEnd (i + 2) (depth - 1) line lineStart else if at i == '\n' then commentEnd (i + 1) depth (line + 1) (i + 1) else commentEnd (i + 1) depth line lineStart
   -- String body after the opening quote; returns (value, end index, line, lineStart).
   let rec stringEnd i acc line lineStart :=
     let c := at i
-    if i >= n then Lexer.fail line 0 "unterminated string" else if c == 34 then (fromCodes (reverse acc), i + 1, line, lineStart) else if c == 92 then
+    if i >= n then Lexer.fail line 0 "unterminated string" else if c == '"' then (fromCodes (reverse acc), i + 1, line, lineStart) else if c == '\\' then
       let e := at (i + 1)
-      if e == 117 && at (i + 2) == 123 then
+      if e == 'u' && at (i + 2) == '{' then
         let rec digitsEnd1 j := if Lexer.isHex (at j) then digitsEnd1 (j + 1) else j
         let close := digitsEnd1 (i + 3)
-        if close == i + 3 || at close != 125 then Lexer.fail line 0 "malformed \\u{} escape" else
+        if close == i + 3 || at close != '}' then Lexer.fail line 0 "malformed \\u{} escape" else
           let code := foldl (fun v d => v * 16 + Lexer.hexValue d) 0 (List.map at (range (i + 3) close))
           stringEnd (close + 1) (code :: acc) line lineStart
       else stringEnd (i + 2) (Lexer.escape e :: acc) line lineStart
-    else if c == 10 then stringEnd (i + 1) (c :: acc) (line + 1) (i + 1) else stringEnd (i + 1) (c :: acc) line lineStart
+    else if c == '\n' then stringEnd (i + 1) (c :: acc) (line + 1) (i + 1) else stringEnd (i + 1) (c :: acc) line lineStart
   let rec go i line lineStart bol acc :=
-    let tok := fun kind value start => Token.mk kind value line (start - lineStart) bol :: acc
-    if i >= n then reverse (Token.mk Kind.eof "" line 0 true :: acc) else
+    let spelled := fun kind value spelling start => Token.mk kind value line (start - lineStart) bol spelling :: acc
+    let tok := fun kind value start => spelled kind value "" start
+    if i >= n then reverse (Token.mk Kind.eof "" line 0 true "" :: acc) else
       let c := at i
       let col := i - lineStart
-      if c == 10 then go (i + 1) (line + 1) (i + 1) true acc else if c == 32 || c == 9 || c == 13 then go (i + 1) line lineStart bol acc else if c == 45 && at (i + 1) == 45 then
+      if c == '\n' then go (i + 1) (line + 1) (i + 1) true acc else if c == ' ' || c == '\t' || c == '\r' then go (i + 1) line lineStart bol acc else if c == '-' && at (i + 1) == '-' then
         let j := lineEnd i
-        go j line lineStart bol (Token.mk Kind.comment (slice source i j) line col bol :: acc)
-      else if c == 47 && at (i + 1) == 45 then
-        let isDoc := at (i + 2) == 45 && at (i + 3) != 47
+        go j line lineStart bol (Token.mk Kind.comment (slice source i j) line col bol "" :: acc)
+      else if c == '/' && at (i + 1) == '-' then
+        let isDoc := at (i + 2) == '-' && at (i + 3) != '/'
         match commentEnd i 0 line lineStart with
         | (j, line2, lineStart2) => if isDoc then
             let body := trim (slice source (i + 3) (j - 2))
-            go j line2 lineStart2 bol (Token.mk Kind.doc body line col bol :: acc)
-          else go j line2 lineStart2 bol (Token.mk Kind.comment (slice source i j) line col bol :: acc)
-      else if c == 34 then
+            go j line2 lineStart2 bol (Token.mk Kind.doc body line col bol "" :: acc)
+          else go
+            j
+            line2
+            lineStart2
+            bol
+            (Token.mk Kind.comment (slice source i j) line col bol "" :: acc)
+      else if c == '"' then
         match stringEnd (i + 1) [] line lineStart with
         | (value, j, line2, lineStart2) => go j line2 lineStart2 false (tok Kind.text value i)
-      else if c == 39 then
-        let isEscape := at (i + 1) == 92
+      else if c == '\'' then
+        let isEscape := at (i + 1) == '\\'
         let code := if isEscape then Lexer.escape (at (i + 2)) else at (i + 1)
         let close := if isEscape then i + 3 else i + 2
-        if at close != 39 then Lexer.fail line col "bad character literal" else go (close + 1) line lineStart false (tok Kind.int (toText code) i)
-      else if isDigit c then if c == 48 && at (i + 1) == 120 then
+        if at close != '\'' then Lexer.fail line col "bad character literal" else go
+          (close + 1)
+          line
+          lineStart
+          false
+          (spelled Kind.int (toText code) (slice source i (close + 1)) i)
+      else if isDigit c then if c == '0' && at (i + 1) == 'x' then
         let j := hexEnd (i + 2)
-        let digits := List.filter (fun d => d != 95) (List.map at (range (i + 2) j))
+        let digits := List.filter (fun d => d != '_') (List.map at (range (i + 2) j))
         let value := foldl (fun v d => v * 16 + Lexer.hexValue d) 0 digits
-        go j line lineStart false (tok Kind.int (toText value) i)
+        go j line lineStart false (spelled Kind.int (toText value) (slice source i j) i)
       else
         let j := digitsEnd i
-        go j line lineStart false (tok Kind.int (replace "_" "" (slice source i j)) i) else if c == 46 && isIdentStart (at (i + 1)) then
+        let written := slice source i j
+        let value := replace "_" "" written
+        go
+          j
+          line
+          lineStart
+          false
+          (spelled Kind.int value (if value == written then "" else written) i) else if c == '.' && isIdentStart (at (i + 1)) then
         let j := identEnd (i + 1)
         -- `(e).field` and `xs[i].field`: a dot right after a closing bracket projects.
-        let kind := if at (i - 1) == 41 || at (i - 1) == 93 then Kind.proj else Kind.dot
+        let kind := if at (i - 1) == ')' || at (i - 1) == ']' then Kind.proj else Kind.dot
         go j line lineStart false (tok kind (slice source (i + 1) j) i)
-      else if isIdentStart c && not (c == 95 && not (isIdentPart (at (i + 1)))) then
+      else if isIdentStart c && not (c == '_' && not (isIdentPart (at (i + 1)))) then
         let j := identEnd i
         let word := slice source i j
         if word == "λ" then go j line lineStart false (tok Kind.kw "fun" i) else if Dict.contains word Lexer.keywords then go j line lineStart false (tok Kind.kw word i) else go j line lineStart false (tok Kind.ident word i)

@@ -63,7 +63,7 @@ def Project.reachable (dir : Text) (roots : List Text) : {IO} Map Text Unit :=
 def Project.read (dir : Text) : {IO} Option Project := Option.map (fun text => Project.fromSexp (Sexp.read text)) (IO.readFile (Project.file dir))
 
 /-- Hashes of named definitions (constructors and operations name their type's or ability's). -/
-def Project.rootsOf (entries : List (Text, Entry)) : List Text := List.filter (fun h => not (startsWith "#" h)) (List.map (fun pair => hash (snd pair)) entries)
+def Project.rootsOf (entries : List (Text, Entry)) : List Text := List.filter (fun h => not (startsWith "#" h)) (List.map (fun pair => Entry.hash (snd pair)) entries)
 
 /-- (owned, provided by libraries): the project's subgraph and the libraries' part of what it reaches. -/
 def Project.subgraph (dir : Text) (ns : Map Text Entry) : {IO} (List Text, List Text) :=

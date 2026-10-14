@@ -75,11 +75,11 @@ it is a projection (`(e).field`); otherwise it is a constructor shorthand (`.red
 
 ### Literals
 
-| Literal   | Form                                                | Token                                     |
-| --------- | --------------------------------------------------- | ----------------------------------------- |
-| Decimal   | `0`–`9` then digits and `_`: `1_000`                | integer                                   |
-| Hex       | `0x` then hex digits and `_`: `0x1F`, `0xFFFF_FFFF` | integer                                   |
-| String    | `"…"`; may span lines                               | text                                      |
+| Literal   | Form                                                | Token                                                                        |
+| --------- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Decimal   | `0`–`9` then digits and `_`: `1_000`                | integer                                                                      |
+| Hex       | `0x` then hex digits and `_`: `0x1F`, `0xFFFF_FFFF` | integer                                                                      |
+| String    | `"…"`; may span lines                               | text                                                                         |
 | Character | `'a'`, `'\n'`, `'\''`                               | integer: the UTF-16 code unit of the char; `view` prints it as written (D84) |
 
 There are no negative literals in the lexer; `-` before an integer is handled by the parser. There are no

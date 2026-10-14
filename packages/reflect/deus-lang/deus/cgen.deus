@@ -1,0 +1,244 @@
+/-
+  A C back end (D80): compiles a definition and the definitions it calls to C, which a C compiler
+  (clang, so LLVM) turns into native code.
+
+  It accepts the same first-order subset as the wasm back end (D51) and reuses that back end's
+  gathering and type tracking, so a program compiles to both or to neither. Each definition is a
+  C function of `V`s, a machine word. `Int` and `Bool` are themselves, sign-extended from 32 bits,
+  and arithmetic wraps at 32 bits as in the interpreter. Any other constructed value points at a
+  block `[tag, field…]` from a bump allocator that never frees; a nullary constructor is a static
+  block. A call to itself in tail position is a jump back to the top of the function; a tail call
+  of a function of the same arity is `musttail`, so mutual recursion in tail position runs in
+  constant stack too.
+
+  `Int.div` and `Int.mod` by zero trap, as in wasm.
+-/
+
+namespace CGen
+
+/-- The C every unit starts with; `nullary` static blocks serve the nullary constructors' tags. -/
+def prelude (nullary : Int) : Text :=
+  Text.join "\n" [
+    "#include <stdint.h>",
+    "#include <stdlib.h>",
+    "typedef intptr_t V;",
+    "#define W(x) ((V)(int32_t)(uint32_t)(x))",
+    "#define ADD(a, b) W((uint32_t)(a) + (uint32_t)(b))",
+    "#define SUB(a, b) W((uint32_t)(a) - (uint32_t)(b))",
+    "#define MUL(a, b) W((uint32_t)(a) * (uint32_t)(b))",
+    "#define SHL(a, b) W((uint32_t)(a) << ((b) & 31))",
+    "#define SHR(a, b) ((V)((int32_t)(a) >> ((b) & 31)))",
+    "#define USHR(a, b) W((uint32_t)(a) >> ((b) & 31))",
+    "static inline V DIV(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? SUB(0, a) : (V)((int32_t)a / (int32_t)b); }",
+    "static inline V MOD(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? 0 : (V)((int32_t)a % (int32_t)b); }",
+    "static V *deus_hp, *deus_hl;",
+    "static V *deus_refill(V n) { V size = n > (1 << 22) ? n : (1 << 22); deus_hp = malloc(size * sizeof(V)); if (!deus_hp) abort(); deus_hl = deus_hp + size; V *p = deus_hp; deus_hp += n; return p; }",
+    "static inline V *deus_alloc(V n) { if (deus_hl - deus_hp < n) return deus_refill(n); V *p = deus_hp; deus_hp += n; return p; }",
+    "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_alloc(n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = x; return (V)p; }",
+    "#define AT(a, i) ({ V *a_ = (V *)(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
+    "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
+      ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
+    ""]
+
+/-- A C integer literal; the most negative `Int` has no literal of its own. -/
+def lit (n : Int) : Text := if n == -2147483648 then "(-2147483647 - 1)" else "(V)" ++ Int.toText n
+
+def macro (p : Text) : Option Text :=
+  if p == "Int.add" then some "ADD"
+  else if p == "Int.sub" then some "SUB"
+  else if p == "Int.mul" then some "MUL"
+  else if p == "Int.div" then some "DIV"
+  else if p == "Int.mod" then some "MOD"
+  else if p == "Int.shl" then some "SHL"
+  else if p == "Int.shr" then some "SHR"
+  else if p == "Int.ushr" then some "USHR"
+  else none
+
+def infix (p : Text) : Option Text :=
+  if p == "Int.and" then some "&"
+  else if p == "Int.or" then some "|"
+  else if p == "Int.xor" then some "^"
+  else if p == "eq" then some "=="
+  else if p == "neq" then some "!="
+  else if p == "lt" then some "<"
+  else if p == "gt" then some ">"
+  else if p == "le" then some "<="
+  else if p == "ge" then some ">="
+  else none
+
+def larger (a : Int) (b : Int) : Int := if a > b then a else b
+
+/-- One more than the largest tag of a nullary constructor (other than `Bool`'s) in `form`. -/
+def nullaryCount (form : Sexp) : Int :=
+  match form with
+  | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int 0] => if t == "#Bool" then 0 else tag + 1
+  | Sexp.list items => List.foldl (fun acc x => larger acc (nullaryCount x)) 0 items
+  | _ => 0
+
+def local (l : Int) : Text := "l" ++ Int.toText l
+
+def fnName (i : Int) : Text := "f" ++ Int.toText i
+
+def args (xs : List Text) : Text := "(" ++ Text.join ", " xs ++ ")"
+
+/-- What the compiler knows while compiling one function: its index, its arity and its label counter. -/
+structure FnCtx @"urn:deus:cgen:FnCtx" where
+  cScope : Wasm.Scope
+  cSelf : Int
+  cArity : Int
+  cNext : Ref Int
+
+def fresh (ctx : FnCtx) : Int := Wasm.fresh ctx.cNext
+
+/-- The index and definition of the function `h`. -/
+def callee (ctx : FnCtx) (h : Text) (argc : Int) : {Throw Text} (Int, Wasm.Fn) :=
+  match List.find (fun f => f.fnHash == h) ctx.cScope.fns with
+  | some f =>
+    if f.fnArity != argc then throw ("#" ++ Text.take 10 h ++ " takes " ++ Int.toText f.fnArity ++ " arguments but is applied to " ++ Int.toText argc ++ "; partial application is outside the C subset")
+    else (List.findIndex (fun g => g.fnHash == h) ctx.cScope.fns, f)
+  | none => throw ("unknown function #" ++ Text.take 10 h)
+
+/--
+  A pattern test against the C expression `v` (a local): statements that `break` out of the
+  enclosing `do … while (0)` when it does not match, and the environment with what it binds.
+-/
+def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text} (Text, List Int) :=
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => ("", env)
+  | Sexp.list [Sexp.sym "pvar"] => ("", v :: env)
+  | Sexp.list [Sexp.sym "pas", p] => pattern ctx v (v :: env) p
+  | Sexp.list [Sexp.sym "pint", Sexp.int n] => ("if (" ++ local v ++ " != " ++ lit n ++ ") break; ", env)
+  | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => ("if (" ++ local v ++ " != " ++ Int.toText tag ++ ") break; ", env)
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
+    let tagTest := "if (((V *)" ++ local v ++ ")[0] != " ++ Int.toText tag ++ ") break; "
+    List.foldl (fun acc pair =>
+      match (acc, pair) with
+      | ((code, bound), (i, Sexp.list [Sexp.sym "pany"])) => (code, bound)
+      | ((code, bound), (i, sub)) =>
+        let f := fresh ctx
+        let _ := Wasm.setType ctx.cScope f (Wasm.fieldType ctx.cScope t tag i (Wasm.typeOfLocal ctx.cScope v))
+        match pattern ctx f bound sub with
+        | (subCode, bound2) => (code ++ "V " ++ local f ++ " = ((V *)" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]; " ++ subCode, bound2)) (tagTest, env) (List.mapIndexed (fun i x => (i, x)) subs)
+  | other => throw ("the pattern " ++ Sexp.print other ++ " is outside the C subset")
+
+/--
+  `e` compiled to C. In tail position the result is statements that return `e` (a call to
+  itself becomes a jump); otherwise it is an expression, using GNU statement expressions for
+  `let`, `seq` and `match`.
+-/
+def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (e : Sexp) : {Throw Text} Text :=
+  let sub := fun (x : Sexp) => expr ctx env false x
+  let ret := fun (x : Text) => if tail then "return " ++ x ++ ";" else x
+  match e with
+  | Sexp.list [Sexp.sym "int", Sexp.int n] => ret (lit n)
+  | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => ret ("(V)" ++ Int.toText tag)
+  | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int tag, Sexp.int 0] => ret ("(V)&deus_nullary[" ++ Int.toText tag ++ "]")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int n] :: xs) =>
+    if n != List.length xs || t == "#Bool" then throw ("partial application of a constructor of " ++ t ++ " is outside the C subset")
+    else
+      let p := fresh ctx
+      let stores := List.mapIndexed (fun i a => local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ sub a ++ "; ") xs
+      ret ("({ V *" ++ local p ++ " = deus_alloc(" ++ Int.toText (n + 1) ++ "); " ++ local p ++ "[0] = " ++ Int.toText tag ++ "; " ++ Text.concat stores ++ "(V)" ++ local p ++ "; })")
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    let v := fresh ctx
+    let _ := Wasm.setType ctx.cScope v (Wasm.typeOf ctx.cScope env scrutinee)
+    let r := fresh ctx
+    let done := "m" ++ Int.toText r
+    let arms := List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, body] =>
+        match pattern ctx v env pat with
+        | (guard, bound) =>
+          if tail then "do { " ++ guard ++ expr ctx bound true body ++ " } while (0); "
+          else "do { " ++ guard ++ local r ++ " = " ++ expr ctx bound false body ++ "; goto " ++ done ++ "; } while (0); "
+      | other => throw ("outside the C subset: " ++ Sexp.print other)) cases
+    let head := "V " ++ local v ++ " = " ++ sub scrutinee ++ "; "
+    if tail then "{ " ++ head ++ Text.concat arms ++ "__builtin_trap(); }"
+    else "({ " ++ head ++ "V " ++ local r ++ "; " ++ Text.concat arms ++ "__builtin_trap(); " ++ done ++ ": " ++ local r ++ "; })"
+  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+    match List.get? env i with
+    | some l => ret (local l)
+    | none => throw ("unbound variable " ++ Int.toText i)
+  | Sexp.list [Sexp.sym "if", c, t, f] =>
+    if tail then "if (" ++ sub c ++ ") { " ++ expr ctx env true t ++ " } else { " ++ expr ctx env true f ++ " }"
+    else "(" ++ sub c ++ " ? " ++ sub t ++ " : " ++ sub f ++ ")"
+  | Sexp.list [Sexp.sym "seq", a, b] =>
+    if tail then "(void)" ++ sub a ++ "; " ++ expr ctx env true b
+    else "({ (void)" ++ sub a ++ "; " ++ sub b ++ "; })"
+  | Sexp.list [Sexp.sym "let", v, b] =>
+    let l := fresh ctx
+    let _ := Wasm.setType ctx.cScope l (Wasm.typeOf ctx.cScope env v)
+    let bind := "V " ++ local l ++ " = " ++ sub v ++ "; "
+    if tail then "{ " ++ bind ++ expr ctx (l :: env) true b ++ " }"
+    else "({ " ++ bind ++ expr ctx (l :: env) false b ++ "; })"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ sub a ++ ")")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) =>
+    match (p, List.map sub xs) with
+    -- `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83); the writes return `()`.
+    | ("Array.make", [n, x]) => ret ("deus_array(" ++ n ++ ", " ++ x ++ ")")
+    | ("Array.length", [a]) => ret ("((V *)(" ++ a ++ "))[0]")
+    | ("Array.get", [a, i]) => ret ("(*AT(" ++ a ++ ", " ++ i ++ "))")
+    | ("Array.set", [a, i, x]) => ret ("({ *AT(" ++ a ++ ", " ++ i ++ ") = " ++ x ++ "; (V)&deus_nullary[0]; })")
+    | ("Ref.new", [x]) =>
+      let l := fresh ctx
+      ret ("({ V *" ++ local l ++ " = deus_alloc(1); " ++ local l ++ "[0] = " ++ x ++ "; (V)" ++ local l ++ "; })")
+    | ("Ref.get", [r]) => ret ("((V *)(" ++ r ++ "))[0]")
+    | ("Ref.set", [r, x]) => ret ("({ ((V *)(" ++ r ++ "))[0] = " ++ x ++ "; (V)&deus_nullary[0]; })")
+    | (_, [ca, cb]) =>
+      match xs with
+      | [a, b] =>
+        if Wasm.isComparison p && not (Wasm.isScalar (Wasm.typeOf ctx.cScope env a) || Wasm.isScalar (Wasm.typeOf ctx.cScope env b)) then
+          throw (p ++ " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
+        else
+          match (macro p, infix p) with
+          | (some m, _) => ret (m ++ "(" ++ ca ++ ", " ++ cb ++ ")")
+          | (_, some op) => ret ("(V)(" ++ ca ++ " " ++ op ++ " " ++ cb ++ ")")
+          | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
+      | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
+    | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
+    match callee ctx h (List.length xs) with
+    | (index, f) =>
+      let values := List.map sub xs
+      if tail && index == ctx.cSelf then
+        -- Evaluate every argument before assigning any parameter, since they read the old ones.
+        let temps := List.map (fun _ => fresh ctx) values
+        let evals := List.map (fun pair => "V " ++ local (fst pair) ++ " = " ++ snd pair ++ "; ") (List.zip temps values)
+        let assigns := List.mapIndexed (fun i t => local i ++ " = " ++ local t ++ "; ") temps
+        "{ " ++ Text.concat evals ++ Text.concat assigns ++ "goto top; }"
+      else if tail && f.fnArity == ctx.cArity then "__attribute__((musttail)) return " ++ fnName index ++ args values ++ ";"
+      else ret (fnName index ++ args values)
+  | other => throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
+
+def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.range 0 n))
+
+/-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
+def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
+  let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
+  let bodies := List.mapIndexed (fun i f =>
+    let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType))))
+    let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity)
+    let env := List.reverse (List.range 0 f.fnArity)
+    "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true f.fnBody ++ "\n}") fns
+  let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
+  let inputs := List.range 0 arity
+  let entry := "int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
+  let main := Text.join "\n" [
+    "#ifdef DEUS_MAIN",
+    "#include <stdio.h>",
+    "int main(int argc, char **argv) {",
+    "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++ Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }",
+    "  printf(\"%d\\n\", " ++ export ++ args (List.map (fun i => "(int32_t)atol(argv[" ++ Int.toText (i + 1) ++ "])") inputs) ++ ");",
+    "  return 0;",
+    "}",
+    "#endif"]
+  let nullary := List.foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
+  Text.join "\n" ([prelude nullary] ++ decls ++ [""] ++ bodies ++ ["", entry, main, ""])
+
+/-- Compiles `main` and what it calls to C exporting it as `export`. -/
+def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
+  let fns := Wasm.gather fetch meta main
+  let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody) fns)
+  unit fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
+
+end CGen

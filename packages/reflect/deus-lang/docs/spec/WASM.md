@@ -15,20 +15,21 @@ The compiler starts at the named definition and follows every `(ref "h")` in its
 Each definition reached must be a stored `(term core)` object whose Core is one or more `lam`s around a
 body; the number of `lam`s is its arity, at least 1. The body may contain only these forms:
 
-| Core form                       | Compiles to                                                                   |
-| ------------------------------- | ----------------------------------------------------------------------------- |
-| `(int n)`                       | `i32.const n`                                                                 |
-| `(var i)`                       | `local.get` of the local bound to de Bruijn index `i`                         |
-| `(let v b)`                     | `v`, `local.set` to a fresh local, then `b`                                   |
-| `(seq a b)`                     | `a`, `drop`, `b`                                                              |
-| `(if c t e)`                    | `c`, `if (result i32) t else e end`                                           |
-| `(con "#Bool" tag 0)`           | `i32.const tag` (`false` 0, `true` 1)                                         |
-| `(con "T" tag 0)`               | a heap block holding only `tag`                                               |
-| `(app (con "T" tag n) a₁ … aₙ)` | a heap block `[tag, a₁ … aₙ]`; `n` must equal the argument count              |
-| `(match s (case p b) …)`        | see [Match](#match)                                                           |
-| `(app (prim "Int.neg") a)`      | `i32.const 0`, `a`, `i32.sub`                                                 |
-| `(app (prim p) a b)`            | `a`, `b`, the instruction for `p` below                                       |
-| `(app (ref "h") a₁ … aₙ)`       | `call` (or `return_call` in tail position) of `h`; `n` must equal `h`'s arity |
+| Core form                                            | Compiles to                                                                   |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `(int n)`                                            | `i32.const n`                                                                 |
+| `(var i)`                                            | `local.get` of the local bound to de Bruijn index `i`                         |
+| `(let v b)`                                          | `v`, `local.set` to a fresh local, then `b`                                   |
+| `(seq a b)`                                          | `a`, `drop`, `b`                                                              |
+| `(if c t e)`                                         | `c`, `if (result i32) t else e end`                                           |
+| `(con "#Bool" tag 0)`                                | `i32.const tag` (`false` 0, `true` 1)                                         |
+| `(con "T" tag 0)`                                    | a heap block holding only `tag`                                               |
+| `(app (con "T" tag n) a₁ … aₙ)`                      | a heap block `[tag, a₁ … aₙ]`; `n` must equal the argument count              |
+| `(match s (case p b) …)`                             | see [Match](#match)                                                           |
+| `(app (prim "Int.neg") a)`                           | `i32.const 0`, `a`, `i32.sub`                                                 |
+| `(app (prim p) a b)`                                 | `a`, `b`, the instruction for `p` below                                       |
+| `(app (ref "h") a₁ … aₙ)`                            | `call` (or `return_call` in tail position) of `h`; `n` must equal `h`'s arity |
+| `(app (prim "Array.…") …)`, `(app (prim "Ref.…") …)` | see [Arrays and cells](#arrays-and-cells)                                     |
 
 | Primitive | Instruction | Primitive  | Instruction |
 | --------- | ----------- | ---------- | ----------- |
@@ -44,6 +45,9 @@ body; the number of `lam`s is its arity, at least 1. The body may contain only t
 
 Patterns allowed in a `case`: `(pany)`, `(pvar)`, `(pas p)`, `(pint n)`, `(pcon "#Bool" tag)` and
 `(pcon "T" tag p …)` with sub-patterns from this list.
+
+A definition whose whole body is a primitive (`def Int.and := prim "Int.and"`) is not compiled as a
+function: calls to it become the primitive, so `Int.and x y` compiles like `x &&& y` would.
 
 Self-recursion and mutual recursion between top-level definitions compile. Local recursion (`letrec`),
 lambdas that are not a definition's leading parameters, partial application, functions as values, `text`
@@ -130,6 +134,24 @@ value no case matches traps.
 | `(pcon "T" tag p …)`             | word 0 `≠` `tag` leaves the case; then each field that is not `(pany)` is loaded into a fresh local and tested against its sub-pattern |
 
 Bindings follow Core's order: left to right, the last one bound is `(var 0)`.
+
+## Arrays and cells
+
+`Array` and `Ref` ([D83](../DECISIONS.md)) are blocks in linear memory too, without a tag word.
+
+| Primitive         | Code                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| `Array.make n x`  | traps if `n < 0`; `alloc(4 + 4n)`, word 0 is `n`, words 1 … n are `x`; the block's address |
+| `Array.length a`  | word 0 of `a`                                                                              |
+| `Array.get a i`   | traps unless `0 ≤ i < length` (unsigned compare); word `i + 1`                             |
+| `Array.set a i v` | the same check; stores `v` in word `i + 1`; returns `0`                                    |
+| `Ref.new v`       | `alloc(4)`, word 0 is `v`; the block's address                                             |
+| `Ref.get r`       | word 0 of `r`                                                                              |
+| `Ref.set r v`     | stores `v` in word 0; returns `0`                                                          |
+
+`Array.set` and `Ref.set` return `()` as address 0: the heap starts at 8, so word 0 is always 0, the
+tag of `Unit`'s only constructor. The type checker sees `Array.get` and `Ref.get` return the element
+type of their argument's type, so a comparison of an element of an `Array Int` compiles.
 
 ## Allocation
 

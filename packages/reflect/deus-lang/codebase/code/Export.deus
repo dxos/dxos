@@ -37,10 +37,26 @@ def Export.exported (e : Entry) : Bool :=
   | Entry.ability _ _ => true
   | _ => false
 
-/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. -/
-def Export.fileSnapshot (dir : Text) (text : Text) : {IO} Map Text Text := Map.fromList (List.map (fun form =>
+/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D85) can leave
+  two versions of a task; the one that is not a version `past` holds wins, else the later line. -/
+def Export.fileSnapshot (dir : Text) (text : Text) (past : Map Text Unit) : {IO} Map Text Text := foldl (fun m form =>
   let t := Tasks.fromSexp form
-  (t.id, Codebase.put dir (Tasks.toSexp t))) (readAll text))
+  let h := Codebase.put dir (Tasks.toSexp t)
+  match Map.lookup t.id m with
+  | Option.some earlier => if Set.contains h past && not (Set.contains earlier past) then m else Map.insert t.id h m
+  | Option.none => Map.insert t.id h m) Map.empty (readAll text)
+
+/-- Restores comments from an export's `comments.sexp` as one change; returns how many. -/
+def Export.importComments (dir : Text) (path : Text) : {IO, Throw Text} Int :=
+  match IO.readFile path with
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let added := concatMap (fun form =>
+        match Sexp.args form with
+        | subject :: thread :: [] => List.map (fun c => (asText subject, commentFromSexp c)) (Sexp.args thread)
+        | _ => defect ("bad comments entry " ++ Sexp.print form)) (readAll text)
+      Comments.add dir added ("comments: import " ++ toText (List.length added) ++ " comments")
+      List.length added
 
 /-- Records an export's `history.sexp` on the current branch (D67); returns how many changes. -/
 def Export.importHistory (dir : Text) (path : Text) : {IO, Throw Text} Int :=
@@ -98,10 +114,10 @@ def Export.mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=
   changed keeps this codebase's value and is returned as a conflict. Returns (tasks in the file,
   conflicts). -/
 def Export.mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Text) : {IO, Throw Text} (Int, List Text) :=
-  let file := fileSnapshot dir text
-  let ours := snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
-  -- A writer that never saw a task, or saw an older version of it, wrote no change to it: tasks are never deleted.
   let past := pastVersions dir
+  let file := fileSnapshot dir text past
+  let ours := Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
+  -- A writer that never saw a task, or saw an older version of it, wrote no change to it: tasks are never deleted.
   let theirs := foldl (fun m pair =>
     match pair with
     | (id, h) =>
@@ -110,7 +126,7 @@ def Export.mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Tex
         | Option.some th => if th != h && Set.contains th past then Map.insert id h m else m) file (Map.toList ours)
   match Tasks.merge dir (readBase dir out) ours theirs with
   | (merged, conflicts) =>
-      if Map.toList merged == Map.toList ours then "" else commitTasks dir (putSnapshot dir merged) message
+      if Map.toList merged == Map.toList ours then "" else commitTasks dir (Tasks.putSnapshot dir merged) message
       recordBase dir out file
       (Map.size file, conflicts)
 
@@ -133,7 +149,7 @@ def Export.readBase (dir : Text) (out : Text) : {IO, Throw Text} Map Text Text :
 /-- Remembers `snapshot` as what this codebase and the export at `out` last agreed on. -/
 def Export.recordBase (dir : Text) (out : Text) (snapshot : Map Text Text) : {IO} Unit :=
   IO.mkdirp (dir ++ "/exports")
-  IO.writeFile (basePath dir out) (putSnapshot dir snapshot ++ "\n")
+  IO.writeFile (basePath dir out) (Tasks.putSnapshot dir snapshot ++ "\n")
 
 /-- The task as Markdown: a heading, its fields, links, comments. -/
 def Export.taskMarkdown (t : Task) : Text :=
@@ -154,7 +170,7 @@ def Export.topOf (name : Text) : Text :=
 /-- The namespace plus a name `Unnamed.h<hash>` for each term a definition still calls but no name
   binds (D77), since the printer writes such a reference as `#<hash>`, which the parser rejects. -/
 def Export.withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry :=
-  let named := Set.fromList (List.map hash (Map.values ns))
+  let named := Set.fromList (List.map Entry.hash (Map.values ns))
   let dependenciesOf := fun h => getOr (Option.map Codebase.dependencies (readObject dir h)) []
   let rec go pending seen acc :=
     match pending with
@@ -167,7 +183,7 @@ def Export.withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry 
             (Map.insert ("Unnamed.h" ++ Text.take 10 h) (Entry.term h) acc)
         | _ => go rest (Set.insert h seen) acc
   go
-    (concatMap (fun e => if exported e then dependenciesOf (hash e) else []) (Map.values ns))
+    (concatMap (fun e => if exported e then dependenciesOf (Entry.hash e) else []) (Map.values ns))
     Map.empty
     ns
 
@@ -215,6 +231,11 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     (fun t => Sexp.print (Tasks.toSexp t) ++ "\n")
     (sortBy (fun a b => compare a.id b.id) tasks)))
   IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
+  -- Comments (D82) are written only when there are some, so an export without them is unchanged.
+  let threads := Map.toList (Comments.current dir)
+  if List.isEmpty threads then () else IO.writeFile (out ++ "/comments.sexp") (Text.concat (List.map
+    (fun pair => Sexp.print (Sexp.node "subject" [Sexp.str (fst pair), threadToSexp (snd pair)]) ++ "\n")
+    threads))
   let project :=
     match Project.read dir with
     | Option.some p => p.projectIri
@@ -225,9 +246,13 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     | Option.none => []
   IO.writeFile (out ++ "/README.md") (join
     "\n"
-    (["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.", "- `specs/` holds the `.mdl` spec blocks, one document per name.", "", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++
+    (["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.", "- `specs/` holds the `.mdl` spec blocks, one document per name."] ++
+      (if List.isEmpty threads then [] else ["- `comments.sexp` holds comments on definitions and changes; the files they attach stay in the codebase's asset store."]) ++
+      ["", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++
       projectStep ++
-      ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp", "deus history import history.sexp", "```", ""]))
+      ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp"] ++
+      (if List.isEmpty threads then [] else ["deus comments import comments.sexp"]) ++
+      ["deus history import history.sexp", "```", ""]))
   let history := fullLog dir 100000
   IO.writeFile (out ++ "/history.sexp") (Text.concat (List.map (fun entry =>
     match entry with
@@ -238,5 +263,5 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
       match entry with
       | (h, message, agent) => "- `" ++ Text.take 10 h ++ "` " ++ message ++
           (if Text.isEmpty agent then "" else " (by " ++ agent ++ ")") ++ "\n") history))
-  recordBase dir out (snapshotOf dir (readCausal dir (headOf dir (currentBranch dir))))
+  recordBase dir out (Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir))))
   (List.length files, List.length sources, List.length tasks)

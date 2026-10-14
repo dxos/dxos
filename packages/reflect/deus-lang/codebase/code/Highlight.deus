@@ -45,7 +45,7 @@ def Highlight.htmlLinkedIn (dialect : Text) (links : Map Text Text) (source : Te
         | Option.none => inner
       else inner) (runsWith (keywordsFor dialect) source))
 
-def Highlight.isWordChar (c : Int) : Bool := isAlpha c || isDigit c || c == 95 || c == 46 || c == 63
+def Highlight.isWordChar (c : Int) : Bool := isAlpha c || isDigit c || c == '_' || c == '.' || c == '?'
 
 /-
   Syntax highlighting of printed source, shared by the explorer (HTML) and the CLI (ANSI colours
@@ -64,27 +64,27 @@ def Highlight.runsWith (kws : Map Text Unit) (source : Text) : List (Text, Text)
   let n := Text.length source
   let rec scan i acc := if i >= n then reverse acc else
     let c := code source i
-    if c == 34 then
-      let rec close j := if j >= n then n else if code source j == 92 then close (j + 2) else if code source j == 34 then j + 1 else close (j + 1)
+    if c == '"' then
+      let rec close j := if j >= n then n else if code source j == '\\' then close (j + 2) else if code source j == '"' then j + 1 else close (j + 1)
       let j := close (i + 1)
       scan j (("str", slice source i j) :: acc)
-    else if c == 47 && i + 1 < n && code source (i + 1) == 45 then
+    else if c == '/' && i + 1 < n && code source (i + 1) == '-' then
       let stop := indexOf source "-/" (i + 2)
       let j := if stop < 0 then n else stop + 2
       scan j (("cm", slice source i j) :: acc)
-    else if c == 47 && i + 1 < n && code source (i + 1) == 42 then
+    else if c == '/' && i + 1 < n && code source (i + 1) == '*' then
       let stop := indexOf source "*/" (i + 2)
       let j := if stop < 0 then n else stop + 2
       scan j (("cm", slice source i j) :: acc)
-    else if (c == 45 || c == 47) && i + 1 < n && code source (i + 1) == c then
+    else if (c == '-' || c == '/') && i + 1 < n && code source (i + 1) == c then
       let stop := indexOf source "\n" i
       let j := if stop < 0 then n else stop
       scan j (("cm", slice source i j) :: acc)
-    else if isAlpha c || c == 95 then
+    else if isAlpha c || c == '_' then
       let rec word j := if j < n && isWordChar (code source j) then word (j + 1) else j
       let j := word i
       let w := slice source i j
-      let kind := if Map.contains w kws then "kw" else if c >= 65 && c <= 90 then "ty" else "plain"
+      let kind := if Map.contains w kws then "kw" else if c >= 'A' && c <= 'Z' then "ty" else "plain"
       scan j ((kind, w) :: acc)
     else scan (i + 1) (("plain", fromCode c) :: acc)
   scan 0 []

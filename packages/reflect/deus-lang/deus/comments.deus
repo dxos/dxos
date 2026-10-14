@@ -1,0 +1,222 @@
+/-
+  Comments (D82): notes on definitions and changes, kept in the codebase as tasks are (D59), so
+  they branch, merge and replicate with the code. A task keeps its own comments; this holds the
+  rest, one thread per subject.
+
+  Every history node may point at a comments snapshot, which maps a subject to the hash of its
+  thread. A definition's subject is its name, so its comments follow it across edits; a change's
+  is its causal hash.
+-/
+
+namespace Comments
+
+/-- The subject of a definition's comments. -/
+def definition (name : Text) : Text := "def:" ++ name
+
+/-- The subject of a change's comments. -/
+def change (causal : Text) : Text := "change:" ++ causal
+
+/-- A subject as the explorer and the inbox write it: `def:<name>` or `change:<causal>`. -/
+def isSubject (subject : Text) : Bool :=
+  (Text.startsWith "def:" subject && Text.length subject > 4) || (Text.startsWith "change:" subject && Text.length subject > 7)
+
+def threadToSexp (comments : List Comment) : Sexp := Sexp.node "thread" (List.map Tasks.commentToSexp comments)
+
+def read (dir : Text) (h : Text) : {IO, Throw Text} List Comment :=
+  match Codebase.readObject dir h with
+  | some form => List.map Tasks.commentFromSexp (Sexp.args form)
+  | none => throw ("missing comment thread #" ++ h)
+
+/-- A history node's comments snapshot: subject -> thread hash. -/
+def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text :=
+  if Text.isEmpty c.threads then Map.empty
+  else
+    match Codebase.readObject dir c.threads with
+    | none => throw ("missing comments snapshot #" ++ c.threads)
+    | some form =>
+      Map.fromList (List.map (fun item =>
+        match Sexp.args item with
+        | [subject, ref] => (Sexp.asText subject, Sexp.asText (Option.getOr (List.head? (Sexp.args ref)) (Sexp.str "")))
+        | _ => defect ("bad comments entry " ++ Sexp.print item)) (Sexp.args form))
+
+/-- Stores a comments snapshot; no comments is `""`, so a history node without them keeps its old hash. -/
+def putSnapshot (dir : Text) (threads : Map Text Text) : {IO} Text :=
+  if Map.size threads == 0 then ""
+  else Codebase.put dir (Sexp.node "comments" (List.map (fun pair => Sexp.node "s" [Sexp.str (fst pair), Sexp.node "ref" [Sexp.str (snd pair)]]) (Map.toList threads)))
+
+/-- The current branch's comments, by subject. -/
+def current (dir : Text) : {IO, Throw Text} Map Text (List Comment) :=
+  let snapshot := snapshotOf dir (Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir)))
+  Map.mapValues (fun h => read dir h) snapshot
+
+/-- Adds comments to subjects on the current branch as one change. Returns the new causal hash. -/
+def add (dir : Text) (added : List (Text, Comment)) (message : Text) : {IO, Throw Text} Text :=
+  let head := Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))
+  let threads := List.foldl (fun m pair =>
+    let before := match Map.lookup (fst pair) m with
+      | some h => read dir h
+      | none => []
+    Map.insert (fst pair) (Codebase.put dir (threadToSexp (before ++ [snd pair]))) m) (snapshotOf dir head) added
+  Codebase.commitComments dir (putSnapshot dir threads) message
+
+/--
+  Three-way merge of comments snapshots. Comments are only ever added, so a thread changed on both
+  sides keeps ours and then theirs' new comments; there are no conflicts.
+-/
+def merge (dir : Text) (base : Map Text Text) (ours : Map Text Text) (theirs : Map Text Text) : {IO, Throw Text} Text :=
+  let subjects := Set.toList (Set.fromList (Map.keys ours ++ Map.keys theirs))
+  putSnapshot dir (List.foldl (fun merged subject =>
+    match (Map.lookup subject ours, Map.lookup subject theirs) with
+    | (some o, some t) =>
+      if o == t || Map.lookup subject base == some t then merged
+      else if Map.lookup subject base == some o then Map.insert subject t merged
+      else
+        let mine := read dir o
+        let extra := List.filter (fun c => not (List.any (fun d => d == c) mine)) (read dir t)
+        Map.insert subject (Codebase.put dir (threadToSexp (mine ++ extra))) merged
+    | (none, some t) => Map.insert subject t merged
+    | _ => merged) ours subjects)
+
+end Comments
+
+/-
+  Assets (D82): files attached to comments, such as screenshots. A store keeps each one at
+  `assets/<sha256>`, named by the SHA-256 of its bytes, and a remote at `<prefix>/assets/<sha256>`;
+  objects name an asset by that hash, so bundles and the git export never carry its bytes.
+-/
+namespace Assets
+
+def path (dir : Text) (h : Text) : Text := dir ++ "/assets/" ++ h
+
+def has (dir : Text) (h : Text) : {IO} Bool := IO.exists (path dir h)
+
+/-- Every asset in the store. -/
+def all (dir : Text) : {IO} List Text :=
+  if IO.isDir (dir ++ "/assets") then List.filter isHash (IO.listDir (dir ++ "/assets")) else []
+
+/-- An asset name: 64 lowercase hex digits. -/
+def isHash (h : Text) : Bool :=
+  Text.length h == 64 && List.all (fun c => (c >= 48 && c <= 57) || (c >= 97 && c <= 102)) (List.map (fun i => Text.code h i) (List.range 0 64))
+
+/-- The media type a file is served with, from its extension. -/
+def mediaTypeOf (name : Text) : Text :=
+  let lower := Text.toLower name
+  let types := [(".png", "image/png"), (".jpg", "image/jpeg"), (".jpeg", "image/jpeg"), (".gif", "image/gif"), (".webp", "image/webp"),
+    (".svg", "image/svg+xml"), (".pdf", "application/pdf"), (".txt", "text/plain; charset=utf-8"), (".json", "application/json")]
+  Option.getOr (Option.map snd (List.find (fun pair => Text.endsWith (fst pair) lower) types)) "application/octet-stream"
+
+/-- The SHA-256 of a file's bytes; the kernel reads only text, so a host tool hashes it. -/
+def sha256File (file : Text) : {IO, Throw Text} Text :=
+  let digest := fun (result : (Int, Text, Text)) =>
+    match result with
+    | (0, out, _) => some (Text.take 64 (Text.trim out))
+    | _ => none
+  match digest (IO.exec "sha256sum" [file]) with
+  | some h => h
+  | none =>
+    match digest (IO.exec "shasum" ["-a", "256", file]) with
+    | some h => h
+    | none => throw ("cannot hash " ++ file ++ ": neither sha256sum nor shasum ran")
+
+/-- The last segment of a path. -/
+def baseName (file : Text) : Text := Option.getOr (List.last? (Text.split file "/")) file
+
+/-- Copies a file into the store, if it is not there yet, and returns it as an asset. -/
+def add (dir : Text) (file : Text) : {IO, Throw Text} Asset :=
+  if not (IO.exists file) then throw ("no file " ++ file)
+  else
+    let h := sha256File file
+    if has dir h then ()
+    else
+      IO.mkdirp (dir ++ "/assets")
+      match IO.exec "cp" [file, path dir h ++ ".tmp"] with
+      | (0, _, _) =>
+        IO.exec "mv" [path dir h ++ ".tmp", path dir h]
+        ()
+      | (_, _, err) => throw ("cannot copy " ++ file ++ ": " ++ Text.trim err)
+    Asset.mk h (mediaTypeOf file) (baseName file)
+
+/-- The assets comments and tasks name on the current branch. -/
+def named (dir : Text) : {IO, Throw Text} List Text :=
+  let fromTasks := List.concatMap (fun t => List.concatMap (fun c => List.map (fun a => a.hash) c.assets) t.comments) (Map.values (Tasks.current dir))
+  let fromThreads := List.concatMap (fun cs => List.concatMap (fun c => List.map (fun a => a.hash) c.assets) cs) (Map.values (Comments.current dir))
+  Set.toList (Set.fromList (fromTasks ++ fromThreads))
+
+end Assets
+
+/-
+  The explorer's inbox (D82): the hosted explorer cannot run DEUS, so a signed-in member's
+  comment or new task is stored on the remote as a request, `<prefix>/inbox/<name>.sexp`, and its
+  images under `assets/`. `deus inbox` applies the requests to the current branch, each as its
+  own change by `github:<login>`, and deletes them; the next push publishes them.
+
+    (request (kind "comment") (by "github:octocat") (at "2026-10-14T19:30:00Z") (subject "def:List.map") (note "…") (assets (asset "<sha256>" "image/png" "shot.png")))
+    (request (kind "task") (by …) (at …) (title "…") (details "…") (link "List.map") (assets …))
+    (request (kind "task-comment") (by …) (at …) (task "<id>") (note "…") (assets …))
+-/
+namespace Inbox
+
+/-- A request's text field, or `""`. -/
+def field (form : Sexp) (key : Text) : Text := Option.getOr (Option.map Sexp.asText (Codebase.metaField (some form) key)) ""
+
+/-- Who made a change, as `deus … --by` records it. -/
+def recordBy (dir : Text) (causal : Text) (author : Text) (at : Text) : {IO} Unit :=
+  IO.mkdirp (dir ++ "/provenance")
+  IO.writeFile (dir ++ "/provenance/" ++ causal) (Sexp.print (Sexp.node "provenance" [Sexp.node "by" [Sexp.str author], Sexp.node "at" [Sexp.str at], Sexp.node "objects" []]) ++ "\n")
+
+/-- Applies one request; returns a line saying what it did. A request that names nothing it can apply to throws. -/
+def applyOne (dir : Text) (form : Sexp) : {IO, Throw Text} Text :=
+  let author := field form "by"
+  let at := field form "at"
+  let assets := List.map Tasks.assetFromSexp (Codebase.metaList (some form) "assets")
+  let missing := List.filter (fun a => not (Assets.has dir a.hash)) assets
+  if not (Text.startsWith "github:" author) then throw "a request must be by github:<login>"
+  else if not (List.isEmpty missing) then throw ("missing asset " ++ Text.join ", " (List.map (fun a => a.hash) missing))
+  else
+    let kind := field form "kind"
+    let done := fun (causal : Text) (line : Text) =>
+      recordBy dir causal author at
+      line
+    if kind == "comment" then
+      let subject := field form "subject"
+      if not (Comments.isSubject subject) then throw ("bad subject " ++ subject)
+      else done (Comments.add dir [(subject, Comment.mk author (field form "note") at assets)] ("comment on " ++ subject)) ("comment on " ++ subject ++ " by " ++ author)
+    else if kind == "task" then
+      let title := Text.trim (field form "title")
+      if Text.isEmpty title then throw "a task needs a title"
+      else
+        let t := Tasks.setField (Tasks.blank (Tasks.freshId dir title author) title) "details" (field form "details")
+        let ns := Codebase.current dir
+        let linked := match Map.lookup (field form "link") ns with
+          | some e => Tasks.link t (Attachment.definition (field form "link") (Entry.hash e))
+          | none => t
+        let withAssets := if List.isEmpty assets then linked else Tasks.comment linked (Comment.mk author "" at assets)
+        done (Tasks.save dir [withAssets] ("task: open " ++ t.id ++ " " ++ title)) ("task " ++ t.id ++ " " ++ title ++ " by " ++ author)
+    else if kind == "task-comment" then
+      let t := Tasks.find (Tasks.current dir) (field form "task")
+      done (Tasks.save dir [Tasks.comment t (Comment.mk author (field form "note") at assets)] ("task: comment on " ++ t.id)) ("comment on task " ++ t.id ++ " by " ++ author)
+    else throw ("unknown request kind " ++ kind)
+
+/--
+  Applies the remote's pending requests in name order (names start with the time they were made)
+  and deletes each one applied or refused. Returns a line per request.
+-/
+def apply (dir : Text) : {Remote, IO, Throw Text} List Text :=
+  let _ := Replicate.pullAssets dir
+  let staged := dir ++ "/cache/inbox-request"
+  IO.mkdirp (dir ++ "/cache")
+  List.map (fun name =>
+    let key := "inbox/" ++ name
+    let line := if not (Remote.download key staged) then name ++ ": gone"
+      else
+        match Option.map Sexp.readAll (IO.readFile staged) with
+        | some [form] =>
+          match try (fun _ => applyOne dir form) with
+          | Result.ok text => name ++ ": " ++ text
+          | Result.err message => name ++ ": refused: " ++ message
+        | _ => name ++ ": refused: not one request"
+    IO.remove staged
+    Remote.drop key
+    line) (List.sort (List.filter (fun n => Text.endsWith ".sexp" n) (Remote.keys "inbox")))
+
+end Inbox

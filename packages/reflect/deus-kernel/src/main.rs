@@ -55,7 +55,9 @@ fn default_environment() {
         std::env::set_var("DEUS_NODE", "node");
     }
     // DEUS code has no isatty; this tells the CLI it may colour its output.
-    if std::env::var_os("DEUS_TTY").is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+    if std::env::var_os("DEUS_TTY").is_none()
+        && std::io::IsTerminal::is_terminal(&std::io::stdout())
+    {
         std::env::set_var("DEUS_TTY", "1");
     }
 }

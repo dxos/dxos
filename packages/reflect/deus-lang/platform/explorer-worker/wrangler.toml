@@ -5,3 +5,15 @@ compatibility_date = "2026-09-01"
 
 [vars]
 ORIGIN = "https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site"
+# The remote's prefix in the bucket: requests go to <PREFIX>/inbox/, attachments to <PREFIX>/assets/ (D82).
+PREFIX = "deus/explorer-demo"
+# Only active members of this GitHub organization may write.
+GITHUB_ORG = "dxos"
+
+# Writes need the bucket. Sign-in also needs three secrets, set with `wrangler secret put`:
+# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET (a GitHub OAuth app whose callback URL is
+# https://<this worker's host>/auth/callback) and SESSION_SECRET (random, 32+ bytes). Without them
+# the explorer is read-only.
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "agent-artifacts"

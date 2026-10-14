@@ -27,7 +27,7 @@ def Sim.next (w : World) : Int :=
   x4
 
 def Sim.parent (path : Text) : Text :=
-  let rec go i := if i < 0 then "" else if code path i == 47 then Text.take i path else go (i - 1)
+  let rec go i := if i < 0 then "" else if code path i == '/' then Text.take i path else go (i - 1)
   go (Text.length path - 1)
 
 /-- Runs `body` against a simulated world; returns its result and everything it printed. -/

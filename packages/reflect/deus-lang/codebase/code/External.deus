@@ -59,7 +59,7 @@ def External.download (dir : Text) (r : Requirement) : {IO} Result Text Text :=
 def External.fetching (dir : Text) (body : Unit -> {Fetch, IO | r} a) : {IO | r} a :=
   handle body () with
   | Fetch.fetch req -> k => k (match External.problems req with
-    | [] => if IO.exists (located dir req) then Result.ok (located dir req) else download dir req
+    | [] => if IO.exists (located dir req) then Result.ok (located dir req) else External.download dir req
     | found => Result.err (join "; " found))
 
 /-- `package` is `owner/repo`, `version` the release tag, `platform` the asset's file name. -/
@@ -73,9 +73,9 @@ def External.imageProblems (image : Text) : List Text :=
   let at := indexOf image "@sha256:" 0
   if at <= 0 then ["image: " ++ image ++ " has no @sha256: digest; a tag alone may move"] else if isSha256 (Text.drop (at + 8) image) then [] else ["image: the digest of " ++ image ++ " is not 64 lowercase hex digits"]
 
-def External.isHex (t : Text) : Bool := all (fun i =>
+def External.isHex (t : Text) : Bool := List.all (fun i =>
   let c := code t i
-  isDigit c || c >= 97 && c <= 102) (range 0 (Text.length t))
+  isDigit c || c >= 'a' && c <= 'f') (range 0 (Text.length t))
 
 def External.isSha256 (t : Text) : Bool := Text.length t == 64 && External.isHex t
 

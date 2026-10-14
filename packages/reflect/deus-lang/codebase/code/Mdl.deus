@@ -69,21 +69,21 @@ def Mdl.header (line : Text) (at : Int) : Block :=
   | kind :: ident :: _ => Block.mk kind ident title [] at
 
 def Mdl.headingOf (t : Text) : Text :=
-  let rec go i := if i < Text.length t && code t i == 35 then go (i + 1) else i
+  let rec go i := if i < Text.length t && code t i == '#' then go (i + 1) else i
   trim (Text.drop (go 0) t)
 
 def Mdl.indentOf (line : Text) : Int :=
-  let rec go i := if i < Text.length line && code line i == 32 then go (i + 1) else i
+  let rec go i := if i < Text.length line && code line i == ' ' then go (i + 1) else i
   go 0
 
-def Mdl.isKeyChar (c : Int) : Bool := isAlpha c || isDigit c || c == 45 || c == 95 || c == 63
+def Mdl.isKeyChar (c : Int) : Bool := isAlpha c || isDigit c || c == '-' || c == '_' || c == '?'
 
 /-- `key: value` when the key is an identifier; a bare `key:` has the empty value. -/
 def Mdl.keyValue (line : Text) : Option (Text, Text) :=
   let i := indexOf line ":" 0
   if i <= 0 then Option.none else
     let key := trim (Text.take i line)
-    if all (fun j => isKeyChar (code key j)) (range 0 (Text.length key)) then Option.some (key, uncomment (trim (Text.drop (i + 1) line))) else Option.none
+    if List.all (fun j => isKeyChar (code key j)) (range 0 (Text.length key)) then Option.some (key, uncomment (trim (Text.drop (i + 1) line))) else Option.none
 
 /-- Parses a document; fences other than ```mdl (```deus among them) are skipped. -/
 def Mdl.parse (doc : Text) : Doc :=

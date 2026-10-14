@@ -7,10 +7,23 @@ ability Alarm @"urn:deus:web:Alarm" where
   set : Int -> Unit
 
 -- Comments written before a statement or an arm; they become metadata, never Core (D66).
+
+-- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D84).
 /-- One `| p, q => body` arm. -/
 structure Arm where
   pats : List Pat
   body : Expr
+
+/-- A mutable array of fixed length (D83). Like `Ref`, writes are not rolled back when a
+  continuation is resumed twice. An index outside `0 .. length` is a defect. -/
+inductive Array a @"#Array" where
+
+/-- A file attached to a comment (D82): its bytes are in the codebase's asset store under their
+  SHA-256, never in an object, so a screenshot does not bloat bundles or the git export. -/
+structure Asset @"urn:deus:task:Asset" where
+  hash : Text
+  mediaType : Text
+  fileName : Text
 
 /-- What a task is about: a definition (its name, and its hash when linked) or a change. -/
 inductive Attachment @"urn:deus:task:Attachment" where
@@ -55,9 +68,12 @@ inductive Bool @"#Bool" where
   | false
   | true
 
+/-- A note by someone; `written` is when (RFC 3339 or nanoseconds since the epoch, or `""`), `assets` what it attaches. -/
 structure Comment @"urn:deus:task:Comment" where
   author : Text
   note : Text
+  written : Text
+  assets : List Asset
 
 /-- A container image pinned by digest (`name@sha256:<hex>`) and how to run it. -/
 structure Container @"urn:deus:external:Container" where
@@ -125,6 +141,7 @@ inductive Event where
   | span (id : Int) (parent : Int) (name : Text) (attrs : List (Text, Text)) (begin : Text) (finished : Text)
   | metric (kind : Text) (name : Text) (value : Int) (time : Text)
 
+-- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D84).
 inductive Expr where
   | var (name : Text) (pos : Pos)
   | dot (name : Text) (pos : Pos)
@@ -151,6 +168,7 @@ inductive Expr where
   | ann (e : Expr) (type : Ty)
   | proj (e : Expr) (field : Text) (pos : Pos)
   | note (text : Text) (e : Expr)
+  | spelled (text : Text) (e : Expr)
 
 /-- A checked error with context: what failed, the facts that locate it, and what it wraps. -/
 structure Failure where
@@ -347,6 +365,7 @@ inductive Pat where
   | list (items : List Pat)
   | unit
   | as (name : Text) (pat : Pat)
+  | spelled (text : Text) (pat : Pat)
 
 /-
   Surface syntax tree produced by the parser and consumed by the resolver.
@@ -444,13 +463,21 @@ structure Registry @"urn:deus:external:Registry" where
   bundle's claims and hashes, so a pull reads each bundle once.
 -/
 /-- An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
-  the bundles (the explorer's site) as (path, content) pairs, replacing what was there. -/
+  the bundles (the explorer's site) as (path, content) pairs, replacing what was there. The file
+  operations (D82) move files byte for byte under a folder beside the bundles: `keys folder` lists
+  the names in it, `download key file` copies one to a local file and says whether it existed,
+  `upload key file mediaType` stores one, and `drop key` deletes one. Assets and the explorer's
+  inbox use them. -/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
   get : Text -> Option Text
   put : Text -> Text -> Unit
   delete : Text -> Unit
   writeAll : List (Text, Text) -> Unit
+  keys : Text -> List Text
+  download : Text -> Text -> Bool
+  upload : Text -> Text -> Text -> Unit
+  drop : Text -> Unit
 
 /-
   The web as DEUS data and abilities (P7, D45, D57), independent of where it runs.
@@ -647,6 +674,7 @@ structure Token where
   line : Int
   col : Int
   bol : Bool
+  spelling : Text
 
 /-- Tracing: `start` opens a span and returns its id; `finish` closes it. -/
 ability Trace where
