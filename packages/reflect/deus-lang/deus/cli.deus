@@ -253,8 +253,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     match option args "closes" with
     | some id =>
       let t := Tasks.find (Tasks.current dir) id
-      Tasks.save dir [Tasks.link (Tasks.setField t "state" "done") (Attachment.change causal)] ("close " ++ t.id ++ " by " ++ short causal)
-      ()
+      recordProvenance dir args (Tasks.save dir [Tasks.link (Tasks.setField t "state" "done") (Attachment.change causal)] ("close " ++ t.id ++ " by " ++ short causal)) []
     | none => ()
     if flag args "quiet" then () else output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
@@ -989,7 +988,8 @@ def task (args : Args) : {IO, Throw Text} Unit :=
   let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
   let tasks := Tasks.current dir
   let saved := fun (t : Task) (message : Text) =>
-    Tasks.save dir [t] message
+    -- `--by` names who made the change, as it does for `update`, so history shows task work too.
+    recordProvenance dir args (Tasks.save dir [t] message) []
     output args (fun _ => taskJson t) (fun _ => taskLine t)
   match args.positional with
   | "new" :: words =>

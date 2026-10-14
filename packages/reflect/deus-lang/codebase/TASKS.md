@@ -33,15 +33,6 @@ History rows link nowhere; a change page could list the definitions it added or 
 
 inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
 
-## Task changes do not record who made them as provenance (`3d6508e4`)
-
-- state: todo
-- priority: none
-- labels: dogfood, tasks
-- links `Tasks.save` (#55c07ae1f6)
-
-deus task new --by claude puts the author on the task but not on the change, so HISTORY.md shows task changes without (by ...).
-
 ## deus run takes the codebase only from the environment (`9caae4c1`)
 
 - state: todo
@@ -149,4 +140,17 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - links `Cli.push` (#69ccb8bb8b)
 
 > claude: Deployed platform/explorer-worker to a temporary account; deus push refreshes the bucket it reads.
+
+## Task changes do not record who made them as provenance (`3d6508e4`)
+
+- state: done
+- priority: none
+- assignee: claude
+- labels: dogfood, tasks
+- links `Tasks.save` (#55c07ae1f6)
+- links change #f48010e0fa
+
+deus task new --by claude puts the author on the task but not on the change, so HISTORY.md shows task changes without (by ...).
+
+> claude: This comment is the first task change with provenance.
 

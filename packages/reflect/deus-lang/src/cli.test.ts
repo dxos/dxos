@@ -555,6 +555,9 @@ describe('deus CLI', () => {
       expect(shown.links[0].current).not.toBe(shown.links[0].hash);
       expect(shown.links[0].changes[0].causal).toBe(update.causal);
       expect(shown.links[1]).toMatchObject({ change: update.causal });
+      expect(shown.history.find((row: { message: string }) => row.message.startsWith('task: comment'))).toMatchObject({
+        by: 'agent-x',
+      });
       expect(shown.history.map((row: { message: string }) => row.message)).toEqual([
         `close ${bug.id} by #${update.causal.slice(0, 10)}`,
         `task: comment on ${bug.id}`,

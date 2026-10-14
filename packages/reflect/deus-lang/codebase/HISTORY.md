@@ -1,5 +1,9 @@
 # History of main
 
+- `ce7a699915` task: comment on 3d6508e4 (by claude)
+- `271e638119` close 3d6508e4 by #f48010e0fa (by claude)
+- `f48010e0fa` toolchain: task changes record their author (by claude)
+- `28fad4063b` task: set 3d6508e4 state assignee
 - `54bd89e634` task: set 4a833ce9 state
 - `16404fb626` task: comment on 4a833ce9
 - `b62e34a440` task: set 4a833ce9 state assignee

@@ -61,6 +61,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 53  | 10-14 16:31 | 11m 07s        | `8db50b86`  | the explorer as a single-page app with a task board                                                     |
 | 54  | 10-14 16:42 | 10m 52s        | `215d6fa6`  | deus view breaks long lines and round-trips to the same hashes                                          |
 | 55  | 10-14 17:04 | 21m 58s        | `ead786c3`  | the whole toolchain round-trips through deus view                                                       |
-| 56  | 10-14 17:08 | 3m 51s         | this commit | D64: work through the codebase; deus export backs it up to git; codebase/ holds the toolchain's export  |
+| 56  | 10-14 17:11 | 6m 39s         | `b6b57ee3`  | work through the codebase and back it up to git as text                                                 |
+| 57  | 10-14 17:16 | 5m 43s         | `9ab8338e`  | write all of stdout into a pipe                                                                         |
+| 58  | 10-14 17:17 | 1m 06s         | this commit | Dogfooding: stdout through pipes, provenance for task changes; work tracked in the codebase             |
 
-Total from stage 1 to stage 56: 7h 25m.
+Total from stage 1 to stage 58: 7h 34m.
