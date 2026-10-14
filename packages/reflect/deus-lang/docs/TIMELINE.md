@@ -70,6 +70,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 62  | 10-14 17:35 | 3m 58s         | `782f2fcf`  | explorer pages for changes                                                                                                                                                              |
 | 63  | 10-14 17:37 | 1m 13s         | `b7216357`  | propose making the codebase the toolchain's source of truth (P8)                                                                                                                        |
 | 64  | 10-14 17:44 | 7m 54s         | `0f5e5e14`  | faster explorer generation (8.1 s to 7.1 s)                                                                                                                                             |
-| 65  | 10-14 17:45 | 0m 58s         | this commit | Explorer generation 8.1 s to 7.1 s: one alias index, one history walk, objects and metadata read once, Json.escape by runs (codebase task a75452c4); codebase pushed to R2 and exported |
+| 65  | 10-14 17:45 | 0m 58s         | `244a0438`  | Explorer generation 8.1 s to 7.1 s: one alias index, one history walk, objects and metadata read once, Json.escape by runs (codebase task a75452c4); codebase pushed to R2 and exported |
+| 66  | 10-14 18:11 | 25m 37s        | `b0a392d6`  | one specification per format under docs/spec                                                                                                                                            |
+| 67  | 10-14 18:26 | 14m 46s        | this commit | dialects: the codebase rendered in a TypeScript-like dialect (`deus view --dialect ts`, explorer DEUS/TS switch, D65)                                                                   |
 
-Total from stage 1 to stage 65: 8h 02m.
+Total from stage 1 to stage 67: 8h 43m.

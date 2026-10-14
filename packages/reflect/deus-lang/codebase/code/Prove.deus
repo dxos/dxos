@@ -672,13 +672,13 @@ def Prove.symText (p : Printer) (s : Sym) (prec : Int) : Text :=
   | Sym.fv name => name
   | Sym.pv name => name
   | Sym.data "#List" 1 (h :: t :: []) => paren 67 prec (Prove.symText p h 68 ++ " :: " ++ Prove.symText p t 67)
-  | Sym.data ty tag [] => conName p ty tag
-  | Sym.data ty tag fields => paren 90 prec (conName p ty tag ++ args fields)
+  | Sym.data ty tag [] => Print.conName p ty tag
+  | Sym.data ty tag fields => paren 90 prec (Print.conName p ty tag ++ args fields)
   | Sym.call h xs => if List.isEmpty xs then nameFor p h else paren 90 prec (nameFor p h ++ args xs)
   | Sym.fn h xs => if List.isEmpty xs then nameFor p h else paren 90 prec (nameFor p h ++ args xs)
   | Sym.prim "implies" (a :: b :: []) => paren 5 prec (Prove.symText p a 6 ++ " -> " ++ Prove.symText p b 5)
   | Sym.prim name (a :: b :: []) =>
-      match infixOf name with
+      match Print.infixOf name with
       | Option.some (op, level) => paren
           level
           prec
@@ -689,7 +689,7 @@ def Prove.symText (p : Printer) (s : Sym) (prec : Int) : Text :=
   | Sym.ite c y n => paren 1 prec ("if " ++ Prove.symText p c 0 ++ " then " ++ Prove.symText p y 0 ++ " else " ++
       Prove.symText p n 0)
   | Sym.app f xs => paren 90 prec (Prove.symText p f 90 ++ args xs)
-  | Sym.ctorFn ty tag _ xs => paren 90 prec (conName p ty tag ++ args xs)
+  | Sym.ctorFn ty tag _ xs => paren 90 prec (Print.conName p ty tag ++ args xs)
   | Sym.primFn name xs => paren 90 prec (name ++ args xs)
   | Sym.clo _ _ => "<function>"
 

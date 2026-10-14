@@ -151,6 +151,7 @@ Then look around the codebase:
 ```bash
 deus ls Tour                 # the names under Tour
 deus view Tour.total         # the source, printed back from the stored definition
+deus view Tour.total --dialect ts   # the same definition in TypeScript-like syntax
 deus dependents Tour.total   # what would be rehashed if it changed
 deus log                     # the history of changes
 ```

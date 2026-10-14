@@ -192,3 +192,7 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - 1
+
+---
+
+- - unison authors mentioned different dialects with shared codebase format -- you can write code in one, and then render with another. lets experiment with that -- still keep deus as the primary -- that best for models, but add minimal rendering to other dialects -- what about something more JS, TS -like?

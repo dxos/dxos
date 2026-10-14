@@ -88,6 +88,10 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
           match try (fun _ => viewEntryWith printer dir ns name e false) with
           | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
           | Result.err message => "-- " ++ message
+        let tsSource :=
+          match try (fun _ => viewEntryIn printer dir ns name e "ts") with
+          | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (lines text))
+          | Result.err message => "// " ++ message
         let deps := List.filter (fun d => Map.contains d index && d != h) (getOr (Map.lookup h depsOf) [])
         let links := Map.fromList (List.map (fun d => (nameFor printer d, d)) deps)
         let users := dedup (sort (getOr (Map.lookup h dependents) []))
@@ -98,7 +102,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
           (out ++ "/def/" ++ h ++ ".json")
           (Json.render (Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
             Json.str
-            (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("deps", named deps), ("users", named users), ("verdict", Json.str (verdictOf dir h)), ("tasks", Json.arr (List.map
+            (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (verdictOf dir h)), ("tasks", Json.arr (List.map
             (fun t => Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state))])
             (about taskMap name h)))])))
   List.length entries

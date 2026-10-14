@@ -23,6 +23,17 @@ const load = async (path) => {
 
 const element = (id) => document.getElementById(id);
 
+/** The dialect definitions are shown in (D65): DEUS, or TypeScript-like where the page has it; kept per viewer. */
+const readDialect = () => {
+  try {
+    return localStorage.getItem('deus.dialect') === 'ts' ? 'ts' : 'deus';
+  } catch {
+    return 'deus';
+  }
+};
+
+let dialect = readDialect();
+
 /** Open cards as `d:<hash>`, `t:<task id>` and `c:<change>`, newest first; the URL hash is the source of truth. */
 const openKeys = () =>
   decodeURIComponent(location.hash.slice(1))
@@ -72,7 +83,7 @@ const definitionCard = (def) =>
     `${escape(def.kind)} · #${escape(def.hash.slice(0, 10))}`,
     (def.aliases.length > 0 ? `<p class="muted">also named ${def.aliases.map(escape).join(', ')}</p>` : '') +
       (def.signature ? `<pre>${escape(def.signature)}</pre>` : '') +
-      `<pre>${def.html}</pre>` +
+      `<pre>${dialect === 'ts' && def.ts ? def.ts : def.html}</pre>` +
       (def.verdict ? `<h3>Verdict</h3><p>${escape(def.verdict)}</p>` : '') +
       (def.tasks.length > 0 ? `<h3>Tasks</h3><p class="links">${def.tasks.map(taskLink).join('')}</p>` : '') +
       `<h3>Depends on</h3>${linkList(def.deps)}<h3>Used by</h3>${linkList(def.users)}`,
@@ -245,7 +256,7 @@ const main = async () => {
   };
 
   document.addEventListener('click', (event) => {
-    const target = event.target.closest('[data-open], [data-close], [data-view]');
+    const target = event.target.closest('[data-open], [data-close], [data-view], [data-dialect]');
     if (!target) {
       return;
     }
@@ -255,6 +266,13 @@ const main = async () => {
       element('workspace').scrollTop = 0;
     } else if (target.dataset.close) {
       close(target.dataset.close);
+    } else if (target.dataset.dialect) {
+      dialect = target.dataset.dialect;
+      try {
+        localStorage.setItem('deus.dialect', dialect);
+      } catch {}
+      showDialect();
+      void render();
     } else {
       for (const button of document.querySelectorAll('#views button')) {
         button.classList.toggle('active', button === target);
@@ -267,6 +285,12 @@ const main = async () => {
     event.preventDefault();
     setOpen([]);
   });
+  const showDialect = () => {
+    for (const button of document.querySelectorAll('#dialects button')) {
+      button.classList.toggle('active', button.dataset.dialect === dialect);
+    }
+  };
+  showDialect();
   window.addEventListener('hashchange', render);
   await render();
 };

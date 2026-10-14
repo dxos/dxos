@@ -8,10 +8,18 @@ namespace Highlight
 
 def keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
 
+/-- Keywords of the TypeScript-like dialect (D65). -/
+def tsKeywords : Map Text Unit := Set.fromList ["function", "const", "return", "switch", "case", "if", "else", "try", "handle", "do", "uses", "type", "interface", "ability", "test", "theorem", "by", "prim", "sorry", "undefined", "true", "false"]
+
+def keywordsFor (dialect : Text) : Map Text Unit := if dialect == "ts" then tsKeywords else keywords
+
 def isWordChar (c : Int) : Bool := Text.isAlpha c || Text.isDigit c || c == '_' || c == '.' || c == '?'
 
 /-- The source as (kind, text) runs, in order. -/
-def runs (source : Text) : List (Text, Text) :=
+def runs (source : Text) : List (Text, Text) := runsWith keywords source
+
+/-- `runs` with a dialect's keywords; comments are DEUS's (`--`, `/- -/`) or TypeScript's (`//`, `/* */`). -/
+def runsWith (kws : Map Text Unit) (source : Text) : List (Text, Text) :=
   let n := Text.length source
   let rec scan i acc :=
     if i >= n then List.reverse acc
@@ -25,7 +33,11 @@ def runs (source : Text) : List (Text, Text) :=
         let stop := Text.indexOf source "-/" (i + 2)
         let j := if stop < 0 then n else stop + 2
         scan j (("cm", Text.slice source i j) :: acc)
-      else if c == '-' && i + 1 < n && Text.code source (i + 1) == '-' then
+      else if c == '/' && i + 1 < n && Text.code source (i + 1) == '*' then
+        let stop := Text.indexOf source "*/" (i + 2)
+        let j := if stop < 0 then n else stop + 2
+        scan j (("cm", Text.slice source i j) :: acc)
+      else if (c == '-' || c == '/') && i + 1 < n && Text.code source (i + 1) == c then
         let stop := Text.indexOf source "\n" i
         let j := if stop < 0 then n else stop
         scan j (("cm", Text.slice source i j) :: acc)
@@ -33,7 +45,7 @@ def runs (source : Text) : List (Text, Text) :=
         let rec word j := if j < n && isWordChar (Text.code source j) then word (j + 1) else j
         let j := word i
         let w := Text.slice source i j
-        let kind := if Map.contains w keywords then "kw" else if c >= 'A' && c <= 'Z' then "ty" else "plain"
+        let kind := if Map.contains w kws then "kw" else if c >= 'A' && c <= 'Z' then "ty" else "plain"
         scan j ((kind, w) :: acc)
       else scan (i + 1) (("plain", Text.fromCode c) :: acc)
   scan 0 []
@@ -48,7 +60,9 @@ def html (source : Text) : Text :=
     | (kind, t) => "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>") (runs source))
 
 /-- HTML in which names found in `links` (display name -> hash) open that definition. -/
-def htmlLinked (links : Map Text Text) (source : Text) : Text :=
+def htmlLinked (links : Map Text Text) (source : Text) : Text := htmlLinkedIn "deus" links source
+
+def htmlLinkedIn (dialect : Text) (links : Map Text Text) (source : Text) : Text :=
   Text.concat (List.map (fun run =>
     match run with
     | (kind, t) =>
@@ -57,12 +71,14 @@ def htmlLinked (links : Map Text Text) (source : Text) : Text :=
         match Map.lookup t links with
         | some h => "<a class=ref data-open=\"d:" ++ h ++ "\">" ++ inner ++ "</a>"
         | none => inner
-      else inner) (runs source))
+      else inner) (runsWith (keywordsFor dialect) source))
 
 def esc : Text := Text.fromCode 27
 
 /-- ANSI colours: keywords magenta, strings green, comments dim, types cyan. -/
-def ansi (source : Text) : Text :=
+def ansi (source : Text) : Text := ansiIn "deus" source
+
+def ansiIn (dialect : Text) (source : Text) : Text :=
   let paint := fun (code : Text) (t : Text) => esc ++ "[" ++ code ++ "m" ++ t ++ esc ++ "[0m"
   Text.concat (List.map (fun run =>
     match run with
@@ -70,18 +86,22 @@ def ansi (source : Text) : Text :=
     | ("str", t) => paint "32" t
     | ("cm", t) => paint "2" t
     | ("ty", t) => paint "36" t
-    | (_, t) => t) (runs source))
+    | (_, t) => t) (runsWith (keywordsFor dialect) source))
 
 /-- Whether output goes to a terminal that wants colour: the kernel sets `DEUS_TTY`, and `NO_COLOR` turns it off. -/
 def enabled (u : Unit) : {IO} Bool :=
   Option.isSome (IO.getEnv "DEUS_TTY") && Option.isNone (IO.getEnv "NO_COLOR")
 
 /-- Colours `text` with ANSI codes when the terminal wants colour. -/
-def forTerminal (source : Text) : {IO} Text := if enabled () then ansi source else source
+def forTerminal (source : Text) : {IO} Text := forTerminalIn "deus" source
+
+def forTerminalIn (dialect : Text) (source : Text) : {IO} Text := if enabled () then ansiIn dialect source else source
 
 /-- Text dimmed on a terminal, as is. -/
 def dim (t : Text) : {IO} Text := if enabled () then esc ++ "[2m" ++ t ++ esc ++ "[0m" else t
 
 test spansKinds := html "def x : Int := \"a<b\" -- note" == "<span class=kw>def</span> x : <span class=ty>Int</span> := <span class=str>\"a&lt;b\"</span> <span class=cm>-- note</span>"
+
+test tsKeywordsAndComments := htmlLinkedIn "ts" Map.empty "const x = 1; // note" == "<span class=kw>const</span> x = 1; <span class=cm>// note</span>"
 
 end Highlight
