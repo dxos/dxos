@@ -4,67 +4,81 @@
 
 import { type Quad } from 'n3';
 
-import { type Fact } from '../../types/index.ts';
-import * as Mapping from '../../types/Mapping.ts';
-import * as Predicate from '../../types/Predicate.ts';
+import * as Ontology from '../../types/Ontology.ts';
 import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
-/**
- * SPARQL selecting every triple of the fact nodes that match the query's graph constraints. The predicate and
- * confidence constraints are applied by {@link selectFacts}: SPARQL cannot express the normalized relation key.
- */
-export const factTriplesSparql = (query: SemanticQuery): string => {
-  const patterns: string[] = [];
-  if (query.subjectEntity) {
-    patterns.push(`?fact <${Vocab.SX}subject> <${Vocab.entityIri(query.subjectEntity).value}> .`);
-  }
-  if (query.source) {
-    patterns.push(`?fact <${Vocab.PROV}wasDerivedFrom> ${JSON.stringify(query.source)} .`);
-  }
-  if (query.entity) {
-    const iri = Vocab.entityIri(query.entity).value;
-    patterns.push(`{ ?fact <${Vocab.SX}subject> <${iri}> } UNION { ?fact <${Vocab.SX}object> <${iri}> }`);
-  }
-  return patterns.length === 0
-    ? 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }'
-    : `SELECT ?fact ?p ?o WHERE { { SELECT DISTINCT ?fact WHERE { ${patterns.join(' ')} } } ?fact ?p ?o }`;
-};
+/** SPARQL IRIREF excludes these characters; a UCHAR escape keeps an arbitrary IRI or key from breaking the query. */
+const iriRef = (iri: string): string =>
+  `<${[...iri]
+    .map((char) =>
+      char <= ' ' || '<>"{}|^`\\'.includes(char) ? `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}` : char,
+    )
+    .join('')}>`;
 
-/**
- * Reassembles the facts in `triples` that also match the query's predicate (by normalized relation key, or a
- * substring of it either way, since an LLM rarely reproduces the stored verb phrase) and minimum confidence.
- */
-export const selectFacts = (triples: readonly Quad[], query: SemanticQuery): Fact[] => {
-  const byNode = new Map<string, Quad[]>();
-  for (const triple of triples) {
-    const node = triple.subject.value;
-    if (node.startsWith(Vocab.FACT)) {
-      const nodeTriples = byNode.get(node);
-      if (nodeTriples) {
-        nodeTriples.push(triple);
-      } else {
-        byNode.set(node, [triple]);
-      }
+const ONTOLOGY = iriRef(Vocab.ONTOLOGY_GRAPH);
+
+/** Excludes rows that are not statements: the ontology graph, and an entity's label or kind. */
+const statementFilter = (graph: string, predicate: string) =>
+  `FILTER(${graph} != ${ONTOLOGY} && ${predicate} NOT IN (${iriRef(Vocab.RDFS_LABEL)}, ${iriRef(Vocab.RDF_TYPE)}))`;
+
+/** Every quad of the ontology graph (predicate labels), as `?g ?s ?p ?o`. */
+export const ONTOLOGY_SPARQL = `SELECT ?g ?s ?p ?o WHERE { VALUES ?g { ${ONTOLOGY} } GRAPH ?g { ?s ?p ?o } }`;
+
+/** The distinct predicates of every stored statement. */
+export const STORED_PREDICATES_SPARQL = `SELECT DISTINCT ?p WHERE { GRAPH ?g { ?s ?p ?o } ${statementFilter('?g', '?p')} }`;
+
+/** The label of each stored predicate: from the ontology graph, else the ontology, else its IRI. */
+export const predicateLabels = (
+  stored: Iterable<string>,
+  ontologyQuads: readonly Quad[],
+  ontology: Ontology.Ontology = Ontology.DEFAULT,
+): Map<string, string> => {
+  const labels = new Map<string, string>();
+  for (const quad of ontologyQuads) {
+    if (quad.predicate.value === Vocab.RDFS_LABEL && !labels.has(quad.subject.value)) {
+      labels.set(quad.subject.value, quad.object.value);
     }
   }
+  return new Map(
+    [...stored].map((iri) => [iri, labels.get(iri) ?? ontology.get(iri)?.label ?? Ontology.labelFromIri(iri)]),
+  );
+};
 
-  let nodes = [...byNode.values()];
-  if (query.predicate) {
-    const needle = Predicate.normalize(query.predicate);
-    const predicateIri = Vocab.sx('predicate').value;
-    nodes = nodes.filter((nodeTriples) =>
-      nodeTriples.some((triple) => {
-        if (triple.predicate.value !== predicateIri) {
-          return false;
-        }
-        const value = Predicate.normalize(triple.object.value);
-        return value === needle || value.includes(needle) || needle.includes(value);
-      }),
+/**
+ * Group pattern binding `?g` to every named graph holding a statement that matches each of the query's
+ * constraints, with `predicates` the IRIs its predicate names. Confidence is not a constraint here: the caller
+ * re-checks every statement (`statementMatches`).
+ */
+export const candidateGraphs = (query: SemanticQuery, predicates?: ReadonlySet<string>): string => {
+  const patterns: string[] = [];
+  if (query.subjectEntity) {
+    const node = iriRef(Vocab.entityNode(query.subjectEntity).value);
+    patterns.push(`{ GRAPH ?g { ${node} ?sp ?so } ${statementFilter('?g', '?sp')} }`);
+  }
+  if (predicates) {
+    patterns.push(
+      `{ GRAPH ?g { ?ps ?pp ?po } FILTER(?g != ${ONTOLOGY} && ?pp IN (${[...predicates].map(iriRef).join(', ')})) }`,
     );
   }
-
-  const facts = Mapping.triplesToFacts(nodes.flat());
-  const min = query.minConfidence;
-  return min === undefined ? facts : facts.filter((fact) => (fact.factuality.confidence ?? 0) >= min);
+  if (query.source) {
+    patterns.push(`?g ${iriRef(`${Vocab.PROV}wasDerivedFrom`)} ${JSON.stringify(query.source)} .`);
+  }
+  if (query.entity) {
+    const node = iriRef(Vocab.entityNode(query.entity).value);
+    patterns.push(
+      `{ { GRAPH ?g { ${node} ?ep ?eo } } UNION { GRAPH ?g { ?es ?ep ${node} } } ${statementFilter('?g', '?ep')} }`,
+    );
+  }
+  return patterns.length === 0 ? `?g ${iriRef(Vocab.RDF_TYPE)} ${iriRef(Vocab.SX_GRAPH)} .` : patterns.join('\n');
 };
+
+/** Group pattern binding `?g` to exactly the given graph IRIs. */
+export const graphValues = (graphs: readonly string[]): string => `VALUES ?g { ${graphs.map(iriRef).join(' ')} }`;
+
+/**
+ * SPARQL loading every quad of the graphs `candidates` binds, as `?g ?s ?p ?o`, and each graph's provenance from
+ * the default graph, as `?g ?p ?o` with `?s` unbound.
+ */
+export const graphQuadsSparql = (candidates: string): string =>
+  `SELECT ?g ?s ?p ?o WHERE { { SELECT DISTINCT ?g WHERE { ${candidates} } } { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }`;

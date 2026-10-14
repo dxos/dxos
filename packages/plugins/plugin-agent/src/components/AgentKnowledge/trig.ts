@@ -4,6 +4,22 @@
 
 import { RDF } from '@dxos/pipeline-rdf';
 
+/** The vocabularies stored facts use, as TriG prefixes. */
+export const TRIG_PREFIXES = Object.entries(RDF.Graph.PREFIXES)
+  .map(([prefix, iri]) => `@prefix ${prefix}: <${iri}>.`)
+  .join('\n');
+
+/**
+ * The fact as the brain stores it, in TriG without the prefixes: its statement inside its named graph, then the
+ * graph's provenance (pipeline-rdf's `factToTriples`).
+ */
+export const formatRawFact = (fact: RDF.Fact): string =>
+  RDF.Graph.toTriG([fact])
+    .split('\n')
+    .filter((line) => !line.startsWith('@prefix'))
+    .join('\n')
+    .trim();
+
 /** The ontology namespace the proposed predicates and classes live in. */
 const DX = 'https://dxos.org/ontology/';
 /** Where graphs minted for an extraction are named. */
@@ -61,9 +77,10 @@ const provenanceKey = (fact: RDF.Fact): string =>
 type Graph = { prefix: string; iri: string; facts: RDF.Fact[] };
 
 /**
- * The facts in the form `docs/QUESTIONS.md` §1 proposes, as TriG: real triples inside named graphs, with the provenance
- * stated once per graph, ontology predicates, and entities as real IRIs where known — otherwise scoped to their graph.
- * A mock-up for review, built from the stored facts; the store does not write this form.
+ * The facts in the fuller form `docs/BRAIN.md` ("Named graphs, IRIs and the ontology") describes, as TriG: real triples
+ * inside named graphs, with the provenance stated once per graph, ontology predicates, and entities as real IRIs where
+ * known — otherwise scoped to their graph. A mock-up for review: the store writes named graphs ({@link formatRawFact})
+ * but keys unresolved entities by slug rather than scoping them to their graph.
  */
 export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGraphOptions = {}): string => {
   const graphs = new Map<string, Graph>();

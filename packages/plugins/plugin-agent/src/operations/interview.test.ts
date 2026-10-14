@@ -22,7 +22,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { Goal, Memory, MemoryOperation } from '#types';
+import { AgentOperation, Goal, MemoryOperation, Mode } from '#types';
 
 import { makeTestBrain } from '../brain/testing.ts';
 
@@ -42,8 +42,8 @@ const TestLayer = AssistantTestLayer({
     Person.Person,
     Organization.Organization,
     HasSubject.HasSubject,
-    Memory.Memory,
     Goal.Goal,
+    Mode.Mode,
     Markdown.Document,
     ProfileOf.ProfileOf,
   ],
@@ -56,11 +56,15 @@ const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
 
 const DISCORD_HANDLE = { label: 'discord', value: '4242' };
 
+/** The agent whose brain holds the memories; Remember records into the space's only agent. */
+const addAgent = Operation.invoke(AgentOperation.CreateAgent, { name: 'Interlocutor' });
+
 describe('Interview', () => {
   it.effect(
     'records memories and goals in the order an interview produces them',
     Effect.fnUntraced(
       function* ({ expect }) {
+        yield* addAgent;
         // Identify the person being interviewed.
         const first = yield* Operation.invoke(MemoryOperation.ResolveEntity, {
           name: 'Rich Burdon',
@@ -125,7 +129,6 @@ describe('Interview', () => {
           subjects: [first.entity],
           supersedes: cadence,
         });
-        expect((yield* Database.load(cadence)).status).toBe('superseded');
         yield* Database.flush();
 
         const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: first.entity });
@@ -148,7 +151,7 @@ describe('Interview', () => {
         ]);
 
         const teamRecall = yield* Operation.invoke(MemoryOperation.Recall, { subject: team });
-        expect(teamRecall.memories.map(({ memory }) => memory.uri)).toEqual([role.uri]);
+        expect(teamRecall.memories.map(({ memory }) => memory)).toEqual([role]);
         expect(teamRecall.goals).toHaveLength(0);
 
         // The profile is regenerated in place.
@@ -184,6 +187,7 @@ describe('Interview', () => {
     'rejects a memory without subjects and a goal owned by a non-entity',
     Effect.fnUntraced(
       function* ({ expect }) {
+        yield* addAgent;
         const empty = yield* Operation.invoke(MemoryOperation.Remember, {
           content: 'Nobody in particular.',
           kind: 'fact',
@@ -191,15 +195,11 @@ describe('Interview', () => {
         }).pipe(Effect.exit);
         expect(failureMessage(empty)).toContain('at least one subject');
 
-        const { memory } = yield* Operation.invoke(MemoryOperation.Remember, {
-          content: 'Placeholder.',
-          kind: 'fact',
-          subjects: [(yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Alice' })).entity],
-        });
+        const note = yield* Database.add(Text.make({ content: 'Placeholder.' }));
         const invalid = yield* Operation.invoke(MemoryOperation.ProposeGoal, {
           title: 'Invalid',
           horizon: 'now',
-          owners: [memory],
+          owners: [Ref.make<Obj.Unknown>(note)],
         }).pipe(Effect.exit);
         expect(failureMessage(invalid)).toContain('people or organizations');
       },
@@ -247,6 +247,7 @@ describe('Interview', () => {
     'recall matches every word of a query, and returns everything about the subject when it matches nothing',
     Effect.fnUntraced(
       function* ({ expect }) {
+        yield* addAgent;
         const { entity: rich } = yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Rich Burdon' });
         yield* Operation.invoke(MemoryOperation.Remember, {
           content: 'Rich is based in New York.',
@@ -279,6 +280,13 @@ describe('Interview', () => {
           limit: Schema.decodeUnknownSync(MemoryOperation.Recall.input)({ limit: '1' }).limit,
         });
         expect(limited.memories).toHaveLength(1);
+
+        // Forgetting withdraws the memory; it no longer recalls.
+        const { forgotten } = yield* Operation.invoke(MemoryOperation.Forget, {
+          memories: [limited.memories[0].memory],
+        });
+        expect(forgotten).toBe(1);
+        expect((yield* Operation.invoke(MemoryOperation.Recall, { subject: rich })).memories).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -5,7 +5,7 @@
 import { Ref } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 
-import { Goal, Memory, Profile } from '#types';
+import { Goal, type Knowledge, Profile } from '#types';
 
 import { type AgentKnowledgeEdge, type AgentKnowledgeNode } from '../AgentKnowledge/index.ts';
 
@@ -13,16 +13,34 @@ export const NOW = new Date('2026-10-03T12:00:00Z');
 
 const AGENT_ID = 'agent';
 
-export type Knowledge = {
+export type Scenario = {
   people: Person.Person[];
   organizations: Organization.Organization[];
   goals: Goal.Goal[];
   /** Each memory with the ids of the entities it is about. */
-  memories: { memory: Memory.Memory; subjects: string[] }[];
+  memories: { memory: Knowledge.Memory; subjects: string[] }[];
 };
 
+let memoryCount = 0;
+
+/** A memory as the brain reads it back. */
+const makeMemory = (
+  content: string,
+  kind: Knowledge.Kind,
+  observedAt: string,
+  subjects: string[],
+): Knowledge.Memory => ({
+  id: `https://dxos.org/semantic/graph/memory-${++memoryCount}`,
+  content,
+  kind,
+  origin: 'stated',
+  observedAt,
+  status: 'active',
+  subjects,
+});
+
 /** The graph the container derives from the same objects: the agent knows every entity. */
-export const toGraph = ({ people, organizations, goals, memories }: Knowledge) => {
+export const toGraph = ({ people, organizations, goals, memories }: Scenario) => {
   const entities = [...people, ...organizations];
   if (entities.length + goals.length + memories.length === 0) {
     return { nodes: [], edges: [] };
@@ -32,7 +50,7 @@ export const toGraph = ({ people, organizations, goals, memories }: Knowledge) =
     { id: AGENT_ID, label: 'Interlocutor' },
     ...entities.map((entity) => ({ id: entity.id, label: Profile.displayName(entity), object: entity })),
     ...goals.map((goal) => ({ id: goal.id, label: goal.title, object: goal })),
-    ...memories.map(({ memory }) => ({ id: memory.id, label: memory.content, object: memory })),
+    ...memories.map(({ memory }) => ({ id: memory.id, label: memory.content })),
   ];
   const edges: AgentKnowledgeEdge[] = [
     ...entities.map((entity): AgentKnowledgeEdge => ({ source: AGENT_ID, target: entity.id, kind: 'knows' })),
@@ -48,11 +66,11 @@ export const toGraph = ({ people, organizations, goals, memories }: Knowledge) =
   return { nodes, edges };
 };
 
-const makeKnowledge = (): Knowledge => {
+const makeKnowledge = (): Scenario => {
   const rich = Person.make({ fullName: 'Rich Burdon' });
   const dxos = Organization.make({ name: 'DXOS' });
-  const memory = (content: string, kind: Memory.Kind, observedAt: string, subjects: string[]) => ({
-    memory: Memory.make({ content, kind, observedAt }),
+  const memory = (content: string, kind: Knowledge.Kind, observedAt: string, subjects: string[]) => ({
+    memory: makeMemory(content, kind, observedAt, subjects),
     subjects,
   });
   return {
@@ -76,7 +94,7 @@ const makeKnowledge = (): Knowledge => {
 };
 
 /** A bigger network of people and organizations, for checking the layout at scale. */
-const makeLargeKnowledge = (): Knowledge => {
+const makeLargeKnowledge = (): Scenario => {
   const organizations = ['DXOS', 'Acme', 'Globex', 'Initech'].map((name) => Organization.make({ name }));
   const people = Array.from({ length: 16 }, (_, index) => Person.make({ fullName: `Person ${index + 1}` }));
   const goals = people
@@ -90,20 +108,24 @@ const makeLargeKnowledge = (): Knowledge => {
       }),
     );
   const memories = people.flatMap((person, index) =>
-    [0, 1].map((offset) => ({
-      memory: Memory.make({
-        content: `Memory ${index * 2 + offset + 1} about ${person.fullName}.`,
-        kind: offset === 0 ? 'fact' : 'preference',
-        observedAt: new Date(NOW.getTime() - (index * 2 + offset) * 3_600_000).toISOString(),
-      }),
-      subjects: [person.id, organizations[index % organizations.length].id],
-    })),
+    [0, 1].map((offset) => {
+      const subjects = [person.id, organizations[index % organizations.length].id];
+      return {
+        memory: makeMemory(
+          `Memory ${index * 2 + offset + 1} about ${person.fullName}.`,
+          offset === 0 ? 'fact' : 'preference',
+          new Date(NOW.getTime() - (index * 2 + offset) * 3_600_000).toISOString(),
+          subjects,
+        ),
+        subjects,
+      };
+    }),
   );
   return { people, organizations, goals, memories };
 };
 
 export const SCENARIOS = {
   default: makeKnowledge,
-  empty: (): Knowledge => ({ people: [], organizations: [], goals: [], memories: [] }),
+  empty: (): Scenario => ({ people: [], organizations: [], goals: [], memories: [] }),
   large: makeLargeKnowledge,
 };

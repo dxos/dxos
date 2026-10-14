@@ -12,7 +12,9 @@ import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
+import { buildSparql } from '../internal/sparql/query-builder.ts';
 import { type Fact } from '../types/index.ts';
+import * as Mapping from '../types/Mapping.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 
 const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
@@ -35,6 +37,15 @@ const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
   sourceHash: 'h1',
   ...over,
 });
+
+/** A fact as stored: named graphs key statements by predicate IRI, which reads back on the fact. */
+const stored = (written: Fact): Fact => ({
+  ...written,
+  assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
+});
+
+const termOf = (found: Fact) =>
+  found.assertion.subject.kind === 'entity' ? found.assertion.subject.entity : found.assertion.subject.literal;
 
 const withFile = <A, E>(run: (path: string) => Effect.Effect<A, E>): Effect.Effect<A, E> =>
   Effect.acquireUseRelease(
@@ -67,8 +78,8 @@ describe('FactStoreLive', () => {
               return [yield* store.query({}), yield* store.cursor('dxn:q:m1')] as const;
             }),
           );
-          expect(facts.map((stored) => stored.id).sort()).toEqual(['f1', 'f2']);
-          expect(facts.find((stored) => stored.id === 'f1')).toEqual(fact('f1'));
+          expect(facts.map((found) => found.id).sort()).toEqual(['f1', 'f2']);
+          expect(facts.find((found) => found.id === 'f1')).toEqual(stored(fact('f1')));
           expect(cursor).toBe('hashA');
         }),
       );
@@ -95,7 +106,7 @@ describe('FactStoreLive', () => {
         { termType: 'Literal', value: 'hi', language: 'en' },
       ]);
       // Facts reassemble unchanged, numbers included.
-      expect(yield* store.query({ minConfidence: 0.5 })).toEqual([fact('f1')]);
+      expect(yield* store.query({ minConfidence: 0.5 })).toEqual([stored(fact('f1'))]);
     }, Effect.scoped),
   );
 
@@ -115,7 +126,7 @@ describe('FactStoreLive', () => {
         }),
       ]);
       const all = yield* store.select('SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }');
-      expect(all.map((stored) => stored.id).sort()).toEqual(['f1', 'f2']);
+      expect(all.map((found) => found.id).sort()).toEqual(['f1', 'f2']);
       const confident = yield* store.select(`
         PREFIX sx: <https://dxos.org/semantic#>
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -123,10 +134,36 @@ describe('FactStoreLive', () => {
           { SELECT DISTINCT ?fact WHERE { ?fact sx:confidence ?conf FILTER(xsd:decimal(?conf) >= 0.8) } }
           ?fact ?p ?o .
         }`);
-      expect(confident.map((stored) => stored.id)).toEqual(['f2']);
+      expect(confident.map((found) => found.id)).toEqual(['f2']);
 
       const error = yield* store.select('DESCRIBE <urn:x>').pipe(Effect.flip);
       expect(error).toBeInstanceOf(SemanticIndexError);
+    }),
+  );
+
+  it.effect(
+    'matches statements, not whole graphs, and loads the graphs a raw SELECT binds to ?g',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      const graph = 'https://dxos.org/semantic/graph/team';
+      yield* store.putFacts([
+        fact('f1', { graph }),
+        fact('f2', {
+          graph,
+          assertion: {
+            subject: { kind: 'entity', entity: 'bob' },
+            predicate: 'works at',
+            object: { kind: 'entity', entity: 'dxos' },
+          },
+        }),
+      ]);
+      const bob = yield* store.query({ entity: 'bob' });
+      expect(bob.map((found) => found.assertion.predicate)).toEqual(['works at']);
+      const working = yield* store.query({ predicate: 'is working at' });
+      expect(working.map((found) => termOf(found))).toEqual(['bob']);
+      const selected = yield* store.select(buildSparql({ subjectEntity: 'bob' }));
+      expect(selected.map((found) => termOf(found)).sort()).toEqual(['alice', 'bob']);
+      expect(yield* store.select(buildSparql({ source: 'dxn:q:none' }))).toEqual([]);
     }),
   );
 

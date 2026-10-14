@@ -98,8 +98,8 @@ it. Grounding is unchanged — a question/request is emitted only when both subj
 concrete and named.
 
 **N3 / storage mapping.** The illocutionary force reifies the propositional content as a quoted graph,
-related to the source utterance by an `sx:` (speech-act) predicate — the same reification the store
-already uses (see [Reification](#reification-storage-shape)):
+related to the source utterance by an `sx:` (speech-act) predicate — the same named graphs the store
+already uses (see [Named graphs](#named-graphs-storage-shape)):
 
 ```
 :msg-42 sx:states   { :meeting :startsAt "15:00" } .   # assertive (default)
@@ -107,8 +107,8 @@ already uses (see [Reification](#reification-storage-shape)):
 :msg-42 sx:requests { :bob :send :report } .           # directive / imperative
 ```
 
-So the graph stays a triple store; the speech act is a predicate over the message and the reified inner
-triple, and the store can answer "what am I asked to do?" distinctly from "what was I told?".
+So the graph stays a triple store; the speech act is a predicate over the message and the graph holding
+the inner triple, and the store can answer "what am I asked to do?" distinctly from "what was I told?".
 
 ## Normalization
 
@@ -145,24 +145,43 @@ interface (`exec(query, ...bindings)`), the shape of a Durable Object's `ctx.sto
 | `FactStoreLive.layer(database)` / `make(database)`          | `@dxos/sql-sqlite/SqlStorage` `makeFile` (`node:sqlite`)               | persistent  | node            |
 | `FactStoreLive.makeMemory()` / `layerMemory`                | `@dxos/sql-sqlite/SqlStorage` `makeMemory` (`node:sqlite` / wa-sqlite) | memory only | node or browser |
 
-- `putFacts` reifies each fact (`Mapping.factToTriples`) and inserts the quads in batches inside
-  `transactionSync`.
-- `query(SemanticQuery)` selects the matching fact nodes' triples with one SPARQL query (entity / subject /
-  source constraints), then matches the predicate by normalized relation key and the minimum confidence in JS,
-  since SPARQL cannot express the relation-key normalization.
-- `select(sparql)` runs a raw `SELECT ?fact ?p ?o` through the compiler; a construct it does not translate
-  fails with `SemanticIndexError` (cause `UnsupportedSparqlError`), see sparql-sqlite's `docs/CONFORMANCE.md`.
+- `putFacts` expands each fact into its named-graph quads (`Mapping.factToTriples`) and inserts them in
+  batches inside `transactionSync`.
+- `query(SemanticQuery)` finds the candidate graphs with one SPARQL query (`GRAPH ?g` statement patterns for
+  entity / subject / predicate, `prov:wasDerivedFrom` on the graph for source), then loads those graphs, their
+  provenance and the ontology graph with a second, and re-checks each statement in JS (`match.ts`): a graph
+  found by one statement may hold others. The predicate's matching IRIs are resolved in JS
+  (`matchingPredicates`), since SPARQL cannot express the ontology's relation key.
+- `select(sparql)` runs a raw SELECT binding `?g` (or `?fact`) through the compiler, then loads and reassembles
+  every statement in the bound graphs; a construct the compiler does not translate fails with
+  `SemanticIndexError` (cause `UnsupportedSparqlError`), see sparql-sqlite's `docs/CONFORMANCE.md`.
 - Ingest cursors live in a `fact_cursors` table in the same database. Opening a store drops the tables of the
   earlier text-triples schema (`triples`, `entities`, `cursors`, `rdf_migrations`); their data is not migrated.
 - The engine's tables (`terms`, `quads`, `dts`, `meta`) are unprefixed, so a database shared with other stores
   must not use those names.
 
-### Reification (storage shape)
+### Named graphs (storage shape)
 
-Each Fact is stored as **plain RDF reification**: a Fact node with `sx:subject` /
-`sx:predicate` / `sx:object` plus PROV-O attribution and `sx:` factuality/metadata triples.
-This is equivalent to the RDF-star quoted-triple form (used only as an export shape) but
-avoids RDF-star vs RDF-1.2 version fragility: every fact is plain triples in the quad store.
+Each statement is a real triple inside a **named graph**, and the graph's provenance is stated once,
+about the graph, in the default graph: PROV-O attribution plus `sx:` factuality and metadata. Statements
+that share their provenance (source, speaker, time, quote, factuality, extraction pass) share a graph
+(`RDF.Graph.assign`); a statement that differs in any of it starts another. This is standard RDF 1.1
+(TriG, N-Quads, SPARQL `GRAPH`), needs no RDF-star, and is stored as-is in the engine's quads.
+
+- **Predicates** are IRIs from an extensible ontology (`RDF.Ontology`): a surface form the ontology
+  knows maps to its predicate (`is on the team as` → `dx:hasRole`); one it does not know mints a
+  `dx:` IRI from its relation key, with its label stored in the ontology graph.
+- **Entities** are IRIs: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL),
+  otherwise a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
+  Facts extracted before this keep the keys they were stored with: an email or URL read earlier is
+  still a slug (`alice-enron-com`), and a source whose text is unchanged is not read again, so both
+  keys can name one entity until the source changes. Facts are append-only, so nothing rewrites them.
+- **Fact ids**: a stored `RDF.Fact` is one statement. A fact without a graph is the only statement of
+  the graph named by its fact IRI, so its id is unchanged; a statement in a named graph is identified by
+  the graph and the triple.
+
+Facts stored in the earlier reified shape (a fact node with `sx:subject` / `sx:predicate` / `sx:object`) lived
+in the text-triples tables, which opening the store drops.
 
 `sx:` is this package's namespace; PROV-O terms (`prov:wasAttributedTo`,
 `prov:generatedAtTime`, `prov:wasDerivedFrom`) are reused verbatim, so the graph is valid
@@ -281,10 +300,10 @@ Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide 
   `recordedAt` is when the fact was _ingested_.
 - **DXN** — a DXOS resource name; facts reference ECHO objects (messages, linked entities) by DXN
   instead of embedding them, so the graph lives outside ECHO.
-- **Reification** — storing a statement as a node with `sx:subject`/`sx:predicate`/`sx:object` (plus
-  metadata) rather than a bare triple, so a fact can carry attribution/factuality/illocution.
-- **`sx:`** — this package's namespace for its own predicates (subject/predicate/object, factuality,
-  speech acts). **PROV-O** terms are reused verbatim so the graph is valid provenance.
+- **Named graph** — a set of statements with an IRI, so the provenance, factuality and illocution they
+  share are stated once, about the graph, rather than about each statement.
+- **`sx:`** — this package's namespace for its own predicates (factuality, speech acts, provenance).
+  **`dx:`** is the ontology: the predicates statements use and the classes entities belong to. **PROV-O** terms are reused verbatim so the graph is valid provenance.
 - **Source / `sourceHash`** — the origin document (DXN) and a content hash used as an incremental
   cursor: an unchanged source is a no-op, a changed one re-extracts.
 - **as-of / according-to** — the two query-time conflict-resolution axes (state _at a time_ × _per a

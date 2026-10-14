@@ -11,6 +11,7 @@ import { AiService } from '@dxos/ai';
 import { trim } from '@dxos/util';
 
 import { SemanticIndexError } from '../../errors.ts';
+import * as Ontology from '../../types/Ontology.ts';
 import { DEFAULT_MODEL } from '../stages/extract.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
@@ -26,14 +27,19 @@ const PROMPT = trim`
   Each fact has a subject entity, a predicate (a short verb phrase), an object entity, plus factuality,
   polarity and an optional confidence (0..1).
 
-  Entities are slugs: lowercase the label and replace each run of non-alphanumeric characters with '-'
+  An entity is keyed by its email address as "mailto:<address>", by its web address as itself, and
+  otherwise by a slug: lowercase the label and replace each run of non-alphanumeric characters with '-'
   (e.g. "Sarah Johnson" -> "sarah-johnson", "DXOS Composer" -> "dxos-composer").
+  Common predicates: ${Ontology.DEFAULT.entries
+    .filter((entry) => entry.description)
+    .map((entry) => entry.label)
+    .join(', ')}.
 
   Emit only the fields the question implies; omit the rest:
   - entity: an entity slug appearing as subject OR object (use this for "everything about X").
   - subjectEntity: an entity slug constrained to the subject position.
-  - predicate: a verb phrase. It is matched literally (no paraphrasing or stemming), so include it ONLY
-    when the exact phrase is likely to appear in the data. For broad "who/what relates to X" questions,
+  - predicate: a verb phrase. It matches a stored predicate whose label or synonyms share its words, so
+    include it ONLY when the relation is likely to appear in the data. For broad "who/what relates to X" questions,
     prefer entity alone — an over-specific predicate that doesn't match returns nothing.
   - minConfidence: a lower bound on confidence.
 

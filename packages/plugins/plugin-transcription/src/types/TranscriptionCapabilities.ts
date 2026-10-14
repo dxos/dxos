@@ -31,6 +31,8 @@ export interface TranscriptionManager {
   setAudioTrack(track?: MediaStreamTrack): Promise<void>;
   setRecording(recording?: boolean): void;
   setEnabled(enabled: boolean): Promise<void>;
+  /** Transcribes whatever audio is still buffered, resolving once its segments are written. */
+  flush(): Promise<void>;
   open(): Promise<this>;
   close(): Promise<this>;
 }

@@ -4,13 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { type Quad as RdfQuad } from 'n3';
 
 import { type Quad, SqlSparqlEngine, type SqlStorage } from '@dxos/sparql-sqlite';
 import * as SqliteStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
-import { factTriplesSparql, selectFacts } from '../internal/sparql/fact-query.ts';
-import { rowsToTriples, toQuad } from '../internal/sparql/terms.ts';
+import {
+  ONTOLOGY_SPARQL,
+  STORED_PREDICATES_SPARQL,
+  candidateGraphs,
+  graphQuadsSparql,
+  graphValues,
+  predicateLabels,
+} from '../internal/sparql/fact-query.ts';
+import { matchingPredicates, statementMatches } from '../internal/sparql/match.ts';
+import { boundGraphs, rowsToQuads, toQuad } from '../internal/sparql/terms.ts';
 import * as Mapping from '../types/Mapping.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
 
@@ -32,6 +41,9 @@ const LEGACY_TABLES = ['triples', 'entities', 'cursors', 'rdf_migrations'];
 
 /** Durable Objects cap a bound string near 2 MB, and the engine binds each batch as one JSON string. */
 const INSERT_BATCH = 5_000;
+
+/** Durable Objects cap statement text at 100 KB, and each graph a `select` binds is inlined as an IRI. */
+const LOAD_BATCH = 200;
 
 const dropLegacyTables = (storage: SqlStorage): void => {
   const legacy = storage
@@ -60,7 +72,7 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
 
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
     attempt('Failed to persist facts')(() => {
-      const quads: Quad[] = facts.flatMap(Mapping.factToTriples).map(toQuad);
+      const quads: Quad[] = facts.flatMap((fact) => Mapping.factToTriples(fact)).map(toQuad);
       transactionSync(() => {
         for (let start = 0; start < quads.length; start += INSERT_BATCH) {
           engine.insert(quads.slice(start, start + INSERT_BATCH));
@@ -68,16 +80,40 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
       });
     });
 
-  // `triplesToFacts` validates via Schema, so malformed stored data fails here too.
+  const ontologyQuads = () => rowsToQuads(engine.query(ONTOLOGY_SPARQL));
+
+  // A graph found by one statement may hold others, so each reassembled statement is checked against the query
+  // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too.
   const query: FactStoreApi['query'] = (semanticQuery) =>
-    attempt('Failed to query facts')(() =>
-      selectFacts(rowsToTriples(engine.query(factTriplesSparql(semanticQuery))), semanticQuery),
-    );
+    attempt('Failed to query facts')(() => {
+      const ontology = ontologyQuads();
+      const predicates =
+        semanticQuery.predicate === undefined
+          ? undefined
+          : matchingPredicates(
+              semanticQuery.predicate,
+              predicateLabels(
+                engine.query(STORED_PREDICATES_SPARQL).flatMap(({ p }) => (p ? [p.value] : [])),
+                ontology,
+              ),
+            );
+      const quads = rowsToQuads(engine.query(graphQuadsSparql(candidateGraphs(semanticQuery, predicates))));
+      return Mapping.triplesToFacts([...quads, ...ontology]).filter((fact) =>
+        statementMatches(fact, semanticQuery, predicates),
+      );
+    });
 
   const select: FactStoreApi['select'] = (sparql) =>
-    attempt('SPARQL query failed')(() => engine.query(sparql)).pipe(
-      Effect.flatMap((rows) =>
-        attempt('Failed to reassemble facts')(() => Mapping.triplesToFacts(rowsToTriples(rows))),
+    attempt('SPARQL query failed')(() => boundGraphs(engine.query(sparql))).pipe(
+      Effect.flatMap((graphs) =>
+        attempt('Failed to reassemble facts')(() => {
+          const quads: RdfQuad[] = [];
+          for (let start = 0; start < graphs.length; start += LOAD_BATCH) {
+            const batch = graphValues(graphs.slice(start, start + LOAD_BATCH));
+            quads.push(...rowsToQuads(engine.query(graphQuadsSparql(batch))));
+          }
+          return graphs.length === 0 ? [] : Mapping.triplesToFacts([...quads, ...ontologyQuads()]);
+        }),
       ),
     );
 

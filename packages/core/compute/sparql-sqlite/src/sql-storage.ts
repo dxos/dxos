@@ -20,6 +20,7 @@ export interface SqlStorageCursor {
  * as-is and any synchronous SQLite (node:sqlite, better-sqlite3, wa-sqlite) can be adapted to it.
  */
 export interface SqlStorage {
+  /** Runs ONE statement; not every adapter runs past the first statement of a multi-statement string. */
   exec(query: string, ...bindings: SqlStorageValue[]): SqlStorageCursor;
 }
 

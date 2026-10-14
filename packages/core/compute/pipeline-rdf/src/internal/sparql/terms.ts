@@ -6,7 +6,7 @@ import { DataFactory, type Quad as RdfQuad, type Term as RdfTerm } from 'n3';
 
 import { type Quad, type Row, type Term } from '@dxos/sparql-sqlite';
 
-const { literal, namedNode, quad } = DataFactory;
+const { blankNode, defaultGraph, literal, namedNode, quad } = DataFactory;
 
 const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
 
@@ -35,20 +35,34 @@ export const toQuad = (triple: RdfQuad): Quad => ({
   ...(triple.graph.termType === 'DefaultGraph' ? {} : { g: toTerm(triple.graph) }),
 });
 
-const toObject = (term: Term) =>
-  term.termType === 'NamedNode'
-    ? namedNode(term.value)
-    : literal(
-        term.value,
-        term.termType === 'Literal' ? (term.language ?? (term.datatype && namedNode(term.datatype))) : undefined,
-      );
+const toResource = (term: Term) => (term.termType === 'BlankNode' ? blankNode(term.value) : namedNode(term.value));
 
-/** `?fact ?p ?o` solutions as triples; rows that cannot be part of a fact's reification are skipped. */
-export const rowsToTriples = (rows: readonly Row[]): RdfQuad[] =>
-  rows.flatMap(({ fact, p, o }) =>
-    fact?.termType === 'NamedNode' &&
-    p?.termType === 'NamedNode' &&
-    (o?.termType === 'NamedNode' || o?.termType === 'Literal')
-      ? [quad(namedNode(fact.value), namedNode(p.value), toObject(o))]
-      : [],
-  );
+const toObject = (term: Term) =>
+  term.termType === 'Literal'
+    ? literal(term.value, term.language ?? (term.datatype ? namedNode(term.datatype) : undefined))
+    : toResource(term);
+
+/**
+ * `?g ?s ?p ?o` solutions as quads: a row with `?s` bound is a quad in graph `?g`, one without it is a default-graph
+ * triple about `?g` (its provenance). Rows with a literal in a resource position are skipped.
+ */
+export const rowsToQuads = (rows: readonly Row[]): RdfQuad[] =>
+  rows.flatMap(({ g, s, p, o }) => {
+    if (g?.termType !== 'NamedNode' || p?.termType !== 'NamedNode' || o === undefined) {
+      return [];
+    }
+    if (s === undefined) {
+      return [quad(namedNode(g.value), namedNode(p.value), toObject(o), defaultGraph())];
+    }
+    return s.termType === 'Literal' ? [] : [quad(toResource(s), namedNode(p.value), toObject(o), namedNode(g.value))];
+  });
+
+/** The distinct graph IRIs a raw SELECT binds to `?g`, or to `?fact`, the variable of the earlier reified shape. */
+export const boundGraphs = (rows: readonly Row[]): string[] => [
+  ...new Set(
+    rows.flatMap((row) => {
+      const graph = row.g ?? row.fact;
+      return graph?.termType === 'NamedNode' ? [graph.value] : [];
+    }),
+  ),
+];

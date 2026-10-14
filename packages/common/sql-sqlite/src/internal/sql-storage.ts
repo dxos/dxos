@@ -17,6 +17,7 @@ export interface Cursor {
 
 /** Synchronous SQL in the shape of a Durable Object's `ctx.storage.sql`, so either can back the same code. */
 export interface Storage {
+  /** Runs ONE statement; `node:sqlite` prepares only the first statement of a multi-statement string. */
   exec(query: string, ...bindings: Value[]): Cursor;
 }
 
