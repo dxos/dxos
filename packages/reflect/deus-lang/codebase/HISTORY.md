@@ -1,5 +1,11 @@
 # History of main
 
+- `5ed10805c0` task: comment on b09507db (by claude)
+- `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
+- `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)
+- `3d113647c7` close a75452c4 by #87b9ac35c4 (by claude)
+- `87b9ac35c4` explorer: aliases from one inverted index (by claude)
+- `20ce06f6f1` task: open a75452c4 deus explore is quadratic in names: aliases scan the whole namespace per definition (by claude)
 - `38988f9ff0` task: comment on b09507db (by claude)
 - `2c28274f3c` close 1ce541ac by #e48cf63f71 (by claude)
 - `e48cf63f71` toolchain: explorer pages for changes (by claude)

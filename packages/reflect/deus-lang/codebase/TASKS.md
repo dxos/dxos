@@ -12,6 +12,8 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 
 > claude: Written up as P8 in docs/PROPOSALS.md, four options; recommending B (source text as metadata while it still resolves, export rebuilds the files). Waiting on a choice before building.
 
+> claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
+
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -80,6 +82,17 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 view of 1061 definitions plus update of all of them; profile which half dominates.
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
+
+## deus explore is quadratic in names: aliases scan the whole namespace per definition (`a75452c4`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: dogfood, perf
+- links `Explorer.generate` (#b304532cfd)
+- links change #87b9ac35c4
+
+Profile: Map.foldr 2.0M and Entry.hash 1.7M entries of 8 s, from Codebase.namesOf per definition. Invert the namespace once.
 
 ## Break long lines in deus view output (`d7eba020`)
 

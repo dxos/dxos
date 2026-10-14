@@ -208,6 +208,12 @@ def Codebase.nameIndex (ns : Map Text Entry) : Map Text Text := foldl (fun m pai
       | Option.some old => if Text.length name < Text.length old then Map.insert key name m else m
       | Option.none => Map.insert key name m) Map.empty (Map.toList ns)
 
+/-- Hash → every name of it, in name order: `namesOf` for all hashes in one pass. -/
+def Codebase.namesByHash (ns : Map Text Entry) : Map Text (List Text) := Map.foldr
+  (fun name e m => Map.insert (hash e) (name :: getOr (Map.lookup (hash e) m) []) m)
+  Map.empty
+  ns
+
 /-- Names of every entry whose hash is `h` (aliases included). -/
 def Codebase.namesOf (ns : Map Text Entry) (h : Text) : List Text := List.map fst (List.filter (fun pair => hash (snd pair) == h) (Map.toList ns))
 

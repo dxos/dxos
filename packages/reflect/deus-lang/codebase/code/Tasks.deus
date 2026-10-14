@@ -82,6 +82,26 @@ def Tasks.fromSexp (form : Sexp) : Task :=
     (List.map attachmentFromSexp (metaList (Option.some form) "links"))
     (List.map comment (metaList (Option.some form) "comments"))
 
+/-- `historyOf` for every task in one walk of the branch: id → changes that touched it, newest first. -/
+def Tasks.histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List (Text, Causal)) :=
+  let touched := fun parent node => if parent.tasks == node.tasks then [] else
+    let before := snapshotOf dir parent
+    let after := snapshotOf dir node
+    List.filter
+      (fun id => Map.lookup id before != Map.lookup id after)
+      (dedup (sort (Map.keys before ++ Map.keys after)))
+  let rec walk h n acc := if n <= 0 then acc else
+    let node := readCausal dir h
+    match parentsOf dir h with
+    | [] => acc
+    | p :: _ =>
+        let parent := readCausal dir p
+        walk p (n - 1) (((h, node), touched parent node) :: acc)
+  foldl
+    (fun m change => foldl (fun m2 id => Map.insert id (fst change :: getOr (Map.lookup id m2) []) m2) m (snd change))
+    Map.empty
+    (walk (headOf dir (currentBranch dir)) limit [])
+
 /-- Changes that touched a task. -/
 def Tasks.historyOf (dir : Text) (id : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) := changesWhere
   dir
