@@ -39,19 +39,18 @@ interface LayerStackOpts {
  * resources off its list, so stopping at the first failure would strand the rest with nothing left
  * holding a reference to retry them.
  */
-const destroyAll = (teardowns: readonly Effect.Effect<void>[]): Effect.Effect<void> =>
-  Effect.gen(function* () {
-    let failure: Exit.Exit<void> | undefined;
-    for (const teardown of teardowns) {
-      const exit = yield* Effect.exit(teardown);
-      if (Exit.isFailure(exit)) {
-        failure ??= exit;
-      }
+const destroyAll = Effect.fnUntraced(function* (teardowns: readonly Effect.Effect<void>[]) {
+  let failure: Exit.Exit<void> | undefined;
+  for (const teardown of teardowns) {
+    const exit = yield* Effect.exit(teardown);
+    if (Exit.isFailure(exit)) {
+      failure ??= exit;
     }
-    if (failure) {
-      return yield* failure;
-    }
-  });
+  }
+  if (failure) {
+    return yield* failure;
+  }
+});
 
 /**
  * Tag for a built {@link LayerStack}.

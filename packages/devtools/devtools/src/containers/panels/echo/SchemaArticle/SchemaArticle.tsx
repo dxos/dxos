@@ -156,7 +156,7 @@ export const SchemaArticle = ({ role, ...props }: ArticleProps & { space?: Space
           </div>
 
           <div className='min-h-0 h-full border-s border-t border-separator'>
-            <div className={mx('p-1 h-full overflow-auto')}>
+            <div className='p-1 h-full overflow-auto'>
               {selected ? (
                 <ObjectViewer
                   object={selected.jsonSchema}

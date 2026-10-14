@@ -64,7 +64,7 @@ describe.skip('Search', () => {
       console.log(JSON.stringify(objects, null, 2));
     });
 
-    test.only('edge architecture', { timeout: 60_000 }, async () => {
+    test('edge architecture', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
         types: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],

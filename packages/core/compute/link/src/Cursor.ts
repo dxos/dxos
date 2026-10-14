@@ -643,22 +643,23 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
  * flushes were O(n²)); the caller flushes once at the end, so a crash only loses this run's in-memory
  * cursor advance + space mutations.
  */
-export const commit = (page: ReadonlyArray<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
-  Effect.gen(function* () {
-    const units = page;
-    if (units.length === 0) {
-      return;
-    }
+export const commit = Effect.fn('cursor.commit')(function* (
+  page: ReadonlyArray<CommitUnit>,
+): Effect.fn.Return<void, never, Service | Database.Service> {
+  const units = page;
+  if (units.length === 0) {
+    return;
+  }
 
-    const state = yield* Service;
-    const feed = state.feed;
-    invariant(feed, 'Cursor.commit requires a feed target');
+  const state = yield* Service;
+  const feed = state.feed;
+  invariant(feed, 'Cursor.commit requires a feed target');
 
-    yield* appendObjects(feed, units);
-    yield* paintYield();
-    yield* runCommitEffects(units);
-    yield* recordCommitted(state, units);
-  }).pipe(Effect.withSpan('cursor.commit'));
+  yield* appendObjects(feed, units);
+  yield* paintYield();
+  yield* runCommitEffects(units);
+  yield* recordCommitted(state, units);
+});
 
 /** An item written by {@link upsertCommit}: an object to upsert into the space plus its cursor key. */
 export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; readonly key: number };

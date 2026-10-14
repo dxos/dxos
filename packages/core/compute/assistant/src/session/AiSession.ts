@@ -83,41 +83,41 @@ const SUMMARY_THRESHOLD = 80_000;
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class Session extends Resource {
-  private readonly _feed: Feed.Feed;
-  private readonly _runtime: Context.Context<Database.Service>;
+  readonly #feed: Feed.Feed;
+  readonly #runtime: Context.Context<Database.Service>;
   readonly #instructions: readonly Instructions.Instructions[];
 
   /**
    * Skills and objects bound to the session.
    */
-  private readonly _binder: AiContext.Binder;
+  readonly #binder: AiContext.Binder;
 
-  private readonly _sessionStore = new SessionStore();
+  readonly #sessionStore = new SessionStore();
 
   public constructor(options: Options) {
     super();
-    this._feed = options.feed;
-    this._runtime = options.runtime;
+    this.#feed = options.feed;
+    this.#runtime = options.runtime;
     this.#instructions = options.instructions ?? [];
-    invariant(this._feed);
-    invariant(this._runtime);
-    this._binder = new AiContext.Binder({
-      feed: this._feed,
-      runtime: this._runtime,
+    invariant(this.#feed);
+    invariant(this.#runtime);
+    this.#binder = new AiContext.Binder({
+      feed: this.#feed,
+      runtime: this.#runtime,
       registry: options.registry,
     });
   }
 
   protected override async _open(): Promise<void> {
-    await this._binder.open(this._ctx);
+    await this.#binder.open(this._ctx);
   }
 
   public get feed() {
-    return this._feed;
+    return this.#feed;
   }
 
   public get context() {
-    return this._binder;
+    return this.#binder;
   }
 
   /**
@@ -126,8 +126,8 @@ export class Session extends Resource {
    */
   public async getHistory(): Promise<Message.Message[]> {
     const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
-    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      this._sessionStore.reifyHistory(this._feed, reachable),
+    return RuntimeProvider.runPromise(Effect.succeed(this.#runtime))(
+      this.#sessionStore.reifyHistory(this.#feed, reachable),
     );
   }
 
@@ -136,8 +136,8 @@ export class Session extends Resource {
    * positionally rather than by `created`, a wall clock peers do not agree on.
    */
   async #messagesInAppendOrder(): Promise<Message.Message[]> {
-    const queryResult = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.query(this._feed, Filter.type(Message.Message)),
+    const queryResult = await RuntimeProvider.runPromise(Effect.succeed(this.#runtime))(
+      Feed.query(this.#feed, Filter.type(Message.Message)),
     );
     const items = await queryResult.run();
     return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
@@ -159,7 +159,7 @@ export class Session extends Resource {
     OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | Registry.Service
   > {
     return ToolExecutionServices.pipe(
-      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) })),
+      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this.#feed) })),
     );
   }
 
@@ -174,17 +174,17 @@ export class Session extends Resource {
    * after the append (rather than before) leaves the rewind pending if the turn fails.
    */
   public async appendTurnMessage(message: Message.Message): Promise<void> {
-    const rewindFrom = this._feed.rewindFrom;
+    const rewindFrom = this.#feed.rewindFrom;
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
-    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined),
+    await RuntimeProvider.runPromise(Effect.succeed(this.#runtime))(
+      Feed.append(this.#feed, [message], parent !== undefined ? { parent } : undefined),
     );
     if (rewindFrom !== undefined) {
       // Cleared only once feed queries see the continuation: the thread truncates on the pointer, and
       // clearing it before the index has the continuation shows the abandoned turn again until it does.
       await this.#messagesInAppendOrder();
-      Obj.update(this._feed, (feed) => {
+      Obj.update(this.#feed, (feed) => {
         feed.rewindFrom = undefined;
       });
     }
@@ -345,13 +345,13 @@ export class Session extends Resource {
           // process-affinity HarnessService LayerSpec — not from here.
           Layer.succeed(
             Harness.HarnessService,
-            Harness.fromBinder({ feed: this._feed, runtime: this._runtime, binder: this.context }),
+            Harness.fromBinder({ feed: this.#feed, runtime: this.#runtime, binder: this.context }),
           ),
-          Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) }),
+          Operation.withInvocationOptions({ conversation: Obj.getURI(this.#feed) }),
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
-      Effect.annotateSpans(sessionAnnotations(this._feed)),
+      Effect.annotateSpans(sessionAnnotations(this.#feed)),
     );
   }
 }

@@ -29,7 +29,7 @@ export { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE, RunAgainError } from './errors
 //
 
 /** Opaque process id (arbitrary string). */
-export const ID = Schema.String.pipe(Schema.brand('ProcessId'));
+export const ID = Schema.String.pipe(Schema.brand('@dxos/compute/Process/ID'));
 export type ID = Schema.Schema.Type<typeof ID>;
 
 /**

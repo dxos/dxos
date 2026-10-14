@@ -170,7 +170,7 @@ describe('EdgeAgent', () => {
         AccessToken.AccessToken,
       ],
     }),
-    Layer.succeed(Trace.TraceService, { write: () => {} }),
+    Trace.writerLayerNoop,
   );
 
   it.live('spawns the chat its process once, lends the credential, and folds the turn into the chat', () =>

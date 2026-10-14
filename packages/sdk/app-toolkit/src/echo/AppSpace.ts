@@ -249,7 +249,7 @@ export const isLegacyDefaultSpace = (space: Space): boolean => {
 /**
  * Find the legacy default space, falling back to the `DefaultSpace` HALO credential for profiles
  * that predate immutable space tags. Migration input only — read {@link getDefaultSpace} at runtime.
- * @deprecated
+ * @deprecated Use {@link getDefaultSpace}.
  */
 export const resolveLegacyDefaultSpace = (
   client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): Credential[] } },

@@ -85,7 +85,7 @@ const Section = ({ title, items, striped }: SectionProps) => {
   const subGridClassNames = ['text-xs px-2', striped && stripeClassNames];
 
   return (
-    <div>
+    <>
       <h1 className='px-2 text-sm'>{title}</h1>
       <Layout.Grid cols={['8rem', 'fill']}>
         {items.map(({ name, description, subitems }, i) => (
@@ -105,7 +105,7 @@ const Section = ({ title, items, striped }: SectionProps) => {
           </Fragment>
         ))}
       </Layout.Grid>
-    </div>
+    </>
   );
 };
 

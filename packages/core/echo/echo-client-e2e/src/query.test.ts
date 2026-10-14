@@ -4298,10 +4298,8 @@ describe('Query', () => {
     test('filters the result of a traversal', async () => {
       const { db } = await setup();
       const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
-      const child = db.add(Obj.make(TestSchema.Expando, { name: 'Child' }));
-      const archived = db.add(Obj.make(TestSchema.Expando, { name: 'Archived child' }));
-      Obj.setParent(child, parent);
-      Obj.setParent(archived, parent);
+      const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      const archived = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Archived child' }));
       Obj.update(archived, (archived) => Annotation.set(archived, StatusAnnotation, 'done'));
       await db.flush({ indexes: true });
 

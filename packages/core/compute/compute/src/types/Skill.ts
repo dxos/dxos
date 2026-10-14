@@ -302,15 +302,14 @@ export const resolveAnnotatedSkills = Effect.fnUntraced(function* (object: Obj.U
  * Resolves a skill from the registry by its meta key.
  * Does not check the local database for the skill.
  */
-export const resolve = (key: string): Effect.Effect<Skill, NotFoundError, Registry.Service> =>
-  Effect.gen(function* () {
-    const results = yield* Registry.runQuery(Filter.and(Filter.type(Skill), Filter.key(key)));
-    const skill = results[0];
-    if (!skill) {
-      return yield* Effect.fail(new NotFoundError({ context: { key } }));
-    }
-    return skill;
-  });
+export const resolve = Effect.fnUntraced(function* (key: string) {
+  const results = yield* Registry.runQuery(Filter.and(Filter.type(Skill), Filter.key(key)));
+  const skill = results[0];
+  if (!skill) {
+    return yield* Effect.fail(new NotFoundError({ context: { key } }));
+  }
+  return skill;
+});
 
 /**
  * Upserts a skill into the database.
@@ -319,13 +318,12 @@ export const resolve = (key: string): Effect.Effect<Skill, NotFoundError, Regist
  * @deprecated Since we're using a registry we no longer need to store skills in the database.
  */
 // TODO(dmaretskyi): Remove.
-export const upsert = (key: string): Effect.Effect<Skill, NotFoundError, Registry.Service | Database.Service> =>
-  Effect.gen(function* () {
-    const local = yield* Database.query(Filter.and(Filter.type(Skill), Filter.key(key))).run;
-    if (local.length > 0) {
-      return local[0];
-    }
-    return yield* Database.add(Obj.clone(yield* resolve(key), { deep: 'all' }));
-  });
+export const upsert = Effect.fnUntraced(function* (key: string) {
+  const local = yield* Database.query(Filter.and(Filter.type(Skill), Filter.key(key))).run;
+  if (local.length > 0) {
+    return local[0];
+  }
+  return yield* Database.add(Obj.clone(yield* resolve(key), { deep: 'all' }));
+});
 
 export class NotFoundError extends BaseError.extend('SkillNotFound', 'Skill not found') {}

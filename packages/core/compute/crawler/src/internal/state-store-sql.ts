@@ -11,7 +11,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 import { StateError } from '../errors.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store/index.ts';
 import type * as StateStore from '../StateStore.ts';
-import type * as Type from '../types.ts';
+import type * as Type from '../Type.ts';
 
 /**
  * Applies any migrations this database has not recorded yet.

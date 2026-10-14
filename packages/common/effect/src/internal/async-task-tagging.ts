@@ -11,21 +11,31 @@ import * as Tracer from 'effect/Tracer';
 
 const runInTask = Symbol('runInTask');
 
+type ConsoleTask = { run: <T>(fn: () => T) => T };
+
+/** Chrome-only `console.createTask`, absent from the standard `Console` typings. */
+type ConsoleWithTask = Console & { createTask: (name: string) => ConsoleTask };
+
+type TaskSpan = Tracer.Span & { [runInTask]?: <T>(fn: () => T) => T };
+
+const hasCreateTask = (value: Console): value is ConsoleWithTask => Predicate.hasProperty(value, 'createTask');
+
 /**
  * Traces effect frames using console.createTask so that the proper stack-trace is visible in Chrome Devtools debugger.
  */
 export const asyncTaskTaggingLayer = () => {
-  if (Predicate.hasProperty(console, 'createTask') === false) {
+  if (!hasCreateTask(console)) {
     return Layer.empty;
   }
+  const taskConsole = console;
 
   const makeTracer = Effect.gen(function* () {
     const oldTracer = yield* Effect.tracer;
     return Tracer.make({
-      span: (name, ...args) => {
-        const span = oldTracer.span(name, ...args);
-        const trace = (console as any).createTask(name);
-        (span as any)[runInTask] = (f: any) => trace.run(f);
+      span: (options, ...args) => {
+        const span: TaskSpan = oldTracer.span(options, ...args);
+        const trace = taskConsole.createTask(options.name);
+        span[runInTask] = (fn) => trace.run(fn);
         return span;
       },
       // `context` is optional in v4. Only wrap it when the underlying tracer implements it --

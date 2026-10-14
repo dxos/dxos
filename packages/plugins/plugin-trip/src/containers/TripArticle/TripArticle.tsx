@@ -155,12 +155,14 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       const segment = db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
       // Pre-fill the start (and end, for a range) from the current calendar selection.
-      if (calendarSelection?.from) {
-        Segment.setDepartAt(segment, calendarSelection.from.toISOString());
-      }
-      if (calendarSelection?.to) {
-        Segment.setArriveAt(segment, calendarSelection.to.toISOString());
-      }
+      Obj.update(segment, (segment) => {
+        if (calendarSelection?.from) {
+          Segment.setDepartAt(segment, calendarSelection.from.toISOString());
+        }
+        if (calendarSelection?.to) {
+          Segment.setArriveAt(segment, calendarSelection.to.toISOString());
+        }
+      });
       // Default the origin to where the previous leg ended so a multi-leg trip chains naturally.
       const previousDestination = previous && Segment.getDestination(previous);
       if (previousDestination) {

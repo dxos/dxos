@@ -29,7 +29,7 @@ export const MasterDetailTable = ({
 }: MasterDetailTableProps) => {
   const [selected, setSelected] = useState<any | undefined>(undefined);
   const [transformedData, setTransformedData] = useState<any>(undefined);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRowClicked = useCallback(
     (row: any) => {
@@ -86,7 +86,7 @@ export const MasterDetailTable = ({
       <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-s')}>
         {selected ? (
           isLoading ? (
-            <p className={mx('font-mono text-xs p-1')}>Loading details...</p>
+            <p className='font-mono text-xs p-1'>Loading details...</p>
           ) : (
             <JsonView data={transformedData} />
           )

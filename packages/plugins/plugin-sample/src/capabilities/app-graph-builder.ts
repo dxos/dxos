@@ -32,7 +32,6 @@ const SAMPLE_SECTION_TYPE = 'sample-section';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // --- Root-level action ---
       // `GraphNodeMatcher.whenRoot` matches the graph root, making this action appear
       // in the global action menu (e.g., the "+" button in the navigation tree).
       // `position: Position.first` places the action in the primary action area.
@@ -60,7 +59,6 @@ export default Capability.makeModule(
           ]),
       })*/
 
-      // --- Sub-graph section ---
       // Creates a "Samples" section node under each space in the navigation tree.
       // This matches Space nodes and returns a section node when SampleItem objects exist.
       // `AppNode.makeSection` builds a virtual branch node (non-navigable, non-draggable).
@@ -84,7 +82,6 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      // --- Section children ---
       // Populates SampleItem objects as child nodes under the section.
       // Matches nodes of `SAMPLE_SECTION_TYPE` and queries the space's database.
       // `createObjectNode` builds a standard app-graph node using the registered metadata.
@@ -103,7 +100,6 @@ export default Capability.makeModule(
           );
         },
       }),
-      // --- Type-specific actions ---
       // `AppGraphBuilder.createTypeExtension` is a convenience that matches nodes whose data
       // is an ECHO object of the specified type. The callback receives the typed object.
       AppGraphBuilder.createTypeExtension({
@@ -132,7 +128,6 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      // --- Plank companion ---
       // Companions are side panels attached to a specific object.
       // `AppNode.makeCompanion` creates a companion node with the `PLANK_COMPANION_TYPE`.
       // The `data` string identifies which companion surface to render (matched by the
@@ -151,7 +146,6 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      // --- Deck companion ---
       // Deck companions are workspace-wide panels (not attached to a specific object).
       // `AppNode.makeDeckCompanion` creates a node with `DECK_COMPANION_TYPE`.
       // The surface role follows the convention: `deck-companion--{id}`.

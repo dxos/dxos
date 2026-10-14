@@ -60,7 +60,7 @@ type MessageSubscription = {
 
 export class EdgeSignalManager extends Resource implements SignalManager {
   /**
-   * @deprecated
+   * @deprecated Use `swarmState` instead.
    */
   public swarmEvent = new Event<SwarmEvent>();
   public swarmState = new Event<SwarmResponse>();

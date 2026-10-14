@@ -89,12 +89,12 @@ export type BinderOptions = {
  * Manages bindings of skills and objects to a conversation.
  */
 export class Binder extends Resource {
-  private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
-  private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
-  private readonly _registry: AtomRegistry.AtomRegistry;
-  private readonly _feed: Feed.Feed;
-  private readonly _runtime: Context.Context<Database.Service>;
-  private readonly _hold: boolean;
+  readonly #skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
+  readonly #objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
+  readonly #registry: AtomRegistry.AtomRegistry;
+  readonly #feed: Feed.Feed;
+  readonly #runtime: Context.Context<Database.Service>;
+  readonly #hold: boolean;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
@@ -116,56 +116,56 @@ export class Binder extends Resource {
     super();
     assertArgument(options.feed, 'options.feed', 'Feed is required');
     assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
-    this._feed = options.feed;
-    this._runtime = options.runtime;
-    this._registry = options.registry ?? AtomEx.makeRegistry();
-    this._hold = options.hold ?? false;
+    this.#feed = options.feed;
+    this.#runtime = options.runtime;
+    this.#registry = options.registry ?? AtomEx.makeRegistry();
+    this.#hold = options.hold ?? false;
   }
 
   /**
    * Returns the skills atom for subscription.
    */
   get skills(): Atom.Atom<Skill.Skill[]> {
-    return this._skills;
+    return this.#skills;
   }
 
   /**
    * Returns the objects atom for subscription.
    */
   get objects(): Atom.Atom<Obj.Unknown[]> {
-    return this._objects;
+    return this.#objects;
   }
 
   /**
    * Gets the current skills value.
    */
   getSkills(): Skill.Skill[] {
-    return this._registry.get(this._skills);
+    return this.#registry.get(this.#skills);
   }
 
   /**
    * Gets the current objects value.
    */
   getObjects(): Obj.Unknown[] {
-    return this._registry.get(this._objects);
+    return this.#registry.get(this.#objects);
   }
 
   /**
    * Subscribe to changes in skills.
    */
   subscribeSkills(cb: (skills: Skill.Skill[]) => void): () => void {
-    return this._registry.subscribe(this._skills, () => cb(this._registry.get(this._skills)));
+    return this.#registry.subscribe(this.#skills, () => cb(this.#registry.get(this.#skills)));
   }
 
   /**
    * Subscribe to changes in objects.
    */
   subscribeObjects(cb: (objects: Obj.Unknown[]) => void): () => void {
-    return this._registry.subscribe(this._objects, () => cb(this._registry.get(this._objects)));
+    return this.#registry.subscribe(this.#objects, () => cb(this.#registry.get(this.#objects)));
   }
 
   protected override async _open(): Promise<void> {
-    if (this._hold) {
+    if (this.#hold) {
       this.#pending = [];
       return;
     }
@@ -181,7 +181,7 @@ export class Binder extends Resource {
     if (!held) {
       return;
     }
-    invariant(Obj.getDatabase(this._feed), 'The feed must be stored before its bindings are flushed.');
+    invariant(Obj.getDatabase(this.#feed), 'The feed must be stored before its bindings are flushed.');
     this.#pending = undefined;
     const { skills, objects } = this._reduce(held);
     if (skills.size > 0 || objects.size > 0) {
@@ -195,13 +195,13 @@ export class Binder extends Resource {
   }
 
   private async _follow(): Promise<void> {
-    const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.query(this._feed, Query.type(Binding)),
+    const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this.#runtime))(
+      Feed.query(this.#feed, Query.type(Binding)),
     );
     this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
-    this.#readWrites = bindingWriteCount(this._feed);
+    this.#readWrites = bindingWriteCount(this.#feed);
     const initialResults = await bindingsQuery.run();
     await this._updateBindings(initialResults);
 
@@ -218,7 +218,7 @@ export class Binder extends Resource {
    * as a tool that bound a skill. A no-op when none has been written since the last read.
    */
   async sync(): Promise<void> {
-    const writes = bindingWriteCount(this._feed);
+    const writes = bindingWriteCount(this.#feed);
     if (this.#bindingsQuery && writes !== this.#readWrites) {
       let results: Binding[];
       try {
@@ -235,10 +235,10 @@ export class Binder extends Resource {
       // Only after the update lands, so one that fails is retried by the next sync.
       this.#readWrites = writes;
       log('sync complete', {
-        skills: this._registry.get(this._skills).length,
+        skills: this.#registry.get(this.#skills).length,
         // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
         // make a diagnostic log the thing that breaks the sync.
-        skillKeys: this._registry.get(this._skills).map((skill) => Obj.getMeta(skill).key),
+        skillKeys: this.#registry.get(this.#skills).map((skill) => Obj.getMeta(skill).key),
       });
     }
   }
@@ -261,8 +261,8 @@ export class Binder extends Resource {
     });
 
     // Resolve references (loading them first if needed).
-    const currentSkills = this._registry.get(this._skills);
-    const currentObjects = this._registry.get(this._objects);
+    const currentSkills = this.#registry.get(this.#skills);
+    const currentObjects = this.#registry.get(this.#objects);
     const resolvedSkills = await this._resolve(bindings.skills, currentSkills);
     const resolvedObjects = await this._resolve(bindings.objects, currentObjects);
 
@@ -286,8 +286,8 @@ export class Binder extends Resource {
     const mergedSkills = this._mergeInto(filteredSkills, resolvedSkills);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
-    this._registry.set(this._skills, mergedSkills);
-    this._registry.set(this._objects, mergedObjects);
+    this.#registry.set(this.#skills, mergedSkills);
+    this.#registry.set(this.#objects, mergedObjects);
 
     log('updated bindings', {
       skills: mergedSkills.length,
@@ -297,13 +297,13 @@ export class Binder extends Resource {
 
   protected override async _close(): Promise<void> {
     // Reset atoms to empty state.
-    this._registry.set(this._skills, []);
-    this._registry.set(this._objects, []);
+    this.#registry.set(this.#skills, []);
+    this.#registry.set(this.#objects, []);
   }
 
   async bind({ skills, objects }: BindingProps): Promise<void> {
-    const currentSkills = this._registry.get(this._skills);
-    const currentObjects = this._registry.get(this._objects);
+    const currentSkills = this.#registry.get(this.#skills);
+    const currentObjects = this.#registry.get(this.#objects);
 
     const { added: addedSkills, next: nextSkills } = this._processBindings(skills, currentSkills, this.#bound.skills);
     const { added: addedObjects, next: nextObjects } = this._processBindings(
@@ -318,8 +318,8 @@ export class Binder extends Resource {
     addedObjects.forEach((ref) => this.#bound.objects.add(refKey(ref.uri)));
 
     // Atomic updates - subscribers notified automatically.
-    this._registry.set(this._skills, nextSkills);
-    this._registry.set(this._objects, nextObjects);
+    this.#registry.set(this.#skills, nextSkills);
+    this.#registry.set(this.#objects, nextObjects);
 
     log('bind', { skills: addedSkills.length, objects: addedObjects.length });
     await this._write(
@@ -348,16 +348,16 @@ export class Binder extends Resource {
     const removedSkillKeys = new Set((skills ?? []).map((ref) => refKey(ref.uri)));
     const removedObjectKeys = new Set((objects ?? []).map((ref) => refKey(ref.uri)));
     if (removedSkillKeys.size > 0) {
-      const current = this._registry.get(this._skills);
-      this._registry.set(
-        this._skills,
+      const current = this.#registry.get(this.#skills);
+      this.#registry.set(
+        this.#skills,
         current.filter((obj) => !removedSkillKeys.has(refKey(Obj.getURI(obj)))),
       );
     }
     if (removedObjectKeys.size > 0) {
-      const current = this._registry.get(this._objects);
-      this._registry.set(
-        this._objects,
+      const current = this.#registry.get(this.#objects);
+      this.#registry.set(
+        this.#objects,
         current.filter((obj) => !removedObjectKeys.has(refKey(Obj.getURI(obj)))),
       );
     }
@@ -392,24 +392,24 @@ export class Binder extends Resource {
    */
   private async _resolveHeld(held: Binding[]): Promise<void> {
     const generation = ++this.#heldGeneration;
-    const { db } = Context.get(this._runtime, Database.Service);
+    const { db } = Context.get(this.#runtime, Database.Service);
     const { skills, objects } = this._reduce(held);
     const hydrate = <T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>): Ref.Ref<T>[] =>
       [...refs].map((ref) => (ref.isAvailable ? ref : db.makeRef<T>(ref.uri)));
     const [resolvedSkills, resolvedObjects] = await Promise.all([
-      this._resolve(hydrate(skills), this._registry.get(this._skills)),
-      this._resolve(hydrate(objects), this._registry.get(this._objects)),
+      this._resolve(hydrate(skills), this.#registry.get(this.#skills)),
+      this._resolve(hydrate(objects), this.#registry.get(this.#objects)),
     ]);
     if (generation !== this.#heldGeneration) {
       return;
     }
-    this._registry.set(this._skills, resolvedSkills);
-    this._registry.set(this._objects, resolvedObjects);
+    this.#registry.set(this.#skills, resolvedSkills);
+    this.#registry.set(this.#objects, resolvedObjects);
   }
 
   private async _append(binding: Binding): Promise<void> {
-    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Feed.append(this._feed, [binding]));
-    countBindingWrite(this._feed);
+    await RuntimeProvider.runPromise(Effect.succeed(this.#runtime))(Feed.append(this.#feed, [binding]));
+    countBindingWrite(this.#feed);
   }
 
   /**

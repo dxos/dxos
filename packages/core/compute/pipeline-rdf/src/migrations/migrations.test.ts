@@ -13,7 +13,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
-import * as FactStoreLive from '../store/fact-store-live.ts';
+import * as FactStoreLive from '../store/FactStoreLive.ts';
 import { FactStore } from '../store/fact-store.ts';
 import * as Vocab from '../types/Vocab.ts';
 import init from './0001_init.sql?raw';

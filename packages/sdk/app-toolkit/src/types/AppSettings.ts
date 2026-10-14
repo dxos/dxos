@@ -38,11 +38,10 @@ export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos
 
 /** Create an empty settings object. Keyed by its typename, so copies created on separate devices merge. */
 export const make = (): AppSettings => {
-  const settings = Obj.make(AppSettings, { shared: {} });
-  Obj.update(settings, (settings) => {
-    Obj.getMeta(settings).convergenceKey = Type.getTypename(AppSettings);
+  return Obj.make(AppSettings, {
+    [Obj.Meta]: { convergenceKey: Type.getTypename(AppSettings) },
+    shared: {},
   });
-  return settings;
 };
 
 /** Create an empty device layer, for the local store's initial value. */

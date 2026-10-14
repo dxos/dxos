@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
@@ -16,12 +16,6 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { TASK_GRID, TASK_GRID_CONTENT, TASK_GRID_ICON } from '../task-grid.ts';
-
-/**
- * Stops an event at the question: it sits inside a listbox row, whose click selects the task and
- * whose arrow keys move the selection, and typing an answer must do neither.
- */
-const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 export type TaskQuestionProps = Util.ThemedClassName<{
   thread: Task.QuestionThread;
@@ -121,9 +115,9 @@ export const TaskQuestion = ({
       // be. The host places the question as a whole; the question places what is inside it.
       className={mx(TASK_GRID, 'gap-y-2 text-sm', classNames)}
       data-testid='task-question'
-      onClick={stop}
-      onPointerDown={stop}
-      onKeyDown={stop}
+      onClick={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
     >
       {/* The question's own row: its glyph in the shared column, its text beside it. Everything
           below — the context, the options, the answer field — is that same second column, so the

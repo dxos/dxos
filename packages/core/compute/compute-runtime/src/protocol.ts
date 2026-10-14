@@ -488,11 +488,11 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       if (typeof value !== 'object' || value === null || Array.isArray(value)) {
         return value;
       }
-      const result: Record<string, unknown> = { ...(value as any) };
+      const result: Record<string, unknown> = { ...value };
       for (const prop of SchemaAST.getPropertySignatures(encoded)) {
         const key = prop.name.toString();
         if (key in result) {
-          result[key] = decodeRefsFromSchema(prop.type, (result as any)[key], db);
+          result[key] = decodeRefsFromSchema(prop.type, result[key], db);
         }
       }
       return result;

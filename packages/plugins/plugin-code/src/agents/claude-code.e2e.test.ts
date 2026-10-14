@@ -100,7 +100,7 @@ const findRequest = (feed: Feed.Feed) =>
 describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on this computer, end to end', () => {
   const TestLayer = Layer.mergeAll(
     TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
-    Layer.succeed(Trace.TraceService, { write: () => {} }),
+    Trace.writerLayerNoop,
   );
 
   /**

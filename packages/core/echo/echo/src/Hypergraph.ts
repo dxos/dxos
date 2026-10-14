@@ -79,7 +79,7 @@ export interface Hypergraph extends Database.Queryable {
    *
    * @performance O(1); allocates a resolver closure.
    */
-  createRefResolver(options: RefResolverOptions): Ref.Resolver;
+  createRefResolver(options?: RefResolverOptions): Ref.Resolver;
 
   /**
    * Get a database by space ID.

@@ -13,9 +13,7 @@ import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source.ts';
 import * as StateStore from '../StateStore.ts';
-import type * as Type from '../types.ts';
-
-// --- Fixture shape (a lean subset of plugin-discord's DiscordChannelFixture) -----------------------
+import type * as Type from '../Type.ts';
 
 export type FixtureMessage = {
   readonly 'id'?: string;
@@ -35,8 +33,6 @@ export type Fixture = {
   readonly messages: readonly FixtureMessage[];
   readonly threads?: readonly FixtureThread[];
 };
-
-// --- FixtureSource --------------------------------------------------------------------------------
 
 // The id is the crawl cursor, so a fixture without one is a hard error rather than silently dropped.
 const messageId = (message: FixtureMessage): string => {
@@ -112,8 +108,6 @@ export const makeFixtureSource = (fixture: Fixture): SourceApi => {
 
 export const fixtureSourceLayer = (fixture: Fixture): Layer.Layer<Source> =>
   Layer.succeed(Source, makeFixtureSource(fixture));
-
-// --- Deterministic (no-LLM) extractor -------------------------------------------------------------
 
 const STOP_WORDS = new Set([
   'The',
@@ -268,8 +262,6 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
         } as any),
     }),
   );
-
-// --- Composed test layer + synthetic fixtures -----------------------------------------------------
 
 /**
  * State + agent registry + semantic store, with NO `Source` and NO `AiService`. Compose with a

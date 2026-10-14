@@ -70,7 +70,9 @@ export type Resolved = {
  * that file via `Plugin.getMetaFromConfig`, so it carries the same `Config2.Plugin` shape a
  * published manifest does.
  */
-const resolveDirectory = (locator: string): Effect.Effect<Resolved, PluginInstallError, any> =>
+const resolveDirectory = (
+  locator: string,
+): Effect.Effect<Resolved, PluginInstallError, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -147,7 +149,7 @@ const resolveAsset = (asset: string, manifestUrl: string): Effect.Effect<PluginA
   });
 
 /** Fetches a published manifest and lists the files to snapshot. */
-const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallError, any> =>
+const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallError, HttpClient.HttpClient> =>
   Effect.gen(function* () {
     const response = yield* HttpClientRequest.get(manifestUrl).pipe(
       HttpClient.execute,
@@ -205,7 +207,7 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
 export const resolveLocator = (
   locator: string,
   { dev }: { dev: boolean },
-): Effect.Effect<Resolved, PluginInstallError, any> => {
+): Effect.Effect<Resolved, PluginInstallError, FileSystem.FileSystem | Path.Path | HttpClient.HttpClient> => {
   if (isUrl(locator)) {
     return dev
       ? Effect.fail(

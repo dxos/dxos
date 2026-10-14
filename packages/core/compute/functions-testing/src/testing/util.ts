@@ -15,6 +15,7 @@ import { Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { bundleFunction } from '@dxos/edge-compute/native';
 import type { BundleResult } from '@dxos/edge-compute/native';
+import { log } from '@dxos/log';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
@@ -45,7 +46,7 @@ export const sync = async (space: Space) => {
   await space.db.flush();
   await space.internal.syncToEdge({
     onProgress: (state) =>
-      console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),
+      log.info(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),
   });
 };
 
@@ -100,7 +101,7 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
             count: count++,
             begin: invocation,
           });
-          console.log(
+          log.info(
             `${count.toString().padStart(3, ' ')}: BEGIN ${invocation.runtime ?? '(unknown runtime)'} ${JSON.stringify(invocation.input)}`,
           );
         } else if (Obj.instanceOf(InvocationTraceEndEvent, invocation)) {
@@ -111,11 +112,11 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
           data.end = invocation;
 
           const outcome = data.end.outcome;
-          console.log(
+          log.info(
             `${data.count.toString().padStart(3, ' ')}: END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`,
           );
           if (outcome === 'failure' && data.end.error) {
-            console.error(ErrorCodec.decode(data.end.error));
+            log.error('invocation failed', { error: ErrorCodec.decode(data.end.error) });
           }
         }
       }
@@ -127,7 +128,7 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
         break;
       }
     } catch (err) {
-      console.error(err);
+      log.catch(err);
     }
     await sleep(1_000);
   }

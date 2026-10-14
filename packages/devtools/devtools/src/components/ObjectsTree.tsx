@@ -144,8 +144,7 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
   }, [node.entity]);
   const handlePrintToConsole = useCallback(async () => {
     const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
-    // eslint-disable-next-line no-console
-    console.log(obj);
+    log.info('object', { obj });
   }, [node.id, model.database]);
   const handleDelete = useCallback(async () => {
     const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();

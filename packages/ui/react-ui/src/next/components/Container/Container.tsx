@@ -114,7 +114,7 @@ export const containerAttributes = ({
   width,
   fixed,
   padBlock,
-}: ContainerProps) => {
+}: ContainerProps = {}) => {
   const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
   const style: CSSProperties & CSSVariables = columns ? { ...spanStyle, '--dx-columns': columns } : spanStyle;
   return {

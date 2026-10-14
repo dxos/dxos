@@ -444,7 +444,7 @@ export class RpcPeer {
     } else if (response.content.case === 'error') {
       throw decodeRpcError(response.content.value, method);
     } else {
-      throw new Error('Malformed response.');
+      throw new Error(`Malformed response: unexpected content case '${String(response.content.case)}'.`);
     }
   }
 
@@ -474,7 +474,7 @@ export class RpcPeer {
             next(response.content.value);
             break;
           default:
-            throw new Error('Malformed response.');
+            throw new Error(`Malformed response: unexpected content case '${String(response.content.case)}'.`);
         }
       };
 

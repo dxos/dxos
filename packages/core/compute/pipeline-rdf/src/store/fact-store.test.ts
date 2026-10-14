@@ -10,8 +10,8 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import * as Statement from 'effect/sql/Statement';
 
 import { type Fact, Ontology, Vocab } from '../types/index.ts';
-import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
+import * as FactStoreLive from './FactStoreLive.ts';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   assertion: {

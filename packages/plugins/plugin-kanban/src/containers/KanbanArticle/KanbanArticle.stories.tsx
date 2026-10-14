@@ -83,7 +83,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
  * Renders the first Kanban in the space via Surface (resolves to KanbanArticle),
  * with a sidebar containing ViewEditor and Json filter.
  */
-const DefaultComponent = () => {
+const DefaultStory = () => {
   const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
@@ -152,14 +152,14 @@ const DefaultComponent = () => {
 
 const meta = {
   title: 'plugins/plugin-kanban/containers/Kanban',
-  component: DefaultComponent,
-  render: () => <DefaultComponent />,
+  component: DefaultStory,
+  render: () => <DefaultStory />,
   decorators: [withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof DefaultComponent>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

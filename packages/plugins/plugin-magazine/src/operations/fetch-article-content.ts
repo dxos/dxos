@@ -17,9 +17,10 @@ const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> =
   Operation.withHandler(
     Effect.fn(function* ({ post: postRef }) {
       const post = yield* Database.load(postRef);
-      invariant(post.link, 'Post has no link.');
+      const link = post.link;
+      invariant(link, 'Post has no link.');
       return yield* Effect.tryPromise({
-        try: () => fetchArticle(post.link!, { corsProxy: browserCorsProxy() }),
+        try: () => fetchArticle(link, { corsProxy: browserCorsProxy() }),
         catch: ArticleFetchError.wrap(),
       });
     }),

@@ -44,6 +44,9 @@ const DiscordTokenForm = Schema.Struct({
   }),
 });
 
+/** Fetches the bot or user identity behind the provided REST layer (`GET /users/@me`). */
+const getMyUser = Effect.flatMap(DiscordREST, (rest) => rest.getMyUser());
+
 /**
  * Validate the pasted token against `GET /users/@me` before letting the
  * coordinator persist the Connection.
@@ -56,10 +59,7 @@ const DiscordTokenForm = Schema.Struct({
  * round-trip.
  */
 const validateToken = (token: string) =>
-  Effect.gen(function* () {
-    const rest = yield* DiscordREST;
-    return yield* rest.getMyUser();
-  }).pipe(
+  getMyUser.pipe(
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.mapError((error) => {
       if (isDiscordErrorResponse(error) && discordErrorStatus(error) === 401) {
@@ -121,10 +121,7 @@ const makeOnTokenCreated =
         return;
       }
       const token = yield* resolveDiscordToken(accessToken);
-      const self = yield* Effect.gen(function* () {
-        const rest = yield* DiscordREST;
-        return yield* rest.getMyUser();
-      }).pipe(Effect.provide(makeLayer(token)));
+      const self = yield* getMyUser.pipe(Effect.provide(makeLayer(token)));
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       });
@@ -140,10 +137,7 @@ const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
  */
 const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.flatMap(resolveDiscordToken(accessToken), (token) =>
-    Effect.gen(function* () {
-      const rest = yield* DiscordREST;
-      yield* rest.getMyUser();
-    }).pipe(Effect.provide(makeDiscordUserLayerFromToken(token))),
+    getMyUser.pipe(Effect.provide(makeDiscordUserLayerFromToken(token))),
   ).pipe(
     Effect.asVoid,
     Effect.mapError(

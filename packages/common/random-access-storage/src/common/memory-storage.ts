@@ -47,7 +47,7 @@ export class MemoryStorage extends AbstractStorage {
     let used = 0;
 
     for (const file of this._files.values()) {
-      const size = (file as any).length;
+      const size = 'length' in file && typeof file.length === 'number' ? file.length : 0;
       used += Number.isNaN(size) ? 0 : size;
     }
 

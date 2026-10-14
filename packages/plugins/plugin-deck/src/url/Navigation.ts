@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Option from 'effect/Option';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';

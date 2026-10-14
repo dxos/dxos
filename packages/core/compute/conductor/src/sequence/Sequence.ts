@@ -23,7 +23,7 @@ export const Definition = Schema.Struct({
 
 export type Definition = Schema.Schema.Type<typeof Definition>;
 /**
- * @deprecated
+ * @deprecated Use the compute graph workflow (`ComputeGraph` in `types/graph.ts`) instead.
  */
 export class Sequence extends Type.makeObject<Sequence>(DXN.make('org.dxos.type.sequence', '0.1.0'))(
   Schema.Struct({

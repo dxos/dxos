@@ -294,13 +294,13 @@ const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, un
 
   if (rawContext instanceof Error) {
     // Structured debug info attached to thrown errors lives on `.context`.
-    mergeInto((rawContext as any).context);
+    mergeInto(readErrorContext(rawContext));
   } else {
     mergeInto(rawContext);
   }
 
   if (entry.error) {
-    mergeInto((entry.error as any).context);
+    mergeInto(readErrorContext(entry.error));
   }
 
   return result;

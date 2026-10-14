@@ -36,6 +36,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
@@ -126,7 +127,7 @@ export type ChatErrorAction = { readonly labelKey: string };
  * offer a usage-dashboard link declaratively — the UI renders whatever action an error declares rather
  * than branching on the error type.
  */
-export class AiUsageQuotaError extends Error {
+export class AiUsageQuotaError extends BaseError.extend('AiUsageQuotaError', QUOTA_EXCEEDED_MESSAGE) {
   readonly action: ChatErrorAction = { labelKey: 'view-usage.label' };
 }
 
@@ -214,7 +215,7 @@ const unavailableModel = (err: unknown): string | undefined => {
 export const parseError = (err: unknown): Error => {
   const quotaError = findInCause(err, UsageQuotaExceededError.is);
   if (quotaError || isQuotaError(err)) {
-    return new AiUsageQuotaError(quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, { cause: err });
+    return new AiUsageQuotaError({ message: quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, cause: err });
   }
 
   const model = unavailableModel(err);

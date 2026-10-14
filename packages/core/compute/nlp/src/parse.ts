@@ -31,8 +31,8 @@ const TaggedSentences = Schema.Struct({
  * Tag `text` with UPOS via a small LLM, then deterministically align tokens to source offsets.
  * Provides the LanguageModel internally; residual requirement is {@link AiService.AiService}.
  */
-export const parseText = (text: string) =>
-  Effect.gen(function* () {
+export const parseText = Effect.fnUntraced(
+  function* (text: string) {
     const { value } = yield* Effect.scoped(
       LanguageModel.generateObject({
         schema: TaggedSentences,
@@ -48,7 +48,9 @@ export const parseText = (text: string) =>
       }),
     );
     return assembleDocument(text, value.sentences);
-  }).pipe(Effect.provide(AiService.languageModel(PARSE_MODEL)));
+  },
+  Effect.provide(AiService.languageModel(PARSE_MODEL)),
+);
 
 /** The pluggable parser contract consumed by the editor extension and pipeline. */
 export type Parser = (text: string) => Promise<Document>;

@@ -22,7 +22,7 @@ export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
 /**
- * @deprecated
+ * @deprecated Use generators in schema package.
  */
 export enum TestSchemaType {
   document = 'com.example.type.document',
@@ -32,7 +32,7 @@ export enum TestSchemaType {
 }
 
 /**
- * @deprecated
+ * @deprecated Use generators in schema package.
  */
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = Schema.Struct({

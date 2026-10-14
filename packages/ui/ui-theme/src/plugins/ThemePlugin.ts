@@ -133,7 +133,7 @@ const writeConsumerTheme = ({
  * Vite plugin to configure theme.
  * Returns the official Tailwind Vite plugin (persistent incremental scanner) alongside the theme plugin.
  */
-export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
+export const ThemePlugin = (options: ThemePluginOptions = {}): Plugin[] => {
   // `src` is published too, so only the location tells a workspace checkout from an installed copy.
   const packageRoot = realpathSync(resolve(import.meta.dirname, ROOT));
   const isMonorepo = !packageRoot.split(sep).includes('node_modules');

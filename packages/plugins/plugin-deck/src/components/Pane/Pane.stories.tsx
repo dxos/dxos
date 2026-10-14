@@ -41,7 +41,7 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
 };
 
 // A presentational preview of the solo split: a main Pane beside a companion Pane (tabs + close).
-const SplitStory = () => {
+const DefaultStory = () => {
   const [tab, setTab] = useState('notes');
   const activeTab = TABS.find((entry) => entry.id === tab);
   return (
@@ -83,7 +83,7 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = {
-  render: () => <SplitStory />,
+  render: () => <DefaultStory />,
   decorators: [withAttention('plank-main')],
 };
 

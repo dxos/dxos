@@ -17,7 +17,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
 
-import { useChatReportContext } from '../../components/Chat/context.ts';
+import { useChatReportContext } from '../../components/Chat/index.ts';
 
 const INTEGRATION_PROMPT_NAME = 'IntegrationPrompt';
 

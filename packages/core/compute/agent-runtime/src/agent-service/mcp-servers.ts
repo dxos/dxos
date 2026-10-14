@@ -49,14 +49,14 @@ const toOptions = (
  * Resolves through {@link Credential.CredentialsService} rather than reading `token` directly, so a
  * token EDGE custodies (a managed one) resolves the same way a pasted one does.
  */
-const resolveAccessToken = (ref: Ref.Ref<AccessToken.AccessToken>) =>
-  Effect.gen(function* () {
+const resolveAccessToken = Effect.fnUntraced(
+  function* (ref: Ref.Ref<AccessToken.AccessToken>) {
     const accessToken = yield* Database.load(ref);
     const credentials = yield* Credential.CredentialsService;
     const credential = yield* Effect.tryPromise(() => credentials.getCredential({ accessTokenId: accessToken.id }));
     return Option.fromNullishOr(credential.apiKey);
-  }).pipe(
-    // The connection then goes out without a key, and the server's 401 reports what is wrong.
-    Effect.tapError((error) => Effect.sync(() => log.warn('failed to resolve MCP server credential', { error }))),
-    Effect.orElseSucceed(() => Option.none<string>()),
-  );
+  },
+  // The connection then goes out without a key, and the server's 401 reports what is wrong.
+  Effect.tapError((error) => Effect.sync(() => log.warn('failed to resolve MCP server credential', { error }))),
+  Effect.orElseSucceed(() => Option.none<string>()),
+);

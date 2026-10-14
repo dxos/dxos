@@ -672,7 +672,7 @@ const main = async () => {
   // The fatal dialog renders outside the plugin manager, so it cannot resolve the support service
   // itself; it gets a bound submit, or nothing when there is no service to file against.
   const supportEndpoint = SupportService.supportEndpoint(config);
-  const submitReport = supportEndpoint
+  const handleReportSubmit = supportEndpoint
     ? async (report: SupportOperation.SupportRequest) => {
         await EffectEx.runPromise(
           SupportService.submitSupportReport({
@@ -725,7 +725,7 @@ const main = async () => {
             <ResetDialog
               error={error}
               logStore={logStore}
-              onSubmitReport={submitReport}
+              onSubmitReport={handleReportSubmit}
               needRefresh={needRefresh}
               onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
               onReset={import.meta.env.DEV ? handleReset : undefined}

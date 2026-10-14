@@ -76,14 +76,11 @@ export const ImportSpaceDialog = () => {
             align='center'
             justify='center'
             gap='sm'
-            asChild
             role='status'
             classNames='my-4 p-8 border-2 border-dashed border-separator rounded-sm'
           >
-            <div>
-              <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
-              <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
-            </div>
+            <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
+            <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
           </Layout.Flex>
         ) : (
           <FileUploader

@@ -98,7 +98,7 @@ type LobbyToolbarProps = Util.ThemedClassName<
 
 const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
   const call = Hooks.useCapability(CallsCapabilities.Manager);
-  const [count, setCount] = useState<number>(0);
+  const [count, setCount] = useState(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
   useEffect(() => {

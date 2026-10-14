@@ -13,7 +13,7 @@ import * as Stream from 'effect/Stream';
 import { type StateError } from './errors.ts';
 import { Source } from './Source.ts';
 import * as StateStore from './StateStore.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 /** Durable outcome of a drained (or paused) crawl, read back from the {@link StateStore}. */
 export type Summary = {
@@ -55,16 +55,15 @@ const pickTarget = (targets: readonly Type.Target[], volatile: Volatile): Type.T
 };
 
 /** Seed the frontier with the configured top-level channels (idempotent — only when empty). */
-const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, StateStore.StateStore> =>
-  Effect.gen(function* () {
-    const existing = yield* StateStore.listTargets();
-    if (existing.length > 0) {
-      return;
-    }
-    yield* StateStore.pushTargets(
-      config.channels.map((channelId) => ({ id: channelId, channelId, depth: 0, status: 'pending' as const })),
-    );
-  });
+const seedFrontier = Effect.fnUntraced(function* (config: Type.Config) {
+  const existing = yield* StateStore.listTargets();
+  if (existing.length > 0) {
+    return;
+  }
+  yield* StateStore.pushTargets(
+    config.channels.map((channelId) => ({ id: channelId, channelId, depth: 0, status: 'pending' as const })),
+  );
+});
 
 /**
  * One bounded crawl step: fetch the next page for the top frontier target and return the events it
@@ -204,11 +203,10 @@ export const commit = (event: Type.Event): Effect.Effect<void, StateError, State
 };
 
 /** Read the durable outcome back from the {@link StateStore} after a drain (or pause). */
-export const summarize = (): Effect.Effect<Summary, StateError, StateStore.StateStore> =>
-  Effect.gen(function* () {
-    const targets = yield* StateStore.listTargets();
-    return {
-      done: !targets.some((target) => target.status === 'pending' || target.status === 'active'),
-      errored: targets.filter((target) => target.status === 'error').length,
-    };
-  });
+export const summarize = Effect.fnUntraced(function* (): Effect.fn.Return<Summary, StateError, StateStore.StateStore> {
+  const targets = yield* StateStore.listTargets();
+  return {
+    done: !targets.some((target) => target.status === 'pending' || target.status === 'active'),
+    errored: targets.filter((target) => target.status === 'error').length,
+  };
+});

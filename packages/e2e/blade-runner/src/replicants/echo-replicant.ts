@@ -98,7 +98,7 @@ export class EchoReplicant {
     invariant(this._db, 'Database not initialized.');
     for (let objIdx = 0; objIdx < amount; objIdx++) {
       const doc = Obj.make(Text, { content: '' }) satisfies Text;
-      this._db!.add(doc);
+      this._db.add(doc);
       const accessor = Doc.createAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {
         const length = doc.content?.length;

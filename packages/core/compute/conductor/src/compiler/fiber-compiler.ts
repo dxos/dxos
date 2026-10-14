@@ -239,7 +239,7 @@ export class GraphExecutor {
 
   getMeta(nodeId: string): ComputeNodeMeta {
     invariant(this._topology, 'Graph not loaded');
-    const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+    const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return node.meta;
   }
 
@@ -249,7 +249,7 @@ export class GraphExecutor {
    */
   getInputSchema(nodeId: string): Schema.Codec<any, any> {
     invariant(this._topology, 'Graph not loaded');
-    const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+    const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return Schema.Struct(Object.fromEntries(node.outputs.map((output) => [output.name, output.schema] as const)));
   }
 
@@ -259,7 +259,7 @@ export class GraphExecutor {
    */
   getOutputSchema(nodeId: string): Schema.Codec<any, any> {
     invariant(this._topology, 'Graph not loaded');
-    const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+    const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return Schema.Struct(Object.fromEntries(node.inputs.map((input) => [input.name, input.schema] as const)));
   }
 
@@ -277,16 +277,16 @@ export class GraphExecutor {
 
   computeInput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
     return Effect.gen({ self: this }, function* () {
-      invariant(this._topology, 'Graph not loaded');
-      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const topology = this._topology;
+      invariant(topology, 'Graph not loaded');
+      const node = topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
       const input = node.inputs.find((input) => input.name === prop) ?? failedInvariant();
 
       let value: unknown;
       switch (input.kind) {
         case InputKind.Scalar: {
           invariant(input.sources.length === 1, 'Scalar input must be bound to a single output');
-          const sourceNode =
-            this._topology!.nodes.find((node) => node.id === input.sources[0].nodeId) ?? failedInvariant();
+          const sourceNode = topology.nodes.find((node) => node.id === input.sources[0].nodeId) ?? failedInvariant();
           value = yield* this.computeOutput(sourceNode.id, input.sources[0].property);
           invariant(!Effect.isEffect(value));
           break;
@@ -296,7 +296,7 @@ export class GraphExecutor {
             input.sources,
             Effect.fnUntraced(
               function* (this: GraphExecutor, source: TopologyNodeConnector) {
-                const sourceNode = this._topology!.nodes.find((node) => node.id === source.nodeId) ?? failedInvariant();
+                const sourceNode = topology.nodes.find((node) => node.id === source.nodeId) ?? failedInvariant();
                 const value = yield* this.computeOutput(sourceNode.id, source.property);
                 invariant(!Effect.isEffect(value));
                 return Array.isArray(value) ? value : [value];
@@ -408,7 +408,7 @@ export class GraphExecutor {
         return result;
       }
 
-      const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
       const compute = Effect.gen({ self: this }, function* () {
         const inputValues = yield* this.computeInputs(nodeId);
@@ -498,6 +498,8 @@ export class GraphExecutor {
    * Returns node ids of all nodes that depend on the given node.
    */
   getAllDependantNodes(nodeId: string): string[] {
+    const topology = this._topology;
+    invariant(topology, 'Graph not loaded');
     const visited = new Set<string>();
 
     const recurse = (node: TopologyNode) => {
@@ -508,13 +510,12 @@ export class GraphExecutor {
       visited.add(node.id);
       for (const output of node.outputs) {
         for (const bound of output.boundTo) {
-          recurse(this._topology!.nodes.find((node) => node.id === bound.nodeId) ?? failedInvariant());
+          recurse(topology.nodes.find((node) => node.id === bound.nodeId) ?? failedInvariant());
         }
       }
     };
 
-    invariant(this._topology, 'Graph not loaded');
-    const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+    const node = topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     recurse(node);
 
     visited.delete(nodeId);

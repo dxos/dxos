@@ -76,7 +76,7 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
   }, [invokePromise, db, channel]);
 
   return (
-    <div>
+    <>
       <Layout.Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
         <Button.Root onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button.Root>
       </Layout.Flex>
@@ -89,7 +89,7 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
           </Listbox.Content>
         </Listbox.Viewport>
       </Listbox.Root>
-    </div>
+    </>
   );
 };
 

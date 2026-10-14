@@ -16,11 +16,6 @@ import { Text } from '@dxos/schema';
 
 import { getSkillId, useActiveSkills, useSkillHandlers, useSkills } from './useSkillRegistry.ts';
 
-/**
- * A skill the user authored in a space, which — unlike a registry skill — carries no registry key.
- */
-const makeSpaceSkill = (name: string) => Obj.make(Skill.Skill, { name, instructions: Template.make(), tools: [] });
-
 const setup = Effect.fnUntraced(function* () {
   const feed = yield* Database.add(Feed.make());
   const runtime = yield* Effect.context<Database.Service>();
@@ -35,7 +30,9 @@ describe('skill picker hooks', () => {
   test('binds a keyless space skill', async () => {
     await Effect.gen(function* () {
       const { context } = yield* setup();
-      const skill = yield* Database.add(makeSpaceSkill('Local'));
+      const skill = yield* Database.add(
+        Obj.make(Skill.Skill, { name: 'Local', instructions: Template.make(), tools: [] }),
+      );
 
       const { result } = renderHook(() => ({
         active: useActiveSkills({ context }),
@@ -59,8 +56,10 @@ describe('skill picker hooks', () => {
 
   test('lists keyless space skills as distinct entries', async () => {
     await Effect.gen(function* () {
-      const first = yield* Database.add(makeSpaceSkill('A'));
-      const second = yield* Database.add(makeSpaceSkill('B'));
+      const first = yield* Database.add(Obj.make(Skill.Skill, { name: 'A', instructions: Template.make(), tools: [] }));
+      const second = yield* Database.add(
+        Obj.make(Skill.Skill, { name: 'B', instructions: Template.make(), tools: [] }),
+      );
       const db = Obj.getDatabase(first);
 
       const { result } = renderHook(() => useSkills({ db }));

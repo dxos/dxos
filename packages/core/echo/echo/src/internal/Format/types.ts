@@ -50,7 +50,7 @@ export const FormatAnnotationId = '@dxos/schema/annotation/Format';
 
 export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotationId);
 
-/** @deprecated */
+/** @deprecated Use `FormatAnnotation.getFromAst`. */
 export const getFormatAnnotation = (node: SchemaAST.AST): TypeFormat | undefined =>
   SchemaAST.getAnnotation<TypeFormat>(node, FormatAnnotationId);
 
@@ -181,6 +181,6 @@ export const OptionsAnnotationId = '@dxos/schema/annotation/Options';
 export type Options = string | number;
 export const OptionsAnnotation = createAnnotationHelper<Options[]>(OptionsAnnotationId);
 
-/** @deprecated */
+/** @deprecated Use `OptionsAnnotation.getFromAst`. */
 export const getOptionsAnnotation = (node: SchemaAST.AST): Options[] | undefined =>
   SchemaAST.getAnnotation<Options[]>(node, OptionsAnnotationId);

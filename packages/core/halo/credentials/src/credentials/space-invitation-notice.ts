@@ -17,7 +17,7 @@ import {
 import { createDidFromIdentityKey } from '../did.ts';
 import { specificCredential } from './assertions.ts';
 import { type CredentialSigner } from './credential-factory.ts';
-import { getCredentialProofPayload } from './signing.ts';
+import { getCredentialSigningPayload } from './signing.ts';
 import { verifyCredential } from './verifier.ts';
 
 /** Tolerated sender clock drift before a notice counts as dated in the future. */
@@ -109,7 +109,7 @@ export const verifySpaceInvitationNotice = async (
 
   // The id is not signed, so it is recomputed; otherwise one signed notice could be replayed under many ids.
   const id = PublicKey.from(
-    await subtleCrypto.digest('SHA-256', new Uint8Array(getCredentialProofPayload(credential))),
+    await subtleCrypto.digest('SHA-256', new Uint8Array(getCredentialSigningPayload(credential))),
   );
   if (!id.equals(claimedId)) {
     return { kind: 'fail', reason: 'malformed', errors: ['Credential id does not match its payload.'] };

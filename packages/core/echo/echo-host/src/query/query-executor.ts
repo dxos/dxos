@@ -845,8 +845,7 @@ export class QueryExecutor extends Resource {
     // ExecutionTrace.putOnPerformanceTimeline(trace);
 
     if (TRACE_QUERY_EXECUTION) {
-      // eslint-disable-next-line no-console
-      console.log(ExecutionTrace.format(trace), trace.sql, trace.explain);
+      log.info(ExecutionTrace.format(trace), { sql: trace.sql, explain: trace.explain });
     }
 
     return { changed };

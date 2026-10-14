@@ -119,7 +119,7 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
             {channel ? (
               <Logger.List checkable={false} />
             ) : (
-              <p className='p-2 text-description'>No Discord channel in this space.</p>
+              <p className='p-2 text-fg-muted'>No Discord channel in this space.</p>
             )}
           </Logger.Content>
         </Panel.Body>

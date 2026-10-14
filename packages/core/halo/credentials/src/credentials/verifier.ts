@@ -8,7 +8,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { type Chain, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { isValidAuthorizedDeviceCredential } from './assertions.ts';
-import { getCredentialProofPayload } from './signing.ts';
+import { getCredentialSigningPayload } from './signing.ts';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 
@@ -64,7 +64,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
     };
   }
 
-  const signData = getCredentialProofPayload(credential);
+  const signData = getCredentialSigningPayload(credential);
   if (!(await verifySignature(signer, signData, proof.value))) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }

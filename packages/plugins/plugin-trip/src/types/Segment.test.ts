@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { Annotation } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { Place } from './Place.ts';
@@ -38,16 +38,20 @@ describe('Segment schemas', () => {
 
     // Transport / activity → departAt / arriveAt.
     const flight = Segment.makeDefault('flight');
-    Segment.setDepartAt(flight, depart);
-    Segment.setArriveAt(flight, arrive);
+    Obj.update(flight, (flight) => {
+      Segment.setDepartAt(flight, depart);
+      Segment.setArriveAt(flight, arrive);
+    });
     expect(Segment.getDepartAt(flight)).toBe(depart);
     expect(Segment.getArriveAt(flight)).toBe(arrive);
     expect(flight.details._tag === 'flight' && flight.details.departAt).toBe(depart);
 
     // Accommodation → checkIn / checkOut.
     const stay = Segment.makeDefault('accommodation');
-    Segment.setDepartAt(stay, depart);
-    Segment.setArriveAt(stay, arrive);
+    Obj.update(stay, (stay) => {
+      Segment.setDepartAt(stay, depart);
+      Segment.setArriveAt(stay, arrive);
+    });
     expect(Segment.getDepartAt(stay)).toBe(depart);
     expect(Segment.getArriveAt(stay)).toBe(arrive);
     expect(stay.details._tag === 'accommodation' && stay.details.checkIn).toBe(depart);

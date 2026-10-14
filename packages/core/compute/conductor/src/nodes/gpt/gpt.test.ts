@@ -18,18 +18,11 @@ import { createTestServices } from '@dxos/edge-compute/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
+import { operationServiceLayerStub } from '../../testing/index.ts';
 import { ValueBag, layerNoop as computeNodeContextLayerNoop } from '../../types/index.ts';
 import { type GptInput, gptNode } from './gpt.ts';
 
 const ENABLE_LOGGING = true;
-
-// `Operation.Service` stub — `gptNode` requires the tag in context but the tested paths do not
-// invoke other operations, so any invocation dies loudly rather than silently no-oping.
-const operationServiceLayer = Layer.succeed(Operation.Service, {
-  invoke: () => Effect.die('Operation.Service not available in test.'),
-  schedule: () => Effect.die('Operation.Service not available in test.'),
-  invokePromise: async () => ({ error: new Error('Operation.Service not available in test.') }),
-} satisfies Operation.OperationService);
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   describe('common', () => {
@@ -49,7 +42,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       testLayer = Layer.mergeAll(
         createTestServices({ db, logging: { enabled: ENABLE_LOGGING } }),
         AiService.notAvailable,
-        operationServiceLayer,
+        operationServiceLayerStub,
         registryLayerNoop,
       );
     });

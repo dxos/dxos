@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -51,13 +52,14 @@ const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
  */
 const queryAll = async (db: EchoDatabase, expected: number): Promise<Obj.Unknown[]> => {
   let objects: Obj.Unknown[] = [];
-  for (let attempt = 0; attempt < 5 && objects.length < expected; attempt++) {
-    if (attempt > 0) {
-      // An immediate retry would re-read the same not-yet-loaded state.
-      await new Promise((resolve) => setTimeout(resolve, 1_000));
-    }
-    objects = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
-  }
+  await waitForCondition({
+    condition: async () => {
+      objects = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+      return objects.length >= expected;
+    },
+    timeout: 5_000,
+    interval: 1_000,
+  }).catch(() => {});
   return objects;
 };
 

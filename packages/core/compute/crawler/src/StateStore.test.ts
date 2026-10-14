@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import * as StateStore from './StateStore.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 const target = (id: string, over: Partial<Type.Target> = {}): Type.Target => ({
   id,

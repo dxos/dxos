@@ -2,15 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
+
 /**
  * Error thrown when attempting to mutate an object outside of an Obj.update() context.
  */
-export class MutationOutsideChangeContextError extends Error {
+export class MutationOutsideChangeContextError extends BaseError.extend(
+  'MutationOutsideChangeContextError',
+  'Cannot mutate object outside of Obj.update().',
+) {
   constructor(operation: string, suggestion: string) {
-    super(
-      `Cannot ${operation} outside of Obj.update(). Use Obj.update(obj, (mutableObj) => { ${suggestion} }) instead.`,
-    );
-    this.name = 'MutationOutsideChangeContextError';
+    super({
+      message: `Cannot ${operation} outside of Obj.update(). Use Obj.update(obj, (mutableObj) => { ${suggestion} }) instead.`,
+    });
   }
 }
 

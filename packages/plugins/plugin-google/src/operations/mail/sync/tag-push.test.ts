@@ -206,7 +206,7 @@ describe('gmail tag push', () => {
 
     await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
 
-    // Archive = the `inbox` tag coming off (see TASKS.md §Phase 1 DECIDED).
+    // Archive = the `inbox` tag coming off.
     const target = dataset.messages[0];
     const message = await feedMessageFor(db, mailbox, target.id);
     const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));

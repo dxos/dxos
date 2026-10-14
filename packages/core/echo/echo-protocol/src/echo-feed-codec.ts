@@ -18,6 +18,7 @@ const FEED_KEY_SOURCES: readonly string[] = [FeedProtocol.KEY_QUEUE_POSITION, Fe
  * `position` is set once a position authority orders it.
  */
 export type FeedBlockRef = {
+  /** Identifies the feed author (peer) that wrote the block. */
   actorId?: string;
   sequence?: number;
   position?: number;

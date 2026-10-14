@@ -4,6 +4,7 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { Tree } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
@@ -14,8 +15,13 @@ import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
-import { type NavTreeItemColumnsProps } from '../types.ts';
 import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction.tsx';
+
+export type NavTreeItemColumnsProps = {
+  path: string[];
+  item: AppGraphNode.Node;
+  open: boolean;
+};
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);

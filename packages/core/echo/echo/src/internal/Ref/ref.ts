@@ -642,7 +642,7 @@ export class RefImpl<T> implements Ref<T> {
   async load(options?: LoadOptions): Promise<T> {
     const obj = await this.tryLoad(options);
     if (obj == null) {
-      throw new Error('Object not found');
+      throw new Error(`Object not found: ${this.uri}`);
     }
     return obj;
   }

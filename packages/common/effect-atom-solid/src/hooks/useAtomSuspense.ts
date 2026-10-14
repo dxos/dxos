@@ -52,7 +52,7 @@ export function useAtomSuspense<A, E>(atom: Atom.Atom<AsyncResult.AsyncResult<A,
       // createResource doesn't have a direct 'setError'.
       // Refetching is the safe bet to re-enter the promise/error flow.
       void refetch();
-    } else if (next._tag === 'Initial' || (next as any).waiting) {
+    } else if (next._tag === 'Initial') {
       // If we go back to loading, refetch to suspend
       void refetch();
     }

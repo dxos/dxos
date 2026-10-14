@@ -25,8 +25,7 @@ import { DeckCapabilities, DeckSchema } from '#types';
 
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
 import { type CompanionTarget, type NavigationIntent, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
-import * as Navigation from './navigation.ts';
-import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
+import * as Navigation from './Navigation.ts';
 
 /**
  * How long resolution waits for a pair's node before it stops trying. Exported because a plank waits
@@ -199,7 +198,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
 
   // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
   // and carries the caller's intent.
-  yield* applyActive(initialPlanks(pairs, idsBySegment()), options?.intent);
+  yield* applyActive(Navigation.initialPlanks(pairs, idsBySegment()), options?.intent);
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
@@ -208,7 +207,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
       pairs,
       (pair, index) => {
         const candidates =
-          pair.id === undefined ? [] : getCandidateEntityIds(pair.id, builder.urlGrammar.tailSeparator);
+          pair.id === undefined ? [] : Navigation.getCandidateEntityIds(pair.id, builder.urlGrammar.tailSeparator);
         if (candidates.length === 0) {
           return Effect.void;
         }
@@ -244,7 +243,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
       return;
     }
     planks.push({
-      id: nodeId ?? resolved[index]?.candidateId ?? getUnresolvedPlankId(pair),
+      id: nodeId ?? resolved[index]?.candidateId ?? Navigation.getUnresolvedPlankId(pair),
       segment: Navigation.toSegment(pair),
     });
   });

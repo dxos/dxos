@@ -65,7 +65,7 @@ const testConnectors: ConnectorSpec.ConnectorEntry[] = [
 
 const CONNECTOR_IDS = ['connector-a', 'connector-b'];
 
-const ComponentStory = () => {
+const DefaultStory = () => {
   const [space] = useSpaces();
   const targets = useQuery(space?.db, Filter.type(Expando.Expando));
   const target = targets[0];
@@ -169,6 +169,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: ComponentStory };
+export const Default: Story = { render: DefaultStory };
 
 export const Toolbar: Story = { render: ToolbarStory };

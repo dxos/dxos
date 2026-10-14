@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
@@ -19,7 +18,6 @@ import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
 
-import skillDefinition from './skill-definition.ts';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [AttentionCapabilities.ViewState],
@@ -31,11 +29,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
-export const SkillDefinition = Capability.inlineModule(
-  'SkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  skillDefinition,
-);
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 // Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
 // `useMemo`/`useObject`/`useObjects` in its own body.

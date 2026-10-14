@@ -38,7 +38,7 @@ import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
-import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle.tsx';
+import MagazineArticle from '../containers/MagazineArticle/index.ts';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and

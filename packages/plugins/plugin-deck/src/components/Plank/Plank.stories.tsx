@@ -19,6 +19,7 @@ import { random } from '@dxos/random';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -65,10 +66,10 @@ const DefaultStory = () => {
   const personNode = useNode(person, 'ph--user--regular');
 
   return (
-    <div className='flex h-full gap-3 p-3 dx-deck-surface'>
+    <Layout.Flex gap='md' classNames='h-full p-3 dx-deck-surface'>
       <Plank node={organizationNode} classNames={PLANK_CLASSNAMES} />
       <Plank node={personNode} classNames={PLANK_CLASSNAMES} />
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -94,14 +95,14 @@ const BreadcrumbStory = () => {
   const [organization] = useMemo(() => [Organization.make({ name: random.company.name() })], []);
   const node = useNode(organization, 'ph--building-office--regular');
   return (
-    <div className='flex h-full p-3 dx-deck-surface'>
+    <Layout.Flex classNames='h-full p-3 dx-deck-surface'>
       <Plank
         node={node}
         classNames={[PLANK_CLASSNAMES, 'w-[40rem]']}
         breadcrumbs={[{ id: 'parent', label: 'Parent' }]}
         controls={<Button.Root icon='ph--x--regular' iconOnly label='Close' data-testid='plank.close' />}
       />
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -124,7 +125,7 @@ const BreadcrumbDepthStory = () => {
   const sessionsNode = useNode(sessions, 'ph--building-office--regular');
   const chatNode = useNode(chat, 'ph--building-office--regular');
   return (
-    <div className='flex flex-col h-full gap-3 p-3 dx-deck-surface'>
+    <Layout.Flex column gap='md' classNames='h-full p-3 dx-deck-surface'>
       <div data-testid='depth-1' className='flex'>
         <Plank
           node={sessionsNode}
@@ -142,7 +143,7 @@ const BreadcrumbDepthStory = () => {
           ]}
         />
       </div>
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -163,10 +164,11 @@ export const TestBreadcrumbStableAcrossDepth: Story = {
 
     const current = crumb('depth-1', 'Sessions');
     const link = crumb('depth-2', 'Sessions');
-    const box = (element: HTMLElement) => element.getBoundingClientRect();
-    await expect(Math.abs(box(current).left - box(link).left)).toBeLessThanOrEqual(0.5);
-    await expect(Math.abs(box(current).width - box(link).width)).toBeLessThanOrEqual(0.5);
-    await expect(Math.abs(box(current).height - box(link).height)).toBeLessThanOrEqual(0.5);
+    const currentBox = current.getBoundingClientRect();
+    const linkBox = link.getBoundingClientRect();
+    await expect(Math.abs(currentBox.left - linkBox.left)).toBeLessThanOrEqual(0.5);
+    await expect(Math.abs(currentBox.width - linkBox.width)).toBeLessThanOrEqual(0.5);
+    await expect(Math.abs(currentBox.height - linkBox.height)).toBeLessThanOrEqual(0.5);
     for (const property of ['fontSize', 'fontWeight', 'lineHeight', 'paddingLeft', 'paddingRight'] as const) {
       await expect(getComputedStyle(current)[property]).toBe(getComputedStyle(link)[property]);
     }

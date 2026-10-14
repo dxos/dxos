@@ -18,7 +18,7 @@ import { CompanionViewState, DeckCapabilities } from '#types';
 
 import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util/index.ts';
 import { type NavigationIntent } from './apply.ts';
-import * as Navigation from './navigation.ts';
+import * as Navigation from './Navigation.ts';
 import { projectUrl } from './project.ts';
 
 /** What the URL currently says is open. */

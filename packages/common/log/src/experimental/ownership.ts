@@ -5,8 +5,15 @@
 import { inspect } from 'node:util';
 
 const kOwnershipScope = Symbol('kOwnershipScope');
-const kCurrentOwnershipScope = Symbol('kCurrentOwnershipScope');
 const kDebugInfoProperties = Symbol('kDebugInfoProperties');
+
+/** Scope of the instance currently under construction; the symbol key was module-private anyway. */
+let currentOwnershipScope: OwnershipScope | undefined;
+
+/** Objects carrying ownership scopes under symbol keys. */
+type ScopeHost = {
+  [kOwnershipScope]?: OwnershipScope;
+};
 
 /**
  *
@@ -71,12 +78,14 @@ export function ownershipClass<T extends { new (...args: any[]): {} }>(constr: T
 
   return class extends constr {
     constructor(...args: any[]) {
-      const currentCausality = (globalThis as any)[kCurrentOwnershipScope];
-      (globalThis as any)[kCurrentOwnershipScope] = new OwnershipScope(constr, currentCausality);
+      const currentCausality = currentOwnershipScope;
+      const scope = new OwnershipScope(constr, currentCausality);
+      currentOwnershipScope = scope;
       super(...args);
-      (this as any)[kOwnershipScope] = (globalThis as any)[kCurrentOwnershipScope];
-      (this as any)[kOwnershipScope].instance = this;
-      (globalThis as any)[kCurrentOwnershipScope] = currentCausality;
+      const instanceHost: ScopeHost = this;
+      instanceHost[kOwnershipScope] = scope;
+      scope.instance = this;
+      currentOwnershipScope = currentCausality;
     }
   };
 }

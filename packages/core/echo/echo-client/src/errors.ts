@@ -3,6 +3,7 @@
 //
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
+import { type SpaceId } from '@dxos/keys';
 
 /** ECHO client operation failed. The underlying failure, where there is one, is the `cause`. */
 export class EchoClientError extends BaseError.extend('EchoClientError', 'ECHO client operation failed.') {}
@@ -30,7 +31,7 @@ export class RepoClosedError extends BaseError.extend(
   'RepoClosedError',
   'Repo proxy is closed; the client is going away.',
 ) {
-  constructor(context: { spaceId: string; documentId?: string }, options?: BaseErrorOptions) {
+  constructor(context: { spaceId: SpaceId; documentId?: string }, options?: BaseErrorOptions) {
     super({ context, ...options });
   }
 }

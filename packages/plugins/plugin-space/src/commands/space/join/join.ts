@@ -9,7 +9,10 @@ import * as Prompt from 'effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
+import * as Terminal from 'effect/Terminal';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
@@ -28,6 +31,7 @@ export const handler = Effect.fn(function* ({
 }) {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
+  const promptServices = yield* Effect.context<Terminal.Terminal | FileSystem.FileSystem | Path.Path>();
 
   let encoded = invitationCode;
   if (encoded.startsWith('http') || encoded.startsWith('socket')) {
@@ -42,11 +46,11 @@ export const handler = Effect.fn(function* ({
         if (Option.isSome(authCode)) {
           return Effect.succeed(Option.getOrUndefined(authCode));
         }
-        // TODO(dxos): `acceptInvitation` runs callbacks without a context, so the prompt's terminal
-        // requirement cannot be provided here — the interactive path dies without a terminal.
-        return Prompt.String({ message: 'Enter the authentication code' })
-          .pipe(Prompt.run)
-          .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | undefined>;
+        return Prompt.String({ message: 'Enter the authentication code' }).pipe(
+          Prompt.run,
+          Effect.provideContext(promptServices),
+          Effect.catch(() => Effect.succeed(undefined)),
+        );
       },
     },
   });

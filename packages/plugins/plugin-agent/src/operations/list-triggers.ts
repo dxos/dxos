@@ -15,10 +15,9 @@ const handler: Operation.WithHandler<typeof TriggerOperation.ListTriggers> = Tri
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef }) {
       const agent = yield* Database.load(agentRef);
-      const brain = yield* BrainService.BrainService;
       const label = labelOf(yield* loadMembers);
       return {
-        triggers: (yield* brain.subscriptions(agent.id)).map(({ id, goal, when, then, createdAt }) => ({
+        triggers: (yield* BrainService.subscriptions(agent.id)).map(({ id, goal, when, then, createdAt }) => ({
           trigger: id,
           ...(goal ? { goal } : {}),
           when: Trigger.describePattern(when, label),

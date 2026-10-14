@@ -160,6 +160,9 @@ export class BrainService extends Context.Service<BrainService, Service>()('@dxo
 /** Re-exported so callers importing this module as a namespace avoid `BrainService.BrainService.key`. */
 export const key = BrainService.key;
 
+/** The agent's subscriptions, oldest first. */
+export const subscriptions = (agent: string) => BrainService.use((brain) => brain.subscriptions(agent));
+
 /**
  * Most subscriptions an agent holds at once: ongoing ones never fire away, so without a cap the store
  * (and the match on every push) would grow with every watch an agent is asked for.

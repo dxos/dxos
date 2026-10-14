@@ -6,13 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, type Ref } from '@dxos/echo';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 import { Drawing, IllustratorCapabilities } from '#types';
 
-export class UnknownDrawingVariantError extends Error {
-  readonly _tag = 'UnknownDrawingVariantError';
-  constructor(readonly schema: string) {
-    super(`No drawing variant registered for canvas schema: ${schema}.`);
+export class UnknownDrawingVariantError extends BaseError.extend(
+  'UnknownDrawingVariantError',
+  'No drawing variant registered for canvas schema.',
+) {
+  constructor(
+    public readonly schema: string,
+    options?: BaseErrorOptions,
+  ) {
+    super({ ...options, context: { ...(options?.context ?? {}), schema } });
   }
 }
 

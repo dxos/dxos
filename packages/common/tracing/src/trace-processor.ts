@@ -53,7 +53,7 @@ export class TraceProcessor {
     };
   }
 
-  private _instanceTag: string | null = null;
+  #instanceTag: string | null = null;
 
   constructor() {
     if (DiagnosticsChannel.supported) {
@@ -63,7 +63,7 @@ export class TraceProcessor {
   }
 
   setInstanceTag(tag: string): void {
-    this._instanceTag = tag;
+    this.#instanceTag = tag;
     this.diagnostics.setInstanceTag(tag);
   }
 

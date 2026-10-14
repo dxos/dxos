@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-export const ToolId = Schema.String.pipe(Schema.brand('ToolId')).annotate({
+export const ToolId = Schema.String.pipe(Schema.brand('@dxos/ai/ToolId')).annotate({
   identifier: 'ToolId',
   name: 'ToolId',
   description: 'Unique identifier for a tool.',

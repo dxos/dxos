@@ -17,7 +17,6 @@ import * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import type * as Scope from 'effect/Scope';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
@@ -54,68 +53,67 @@ export interface Options {
   authProvider?: OAuthClientProvider;
 }
 
-export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError, Scope.Scope> =>
-  Effect.gen(function* () {
-    // Closed with the scope: an open client holds a connection (its SSE stream) to the server, and a
-    // browser allows only six per host over HTTP/1.1, so clients leaked across turns stall the next.
-    const { client, protocol } = yield* Effect.acquireRelease(connectWithFallback(options), ({ client }) =>
-      Effect.tryPromise(() => client.close()).pipe(Effect.ignore),
-    );
+export const make = Effect.fn('McpToolkit.make')(function* (options: Options) {
+  // Closed with the scope: an open client holds a connection (its SSE stream) to the server, and a
+  // browser allows only six per host over HTTP/1.1, so clients leaked across turns stall the next.
+  const { client, protocol } = yield* Effect.acquireRelease(connectWithFallback(options), ({ client }) =>
+    Effect.tryPromise(() => client.close()).pipe(Effect.ignore),
+  );
 
-    const { tools } = yield* Effect.tryPromise({
-      try: () => client.listTools(),
-      catch: (cause) =>
-        new McpConnectionError({
-          url: options.url,
-          protocol,
-          message: `Failed to list MCP tools: ${formatCause(cause)}`,
-          unauthorized: isUnauthorized(cause),
-        }),
-    });
-    if (tools.length === 0) {
-      return OpaqueToolkit.empty;
-    }
-
-    // Dynamic tools carry the server's own JSON Schema to the provider verbatim, exactly as
-    // operation tools do (see `projectFunctionToTool`): `Tool.make` takes an Effect schema, and
-    // handing it a fields record instead leaves the tool with no parameter AST, which then throws
-    // inside `Response.StreamPart` on the first model turn that lists the tool.
-    const effectTools = tools.map((mcpTool) =>
-      Tool.dynamic(sanitizeToolName(mcpTool.name), {
-        description: mcpTool.description ?? `MCP tool: ${mcpTool.name}`,
-        parameters: mcpTool.inputSchema,
-        success: Schema.String,
-        failure: Schema.Never,
-      })
-        // A server's schema rarely meets a provider's strict mode (every key required, no extra
-        // properties), and one non-conforming tool rejects the whole request.
-        .annotate(Tool.Strict, false),
-    );
-
-    const toolkit = Toolkit.make(...effectTools);
-
-    const handlers = Object.fromEntries(
-      tools.map((mcpTool) => {
-        const toolName = sanitizeToolName(mcpTool.name);
-        return [
-          toolName,
-          Effect.fn(function* (args: unknown) {
-            const result = yield* Effect.promise(() =>
-              client.callTool({
-                name: mcpTool.name,
-                arguments: args as any,
-              }),
-            );
-            return formatToolResult(result);
-          }),
-        ];
+  const { tools } = yield* Effect.tryPromise({
+    try: () => client.listTools(),
+    catch: (cause) =>
+      new McpConnectionError({
+        url: options.url,
+        protocol,
+        message: `Failed to list MCP tools: ${formatCause(cause)}`,
+        unauthorized: isUnauthorized(cause),
       }),
-    ) as any;
+  });
+  if (tools.length === 0) {
+    return OpaqueToolkit.empty;
+  }
 
-    const layer = toolkit.toLayer(handlers);
+  // Dynamic tools carry the server's own JSON Schema to the provider verbatim, exactly as
+  // operation tools do (see `projectFunctionToTool`): `Tool.make` takes an Effect schema, and
+  // handing it a fields record instead leaves the tool with no parameter AST, which then throws
+  // inside `Response.StreamPart` on the first model turn that lists the tool.
+  const effectTools = tools.map((mcpTool) =>
+    Tool.dynamic(sanitizeToolName(mcpTool.name), {
+      description: mcpTool.description ?? `MCP tool: ${mcpTool.name}`,
+      parameters: mcpTool.inputSchema,
+      success: Schema.String,
+      failure: Schema.Never,
+    })
+      // A server's schema rarely meets a provider's strict mode (every key required, no extra
+      // properties), and one non-conforming tool rejects the whole request.
+      .annotate(Tool.Strict, false),
+  );
 
-    return OpaqueToolkit.make(toolkit, layer);
-  }).pipe(Effect.withSpan('McpToolkit.make'));
+  const toolkit = Toolkit.make(...effectTools);
+
+  const handlers = Object.fromEntries(
+    tools.map((mcpTool) => {
+      const toolName = sanitizeToolName(mcpTool.name);
+      return [
+        toolName,
+        Effect.fn(function* (args: unknown) {
+          const result = yield* Effect.promise(() =>
+            client.callTool({
+              name: mcpTool.name,
+              arguments: args as any,
+            }),
+          );
+          return formatToolResult(result);
+        }),
+      ];
+    }),
+  ) as any;
+
+  const layer = toolkit.toLayer(handlers);
+
+  return OpaqueToolkit.make(toolkit, layer);
+});
 
 /**
  * Connects, lists the server's tools and disconnects — a connection check that leaves nothing open.

@@ -148,6 +148,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
+      AgentPlugin.meta.profile.key,
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
@@ -163,7 +164,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
-      AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
@@ -307,21 +307,21 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
-    QaPlugin.make(),
     ProjectsPlugin.make(),
+    QaPlugin.make(),
     ReviewPlugin.make(),
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),
-    isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
+    isDev && SidekickPlugin.make(),
     StackPlugin.make(),
     TablePlugin.make(),
-    TypeSafePlugin.make(),
     TasksPlugin.make(),
     ThreadPlugin.make(),
     TldrawPlugin.make(),
     TranscriptionPlugin.make(),
+    TypeSafePlugin.make(),
     UmlPlugin.make(),
     ...experimental,
   ]
@@ -336,6 +336,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
  */
 // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
 const experimental: Plugin.Plugin[] = [
+  AgentPlugin.make(),
   BloggerPlugin.make(),
   BlueskyPlugin.make(),
   BrainPlugin.make(),
@@ -348,7 +349,6 @@ const experimental: Plugin.Plugin[] = [
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),
   IdeogramPlugin.make(),
-  AgentPlugin.make(),
   IrohBeaconPlugin.make(),
   LaMetricPlugin.make(),
   LinearPlugin.make(),

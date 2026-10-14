@@ -403,7 +403,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       expect(storedThreads.length).toBe(threads.length);
       expect(storedThreads.every((thread) => thread.messageIds.length > 0)).toBe(true);
 
-      // Corpus layer (phase 3). Clustering is deterministic, so assert it strictly: every thread
+      // Corpus layer. Clustering is deterministic, so assert it strictly: every thread
       // lands in exactly one topic. LLM enrichment (topic summaries, digest narrative) is advisory
       // and degradable — proven deterministically in topics/digest unit tests.
       const narrate: Summarizer = (prompt) =>

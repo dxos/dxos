@@ -41,7 +41,7 @@ export const downloadAssets = ({
   baseUrl: string;
   assets: readonly PluginAsset[];
   manifest?: string;
-}): Effect.Effect<string, PluginInstallError, any> =>
+}): Effect.Effect<string, PluginInstallError, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -135,7 +135,7 @@ export const downloadAssets = ({
   }).pipe(Effect.scoped, Effect.provide(FetchHttpClient.layer));
 
 /** Deletes a copied plugin's install directory. Linked installs own no bytes here. */
-export const removeAssets = (id: string): Effect.Effect<void, never, any> =>
+export const removeAssets = (id: string): Effect.Effect<void, never, FileSystem.FileSystem> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(getPluginInstallPath(id), { recursive: true }).pipe(Effect.catch(() => Effect.void));

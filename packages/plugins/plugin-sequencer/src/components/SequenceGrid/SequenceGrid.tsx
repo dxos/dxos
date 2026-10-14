@@ -83,11 +83,6 @@ const pitchLabel = (pitch: number): string => {
   return `${name}${octave}`;
 };
 
-const isBlackKey = (pitch: number): boolean => {
-  const offset = ((pitch % 12) + 12) % 12;
-  return offset === 1 || offset === 3 || offset === 6 || offset === 8 || offset === 10;
-};
-
 const renderNoteCell: RenderCell<{ color: string; velocity: number; subdued?: boolean }> = ({
   ctx,
   x,
@@ -481,13 +476,6 @@ export const SequenceGrid = ({
     [notes, maxPitch, beatsPerCell, onToggleNote, onResizeNote, registry, atoms.cells, trackColor],
   );
 
-  // Style the row bands so black-key rows are darker (piano-roll feel).
-  const rowBandRenderer = useMemo(() => {
-    return {
-      isBlackKey: (rowIndex: number) => isBlackKey(maxPitch - rowIndex),
-    };
-  }, [maxPitch]);
-
   // Stable prop identities so CellGrid's effects don't tear down on every render.
   const cellGridHeaders = useMemo(() => ({ left: 56, top: 22 }), []);
   const cellGridStaticStyle = useMemo(
@@ -591,12 +579,6 @@ export const SequenceGrid = ({
           onChange={onLoopChange}
         />
       )}
-      {/*
-        rowBandRenderer is reserved for a future pass where the static layer can paint
-        black-key rows differently. The current CellGrid only supports a single row-band
-        color; surfacing per-row tinting is a tracked follow-up.
-      */}
-      <div className='hidden' aria-hidden data-row-bands={String(!!rowBandRenderer)} />
     </div>
   );
 };

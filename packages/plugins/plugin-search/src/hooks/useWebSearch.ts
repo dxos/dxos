@@ -25,8 +25,7 @@ export type UseWebSearch = {
   isLoading: boolean;
 };
 
-/** @deprecated */
-// TODO(burdon): Remove testing deps.
+// TODO(burdon): Deprecated; remove testing deps.
 export const useWebSearch = ({ query, context }: UseWebSearchProps): UseWebSearch => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);

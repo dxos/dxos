@@ -14,6 +14,7 @@ import { getTypeURIFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
+import { ComputeNodeError } from '../errors.ts';
 import {
   AnyInput,
   AnyOutput,
@@ -343,7 +344,7 @@ export const registry: Record<NodeType, Executable> = {
       Effect.gen(function* (): any {
         const functionRef = node?.function;
         if (!node || !functionRef) {
-          throw new Error(`Function not specified on ${node?.id}.`);
+          return yield* Effect.fail(new ComputeNodeError({ message: `Function not specified on ${node?.id}.` }));
         }
 
         const func = yield* Database.load(functionRef);

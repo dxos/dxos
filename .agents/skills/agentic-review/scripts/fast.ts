@@ -35,6 +35,7 @@ const { values } = parseArgs({
     'main': { type: 'string' },
     'base': { type: 'string' },
     'dry-run': { type: 'boolean', default: false },
+    'approve-cost': { type: 'string' },
   },
 });
 
@@ -86,7 +87,11 @@ run('prepare.ts', [
 
 const groups = Object.keys(JSON.parse(readFileSync(join(store, GROUPS_MANIFEST), 'utf8')));
 if (groups.length > 0) {
-  run('system-one.ts', [`--slug=${slug}`, ...(dryRun ? ['--dry-run'] : [])]);
+  run('system-one.ts', [
+    `--slug=${slug}`,
+    ...(dryRun ? ['--dry-run'] : []),
+    ...(values['approve-cost'] ? [`--approve-cost=${values['approve-cost']}`] : []),
+  ]);
 }
 if (dryRun) {
   // A dry run prices the pass without judging anything, so there is nothing to finalize.

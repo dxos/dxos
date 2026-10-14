@@ -60,8 +60,6 @@ const COUNTERS_PASS: Pass = {
 
 const readBudgets = (file: string): Record<string, Budget> => parseBudgets(JSON.parse(readFileSync(file, 'utf8')));
 
-const relative = (file: string) => path.relative(APP_ROOT, file);
-
 /** A work counter's label leads with the stage, as the tables list stages; its id leads with the counter. */
 const labelOf = (id: string): string => {
   const [head, ...rest] = id.split(' > ');
@@ -115,7 +113,7 @@ const renderDocs = (budgets: Record<string, Budget>, counters: Record<string, Bu
     'coverage) cost 7–29% of wall time, so a separate job runs them and scores only them, as the',
     '`composer-work` suite; its timings are never scored or published.',
     '',
-    tables(counters, ` (${relative(COUNTERS_BUDGETS_FILE)})`),
+    tables(counters, ` (${path.relative(APP_ROOT, COUNTERS_BUDGETS_FILE)})`),
     '',
   ].join('\n');
 
@@ -143,7 +141,7 @@ if (command === 'score') {
     suite: pass.suite,
     title: pass.title,
     budgets: readBudgets(pass.budgetsFile),
-    budgetsFile: relative(pass.budgetsFile),
+    budgetsFile: path.relative(APP_ROOT, pass.budgetsFile),
     publish: values.publish,
     summary: values.summary,
   });
@@ -163,7 +161,7 @@ if (command === 'score') {
   const budgets = replaceWorkBudgets(readBudgets(pass.budgetsFile), proposed);
   if (values.write) {
     writeFileSync(pass.budgetsFile, JSON.stringify(budgets, null, 2) + '\n');
-    console.log(`wrote ${Object.keys(proposed).length} work budgets to ${relative(pass.budgetsFile)}`);
+    console.log(`wrote ${Object.keys(proposed).length} work budgets to ${path.relative(APP_ROOT, pass.budgetsFile)}`);
   } else {
     console.log(JSON.stringify(proposed, null, 2));
   }

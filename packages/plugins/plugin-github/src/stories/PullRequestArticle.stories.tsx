@@ -21,7 +21,7 @@ import { PullRequest } from '@dxos/types';
 import { translations } from '#translations';
 import { GitHubOperation } from '#types';
 
-import { PullRequestArticle } from '../containers/PullRequestArticle/PullRequestArticle.tsx';
+import PullRequestArticle from '../containers/PullRequestArticle/index.ts';
 import { PULL_REQUEST_13348_BODY, PULL_REQUEST_13348_RUNS } from '../testing/index.ts';
 import PULL_REQUEST_13363_PATCH from '../testing/pull-request-13363.patch?raw';
 

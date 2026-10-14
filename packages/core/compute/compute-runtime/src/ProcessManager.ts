@@ -79,6 +79,7 @@ const makeLoopbackRpcClient = (
 ): Effect.Effect<RpcClient.RpcClient<any>> =>
   RpcTest.makeClient(rpcs).pipe(Effect.provide(rpcHandlers), Effect.provideService(Scope.Scope, scope));
 
+// Bounds the retained terminated-process snapshots so a long-lived manager does not grow without limit.
 const FINISHED_PROCESS_RETENTION = 200;
 
 /**

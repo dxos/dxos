@@ -50,7 +50,7 @@ export const PickerButton = ({
   // TODO(burdon): useControllableState doesn't update the prop when the value is changed. Replace it.
   useEffect(() => setValue(valueProp), [valueProp]);
 
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
 
   return (
     <Menu.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'bottom' }}>

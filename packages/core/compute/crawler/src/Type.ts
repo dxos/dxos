@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 /**
  * A source-native user (the author of a message). Identified by a stable id (e.g. a Discord
  * user id), never by display name — names collide and change.

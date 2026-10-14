@@ -105,7 +105,7 @@ interface LockableClass {
 const FORCE_DISABLE_WARNING = false;
 
 // Enabled only in tests by default.
-const enableWarning = !FORCE_DISABLE_WARNING && (globalThis as any).mochaExecutor;
+const enableWarning = !FORCE_DISABLE_WARNING && Reflect.get(globalThis, 'mochaExecutor');
 
 /**
  * Same as `synchronized` in Java.

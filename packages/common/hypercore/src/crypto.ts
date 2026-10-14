@@ -36,7 +36,7 @@ export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
 
   return {
     sign: (message, secretKey, cb) => {
-      callbackify(signer.sign.bind(signer!))(publicKey, message, (err, result) => {
+      callbackify(signer.sign.bind(signer))(publicKey, message, (err, result) => {
         if (err) {
           cb(err, null);
           return;

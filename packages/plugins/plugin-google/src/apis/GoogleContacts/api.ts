@@ -70,8 +70,11 @@ export const batchGetPeople = Effect.fn(function* (resourceNames: readonly strin
  * https://developers.google.com/people/api/rest/v1/people.connections/list
  */
 export const listConnections = Effect.fn(function* (opts: {
+  /** Continues a prior page of results. */
   pageToken?: string;
+  /** Token from a previous full sync, used to fetch only incremental changes. */
   syncToken?: string;
+  /** Requests a `syncToken` in the final page for later incremental syncs. */
   requestSyncToken?: boolean;
 }) {
   const url = createUrl([API_URL, 'people/me/connections'], {

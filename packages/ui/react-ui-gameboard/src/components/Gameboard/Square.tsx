@@ -72,7 +72,7 @@ export const Square = memo(({ location, label, classNames }: SquareProps) => {
         classNames,
       )}
     >
-      {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}
+      {label && <div className={'absolute bottom-1 left-1 text-xs text-neutral-500'}>{label}</div>}
     </div>
   );
 });

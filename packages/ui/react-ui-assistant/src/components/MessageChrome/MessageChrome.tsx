@@ -131,7 +131,7 @@ export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps)
       {isRemovable(delivery) && (
         <button
           type='button'
-          className='underline underline-offset-2 hover:text-fg-default'
+          className='underline underline-offset-2 hover:text-fg'
           data-action='remove'
           data-value={message.id}
           data-testid='chat.remove'

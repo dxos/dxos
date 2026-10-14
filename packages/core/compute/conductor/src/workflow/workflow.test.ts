@@ -9,7 +9,6 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
-import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -19,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
+import { operationServiceLayerStub } from '../testing/index.ts';
 import {
   AnyInput,
   AnyOutput,
@@ -33,15 +33,7 @@ import {
 } from '../types/index.ts';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader.ts';
 
-const TestLayer = Layer.mergeAll(
-  computeNodeContextLayerNoop,
-  Layer.succeed(Operation.Service, {
-    invoke: () => Effect.die('Operation.Service not available in test.'),
-    schedule: () => Effect.die('Operation.Service not available in test.'),
-    invokePromise: async () => ({ error: new Error('Not available') }),
-  } as any),
-  registryLayerNoop,
-).pipe(
+const TestLayer = Layer.mergeAll(computeNodeContextLayerNoop, operationServiceLayerStub, registryLayerNoop).pipe(
   Layer.provideMerge(
     Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]), Trace.writerLayerNoop),
   ),

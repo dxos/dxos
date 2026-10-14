@@ -16,7 +16,7 @@ export const onEvent = (eventEmitter: EventEmitter, eventName: string, callback:
 };
 
 /**
- * @deprecated
+ * @deprecated Use {@link onEvent}.
  */
 export const addListener = (eventEmitter: EventEmitter, eventName: string, callback: () => void) => {
   const off = onEvent(eventEmitter, eventName, callback);

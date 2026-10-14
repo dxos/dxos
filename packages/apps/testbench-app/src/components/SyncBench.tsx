@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-/* eslint-disable no-console */
-
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Atom from 'effect/reactivity/Atom';
@@ -85,11 +83,11 @@ export const SyncBench = () => {
 
   useEffect(() => {
     const code = new URLSearchParams(location.search).get('spaceInvitation');
-    console.log('code', code);
+    log.info('invitation code', { code });
     if (code) {
       queueMicrotask(async () => {
         const invitation = client.spaces.join(InvitationEncoder.decode(code));
-        invitation.subscribe((state) => console.log(state));
+        invitation.subscribe((state) => log.debug('invitation state', { state }));
         await invitation.wait();
         // TODO(dmaretskyi): Invitation missing spaceId.
         const space = client.spaces.get().at(-1)!;
@@ -127,7 +125,7 @@ export const SyncBench = () => {
     }
     const start = performance.now();
     const results = await space.db.query(Filter.everything()).run();
-    console.log('loadAll', { time: performance.now() - start, count: results.length });
+    log.info('loadAll', { time: performance.now() - start, count: results.length });
   };
 
   return (

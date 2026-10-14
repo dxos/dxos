@@ -7,7 +7,6 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import { tags } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 /**
  * Highlights leading slash-commands (e.g. `/resolve`) and `@mention` tags
@@ -37,11 +36,11 @@ const parser = StreamLanguage.define<{ count: number }>({
 const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
-    class: mx('dx-tag dx-tag-inline dx-tag-indigo mx-0.5'),
+    class: 'dx-tag dx-tag-inline dx-tag-indigo mx-0.5',
   },
   {
     tag: tags.labelName,
-    class: mx('dx-tag dx-tag-inline dx-tag-blue mx-0.5'),
+    class: 'dx-tag dx-tag-inline dx-tag-blue mx-0.5',
   },
 ]);
 

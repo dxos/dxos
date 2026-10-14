@@ -310,6 +310,7 @@ export const TOOL_NAMES = [QueryOperations.name, InvokeOperation.name, LoadSkill
 export type SkillListing = {
   skills: readonly { name: string; key: string; description?: string }[];
   instructions?: string;
+  /** Opaque proof that `loadSkill` was called; pass it back as `skillToken` to `invokeOperation`. */
   skillToken?: string;
 };
 
@@ -488,9 +489,11 @@ const dispatch = (
   });
 
 export type InvokeArguments = {
+  /** Operation key (not a skill key). */
   key: string;
   input?: Record<string, unknown>;
   spaceId?: SpaceId;
+  /** Token issued by `loadSkill` for a skill governing the operation; proves the skill was read. */
   skillToken?: string;
 };
 
@@ -961,7 +964,9 @@ export const toolsLayer = ({
     if (claimed.length > 0) {
       // Loud at layer build: a host static tool of the same name would shadow this package's,
       // leaving the server advertising one tool and dispatching the other.
-      throw new Error(`MCP tool name collision: the host reserves names this server defines: ${claimed.join(', ')}.`);
+      return yield* Effect.die(
+        new Error(`MCP tool name collision: the host reserves names this server defines: ${claimed.join(', ')}.`),
+      );
     }
     const handlers = Effect.gen(function* () {
       const source = yield* RegistrySource;

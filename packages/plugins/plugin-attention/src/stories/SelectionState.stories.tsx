@@ -112,10 +112,10 @@ const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
 };
 
 //
-// SelectionStateStory — the canonical demo component.
+// DefaultStory — the canonical demo component.
 //
 
-const SelectionStateStory = () => {
+const DefaultStory = () => {
   const manager = useManager();
   const editorStore = useMemo(() => makeEditorStore(manager), [manager]);
 
@@ -167,9 +167,9 @@ const SelectionStateStory = () => {
 // Storybook meta.
 //
 
-const meta: Meta<typeof SelectionStateStory> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-attention/SelectionState',
-  component: SelectionStateStory,
+  component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention()],
 };
 
@@ -177,4 +177,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <SelectionStateStory /> };
+export const Default: Story = { render: () => <DefaultStory /> };

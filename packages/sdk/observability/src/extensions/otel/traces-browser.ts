@@ -37,8 +37,8 @@ export type OtelTracesOptions = OtelOptions & {
 };
 
 export class OtelTraces {
-  private _tracer: Tracer;
-  private readonly _tracerProvider: WebTracerProvider;
+  #tracer: Tracer;
+  readonly #tracerProvider: WebTracerProvider;
   readonly #samplingProcessors: TailSampling.TailSamplingSpanProcessor[];
 
   constructor(private readonly options: OtelTracesOptions) {
@@ -65,7 +65,7 @@ export class OtelTraces {
             ),
         );
 
-    this._tracerProvider = new WebTracerProvider({
+    this.#tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
       sampler: new AlwaysOnSampler(),
       spanProcessors: [
@@ -75,12 +75,12 @@ export class OtelTraces {
       ],
     });
 
-    trace.setGlobalTracerProvider(this._tracerProvider);
+    trace.setGlobalTracerProvider(this.#tracerProvider);
     // Without a context manager `context.active()` is always the root, so the Effect tracer's
     // context hook is inert and a log emitted inside a span cannot find it.
     otelContext.setGlobalContextManager(new StackContextManager().enable());
 
-    this._tracer = trace.getTracer(
+    this.#tracer = trace.getTracer(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
     );
@@ -92,7 +92,7 @@ export class OtelTraces {
    * their already-exported children reference a parent that never made it to OTLP).
    */
   public async flush(): Promise<void> {
-    await this._tracerProvider.forceFlush();
+    await this.#tracerProvider.forceFlush();
   }
 
   /**
@@ -105,7 +105,7 @@ export class OtelTraces {
    * emitting new spans.
    */
   public async close(): Promise<void> {
-    await this._tracerProvider.shutdown();
+    await this.#tracerProvider.shutdown();
   }
 
   /**
@@ -132,7 +132,7 @@ export class OtelTraces {
       ],
     });
 
-    const tracer = this._tracer;
+    const tracer = this.#tracer;
 
     TRACE_PROCESSOR.tracingBackend = {
       startSpan: (options: StartSpanOptions): RemoteSpan => {

@@ -13,11 +13,6 @@ import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
- * @deprecated
- */
-export const createArtifactElement = (id: EntityId) => `<artifact id=${id} />`;
-
-/**
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  *

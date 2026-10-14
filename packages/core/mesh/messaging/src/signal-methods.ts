@@ -60,8 +60,8 @@ export type UnsubscribeCallback = () => Promise<void>;
 export interface SignalMethods {
   /**
    * Emits when other peers join or leave the swarm.
-   * @deprecated
-   * TODO(mykola): Use swarmState in network-manager instead.
+   * @deprecated Use `swarmState` instead.
+   * TODO(mykola): Migrate network-manager to swarmState.
    */
   swarmEvent: Event<SwarmEvent>;
 

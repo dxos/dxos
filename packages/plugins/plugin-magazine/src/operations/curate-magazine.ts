@@ -107,8 +107,6 @@ export default FeedOperation.CurateMagazine.pipe(
 /** Phases the curation run reports; the meter draws one step per phase. */
 const PHASES = 3;
 
-// -- Helpers --
-
 /**
  * Resolves curated post refs, tolerating individual failures: a post whose queue entry has rotated
  * away must not fail the run, and its ref is carried through unresolved.

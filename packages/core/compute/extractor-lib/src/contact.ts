@@ -63,12 +63,10 @@ export const buildContactFromActor = (
       return undefined;
     }
 
-    const contact = Obj.make(Person.Person, { emails: [{ value: email }] });
-    if (actor.name) {
-      Obj.update(contact, (contact) => {
-        contact.fullName = actor.name;
-      });
-    }
+    const contact = Obj.make(Person.Person, {
+      emails: [{ value: email }],
+      ...(actor.name ? { fullName: actor.name } : {}),
+    });
 
     // Only into a caller-owned overlay: the next message from the same sender must not build a
     // second contact, but a run that dies before committing must not leave the space's shared index

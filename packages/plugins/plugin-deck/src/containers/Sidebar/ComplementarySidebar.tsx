@@ -120,10 +120,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           >
             <Surface.Surface type={AppSurface.StatusIndicator} />
           </Layout.Grid>
-          <div className='hidden lg:grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-action) p-1'>
+          <Layout.Grid cols={1} classNames='hidden lg:grid justify-items-center auto-rows-(--dx-rail-action) p-1'>
             {/* Rail-action sized like the tab triggers above it, so the glyphs share one centre line. */}
             <ToggleComplementarySidebarButton classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0' />
-          </div>
+          </Layout.Grid>
         </div>
 
         {/* R1 Content. */}

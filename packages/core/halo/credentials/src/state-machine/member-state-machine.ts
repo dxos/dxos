@@ -92,7 +92,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
         break;
       }
       default:
-        throw new Error('Invalid assertion type');
+        throw new Error(`Invalid assertion type: ${credential.subject?.assertion?.typeUrl}`);
     }
   }
 

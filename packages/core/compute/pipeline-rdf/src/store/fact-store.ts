@@ -10,7 +10,7 @@ import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
 import { type Fact, type Ontology } from '../types/index.ts';
 
 //
-// The FactStore service tag and API surface only. Implementations live in `fact-store-live.ts`
+// The FactStore service tag and API surface only. Implementations live in `FactStoreLive.ts`
 // (exported as `FactStoreLive`) so operation definitions referencing the tag in `services:`
 // stay chunk-free — importing this file must never pull the SPARQL/SQLite machinery.
 //

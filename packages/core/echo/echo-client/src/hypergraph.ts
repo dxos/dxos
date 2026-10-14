@@ -547,7 +547,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   ): Entity.Any | undefined {
     const parsedEchoUri = EID.tryParse(uri);
     if (!parsedEchoUri) {
-      throw new Error('Unsupported URI kind');
+      throw new Error(`Unsupported URI kind: ${uri}`);
     }
 
     const spaceId = EID.getSpaceId(parsedEchoUri) ?? context.space;

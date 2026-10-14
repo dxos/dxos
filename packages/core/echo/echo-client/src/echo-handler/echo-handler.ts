@@ -114,7 +114,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, EventId, new Event());
     }
 
-    // Maybe have been set by `create`.
+    // Redefines the property if `create` already set it.
     Object.defineProperty(target, inspectCustom, {
       enumerable: false,
       configurable: true,
@@ -464,7 +464,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _validateValue(target: ProxyTarget, path: Doc.KeyPath, value: any): any {
     invariant(path.length > 0);
     if (typeof path.at(-1) === 'symbol') {
-      throw new Error('Invalid path');
+      throw new Error(`Invalid path: ${path.map(String).join('.')}`);
     }
     if (path.length === 1 && path[0] === 'id') {
       throw new Error('Object Id is readonly');

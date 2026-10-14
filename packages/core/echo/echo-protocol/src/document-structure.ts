@@ -73,8 +73,7 @@ export interface DatabaseDirectory {
   branches?: SpaceBranchRegistry;
 
   /**
-   * @deprecated
-   * For backward compatibility.
+   * @deprecated Use `spaceId` instead.
    */
   experimental_spaceKey?: string;
 }

@@ -181,11 +181,9 @@ export class ObjectCore {
     }
   }
 
-  // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
   // The EchoDatabase reference is typed `unknown` here to avoid a circular dep
   // between core-db ← proxy-db; echo-handler casts it at the usage sites.
-  // -------------------------------------------------------------------------
 
   /**
    * EchoDatabase reference. Set by echo-handler on db.add(); typed narrowly

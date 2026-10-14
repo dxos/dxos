@@ -52,7 +52,6 @@ describe('ConnectionState', () => {
     });
 
     const triggerTimestamp = Date.now();
-    await sleep(10);
     const timeToTrigger = (await triggerCall.wait({ timeout: 1000 })) - triggerTimestamp;
     expect(timeToTrigger).to.be.greaterThanOrEqual(100);
   });

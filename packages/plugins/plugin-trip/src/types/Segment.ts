@@ -199,30 +199,26 @@ export const getArriveAt = (seg: Segment): string | undefined =>
 
 /**
  * Sets the departure time (ISO 8601) across variants — `checkIn` for
- * accommodation, `departAt` otherwise.
+ * accommodation, `departAt` otherwise. Call inside `Obj.update`.
  */
-export const setDepartAt = (seg: Segment, iso: string): void => {
-  Obj.update(seg, (seg) => {
-    if (seg.details._tag === 'accommodation') {
-      seg.details.checkIn = iso;
-    } else {
-      seg.details.departAt = iso;
-    }
-  });
+export const setDepartAt = (seg: Obj.Mutable<Segment>, iso: string): void => {
+  if (seg.details._tag === 'accommodation') {
+    seg.details.checkIn = iso;
+  } else {
+    seg.details.departAt = iso;
+  }
 };
 
 /**
  * Sets the arrival / end time (ISO 8601) across variants — `checkOut` for
- * accommodation, `arriveAt` otherwise.
+ * accommodation, `arriveAt` otherwise. Call inside `Obj.update`.
  */
-export const setArriveAt = (seg: Segment, iso: string): void => {
-  Obj.update(seg, (seg) => {
-    if (seg.details._tag === 'accommodation') {
-      seg.details.checkOut = iso;
-    } else {
-      seg.details.arriveAt = iso;
-    }
-  });
+export const setArriveAt = (seg: Obj.Mutable<Segment>, iso: string): void => {
+  if (seg.details._tag === 'accommodation') {
+    seg.details.checkOut = iso;
+  } else {
+    seg.details.arriveAt = iso;
+  }
 };
 
 /**

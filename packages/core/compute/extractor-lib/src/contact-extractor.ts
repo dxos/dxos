@@ -26,30 +26,32 @@ export const matchMessage = (source: Obj.Any): MatchResult => {
  * `AiService`, so it composes into contexts without those layers (e.g. a streaming pipeline
  * stage). Does NOT write to the database.
  */
-export const extractContact = ({ db, source }: ExtractInput): Effect.Effect<ExtractResult, never> =>
-  Effect.gen(function* () {
-    // `dispatch` may invoke an explicitly-selected extractor without `match()`, so guard a
-    // sender-less message rather than crashing in `buildContactGraph`.
-    const message = source as Message.Message;
-    const sender = message.sender;
-    if (!sender) {
-      return { created: [], updated: [], relations: [] };
-    }
+export const extractContact = Effect.fnUntraced(function* ({
+  db,
+  source,
+}: ExtractInput): Effect.fn.Return<ExtractResult, never> {
+  // `dispatch` may invoke an explicitly-selected extractor without `match()`, so guard a
+  // sender-less message rather than crashing in `buildContactGraph`.
+  const message = source as Message.Message;
+  const sender = message.sender;
+  if (!sender) {
+    return { created: [], updated: [], relations: [] };
+  }
 
-    // A machine is never a contact. Only the deny half of the contact gate applies here: this
-    // extractor runs per message, so it has no outbound/known-organization evidence to satisfy the
-    // full allow-list — but running with NO gate at all (as it did) turned every `no-reply@`,
-    // `mailer-daemon@` and `invoice+statements+acct_…@stripe.com` sender in a mailbox into a Person.
-    if (isAutomatedSender(sender.email, senderSignals(message))) {
-      return { created: [], updated: [], relations: [] };
-    }
-    const { contact, organization } = yield* buildContactGraph(sender, db);
-    return {
-      created: [organization, contact].filter((object): object is NonNullable<typeof object> => !!object),
-      updated: [],
-      relations: [],
-    };
-  });
+  // A machine is never a contact. Only the deny half of the contact gate applies here: this
+  // extractor runs per message, so it has no outbound/known-organization evidence to satisfy the
+  // full allow-list — but running with NO gate at all (as it did) turned every `no-reply@`,
+  // `mailer-daemon@` and `invoice+statements+acct_…@stripe.com` sender in a mailbox into a Person.
+  if (isAutomatedSender(sender.email, senderSignals(message))) {
+    return { created: [], updated: [], relations: [] };
+  }
+  const { contact, organization } = yield* buildContactGraph(sender, db);
+  return {
+    created: [organization, contact].filter((object): object is NonNullable<typeof object> => !!object),
+    updated: [],
+    relations: [],
+  };
+});
 
 /**
  * Reusable extractor that creates a Person from a message's sender, linking to an existing

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
@@ -15,6 +16,9 @@ import { log } from '@dxos/log';
  * NOTE: Keep DISABLED in production, "quick" check is O(dbSize) which took 6 seconds for my relatively-small profile.
  */
 export const RUN_SQLITE_QUICK_CHECK_ON_STARTUP = false;
+
+/** Raised when `PRAGMA quick_check` reports corruption. */
+export class SqliteQuickCheckError extends Data.TaggedError('SqliteQuickCheckError') {}
 
 /** Timeout for the startup sqlite health check (schema probe + optional quick_check). */
 export const SQLITE_HEALTH_CHECK_TIMEOUT_MS = 15_000;
@@ -51,7 +55,7 @@ export const testSqlite = (): Effect.Effect<void, unknown, SqlClient.SqlClient> 
       log('starting sqlite quick_check');
       const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
       if (result.quick_check !== 'ok') {
-        throw new Error('SQLite quick check failed');
+        return yield* new SqliteQuickCheckError();
       }
       log('sqlite quick_check passed');
     } else {

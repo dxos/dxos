@@ -29,7 +29,6 @@ export default Capability.makeModule(
     // Lazy-load the operation definitions (and their `@dxos/ai` dependency) only at click time, so the
     // AI stack stays out of early boot. Each action references its concrete operation (the three ops
     // have distinct output types, so a name-indexed helper would not typecheck).
-    const loadOps = () => Effect.promise(() => import('../types/VideoOperation.ts'));
     const scope = (video: Video.Video) => ({ spaceId: Obj.getDatabase(video)?.spaceId });
 
     const extension = yield* AppGraphBuilder.createExtension({
@@ -41,7 +40,7 @@ export default Capability.makeModule(
             id: `${video.id}-fetch-transcript`,
             data: () =>
               Effect.gen(function* () {
-                const ops = yield* loadOps();
+                const ops = yield* Effect.promise(() => import('../types/VideoOperation.ts'));
                 return yield* Operation.invoke(ops.FetchTranscript, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
@@ -54,7 +53,7 @@ export default Capability.makeModule(
             id: `${video.id}-transcribe`,
             data: () =>
               Effect.gen(function* () {
-                const ops = yield* loadOps();
+                const ops = yield* Effect.promise(() => import('../types/VideoOperation.ts'));
                 return yield* Operation.invoke(ops.Transcribe, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
@@ -67,7 +66,7 @@ export default Capability.makeModule(
             id: `${video.id}-summarize`,
             data: () =>
               Effect.gen(function* () {
-                const ops = yield* loadOps();
+                const ops = yield* Effect.promise(() => import('../types/VideoOperation.ts'));
                 return yield* Operation.invoke(ops.Summarize, { video: Ref.make(video) }, scope(video));
               }),
             properties: {

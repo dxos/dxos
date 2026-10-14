@@ -9,7 +9,7 @@ import { ConnectionState } from '@dxos/react-client/mesh';
 import * as Input from '@dxos/react-ui/Input';
 
 export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
-  const toggleNetwork = async (checked: boolean) => {
+  const handleNetworkToggle = async (checked: boolean) => {
     const mode = checked ? ConnectionState.OFFLINE : ConnectionState.ONLINE;
     await Promise.all(clients.map((client) => client.mesh.updateConfig(mode)));
   };
@@ -18,7 +18,7 @@ export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
     <div className='flex'>
       <Input.Checkbox
         classNames='mr-2'
-        onCheckedChange={({ checked }) => toggleNetwork(checked === true)}
+        onCheckedChange={({ checked }) => handleNetworkToggle(checked === true)}
         label={
           <>
             Disable{' '}

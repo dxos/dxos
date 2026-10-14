@@ -12,10 +12,7 @@ import { Capabilities } from '../common/index.ts';
 import * as Role from '../common/Role.ts';
 import { PluginManagerContext } from '../context.ts';
 import { topologicalSort } from '../helpers.ts';
-import { PluginManagerProvider } from '../ui/components/PluginManager/PluginManagerProvider.ts';
-import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent.tsx';
-import { SurfaceManager } from '../ui/components/Surface/SurfaceManager.ts';
-import { SurfaceManagerProvider } from '../ui/components/Surface/SurfaceManagerContext.ts';
+import { PluginManagerProvider, Surface, SurfaceManager, SurfaceManagerProvider } from '../ui/components/index.ts';
 import { type TestHarness } from './harness.ts';
 
 export type HarnessRenderOptions = Omit<RenderOptions, 'wrapper'> & {
@@ -56,7 +53,7 @@ export const renderSurface = <TToken extends Role.Role<any>>(
   const { type, data, limit, fallback, placeholder } = props;
   return render(
     harness,
-    <SurfaceComponent type={type} data={data as any} limit={limit} fallback={fallback} placeholder={placeholder} />,
+    <Surface.Surface type={type} data={data as any} limit={limit} fallback={fallback} placeholder={placeholder} />,
     options,
   );
 };
