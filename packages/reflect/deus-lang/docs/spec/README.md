@@ -1,0 +1,63 @@
+# DEUS format specifications
+
+One file per format DEUS reads or writes. Each says who writes the format, who reads it, and enough for an
+independent implementation. Where a spec and the code disagree, the code in [`deus/`](../../deus) and
+[`src/kernel/`](../../src/kernel) is right and the spec is a bug.
+
+| Spec                                   | Format                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------- |
+| [LANGUAGE.md](./LANGUAGE.md)           | `.deus` source: lexical structure, layout, grammar, static and dynamic semantics       |
+| [CORE.md](./CORE.md)                   | Core IR: canonical S-expressions, terms, patterns, objects, hashing                    |
+| [IMAGE.md](./IMAGE.md)                 | Images (`seed/deus.image`) and the executables that carry one                          |
+| [CODEBASE-STORE.md](./CODEBASE-STORE.md) | The codebase directory (`~/.deus`): objects, metadata, branches, layers, tasks        |
+| [CODEBASE-TEXT.md](./CODEBASE-TEXT.md) | The text export written by `deus export` and kept in git                               |
+| [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Replication bundles: naming, contents, the `DEUSCOL1` columnar encoding, gzip      |
+| [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
+| [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
+| [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
+| [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
+| [CLI-JSON.md](./CLI-JSON.md)           | `deus … --json` output and exit codes                                                  |
+| [OBSERVABILITY.md](./OBSERVABILITY.md) | Log, trace and metric output: NDJSON and OTLP JSON lines                               |
+
+How they fit together: source ([LANGUAGE](./LANGUAGE.md)) compiles to [Core](./CORE.md); Core objects live
+in the [store](./CODEBASE-STORE.md); the store is backed up as [text](./CODEBASE-TEXT.md) and replicated as
+[bundles](./CODEBASE-BINARY.md); the closure of one definition is an [image](./IMAGE.md), which a kernel runs.
+
+## Known divergences
+
+Writing the specs against the code found these. Each is also marked with a "Note:" in its spec. Until one
+is fixed, the spec describes what the code does.
+
+Bugs:
+
+- `quoteText` in [`deus/print.deus`](../../deus/print.deus) writes control characters as `\u{<decimal>}`
+  but the lexer reads `\u{…}` as hex, so `deus view` of `"\u{1b}"` prints `"\u{27}"` and an update rehashes
+  the definition ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
+- The wasm compiler compiles `==`, `<` and the other comparisons on constructed values to `i32` compares of
+  addresses: `some x == some x` is `0` in wasm and `true` in `deus eval` ([WASM.md](./WASM.md)).
+- The explorer writes builtin definitions as `def/#Bool.json`, but the app requests `def/%23Bool.json`,
+  which the local server does not decode; the bucket upload puts a raw `#` in the URL. Bucket uploads also
+  send `.js` and `.css` as `text/plain` ([EXPLORER.md](./EXPLORER.md)).
+- `\u{…}` escapes above U+FFFF lose their high bits in the TypeScript kernel's `Text.fromCodes`
+  ([LANGUAGE.md](./LANGUAGE.md)).
+- The prover ignores tactic names it does not know ([LANGUAGE.md](./LANGUAGE.md#theorems-and-tactics)).
+- Type ascriptions (`(e : T)`, `let x : T := …`) are erased before checking, and a row written on a
+  definition with no binders is not checked ([LANGUAGE.md](./LANGUAGE.md#static-semantics)).
+- Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.
+  A file under `bundles/` whose name is not `<level>-<sha256>` makes a pull fail
+  ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md)).
+- `deus export` drops attributes (`@[ext …]`, `@[integration]`), `.mdl` spec entries, the `project` file and
+  some doc comments, so a restored codebase is not the same codebase ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
+
+Docs that disagree with the code:
+
+- `Codebase.layers` says `results` and `provenance` replicate; bundles carry only objects and metadata.
+- D51 and `deus help` say the wasm compiler is first-order `Int`/`Bool`; it handles data since D56.
+- D62 lists four explorer JSON kinds; the explorer also writes `change/<causal>.json`.
+- D63 says `deus view` keeps lines within 100 columns; only some forms break.
+- D31 says spans identify code by hash; only defect traces carry hashes.
+- LLM.md says `--json` works on any command; `compile`, `image`, `run`, `serve` and `help` ignore it.
+- GETTING_STARTED.md says a `match` must cover every case; nothing checks exhaustiveness, and a missed
+  case is a defect at run time.
+- The header comments of [`deus/codebase.deus`](../../deus/codebase.deus) (a top-level `tasks` entry) and
+  [`deus/image.deus`](../../deus/image.deus) (no nominal lines) are stale.
