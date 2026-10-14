@@ -1048,7 +1048,7 @@ const carriesWrite = (key: string | symbol, request: unknown): boolean => {
     case 'DataService.update':
       return true;
     case 'DataService.updateSubscription':
-      return (['addIds', 'removeIds'] as const).some(
+      return (['add', 'removeIds'] as const).some(
         (field) => Predicate.hasProperty(request, field) && Array.isArray(request[field]) && request[field].length > 0,
       );
     default:
