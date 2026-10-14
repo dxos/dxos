@@ -170,11 +170,12 @@ export const runTurn = (
     const started = Date.now();
     const target = yield* ensureProcess(options, chat);
     const rpc = yield* target.control.rpc(target);
+    // The Composer token is the signed-in identity's alone, so nothing the space lends may replace it.
     const env = {
-      ...(yield* options.composerMcp ?? Effect.succeed(NO_CREDENTIALS)),
       ...(yield* options.definition.credentials.pipe(
         Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
       )),
+      ...(yield* options.composerMcp ?? Effect.succeed(NO_CREDENTIALS)),
     };
     yield* rpc
       .provideCredentials({ env })
@@ -451,28 +452,54 @@ const COMPOSER_MCP_TOKEN_MARGIN = Duration.hours(1);
 
 /** The part of the identity service that mints API tokens. */
 export type ApiTokenMinter = {
+  getEdgeIdentity: () => Option.Option<{ readonly identityDid: string }>;
   createApiToken: (options: { label: string; expiresAt?: number }) => Effect.Effect<{ token: string }, unknown>;
 };
 
+type MintedToken = { did: string; token: string; expiresAt: number };
+
 /**
  * The variable ({@link EdgeProtocol.COMPOSER_MCP_TOKEN_ENV}) holding an API token minted for the signed-in
- * identity, which EDGE presents to its Composer MCP server for the agent. One token is kept per identity and
- * replaced as it nears expiry; with no identity, or when minting fails, the agent goes without.
+ * identity, which EDGE presents to its Composer MCP server for the agent. One token is kept per identity DID and
+ * replaced as it nears expiry; concurrent turns share one mint. With no identity, or when minting fails, the
+ * agent goes without.
  */
 export const composerMcpCredentials = (
   identity: () => ApiTokenMinter | undefined,
   now: () => number = Date.now,
 ): Effect.Effect<Record<string, string>> => {
-  let cached: { identity: ApiTokenMinter; token: string; expiresAt: number } | undefined;
+  let cached: MintedToken | undefined;
+  let pending: { did: string; mint: Effect.Effect<MintedToken, unknown> } | undefined;
+  const currentDid = (service: ApiTokenMinter) => Option.getOrUndefined(service.getEdgeIdentity())?.identityDid;
   return Effect.gen(function* () {
     const service = identity();
-    if (!service) {
+    const did = service && currentDid(service);
+    if (!service || !did) {
       return NO_CREDENTIALS;
     }
-    if (cached?.identity !== service || cached.expiresAt - now() < Duration.toMillis(COMPOSER_MCP_TOKEN_MARGIN)) {
-      const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
-      const minted = yield* service.createApiToken({ label: 'Claude Code (cloud)', expiresAt });
-      cached = { identity: service, token: minted.token, expiresAt };
+    if (cached?.did !== did || cached.expiresAt - now() < Duration.toMillis(COMPOSER_MCP_TOKEN_MARGIN)) {
+      if (pending?.did !== did) {
+        const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
+        const mint = service
+          .createApiToken({ label: 'Claude Code (cloud)', expiresAt })
+          .pipe(Effect.map(({ token }): MintedToken => ({ did, token, expiresAt })));
+        pending = { did, mint: yield* Effect.cached(mint) };
+      }
+      const entry = pending;
+      const minted = yield* entry.mint.pipe(
+        Effect.ensuring(
+          Effect.sync(() => {
+            if (pending === entry) {
+              pending = undefined;
+            }
+          }),
+        ),
+      );
+      // A token minted for an identity that was signed out meanwhile must never be lent as the new one's.
+      if (currentDid(service) !== did) {
+        return NO_CREDENTIALS;
+      }
+      cached = minted;
     }
     return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: cached.token };
   }).pipe(
