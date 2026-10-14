@@ -9,7 +9,7 @@ group sdk "SDK" {
   node EdgeClient "@dxos/edge-client" ref="packages/core/mesh/edge-client/src/edge-http-client.ts"
 }
 group edge "EDGE" {
-  node Email "email-service (new)" ref="packages/services/email-service"
+  node Email "compute-service (agent mailboxes, new)" ref="packages/services/compute-service/src/email"
 }
 edge Agent -> Thread
 edge Agent -> Echo

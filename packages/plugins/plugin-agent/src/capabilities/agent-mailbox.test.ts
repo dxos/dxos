@@ -44,7 +44,7 @@ describe('EDGE agent mailbox', () => {
       yield* mailbox.release('kai');
       expect(edge.requests).toEqual([
         {
-          path: '/email/mailboxes/kai',
+          path: '/compute/email/mailboxes/kai',
           method: 'PUT',
           body: {
             spaceId: 'SPACE',
@@ -53,8 +53,8 @@ describe('EDGE agent mailbox', () => {
             allowedSenders: ['dxos.org'],
           },
         },
-        { path: '/email/mailboxes/kai', method: 'GET' },
-        { path: '/email/mailboxes/kai', method: 'DELETE' },
+        { path: '/compute/email/mailboxes/kai', method: 'GET' },
+        { path: '/compute/email/mailboxes/kai', method: 'DELETE' },
       ]);
     }),
   );

@@ -17,7 +17,7 @@ import { BaseError } from '@dxos/errors';
 
 export class AgentMailboxError extends BaseError.extend('AgentMailboxError', 'Agent mailbox request failed.') {}
 
-/** A mailbox as EDGE's email-service reports it (`MailboxStatus`), after every claim, release or read. */
+/** A mailbox as EDGE's compute-service reports it (`MailboxStatus`), after every claim, release or read. */
 export const MailboxStatus = Schema.Struct({
   handle: Schema.String,
   address: Schema.String,

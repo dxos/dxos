@@ -41,7 +41,7 @@ export type EmailChannelBackendOptions = {
 };
 
 /**
- * Email channel backend: connecting the channel claims the agent's address, after which EDGE's email-service routes
+ * Email channel backend: connecting the channel claims the agent's address, after which EDGE's compute-service routes
  * each email thread into its own chat of the agent and mails the agent's replies. Nothing is sent from here: the
  * agent answers mail, it does not start it.
  */

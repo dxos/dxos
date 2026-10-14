@@ -15,9 +15,9 @@ import { type EdgeHttpClient, EdgeHttpClientService, type EdgeRequestArgs } from
 import { AgentMailbox } from '#types';
 
 /** EDGE route of a mailbox. */
-const mailboxPath = (handle: string): string => `/email/mailboxes/${encodeURIComponent(handle)}`;
+const mailboxPath = (handle: string): string => `/compute/email/mailboxes/${encodeURIComponent(handle)}`;
 
-/** {@link AgentMailbox.Service} over EDGE's `/email/mailboxes/:handle`, signed with the user's identity. */
+/** {@link AgentMailbox.Service} over EDGE's `/compute/email/mailboxes/:handle`, signed with the user's identity. */
 export const makeEdgeAgentMailbox = (edge: EdgeHttpClient): AgentMailbox.Service => {
   // The EDGE client has no Effect form, so this is the one Promise boundary.
   const call = Effect.fnUntraced(function* (handle: string, args: EdgeRequestArgs) {

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-/** `Channel.backend.kind` of a channel whose conversations are email threads, hosted by EDGE's email-service. */
+/** `Channel.backend.kind` of a channel whose conversations are email threads, hosted by EDGE's compute-service. */
 export const BACKEND_KIND = 'org.dxos.channel.backend.email';
 
 /** Who may mail the agent when the config names nobody; EDGE applies the same default. */
