@@ -167,6 +167,10 @@ export type Compiler = { compile: (lam: Term) => JitFn | null };
 /** After this many deoptimizations a lambda stays on the machine. */
 const DEOPT_LIMIT = 8;
 
+/** Whether an error thrown by compiled code makes the machine replay the call. */
+export const isDeopt = (err: unknown): boolean =>
+  err === DEOPT || err instanceof DeusDefect || err instanceof RangeError;
+
 const DEOPTED: unique symbol = Symbol('deopted');
 
 /** How many definitions a defect's stack trace lists. */
@@ -626,6 +630,8 @@ export class Machine {
   /** How many compiled calls are running, and undo actions for the mutations they made. */
   jitDepth = 0;
   readonly journal: (() => void)[] = [];
+  /** Set once the deoptimization in flight is counted against the innermost lambda it left. */
+  charged = false;
 
   readonly prims: Map<string, Prim>;
   readonly host: HostHandler;
@@ -755,17 +761,29 @@ export class Machine {
     try {
       return jit(fn.env, args);
     } catch (err) {
-      if (err === DEOPT || err instanceof DeusDefect || err instanceof RangeError) {
+      if (isDeopt(err)) {
         this.rollback(mark);
-        if (++lam.deopts > DEOPT_LIMIT) {
-          lam.jit = null;
-        }
+        this.charge(lam);
+        this.charged = false;
         return DEOPTED;
       }
       throw err;
     } finally {
       if (--this.jitDepth === 0) {
         this.journal.length = 0;
+      }
+    }
+  }
+
+  /**
+   * Counts a deoptimization against `lam` unless an inner call already took it, so a callback
+   * that performs an operation does not disable the higher-order function that called it.
+   */
+  charge(lam: Term): void {
+    if (!this.charged) {
+      this.charged = true;
+      if (++lam.deopts > DEOPT_LIMIT) {
+        lam.jit = null;
       }
     }
   }

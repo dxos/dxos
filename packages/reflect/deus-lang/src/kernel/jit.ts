@@ -35,6 +35,7 @@ import {
   type Value,
   VAR,
   lookupIn,
+  isDeopt,
   pair,
   show,
 } from './machine.ts';
@@ -398,7 +399,15 @@ export const createCompiler = (machine: Machine) => {
           jit = compile(lam);
           lam.jit = jit;
         }
-        const result = jit ? jit(fn.env, own) : machine.runClosure(fn, own);
+        let result: Value;
+        try {
+          result = jit ? jit(fn.env, own) : machine.runClosure(fn, own);
+        } catch (err) {
+          if (isDeopt(err)) {
+            machine.charge(lam);
+          }
+          throw err;
+        }
         if (args.length === n) {
           return result;
         }
