@@ -23,11 +23,6 @@ export const ChannelBackend = Capability.lazyModule(
   },
   () => import('./channel-backend.ts'),
 );
-// EDGE's bot routes over the client's EDGE HTTP client; EDGE provides the service itself, over a worker binding.
-export const DiscordBot = AppCapability.layerSpec(() => import('./discord-bot.ts'), {
-  name: 'DiscordBot',
-  environments: ['browser', 'node', 'tauri'],
-});
 export const Connector = Capability.lazyModule(
   'DiscordConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
@@ -46,5 +41,4 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const Translations = AppCapability.translations(translations);

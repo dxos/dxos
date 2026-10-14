@@ -73,7 +73,6 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
         Obj.getMeta(match).keys.push(AgentChannels.directKey(channel.id));
       });
     }
-    yield* bindChannelSkills(match, channel);
     return match;
   }
 
@@ -94,37 +93,9 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const runtime = yield* Effect.context<Database.Service>();
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-  const declared = yield* channelSkills(channel);
-  yield* Effect.promise(() =>
-    binder.bind({
-      skills: [...bindings.skills, ...declared],
-      objects: [...bindings.objects, Ref.make(chat)],
-    }),
-  );
+  yield* Effect.promise(() => binder.bind({ skills: bindings.skills, objects: [...bindings.objects, Ref.make(chat)] }));
   return chat;
 }, Effect.scoped);
-
-/**
- * The skills the channel's backend declares on its config type ({@link Skill.SkillsAnnotation}): how the agent
- * answers there (posting, reacting, mailing) is the backend's to provide, so the agent core names no channel.
- */
-const channelSkills = Effect.fnUntraced(function* (channel: Channel.Channel) {
-  const config = yield* Database.load(channel.backend.config).pipe(Effect.orElseSucceed(() => undefined));
-  return config ? Skill.annotatedSkillRefs(config) : [];
-});
-
-/** Binds the channel's skills to a chat made before the channel declared them; a skill already bound is skipped. */
-const bindChannelSkills = Effect.fnUntraced(function* (chat: Chat.Chat, channel: Channel.Channel) {
-  const skills = yield* channelSkills(channel);
-  if (skills.length === 0) {
-    return;
-  }
-  const feed = yield* Database.load(chat.feed);
-  const runtime = yield* Effect.context<Database.Service>();
-  const AiContext = yield* Effect.promise(aiContextRuntime);
-  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-  yield* Effect.promise(() => binder.bind({ skills }));
-});
 
 const handler: Operation.WithHandler<typeof AgentOperation.EnsureChannelChat> = AgentOperation.EnsureChannelChat.pipe(
   Operation.withHandler(

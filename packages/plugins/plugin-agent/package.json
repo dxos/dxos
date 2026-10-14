@@ -118,11 +118,6 @@
       "types": "./dist/types/src/types/BrainService.d.ts",
       "import": "./dist/lib/BrainService.mjs"
     },
-    "./EmailOperation": {
-      "source": "./src/types/EmailOperation.ts",
-      "types": "./dist/types/src/types/EmailOperation.d.ts",
-      "import": "./dist/lib/EmailOperation.mjs"
-    },
     "./BrainSkill": {
       "source": "./src/skills/BrainSkill.ts",
       "types": "./dist/types/src/skills/BrainSkill.d.ts",

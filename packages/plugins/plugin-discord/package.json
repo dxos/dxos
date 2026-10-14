@@ -74,16 +74,6 @@
       "types": "./dist/types/src/types/DiscordAdminOperation.d.ts",
       "import": "./dist/lib/DiscordAdminOperation.mjs"
     },
-    "./DiscordAgentOperation": {
-      "source": "./src/types/DiscordAgentOperation.ts",
-      "types": "./dist/types/src/types/DiscordAgentOperation.d.ts",
-      "import": "./dist/lib/DiscordAgentOperation.mjs"
-    },
-    "./DiscordBot": {
-      "source": "./src/types/DiscordBot.ts",
-      "types": "./dist/types/src/types/DiscordBot.d.ts",
-      "import": "./dist/lib/DiscordBot.mjs"
-    },
     "./DiscordChannel": {
       "source": "./src/types/DiscordChannel.ts",
       "types": "./dist/types/src/types/DiscordChannel.d.ts",

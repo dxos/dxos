@@ -10,7 +10,6 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import {
   BrainSkill,
   ConversationSkill,
-  EmailSkill,
   GoalsSkill,
   InterviewSkill,
   ModesSkill,
@@ -29,5 +28,4 @@ export default () =>
     Capability.contribute(AppCapabilities.SkillDefinition, ModesSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, NoteTakerSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, SupportSkill),
-    Capability.contribute(AppCapabilities.SkillDefinition, EmailSkill),
   ]);
