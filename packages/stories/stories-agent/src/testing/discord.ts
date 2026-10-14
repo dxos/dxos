@@ -48,7 +48,7 @@ export type DiscordBotArgs = {
 
 export const DISCORD_CHANNEL_NAME = 'Discord';
 
-/** The agent's email address on EDGE's agent domain: `kai@dx.pub` on dev. */
+/** The agent's email address on EDGE's agent domain: `kai@dev.dxos.ai` on dev. */
 export const EMAIL_HANDLE = 'kai';
 
 /** The mode the agent works in on the community channel; each Discord thread's chat inherits its skills. */

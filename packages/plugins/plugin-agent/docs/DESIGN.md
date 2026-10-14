@@ -123,8 +123,8 @@ thread never becomes the primary chat. Person and Organization properties show t
 ### 6. Email
 
 An agent can also have an address: an Email channel (`AgentEmail` config: handle, display name,
-allowed senders) in its `AgentChannels`. Connecting it claims `<handle>@dx.pub` through
-`AgentMailbox.AgentMailboxService` (`PUT <edge>/compute/email/mailboxes/:handle`). On EDGE,
+allowed senders) in its `AgentChannels`. Connecting it claims `<handle>@dxos.ai` (`@dev.dxos.ai`
+on dev) through `AgentMailbox.AgentMailboxService` (`PUT <edge>/compute/email/mailboxes/:handle`). On EDGE,
 compute-service's `email` handler hands that handle's mail to an `AgentMailbox` Durable Object,
 which keeps one chat per email thread (`ensureChannelChat`, keyed by the thread's reply token),
 runs the agent's turn, and mails the reply in the same thread. Allowed senders default to
