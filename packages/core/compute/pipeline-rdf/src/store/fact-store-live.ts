@@ -200,22 +200,30 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
   return { putFacts, predicates, query, select, cursor, setCursor, clear };
 };
 
+/** Storage that runs its own transactions, as every `@dxos/sql-sqlite/SqlStorage` database does. */
+type TransactionalStorage = SqlStorage & Required<Options>;
+
 /**
- * Opens a FactStore over synchronous SQLite: a Durable Object's `ctx.storage.sql`, or a database from
- * `@dxos/sql-sqlite/SqlStorage`. Creates the schema on first use; a schema failure is a defect.
+ * Opens a FactStore over synchronous SQLite: a Durable Object's `ctx.storage.sql` (which must pass
+ * `transactionSync`), or a database from `@dxos/sql-sqlite/SqlStorage`. Creates the schema on first use; a
+ * schema failure, or storage with no way to make writes atomic, is a defect.
  */
 export const make = (
-  storage: SqlStorage,
-  { transactionSync = (run) => run() }: Options = {},
-): Effect.Effect<FactStoreApi> =>
-  attempt('Failed to initialize the fact store')(() => open(storage, transactionSync)).pipe(Effect.orDie);
+  storage: SqlStorage | TransactionalStorage,
+  options: Options = {},
+): Effect.Effect<FactStoreApi> => {
+  const transactionSync =
+    options.transactionSync ??
+    ('transactionSync' in storage ? <T>(run: () => T): T => storage.transactionSync(run) : undefined);
+  if (!transactionSync) {
+    return Effect.die(new Error('FactStoreLive needs transactionSync for storage that has none of its own'));
+  }
+  return attempt('Failed to initialize the fact store')(() => open(storage, transactionSync)).pipe(Effect.orDie);
+};
 
 /** Layer of {@link make}. */
-export const layer = (storage: SqlStorage, options?: Options): Layer.Layer<FactStore> =>
+export const layer = (storage: SqlStorage | TransactionalStorage, options?: Options): Layer.Layer<FactStore> =>
   Layer.effect(FactStore, make(storage, options));
-
-const openDatabase = (database: SqliteStorage.Database): Effect.Effect<FactStoreApi> =>
-  make(database, { transactionSync: (run) => database.transactionSync(run) });
 
 const memoryError = (cause: unknown) =>
   new SemanticIndexError({ message: 'Failed to open the in-memory fact store', cause });
@@ -232,7 +240,8 @@ export const makeMemory = (): FactStoreApi => {
       : SqliteStorage.makeMemory().pipe(
           Effect.mapError(memoryError),
           Effect.flatMap((database) =>
-            openDatabase(database).pipe(
+            make(database).pipe(
+              Effect.onError(() => Effect.sync(() => database.close())),
               Effect.map((opened) => {
                 // A concurrent first call may have opened one already; keep that one so all calls share it.
                 if (store) {
@@ -262,6 +271,6 @@ export const layerMemory: Layer.Layer<FactStore> = Layer.effect(
   FactStore,
   Effect.acquireRelease(SqliteStorage.makeMemory(), (database) => Effect.sync(() => database.close())).pipe(
     Effect.orDie,
-    Effect.flatMap(openDatabase),
+    Effect.flatMap((database) => make(database)),
   ),
 );

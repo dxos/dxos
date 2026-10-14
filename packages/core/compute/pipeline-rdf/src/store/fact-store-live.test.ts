@@ -198,4 +198,13 @@ describe('FactStoreLive', () => {
       expect(yield* reopened.cursor('dxn:q:m1')).toBe('hashA');
     }, Effect.scoped),
   );
+
+  it.effect(
+    'refuses storage that can make no write atomic',
+    Effect.fnUntraced(function* () {
+      const database = yield* openFile(':memory:');
+      const exit = yield* FactStoreLive.make({ exec: database.exec }).pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+    }, Effect.scoped),
+  );
 });
