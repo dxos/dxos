@@ -5,6 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
+import { Columns } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Field from '@dxos/react-ui/Field';
 import * as Focus from '@dxos/react-ui/Focus';
@@ -49,9 +50,6 @@ type ColumnProps = Pick<EntityBrowserProps, 'icons' | 'hues'> & {
 };
 
 const CARD_SELECTOR = '[data-testid="entity-card"]';
-
-/** Columns share the width, so one column fills the panel; past their minimum the row scrolls instead. */
-const COLUMN_TRACK = 'minmax(24rem, 1fr)';
 
 /**
  * One column: a filter and the close action in its toolbar, over a stack of cards that up and down arrows move through
@@ -181,7 +179,6 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
     const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
     // One entry per column that has chosen something; choosing in a column drops every choice after it.
     const [path, setPath] = useState<BrowseSelection[]>([]);
-    const viewportRef = useRef<HTMLDivElement>(null);
     const stackRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     // Into the next column at its first card, or back to the card chosen in the previous one.
@@ -212,34 +209,26 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
       return result;
     }, [cards, byId, path]);
 
-    // Like Finder, the column a choice opens scrolls into view.
-    useEffect(() => {
-      viewportRef.current?.scrollTo({ left: viewportRef.current.scrollWidth, behavior: 'smooth' });
-    }, [columns.length]);
-
     return (
-      <ScrollArea.Root {...props} orientation='horizontal' autoHide={false} ref={forwardedRef}>
-        <ScrollArea.Viewport ref={viewportRef}>
-          <Layout.Grid cols={columns.map(() => COLUMN_TRACK)} rows={['fill']} classNames='h-full'>
-            {columns.map((stack, column) => (
-              <EntityBrowserColumn
-                ref={(element) => {
-                  stackRefs.current[column] = element;
-                }}
-                onNavigate={(direction) => navigate(column, direction)}
-                // Keyed by what opened the column, so its filter resets when a new choice replaces it.
-                key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
-                column={stack}
-                selection={path[column]}
-                icons={icons}
-                hues={hues}
-                onChoose={(selection) => setPath((current) => [...current.slice(0, column), selection])}
-                onClose={column === 0 ? undefined : () => setPath((current) => current.slice(0, column - 1))}
-              />
-            ))}
-          </Layout.Grid>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      // Columns sizes them to whole shares of the width and, like Finder, scrolls the one a choice opens into view.
+      <Columns.Root {...props} minColumnWidth={24} ref={forwardedRef}>
+        {columns.map((stack, column) => (
+          <EntityBrowserColumn
+            ref={(element) => {
+              stackRefs.current[column] = element;
+            }}
+            onNavigate={(direction) => navigate(column, direction)}
+            // Keyed by what opened the column, so its filter resets when a new choice replaces it.
+            key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
+            column={stack}
+            selection={path[column]}
+            icons={icons}
+            hues={hues}
+            onChoose={(selection) => setPath((current) => [...current.slice(0, column), selection])}
+            onClose={column === 0 ? undefined : () => setPath((current) => current.slice(0, column - 1))}
+          />
+        ))}
+      </Columns.Root>
     );
   },
 );
