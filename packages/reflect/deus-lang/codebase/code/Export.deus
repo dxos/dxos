@@ -1,3 +1,82 @@
+/-- Runs a CLI command against a simulated codebase; its output is discarded. -/
+def Export.Spec.deus (dir : Text) (words : List Text) (command : Args -> {IO, Throw Text} Unit) : {IO, Throw Text} Unit := command (parseArgs (words ++ ["--codebase", dir, "--quiet"]))
+
+test Export.Spec.exportIsStable := inStore (fun _ =>
+  roundTrip Spec.sample specSample
+  let files := fun u => List.map (fun f => (f, IO.readFile ("out/code/" ++ f))) (IO.listDir "out/code")
+  let first := files ()
+  Export.write "cb" "out"
+  first == files () && not (List.isEmpty first))
+
+test Export.Spec.namesUnnamedCallees := inStore (fun _ =>
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (Compile.Spec.prelude ++
+    "def helper (n : Int) : Int := n + 1\ndef user (n : Int) : Int := helper n * 2\n")
+  deus "cb" ["src"] (fun a => addOrUpdate a false)
+  deus "cb" ["helper"] rm
+  Export.write "cb" "out"
+  Codebase.init "cb2"
+  deus "cb2" ["out/code"] (fun a => addOrUpdate a false)
+  Map.lookup "user" (Codebase.current "cb") == Map.lookup "user" (Codebase.current "cb2"))
+
+/-- Generated programs: definitions whose bodies hold generated text and numbers. -/
+def Export.Spec.program (t : Text) (k : Int) : Text := Spec.sample ++ "def word : Text := " ++ quoteText t ++ "\ndef number : Int := " ++ toText k ++
+  "\ndef both (n : Int) : Text := if n == number then word else " ++ quoteText (t ++ t) ++ "\n"
+
+test Export.Spec.restoresMetadata := inStore (fun _ =>
+  roundTrip Spec.sample specSample
+  let ns := Codebase.current "cb2"
+  let metaOf := fun name => Option.map (fun e => readMeta "cb2" (Entry.hash e)) (Map.lookup name ns)
+  let field := fun name key =>
+    match metaOf name with
+    | Option.some m => metaField m key
+    | Option.none => Option.none
+  field "areaOfSquare" "attrs" == Option.some (Sexp.list [Sexp.str "integration"]) && field "areaOfSquare" "doc" == Option.some (Sexp.str "A test.") && field "notNot" "doc" == Option.some (Sexp.str "A theorem.") && field "Shape" "doc" == Option.some (Sexp.str "A shape.") && field "area" "doc" == Option.some (Sexp.str "Area, roughly.") && isSome (field "area" "notes") && isSome (field "Shape" "lead"))
+
+test Export.Spec.restoresSpecs := inStore (fun _ =>
+  roundTrip Spec.sample specSample
+  let before := Map.lookup "S.N-1" (Codebase.current "cb")
+  isSome before && before == Map.lookup "S.N-1" (Codebase.current "cb2"))
+
+test Export.Spec.restoresTasks := inStore (fun _ =>
+  roundTrip Spec.sample specSample
+  deus
+    "cb"
+    ["new", "Write", "laws", "--labels", "spec,dogfood", "--details", "line one\nline two"]
+    task
+  Export.write "cb" "out"
+  importTasks "cb2" "out/tasks.sexp"
+  Map.toList (Tasks.current "cb") == Map.toList (Tasks.current "cb2"))
+
+theorem Export.Spec.restoresTheSnapshot (t : Text) (k : Int) : inStore (fun _ =>
+    roundTrip (program t k) specSample
+    Spec.snapshotOf "cb" == Spec.snapshotOf "cb2") == true := by test 20
+
+/-- Adds `src/` to `cb`, exports it to `out`, and restores `out` into `cb2`. -/
+def Export.Spec.roundTrip (source : Text) (spec : Text) : {IO, Throw Text} Unit :=
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ source)
+  IO.writeFile "src/s.mdl" spec
+  deus "cb" ["src"] (fun a => addOrUpdate a false)
+  Export.write "cb" "out"
+  Codebase.init "cb2"
+  deus
+    "cb2"
+    (if IO.exists "out/specs" then ["out/code", "out/specs"] else ["out/code"])
+    (fun a => addOrUpdate a false)
+
+def Export.Spec.sample : Text := "-- A lead comment.\n/-- A shape. -/\ninductive Shape @\"urn:x:Shape\" where\n  | circle (r : Int)\n  | square (s : Int)\n" ++
+  "/-- An ability. -/\nability Ask where\n  ask : Int -> Int\n" ++
+  "/-- Area, roughly. -/\ndef area (s : Shape) : Int :=\n  -- A note inside.\n  match s with\n  | Shape.circle r => 3 * r * r\n  | Shape.square w => w * w\n" ++
+  "def escape : Text := \"esc \\u{1b} del \\u{7f} tab \\t\"\n" ++
+  "/-- Asks twice. -/\ndef twice (u : Unit) : {Ask} Int := Ask.ask 1 + Ask.ask 2\n" ++
+  "/-- A test. -/\n@[integration]\ntest areaOfSquare := area (Shape.square 3) == 9\n" ++
+  "/-- A theorem. -/\ntheorem notNot (b : Bool) : (if b then true else false) = b := by decide\n"
+
+def Export.Spec.snapshotOf (dir : Text) : {IO, Throw Text} Text := (readCausal dir (headOf dir (currentBranch dir))).snapshot
+
+def Export.Spec.specSample : Text := "---\nname: S\n---\n## Extensions\n\n| Term | URI |\n| --- | --- |\n| `note` | `org.example.note@1.0` |\n\n```mdl\nnote N-1: a note\n  text: hello\n  more:\n  - one\n  - two\n```\n"
+
 /-- Where the codebase keeps the tasks it last exchanged with the export at `out`, keyed by its absolute path. -/
 def Export.basePath (dir : Text) (out : Text) : {IO} Text :=
   let absolute := if startsWith "/" out then out else getOr (IO.getEnv "PWD") "" ++ "/" ++ out
@@ -9,6 +88,59 @@ def Export.directoryOf (path : Text) : Text :=
   | _ :: [] => "."
   | _ :: rest => join "/" (reverse rest)
   | [] => "."
+
+/-- A spec document as `.mdl` text (D99): its frontmatter, then each block after the prose that
+  preceded it, in the stored order, then the closing prose. The Extensions table is written from
+  the blocks' URIs under the document's own Extensions heading, or at the top when it has none.
+  Blocks with no stored order (added before D99) come last, by name. -/
+def Export.document (dir : Text) (ns : Map Text Entry) (d : Text) : {IO} Text :=
+  let blocks := filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => if documentOf name == d then Option.map (fun obj =>
+        let meta := readMeta dir h
+        let order :=
+          match metaField meta "order" with
+          | Option.some (Sexp.int k) => k
+          | _ => 1000000
+        (order, name, Mdl.fromSexp obj, meta)) (readObject dir h) else Option.none
+    | _ => Option.none) (Map.toList ns)
+  let sorted := sortBy (fun a b =>
+    match (a, b) with
+    | ((oa, na, _, _), ob, nb, _, _) => if oa == ob then compare na nb else compare oa ob) blocks
+  let text := fun meta key => getOr (Option.map asText (metaField meta key)) ""
+  let front :=
+    match sorted with
+    | (_, _, _, meta) :: _ => filterMap (fun kv =>
+        match kv with
+        | Sexp.list (k :: v :: []) => Option.some (asText k, asText v)
+        | _ => Option.none) (metaList meta "front")
+    | [] => []
+  let frontLines := if any (fun kv => fst kv == "name") front then front else ("name", d) :: List.filter (fun kv => fst kv != "name") front
+  let terms := dedup (sort (List.map (fun x =>
+    match x with
+    | (_, _, (uri, b), _) => "| `" ++ b.blockType ++ "` | `" ++ uri ++ "` |") sorted))
+  let table := join "\n" (["| Term | URI |", "| --- | --- |"] ++ terms)
+  let pieces := concatMap (fun x =>
+    match x with
+    | (_, _, (_, b), meta) => List.filter (fun t => not (Text.isEmpty t)) [text meta "lead", Mdl.render b]) sorted
+  let tail :=
+    match last? sorted with
+    | Option.some (_, _, _, meta) => text meta "tail"
+    | Option.none => ""
+  let bodyLines := lines (join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
+  let isExtensions := fun l => startsWith "#" (trim l) && headingOf (trim l) == "Extensions"
+  let body := if any isExtensions bodyLines then
+    let at := findIndex isExtensions bodyLines
+    join "\n" (List.take (at + 1) bodyLines ++ ["", table] ++ List.drop (at + 1) bodyLines)
+  else join "\n" (["## Extensions", "", table, ""] ++ bodyLines)
+  join
+    "\n"
+    (["---"] ++ List.map (fun kv => fst kv ++ ": " ++ snd kv) frontLines ++ ["---", "", body]) ++ "\n"
+
+/-- The document a spec block belongs to: its name without the block id. -/
+def Export.documentOf (name : Text) : Text :=
+  let parts := Text.split name "."
+  join "." (List.take (List.length parts - 1) parts)
 
 /-
   Exporting a codebase as text (D64), so a git repository can back it up and review its changes.
@@ -151,6 +283,12 @@ def Export.recordBase (dir : Text) (out : Text) (snapshot : Map Text Text) : {IO
   IO.mkdirp (dir ++ "/exports")
   IO.writeFile (basePath dir out) (Tasks.putSnapshot dir snapshot ++ "\n")
 
+/-- The names of the spec documents the namespace holds, sorted. -/
+def Export.specDocuments (ns : Map Text Entry) : List Text := dedup (sort (filterMap (fun pair =>
+  match pair with
+  | (name, Entry.spec _) => Option.some (documentOf name)
+  | _ => Option.none) (Map.toList ns)))
+
 /-- The task as Markdown: a heading, its fields, links, comments. -/
 def Export.taskMarkdown (t : Task) : Text :=
   let field := fun label value => if Text.isEmpty value then "" else "- " ++ label ++ ": " ++ value ++ "\n"
@@ -198,29 +336,10 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     | (name, e) =>
         let body := snd (viewParts printer dir ns name e "deus")
         if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
-  -- Spec blocks go back into `.mdl` documents, one per document name, so `deus add` restores them.
-  let specs := filterMap (fun pair =>
-    match pair with
-    | (name, Entry.spec h) =>
-        match readObject dir h with
-        | Option.some obj =>
-            match Mdl.fromSexp obj with
-            | (uri, b) => Option.some (Text.take (Text.length name - Text.length b.blockId - 1) name, b.blockType, uri, Mdl.render b)
-        | Option.none => Option.none
-    | _ => Option.none) (Map.toList ns)
-  let documents := dedup (sort (List.map fst specs))
+  -- Spec documents go back into `.mdl` files, one per document, so `deus add` restores them.
+  let documents := specDocuments ns
   if List.isEmpty documents then () else IO.mkdirp (out ++ "/specs")
-  forEach documents (fun d =>
-    let mine := filterMap (fun pair => if fst pair == d then Option.some (snd pair) else Option.none) specs
-    let terms := dedup (sort (List.map (fun x =>
-      match x with
-      | (term, uri, _) => "| `" ++ term ++ "` | `" ++ uri ++ "` |") mine))
-    IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (join
-      "\n"
-      (["---", "name: " ++ d, "---", "", "## Extensions", "", "| Term | URI |", "| --- | --- |"] ++
-        terms ++ ["", "## Blocks", ""] ++ List.map (fun x =>
-        match x with
-        | (_, _, text) => text ++ "\n") mine)))
+  forEach documents (fun d => IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (document dir ns d))
   let files := dedup (sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")
   forEach files (fun f => IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (join

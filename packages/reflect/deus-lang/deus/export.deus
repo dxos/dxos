@@ -65,6 +65,66 @@ def withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry :=
         | _ => go rest (Set.insert h seen) acc
   go (List.concatMap (fun e => if exported e then dependenciesOf (Entry.hash e) else []) (Map.values ns)) Set.empty ns
 
+/-- The document a spec block belongs to: its name without the block id. -/
+def documentOf (name : Text) : Text :=
+  let parts := Text.split name "."
+  Text.join "." (List.take (List.length parts - 1) parts)
+
+/-- The names of the spec documents the namespace holds, sorted. -/
+def specDocuments (ns : Map Text Entry) : List Text :=
+  List.dedup (List.sort (List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec _) => some (documentOf name)
+    | _ => none) (Map.toList ns)))
+
+/--
+  A spec document as `.mdl` text (D99): its frontmatter, then each block after the prose that
+  preceded it, in the stored order, then the closing prose. The Extensions table is written from
+  the blocks' URIs under the document's own Extensions heading, or at the top when it has none.
+  Blocks with no stored order (added before D99) come last, by name.
+-/
+def document (dir : Text) (ns : Map Text Entry) (d : Text) : {IO} Text :=
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) =>
+      if documentOf name == d then
+        Option.map (fun obj =>
+          let meta := Codebase.readMeta dir h
+          let order := match Codebase.metaField meta "order" with
+            | some (Sexp.int k) => k
+            | _ => 1000000
+          (order, name, Mdl.fromSexp obj, meta)) (Codebase.readObject dir h)
+      else none
+    | _ => none) (Map.toList ns)
+  let sorted := List.sortBy (fun a b =>
+    match (a, b) with
+    | ((oa, na, _, _), (ob, nb, _, _)) => if oa == ob then compare na nb else compare oa ob) blocks
+  let text := fun (meta : Option Sexp) (key : Text) => Option.getOr (Option.map Sexp.asText (Codebase.metaField meta key)) ""
+  let front := match sorted with
+    | (_, _, _, meta) :: _ => List.filterMap (fun kv =>
+      match kv with
+      | Sexp.list [k, v] => some (Sexp.asText k, Sexp.asText v)
+      | _ => none) (Codebase.metaList meta "front")
+    | [] => []
+  let frontLines := if List.any (fun kv => fst kv == "name") front then front else ("name", d) :: List.filter (fun kv => fst kv != "name") front
+  let terms := List.dedup (List.sort (List.map (fun x =>
+    match x with
+    | (_, _, (uri, b), _) => "| `" ++ b.blockType ++ "` | `" ++ uri ++ "` |") sorted))
+  let table := Text.join "\n" (["| Term | URI |", "| --- | --- |"] ++ terms)
+  let pieces := List.concatMap (fun x =>
+    match x with
+    | (_, _, (_, b), meta) => List.filter (fun t => not (Text.isEmpty t)) [text meta "lead", Mdl.render b]) sorted
+  let tail := match List.last? sorted with
+    | some (_, _, _, meta) => text meta "tail"
+    | none => ""
+  let bodyLines := Text.lines (Text.join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
+  let isExtensions := fun (l : Text) => Text.startsWith "#" (Text.trim l) && Mdl.headingOf (Text.trim l) == "Extensions"
+  let body := if List.any isExtensions bodyLines then
+      let at := List.findIndex isExtensions bodyLines
+      Text.join "\n" (List.take (at + 1) bodyLines ++ ["", table] ++ List.drop (at + 1) bodyLines)
+    else Text.join "\n" (["## Extensions", "", table, ""] ++ bodyLines)
+  Text.join "\n" (["---"] ++ List.map (fun kv => fst kv ++ ": " ++ snd kv) frontLines ++ ["---", "", body]) ++ "\n"
+
 /-- Writes the export of the current branch to `out`; returns (source files, definitions, tasks). -/
 def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
   let _ := mergeExisting dir out
@@ -76,27 +136,10 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
     | (name, e) =>
       let body := snd (Cli.viewParts printer dir ns name e "deus")
       if Text.isEmpty (Text.trim body) then none else some (topOf name, body)) entries
-  -- Spec blocks go back into `.mdl` documents, one per document name, so `deus add` restores them.
-  let specs := List.filterMap (fun pair =>
-    match pair with
-    | (name, Entry.spec h) =>
-      match Codebase.readObject dir h with
-      | some obj =>
-        match Mdl.fromSexp obj with
-        | (uri, b) => some (Text.take (Text.length name - Text.length b.blockId - 1) name, (b.blockType, uri, Mdl.render b))
-      | none => none
-    | _ => none) (Map.toList ns)
-  let documents := List.dedup (List.sort (List.map fst specs))
+  -- Spec documents go back into `.mdl` files, one per document, so `deus add` restores them.
+  let documents := specDocuments ns
   if List.isEmpty documents then () else IO.mkdirp (out ++ "/specs")
-  List.forEach documents (fun d =>
-    let mine := List.filterMap (fun pair => if fst pair == d then some (snd pair) else none) specs
-    let terms := List.dedup (List.sort (List.map (fun x =>
-      match x with
-      | (term, uri, _) => "| `" ++ term ++ "` | `" ++ uri ++ "` |") mine))
-    IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (Text.join "\n" (["---", "name: " ++ d, "---", "", "## Extensions", "", "| Term | URI |", "| --- | --- |"] ++ terms ++ ["", "## Blocks", ""] ++
-      List.map (fun x =>
-        match x with
-        | (_, _, text) => text ++ "\n") mine)))
+  List.forEach documents (fun d => IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (document dir ns d))
   let files := List.dedup (List.sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")
   List.forEach files (fun f =>

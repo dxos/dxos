@@ -1,5 +1,26 @@
 # History of main
 
+- `0833dc37cb` task: set 50e58574 details
+- `8755200a57` history: import 459 changes (by claude)
+- `d435c5cfa7` task: import from tasks.sexp
+- `4c8ea1ee27` add code specs
+- `7b35b30de6` task: set 50e58574 details
+- `302f8b5248` history: import 451 changes (by claude)
+- `c2c006d631` task: import from tasks.sexp
+- `5e722d76ec` add code specs
+- `4c432b5427` task: set 50e58574 details
+- `611a529b6e` history: import 404 changes (by claude)
+- `5eba8c36bd` task: import from tasks.sexp
+- `32b847eed4` add code specs
+- `82b26f3b0b` task: open f4afc2c0 A pull keeps existing metadata, so spec prose edited in two codebases does not merge
+- `643c8e815d` task: open 3e686896 Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase
+- `1f094af5f5` task: set b4d7a440 state assignee
+- `254574a07f` task: set 50e58574 state assignee
+- `361dc8fcd7` task: open 50e58574 Specs live in the codebase: documents keep their prose, deus view and deus mdl take a document, docs/spec/*.mdl removed
+- `a4d50c65e3` specs live in the codebase: documents keep their prose and order (D96) (by claude)
+- `6c113461a6` history: import 408 changes
+- `e565d47432` task: import from tasks.sexp
+- `a44472206d` add code specs
 - `211fc54767` C back end: a local passed as an argument moves there when later arguments only read it (D98) (by claude)
 - `5abc62eac7` history: import 438 changes
 - `5460cc4043` task: import from tasks.sexp

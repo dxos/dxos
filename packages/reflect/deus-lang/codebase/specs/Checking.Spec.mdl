@@ -1,6 +1,20 @@
 ---
+id: org.dxos.deus.spec.checking
 name: Checking.Spec
+version: 1.0
 ---
+
+# Checked ascriptions and rows
+
+A type written inside a definition is a claim the checker holds the code to ([D95](../../docs/DECISIONS.md)). Before
+this, `(e : T)`, `let x : T := …` and a binder `(x : T)` were parsed and dropped, and a row written on a
+definition with no binders (`def x : {} Int := …`) was never attached to anything, so all of them were
+comments the compiler did not read.
+
+Written in the order of the process ([D92](../../docs/DECISIONS.md)): requirements, then the APIs and laws, then
+the implementation. The theorems below ran red on the old checker (4 of the first 10 failed) before any of
+it was written. `deus mdl Checking.Spec` checks the blocks; `deus check Checking.Spec` runs the
+theorems.
 
 ## Extensions
 
@@ -10,7 +24,21 @@ name: Checking.Spec
 | `law` | `org.dxos.deus.law@1.0` |
 | `req` | `org.dxos.deus.req@1.0` |
 
-## Blocks
+## APIs
+
+There is no new syntax and no new command. The parser keeps the type: `Expr.ann e T` for `(e : T)` and an
+annotated `let` value, `Pat.ann p T` for a binder. The resolver writes `(ann T e)`, `(ann T p)` in a pattern
+and `(annlocal T e)` under a `lam` whose binder is ascribed; `Resolve.unnote` removes them before hashing,
+as it removes comments (D66) and number spellings (D88), and `Resolve.unmark` keeps them for the checker.
+
+| Form             | Checker rule                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `(ann T e)`      | `T` is read like a signature, with its own fresh type and row variables; `e` is checked against it, and the result is `T`. |
+| `(ann T p)`      | In a pattern: the scrutinee's type is unified with `T`, then `p` is matched.                             |
+| `(annlocal T e)` | Local 0 is unified with `T`, then `e` is inferred.                                                       |
+
+A definition with no binders whose signature is `(teff (eff …) T)` is checked against `T` in the row the
+braces write, closed unless it names a tail (`{IO | r}`). Without braces the row is fresh, as before.
 
 ```mdl
 api A-1: the checker's view of Core
@@ -19,11 +47,7 @@ api A-1: the checker's view of Core
   - Types.signatureRow : Unifier -> List Sexp -> Ref (Map Text TType) -> Ref (Map Text TRow) -> TRow
 ```
 
-```mdl
-law L-1: ascriptions are not part of Core, so a definition hashes as it does without them
-  theorem: Checking.Spec.ascriptionKeepsHash
-  evidence: proof
-```
+## Ascriptions
 
 ```mdl
 req R-1: (e : T) is checked; e must have type T and the expression has type T
@@ -36,6 +60,12 @@ req R-2: let x : T := v and let f p : T := v check v, for f its body, against T
 ```
 
 ```mdl
+law L-1: ascriptions are not part of Core, so a definition hashes as it does without them
+  theorem: Checking.Spec.ascriptionKeepsHash
+  evidence: proof
+```
+
+```mdl
 req R-3: a type variable in an ascription is flexible; it names a type and declares nothing general
   by: Checking.Spec.ascriptionVariableIsFlexible
 ```
@@ -44,6 +74,8 @@ req R-3: a type variable in an ascription is flexible; it names a type and decla
 req R-4: a binder written (x : T) in a lambda, a local function or a pattern has type T
   by: Checking.Spec.lambdaBinderChecked | Checking.Spec.patternBinderChecked | Checking.Spec.binderKeepsHash
 ```
+
+## Rows on definitions without binders
 
 ```mdl
 req R-5: a row written on a definition with no binders bounds what its body may perform
@@ -54,3 +86,11 @@ req R-5: a row written on a definition with no binders bounds what its body may 
 req R-6: a definition with no binders and no written row stays unconstrained
   by: Checking.Spec.bareWithoutRow
 ```
+
+## Theorems
+
+Each theorem compiles a small source with `Compile.batch` and states whether it type-checks. The sources
+declare what they use, so the oracle is the compiler alone. Without the prelude an operator such as `+` has
+no known type, so a mismatch is stated with a binder's type, which is known.
+
+The laws are the definitions under `Checking.Spec`: `deus ls Checking.Spec.` lists them and `deus view` prints them.

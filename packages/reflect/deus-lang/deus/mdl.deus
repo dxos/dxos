@@ -158,6 +158,60 @@ def parse (doc : Text) : Doc :=
           else go more section none terms blocks
     go lines "" none [] []
 
+/-- Whether a block is stored as a spec object: it has an id and is not an `ext` declaration. -/
+def stored (b : Block) : Bool := not (Text.isEmpty b.blockId) && b.blockType != "ext"
+
+/-- Lines joined, without the blank lines at either end. -/
+def trimLines (lines : List Text) : Text :=
+  let rec leading xs :=
+    match xs with
+    | l :: more => if Text.isEmpty (Text.trim l) then leading more else xs
+    | [] => []
+  Text.join "\n" (List.reverse (leading (List.reverse (leading lines))))
+
+/--
+  A document's prose as the codebase keeps it with the blocks (D99): the text before each stored
+  block, in order, and the text after the last. A ```deus fence is left out, since its code is
+  stored as definitions; one opening with `namespace N` leaves a line naming `N`. The Extensions
+  table's rows are left out too, since the export writes them from the blocks' URIs. Everything
+  else is kept as written, `ext` blocks and other fences included, except that runs of blank lines
+  outside fences become one, so the text survives a round trip unchanged.
+-/
+def prose (doc : Text) : (List Text, Text) :=
+  match frontmatter (List.mapIndexed (fun i l => (i + 1, l)) (Text.lines doc)) with
+  | (_, lines) =>
+    -- fence: none outside; some (kind, its lines reversed, the opening line last).
+    let rec go rest section fence acc leads :=
+      match rest with
+      | [] => (List.reverse leads, trimLines (List.reverse acc))
+      | (_, line) :: more =>
+        let t := Text.trim line
+        match fence with
+        | some (kind, held) =>
+          if t != "```" then go more section (some (kind, line :: held)) acc leads
+          else if kind == "deus" then
+            -- The code is stored as definitions; a line says where, so the document still points at its laws.
+            let code := List.filter (fun l => not (Text.isEmpty (Text.trim l))) (List.drop 1 (List.reverse held))
+            match code with
+            | first :: _ =>
+              if Text.startsWith "namespace " (Text.trim first) then
+                let ns := Text.trim (Text.drop 10 (Text.trim first))
+                go more section none (("The laws are the definitions under `" ++ ns ++ "`: `deus ls " ++ ns ++ ".` lists them and `deus view` prints them.") :: acc) leads
+              else go more section none acc leads
+            | [] => go more section none acc leads
+          else if kind == "mdl" && stored (block 0 (List.drop 1 (List.reverse held))) then go more section none [] (trimLines (List.reverse acc) :: leads)
+          else go more section none (line :: held ++ acc) leads
+        | none =>
+          let afterBlank := match acc with
+            | prev :: _ => Text.isEmpty (Text.trim prev)
+            | [] => true
+          if Text.startsWith "```" t then go more section (some (if t == "```mdl" then "mdl" else if t == "```deus" then "deus" else "other", [line])) acc leads
+          else if Text.startsWith "#" t then go more (headingOf t) none (line :: acc) leads
+          else if section == "Extensions" && Text.startsWith "|" t then go more section none acc leads
+          else if Text.isEmpty t && afterBlank then go more section none acc leads
+          else go more section none (line :: acc) leads
+    go lines "" none [] []
+
 /-- Terms a document may use: its Extensions table and its inline `ext <term>` blocks with a `uri:`. -/
 def declared (doc : Doc) : List (Text, Text) :=
   doc.terms ++ List.filterMap (fun b =>
