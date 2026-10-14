@@ -52,7 +52,12 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     if (!userId) {
       continue;
     }
-    const names = [person.fullName, person.preferredName, person.nickname, ...(person.identities ?? []).map(({ value }) => value)];
+    const names = [
+      person.fullName,
+      person.preferredName,
+      person.nickname,
+      ...(person.identities ?? []).map(({ value }) => value),
+    ];
     if (names.some((candidate) => candidate?.trim().toLowerCase() === wanted)) {
       return userId;
     }

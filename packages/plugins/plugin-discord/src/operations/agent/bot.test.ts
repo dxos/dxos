@@ -9,9 +9,9 @@ import * as Layer from 'effect/Layer';
 
 import * as Agent from '@dxos/assistant/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
+import { type Context } from '@dxos/context';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { type Context } from '@dxos/context';
 import { EdgeHttpClient, type EdgeRequestArgs } from '@dxos/edge-client';
 import { EID } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
@@ -143,19 +143,31 @@ describe('makeEdgeDiscordBot', () => {
   it.effect('posts actions to the bot route and searches its members', () =>
     Effect.gen(function* () {
       const actions = new MockEdgeHttpClient({ channelId: 'c1', messageId: 'm1' });
-      const posted = yield* makeEdgeDiscordBot(actions).act(BOT, { kind: 'react', channelId: 'c1', messageId: 'm0', emoji: '👍' });
+      const posted = yield* makeEdgeDiscordBot(actions).act(BOT, {
+        kind: 'react',
+        channelId: 'c1',
+        messageId: 'm0',
+        emoji: '👍',
+      });
       expect(posted).toEqual({ channelId: 'c1', messageId: 'm1' });
       expect(actions.requests).toEqual([
         {
           path: '/discord/bots/app-1/actions',
           method: 'POST',
-          body: { spaceId: 'space-1', channel: 'echo://space-1/channel-1', action: { kind: 'react', channelId: 'c1', messageId: 'm0', emoji: '👍' } },
+          body: {
+            spaceId: 'space-1',
+            channel: 'echo://space-1/channel-1',
+            action: { kind: 'react', channelId: 'c1', messageId: 'm0', emoji: '👍' },
+          },
         },
       ]);
 
       const search = new MockEdgeHttpClient({ members: [{ userId: '1', username: 'rich' }] });
       expect(yield* makeEdgeDiscordBot(search).findMembers(BOT, 'ri')).toEqual([{ userId: '1', username: 'rich' }]);
-      expect(search.requests[0]).toEqual({ path: '/discord/bots/app-1/members?spaceId=space-1&query=ri', method: 'GET' });
+      expect(search.requests[0]).toEqual({
+        path: '/discord/bots/app-1/members?spaceId=space-1&query=ri',
+        method: 'GET',
+      });
     }),
   );
 });

@@ -12,15 +12,12 @@ import { agentBot } from './bot.ts';
 
 const handler: Operation.WithHandler<typeof DiscordAgentOperation.Reply> = DiscordAgentOperation.Reply.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(
-      function* ({ agent, channel, text, replyTo }) {
-        const bot = yield* agentBot(agent);
-        const service = yield* DiscordBot.DiscordBotService;
-        const posted = yield* service.act(bot, { kind: 'post', channelId: channel, text, replyTo });
-        return { channel: posted.channelId, message: posted.messageId };
-      },
-      Effect.orDie,
-    ),
+    Effect.fnUntraced(function* ({ agent, channel, text, replyTo }) {
+      const bot = yield* agentBot(agent);
+      const service = yield* DiscordBot.DiscordBotService;
+      const posted = yield* service.act(bot, { kind: 'post', channelId: channel, text, replyTo });
+      return { channel: posted.channelId, message: posted.messageId };
+    }, Effect.orDie),
   ),
 );
 

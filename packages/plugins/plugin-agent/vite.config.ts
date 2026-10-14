@@ -30,6 +30,7 @@ export default defineConfig({
     Goal: 'src/types/Goal.ts',
     InterviewSkill: 'src/skills/InterviewSkill.ts',
     ConversationSkill: 'src/skills/ConversationSkill.ts',
+    EmailSkill: 'src/skills/EmailSkill.ts',
     GoalsSkill: 'src/skills/GoalsSkill.ts',
     ModesSkill: 'src/skills/ModesSkill.ts',
     NoteTakerSkill: 'src/skills/NoteTakerSkill.ts',

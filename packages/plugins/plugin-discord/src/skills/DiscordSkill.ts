@@ -11,7 +11,11 @@ import { trim } from '@dxos/util';
 
 import { DiscordAgentOperation, DiscordChannel } from '#types';
 
-export const operations = [DiscordAgentOperation.Reply, DiscordAgentOperation.DirectMessage, DiscordAgentOperation.React];
+export const operations = [
+  DiscordAgentOperation.Reply,
+  DiscordAgentOperation.DirectMessage,
+  DiscordAgentOperation.React,
+];
 
 const tool = Operation.toolName;
 
