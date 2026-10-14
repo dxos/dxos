@@ -251,6 +251,10 @@ export const layer = (dir: string): Layer.Layer<Log, LogError> =>
         try: () => mkdir(dir, { recursive: true }),
         catch: fail('Failed to create store directory'),
       }),
-      () => Layer.effect(Log, make()).pipe(Layer.provide(clientLayer(join(dir, SQLITE_FILE)))),
+      () =>
+        Layer.effect(Log, make()).pipe(
+          Layer.provide(clientLayer(join(dir, SQLITE_FILE))),
+          Layer.catchTag('SqlError', (error) => Layer.effect(Log, Effect.fail(fail('Failed to open the log')(error)))),
+        ),
     ),
   );

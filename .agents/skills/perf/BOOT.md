@@ -24,16 +24,18 @@ DX_TRACE_BOOT_LEAK=1 moon run composer-app:bundle
 The build prints the shortest static import chain from `main.tsx` to each package that must never
 be boot-reachable (the targets in `composer-app/src/vite/trace-boot-leak.ts`). For a package not on
 that list, `pnpm dx-trace-imports --from packages/apps/composer-app/src/main.tsx --to <package>`
-prints its chains. The fix is usually at the first link that did not need to be static. Prefer build configuration (the chunking groups in
-`vite.config.ts`, an exclude list, an import map) over rewriting runtime code to avoid a
-dependency.
+prints its chains. The fix is usually at the first link that did not need to be static, and it goes
+in build configuration, not runtime code. An exclude list or an import map drops a dependency the
+boot path never uses. A chunking group in `vite.config.ts` decides only which chunk a module lands
+in: it can weld lazy modules into a boot chunk, which narrowing the group undoes, but it cannot make
+a static dependency lazy.
 
 ## Runtime: what happens before ready
 
 ```bash
 pnpm perf compare --base main --metric 'wall > boot' --http2 --until boot
 DX_PWA=false moon run composer-app:e2e-startup
-node packages/apps/composer-app/scripts/memory/boot-census.mjs http://localhost:4173 out/composer --settle 150
+node packages/apps/composer-app/scripts/memory/boot-census.mjs http://localhost:4173 packages/apps/composer-app/out/composer --settle 150
 ```
 
 The perf flow cannot profile `boot`, since nothing exists to attach to before the page does, so

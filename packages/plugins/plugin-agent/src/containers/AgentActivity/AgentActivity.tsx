@@ -149,10 +149,12 @@ type ChannelTileProps = {
   onRemove: (uri: string) => void;
 };
 
-/** One channel row, named by the channel its ref resolves to, with its connection's state. */
+/** One channel row, named by the channel its ref resolves to, with its connection's state and its backend's summary. */
 const ChannelTile = ({ channel: ref, status, onRemove }: ChannelTileProps) => {
   const channel = useResolveRef(ref);
-  const detail = status?.error ?? status?.status?.error ?? status?.status?.state;
+  // The backend's summary names what the channel is (an email channel's address), which its name alone does not.
+  const summary = [status?.status?.state, status?.status?.detail].filter(Boolean).join(' · ');
+  const detail = status?.error ?? status?.status?.error ?? (summary || undefined);
   return (
     <AgentActivityComponent.Channel
       id={ref.uri}

@@ -286,6 +286,15 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
     return this.runSync();
   }
 
+  /** The registry is matched in memory on every read, so its answer is always whole and current. */
+  get completeness(): QueryResult.Completeness {
+    return 'complete';
+  }
+
+  get sources(): readonly QueryResult.SourceState[] {
+    return [{ source: 'registry', state: 'answered', answers: 0 }];
+  }
+
   run(): Promise<T[]> {
     return Promise.resolve(this.runSync());
   }

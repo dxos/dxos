@@ -162,7 +162,7 @@ test.describe('compute scene logic', () => {
 
   test('toggling the switches propagates through the gates to the beacon', async () => {
     const beacon = page.locator(`[data-node-id] ${BEACON}`).first();
-    const lit = () => beacon.evaluate((node) => node.getAttribute('class')?.includes('opacity-100') ?? false);
+    const lit = () => beacon.evaluate((node) => node.getAttribute('class')?.includes('text-yellow-500') ?? false);
     expect(await lit()).toBe(false);
 
     // Two switches feed the AND, whose output feeds the OR, whose output lights the beacon — so the

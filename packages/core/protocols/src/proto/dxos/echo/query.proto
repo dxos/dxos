@@ -37,9 +37,26 @@ message QueryResult {
   optional string queueNamespace = 7;
   float rank = 3;
 
-  /// In the ECHO Json object format.
+  /**
+   * The object as `objectStructureToJson` (`@dxos/echo/internal`) writes it, which
+   * `objectStructureFromJson` reads back: data fields at the top level with `Uint8Array` values
+   * in the DAG-JSON form `{"/":{"bytes":…}}`, plus `id`, `@type`, `@meta` (omitted when empty), `@deleted`,
+   * `@parent`, `@relationSource` and `@relationTarget`.
+   */
   optional string document_json = 10;
   optional bytes document_automerge = 11;
+
+  /// Heads of the document the index read `document_json` at; sent only for a document that holds just this object.
+  repeated string heads = 14;
+
+  /// The document's Automerge bytes, which may be ahead of `heads`; sent with `heads` so the client can show the row unloaded and load it on the first write.
+  optional bytes bytes = 15;
+
+  /// Unix ms of the object's creation, sent with `bytes`.
+  optional double created_at = 16;
+
+  /// Unix ms of the object's last change, sent with `bytes`.
+  optional double updated_at = 17;
 
   /// JSON-encoded group key (an object keyed by the aggregate's group-field names). Present iff the query has an aggregate clause.
   optional string groupKey = 12;

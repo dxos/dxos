@@ -27,6 +27,7 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   #stale = false;
   #unsubscribe: CleanupFn | undefined;
   #atom: Atom.Atom<T[]> | undefined;
+  #answers = 0;
 
   constructor(options: {
     execute: () => Promise<Entity.Unknown[]>;
@@ -56,6 +57,19 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
       return this.runSync();
     });
     return this.#atom;
+  }
+
+  get completeness(): QueryResult.Completeness {
+    if (this.#results === undefined) {
+      return 'pending';
+    }
+    return this.#pending ? 'stale' : 'complete';
+  }
+
+  get sources(): readonly QueryResult.SourceState[] {
+    return [
+      { source: this.#source, state: this.#results === undefined ? 'pending' : 'answered', answers: this.#answers },
+    ];
   }
 
   async run(): Promise<T[]> {
@@ -136,6 +150,7 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
         // "No results yet" reads as empty through the sync accessors, so it is the baseline.
         const previous = this.#results ?? [];
         this.#results = next;
+        this.#answers++;
         if (previous.length !== next.length || next.some((item, index) => item !== previous[index])) {
           this.#listeners.forEach((listener) => listener(this));
         }

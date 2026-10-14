@@ -3,10 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Allow debug-port fetch to local recovery server (does not bypass mixed-content; use HTTPS server on HTTPS pages). -->
+    <!-- Allow debug-port fetch to local recovery server (does not bypass mixed-content; use HTTPS server on HTTPS pages).
+         ipc: and http://ipc.localhost keep Tauri's binary IPC; without them invoke falls back to postMessage, which JSON-encodes byte payloads and hangs on a large profile export. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="connect-src 'self' http://127.0.0.1:9321 https://127.0.0.1:9321 http://localhost:9321 https://localhost:9321"
+      content="connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:9321 https://127.0.0.1:9321 http://localhost:9321 https://localhost:9321"
     />
     <title>Composer Recovery</title>
     <link rel="stylesheet" href="/src/recovery/ui.css" />

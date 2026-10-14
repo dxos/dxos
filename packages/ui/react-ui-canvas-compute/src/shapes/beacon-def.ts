@@ -30,6 +30,8 @@ export const beaconNodeDef = defineComputeNode<BeaconShape>({
   name: 'Beacon',
   icon: 'ph--sun--regular',
   group: 'Outputs',
+  // A lamp: round, with its one port at the side centre, which lies on the circle.
+  ellipse: true,
   schema: withZ(BeaconShape),
   component: BeaconComponent,
   create: createBeacon,

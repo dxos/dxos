@@ -21,7 +21,7 @@ import React, {
 } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type ThemedClassName } from '@dxos/ui-types';
+import { DX_POPOVER_CONTENT_ATTR, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
@@ -137,6 +137,8 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
             {...props}
             {...(labels.title && { 'aria-labelledby': popover.getTitleProps().id })}
             {...(labels.description && { 'aria-describedby': popover.getDescriptionProps().id })}
+            // Hover-driven anchors (`dx-anchor`) treat the pointer over this element as still inside, so the card stays open.
+            {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
             data-surface='popup'
             data-size={popupSize}
             className={mx(recipes.popup(), recipes.popoverContent(), classNames)}

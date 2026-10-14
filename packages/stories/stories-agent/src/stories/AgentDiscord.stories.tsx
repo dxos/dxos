@@ -3,11 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole, StorySettingsToolbar } from '../modules/index.ts';
 import {
   type DiscordBotArgs,
   type FakeDiscordBot,
@@ -16,11 +17,11 @@ import {
   type ModuleLayout,
   createDecorators,
   edgeFake,
-  edgeLocalPersistent,
   ensureBotRecord,
   installFakeDiscordBot,
   setupAgent,
   setupDiscordAgent,
+  storyConfig,
   storyParameters,
 } from '../testing/index.ts';
 
@@ -51,12 +52,23 @@ const companion = (variant: string) => ({
  * 1. Discord: **Connect Discord** signs you in (the servers you administer appear).
  * 2. Pick a server without the bot and **Install** it (Discord's consent page), then **Refresh**.
  * 3. Pick the server, and **Connect** a channel: it appears in Activity → Channels.
- * 4. Mention @Kai in that channel: the conversation appears under Activity → Conversations.
- * 5. Reload: the space, the binding and the conversation are still there.
+ * 4. Activity: **Connect channels** starts the bot; the Discord bot panel reaches ready.
+ * 5. Mention @Kai in that channel: the conversation appears under Activity → Conversations.
+ * 6. Reload: the space, the binding and the conversation are still there.
  */
 export const Setup: Story = {
+  // Rows, not a fragment: `ModuleContainer` pins itself to its nearest positioned ancestor, so a bare sibling of the
+  // toolbar would cover it.
+  render: (args) => (
+    <div className='dx-grow grid grid-rows-[min-content_1fr]'>
+      <StorySettingsToolbar />
+      <div className='relative'>
+        <ModuleContainer {...args} />
+      </div>
+    </div>
+  ),
   decorators: createDecorators({
-    config: edgeLocalPersistent,
+    config: storyConfig(),
     onReady: async ({ db, invoker }) => {
       await setupAgent({ db, invoker, remote: true });
       await ensureBotRecord(db, KAI_APPLICATION_ID);
@@ -64,8 +76,8 @@ export const Setup: Story = {
   }),
   args: {
     layout: [
-      [companion('discord'), StoryRole.DiscordBot],
-      [companion('activity')],
+      [companion('discord'), companion('activity'), StoryRole.DiscordBot],
+      [StoryRole.AgentProperties, StoryRole.EmailChannel],
       [StoryRole.Conversation],
       [companion('brain')],
     ],

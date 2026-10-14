@@ -39,13 +39,15 @@ Fill in the spec it writes:
 ```bash
 pnpm perf run --scenario <name> -n 1              # does it run, is the symptom in the numbers?
 git commit                                        # check measures committed trees
-pnpm perf scenario check <name> --capture <run>
+pnpm perf scenario check <name> --capture <run>   # without --capture when there was no live app
 ```
 
 Never hillclimb on a scenario that has not passed `check`. It passes only when an A/A run makes no
-false call, an injected slowdown sized from the A/A run is caught, and at least half the capture's
-hot functions are among the scenario's. A scenario that fails the last one reproduces some other
-problem; change the fixture or the steps, not the bar. A run that does not show the report's symptom at all needs
+false call, an injected slowdown sized from the A/A run is caught, and, given a capture, at least
+half the capture's hot functions are among the scenario's. A scenario that fails that last test
+reproduces some other problem; change the fixture or the steps, not the bar. Without a capture,
+`check` reports the field reproduction unverified, which is enough to go on only when the run shows
+the report's symptom, and the scenario's PR then says it is unverified. A run that does not show the report's symptom at all needs
 a bigger or older fixture before it needs `check`.
 
 ## 4. Land it

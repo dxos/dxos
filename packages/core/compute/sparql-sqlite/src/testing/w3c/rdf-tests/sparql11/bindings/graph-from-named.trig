@@ -1,0 +1,4 @@
+PREFIX : <http://example.org/>
+
+GRAPH :g1 { :s :p :o . }
+GRAPH :g2 { :s :p :o . }

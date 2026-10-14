@@ -850,3 +850,13 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.exhaustive,
   );
 };
+
+export {
+  type BranchCharacteristics,
+  type Characteristics,
+  type QueryClass,
+  type QueryWindow,
+  type Revalidation,
+  type SelectionKind,
+  characteristics,
+} from './characteristics.ts';

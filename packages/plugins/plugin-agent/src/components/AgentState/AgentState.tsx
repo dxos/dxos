@@ -153,7 +153,7 @@ AgentStateIdentity.displayName = 'AgentState.Identity';
 //
 
 type AgentStateCounts = {
-  memories: { active: number; expired: number };
+  memories: { active: number; superseded: number };
   /** Facts in the agent's brain and how many people said them; absent when none were read. */
   facts?: { count: number; speakers: number };
   goals: { proposed: number; confirmed: number };
@@ -174,7 +174,7 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
       id: 'memories',
       icon: 'ph--brain--regular',
       title: t('agent-state-memories.label'),
-      value: counts.memories.active + counts.memories.expired,
+      value: counts.memories.active + counts.memories.superseded,
       description: t('agent-state-memories.description', counts.memories),
     },
     ...(counts.facts

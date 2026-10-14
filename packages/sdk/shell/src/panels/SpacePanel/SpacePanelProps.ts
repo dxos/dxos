@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FC, type cloneElement } from 'react';
+import { type FC, type ReactNode, type cloneElement } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { type Space } from '@dxos/react-client/echo';
@@ -32,11 +32,13 @@ export type SpacePanelImplProps = {
 export type SpacePanelProps = Pick<SpacePanelImplProps, 'space'> &
   Partial<Omit<SpacePanelImplProps, 'send' | 'activeView' | 'space'>>;
 
-export type SpacePanelHeadingProps = Pick<SpacePanelImplProps, 'titleId' | 'space' | 'onDone' | 'doneActionParent'>;
+export type SpacePanelHeadingProps = Pick<SpacePanelImplProps, 'titleId' | 'onDone'>;
 
 export type SpacePanelStepProps = Pick<
   SpacePanelImplProps,
   'space' | 'createInvitationUrl' | 'send' | 'onDone' | 'doneActionParent' | 'DoneAction'
 > & {
   active?: boolean;
+  /** Rows the step shows above its own, in its Dialog.Body (the space's name, for the space manager). */
+  heading?: ReactNode;
 };

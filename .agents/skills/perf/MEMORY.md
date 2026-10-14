@@ -21,7 +21,7 @@ Measure with nothing attached to the page while it loads. A Playwright page cost
 
 ```bash
 node packages/apps/composer-app/scripts/memory/ledger.mjs http://localhost:4173 --detached
-node packages/apps/composer-app/scripts/memory/ledger.mjs http://localhost:4173 --detached --by-code --dist out/composer
+node packages/apps/composer-app/scripts/memory/ledger.mjs http://localhost:4173 --detached --by-code --dist packages/apps/composer-app/out/composer
 ```
 
 `ledger.mjs` closes the books per process: allocators, committed wasm and a residual. No
@@ -29,11 +29,13 @@ allocator reports wasm linear memory, so the ledger adds it and names the module
 
 ## Growth: what accumulates?
 
-Three snapshots, not two: after warm-up, after N repetitions and after 2N. What grows in both
-intervals is an accumulator; what grows once is a cache filling.
+Three snapshots, not two: after warm-up, after N repetitions of one workload and after 2N. What
+grows in both intervals is an accumulator; what grows once is a cache filling. The perf flow does
+not repeat a workload, so its snapshots show growth from one stage to the next, and
+`snapshot-diff.mjs` shows growth while the app sits idle.
 
 ```bash
-pnpm perf run --snapshots idle,<stage>,end -n 1   # snapshots at stage boundaries
+pnpm perf run --snapshots idle,<stage>,end -n 1   # snapshots at one flow's stage boundaries
 pnpm perf summarize --heap                        # their composition
 node packages/apps/composer-app/scripts/memory/snapshot-diff.mjs http://localhost:4173 --wait1 60 --wait2 420
 node packages/apps/composer-app/scripts/memory/retainers.mjs <file.heapsnapshot> --min 400000
