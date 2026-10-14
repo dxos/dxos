@@ -675,11 +675,12 @@ audit" (points 25–39, all accepted as recommended except where these rules say
 2. **Scrolling is composed.** It comes only from `ScrollArea.Root > ScrollArea.Viewport asChild > <part>`; a part
    that scrolls itself (a popup's Content, `Toolbar.Root`, a list's Content) wraps itself so its own element is the
    viewport, since a part must keep its ref and `data-part` (finding 10).
-3. **`scroll` is the only sugar.** List Contents (`Listbox.Content`, `OrderedList.Content`) take `scroll` (default
-   `true`); `scroll={false}` hands scrolling to a host that already scrolls, since nested frames never scroll
-   (AUDIT point 14).
-4. **Viewport belongs to ScrollArea.** No other composite has a `Viewport` part, since Ark uses the name only for
-   scroll-area's scrolling element.
+3. **A list scrolls only when composed in a `Viewport`.** List Contents (`Listbox.Content`, `OrderedList.Content`) never
+   scroll on their own; `Listbox.Viewport`/`OrderedList.Viewport` is the `ScrollArea.Root > ScrollArea.Viewport
+asChild` sugar around them (decided 2026-10-12, replacing a `scroll` prop that defaulted to `true`). Without one the
+   host scrolls, so a list dropped into a scrolling page cannot trap wheel and trackpad gestures (AUDIT point 14).
+4. **Viewport belongs to ScrollArea.** A composite's `Viewport` part is only ever a ScrollArea (the list sugar above),
+   since Ark uses the name only for scroll-area's scrolling element.
 5. **Header, Body, Footer.** `Card`, `Dialog`, `Popover` and `Panel` share them; `Panel.Toolbar`/`Statusbar` become
    `Panel.Header`/`Footer`, generic regions that size to their content (`auto minmax(0,1fr) auto`) and hold a
    `Toolbar.Root` as a child when they need one. A one-row toolbar keeps adjacent planks aligned, and an empty header

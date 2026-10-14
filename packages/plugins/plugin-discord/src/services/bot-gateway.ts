@@ -30,7 +30,7 @@ export const appEdgeClient: EdgeClientResolver = Effect.gen(function* () {
 });
 
 /** EDGE route of the gateway host for one bot, keyed by its Discord application id. */
-export const discordBotPath = (applicationId: string) => `/compute/discord/bots/${encodeURIComponent(applicationId)}`;
+export const discordBotPath = (applicationId: string) => `/discord/bots/${encodeURIComponent(applicationId)}`;
 
 /** Calls a bot route and decodes the `DiscordBotStatus` EDGE answers every verb with. */
 export const callBot: (

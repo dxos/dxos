@@ -676,6 +676,7 @@ export const createIssueComment = (
   );
 
 const GitHubCheckRunSchema = Schema.Struct({
+  id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   /** `queued`, `in_progress` or `completed`. */
   status: Schema.String,

@@ -248,19 +248,23 @@ export const createReactRenderer = ({
       const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
       return (
         <UiListbox.Root key={path} items={options} selectionMode='multiple' value={selections}>
-          <UiListbox.Content>
-            {options.map((option) => (
-              <UiListbox.Item
-                key={option.value}
-                item={option}
-                // A shift-click must not start a text selection before the row's click handler runs.
-                onMouseDown={(event) => event.shiftKey && event.preventDefault()}
-                onClick={(event) =>
-                  event.shiftKey && event.altKey ? api.extendTo(option.value) : api.select(option.value, event.shiftKey)
-                }
-              />
-            ))}
-          </UiListbox.Content>
+          <UiListbox.Viewport>
+            <UiListbox.Content>
+              {options.map((option) => (
+                <UiListbox.Item
+                  key={option.value}
+                  item={option}
+                  // A shift-click must not start a text selection before the row's click handler runs.
+                  onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+                  onClick={(event) =>
+                    event.shiftKey && event.altKey
+                      ? api.extendTo(option.value)
+                      : api.select(option.value, event.shiftKey)
+                  }
+                />
+              ))}
+            </UiListbox.Content>
+          </UiListbox.Viewport>
         </UiListbox.Root>
       );
     }
@@ -276,14 +280,16 @@ export const createReactRenderer = ({
           // fires this only when something was selected, so an empty selection dispatches nothing.
           onDeselect={() => handlers.select?.(undefined)}
         >
-          <Listbox.Content>
-            {options.map((option) => (
-              <Listbox.Item key={option.value} id={option.value}>
-                <Listbox.ItemText>{option.label}</Listbox.ItemText>
-                <Listbox.ItemIndicator />
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content>
+              {options.map((option) => (
+                <Listbox.Item key={option.value} id={option.value}>
+                  <Listbox.ItemText>{option.label}</Listbox.ItemText>
+                  <Listbox.ItemIndicator />
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       );
     }

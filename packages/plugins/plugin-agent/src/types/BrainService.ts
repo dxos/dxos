@@ -200,9 +200,12 @@ export const fromEvaluator = (event: {
 export const termText = (term: RDF.Term): string =>
   term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
-/** A fact as one line: subject, predicate, object. */
+/**
+ * A fact as one line: subject, predicate, object; a negated fact is marked "not:", or a denial reads back as the
+ * assertion it denies.
+ */
 export const factText = (fact: RDF.Fact): string =>
-  `${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;
+  `${fact.factuality.polarity === '-' ? 'not: ' : ''}${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;
 
 /** An event as plain JSON, for brains across a wire. */
 export const encodeEvent = Schema.encodeSync(Event);

@@ -65,7 +65,14 @@ const usePickerState = ({
   );
   const [creating, setCreating] = useState<string>();
   const items = useMemo<Combobox.Option[]>(
-    () => options.map(({ id, label, description }) => ({ value: id, label, description })),
+    () =>
+      options.map(({ id, label, description, icon, iconHue }) => ({
+        value: id,
+        label,
+        description,
+        icon,
+        iconHue: hues.find((hue) => hue === iconHue),
+      })),
     [options],
   );
   const handleOpenChange = useCallback(

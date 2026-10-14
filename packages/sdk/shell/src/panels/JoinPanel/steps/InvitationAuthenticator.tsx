@@ -5,12 +5,15 @@
 import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
+import { Emoji } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -51,30 +54,18 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div className='grow flex flex-col justify-center gap-4'>
-        <Field.Root
-          {...(failed && {
-            validationValence: 'error',
-          })}
-        >
+      <Dialog.Body gap='xl' align='center'>
+        <Field.Root {...(failed && { validationValence: 'error' })}>
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
-            <Field.Label asChild>
-              <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Field.Label>
+            <Field.Label classNames='text-center'>{t('auth-code-input.label')}</Field.Label>
           ) : (
-            <>
-              <Field.Label>
-                <InputLabel classNames='text-fg-muted'>{t('authenticating.label')}</InputLabel>
-              </Field.Label>
-              <div className='grow' />
-            </>
+            <Typography.Text tone='muted'>{t('authenticating.label')}</Typography.Text>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
             <Input.Pin
               {...{
-                // The panel centres its content; the pin input's cell row otherwise starts at the inline start.
-                'classNames': 'justify-center',
                 disabled,
+                'size': 'lg',
                 'length': pinLength,
                 'inputMode': 'numeric',
                 'autoComplete': 'off',
@@ -89,26 +80,25 @@ export const InvitationAuthenticator = ({
           )}
           {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
         </Field.Root>
-
-        {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-          <>
-            <Label>{t('auth-other-device-emoji.message')}</Label>
-            <div className='flex justify-center'>
+        {invitationId &&
+          authMethod === Invitation_AuthMethod.SHARED_SECRET && (
+            // One block, so the Body's gap sets it apart from the PIN while the message sits right above its emoji.
+            <div className='flex flex-col items-center'>
+              <Typography.Text tone='muted'>{t('auth-other-device-emoji.message')}</Typography.Text>
               <Emoji text={hexToEmoji(invitationId)} />
             </div>
-          </>
-        )}
-      </div>
-      <ActionBar>
-        <Action
+          )}
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           {t('cancel.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='primary'
           disabled={disabled}
           onClick={() => onInvitationAuthenticate?.(authCode)}
@@ -116,8 +106,8 @@ export const InvitationAuthenticator = ({
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
           {t('next.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };
