@@ -1,0 +1,80 @@
+/-
+  Update propagation (Unison's `update`): when a definition gets a new hash, every definition
+  that depends on it, directly or not, is rewritten to the new hash and rehashed. Rehashing
+  goes through `Compile.hashTerms`, so recursive groups are hashed as cycles exactly as `add`
+  would hash them.
+-/
+
+namespace Update
+
+def isTermLike (e : Entry) : Bool :=
+  match e with
+  | Entry.term _ => true
+  | Entry.test _ => true
+  | Entry.theorem _ => true
+  | _ => false
+
+/-- Term-like entries whose objects reference `h`. -/
+def dependentsOf (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} List Text :=
+  List.dedup (List.sort (List.filterMap (fun pair =>
+    let eh := Entry.hash (snd pair)
+    if isTermLike (snd pair) && eh != h then
+      match Codebase.readObject dir eh with
+      | some obj => if List.contains h (Codebase.dependencies obj) then some eh else none
+      | none => none
+    else none) (Map.toList ns)))
+
+/-- Rebuilds a pending definition from a stored object. -/
+def pendingOf (name : Text) (obj : Sexp) : Pending :=
+  match obj with
+  | Sexp.list [Sexp.sym "term", c] => Pending.mk name "term" c
+  | Sexp.list [Sexp.sym "test", c] => Pending.mk name "test" c
+  | _ => Pending.mk name "theorem" obj
+
+/--
+  Propagates `subst` (old hash to new hash) through the namespace. `fresh` names were just
+  compiled and are left alone. Returns the new namespace and the names that were rehashed.
+-/
+def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh : Map Text Unit) : {IO} (Map Text Entry, List Text) :=
+  if Map.size subst == 0 then (ns, [])
+  else
+    let candidates := List.filter (fun pair => isTermLike (snd pair) && not (Set.contains (fst pair) fresh)) (Map.toList ns)
+    let objectOf := fun (h : Text) => Option.getOr (Codebase.readObject dir h) (Sexp.list [])
+    -- Grow the set of changed hashes until no candidate depends on one.
+    let rec grow changed affected :=
+      let next := List.filter (fun pair =>
+        let h := Entry.hash (snd pair)
+        not (Set.contains h affected) && List.any (fun d => Set.contains d changed) (Codebase.dependencies (objectOf h))) candidates
+      if List.isEmpty next then affected
+      else
+        let hs := List.map (fun pair => Entry.hash (snd pair)) next
+        grow (List.foldl (fun s h => Set.insert h s) changed hs) (List.foldl (fun s h => Set.insert h s) affected hs)
+    let affected := grow (Set.fromList (Map.keys subst)) Set.empty
+    if Map.size affected == 0 then (ns, [])
+    else
+      -- One canonical name per affected hash; aliases follow it.
+      let canonical := List.foldl (fun m pair =>
+        let h := Entry.hash (snd pair)
+        if Set.contains h affected && not (Map.contains h m) then Map.insert h (fst pair) m else m) Map.empty candidates
+      let rewriteMap := List.foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) subst (Map.toList canonical)
+      let pending := List.map (fun pair =>
+        match pair with
+        | (h, name) => pendingOf name (Codebase.rewrite (objectOf h) rewriteMap)) (Map.toList canonical)
+      match Compile.hashTerms pending Map.empty with
+      | (hashes, objects) =>
+        List.forEach objects (fun pair => Codebase.writeObject dir (fst pair) (snd pair))
+        List.forEach (Map.toList canonical) (fun pair =>
+          match (Codebase.readMeta dir (fst pair), Map.lookup (snd pair) hashes) with
+          | (some m, some h2) => Codebase.writeMeta dir h2 m
+          | _ => ())
+        let newHash := fun (old : Text) => Option.getOr (Option.bind (Map.lookup old canonical) (fun name => Map.lookup name hashes)) old
+        let renamed := List.filter (fun pair => Set.contains (Entry.hash (snd pair)) affected) candidates
+        let ns2 := List.foldl (fun m pair =>
+          match pair with
+          | (name, Entry.term h) => Map.insert name (Entry.term (newHash h)) m
+          | (name, Entry.test h) => Map.insert name (Entry.test (newHash h)) m
+          | (name, Entry.theorem h) => Map.insert name (Entry.theorem (newHash h)) m
+          | _ => m) ns renamed
+        (ns2, List.map fst renamed)
+
+end Update

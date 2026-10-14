@@ -113,6 +113,8 @@ namespace Code
 /-- Loads `(def "hash" term)` forms into the running machine. -/
 def load : Text -> Unit := prim "Code.load"
 def has : Text -> Bool := prim "Code.has"
+/-- A data value as Core text, for printing it with names. -/
+def quote : a -> Text := prim "Code.quote"
 /-- Evaluates a loaded definition in the caller's context (its effects reach the caller's handlers). -/
 def run : Text -> a := prim "Code.run"
 /-- Machine steps so far: the deterministic cost model for performance requirements. -/

@@ -1,0 +1,70 @@
+/-
+  Printing declarations that are not plain definitions: types, abilities and theorems.
+-/
+
+namespace View
+
+def typeArgs (form : Sexp) : List Sexp :=
+  List.filter (fun x => Sexp.head x == "ctor") (Sexp.args form)
+
+def iriClause (iri : Text) (name : Text) : Text := if iri == "urn:deus:" ++ name then "" else " @" ++ Print.quoteText iri
+
+def params (count : Int) : Text := Text.concat (List.map (fun i => " " ++ Text.fromCode ('a' + i)) (List.range 0 count))
+
+/-- `inductive T where | c (F) …` or `structure T where f : F …`. -/
+def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+  match (e, Sexp.args obj) with
+  | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
+    let ctors := typeArgs obj
+    let display := name
+    if not (List.isEmpty fields) then
+      let types := Option.getOr (Option.map Sexp.args (List.head? ctors)) []
+      let lines := List.map (fun pair =>
+        match pair with
+        | (f, t) => "  " ++ f ++ " : " ++ Print.ty p t 0) (List.zip fields (List.drop 1 types))
+      "structure " ++ display ++ params count ++ iriClause iri name ++ " where\n" ++ Text.join "\n" lines
+    else
+      let ctorNames := List.filterMap (fun pair =>
+        match pair with
+        | (n, Entry.ctor t tag _) => if t == h then some (tag, Names.lastSegment n) else none
+        | _ => none) (Map.toList ns)
+      let lines := List.mapIndexed (fun tag c =>
+        let cname := Option.getOr (List.lookup tag ctorNames) ("ctor" ++ Int.toText tag)
+        let fieldTypes := List.drop 1 (Sexp.args c)
+        "  | " ++ cname ++ Text.concat (List.map (fun t => " " ++ Print.ty p t 100) fieldTypes)) ctors
+      "inductive " ++ display ++ params count ++ iriClause iri name ++ " where" ++ (if List.isEmpty lines then "" else "\n" ++ Text.join "\n" lines)
+  | _ => Sexp.print obj
+
+def abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+  match (e, Sexp.args obj) with
+  | (Entry.ability h iri, _ :: Sexp.int count :: ops) =>
+    let opNames := List.filterMap (fun pair =>
+      match pair with
+      | (n, Entry.op a index _) => if a == h then some (index, Names.lastSegment n) else none
+      | _ => none) (Map.toList ns)
+    let lines := List.mapIndexed (fun index op =>
+      let oname := Option.getOr (List.lookup index opNames) ("op" ++ Int.toText index)
+      match Sexp.args op with
+      | [_, t] => "  " ++ oname ++ " : " ++ Print.ty p t 0
+      | _ => "  " ++ oname) ops
+    "ability " ++ name ++ params count ++ iriClause iri name ++ " where\n" ++ Text.join "\n" lines
+  | _ => Sexp.print obj
+
+/-- `theorem t (x : T) : prop := by tactic`. -/
+def theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sexp) (proof : Sexp) : Text :=
+  let rec params t env acc :=
+    match t with
+    | Sexp.list [Sexp.sym "lam", b] =>
+      let x := Print.bind p env
+      params b (x :: env) (x :: acc)
+    | _ => (List.reverse acc, t, env)
+  match params prop [] [] with
+  | (names, b, env) =>
+    let binders := Text.concat (List.map (fun pair =>
+      match pair with
+      | (x, t) => " (" ++ x ++ " : " ++ Print.ty p t 0 ++ ")") (List.zip names types))
+    let tactic := List.map Sexp.asText (Sexp.args proof)
+    let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ Text.join " " tactic
+    "theorem " ++ name ++ binders ++ " : " ++ Print.expr p b env 2 0 ++ " := " ++ proofText
+
+end View

@@ -1,0 +1,285 @@
+/-
+  Tests and theorems.
+
+  A test is a `Bool` expression. A theorem is a proposition over typed binders plus the
+  evidence its author claims (docs/DECISIONS.md D13):
+
+    sorry       stated, not checked
+    by rfl      no binders; the proposition evaluates to `true`
+    by decide   every value of finite binder types is checked
+    by test n   n generated cases pass (seeded by the theorem's hash, so reruns are identical)
+
+  Results are cached under the hash of what was checked: unchanged code is never rechecked.
+  A defect inside a test or a theorem is caught at this boundary and reported as a failure.
+-/
+
+/-- The outcome of checking one test or theorem. -/
+inductive Verdict where
+  | pass (evidence : Text) (cases : Int)
+  | fail (reason : Text)
+  | unchecked
+
+namespace Check
+
+def toSexp : Verdict -> Sexp
+  | Verdict.pass evidence cases => Sexp.node "pass" [Sexp.str evidence, Sexp.int cases]
+  | Verdict.fail reason => Sexp.node "fail" [Sexp.str reason]
+  | Verdict.unchecked => Sexp.node "unchecked" []
+
+def fromSexp (s : Sexp) : Verdict :=
+  match s with
+  | Sexp.list [Sexp.sym "pass", Sexp.str evidence, Sexp.int cases] => Verdict.pass evidence cases
+  | Sexp.list [Sexp.sym "fail", Sexp.str reason] => Verdict.fail reason
+  | _ => Verdict.unchecked
+
+def cached (dir : Text) (h : Text) : {IO} Option Verdict :=
+  Option.map (fun t => fromSexp (Sexp.read t)) (IO.readFile (dir ++ "/cache/" ++ h))
+
+def remember (dir : Text) (h : Text) (v : Verdict) : {IO} Unit :=
+  match v with
+  | Verdict.unchecked => ()
+  | _ => IO.writeFile (dir ++ "/cache/" ++ h) (Sexp.print (toSexp v) ++ "\n")
+
+/-- Runs a loaded definition; a defect becomes `Result.err`. -/
+def guarded (h : Text) : Result Text a :=
+  handle Result.ok (Code.run h) with
+  | Defect.raise message -> _ => Result.err message
+
+/-- Evaluates a Core term (built by the checker) in the running machine. -/
+def evalCore (core : Sexp) : Result Text a :=
+  let h := "check:" ++ Text.sha256 (Sexp.print core)
+  if Code.has h then guarded h
+  else
+    Code.load (Sexp.print (Sexp.node "def" [Sexp.str h, core]))
+    guarded h
+
+--
+-- Generators: values of a binder type, as Core terms.
+--
+
+/-- A deterministic generator: xorshift over a 32-bit state. -/
+def nextRandom (state : Ref Int) : Int :=
+  let x1 := Ref.get state
+  let x2 := Int.xor x1 (Int.shl x1 13)
+  let x3 := Int.xor x2 (Int.ushr x2 17)
+  let x4 := Int.xor x3 (Int.shl x3 5)
+  Ref.set state x4
+  x4
+
+def below (state : Ref Int) (n : Int) : Int :=
+  let r := Int.and (nextRandom state) 2147483647
+  if n <= 0 then 0 else r % n
+
+def seedOf (h : Text) : Int :=
+  match Int.fromText (Text.join "" (List.map (fun c => Int.toText (Int.and c 7)) (List.take 9 (Text.utf8 h)))) with
+  | some v => if v == 0 then 1 else v
+  | none => 1
+
+/-- Type declarations by IRI, for generating values of user types. -/
+def typesByIri (dir : Text) (ns : Map Text Entry) : {IO} Map Text Sexp :=
+  List.foldl (fun m pair =>
+    match snd pair with
+    | Entry.type h iri _ =>
+      match Codebase.readObject dir h with
+      | some obj => Map.insert iri obj m
+      | none => m
+    | _ => m) Map.empty (Map.toList ns)
+
+def substVars (t : Sexp) (args : List Sexp) : Sexp :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", Sexp.int i] => Option.getOr (List.get? args i) t
+  | Sexp.list items => Sexp.list (List.map (fun x => substVars x args) items)
+  | _ => t
+
+def headAndArgs (t : Sexp) : (Sexp, List Sexp) :=
+  match t with
+  | Sexp.list (Sexp.sym "tapp" :: f :: args) => (f, args)
+  | _ => (t, [])
+
+def con (hash : Text) (tag : Int) (fields : List Sexp) : Sexp :=
+  let c := Sexp.node "con" [Sexp.str hash, Sexp.int tag, Sexp.int (List.length fields)]
+  if List.isEmpty fields then c else Sexp.list (Sexp.sym "app" :: c :: fields)
+
+def alphabet : List Text := ["a", "b", "z", " ", "0", "\n", "é", "-", "\""]
+
+def interestingInts : List Int := [0, 1, -1, 2, 7, -100, 2147483647, -2147483648]
+
+/-- One random value of a type, as Core; `depth` bounds recursive types. -/
+def generate (types : Map Text Sexp) (state : Ref Int) (t : Sexp) (depth : Int) : Sexp :=
+  match headAndArgs t with
+  | (Sexp.list [Sexp.sym "tref", Sexp.str iri], args) =>
+    if iri == "#Int" then
+      let k := below state 4
+      let v := if k == 0 then Option.getOr (List.get? interestingInts (below state 8)) 0
+        else if k == 1 then nextRandom state
+        else below state 41 - 20
+      Sexp.node "int" [Sexp.int v]
+    else if iri == "#Text" then Sexp.node "text" [Sexp.str (Text.concat (List.map (fun _ => Option.getOr (List.get? alphabet (below state 9)) "a") (List.range 0 (below state 6))))]
+    else if iri == "#Bool" then con "#Bool" (below state 2) []
+    else if iri == "#Unit" then con "#Unit" 0 []
+    else if iri == "#List" then
+      let elem := Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])
+      let count := if depth <= 0 then 0 else below state 6
+      List.foldl (fun acc _ => con "#List" 1 [generate types state elem (depth - 1), acc]) (con "#List" 0 []) (List.range 0 count)
+    else if iri == "#Option" then
+      if below state 3 == 0 || depth <= 0 then con "#Option" 0 []
+      else con "#Option" 1 [generate types state (Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])) (depth - 1)]
+    else if iri == "#Pair" then
+      match args with
+      | [a, b] => con "#Pair" 0 [generate types state a depth, generate types state b depth]
+      | _ => con "#Unit" 0 []
+    else
+      match Map.lookup iri types with
+      | some decl =>
+        let hash := Resolve.hashFor iri decl
+        let ctors := View.typeArgs decl
+        let nullary := List.filter (fun pair => List.length (Sexp.args (snd pair)) == 1) (List.mapIndexed (fun i c => (i, c)) ctors)
+        let pool := if depth <= 0 && not (List.isEmpty nullary) then nullary else List.mapIndexed (fun i c => (i, c)) ctors
+        match List.get? pool (below state (List.length pool)) with
+        | some (tag, c) => con hash tag (List.map (fun ft => generate types state (substVars ft args) (depth - 1)) (List.drop 1 (Sexp.args c)))
+        | none => defect ("cannot generate a value of " ++ iri)
+      | none => defect ("cannot generate a value of " ++ iri)
+  | _ => defect ("cannot generate a value of type " ++ Sexp.print t)
+
+/-- Every value of a finite type, or `none` if the type is infinite or too large. -/
+def enumerate (types : Map Text Sexp) (t : Sexp) : Option (List Sexp) :=
+  match headAndArgs t with
+  | (Sexp.list [Sexp.sym "tref", Sexp.str iri], args) =>
+    if iri == "#Bool" then some [con "#Bool" 0 [], con "#Bool" 1 []]
+    else if iri == "#Unit" then some [con "#Unit" 0 []]
+    else if iri == "#Option" then
+      Option.map (fun vs => con "#Option" 0 [] :: List.map (fun v => con "#Option" 1 [v]) vs) (Option.bind (List.head? args) (fun a => enumerate types a))
+    else if iri == "#Pair" then
+      match args with
+      | [a, b] =>
+        Option.bind (enumerate types a) (fun xs =>
+          Option.map (fun ys => List.concatMap (fun x => List.map (fun y => con "#Pair" 0 [x, y]) ys) xs) (enumerate types b))
+      | _ => none
+    else
+      match Map.lookup iri types with
+      | some decl =>
+        let ctors := View.typeArgs decl
+        if List.all (fun c => List.length (Sexp.args c) == 1) ctors then
+          let hash := Resolve.hashFor iri decl
+          some (List.mapIndexed (fun i _ => con hash i []) ctors)
+        else none
+      | none => none
+  | _ => none
+
+/-- Every combination of the binders' values. -/
+def product (domains : List (List Sexp)) : List (List Sexp) :=
+  match domains with
+  | [] => [[]]
+  | d :: rest => List.concatMap (fun v => List.map (fun vs => v :: vs) (product rest)) d
+
+def caseCore (prop : Sexp) (args : List Sexp) : Sexp :=
+  if List.isEmpty args then prop else Sexp.list (Sexp.sym "app" :: prop :: args)
+
+/-- Checks cases in order; the first failing one is the counterexample. -/
+def runCases (prop : Sexp) (cases : List (List Sexp)) (describe : List Sexp -> Text) : Option Text :=
+  match cases with
+  | [] => none
+  | args :: rest =>
+    match evalCore (caseCore prop args) with
+    | Result.ok true => runCases prop rest describe
+    | Result.ok _ => some ("counterexample: " ++ describe args)
+    | Result.err message => some ("defect " ++ show message ++ " at " ++ describe args)
+
+def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {IO} Verdict :=
+  match obj with
+  | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+    let tactic := List.map Sexp.asText (Sexp.args proof)
+    let printer := Print.printer ns []
+    let describe := fun (args : List Sexp) => Text.join ", " (List.map (fun a => Print.expr printer a [] 0 100) args)
+    let typeDecls := typesByIri dir ns
+    match tactic with
+    | ["sorry"] => Verdict.unchecked
+    | ["rfl"] =>
+      if not (List.isEmpty types) then Verdict.fail "rfl needs a closed proposition (no binders); use decide or test"
+      else
+        match runCases prop [[]] describe with
+        | none => Verdict.pass "rfl" 1
+        | some reason => Verdict.fail reason
+    | ["decide"] =>
+      let domains := List.map (fun t => enumerate typeDecls t) types
+      if List.any Option.isNone domains then Verdict.fail "decide needs finite binder types; use test"
+      else
+        let cases := product (List.map (fun d => Option.getOr d []) domains)
+        match runCases prop cases describe with
+        | none => Verdict.pass "decide" (List.length cases)
+        | some reason => Verdict.fail reason
+    | "test" :: rest =>
+      let count := Option.getOr (Option.bind (List.head? rest) Int.fromText) 100
+      let state := Ref.new (seedOf h)
+      let cases := List.map (fun _ => List.map (fun t => generate typeDecls state t 4) types) (List.range 0 count)
+      match runCases prop cases describe with
+      | none => Verdict.pass "test" count
+      | some reason => Verdict.fail reason
+    | _ => Verdict.fail ("unknown tactic: " ++ Text.join " " tactic)
+  | _ => Verdict.fail "not a theorem"
+
+def checkTest (h : Text) : Verdict :=
+  match guarded h with
+  | Result.ok true => Verdict.pass "test" 1
+  | Result.ok _ => Verdict.fail "returned false"
+  | Result.err message => Verdict.fail ("defect: " ++ message)
+
+/-- Runs every test or theorem under a prefix; prints a report; exits 1 on failure. -/
+def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
+  let dir := Cli.openCodebase args
+  let ns := Codebase.current dir
+  let prefix := Option.getOr (List.head? args.positional) ""
+  let selected := List.filter (fun pair =>
+    Text.startsWith prefix (fst pair) &&
+      (match snd pair with
+      | Entry.test _ => not wantTheorems
+      | Entry.theorem _ => wantTheorems
+      | _ => false)) (Map.toList ns)
+  let results := List.map (fun pair =>
+    match pair with
+    | (name, e) =>
+      let h := Entry.hash e
+      match cached dir h with
+      | some v => (name, v, true)
+      | none =>
+        Image.load (Cli.fetcher dir) [h]
+        let v := if wantTheorems then
+            match Codebase.readObject dir h with
+            | some obj => checkTheorem dir ns h obj
+            | none => Verdict.fail "missing object"
+          else checkTest h
+        remember dir h v
+        (name, v, false)) selected
+  let failed := List.filter (fun r =>
+    match r with
+    | (_, Verdict.fail _, _) => true
+    | _ => false) results
+  let line := fun (r : (Text, Verdict, Bool)) =>
+    match r with
+    | (name, v, wasCached) =>
+      let suffix := if wasCached then "  (cached)" else ""
+      match v with
+      | Verdict.pass evidence cases =>
+        if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix
+        else "  ✓ " ++ name ++ suffix
+      | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ reason ++ suffix
+      | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
+  Cli.output args
+    (fun _ => Json.arr (List.map (fun r =>
+      match r with
+      | (name, v, wasCached) =>
+        let status := match v with
+          | Verdict.pass evidence cases => [("status", Json.str "pass"), ("evidence", Json.str evidence), ("cases", Json.num cases)]
+          | Verdict.fail reason => [("status", Json.str "fail"), ("reason", Json.str reason)]
+          | Verdict.unchecked => [("status", Json.str "unchecked")]
+        Json.obj ([("name", Json.str name), ("cached", Json.bool wasCached)] ++ status)) results))
+    (fun _ =>
+      let summary := Int.toText (List.length results - List.length failed) ++ " passed, " ++ Int.toText (List.length failed) ++ " failed"
+      Text.join "\n" (List.map line results ++ [summary]))
+  if List.isEmpty failed then () else IO.exit 1
+
+def tests (args : Args) : {IO, Throw Text} Unit := run args false
+
+def theorems (args : Args) : {IO, Throw Text} Unit := run args true
+
+end Check

@@ -1,0 +1,379 @@
+/-
+  Printer: Core back to DEUS source, as Unison's `view` does. Dependencies print under their
+  current names (so a rename shows up everywhere at once); locals print under the author's
+  names, kept as metadata in binder order (see `Resolve.strip`).
+-/
+
+structure Printer where
+  display : Map Text Text
+  typeNames : Map Text Text
+  fieldNames : Map Text Text
+  supply : Ref (List Text)
+  fresh : Ref Int
+
+namespace Print
+
+/-- Shortest suffix of `fqn` that names nothing else in the namespace. -/
+def suffixify (all : Map Text (List Text)) (fqn : Text) : Text :=
+  let segments := Text.split fqn "."
+  let count := List.length segments
+  let rec go k :=
+    if k >= count then fqn
+    else
+      let candidate := Text.join "." (List.drop (count - k) segments)
+      let clashes := List.filter (fun other => other == candidate || Text.endsWith ("." ++ candidate) other) (Option.getOr (Map.lookup (Names.lastSegment fqn) all) [])
+      if List.length clashes <= 1 then candidate else go (k + 1)
+  go 1
+
+/-- A printer for a namespace: hash (or `type#tag`, `ability!index`) to display name. -/
+def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
+  let bySegment := (Names.build ns).bySegment
+  let index := Codebase.nameIndex ns
+  let display := Map.mapValues (fun fqn => suffixify bySegment fqn) index
+  let typeNames := List.foldl (fun m pair =>
+    match pair with
+    | (name, Entry.type _ iri _) => Map.insert iri (suffixify bySegment name) m
+    | (name, Entry.ability _ iri) => Map.insert iri (suffixify bySegment name) m
+    | _ => m) Map.empty (Map.toList ns)
+  -- Accessors print as `e.field` when the field name is unique among structures.
+  let names := Names.build ns
+  let fieldNames := List.foldl (fun m pair =>
+    match pair with
+    | (owner, Entry.type _ _ fields) =>
+      List.foldl (fun m2 f =>
+        match (Map.lookup (owner ++ "." ++ f) ns, Map.lookup f names.fieldOwners) with
+        | (some (Entry.term h), some [_]) => Map.insert h f m2
+        | _ => m2) m fields
+    | _ => m) Map.empty (Map.toList ns)
+  Printer.mk display typeNames fieldNames (Ref.new locals) (Ref.new 0)
+
+def nameFor (p : Printer) (key : Text) : Text :=
+  match Map.lookup key p.display with
+  | some name => name
+  | none => "#" ++ Text.take 10 key
+
+/-- The next binder name: the author's, made unique against the names in scope. -/
+def bind (p : Printer) (env : List Text) : Text :=
+  let given := match Ref.get p.supply with
+    | x :: rest =>
+      Ref.set p.supply rest
+      x
+    | [] => ""
+  let base := if given == "" then
+      let k := Ref.get p.fresh
+      Ref.set p.fresh (k + 1)
+      "x" ++ Int.toText k
+    else given
+  let rec unique candidate k := if List.contains candidate env then unique (base ++ Int.toText k) (k + 1) else candidate
+  unique base 1
+
+def spaces (n : Int) : Text := Text.repeat n " "
+
+def quoteText (t : Text) : Text :=
+  let n := Text.length t
+  let rec go i acc :=
+    if i >= n then Text.concat (List.reverse acc)
+    else
+      let c := Text.code t i
+      let piece := if c == '"' then "\\\""
+        else if c == '\\' then "\\\\"
+        else if c == 10 then "\\n"
+        else if c == 9 then "\\t"
+        else if c == 13 then "\\r"
+        else if c < 32 then "\\u{" ++ Int.toText c ++ "}"
+        else Text.fromCode c
+      go (i + 1) (piece :: acc)
+  "\"" ++ go 0 [] ++ "\""
+
+def infixOf (name : Text) : Option (Text, Int) :=
+  if name == "Int.add" then some ("+", 65)
+  else if name == "Int.sub" then some ("-", 65)
+  else if name == "Int.mul" then some ("*", 70)
+  else if name == "Int.div" then some ("/", 70)
+  else if name == "Int.mod" then some ("%", 70)
+  else if name == "eq" then some ("==", 50)
+  else if name == "neq" then some ("!=", 50)
+  else if name == "lt" then some ("<", 50)
+  else if name == "le" then some ("<=", 50)
+  else if name == "gt" then some (">", 50)
+  else if name == "ge" then some (">=", 50)
+  else if name == "append" then some ("++", 65)
+  else none
+
+/-- Parenthesizes text of precedence `level` printed in a context that binds tighter (`ctx`). -/
+def paren (level : Int) (ctx : Int) (t : Text) : Text := if level < ctx then "(" ++ t ++ ")" else t
+
+/-- Elements of a list built from cons cells ending in nil, if it is one. -/
+def listItems (t : Sexp) : Option (List Sexp) :=
+  match t with
+  | Sexp.list [Sexp.sym "con", Sexp.str "#List", Sexp.int 0, Sexp.int 0] => some []
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "con", Sexp.str "#List", Sexp.int 1, Sexp.int 2], h, rest] =>
+    Option.map (fun items => h :: items) (listItems rest)
+  | _ => none
+
+def tupleItems (t : Sexp) : List Sexp :=
+  match t with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "con", Sexp.str "#Pair", Sexp.int 0, Sexp.int 2], a, rest] => a :: tupleItems rest
+  | _ => [t]
+
+def conName (p : Printer) (t : Text) (tag : Int) : Text :=
+  if t == "#Bool" then (if tag == 1 then "true" else "false")
+  else if t == "#Unit" then "()"
+  else if t == "#List" then (if tag == 0 then "[]" else "List.cons")
+  else nameFor p (t ++ "#" ++ Int.toText tag)
+
+/-- Whether a term prints as several lines (so it needs a block). -/
+def isBlock (t : Sexp) : Bool :=
+  let h := Sexp.head t
+  h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle"
+
+/-- A body after `:=`, `=>`, `then` or `else`: inline, or a block on the next lines. -/
+def body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
+  if isBlock t then "\n" ++ spaces (ind + 2) ++ stmts p t env (ind + 2)
+  else " " ++ expr p t env ind 0
+
+/-- Statements: `let` lines and expressions at one indentation. -/
+def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
+  let nl := "\n" ++ spaces ind
+  match t with
+  | Sexp.list [Sexp.sym "let", v, b] =>
+    let name := bind p env
+    let value := body p v env ind
+    "let " ++ name ++ " :=" ++ value ++ nl ++ stmts p b (name :: env) ind
+  | Sexp.list [Sexp.sym "seq", a, b] => expr p a env ind 0 ++ nl ++ stmts p b env ind
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fns, b] =>
+    let names := List.map (fun _ => bind p env) fns
+    let inner := List.reverse names ++ env
+    let defs := List.map (fun pair =>
+      match pair with
+      | (name, fn) => "let rec " ++ name ++ lambdaHead p fn inner ind) (List.zip names fns)
+    Text.join nl defs ++ nl ++ stmts p b inner ind
+  | _ => expr p t env ind 0
+
+/-- ` x y :=` plus the body, for a lambda printed as a local function. -/
+def lambdaHead (p : Printer) (fn : Sexp) (env : List Text) (ind : Int) : Text :=
+  let rec params t env2 acc :=
+    match t with
+    | Sexp.list [Sexp.sym "lam", b] =>
+      let name := bind p env2
+      params b (name :: env2) (name :: acc)
+    | _ => (List.reverse acc, t, env2)
+  match params fn env [] with
+  | (names, b, env2) => Text.concat (List.map (fun x => " " ++ x) names) ++ " :=" ++ body p b env2 ind
+
+def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  match t with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? env i) ("$" ++ Int.toText i)
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => nameFor p h
+  | Sexp.list [Sexp.sym "int", Sexp.int v] => if v < 0 then paren 99 prec (Int.toText v) else Int.toText v
+  | Sexp.list [Sexp.sym "text", Sexp.str v] => quoteText v
+  | Sexp.list [Sexp.sym "prim", Sexp.str name] => paren 90 prec ("prim " ++ quoteText name)
+  | Sexp.list [Sexp.sym "con", Sexp.str ty, Sexp.int tag, _] => conName p ty tag
+  | Sexp.list [Sexp.sym "op", Sexp.str a, Sexp.int index, _] => nameFor p (a ++ "!" ++ Int.toText index)
+  | Sexp.list [Sexp.sym "if", c, Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int 0, _], Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int 1, _]] =>
+    paren 90 prec ("not " ++ expr p c env ind 100)
+  | Sexp.list [Sexp.sym "if", a, b, Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int 0, _]] =>
+    paren 35 prec (expr p a env ind 36 ++ " && " ++ expr p b env ind 35)
+  | Sexp.list [Sexp.sym "if", a, Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int 1, _], b] =>
+    paren 30 prec (expr p a env ind 31 ++ " || " ++ expr p b env ind 30)
+  | Sexp.list [Sexp.sym "if", c, yes, no] =>
+    let text := "if " ++ expr p c env ind 0 ++ " then" ++ body p yes env ind ++ (if isBlock yes then "\n" ++ spaces ind else " ") ++ "else" ++ body p no env ind
+    paren 1 prec text
+  | Sexp.list (Sexp.sym "lam" :: _) =>
+    let rec params x env2 acc :=
+      match x with
+      | Sexp.list [Sexp.sym "lam", b] =>
+        let name := bind p env2
+        params b (name :: env2) (name :: acc)
+      | _ => (List.reverse acc, x, env2)
+    match params t env [] with
+    | (names, b, env2) => paren 1 prec ("fun " ++ Text.join " " names ++ " =>" ++ body p b env2 ind)
+  | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
+    let arms := List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] =>
+        match pattern p pat env with
+        | (text, env2) => "\n" ++ spaces ind ++ "| " ++ text ++ " =>" ++ body p b env2 (ind + 2)
+      | _ => "") cases
+    paren 1 prec ("match " ++ expr p scrut env ind 0 ++ " with" ++ Text.concat arms)
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
+    let rendered := List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "ret", rb] =>
+        let name := bind p env
+        "\n" ++ spaces ind ++ "| return " ++ name ++ " =>" ++ body p rb (name :: env) (ind + 2)
+      | Sexp.list [Sexp.sym "on", Sexp.str a, Sexp.int index, Sexp.int arity, hb] =>
+        let rec args k env2 acc :=
+          if k == 0 then (List.reverse acc, env2)
+          else
+            let name := bind p env2
+            args (k - 1) (name :: env2) (name :: acc)
+        match args arity env [] with
+        | (names, env2) =>
+          let k := bind p env2
+          "\n" ++ spaces ind ++ "| " ++ nameFor p (a ++ "!" ++ Int.toText index) ++ Text.concat (List.map (fun x => " " ++ x) names) ++ " -> " ++ k ++ " =>" ++ body p hb (k :: env2) (ind + 2)
+      | _ => "") clauses
+    paren 1 prec ("handle" ++ body p b env ind ++ (if isBlock b then "\n" ++ spaces ind else " ") ++ "with" ++ Text.concat rendered)
+  | Sexp.list (Sexp.sym "app" :: f :: args) =>
+    match (f, args) with
+    | (Sexp.list [Sexp.sym "ref", Sexp.str h], [a]) =>
+      match Map.lookup h p.fieldNames with
+      | some field =>
+        match a with
+        | Sexp.list [Sexp.sym "var", _] => expr p a env ind 100 ++ "." ++ field
+        | _ => "(" ++ expr p a env ind 0 ++ ")." ++ field
+      | none => application p f args env ind prec
+    | (Sexp.list [Sexp.sym "prim", Sexp.str name], [a, b]) =>
+      match infixOf name with
+      | some (op, level) => paren level prec (expr p a env ind level ++ " " ++ op ++ " " ++ expr p b env ind (level + 1))
+      | none => application p f args env ind prec
+    | (Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], [a]) => paren 95 prec ("-" ++ expr p a env ind 100)
+    | (Sexp.list [Sexp.sym "con", Sexp.str "#Pair", Sexp.int 0, Sexp.int 2], [_, _]) =>
+      "(" ++ Text.join ", " (List.map (fun x => expr p x env ind 0) (tupleItems t)) ++ ")"
+    | (Sexp.list [Sexp.sym "con", Sexp.str "#List", Sexp.int 1, Sexp.int 2], [h, rest]) =>
+      match listItems t with
+      | some items => "[" ++ Text.join ", " (List.map (fun x => expr p x env ind 0) items) ++ "]"
+      | none => paren 67 prec (expr p h env ind 68 ++ " :: " ++ expr p rest env ind 67)
+    | _ => application p f args env ind prec
+  | _ => paren 100 prec (Sexp.print t)
+
+def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  paren 90 prec (expr p f env ind 90 ++ Text.concat (List.map (fun a => " " ++ expr p a env ind 100) args))
+
+/-- A pattern and the environment it extends (binders in order). -/
+def pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) :=
+  patternAt p pat env 0
+
+def patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : (Text, List Text) :=
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => ("_", env)
+  | Sexp.list [Sexp.sym "pvar"] =>
+    let name := bind p env
+    (name, name :: env)
+  | Sexp.list [Sexp.sym "pas", inner] =>
+    let name := bind p env
+    match patternAt p inner (name :: env) 100 with
+    | (text, env2) => (name ++ "@" ++ text, env2)
+  | Sexp.list [Sexp.sym "pint", Sexp.int v] => (Int.toText v, env)
+  | Sexp.list [Sexp.sym "ptext", Sexp.str v] => (quoteText v, env)
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str ty :: Sexp.int tag :: subs) =>
+    if ty == "#List" && tag == 1 then
+      match subs with
+      | [h, t] =>
+        match patternAt p h env 68 with
+        | (ht, env2) =>
+          match patternAt p t env2 67 with
+          | (tt, env3) => (Print.paren 67 prec (ht ++ " :: " ++ tt), env3)
+      | _ => ("?", env)
+    else if ty == "#Pair" then
+      match subs with
+      | [a, b] =>
+        match patternAt p a env 0 with
+        | (at, env2) =>
+          match patternAt p b env2 0 with
+          | (bt, env3) =>
+            let inner := if Text.startsWith "(" bt && Text.endsWith ")" bt && Sexp.head b == "pcon" then Text.slice bt 1 (Text.length bt - 1) else bt
+            ("(" ++ at ++ ", " ++ inner ++ ")", env3)
+      | _ => ("?", env)
+    else
+      let rec go rest env2 acc :=
+        match rest with
+        | [] => (List.reverse acc, env2)
+        | x :: more =>
+          match patternAt p x env2 100 with
+          | (text, env3) => go more env3 (text :: acc)
+      match go subs env [] with
+      | (texts, env2) =>
+        let name := conName p ty tag
+        if List.isEmpty texts then (name, env2) else (Print.paren 90 prec (name ++ " " ++ Text.join " " texts), env2)
+  | _ => (Sexp.print pat, env)
+
+--
+-- Types.
+--
+
+def ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
+  match t with
+  | Sexp.list [Sexp.sym "tref", Sexp.str iri] =>
+    if Text.startsWith "#" iri then Text.drop 1 iri else Option.getOr (Map.lookup iri p.typeNames) iri
+  | Sexp.list [Sexp.sym "tvar", Sexp.str name] => if name == "?" then "_" else name
+  | Sexp.list [Sexp.sym "tvar", Sexp.int i] => Text.fromCode ('a' + i)
+  | Sexp.list (Sexp.sym "tapp" :: Sexp.list [Sexp.sym "tref", Sexp.str "#Pair"] :: args) =>
+    "(" ++ Text.join ", " (List.map (fun x => ty p x 0) args) ++ ")"
+  | Sexp.list (Sexp.sym "tapp" :: f :: args) => paren 90 prec (ty p f 90 ++ Text.concat (List.map (fun x => " " ++ ty p x 100) args))
+  | Sexp.list [Sexp.sym "tfun", a, b] => paren 10 prec (ty p a 11 ++ " -> " ++ ty p b 10)
+  | Sexp.list [Sexp.sym "tfun", a, b, Sexp.list (Sexp.sym "eff" :: effs)] =>
+    paren 10 prec (ty p a 11 ++ " -> {" ++ Text.join ", " (List.map (fun x => ty p x 0) effs) ++ "} " ++ ty p b 10)
+  | _ => Sexp.print t
+
+/-- Splits a signature into its first `n` argument types and the rest. -/
+def splitSig (sig : Sexp) (n : Int) : (List Sexp, Option Sexp) :=
+  if n == 0 then ([], some sig)
+  else
+    match sig with
+    | Sexp.list (Sexp.sym "tfun" :: a :: b :: _) =>
+      match splitSig b (n - 1) with
+      | (args, rest) => (a :: args, rest)
+      | _ => ([], none)
+    | _ => ([], none)
+
+/-- A whole definition: `def name (x : A) : B := body`. -/
+def definition (p : Printer) (name : Text) (core : Sexp) (sig : Option Sexp) (doc : Option Text) : Text :=
+  let docText := match doc with
+    | some d => "/-- " ++ d ++ " -/\n"
+    | none => ""
+  let rec params t env acc :=
+    match t with
+    | Sexp.list [Sexp.sym "lam", b] =>
+      let x := bind p env
+      params b (x :: env) (x :: acc)
+    | _ => (List.reverse acc, t, env)
+  let rec lamCount t := if Sexp.head t == "lam" then 1 + lamCount (Option.getOr (List.head? (Sexp.args t)) t) else 0
+  let unnamed := List.all (fun x => x == "") (List.take (lamCount core) (Ref.get p.supply))
+  match params core [] [] with
+  | (names, Sexp.list (Sexp.sym "match" :: scrut :: cases), env) =>
+    let count := List.length names
+    if unnamed && count > 0 && equationScrutinee scrut count then
+      let sigText := match sig with
+        | some t => " : " ++ ty p t 0
+        | none => ""
+      let arms := List.map (fun c =>
+        match c with
+        | Sexp.list [Sexp.sym "case", pat, b2] =>
+          match patternColumns p pat env count with
+          | (text, env2) => "\n| " ++ text ++ " =>" ++ body p b2 env2 0
+        | _ => "") cases
+      docText ++ "def " ++ name ++ sigText ++ Text.concat arms
+    else plainDefinition p name docText names (Sexp.list (Sexp.sym "match" :: scrut :: cases)) env sig
+  | (names, b, env) => plainDefinition p name docText names b env sig
+
+/-- Whether a match scrutinizes the equation parameters: `(var 0)`, or their tuple in order. -/
+def equationScrutinee (scrut : Sexp) (count : Int) : Bool :=
+  if count == 1 then scrut == Sexp.node "var" [Sexp.int 0]
+  else scrut == Resolve.tuple (List.map (fun i => Sexp.node "var" [Sexp.int (count - 1 - i)]) (List.range 0 count))
+
+/-- The patterns of an equation arm: a right-nested pair pattern split into `count` columns. -/
+def patternColumns (p : Printer) (pat : Sexp) (env : List Text) (count : Int) : (Text, List Text) :=
+  if count <= 1 then patternAt p pat env 0
+  else
+    match pat with
+    | Sexp.list [Sexp.sym "pcon", Sexp.str "#Pair", Sexp.int 0, a, rest] =>
+      match patternAt p a env 0 with
+      | (at, env2) =>
+        match patternColumns p rest env2 (count - 1) with
+        | (more, env3) => (at ++ ", " ++ more, env3)
+    | _ => patternAt p pat env 0
+
+def plainDefinition (p : Printer) (name : Text) (docText : Text) (names : List Text) (b : Sexp) (env : List Text) (sig : Option Sexp) : Text :=
+    let count := List.length names
+    let header := match Option.map (fun s => splitSig s count) sig with
+      | some (types, some result) =>
+        if List.length types == count then
+          Text.concat (List.map (fun pair =>
+            match pair with
+            | (x, t) => if Sexp.head t == "tvar" && Sexp.args t == [Sexp.str "?"] then " " ++ x else " (" ++ x ++ " : " ++ ty p t 0 ++ ")") (List.zip names types)) ++ (if Sexp.args result == [Sexp.str "?"] then "" else " : " ++ ty p result 0)
+        else Text.concat (List.map (fun x => " " ++ x) names)
+      | _ => Text.concat (List.map (fun x => " " ++ x) names)
+    docText ++ "def " ++ name ++ header ++ " :=" ++ body p b env 0
+
+end Print

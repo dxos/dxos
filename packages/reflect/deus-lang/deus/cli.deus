@@ -1,5 +1,8 @@
 /-
   The `deus` command line. Every command is DEUS code; the kernel only runs the seed.
+
+  People and agents use the same commands. `--json` switches output to one JSON document per
+  command, so an agent can read definitions and write patches without scraping text.
 -/
 
 namespace Cli
@@ -9,6 +12,9 @@ structure Args where
   positional : List Text
   options : Map Text Text
 
+/-- Options that never take a value. -/
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help"]
+
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
     match rest with
@@ -16,12 +22,11 @@ def parseArgs (args : List Text) : Args :=
     | a :: more =>
       if Text.startsWith "--" a then
         let key := Text.drop 2 a
-        match more with
-        | v :: tail =>
-          if Text.startsWith "--" v then go more pos (Map.insert key "true" opts)
-          else if key == "json" then go more pos (Map.insert key "true" opts)
-          else go tail pos (Map.insert key v opts)
-        | [] => go more pos (Map.insert key "true" opts)
+        if Set.contains key booleanFlags then go more pos (Map.insert key "true" opts)
+        else
+          match more with
+          | v :: tail => go tail pos (Map.insert key v opts)
+          | [] => go more pos (Map.insert key "true" opts)
       else if a == "-o" then
         match more with
         | v :: tail => go tail pos (Map.insert "out" v opts)
@@ -49,11 +54,52 @@ def expandPaths (paths : List Text) : {IO} List Text :=
       List.map (fun f => path ++ "/" ++ f) (List.filter (fun f => Text.endsWith ".deus" f || Text.endsWith ".mdl" f) (IO.listDir path))
     else [path]) paths
 
+def parseFiles (paths : List Text) : {IO, Throw Text} List (Text, List Decl) :=
+  List.map (fun path => Compile.parseFile path (readSource path)) (expandPaths paths)
+
+/-- The codebase directory: `--codebase`, then `$DEUS_CODEBASE`, then `./.deus`. -/
+def codebaseDir (args : Args) : {IO} Text :=
+  match option args "codebase" with
+  | some dir => dir
+  | none => Option.getOr (IO.getEnv "DEUS_CODEBASE") ".deus"
+
+def openCodebase (args : Args) : {IO, Throw Text} Text :=
+  let dir := codebaseDir args
+  if Codebase.isCodebase dir then dir else throw ("no codebase at " ++ dir ++ " (run `deus init`)")
+
+def short (h : Text) : Text := if Text.startsWith "#" h then h else "#" ++ Text.take 10 h
+
+/-- Prints JSON when `--json` is set, otherwise the text. -/
+def output (args : Args) (json : Unit -> Json) (text : Unit -> Text) : {IO} Unit :=
+  if flag args "json" then println (Json.render (json ())) else
+    let t := text ()
+    if Text.isEmpty t then () else println t
+
+def entryJson (name : Text) (e : Entry) : Json :=
+  Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
+
+/-- Resolves a name (or `#hashprefix`) in a namespace to its full name and entry. -/
+def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) :=
+  if Text.startsWith "#" name then
+    let prefix := Text.drop 1 name
+    match List.filter (fun pair => Text.startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
+    | [] => throw ("no definition with hash " ++ name)
+    | pair :: _ => pair
+  else
+    match Map.lookup name ns with
+    | some e => (name, e)
+    | none =>
+      match Names.lookup (Names.build ns) name (Scope.mk [] []) (fun _ => true) true with
+      | some hit => hit
+      | none => throw ("unknown name " ++ name)
+
+--
+-- Commands: compiling.
+--
+
 /-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
 def compile (args : Args) : {IO, Throw Text} Unit :=
-  let files := expandPaths args.positional
-  let parsed := List.map (fun path => Compile.parseFile path (readSource path)) files
-  let result := Compile.batch Map.empty parsed
+  let result := Compile.batch Map.empty (parseFiles args.positional)
   let main := Option.getOr (option args "main") "main"
   let entry := match List.lookup main result.entries with
     | some (Entry.term h) => h
@@ -64,24 +110,348 @@ def compile (args : Args) : {IO, Throw Text} Unit :=
   | some out => IO.writeFile out image
   | none => IO.print image
 
+def init (args : Args) : {IO, Throw Text} Unit :=
+  let dir := codebaseDir args
+  Codebase.init dir
+  output args (fun _ => Json.obj [("codebase", Json.str dir), ("branch", Json.str "main")]) (fun _ => "Initialized an empty codebase in " ++ dir ++ " on branch main.")
+
+/-- Names a batch would change: (name, old, new) for every name already bound to something else. -/
+def changes (ns : Map Text Entry) (entries : List (Text, Entry)) : List (Text, Entry, Entry) :=
+  List.filterMap (fun pair =>
+    match pair with
+    | (name, e) =>
+      match Map.lookup name ns with
+      | some old => if old == e then none else some (name, old, e)
+      | none => none) entries
+
+/-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
+def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let batch := Compile.batch ns (parseFiles args.positional)
+  let replaced := changes ns batch.entries
+  if not isUpdate && not (List.isEmpty replaced) then
+    throw ("these names already exist; use `deus update`:\n  " ++ Text.join "\n  " (List.map (fun c =>
+      match c with
+      | (name, _, _) => name) replaced))
+  else
+    Codebase.store dir batch
+    let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) batch.entries
+    let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns batch.entries
+    let subst := Map.fromList (List.map (fun c =>
+      match c with
+      | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
+    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map fst batch.entries))
+    let ns3 := fst propagated
+    let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
+    let causal := Codebase.commit dir ns3 message
+    output args
+      (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
+        match c with
+        | (name, _, new) => entryJson name new) replaced)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
+      (fun _ =>
+        let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
+        let updatedLines := List.map (fun c =>
+          match c with
+          | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
+        let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
+        let lines := addedLines ++ updatedLines ++ propagatedLines
+        if List.isEmpty lines then "Nothing changed." else Text.join "\n" lines)
+
+--
+-- Commands: reading the codebase.
+--
+
+def ls (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let prefix := Option.getOr (List.head? args.positional) ""
+  let rows := List.filter (fun pair => Text.startsWith prefix (fst pair)) (Map.toList ns)
+  output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows))
+    (fun _ => Text.join "\n" (List.map (fun p => Text.padRight 40 (fst p) ++ " " ++ Text.padRight 8 (Entry.kind (snd p)) ++ " " ++ short (Entry.hash (snd p))) rows))
+
+def find (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let query := Option.getOr (List.head? args.positional) ""
+  let rows := List.filter (fun pair => Text.contains query (fst pair)) (Map.toList ns)
+  output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows))
+    (fun _ => Text.join "\n" (List.map (fun p => fst p ++ "  " ++ short (Entry.hash (snd p))) rows))
+
+def names (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (_, e) =>
+    let all := Codebase.namesOf ns (Entry.hash e)
+    output args (fun _ => Json.obj [("hash", Json.str (Entry.hash e)), ("names", Json.arr (List.map Json.str all))]) (fun _ => Text.join "\n" all)
+
+/-- Source text of one entry (a definition, a type, an ability). -/
+def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+  let h := Entry.hash e
+  let meta := Codebase.readMeta dir h
+  let header := "-- " ++ name ++ " " ++ short h ++ "\n"
+  match e with
+  | Entry.ctor _ _ _ => header ++ "-- a constructor of " ++ Text.join ", " (Codebase.namesOf ns h)
+  | Entry.op _ _ _ => header ++ "-- an operation of " ++ Text.join ", " (Codebase.namesOf ns h)
+  | _ =>
+    match Codebase.readObject dir h with
+    | none => if Text.startsWith "#" h then header ++ "-- builtin" else throw ("missing object " ++ h)
+    | some obj =>
+      if core then header ++ Sexp.print obj
+      else
+        let locals := List.map Sexp.asText (Codebase.metaList meta "locals")
+        let p := Print.printer ns locals
+        let doc := Option.map Sexp.asText (Codebase.metaField meta "doc")
+        let display := Names.lastSegment name
+        match obj with
+        | Sexp.list [Sexp.sym "term", c] => header ++ Print.definition p name c (Codebase.metaField meta "sig") doc
+        | Sexp.list [Sexp.sym "test", c] => header ++ "test " ++ name ++ " :=" ++ Print.body p c [] 0
+        | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+          header ++ View.theoremDecl p name types prop proof
+        | Sexp.list (Sexp.sym "type" :: _) => header ++ View.typeDecl p ns name e obj
+        | Sexp.list (Sexp.sym "ability" :: _) => header ++ View.abilityDecl p ns name e obj
+        | _ => header ++ Sexp.print obj
+
+def view (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let entries := List.map (fun name => lookupName ns name) args.positional
+  let texts := List.map (fun pair => viewEntry dir ns (fst pair) (snd pair) (flag args "core")) entries
+  output args
+    (fun _ => Json.arr (List.map (fun pair =>
+      match pair with
+      | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e)), ("source", Json.str text)]) (List.zip entries texts)))
+    (fun _ => Text.join "\n\n" texts)
+
+def deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (name, e) =>
+    let h := Entry.hash e
+    let index := Codebase.nameIndex ns
+    let display := fun (x : Text) => Option.getOr (Map.lookup x index) (short x)
+    let found := if reverse then Update.dependentsOf dir ns h
+      else
+        match Codebase.readObject dir h with
+        | some obj => Codebase.dependencies obj
+        | none => []
+    output args (fun _ => Json.obj [("name", Json.str name), (if reverse then "dependents" else "dependencies", Json.arr (List.map (fun x => Json.obj [("hash", Json.str x), ("name", Json.str (display x))]) found))])
+      (fun _ => Text.join "\n" (List.map display found))
+
+--
+-- Commands: names.
+--
+
+/-- Moves a name and everything under it (`T` moves `T.mk`, `T.field`…). -/
+def mv (args : Args) (keep : Bool) : {IO, Throw Text} Unit :=
+  match args.positional with
+  | [from, to] =>
+    let dir := openCodebase args
+    let ns := Codebase.current dir
+    let moving := List.filter (fun pair => fst pair == from || Text.startsWith (from ++ ".") (fst pair)) (Map.toList ns)
+    if List.isEmpty moving then throw ("unknown name " ++ from)
+    else
+      let renamed := List.map (fun pair => (to ++ Text.drop (Text.length from) (fst pair), snd pair)) moving
+      match List.find (fun pair => Map.contains (fst pair) ns) renamed with
+      | some (taken, _) => throw (taken ++ " already exists")
+      | none =>
+        let without := if keep then ns else List.foldl (fun m pair => Map.remove (fst pair) m) ns moving
+        let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) without renamed
+        let _ := Codebase.commit dir ns2 ((if keep then "alias " else "move ") ++ from ++ " " ++ to)
+        output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) renamed)) (fun _ => Text.join "\n" (List.map (fun p => "  " ++ fst p) renamed))
+  | _ => throw "usage: deus mv <from> <to>"
+
+def rm (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let ns2 := List.foldl (fun m name =>
+    if Map.contains name m then Map.remove name m else throw ("unknown name " ++ name)) ns args.positional
+  let _ := Codebase.commit dir ns2 ("delete " ++ Text.join " " args.positional)
+  output args (fun _ => Json.arr (List.map Json.str args.positional)) (fun _ => "Deleted " ++ Text.join ", " args.positional ++ ".")
+
+--
+-- Commands: branches and history.
+--
+
+def branch (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | [] =>
+    let current := Codebase.currentBranch dir
+    let all := Codebase.branches dir
+    output args (fun _ => Json.obj [("current", Json.str current), ("branches", Json.arr (List.map Json.str all))])
+      (fun _ => Text.join "\n" (List.map (fun b => (if b == current then "* " else "  ") ++ b) all))
+  | [name] =>
+    if not (Codebase.validBranch name) then throw ("invalid branch name " ++ name)
+    else if Option.isSome (Codebase.branchHead dir name) then throw ("branch " ++ name ++ " exists")
+    else
+      Codebase.setBranch dir name (Codebase.headOf dir (Codebase.currentBranch dir))
+      IO.writeFile (dir ++ "/HEAD") (name ++ "\n")
+      output args (fun _ => Json.obj [("branch", Json.str name)]) (fun _ => "Created and switched to branch " ++ name ++ ".")
+  | _ => throw "usage: deus branch [name]"
+
+def switch (args : Args) : {IO, Throw Text} Unit :=
+  match args.positional with
+  | [name] =>
+    let dir := openCodebase args
+    let _ := Codebase.headOf dir name
+    IO.writeFile (dir ++ "/HEAD") (name ++ "\n")
+    output args (fun _ => Json.obj [("branch", Json.str name)]) (fun _ => "Switched to branch " ++ name ++ ".")
+  | _ => throw "usage: deus switch <branch>"
+
+def merge (args : Args) : {IO, Throw Text} Unit :=
+  match args.positional with
+  | [other] =>
+    let dir := openCodebase args
+    match Codebase.merge dir other with
+    | MergeResult.upToDate => output args (fun _ => Json.obj [("result", Json.str "up-to-date")]) (fun _ => "Already up to date.")
+    | MergeResult.fastForward h => output args (fun _ => Json.obj [("result", Json.str "fast-forward"), ("causal", Json.str h)]) (fun _ => "Fast-forwarded to " ++ short h ++ ".")
+    | MergeResult.merged h changed =>
+      output args (fun _ => Json.obj [("result", Json.str "merged"), ("causal", Json.str h), ("changed", Json.arr (List.map Json.str changed))])
+        (fun _ => "Merged " ++ other ++ " (" ++ short h ++ "):\n" ++ Text.join "\n" (List.map (fun x => "  " ++ x) changed))
+    | MergeResult.conflicts names =>
+      output args (fun _ => Json.obj [("result", Json.str "conflicts"), ("names", Json.arr (List.map Json.str names))])
+        (fun _ => "Conflicts; nothing was merged:\n" ++ Text.join "\n" (List.map (fun x => "  " ++ x) names))
+      IO.exit 1
+  | _ => throw "usage: deus merge <branch>"
+
+def log (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let limit := Option.getOr (Option.bind (option args "n") Int.fromText) 20
+  let entries := Codebase.history dir (Codebase.currentBranch dir) limit
+  output args (fun _ => Json.arr (List.map (fun pair =>
+      match pair with
+      | (h, c) => Json.obj [("causal", Json.str h), ("message", Json.str c.message), ("parents", Json.arr (List.map Json.str c.parents))]) entries))
+    (fun _ => Text.join "\n" (List.map (fun pair =>
+      match pair with
+      | (h, c) => short h ++ "  " ++ c.message) entries))
+
+/-- Moves the branch back to its first parent; the undone node stays in the store. -/
+def undo (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let branchName := Codebase.currentBranch dir
+  let head := Codebase.headOf dir branchName
+  match (Codebase.readCausal dir head).parents with
+  | parent :: _ =>
+    Codebase.setBranch dir branchName parent
+    output args (fun _ => Json.obj [("causal", Json.str parent)]) (fun _ => "Undid " ++ short head ++ "; now at " ++ short parent ++ ".")
+  | [] => throw "nothing to undo"
+
+--
+-- Commands: running.
+--
+
+def fetcher (dir : Text) : Text -> {IO} Option Sexp := fun h => Codebase.readObject dir h
+
+/-- `deus run <name> [args…]`: runs `name ()` with `IO.args` answering the remaining arguments. -/
+def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match rest with
+  | [] => throw "usage: deus run <name> [args…]"
+  | name :: programArgs =>
+    match lookupName ns name with
+    | (_, Entry.term h) =>
+      Image.load (fetcher dir) [h]
+      let f := Code.run h
+      handle f () with
+      | IO.args _ -> k => k programArgs
+    | _ => throw (name ++ " is not a term")
+
+/-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it. -/
+def eval (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let source := "def it := " ++ Text.join " " args.positional
+  let batch := Compile.batch ns [Compile.parseFile "<eval>" source]
+  match List.lookup "it" batch.entries with
+  | some (Entry.term h) =>
+    let objects := Map.fromList batch.objects
+    Image.load (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) [h]
+    let value := Code.run h
+    let text := Print.expr (Print.printer ns []) (Sexp.read (Code.quote value)) [] 0 0
+    output args (fun _ => Json.obj [("value", Json.str text)]) (fun _ => text)
+  | _ => throw "eval failed"
+
+/-- `deus image <name> -o <file>`: the kernel image of a definition. -/
+def image (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (_, Entry.term h) =>
+    let text := Image.build (fetcher dir) h
+    match option args "out" with
+    | some out => IO.writeFile out text
+    | none => IO.print text
+  | _ => throw "usage: deus image <term> -o <file>"
+
 def usage : Text :=
   Text.join "\n" [
-    "usage: deus <command> [args]",
+    "usage: deus <command> [args] [--json] [--codebase <dir>]",
     "",
-    "  compile <files|dirs…> --main <name> -o <image>   compile files to a kernel image",
+    "codebase",
+    "  init                                 create a codebase (./.deus, or --codebase, or $DEUS_CODEBASE)",
+    "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)",
+    "  update <files|dirs…>                 add or replace definitions; dependents are rehashed",
+    "                                       (both take --message <why> for the history)",
+    "  ls [prefix]                          list names",
+    "  find <text>                          names containing text",
+    "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
+    "  names <name|#hash>                   every name of a hash",
+    "  deps <name> / dependents <name>      what a definition uses / what uses it",
+    "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name",
+    "  rm <names…>                          remove names",
+    "",
+    "history",
+    "  branch [name]                        list branches, or create one and switch to it",
+    "  switch <branch>                      change branch",
+    "  merge <branch>                       three-way merge into the current branch",
+    "  log [--n N] / undo                   history / step the branch back",
+    "",
+    "running",
+    "  run <name> [args…]                   run name () with IO.args = args",
+    "  eval <expr>                          evaluate an expression",
+    "  test [prefix]                        run tests (results cached by hash)",
+    "  check [prefix]                       check theorems and report their evidence",
+    "  image <name> -o <file>               write a kernel image",
+    "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 
-def run (argv : List Text) : {IO, Throw Text} Unit :=
+def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   match argv with
   | [] => IO.print usage
   | command :: rest =>
     let args := parseArgs rest
     if command == "compile" then compile args
+    else if command == "init" then init args
+    else if command == "add" then addOrUpdate args false
+    else if command == "update" then addOrUpdate args true
+    else if command == "ls" then ls args
+    else if command == "find" then find args
+    else if command == "view" then view args
+    else if command == "names" then names args
+    else if command == "deps" then deps args false
+    else if command == "dependents" then deps args true
+    else if command == "mv" then mv args false
+    else if command == "alias" then mv args true
+    else if command == "rm" then rm args
+    else if command == "branch" then branch args
+    else if command == "switch" then switch args
+    else if command == "merge" then merge args
+    else if command == "log" then log args
+    else if command == "undo" then undo args
+    else if command == "run" then run (parseArgs (List.take 0 rest)) rest
+    else if command == "eval" then eval args
+    else if command == "test" then Check.tests args
+    else if command == "check" then Check.theorems args
+    else if command == "image" then image args
     else if command == "help" then IO.print usage
-    else die ("unknown command " ++ command)
+    else die ("unknown command " ++ command ++ "\n" ++ usage)
 
 def main (u : Unit) : {IO} Unit :=
-  match try (fun _ => run (IO.args ())) with
+  match try (fun _ => dispatch (IO.args ())) with
   | Result.ok _ => ()
   | Result.err message => die message
 

@@ -117,7 +117,7 @@ A `.deus` directory, after Unison's UCM:
 
 Agents use the same CLI as people. Every command takes `--json`; `view` prints a definition
 as source with current names, and `update` takes the edited source back. See
-[`LLM.md`](./LLM.md) (planned).
+[`LLM.md`](./LLM.md).
 
 ## Specifications
 

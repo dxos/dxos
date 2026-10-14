@@ -21,7 +21,7 @@ import {
   show,
   some,
 } from './machine.ts';
-import { readAll } from './sexp.ts';
+import { type Sexp, Str, print, readAll } from './sexp.ts';
 
 const int = (value: Value): number => {
   if (typeof value !== 'number') {
@@ -50,6 +50,24 @@ const append = (a: Value, b: Value): Value => {
     out = new Con('#List', 1, [items[i], out]);
   }
   return out;
+};
+
+/** A data value back as Core, so the DEUS printer can show it with names; functions are opaque. */
+const quoteValue = (value: Value): Sexp => {
+  if (typeof value === 'number') {
+    return ['int', value];
+  }
+  if (typeof value === 'string') {
+    return ['text', new Str(value)];
+  }
+  if (typeof value === 'boolean') {
+    return ['con', new Str('#Bool'), value ? 1 : 0, 0];
+  }
+  if (value instanceof Con) {
+    const con: Sexp = ['con', new Str(value.type), value.tag, value.fields.length];
+    return value.fields.length === 0 ? con : ['app', con, ...value.fields.map(quoteValue)];
+  }
+  return ['prim', new Str('<function>')];
 };
 
 const parseInt32 = (value: string): Value => (/^-?[0-9]+$/.test(value) ? some(Number(value) | 0) : NONE);
@@ -144,6 +162,7 @@ export const createPrims = (): Map<string, Prim> => {
     machine.load(readAll(text(source)));
     return new Con('#Unit', 0, []);
   });
+  def('Code.quote', 1, ([v]) => print(quoteValue(v)));
   def('Code.has', 1, ([hash], machine) => machine.globals.has(text(hash)));
   def('Code.steps', 1, (_args, machine) => machine.steps);
   prims.set(

@@ -1,0 +1,73 @@
+/-
+  Tests and theorems about the toolchain itself, run by `deus test` and `deus check` on a
+  codebase built from `deus/` (src/cli.test.ts does that in CI).
+-/
+
+namespace Tests
+
+def parses (source : Text) : Bool :=
+  match try (fun _ => Parser.parse source) with
+  | Result.ok _ => true
+  | Result.err _ => false
+
+def tokenValues (source : Text) : List Text :=
+  match try (fun _ => Lexer.lex source) with
+  | Result.ok tokens => List.map (fun t => t.value) tokens
+  | Result.err e => [e]
+
+test sexpRoundTrip :=
+  let text := "(def \"a\\nb\" (lam (app (var 0) (int -12) (text \"q\\\"\\u0001\"))))"
+  Sexp.print (Sexp.read text) == text
+
+test lexerSymbols := tokenValues "x :: xs ++ [1] |> f" == ["x", "::", "xs", "++", "[", "1", "]", "|>", "f", ""]
+
+test lexerUnicode := tokenValues "fun x → x" == ["fun", "x", "->", "x", ""]
+
+test lexerProjection :=
+  match try (fun _ => Lexer.lex "(f x).y") with
+  | Result.ok tokens => List.any (fun t => t.kind == Kind.proj && t.value == "y") tokens
+  | Result.err _ => false
+
+test parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 2\n"
+
+test parserRejectsIndentedDecl := not (parses "  def f := 1\n")
+
+test resolveStripsNames :=
+  match Resolve.strip (Sexp.node "lam" [Sexp.str "x", Sexp.node "var" [Sexp.int 0]]) with
+  | (core, names) => core == Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]] && names == ["x"]
+
+test hashIgnoresLocalNames :=
+  let compileOne := fun (source : Text) =>
+    match try (fun _ => Compile.batch Map.empty [Compile.parseFile "t.deus" source]) with
+    | Result.ok b => List.lookup "f" b.entries
+    | Result.err _ => none
+  let original := compileOne "def f x := x + 1\n"
+  Option.isSome original && original == compileOne "def f renamed := renamed + 1\n" && original != compileOne "def f x := x + 2\n"
+
+test mutualRecursionHashesAsCycle :=
+  let source := "def even n := if n == 0 then true else odd (n - 1)\ndef odd n := if n == 0 then false else even (n - 1)\n"
+  match try (fun _ => Compile.batch Map.empty [Compile.parseFile "t.deus" source]) with
+  | Result.ok b =>
+    match (List.lookup "even" b.entries, List.lookup "odd" b.entries) with
+    | (some (Entry.term e), some (Entry.term o)) => Text.contains "." e && Text.take 64 e == Text.take 64 o
+    | _ => false
+  | Result.err _ => false
+
+test mdlFencesKeepLines := Mdl.deusSource "# Doc\n```deus\ndef a := 1\n```\ntext" == "\n\ndef a := 1\n\n"
+
+theorem reverseInvolutive (xs : List Int) : List.reverse (List.reverse xs) = xs := by test 100
+
+theorem sortIsSorted (xs : List Int) : List.sort (List.sort xs) = List.sort xs := by test 100
+
+theorem mapInsertLookup (k : Int) (v : Int) (xs : List Int) :
+    Map.lookup k (Map.insert k v (Map.fromList (List.map (fun x => (x, x)) xs))) = some v := by test 100
+
+theorem textReplaceIdentity (t : Text) : Text.replace "a" "a" t = t := by test 100
+
+theorem quoteRoundTrip (t : Text) : Sexp.read (Sexp.print (Sexp.str t)) = Sexp.str t := by test 200
+
+theorem notInvolutive (b : Bool) : not (not b) = b := by decide
+
+theorem optionOrElse (o : Option Bool) : Option.orElse o (fun _ => o) = o := by decide
+
+end Tests

@@ -45,3 +45,29 @@ mdl is extensible -- the mdl extensions are defined in the language
 ---
 
 - make be able to compile to standalone binary
+
+---
+
+- proposal: we need to be able to separate graph data (the actual content-addressed defintiions) into subgraphs. so that it doesnt become one huge graph. lets have that be infered from definitoin IRIs? the authoerity part. it should be pretty coarse -- sepecific library, organization, project
+- proposal: be able to represent requirements to extenral toolling kinda like nix -- if we ever need to depend on fetching binaries to do things. also have language to describe external registries: npm, crates, apt, etc...
+
+---
+
+proposals are ideas to solve things, you need to evaluate and choose the best approach, maybe there's a better pparoach
+
+---
+
+- proposal: store replication. could be just pushing to an r2 (our artifacts buckets is suitable). every push is a new file. graph compaction is needed (iternining, deduping, clearing old definitions). maybe sedimentary/subduction style compaction where concurent clients can do compaction locally and push overlappign blobs
+
+---
+
+- have commits/branching support -- we have to be able to know how codebase evolves -- what's UCM stance on this
+
+---
+
+- test with some simple lean-style formal proof
+- better test: declaration, formal theorem about it, impl and proof -- for example a sorting algo
+
+---
+
+- syntax for deus so vscode can render it
