@@ -1073,6 +1073,16 @@ describe('deus CLI', () => {
     const after = messages(restored);
     expect(after[0]).toMatch(/^history: import \d+ changes$/);
     expect(after.slice(-before.length)).toEqual(before);
+    // The explorer lists the imported changes too; one with no causal node here is marked and gets no page.
+    process.env.DEUS_HOME = root;
+    const restoredSite = join(scratch, 'comments-restored-site');
+    expect(deus('explore', '--out', restoredSite, ...restored)).toMatchObject({ stderr: '', code: 0 });
+    const shown: { message: string; imported?: boolean }[] = JSON.parse(
+      readFileSync(join(restoredSite, 'meta.json'), 'utf8'),
+    ).history;
+    expect(shown.map((row) => row.message)).toEqual(after);
+    expect(shown[0].imported).toBeUndefined();
+    expect(shown.filter((row) => row.imported).length).toBeGreaterThan(0);
     const third = join(scratch, 'comments-export-3');
     deus('export', third, ...restored);
     expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
