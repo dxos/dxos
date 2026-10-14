@@ -18,7 +18,8 @@ import * as Util from '@dxos/react-ui/Util';
 import { meta } from '#meta';
 
 import { EntityCard, type EntityCardProps } from './EntityCard.tsx';
-import { type BrowseSelection, type EntityCardModel, related } from './subgraph.ts';
+import { KnowledgeCard } from './KnowledgeStack.tsx';
+import { type BrowseSelection, type EntityCardModel, related, statements } from './subgraph.ts';
 
 export type EntityBrowserProps = {
   cards: readonly EntityCardModel[];
@@ -34,8 +35,13 @@ const matches = (card: EntityCardModel, filter: string): boolean => {
   return !text || card.label.toLowerCase().includes(text) || !!card.type?.toLowerCase().includes(text);
 };
 
+/** What a column stacks: entity cards, or the statements (a memory's claims) a text-valued property holds. */
+type Column =
+  | { kind: 'entities'; cards: readonly EntityCardModel[] }
+  | { kind: 'statements'; texts: readonly string[] };
+
 type ColumnProps = Pick<EntityBrowserProps, 'icons' | 'hues'> & {
-  stack: readonly EntityCardModel[];
+  column: Column;
   selection?: BrowseSelection;
   onChoose: (selection: BrowseSelection) => void;
   /** Closes this column (and every one after it); absent on the first, which always shows the whole graph. */
@@ -54,7 +60,7 @@ const COLUMN_TRACK = 'minmax(24rem, 1fr)';
  * (each card focused is chosen, as in Finder) and left and right leave.
  */
 const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ stack, selection, icons, hues, onChoose, onClose, onNavigate }, forwardedRef) => {
+  ({ column, selection, icons, hues, onChoose, onClose, onNavigate }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const [filter, setFilter] = useState('');
     const [stackElement, setStackElement] = useState<HTMLDivElement | null>(null);
@@ -121,29 +127,42 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
             <ScrollArea.Viewport>
               <Focus.Group asChild onKeyDown={handleKeyDown} ref={stackRef}>
                 <Layout.Flex column gap='sm' classNames='p-2'>
-                  {stack
-                    .filter((card) => matches(card, filter))
-                    .map((card) => {
-                      const chosen = selection?.cardId === card.id;
-                      return (
-                        <Focus.Item
-                          key={card.id}
-                          asChild
-                          current={chosen}
-                          onCurrentChange={() => onChoose({ cardId: card.id })}
-                        >
-                          <EntityCard
-                            card={card}
-                            icons={icons}
-                            hues={hues}
-                            selected={chosen}
-                            currentProperty={chosen ? selection?.property : undefined}
-                            onSelectProperty={(property) => onChoose({ cardId: card.id, property })}
-                            onSelect={(entity, property) => onChoose({ cardId: card.id, property, entity })}
-                          />
-                        </Focus.Item>
-                      );
-                    })}
+                  {column.kind === 'statements' &&
+                    column.texts
+                      .filter((text) => text.toLowerCase().includes(filter.trim().toLowerCase()))
+                      .map((text) => (
+                        <KnowledgeCard
+                          key={text}
+                          icon='ph--quotes--regular'
+                          title={text}
+                          rows={[]}
+                          testId='entity-statement'
+                        />
+                      ))}
+                  {column.kind === 'entities' &&
+                    column.cards
+                      .filter((card) => matches(card, filter))
+                      .map((card) => {
+                        const chosen = selection?.cardId === card.id;
+                        return (
+                          <Focus.Item
+                            key={card.id}
+                            asChild
+                            current={chosen}
+                            onCurrentChange={() => onChoose({ cardId: card.id })}
+                          >
+                            <EntityCard
+                              card={card}
+                              icons={icons}
+                              hues={hues}
+                              selected={chosen}
+                              currentProperty={chosen ? selection?.property : undefined}
+                              onSelectProperty={(property) => onChoose({ cardId: card.id, property })}
+                              onSelect={(entity, property) => onChoose({ cardId: card.id, property, entity })}
+                            />
+                          </Focus.Item>
+                        );
+                      })}
                 </Layout.Flex>
               </Focus.Group>
             </ScrollArea.Viewport>
@@ -179,14 +198,20 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
     };
 
     const columns = useMemo(() => {
-      const result: EntityCardModel[][] = [[...cards]];
+      const result: Column[] = [{ kind: 'entities', cards }];
       for (const selection of path) {
         const card = byId.get(selection.cardId);
         const next = card ? related(card, selection).flatMap((id) => byId.get(id) ?? []) : [];
-        if (next.length === 0) {
-          break;
+        if (next.length > 0) {
+          result.push({ kind: 'entities', cards: next });
+          continue;
         }
-        result.push(next);
+        // A statement links to nothing further, so a column of them ends the chain.
+        const texts = card ? statements(card, selection) : [];
+        if (texts.length > 0) {
+          result.push({ kind: 'statements', texts });
+        }
+        break;
       }
       return result;
     }, [cards, byId, path]);
@@ -208,7 +233,7 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
                 onNavigate={(direction) => navigate(column, direction)}
                 // Keyed by what opened the column, so its filter resets when a new choice replaces it.
                 key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
-                stack={stack}
+                column={stack}
                 selection={path[column]}
                 icons={icons}
                 hues={hues}

@@ -71,10 +71,13 @@ const Values = ({
   onSelect?: (id: string) => void;
 }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const rest = values.length - MAX_VALUES;
+  const entities = values.filter((value) => value.kind === 'entity');
+  // Text values (a memory's claims) are sentences, not links, so the card counts them; choosing the row opens them.
+  const statements = values.length - entities.length;
+  const rest = entities.length - MAX_VALUES;
   return (
     <>
-      {values.slice(0, MAX_VALUES).map((value) =>
+      {entities.slice(0, MAX_VALUES).map((value) =>
         value.kind === 'entity' ? (
           <Tag.Tag
             key={value.id}
@@ -102,6 +105,11 @@ const Values = ({
         <Tag.Tag title={t('entity-card-more.description', { count: rest })}>
           {t('entity-card-more.label', { count: rest })}
         </Tag.Tag>
+      )}
+      {statements > 0 && (
+        <Card.Text data-testid='entity-card-statements'>
+          {t('entity-card-statements.label', { count: statements })}
+        </Card.Text>
       )}
     </>
   );

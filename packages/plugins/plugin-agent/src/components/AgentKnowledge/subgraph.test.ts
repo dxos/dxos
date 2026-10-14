@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type RDF } from '@dxos/pipeline-rdf';
 
-import { propertyKey, related, toEntityCards } from './subgraph.ts';
+import { propertyKey, related, statements, toEntityCards } from './subgraph.ts';
 
 const fact = (id: string, subject: RDF.Term, predicate: string, object: RDF.Term): RDF.Fact => ({
   id,
@@ -75,5 +75,22 @@ describe('related', () => {
     expect(related(alice, { cardId: 'alice', property: propertyKey('in', 'know') })).toEqual(['bob']);
     expect(related(alice, { cardId: 'alice' })).toEqual(['acme', 'bob', 'carol']);
     expect(cards.map(({ id }) => id)).toEqual(['alice', 'acme', 'bob', 'carol']);
+  });
+});
+
+describe('statements', () => {
+  test("opens a text-valued property's values, and nothing for an entity property or a chip", ({ expect }) => {
+    const [card] = toEntityCards([
+      fact('c1', alice, 'claim', { kind: 'literal', literal: 'Alice leads indexing.' }),
+      fact('c2', alice, 'claim', { kind: 'literal', literal: 'Alice prefers async reviews.' }),
+      fact('c3', alice, 'knows', bob),
+    ]);
+    const claim = propertyKey('out', 'claim');
+    expect(statements(card, { cardId: 'alice', property: claim })).toEqual([
+      'Alice leads indexing.',
+      'Alice prefers async reviews.',
+    ]);
+    expect(statements(card, { cardId: 'alice', property: propertyKey('out', 'know') })).toEqual([]);
+    expect(statements(card, { cardId: 'alice', property: claim, entity: 'bob' })).toEqual([]);
   });
 });

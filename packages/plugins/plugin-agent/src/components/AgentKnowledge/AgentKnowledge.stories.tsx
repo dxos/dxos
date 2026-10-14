@@ -197,6 +197,17 @@ const PROFILE_FACTS: RDF.Fact[] = [
   rdfFact('p-4', [entity('david', 'David'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-5', [entity('emma', 'Emma'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-6', [entity('bob', 'Bob'), 'works at', entity('acme', 'Acme')], PROFILE),
+  // A memory's claims are text, not entities: the card counts them and the browser opens them as statements.
+  rdfFact(
+    'p-7',
+    [entity('alice', 'Alice Chen'), 'claim', { kind: 'literal', literal: 'Alice leads the indexing team.' }],
+    PROFILE,
+  ),
+  rdfFact(
+    'p-8',
+    [entity('alice', 'Alice Chen'), 'claim', { kind: 'literal', literal: 'Alice prefers async reviews.' }],
+    PROFILE,
+  ),
 ];
 
 const CARD_OPTIONS = {
