@@ -19,6 +19,11 @@ yarn.lock                    merge=binary
 # GitHub collapses them in PR review; text diff is kept for local `git diff`.
 .agents/reviews/**           linguist-generated=true
 
+# DEUS: the compiler image regenerated from deus/ (`deus compile`) and the text export of the
+# toolchain's codebase (`deus export`). Generated, so review collapses them.
+packages/reflect/deus-lang/seed/deus.image      linguist-generated=true
+packages/reflect/deus-lang/codebase/**          linguist-generated=true
+
 # Rush's JSON config files use JavaScript-style code comments.  The rule below prevents pedantic
 # syntax highlighters such as GitHub's from highlighting these comments as errors.  Your text editor
 # may also require a special configuration to allow comments in JSON.
