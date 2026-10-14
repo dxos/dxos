@@ -162,27 +162,7 @@ export abstract class BaseHttpClient {
         log('call', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
-        if (response.ok) {
-          const contentType = response.headers.get('Content-Type') ?? '';
-          // No-content responses (204, empty body, non-JSON) — return undefined.
-          if (
-            response.status === 204 ||
-            response.headers.get('Content-Length') === '0' ||
-            !contentType.includes('application/json')
-          ) {
-            return undefined as T;
-          }
-          const body = await response.json();
-          if (typeof body !== 'object' || body === null) {
-            return body;
-          }
-          if (!('success' in body)) {
-            return body;
-          }
-          if (body.success) {
-            return body.data;
-          }
-        } else if (response.status === 401 && hasVpChallenge(response) && !handledAuth) {
+        if (response.status === 401 && hasVpChallenge(response) && !handledAuth) {
           // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets a
           // VP challenge on its own 401s; upstream-forwarded 401s carry none, or carry an
           // unrelated scheme.
@@ -192,8 +172,24 @@ export abstract class BaseHttpClient {
         }
 
         const contentType = response.headers.get('Content-Type') ?? '';
-        const text = contentType.startsWith('application/json') ? await response.text() : undefined;
-        const body: EdgeFailure = text === undefined ? undefined : JSON.parse(text);
+        const isJson = contentType.includes('application/json');
+        // No-content responses (204, empty body, non-JSON) — return undefined.
+        if (response.ok && (response.status === 204 || response.headers.get('Content-Length') === '0' || !isJson)) {
+          return undefined as T;
+        }
+
+        // One read for both branches: an OK envelope that failed falls through with this body.
+        const text = isJson ? await response.text() : undefined;
+        const parsed = text === undefined ? undefined : JSON.parse(text);
+        if (response.ok) {
+          if (typeof parsed !== 'object' || parsed === null || !('success' in parsed)) {
+            return parsed;
+          }
+          if (parsed.success) {
+            return parsed.data;
+          }
+        }
+        const body: EdgeFailure | undefined = parsed;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 

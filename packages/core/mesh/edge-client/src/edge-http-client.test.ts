@@ -94,7 +94,7 @@ describe('EdgeHttpClient.request', () => {
   });
 
   // WebKit never frees a cloned body whose other branch goes unread.
-  test('reads each response body once, without cloning it', async ({ expect }) => {
+  test('reads each response body once, without cloning it, and decodes every failure', async ({ expect }) => {
     const json = { 'Content-Type': 'application/json' };
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const { pathname } = new URL(String(input instanceof URL ? input : (input.url ?? input)));
@@ -107,8 +107,13 @@ describe('EdgeHttpClient.request', () => {
               headers: json,
             },
           );
+        case '/declined':
+          return new Response(JSON.stringify({ success: false, message: 'declined by edge' }), {
+            status: 200,
+            headers: json,
+          });
         case '/refused':
-          return new Response(JSON.stringify({ success: false, error: { message: 'no' } }), {
+          return new Response(JSON.stringify({ success: false, message: 'refused by edge' }), {
             status: 400,
             headers: json,
           });
@@ -132,8 +137,18 @@ describe('EdgeHttpClient.request', () => {
       });
 
       expect(await client.request(Context.default(), '/status', { method: 'GET' })).toEqual({ running: true });
-      await expect(client.request(Context.default(), '/refused', { method: 'GET' })).rejects.toThrow();
-      await expect(client.request(Context.default(), '/broken', { method: 'GET' })).rejects.toThrow();
+      await expect(client.request(Context.default(), '/declined', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('declined by edge'),
+        isRetryable: false,
+      });
+      await expect(client.request(Context.default(), '/refused', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('refused by edge'),
+      });
+      await expect(client.request(Context.default(), '/broken', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('HTTP code 400'),
+        cause: expect.objectContaining({ message: 'bad request' }),
+      });
+      expect(fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/declined'))).toHaveLength(1);
       expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith('/auth'))).toBe(true);
       expect(clone).not.toHaveBeenCalled();
     } finally {
