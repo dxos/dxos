@@ -24,6 +24,7 @@ import { AgentOperationError } from './errors.ts';
 import {
   type EntityIndex,
   agentId,
+  knownEntities,
   loadEntities,
   loadMembers,
   memberByDid,
@@ -326,7 +327,7 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(members, yield* loadEntities, read, uri);
+    const facts = yield* extract(agent, members, yield* loadEntities, read, uri);
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,
@@ -340,15 +341,18 @@ export const readSource: (
     ? { uri: Obj.getURI(source), ...(yield* readObject(members, agent, source)) }
     : { uri: url ?? '', text: '', segments: [] };
   const body = text === undefined ? read : { ...read, text, segments: segmentMarkdown(members, text) };
-  const facts = yield* extract(members, yield* loadEntities, body, body.uri);
+  const facts = yield* extract(agent, members, yield* loadEntities, body, body.uri);
   return { facts, ...(yield* pushFacts(agent, facts)) };
 });
 
 /**
  * A direct model call rather than a chat turn: extraction is a pure derivation of the text. Attribution gives each
- * fact its own speaker and time, so the facts are grouped into graphs again once it has.
+ * fact its own speaker and time, so the facts are grouped into graphs again once it has. The extractor is shown the
+ * seed predicates (a predicate it invents is minted in the agent's brain namespace) and the members, people and
+ * organizations by name, so mentions of them resolve to their stable IRIs.
  */
 const extract = (
+  agent: Agent.Agent,
   members: readonly Space.Member[],
   entities: EntityIndex,
   body: Pick<SourceText, 'text' | 'segments'>,
@@ -356,7 +360,13 @@ const extract = (
 ) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
-    : extractDocFacts({ text: body.text, source: uri }).pipe(
+    : extractDocFacts(
+        { text: body.text, source: uri },
+        {
+          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id)),
+          entities: knownEntities(members, entities),
+        },
+      ).pipe(
         Effect.map((facts) =>
           RDF.Graph.assign(
             distinct(facts.map((fact) => attribute(resolveTerms(members, fact, entities), body.segments))).map(

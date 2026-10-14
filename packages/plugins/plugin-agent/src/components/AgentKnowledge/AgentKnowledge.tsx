@@ -32,7 +32,7 @@ import { TurtleSnippet } from './TurtleSnippet.tsx';
 // Root
 //
 
-const VIEWS = ['memories', 'facts', 'entities', 'goals', 'graph'] as const;
+const VIEWS = ['memories', 'facts', 'entities', 'predicates', 'goals', 'graph'] as const;
 
 type AgentKnowledgeView = (typeof VIEWS)[number];
 
@@ -42,7 +42,7 @@ const isView = (value: string): value is AgentKnowledgeView => VIEWS.some((view)
 
 type AgentKnowledgeContextValue = {
   view: AgentKnowledgeView;
-  /** Whether the Facts view shows each fact's triple and metadata under it. */
+  /** Whether the Facts view shows each fact's triple and metadata, and the Predicates view the ontology as TriG. */
   raw: boolean;
   brain: AgentKnowledgeBrainStatus;
 };
@@ -69,7 +69,10 @@ type AgentKnowledgeRootProps = PropsWithChildren<{
   brain?: AgentKnowledgeBrainStatus;
 }>;
 
-/** What the agent knows, one view at a time: its memories, the facts it read, the goals it serves and its knowledge graph. */
+/**
+ * What the agent knows, one view at a time: its memories, the facts it read, the predicates its brain states them
+ * with, the goals it serves and its knowledge graph.
+ */
 const AgentKnowledgeRoot = ({
   role,
   defaultView = 'memories',
@@ -82,11 +85,14 @@ const AgentKnowledgeRoot = ({
   const [raw, setRaw] = useState(false);
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] });
-    if (view === 'facts') {
+    if (view === 'facts' || view === 'predicates') {
       builder.action(
         'raw',
         {
-          label: ['agent-knowledge-raw-facts.label', { ns: meta.profile.key }],
+          label: [
+            view === 'facts' ? 'agent-knowledge-raw-facts.label' : 'agent-knowledge-raw-predicates.label',
+            { ns: meta.profile.key },
+          ],
           icon: 'ph--brackets-curly--regular',
           iconOnly: true,
           checked: raw,
@@ -128,6 +134,9 @@ const AgentKnowledgeRoot = ({
                   </Tabs.Trigger>
                   <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
                     {t('agent-knowledge-entities.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='predicates' data-testid='agent-knowledge-tab-predicates'>
+                    {t('agent-knowledge-predicates.label')}
                   </Tabs.Trigger>
                   <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
                     {t('agent-knowledge-goals.label')}
@@ -355,6 +364,88 @@ const AgentKnowledgeEntities = ({ cards }: AgentKnowledgeEntitiesProps) => {
 AgentKnowledgeEntities.displayName = 'AgentKnowledge.Entities';
 
 //
+// Predicates
+//
+
+type AgentKnowledgePredicate = {
+  iri: string;
+  /** The IRI as a prefixed name (`schema:worksFor`, `brain:tutor`). */
+  curie: string;
+  label: string;
+  /** The vocabulary that defines it (`schema`, `foaf`, `dx`), or `brain` for one the agent's extractor minted. */
+  vocabulary?: string;
+  description?: string;
+  synonyms?: readonly string[];
+  /** How many facts state it. */
+  count: number;
+};
+
+type AgentKnowledgePredicatesProps = {
+  /** The brain's predicates: the seed vocabulary, then those its extractor minted. */
+  predicates: readonly AgentKnowledgePredicate[];
+  /** The ontology graph as TriG, shown in place of the list when the view asks for raw. */
+  trig?: string;
+};
+
+/** The predicates the agent's brain knows: the seed vocabulary every brain starts with, and those it minted. */
+const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicatesProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { view, raw } = useContext(AgentKnowledgeContext);
+  if (view !== 'predicates') {
+    return null;
+  }
+
+  return (
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport asChild>
+          <Layout.Container>
+            {raw && trig ? (
+              <pre
+                data-testid='agent-knowledge-predicates-trig'
+                className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
+              >
+                {trig}
+              </pre>
+            ) : (
+              <Listbox.Root
+                items={predicates.map((predicate) => ({
+                  value: predicate.iri,
+                  label: predicate.label,
+                  icon: 'ph--arrow-right--regular',
+                }))}
+              >
+                <Listbox.Content>
+                  {predicates.map((predicate) => (
+                    <Listbox.Item key={predicate.iri} id={predicate.iri} data-testid='agent-knowledge-predicate'>
+                      <Listbox.ItemIcon />
+                      <Listbox.ItemText />
+                      <Listbox.ItemDescription>
+                        {[
+                          predicate.curie,
+                          predicate.vocabulary === 'brain' ? t('agent-knowledge-predicate-minted.label') : undefined,
+                          t('agent-knowledge-predicate-count.label', { count: predicate.count }),
+                          predicate.description,
+                          predicate.synonyms?.length ? predicate.synonyms.join(', ') : undefined,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </Listbox.ItemDescription>
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            )}
+          </Layout.Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
+  );
+};
+
+AgentKnowledgePredicates.displayName = 'AgentKnowledge.Predicates';
+
+//
 // Goals
 //
 
@@ -515,6 +606,7 @@ export const AgentKnowledge = {
   Memories: AgentKnowledgeMemories,
   Facts: AgentKnowledgeFacts,
   Entities: AgentKnowledgeEntities,
+  Predicates: AgentKnowledgePredicates,
   Goals: AgentKnowledgeGoals,
   Graph: AgentKnowledgeGraph,
 };
@@ -531,6 +623,8 @@ export type {
   AgentKnowledgeMemoriesProps,
   AgentKnowledgeMemory,
   AgentKnowledgeNode,
+  AgentKnowledgePredicate,
+  AgentKnowledgePredicatesProps,
   AgentKnowledgeRootProps,
   AgentKnowledgeView,
   AgentKnowledgeWatch,

@@ -9,17 +9,21 @@ export const TRIG_PREFIXES = Object.entries(RDF.Graph.PREFIXES)
   .map(([prefix, iri]) => `@prefix ${prefix}: <${iri}>.`)
   .join('\n');
 
+const SHARED_PREFIXES = new Set(TRIG_PREFIXES.split('\n'));
+
 /**
- * The fact as the brain stores it, in TriG without the prefixes: its statement inside its named graph, then the
- * graph's provenance (pipeline-rdf's `factToTriples`).
+ * The fact as the brain stores it, in TriG without the shared prefixes: its statement inside its named graph, then
+ * the graph's provenance (pipeline-rdf's `factToTriples`). The prefixes of its graph-local entities and the brain's
+ * namespace are particular to the fact, so they stay.
  */
-export const formatRawFact = (fact: RDF.Fact): string =>
-  layoutTriG(
-    RDF.Graph.toTriG([fact])
-      .split('\n')
-      .filter((line) => !line.startsWith('@prefix'))
-      .join('\n'),
-  );
+export const formatRawFact = (fact: RDF.Fact): string => {
+  const lines = RDF.Graph.toTriG([fact])
+    .split('\n')
+    .filter((line) => !SHARED_PREFIXES.has(line));
+  const own = lines.filter((line) => line.startsWith('@prefix'));
+  const body = layoutTriG(lines.filter((line) => !line.startsWith('@prefix')).join('\n'));
+  return own.length > 0 ? `${own.join('\n')}\n\n${body}` : body;
+};
 
 /**
  * Lays out n3's compact TriG for reading: graph bodies indented, a space before each `;` and `.`, every statement
@@ -127,8 +131,8 @@ type Graph = { prefix: string; iri: string; facts: RDF.Fact[] };
 /**
  * The facts in the fuller form `docs/BRAIN.md` ("Named graphs, IRIs and the ontology") describes, as TriG: real triples
  * inside named graphs, with the provenance stated once per graph, ontology predicates, and entities as real IRIs where
- * known — otherwise scoped to their graph. A mock-up for review: the store writes named graphs ({@link formatRawFact})
- * but keys unresolved entities by slug rather than scoping them to their graph.
+ * known — otherwise scoped to their graph. A mock-up for review, predating the store's own form: the store now scopes
+ * unresolved entities to their graph and mints invented predicates in the brain's namespace ({@link formatRawFact}).
  */
 export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGraphOptions = {}): string => {
   const graphs = new Map<string, Graph>();
@@ -218,4 +222,13 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
   ];
 
   return [prefixes.join('\n'), ...blocks, ...ontology].join('\n\n');
+};
+
+/** The prefixed name an IRI reads as (`schema:worksFor`; a predicate the brain minted as `brain:…`). */
+export const curie = (iri: string, namespace: string): string => {
+  const [prefix, base] =
+    [['brain', namespace] as const, ...Object.entries(RDF.Graph.PREFIXES)]
+      .filter(([, base]) => iri.startsWith(base))
+      .sort(([, left], [, right]) => right.length - left.length)[0] ?? [];
+  return prefix !== undefined && base !== undefined ? `${prefix}:${iri.slice(base.length)}` : `<${iri}>`;
 };
