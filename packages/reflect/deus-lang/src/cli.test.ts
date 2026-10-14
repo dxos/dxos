@@ -407,6 +407,25 @@ describe('deus CLI', () => {
     }
     expect([call('inRange', 7), call('inRange', 9)]).toEqual([1, 0]);
 
+    // Algebraic data (D56): the sorting example itself, with lists on the module's heap.
+    deus('add', join(root, 'examples/sort.deus'), ...c);
+    deus(
+      'add',
+      file(
+        'lists.deus',
+        [
+          'def build (n : Int) : List Int := if n == 0 then [] else n :: build (n - 1)',
+          'def total (xs : List Int) : Int := match xs with',
+          '  | [] => 0',
+          '  | x :: rest => x + total rest',
+          'def sortedSum (n : Int) : Int := if Sort.sorted (Sort.isort (build n)) then total (Sort.isort (build n)) else 0 - 1',
+          '',
+        ].join('\n'),
+      ),
+      ...c,
+    );
+    expect(String(call('sortedSum', 300))).toBe(deus('eval', 'sortedSum 300', ...c).stdout.trim());
+
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
   });

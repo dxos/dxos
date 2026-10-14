@@ -2,12 +2,17 @@
   A WebAssembly back end (D51): compiles a definition and the definitions it calls to a binary
   wasm module, written byte by byte in DEUS.
 
-  The subset is first-order arithmetic: every definition is a function of `Int`s (and `Bool`s,
-  which are `i32` 0 and 1) to an `Int` or `Bool`, built from literals, locals, `let`, `seq`,
-  `if`, integer and comparison primitives, and saturated calls of other such definitions. A call
-  in tail position is a `return_call`, so recursion that loops runs in constant stack. Anything
-  else (closures, data, text, effects) is refused with the form that is out of the subset; such
-  programs run on the wasm kernel instead (D41).
+  The subset is first-order code over integers and algebraic data: every definition is a
+  function of values to a value, built from literals, locals, `let`, `seq`, `if`, `match`,
+  constructors, integer and comparison primitives, and saturated calls of other such
+  definitions. A call in tail position is a `return_call`, so recursion that loops runs in
+  constant stack. Anything else (closures, text, effects) is refused with the form that is out
+  of the subset; such programs run on the wasm kernel instead (D41).
+
+  Values are `i32`s. `Int` and `Bool` (0, 1) are themselves; any other constructed value
+  (D56) points at a block `[tag, field…]` in linear memory, allocated by bumping a heap pointer
+  that grows memory as needed and never frees. The module exports `memory` and `alloc`, so a host
+  can build arguments and read results.
 
   `Int.div` and `Int.mod` by zero trap rather than raise a defect.
 -/
@@ -99,6 +104,43 @@ def gather (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw
         | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
   go [main] [] []
 
+def fresh (next : Ref Int) : Int :=
+  let local := Ref.get next
+  Ref.set next (local + 1)
+  local
+
+def localGet (l : Int) : List Int := 32 :: uleb l
+
+def localSet (l : Int) : List Int := 33 :: uleb l
+
+/-- `i32.load` / `i32.store` at a constant offset, 4-byte aligned. -/
+def load (offset : Int) : List Int := [40, 2] ++ uleb offset
+
+def store (offset : Int) : List Int := [54, 2] ++ uleb offset
+
+/--
+  A pattern test against the value in local `v`: code that leaves the current block (`br_if 0`)
+  when it does not match, and the environment with what it binds (left to right, so the last
+  binding is `var 0`).
+-/
+def pattern (next : Ref Int) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text} (List Int, List Int) :=
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => ([], env)
+  | Sexp.list [Sexp.sym "pvar"] => ([], v :: env)
+  | Sexp.list [Sexp.sym "pas", p] => pattern next v (v :: env) p
+  | Sexp.list [Sexp.sym "pint", Sexp.int n] => (localGet v ++ (65 :: sleb n) ++ [71, 13, 0], env)
+  | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => (localGet v ++ [65, tag, 71, 13, 0], env)
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str _ :: Sexp.int tag :: subs) =>
+    let tagTest := localGet v ++ load 0 ++ (65 :: sleb tag) ++ [71, 13, 0]
+    List.foldl (fun acc pair =>
+      match (acc, pair) with
+      | ((code, bound), (i, Sexp.list [Sexp.sym "pany"])) => (code, bound)
+      | ((code, bound), (i, sub)) =>
+        let f := fresh next
+        match pattern next f bound sub with
+        | (subCode, bound2) => (code ++ localGet v ++ load (4 + 4 * i) ++ localSet f ++ subCode, bound2)) (tagTest, env) (List.mapIndexed (fun i x => (i, x)) subs)
+  | other => throw ("the pattern " ++ Sexp.print other ++ " is outside the wasm subset")
+
 /-- Code for `e`; `env` maps de Bruijn indices to locals, `next` is the next free local. -/
 def expr (fns : List Fn) (env : List Int) (next : Ref Int) (tail : Bool) (e : Sexp) : {Throw Text} List Int :=
   let sub := fun (x : Sexp) => expr fns env next false x
@@ -106,6 +148,20 @@ def expr (fns : List Fn) (env : List Int) (next : Ref Int) (tail : Bool) (e : Se
   match e with
   | Sexp.list [Sexp.sym "int", Sexp.int n] => 65 :: sleb n
   | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => [65, tag]
+  | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int tag, Sexp.int 0] => construct fns env next tag []
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int n] :: args) =>
+    if n != List.length args || t == "#Bool" then throw ("partial application of a constructor of " ++ t ++ " is outside the wasm subset")
+    else construct fns env next tag args
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    let v := fresh next
+    -- One block per case: a failed test leaves it for the next; a match leaves the outer block.
+    let arms := List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, body] =>
+        match pattern next v env pat with
+        | (guard, bound) => [2, 64] ++ guard ++ expr fns bound next tail body ++ [12, 1, 11]
+      | other => throw ("outside the wasm subset: " ++ Sexp.print other)) cases
+    sub scrutinee ++ localSet v ++ [2, i32] ++ arms ++ [0, 11]
   | Sexp.list [Sexp.sym "var", Sexp.int i] =>
     match List.get? env i with
     | some local => 32 :: uleb local
@@ -131,9 +187,29 @@ def expr (fns : List Fn) (env : List Int) (next : Ref Int) (tail : Bool) (e : Se
     | none => throw ("unknown function #" ++ Text.take 10 h)
   | other => throw ("outside the wasm subset: " ++ Text.take 120 (Sexp.print other))
 
+/-- A constructed value: `alloc` a block, store the tag and each field, and leave its address. -/
+def construct (fns : List Fn) (env : List Int) (next : Ref Int) (tag : Int) (args : List Sexp) : {Throw Text} List Int :=
+  let p := fresh next
+  let fields := List.concat (List.mapIndexed (fun i a => localGet p ++ expr fns env next false a ++ store (4 + 4 * i)) args)
+  (65 :: sleb (4 + 4 * List.length args)) ++ (16 :: uleb (List.length fns)) ++ localSet p ++ localGet p ++ (65 :: sleb tag) ++ store 0 ++ fields ++ localGet p
+
+/--
+  `alloc n`: bumps the heap pointer (global 0) by `n` bytes. Past the end of memory it grows by
+  at least the current size, so a program that allocates a lot grows memory a logarithmic number
+  of times. Locals: 1 the block, 2 the pages missing.
+-/
+def allocBody : List Int :=
+  List.concat [
+    [35, 0, 33, 1],
+    [35, 0, 32, 0, 106, 36, 0],
+    [35, 0, 63, 0, 65, 16, 116, 75, 4, 64],
+    [35, 0, 65, 16, 118, 65, 1, 106, 63, 0, 107, 33, 2],
+    [32, 2, 63, 0, 32, 2, 63, 0, 74, 27, 64, 0, 26, 11],
+    [32, 1, 11]]
+
 /-- The module: one type and one function per definition; `main` is exported as `export`. -/
 def module (fns : List Fn) (export : Text) : {Throw Text} List Int :=
-  let types := List.map (fun f => [96] ++ vec (List.replicate f.fnArity [i32]) ++ vec [[i32]]) fns
+  let types := List.map (fun f => [96] ++ vec (List.replicate f.fnArity [i32]) ++ vec [[i32]]) fns ++ [[96] ++ vec [[i32]] ++ vec [[i32]]]
   let codes := List.map (fun f =>
     let next := Ref.new f.fnArity
     let env := List.reverse (List.range 0 f.fnArity)
@@ -142,12 +218,16 @@ def module (fns : List Fn) (export : Text) : {Throw Text} List Int :=
     let locals := if extra == 0 then vec [] else vec [uleb extra ++ [i32]]
     let entry := locals ++ code
     uleb (List.length entry) ++ entry) fns
+  let alloc := List.length fns
+  let allocEntry := vec [[2, i32]] ++ allocBody
   List.concat [
     [0, 97, 115, 109, 1, 0, 0, 0],
     section 1 (vec types),
-    section 3 (vec (List.mapIndexed (fun i _ => uleb i) fns)),
-    section 7 (vec [name export ++ [0, 0]]),
-    section 10 (uleb (List.length codes) ++ List.concat codes)]
+    section 3 (vec (List.mapIndexed (fun i _ => uleb i) (fns ++ [Fn.mk "" 1 (Sexp.list [])]))),
+    section 5 (vec [[0, 1]]),
+    section 6 (vec [[i32, 1, 65, 8, 11]]),
+    section 7 (vec [name export ++ [0, 0], name "memory" ++ [2, 0], name "alloc" ++ (0 :: uleb alloc)]),
+    section 10 (uleb (List.length codes + 1) ++ List.concat codes ++ uleb (List.length allocEntry) ++ allocEntry)]
 
 /-- Compiles `main` and what it calls to a wasm module exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=

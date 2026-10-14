@@ -41,6 +41,10 @@ stage. The table is regenerated from `git log` with every commit.
 | 33  | 10-14 14:30 | 4m 06s         | `cb7fd584`  | Durable Objects — actor calls, alarms, multi-object simulation                              |
 | 34  | 10-14 14:35 | 4m 49s         | `75b49f19`  | artifacts layer caches builds; operators get types                                          |
 | 35  | 10-14 14:39 | 4m 04s         | `4fde6a76`  | replication — retention GC with shallow history                                             |
-| 36  | 10-14 14:47 | 7m 28s         | this commit | row parameters: functions in data keep their effects                                        |
+| 36  | 10-14 14:47 | 7m 29s         | `baae3944`  | row parameters — functions in data keep their effects                                       |
+| 37  | 10-14 14:47 | 0m 33s         | `317f5828`  | VS Code grammar highlights ```mdl blocks; drop unreserved keywords                          |
+| 38  | 10-14 14:58 | 11m 12s        | `c9f7dcfd`  | deterministic replication test; scoped env in the fetch test; review refresh                |
+| 39  | 10-14 15:01 | 2m 19s         | `2632d259`  | fix the type error and format break that failed Check                                       |
+| 40  | 10-14 15:06 | 5m 38s         | this commit | wasm compiler: algebraic data on a linear-memory heap                                       |
 
-Total from stage 1 to stage 36: 5h 04m.
+Total from stage 1 to stage 40: 5h 23m.

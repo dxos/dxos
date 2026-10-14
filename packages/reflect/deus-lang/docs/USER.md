@@ -119,3 +119,10 @@ re-read core instructions
 ---
 
 perhaps add an alarm to remind you of that every 30 minutes
+
+---
+
+- example to build: http server (locally as standalone bineary, but also on cloudflare)
+- we need an abastraction layer on top of cloudflare (http handlers, durable objects) so that programs written with it can be deployed to cf, but also run as standalone binaries
+- binary store format, suggestion: look at columnar stores with column compression
+- performance is always a good thing to look at if youre not sure what to do
