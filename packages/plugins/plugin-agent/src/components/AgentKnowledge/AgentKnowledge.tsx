@@ -221,7 +221,11 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
             },
             {
               label: t('agent-knowledge-observed.label'),
-              value: <Typography.Timestamp date={memory.observedAt} now={now} />,
+              value: (
+                <Card.Text>
+                  <Typography.Timestamp date={memory.observedAt} now={now} />
+                </Card.Text>
+              ),
             },
           ]}
         />
@@ -295,7 +299,14 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
             ...(fact.speaker
               ? [{ label: t('agent-knowledge-speaker.label'), value: <Card.Text truncate>{fact.speaker}</Card.Text> }]
               : []),
-            { label: t('agent-knowledge-said.label'), value: <Typography.Timestamp date={fact.saidAt} now={now} /> },
+            {
+              label: t('agent-knowledge-said.label'),
+              value: (
+                <Card.Text>
+                  <Typography.Timestamp date={fact.saidAt} now={now} />
+                </Card.Text>
+              ),
+            },
           ]}
         >
           {raw && fact.fact && (

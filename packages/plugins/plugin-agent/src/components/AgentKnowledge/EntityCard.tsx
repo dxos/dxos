@@ -46,7 +46,8 @@ export type EntityCardFieldProps = { label: string; children: React.ReactNode };
 
 /**
  * A key and its value side by side, the key a fixed width so the values line up down the card: the read-only form row
- * every knowledge card (entities, predicates) is built from.
+ * every knowledge card (entities, predicates) is built from. A text value goes in `Card.Text`, whose block padding the
+ * key's has, so their first lines share a baseline.
  */
 export const EntityCardField = ({ label, children }: EntityCardFieldProps) => (
   // Top-aligned, so a key stays on its value's first line when the value wraps (a description, a run of chips).
