@@ -40,6 +40,8 @@ case "$tool" in
       /*) relative=${path#"$root"/} ;;
       *) relative=$path ;;
     esac
+    # `./a/b` names the same file as `a/b`.
+    while [ "${relative#./}" != "$relative" ]; do relative=${relative#./}; done
     while IFS= read -r prefix; do
       [ -z "$prefix" ] && continue
       case "$relative" in
