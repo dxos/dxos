@@ -34,6 +34,8 @@ export type AgentKnowledgeData = {
   nodes: AgentKnowledgeNode[];
   edges: AgentKnowledgeEdge[];
   brain: AgentKnowledgeBrainStatus;
+  /** Re-reads the brain now, e.g. after changing it. */
+  refresh: () => void;
 };
 
 /** The name of a fact's source when it is an object in the space (a document); a chat message is a feed item, so has none. */
@@ -55,7 +57,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   const triggers = useTriggers(agent);
 
   // Facts and memories live only in the agent's brain (EDGE's for an agent whose chats run there), never in the space.
-  const { inspection, error } = useBrainStore(agent);
+  const { inspection, error, refresh } = useBrainStore(agent);
   const memories = useMemo(
     () =>
       Knowledge.fromFacts((inspection?.facts ?? []).map(({ fact }) => fact))
@@ -149,5 +151,5 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, error],
   );
 
-  return { memories, facts, goals: goalItems, nodes, edges, brain };
+  return { memories, facts, goals: goalItems, nodes, edges, brain, refresh };
 };

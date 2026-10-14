@@ -45,7 +45,11 @@ type AgentKnowledgeContextValue = {
 };
 
 /** Memories and facts are read from the agent's brain, so an empty list means nothing only once a read has returned. */
-type AgentKnowledgeBrainStatus = { state: 'loading' } | { state: 'ready' } | { state: 'error'; error: string };
+type AgentKnowledgeBrainStatus =
+  | { state: 'loading' }
+  | { state: 'resetting' }
+  | { state: 'ready' }
+  | { state: 'error'; error: string };
 
 const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({
   view: 'memories',
@@ -149,13 +153,15 @@ const Status = ({ children }: PropsWithChildren) => (
   </Panel.Body>
 );
 
-/** The loading or error status in place of a brain-backed view's empty message, or undefined once read. */
+/** The status that stands in for a brain-backed view while it is read or wiped, or failed to read; undefined once read. */
 const useBrainStatusMessage = (): string | undefined => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { brain } = useContext(AgentKnowledgeContext);
   switch (brain.state) {
     case 'loading':
       return t('agent-knowledge-loading.message');
+    case 'resetting':
+      return t('agent-knowledge-resetting.message');
     case 'error':
       return t('agent-knowledge-error.message', { error: brain.error });
     default:
@@ -184,7 +190,7 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
     return null;
   }
 
-  return memories.length === 0 ? (
+  return memories.length === 0 || status ? (
     <Status>{status ?? t('agent-knowledge-memories-empty.message')}</Status>
   ) : (
     <Panel.Body asChild>
@@ -253,7 +259,7 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
     return null;
   }
 
-  return facts.length === 0 ? (
+  return facts.length === 0 || status ? (
     <Status>{status ?? t('agent-knowledge-facts-empty.message')}</Status>
   ) : (
     <Panel.Body asChild>

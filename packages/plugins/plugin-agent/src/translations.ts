@@ -98,6 +98,7 @@ export const translations = [
         'agent-knowledge-memories.label': 'Memories',
         'agent-knowledge-memories-empty.message': 'Nothing remembered yet.',
         'agent-knowledge-loading.message': 'Reading the brain…',
+        'agent-knowledge-resetting.message': 'Wiping the brain…',
         'agent-knowledge-error.message': 'Could not read the brain: {{error}}',
         'agent-state-channel-unnamed.label': 'Conversation',
         'agent-state-channel-mode.label': 'Mode: {{mode}}',
