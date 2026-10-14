@@ -1,5 +1,10 @@
 # History of main
 
+- `cf058fac29` export: merge tasks from codebase
+- `1a7a8cb1c2` task: comment on 771e6f9e (by claude)
+- `0798d17c17` history: import 532 changes (by claude)
+- `f7be59b176` task: import from tasks.sexp
+- `7cfe0a41ea` add code specs
 - `44545eb04d` task: comment on e76e36b0 (by claude)
 - `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
 - `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
@@ -9,6 +14,20 @@
 - `f4563342df` task: set 771e6f9e state
 - `e9b5cdc855` task: comment on 771e6f9e (by claude)
 - `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
+- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
+- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
+- `e468baa69b` task: comment on 12663f55 (by claude)
+- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
+- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
+- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
+- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
+- `616c10e45e` history: import 511 changes
+- `a5ec773714` task: import from tasks.sexp
+- `3796ba0f06` task: set 38603468 state details (by claude)
+- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
+- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
 - `26b25952c4` history: import 507 changes
 - `ce1b500e79` task: import from tasks.sexp
 - `880640eb13` task: set e76e36b0 state (by claude)

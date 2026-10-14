@@ -41,6 +41,14 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 > claude: Simulation is done (D65, qa blocks run by deus mdl). Left: run the same flows against deus serve and in a browser.
 
+## Republish the hosted explorer on every push to the PR branch (`696086fe`)
+
+- state: todo
+- priority: high
+- labels: explorer, ci
+
+The hosted explorer stays at its last manual publish (the 19:18 one) because nothing republishes it. Once threads push to r2://agent-artifacts/deus/toolchain (D101), a CI job, or deus push itself, should run deus explore --publish for the explorer URL. A CI job needs Dmytro's go-ahead and an R2 token that can write agent-artifacts; the existing CI R2 token covers only the Composer asset buckets.
+
 ## The codebase explorer app needs to be much better (`861438d2`)
 
 - state: doing
@@ -151,14 +159,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - assignee: claude
 - labels: mdl, spec
 
-## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
-
-- state: todo
-- priority: medium
-- labels: native, perf, wasm
-
-D90 widens values to 64 bits so blocks and integers can be told apart in wasm32; this doubles block size and makes list sorts 1.1-1.8x slower than the never-freeing --wasm back end (docs/spec/NATIVE.md#wasm-through-c). A low tag bit on Int (or on pointers) keeps 32-bit words but changes every arithmetic op in both back ends.
-
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
 - state: todo
@@ -253,12 +253,6 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - priority: low
 - assignee: claude
 - labels: browser
-
-## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
-
-- state: todo
-- priority: low
-- labels: native, perf
 
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
@@ -396,6 +390,8 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 Surfaces and ECHO access written in DEUS, compiled with --js, loaded into Composer by URL; autocue demo.
 
 > claude: Done (D102): examples/composer loads by URL in a production Composer; creates a DEUS codebase object, searches 1922 definitions, reads source with Uses/Used by, pins on the ECHO object. Autocue flow examples/composer/autocue/deus-plugin.mjs passes all 7 steps.
+
+> claude: Its decision was renumbered D104 in the merge (D102 and D103 were taken).
 
 ## Declarations without a body: def f with a full signature and no implementation (`cf5e187f`)
 
@@ -699,6 +695,18 @@ From Dmytro: about mdl-first approach --- I want agents to record specs in codeb
 - assignee: claude
 - labels: explorer
 
+## The explorer History view hides the history imported from an export (`12663f55`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, bug
+- links change #112a8df7a8
+
+After a restore, History showed only init, add code specs, task import and history import N changes, so the hosted explorer looked as if nobody updated the codebase. List the full log, as deus log does.
+
+> claude: meta.json now carries the full log (up to 1000); a change with no causal node in the store is marked imported and shown greyed without a page. A restored toolchain codebase lists about 500 changes instead of 4.
+
 ## The prover ignores tactic names it does not know (`bf5681bf`)
 
 - state: done
@@ -862,6 +870,14 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 - links change #0f3089d483
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
+
+## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
+
+- state: canceled
+- priority: medium
+- labels: native, perf, wasm
+
+Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 64-bit values in wasm stay.
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 
@@ -1028,6 +1044,13 @@ D69 refuses == on data; generate per-type compare functions from the type object
 - links change #387eb2652a
 
 From docs/spec/README.md, Known divergences.
+
+## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
+
+- state: done
+- priority: low
+- labels: native, perf
+- links change #eddca32cd2
 
 ## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
 

@@ -68,6 +68,20 @@ def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json :=
   Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
     Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir (fst pair))) [])
 
+/-- How many changes the History view lists, imported ones (D67) included. -/
+def historyLimit : Int := 1000
+
+/--
+  A row of the full log. A change imported from an export has no causal node in this store, so it
+  is marked `imported` and gets no page.
+-/
+def logJson (dir : Text) (entry : (Text, Text, Text)) : {IO} Json :=
+  match entry with
+  | (h, message, agent) =>
+    Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++
+      (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++
+      (if Option.isSome (Codebase.readObject dir h) then [] else [("imported", Json.bool true)]))
+
 def refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.str name), ("hash", Json.str h)]
 
 def taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, Causal)) (t : Task) : {IO, Throw Text} Json :=
@@ -172,7 +186,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     ("branches", Json.arr (List.map Json.str (Codebase.branches dir))), ("definitions", Json.num (List.length entries)),
     ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter Tasks.isOpen tasks))),
     ("console", Json.bool (IO.exists (out ++ "/console/info.json"))),
-    ("history", Json.arr (List.map (changeJson dir) (Codebase.history dir branch 30)))]))
+    ("history", Json.arr (List.map (logJson dir) (Cli.fullLog dir historyLimit)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)

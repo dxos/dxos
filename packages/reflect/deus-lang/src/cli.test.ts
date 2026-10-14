@@ -706,6 +706,27 @@ describe('deus CLI', () => {
         deus('eval', 'wrap 3', ...c).stdout,
       );
 
+      // A freed block over 256 words is reused, so a loop over fresh 1000-item arrays allocates one.
+      deus(
+        'add',
+        file(
+          'big.deus',
+          [
+            'def fill (a : Array Int) (i : Int) : Array Int := if i == Array.length a then a else fill (Array.set a i i) (i + 1)',
+            'def big (i : Int) (acc : Int) : Int := if i == 0 then acc else big (i - 1) (acc + Array.get (fill (Array.make 1000 0) 0) 999)',
+            '',
+          ].join('\n'),
+        ),
+        ...c,
+      );
+      expect(deus('build', 'big', '-o', join(scratch, 'big'), '--c', ...c).code).toBe(0);
+      const big = spawnSync(join(scratch, 'big'), ['100', '0'], {
+        encoding: 'utf8',
+        env: { ...process.env, DEUS_HEAP_STATS: '1' },
+      });
+      expect(big.stdout).toBe(deus('eval', 'big 100 0', ...c).stdout);
+      expect(big.stderr).toContain('heap: 1002 words bumped, 0 live');
+
       // A self tail call is a jump, so a million-deep loop runs in constant stack.
       deus(
         'add',
@@ -1073,6 +1094,16 @@ describe('deus CLI', () => {
     const after = messages(restored);
     expect(after[0]).toMatch(/^history: import \d+ changes$/);
     expect(after.slice(-before.length)).toEqual(before);
+    // The explorer lists the imported changes too; one with no causal node here is marked and gets no page.
+    process.env.DEUS_HOME = root;
+    const restoredSite = join(scratch, 'comments-restored-site');
+    expect(deus('explore', '--out', restoredSite, ...restored)).toMatchObject({ stderr: '', code: 0 });
+    const shown: { message: string; imported?: boolean }[] = JSON.parse(
+      readFileSync(join(restoredSite, 'meta.json'), 'utf8'),
+    ).history;
+    expect(shown.map((row) => row.message)).toEqual(after);
+    expect(shown[0].imported).toBeUndefined();
+    expect(shown.filter((row) => row.imported).length).toBeGreaterThan(0);
     const third = join(scratch, 'comments-export-3');
     deus('export', third, ...restored);
     expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(

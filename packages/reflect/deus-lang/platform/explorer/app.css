@@ -1405,6 +1405,22 @@ ul.rows {
   margin-left: auto;
 }
 
+.timeline-row.imported {
+  color: var(--muted);
+}
+
+.timeline-row.imported:hover {
+  background: none;
+}
+
+.timeline-row.imported .dot {
+  border-color: var(--faint);
+}
+
+.timeline-row.imported .chip {
+  margin-left: auto;
+}
+
 .timeline-row .hash {
   flex: none;
 }

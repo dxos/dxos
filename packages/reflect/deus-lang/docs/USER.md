@@ -337,3 +337,7 @@ about mdl-first approach --- I want agents to record specs in codebase, not in g
 ---
 
 oh, nonono, threads MUST use the codebase as primary VCS, and git as backup
+
+---
+
+are woktrees not pushing the codebase, or is this explorer not getting updated
