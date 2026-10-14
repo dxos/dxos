@@ -211,17 +211,18 @@ error, a name the namespace lacks, or a defect is `Result.err` with its message.
 
 `describe` returns, in this order and only when they apply:
 
-| Property    | Value                                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
-| `kind`      | the entry's kind: `term`, `type`, `ability`, `test`, `theorem`, `spec`, `ctor` or `op`                 |
-| `hash`      | its hash                                                                                               |
-| `view`      | its declaration as `deus view` prints it, without the header lines                                     |
-| `type`      | its inferred type as `deus view` displays it (`Text -> Sexp -> {IO} Text`)                             |
-| `statement` | a theorem's binders and proposition with every reference by its full name                              |
-| `verdict`   | `pass`, `fail` or `unchecked`, for a test or a theorem: the cached result, else checked now and cached |
-| `evidence`  | with `pass`: `test`, `integration`, `rfl`, `decide`, `proof` or `proof assuming tested lemmas`         |
-| `cases`     | with `pass`: how many cases ran                                                                        |
-| `reason`    | with `fail`: why                                                                                       |
+| Property      | Value                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| `kind`        | the entry's kind: `term`, `type`, `ability`, `test`, `theorem`, `spec`, `ctor` or `op`                 |
+| `hash`        | its hash                                                                                               |
+| `view`        | its declaration as `deus view` prints it, without the header lines                                     |
+| `type`        | its inferred type as `deus view` displays it (`Text -> Sexp -> {IO} Text`)                             |
+| `statement`   | a theorem's binders and proposition with every reference by its full name                              |
+| `implemented` | `false` for a term declared with a signature and no body (D93)                                         |
+| `verdict`     | `pass`, `fail` or `unchecked`, for a test or a theorem: the cached result, else checked now and cached |
+| `evidence`    | with `pass`: `test`, `integration`, `rfl`, `decide`, `proof` or `proof assuming tested lemmas`         |
+| `cases`       | with `pass`: how many cases ran                                                                        |
+| `reason`      | with `fail`: why                                                                                       |
 
 `Code.cost` runs the thunk on the machine with the JIT off, so steps are deterministic and equal on
 both kernels ([D46](../DECISIONS.md)). An operation the thunk performs and does not handle itself is
@@ -250,7 +251,8 @@ keeps its laws in ` ```deus ` fences, so `deus add` compiles them next to the co
   With neither, the problem is `no evidence: …`.
 - `api`: `signatures` holds one `Name : Type` per line. The name must be in the codebase, and its
   `describe` type must equal the stated one after runs of spaces and new lines are collapsed. A
-  line with no `:` only checks that the name exists.
+  line with no `:` only checks that the name exists. A name declared without a body (D93) is
+  reported as the gap `<name> is declared but not implemented`.
 - `law`: `theorem` names one theorem. It must pass, and with `evidence: proof` its evidence must be
   `proof`, `decide` or `rfl` (the default, `test`, accepts any pass). `statement`, when given, must
   equal the theorem's `describe` statement, with `=` read as `==` and spaces collapsed.

@@ -205,7 +205,11 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
         skip p
         Option.some (withStop p 0 (fun _ => Parser.ty p))
       else Option.none
-      if is p "|" then Decl.defn name bs type Option.none (Option.some (Parser.arms p)) doc attributes pos else
+      let after := peek p
+      if is p "|" then Decl.defn name bs type Option.none (Option.some (Parser.arms p)) doc attributes pos else if after.kind == Kind.eof || after.bol && after.col == 0 then
+        -- A declaration (D93): the signature must be complete, since nothing else gives the type.
+        if isNone type then errorAt t ("declaration " ++ name ++ " has no body, so it needs a result type") else if any (fun b => isNone b.annot) bs then errorAt t ("declaration " ++ name ++ " has no body, so every parameter needs a type") else Decl.defn name bs type Option.none Option.none doc attributes pos
+      else
         expect p ":="
         Decl.defn name bs type (Option.some (Parser.body p)) Option.none doc attributes pos
     else if word == "theorem" then

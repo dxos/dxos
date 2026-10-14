@@ -1,11 +1,17 @@
 # History of main
 
+- `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
+- `aad1732770` task: link cf5e187f to Resolve.stub
+- `c52516022a` task: set cf5e187f state
+- `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
+- `135f9abba9` task: set cf5e187f assignee
+- `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
+- `7829722c1b` history: import 351 changes
+- `ae69cbd311` task: import from tasks.sexp
+- `08e90dab62` add code specs
 - `438184d11a` close e4a19978 by #458d0633bd (by claude)
 - `458d0633bd` the explorer's report tool: a screenshot filed as a labelled task (D90) (by claude)
 - `993938b5c3` task: open e4a19978 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
-- `74c2b4296d` history: import 313 changes
-- `eb9b7f4404` task: import from tasks.sexp
-- `617221bcb6` add code specs
 - `089232a06c` task: set 6ffdc230 details (by claude)
 - `b1615b9a4a` history: import 347 changes (by claude)
 - `4d335b2648` task: import from tasks.sexp

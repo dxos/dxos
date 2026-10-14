@@ -99,5 +99,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 91  | 10-14 21:00 | 20m 00s        | `dc3f2e0f`  | a pull ignores stray files under `bundles/` and verifies bundle and object hashes, cycle members included (D91, task 7afeaa0c)                                                                                                                                                    |
 | 92  | 10-14 20:47 | 8m 30s         | `331dc268`  | the spec process dogfooded: `req`, `api` and `law` blocks checked by `deus mdl`, checked specs with laws for the codebase store, compile, export and explorer; two stale prose specs corrected (D92, task 6ffdc230)                                                               |
 | 93  | 10-14 20:51 | 4m 07s         | this commit | the explorer's report tool: a signed-in member files a screenshot of the current view as a task labelled `explorer,report` (D93)                                                                                                                                                  |
+| 94  | 10-14 20:58 | 25m 00s        | this commit | declarations without a body: `def parse (t : Text) : Int` type-checks its callers and raises `not implemented: parse` when run; its hash covers name and type, it prints back as written, and an `api` block reports it as a known gap (D94, task cf5e187f)                       |
 
-Total from stage 1 to stage 93: 13h 51m.
+Total from stage 1 to stage 94: 14h 16m.

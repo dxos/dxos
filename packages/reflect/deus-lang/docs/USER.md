@@ -306,3 +306,7 @@ how much of .mdl are you dogfooding? the general process should be mdl spec > ap
 ---
 
 - codebase ui -- when authed should have a report tool that takes screenshot and files a task --- typically something about improbing codebase explorer
+
+---
+
+I think deus should allow declaring a definition with a type but no impl
