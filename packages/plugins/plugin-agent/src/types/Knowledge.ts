@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { EntityId } from '@dxos/keys';
 import { RDF } from '@dxos/pipeline-rdf';
 
 /**
@@ -80,7 +81,15 @@ export type MakeProps = {
   readonly supersedes?: string;
   /** IRI of the memory this one withdraws; the graph restates the claim it withdraws. */
   readonly retracts?: string;
+  /** The graph's IRI; a fresh one by default. */
+  readonly id?: string;
 };
+
+/**
+ * A fresh memory IRI. An entity id rather than a hash of the provenance, whose time would give every run a different
+ * id: the model reads it back from Remember and Recall, and deterministic test runs pin entity ids.
+ */
+export const makeId = (): string => RDF.Vocab.graphIri(`memory-${EntityId.random()}`).value;
 
 const literal = (value: string): RDF.Term => ({ kind: 'literal', literal: value });
 
@@ -97,9 +106,11 @@ export const toFacts = ({
   body,
   supersedes,
   retracts,
+  id = makeId(),
 }: MakeProps): RDF.Fact[] => {
   const fact = (subject: Subject, predicateIri: string, object: string): RDF.Fact => ({
     id: '',
+    graph: id,
     assertion: {
       subject: {
         kind: 'entity',

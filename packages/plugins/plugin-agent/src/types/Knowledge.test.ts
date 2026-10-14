@@ -27,6 +27,8 @@ describe('Knowledge', () => {
     });
     expect(facts).toHaveLength(2);
     expect(new Set(facts.map((fact) => fact.graph)).size).toBe(1);
+    // An entity id, not a hash of the time it was recorded, so a replayed run gets the same id.
+    expect(facts[0].graph).toMatch(/^https:\/\/dxos\.org\/semantic\/graph\/memory-/);
     expect(facts[0].assertion.predicateIri).toBe(Knowledge.CLAIM);
 
     const [memory] = Knowledge.fromFacts(stored(facts));
