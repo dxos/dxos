@@ -170,7 +170,7 @@ export class CallsServicePeer extends Resource {
     }
 
     try {
-      const data = (await response.clone().json()) as T;
+      const data = (await response.json()) as T;
       this.history.push({
         endpoint: relativePath,
         type: 'response',

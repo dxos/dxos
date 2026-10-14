@@ -133,16 +133,21 @@ const splitOutsideQuotes = (header: string): string[] => {
  */
 export const readAuthChallenge = async (response: Response): Promise<string | undefined> => {
   const headerChallenge = parseChallengeHeader(response.headers.get('WWW-Authenticate'));
-  if (headerChallenge) {
-    return headerChallenge;
-  }
-  if (!response.ok) {
-    return undefined;
-  }
+  return headerChallenge ?? (response.ok ? bodyChallenge(await readJson(response.clone())) : undefined);
+};
+
+/** `value[key]` when `value` is an object; a JSON body's shape is not known until it is read. */
+const field = (value: unknown, key: string): unknown =>
+  typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
+
+const bodyChallenge = (body: unknown): string | undefined => {
+  const challenge = field(field(body, 'data'), 'challenge') ?? field(body, 'challenge');
+  return typeof challenge === 'string' && challenge.length > 0 ? challenge : undefined;
+};
+
+const readJson = async (response: Response): Promise<unknown> => {
   try {
-    const body = await response.clone().json();
-    const challenge = body?.data?.challenge ?? body?.challenge;
-    return typeof challenge === 'string' && challenge.length > 0 ? challenge : undefined;
+    return await response.json();
   } catch (error) {
     log.verbose('auth challenge response was not JSON', { error });
     return undefined;
@@ -174,20 +179,17 @@ export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise
   try {
     const response = await fetch(new URL('/auth', baseHttpUrl), { headers: clientVersionHeaders() });
     await assertClientSupported(response);
-    const challenge = await readAuthChallenge(response);
+    // Read once for both the challenge and its TTL; a 401 fallback has no body to read a TTL from.
+    const body = response.ok ? await readJson(response) : undefined;
+    const challenge = parseChallengeHeader(response.headers.get('WWW-Authenticate')) ?? bodyChallenge(body);
     if (!challenge) {
       log.verbose('no challenge in /auth response', { status: response.status });
       return undefined;
     }
-    let expiresInMs: number | undefined;
-    try {
-      const body = await response.clone().json();
-      const advertised = body?.data?.expiresInMs;
-      // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
-      expiresInMs = Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
-    } catch {
-      // Header-shaped challenge (the 401 fallback) — no JSON body to read a TTL from.
-    }
+    const advertised = field(field(body, 'data'), 'expiresInMs');
+    // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
+    const expiresInMs =
+      typeof advertised === 'number' && Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
     return { challenge, expiresInMs };
   } catch (error) {
     if (error instanceof EdgeClientTooOldError) {

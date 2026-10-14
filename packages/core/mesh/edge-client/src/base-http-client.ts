@@ -172,7 +172,8 @@ export abstract class BaseHttpClient {
           ) {
             return undefined as T;
           }
-          const body = await response.clone().json();
+          // Never cloned: WebKit never frees a cloned body whose other branch goes unread.
+          const body = await response.json();
           if (typeof body !== 'object' || body === null) {
             return body;
           }
@@ -192,9 +193,8 @@ export abstract class BaseHttpClient {
         }
 
         const contentType = response.headers.get('Content-Type') ?? '';
-        const body: EdgeFailure = contentType.startsWith('application/json')
-          ? await response.clone().json()
-          : undefined;
+        const text = contentType.startsWith('application/json') ? await response.text() : undefined;
+        const body: EdgeFailure = text === undefined ? undefined : JSON.parse(text);
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 
@@ -206,7 +206,7 @@ export abstract class BaseHttpClient {
           processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
           invariant(!response.ok, 'Expected response to not be ok.');
-          processingError = await EdgeCallFailedError.fromHttpFailure(response);
+          processingError = await EdgeCallFailedError.fromHttpFailure(response, text);
         }
       } catch (error: any) {
         // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal

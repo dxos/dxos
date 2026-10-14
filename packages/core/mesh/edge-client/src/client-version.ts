@@ -28,16 +28,14 @@ export const clientVersionProtocol = (): string => `${EDGE_CLIENT_VERSION_PROTOC
 
 /**
  * Throws {@link EdgeClientTooOldError} when `response` is EDGE's failure envelope refusing this SDK. Matched on the
- * envelope's `data.type`, as any WebSocket endpoint answers a plain GET with a bare 426 "Upgrade Required".
+ * envelope's `data.type`, as any WebSocket endpoint answers a plain GET with a bare 426 "Upgrade Required". Reads the
+ * body of a failed JSON response.
  */
 export const assertClientSupported = async (response: Response): Promise<void> => {
   if (response.ok || !response.headers.get('Content-Type')?.startsWith('application/json')) {
     return;
   }
-  const body: EdgeFailure | undefined = await response
-    .clone()
-    .json()
-    .catch(() => undefined);
+  const body: EdgeFailure | undefined = await response.json().catch(() => undefined);
   if (body?.success === false && body.data?.type === EDGE_CLIENT_TOO_OLD) {
     throw new EdgeClientTooOldError(body, response.status);
   }
