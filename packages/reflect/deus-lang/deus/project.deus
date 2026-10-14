@@ -1,0 +1,120 @@
+/-
+  Projects (P1, D49): a codebase is one project, named globally by an IRI whose authority and
+  leading path say who owns it (`https://dxos.org/deus/std`). Its dependencies are pinned
+  releases of other projects (a causal hash), mounted under `lib.<name>` as in UCM, with their
+  objects copied into this store (identical hashes deduplicate).
+
+  A project's subgraph is inferred, not tagged: the definitions its own names reach, minus those
+  its libraries reach. A hash two projects share therefore belongs to the library that provides
+  it. A type whose IRI lies under a library's IRI may be minted only by that library.
+
+    project   (project (iri "<iri>") (lib "<name>" "<iri>" "<causal>")…)
+-/
+
+structure Lib @"urn:deus:project:Lib" where
+  libName : Text
+  libIri : Text
+  release : Text
+
+structure Project @"urn:deus:project:Project" where
+  projectIri : Text
+  libs : List Lib
+
+namespace Project
+
+def file (dir : Text) : Text := dir ++ "/project"
+
+def toSexp (p : Project) : Sexp :=
+  Sexp.node "project" (Sexp.node "iri" [Sexp.str p.projectIri] :: List.map (fun l => Sexp.node "lib" [Sexp.str l.libName, Sexp.str l.libIri, Sexp.str l.release]) p.libs)
+
+def fromSexp (form : Sexp) : Project :=
+  let items := Sexp.args form
+  let iri := Option.getOr (Option.map Sexp.asText (Codebase.metaField (some form) "iri")) ""
+  let libs := List.filterMap (fun item =>
+    match item with
+    | Sexp.list [Sexp.sym "lib", Sexp.str name, Sexp.str libIri, Sexp.str causal] => some (Lib.mk name libIri causal)
+    | _ => none) items
+  Project.mk iri libs
+
+def read (dir : Text) : {IO} Option Project := Option.map (fun text => fromSexp (Sexp.read text)) (IO.readFile (file dir))
+
+def write (dir : Text) (p : Project) : {IO} Unit := IO.writeFile (file dir) (Sexp.print (toSexp p) ++ "\n")
+
+/-- `https://dxos.org/deus/std` → `dxos.org`; an IRI without `//` is its own authority. -/
+def authority (iri : Text) : Text :=
+  let start := Text.indexOf iri "//" 0
+  if start < 0 then iri
+  else
+    let rest := Text.drop (start + 2) iri
+    let slash := Text.indexOf rest "/" 0
+    if slash < 0 then rest else Text.take slash rest
+
+/-- Whether `iri` lies under a project's IRI (equal to it, or below it by path or fragment). -/
+def owns (projectIri : Text) (iri : Text) : Bool :=
+  not (Text.isEmpty projectIri) && (iri == projectIri || Text.startsWith (projectIri ++ "/") iri || Text.startsWith (projectIri ++ "#") iri)
+
+/-- Every hash reachable from `roots` through object dependencies. -/
+def reachable (dir : Text) (roots : List Text) : {IO} Map Text Unit :=
+  let rec go pending seen :=
+    match pending with
+    | [] => seen
+    | h :: rest =>
+      if Map.contains h seen then go rest seen
+      else
+        let deps := match Codebase.readObject dir h with
+          | some form => Codebase.dependencies form
+          | none => []
+        go (deps ++ rest) (Map.insert h () seen)
+  go roots Map.empty
+
+def isLibName (name : Text) : Bool := Text.startsWith "lib." name
+
+/-- Hashes of named definitions (constructors and operations name their type's or ability's). -/
+def rootsOf (entries : List (Text, Entry)) : List Text :=
+  List.filter (fun h => not (Text.startsWith "#" h)) (List.map (fun pair => Entry.hash (snd pair)) entries)
+
+/-- (owned, provided by libraries): the project's subgraph and the libraries' part of what it reaches. -/
+def subgraph (dir : Text) (ns : Map Text Entry) : {IO} (List Text, List Text) :=
+  let entries := Map.toList ns
+  let fromLibs := reachable dir (rootsOf (List.filter (fun pair => isLibName (fst pair)) entries))
+  let fromOwn := reachable dir (rootsOf (List.filter (fun pair => not (isLibName (fst pair))) entries))
+  (List.filter (fun h => not (Map.contains h fromLibs)) (Map.keys fromOwn), Map.keys fromLibs)
+
+/-- Copies an object and its metadata from another store unless already present. -/
+def copy (from : Text) (dir : Text) (h : Text) : {IO} Unit :=
+  match Codebase.readObject from h with
+  | none => ()
+  | some form =>
+    Codebase.writeObject dir h form
+    match Codebase.readMeta from h with
+    | some meta => if IO.exists (dir ++ "/meta/" ++ h) then () else Codebase.writeMeta dir h meta
+    | none => ()
+
+/--
+  Mounts a release of the project at `from` (its branch's head) under `lib.<name>`: copies what
+  its names reach, and returns the library record and the namespace with the mount replaced.
+-/
+def install (dir : Text) (ns : Map Text Entry) (name : Text) (from : Text) (branch : Text) : {IO, Throw Text} (Lib, Map Text Entry) :=
+  let release := Codebase.headOf from branch
+  let theirs := Codebase.readNamespace from (Codebase.readCausal from release).snapshot
+  let iri := match read from with
+    | some p => p.projectIri
+    | none => throw (from ++ " is not a project; run `deus project init <iri>` there")
+  let own := List.filter (fun pair => not (isLibName (fst pair))) (Map.toList theirs)
+  List.forEach (Map.keys (reachable from (rootsOf own))) (fun h => copy from dir h)
+  let mount := "lib." ++ name ++ "."
+  let kept := Map.fromList (List.filter (fun pair => not (Text.startsWith mount (fst pair))) (Map.toList ns))
+  (Lib.mk name iri release, List.foldl (fun m pair => Map.insert (mount ++ fst pair) (snd pair) m) kept own)
+
+/-- Type and ability IRIs in `entries` that lie under a library's IRI: only that library may mint them. -/
+def trespasses (p : Project) (entries : List (Text, Entry)) : List Text :=
+  List.filterMap (fun pair =>
+    let iri := match snd pair with
+      | Entry.type _ i _ => i
+      | Entry.ability _ i => i
+      | _ => ""
+    match List.find (fun l => owns l.libIri iri) p.libs with
+    | some l => if isLibName (fst pair) then none else some (fst pair ++ " has IRI " ++ iri ++ ", which belongs to lib." ++ l.libName ++ " (" ++ l.libIri ++ ")")
+    | none => none) entries
+
+end Project

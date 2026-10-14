@@ -206,7 +206,11 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let entries := batch.entries ++ specEntries dir args.positional
   let replaced := changes ns entries
   let crossings := layerCrossings dir batch
+  let trespasses := match Project.read dir with
+    | some p => Project.trespasses p entries
+    | none => []
   if not (List.isEmpty crossings) then throw ("a layer may not depend on these:\n  " ++ Text.join "\n  " crossings)
+  else if not (List.isEmpty trespasses) then throw ("only a library may mint types under its IRI:\n  " ++ Text.join "\n  " trespasses)
   else if not isUpdate && not (List.isEmpty replaced) then
     throw ("these names already exist; use `deus update`:\n  " ++ Text.join "\n  " (List.map (fun c =>
       match c with
@@ -445,6 +449,49 @@ def layers (args : Args) : {IO, Throw Text} Unit :=
       match row with
       | (name, place, replicated, count) => Text.padRight 12 name ++ Text.padRight 14 place ++ Text.padRight 12 (if replicated then "replicated" else "local") ++ Int.toText count) rows))
 
+/--
+  `deus project`: the project's IRI, its libraries, and the size of its subgraph.
+  `deus project init <iri>`: names the codebase's project.
+-/
+def project (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["init", iri] =>
+    match Project.read dir with
+    | some p => throw ("this codebase is already the project " ++ p.projectIri)
+    | none =>
+      Project.write dir (Project.mk iri [])
+      output args (fun _ => Json.obj [("project", Json.str iri)]) (fun _ => "Project " ++ iri ++ " (authority " ++ Project.authority iri ++ ").")
+  | [] =>
+    match Project.read dir with
+    | none => throw "this codebase has no project; run `deus project init <iri>`"
+    | some p =>
+      let parts := Project.subgraph dir (Codebase.current dir)
+      output args
+        (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (Project.authority p.projectIri)), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))),
+          ("libs", Json.arr (List.map (fun l => Json.obj [("name", Json.str l.libName), ("iri", Json.str l.libIri), ("release", Json.str l.release)]) p.libs))])
+        (fun _ => Text.join "\n" ([p.projectIri ++ "  (authority " ++ Project.authority p.projectIri ++ ")",
+          "  owns " ++ Int.toText (List.length (fst parts)) ++ " definitions; " ++ Int.toText (List.length (snd parts)) ++ " come from libraries"] ++
+          List.map (fun l => "  lib." ++ l.libName ++ "  " ++ l.libIri ++ " @ " ++ short l.release) p.libs))
+  | _ => throw "usage: deus project [init <iri>]"
+
+/-- `deus lib install <name> <codebase> [--branch b]`: mounts that project's branch head under `lib.<name>`. -/
+def lib (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["install", name, from] =>
+    let p := match Project.read dir with
+      | some p => p
+      | none => throw "this codebase has no project; run `deus project init <iri>`"
+    let installed := Project.install dir (Codebase.current dir) name from (Option.getOr (option args "branch") "main")
+    match installed with
+    | (l, ns) =>
+      Project.write dir { p with libs := l :: List.filter (fun other => other.libName != name) p.libs }
+      let causal := Codebase.commit dir ns ("lib install " ++ name ++ " " ++ l.libIri ++ " @ " ++ short l.release)
+      output args (fun _ => Json.obj [("lib", Json.str name), ("iri", Json.str l.libIri), ("release", Json.str l.release), ("causal", Json.str causal)])
+        (fun _ => "Installed lib." ++ name ++ " = " ++ l.libIri ++ " @ " ++ short l.release ++ ".")
+  | _ => throw "usage: deus lib install <name> <codebase> [--branch <branch>]"
+
 --
 -- Commands: running.
 --
@@ -654,6 +701,10 @@ def usage : Text :=
     "  log [--n N] / undo                   history / step the branch back",
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "",
+    "projects",
+    "  project [init <iri>]                 the project's IRI, libraries and owned subgraph",
+    "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)",
+    "",
     "running",
     "  run <name> [args…]                   run name () with IO.args = args",
     "  eval <expr>                          evaluate an expression",
@@ -692,6 +743,8 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "merge" then merge args
     else if command == "log" then log args
     else if command == "layers" then layers args
+    else if command == "project" then project args
+    else if command == "lib" then lib args
     else if command == "undo" then undo args
     else if command == "run" then run (parseArgs (List.take 0 rest)) rest
     else if command == "eval" then eval args

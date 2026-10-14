@@ -147,6 +147,11 @@ test specBlocksRoundTrip :=
   | some b => Mdl.fromSexp (Mdl.toSexp "org.example.perf@1.0" b) == ("org.example.perf@1.0", { b with lineNo := 0 })
   | none => false
 
+test projectAuthorityAndOwnership :=
+  Project.authority "https://dxos.org/deus/std" == "dxos.org" && Project.authority "urn:deus:x" == "urn:deus:x" &&
+    Project.owns "https://dxos.org/deus/std" "https://dxos.org/deus/std/Shape" &&
+    not (Project.owns "https://dxos.org/deus/std" "https://dxos.org/deus/stdlib/Shape")
+
 test mdlValidatesDeclarations :=
   Mdl.validate (Mdl.parse mdlSample) == ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
 

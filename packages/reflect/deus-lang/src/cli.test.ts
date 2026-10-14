@@ -16,6 +16,13 @@ const root = join(import.meta.dirname, '..');
 const seed = readFileSync(SEED_PATH, 'utf8');
 const scratch = mkdtempSync(join(tmpdir(), 'deus-cli-'));
 
+/** Writes a source file into the scratch directory and returns its path. */
+const file = (name: string, text: string) => {
+  const path = join(scratch, name);
+  writeFileSync(path, text);
+  return path;
+};
+
 /** Runs the seed (the DEUS CLI) in-process. */
 const deus = (...args: string[]) => {
   let stdout = '';
@@ -105,11 +112,6 @@ describe('deus CLI', () => {
 
   test('update propagates to dependents; branches merge three-way', { timeout: 120_000 }, ({ expect }) => {
     const codebase = join(scratch, 'demo');
-    const file = (name: string, text: string) => {
-      const path = join(scratch, name);
-      writeFileSync(path, text);
-      return path;
-    };
     const c = ['--codebase', codebase];
     deus('init', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -234,6 +236,42 @@ describe('deus CLI', () => {
     expect(layers.results).toBeGreaterThan(0);
     const log = JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout);
     expect(log[0].by).toBe('agent-x');
+  });
+
+  test('projects pin libraries, infer their subgraph, and guard library IRIs', { timeout: 120_000 }, ({ expect }) => {
+    const std = ['--codebase', join(scratch, 'std')];
+    const app = ['--codebase', join(scratch, 'app')];
+    deus('init', ...std);
+    deus('project', 'init', 'https://dxos.org/deus/std', ...std);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...std);
+    deus(
+      'add',
+      file(
+        'shape.deus',
+        'inductive Shape @"https://dxos.org/deus/std/Shape" where\n  | circle (r : Int)\ndef area (s : Shape) : Int := match s with\n  | Shape.circle r => 3 * r * r\n',
+      ),
+      ...std,
+    );
+
+    deus('init', ...app);
+    deus('project', 'init', 'https://example.org/app', ...app);
+    expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
+    // Library names resolve by suffix, as in UCM.
+    expect(deus('add', file('app.deus', 'def twice (n : Int) : Int := area (Shape.circle n) * 2\n'), ...app).code).toBe(
+      0,
+    );
+    expect(deus('eval', 'twice 2', ...app).stdout).toBe('24\n');
+
+    const info = JSON.parse(deus('project', '--json', ...app).stdout);
+    expect([info.authority, info.owned, info.libs[0].iri]).toEqual(['example.org', 1, 'https://dxos.org/deus/std']);
+
+    const minted = deus(
+      'add',
+      file('fake.deus', 'inductive Fake @"https://dxos.org/deus/std/Fake" where\n  | fake\n'),
+      ...app,
+    );
+    expect(minted.code).toBe(1);
+    expect(minted.stderr).toContain('Fake has IRI https://dxos.org/deus/std/Fake, which belongs to lib.std');
   });
 
   test('fetches a pinned tool by hash, caches it, and refuses a mismatch', { timeout: 120_000 }, ({ expect }) => {

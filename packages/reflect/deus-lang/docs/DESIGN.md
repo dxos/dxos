@@ -175,6 +175,14 @@ perf P-1: insertion sort is quadratic on reversed input
   budget: 100000
 ```
 
+## Projects
+
+A codebase is one project, named by an IRI (`deus project init https://dxos.org/deus/std`).
+Dependencies are releases of other projects, pinned by causal hash and mounted under
+`lib.<name>` (`deus lib install std ../std`). Names resolve by suffix, so `area` finds
+`lib.std.area`. The project's subgraph is inferred (D49), and a type IRI under a library's IRI
+can only come from that library.
+
 ## The outside world
 
 Code that needs something outside the codebase says so in its effect row (D47):

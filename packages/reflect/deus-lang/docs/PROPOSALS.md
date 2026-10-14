@@ -31,6 +31,12 @@ Types keep their own IRIs. A type IRI under a project's IRI is checked to belong
 authority part also guards who may mint a type in a namespace. Storage, sync and images
 partition by project.
 
+**Status.** Implemented (D49) in `deus/project.deus`. `deus project init <iri>` names a
+codebase's project. `deus lib install <name> <codebase>` pins another project's branch head as
+a release under `lib.<name>`, copying what it reaches. `deus project` reports the authority and
+the inferred subgraph (owned versus provided by libraries). `add` refuses a type or ability
+whose IRI lies under a library's IRI. Replication by project is P3.
+
 ## P2. Requirements on external tooling and registries
 
 **Proposal:** describe dependencies on fetched binaries (as Nix does), and the registries they
