@@ -27,15 +27,13 @@ export const IdentityDialog = (props: IdentityDialogProps) => {
       initialFocusEl={() => contentRef.current}
     >
       <Dialog.Content aria-labelledby={titleId} ref={contentRef}>
-        <Dialog.Body>
-          <IdentityPanel
-            {...{
-              ...props,
-              titleId,
-              doneActionParent: <Dialog.CloseTrigger asChild />,
-            }}
-          />
-        </Dialog.Body>
+        <IdentityPanel
+          {...{
+            ...props,
+            titleId,
+            doneActionParent: <Dialog.CloseTrigger asChild />,
+          }}
+        />
       </Dialog.Content>
     </Dialog.Root>
   );

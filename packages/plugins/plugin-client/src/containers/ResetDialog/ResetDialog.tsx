@@ -66,16 +66,14 @@ export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialog
       <Dialog.Header>
         <Dialog.Title>{t('logout.label')}</Dialog.Title>
       </Dialog.Header>
-      <Dialog.Body>
-        <Dialog.Description classNames='sr-only'>{t('logout.description')}</Dialog.Description>
-        <ConfirmReset
-          active
-          mode={mode}
-          confirmLabel={t('logout.label')}
-          onConfirm={handleReset}
-          onCancel={handleCancel}
-        />
-      </Dialog.Body>
+      <Dialog.Description srOnly>{t('logout.description')}</Dialog.Description>
+      <ConfirmReset
+        active
+        mode={mode}
+        confirmLabel={t('logout.label')}
+        onConfirm={handleReset}
+        onCancel={handleCancel}
+      />
     </Dialog.Content>
   );
 };

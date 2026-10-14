@@ -40,6 +40,7 @@ import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { preloadLinkIndex } from './src/vite/preload-link-index.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -539,6 +540,7 @@ export default defineConfig((env) => ({
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
+    preloadLinkIndex(),
     ShutdownPlugin(),
     ...sharedPlugins(env),
 

@@ -1,0 +1,12 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Meeting detection and system-audio capture for the meeting recorder."
+permissions = [
+  "allow-get-support",
+  "allow-list-mic-apps",
+  "allow-start-detection",
+  "allow-stop-detection",
+  "allow-start-system-audio",
+  "allow-stop-system-audio",
+]

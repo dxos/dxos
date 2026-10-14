@@ -41,6 +41,10 @@ export class ObjectCoreRegistry {
   readonly #cores = new Map<string, WeakRef<ObjectCore>>();
   readonly #onRelease?: (id: string) => void;
 
+  /** Insertion sequence per id: ascending sequence is the iteration order of {@link values}. */
+  readonly #sequence = new Map<string, number>();
+  #nextSequence = 0;
+
   /**
    * Recently touched cores, held strongly, each against the time it was last touched.
    *
@@ -63,7 +67,7 @@ export class ObjectCoreRegistry {
     if (this.#cores.get(id)?.deref() !== undefined) {
       return;
     }
-    this.#cores.delete(id);
+    this.#forget(id);
     this.#onRelease?.(id);
   });
 
@@ -78,7 +82,7 @@ export class ObjectCoreRegistry {
     }
     const core = ref.deref();
     if (core === undefined) {
-      this.#cores.delete(id);
+      this.#forget(id);
       return undefined;
     }
     this.#pin(core);
@@ -97,6 +101,10 @@ export class ObjectCoreRegistry {
       this.#finalizer.unregister(previous);
     }
 
+    // Re-setting a present id keeps its position in the map, so it keeps its sequence too.
+    if (!this.#cores.has(id)) {
+      this.#sequence.set(id, this.#nextSequence++);
+    }
     this.#cores.set(id, new WeakRef(core));
     this.#finalizer.register(core, id, core);
     this.#pin(core);
@@ -143,7 +151,18 @@ export class ObjectCoreRegistry {
     if (core !== undefined) {
       this.#finalizer.unregister(core);
     }
+    this.#sequence.delete(id);
     return this.#cores.delete(id);
+  }
+
+  /** Where the id falls in {@link values} order, comparable across ids; undefined when absent. */
+  sequenceOf(id: string): number | undefined {
+    return this.#sequence.get(id);
+  }
+
+  #forget(id: string): void {
+    this.#cores.delete(id);
+    this.#sequence.delete(id);
   }
 
   /** Live cores. Entries collected since the last pass are pruned rather than yielded. */
@@ -151,7 +170,7 @@ export class ObjectCoreRegistry {
     for (const [id, ref] of [...this.#cores]) {
       const core = ref.deref();
       if (core === undefined) {
-        this.#cores.delete(id);
+        this.#forget(id);
         continue;
       }
       yield core;
@@ -183,5 +202,6 @@ export class ObjectCoreRegistry {
       }
     }
     this.#cores.clear();
+    this.#sequence.clear();
   }
 }

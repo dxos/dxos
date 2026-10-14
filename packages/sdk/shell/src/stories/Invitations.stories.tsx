@@ -4,7 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
@@ -18,6 +18,7 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { IdentityListItem } from '../components/index.ts';
@@ -28,6 +29,18 @@ import { SpaceListItem } from './SpaceListItem.tsx';
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 
 const createInvitationUrl = (invitation: string) => invitation;
+
+/**
+ * Lays a panel out as the parts of a dialog inline in its peer's column: three portalled dialogs would stack over
+ * one another, so the panels get the dialog's context and frame without its positioner.
+ */
+const PanelFrame = ({ children }: PropsWithChildren) => (
+  <Dialog.Root open modal={false} trapFocus={false} preventScroll={false}>
+    <div className='dx-dialog' data-surface='raised'>
+      {children}
+    </div>
+  </Dialog.Root>
+);
 
 const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPanel: (panel?: PanelType) => void }) => {
   const client = useClient();
@@ -229,7 +242,13 @@ const Invitations = () => {
       </div>
       {identity || panel ? (
         <div className='dx-base-surface rounded-sm p-2'>
-          <Panel id={id} panel={panel} setPanel={setPanel} />
+          {panel ? (
+            <PanelFrame>
+              <Panel id={id} panel={panel} setPanel={setPanel} />
+            </PanelFrame>
+          ) : (
+            <Panel id={id} panel={panel} setPanel={setPanel} />
+          )}
         </div>
       ) : null}
     </div>

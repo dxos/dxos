@@ -6,9 +6,9 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type Database, type Type } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
+import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
@@ -43,22 +43,22 @@ export const storyParameters = {
   ],
 };
 
-/** The agent's objects, the team it knows, and the Discord channel config. */
+/** The agent's objects, the team it knows, and its Discord and email channel configs. */
 const TYPES: Type.AnyEntity[] = [
   Person.Person,
   Organization.Organization,
   HasSubject.HasSubject,
   ProfileOf.ProfileOf,
-  Memory.Memory,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,
   AgentChannels.AgentChannels,
+  AgentEmail.AgentEmail,
   DiscordChannel.DiscordChannel,
 ];
 
 export type DecoratorsProps = {
-  /** The client config; the live stories use {@link edgeLocalPersistent}. */
+  /** The client config; the live stories use {@link storyConfig}. */
   config?: Config;
   /** Seeds the space through plugin operations once it is available. */
   onReady: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;

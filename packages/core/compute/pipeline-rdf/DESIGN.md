@@ -98,8 +98,8 @@ it. Grounding is unchanged — a question/request is emitted only when both subj
 concrete and named.
 
 **N3 / storage mapping.** The illocutionary force reifies the propositional content as a quoted graph,
-related to the source utterance by an `sx:` (speech-act) predicate — the same reification the store
-already uses (see [Reification](#reification-storage-shape)):
+related to the source utterance by an `sx:` (speech-act) predicate — the same named graphs the store
+already uses (see [Named graphs](#named-graphs-storage-shape)):
 
 ```
 :msg-42 sx:states   { :meeting :startsAt "15:00" } .   # assertive (default)
@@ -107,8 +107,8 @@ already uses (see [Reification](#reification-storage-shape)):
 :msg-42 sx:requests { :bob :send :report } .           # directive / imperative
 ```
 
-So the graph stays a triple store; the speech act is a predicate over the message and the reified inner
-triple, and the store can answer "what am I asked to do?" distinctly from "what was I told?".
+So the graph stays a triple store; the speech act is a predicate over the message and the graph holding
+the inner triple, and the store can answer "what am I asked to do?" distinctly from "what was I told?".
 
 ## Normalization
 
@@ -121,13 +121,12 @@ independently without re-extracting. Three layers, by increasing cost and contex
    (`normalizeEntityId`: trim, lowercase, runs of non-alphanumerics → `-`), so `DXOS` / `dxos`
    collapse to one entity; the original surface is kept as `label` for display. Deterministic,
    per-mention.
-2. **Predicate / relation — planned.** Predicates are stored verbatim today, so paraphrases
-   don't match (`works at` ≠ `works for` ≠ `employed by`; a query for one misses the others).
-   Mirror the entity split: keep the surface predicate for display **and** a normalized
-   _relation key_ for matching, then query on the key. Start with deterministic
-   lemmatize/stem, with a controlled-vocabulary mapping as a later refinement. The LLM must
-   **not** be asked to invent a canonical predicate per call — independent calls would be
-   inconsistent.
+2. **Predicate / relation — done.** The extractor is shown the whole vocabulary (seed + what the
+   brain has minted) with each predicate's shorthand, forms, typing and definition, and reuses one when it
+   fits; only otherwise does it write a new verb phrase, which must come with a definition. Surface forms
+   resolve through the relation key (lemmatize/stem) and the synonym table, so `works at` / `employed by`
+   / `works for` are one predicate (`schema:worksFor`). A stage grows its ontology with what each document
+   mints, so the next document is shown it.
 3. **Entity resolution / coreference — deferred.** Canonicalize aliases (`dmaretskyi` = `Dima`
    = a Person) and link to ECHO objects by DXN. This needs corpus-wide context, so it runs as
    a separate resolution pass over the accumulated store — the pattern `AgentRegistry` already
@@ -135,33 +134,61 @@ independently without re-extracting. Three layers, by increasing cost and contex
 
 ## Storage & query engine
 
-One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
-`Source`. `FactStore.query` → `buildSparql` → Comunica → `Source.match()` in every
-configuration below; only the backend differs.
+One engine everywhere: **`@dxos/sparql-sqlite`** (`SqlSparqlEngine`), which compiles each SPARQL query to one
+SQL statement over an interned quad store. It runs on any synchronous SQLite behind its `SqlStorage`
+interface (`exec(query, ...bindings)`), the shape of a Durable Object's `ctx.storage.sql`.
 
-| Config                 | Source                                              | Persistence | Platform          |
-| ---------------------- | --------------------------------------------------- | ----------- | ----------------- |
-| **N3**                 | N3 `Store` (in-memory)                              | memory only | browser or node   |
-| **SQLite (OPFS)**      | `makeSqliteSource` — wa-sqlite + OPFS (worker)      | persistent  | browser           |
-| **SQLite (file / DO)** | `makeSqliteSource` — better-sqlite3 / Cloudflare DO | persistent  | node / Cloudflare |
+| Constructor                                                 | SQLite                                                                 | Persistence | Platform        |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- | ----------- | --------------- |
+| `FactStoreLive.layer(ctx.storage.sql, { transactionSync })` | Durable Object SQLite                                                  | persistent  | Cloudflare      |
+| `FactStoreLive.layer(database)` / `make(database)`          | `@dxos/sql-sqlite/SqlStorage` `makeFile` (`node:sqlite`)               | persistent  | node            |
+| `FactStoreLive.makeMemory()` / `layerMemory`                | `@dxos/sql-sqlite/SqlStorage` `makeMemory` (`node:sqlite` / wa-sqlite) | memory only | node or browser |
 
-For SQLite, persistence is the database itself — no whole-graph snapshot, no in-memory size
-ceiling. N3 is fast and dependency-light but ephemeral (optionally snapshotted to
-localStorage/IndexedDB).
+- `putFacts` expands each fact into its named-graph quads (`Mapping.factToTriples`) and inserts them in
+  batches inside `transactionSync`.
+- `query(SemanticQuery)` finds the candidate graphs with one SPARQL query (`GRAPH ?g` statement patterns for
+  entity / subject / predicate, `prov:wasDerivedFrom` on the graph for source), then loads those graphs, their
+  provenance and the ontology graph with a second, and re-checks each statement in JS (`match.ts`): a graph
+  found by one statement may hold others. The predicate's matching IRIs are resolved in JS
+  (`matchingPredicates`), since SPARQL cannot express the ontology's relation key.
+- `select(sparql)` runs a raw SELECT binding `?g` (or `?fact`) through the compiler, then loads and reassembles
+  every statement in the bound graphs; a construct the compiler does not translate fails with
+  `SemanticIndexError` (cause `UnsupportedSparqlError`), see sparql-sqlite's `docs/CONFORMANCE.md`.
+- Ingest cursors live in a `fact_cursors` table in the same database. Opening a store drops the tables of the
+  earlier text-triples schema (`triples`, `entities`, `cursors`, `rdf_migrations`); their data is not migrated.
+- The engine's tables (`terms`, `quads`, `dts`, `meta`) are unprefixed, so a database shared with other stores
+  must not use those names.
 
-Why Comunica over an embeddable store (e.g. Oxigraph): Oxigraph's WASM build is in-memory
-with a fixed backend, so it cannot persist to or stream from storage we control. Comunica
-queries any `Source` we implement, which is what makes the SQLite backend possible. The
-trade is performance (a constant factor; our queries are simple per-entity/per-source/as-of
-lookups, not heavy joins).
+### Named graphs (storage shape)
 
-### Reification (storage shape)
+Each statement is a real triple inside a **named graph**, and the graph's provenance is stated once,
+about the graph, in the default graph: PROV-O attribution plus `sx:` factuality and metadata. Statements
+that share their provenance (source, speaker, time, quote, factuality, extraction pass) share a graph
+(`RDF.Graph.assign`); a statement that differs in any of it starts another. This is standard RDF 1.1
+(TriG, N-Quads, SPARQL `GRAPH`), needs no RDF-star, and is stored as-is in the engine's quads.
 
-Each Fact is stored as **plain RDF reification**: a Fact node with `sx:subject` /
-`sx:predicate` / `sx:object` plus PROV-O attribution and `sx:` factuality/metadata triples.
-This is equivalent to the RDF-star quoted-triple form (used only as an export shape) but
-avoids RDF-star vs RDF-1.2 version fragility and keeps the SQLite `Source` a simple
-`(subject, predicate, object, objectType, graph)` table.
+- **Predicates** are IRIs from an extensible ontology (`RDF.Ontology`), seeded from established
+  vocabularies under their own IRIs (`is on the team as` → `schema:jobTitle`, `is a` → `rdf:type`,
+  `knows` → `foaf:knows`); `dx:` holds only what none of them names. A surface form the ontology does not
+  know is minted in the **brain's namespace** (`https://dxos.org/semantic/brain/<id>/`) from its relation
+  key. Every predicate is an `rdf:Property` described in the ontology graph (`graph:ontology`) — label,
+  shorthand, synonyms, definition, domain/range, defining vocabulary, and for a minted one when, by what
+  and from which quote — never inside a statement graph (`FactStore.predicates` reads them back).
+- **Merging** predicates is `owl:equivalentProperty` (`Ontology.merge`): the merged one stays readable,
+  deprecated, and a query for either matches both. Seed predicates list the `dx:` IRIs they were stored
+  under before moving to shared vocabularies as equivalents, so older facts still match.
+- **Entities** are IRIs: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL) is
+  the same node in every graph; any other mention is **local to the graph that mentions it**
+  (`<graph>#<slug>`), since a label alone does not say two graphs mean the same thing. Labels and kinds
+  (schema.org / SKOS classes) are stated inside the graph that mentions them. The extractor is shown the
+  known entities (`ExtractOptions.entities`) so mentions of them resolve. Facts stored before this keep the
+  global `entity:` slugs they were written with; both read back as slugs.
+- **Fact ids**: a stored `RDF.Fact` is one statement. A fact without a graph is the only statement of
+  the graph named by its fact IRI, so its id is unchanged; a statement in a named graph is identified by
+  the graph and the triple.
+
+Facts stored in the earlier reified shape (a fact node with `sx:subject` / `sx:predicate` / `sx:object`) lived
+in the text-triples tables, which opening the store drops.
 
 `sx:` is this package's namespace; PROV-O terms (`prov:wasAttributedTo`,
 `prov:generatedAtTime`, `prov:wasDerivedFrom`) are reused verbatim, so the graph is valid
@@ -280,13 +307,13 @@ Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide 
   `recordedAt` is when the fact was _ingested_.
 - **DXN** — a DXOS resource name; facts reference ECHO objects (messages, linked entities) by DXN
   instead of embedding them, so the graph lives outside ECHO.
-- **Reification** — storing a statement as a node with `sx:subject`/`sx:predicate`/`sx:object` (plus
-  metadata) rather than a bare triple, so a fact can carry attribution/factuality/illocution.
-- **`sx:`** — this package's namespace for its own predicates (subject/predicate/object, factuality,
-  speech acts). **PROV-O** terms are reused verbatim so the graph is valid provenance.
+- **Named graph** — a set of statements with an IRI, so the provenance, factuality and illocution they
+  share are stated once, about the graph, rather than about each statement.
+- **`sx:`** — this package's namespace for its own predicates (factuality, speech acts, provenance).
+  **`dx:`** is the ontology: the predicates statements use and the classes entities belong to. **PROV-O** terms are reused verbatim so the graph is valid provenance.
 - **Source / `sourceHash`** — the origin document (DXN) and a content hash used as an incremental
   cursor: an unchanged source is a no-op, a changed one re-extracts.
 - **as-of / according-to** — the two query-time conflict-resolution axes (state _at a time_ × _per a
   source_); conflicts are never merged at write time.
-- **Comunica / Source** — the SPARQL engine (`@comunica/query-sparql-rdfjs`) and the swappable RDF/JS
-  backend it queries (N3 in-memory, or SQLite over OPFS / file / Durable Object).
+- **sparql-sqlite** — the SPARQL engine (`@dxos/sparql-sqlite`): each query compiles to one SQL statement
+  over a quad store in synchronous SQLite (Durable Object, `node:sqlite`, or in-memory wa-sqlite).

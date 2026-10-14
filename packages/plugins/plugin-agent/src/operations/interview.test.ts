@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
@@ -13,7 +14,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -21,7 +22,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { Goal, Memory, MemoryOperation } from '#types';
+import { AgentOperation, Goal, MemoryOperation, Mode } from '#types';
 
 import { makeTestBrain } from '../brain/testing.ts';
 
@@ -41,8 +42,8 @@ const TestLayer = AssistantTestLayer({
     Person.Person,
     Organization.Organization,
     HasSubject.HasSubject,
-    Memory.Memory,
     Goal.Goal,
+    Mode.Mode,
     Markdown.Document,
     ProfileOf.ProfileOf,
   ],
@@ -55,11 +56,15 @@ const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
 
 const DISCORD_HANDLE = { label: 'discord', value: '4242' };
 
+/** The agent whose brain holds the memories; Remember records into the space's only agent. */
+const addAgent = Operation.invoke(AgentOperation.CreateAgent, { name: 'Interlocutor' });
+
 describe('Interview', () => {
   it.effect(
     'records memories and goals in the order an interview produces them',
     Effect.fnUntraced(
       function* ({ expect }) {
+        yield* addAgent;
         // Identify the person being interviewed.
         const first = yield* Operation.invoke(MemoryOperation.ResolveEntity, {
           name: 'Rich Burdon',
@@ -124,7 +129,6 @@ describe('Interview', () => {
           subjects: [first.entity],
           supersedes: cadence,
         });
-        expect((yield* Database.load(cadence)).status).toBe('superseded');
         yield* Database.flush();
 
         const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: first.entity });
@@ -147,7 +151,7 @@ describe('Interview', () => {
         ]);
 
         const teamRecall = yield* Operation.invoke(MemoryOperation.Recall, { subject: team });
-        expect(teamRecall.memories.map(({ memory }) => memory.uri)).toEqual([role.uri]);
+        expect(teamRecall.memories.map(({ memory }) => memory)).toEqual([role]);
         expect(teamRecall.goals).toHaveLength(0);
 
         // The profile is regenerated in place.
@@ -183,6 +187,7 @@ describe('Interview', () => {
     'rejects a memory without subjects and a goal owned by a non-entity',
     Effect.fnUntraced(
       function* ({ expect }) {
+        yield* addAgent;
         const empty = yield* Operation.invoke(MemoryOperation.Remember, {
           content: 'Nobody in particular.',
           kind: 'fact',
@@ -190,17 +195,98 @@ describe('Interview', () => {
         }).pipe(Effect.exit);
         expect(failureMessage(empty)).toContain('at least one subject');
 
-        const { memory } = yield* Operation.invoke(MemoryOperation.Remember, {
-          content: 'Placeholder.',
-          kind: 'fact',
-          subjects: [(yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Alice' })).entity],
-        });
+        const note = yield* Database.add(Text.make({ content: 'Placeholder.' }));
         const invalid = yield* Operation.invoke(MemoryOperation.ProposeGoal, {
           title: 'Invalid',
           horizon: 'now',
-          owners: [memory],
+          owners: [Ref.make<Obj.Unknown>(note)],
         }).pipe(Effect.exit);
         expect(failureMessage(invalid)).toContain('people or organizations');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'resolves a nickname, a handle written as a name, or a unique first name to the person already known',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dmytro Maretskyi',
+            nickname: 'Dima',
+            identities: [{ label: 'discord', value: 'dmaretskyi' }],
+          }),
+        );
+        for (const name of ['Dima', 'dmaretskyi', 'Dmytro', 'dmytro maretskyi']) {
+          const resolved = yield* Operation.invoke(MemoryOperation.ResolveEntity, { name });
+          expect({ name, created: resolved.created, id: resolved.entity.uri }).toEqual({
+            name,
+            created: false,
+            id: Ref.make(dima).uri,
+          });
+        }
+
+        // A first name two people share names neither.
+        yield* Database.add(Person.make({ fullName: 'Dmytro Kovalenko' }));
+        expect((yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Dmytro' })).created).toBe(true);
+
+        // A full name outranks someone else's nickname.
+        const otherDima = yield* Database.add(Person.make({ fullName: 'Dima' }));
+        expect((yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Dima' })).entity.uri).toBe(
+          Ref.make(otherDima).uri,
+        );
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'recall matches every word of a query, and returns everything about the subject when it matches nothing',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        yield* addAgent;
+        const { entity: rich } = yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Rich Burdon' });
+        yield* Operation.invoke(MemoryOperation.Remember, {
+          content: 'Rich is based in New York.',
+          kind: 'fact',
+          subjects: [rich],
+        });
+        yield* Database.flush();
+
+        const words = yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'york based' });
+        expect(words.queryMatched).toBeUndefined();
+        expect(words.memories.map(({ content }) => content)).toEqual(['Rich is based in New York.']);
+
+        // Words split the same way on both sides, and a query word may start a longer word but not sit inside one.
+        for (const query of ['new-york', 'NEW YORK', 'bas']) {
+          expect(
+            (yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query })).queryMatched,
+          ).toBeUndefined();
+        }
+        expect((yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'ork' })).queryMatched).toBe(
+          false,
+        );
+
+        const fallback = yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'location' });
+        expect(fallback.queryMatched).toBe(false);
+        expect(fallback.memories.map(({ content }) => content)).toEqual(['Rich is based in New York.']);
+
+        // Models pass numbers as strings; the call still succeeds.
+        const limited = yield* Operation.invoke(MemoryOperation.Recall, {
+          subject: rich,
+          limit: Schema.decodeUnknownSync(MemoryOperation.Recall.input)({ limit: '1' }).limit,
+        });
+        expect(limited.memories).toHaveLength(1);
+
+        // Forgetting withdraws the memory; it no longer recalls.
+        const { forgotten } = yield* Operation.invoke(MemoryOperation.Forget, {
+          memories: [limited.memories[0].memory],
+        });
+        expect(forgotten).toBe(1);
+        expect((yield* Operation.invoke(MemoryOperation.Recall, { subject: rich })).memories).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

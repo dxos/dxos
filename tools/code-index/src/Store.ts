@@ -722,6 +722,9 @@ export const layer = (dir: string, options: LayerOptions = {}): Layer.Layer<Stor
     Effect.map(prepare, () =>
       Layer.effect(Store, make(dir, readOnly)).pipe(
         Layer.provide(clientLayer(join(dir, SQLITE_FILE), { readonly: readOnly })),
+        Layer.catchTag('SqlError', (error) =>
+          Layer.effect(Store, Effect.fail(fail('Failed to open the store')(error))),
+        ),
       ),
     ),
   );

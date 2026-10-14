@@ -10,6 +10,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, Obj } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { type ComplexMap, trim } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -36,6 +37,13 @@ export const SETTINGS_SECTION_ID = 'settings';
 
 /** Key for the Expando that stores cross-space ordering (must stay stable for persisted data). */
 export const SHARED = 'shared-spaces';
+
+/** Stores the rail order, given as graph node ids, as the bare workspace ids readers key by. */
+export const setSpacesOrder = (ordering: Obj.Any, nodeIds: readonly string[]): void => {
+  Obj.update(ordering, (ordering: Record<string, unknown>) => {
+    ordering.order = nodeIds.map(GraphNode.segmentId);
+  });
+};
 
 export type SpacePluginOptions = {
   /**

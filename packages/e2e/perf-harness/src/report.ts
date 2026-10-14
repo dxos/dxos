@@ -201,6 +201,9 @@ export const DATA_COUNTER_COLUMNS = [
   'echo.querySubscriberCallbacks',
   'echo.indexPasses',
   'echo.indexedObjects',
+  'echo.objectDocumentsLoaded',
+  'echo.snapshotObjects',
+  'echo.activations',
 ] as const;
 
 /** `sqlite.rowsRead` → `sqliteRowsRead`. */

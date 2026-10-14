@@ -104,6 +104,8 @@ op Create
   input:
     name?: string
     channel?: Channel
+    event?: Ref<Event>
+    db?: Database                     # unanchored meeting (e.g. recorded from another app); persisted here
   output:
     object: Meeting
   effects: [echo:write]

@@ -25,10 +25,11 @@ describe('profile digest', () => {
     expect(realmOf('page')).toBe('page');
   });
 
-  test('a function missing from a profile counts as zero in the mean', ({ expect }) => {
+  test('a function missing from a profile, or a run without the profile, counts as zero in the mean', ({ expect }) => {
     const mean = meanCosts([costs(cost('a', 10)), costs(cost('a', 20), cost('b', 6))]);
     expect(mean.get('a')?.selfMs).toBe(15);
     expect(mean.get('b')?.selfMs).toBe(3);
+    expect(meanCosts([costs(cost('a', 10))], 2).get('a')?.selfMs).toBe(5);
   });
 
   test('comparing ranks by the size of the change, not by cost', ({ expect }) => {
