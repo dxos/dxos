@@ -82,7 +82,7 @@
           "name": "keyword.control.deus",
           "match": "\\b(match|with|if|then|else|handle|return|let|rec|fun|do|where)\\b"
         },
-        { "name": "keyword.other.deus", "match": "\\b(prim|perf|ext)\\b" },
+        { "name": "keyword.other.deus", "match": "\\bprim\\b" },
         { "name": "keyword.control.lambda.deus", "match": "λ" },
         { "name": "constant.language.boolean.deus", "match": "\\b(true|false)\\b" },
         { "name": "constant.language.unit.deus", "match": "\\(\\)" },
