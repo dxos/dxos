@@ -33,7 +33,10 @@ export default {
         return await asset(env, url);
       }
     } catch (error) {
-      return json({ error: error instanceof HttpError ? error.message : 'internal error' }, error instanceof HttpError ? error.status : 500);
+      return json(
+        { error: error instanceof HttpError ? error.message : 'internal error' },
+        error instanceof HttpError ? error.status : 500,
+      );
     }
     return site(request, env, ctx, url);
   },
@@ -128,7 +131,10 @@ const auth = async (request, env, url) => {
       member,
       exp: Date.now() + SESSION_DAYS * 24 * 3600 * 1000,
     });
-    return redirect(safeReturn(back), [cookie(SESSION_COOKIE, session, SESSION_DAYS * 24 * 3600), cookie(STATE_COOKIE, '', 0)]);
+    return redirect(safeReturn(back), [
+      cookie(SESSION_COOKIE, session, SESSION_DAYS * 24 * 3600),
+      cookie(STATE_COOKIE, '', 0),
+    ]);
   }
   throw new HttpError(404, 'not found');
 };
@@ -136,8 +142,13 @@ const auth = async (request, env, url) => {
 const exchangeCode = async (env, code, redirectUri) => {
   const response = await fetch(`${env.GITHUB_OAUTH_URL ?? 'https://github.com'}/login/oauth/access_token`, {
     method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/json' },
-    body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code, redirect_uri: redirectUri }),
+    headers: { 'accept': 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify({
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_CLIENT_SECRET,
+      code,
+      redirect_uri: redirectUri,
+    }),
   });
   const body = await response.json();
   if (!body.access_token) {
@@ -148,7 +159,11 @@ const exchangeCode = async (env, code, redirectUri) => {
 
 const github = async (env, token, path) => {
   const response = await fetch(`${env.GITHUB_API_URL ?? 'https://api.github.com'}${path}`, {
-    headers: { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json', 'user-agent': 'deus-explorer' },
+    headers: {
+      'authorization': `Bearer ${token}`,
+      'accept': 'application/vnd.github+json',
+      'user-agent': 'deus-explorer',
+    },
   });
   if (!response.ok) {
     throw new HttpError(502, `GitHub answered ${response.status}`);
@@ -192,7 +207,13 @@ const sessionOf = async (request, env) => {
 };
 
 const hmac = async (secret, text) => {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
   return base64url(new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text))));
 };
 
@@ -244,21 +265,34 @@ const api = async (request, env, url) => {
     if (!/^(def:.+|change:[0-9a-f]{64})$/.test(subject)) {
       throw new HttpError(400, 'a comment needs a subject: def:<name> or change:<causal>');
     }
-    return json(await enqueue(env, { kind: 'comment', by, subject, note: required(body.note, 'note', assets), assets }));
+    return json(
+      await enqueue(env, { kind: 'comment', by, subject, note: required(body.note, 'note', assets), assets }),
+    );
   }
   if (url.pathname === '/api/task') {
     const title = text(body.title, 300).trim();
     if (!title) {
       throw new HttpError(400, 'a task needs a title');
     }
-    return json(await enqueue(env, { kind: 'task', by, title, details: text(body.details, 20000), link: text(body.link, 500), assets }));
+    return json(
+      await enqueue(env, {
+        kind: 'task',
+        by,
+        title,
+        details: text(body.details, 20000),
+        link: text(body.link, 500),
+        assets,
+      }),
+    );
   }
   if (url.pathname === '/api/task-comment') {
     const task = text(body.task, 64);
     if (!/^[0-9a-f]{1,64}$/.test(task)) {
       throw new HttpError(400, 'a task comment needs a task id');
     }
-    return json(await enqueue(env, { kind: 'task-comment', by, task, note: required(body.note, 'note', assets), assets }));
+    return json(
+      await enqueue(env, { kind: 'task-comment', by, task, note: required(body.note, 'note', assets), assets }),
+    );
   }
   throw new HttpError(404, 'not found');
 };
@@ -301,7 +335,8 @@ const storeAsset = async (request, env) => {
   if (!(await env.BUCKET.head(key))) {
     await env.BUCKET.put(key, bytes, { httpMetadata: { contentType: type } });
   }
-  const name = decodeURIComponent(request.headers.get('x-file-name') ?? '') || `${hash.slice(0, 10)}.${type.split('/')[1]}`;
+  const name =
+    decodeURIComponent(request.headers.get('x-file-name') ?? '') || `${hash.slice(0, 10)}.${type.split('/')[1]}`;
   return { hash, type, name: name.slice(0, 200).replace(/[/\\]/g, '_') };
 };
 
@@ -310,7 +345,9 @@ const enqueue = async (env, request) => {
   const at = new Date().toISOString();
   const name = `${at.replace(/[:.]/g, '-')}-${randomId().slice(0, 8)}.sexp`;
   const entry = { ...request, at };
-  await env.BUCKET.put(`${prefix(env)}/inbox/${name}`, `${requestToSexp(entry)}\n`, { httpMetadata: { contentType: 'text/plain; charset=utf-8' } });
+  await env.BUCKET.put(`${prefix(env)}/inbox/${name}`, `${requestToSexp(entry)}\n`, {
+    httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+  });
   return { name, ...entry };
 };
 
@@ -424,7 +461,10 @@ const parseSexp = (source) => {
 //
 
 const json = (value, status = 200) =>
-  new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+  new Response(JSON.stringify(value), {
+    status,
+    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+  });
 
 const redirect = (location, cookies = []) => {
   const headers = new Headers({ location, 'cache-control': 'no-store' });
@@ -450,6 +490,11 @@ const randomId = () => hex(crypto.getRandomValues(new Uint8Array(16)));
 
 const hex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
-const base64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const base64url = (bytes) =>
+  btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 
-const fromBase64url = (text) => Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/')), (char) => char.charCodeAt(0));
+const fromBase64url = (text) =>
+  Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/')), (char) => char.charCodeAt(0));

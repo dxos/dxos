@@ -128,7 +128,9 @@ const ASSET_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'appl
 const getJson = async (path) => {
   try {
     const response = await fetch(path, { credentials: 'same-origin' });
-    return response.ok && (response.headers.get('content-type') ?? '').includes('json') ? await response.json() : undefined;
+    return response.ok && (response.headers.get('content-type') ?? '').includes('json')
+      ? await response.json()
+      : undefined;
   } catch {
     return undefined;
   }
@@ -224,7 +226,9 @@ const threadSection = (saved, waiting, composer) => {
   return section(
     'Comments',
     count,
-    saved.map((comment) => commentHtml(comment)).join('') + waiting.map((comment) => commentHtml(comment, true)).join('') + composer,
+    saved.map((comment) => commentHtml(comment)).join('') +
+      waiting.map((comment) => commentHtml(comment, true)).join('') +
+      composer,
   );
 };
 
@@ -1086,12 +1090,16 @@ const renderTasks = () => {
     filed.length > 0
       ? `<section class="pending-tasks"><h3>Waiting for the inbox <span class="count">${filed.length}</span></h3>` +
         filed
-          .map((request) => `<div class="task-card pending"><span class="task-title">${escape(request.title)}</span><span class="task-meta">${authorHtml(request.by)}<span class="chip pending-chip">pending</span></span></div>`)
+          .map(
+            (request) =>
+              `<div class="task-card pending"><span class="task-title">${escape(request.title)}</span><span class="task-meta">${authorHtml(request.by)}<span class="chip pending-chip">pending</span></span></div>`,
+          )
           .join('') +
         '</section>'
       : '';
   const action = canWrite() ? '<button class="primary-button" data-new-task>New task</button>' : '';
-  element('tasks-view').innerHTML = `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${waiting}<div class="board">${columns.join('')}</div>`;
+  element('tasks-view').innerHTML =
+    `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${waiting}<div class="board">${columns.join('')}</div>`;
 };
 
 const renderHistory = async () => {

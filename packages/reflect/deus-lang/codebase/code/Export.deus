@@ -25,6 +25,18 @@ def Export.exported (e : Entry) : Bool :=
   | Entry.ability _ _ => true
   | _ => false
 
+/-- Restores comments from an export's `comments.sexp` as one change; returns how many. -/
+def Export.importComments (dir : Text) (path : Text) : {IO, Throw Text} Int :=
+  match IO.readFile path with
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let added := concatMap (fun form =>
+        match Sexp.args form with
+        | subject :: thread :: [] => List.map (fun c => (asText subject, commentFromSexp c)) (Sexp.args thread)
+        | _ => defect ("bad comments entry " ++ Sexp.print form)) (readAll text)
+      Comments.add dir added ("comments: import " ++ toText (List.length added) ++ " comments")
+      List.length added
+
 /-- Records an export's `history.sexp` on the current branch (D67); returns how many changes. -/
 def Export.importHistory (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
@@ -62,9 +74,29 @@ def Export.topOf (name : Text) : Text :=
   | top :: _ => top
   | [] => "_root"
 
+/-- The namespace plus a name `Unnamed.h<hash>` for each term a definition still calls but no name
+  binds (D77), since the printer writes such a reference as `#<hash>`, which the parser rejects. -/
+def Export.withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry :=
+  let named := Set.fromList (List.map Entry.hash (Map.values ns))
+  let dependenciesOf := fun h => getOr (Option.map Codebase.dependencies (readObject dir h)) []
+  let rec go pending seen acc :=
+    match pending with
+    | [] => acc
+    | h :: rest => if Set.contains h seen || Set.contains h named || startsWith "#" h || Text.contains "." h then go rest seen acc else
+        match readObject dir h with
+        | Option.some (Sexp.list (Sexp.sym "term" :: _ :: [])) => go
+            (dependenciesOf h ++ rest)
+            (Set.insert h seen)
+            (Map.insert ("Unnamed.h" ++ Text.take 10 h) (Entry.term h) acc)
+        | _ => go rest (Set.insert h seen) acc
+  go
+    (concatMap (fun e => if exported e then dependenciesOf (Entry.hash e) else []) (Map.values ns))
+    Map.empty
+    ns
+
 /-- Writes the export of the current branch to `out`; returns (source files, definitions, tasks). -/
 def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
-  let ns := Codebase.current dir
+  let ns := withUnnamed dir (Codebase.current dir)
   let printer := printer ns []
   let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
   let sources := filterMap (fun pair =>
@@ -105,6 +137,11 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     (fun t => Sexp.print (Tasks.toSexp t) ++ "\n")
     (sortBy (fun a b => compare a.id b.id) tasks)))
   IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
+  -- Comments (D79) are written only when there are some, so an export without them is unchanged.
+  let threads := Map.toList (Comments.current dir)
+  if List.isEmpty threads then () else IO.writeFile (out ++ "/comments.sexp") (Text.concat (List.map
+    (fun pair => Sexp.print (Sexp.node "subject" [Sexp.str (fst pair), threadToSexp (snd pair)]) ++ "\n")
+    threads))
   let project :=
     match Project.read dir with
     | Option.some p => p.projectIri
@@ -115,9 +152,13 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     | Option.none => []
   IO.writeFile (out ++ "/README.md") (join
     "\n"
-    (["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.", "- `specs/` holds the `.mdl` spec blocks, one document per name.", "", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++
+    (["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.", "- `specs/` holds the `.mdl` spec blocks, one document per name."] ++
+      (if List.isEmpty threads then [] else ["- `comments.sexp` holds comments on definitions and changes; the files they attach stay in the codebase's asset store."]) ++
+      ["", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++
       projectStep ++
-      ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp", "deus history import history.sexp", "```", ""]))
+      ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp"] ++
+      (if List.isEmpty threads then [] else ["deus comments import comments.sexp"]) ++
+      ["deus history import history.sexp", "```", ""]))
   let history := fullLog dir 100000
   IO.writeFile (out ++ "/history.sexp") (Text.concat (List.map (fun entry =>
     match entry with

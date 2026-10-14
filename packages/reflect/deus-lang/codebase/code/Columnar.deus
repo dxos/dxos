@@ -62,7 +62,7 @@ def Columnar.encode (forms : List Sexp) : Text :=
         forEach items walk
         Ref.set shape (")" :: Ref.get shape)
     | Sexp.sym name => emit "s" symbolRefs (intern symbolIndex symbols name)
-    | Sexp.str value => if isHash value then emit "h" hashRefs (intern hashIndex hashes value) else emit "t" stringRefs (intern stringIndex strings value)
+    | Sexp.str value => if Columnar.isHash value then emit "h" hashRefs (intern hashIndex hashes value) else emit "t" stringRefs (intern stringIndex strings value)
     | Sexp.int n => emit "i" ints n
   forEach forms walk
   let dictionary := fun values => Sexp.print (Sexp.list (List.map Sexp.str (reverse (Ref.get values))))

@@ -1,6 +1,7 @@
 /-
   `deus build`: a standalone executable for a term (D38), with `--native` a small one made from
-  the Rust kernel (D42), or with `--worker` a Cloudflare Worker serving an actor (D45).
+  the Rust kernel (D42), with `--worker` a Cloudflare Worker serving an actor (D45), or with `--browser` a static page
+  running it on the wasm kernel (D78).
 
   The executable is a Node single-executable application: the kernel, bundled into one script,
   plus the term's image as an asset. The tools are pinned by version and run through `npx`, so
@@ -100,11 +101,10 @@ def native (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended im
 def server (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended image out "DEUSSRV1"
 
 /--
-  Writes a Cloudflare Worker to the directory `out` (D45): the wasm kernel, the actor's image,
-  the Durable Object that serves it (`deus-kernel/embed/worker.mjs`) and `wrangler.toml`.
-  `wrangler dev` in `out` serves it locally on workerd; `wrangler deploy` publishes it.
+  Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript
+  driver to the directory `out`; returns the kernel crate's directory.
 -/
-def worker (image : Text) (name : Text) (out : Text) : {IO, Throw Failure} Unit :=
+def embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
   let crate := require "DEUS_HOME" ++ "/../deus-kernel"
   let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
   let _ := if IO.exists wasm then ""
@@ -114,6 +114,27 @@ def worker (image : Text) (name : Text) (out : Text) : {IO, Throw Failure} Unit 
   IO.writeFile (out ++ "/app.image") image
   let _ := tool "cp" [wasm, out ++ "/deus_kernel.wasm"]
   let _ := tool "cp" [crate ++ "/embed/kernel.mjs", out ++ "/kernel.mjs"]
+  crate
+
+/--
+  Writes a static web page to the directory `out` that runs the image in the browser on the wasm
+  kernel: a terminal whose command lines run main with those arguments, with `IO` answered from an
+  in-memory file system the page edits (`deus-kernel/embed/host.mjs`, `platform/browser/`).
+  `deus.json` configures the page.
+-/
+def browser (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
+  let page := require "DEUS_HOME" ++ "/platform/browser"
+  let crate := embedded image out
+  let _ := tool "cp" [crate ++ "/embed/host.mjs", page ++ "/index.html", page ++ "/app.js", page ++ "/app.css", out]
+  IO.writeFile (out ++ "/deus.json") (Json.render (Json.obj [("cwd", Json.str "/work"), ("env", Json.obj [("HOME", Json.str "/home")]), ("files", Json.obj [])]))
+
+/--
+  Writes a Cloudflare Worker to the directory `out` (D45): the wasm kernel, the actor's image,
+  the Durable Object that serves it (`deus-kernel/embed/worker.mjs`) and `wrangler.toml`.
+  `wrangler dev` in `out` serves it locally on workerd; `wrangler deploy` publishes it.
+-/
+def worker (image : Text) (name : Text) (out : Text) : {IO, Throw Failure} Unit :=
+  let crate := embedded image out
   let _ := tool "cp" [crate ++ "/embed/worker.mjs", out ++ "/worker.mjs"]
   IO.writeFile (out ++ "/wrangler.toml") (Text.join "\n" [
     "name = " ++ Json.render (Json.str name),

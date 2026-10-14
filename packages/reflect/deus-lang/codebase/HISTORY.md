@@ -1,5 +1,30 @@
 # History of main
 
+- `3e5bea8a28` task: set 77740edd state (by claude)
+- `15483974b6` task: link 77740edd to #feaea530df (by claude)
+- `b02f44ca79` task: set 22a99190 state (by claude)
+- `ef57769f4b` task: link 22a99190 to #feaea530df (by claude)
+- `572b3e7014` close fb964840 by #feaea530df (by claude)
+- `feaea530df` the explorer writes: GitHub sign-in, comments, tasks with images (D79) (by claude)
+- `22b72c5a39` task: open 77740edd File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `5b1db4e0fd` task: open 22a99190 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `700b39b3f0` task: open fb964840 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `9ba4d92091` history: import 146 changes
+- `073671715e` task: import 47 tasks
+- `c648f7f874` add code specs
+- `67c7d5a614` init
+- `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
+- `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
+- `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
+- `e9736e3585` task: open d2328509 Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (by claude)
+- `5ffb35ed9a` close 3b617154 by #96cf462d73 (by claude)
+- `96cf462d73` deus build --browser: a static page running an image on the wasm kernel with an in-memory file system (D78) (by claude)
+- `86f256e943` task: set 3b617154 state (by claude)
+- `a476baf0f1` task: open 3b617154 Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (by claude)
+- `24bf075943` history: import 134 changes
+- `a1aac3aaba` task: import 42 tasks
+- `a613239c2d` add code specs
+- `67c7d5a614` init
 - `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
 - `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
 - `e11ebf252d` task: set b2166fc8 priority assignee labels details

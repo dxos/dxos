@@ -1,3 +1,5 @@
+test Tests.astralEscapes := fromCodes [128512] == "😀" && Text.length (fromCodes [128512]) == 2 && tokenValues "\"😀\"" == ["😀", ""]
+
 test Tests.controlCharactersPrintAsHex := quoteText (fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" && tokenValues "\"\\u{1b}\"" == [fromCode 27, ""]
 
 test Tests.externalLowersBlocks :=
@@ -205,7 +207,7 @@ def Tests.tokenValues (source : Text) : List Text :=
 
 test Tests.truncatedSourcesTerminate :=
   let n := Text.length sample
-  all (fun k =>
+  List.all (fun k =>
     match try (fun _ => Parser.parse (Text.take k sample)) with
     | Result.ok _ => true
     | Result.err _ => true) (range 0 (n + 1))

@@ -167,7 +167,7 @@ def Prove.decreasing (self : Text) (body : Sexp) (arity : Int) : Option (List In
     | _ => []
   let calls := walk body initial
   if List.isEmpty calls then Option.some [] else
-    let common := List.filter (fun i => all (fun c => List.contains i c) calls) (range 0 arity)
+    let common := List.filter (fun i => List.all (fun c => List.contains i c) calls) (range 0 arity)
     if List.isEmpty common then Option.none else Option.some common
 
 /-- The body of an unfoldable definition: (arity, body), or `none` with the reason recorded. -/
@@ -200,7 +200,7 @@ def Prove.evalCore (pr : Prover) (t : Sexp) (env : List Sym) : {Stuck, IO} Sym :
   | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: Sexp.int n :: []) => Sym.ctorFn ty tag n []
   | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => if Set.contains name purePrims then Sym.primFn name [] else Stuck.stuck ("impure primitive " ++ name)
   | Sexp.list (Sexp.sym "lam" :: b :: []) => Sym.clo env b
-  | Sexp.list (Sexp.sym "app" :: f :: args) => apply pr (Prove.evalCore pr f env) (List.map (fun a => Prove.evalCore pr a env) args)
+  | Sexp.list (Sexp.sym "app" :: f :: args) => Prove.apply pr (Prove.evalCore pr f env) (List.map (fun a => Prove.evalCore pr a env) args)
   | Sexp.list (Sexp.sym "let" :: v :: b :: []) => Prove.evalCore pr b (Prove.evalCore pr v env :: env)
   | Sexp.list (Sexp.sym "seq" :: _ :: b :: []) => Prove.evalCore pr b env
   | Sexp.list (Sexp.sym "if" :: c :: yes :: no :: []) =>
@@ -373,7 +373,7 @@ def Prove.lemmaRules (pr : Prover) (h : Text) : {IO} List Rule :=
         handle Prove.evalCore pr prop [] with
         | Stuck.stuck x1 -> x2 => trueSym
       let applied :=
-        handle apply pr body (List.map (fun x => Sym.pv x) names) with
+        handle Prove.apply pr body (List.map (fun x => Sym.pv x) names) with
         | Stuck.stuck x3 -> x4 => trueSym
       let rec split2 s conds :=
         match s with
@@ -461,7 +461,7 @@ def Prove.norm (pr : Prover) (s : Sym) : {IO} Sym :=
       let normed := List.map (fun a => Prove.norm pr a) args
       match definitionOf pr h with
       | Option.some (arity, _) => if List.length normed >= arity then
-          handle apply pr (Sym.fn h []) normed with
+          handle Prove.apply pr (Sym.fn h []) normed with
           | Stuck.stuck x0 -> x1 => Sym.call h normed
         else Sym.call h normed
       | Option.none => Sym.call h normed
@@ -473,7 +473,7 @@ def Prove.norm (pr : Prover) (s : Sym) : {IO} Sym :=
         let n2 := Prove.norm pr no
         if y == n2 then y else if isTrue y && isFalse n2 then cv else Sym.ite cv y n2
   | Sym.app f args =>
-      handle apply pr (Prove.norm pr f) (List.map (fun a => Prove.norm pr a) args) with
+      handle Prove.apply pr (Prove.norm pr f) (List.map (fun a => Prove.norm pr a) args) with
       | Stuck.stuck x2 -> x3 => Sym.app f args
   | Sym.fn h args => Sym.fn h (List.map (fun a => Prove.norm pr a) args)
   | Sym.ctorFn ty tag n args => Sym.ctorFn ty tag n (List.map (fun a => Prove.norm pr a) args)
@@ -565,7 +565,7 @@ def Prove.primitiveDirect (name : Text) (args : List Sym) : Sym :=
 /-- Runs a tactic script on a theorem; `ok` with the steps used, or the goals left. -/
 def Prove.proveTheorem (pr : Prover) (names : List Text) (types : List Sexp) (prop : Sexp) (proof : List Sexp) : {IO} Result Text Text :=
   let start :=
-    handle apply pr (Prove.evalCore pr prop []) (List.map Sym.fv names) with
+    handle Prove.apply pr (Prove.evalCore pr prop []) (List.map Sym.fv names) with
     | Stuck.stuck why -> x0 => defect ("cannot state the theorem: " ++ why)
   let goal := Goal.mk [] (norm pr start) (zip names types)
   let steps := parseSteps proof
@@ -600,7 +600,7 @@ def Prove.pure (core : Sexp) : Bool :=
   | Sexp.list (Sexp.sym "op" :: _) => false
   | Sexp.list (Sexp.sym "handle" :: _) => false
   | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => Set.contains name purePrims
-  | Sexp.list items => all Prove.pure items
+  | Sexp.list items => List.all Prove.pure items
   | _ => true
 
 /-- Primitives with no effects and a meaning the prover models or can compute. -/
@@ -633,7 +633,7 @@ def Prove.rewrite (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {I
     | r :: rest =>
         match Prove.unify r.lhs reduced Map.empty with
         | Option.some binds =>
-            let ok := all
+            let ok := List.all
               (fun cond => depth > 0 && isTrue (simplify pr rules (Prove.instantiate cond binds) (depth - 1)))
               r.conds
             if ok then norm pr (Prove.instantiate r.rhs binds) else tryRules rest

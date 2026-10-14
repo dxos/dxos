@@ -9,19 +9,35 @@ def Replicate.bucket (endpoint : Text) (name : Text) (prefix : Text) (config : T
   let curl := fun arguments => IO.exec
     "curl"
     (["-sS", "--fail-with-body", "-K", config, "--aws-sigv4", "aws:amz:auto:s3"] ++ arguments)
+  -- The names under a folder, one ListObjectsV2 page at a time.
+  let listUnder := fun under =>
+    let rec page token acc :=
+      let query := "?list-type=2&prefix=" ++ under ++
+        (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
+      match curl [base ++ query] with
+      | (0, xml, _) =>
+          let keys := List.map (fun key => Text.drop (Text.length under) key) (xmlValues "Key" xml)
+          match xmlValues "NextContinuationToken" xml with
+          | next :: _ => page next (acc ++ keys)
+          | [] => acc ++ keys
+      | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ trim err ++ " " ++ trim out)
+    page "" []
   handle body () with
-  | Remote.list x0 -> k =>
-      let rec page token acc :=
-        let query := "?list-type=2&prefix=" ++ folder ++
-          (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
-        match curl [base ++ query] with
-        | (0, xml, _) =>
-            let keys := List.map (fun key => Text.drop (Text.length folder) key) (xmlValues "Key" xml)
-            match xmlValues "NextContinuationToken" xml with
-            | next :: _ => page next (acc ++ keys)
-            | [] => acc ++ keys
-        | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ trim err ++ " " ++ trim out)
-      k (page "" [])
+  | Remote.list x0 -> k => k (listUnder folder)
+  | Remote.keys under -> k => k (listUnder (prefix ++ "/" ++ under ++ "/"))
+  | Remote.download key file -> k =>
+      match curl ["-o", file, base ++ "/" ++ prefix ++ "/" ++ key] with
+      | (0, _, _) => k true
+      | _ =>
+          IO.exec "rm" ["-f", file]
+          k false
+  | Remote.upload key file mediaType -> k =>
+      match curl ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/" ++ prefix ++ "/" ++ key] with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
+  | Remote.drop key -> k =>
+      curl ["-X", "DELETE", base ++ "/" ++ prefix ++ "/" ++ key]
+      k ()
   | Remote.get key -> k =>
       let staged := config ++ "." ++ key
       let text :=
@@ -106,7 +122,7 @@ def Replicate.compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, 
   let covered := Set.fromList (List.concat strata)
   let headClaims := concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
   let removable := List.filter
-    (fun s => levelOf s.bundleName < level && not (List.isEmpty s.hashes) && all (fun h => Set.contains h covered) s.hashes)
+    (fun s => levelOf s.bundleName < level && not (List.isEmpty s.hashes) && List.all (fun h => Set.contains h covered) s.hashes)
     seen
   -- Claims that are still heads survive their bundle in a claims-only bundle.
   let kept := List.filter
@@ -139,6 +155,24 @@ def Replicate.directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO 
       k ()
   | Remote.writeAll files -> k =>
       forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
+      k ()
+  | Remote.keys folder -> k => k (if IO.isDir (root ++ "/" ++ folder) then List.filter (fun n => not (endsWith ".tmp" n)) (IO.listDir (root ++ "/" ++ folder)) else [])
+  | Remote.download key file -> k =>
+      let source := root ++ "/" ++ key
+      if not (IO.exists source) then k false else
+        match IO.exec "cp" [source, file] with
+        | (0, _, _) => k true
+        | _ => k false
+  | Remote.upload key file x1 -> k =>
+      let target := root ++ "/" ++ key
+      IO.mkdirp (Text.take (Text.length target - Text.length (Assets.baseName target) - 1) target)
+      match IO.exec "cp" [file, target ++ ".tmp"] with
+      | (0, _, _) =>
+          IO.exec "mv" [target ++ ".tmp", target]
+          k ()
+      | (_, _, err) => defect ("copying " ++ key ++ " failed: " ++ trim err)
+  | Remote.drop key -> k =>
+      IO.remove (root ++ "/" ++ key)
       k ()
 
 /-- A file's text, decompressed if gzip compressed it (`-f` passes other files through unchanged). -/
@@ -207,6 +241,19 @@ def Replicate.pull (dir : Text) (remote : Text) : {Remote, IO, Throw Text} List 
       (snd pair))
     (branch, heads)) (branchesOf seen)
 
+/-- Downloads the remote's assets the store lacks; returns how many. -/
+def Replicate.pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
+  let missing := List.filter (fun h => Assets.isHash h && not (Assets.has dir h)) (Remote.keys "assets")
+  IO.mkdirp (dir ++ "/assets")
+  List.length (List.filter (fun h =>
+    let staged := Assets.path dir h ++ ".tmp"
+    if Remote.download ("assets/" ++ h) staged && sha256File staged == h then
+      IO.exec "mv" [staged, Assets.path dir h]
+      true
+    else
+      IO.exec "rm" ["-f", staged]
+      false) missing)
+
 /-- Uploads what `branch` reaches and the remote lacks, with a claim for its head; none if up to date. -/
 def Replicate.push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text} Option Text :=
   let seen := sync dir remote
@@ -222,6 +269,15 @@ def Replicate.push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, T
       (seenDir dir remote ++ "/" ++ name)
       (seenToText (Seen.mk name [(branch, head)] missing))
     Option.some name
+
+/-- Uploads the store's assets the remote lacks; returns how many. -/
+def Replicate.pushAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
+  let there := Set.fromList (Remote.keys "assets")
+  let missing := List.filter (fun h => not (Set.contains h there)) (Assets.all dir)
+  forEach
+    missing
+    (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
+  List.length missing
 
 def Replicate.seenDir (dir : Text) (remote : Text) : Text := dir ++ "/remotes/" ++ remote ++ "/seen"
 

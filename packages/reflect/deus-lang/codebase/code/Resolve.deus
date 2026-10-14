@@ -260,7 +260,7 @@ def Resolve.record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr))
     | f :: _ => getOr (Dict.lookup f (ctx.names).fieldOwners) []
   let fits := fun owner =>
     let have := structFields ctx owner
-    all (fun g => List.contains g have) given && (isSome base || List.length have == List.length given)
+    List.all (fun g => List.contains g have) given && (isSome base || List.length have == List.length given)
   match List.filter fits owners with
   | owner :: [] =>
       let have := structFields ctx owner

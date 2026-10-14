@@ -4,15 +4,22 @@ def Tasks.about (tasks : Map Text Task) (name : Text) (h : Text) : List Task := 
   | Attachment.definition n linked => n == name || linked == h
   | Attachment.change _ => false) t.links) (Map.values tasks)
 
+def Tasks.assetFromSexp (form : Sexp) : Asset :=
+  match Sexp.args form with
+  | h :: kind :: name :: [] => Asset.mk (asText h) (asText kind) (asText name)
+  | _ => defect ("bad asset " ++ Sexp.print form)
+
+--
+-- Objects.
+--
+def Tasks.assetToSexp (a : Asset) : Sexp := Sexp.node "asset" [Sexp.str a.hash, Sexp.str a.mediaType, Sexp.str a.fileName]
+
 def Tasks.attachmentFromSexp (form : Sexp) : Attachment :=
   match (head form, Sexp.args form) with
   | ("def", name :: ref :: []) => Attachment.definition (asText name) (asText (getOr (head? (Sexp.args ref)) (Sexp.str "")))
   | ("change", h :: []) => Attachment.change (asText h)
   | _ => defect ("bad task link " ++ Sexp.print form)
 
---
--- Objects.
---
 def Tasks.attachmentToSexp (a : Attachment) : Sexp :=
   match a with
   | Attachment.definition name h => Sexp.node "def" [Sexp.str name, Sexp.node "ref" [Sexp.str h]]
@@ -47,9 +54,26 @@ def Tasks.comment (t : Task) (c : Comment) : Task := Task.mk
   t.links
   (t.comments ++ [c])
 
+def Tasks.commentFromSexp (c : Sexp) : Comment :=
+  match Sexp.args c with
+  | author :: note :: rest =>
+      let at := getOr (Option.map asText (metaField (Option.some c) "at")) ""
+      Comment.mk
+        (asText author)
+        (asText note)
+        at
+        (List.map assetFromSexp (metaList (Option.some c) "assets"))
+  | _ => defect ("bad comment " ++ Sexp.print c)
+
+/-- A comment without a time or assets prints as `(comment author note)`, so older objects keep their hashes. -/
+def Tasks.commentToSexp (c : Comment) : Sexp :=
+  let at := if Text.isEmpty c.written then [] else [Sexp.node "at" [Sexp.str c.written]]
+  let assets := if List.isEmpty c.assets then [] else [Sexp.node "assets" (List.map assetToSexp c.assets)]
+  Sexp.node "comment" ([Sexp.str c.author, Sexp.str c.note] ++ at ++ assets)
+
 /-- The current branch's tasks, by id. -/
 def Tasks.current (dir : Text) : {IO, Throw Text} Map Text Task :=
-  let snapshot := snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
+  let snapshot := Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
   Map.fromList (List.map (fun pair => (fst pair, Tasks.read dir (snd pair))) (Map.toList snapshot))
 
 /-- Fields `deus task new` and `deus task set` take as options. -/
@@ -72,10 +96,6 @@ def Tasks.freshId (dir : Text) (title : Text) (author : Text) : {IO, Throw Text}
 
 def Tasks.fromSexp (form : Sexp) : Task :=
   let text := fun key => getOr (Option.map asText (metaField (Option.some form) key)) ""
-  let comment := fun c =>
-    match Sexp.args c with
-    | author :: note :: [] => Comment.mk (asText author) (asText note)
-    | _ => defect ("bad task comment " ++ Sexp.print c)
   Task.mk
     (text "id")
     (text "title")
@@ -86,13 +106,13 @@ def Tasks.fromSexp (form : Sexp) : Task :=
     (text "parent")
     (text "details")
     (List.map attachmentFromSexp (metaList (Option.some form) "links"))
-    (List.map comment (metaList (Option.some form) "comments"))
+    (List.map commentFromSexp (metaList (Option.some form) "comments"))
 
 /-- `historyOf` for every task in one walk of the branch: id → changes that touched it, newest first. -/
 def Tasks.histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List (Text, Causal)) :=
   let touched := fun parent node => if parent.tasks == node.tasks then [] else
-    let before := snapshotOf dir parent
-    let after := snapshotOf dir node
+    let before := Tasks.snapshotOf dir parent
+    let after := Tasks.snapshotOf dir node
     List.filter
       (fun id => Map.lookup id before != Map.lookup id after)
       (dedup (sort (Map.keys before ++ Map.keys after)))
@@ -113,7 +133,7 @@ def Tasks.histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List
 def Tasks.historyOf (dir : Text) (id : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) := changesWhere
   dir
   limit
-  (fun parent node => parent.tasks != node.tasks && Map.lookup id (snapshotOf dir parent) != Map.lookup id (snapshotOf dir node))
+  (fun parent node => parent.tasks != node.tasks && Map.lookup id (Tasks.snapshotOf dir parent) != Map.lookup id (Tasks.snapshotOf dir node))
 
 /-- Changes that rebound a name. -/
 def Tasks.historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) := changesWhere
@@ -223,9 +243,9 @@ def Tasks.save (dir : Text) (changed : List Task) (message : Text) : {IO, Throw 
   let head := readCausal dir (headOf dir (currentBranch dir))
   let tasks := foldl
     (fun m t => Map.insert t.id (Codebase.put dir (Tasks.toSexp t)) m)
-    (snapshotOf dir head)
+    (Tasks.snapshotOf dir head)
     changed
-  commitTasks dir (putSnapshot dir tasks) message
+  commitTasks dir (Tasks.putSnapshot dir tasks) message
 
 /-- Sets one field from its text form, as `deus task set --<field> <value>` does. -/
 def Tasks.setField (t : Task) (field : Text) (value : Text) : {Throw Text} Task := if field == "title" then Task.mk t.id value t.state t.priority t.assignee t.labels t.parent t.details t.links t.comments else if field == "state" then Task.mk
@@ -296,7 +316,7 @@ def Tasks.threeSet (b : List a) (o : List a) (t : List a) : List a :=
 /-- A task as an object. A linked definition is a `(ref …)`, so replication keeps the version a task was about. -/
 def Tasks.toSexp (t : Task) : Sexp :=
   let text := fun key value => Sexp.node key [Sexp.str value]
-  let comments := List.map (fun c => Sexp.node "comment" [Sexp.str c.author, Sexp.str c.note]) t.comments
+  let comments := List.map commentToSexp t.comments
   Sexp.node
     "task"
     [text "id" t.id, text "title" t.title, text "state" (stateText t.state), Sexp.node "priority" [Sexp.int t.priority], text "assignee" t.assignee, Sexp.node "labels" (List.map Sexp.str t.labels), text "parent" t.parent, text "details" t.details, Sexp.node "links" (List.map attachmentToSexp t.links), Sexp.node "comments" comments]

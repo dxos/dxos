@@ -71,12 +71,25 @@
         <label>Title <input id="task-title" name="title" required maxlength="300" autocomplete="off" /></label>
         <label
           >Details
-          <textarea id="task-details" name="details" rows="6" placeholder="What is wrong or wanted. Paste or drop screenshots here."></textarea>
+          <textarea
+            id="task-details"
+            name="details"
+            rows="6"
+            placeholder="What is wrong or wanted. Paste or drop screenshots here."
+          ></textarea>
         </label>
-        <label>About <input id="task-link" name="link" placeholder="A definition, such as List.map" autocomplete="off" /></label>
+        <label
+          >About <input id="task-link" name="link" placeholder="A definition, such as List.map" autocomplete="off"
+        /></label>
         <div class="attachments"></div>
         <footer>
-          <label class="attach-button">Attach image<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf" multiple hidden /></label>
+          <label class="attach-button"
+            >Attach image<input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
+              multiple
+              hidden
+          /></label>
           <span class="muted">Filed tasks join the codebase when the inbox is next applied.</span>
           <button type="button" class="plain-button" data-dismiss>Cancel</button>
           <button type="submit" class="primary-button">File task</button>

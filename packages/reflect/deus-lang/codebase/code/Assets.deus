@@ -1,0 +1,62 @@
+/-- Copies a file into the store, if it is not there yet, and returns it as an asset. -/
+def Assets.add (dir : Text) (file : Text) : {IO, Throw Text} Asset := if not (IO.exists file) then Throw.throw ("no file " ++ file) else
+  let h := sha256File file
+  if Assets.has dir h then () else
+    IO.mkdirp (dir ++ "/assets")
+    match IO.exec "cp" [file, Assets.path dir h ++ ".tmp"] with
+    | (0, _, _) =>
+        IO.exec "mv" [Assets.path dir h ++ ".tmp", Assets.path dir h]
+        ()
+    | (_, _, err) => Throw.throw ("cannot copy " ++ file ++ ": " ++ trim err)
+  Asset.mk h (mediaTypeOf file) (Assets.baseName file)
+
+/-- Every asset in the store. -/
+def Assets.all (dir : Text) : {IO} List Text := if IO.isDir (dir ++ "/assets") then List.filter Assets.isHash (IO.listDir (dir ++ "/assets")) else []
+
+/-- The last segment of a path. -/
+def Assets.baseName (file : Text) : Text := getOr (last? (Text.split file "/")) file
+
+def Assets.has (dir : Text) (h : Text) : {IO} Bool := IO.exists (Assets.path dir h)
+
+/-- An asset name: 64 lowercase hex digits. -/
+def Assets.isHash (h : Text) : Bool := Text.length h == 64 && List.all
+  (fun c => c >= 48 && c <= 57 || c >= 97 && c <= 102)
+  (List.map (fun i => code h i) (range 0 64))
+
+/-- The media type a file is served with, from its extension. -/
+def Assets.mediaTypeOf (name : Text) : Text :=
+  let lower := toLower name
+  let types := [(".png", "image/png"), (".jpg", "image/jpeg"), (".jpeg", "image/jpeg"), (".gif", "image/gif"), (".webp", "image/webp"), (".svg", "image/svg+xml"), (".pdf", "application/pdf"), (".txt", "text/plain; charset=utf-8"), (".json", "application/json")]
+  getOr
+    (Option.map snd (List.find (fun pair => endsWith (fst pair) lower) types))
+    "application/octet-stream"
+
+/-- The assets comments and tasks name on the current branch. -/
+def Assets.named (dir : Text) : {IO, Throw Text} List Text :=
+  let fromTasks := concatMap
+    (fun t => concatMap (fun c => List.map (fun a => a.hash) c.assets) t.comments)
+    (Map.values (Tasks.current dir))
+  let fromThreads := concatMap
+    (fun cs => concatMap (fun c => List.map (fun a => a.hash) c.assets) cs)
+    (Map.values (Comments.current dir))
+  Set.toList (Set.fromList (fromTasks ++ fromThreads))
+
+/-
+  Assets (D79): files attached to comments, such as screenshots. A store keeps each one at
+  `assets/<sha256>`, named by the SHA-256 of its bytes, and a remote at `<prefix>/assets/<sha256>`;
+  objects name an asset by that hash, so bundles and the git export never carry its bytes.
+-/
+def Assets.path (dir : Text) (h : Text) : Text := dir ++ "/assets/" ++ h
+
+/-- The SHA-256 of a file's bytes; the kernel reads only text, so a host tool hashes it. -/
+def Assets.sha256File (file : Text) : {IO, Throw Text} Text :=
+  let digest := fun result =>
+    match result with
+    | (0, out, _) => Option.some (Text.take 64 (trim out))
+    | _ => Option.none
+  match digest (IO.exec "sha256sum" [file]) with
+  | Option.some h => h
+  | Option.none =>
+      match digest (IO.exec "shasum" ["-a", "256", file]) with
+      | Option.some h => h
+      | Option.none => Throw.throw ("cannot hash " ++ file ++ ": neither sha256sum nor shasum ran")
