@@ -48,7 +48,9 @@ Blocks are reference counted with reuse, as in Perceus (Koka, Lean 4) ([D86](../
 - **Ownership.** A function owns its parameters and every local it binds, and consumes each exactly
   once: the last use moves it, earlier uses `deus_dup` it, and a path that never uses it drops it
   first. Arguments are evaluated left to right into locals, so a drop can never run before an
-  earlier argument's use.
+  earlier argument's use. A local passed as an argument itself, with no later argument consuming
+  it, moves there even when later arguments read it: the moved value lives until the call, so
+  `Array.set a i (Array.get a j)` counts nothing and still writes in place ([D98](../DECISIONS.md)).
 - **Borrowing.** A parameter that a function only reads through (as the container of an `Array` or
   `Ref` access, or as an argument its callee borrows) is borrowed: the caller keeps ownership and
   passes it without counting. The borrowed set is the largest one no body consumes, found by

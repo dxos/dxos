@@ -740,7 +740,7 @@ Measured in docs/IMMUTABILITY.md (D83): seven sorts on both kernels, wasm, C and
 - assignee: claude
 - labels: spec, mdl, codebase
 
-From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D98.
+From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D99.
 
 ## Task viewer in the codebase explorer (`553faf09`)
 

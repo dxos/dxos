@@ -19,7 +19,7 @@ Related specs: the store being exported is [CODEBASE-STORE.md](./CODEBASE-STORE.
   README.md            what the export is and how to restore it
   code/<Top>.deus      source of every exported definition whose name starts with <Top>.
   code/_root.deus      source of every exported definition whose name has no dot
-  specs/<doc>.mdl      each spec document: its blocks in order with their prose (D98)
+  specs/<doc>.mdl      each spec document: its blocks in order with their prose (D99)
   tasks.sexp           every task on the branch, one object per line
   TASKS.md             the tasks, for reading
   history.sexp         the branch's history, one entry per line, for `deus history import`
@@ -261,7 +261,7 @@ generated: change the codebase, then export again.
 - `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.
 - `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.
 - `specs/` holds the spec documents, one per name: frontmatter, the Extensions table written from the
-  blocks' URIs, then each block after the prose that preceded it ([D98](../DECISIONS.md)).
+  blocks' URIs, then each block after the prose that preceded it ([D99](../DECISIONS.md)).
 
 To restore it into a fresh codebase:
 

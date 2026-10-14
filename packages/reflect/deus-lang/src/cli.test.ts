@@ -81,7 +81,7 @@ describe('deus CLI', () => {
     expect(deus('update', file('printed.deus', source), '--codebase', codebase).stdout).toBe('Nothing changed.\n');
   });
 
-  // The specs live in the codebase (D98), so its export in git is where CI finds them: restoring it
+  // The specs live in the codebase (D99), so its export in git is where CI finds them: restoring it
   // must give the toolchain as `deus/` compiles it, and every spec document must hold.
   test('restores the codebase export, which matches deus/ and whose specs hold', { timeout: 180_000 }, ({ expect }) => {
     const restored = join(scratch, 'restored');

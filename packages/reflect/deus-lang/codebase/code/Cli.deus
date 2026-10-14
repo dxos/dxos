@@ -849,7 +849,7 @@ def Cli.main (u : Unit) : {IO} Unit :=
   | Result.ok _ => ()
   | Result.err message => die message
 
-/-- `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D98), MDL
+/-- `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D99), MDL
   files, or with no arguments every spec document the codebase holds. Each block goes to the
   extension its term's URI names in the codebase; a block whose extension the codebase lacks is
   reported unchecked. -/
@@ -1235,7 +1235,7 @@ def Cli.siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" 
 
 /-- The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
-  The document's prose is kept in each block's metadata (D98): its order, the text before it,
+  The document's prose is kept in each block's metadata (D99): its order, the text before it,
   and on the first block the frontmatter and on the last the text after it, so the codebase holds
   the whole document and the export writes it back. -/
 def Cli.specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) := concatMap (fun path => if not (endsWith ".mdl" path) then [] else
@@ -1426,7 +1426,7 @@ def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let printer := printer ns []
   let dialect := if flag args "core" then "core" else getOr (option args "dialect") "deus"
   if dialect == "deus" || dialect == "ts" || dialect == "core" then () else Throw.throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
-  -- A spec document's name prints the whole document from its blocks (D98).
+  -- A spec document's name prints the whole document from its blocks (D99).
   let documents := specDocuments ns
   -- (name, kind, hash, text); a document has no hash.
   let shownFor := fun name => if not (Map.contains name ns) && List.contains name documents then (name, "document", "", document dir ns name) else

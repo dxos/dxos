@@ -78,10 +78,10 @@ def specDocuments (ns : Map Text Entry) : List Text :=
     | _ => none) (Map.toList ns)))
 
 /--
-  A spec document as `.mdl` text (D98): its frontmatter, then each block after the prose that
+  A spec document as `.mdl` text (D99): its frontmatter, then each block after the prose that
   preceded it, in the stored order, then the closing prose. The Extensions table is written from
   the blocks' URIs under the document's own Extensions heading, or at the top when it has none.
-  Blocks with no stored order (added before D98) come last, by name.
+  Blocks with no stored order (added before D99) come last, by name.
 -/
 def document (dir : Text) (ns : Map Text Entry) (d : Text) : {IO} Text :=
   let blocks := List.filterMap (fun pair =>
