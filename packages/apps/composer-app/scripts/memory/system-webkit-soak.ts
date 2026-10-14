@@ -12,6 +12,7 @@
  * Usage: node scripts/memory/system-webkit-soak.ts --host <wkapp> --archive <file.dxprofile> --dist <bundle>
  *        --edge <non-production EDGE URL> [--telemetry <sink port>] [--port 4498] [--passes 8]
  *        [--idle-ms 60000] [--drive <calls per round>] [--drive-rounds 3] [--drive-via client]
+ *        [--devtools] [--watch <readings>]
  *
  * `--drive` ends with rounds of that many calls to a loopback route answering EDGE's JSON envelope
  * (512 KiB, gzipped), each read after two forced collections. `--drive-via` names the path per round,
@@ -54,6 +55,8 @@ const { values } = parseArgs({
     'drive': { type: 'string', default: '0' },
     'drive-rounds': { type: 'string', default: '3' },
     'drive-via': { type: 'string', default: 'client' },
+    'devtools': { type: 'boolean', default: false },
+    'watch': { type: 'string', default: '0' },
   },
 });
 if (!values.host || !values.archive || !values.dist || !values.edge) {
@@ -323,7 +326,36 @@ const main = async (): Promise<number> => {
       await waitForReady();
     });
     await sleep(SETTLE_MS);
+    if (values.devtools) {
+      // As a developer's native app keeps it: the devtools plugin on, its overview expanded in the
+      // complementary sidebar, where its cards poll EDGE. Enabled plugins load on the next boot.
+      await host.evaluate(`
+        const ids = (globalThis.composer?.plugins?.() ?? []).filter(({ id }) => id === 'org.dxos.plugin.devtools').map(({ id }) => id);
+        await globalThis.composer.invoke('org.dxos.operation.registry.enablePlugins', { ids });
+        return true;
+      `);
+      await sleep(3_000);
+      await host.load(`${origin}/`);
+      await waitForReady();
+      await host.evaluate(
+        `await globalThis.composer.invoke('org.dxos.operation.appToolkit.updateComplementary', { subject: 'devtoolsOverview', state: 'expanded' }); return true;`,
+      );
+      let mounted = false;
+      for (let attempt = 0; attempt < 60 && !mounted; attempt++) {
+        mounted = await host.evaluate<boolean>(`return document.body.innerText.includes('Websocket');`);
+        await sleep(500);
+      }
+      process.stdout.write(`devtools overview mounted: ${mounted}\n`);
+    }
     await stage('idle', () => sleep(idleMs));
+    // Readings after two collections each, so what stays is retained, not yet uncollected.
+    for (let round = 1; round <= Number(values.watch); round++) {
+      await sleep(idleMs);
+      await collect();
+      await sleep(5_000);
+      await collect();
+      await stage(`watch-${round}`, async () => undefined);
+    }
     const spaceIds = await host.evaluate<string[]>(
       `return (globalThis.dxos?.spaces?.() ?? []).slice(0, ${MAX_SPACES}).map(({ id }) => id);`,
     );
