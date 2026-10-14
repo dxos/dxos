@@ -1010,6 +1010,36 @@ def build (args : Args) : {IO, Throw Text} Unit :=
     | Result.err f => throw (Failure.render f)
   | _ => throw "usage: deus build <term> -o <file>"
 
+/--
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D78): a TypeScript module for the
+  functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads.
+-/
+def bindings (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match (args.positional, option args "out") with
+  | (first :: _, some out) =>
+    let stem := Option.getOr (option args "name") (Text.toLower (Names.lastSegment first))
+    let command := "deus bindings " ++ Text.join " " args.positional
+    match Bindings.generate dir args.positional command with
+    | (text, exported, skipped) =>
+      let copied := try (fun _ =>
+        let home := Build.require "DEUS_HOME"
+        IO.mkdirp out
+        IO.writeFile (out ++ "/" ++ stem ++ ".ts") text
+        let _ := Build.tool "cp" [home ++ "/src/bindings/runtime.ts", out ++ "/deus-runtime.ts"]
+        let _ := Build.tool "cp" [Build.wasmKernel (), out ++ "/deus_kernel.wasm"]
+        ())
+      match copied with
+      | Result.err f => throw (Failure.render f)
+      | Result.ok _ =>
+        List.forEach skipped (fun s => eprintln ("warning: not exported: " ++ fst s ++ ": " ++ snd s))
+        let path := out ++ "/" ++ stem ++ ".ts"
+        output args
+          (fun _ => Json.obj [("module", Json.str path), ("exported", Json.arr (List.map Json.str exported)),
+            ("skipped", Json.arr (List.map (fun s => Json.obj [("name", Json.str (fst s)), ("reason", Json.str (snd s))]) skipped))])
+          (fun _ => "Wrote " ++ path ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
+  | _ => throw "usage: deus bindings <prefix|name…> -o <dir> [--name stem]"
+
 --
 -- Commands: tasks (D59).
 --
@@ -1239,6 +1269,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
+    "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 
@@ -1282,6 +1313,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "check" then Check.theorems args
     else if command == "image" then image args
     else if command == "build" then build args
+    else if command == "bindings" then bindings args
     else if command == "serve" then serve args
     else if command == "explore" then explore args
     else if command == "task" then task args
