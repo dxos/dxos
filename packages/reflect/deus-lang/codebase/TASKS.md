@@ -109,6 +109,62 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
+## devex: a fresh container cannot run the full suite: the Rust wasm32 target and tsc are missing, and three threads re-diagnosed it (native, explorer, bindings) (`6cffbc44`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Install the wasm32 target and tsc in the repo's cloud setup script or a SessionStart hook, and add a test preflight that names exactly what is missing.
+
+## devex: deus mdl over all specs takes 34 s (`7f677d04`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Every agent runs it before each commit; cache unchanged specs by hash.
+
+## devex: merges into #13952 race and D-numbers collide (`602f4557`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
+
+## devex: the dogfood test takes 124 s (`f264430b`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Its view round-trip re-adds the whole printed toolchain; blocked on the printed-source typecheck task.
+
+## devex: the restore test takes 89 s and compiles deus/ twice (`b4e12f14`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Restore once into a shared codebase, or reuse the dogfood codebase.
+
+## devex: the seed fixpoint compiles the toolchain twice (17 s) (`9e2f6916`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
+
+## devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x (`44892ca0`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Compile.typecheck checks members 82745 times for 1616 members on printed source vs 1625 on cat.deus. Found while measuring agent wall time.
+
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -1005,6 +1061,15 @@ Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-
 - assignee: claude
 - labels: analytics, perf
 - links change #f49a4c7913
+
+## RC and the pure Array: once blocks carry reference counts (62d1bdda, cf0e3937), make the copying Array.set write in place at count 1 and Array.copy a share; the static pass in deus/unique.deus keeps removing the check where it proves uniqueness (D86) (`82d2d7a2`)
+
+- state: done
+- priority: medium
+- labels: perf, native
+- links `Unique.rewriteAll` (#9a8d82961a)
+
+Done in D95: the C back end's Array.set writes in place at a count of one (deus_array_unique) and copies a shared or borrowed array; --wasm keeps the static pass.
 
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 

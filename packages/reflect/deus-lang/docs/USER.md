@@ -365,3 +365,11 @@ this displays code as list, but there might be another view: a force-graph with 
 ---
 
 push the toolchain codebase to r2://agent-artifacts/deus/toolchain and make it the CLI default
+
+---
+
+dont forget to improve devex perf as you go, focusing on where agents waste the most time
+
+---
+
+is this correct? nothing lost
