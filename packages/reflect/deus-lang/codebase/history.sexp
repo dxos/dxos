@@ -1,3 +1,5 @@
+(entry "6603ee130b3f3db103baa823da017cc31ca9f627374c408fa5346b85b4f3b9aa" "close 7afeaa0c by #1efeb3fb7d" "claude")
+(entry "1efeb3fb7db1eb59d51b702245e4d1c300fa6e772064fa6899e92cbdf19c1ff7" "pull: verify bundle names, bundle and object hashes, cycle members included (D90)" "claude")
 (entry "83474d34b9ca1a00b6325edf5f690bb5f9583aff261da83908226cd76a0dae20" "export: merge 19 changes from codebase" "")
 (entry "aabff4cf3cdf4d7cd3ce0ec950e2dfb760fa1ad95adf3d13a99511723df4c58c" "export: merge tasks from codebase" "")
 (entry "63e3914ad264e8aad25ae9118dfbdc93a21b81dded45acca96360d6816ed5aa4" "merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89" "claude")

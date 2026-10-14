@@ -1,5 +1,7 @@
 # History of main
 
+- `6603ee130b` close 7afeaa0c by #1efeb3fb7d (by claude)
+- `1efeb3fb7d` pull: verify bundle names, bundle and object hashes, cycle members included (D90) (by claude)
 - `83474d34b9` export: merge 19 changes from codebase
 - `aabff4cf3c` export: merge tasks from codebase
 - `63e3914ad2` merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89 (by claude)
