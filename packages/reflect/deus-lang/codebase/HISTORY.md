@@ -1,5 +1,10 @@
 # History of main
 
+- `efb62b2ac7` Merge #13952's branch (explorer spec backfill) into the JS target (by claude)
+- `31a71813bc` history: import 410 changes
+- `3487bc898b` history: import 442 changes
+- `797c4cd451` task: import from tasks.sexp
+- `cedb78ea51` add code specs
 - `280dd114dc` Merge #13952's branch into the JS target (D96) (by claude)
 - `c8547225d9` history: import 426 changes
 - `bdfda4a33d` task: import from tasks.sexp
@@ -34,6 +39,12 @@
 - `6c41a3a2d6` task: open 86ef7d80 JS back end: deus build --js, direct style, source maps (D94)
 - `ccf54ad86f` history: import 353 changes
 - `f13276e40e` task: import from tasks.sexp
+- `d90027cba3` close c50cd76e by #9cee717581 (by claude)
+- `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
+- `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
+- `99b512f359` history: import 359 changes
+- `7b6f241c41` task: import from tasks.sexp
+- `b878c25ce1` add code specs
 - `4fa0ad8131` export: merge 35 changes from codebase
 - `e8b6a8fb9d` export: merge tasks from codebase
 - `2c40570335` update docs/spec/CHECKING.mdl (by claude)
