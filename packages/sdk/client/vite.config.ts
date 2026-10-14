@@ -13,6 +13,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'invitations': 'src/invitations/index.ts',
     'local': 'src/services/local.ts',
+    'lock-key': 'src/lock-key.ts',
     'mesh': 'src/mesh/index.ts',
     'testing': 'src/testing/index.ts',
     'services/dedicated/dedicated-worker-entrypoint': 'src/services/dedicated/dedicated-worker-entrypoint.ts',

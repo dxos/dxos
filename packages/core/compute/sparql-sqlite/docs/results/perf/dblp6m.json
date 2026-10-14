@@ -1,0 +1,879 @@
+{
+  "load": {
+    "db": "dblp6m",
+    "file": "dblp-6m.nt",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791872891",
+    "at": "2026-10-13T06:32:30.527Z",
+    "pingMs": 29.94206100000008,
+    "batchLines": 20000,
+    "concurrency": 2,
+    "quadsSent": 5898342,
+    "rawBytes": 774914464,
+    "gzBytes": 52324551,
+    "elapsedMs": 168508.92741,
+    "quadsPerSec": 35003.142507985416,
+    "medianBatchMs": 1112.0930219999973,
+    "p90BatchMs": 1331.119135999994,
+    "maxBatchMs": 3223.180414000002,
+    "stats": {
+      "triples": 5898338,
+      "dbBytes": 415051776,
+      "terms": 1586320,
+      "termLexBytes": 59191545,
+      "indexes": "spo,pos,osp"
+    },
+    "bytesPerTriple": 70.36758083378741
+  },
+  "hints": {
+    "db": "dblp6m",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "hints": "1",
+    "at": "2026-10-13T06:57:23.422Z",
+    "pingMs": 29.948472000000038,
+    "stats": {
+      "triples": 5898338,
+      "dbBytes": 415051776,
+      "terms": 1586320,
+      "termLexBytes": 59191545,
+      "indexes": "spo,pos,osp"
+    },
+    "stat1": [
+      { "idx": "quads_osp", "stat": "5119998 4 2 1 1" },
+      { "idx": "quads_pos", "stat": "5119998 108937 3 1 1" },
+      { "idx": "quads", "stat": "5119998 10 2 1 1" }
+    ],
+    "queries": [
+      {
+        "id": "D1-lookup",
+        "family": "dblp",
+        "kind": "lookup",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?p ?title ?year WHERE { ?p dblp:doi <https://doi.org/10.1145/337292.337434> ; dblp:title ?title ; dblp:yearOfPublication ?year }",
+        "template": "D1-lookup",
+        "rows": 1,
+        "checksum": "0aade06d",
+        "firstMs": 61.636510000000044,
+        "wallMs": 32.063535,
+        "serverMs": 0.4498414999999909,
+        "sql": "SELECT r.\"p\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"title\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"year\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"p\", q1.o AS \"title\", q2.o AS \"year\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (likelihood(q0.p = 10, 1.933e-2)) AND (likelihood(q0.o = 1176639, 1.011e-5)) AND (q0.s = q1.s) AND (likelihood(q1.p = 22, 1.933e-2)) AND (q0.s = q2.s) AND (likelihood(q2.p = 37, 1.932e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"p\" LEFT JOIN main.terms t1 ON t1.id = r.\"title\" LEFT JOIN main.terms t2 ON t2.id = r.\"year\"",
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 1, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 1, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 12, "actual": 1, "ms": 31 }
+        ]
+      },
+      {
+        "id": "D2-star",
+        "family": "dblp",
+        "kind": "star",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?title ?year ?venue ?type ?pages ?n WHERE { <https://dblp.org/rec/conf/dac/NewtonRMSB00> dblp:title ?title ; dblp:yearOfPublication ?year ; dblp:bibtexType ?type ; dblp:numberOfCreators ?n . OPTIONAL { <https://dblp.org/rec/conf/dac/NewtonRMSB00> dblp:publishedIn ?venue } OPTIONAL { <https://dblp.org/rec/conf/dac/NewtonRMSB00> dblp:pagination ?pages } }",
+        "template": "D2-star",
+        "rows": 1,
+        "checksum": "d6194034",
+        "firstMs": 66.24636199999986,
+        "wallMs": 29.580204000000094,
+        "serverMs": 0,
+        "sql": "SELECT r.\"title\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"year\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"venue\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"type\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"pages\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4, r.\"n\" AS c5, t5.kind AS k5, t5.lex AS l5, t5.dt AS d5, t5.lang AS g5 FROM (SELECT q0.o AS \"title\", q1.o AS \"year\", q4.o AS \"venue\", q2.o AS \"type\", q5.o AS \"pages\", q3.o AS \"n\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 LEFT JOIN quads AS q4 ON (q4.s = 1176638) AND (likelihood(q4.p = 34, 1.421e-2)) LEFT JOIN quads AS q5 ON (q5.s = 1176638) AND (likelihood(q5.p = 32, 1.245e-2)) WHERE (q0.s = 1176638) AND (likelihood(q0.p = 22, 1.933e-2)) AND (q1.s = 1176638) AND (likelihood(q1.p = 37, 1.932e-2)) AND (q2.s = 1176638) AND (likelihood(q2.p = 24, 1.953e-2)) AND (q3.s = 1176638) AND (likelihood(q3.p = 26, 1.953e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"title\" LEFT JOIN main.terms t1 ON t1.id = r.\"year\" LEFT JOIN main.terms t2 ON t2.id = r.\"venue\" LEFT JOIN main.terms t3 ON t3.id = r.\"type\" LEFT JOIN main.terms t4 ON t4.id = r.\"pages\" LEFT JOIN main.terms t5 ON t5.id = r.\"n\"",
+        "plan": [
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "28/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?) LEFT-JOIN",
+          "40/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?) LEFT-JOIN",
+          "47/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "52/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "57/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "72/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D3-authors-of-pub",
+        "family": "dblp",
+        "kind": "star+join",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?ord ?name ?orcid WHERE { <https://dblp.org/rec/conf/dac/NewtonRMSB00> dblp:hasSignature ?sig . ?sig dblp:signatureOrdinal ?ord ; dblp:signatureDblpName ?name . OPTIONAL { ?sig dblp:signatureOrcid ?orcid } } ORDER BY ?ord",
+        "template": "D3-authors-of-pub",
+        "rows": 5,
+        "checksum": "c7640ec2",
+        "firstMs": 77.29089299999987,
+        "wallMs": 28.611703999999918,
+        "serverMs": 0.532801749999976,
+        "sql": "SELECT r.\"ord\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"name\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"orcid\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q1.o AS \"ord\", q2.o AS \"name\", q3.o AS \"orcid\", (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = q1.o) AS \"_o0\", (SELECT num FROM terms WHERE id = q1.o) AS \"_o1\", (SELECT lex FROM terms WHERE id = q1.o) AS \"_o2\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 LEFT JOIN quads AS q3 ON (likelihood(q3.p = 120, 1.953e-2)) AND (q0.o = q3.s) WHERE (q0.s = 1176638) AND (likelihood(q0.p = 52, 1.953e-2)) AND (q0.o = q1.s) AND (likelihood(q1.p = 61, 1.953e-2)) AND (q0.o = q2.s) AND (likelihood(q2.p = 56, 1.953e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"ord\" LEFT JOIN main.terms t1 ON t1.id = r.\"name\" LEFT JOIN main.terms t2 ON t2.id = r.\"orcid\" ORDER BY r.\"_o0\", r.\"_o1\", r.\"_o2\"",
+        "plan": [
+          "9/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "14/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "20/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "26/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?) LEFT-JOIN",
+          "34/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "39/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "44/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "65/0 CORRELATED SCALAR SUBQUERY 1",
+          "69/65 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "85/0 CORRELATED SCALAR SUBQUERY 2",
+          "89/85 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "99/0 CORRELATED SCALAR SUBQUERY 3",
+          "103/99 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "129/0 USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "id": "D4-pubs-of-author",
+        "family": "dblp",
+        "kind": "join",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?p ?title ?year WHERE { ?p dblp:authoredBy <https://dblp.org/pid/97/5026> ; dblp:title ?title ; dblp:yearOfPublication ?year } ORDER BY DESC(?year)",
+        "template": "D4-pubs-of-author",
+        "rows": 560,
+        "checksum": "879bbab1",
+        "firstMs": 58.6309369999999,
+        "wallMs": 41.41655199999968,
+        "serverMs": 6.785291500000085,
+        "sql": "SELECT r.\"p\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"title\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"year\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"p\", q1.o AS \"title\", q2.o AS \"year\", (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = q2.o) AS \"_o0\", (SELECT num FROM terms WHERE id = q2.o) AS \"_o1\", (SELECT lex FROM terms WHERE id = q2.o) AS \"_o2\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (likelihood(q0.p = 48, 1.953e-2)) AND (likelihood(q0.o = 320858, 5.600e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 22, 1.933e-2)) AND (q0.s = q2.s) AND (likelihood(q2.p = 37, 1.932e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"p\" LEFT JOIN main.terms t1 ON t1.id = r.\"title\" LEFT JOIN main.terms t2 ON t2.id = r.\"year\" ORDER BY r.\"_o0\" DESC, r.\"_o1\" DESC, r.\"_o2\" DESC",
+        "plan": [
+          "8/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "19/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "25/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "30/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "35/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 CORRELATED SCALAR SUBQUERY 1",
+          "60/56 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "76/0 CORRELATED SCALAR SUBQUERY 2",
+          "80/76 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "90/0 CORRELATED SCALAR SUBQUERY 3",
+          "94/90 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "116/0 USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 560, "ms": 29 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 560, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 12, "actual": 560, "ms": 34 }
+        ]
+      },
+      {
+        "id": "D5-coauthors",
+        "family": "dblp",
+        "kind": "2-hop",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?co (COUNT(?p) AS ?n) WHERE { ?p dblp:authoredBy <https://dblp.org/pid/97/5026> . ?p dblp:authoredBy ?co . FILTER (?co != <https://dblp.org/pid/97/5026>) } GROUP BY ?co ORDER BY DESC(?n) LIMIT 20",
+        "template": "D5-coauthors",
+        "rows": 20,
+        "checksum": "9caba042",
+        "firstMs": 36.02691400000003,
+        "wallMs": 33.61412900000005,
+        "serverMs": 3.9419582499999706,
+        "sql": "SELECT r.\"co\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"n\" AS c1 FROM (SELECT a2.\"co\" AS \"co\", a2.\"_a0\" AS \"n\", a2.\"_a0\" AS \"_o0\" FROM (SELECT q1.o AS \"co\", COUNT(q0.s) AS \"_a0\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 48, 1.953e-2)) AND (likelihood(q0.o = 320858, 5.600e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 48, 1.953e-2)) AND ((q1.o <> 320858)) GROUP BY q1.o) AS a2 ORDER BY a2.\"_a0\" DESC LIMIT 20) r LEFT JOIN main.terms t0 ON t0.id = r.\"co\" ORDER BY r.\"_o0\" DESC",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "16/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/4 USE TEMP B-TREE FOR GROUP BY",
+          "64/2 SCAN a2",
+          "78/2 USE TEMP B-TREE FOR ORDER BY",
+          "88/0 SCAN r",
+          "91/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 560, "ms": 29 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 2308, "ms": 36 }
+        ]
+      },
+      {
+        "id": "D6-per-year",
+        "family": "dblp",
+        "kind": "aggregate",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?year (COUNT(?p) AS ?n) WHERE { ?p dblp:yearOfPublication ?year } GROUP BY ?year ORDER BY ?year",
+        "template": "D6-per-year",
+        "rows": 65,
+        "checksum": "e33337a7",
+        "firstMs": 42.860621999999694,
+        "wallMs": 41.884313999999904,
+        "serverMs": 10.759984000000031,
+        "sql": "SELECT r.\"year\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"n\" AS c1 FROM (SELECT a1.\"year\" AS \"year\", a1.\"_a0\" AS \"n\", (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = a1.\"year\") AS \"_o0\", (SELECT num FROM terms WHERE id = a1.\"year\") AS \"_o1\", (SELECT lex FROM terms WHERE id = a1.\"year\") AS \"_o2\" FROM (SELECT q0.o AS \"year\", COUNT(q0.s) AS \"_a0\" FROM quads AS q0 WHERE (likelihood(q0.p = 37, 1.932e-2)) GROUP BY q0.o) AS a1) r LEFT JOIN main.terms t0 ON t0.id = r.\"year\" ORDER BY r.\"_o0\", r.\"_o1\", r.\"_o2\"",
+        "plan": [
+          "2/0 CO-ROUTINE a1",
+          "8/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "42/0 SCAN a1",
+          "45/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "57/0 CORRELATED SCALAR SUBQUERY 1",
+          "61/57 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "77/0 CORRELATED SCALAR SUBQUERY 2",
+          "81/77 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "91/0 CORRELATED SCALAR SUBQUERY 3",
+          "95/91 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "109/0 USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 98940, "ms": 35 }
+        ]
+      },
+      {
+        "id": "D7-per-type-venue",
+        "family": "dblp",
+        "kind": "aggregate",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?type ?venue (COUNT(?p) AS ?n) WHERE { ?p dblp:bibtexType ?type ; dblp:publishedIn ?venue } GROUP BY ?type ?venue ORDER BY DESC(?n) LIMIT 20",
+        "template": "D7-per-type-venue",
+        "rows": 20,
+        "checksum": "899159a3",
+        "firstMs": 186.30274800000007,
+        "wallMs": 179.36089899999934,
+        "serverMs": 159.25802150000004,
+        "sql": "SELECT r.\"type\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"venue\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"n\" AS c2 FROM (SELECT a2.\"type\" AS \"type\", a2.\"venue\" AS \"venue\", a2.\"_a0\" AS \"n\", a2.\"_a0\" AS \"_o0\" FROM (SELECT q0.o AS \"type\", q1.o AS \"venue\", COUNT(q0.s) AS \"_a0\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 24, 1.953e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 34, 1.421e-2)) GROUP BY q0.o, q1.o) AS a2 ORDER BY a2.\"_a0\" DESC LIMIT 20) r LEFT JOIN main.terms t0 ON t0.id = r.\"type\" LEFT JOIN main.terms t1 ON t1.id = r.\"venue\" ORDER BY r.\"_o0\" DESC",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q1 USING COVERING INDEX quads_pos (p=?)",
+          "15/4 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "21/4 USE TEMP B-TREE FOR GROUP BY",
+          "64/2 SCAN a2",
+          "79/2 USE TEMP B-TREE FOR ORDER BY",
+          "91/0 SCAN r",
+          "94/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "99/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 72777, "ms": 33 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 217874, "actual": 72777, "ms": 134 }
+        ]
+      },
+      {
+        "id": "D8-text",
+        "family": "dblp",
+        "kind": "text",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?p ?title WHERE { ?p dblp:title ?title . FILTER (CONTAINS(LCASE(?title), \"neural network\")) } LIMIT 100",
+        "template": "D8-text",
+        "rows": 100,
+        "checksum": "c241061b",
+        "firstMs": 70.63422900000023,
+        "wallMs": 73.42340200000035,
+        "serverMs": 41.034659250000004,
+        "sql": "SELECT r.\"p\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"title\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.s AS \"p\", q0.o AS \"title\" FROM quads AS q0 WHERE (likelihood(q0.p = 22, 1.933e-2)) AND ((instr(lower((SELECT lex FROM terms WHERE id = q0.o AND kind IN (2, 3))), 'neural network') > 0)) LIMIT 100) r LEFT JOIN main.terms t0 ON t0.id = r.\"p\" LEFT JOIN main.terms t1 ON t1.id = r.\"title\"",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "5/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "10/2 CORRELATED SCALAR SUBQUERY 1",
+          "14/10 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "35/0 SCAN r",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 1234, "ms": 178 }
+        ]
+      },
+      {
+        "id": "D9-text-year",
+        "family": "dblp",
+        "kind": "text+range",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?p ?title ?year WHERE { ?p dblp:title ?title ; dblp:yearOfPublication ?year . FILTER (xsd:integer(STR(?year)) >= 2020 && REGEX(?title, \"^Deep\", \"i\")) } ORDER BY ?title LIMIT 50",
+        "template": "D9-text-year",
+        "rows": 50,
+        "checksum": "7b22dd9a",
+        "firstMs": 156.65429799999947,
+        "wallMs": 174.99435300000005,
+        "serverMs": 126.17005999999992,
+        "sql": "SELECT r.\"p\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"title\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"year\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"p\", q0.o AS \"title\", q1.o AS \"year\", (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = q0.o) AS \"_o0\", (SELECT num FROM terms WHERE id = q0.o) AS \"_o1\", (SELECT lex FROM terms WHERE id = q0.o) AS \"_o2\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 22, 1.933e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 37, 1.932e-2)) AND (((CAST((CASE WHEN (length(trim((SELECT lex FROM terms WHERE id = q1.o AND kind <> 1))) - length(ltrim(trim((SELECT lex FROM terms WHERE id = q1.o AND kind <> 1)), '+-')) <= 1 AND ltrim(trim((SELECT lex FROM terms WHERE id = q1.o AND kind <> 1)), '+-') GLOB '*[0-9]*' AND NOT ltrim(trim((SELECT lex FROM terms WHERE id = q1.o AND kind <> 1)), '+-') GLOB '*[^0-9]*') THEN CAST(trim((SELECT lex FROM terms WHERE id = q1.o AND kind <> 1)) AS REAL) END) AS INTEGER) >= 2020) AND ((SELECT lex FROM terms WHERE id = q0.o AND kind IN (2, 3)) LIKE 'Deep%' ESCAPE '\\'))) ORDER BY (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = q0.o), (SELECT num FROM terms WHERE id = q0.o), (SELECT lex FROM terms WHERE id = q0.o) LIMIT 50) r LEFT JOIN main.terms t0 ON t0.id = r.\"p\" LEFT JOIN main.terms t1 ON t1.id = r.\"title\" LEFT JOIN main.terms t2 ON t2.id = r.\"year\" ORDER BY r.\"_o0\", r.\"_o1\", r.\"_o2\"",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "7/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "12/2 CORRELATED SCALAR SUBQUERY 9",
+          "16/12 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "28/2 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "35/2 CORRELATED SCALAR SUBQUERY 4",
+          "39/35 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "52/2 CORRELATED SCALAR SUBQUERY 5",
+          "56/52 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "73/2 CORRELATED SCALAR SUBQUERY 6",
+          "77/73 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "91/2 CORRELATED SCALAR SUBQUERY 7",
+          "95/91 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "109/2 CORRELATED SCALAR SUBQUERY 8",
+          "113/109 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "129/2 CORRELATED SCALAR SUBQUERY 10",
+          "133/129 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "148/2 CORRELATED SCALAR SUBQUERY 11",
+          "152/148 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "161/2 CORRELATED SCALAR SUBQUERY 12",
+          "165/161 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "181/2 CORRELATED SCALAR SUBQUERY 1",
+          "185/181 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "200/2 CORRELATED SCALAR SUBQUERY 2",
+          "204/200 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "213/2 CORRELATED SCALAR SUBQUERY 3",
+          "217/213 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "228/2 USE TEMP B-TREE FOR ORDER BY",
+          "243/0 SCAN r",
+          "246/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "251/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "256/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "292/0 USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 98947, "ms": 36 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 217874, "actual": 176, "ms": 161 }
+        ]
+      },
+      {
+        "id": "D10-prolific",
+        "family": "dblp",
+        "kind": "aggregate+join",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?a (COUNT(DISTINCT ?p) AS ?n) WHERE { ?p dblp:authoredBy ?a ; dblp:yearOfPublication ?year . FILTER (STR(?year) = \"2019\") } GROUP BY ?a ORDER BY DESC(?n) LIMIT 10",
+        "template": "D10-prolific",
+        "rows": 10,
+        "checksum": "3efadffe",
+        "firstMs": 730.9267389999986,
+        "wallMs": 716.9550220000001,
+        "serverMs": 931.0700135000002,
+        "sql": "SELECT r.\"a\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"n\" AS c1 FROM (SELECT a2.\"a\" AS \"a\", a2.\"_a0\" AS \"n\", a2.\"_a0\" AS \"_o0\" FROM (SELECT q0.o AS \"a\", COUNT(DISTINCT q0.s) AS \"_a0\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 48, 1.953e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 37, 1.932e-2)) AND (((SELECT lex FROM terms WHERE id = q1.o AND kind <> 1) = '2019')) GROUP BY q0.o) AS a2 ORDER BY a2.\"_a0\" DESC LIMIT 10) r LEFT JOIN main.terms t0 ON t0.id = r.\"a\" ORDER BY r.\"_o0\" DESC",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "15/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "22/4 CORRELATED SCALAR SUBQUERY 1",
+          "26/22 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "70/2 SCAN a2",
+          "84/2 USE TEMP B-TREE FOR ORDER BY",
+          "94/0 SCAN r",
+          "97/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 303261, "ms": 53 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 217874, "actual": 15847, "ms": 90 }
+        ]
+      },
+      {
+        "id": "D11-no-doi",
+        "family": "dblp",
+        "kind": "optional/negation",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT (COUNT(?p) AS ?n) WHERE { ?p rdf:type dblp:Inproceedings . FILTER NOT EXISTS { ?p dblp:doi ?doi } }",
+        "template": "D11-no-doi",
+        "rows": 1,
+        "checksum": "e969a168",
+        "firstMs": 87.65441999999894,
+        "wallMs": 67.67010200000004,
+        "serverMs": 37.1400450000001,
+        "sql": "SELECT r.\"n\" AS c0 FROM (SELECT a2.\"_a0\" AS \"n\" FROM (SELECT COUNT(q0.s) AS \"_a0\" FROM quads AS q0 WHERE (likelihood(q0.p = 2, 1.953e-2)) AND (likelihood(q0.o = 905783, 2.338e-1)) AND ((NOT EXISTS (SELECT 1 FROM quads AS q1 WHERE (q0.s = q1.s) AND (likelihood(q1.p = 10, 1.933e-2)))))) AS a2) r ",
+        "plan": [
+          "2/0 CO-ROUTINE a2",
+          "5/2 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "11/2 CORRELATED SCALAR SUBQUERY 1",
+          "15/11 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SCAN a2"
+        ]
+      },
+      {
+        "id": "D12-path",
+        "family": "dblp",
+        "kind": "property path",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?name WHERE { <https://dblp.org/rec/conf/dac/NewtonRMSB00> dblp:hasSignature/dblp:signatureCreator/^dblp:signatureCreator/dblp:signatureDblpName ?name } LIMIT 100",
+        "template": "D12-path",
+        "rows": 37,
+        "checksum": "92b7b8f8",
+        "firstMs": 42.066248999999516,
+        "wallMs": 29.212596999997913,
+        "serverMs": 0.04303650000019843,
+        "sql": "SELECT r.\"name\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q3.o AS \"name\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (q0.s = 1176638) AND (likelihood(q0.p = 52, 1.953e-2)) AND (q0.o = q1.s) AND (likelihood(q1.p = 58, 1.953e-2)) AND (likelihood(q2.p = 58, 1.953e-2)) AND (q1.o = q2.o) AND (q2.s = q3.s) AND (likelihood(q3.p = 56, 1.953e-2)) LIMIT 100) r LEFT JOIN main.terms t0 ON t0.id = r.\"name\"",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "8/2 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "13/2 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "19/2 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "25/2 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "40/0 SCAN r",
+          "43/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D13-versions",
+        "family": "dblp",
+        "kind": "path +",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?v ?root WHERE { ?v dblp:isVersionOf+ ?root } LIMIT 100",
+        "template": "D13-versions",
+        "rows": 100,
+        "checksum": "067d27dc",
+        "firstMs": 43.74286399999983,
+        "wallMs": 40.639334999999846,
+        "serverMs": 9.389303250000012,
+        "sql": "WITH RECURSIVE c0(st, n) AS (SELECT s AS st, o AS n FROM (SELECT s, o FROM quads WHERE p = 320778) UNION SELECT c0.st, e.o FROM c0 CROSS JOIN quads e ON e.s = c0.n AND e.p = 320778) SELECT r.\"v\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"root\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT r1.s AS \"v\", r1.o AS \"root\" FROM (SELECT st AS s, n AS o FROM c0) AS r1 LIMIT 100) r LEFT JOIN main.terms t0 ON t0.id = r.\"v\" LEFT JOIN main.terms t1 ON t1.id = r.\"root\"",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE c0",
+          "8/4 SETUP",
+          "10/8 SEARCH quads USING COVERING INDEX quads_pos (p=?)",
+          "29/4 RECURSIVE STEP",
+          "31/29 SCAN c0",
+          "32/29 SEARCH e USING PRIMARY KEY (s=? AND p=?)",
+          "50/2 SCAN c0",
+          "61/0 SCAN r",
+          "64/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "69/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D14-sameAs-count",
+        "family": "dblp",
+        "kind": "count",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT (COUNT(*) AS ?n) WHERE { ?p owl:sameAs ?x }",
+        "template": "D14-sameAs-count",
+        "rows": 1,
+        "checksum": "10ee48c6",
+        "firstMs": 47.02957999999853,
+        "wallMs": 42.19274200000291,
+        "serverMs": 11.533051249999517,
+        "sql": "SELECT r.\"n\" AS c0 FROM (SELECT a1.\"_a0\" AS \"n\" FROM (SELECT COUNT(*) AS \"_a0\" FROM quads AS q0 WHERE (likelihood(q0.p = 5, 1.953e-2))) AS a1) r ",
+        "plan": ["2/0 CO-ROUTINE a1", "5/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "15/0 SCAN a1"],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 208636, "ms": 43 }
+        ]
+      },
+      {
+        "id": "D10r-prolific-const",
+        "family": "dblp",
+        "kind": "aggregate+join",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?a (COUNT(DISTINCT ?p) AS ?n) WHERE { ?p dblp:yearOfPublication \"2019\"^^xsd:gYear ; dblp:authoredBy ?a } GROUP BY ?a ORDER BY DESC(?n) LIMIT 10",
+        "template": "D10r-prolific-const",
+        "rows": 10,
+        "checksum": "3efadffe",
+        "firstMs": 56.89678999999887,
+        "wallMs": 60.03843000000052,
+        "serverMs": 27.878106500000285,
+        "sql": "SELECT r.\"a\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"n\" AS c1 FROM (SELECT a2.\"a\" AS \"a\", a2.\"_a0\" AS \"n\", a2.\"_a0\" AS \"_o0\" FROM (SELECT q1.o AS \"a\", COUNT(DISTINCT q0.s) AS \"_a0\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 37, 1.932e-2)) AND (likelihood(q0.o = 147298, 3.829e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 48, 1.953e-2)) GROUP BY q1.o) AS a2 ORDER BY a2.\"_a0\" DESC LIMIT 10) r LEFT JOIN main.terms t0 ON t0.id = r.\"a\" ORDER BY r.\"_o0\" DESC",
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "16/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "22/4 USE TEMP B-TREE FOR GROUP BY",
+          "61/4 USE TEMP B-TREE FOR count(DISTINCT)",
+          "67/2 SCAN a2",
+          "81/2 USE TEMP B-TREE FOR ORDER BY",
+          "91/0 SCAN r",
+          "94/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 3788, "ms": 30 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 15847, "ms": 44 }
+        ]
+      },
+      {
+        "id": "D15-describe",
+        "family": "dblp",
+        "kind": "gap: DESCRIBE",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nDESCRIBE <https://dblp.org/rec/conf/dac/NewtonRMSB00>",
+        "template": "D15-describe",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE",
+        "firstMs": 27.983070000002044
+      },
+      {
+        "id": "D16-regex-quantified",
+        "family": "dblp",
+        "kind": "gap: REGEX",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?p ?title WHERE { ?p dblp:title ?title . FILTER REGEX(?title, \"^(deep|neural) [a-z]+ networks?\", \"i\") } LIMIT 100",
+        "template": "D16-regex-quantified",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: REGEX metachar [",
+        "firstMs": 28.566383000004862
+      },
+      {
+        "id": "D17-datatype",
+        "family": "dblp",
+        "kind": "gap: DATATYPE",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nSELECT ?dt (COUNT(*) AS ?n) WHERE { ?p dblp:yearOfPublication ?y . BIND (DATATYPE(?y) AS ?dt) } GROUP BY ?dt",
+        "template": "D17-datatype",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: function datatype",
+        "firstMs": 28.673902000002272
+      },
+      {
+        "id": "D15r-describe",
+        "family": "dblp",
+        "kind": "DESCRIBE as CONSTRUCT",
+        "sparql": "PREFIX dblp: <https://dblp.org/rdf/schema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\nCONSTRUCT { <https://dblp.org/rec/conf/dac/NewtonRMSB00> ?p ?o } WHERE { <https://dblp.org/rec/conf/dac/NewtonRMSB00> ?p ?o }",
+        "template": "D15-describe",
+        "rows": 36,
+        "checksum": "c1296faf",
+        "firstMs": 41.13029400000005,
+        "wallMs": 31.220258999999942,
+        "serverMs": 0.16331100000002152,
+        "plan": [
+          "4/0 SEARCH q0 USING PRIMARY KEY (s=?)",
+          "8/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "13/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      }
+    ]
+  },
+  "noHints": {
+    "db": "dblp6m",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "hints": "0",
+    "at": "2026-10-13T06:56:50.085Z",
+    "pingMs": 31.187085000000025,
+    "stats": {
+      "triples": 5898338,
+      "dbBytes": 415051776,
+      "terms": 1586320,
+      "termLexBytes": 59191545,
+      "indexes": "spo,pos,osp"
+    },
+    "queries": [
+      {
+        "id": "D1-lookup",
+        "rows": 1,
+        "checksum": "0aade06d",
+        "wallMs": 33.25808699999993,
+        "serverMs": 0,
+        "firstMs": 48.540558000000146,
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "21/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "35/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "40/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D2-star",
+        "rows": 1,
+        "checksum": "d6194034",
+        "wallMs": 29.428743000000168,
+        "serverMs": 0.4508542499999635,
+        "firstMs": 35.82746899999984,
+        "plan": [
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "28/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?) LEFT-JOIN",
+          "40/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?) LEFT-JOIN",
+          "47/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "52/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "57/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "72/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D3-authors-of-pub",
+        "rows": 5,
+        "checksum": "c7640ec2",
+        "wallMs": 30.49650200000042,
+        "serverMs": 0,
+        "firstMs": 38.660935000000336,
+        "plan": [
+          "9/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "14/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?) LEFT-JOIN",
+          "40/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "45/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "50/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "71/0 CORRELATED SCALAR SUBQUERY 1",
+          "75/71 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "91/0 CORRELATED SCALAR SUBQUERY 2",
+          "95/91 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "105/0 CORRELATED SCALAR SUBQUERY 3",
+          "109/105 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "135/0 USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "id": "D4-pubs-of-author",
+        "rows": 560,
+        "checksum": "879bbab1",
+        "wallMs": 46.163870000000315,
+        "serverMs": 9.10345325000003,
+        "firstMs": 53.7959850000002,
+        "plan": [
+          "8/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "22/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "31/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "36/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "41/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 CORRELATED SCALAR SUBQUERY 1",
+          "66/62 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "82/0 CORRELATED SCALAR SUBQUERY 2",
+          "86/82 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "96/0 CORRELATED SCALAR SUBQUERY 3",
+          "100/96 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "122/0 USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "id": "D5-coauthors",
+        "rows": 20,
+        "checksum": "9caba042",
+        "wallMs": 37.30315900000005,
+        "serverMs": 3.809671750000007,
+        "firstMs": 42.28052600000001,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "16/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/4 USE TEMP B-TREE FOR GROUP BY",
+          "64/2 SCAN a2",
+          "78/2 USE TEMP B-TREE FOR ORDER BY",
+          "88/0 SCAN r",
+          "91/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D6-per-year",
+        "rows": 65,
+        "checksum": "e33337a7",
+        "wallMs": 42.756730999999945,
+        "serverMs": 14.081312249999996,
+        "firstMs": 46.648493000000144,
+        "plan": [
+          "2/0 CO-ROUTINE a1",
+          "8/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "42/0 SCAN a1",
+          "45/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "57/0 CORRELATED SCALAR SUBQUERY 1",
+          "61/57 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "77/0 CORRELATED SCALAR SUBQUERY 2",
+          "81/77 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "91/0 CORRELATED SCALAR SUBQUERY 3",
+          "95/91 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "109/0 USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "id": "D7-per-type-venue",
+        "rows": 20,
+        "checksum": "899159a3",
+        "wallMs": 240.7497540000004,
+        "serverMs": 177.11668624999993,
+        "firstMs": 236.00944300000083,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "15/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "21/4 USE TEMP B-TREE FOR GROUP BY",
+          "64/2 SCAN a2",
+          "79/2 USE TEMP B-TREE FOR ORDER BY",
+          "91/0 SCAN r",
+          "94/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "99/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D8-text",
+        "rows": 100,
+        "checksum": "c241061b",
+        "wallMs": 73.48396300000059,
+        "serverMs": 41.25188500000013,
+        "firstMs": 71.33990699999958,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "5/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "10/2 CORRELATED SCALAR SUBQUERY 1",
+          "14/10 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "35/0 SCAN r",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D9-text-year",
+        "rows": 50,
+        "checksum": "7b22dd9a",
+        "wallMs": 154.61369899999954,
+        "serverMs": 120.41750575000015,
+        "firstMs": 156.46282400000018,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "7/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "12/2 CORRELATED SCALAR SUBQUERY 9",
+          "16/12 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "28/2 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "35/2 CORRELATED SCALAR SUBQUERY 4",
+          "39/35 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "52/2 CORRELATED SCALAR SUBQUERY 5",
+          "56/52 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "73/2 CORRELATED SCALAR SUBQUERY 6",
+          "77/73 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "91/2 CORRELATED SCALAR SUBQUERY 7",
+          "95/91 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "109/2 CORRELATED SCALAR SUBQUERY 8",
+          "113/109 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "129/2 CORRELATED SCALAR SUBQUERY 10",
+          "133/129 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "148/2 CORRELATED SCALAR SUBQUERY 11",
+          "152/148 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "161/2 CORRELATED SCALAR SUBQUERY 12",
+          "165/161 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "181/2 CORRELATED SCALAR SUBQUERY 1",
+          "185/181 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "200/2 CORRELATED SCALAR SUBQUERY 2",
+          "204/200 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "213/2 CORRELATED SCALAR SUBQUERY 3",
+          "217/213 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "228/2 USE TEMP B-TREE FOR ORDER BY",
+          "243/0 SCAN r",
+          "246/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "251/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "256/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "292/0 USE TEMP B-TREE FOR ORDER BY"
+        ]
+      },
+      {
+        "id": "D10-prolific",
+        "rows": 10,
+        "checksum": "3efadffe",
+        "wallMs": 737.4925670000011,
+        "serverMs": 772.4226007500001,
+        "firstMs": 769.8835390000004,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "15/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "22/4 CORRELATED SCALAR SUBQUERY 1",
+          "26/22 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)",
+          "70/2 SCAN a2",
+          "84/2 USE TEMP B-TREE FOR ORDER BY",
+          "94/0 SCAN r",
+          "97/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D11-no-doi",
+        "rows": 1,
+        "checksum": "e969a168",
+        "wallMs": 63.542184999998426,
+        "serverMs": 31.432294750000437,
+        "firstMs": 63.04547299999831,
+        "plan": [
+          "2/0 CO-ROUTINE a2",
+          "5/2 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "11/2 CORRELATED SCALAR SUBQUERY 1",
+          "15/11 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SCAN a2"
+        ]
+      },
+      {
+        "id": "D12-path",
+        "rows": 37,
+        "checksum": "92b7b8f8",
+        "wallMs": 28.889358999997057,
+        "serverMs": 0.32437150000077963,
+        "firstMs": 33.16800400000284,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "8/2 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "13/2 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "19/2 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "25/2 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "40/0 SCAN r",
+          "43/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D13-versions",
+        "rows": 100,
+        "checksum": "067d27dc",
+        "wallMs": 39.907304999996995,
+        "serverMs": 9.902593250000791,
+        "firstMs": 43.04409899999882,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE c0",
+          "8/4 SETUP",
+          "10/8 SEARCH quads USING COVERING INDEX quads_pos (p=?)",
+          "29/4 RECURSIVE STEP",
+          "31/29 SCAN c0",
+          "32/29 SEARCH e USING PRIMARY KEY (s=? AND p=?)",
+          "50/2 SCAN c0",
+          "61/0 SCAN r",
+          "64/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "69/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D14-sameAs-count",
+        "rows": 1,
+        "checksum": "10ee48c6",
+        "wallMs": 40.923688999999285,
+        "serverMs": 11.036203249999744,
+        "firstMs": 44.240741000001435,
+        "plan": ["2/0 CO-ROUTINE a1", "5/2 SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "15/0 SCAN a1"]
+      },
+      {
+        "id": "D10r-prolific-const",
+        "rows": 10,
+        "checksum": "3efadffe",
+        "wallMs": 56.823543000002246,
+        "serverMs": 25.68051799999921,
+        "firstMs": 56.21080300000176,
+        "plan": [
+          "2/0 CO-ROUTINE r",
+          "4/2 CO-ROUTINE a2",
+          "11/4 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "16/4 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "22/4 USE TEMP B-TREE FOR GROUP BY",
+          "61/4 USE TEMP B-TREE FOR count(DISTINCT)",
+          "67/2 SCAN a2",
+          "81/2 USE TEMP B-TREE FOR ORDER BY",
+          "91/0 SCAN r",
+          "94/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "D15-describe",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE",
+        "firstMs": 31.95438699999795
+      },
+      {
+        "id": "D16-regex-quantified",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: REGEX metachar [",
+        "firstMs": 32.35010499999771
+      },
+      {
+        "id": "D17-datatype",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: function datatype",
+        "firstMs": 29.81525099999999
+      }
+    ]
+  },
+  "oxigraphLocal": {
+    "engine": "oxigraph-js (LOCAL, in-memory)",
+    "triples": 5898338,
+    "loadMs": 48876.17291,
+    "results": [
+      { "id": "D1-lookup", "rows": 1, "checksum": "0aade06d", "ms": 0.2864530000006198 },
+      { "id": "D2-star", "rows": 1, "checksum": "d6194034", "ms": 0.26795799999672454 },
+      { "id": "D3-authors-of-pub", "rows": 5, "checksum": "c7640ec2", "ms": 0.3326170000000275 },
+      { "id": "D4-pubs-of-author", "rows": 560, "checksum": "879bbab1", "ms": 16.368517000002612 },
+      { "id": "D5-coauthors", "rows": 20, "checksum": "9caba042", "ms": 4.466350000002421 },
+      { "id": "D6-per-year", "rows": 65, "checksum": "e33337a7", "ms": 84.47095100000297 },
+      { "id": "D7-per-type-venue", "rows": 20, "checksum": "899159a3", "ms": 441.42115699999704 },
+      { "id": "D8-text", "rows": 100, "checksum": "92a4b76b", "ms": 16.276288999993994 },
+      { "id": "D9-text-year", "rows": 50, "checksum": "7b22dd9a", "ms": 183.88789499999984 },
+      { "id": "D10-prolific", "rows": 10, "checksum": "740640c4", "ms": 1072.4914179999978 },
+      { "id": "D11-no-doi", "rows": 1, "checksum": "e969a168", "ms": 98.08576200000243 },
+      { "id": "D12-path", "rows": 37, "checksum": "92b7b8f8", "ms": 0.7136590000009164 },
+      { "id": "D13-versions", "rows": 100, "checksum": "6ad586d0", "ms": 15.510814000001119 },
+      { "id": "D14-sameAs-count", "rows": 1, "checksum": "10ee48c6", "ms": 160.5133399999977 },
+      { "id": "D10r-prolific-const", "rows": 10, "checksum": "740640c4", "ms": 51.2345770000029 },
+      { "id": "D15-describe", "rows": 74, "checksum": "8b6aeaf3", "ms": 0.7695049999965704 },
+      { "id": "D16-regex-quantified", "rows": 13, "checksum": "7c579398", "ms": 137.53997499999969 },
+      { "id": "D17-datatype", "rows": 1, "checksum": "05704079", "ms": 120.27793699999893 }
+    ]
+  }
+}

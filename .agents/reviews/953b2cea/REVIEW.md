@@ -677,7 +677,7 @@ _58 error(s), 646 warning(s)._
 - 953b2cea-659 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx:11
 - 953b2cea-660 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx:78
 - 953b2cea-661 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:10
-- 953b2cea-662 - resolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:77
+- 953b2cea-662 - ignored - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:77
 - 953b2cea-663 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:14
 - 953b2cea-664 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:721
 - 953b2cea-665 - ignored - intents-not-coordinates - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:1370
@@ -3550,7 +3550,7 @@ This barrel blanket-re-exports 12 submodules with `export * from`, so every file
 ### Fix pass
 
 - one Sonnet fixer per package batch; each fix typechecked with `tsc --noEmit` and linted with oxlint
-- 272 resolved, 432 ignored; reasons for each ignored issue below
+- 271 resolved, 433 ignored; reasons for each ignored issue below
 
 ### Ignored
 
@@ -3986,3 +3986,4 @@ This barrel blanket-re-exports 12 submodules with `export * from`, so every file
 - 953b2cea-703: getStyles is exported and used by many call sites in other packages; rename is cross-package.
 - 953b2cea-704: Replacing 12 wildcard exports changes the public surface used by many packages outside this batch.
 - 953b2cea-590: A case-only rename (`Tour.test.ts` → `tour.test.ts`) breaks checkouts on case-insensitive filesystems; not worth it for a naming warning.
+- 953b2cea-662: `main` rewrote `Dock.tsx` and still uses `stop`; the merge took main's version.

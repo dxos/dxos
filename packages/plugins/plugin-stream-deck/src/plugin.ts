@@ -9,9 +9,6 @@ import { AppGraphBuilder, BridgeDriver, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
 export const StreamDeckPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(BridgeDriver),
@@ -21,7 +18,7 @@ export const StreamDeckPlugin = Plugin.define(meta).pipe(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
-      content: pluginSpec,
+      content: () => import('../PLUGIN.mdl?raw'),
       mimeType: 'application/x-mdl',
     }),
   ),

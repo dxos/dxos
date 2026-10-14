@@ -4,11 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 
-/** A reference to an entity: `entity` is the normalized slug, `label` the surface form. */
+import { EntityKind } from './Entity.ts';
+
+/**
+ * A reference to an entity: `entity` is its key, `label` the surface form. The key is an absolute IRI where one is
+ * known (`echo://…`, `did:…`, `mailto:…`, a URL), which is the same entity in every graph; otherwise it is a
+ * normalized slug, stored as an IRI local to the graph that mentions it (`Vocab.localEntityIri`).
+ */
 export const EntityTerm = Schema.Struct({
   kind: Schema.Literal('entity'),
   entity: Schema.String,
   label: Schema.optional(Schema.String),
+  /** What sort of thing the extractor took it for; stored as the entity's `rdf:type` in its graph. */
+  type: Schema.optional(EntityKind),
 });
 export interface EntityTerm extends Schema.Schema.Type<typeof EntityTerm> {}
 
@@ -33,7 +41,15 @@ export const termValue = (term: Term): string => (term.kind === 'entity' ? term.
 
 export const Assertion = Schema.Struct({
   subject: Term,
+  /** The predicate's label: the surface form, or the ontology's label once stored. */
   predicate: Schema.String,
+  /** The predicate's IRI; resolved from `predicate` through the ontology when absent. */
+  predicateIri: Schema.optional(Schema.String),
+  /**
+   * What a predicate the ontology does not define means, as the extractor that minted it defined it; stored as its
+   * `rdfs:comment` in the ontology graph, not in the statement's graph.
+   */
+  predicateDescription: Schema.optional(Schema.String),
   object: Term,
   /** ISO date when the asserted state holds. */
   validFrom: Schema.optional(Schema.String),

@@ -131,9 +131,24 @@ const KEY_GLYPHS: Record<string, string> = {
   Home: 'Home',
 };
 
+/** A shifted digit's character, read as the key cap it is typed on, since the label already shows Shift. */
+const SHIFTED_DIGITS: Record<string, string> = {
+  '!': '1',
+  '@': '2',
+  '#': '3',
+  '$': '4',
+  '%': '5',
+  '^': '6',
+  '&': '7',
+  '*': '8',
+  '(': '9',
+  ')': '0',
+};
+
 /** The chord as a label reads it: modifiers in the platform's order, then the key. */
 export const shortcutLabel = (binding: KeyBinding): string => {
-  const key = KEY_GLYPHS[binding.key] ?? binding.key.toUpperCase();
+  const key =
+    KEY_GLYPHS[binding.key] ?? (binding.shift ? SHIFTED_DIGITS[binding.key] : undefined) ?? binding.key.toUpperCase();
   const modifiers = [
     binding.alt ? (IS_MAC ? '⌥' : 'Alt+') : '',
     binding.shift ? (IS_MAC ? '⇧' : 'Shift+') : '',

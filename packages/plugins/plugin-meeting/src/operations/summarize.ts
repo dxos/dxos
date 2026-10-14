@@ -13,14 +13,21 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Summarize> = Meetin
     Effect.fnUntraced(function* ({ meeting }) {
       // The Meeting hub owns the transcript + notes + summary; delegate the LLM work to the transcription
       // operation and write the result back into the meeting's summary document.
-      const { content: transcript } = yield* Operation.invoke(TranscriptOperation.Open, {
-        transcript: meeting.transcript,
-      });
+      // Both steps resolve space-scoped services (the database, the AI service), which a caller outside
+      // a space context (a toolbar, a background stop) does not supply; the meeting knows its own space.
+      const spaceId = Obj.getDatabase(meeting)?.spaceId;
+      const options = spaceId ? { spaceId } : undefined;
+      const { content: transcript } = yield* Operation.invoke(
+        TranscriptOperation.Open,
+        { transcript: meeting.transcript },
+        options,
+      );
       const notes = yield* Effect.promise(() => meeting.notes.load());
-      const { summary } = yield* Operation.invoke(TranscriptOperation.Summarize, {
-        transcript,
-        notes: notes.content,
-      });
+      const { summary } = yield* Operation.invoke(
+        TranscriptOperation.Summarize,
+        { transcript, notes: notes.content },
+        options,
+      );
 
       const summaryText = yield* Effect.promise(() => meeting.summary.load());
       Obj.update(summaryText, (summaryText) => {

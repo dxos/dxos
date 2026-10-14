@@ -435,7 +435,8 @@ export const useApp = ({
               }
             }),
           ),
-          Effect.forever,
+          // Each yield is a clamped 4ms timer in the browser, so a yielding loop drains a startup backlog one message per tick.
+          Effect.forever({ disableYield: true }),
         ),
       );
 

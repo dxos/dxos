@@ -14,6 +14,7 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import { keyAction } from '../../model/keys.ts';
 import { type Layer, type LayerId } from '../../model/types.ts';
+import { InspectorMenu } from '../InspectorMenu/index.ts';
 
 export type LayersPanelProps = Util.ThemedClassName<{
   /** The scene's layers, bottom first (`sceneLayers`); the panel lists them top first, as they stack. */
@@ -35,6 +36,8 @@ export type LayersPanelProps = Util.ThemedClassName<{
   onMerge?: (ids: LayerId[], into: LayerId) => void;
   /** Whether the panel is docked beside the canvas. */
   docked?: boolean;
+  /** Docks or floats the inspectors, from the panel's menu; the item shows only when given. */
+  onDockedChange?: (docked: boolean) => void;
 }>;
 
 type LayerNameProps = {
@@ -93,6 +96,7 @@ export const LayersPanel = ({
   onDelete,
   onMerge,
   docked = false,
+  onDockedChange,
 }: LayersPanelProps) => {
   const items = useMemo(() => [...layers].reverse(), [layers]);
   // The row whose name is open; a new layer opens its own, so it is named as it is made.
@@ -123,32 +127,20 @@ export const LayersPanel = ({
           />
           {/* The rarer, destructive edits wait in a menu at the toolbar's end. */}
           <Toolbar.Separator variant='gap' />
-          <Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
-            <Menu.Trigger asChild>
-              <Button.Root
-                variant='ghost'
-                iconOnly
-                icon='ph--dots-three-vertical--regular'
-                label='Layer actions'
-                disabled={readonly}
-                data-testid='layers-menu'
-              />
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item
-                item={{ value: 'merge', label: 'Merge layers', icon: 'ph--arrow-line-down--regular' }}
-                disabled={!onMerge || selected.length < 2}
-                data-testid='layers-merge'
-                onSelect={() => top && onMerge?.(selected, top)}
-              />
-              <Menu.Item
-                item={{ value: 'delete', label: 'Delete layers', icon: 'ph--trash--regular' }}
-                disabled={!onDelete || selected.length === 0 || selected.length >= layers.length}
-                data-testid='layers-delete'
-                onSelect={() => onDelete?.(selected)}
-              />
-            </Menu.Content>
-          </Menu.Root>
+          <InspectorMenu docked={docked} onDockedChange={onDockedChange} data-testid='layers-menu'>
+            <Menu.Item
+              item={{ value: 'merge', label: 'Merge layers', icon: 'ph--arrow-line-down--regular' }}
+              disabled={readonly || !onMerge || selected.length < 2}
+              data-testid='layers-merge'
+              onSelect={() => top && onMerge?.(selected, top)}
+            />
+            <Menu.Item
+              item={{ value: 'delete', label: 'Delete layers', icon: 'ph--trash--regular' }}
+              disabled={readonly || !onDelete || selected.length === 0 || selected.length >= layers.length}
+              data-testid='layers-delete'
+              onSelect={() => onDelete?.(selected)}
+            />
+          </InspectorMenu>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

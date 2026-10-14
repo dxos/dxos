@@ -22,6 +22,7 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   ModeOperation.SwitchMode.pipe(Operation.lazyHandler(() => import('./switch-mode.ts'))),
   MemoryOperation.ResolveEntity.pipe(Operation.lazyHandler(() => import('./resolve-entity.ts'))),
   MemoryOperation.Remember.pipe(Operation.lazyHandler(() => import('./remember.ts'))),
+  MemoryOperation.Forget.pipe(Operation.lazyHandler(() => import('./forget.ts'))),
   MemoryOperation.Recall.pipe(Operation.lazyHandler(() => import('./recall.ts'))),
   MemoryOperation.ProposeGoal.pipe(Operation.lazyHandler(() => import('./propose-goal.ts'))),
   MemoryOperation.ConfirmGoal.pipe(Operation.lazyHandler(() => import('./confirm-goal.ts'))),
@@ -36,5 +37,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.CancelTrigger.pipe(Operation.lazyHandler(() => import('./cancel-trigger.ts'))),
   TriggerOperation.RunDue.pipe(Operation.lazyHandler(() => import('./run-due.ts'))),
   TriggerOperation.InspectBrain.pipe(Operation.lazyHandler(() => import('./inspect-brain.ts'))),
+  TriggerOperation.ResetBrain.pipe(Operation.lazyHandler(() => import('./reset-brain.ts'))),
   BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
 ]);

@@ -1,0 +1,8 @@
+PREFIX : <http://example.org/>
+
+SELECT ?s (COUNT(*) AS ?count) {
+  ?s ?p ?o
+}
+GROUP BY ?s
+ORDER BY LCASE(?name)
+VALUES (?s ?name) { (:a "beta") (:b "Gamma") (:c "Alpha") }

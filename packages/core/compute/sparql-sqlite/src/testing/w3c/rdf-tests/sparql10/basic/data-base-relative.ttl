@@ -1,0 +1,8 @@
+@prefix ns: <http://example.org/ns#> .
+
+<http://example.com/xxx/abc>     ns:p "res0" .
+<http://example.com/xxx/def>     ns:p "res1" .
+<http://example.com/xxx/abc#ghi> ns:p "res2" .
+<http://example.com/xxx/jkl>     ns:p "res3" .
+<http://example.com/mno>         ns:p "res4" .
+<http://example.com/pqr>         ns:p "res5" .

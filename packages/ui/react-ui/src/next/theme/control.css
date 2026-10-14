@@ -812,6 +812,9 @@
   /* zag copies the content's z-index onto its positioner, so setting it here lifts the whole popup. */
   .dx-popup {
     z-index: var(--dx-layer-popup);
+    /* The popup is unpositioned, so its z-index alone stacks nothing: the arrow's `z-index: -1` needs it as a stacking
+       context to paint over the surface and its ring rather than under them, which cut the arrow to a sliver. */
+    isolation: isolate;
     min-width: var(--reference-width, 8rem);
     padding-block: var(--dx-control-inset);
     border-radius: var(--radius-sm, 0.25rem);

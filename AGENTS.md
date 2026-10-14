@@ -304,6 +304,9 @@ Deeper conventions:
   `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
+- **Every push to a ready PR runs the full Check suite.** Batch commits into one push. Merge `main`
+  in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
+  iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. A PR gets a Composer preview only with the `preview` label, added only on request; when it
   has one, surface the preview URL next to the PR link.
@@ -318,6 +321,13 @@ Deeper conventions:
   for when to add one, which package to name, and bump levels.
 
 ## Handing an agent a credential
+
+**Absence is a claim; check it before you make it.** Never report a credential or tool missing (in a reply,
+a PR body, a comment) without a direct check: `printenv NAME` presence (`[ -n "$(printenv NAME)" ]`, never the
+value) or `command -v tool`. The `SessionStart` environment inventory (`.claude/hooks/env-inventory.sh`) lists every
+credential name; when a session starts outside the repo (a parent directory holding several checkouts) that hook does
+not run, so run it yourself from the checkout root (`bash <checkout>/.claude/hooks/env-inventory.sh`). A `env | grep` you filtered for one task is not an
+inventory.
 
 **In the cloud sandbox, prefer the 1Password CLI.** When `OP_SERVICE_ACCOUNT_TOKEN` is set, read the
 credential with `op run` / `op read` before asking the user for anything, since the value then never

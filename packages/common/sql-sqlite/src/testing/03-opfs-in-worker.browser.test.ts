@@ -37,6 +37,17 @@ describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequent
     }
   });
 
+  test('a backlog of statements queued behind a transaction leaves the connection free', async () => {
+    const worker = spawnInWorkerTestRunner();
+    try {
+      await waitForInWorkerTestRunner(worker);
+      const result = (await runInWorkerTestCase(worker, 'backlog')) as { free: boolean };
+      expect(result.free).toBe(true);
+    } finally {
+      terminateInWorkerTestRunner(worker);
+    }
+  });
+
   test('exports database inside worker via SqliteClient.layerOpfs', async () => {
     const worker = spawnInWorkerTestRunner();
     try {
