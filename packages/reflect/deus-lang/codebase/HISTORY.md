@@ -1,5 +1,8 @@
 # History of main
 
+- `0f63a1ecdd` close 9caae4c1 by #ed7e98a85a (by claude)
+- `ed7e98a85a` toolchain: deus run takes options before the name (by claude)
+- `4c9083f657` task: set 9caae4c1 state assignee (by claude)
 - `ce7a699915` task: comment on 3d6508e4 (by claude)
 - `271e638119` close 3d6508e4 by #f48010e0fa (by claude)
 - `f48010e0fa` toolchain: task changes record their author (by claude)

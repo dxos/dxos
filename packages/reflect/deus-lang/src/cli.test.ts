@@ -480,6 +480,9 @@ describe('deus CLI', () => {
       expect(deus('init', ...c).stdout).toContain('with the builtins and prelude');
       deus('add', join(root, 'examples/tour.deus'), ...c);
       expect(deus('test', 'Tour', ...c).stdout).toMatch(/3 passed, 0 failed/);
+      expect(deus('run', ...c, 'Tour.main', '--codebase', 'is', 'an', 'argument').stdout).toContain(
+        'error: not a number: --codebase',
+      );
       expect(deus('run', 'Tour.main', '12', '-3', 'tea').stdout).toBe(
         '12 cups of tea cost 36\nerror: negative quantity -3\nerror: not a number: tea\n',
       );

@@ -33,15 +33,6 @@ History rows link nowhere; a change page could list the definitions it added or 
 
 inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
 
-## deus run takes the codebase only from the environment (`9caae4c1`)
-
-- state: todo
-- priority: none
-- labels: dogfood, cli
-- links `Cli.run` (#5a32b74cc4)
-
-Every argument after the name goes to the program, so --codebase cannot be given.
-
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -153,4 +144,15 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 deus task new --by claude puts the author on the task but not on the change, so HISTORY.md shows task changes without (by ...).
 
 > claude: This comment is the first task change with provenance.
+
+## deus run takes the codebase only from the environment (`9caae4c1`)
+
+- state: done
+- priority: none
+- assignee: claude
+- labels: dogfood, cli
+- links `Cli.run` (#5a32b74cc4)
+- links change #ed7e98a85a
+
+Every argument after the name goes to the program, so --codebase cannot be given.
 

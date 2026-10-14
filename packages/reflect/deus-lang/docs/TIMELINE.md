@@ -63,6 +63,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 55  | 10-14 17:04 | 21m 58s        | `ead786c3`  | the whole toolchain round-trips through deus view                                                       |
 | 56  | 10-14 17:11 | 6m 39s         | `b6b57ee3`  | work through the codebase and back it up to git as text                                                 |
 | 57  | 10-14 17:16 | 5m 43s         | `9ab8338e`  | write all of stdout into a pipe                                                                         |
-| 58  | 10-14 17:17 | 1m 06s         | this commit | Dogfooding: stdout through pipes, provenance for task changes; work tracked in the codebase             |
+| 58  | 10-14 17:20 | 3m 24s         | `6e0756a0`  | task changes record who made them                                                                       |
+| 59  | 10-14 17:22 | 2m 01s         | this commit | deus run takes CLI options before the name (codebase task 9caae4c1)                                     |
 
-Total from stage 1 to stage 58: 7h 34m.
+Total from stage 1 to stage 59: 7h 39m.

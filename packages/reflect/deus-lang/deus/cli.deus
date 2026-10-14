@@ -36,6 +36,26 @@ def parseArgs (args : List Text) : Args :=
 
 def option (args : Args) (key : Text) : Option Text := Map.lookup key args.options
 
+/--
+  Splits `--flag value` options off the front of arguments, for commands like `run` whose
+  remaining arguments belong to someone else: `deus run --codebase c main a b`.
+-/
+def leadingOptions (argv : List Text) : (List Text, List Text) :=
+  match argv with
+  | a :: more =>
+    if Text.startsWith "--" a then
+      if Set.contains (Text.drop 2 a) booleanFlags then
+        match leadingOptions more with
+        | (options, rest) => (a :: options, rest)
+      else
+        match more with
+        | v :: tail =>
+          match leadingOptions tail with
+          | (options, rest) => (a :: v :: options, rest)
+        | [] => ([a], [])
+    else ([], argv)
+  | [] => ([], [])
+
 def flag (args : Args) (key : Text) : Bool := Map.contains key args.options
 
 def die (message : Text) : {IO} a :=
@@ -1118,7 +1138,7 @@ def usage : Text :=
     "  compact [remote] --keep n            garbage-collect: keep n generations from each head",
     "",
     "running",
-    "  run <name> [args…]                   run name () with IO.args = args",
+    "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",
     "  eval <expr>                          evaluate an expression",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
@@ -1177,7 +1197,9 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "pull" then pull args
     else if command == "compact" then compact args
     else if command == "undo" then undo args
-    else if command == "run" then run (parseArgs (List.take 0 rest)) rest
+    else if command == "run" then
+      match leadingOptions rest with
+      | (options, program) => run (parseArgs options) program
     else if command == "eval" then eval args
     else if command == "mdl" then mdl args
     else if command == "test" then Check.tests args
