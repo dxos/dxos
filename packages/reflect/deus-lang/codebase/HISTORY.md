@@ -1,5 +1,10 @@
 # History of main
 
+- `f8f410ac05` export: merge tasks from codebase
+- `4b59911ace` analytics decisions renumbered D103, D104 (by claude)
+- `44f4b80a35` history: import 526 changes
+- `0b582fa2ae` task: import from tasks.sexp
+- `027cb63f7b` add code specs
 - `90521a638a` task: comment on 72207dc1 (by claude)
 - `77856573c6` history: import 515 changes
 - `397db919a9` task: import from tasks.sexp
@@ -12,6 +17,13 @@
 - `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
 - `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
 - `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `3796ba0f06` task: set 38603468 state details (by claude)
+- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
+- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
+- `26b25952c4` history: import 507 changes
+- `ce1b500e79` task: import from tasks.sexp
 - `880640eb13` task: set e76e36b0 state (by claude)
 - `ea44281ed7` task: set e76e36b0 details (by claude)
 - `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)

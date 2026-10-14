@@ -114,7 +114,7 @@ def entryJson (name : Text) (e : Entry) : Json :=
   Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
 
 /--
-  Resolves a reference in a namespace to its full name and entry (D103): a name, a `#hashprefix`,
+  Resolves a reference in a namespace to its full name and entry (D104): a name, a `#hashprefix`,
   a name IRI `<project>/<name>`, or a pinned `<project>/<name>#<hash>`. A prefix that matches
   more than one hash is an error; a pinned hash whose name moved resolves to another name of it.
 -/
@@ -1518,7 +1518,7 @@ def usage : Text :=
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "  migrate                              rewrite history with namespace-tree snapshots",
     "",
-    "analytics (events about the codebase, in @[event] structures; push-only, D102)",
+    "analytics (events about the codebase, in @[event] structures; push-only, D103)",
     "  event types                          event types with their columns and counts",
     "  event record <Type> field=value…     record an event (a ref field takes a name, an IRI or #hash)",
     "  event import <file>                  record (event \"Type\" (field value)…) forms",

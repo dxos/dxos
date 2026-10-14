@@ -4,7 +4,7 @@
 //
 
 // Writes CiRun events for the check runs on a pull request's latest commits, as
-// `(event "CiRun" (field value)…)` forms for `deus event import` (D102).
+// `(event "CiRun" (field value)…)` forms for `deus event import` (D103).
 //
 //   node scripts/analytics-ci.mjs [--pr 13952] [--commits 30] [--repo dxos/dxos] > ci.sexp
 //   deus event import ci.sexp
