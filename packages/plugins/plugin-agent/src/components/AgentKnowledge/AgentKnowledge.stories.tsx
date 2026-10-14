@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
+import { Masonry } from '@dxos/react-ui-masonry';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
@@ -21,6 +22,8 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeView,
 } from './AgentKnowledge.tsx';
+import { EntityCard } from './EntityCard.tsx';
+import { type EntityCardModel, toEntityCards } from './subgraph.ts';
 import { formatNamedGraphs } from './trig.ts';
 import { TURTLE_PREFIXES, formatRawFact } from './turtle.ts';
 
@@ -90,6 +93,7 @@ const rdfFact = (
 });
 
 const entity = (id: string, label?: string): RDF.Term => ({ kind: 'entity', entity: id, label });
+const slugOf = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
 
 /** One roster sentence read from the team page (two statements, one provenance) and a line Dima said in CI triage. */
 const ROSTER = { source: 'https://dxos.org/team', at: hoursAgo(30), hash: 'e7f0d44f' };
@@ -150,6 +154,66 @@ const NamedGraphsStory = () => {
   );
 };
 
+/** The graph around one researcher, as facts read from a profile page and a lab roster. */
+const PROFILE = { source: 'https://example.com/alice', at: hoursAgo(5), hash: 'a11ce' };
+const COLLEAGUES = ['Bob', 'Carol', ...Array.from({ length: 12 }, (_, index) => `Colleague ${index + 1}`)];
+const PROFILE_FACTS: RDF.Fact[] = [
+  rdfFact('p-1', [entity('alice', 'Alice Chen'), 'works at', entity('acme', 'Acme')], PROFILE),
+  ...COLLEAGUES.map((name, index) =>
+    rdfFact(`p-knows-${index}`, [entity('alice', 'Alice Chen'), 'knows', entity(slugOf(name), name)], PROFILE),
+  ),
+  rdfFact('p-2', [entity('alice', 'Alice Chen'), 'authored', entity('paper-a', 'Paper A')], PROFILE),
+  rdfFact('p-3', [entity('alice', 'Alice Chen'), 'authored', entity('paper-b', 'Paper B')], PROFILE),
+  rdfFact('p-4', [entity('david', 'David'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
+  rdfFact('p-5', [entity('emma', 'Emma'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
+  rdfFact('p-6', [entity('bob', 'Bob'), 'works at', entity('acme', 'Acme')], PROFILE),
+];
+
+const CARD_OPTIONS = {
+  types: {
+    'alice': 'Person',
+    'bob': 'Person',
+    'david': 'Person',
+    'emma': 'Person',
+    'rich-burdon': 'Person',
+    'dima': 'Person',
+  },
+  inverses: {
+    'know': 'Known by',
+    'author': 'Authored by',
+    'work at': 'Employs',
+    'own': 'Owned by',
+    'member of': 'Members',
+  },
+};
+
+const CARD_ICONS = {
+  'work at': 'ph--buildings--regular',
+  'know': 'ph--users--regular',
+  'author': 'ph--file-text--regular',
+  'own': 'ph--key--regular',
+};
+
+/** One card per entity of the graph: what it states, and below the rule what others state about it. */
+const EntityCardTile = ({ data }: { data: EntityCardModel }) => (
+  <EntityCard card={data} icons={CARD_ICONS} onSelect={() => {}} onClose={() => {}} />
+);
+
+const SubgraphsStory = () => {
+  const cards = useMemo(() => toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], CARD_OPTIONS), []);
+  return (
+    <Panel.Root>
+      <Panel.Body>
+        <Masonry.Root Tile={EntityCardTile} minColumnWidth={20} maxColumnWidth={28}>
+          <Masonry.Content>
+            <Masonry.Viewport items={cards} getId={(card) => card.id} />
+          </Masonry.Content>
+        </Masonry.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
 type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
   scenario: keyof typeof SCENARIOS;
@@ -172,7 +236,7 @@ const DefaultStory = ({ scenario, defaultView }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-agent/components/AgentKnowledge',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -184,26 +248,38 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  decorators: [withLayout({ layout: 'column' })],
   args: { scenario: 'default' },
 };
 
 export const Empty: Story = {
+  decorators: [withLayout({ layout: 'column' })],
   args: { scenario: 'empty' },
 };
 
 export const Facts: Story = {
+  decorators: [withLayout({ layout: 'column' })],
   args: { scenario: 'default', defaultView: 'facts' },
 };
 
 export const Goals: Story = {
+  decorators: [withLayout({ layout: 'column' })],
   args: { scenario: 'default', defaultView: 'goals' },
 };
 
 export const LargeGraph: Story = {
+  decorators: [withLayout({ layout: 'column' })],
   args: { scenario: 'large', defaultView: 'graph' },
 };
 
 export const NamedGraphs: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
   args: { scenario: 'default' },
   render: () => <NamedGraphsStory />,
+};
+
+export const Subgraphs: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  args: { scenario: 'default' },
+  render: () => <SubgraphsStory />,
 };

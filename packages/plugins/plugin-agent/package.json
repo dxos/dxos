@@ -317,6 +317,7 @@
     "@dxos/edge-compute": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
