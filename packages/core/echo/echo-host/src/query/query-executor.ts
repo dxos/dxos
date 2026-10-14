@@ -18,6 +18,7 @@ import {
   EscapedPropPath,
   PROPERTY_ID,
   QueryAST,
+  backingJson,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import {
@@ -44,7 +45,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
-import { backingJson, isSaved } from './object-state.ts';
+import { isSaved } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow, compilePlan, planDeclinedByCompiler } from './sql/index.ts';

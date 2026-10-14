@@ -339,7 +339,7 @@ export class IndexEngine {
     return this.#objectSnapshotIndex.querySnapshotsJSON(recordIds);
   }
 
-  /** Each document object's JSON text with the heads it was read at; see {@link ObjectSnapshotIndex.queryBackings}. */
+  /** Each document object's JSON text with the heads it was read at, and stored bytes; see {@link ObjectSnapshotIndex.queryBackings}. */
   queryBackings(recordIds: readonly number[]) {
     return this.#objectSnapshotIndex.queryBackings(recordIds);
   }
