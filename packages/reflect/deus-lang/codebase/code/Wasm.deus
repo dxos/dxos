@@ -72,7 +72,7 @@ def Wasm.binary (name : Text) : Option Int := if name == "Int.add" then Option.s
 
 /-- Compiles `main` and what it calls to a wasm module exporting it as `export`. -/
 def Wasm.compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
-  let gathered := gather fetch meta main
+  let gathered := Wasm.gather fetch meta main
   let fns := rewriteAll gathered (datatypesOf fetch gathered)
   let names := dedup (concatMap (fun f => patternTypes f.fnBody) fns)
   Wasm.module fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
@@ -169,10 +169,10 @@ def Wasm.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {
         match fetch h with
         | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: p :: []) :: [])) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
-            match unlam core with
+            match Wasm.unlam core with
             | (0, _) => Throw.throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
             | (n, b) => go
-                (rest ++ refsOf b)
+                (rest ++ Wasm.refsOf b)
                 (h :: seen)
                 (Fn.mk h n b (Wasm.storedType (meta h)) :: acc)
                 prims

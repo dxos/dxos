@@ -1,5 +1,9 @@
 # History of main
 
+- `7b35b30de6` task: set 50e58574 details
+- `302f8b5248` history: import 451 changes (by claude)
+- `c2c006d631` task: import from tasks.sexp
+- `5e722d76ec` add code specs
 - `4c432b5427` task: set 50e58574 details
 - `611a529b6e` history: import 404 changes (by claude)
 - `5eba8c36bd` task: import from tasks.sexp
@@ -13,6 +17,49 @@
 - `6c113461a6` history: import 408 changes
 - `e565d47432` task: import from tasks.sexp
 - `a44472206d` add code specs
+- `c53158568a` Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97 (by claude)
+- `65aa9a06c5` history: import 434 changes
+- `fc3475b4c1` task: import from tasks.sexp
+- `3f2af1b29d` add code specs
+- `efb62b2ac7` Merge #13952's branch (explorer spec backfill) into the JS target (by claude)
+- `31a71813bc` history: import 410 changes
+- `3487bc898b` history: import 442 changes
+- `797c4cd451` task: import from tasks.sexp
+- `cedb78ea51` add code specs
+- `280dd114dc` Merge #13952's branch into the JS target (D96) (by claude)
+- `c8547225d9` history: import 426 changes
+- `bdfda4a33d` task: import from tasks.sexp
+- `dd81587487` add code specs
+- `489553f1e8` delete JsGen.Spec.Shape.circle JsGen.Spec.Shape.rect
+- `0c44e5f6ba` delete JsGen.Spec.Shape JsGen.Spec.area
+- `0f628d8efe` JsGen.Spec: names that do not clash with the tour (by claude)
+- `a76744d439` task: set c06f5905 state (by claude)
+- `91e117df73` task: set 78c17e2d state (by claude)
+- `1593c56b87` close 86ef7d80 by #a3b91d88c1 (by claude)
+- `a3b91d88c1` JS back end: deus build --js, direct style, source-mapped, spec-first in JS.mdl (D94) (by claude)
+- `d899edd608` task: set 5d6c67b4 priority labels (by claude)
+- `cc9f3cc6b1` task: open 5d6c67b4 Composer assistant skills for writing DEUS and using the codebase
+- `16dd2a7243` task: set 771e6f9e state (by claude)
+- `8d0b1cf442` task: set 771e6f9e details (by claude)
+- `2372949034` task: set 771e6f9e priority labels (by claude)
+- `1bb9f66932` task: open 771e6f9e Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL
+- `abb86679f0` task: set 1854b55d details (by claude)
+- `b79db127bf` task: set 1854b55d priority labels (by claude)
+- `f10a720bbc` task: open 1854b55d Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it
+- `7f4e2ad7d6` task: set 508d9443 details (by claude)
+- `ce83aa6993` task: set 508d9443 priority labels (by claude)
+- `882f13afdd` task: open 508d9443 JS back end refuses multi-shot handlers by name: a test for the refusal
+- `92835e5e18` task: set c06f5905 details (by claude)
+- `555e0b0b80` task: set c06f5905 priority labels (by claude)
+- `2952318075` task: open c06f5905 React bindings: hooks as an ability, a todo app in DEUS (D94)
+- `e710870ece` task: set 78c17e2d details (by claude)
+- `26c4a3df9d` task: set 78c17e2d priority labels (by claude)
+- `3d882093bf` task: open 78c17e2d JS interop: Js.import bindings with codecs from the signature (D94)
+- `9440cb0c70` task: set 86ef7d80 details (by claude)
+- `01bdc803df` task: set 86ef7d80 priority labels (by claude)
+- `6c41a3a2d6` task: open 86ef7d80 JS back end: deus build --js, direct style, source maps (D94)
+- `ccf54ad86f` history: import 353 changes
+- `f13276e40e` task: import from tasks.sexp
 - `32032ea1fa` task: open 2a2b87a2 Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (by claude)
 - `4840de1a1a` the explorer's writing and console in its checked spec (from #13952's branch) (by claude)
 - `916dd946a8` history: import 408 changes

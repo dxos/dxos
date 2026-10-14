@@ -213,7 +213,7 @@ def baseName (path : Text) : Text :=
 /--
   The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
-  The document's prose is kept in each block's metadata (D97): its order, the text before it,
+  The document's prose is kept in each block's metadata (D98): its order, the text before it,
   and on the first block the frontmatter and on the last the text after it, so the codebase holds
   the whole document and the export writes it back.
 -/
@@ -416,7 +416,7 @@ def view (args : Args) : {IO, Throw Text} Unit :=
   let printer := Print.printer ns []
   let dialect := if flag args "core" then "core" else Option.getOr (option args "dialect") "deus"
   if dialect == "deus" || dialect == "ts" || dialect == "core" then () else throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
-  -- A spec document's name prints the whole document from its blocks (D97).
+  -- A spec document's name prints the whole document from its blocks (D98).
   let documents := Export.specDocuments ns
   -- (name, kind, hash, text); a document has no hash.
   let shownFor := fun (name : Text) =>
@@ -877,6 +877,7 @@ def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a)
     k (match compiled source with
       | Result.ok h => guardDefect (fun _ => Code.run h)
       | Result.err message => Result.err message)
+  | MdlHost.js source -> k => k (jsCompare dir ns source)
   | MdlHost.describe name -> k =>
     k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
       | Result.ok r => r
@@ -945,7 +946,7 @@ def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (docum
         | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
 
 /--
-  `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D97), MDL
+  `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D98), MDL
   files, or with no arguments every spec document the codebase holds. Each block goes to the
   extension its term's URI names in the codebase; a block whose extension the codebase lacks is
   reported unchecked.
@@ -1092,6 +1093,21 @@ def explore (args : Args) : {IO, Throw Text} Unit :=
 def build (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
+  if flag args "js" then
+    match option args "out" with
+    | some out =>
+      let roots := List.map (fun name =>
+        match lookupName ns name with
+        | (_, Entry.term h) => (JsGen.mangle (Names.lastSegment name), h)
+        | _ => throw (name ++ " is not a term")) args.positional
+      if List.isEmpty roots then throw "usage: deus build <name…> -o <file.js> --js" else ()
+      writeJs dir ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) roots out
+      output args (fun _ => Json.obj [("module", Json.str out), ("map", Json.str (out ++ ".map"))]) (fun _ => "Built " ++ out ++ ".")
+    | none => throw "usage: deus build <name…> -o <file.js> --js"
+  else buildImage args dir ns
+
+/-- `deus build` for every target that runs an image or compiles one definition. -/
+def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} Unit :=
   match (lookupName ns (Option.getOr (List.head? args.positional) ""), option args "out") with
   | ((_, Entry.term h), some out) =>
     let image := Image.build (fetcher dir) h
@@ -1113,6 +1129,65 @@ def build (args : Args) : {IO, Throw Text} Unit :=
     | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
     | Result.err f => throw (Failure.render f)
   | _ => throw "usage: deus build <term> -o <file>"
+
+/--
+  Writes the JS module of `roots` (export name, hash) to `out` (D97), its source map to
+  `<out>.map`, and the runtime beside it as `deus-runtime.mjs`.
+-/
+def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (roots : List (Text, Text)) (out : Text) : {IO, Throw Text} Unit :=
+  let printer := Print.printer ns []
+  let jsImport := match Map.lookup "Js.import" ns with
+    | some (Entry.term h) => h
+    | _ => ""
+  let parts := Text.split out "/"
+  let folder := if List.length parts < 2 then "." else Text.join "/" (List.take (List.length parts - 1) parts)
+  let base := Option.getOr (List.last? parts) out
+  let home := match IO.getEnv "DEUS_HOME" with
+    | some h => h
+    | none => throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+  let runtime := match IO.readFile (home ++ "/platform/js/runtime.mjs") with
+    | some text => text
+    | none => throw ("cannot read " ++ home ++ "/platform/js/runtime.mjs")
+  -- Wrapped: a closed-row function where `{Throw Text | r}` is expected hangs the checker (task in TASKS.md).
+  match JsGen.compile (fun h => fetch h) (fun h => meta h) (fun h name => Explorer.sourceOf printer dir ns name (Entry.term h)) ns jsImport roots "./deus-runtime.mjs" (base ++ ".map") with
+  | (code, map) =>
+    IO.writeFile out code
+    IO.writeFile (out ++ ".map") map
+    IO.writeFile (folder ++ "/deus-runtime.mjs") runtime
+
+/--
+  The value of `def it := <source>` on this kernel and on the js target, each printed as `deus eval`
+  prints it (D97). The module runs under `$DEUS_NODE`.
+-/
+def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result Text (Text, Text) :=
+  match try (fun _ =>
+    let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" ("def it := " ++ source)]
+    match List.lookup "it" batch.entries with
+    | some (Entry.term h) =>
+      let objects := Map.fromList batch.objects
+      let metas := Map.fromList batch.metas
+      Image.load (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) [h]
+      let printer := Print.printer ns []
+      let render := fun (quoted : Text) => Print.expr printer (Sexp.read quoted) [] 0 0
+      let kernel := match guardDefect (fun _ => Code.quote (Code.run h)) with
+        | Result.ok q => render q
+        | Result.err message => "defect: " ++ message
+      let out := dir ++ "/cache/js-" ++ Text.take 16 (Text.sha256 (h ++ source))
+      IO.mkdirp out
+      writeJs dir ns (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) (fun x => Option.orElse (Map.lookup x metas) (fun _ => Codebase.readMeta dir x)) [("it", h)] (out ++ "/it.js")
+      IO.writeFile (out ++ "/run.mjs") (Text.join "\n" [
+        "import { raw } from './it.js';",
+        "import { quote, DeusDefect } from './deus-runtime.mjs';",
+        "try { process.stdout.write(quote(raw.it)); } catch (err) {",
+        "  if (!(err instanceof DeusDefect)) throw err;",
+        "  process.stdout.write('defect: ' + err.message); }"])
+      let node := Option.getOr (IO.getEnv "DEUS_NODE") "node"
+      match IO.exec node [out ++ "/run.mjs"] with
+      | (0, stdout, _) => (kernel, if Text.startsWith "defect: " stdout then stdout else render stdout)
+      | (code, _, stderr) => throw ("node exited with " ++ Int.toText code ++ ": " ++ Text.trim stderr)
+    | _ => throw ("cannot compile " ++ source)) with
+  | Result.ok pair => Result.ok pair
+  | Result.err message => Result.err message
 
 /--
   `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81, D87): a JavaScript module and its
@@ -1457,6 +1532,7 @@ def usage : Text :=
     "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
+    "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",

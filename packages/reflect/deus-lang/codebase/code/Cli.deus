@@ -77,7 +77,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
 def Cli.applyFields (args : Args) (t : Task) : {Throw Text} Task := foldl (fun acc field =>
   match option args field with
   | Option.some value => setField acc field value
-  | Option.none => acc) t fields
+  | Option.none => acc) t Tasks.fields
 
 /-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
 def Cli.asset (args : Args) : {IO, Throw Text} Unit :=
@@ -180,6 +180,24 @@ def Cli.branch (args : Args) : {IO, Throw Text} Unit :=
 def Cli.build (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
+  if flag args "js" then
+    match option args "out" with
+    | Option.some out =>
+        let roots := List.map (fun name =>
+          match Cli.lookupName ns name with
+          | (_, Entry.term h) => (mangle (lastSegment name), h)
+          | _ => Throw.throw (name ++ " is not a term")) args.positional
+        if List.isEmpty roots then Throw.throw "usage: deus build <name…> -o <file.js> --js" else ()
+        writeJs dir ns (fun h => readObject dir h) (fun h => readMeta dir h) roots out
+        Cli.output
+          args
+          (fun _ => Json.obj [("module", Json.str out), ("map", Json.str (out ++ ".map"))])
+          (fun _ => "Built " ++ out ++ ".")
+    | Option.none => Throw.throw "usage: deus build <name…> -o <file.js> --js"
+  else buildImage args dir ns
+
+/-- `deus build` for every target that runs an image or compiles one definition. -/
+def Cli.buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} Unit :=
   match (Cli.lookupName ns (getOr (head? args.positional) ""), option args "out") with
   | ((_, Entry.term h), Option.some out) =>
       let image := Image.build (fetcher dir) h
@@ -647,6 +665,47 @@ def Cli.init (args : Args) : {IO, Throw Text} Unit :=
     (fun _ => "Initialized a codebase in " ++ dir ++ " on branch main" ++
       (if library then ", with the builtins and prelude." else ", empty."))
 
+/-- The value of `def it := <source>` on this kernel and on the js target, each printed as `deus eval`
+  prints it (D97). The module runs under `$DEUS_NODE`. -/
+def Cli.jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result Text (Text, Text) :=
+  match try (fun _ =>
+    let batch := batch
+      ns
+      (fun h => readObject dir h)
+      (fun h => readMeta dir h)
+      (checkTypes ())
+      [parseFile "<eval>" ("def it := " ++ source)]
+    match List.lookup "it" batch.entries with
+    | Option.some (Entry.term h) =>
+        let objects := Map.fromList batch.objects
+        let metas := Map.fromList batch.metas
+        Image.load (fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x)) [h]
+        let printer := printer ns []
+        let render := fun quoted => Print.expr printer (Sexp.read quoted) [] 0 0
+        let kernel :=
+          match guardDefect (fun _ => Code.quote (Code.run h)) with
+          | Result.ok q => render q
+          | Result.err message => "defect: " ++ message
+        let out := dir ++ "/cache/js-" ++ Text.take 16 (Text.sha256 (h ++ source))
+        IO.mkdirp out
+        writeJs
+          dir
+          ns
+          (fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x))
+          (fun x => orElse (Map.lookup x metas) (fun _ => readMeta dir x))
+          [("it", h)]
+          (out ++ "/it.js")
+        IO.writeFile (out ++ "/run.mjs") (join
+          "\n"
+          ["import { raw } from './it.js';", "import { quote, DeusDefect } from './deus-runtime.mjs';", "try { process.stdout.write(quote(raw.it)); } catch (err) {", "  if (!(err instanceof DeusDefect)) throw err;", "  process.stdout.write('defect: ' + err.message); }"])
+        let node := getOr (IO.getEnv "DEUS_NODE") "node"
+        match IO.exec node [out ++ "/run.mjs"] with
+        | (0, stdout, _) => (kernel, if startsWith "defect: " stdout then stdout else render stdout)
+        | (code, _, stderr) => Throw.throw ("node exited with " ++ toText code ++ ": " ++ trim stderr)
+    | _ => Throw.throw ("cannot compile " ++ source)) with
+  | Result.ok pair => Result.ok pair
+  | Result.err message => Result.err message
+
 /-- Dependencies of a batch's objects that their layer may not have, as `name (layer) -> name (layer)`. -/
 def Cli.layerCrossings (dir : Text) (batch : Batch) : {IO} List Text :=
   let objects := Map.fromList batch.objects
@@ -790,7 +849,7 @@ def Cli.main (u : Unit) : {IO} Unit :=
   | Result.ok _ => ()
   | Result.err message => die message
 
-/-- `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D97), MDL
+/-- `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D98), MDL
   files, or with no arguments every spec document the codebase holds. Each block goes to the
   extension its term's URI names in the codebase; a block whose extension the codebase lacks is
   reported unchecked. -/
@@ -1176,7 +1235,7 @@ def Cli.siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" 
 
 /-- The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
-  The document's prose is kept in each block's metadata (D97): its order, the text before it,
+  The document's prose is kept in each block's metadata (D98): its order, the text before it,
   and on the first block the frontmatter and on the last the text after it, so the codebase holds
   the whole document and the export writes it back. -/
 def Cli.specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) := concatMap (fun path => if not (endsWith ".mdl" path) then [] else
@@ -1294,7 +1353,9 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
             section "Links" (concatMap snd links) ++ section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++ section "Comments" (List.map commentLine t.comments) ++ section "History" (List.map (changeLine dir) history)))
   | "set" :: id :: [] =>
       let t := applyFields args (Tasks.find tasks id)
-      saved t ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) fields))
+      saved
+        t
+        ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) Tasks.fields))
   | "comment" :: id :: words =>
       let t := Tasks.find tasks id
       saved
@@ -1356,7 +1417,7 @@ def Cli.undo (args : Args) : {IO, Throw Text} Unit :=
 
 def Cli.usage : Text := join
   "\n"
-  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)", "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)", "  comments [<name|change:h>]           comments on one subject, or every subject with comments", "  comments import <comments.sexp>      restore comments from an export", "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source", "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
+  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)", "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)", "  comments [<name|change:h>]           comments on one subject, or every subject with comments", "  comments import <comments.sexp>      restore comments from an export", "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source", "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
 
 def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1365,7 +1426,7 @@ def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let printer := printer ns []
   let dialect := if flag args "core" then "core" else getOr (option args "dialect") "deus"
   if dialect == "deus" || dialect == "ts" || dialect == "core" then () else Throw.throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
-  -- A spec document's name prints the whole document from its blocks (D97).
+  -- A spec document's name prints the whole document from its blocks (D98).
   let documents := specDocuments ns
   -- (name, kind, hash, text); a document has no hash.
   let shownFor := fun name => if not (Map.contains name ns) && List.contains name documents then (name, "document", "", document dir ns name) else
@@ -1475,6 +1536,7 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO
   | MdlHost.run source -> k => k (match compiled source with
     | Result.ok h => guardDefect (fun _ => Code.run h)
     | Result.err message => Result.err message)
+  | MdlHost.js source -> k => k (jsCompare dir ns source)
   | MdlHost.describe name -> k => k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
     | Result.ok r => r
     | Result.err message => Result.err message)
@@ -1511,3 +1573,37 @@ def Cli.withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw
     | Result.ok value => value
     | Result.err message => Throw.throw message
   else directory url body
+
+/-- Writes the JS module of `roots` (export name, hash) to `out` (D97), its source map to
+  `<out>.map`, and the runtime beside it as `deus-runtime.mjs`. -/
+def Cli.writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (roots : List (Text, Text)) (out : Text) : {IO, Throw Text} Unit :=
+  let printer := printer ns []
+  let jsImport :=
+    match Map.lookup "Js.import" ns with
+    | Option.some (Entry.term h) => h
+    | _ => ""
+  let parts := Text.split out "/"
+  let folder := if List.length parts < 2 then "." else join "/" (List.take (List.length parts - 1) parts)
+  let base := getOr (last? parts) out
+  let home :=
+    match IO.getEnv "DEUS_HOME" with
+    | Option.some h => h
+    | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+  let runtime :=
+    match IO.readFile (home ++ "/platform/js/runtime.mjs") with
+    | Option.some text => text
+    | Option.none => Throw.throw ("cannot read " ++ home ++ "/platform/js/runtime.mjs")
+  -- Wrapped: a closed-row function where `{Throw Text | r}` is expected hangs the checker (task in TASKS.md).
+  match JsGen.compile
+    (fun h => fetch h)
+    (fun h => meta h)
+    (fun h name => sourceOf printer dir ns name (Entry.term h))
+    ns
+    jsImport
+    roots
+    "./deus-runtime.mjs"
+    (base ++ ".map") with
+  | (code, map) =>
+      IO.writeFile out code
+      IO.writeFile (out ++ ".map") map
+      IO.writeFile (folder ++ "/deus-runtime.mjs") runtime

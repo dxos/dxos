@@ -1,5 +1,19 @@
 # Tasks
 
+## Composer assistant skills for writing DEUS and using the codebase (`5d6c67b4`)
+
+- state: todo
+- priority: high
+- labels: js, composer, llm
+
+## Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL (`771e6f9e`)
+
+- state: doing
+- priority: high
+- labels: js, composer
+
+Surfaces and ECHO access written in DEUS, compiled with --js, loaded into Composer by URL; autocue demo.
+
 ## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
 
 - state: todo
@@ -39,6 +53,14 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
+
+## Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it (`1854b55d`)
+
+- state: todo
+- priority: high
+- labels: checker, bug
+
+Bisected while writing jsgen.deus: (1) closed-row {IO} callbacks passed where {Throw Text | r} is expected; (2) a let-bound function used at two rows; (3) a ++/:: precedence type error in a big recursive group. Each made deus compile deus run for minutes instead of reporting; deus add into a scratch codebase reports the same errors fast.
 
 ## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
 
@@ -106,6 +128,14 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
+
+## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
+
+- state: todo
+- priority: medium
+- labels: js
+
+JS.mdl R-2 is a gap until a test compiles such a handler and checks the message.
 
 ## Laws for task, comment and history-record merges, and for add/update refusing layer crossings (`823f7b83`)
 
@@ -581,6 +611,23 @@ Each thread exports codebase/ from its own ~/.deus, so the last export wins: his
 - parent: 861438d2
 - links change #c432032637
 
+## JS back end: deus build --js, direct style, source maps (D94) (`86ef7d80`)
+
+- state: done
+- priority: high
+- labels: js, backend
+- links change #a3b91d88c1
+
+deus build --js: one function per definition named after it, direct-style handlers, source maps; spec-first in docs/spec/JS.mdl.
+
+## JS interop: Js.import bindings with codecs from the signature (D94) (`78c17e2d`)
+
+- state: done
+- priority: high
+- labels: js
+
+platform/js/js.deus: Js.import bindings, codecs chosen from the signature (JS.mdl#foreign-imports).
+
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
 - state: done
@@ -658,6 +705,14 @@ Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end fol
 - links `Array.set` (#b3d7fa0dc1)
 - links change #034fda7dc8
 
+## React bindings: hooks as an ability, a todo app in DEUS (D94) (`c06f5905`)
+
+- state: done
+- priority: high
+- labels: js, react
+
+platform/js/react.deus: a Hooks ability handled by React's hooks; examples/react/todo.deus, verified in Chromium.
+
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 
 - state: done
@@ -685,7 +740,7 @@ Measured in docs/IMMUTABILITY.md (D83): seven sorts on both kernels, wasm, C and
 - assignee: claude
 - labels: spec, mdl, codebase
 
-From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D97.
+From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D98.
 
 ## Task viewer in the codebase explorer (`553faf09`)
 

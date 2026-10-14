@@ -348,7 +348,7 @@ property whose value has newlines prints as `- ` lines.
 
 ## Spec documents in the codebase
 
-A spec document lives in the codebase, not as a file ([D97](../DECISIONS.md)). Its blocks are spec
+A spec document lives in the codebase, not as a file ([D98](../DECISIONS.md)). Its blocks are spec
 objects as above; its prose is kept in each block's metadata, which is not hashed, so editing prose
 never changes a block's hash:
 

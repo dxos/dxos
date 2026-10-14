@@ -6,7 +6,7 @@ how the process works in DEUS, what the backfill covered, and what it found and 
 
 ## How to write a spec
 
-A spec is a document in the codebase, named `<Subsystem>.Spec` (D97). Dmytro: "I want agents to
+A spec is a document in the codebase, named `<Subsystem>.Spec` (D98). Dmytro: "I want agents to
 record specs in codebase, not in github. and overall, most development at this point should be
 happening via-codebase". Nothing under `docs/spec/` holds a checked spec any more; the copies in
 [`codebase/specs/`](../codebase/specs) are the export, written by `deus export codebase`.
@@ -117,4 +117,4 @@ Each is a codebase task (ids in brackets):
 New work follows the process: a spec change comes first in the same commit as the code. The rest of
 the toolchain (lexer and parser, types, prover, tasks, replication, update, image, the wasm and C back
 ends) gets checked specs as it is touched (`1ab6c044`), and Bindings.Spec's requirements table became `req`
-blocks with the move into the codebase (D97).
+blocks with the move into the codebase (D98).

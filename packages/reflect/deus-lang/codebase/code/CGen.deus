@@ -48,7 +48,7 @@ def CGen.callee (ctx : FnCtx) (h : Text) (argc : Int) : {Throw Text} (Int, Fn) :
 
 /-- Compiles `main` and what it calls to C exporting it as `export`. -/
 def CGen.compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
-  let fns := gather fetch meta main
+  let fns := Wasm.gather fetch meta main
   let names := dedup (concatMap (fun f => patternTypes f.fnBody) fns)
   CGen.unit fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 

@@ -20,6 +20,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
 | [Bindings.Spec](../../codebase/specs/Bindings.Spec.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
 | [Checking.Spec](../../codebase/specs/Checking.Spec.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
+| [JsGen.Spec](../../codebase/specs/JsGen.Spec.mdl)                  | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
@@ -28,7 +29,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | Log, trace and metric output: NDJSON and OTLP JSON lines                               |
 
 The checked specs (`Codebase.Spec`, `Compile.Spec` and the other `*.Spec` rows) live in the codebase, not
-in this directory ([D97](../DECISIONS.md)): `deus view Compile.Spec` prints one, `deus mdl Compile.Spec` checks it,
+in this directory ([D98](../DECISIONS.md)): `deus view Compile.Spec` prints one, `deus mdl Compile.Spec` checks it,
 and the links go to the copies `deus export` writes to [`codebase/specs/`](../../codebase/specs).
 
 How they fit together: source ([LANGUAGE](./LANGUAGE.md)) compiles to [Core](./CORE.md); Core objects live

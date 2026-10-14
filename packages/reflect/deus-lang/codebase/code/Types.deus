@@ -342,7 +342,7 @@ def Types.occurs (u : Unifier) (id : Int) (t : TType) : Bool :=
 
 def Types.occursInRow (u : Unifier) (id : Int) (r : TRow) : Bool :=
   match resolveRow u r with
-  | TRow.extend l rest => occurs u id l || Types.occursInRow u id rest
+  | TRow.extend l rest => Types.occurs u id l || Types.occursInRow u id rest
   | TRow.var other => other == id
   | TRow.empty => false
 
@@ -634,8 +634,8 @@ def Types.typeToSexp (t : TType) : Sexp :=
 def Types.unify (u : Unifier) (a : TType) (b : TType) : {Throw Text} Unit :=
   match (Types.resolve u a, Types.resolve u b) with
   | (TType.var x, TType.var y) => if x == y then () else MutMap.set u.types x (TType.var y)
-  | (TType.var x, t) => if occurs u x t then Throw.throw "infinite type" else MutMap.set u.types x t
-  | (t, TType.var y) => if occurs u y t then Throw.throw "infinite type" else MutMap.set u.types y t
+  | (TType.var x, t) => if Types.occurs u x t then Throw.throw "infinite type" else MutMap.set u.types x t
+  | (t, TType.var y) => if Types.occurs u y t then Throw.throw "infinite type" else MutMap.set u.types y t
   | (TType.con i1 a1, TType.con i2 a2) => if i1 != i2 || List.length a1 != List.length a2 then mismatch u a b else forEach (zip a1 a2) (fun pair => Types.unify u (fst pair) (snd pair))
   | (TType.fn a1 r1 b1, TType.fn a2 r2 b2) =>
       Types.unify u a1 a2

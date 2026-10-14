@@ -68,6 +68,9 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
   set alarms, simulated deterministically and served on workerd.
 - [`examples/perf.mdl`](./examples/perf.mdl) — performance requirements on the sort, checked by
   the `perf` extension ([`platform/perf.deus`](./platform/perf.deus)) in machine steps.
+- [`examples/react/`](./examples/react) — a React todo app written in DEUS and compiled with
+  `deus build --js` ([D97](./docs/DECISIONS.md), [JsGen.Spec](./codebase/specs/JsGen.Spec.mdl)); the bindings are
+  [`platform/js/js.deus`](./platform/js/js.deus) and [`platform/js/react.deus`](./platform/js/react.deus).
 - [`editors/vscode/`](./editors/vscode) — syntax highlighting for VS Code and TextMate renderers.
 
 ## Docs

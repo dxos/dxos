@@ -64,7 +64,7 @@ def Parser.atomBase (p : Parser) : {Throw Text} Expr :=
     skip p
     let name := Parser.next p
     if name.kind == Kind.text then Expr.prim name.value else errorAt name "expected primitive name"
-  else if t.value == "fun" then funExpr p else if t.value == "if" then ifExpr p else if t.value == "match" then matchExpr p else if t.value == "handle" then handleExpr p else if t.value == "do" then
+  else if t.value == "fun" then funExpr p else if t.value == "if" then ifExpr p else if t.value == "match" then matchExpr p else if t.value == "handle" then Parser.handleExpr p else if t.value == "do" then
     skip p
     Parser.body p
   else if t.value == "let" then Parser.stmts p t.col else Parser.error p "expected an expression" else if isTok t "(" then
