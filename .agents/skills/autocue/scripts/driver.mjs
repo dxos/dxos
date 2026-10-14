@@ -98,6 +98,9 @@ const parseArgs = () => {
     'headed': 'off',
     // Tauri on macOS: `on` deletes the test build's profile before launch, for a first-run take.
     'fresh': 'off',
+    // Extra Chromium flags, comma-separated, e.g. a fake microphone fed from a voice file:
+    // `--use-fake-device-for-media-stream,--use-fake-ui-for-media-stream,--use-file-for-fake-audio-capture=/tmp/voice.wav`.
+    'chromium-args': '',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -160,6 +163,9 @@ const launchOptions = {
     // `deviceScaleFactor` alone renders the page at 2x but the screencast still captures at CSS size, so
     // the "2x" video was 1x frames upscaled; forcing the scale browser-wide makes the frames real 2x.
     ...(scale !== 1 ? [`--force-device-scale-factor=${scale}`] : []),
+    ...String(options['chromium-args'])
+      .split(',')
+      .filter((arg) => arg.length > 0),
   ],
 };
 

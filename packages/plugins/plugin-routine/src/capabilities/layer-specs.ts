@@ -173,7 +173,7 @@ const OperationsToRegistrySpec = LayerSpec.make(
             .map(([name, keys]) => `${name} <- ${keys.join(', ')}`)
             .join('; ')}`,
         );
-        registry.add(definitions.map(Operation.serialize));
+        registry.add(definitions.map((definition) => Operation.serialize(definition)));
         return registry;
       }),
     ),

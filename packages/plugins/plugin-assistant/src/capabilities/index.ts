@@ -20,9 +20,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { AssistantCapabilities, AssistantEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',
   {
@@ -163,6 +160,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
