@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import { readFreeze } from '../score/freeze.ts';
 import { portListening, restorePatchFile } from './arms.ts';
 import { readLedger } from './ledger.ts';
 import { LOCK_FILE, lockHolder } from './lock.ts';
@@ -123,7 +124,17 @@ export const doctor = async ({ target: name }: { target: string }): Promise<numb
   );
   const arms = path.join(perfDir(root), 'arms');
   lines.push(line('arms', existsSync(arms) ? `${readdirSync(arms).length} cached under .perf/arms` : 'none cached'));
-  lines.push(line('harness', harnessHash(root, target.harness)));
+  const harness = harnessHash(root, target.harness);
+  const frozen = readFreeze(root);
+  lines.push(
+    line(
+      'harness',
+      frozen ? `${harness}, frozen at ${frozen.hash} since ${frozen.since}` : `${harness} (not frozen)`,
+      frozen && frozen.hash !== harness
+        ? 'the harness changed while frozen; compare will void its verdicts'
+        : undefined,
+    ),
+  );
   const ledger = readLedger(root);
   const last = ledger.at(-1);
   lines.push(

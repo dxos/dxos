@@ -18,12 +18,14 @@ import {
   overallVerdict,
   toRoundReadings,
 } from '../compare/verdict.ts';
+import { readFreeze } from '../score/freeze.ts';
 import { parseBudgets } from '../score/score.ts';
 import { WORK_GROUP, groupOfId } from '../score/stages.ts';
-import { type Arm, buildArm, runFlow, serveArm } from './arms.ts';
+import { type Arm, buildArm, runFlow, runLogged, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { type Session, elapsedMinutes, openSession, settle } from './session.ts';
-import { HarnessError, machineLoad } from './workspace.ts';
+import { type Target, TARGETS } from './targets.ts';
+import { HarnessError, git, harnessChanges, harnessHash, machineLoad, workspaceRoot } from './workspace.ts';
 
 export type CompareOptions = {
   target: string;
@@ -39,6 +41,10 @@ export type CompareOptions = {
   json: boolean;
   ignoreLoad: boolean;
   lockWaitMinutes: number;
+  /** Shell commands that must pass before anything is measured, e.g. the touched packages' tests. */
+  checks: string[];
+  /** Measure even though the harness differs between the arms; the verdict then covers both changes. */
+  allowHarnessChange: boolean;
 };
 
 type Label = 'base' | 'candidate';
@@ -87,19 +93,112 @@ const noBudget = (ids: ReadonlyArray<string>): string[] =>
     : [];
 
 /**
+ * Why a verdict between `base` and HEAD would compare two measurements rather than two apps:
+ * `between` the arms, which `--allow-harness-change` admits, and since a `frozen` harness, which it never does.
+ */
+const voidReasons = (
+  root: string,
+  target: Target,
+  base: string,
+  head: string,
+): { between: string[]; frozen: string[] } => {
+  const changed = harnessChanges(root, base, head, target.harness);
+  const freeze = readFreeze(root);
+  const current = freeze ? harnessHash(root, target.harness) : undefined;
+  return {
+    between: changed.length > 0 ? [`the harness differs between the arms: ${changed.join(', ')}`] : [],
+    frozen:
+      freeze && freeze.hash !== current
+        ? [`the harness changed since \`pnpm perf freeze\` (${freeze.hash} → ${current})`]
+        : [],
+  };
+};
+
+/** A void verdict, as text or as the one JSON line a `--json` caller parses. */
+const writeVoid = (reasons: string[], json: boolean): number => {
+  process.stdout.write(
+    json
+      ? JSON.stringify({ verdict: 'void', exitCode: EXIT_CODE.error, reasons }) + '\n'
+      : [
+          ...reasons.map((reason) => `void: ${reason}`),
+          'A verdict needs both arms measured the same way. Change the app, and land a harness change as its own PR.',
+          `verdict void (exit ${EXIT_CODE.error})`,
+        ].join('\n') + '\n',
+  );
+  return EXIT_CODE.error;
+};
+
+/**
  * Paired, interleaved A/B: each round measures both arms back to back in a random order, so drift
  * and order effects land on both. Stops once every target metric is decided, or at the round or time cap.
  */
 export const compare = async (options: CompareOptions): Promise<number> => {
+  const root = workspaceRoot();
+  const baseCommit = git(root, ['rev-parse', '--verify', `${options.base}^{commit}`]);
+  const headCommit = git(root, ['rev-parse', 'HEAD']);
+  const { between, frozen } = TARGETS[options.target]
+    ? voidReasons(root, TARGETS[options.target], baseCommit, headCommit)
+    : { between: [], frozen: [] };
+  const blocking = [...frozen, ...(options.allowHarnessChange ? [] : between)];
+  const reasons = options.allowHarnessChange ? between : [];
+  // Checked before the lock: a void run measures nothing, so it should not wait behind one that does.
+  if (blocking.length > 0) {
+    appendLedger(root, {
+      id: `void-${Date.now().toString(36)}`,
+      time: new Date().toISOString(),
+      command: 'compare',
+      target: options.target,
+      base: baseCommit.slice(0, 12),
+      head: headCommit.slice(0, 12),
+      harness: '',
+      rounds: '0',
+      verdict: 'void',
+      summary: blocking.join('; '),
+      dir: '',
+    });
+    return writeVoid(blocking, options.json);
+  }
+
   const session = await openSession({
     command: `perf compare --base ${options.base}`,
     target: options.target,
     ignoreLoad: options.ignoreLoad,
     lockWaitMinutes: options.lockWaitMinutes,
   });
-  const { root, target, dir, progress } = session;
+  const { target, dir, progress } = session;
+  const record = (verdict: string, summary: string, base: string, head: string, rounds = 0) =>
+    appendLedger(root, {
+      id: session.id,
+      time: new Date().toISOString(),
+      command: 'compare',
+      target: target.name,
+      base: base.slice(0, 12),
+      head: head.slice(0, 12),
+      harness: session.harness,
+      rounds: String(rounds),
+      verdict,
+      summary,
+      dir: path.relative(root, dir),
+    });
   try {
     progress(`run ${path.relative(root, dir)}`);
+    // Both arms run the working tree's specs, so a check that rewrites one would move both yardsticks.
+    const harnessBeforeChecks = harnessHash(root, target.harness);
+    for (const check of options.checks) {
+      session.checkInterrupted();
+      const logFile = path.join(dir, 'checks.log');
+      if ((await runLogged('sh', ['-c', check], { cwd: root, env: process.env, logFile })) !== 0) {
+        record('check failed', check, baseCommit, headCommit);
+        throw new HarnessError(`check failed, nothing measured: ${check}; log: ${logFile}`);
+      }
+      progress(`check passed: ${check}`);
+    }
+    if (options.checks.length > 0 && harnessHash(root, target.harness) !== harnessBeforeChecks) {
+      const reason = 'a `--check` command changed the harness';
+      record('void', reason, baseCommit, headCommit);
+      return writeVoid([reason], options.json);
+    }
+
     const candidate = await buildArm({ root, target, ref: 'HEAD', logFile: path.join(dir, 'build.log') });
     progress(`candidate HEAD ${candidate.commit.slice(0, 9)} ${candidate.cached ? 'cached' : 'built'}`);
     session.checkInterrupted();
@@ -163,27 +262,24 @@ export const compare = async (options: CompareOptions): Promise<number> => {
         2,
       ),
     );
-    appendLedger(root, {
-      id: session.id,
-      time: new Date().toISOString(),
-      command: aa ? 'compare (A/A)' : 'compare',
-      target: target.name,
-      base: base.commit.slice(0, 12),
-      head: candidate.commit.slice(0, 12),
-      harness: session.harness,
-      rounds: String(roundCount),
-      verdict,
-      summary: summarize(targets),
-      dir: path.relative(root, dir),
-    });
+    record(verdict, `${aa ? 'A/A: ' : ''}${summarize(targets)}`, base.commit, candidate.commit, roundCount);
 
     if (options.json) {
-      process.stdout.write(JSON.stringify({ verdict, exitCode: EXIT_CODE[verdict], dir, comparisons: targets }) + '\n');
+      process.stdout.write(
+        JSON.stringify({
+          verdict,
+          exitCode: EXIT_CODE[verdict],
+          dir,
+          comparisons: targets,
+          allowedHarnessChanges: reasons,
+        }) + '\n',
+      );
     } else {
       const lines = [
         `perf compare ${target.name}${aa ? ' (A/A: both arms are the same tree)' : ''}`,
         `base ${options.base} ${base.commit.slice(0, 9)} → HEAD ${candidate.commit.slice(0, 9)}  harness ${session.harness}`,
         `${roundCount} rounds, ${elapsedMinutes(session)} min, load ${load.toFixed(1)}/${cores}  ${path.relative(root, dir)}`,
+        ...reasons.map((reason) => `harness change allowed, so the verdict covers it too: ${reason}`),
         ...renderComparison({ comparisons, isTarget }),
         ...noBudget(targets.map(({ id }) => id).filter((id) => budgets[id] === undefined)),
         `verdict ${verdict} (exit ${EXIT_CODE[verdict]})`,
