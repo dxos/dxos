@@ -471,6 +471,8 @@ def JsGen.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> 
                   | (ps, _) => JsKind.importFn module path (List.length ps)
                 go rest (JsDef.mk h display (jsName display) kind (Sexp.list []) t :: acc)
             | Option.none =>
+                if not (Text.isEmpty jsImport) && List.contains jsImport (Wasm.refsOf core) then Throw.throw (display ++
+                  " uses Js.import inside an expression; a binding is a definition whose whole body is Js.import \"<module>\" \"<path>\"") else ()
                 let body := dress (Ref.new (locals m)) core
                 let kind :=
                   match JsGen.unlam core with
