@@ -9,11 +9,11 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+## Native: reference counting with reuse in the wasm back end (D86's scheme) (`ef46861c`)
 
 - state: todo
 - priority: high
-- labels: native, perf
+- labels: native, perf, wasm
 
 ## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
 
@@ -184,6 +184,12 @@ D69 refuses == on data; generate per-type compare functions from the type object
 
 From docs/spec/README.md, Known divergences.
 
+## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
+
+- state: todo
+- priority: low
+- labels: native, perf
+
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
 - state: todo
@@ -349,6 +355,15 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 - assignee: claude
 - labels: review, bug
 - links `Build.kernel` (#3a3356fef8)
+
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #dbf6867c1b
+
+Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end follows as its own task.
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 

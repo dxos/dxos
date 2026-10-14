@@ -1,5 +1,15 @@
 # History of main
 
+- `18b3ef016c` C back end: MUSTTAIL only where the C compiler has it (D86) (by claude)
+- `22f3b808cf` task: open f7d39ad6 Native: reuse freed blocks over 256 words (long arrays) in the C back end (by claude)
+- `5f3fbc3f4d` task: open ef46861c Native: reference counting with reuse in the wasm back end (D86's scheme) (by claude)
+- `06539159c6` task: set 62d1bdda details (by claude)
+- `a6a923b3cb` close 62d1bdda by #dbf6867c1b (by claude)
+- `dbf6867c1b` C back end: reference counting with reuse, borrowed parameters, in-place matches (D86) (by claude)
+- `a39946d067` task: set 62d1bdda state (by claude)
+- `07c79505a1` history: import 213 changes
+- `42c39f5638` task: import from tasks.sexp
+- `14b39bdcec` add code specs
 - `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
 - `44e512757f` close d2328509 by #0f3089d483 (by claude)
 - `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)

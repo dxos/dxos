@@ -91,6 +91,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 83  | 10-14 19:55 | 5m 00s         | `2a93c586`  | TypeScript interop: `deus bindings` writes typed TypeScript modules over the wasm kernel; TS answers DEUS abilities (D81, task 17d50ae5)                                                                                             |
 | 84  | 10-14 19:50 | 12m 22s        | `b03fbb90`  | the explorer writes: GitHub sign-in for active `dxos` members, comments on definitions, changes and tasks, filing tasks with image attachments, all through the inbox that `deus inbox` applies (D82)                                |
 | 85  | 10-14 19:58 | 22m 00s        | `d75aa010`  | sorting case study: immutability is not asymptotically slower, but in-place is 2–5× faster and uses 20× less memory compiled; mutable `Array` in both kernels, wasm and C (D83, task 8aa78a39)                                       |
-| 86  | 10-14 20:14 | 27m 10s        | this commit | a live console in the explorer: `deus explore --console` runs the toolchain on the wasm kernel in the page against a snapshot of the codebase (D84, task d2328509); filed writes applied every 15 minutes once sign-in is live (D85) |
+| 86  | 10-14 20:14 | 27m 10s        | `8d55c36c`  | a live console in the explorer: `deus explore --console` runs the toolchain on the wasm kernel in the page against a snapshot of the codebase (D84, task d2328509); filed writes applied every 15 minutes once sign-in is live (D85) |
+| 87  | 10-14 20:20 | 6m 00s         | this commit | reference counting with reuse in the C back end: borrowed parameters, in-place matches, per-size free lists; peak memory 15–40× lower on the sorts (D86, task 62d1bdda)                                                              |
 
-Total from stage 1 to stage 86: 12h 25m.
+Total from stage 1 to stage 87: 12h 31m.

@@ -568,18 +568,28 @@ describe('deus CLI', () => {
       const c = ['--codebase', join(scratch, 'c')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-      deus('add', join(root, 'examples/bench.deus'), ...c);
-      // Mutual recursion, tail loops, data on the heap, nullary constructors and 32-bit wrapping.
-      for (const [name, arg] of [
-        ['Bench.fib', 20],
-        ['Bench.collatz', 1000],
-        ['Bench.trees', 2],
-        ['Bench.queens', 6],
+      deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      // Mutual recursion, tail loops, data on the heap, nullary constructors, 32-bit wrapping,
+      // arrays and refs. Reference counting frees every block by the end of the run (D86).
+      for (const [name, args] of [
+        ['Bench.fib', [20]],
+        ['Bench.collatz', [1000]],
+        ['Bench.trees', [2]],
+        ['Bench.queens', [6]],
+        ['Sorting.benchMerge', [300, 7]],
+        ['Sorting.benchQuick', [300, 7]],
+        ['Sorting.benchHeap', [300, 7]],
+        ['Sorting.benchArray', [300, 7]],
+        ['Sorting.benchPersistent', [300, 7]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
-        const run = spawnSync(out, [String(arg)], { encoding: 'utf8' });
-        expect(run.stdout).toBe(deus('eval', `${name} ${arg}`, ...c).stdout);
+        const run = spawnSync(out, args.map(String), {
+          encoding: 'utf8',
+          env: { ...process.env, DEUS_HEAP_STATS: '1' },
+        });
+        expect(run.stdout).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(run.stderr).toContain(', 0 live,');
       }
       deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
       expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
