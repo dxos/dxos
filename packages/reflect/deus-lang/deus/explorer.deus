@@ -171,6 +171,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   IO.writeFile (out ++ "/meta.json") (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch),
     ("branches", Json.arr (List.map Json.str (Codebase.branches dir))), ("definitions", Json.num (List.length entries)),
     ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter Tasks.isOpen tasks))),
+    ("console", Json.bool (IO.exists (out ++ "/console/info.json"))),
     ("history", Json.arr (List.map (changeJson dir) (Codebase.history dir branch 30)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>

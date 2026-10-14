@@ -236,13 +236,13 @@ Each file holds one form:
 
 ```text
 request = "(request" { " (" field " " string ")" } " (assets" { " (asset " sha256 " " media-type " " file-name ")" } "))"
-field   = "kind" | "by" | "at" | "subject" | "note" | "title" | "details" | "link" | "task"
+field   = "kind" | "by" | "at" | "subject" | "note" | "title" | "details" | "link" | "labels" | "task"
 ```
 
 | `kind`         | Fields used                        | Applied as                                                                                   |
 | -------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
 | `comment`      | `subject`, `note`, assets          | a comment on `def:<name>` or `change:<causal>`                                               |
-| `task`         | `title`, `details`, `link`, assets | a new task linked to the definition `link` names, if it exists; assets go in a first comment |
+| `task`         | `title`, `details`, `link`, `labels`, assets | a new task linked to the definition `link` names, if it exists, with the comma-separated `labels` (D86); assets go in a first comment |
 | `task-comment` | `task`, `note`, assets             | a comment on the task with that id or unique id prefix                                       |
 
 `by` must be `github:<login>`, and it is recorded as the change's provenance; `at` is the time filed, in

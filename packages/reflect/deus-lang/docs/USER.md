@@ -282,3 +282,4 @@ as git, we should be able to keep entire code history without trimming, artifact
 ---
 
 - explore if functional style of writing programs (specifically immutability leads to fundamentally inneficient code and whether we need to add mutable memory. case study: writing a sorting algorithm
+- codebase ui -- when authed should have a report tool that takes screenshot and files a task --- typically something about improbing codebase explorer

@@ -62,10 +62,11 @@ change  = {"causal": string, "message": string, "by"?: string}
 | `definitions` | number   | how many visible names                                            |
 | `tasks`       | number   | how many tasks                                                    |
 | `open`        | number   | how many tasks are `todo` or `doing`                              |
+| `console`     | boolean  | whether the site has a [console](#console) (D84)                  |
 | `history`     | change[] | the branch's 30 most recent history nodes, newest first           |
 
 ```json
-{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
+{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"console":false,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
 ```
 
 ## names.json
@@ -272,6 +273,18 @@ secrets `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (a GitHub OAuth app whose cal
 `https://<host>/auth/callback`) and `SESSION_SECRET`. Without the three secrets, sign-in is off and
 `api/me` says so.
 
+## Report
+
+A signed-in member's Report button (or `r`) files a task about what they are looking at ([D86](../DECISIONS.md)).
+The app first draws the page as it is into a PNG with no permission prompt: it clones the DOM, keeps each
+scrolled element's offset and each field's typed text, pins the current theme's tokens, and renders the
+clone with `app.css` inside an SVG `foreignObject` onto a canvas (at most 2× device pixels). Where the
+browser refuses to export that canvas, it asks to share the tab (`getDisplayMedia` with
+`preferCurrentTab`) and keeps one frame instead. The task form then opens titled Report, with the
+screenshot attached, the details prefilled with the open cards, the URL, the viewport and the user agent,
+and the labels `explorer,report`. Images inside the page (attachment thumbnails) are left out of the
+drawing, since an SVG image loads nothing external.
+
 ## Console
 
 `deus explore --console` adds a console to the site ([D84](../DECISIONS.md)): the toolchain itself, running
@@ -286,7 +299,8 @@ codebase, so a reader can `view`, `eval`, `test` or `log` with no server. It wri
 | `console/deus.image`             | the toolchain image, `$DEUS_HOME/seed/deus.image`                                                                           |
 | `console/codebase.json`          | every file of the codebase directory as `{path: text}`, except `cache/`, `artifacts/`, `assets/`, `remotes/` and `exports/` |
 
-The app loads nothing but `info.json` until the console is first opened (the top bar's Console button,
+The app loads nothing for the console until `meta.json` says there is one, and nothing but `info.json`
+until the console is first opened (the top bar's Console button,
 `` ` ``, or a definition card's `›_` button, which runs `view <name>`, or `test <name>` for a test, and
 leaves `eval <name> ` in the prompt for a term). It then mounts the snapshot at `/codebase` with
 `DEUS_CODEBASE=/codebase` and runs each command line as the image's arguments, split as a POSIX shell
