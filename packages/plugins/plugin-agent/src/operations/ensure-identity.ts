@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -29,6 +30,15 @@ const ProvisionedBrain = Schema.Struct({
   membership: Schema.String,
 });
 
+/**
+ * EDGE did not give the agent its identity, or the caller's HALO did not take the membership. Worth retrying: EDGE
+ * answers its creator's repeated request with the same identity and membership, so nothing is minted twice.
+ */
+export class ProvisionIdentityError extends BaseError.extend(
+  'ProvisionIdentityError',
+  "The agent's identity could not be provisioned.",
+) {}
+
 const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = AgentOperation.EnsureIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef }) {
@@ -44,33 +54,36 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
       }
 
       const { db } = yield* Database.Service;
-      const provisioned = yield* Effect.tryPromise(() =>
-        edge.value.request(Context.default(), '/compute/brain', {
-          method: 'POST',
-          body: { agent: agent.id, homeSpaceId: db.spaceId, label: agent.name ?? '' },
-        }),
-      ).pipe(
-        Effect.flatMap(Schema.decodeUnknownEffect(ProvisionedBrain)),
-        Effect.tapError((error) => Effect.sync(() => log.warn('agent identity not provisioned', { error }))),
-        Effect.option,
+      const { identity, membership } = yield* Effect.tryPromise({
+        try: () =>
+          edge.value.request(Context.default(), '/compute/brain', {
+            method: 'POST',
+            body: { agent: agent.id, homeSpaceId: db.spaceId, label: agent.name ?? '' },
+          }),
+        catch: (cause) => new ProvisionIdentityError({ cause }),
+      }).pipe(
+        Effect.flatMap((answer) =>
+          Schema.decodeUnknownEffect(ProvisionedBrain)(answer).pipe(
+            Effect.mapError((cause) => new ProvisionIdentityError({ cause })),
+          ),
+        ),
       );
-      if (Option.isNone(provisioned)) {
-        return { provisioned: false };
-      }
 
-      const { identity, membership } = provisioned.value;
+      // A `SpaceMember` in the caller's HALO is what makes their client join the agent's default space. Written before
+      // the agent takes its DID, which is what ends the retries, so a failed write is retried rather than lost.
+      const client = yield* Capability.getOption(ClientCapabilities.Client);
+      if (Option.isSome(client)) {
+        yield* Effect.tryPromise({
+          try: () =>
+            client.value.halo.writeCredentials([buf.fromBinary(CredentialSchema, Buffer.from(membership, 'base64'))]),
+          catch: (cause) => new ProvisionIdentityError({ cause }),
+        });
+      }
       Obj.update(agent, (agent) => {
         agent.did = identity.identityDid;
       });
 
-      // A `SpaceMember` in the caller's HALO is what makes their client join the agent's default space.
-      const client = yield* Capability.getOption(ClientCapabilities.Client);
       if (Option.isSome(client)) {
-        const credential = buf.fromBinary(CredentialSchema, Buffer.from(membership, 'base64'));
-        yield* Effect.tryPromise(() => client.value.halo.writeCredentials([credential])).pipe(
-          Effect.catch((error) => Effect.sync(() => log.warn('membership not written to HALO', { error }))),
-        );
-
         // The agent is a member of the space it is created in, when that space takes members (see `admitAgent`).
         const space = client.value.spaces.get(db.spaceId);
         if (space) {

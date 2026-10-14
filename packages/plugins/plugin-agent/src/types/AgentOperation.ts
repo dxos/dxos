@@ -218,8 +218,9 @@ export const OpenPrivateChat = Operation.make({
 /**
  * Gives an agent its own identity on EDGE: a brain with a self-owned HALO identity and a default space it owns,
  * which the caller joins; the members of that space are the agent's admins, and its creator is the owner. The
- * agent takes the brain's DID. An agent that has a DID already, or a client that cannot reach EDGE, is left as
- * it is.
+ * agent takes the brain's DID once the membership is in the caller's HALO. An agent that has a DID already, or a
+ * client without an EDGE client, is left as it is; a refusal fails, and is safe to retry, since EDGE answers its
+ * creator's repeated request with the same identity.
  */
 export const EnsureIdentity = Operation.make({
   meta: {

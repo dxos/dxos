@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
@@ -11,13 +12,14 @@ import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import { type IdentityDid, type SpaceId } from '@dxos/keys';
+import { IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { EdgeCallFailedError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { AgentOperation, AgentPresence, AgentSpace } from '#types';
 
-import { admitAgent } from './admit-agent.ts';
+import { AdmitAgentError, admitAgent, isMember, mayAdmitAgent } from './admit-agent.ts';
 import { makeAgent } from './create-agent.ts';
 
 /** What an agent's presence starts from: the URI of its home agent, which names its brain, and what it is called. */
@@ -75,27 +77,77 @@ export class InviteRefusedError extends BaseError.extend(
   "Only an agent's admins can add it to another space.",
 ) {}
 
+/** The identity EDGE minted for an agent's brain. */
+export type AgentIdentity = { identityDid: IdentityDid; identityKey: PublicKey; label: string };
+
+/** `GET /compute/brain/:agent`, as far as the invitation reads it. */
+const BrainInfo = Schema.Struct({
+  identity: Schema.Struct({ identityDid: IdentityDid, identityKey: Schema.String, label: Schema.String }),
+});
+
 /**
- * The agent the ref names, as an invitee: read from the agent where the client reaches its space, otherwise from the
- * agent's own space, which its admins are members of and which records its home and name but not its instructions.
+ * The identity of the agent whose home is `home`, from EDGE, which minted it: never from a space that claims to be the
+ * agent's, since a client chooses its own space's tags and owner. `undefined` for an agent without one, which EDGE
+ * answers with 404.
+ */
+const identityOf = Effect.fnUntraced(function* (home: string) {
+  const location = AgentPresence.locate(home);
+  const edge = yield* Capability.getOption(ClientCapabilities.EdgeHttpClient);
+  if (!location || Option.isNone(edge)) {
+    return undefined;
+  }
+  return yield* Effect.tryPromise({
+    try: () => edge.value.request(Context.default(), `/compute/brain/${location.agentId}`, { method: 'GET' }),
+    catch: (cause) => new InviteRefusedError({ cause }),
+  }).pipe(
+    Effect.flatMap((answer) =>
+      Schema.decodeUnknownEffect(BrainInfo)(answer).pipe(Effect.mapError((cause) => new InviteRefusedError({ cause }))),
+    ),
+    Effect.flatMap(({ identity }) =>
+      Effect.try({
+        try: (): AgentIdentity => ({
+          identityDid: identity.identityDid,
+          identityKey: PublicKey.fromHex(identity.identityKey),
+          label: identity.label,
+        }),
+        catch: (cause) => new InviteRefusedError({ cause }),
+      }),
+    ),
+    Effect.catchIf(
+      (error) => error.cause instanceof EdgeCallFailedError && error.cause.status === 404,
+      () => Effect.succeed(undefined),
+    ),
+  );
+});
+
+/**
+ * The agent the ref names, as an invitee, and the identity EDGE minted for it: read from the agent where the client
+ * reaches its space, otherwise from the agent's own space, which its admins are members of and which records its home
+ * and name but not its instructions. Either way the agent's DID is EDGE's, and its own space is read only where the
+ * identity EDGE names owns it.
  */
 const resolveInvitee = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agent>) {
   const client = Option.getOrUndefined(yield* Capability.getOption(ClientCapabilities.Client));
   const spaces = client?.spaces.get() ?? [];
   const spaceId = AgentPresence.locate(agentRef.uri)?.spaceId;
   if (!client || spaces.some((space) => space.id === spaceId)) {
-    return yield* inviteeOf(yield* Database.load(agentRef));
+    const invitee = yield* inviteeOf(yield* Database.load(agentRef));
+    const identity = yield* identityOf(invitee.home);
+    return { invitee: { ...invitee, did: identity?.identityDid ?? invitee.did }, identity };
   }
 
-  const identityKey = toPublicKey(client.halo.identity.get()?.identityKey);
-  const recorded = identityKey
-    ? AgentSpace.administeredAgents(spaces, identityKey).find(({ home }) => home === agentRef.uri)
-    : undefined;
-  if (!recorded) {
+  const identity = yield* identityOf(agentRef.uri);
+  if (!identity) {
     return yield* Effect.fail(new InviteRefusedError());
   }
-  const invitee: Invitee = { home: agentRef.uri, name: recorded.name ?? '', did: recorded.did };
-  return invitee;
+  const self = toPublicKey(client.halo.identity.get()?.identityKey);
+  const recorded = self
+    ? AgentSpace.administeredAgents(spaces, self).find(
+        ({ home, identityKey }) => home === agentRef.uri && (identityKey?.equals(identity.identityKey) ?? false),
+      )
+    : undefined;
+  const invitee: Invitee = { home: agentRef.uri, name: recorded?.name ?? identity.label, did: identity.identityDid };
+  return { invitee, identity };
 });
 
 /**
@@ -118,34 +170,31 @@ const registerSpace = Effect.fnUntraced(function* (home: string, spaceId: SpaceI
   });
 });
 
-/**
- * Admits the agent's identity to the space as a member, found by its DID in the agent's own space, which only its
- * admins are in. An agent without an identity, or a client without the space, has nothing to admit.
- */
-const admitHere = Effect.fnUntraced(function* ({ did, name }: Invitee, spaceId: SpaceId) {
+/** The client's view of the space the invitation is into, and who the client is; none without a client. */
+const memberSpace = Effect.fnUntraced(function* (spaceId: SpaceId) {
   const client = Option.getOrUndefined(yield* Capability.getOption(ClientCapabilities.Client));
   const space = client?.spaces.get(spaceId);
   const self = toPublicKey(client?.halo.identity.get()?.identityKey);
-  if (!client || !space || !self || did === undefined) {
-    return;
-  }
-  const identityKey = AgentSpace.administeredAgents(client.spaces.get(), self).find(
-    (agent) => agent.did === did,
-  )?.identityKey;
-  if (identityKey) {
-    yield* admitAgent(space, identityKey, name);
-  }
+  return space && self ? { space, self } : undefined;
 });
 
 const handler: Operation.WithHandler<typeof AgentOperation.InviteAgent> = AgentOperation.InviteAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef }) {
-      const invitee = yield* resolveInvitee(agentRef);
+      const { invitee, identity } = yield* resolveInvitee(agentRef);
       const { db } = yield* Database.Service;
+      const here = yield* memberSpace(db.spaceId);
+      const admits = identity !== undefined && here !== undefined && !isMember(here.space, identity.identityKey);
+      // Refused before EDGE puts the brain in the space, where the agent would then be without being a member.
+      if (admits && !mayAdmitAgent(here.space, here.self)) {
+        return yield* Effect.fail(new AdmitAgentError());
+      }
       if (AgentPresence.locate(invitee.home)?.spaceId !== db.spaceId) {
         yield* registerSpace(invitee.home, db.spaceId);
       }
-      yield* admitHere(invitee, db.spaceId);
+      if (admits) {
+        yield* admitAgent(here.space, identity.identityKey, invitee.name);
+      }
       const { agent, created } = yield* inviteAgent(invitee);
       return { agent: Ref.make(agent), created };
     }),

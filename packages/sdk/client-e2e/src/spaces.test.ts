@@ -1016,11 +1016,17 @@ describe('Spaces', () => {
 
     const person = PublicKey.random();
     const agent = PublicKey.random();
-    // Written in order, so once the agent is a member the person's admission has been refused.
-    await space.admitContact(contact(person, 'Bob'), SpaceMember_Role.EDITOR);
+    // Refused when asked, rather than written and then dropped by the space.
+    await expect(space.admitContact(contact(person, 'Bob'), SpaceMember_Role.EDITOR)).rejects.toThrow(
+      'No member management permission.',
+    );
     await space.admitContact(contact(agent, 'Kai'), SpaceMember_Role.EDITOR, { agent: true });
     await expect.poll(memberKeys).toContain(agent.toHex());
     expect(memberKeys()).not.toContain(person.toHex());
+    // Not even as an admin.
+    await expect(
+      space.admitContact(contact(PublicKey.random(), 'Ann'), SpaceMember_Role.ADMIN, { agent: true }),
+    ).rejects.toThrow('No member management permission.');
     expect(
       space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(agent)),
     ).toMatchObject({ role: SpaceMember_Role.EDITOR, identity: { profile: { displayName: 'Kai' } } });
