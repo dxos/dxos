@@ -15,13 +15,6 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
-## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
-
-- state: todo
-- priority: high
-- labels: perf
-- links `Array.set` (#b3d7fa0dc1)
-
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -116,6 +109,13 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 - priority: medium
 - labels: native, perf
 
+## RC and the pure Array: once blocks carry reference counts (62d1bdda, cf0e3937), make the copying Array.set write in place at count 1 and Array.copy a share; the static pass in deus/unique.deus keeps removing the check where it proves uniqueness (D86) (`82d2d7a2`)
+
+- state: todo
+- priority: medium
+- labels: perf, native
+- links `Unique.rewriteAll` (#9a8d82961a)
+
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
 - state: todo
@@ -125,12 +125,21 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 
 From docs/spec/README.md, Known divergences.
 
-## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D83) (`a1b73fb8`)
+## TS kernel JIT: Ref.set journals a closure on every write; journal only when a deoptimisation can replay the entry (Array.set no longer journals, D86) (`a1b73fb8`)
 
 - state: todo
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
+
+Array.set no longer journals (D86: a write makes a new version, so a replay has nothing to undo). Ref.set still journals a closure on every write while compiled; journal only when a deoptimisation can replay the entry.
+
+## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D86) (`32bf2703`)
+
+- state: todo
+- priority: medium
+- labels: prover
+- links `Check.generate` (#ba17124ee9)
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
@@ -349,6 +358,14 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 - assignee: claude
 - labels: review, bug
 - links `Build.kernel` (#3a3356fef8)
+
+## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
+
+- state: done
+- priority: high
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
+- links change #9bc9f93c4b
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 

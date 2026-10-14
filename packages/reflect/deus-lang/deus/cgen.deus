@@ -35,6 +35,7 @@ def prelude (nullary : Int) : Text :=
     "static V *deus_refill(V n) { V size = n > (1 << 22) ? n : (1 << 22); deus_hp = malloc(size * sizeof(V)); if (!deus_hp) abort(); deus_hl = deus_hp + size; V *p = deus_hp; deus_hp += n; return p; }",
     "static inline V *deus_alloc(V n) { if (deus_hl - deus_hp < n) return deus_refill(n); V *p = deus_hp; deus_hp += n; return p; }",
     "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_alloc(n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = x; return (V)p; }",
+    "static V deus_array_copy(V a) { V n = ((V *)a)[0]; V *p = deus_alloc(n + 1); __builtin_memcpy(p, (V *)a, (n + 1) * sizeof(V)); return (V)p; }",
     "#define AT(a, i) ({ V *a_ = (V *)(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
     "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
       ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
@@ -174,11 +175,17 @@ def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (e : Sexp) : {Throw Text} 
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ sub a ++ ")")
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) =>
     match (p, List.map sub xs) with
-    -- `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83); the writes return `()`.
+    -- `Array` is a block `[length, item…]` (D83; `set` copies, D86) and `Ref` a block `[value]`; `Ref.set` returns `()`.
     | ("Array.make", [n, x]) => ret ("deus_array(" ++ n ++ ", " ++ x ++ ")")
     | ("Array.length", [a]) => ret ("((V *)(" ++ a ++ "))[0]")
     | ("Array.get", [a, i]) => ret ("(*AT(" ++ a ++ ", " ++ i ++ "))")
-    | ("Array.set", [a, i, x]) => ret ("({ *AT(" ++ a ++ ", " ++ i ++ ") = " ++ x ++ "; (V)&deus_nullary[0]; })")
+    | ("Array.setInPlace", [a, i, x]) =>
+      let l := fresh ctx
+      ret ("({ V " ++ local l ++ " = " ++ a ++ "; *AT(" ++ local l ++ ", " ++ i ++ ") = " ++ x ++ "; " ++ local l ++ "; })")
+    | ("Array.set", [a, i, x]) =>
+      let l := fresh ctx
+      ret ("({ V " ++ local l ++ " = deus_array_copy(" ++ a ++ "); *AT(" ++ local l ++ ", " ++ i ++ ") = " ++ x ++ "; " ++ local l ++ "; })")
+    | ("Array.copy", [a]) => ret ("deus_array_copy(" ++ a ++ ")")
     | ("Ref.new", [x]) =>
       let l := fresh ctx
       ret ("({ V *" ++ local l ++ " = deus_alloc(1); " ++ local l ++ "[0] = " ++ x ++ "; (V)" ++ local l ++ "; })")
@@ -237,7 +244,8 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
 
 /-- Compiles `main` and what it calls to C exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
-  let fns := Wasm.gather fetch meta main
+  let gathered := Wasm.gather fetch meta main
+  let fns := Unique.rewriteAll gathered (Unique.datatypesOf fetch gathered)
   let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody) fns)
   unit fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 

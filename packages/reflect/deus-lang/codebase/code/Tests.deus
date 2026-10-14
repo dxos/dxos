@@ -114,7 +114,7 @@ test Tests.mutualRecursionHashesAsCycle :=
 theorem Tests.notInvolutive (b : Bool) : not (not b) == b := by decide
 
 test Tests.observeNestsSpans :=
-  let traced := fun u => Trace.span "outer" [] (fun _ => Trace.span "inner" [("k", "v")] (fun _ => info "hi" []))
+  let traced := fun u => Trace.span "outer" [] (fun _ => Trace.span "inner" [("k", "v")] (fun _ => Log.info "hi" []))
   match Observe.collect traced with
   | (_, events) => events ==
       [Event.log "info" "hi" [] 2 "3", Event.span 2 1 "inner" [("k", "v")] "2" "4", Event.span 1 0 "outer" [] "1" "5"]

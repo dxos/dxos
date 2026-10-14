@@ -174,7 +174,9 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
     match typeArgs (typeOf scope env a) with
     | [t] => t
     | _ => unknown
-  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.set"], _, _, _] => tref "#Unit"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.set"], a, _, _] => typeOf scope env a
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.setInPlace"], a, _, _] => typeOf scope env a
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.copy"], a] => typeOf scope env a
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Ref.get"], r] =>
     match typeArgs (typeOf scope env r) with
     | [t] => t
@@ -339,9 +341,11 @@ def primitive (scope : Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : 
   | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
 
 /--
-  `Array` primitives (D83) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
-  is the code for each argument. An index outside the array, or a negative length, traps.
-  `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`.
+  `Array` primitives (D83, D86) on a block `[length, item…]`, and `Ref` on a block `[value]`;
+  `args` is the code for each argument. An index outside the array, or a negative length, traps.
+  `Array.set` copies the block and writes into the copy; `Array.setInPlace` and `Array.copy` come
+  from `Unique.rewriteAll`, which proved the array unique or needs a second one. `Ref.set` returns
+  address 0, whose word is 0, so it reads as `()`.
 -/
 def array (scope : Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
   let unreachableIf := fun (cond : List Int) => cond ++ [4, 64, 0, 11]
@@ -358,10 +362,20 @@ def array (scope : Scope) (next : Ref Int) (p : Text) (args : List (List Int)) :
     let la := fresh next
     let li := fresh next
     a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ load 4
+  | ("Array.setInPlace", [a, i, v]) =>
+    let la := fresh next
+    let li := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ store 4 ++ localGet la
   | ("Array.set", [a, i, v]) =>
     let la := fresh next
     let li := fresh next
-    a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ store 4 ++ [65, 0]
+    let lv := fresh next
+    let lc := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ v ++ localSet lv ++ checked la li ++ copyBlock scope la lc ++ address lc li ++ localGet lv ++ store 4 ++ localGet lc
+  | ("Array.copy", [a]) =>
+    let la := fresh next
+    let lc := fresh next
+    a ++ localSet la ++ copyBlock scope la lc ++ localGet lc
   | ("Array.make", [n, x]) =>
     let ln := fresh next
     let lx := fresh next
@@ -380,6 +394,11 @@ def array (scope : Scope) (next : Ref Int) (p : Text) (args : List (List Int)) :
       [12, 0, 11, 11],
       localGet lp]
   | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
+
+/-- Copies the array block at local `a` into a new block, whose address goes to local `c` (`memory.copy`). -/
+def copyBlock (scope : Scope) (a : Int) (c : Int) : List Int :=
+  let size := localGet a ++ load 0 ++ [65, 2, 116, 65, 4, 106]
+  size ++ (16 :: uleb (List.length scope.fns)) ++ localSet c ++ localGet c ++ localGet a ++ size ++ [252, 10, 0, 0]
 
 /-- A constructed value: `alloc` a block, store the tag and each field, and leave its address. -/
 def construct (scope : Scope) (env : List Int) (next : Ref Int) (tag : Int) (args : List Sexp) : {Throw Text} List Int :=
@@ -426,7 +445,8 @@ def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Th
 
 /-- Compiles `main` and what it calls to a wasm module exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
-  let fns := gather fetch meta main
+  let gathered := gather fetch meta main
+  let fns := Unique.rewriteAll gathered (Unique.datatypesOf fetch gathered)
   let names := List.dedup (List.concatMap (fun f => patternTypes f.fnBody) fns)
   module fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 

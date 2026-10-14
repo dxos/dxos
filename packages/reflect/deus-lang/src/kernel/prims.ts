@@ -193,7 +193,7 @@ export const createPrims = (): Map<string, Prim> => {
     }
     return at;
   };
-  // Persistent arrays (D84): `set` returns a new version, so nothing needs journaling for a replay.
+  // Persistent arrays (D86): `set` returns a new version, so nothing needs journaling for a replay.
   def('Array.make', 2, ([n, v]) => {
     if (int(n) < 0) {
       throw new DeusDefect(`Array.make: negative length ${int(n)}`);

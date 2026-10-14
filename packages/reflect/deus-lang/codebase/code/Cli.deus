@@ -77,7 +77,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
 def Cli.applyFields (args : Args) (t : Task) : {Throw Text} Task := foldl (fun acc field =>
   match option args field with
   | Option.some value => setField acc field value
-  | Option.none => acc) t fields
+  | Option.none => acc) t Tasks.fields
 
 /-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
 def Cli.asset (args : Args) : {IO, Throw Text} Unit :=
@@ -124,7 +124,7 @@ def Cli.bindings (args : Args) : {IO, Throw Text} Unit :=
       match Bindings.generate dir args.positional command with
       | (text, exported, skipped) =>
           let copied := try (fun _ =>
-            let home := require "DEUS_HOME"
+            let home := Build.require "DEUS_HOME"
             IO.mkdirp out
             IO.writeFile (out ++ "/" ++ stem ++ ".ts") text
             Build.tool "cp" [home ++ "/src/bindings/runtime.ts", out ++ "/deus-runtime.ts"]
@@ -705,7 +705,7 @@ def Cli.ls (args : Args) : {IO, Throw Text} Unit :=
   let rows := List.filter (fun pair => startsWith prefix (fst pair)) (Map.toList ns)
   let width := foldl (fun w p => if Text.length (fst p) > w then Text.length (fst p) else w) 0 rows
   let colour := enabled ()
-  let paint := fun code t => if colour then esc ++ "[" ++ code ++ "m" ++ t ++ esc ++ "[0m" else t
+  let paint := fun code t => if colour then Highlight.esc ++ "[" ++ code ++ "m" ++ t ++ Highlight.esc ++ "[0m" else t
   let lines := List.map
     (fun p => padRight (width + 2) (fst p) ++ paint "36" (padRight 8 (Entry.kind (snd p))) ++ " " ++
       paint "2" (short (Entry.hash (snd p))))
@@ -1202,7 +1202,9 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
             section "Links" (concatMap snd links) ++ section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++ section "Comments" (List.map commentLine t.comments) ++ section "History" (List.map (changeLine dir) history)))
   | "set" :: id :: [] =>
       let t := applyFields args (Tasks.find tasks id)
-      saved t ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) fields))
+      saved
+        t
+        ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) Tasks.fields))
   | "comment" :: id :: words =>
       let t := Tasks.find tasks id
       saved

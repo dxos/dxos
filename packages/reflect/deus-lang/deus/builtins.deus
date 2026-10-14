@@ -125,7 +125,7 @@ def set : Ref a -> a -> Unit := prim "Ref.set"
 end Ref
 
 /--
-  An immutable array of fixed length (D84). `set` returns a new array and leaves the old one as
+  An immutable array of fixed length (D86). `set` returns a new array and leaves the old one as
   it was, but costs O(1) when the old one is not used again: the kernels keep versions (reading
   an old one is slower), and the compiled back ends write in place when the array is unique. An
   index outside `0 .. length` is a defect.

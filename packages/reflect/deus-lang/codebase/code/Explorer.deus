@@ -50,7 +50,7 @@ def Explorer.checked (e : Entry) : Bool := Entry.kind e == "test" || Entry.kind 
   snapshot. -/
 def Explorer.console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let copied := try (fun _ =>
-    let home := require "DEUS_HOME"
+    let home := Build.require "DEUS_HOME"
     let crate := home ++ "/../deus-kernel"
     IO.mkdirp (out ++ "/console")
     -- The site is text end to end (the bundled server and `Remote.writeAll`), so the kernel ships as base64.

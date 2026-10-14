@@ -1,0 +1,173 @@
+---
+id: org.dxos.deus.array
+name: ArrayLaws
+version: 1.0
+---
+
+# Arrays
+
+`Array a` is a fixed-length sequence of values of type `a`, indexed from 0 ([D86](../DECISIONS.md)).
+It is an immutable value like a list: `Array.set` returns a new array and leaves the old one as it
+was. What makes it an array rather than a list is the cost: every operation is O(1) when the program
+does not use an old version again, which is how array code is usually written.
+
+This document is the spec. The API is below, then its laws as theorems (proved by `deus test`),
+then the cost model and how each runtime meets it. `deus add docs/spec/ARRAY.mdl` adds the theorems
+to a codebase; `deus mdl docs/spec/ARRAY.mdl` checks the requirements.
+
+## API
+
+The four primitives are declared in [`deus/builtins.deus`](../../deus/builtins.deus):
+
+```text
+Array.make   : Int -> a -> Array a            -- n copies of a value; n < 0 is a defect
+Array.length : Array a -> Int
+Array.get    : Array a -> Int -> a            -- an index outside 0 .. length is a defect
+Array.set    : Array a -> Int -> a -> Array a -- a new array; an index outside 0 .. length is a defect
+```
+
+Arrays compare structurally (`==` and `compare` look at the items, in order) and print as `#[1, 2]`.
+A value has no identity, so nothing can tell two equal arrays apart.
+
+## Laws
+
+Every law is a theorem over any array, index and value. The bounds are hypotheses because an index
+outside the array is a defect, not a value. The prover's model of the `Array` primitives is these
+same equations (its trusted base, [`deus/prove.deus`](../../deus/prove.deus)), so the first seven
+are proved by evaluation; that checks each statement against the model, and lets later proofs about
+array code use them. The kernels are checked against the laws by the tests at the end, and by the
+tested theorems, which need a property of a whole array and run on random arrays.
+
+```deus
+namespace ArrayLaws
+
+/-- `make` builds an array of the length asked for. -/
+theorem lengthMake (n : Int) (x : Int) : 0 <= n -> Array.length (Array.make n x) = n := by
+  simp
+
+/-- Every item of a made array is the value it was made with. -/
+theorem getMake (n : Int) (x : Int) (i : Int) : 0 <= i -> i < n -> Array.get (Array.make n x) i = x := by
+  simp
+
+/-- `set` keeps the length. -/
+theorem lengthSet (a : Array Int) (i : Int) (v : Int) : 0 <= i -> i < Array.length a -> Array.length (Array.set a i v) = Array.length a := by
+  simp
+
+/-- Reading the index just written gives the value written. -/
+theorem getSetSame (a : Array Int) (i : Int) (v : Int) : 0 <= i -> i < Array.length a -> Array.get (Array.set a i v) i = v := by
+  simp
+
+/-- Reading any other index gives what the old array had there. -/
+theorem getSetOther (a : Array Int) (i : Int) (j : Int) (v : Int) : 0 <= i -> i < Array.length a -> i != j -> Array.get (Array.set a i v) j = Array.get a j := by
+  auto
+
+/-- A second write to the same index replaces the first. -/
+theorem setSetSame (a : Array Int) (i : Int) (v : Int) (w : Int) : Array.set (Array.set a i v) i w = Array.set a i w := by
+  simp
+
+/-- Writing back what is already there gives an equal array. -/
+theorem setGetSame (a : Array Int) (i : Int) : 0 <= i -> i < Array.length a -> Array.set a i (Array.get a i) = a := by
+  simp
+
+/-- The items of `a` from `i` down to 0, onto `acc`. -/
+def itemsGo (a : Array Int) (i : Int) (acc : List Int) : List Int :=
+  if i < 0 then acc else itemsGo a (i - 1) (Array.get a i :: acc)
+
+def items (a : Array Int) : List Int := itemsGo a (Array.length a - 1) []
+
+/-- Two arrays are equal exactly when their items are (extensionality). -/
+theorem equalItems (a : Array Int) (b : Array Int) : (a == b) = (items a == items b) := by test 200
+
+/-- `i` folded into `0 .. n` (for `n > 0`), so a random index lands inside a random array. -/
+def wrap (i : Int) (n : Int) : Int := (i % n + n) % n
+
+/-- Writes to two different indices give the same array in either order. -/
+def commutes (a : Array Int) (i : Int) (j : Int) (v : Int) (w : Int) : Bool :=
+  let n := Array.length a
+  if n == 0 then true
+  else
+    let x := wrap i n
+    let y := wrap j n
+    x == y || Array.set (Array.set a x v) y w == Array.set (Array.set a y w) x v
+
+/-- Writes to different indices commute. -/
+theorem setsCommute (a : Array Int) (i : Int) (j : Int) (v : Int) (w : Int) : commutes a i j v w = true := by test 200
+
+/-- A write leaves the old array as it was (persistence): what the kernels' versions must keep true. -/
+def keepsOld (a : Array Int) (i : Int) (v : Int) : Bool :=
+  let n := Array.length a
+  if n == 0 then true
+  else
+    let x := wrap i n
+    let before := items a
+    let b := Array.set a x v
+    let c := Array.set b x (v + 1)
+    items a == before && Array.get b x == v && Array.get c x == v + 1 && items b != items c && items a == before
+
+theorem oldUnchanged (a : Array Int) (i : Int) (v : Int) : keepsOld a i v = true := by test 200
+
+/-- `n` writes in a row, each to the newest array: the use the cost model makes O(1) per write. -/
+def fillGo (a : Array Int) (i : Int) (n : Int) : Array Int :=
+  if i >= n then a else fillGo (Array.set a i (n - i)) (i + 1) n
+
+def fill (n : Int) : Array Int := fillGo (Array.make n 0) 0 n
+
+/-- The proved laws, at every pair of indices of one array: the kernels agree with the prover's model. -/
+def lawsAt (a : Array Int) (i : Int) (j : Int) (v : Int) : Bool :=
+  let b := Array.set a i v
+  Array.length b == Array.length a && Array.get b i == v && (i == j || Array.get b j == Array.get a j) && Array.set b i (v + 1) == Array.set a i (v + 1) && Array.set a i (Array.get a i) == a
+
+test lawsHoldOnKernels :=
+  let indices := List.range 0 5
+  Array.length (Array.make 3 7) == 3 && List.all (fun i => Array.get (Array.make 3 7) i == 7) (List.range 0 3) && List.all (fun i => List.all (fun j => lawsAt (fill 5) i j 42) indices) indices
+
+/-- Old versions stay readable while new ones are made from them. -/
+test versionsIndependent :=
+  let a := fill 4
+  let b := Array.set a 0 9
+  let c := Array.set a 0 7
+  let d := Array.set b 3 1
+  items a == [4, 3, 2, 1] && items b == [9, 3, 2, 1] && items c == [7, 3, 2, 1] && items d == [9, 3, 2, 1] && items (Array.set d 3 5) == [9, 3, 2, 5] && items a == [4, 3, 2, 1]
+
+end ArrayLaws
+```
+
+## Cost model
+
+| Operation              | Cost                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `make n x`             | O(n)                                                                                 |
+| `length`, `get`, `set` | O(1) on the newest array, the one no `set` has been applied to yet                   |
+| `get`, `set` on an older array | O(1) compiled (the old array was copied when it was kept); O(k) on the kernels, for an array k writes old |
+
+A program that only ever writes to the newest array, as every in-place algorithm does, pays O(1)
+for each operation on every runtime. A program that keeps old versions still gets correct answers
+and pays for what it keeps.
+
+Each runtime meets this in its own way:
+
+- **The kernels** (TypeScript and Rust) keep versions, Baker's trick with Conchon and Filliâtre's
+  rerooting. The newest version owns the items and each older version is a diff to the next one.
+  Reading an older version moves the items back to it first, so a program that alternates between
+  two versions pays for the distance each time.
+- **Compiled code** (wasm and C) has one block of memory per array. A static pass,
+  [`deus/unique.deus`](../../deus/unique.deus), finds every `set` whose array nothing will read
+  again and makes it write in place. Every other `set` copies the array first. The pass is
+  described in [WASM.md](WASM.md).
+
+## Extensions
+
+| Term   | URI                      |
+| ------ | ------------------------ |
+| `perf` | `org.dxos.deus.perf@1.0` |
+
+## Requirements
+
+Writing every item once, each time to the newest array, is linear on the kernels:
+
+```mdl
+perf ARRAY-1: a run of writes to the newest array is linear
+  run: fun n => ArrayLaws.fill n
+  sizes: 100 | 200 | 400
+  order: n
+```

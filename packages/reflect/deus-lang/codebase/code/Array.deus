@@ -4,4 +4,4 @@ def Array.length : Array a -> Int := prim "Array.length"
 
 def Array.make : Int -> a -> Array a := prim "Array.make"
 
-def Array.set : Array a -> Int -> a -> Unit := prim "Array.set"
+def Array.set : Array a -> Int -> a -> Array a := prim "Array.set"

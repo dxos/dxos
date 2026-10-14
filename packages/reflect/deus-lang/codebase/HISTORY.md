@@ -1,5 +1,15 @@
 # History of main
 
+- `dc91f14909` task: open 82d2d7a2 RC and the pure Array: once blocks carry reference counts (62d1bdda, cf0e3937), make the copying Array.set write in place at count 1 and Array.copy a share; the static pass in deus/unique.deus keeps removing the check where it proves uniqueness (D86) (by claude)
+- `7b0ba6832b` task: open 32bf2703 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D86) (by claude)
+- `4eb86d828f` task: set a1b73fb8 title (by claude)
+- `88bf20cb8b` task: set a1b73fb8 details (by claude)
+- `732aafbdfc` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `10e7f36de3` close 95ca184f by #9bc9f93c4b (by claude)
+- `9bc9f93c4b` Pure Array.set (D86): persistent versions on the kernels, a uniqueness pass that writes in place in wasm and C, and the Array spec with its laws as theorems (by claude)
+- `07c79505a1` history: import 213 changes
+- `42c39f5638` task: import from tasks.sexp
+- `14b39bdcec` add code specs
 - `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
 - `44e512757f` close d2328509 by #0f3089d483 (by claude)
 - `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)

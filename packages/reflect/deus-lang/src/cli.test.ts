@@ -519,7 +519,7 @@ describe('deus CLI', () => {
       const out = join(scratch, `${name}.wasm`);
       expect(deus('build', name, '-o', out, '--wasm', ...c).code).toBe(0);
       const exports = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out)))).exports;
-      const fn = exports[name];
+      const fn = exports[name.split('.').pop() ?? name];
       return typeof fn === 'function' ? fn(...args) : undefined;
     };
     // A million-deep recursion runs in constant stack (`return_call`) and wraps at 32 bits.
@@ -551,6 +551,12 @@ describe('deus CLI', () => {
     );
     expect(String(call('sortedSum', 300))).toBe(deus('eval', 'sortedSum 300', ...c).stdout.trim());
 
+    // The pure `Array` (D86): compiled code copies where an old array is still read, and writes in
+    // place where it is not, so every aliasing case gives the kernel's answer.
+    deus('add', join(root, 'examples/aliasing.deus'), ...c);
+    expect(String(call('Aliasing.all', 3))).toBe(deus('eval', 'Aliasing.all 3', ...c).stdout.trim());
+    expect(String(call('Aliasing.chain', 100_000))).toBe('704982704');
+
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
 
@@ -581,6 +587,11 @@ describe('deus CLI', () => {
         const run = spawnSync(out, [String(arg)], { encoding: 'utf8' });
         expect(run.stdout).toBe(deus('eval', `${name} ${arg}`, ...c).stdout);
       }
+      deus('add', join(root, 'examples/aliasing.deus'), ...c);
+      expect(deus('build', 'Aliasing.all', '-o', join(scratch, 'aliasing'), '--c', ...c).code).toBe(0);
+      expect(spawnSync(join(scratch, 'aliasing'), ['3'], { encoding: 'utf8' }).stdout).toBe(
+        deus('eval', 'Aliasing.all 3', ...c).stdout,
+      );
       deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
       expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
       expect(spawnSync(join(scratch, 'wrap'), ['3'], { encoding: 'utf8' }).stdout).toBe(
