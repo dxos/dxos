@@ -65,6 +65,12 @@ export interface IndexerObject {
    * bytes: the document's only object, not a branch, and small enough to ship. Absent otherwise.
    */
   heads?: readonly string[];
+
+  /**
+   * The document's Automerge bytes, kept with {@link heads} by a host whose document store is too slow
+   * to read on every query; a host that reads its own store per row leaves this out.
+   */
+  bytes?: Uint8Array;
 }
 
 export interface ChangeSummary {

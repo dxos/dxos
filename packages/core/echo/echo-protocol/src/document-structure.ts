@@ -17,6 +17,27 @@ import { createIdFromSpaceKey } from './space-id.ts';
 /** Largest JSON (characters) and stored changes (bytes) a client backs an object with instead of its document. */
 export const BACKED_OBJECT_LIMIT = 64 * 1024;
 
+/**
+ * Whether a client can back `structure` with its document's stored changes: the document's only object,
+ * with no links, and not merged into another.
+ */
+export const isBackable = (doc: DatabaseDirectory, structure: EntityStructure): boolean =>
+  Object.keys(doc.objects ?? {}).length === 1 &&
+  Object.keys(doc.links ?? {}).length === 0 &&
+  structure.system?.mergedInto === undefined;
+
+/**
+ * The JSON text a query row backs `structure` with, or `undefined` when it cannot be backed or the text
+ * exceeds {@link BACKED_OBJECT_LIMIT}.
+ */
+export const backingJson = (doc: DatabaseDirectory, structure: EntityStructure, json: unknown): string | undefined => {
+  if (!isBackable(doc, structure)) {
+    return undefined;
+  }
+  const text = JSON.stringify(json);
+  return text.length <= BACKED_OBJECT_LIMIT ? text : undefined;
+};
+
 export type SpaceState = {
   // Url of the root automerge document.
   rootUrl?: string;

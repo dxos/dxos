@@ -7,7 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, backingJson } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
@@ -16,7 +16,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { countWork } from '@dxos/util';
 
 import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
-import { backingJson, sameHeads } from '../query/object-state.ts';
+import { sameHeads } from '../query/object-state.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 

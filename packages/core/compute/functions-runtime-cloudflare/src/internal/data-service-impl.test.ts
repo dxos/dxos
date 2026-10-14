@@ -55,6 +55,44 @@ describe('DataServiceImpl', () => {
     // fetching — the 15s space-open hang (DX-1297).
     expect(batches.at(-1)).toEqual({ updates: [{ documentId, unavailable: true }] });
   });
+
+  test('a passive add fetches nothing; the others in the same request still load', async ({ expect }) => {
+    const subscriptionId = 'test-subscription';
+    const requested: string[][] = [];
+    const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {
+      ...emptyDataService(),
+      getDocuments: async (_ctx, _spaceId, documentIds) => {
+        requested.push(documentIds);
+        return Object.assign([] as EdgeFunctionEnv.RawDocument[], { [Symbol.dispose]: () => {} });
+      },
+    });
+    const registered = new Trigger();
+    void EffectEx.runPromise(
+      Stream.runForEach(impl['DataService.subscribe']({ subscriptionId, spaceId: SpaceId.random() }), () =>
+        Effect.sync(() => registered.wake()),
+      ),
+    );
+    await registered.wait({ timeout: 1000 });
+
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({
+        subscriptionId,
+        add: [{ id: 'held', heads: ['head-1'], passive: true }],
+      }),
+    );
+    expect(requested).toEqual([]);
+
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({
+        subscriptionId,
+        add: [
+          { id: 'held', heads: ['head-1'], passive: true },
+          { id: 'written', heads: ['head-2'] },
+        ],
+      }),
+    );
+    expect(requested).toEqual([['written']]);
+  });
 });
 
 /** A host that holds no documents, as the EDGE data plane does for a space that never replicated. */

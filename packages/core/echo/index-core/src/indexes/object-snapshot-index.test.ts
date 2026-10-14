@@ -134,6 +134,41 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
+    'stores the document bytes a host passes with heads, and drops them with the heads',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+        heads: ['h1'],
+        bytes: new Uint8Array([1, 2, 3]),
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      yield* store.update([object]);
+      const [backing] = yield* store.queryBackings([object.recordId!]);
+      expect(backing.bytes).toEqual(new Uint8Array([1, 2, 3]));
+
+      yield* store.update([{ ...object, bytes: undefined }]);
+      const [withoutBytes] = yield* store.queryBackings([object.recordId!]);
+      expect(withoutBytes.heads).toEqual(['h1']);
+      expect(withoutBytes.bytes).toBeUndefined();
+
+      yield* store.update([{ ...object, heads: undefined }]);
+      expect(yield* store.queryBackings([object.recordId!])).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'handles more than 999 recordIds without exceeding SQLite variable limit',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();

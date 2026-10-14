@@ -7,7 +7,7 @@ import { type DocumentId, interpretAsDocumentId, isValidAutomergeUrl } from '@au
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion, backingJson } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import {
   type DataSourceCursor,
@@ -18,7 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { backingJson, isSaved } from '../query/object-state.ts';
+import { isSaved } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
