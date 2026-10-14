@@ -4,6 +4,7 @@
 
 import { defineConfig } from '@playwright/test';
 
+import { PERF_HTTP2 } from '@dxos/perf-harness';
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
 import { PERF_PORT } from './perf/server.ts';
@@ -54,5 +55,7 @@ export default defineConfig({
     port: PERF_PORT ?? 4173,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
+    // With `https` set, vite serves preview over HTTP/2 (composer-app's `vite.config.ts`).
+    ...(PERF_HTTP2 ? { env: { HTTPS: 'true' } } : {}),
   },
 });

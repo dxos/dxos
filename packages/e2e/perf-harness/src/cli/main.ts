@@ -15,6 +15,7 @@ import { runCommand } from './run.ts';
 import { scenarioCheck, scenarioNew } from './scenario.ts';
 import { installInterruptHandlers } from './session.ts';
 import { expand, summarize } from './summarize.ts';
+import { type Conditions } from './targets.ts';
 import { HarnessError, errorCode, workspaceRoot } from './workspace.ts';
 
 const HELP = `perf: build, serve and measure the app, and say whether a change helped.
@@ -63,6 +64,12 @@ run
 common: --target composer  --scenario <name> (run, compare: measure a scenario instead of the flow)
          --ignore-load  --lock-wait <minutes, default 60>
 
+conditions (run, compare, scenario check; every arm shares them, and rows record them)
+  --until <stage>         skip every stage after this one; setup between stages still runs
+  --http2                 serve over HTTP/2 with a self-signed certificate, as production's CDN does
+  --service-worker        build with the PWA service worker on (a separate cached bundle)
+  --cpu-throttle <n>      slow the page n times (Emulation.setCPUThrottlingRate)
+
 compare exits 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not measure.
 HEAD must be committed: each attempt is a commit, so the ledger can name what was measured.
 `;
@@ -110,13 +117,26 @@ const main = async (): Promise<number> => {
       'ignore-load': { type: 'boolean', default: false },
       'lock-wait': { type: 'string' },
       'seed': { type: 'string' },
+      'until': { type: 'string' },
+      'http2': { type: 'boolean', default: false },
+      'service-worker': { type: 'boolean', default: false },
+      'cpu-throttle': { type: 'string' },
       'help': { type: 'boolean', short: 'h', default: false },
     },
   });
   const [command] = positionals;
+  const cpuThrottle =
+    values['cpu-throttle'] === undefined ? undefined : integer(values['cpu-throttle'], 1, 'cpu-throttle');
+  const conditions: Conditions = {
+    ...(values.until ? { until: values.until } : {}),
+    ...(values.http2 ? { http2: true } : {}),
+    ...(values['service-worker'] ? { serviceWorker: true } : {}),
+    ...(cpuThrottle && cpuThrottle > 1 ? { cpuThrottle } : {}),
+  };
   const common = {
     target: values.target,
     scenario: values.scenario,
+    conditions,
     ignoreLoad: values['ignore-load'],
     lockWaitMinutes: integer(values['lock-wait'], 60, 'lock-wait'),
   };
@@ -200,6 +220,7 @@ const main = async (): Promise<number> => {
         inject: values.inject,
         rounds: Math.max(3, Math.round(integer(values.rounds, 6, 'rounds'))),
         seed: integer(values.seed, 1, 'seed'),
+        conditions,
         ignoreLoad: values['ignore-load'],
         lockWaitMinutes: integer(values['lock-wait'], 60, 'lock-wait'),
       });

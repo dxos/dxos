@@ -540,6 +540,9 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       ...(row.comparability.snapshotStages?.length
         ? { snapshotStages: row.comparability.snapshotStages.join(',') }
         : {}),
+      ...(row.comparability.http2 ? { http2: true } : {}),
+      ...(row.comparability.serviceWorker ? { serviceWorker: true } : {}),
+      ...(row.comparability.cpuThrottle ? { cpuThrottle: row.comparability.cpuThrottle } : {}),
     },
   };
 };

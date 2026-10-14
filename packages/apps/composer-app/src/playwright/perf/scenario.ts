@@ -14,6 +14,7 @@ import {
   appendRows,
   attachAll,
   countersLabel,
+  flowConditions,
   installProbes,
   installReactProbe,
   launchInstrumentedBrowser,
@@ -25,13 +26,12 @@ import {
   writeRunReport,
 } from '@dxos/perf-harness';
 
-import { INITIAL_URL } from '../harness-helpers.ts';
-import { PERF_PORT } from './server.ts';
+import { PERF_ORIGIN } from './server.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
 /** Moved off the shared e2e port by `DX_PERF_PORT`, which the config serves on too. */
-export const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
+export const BASE_URL = PERF_ORIGIN;
 
 /** Idle after ready before the first measured step; recorded on every row, as in the projects flow. */
 export const SETTLE_MS = 20_000;
@@ -113,6 +113,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
     const page = await context.newPage();
     const include = scenario.navigates ? skipSharedWorkers : undefined;
     const comparability: Comparability = {
+      ...flowConditions(),
       servingMode: 'preview',
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',

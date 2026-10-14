@@ -85,6 +85,11 @@ export type RunnerOptions = {
   counterDir?: string;
   /** The targets each boundary attaches to; defaults to every measured realm. */
   include?: TargetFilter;
+  /**
+   * The last stage to run; later stages skip their body and record no row. Defaults to
+   * `DX_PERF_UNTIL`, which `pnpm perf --until` sets. Work a flow does between stages still runs.
+   */
+  until?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -116,9 +121,13 @@ export class StageRunner {
   readonly #counters: CounterSet;
   readonly #counterDir: string;
   readonly #calls: CallCounter | undefined;
+  readonly #until: string | undefined;
+  #past = false;
+  #throttled = false;
 
   constructor(options: RunnerOptions) {
     this.#options = options;
+    this.#until = options.until ?? (process.env.DX_PERF_UNTIL || undefined);
     this.#counters = options.counters ?? DEFAULT_COUNTERS;
     this.#counterDir = options.counterDir ?? path.join(tmpdir(), 'dxos-perf-counters');
     this.#calls = this.#counters.calls ? startCallCounting(this.#counterDir) : undefined;
@@ -169,6 +178,17 @@ export class StageRunner {
       .catch(() => undefined);
   }
 
+  /** Applies `comparability.cpuThrottle` through the page's session, once. */
+  async #throttle(): Promise<void> {
+    const { page, comparability } = this.#options;
+    if (this.#throttled || !comparability.cpuThrottle) {
+      return;
+    }
+    this.#throttled = true;
+    const session = await page.context().newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate: comparability.cpuThrottle });
+  }
+
   /** One PNG per stage, for a reviewer who wants to see what the numbers describe. */
   async #screenshot(id: string): Promise<string | undefined> {
     const { screenshotDir, page } = this.#options;
@@ -191,7 +211,7 @@ export class StageRunner {
   }
 
   /**
-   * Runs one stage, bracketing `body` with the boundary reads.
+   * Runs one stage, bracketing `body` with the boundary reads; nothing once past {@link RunnerOptions.until}.
    *
    * @param restartsApp The stage reloads the app, which starts every realm's counters over under the
    *   same names; its opening readings are dropped, so each realm's closing reading is the stage's whole.
@@ -200,8 +220,13 @@ export class StageRunner {
     id: string,
     body: () => Promise<void>,
     { restartsApp = false }: { restartsApp?: boolean } = {},
-  ): Promise<StageRow> {
+  ): Promise<StageRow | undefined> {
+    if (this.#past) {
+      return undefined;
+    }
+    this.#past = id === this.#until;
     const { page, browserCdp, debugPort, network, mode } = this.#options;
+    await this.#throttle();
 
     this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
     if (restartsApp) {
