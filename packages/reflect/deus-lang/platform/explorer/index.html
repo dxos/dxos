@@ -27,6 +27,19 @@
         <a data-view="tasks">Tasks <span id="open-count" class="count"></span></a>
         <a data-view="history">History</a>
       </nav>
+      <div id="layouts" class="segmented" title="Show the open cards as a list or as a graph (v)">
+        <button data-view="code" title="List (v)" aria-label="List">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12M2 8h12M2 12.5h12" /></svg>
+        </button>
+        <button data-view="graph" title="Graph (v)" aria-label="Graph">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4.5 4.5 11.5 7M4.5 4.5 6 11.5M11.5 7 6 11.5" />
+            <circle cx="4" cy="4" r="2" />
+            <circle cx="12" cy="7" r="2" />
+            <circle cx="6" cy="12" r="2" />
+          </svg>
+        </button>
+      </div>
       <div id="dialects" class="segmented" title="The syntax definitions are shown in" hidden>
         <button data-dialect="deus">DEUS</button>
         <button data-dialect="ts">TS</button>
@@ -54,6 +67,7 @@
       </aside>
       <main id="main">
         <section id="workspace"></section>
+        <section id="graph-view" aria-label="Graph of the open definitions" hidden></section>
         <section id="tasks-view" hidden></section>
         <section id="history-view" hidden></section>
       </main>
@@ -135,6 +149,8 @@
           <dd>Find a definition, type or task</dd>
           <dt><kbd>j</kbd> <kbd>k</kbd></dt>
           <dd>Focus the next or previous card</dd>
+          <dt><kbd>v</kbd></dt>
+          <dd>Show the open cards as a list or as a graph</dd>
           <dt><kbd>x</kbd></dt>
           <dd>Close the focused card</dd>
           <dt><kbd>X</kbd></dt>

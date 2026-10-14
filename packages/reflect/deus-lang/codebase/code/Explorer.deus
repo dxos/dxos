@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
   deus "cb" ["area", "zArea"] (fun a => mv a true)
   regenerate ()
@@ -23,6 +22,15 @@ test Explorer.Spec.commentsAreListed := inSite (fun _ =>
       "\"def:area\":[{\"author\":\"github:o\",\"note\":\"why area?\""
       (Spec.file "comments.json")
   | _ => false)
+
+test Explorer.Spec.edgesAgree := inStore (fun _ =>
+  site (Spec.sample ++ "\ndef countdown (n : Int) : Int := if n == 0 then 0 else countdown (n - 1)\n")
+  let hashes := List.map
+    (fun pair => Entry.hash (snd pair))
+    (List.filter visible (Map.toList (Codebase.current "cb")))
+  List.all (fun h =>
+    let page := pageFor h
+    List.all (fun u => u != h && List.contains h (refsIn "deps" (pageFor u))) (refsIn "users" page) && List.all (fun d => List.contains h (refsIn "users" (pageFor d))) (refsIn "deps" page)) hashes && any (fun h => not (List.isEmpty (refsIn "users" (pageFor h)))) hashes)
 
 test Explorer.Spec.everyDefinitionHasAPage := inSite (fun _ =>
   let entries := List.filter visible (Map.toList (Codebase.current "cb"))
@@ -76,6 +84,17 @@ def Explorer.Spec.namesIn (json : Text) : List Text := List.map
 
 theorem Explorer.Spec.otherPagesAreTheHash (t : Text) : prim "implies" (startsWith "#" t == false) (pageOf t == t) := by test 100
 
+def Explorer.Spec.pageFor (h : Text) : {IO} Text := Spec.file ("def/" ++ pageOf h ++ ".json")
+
+/-- The hashes listed in one of a page's `deps` or `users` arrays. -/
+def Explorer.Spec.refsIn (field : Text) (page : Text) : List Text :=
+  let start := indexOf page ("\"" ++ field ++ "\":[") 0
+  let rest := Text.drop (start + Text.length field + 4) page
+  let list := Text.take (indexOf rest "]" 0) rest
+  List.map
+    (fun piece => Text.take (indexOf piece "\"" 0) piece)
+    (List.drop 1 (Text.split list "\"hash\":\""))
+
 def Explorer.Spec.regenerate (u : Unit) : {IO, Throw Text} Int := withHome (fun _ => Explorer.generate "cb" "site")
 
 def Explorer.Spec.request (author : Text) : Sexp := Sexp.read ("(request (kind \"task\") (by \"" ++ author ++
@@ -85,7 +104,7 @@ def Explorer.Spec.request (author : Text) : Sexp := Sexp.read ("(request (kind \
 def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
   forEach appFiles (fun f => IO.writeFile ("home/platform/explorer/" ++ f) ("app " ++ f))
   IO.mkdirp "src"
-  IO.writeFile "src/a.deus" (Spec.prelude ++ source)
+  IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ source)
   deus "cb" ["src"] (fun a => addOrUpdate a false)
   regenerate ()
 
@@ -126,8 +145,6 @@ def Explorer.Spec.withHome (body : Unit -> {IO, Throw Text} a) : {IO, Throw Text
   handle body () with
   | IO.getEnv name -> k => k (if name == "DEUS_HOME" then Option.some "home" else IO.getEnv name)
 
-=======
->>>>>>> origin/dm/agent-13-oct-x8ehi8-0y35ai
 /-- The app's files, from the toolchain's sources. -/
 def Explorer.appFiles : List Text := ["index.html", "app.js", "app.css"]
 
@@ -288,7 +305,8 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
         let deps := List.filter (fun d => Map.contains d index && d != h) (getOr (Map.lookup h depsOf) [])
         -- References in the source print under their display names; those names link to the definitions.
         let links := Map.fromList (List.map (fun d => (nameFor printer d, d)) deps)
-        let users := dedup (sort (getOr (Map.lookup h dependents) []))
+        -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
+        let users := List.filter (fun u => u != h) (dedup (sort (getOr (Map.lookup h dependents) [])))
         let named := fun hs => Json.arr (List.map (fun x => refJson (getOr (Map.lookup x index) (short x)) x) hs)
         let meta := metaFor h
         let sig := Explorer.signature meta

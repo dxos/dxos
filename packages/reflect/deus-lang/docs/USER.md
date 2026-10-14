@@ -314,3 +314,7 @@ how much of .mdl are you dogfooding? the general process should be mdl spec > ap
 ---
 
 I think deus should allow declaring a definition with a type but no impl
+
+---
+
+this displays code as list, but there might be another view: a force-graph with code-cards as nodes

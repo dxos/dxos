@@ -89,6 +89,11 @@ req R-7: a test or theorem shows its cached verdict, and pass or fail in names.j
   by: Explorer.Spec.verdictsAreShown
 ```
 
+```mdl
+req R-13: dependencies and users agree both ways, and nothing is its own user, so the graph view draws each edge once from either page
+  by: Explorer.Spec.edgesAgree
+```
+
 ## Writing and the console
 
 The hosted explorer files comments and tasks as inbox requests, and `deus inbox` applies them (D82,
@@ -226,6 +231,25 @@ test verdictsAreShown :=
       Text.contains ("\"name\":\"notNot\",\"kind\":\"theorem\",\"hash\":\"" ++ Entry.hash e ++ "\"") (file "names.json") &&
       Text.contains "\"summary\":\"A theorem.\",\"status\":\"pass\"" (file "names.json")
     | none => false)
+
+/-- The hashes listed in one of a page's `deps` or `users` arrays. -/
+def refsIn (field : Text) (page : Text) : List Text :=
+  let start := Text.indexOf page ("\"" ++ field ++ "\":[") 0
+  let rest := Text.drop (start + Text.length field + 4) page
+  let list := Text.take (Text.indexOf rest "]" 0) rest
+  List.map (fun piece => Text.take (Text.indexOf piece "\"" 0) piece) (List.drop 1 (Text.split list "\"hash\":\""))
+
+def pageFor (h : Text) : {IO} Text := file ("def/" ++ Explorer.pageOf h ++ ".json")
+
+test edgesAgree :=
+  Codebase.Spec.inStore (fun _ =>
+    let _ := site (Export.Spec.sample ++ "\ndef countdown (n : Int) : Int := if n == 0 then 0 else countdown (n - 1)\n")
+    let hashes := List.map (fun pair => Entry.hash (snd pair)) (List.filter Explorer.visible (Map.toList (Codebase.current "cb")))
+    List.all (fun h =>
+      let page := pageFor h
+      List.all (fun u => u != h && List.contains h (refsIn "deps" (pageFor u))) (refsIn "users" page) &&
+        List.all (fun d => List.contains h (refsIn "users" (pageFor d))) (refsIn "deps" page)) hashes &&
+      List.any (fun h => not (List.isEmpty (refsIn "users" (pageFor h)))) hashes)
 
 test commentsAreListed :=
   inSite (fun _ =>

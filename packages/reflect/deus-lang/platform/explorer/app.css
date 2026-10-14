@@ -1875,3 +1875,209 @@ body.with-console #sidebar {
     padding-bottom: 55vh;
   }
 }
+
+/* The list or graph switch, and the graph view. */
+
+#layouts button {
+  display: grid;
+  place-items: center;
+  padding: 3px 7px;
+}
+
+#layouts svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+#layouts circle {
+  fill: var(--surface);
+}
+
+#graph-view {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  background-color: var(--bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--faint) 35%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  user-select: none;
+}
+
+#graph-view:active {
+  cursor: grabbing;
+}
+
+.graph-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.graph-edges-layer {
+  position: absolute;
+  overflow: visible;
+  width: 1px;
+  height: 1px;
+}
+
+/* Edges between two neighbours are context; edges to an open card are the point, to the focused one most. */
+.graph-edges line {
+  stroke: color-mix(in srgb, var(--faint) 30%, transparent);
+  stroke-width: 1;
+}
+
+.graph-edges line.main {
+  stroke: color-mix(in srgb, var(--faint) 80%, transparent);
+  stroke-width: 1.3;
+}
+
+.graph-edges line.near {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+
+#arrow path {
+  fill: color-mix(in srgb, var(--faint) 70%, transparent);
+}
+
+#arrow-near path {
+  fill: var(--accent);
+}
+
+.gnode {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: 260px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.gnode:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.gnode.open {
+  max-width: 340px;
+  padding: 10px 12px;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.gnode.focused {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent),
+    var(--shadow);
+}
+
+.gnode-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.gnode-name {
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gnode.open .gnode-name {
+  font-size: 14px;
+}
+
+.gnode-ns {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.gnode-sig {
+  overflow: hidden;
+  color: var(--ty);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gnode-summary {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.gnode-more {
+  color: var(--faint);
+  font-size: 11.5px;
+}
+
+.graph-bar {
+  position: absolute;
+  top: 10px;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.graph-bar > * {
+  pointer-events: auto;
+}
+
+.graph-hint {
+  max-width: 62ch;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  font-size: 12px;
+}
+
+.graph-empty {
+  max-width: 460px;
+  margin: 18vh auto 0;
+  padding: 0 16px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .graph-hint {
+    display: none;
+  }
+
+  .graph-bar {
+    justify-content: flex-end;
+  }
+}
+
+.graph-buttons {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}

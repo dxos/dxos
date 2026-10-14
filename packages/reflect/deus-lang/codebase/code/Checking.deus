@@ -2,8 +2,8 @@
 theorem Checking.Spec.ascriptionHolds : checks "def f (x : Int) : Int := (x : Int) + 1\n" == true := by rfl
 
 /-- L-1: the ascription leaves the hash as it was. -/
-theorem Checking.Spec.ascriptionKeepsHash : (isSome (hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f") && hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f" ==
-    hashOf "def f (x : Int) : Int := x + 1\n" "f") ==
+theorem Checking.Spec.ascriptionKeepsHash : (isSome (Checking.Spec.hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f") && Checking.Spec.hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f" ==
+    Checking.Spec.hashOf "def f (x : Int) : Int := x + 1\n" "f") ==
     true := by rfl
 
 /-- R-1: an ascription that does not hold is a type error. -/
@@ -22,8 +22,8 @@ theorem Checking.Spec.bareRowRejects : checks (failAbility ++ "def x : {} Int :=
 theorem Checking.Spec.bareWithoutRow : checks (failAbility ++ "def x : Int := Fail.fail 1\n") == true := by rfl
 
 /-- R-4, L-1: a binder's ascription leaves the hash as it was. -/
-theorem Checking.Spec.binderKeepsHash : (isSome (hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f") && hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f" ==
-    hashOf "def f (x : Int) : Int := (fun n => n) x\n" "f") ==
+theorem Checking.Spec.binderKeepsHash : (isSome (Checking.Spec.hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f") && Checking.Spec.hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f" ==
+    Checking.Spec.hashOf "def f (x : Int) : Int := (fun n => n) x\n" "f") ==
     true := by rfl
 
 def Checking.Spec.checks (source : Text) : Bool := isSome (compiled source)
@@ -35,7 +35,7 @@ def Checking.Spec.compiled (source : Text) : Option (List (Text, Entry)) :=
     (fun _ => Option.none)
     (fun _ => Option.none)
     "strict"
-    [parseFile "t.deus" (Spec.prelude ++ source)]) with
+    [parseFile "t.deus" (Checking.Spec.prelude ++ source)]) with
   | Result.ok b => Option.some b.entries
   | Result.err _ => Option.none
 

@@ -74,6 +74,11 @@ req R-12: the inbox refuses a request not signed by a GitHub user, and changes n
 ```
 
 ```mdl
+req R-13: dependencies and users agree both ways, and nothing is its own user, so the graph view draws each edge once from either page
+  by: Explorer.Spec.edgesAgree
+```
+
+```mdl
 req R-2: every visible definition has a page, and meta.json counts them
   by: Explorer.Spec.everyDefinitionHasAPage
 ```

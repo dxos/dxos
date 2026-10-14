@@ -481,7 +481,10 @@ const open = (key) => {
   const { keys } = parseFragment();
   const anchor = keys.indexOf(ui.focus);
   ui.focus = key;
-  writeFragment('code', keys.includes(key) ? keys : [...keys.slice(0, anchor + 1), key, ...keys.slice(anchor + 1)]);
+  writeFragment(
+    ui.view === 'graph' ? 'graph' : 'code',
+    keys.includes(key) ? keys : [...keys.slice(0, anchor + 1), key, ...keys.slice(anchor + 1)],
+  );
 };
 
 const close = (key) => {
@@ -1257,6 +1260,9 @@ const setFocus = (key, scroll = true) => {
   if (node && scroll) {
     node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
+  if (ui.view === 'graph') {
+    drawGraph();
+  }
   reveal(key);
 };
 
@@ -1271,15 +1277,22 @@ const renderNow = async () => {
   const { view, keys } = parseFragment();
   ui.view = view;
   for (const link of document.querySelectorAll('#views [data-view]')) {
-    link.classList.toggle('active', link.dataset.view === view);
+    link.classList.toggle('active', link.dataset.view === (view === 'graph' ? 'code' : view));
+  }
+  element('layouts').hidden = view !== 'code' && view !== 'graph';
+  for (const button of document.querySelectorAll('#layouts [data-view]')) {
+    button.classList.toggle('active', button.dataset.view === view);
   }
   element('workspace').hidden = view !== 'code';
+  element('graph-view').hidden = view !== 'graph';
   element('tasks-view').hidden = view !== 'tasks';
   element('history-view').hidden = view !== 'history';
   if (view === 'tasks') {
     renderTasks();
   } else if (view === 'history') {
     void renderHistory();
+  } else if (view === 'graph') {
+    void renderGraph(keys);
   }
 
   const workspace = element('workspace');
@@ -1322,6 +1335,435 @@ const titleOf = (key) => {
     return value === 'checks' ? 'Checks' : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
+};
+
+//
+// The graph view: the open definitions as cards in a force-directed layout, with what they depend on and
+// what uses them around them; an edge points from a user to its dependency.
+//
+
+const NEIGHBOR_LIMIT = 12;
+
+const graph = {
+  nodes: new Map(),
+  edges: [],
+  positions: new Map(),
+  camera: { x: 0, y: 0, scale: 1 },
+  moved: false,
+  alpha: 0,
+  frame: 0,
+  shownKeys: '',
+};
+
+/** A stable angle per hash, so the same neighbourhood lays out the same way on every visit. */
+const angleOf = (hash) => {
+  let sum = 0;
+  for (const char of hash) {
+    sum = (sum * 31 + char.charCodeAt(0)) % 3600;
+  }
+  return (sum / 3600) * 2 * Math.PI;
+};
+
+/** The open definitions, their pages, and up to `NEIGHBOR_LIMIT` neighbours each, dependencies first. */
+const graphData = async (keys) => {
+  const centers = keys.filter((key) => key.startsWith('d:')).map((key) => key.slice(2));
+  const pages = new Map();
+  await Promise.all(centers.map(async (hash) => pages.set(hash, await load(pagePath(hash)))));
+  const shown = new Map(
+    centers.filter((hash) => pages.get(hash)).map((hash) => [hash, { open: true, near: hash, hidden: 0 }]),
+  );
+  for (const hash of centers.filter((center) => shown.has(center))) {
+    const page = pages.get(hash);
+    const fresh = [...new Set([...page.deps, ...page.users].map((ref) => ref.hash))].filter(
+      (other) => !shown.has(other),
+    );
+    for (const other of fresh.slice(0, NEIGHBOR_LIMIT)) {
+      shown.set(other, { open: false, near: hash, hidden: 0 });
+    }
+    shown.get(hash).hidden = Math.max(0, fresh.length - NEIGHBOR_LIMIT);
+  }
+  await Promise.all(
+    [...shown.keys()]
+      .filter((hash) => !pages.has(hash))
+      .map(async (hash) => pages.set(hash, await load(pagePath(hash)))),
+  );
+  const edges = [];
+  for (const hash of shown.keys()) {
+    for (const dep of pages.get(hash)?.deps ?? []) {
+      if (shown.has(dep.hash) && dep.hash !== hash) {
+        edges.push([hash, dep.hash]);
+      }
+    }
+  }
+  return { centers, shown, edges, pages };
+};
+
+const graphNodeHtml = (hash, info, page) => {
+  const entry = index.byHash.get(hash) ?? page ?? { name: short(hash), kind: 'term' };
+  const name = entry.name;
+  const namespace = namespaceOf(name);
+  const sig = entry.sig ? typeOf(entry.sig) : page?.signature ? typeOf(page.signature) : '';
+  const summary = entry.summary ?? '';
+  return (
+    `<div class="gnode${info.open ? ' open' : ''}" data-node="${escape(hash)}" title="${escape(info.open ? `${name}: show in the list` : `${name}: open`)}">` +
+    `<div class="gnode-head">${icon(entry.kind)}<span class="gnode-name">${namespace ? `<span class="gnode-ns">${escape(namespace)}.</span>` : ''}${escape(lastSegment(name))}</span>${statusMark(entry.status)}</div>` +
+    (sig ? `<code class="gnode-sig">${escape(sig)}</code>` : '') +
+    (info.open && summary ? `<p class="gnode-summary">${inlineDoc(summary, namespace)}</p>` : '') +
+    (info.hidden > 0 ? `<span class="gnode-more">+${info.hidden} more in the list</span>` : '') +
+    '</div>'
+  );
+};
+
+/** One step of the layout: nodes repel, edges pull to a rest length, overlapping cards push apart. */
+const graphTick = () => {
+  const nodes = [...graph.nodes.values()];
+  const alpha = graph.alpha;
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      const b = nodes[j];
+      let dx = b.x - a.x;
+      let dy = b.y - a.y;
+      const distance = Math.max(Math.hypot(dx, dy), 1);
+      const push = (alpha * 60000) / (distance * distance);
+      dx /= distance;
+      dy /= distance;
+      a.vx -= dx * push;
+      a.vy -= dy * push;
+      b.vx += dx * push;
+      b.vy += dy * push;
+      const overlapX = (a.width + b.width) / 2 + 24 - Math.abs(b.x - a.x);
+      const overlapY = (a.height + b.height) / 2 + 18 - Math.abs(b.y - a.y);
+      if (overlapX > 0 && overlapY > 0) {
+        const sign = (value) => (value >= 0 ? 1 : -1);
+        if (overlapX / (a.width + b.width) < overlapY / (a.height + b.height)) {
+          a.x -= (sign(b.x - a.x) * overlapX) / 2;
+          b.x += (sign(b.x - a.x) * overlapX) / 2;
+        } else {
+          a.y -= (sign(b.y - a.y) * overlapY) / 2;
+          b.y += (sign(b.y - a.y) * overlapY) / 2;
+        }
+      }
+    }
+  }
+  for (const [from, to] of graph.edges) {
+    const a = graph.nodes.get(from);
+    const b = graph.nodes.get(to);
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const distance = Math.max(Math.hypot(dx, dy), 1);
+    const rest = (a.width + b.width) / 2 + 70;
+    const pull = ((distance - rest) / distance) * alpha * 0.06;
+    a.vx += dx * pull;
+    a.vy += dy * pull;
+    b.vx -= dx * pull;
+    b.vy -= dy * pull;
+  }
+  for (const node of nodes) {
+    const gravity = alpha * (node.open ? 0.02 : 0.006);
+    node.vx -= node.x * gravity;
+    node.vy -= node.y * gravity;
+    if (!node.pinned) {
+      node.x += node.vx;
+      node.y += node.vy;
+    }
+    node.vx *= 0.6;
+    node.vy *= 0.6;
+  }
+  graph.alpha *= 0.985;
+};
+
+/** Where the segment from `a`'s centre to `b`'s centre leaves `a`'s card. */
+const rimPoint = (a, b) => {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const scale = Math.min(a.width / 2 / Math.abs(dx || 1e-9), a.height / 2 / Math.abs(dy || 1e-9));
+  return [a.x + dx * Math.min(scale, 1), a.y + dy * Math.min(scale, 1)];
+};
+
+const drawGraph = () => {
+  const view = element('graph-view');
+  const stage = view.querySelector('.graph-stage');
+  if (!stage) {
+    return;
+  }
+  const { x, y, scale } = graph.camera;
+  stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  for (const node of graph.nodes.values()) {
+    node.element.style.transform = `translate(${node.x - node.width / 2}px, ${node.y - node.height / 2}px)`;
+    node.element.classList.toggle('focused', `d:${node.hash}` === ui.focus);
+  }
+  const focus = ui.focus?.slice(2);
+  stage.querySelector('.graph-edges').innerHTML = graph.edges
+    .map(([from, to]) => {
+      const a = graph.nodes.get(from);
+      const b = graph.nodes.get(to);
+      const [x1, y1] = rimPoint(a, b);
+      const [x2, y2] = rimPoint(b, a);
+      const near = from === focus || to === focus;
+      const main = a.open || b.open;
+      return `<line class="${near ? 'near' : main ? 'main' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#arrow${near ? '-near' : ''})"/>`;
+    })
+    .join('');
+};
+
+/** Centres the layout in the view, no larger than life; on a phone, around the focused card, still readable. */
+const fitGraph = () => {
+  const view = element('graph-view');
+  const nodes = [...graph.nodes.values()];
+  if (nodes.length === 0) {
+    return;
+  }
+  const left = Math.min(...nodes.map((node) => node.x - node.width / 2));
+  const right = Math.max(...nodes.map((node) => node.x + node.width / 2));
+  const top = Math.min(...nodes.map((node) => node.y - node.height / 2));
+  const bottom = Math.max(...nodes.map((node) => node.y + node.height / 2));
+  const fit = Math.min(1, (view.clientWidth - 32) / (right - left), (view.clientHeight - 80) / (bottom - top));
+  const scale = Math.max(fit, 0.6);
+  const focus = scale > fit ? (graph.nodes.get(ui.focus?.slice(2)) ?? nodes.find((node) => node.open)) : undefined;
+  const [centerX, centerY] = focus ? [focus.x, focus.y] : [(left + right) / 2, (top + bottom) / 2];
+  graph.camera = {
+    scale,
+    x: view.clientWidth / 2 - centerX * scale,
+    y: (view.clientHeight + 40) / 2 - centerY * scale,
+  };
+  graph.moved = false;
+};
+
+const animateGraph = () => {
+  cancelAnimationFrame(graph.frame);
+  const step = () => {
+    if (ui.view !== 'graph') {
+      return;
+    }
+    for (let i = 0; i < 2; i++) {
+      graphTick();
+    }
+    if (!graph.moved) {
+      fitGraph();
+    }
+    drawGraph();
+    if (graph.alpha > 0.02) {
+      graph.frame = requestAnimationFrame(step);
+    }
+  };
+  graph.frame = requestAnimationFrame(step);
+};
+
+const renderGraph = async (keys) => {
+  const view = element('graph-view');
+  const signature = keys.join(',');
+  const data = await graphData(keys);
+  if (parseFragment().view !== 'graph') {
+    return;
+  }
+  if (data.shown.size === 0) {
+    cancelAnimationFrame(graph.frame);
+    graph.nodes.clear();
+    graph.edges = [];
+    graph.shownKeys = signature;
+    view.innerHTML =
+      '<div class="graph-empty"><h2>Nothing to draw yet</h2><p class="muted">Open a definition from the tree or the finder (<kbd>/</kbd>) and the graph shows it with what it depends on and what uses it.</p></div>';
+    return;
+  }
+  if (signature === graph.shownKeys && view.querySelector('.graph-stage')) {
+    drawGraph();
+    return;
+  }
+  graph.shownKeys = signature;
+  for (const node of graph.nodes.values()) {
+    graph.positions.set(node.hash, [node.x, node.y]);
+  }
+  const others = keys.length - data.centers.length;
+  view.innerHTML =
+    '<div class="graph-stage"><svg class="graph-edges-layer" aria-hidden="true"><defs>' +
+    '<marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker>' +
+    '<marker id="arrow-near" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker>' +
+    '</defs><g class="graph-edges"></g></svg>' +
+    [...data.shown].map(([hash, info]) => graphNodeHtml(hash, info, data.pages.get(hash))).join('') +
+    '</div>' +
+    '<div class="graph-bar"><span class="muted graph-hint">Click a card to open it; click an open card to show it in the list. Arrows point to what a definition uses.' +
+    (others > 0
+      ? ` ${others} open card${others === 1 ? ' is' : 's are'} not a definition and ${others === 1 ? 'shows' : 'show'} only in the list.`
+      : '') +
+    '</span><span class="graph-buttons"><button class="plain-button" data-graph="out" title="Zoom out (⌘ scroll)" aria-label="Zoom out">−</button>' +
+    '<button class="plain-button" data-graph="in" title="Zoom in (⌘ scroll)" aria-label="Zoom in">+</button>' +
+    '<button class="plain-button" data-graph="fit" title="Fit the graph to the view">Fit</button></span></div>';
+  const previous = graph.nodes;
+  graph.nodes = new Map();
+  for (const [hash, info] of data.shown) {
+    const nodeElement = view.querySelector(`.gnode[data-node="${CSS.escape(hash)}"]`);
+    const kept = graph.positions.get(hash);
+    const near = graph.positions.get(info.near) ?? [0, 0];
+    const angle = angleOf(hash);
+    const [x, y] =
+      kept ??
+      (info.open ? [near[0] + 40, near[1] + 40] : [near[0] + Math.cos(angle) * 260, near[1] + Math.sin(angle) * 180]);
+    graph.nodes.set(hash, {
+      hash,
+      open: info.open,
+      element: nodeElement,
+      width: nodeElement.offsetWidth,
+      height: nodeElement.offsetHeight,
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      pinned: previous.get(hash)?.pinned ?? false,
+    });
+  }
+  graph.edges = data.edges;
+  graph.alpha = 1;
+  // Most of the layout runs before the first paint, so the view opens settled rather than exploding.
+  const settled = [...graph.nodes.keys()].every((hash) => previous.has(hash));
+  for (let i = 0; i < (previous.size === 0 ? 160 : settled ? 0 : 40); i++) {
+    graphTick();
+  }
+  if (!graph.moved) {
+    fitGraph();
+  }
+  drawGraph();
+  animateGraph();
+};
+
+/** Dragging a card moves (and pins) it; dragging the background pans; the wheel or a pinch zooms. */
+const onGraphEvents = () => {
+  const view = element('graph-view');
+  const pointers = new Map();
+  let drag;
+  let pinch;
+  const toStage = (clientX, clientY) => {
+    const box = view.getBoundingClientRect();
+    return [
+      (clientX - box.left - graph.camera.x) / graph.camera.scale,
+      (clientY - box.top - graph.camera.y) / graph.camera.scale,
+    ];
+  };
+  const zoomAt = (clientX, clientY, factor) => {
+    const box = view.getBoundingClientRect();
+    const scale = Math.min(2.5, Math.max(0.15, graph.camera.scale * factor));
+    const px = clientX - box.left;
+    const py = clientY - box.top;
+    graph.camera.x = px - ((px - graph.camera.x) * scale) / graph.camera.scale;
+    graph.camera.y = py - ((py - graph.camera.y) * scale) / graph.camera.scale;
+    graph.camera.scale = scale;
+    graph.moved = true;
+    drawGraph();
+  };
+  view.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.graph-bar, .graph-empty') || event.button > 0) {
+      return;
+    }
+    pointers.set(event.pointerId, [event.clientX, event.clientY]);
+    view.setPointerCapture(event.pointerId);
+    if (pointers.size === 2) {
+      const [[ax, ay], [bx, by]] = [...pointers.values()];
+      pinch = { distance: Math.hypot(bx - ax, by - ay) };
+      drag = undefined;
+      return;
+    }
+    const nodeElement = event.target.closest('.gnode');
+    const node = nodeElement && graph.nodes.get(nodeElement.dataset.node);
+    const [sx, sy] = toStage(event.clientX, event.clientY);
+    drag = {
+      node,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: node ? node.x - sx : 0,
+      offsetY: node ? node.y - sy : 0,
+      cameraX: graph.camera.x,
+      cameraY: graph.camera.y,
+      moved: false,
+    };
+  });
+  view.addEventListener('pointermove', (event) => {
+    if (!pointers.has(event.pointerId)) {
+      return;
+    }
+    pointers.set(event.pointerId, [event.clientX, event.clientY]);
+    if (pinch && pointers.size === 2) {
+      const [[ax, ay], [bx, by]] = [...pointers.values()];
+      const distance = Math.hypot(bx - ax, by - ay);
+      zoomAt((ax + bx) / 2, (ay + by) / 2, distance / pinch.distance);
+      pinch.distance = distance;
+      return;
+    }
+    if (!drag) {
+      return;
+    }
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    drag.moved ||= Math.hypot(dx, dy) > 4;
+    if (!drag.moved) {
+      return;
+    }
+    if (drag.node) {
+      const [sx, sy] = toStage(event.clientX, event.clientY);
+      drag.node.x = sx + drag.offsetX;
+      drag.node.y = sy + drag.offsetY;
+      drag.node.pinned = true;
+      graph.alpha = Math.max(graph.alpha, 0.3);
+      graph.moved = true;
+      animateGraph();
+    } else {
+      graph.camera.x = drag.cameraX + dx;
+      graph.camera.y = drag.cameraY + dy;
+      graph.moved = true;
+    }
+    drawGraph();
+  });
+  const release = (event) => {
+    pointers.delete(event.pointerId);
+    if (pointers.size < 2) {
+      pinch = undefined;
+    }
+    if (drag && !drag.moved && drag.node && event.type === 'pointerup') {
+      const key = `d:${drag.node.hash}`;
+      if (drag.node.open) {
+        ui.focus = key;
+        setView('code');
+      } else {
+        open(key);
+      }
+    }
+    drag = undefined;
+  };
+  view.addEventListener('pointerup', release);
+  view.addEventListener('pointercancel', release);
+  view.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      // A pinch arrives as a wheel with ctrlKey; a plain wheel or two-finger scroll pans.
+      if (event.ctrlKey || event.metaKey) {
+        zoomAt(event.clientX, event.clientY, Math.exp(-event.deltaY * 0.01));
+      } else {
+        graph.camera.x -= event.deltaX;
+        graph.camera.y -= event.deltaY;
+        graph.moved = true;
+        drawGraph();
+      }
+    },
+    { passive: false },
+  );
+  view.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-graph]');
+    if (button) {
+      const box = view.getBoundingClientRect();
+      if (button.dataset.graph === 'fit') {
+        fitGraph();
+        drawGraph();
+      } else {
+        zoomAt(box.left + box.width / 2, box.top + box.height / 2, button.dataset.graph === 'in' ? 1.25 : 0.8);
+      }
+    }
+  });
+  window.addEventListener('resize', () => {
+    if (ui.view === 'graph' && !graph.moved) {
+      fitGraph();
+      drawGraph();
+    }
+  });
 };
 
 //
@@ -1605,12 +2047,12 @@ const onKey = (event) => {
       break;
     case 'j':
     case 'ArrowDown':
-      if (ui.view === 'code' && keys.length > 0 && event.key === 'j') {
+      if ((ui.view === 'code' || ui.view === 'graph') && keys.length > 0 && event.key === 'j') {
         setFocus(keys[Math.min(at + 1, keys.length - 1)]);
       }
       break;
     case 'k':
-      if (ui.view === 'code' && keys.length > 0) {
+      if ((ui.view === 'code' || ui.view === 'graph') && keys.length > 0) {
         setFocus(keys[Math.max(at - 1, 0)]);
       }
       break;
@@ -1625,6 +2067,11 @@ const onKey = (event) => {
     case 'c':
       if (ui.focus) {
         toggleFold(ui.focus);
+      }
+      break;
+    case 'v':
+      if (ui.view === 'code' || ui.view === 'graph') {
+        setView(ui.view === 'graph' ? 'code' : 'graph');
       }
       break;
     case 't':
@@ -2054,6 +2501,7 @@ const main = async () => {
   showDialect();
   await loadWriting();
   onWriteEvents();
+  onGraphEvents();
   await onShellEvents();
 
   document.addEventListener('click', onClick);

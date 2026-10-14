@@ -797,6 +797,15 @@ Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
 
 Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
 
+## Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (`55a3e9d5`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer
+- parent: 861438d2
+- links change #3899aa8081
+
 ## Explorer overview: count tiles and recent changes should be clickable (`20dbe121`)
 
 - state: done
