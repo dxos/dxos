@@ -420,7 +420,7 @@ const compilePat = (form: Sexp): Pattern => {
   }
 };
 
-/** Compiles one canonical Core term (see docs/CORE.md) into the machine's representation. */
+/** Compiles one canonical Core term (see docs/spec/CORE.md) into the machine's representation. */
 export const compileTerm = (form: Sexp, prims: Map<string, Prim>, owner = ''): Term => {
   const node = compileNode(form, prims, owner);
   node.owner = owner;

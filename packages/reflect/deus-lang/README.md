@@ -12,7 +12,7 @@ deus/*.deus  ──compile (the seed runs the compiler)──▶  seed/deus.imag
   codebase store, projects, replication, MDL, the wasm compiler and the CLI.
 - `seed/deus.image` — the compiled image of the toolchain. Compiling `deus/` with it must
   reproduce it byte for byte (`src/seed.test.ts`).
-- `src/kernel/` — the only TypeScript: a CEK machine for [Core](./docs/CORE.md), primitives and
+- `src/kernel/` — the only TypeScript: a CEK machine for [Core](./docs/spec/CORE.md), primitives and
   host IO.
 
 ## Use
@@ -75,7 +75,8 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
 - [`docs/DECISIONS.md`](./docs/DECISIONS.md) — the decision log.
 - [`docs/TIMELINE.md`](./docs/TIMELINE.md) — each stage with the wall time it took.
 - [`docs/DESIGN.md`](./docs/DESIGN.md) — the language and the toolchain.
-- [`docs/CORE.md`](./docs/CORE.md) — the Core IR, object and image formats.
+- [`docs/spec/`](./docs/spec/README.md) — one specification per format: the language, Core, images, the codebase
+  (store, text export, binary bundles), MDL and the rest.
 - [`docs/PRIOR-ART.md`](./docs/PRIOR-ART.md) — what was taken from Unison, Lean, Koka, Effect-TS and others.
 - [`docs/PROPOSALS.md`](./docs/PROPOSALS.md) — the user's proposals, evaluated against alternatives.
 - [`docs/LLM.md`](./docs/LLM.md) — how an agent drives the CLI.
