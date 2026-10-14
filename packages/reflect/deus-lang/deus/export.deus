@@ -55,7 +55,7 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
   let sources := List.filterMap (fun pair =>
     match pair with
     | (name, e) =>
-      let body := snd (Cli.viewParts printer dir ns name e false)
+      let body := snd (Cli.viewParts printer dir ns name e "deus")
       if Text.isEmpty (Text.trim body) then none else some (topOf name, body)) entries
   -- Spec blocks go back into `.mdl` documents, one per document name, so `deus add` restores them.
   let specs := List.filterMap (fun pair =>

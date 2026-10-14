@@ -12,7 +12,7 @@ def View.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entr
         match Sexp.args op with
         | _ :: t :: [] => "  " ++ oname ++ " : " ++ Print.ty p t 0
         | _ => "  " ++ oname) ops
-      "ability " ++ name ++ params names ++ iriClause iri name ++ " where\n" ++ join "\n" lines
+      "ability " ++ name ++ View.params names ++ iriClause iri name ++ " where\n" ++ join "\n" lines
   | _ => Sexp.print obj
 
 /-- Constructor field names from a type's metadata, one list per constructor (`""` for unnamed). -/
@@ -89,7 +89,7 @@ def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) 
         let lines := List.map (fun pair =>
           match pair with
           | (f, t) => "  " ++ f ++ " : " ++ Print.ty p t 0) (zip fields (List.drop 1 types))
-        "structure " ++ display ++ params names ++ iriClause iri name ++ " where\n" ++
+        "structure " ++ display ++ View.params names ++ iriClause iri name ++ " where\n" ++
           join "\n" lines
       else
         let ctorNames := filterMap (fun pair =>
@@ -106,6 +106,6 @@ def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) 
             | fieldName => " (" ++ fieldName ++ " : " ++ Print.ty p (snd pair) 0 ++ ")"
           "  | " ++ cname ++
             Text.concat (List.map field (mapIndexed (fun i t => (i, t)) fieldTypes))) ctors
-        "inductive " ++ display ++ params names ++ iriClause iri name ++ " where" ++
+        "inductive " ++ display ++ View.params names ++ iriClause iri name ++ " where" ++
           (if List.isEmpty lines then "" else "\n" ++ join "\n" lines)
   | _ => Sexp.print obj

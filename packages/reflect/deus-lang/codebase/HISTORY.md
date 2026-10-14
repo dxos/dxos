@@ -1,5 +1,7 @@
 # History of main
 
+- `4e18596be8` merge the TypeScript-like dialect (D70) from #13952 (by claude)
+- `2d1240fb34` task: import 2 tasks
 - `2aa065727b` task: open 186feaf2 wasm: structural equality on constructed values (by claude)
 - `e4901e522a` close 40cb2f16 by #c08af3d400 (by claude)
 - `c08af3d400` wasm: compare by type, refuse address compares (D69) (by claude)

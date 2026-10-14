@@ -1,3 +1,5 @@
+(entry "4e18596be8589cf60e13b2c8348a646ff4061b92d74ca8aa295d0e52ee9771ca" "merge the TypeScript-like dialect (D70) from #13952" "claude")
+(entry "2d1240fb3407ceead9de5954604066fe354df4ddd67d80365db5d4cc35d95bb3" "task: import 2 tasks" "")
 (entry "2aa065727b912dcfd5c84a1f4ed918a1930d5b4403d3f392545caadeb924bb5a" "task: open 186feaf2 wasm: structural equality on constructed values" "claude")
 (entry "e4901e522a80acc2656629d45c0eee7624f78f2f70b77ea3bd4e0e7911c9eadf" "close 40cb2f16 by #c08af3d400" "claude")
 (entry "c08af3d4007a2edae40965c3cb9ac3761512a84a9a17f5edb7555688b910d591" "wasm: compare by type, refuse address compares (D69)" "claude")

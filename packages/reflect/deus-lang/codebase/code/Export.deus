@@ -70,7 +70,7 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
   let sources := filterMap (fun pair =>
     match pair with
     | (name, e) =>
-        let body := snd (viewParts printer dir ns name e false)
+        let body := snd (viewParts printer dir ns name e "deus")
         if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
   -- Spec blocks go back into `.mdl` documents, one per document name, so `deus add` restores them.
   let specs := filterMap (fun pair =>

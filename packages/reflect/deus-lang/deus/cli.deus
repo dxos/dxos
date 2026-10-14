@@ -325,30 +325,37 @@ def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core
 
 /-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
 def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
-  match viewParts base dir ns name e core with
+  viewEntryIn base dir ns name e (if core then "core" else "deus")
+
+/-- One entry in a dialect (D70): `deus` (the primary syntax), `ts` (TypeScript-like) or `core`. -/
+def viewEntryIn (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} Text :=
+  match viewParts base dir ns name e dialect with
   | (header, source) => header ++ source
 
-/-- The `-- name hash` header lines, and the source (empty for a constructor, an operation or a field). -/
-def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} (Text, Text) :=
+/-- The header comment lines, and the source (empty for a constructor, an operation or a field). -/
+def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} (Text, Text) :=
+  let core := dialect == "core"
+  let ts := dialect == "ts"
   let h := Entry.hash e
   let meta := Codebase.readMeta dir h
+  let comment := if ts then "// " else "-- "
   let typeLine := match Codebase.metaField meta "scheme" with
-    | some scheme => "-- : " ++ Types.displayScheme scheme ++ "\n"
+    | some scheme => comment ++ ": " ++ Types.displayScheme scheme ++ "\n"
     | none => ""
-  let header := "-- " ++ name ++ " " ++ short h ++ "\n" ++ typeLine
+  let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
-  | Entry.ctor _ _ _ => (header ++ "-- a constructor of " ++ Text.join ", " (Codebase.namesOf ns h), "")
-  | Entry.op _ _ _ => (header ++ "-- an operation of " ++ Text.join ", " (Codebase.namesOf ns h), "")
+  | Entry.ctor _ _ _ => (header ++ comment ++ "a constructor of " ++ Text.join ", " (Codebase.namesOf ns h), "")
+  | Entry.op _ _ _ => (header ++ comment ++ "an operation of " ++ Text.join ", " (Codebase.namesOf ns h), "")
   | _ =>
     -- A field accessor comes with its structure, so it prints as a note, as constructors do.
     let owner := Text.join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
     let isField := match Map.lookup owner ns with
       | some (Entry.type _ _ fields) => List.contains (Names.lastSegment name) fields
       | _ => false
-    if isField then (header ++ "-- a field of structure " ++ owner, "")
+    if isField then (header ++ comment ++ "a field of structure " ++ owner, "")
     else
       match Codebase.readObject dir h with
-      | none => if Text.startsWith "#" h then (header ++ "-- builtin", "") else throw ("missing object " ++ h)
+      | none => if Text.startsWith "#" h then (header ++ comment ++ "builtin", "") else throw ("missing object " ++ h)
       | some obj =>
         if core then (header, Sexp.print obj)
         else
@@ -356,29 +363,40 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
           let p := Print.withSelf (Print.withLocals base locals) h name
           let doc := Option.map Sexp.asText (Codebase.metaField meta "doc")
           let display := Names.lastSegment name
-          -- Comments come back from metadata: the lead above the declaration, notes inside it (D66).
-          let lead := match Codebase.metaField meta "lead" with
-            | some text => Print.commentLines (Sexp.asText text) 0
-            | none => ""
-          let notes := Print.notesOf meta
-          -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
-          let docText := match doc with
-            | some d => "/-- " ++ d ++ " -/\n"
-            | none => ""
-          let attrs := List.map (fun a =>
-            match Sexp.asList a with
-            | key :: values => Sexp.asText key ++ Text.concat (List.map (fun v => " " ++ Print.quoteText (Sexp.asText v)) values)
-            | [] => "") (Codebase.metaList meta "attrs")
-          let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
-          (header, lead ++ docText ++ attrText ++ (match obj with
-            | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") none
-            | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
-            | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
-              View.theoremDecl p name types prop proof
-            | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
-            | Sexp.list (Sexp.sym "ability" :: _) => View.abilityDecl p ns name e obj meta
-            | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
-            | _ => Sexp.print obj))
+          if ts then
+            (header, match obj with
+              | Sexp.list [Sexp.sym "term", c] => Ts.definition p name c (Codebase.metaField meta "sig") doc
+              | Sexp.list [Sexp.sym "test", c] => Ts.testDecl p name c
+              | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+                Ts.theoremDecl p name types prop proof
+              | Sexp.list (Sexp.sym "type" :: _) => Ts.typeDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "ability" :: _) => Ts.abilityDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+              | _ => Sexp.print obj)
+          else
+            -- Comments come back from metadata: the lead above the declaration, notes inside it (D66).
+            let lead := match Codebase.metaField meta "lead" with
+              | some text => Print.commentLines (Sexp.asText text) 0
+              | none => ""
+            let notes := Print.notesOf meta
+            -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
+            let docText := match doc with
+              | some d => "/-- " ++ d ++ " -/\n"
+              | none => ""
+            let attrs := List.map (fun a =>
+              match Sexp.asList a with
+              | key :: values => Sexp.asText key ++ Text.concat (List.map (fun v => " " ++ Print.quoteText (Sexp.asText v)) values)
+              | [] => "") (Codebase.metaList meta "attrs")
+            let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
+            (header, lead ++ docText ++ attrText ++ (match obj with
+              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") none
+              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
+              | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+                View.theoremDecl p name types prop proof
+              | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "ability" :: _) => View.abilityDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+              | _ => Sexp.print obj))
 
 def view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -386,8 +404,10 @@ def view (args : Args) : {IO, Throw Text} Unit :=
   let entries := List.map (fun name => lookupName ns name) args.positional
   -- One printer for all entries: its name tables cost more to build than printing one definition.
   let printer := Print.printer ns []
-  let texts := List.map (fun pair => viewEntryWith printer dir ns (fst pair) (snd pair) (flag args "core")) entries
-  let shown := Highlight.forTerminal (Text.join "\n\n" texts)
+  let dialect := if flag args "core" then "core" else Option.getOr (option args "dialect") "deus"
+  if dialect == "deus" || dialect == "ts" || dialect == "core" then () else throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
+  let texts := List.map (fun pair => viewEntryIn printer dir ns (fst pair) (snd pair) dialect) entries
+  let shown := Highlight.forTerminalIn dialect (Text.join "\n\n" texts)
   output args
     (fun _ => Json.arr (List.map (fun pair =>
       match pair with
@@ -1159,6 +1179,7 @@ def usage : Text :=
     "  ls [prefix]                          list names",
     "  find <text>                          names containing text",
     "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
+    "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax",
     "  names <name|#hash>                   every name of a hash",
     "  deps <name> / dependents <name>      what a definition uses / what uses it",
     "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name",

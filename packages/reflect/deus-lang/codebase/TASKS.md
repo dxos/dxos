@@ -111,6 +111,13 @@ D69 refuses == on data; generate per-type compare functions from the type object
 
 From docs/spec/README.md, Known divergences.
 
+## Parse the TypeScript-like dialect back into Core (`be4c4645`)
+
+- state: todo
+- priority: low
+- labels: dialects
+- links `Ts.definition` (#e5f668ab9e)
+
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -222,6 +229,15 @@ From docs/spec/README.md, Known divergences.
 - links change #c08af3d400
 
 From docs/spec/README.md, Known divergences.
+
+## Render the codebase in a TypeScript-like dialect (`655b148a`)
+
+- state: done
+- priority: medium
+- labels: feature, dialects
+- links change #02ade21de7
+
+> claude: Dmytro: render the shared codebase format in other dialects, DEUS stays primary. First dialect: TypeScript-like, view and explorer only; parsing back is a follow-up.
 
 ## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
 

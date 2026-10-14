@@ -543,6 +543,24 @@ describe('deus CLI', () => {
         '  | circle (radius : Int)\n  | rect (width : Int) (height : Int)',
       );
       expect(deus('view', 'Result', ...c).stdout).toContain('inductive Result e a where\n  | ok (value : a)');
+      // The same definitions in the TypeScript-like dialect (D65).
+      const ts = deus(
+        'view',
+        'Tour.fromTable',
+        'Tour.area',
+        'Tour.Shape',
+        'Tour.Prices',
+        '--dialect',
+        'ts',
+        ...c,
+      ).stdout;
+      expect(ts).toContain(
+        'function Tour.fromTable<a, r>(table: Map<Text, Int>, body: (() => a uses Prices, ...r)): a uses ...r {\n  try {\n    return body();\n  } handle {\n    Prices.priceOf(item, resume) {',
+      );
+      expect(ts).toContain('  switch (shape) {\n    case Shape.circle(r):\n      return 3 * r * r;');
+      expect(ts).toContain('type Tour.Shape =\n  | circle(radius: Int)\n  | rect(width: Int, height: Int);');
+      expect(ts).toContain('ability Tour.Prices {\n  priceOf(Text): Int;\n}');
+      expect(deus('view', 'Tour.area', '--dialect', 'cobol', ...c).stderr).toContain('unknown dialect cobol');
       const unhandled = deus(
         'add',
         file('unhandled.deus', 'def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))\n'),

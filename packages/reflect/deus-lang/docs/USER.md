@@ -236,4 +236,8 @@ perhaps add an alarm to remind you of that every 30 minutes
 
 ---
 
+- - unison authors mentioned different dialects with shared codebase format -- you can write code in one, and then render with another. lets experiment with that -- still keep deus as the primary -- that best for models, but add minimal rendering to other dialects -- what about something more JS, TS -like?
+
+---
+
 - standing instructions: all sessions should be merging changes directly into https://github.com/dxos/dxos/pull/13952 ; close all extra PRs that were openend
