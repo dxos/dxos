@@ -94,7 +94,7 @@ describe('rdf migrations', () => {
         assertion: {
           subject: { kind: 'entity', entity: 'did:key:z6MkRich', label: 'Rich Burdon' },
           predicate: 'has role',
-          predicateIri: 'https://dxos.org/ontology/hasRole',
+          predicateIri: 'https://schema.org/jobTitle',
           object: { kind: 'entity', entity: 'founder', label: 'Founder' },
           quote: 'Rich is on the DXOS team as Founder',
         },

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import { Editor } from '@dxos/react-ui-editor';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -20,6 +20,7 @@ import { translations } from '#translations';
 import { NOW, SCENARIOS, toGraph } from '../AgentState/testing.ts';
 import {
   AgentKnowledge,
+  type AgentKnowledgeBrainStatus,
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
   type AgentKnowledgeView,
@@ -27,7 +28,7 @@ import {
 import { EntityBrowser } from './EntityBrowser.tsx';
 import { EntityCard } from './EntityCard.tsx';
 import { type EntityCardModel, toEntityCards } from './subgraph.ts';
-import { TRIG_PREFIXES, formatNamedGraphs, formatRawFact } from './trig.ts';
+import { TRIG_PREFIXES, curie, formatNamedGraphs, formatRawFact } from './trig.ts';
 
 const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).toISOString();
 
@@ -260,25 +261,40 @@ const SubgraphsStory = () => {
   );
 };
 
-/** Finder-style columns over the same graph; objects (an employer, a paper) get cards too, so every chip opens one. */
-const BrowserStory = () => {
-  const cards = useMemo(() => toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true }), []);
-  return <EntityBrowser cards={cards} icons={CARD_ICONS} hues={CARD_HUES} />;
-};
+/** The story's graph as cards; objects (an employer, a paper) get cards too, so every chip opens one. */
+const ENTITY_CARDS = toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true });
+
+/** Finder-style columns over the same graph. */
+const BrowserStory = () => <EntityBrowser cards={ENTITY_CARDS} icons={CARD_ICONS} hues={CARD_HUES} />;
 
 type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
   scenario: keyof typeof SCENARIOS;
   defaultView?: AgentKnowledgeView;
+  brain?: AgentKnowledgeBrainStatus;
 };
 
-const DefaultStory = ({ scenario, defaultView }: StoryProps) => {
+/** The seed vocabulary, as the Predicates view lists it for a brain that has minted nothing yet. */
+const SEED = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace('story-agent'));
+const PREDICATES = SEED.entries.map((entry) => ({
+  iri: entry.iri,
+  curie: curie(entry.iri, SEED.namespace),
+  label: entry.label,
+  vocabulary: curie(entry.iri, SEED.namespace).split(':')[0],
+  ...(entry.description ? { description: entry.description } : {}),
+  ...(entry.synonyms?.length ? { synonyms: entry.synonyms } : {}),
+  count: 0,
+}));
+
+const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
   const knowledge = useMemo(() => SCENARIOS[scenario](), [scenario]);
   const { nodes, edges } = useMemo(() => toGraph(knowledge), [knowledge]);
   return (
-    <AgentKnowledge.Root defaultView={defaultView}>
+    <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
       <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
+      <AgentKnowledge.Entities cards={scenario === 'empty' ? [] : ENTITY_CARDS} />
+      <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />
       <AgentKnowledge.Goals goals={scenario === 'empty' ? [] : GOALS} />
       <AgentKnowledge.Graph nodes={nodes} edges={edges} />
     </AgentKnowledge.Root>
@@ -313,11 +329,35 @@ export const Empty: Story = {
   },
 };
 
+export const Loading: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: {
+    scenario: 'empty',
+    brain: { state: 'loading' },
+  },
+};
+
 export const Facts: Story = {
   decorators: [withLayout({ layout: 'column' })],
   args: {
     scenario: 'default',
     defaultView: 'facts',
+  },
+};
+
+export const Entities: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: {
+    scenario: 'default',
+    defaultView: 'entities',
+  },
+};
+
+export const Predicates: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: {
+    scenario: 'default',
+    defaultView: 'predicates',
   },
 };
 

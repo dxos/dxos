@@ -11,6 +11,8 @@ import { DataFactory, type Quad, type Term as RdfTerm } from 'n3';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
+import * as Vocab from '../../types/Vocab.ts';
+
 const { namedNode, literal, quad, defaultGraph } = DataFactory;
 
 export type Row = { s: string; p: string; o: string; oType: string; g: string };
@@ -25,6 +27,37 @@ const objectColumn = (object: RdfTerm) => ({
   value: object.value,
   oType: object.termType === 'Literal' ? 'literal' : 'iri',
 });
+
+/** Cloudflare Durable Object SQLite binds at most 100 parameters per statement, so id lists are bound in chunks below that. */
+const MAX_IDS_PER_STATEMENT = 40;
+
+const chunks = <T>(items: readonly T[], size: number): T[][] =>
+  Array.from({ length: Math.ceil(items.length / size) }, (_, index) => items.slice(index * size, (index + 1) * size));
+
+/**
+ * Runs `select` over `ids` in chunks small enough to bind, and concatenates the results. `select` may bind each id
+ * twice plus a few constants.
+ */
+export const selectChunked = <A, E, R>(
+  ids: readonly string[],
+  select: (chunk: readonly string[]) => Effect.Effect<readonly A[], E, R>,
+): Effect.Effect<A[], E, R> =>
+  Effect.forEach(chunks(ids, MAX_IDS_PER_STATEMENT), select).pipe(Effect.map((results) => results.flat()));
+
+/** The rows of the named graphs `graphs`, their provenance in the default graph, and the ontology graph once. */
+export const loadGraphRows = (
+  sql: SqlClient.SqlClient,
+  graphs: readonly string[],
+): Effect.Effect<Row[], SqlError.SqlError> =>
+  Effect.gen(function* () {
+    const statements = yield* selectChunked(
+      graphs,
+      (chunk) => sql<Row>`
+        SELECT s, p, o, oType, g FROM triples WHERE ${sql.in('g', chunk)} OR (g = '' AND ${sql.in('s', chunk)})`,
+    );
+    const ontology = yield* sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH}`;
+    return [...statements, ...ontology];
+  });
 
 /** Persist quads as rows in the `triples` table. The batch is wrapped in a single transaction
  *  so partial failure rolls back; duplicate quads are ignored via the `triples_unique` constraint. */

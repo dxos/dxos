@@ -22,8 +22,9 @@ const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
 
 //
 // Storage shape: each statement is a real triple inside a named graph, and the graph's provenance is stated once,
-// about the graph, in the default graph. Entities carry their labels and kinds inside the graph that mentions them;
-// a predicate the ontology does not define carries its label in the ontology graph.
+// about the graph, in the default graph. Entities carry their labels and kinds inside the graph that mentions them,
+// and one known by a label alone has an IRI local to that graph; a predicate the ontology does not define is
+// described (label, comment, defining namespace) in the ontology graph.
 //
 // Invariant: every provenance predicate has a UNIQUE local name (reassembly keys provenance by local name).
 // `attribution.source` is `prov:wasDerivedFrom`; `attribution.wasDerivedFrom` uses `sx:derivedFrom` so the two
@@ -31,25 +32,47 @@ const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
 //
 
 const CLASSES: Record<EntityKind, string> = {
-  person: 'Person',
-  org: 'Organization',
-  place: 'Place',
-  event: 'Event',
-  concept: 'Concept',
-  thing: 'Thing',
+  person: `${Vocab.SCHEMA}Person`,
+  org: `${Vocab.SCHEMA}Organization`,
+  place: `${Vocab.SCHEMA}Place`,
+  event: `${Vocab.SCHEMA}Event`,
+  concept: `${Vocab.SKOS}Concept`,
+  thing: `${Vocab.SCHEMA}Thing`,
 };
 
-const KINDS = new Map(Object.entries(CLASSES).map(([kind, name]) => [`${Vocab.DX}${name}`, kind as EntityKind]));
+// Facts stored before the kinds moved to schema.org typed entities with `dx:` classes.
+const LEGACY_CLASSES: Record<EntityKind, string> = {
+  person: `${Vocab.DX}Person`,
+  org: `${Vocab.DX}Organization`,
+  place: `${Vocab.DX}Place`,
+  event: `${Vocab.DX}Event`,
+  concept: `${Vocab.DX}Concept`,
+  thing: `${Vocab.DX}Thing`,
+};
+
+const KINDS = new Map(
+  [...Object.entries(CLASSES), ...Object.entries(LEGACY_CLASSES)].map(([kind, iri]) => [iri, kind as EntityKind]),
+);
+
+/** The class IRIs an entity's kind is typed with; an `rdf:type` to any other class is a statement, not a kind. */
+export const KIND_CLASSES: ReadonlyArray<string> = [...KINDS.keys()];
+
+/** Whether a quad states an entity's kind (an `rdf:type` to a kind class) rather than making a statement. */
+export const isKindQuad = (predicate: string, object: string): boolean =>
+  predicate === Vocab.RDF_TYPE && KINDS.has(object);
 
 /** The class IRI an entity of this kind is typed with. */
-export const classIri = (kind: EntityKind): string => `${Vocab.DX}${CLASSES[kind]}`;
+export const classIri = (kind: EntityKind): string => CLASSES[kind];
 
-/** RDF has no literal subjects, so a literal subject is stored as the entity it names. */
-const subjectNode = (term: Term): NamedNode =>
-  term.kind === 'entity' ? Vocab.entityNode(term.entity) : Vocab.entityIri(term.literal);
+/**
+ * RDF has no literal subjects, so a literal subject is stored as the entity it names. An entity slug is local to the
+ * graph: the extractor resolved it to no stable IRI, and a label alone does not say two graphs mean one thing.
+ */
+const subjectNode = (term: Term, graph: string): NamedNode =>
+  term.kind === 'entity' ? Vocab.entityNode(term.entity, graph) : Vocab.localEntityIri(graph, term.literal);
 
-const objectNode = (term: Term): NamedNode | Literal =>
-  term.kind === 'entity' ? Vocab.entityNode(term.entity) : Vocab.str(term.literal);
+const objectNode = (term: Term, graph: string): NamedNode | Literal =>
+  term.kind === 'entity' ? Vocab.entityNode(term.entity, graph) : Vocab.str(term.literal);
 
 /** The graph IRI a fact is stored in: its own graph unless it names one. */
 export const graphOf = (fact: Fact): string => fact.graph ?? Vocab.factIri(fact.id).value;
@@ -70,9 +93,9 @@ export const idInGraph = (fact: Fact, graph: string, ontology: Ontology.Ontology
     ? Vocab.factIdFromIri(graph)
     : statementId(
         graph,
-        subjectNode(fact.assertion.subject),
+        subjectNode(fact.assertion.subject, graph),
         predicateOf(fact, ontology),
-        objectNode(fact.assertion.object),
+        objectNode(fact.assertion.object, graph),
       );
 
 /** Expands a fact into its statement, the descriptions of its entities, and its graph's provenance. */
@@ -80,8 +103,8 @@ export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology
   const graph = namedNode(graphOf(fact));
   const meta = defaultGraph();
   const predicate = predicateOf(fact, ontology);
-  const subject = subjectNode(fact.assertion.subject);
-  const object = objectNode(fact.assertion.object);
+  const subject = subjectNode(fact.assertion.subject, graph.value);
+  const object = objectNode(fact.assertion.object, graph.value);
   const quads: Quad[] = [quad(subject, namedNode(predicate), object, graph)];
 
   for (const [node, term] of [
@@ -100,15 +123,16 @@ export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology
     }
   }
 
+  // A predicate the ontology does not define is described in the ontology graph, never inside the statement's.
   if (!ontology.get(predicate)) {
-    quads.push(
-      quad(
-        namedNode(predicate),
-        namedNode(Vocab.RDFS_LABEL),
-        Vocab.str(fact.assertion.predicate),
-        namedNode(Vocab.ONTOLOGY_GRAPH),
-      ),
-    );
+    const definition: Ontology.Entry = {
+      iri: predicate,
+      name: Ontology.key(fact.assertion.predicate),
+      label: fact.assertion.predicate,
+      ...(fact.assertion.predicateDescription ? { description: fact.assertion.predicateDescription } : {}),
+      ...(Vocab.brainNamespaceOf(predicate) ? { definedBy: Vocab.brainNamespaceOf(predicate) } : {}),
+    };
+    quads.push(...Ontology.toQuads(definition));
   }
 
   const about = (name: NamedNode, value: NamedNode | Literal) => quads.push(quad(graph, name, value, meta));
@@ -144,7 +168,7 @@ export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology
     }
   }
   if (fact.attribution.agent) {
-    about(Vocab.prov('wasAttributedTo'), Vocab.entityNode(fact.attribution.agent));
+    about(Vocab.prov('wasAttributedTo'), Vocab.entityNode(fact.attribution.agent, graph.value));
   }
   for (const derived of fact.attribution.wasDerivedFrom ?? []) {
     about(Vocab.sx('derivedFrom'), Vocab.str(derived));
@@ -158,11 +182,10 @@ export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology
   return quads;
 };
 
-const DESCRIPTIONS = new Set([Vocab.RDFS_LABEL, Vocab.RDF_TYPE]);
-
 /** Reassembles (and validates) facts from quads: the inverse of {@link factToTriples}, one fact per statement. */
 export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontology = Ontology.DEFAULT): Fact[] => {
   const labels = new Map<string, string>();
+  const comments = new Map<string, string>();
   const provenance = new Map<string, Map<string, RdfTerm[]>>();
   const graphs = new Map<string, { statements: Quad[]; labels: Map<string, string>; types: Map<string, EntityKind> }>();
   const graphFor = (iri: string) => {
@@ -182,20 +205,26 @@ export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontolo
       const name = localName(entry.predicate.value);
       props.set(name, [...(props.get(name) ?? []), entry.object]);
     } else if (entry.graph.value === Vocab.ONTOLOGY_GRAPH) {
-      if (entry.predicate.value === Vocab.RDFS_LABEL && !labels.has(entry.subject.value)) {
-        labels.set(entry.subject.value, entry.object.value);
+      const known =
+        entry.predicate.value === Vocab.RDFS_LABEL
+          ? labels
+          : entry.predicate.value === Vocab.RDFS_COMMENT
+            ? comments
+            : undefined;
+      if (known && !known.has(entry.subject.value)) {
+        known.set(entry.subject.value, entry.object.value);
       }
-    } else if (!DESCRIPTIONS.has(entry.predicate.value)) {
-      graphFor(entry.graph.value).statements.push(entry);
     } else if (entry.predicate.value === Vocab.RDFS_LABEL) {
       const graph = graphFor(entry.graph.value);
       if (!graph.labels.has(entry.subject.value)) {
         graph.labels.set(entry.subject.value, entry.object.value);
       }
     } else {
-      const kind = KINDS.get(entry.object.value);
+      const kind = entry.predicate.value === Vocab.RDF_TYPE ? KINDS.get(entry.object.value) : undefined;
       if (kind) {
         graphFor(entry.graph.value).types.set(entry.subject.value, kind);
+      } else {
+        graphFor(entry.graph.value).statements.push(entry);
       }
     }
   }
@@ -211,7 +240,7 @@ export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontolo
         : node.termType === 'NamedNode'
           ? {
               kind: 'entity',
-              entity: Vocab.entityKey(node.value),
+              entity: Vocab.entityKey(node.value, iri),
               ...(graph.labels.has(node.value) ? { label: graph.labels.get(node.value) } : {}),
               ...(graph.types.has(node.value) ? { type: graph.types.get(node.value) } : {}),
             }
@@ -235,6 +264,9 @@ export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontolo
           subject: term(statement.subject),
           predicate: labels.get(predicate) ?? ontology.get(predicate)?.label ?? Ontology.labelFromIri(predicate),
           predicateIri: predicate,
+          ...(comments.has(predicate) && !ontology.get(predicate)
+            ? { predicateDescription: comments.get(predicate) }
+            : {}),
           object: term(statement.object),
           ...(one('validFrom') !== undefined ? { validFrom: one('validFrom') } : {}),
           ...(one('validTo') !== undefined ? { validTo: one('validTo') } : {}),
@@ -256,7 +288,7 @@ export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontolo
             }
           : {}),
         attribution: {
-          ...(agent !== undefined ? { agent: Vocab.entityKey(agent.value) } : {}),
+          ...(agent !== undefined ? { agent: Vocab.entityKey(agent.value, iri) } : {}),
           ...(one('agentLabel') !== undefined ? { agentLabel: one('agentLabel') } : {}),
           source: one('wasDerivedFrom'),
           generatedAtTime: one('generatedAtTime'),

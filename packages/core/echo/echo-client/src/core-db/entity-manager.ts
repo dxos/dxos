@@ -19,11 +19,13 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
+  scheduleTaskInterval,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, type Entity, Ref } from '@dxos/echo';
 import {
+  BACKED_OBJECT_LIMIT,
   type BranchRecord,
   DatabaseDirectory,
   EncodedReference,
@@ -37,6 +39,7 @@ import {
   afterCommit,
   batchEvents,
   objectStructureFromJson,
+  objectStructureToJson,
   runInCommit,
 } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
@@ -101,6 +104,14 @@ interface ObjectUnavailable {
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
+/** Which loaded object documents a space keeps in memory. */
+export type DocumentRetention = {
+  /** How long, in ms, a document stays loaded once nothing changes it. */
+  ttl?: number;
+  /** How many of the most recently edited documents stay loaded whatever their idle time. */
+  budget?: number;
+};
+
 export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
@@ -110,6 +121,9 @@ export type EntityManagerProps = {
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Which loaded documents go back to their stored changes; see {@link DocumentRetention}. */
+  documentRetention?: DocumentRetention;
 
   /** Mints the caller-facing proxy for a core, injected because the proxy layer is built on this one. */
   createEntity: (core: ObjectCore) => Entity.Unknown;
@@ -148,6 +162,8 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _branchStore?: BranchStore;
 
   private readonly _createEntity: (core: ObjectCore) => Entity.Unknown;
+
+  private readonly _documentRetention: Required<DocumentRetention>;
 
   /**
    * Object ids whose backing document was determined to be not on local disk
@@ -272,6 +288,7 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
+    this._documentRetention = { ...DOCUMENT_RETENTION, ...options.documentRetention };
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
@@ -313,6 +330,7 @@ export class EntityManager implements IDatabaseBinding {
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
+    scheduleTaskInterval(ctx, async () => this.#expireIdleDocuments(), this._documentRetention.ttl / 2);
     ctx.onDispose(() => {
       for (const { handle, onUpdate, onActivated } of this.#passiveHandles.values()) {
         handle.off('passive', onUpdate);
@@ -666,6 +684,89 @@ export class EntityManager implements IDatabaseBinding {
       createdAt: core.snapshot.root.objects[id]?.system?.createdAt,
     });
     this.#refreshSnapshot(core, { structure, updatedAt });
+  }
+
+  /**
+   * Moves each object whose document has not changed for the retention TTL, that no editor holds and that
+   * is not among the most recently edited, back onto its document's stored changes, subscribed passive, so
+   * the document leaves memory. The next write or document read loads it again.
+   */
+  #expireIdleDocuments(): void {
+    const { ttl, budget } = this._documentRetention;
+    const now = performance.now();
+    const cores = this.allObjectCores();
+    // Wasm memory never shrinks, so a release only makes room for a later load, and a document edited
+    // again would load right back.
+    // TODO(wittjosiah): Consider ranking by how often a document is edited or loaded instead of when.
+    const kept = new Set(
+      cores
+        .filter((core) => core.editedAt > 0 && this.#isExpirable(core))
+        .sort((a, b) => b.editedAt - a.editedAt)
+        .slice(0, budget),
+    );
+    for (const core of cores) {
+      if (!kept.has(core) && now - core.activeAt >= ttl && this.#isExpirable(core)) {
+        this.#expire(core);
+      }
+    }
+  }
+
+  /** Whether the core is the only object bound to its own document, on the main branch, with no editor. */
+  #isExpirable(core: ObjectCore): boolean {
+    const handle = core.docHandle;
+    return (
+      handle !== undefined &&
+      handle !== this._spaceRootDocHandle &&
+      !core.hasAccessorListeners &&
+      this.getCurrentBranch(core.id) === 'main' &&
+      this._objectDocumentHandles.get(core.id) === handle &&
+      this._documentObjects.get(handle)?.size === 1
+    );
+  }
+
+  /** Backs the core with a snapshot of its document as it is now, when the host can keep that current. */
+  #expire(core: ObjectCore): void {
+    const handle = core.docHandle;
+    const documentId = handle?.documentId;
+    if (!handle || !documentId) {
+      return;
+    }
+    const doc = handle.doc();
+    const structure = doc.objects?.[core.id];
+    // The host's passive updates carry JSON only under these conditions; otherwise the object loads again.
+    if (
+      !structure ||
+      Object.keys(doc.objects ?? {}).length !== 1 ||
+      Object.keys(doc.links ?? {}).length > 0 ||
+      structure.system?.mergedInto !== undefined
+    ) {
+      return;
+    }
+    const json = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
+    const bytes = A.save(doc);
+    if (json.length > BACKED_OBJECT_LIMIT || bytes.length > BACKED_OBJECT_LIMIT) {
+      return;
+    }
+    const heads = A.getHeads(doc);
+    const updatedAt = core.getUpdatedAt();
+    if (!this._repoProxy.deactivate(documentId, { bytes, heads })) {
+      return;
+    }
+    this._unbindObjectDocument(core.id);
+    if (handle.url != null) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId: core.id });
+    }
+    core.demote({
+      root: {
+        objects: {
+          [core.id]: objectStructureFromJson(JSON.parse(json), { createdAt: structure.system?.createdAt }),
+        },
+      },
+      updatedAt,
+      handle,
+    });
+    countWork('echo.documentsExpired');
+    this.#watchPassive(core.id, handle);
   }
 
   /** Whoever loaded a snapshot core's document, this binds the core to it. */
@@ -2227,6 +2328,17 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
     this._evictRemovedObjects(event);
     const documentChanges = this._processDocumentUpdate(event);
+    const now = performance.now();
+    const edited = event.patchInfo.source === 'change';
+    for (const objectId of documentChanges.updatedObjectIds) {
+      const core = this._objects.get(objectId);
+      if (core) {
+        core.activeAt = now;
+        if (edited) {
+          core.editedAt = now;
+        }
+      }
+    }
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
@@ -2605,5 +2717,7 @@ export class EntityManager implements IDatabaseBinding {
 }
 
 const RPC_TIMEOUT = 20_000;
+
+const DOCUMENT_RETENTION: Required<DocumentRetention> = { ttl: 30_000, budget: 50 };
 
 type PassiveUpdate = ClientDocHandleEvents<DatabaseDirectory>['passive'];

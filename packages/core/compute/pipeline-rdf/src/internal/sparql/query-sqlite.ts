@@ -11,7 +11,7 @@ import { type Fact } from '../../types/index.ts';
 import * as Mapping from '../../types/Mapping.ts';
 import * as Ontology from '../../types/Ontology.ts';
 import * as Vocab from '../../types/Vocab.ts';
-import { type Row, rowToQuad } from '../source/sqlite-source.ts';
+import { loadGraphRows, rowToQuad, selectChunked } from '../source/sqlite-source.ts';
 import { matchingPredicates, statementMatches } from './match.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
@@ -27,7 +27,17 @@ export const querySqlite = (
 ): Effect.Effect<Fact[], SemanticIndexError> =>
   Effect.gen(function* () {
     // Rows that are statements, not provenance, predicate metadata, or an entity's label or kind.
-    const statement = sql`g <> '' AND g <> ${Vocab.ONTOLOGY_GRAPH} AND p <> ${Vocab.RDFS_LABEL} AND p <> ${Vocab.RDF_TYPE}`;
+    const statement = sql`g <> '' AND g <> ${Vocab.ONTOLOGY_GRAPH} AND p <> ${Vocab.RDFS_LABEL}
+      AND NOT (p = ${Vocab.RDF_TYPE} AND ${sql.in('o', [...Mapping.KIND_CLASSES])})`;
+    // An entity slug names the graph-local entity of that slug in every graph (and its pre-local `entity:` IRI).
+    const isEntity = (column: 's' | 'o', key: string) => {
+      const node = Vocab.entityNode(key).value;
+      if (Vocab.isIri(key)) {
+        return sql`${sql(column)} = ${node}`;
+      }
+      const suffix = Vocab.localEntitySuffix(key);
+      return sql`(${sql(column)} = ${node} OR substr(${sql(column)}, ${-suffix.length}) = ${suffix})`;
+    };
     const graphsWhere = (where: Statement.Fragment) =>
       sql<{ g: string }>`SELECT DISTINCT g FROM triples WHERE ${statement} AND ${where}`.pipe(
         Effect.map((rows) => new Set(rows.map((row) => row.g))),
@@ -39,7 +49,7 @@ export const querySqlite = (
     };
 
     if (query.subjectEntity) {
-      restrict(yield* graphsWhere(sql`s = ${Vocab.entityNode(query.subjectEntity).value}`));
+      restrict(yield* graphsWhere(isEntity('s', query.subjectEntity)));
     }
     let predicates: Set<string> | undefined;
     if (query.predicate) {
@@ -54,7 +64,10 @@ export const querySqlite = (
         ),
         ontology,
       );
-      restrict(yield* graphsWhere(sql.in('p', [...predicates])));
+      const matched = yield* selectChunked([...predicates], (chunk) =>
+        graphsWhere(sql.in('p', chunk)).pipe(Effect.map((set) => [...set])),
+      );
+      restrict(new Set(matched));
     }
     if (query.source) {
       const rows = yield* sql<{ s: string }>`
@@ -63,8 +76,9 @@ export const querySqlite = (
       restrict(new Set(rows.map((row) => row.s)));
     }
     if (query.entity) {
-      const node = Vocab.entityNode(query.entity).value;
-      restrict(yield* graphsWhere(sql`(s = ${node} OR (o = ${node} AND oType = 'iri'))`));
+      restrict(
+        yield* graphsWhere(sql`(${isEntity('s', query.entity)} OR (${isEntity('o', query.entity)} AND oType = 'iri'))`),
+      );
     }
 
     // No constraints → every stored graph.
@@ -79,10 +93,7 @@ export const querySqlite = (
       return [];
     }
 
-    const ids = [...candidates];
-    const rows = yield* sql<Row>`
-      SELECT s, p, o, oType, g FROM triples
-      WHERE ${sql.in('g', ids)} OR (g = '' AND ${sql.in('s', ids)}) OR g = ${Vocab.ONTOLOGY_GRAPH}`;
+    const rows = yield* loadGraphRows(sql, [...candidates]);
     const facts = yield* Effect.try({
       try: () => Mapping.triplesToFacts(rows.map(rowToQuad), ontology),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),

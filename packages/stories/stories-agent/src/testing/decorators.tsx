@@ -6,6 +6,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type Database, type Type } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
+import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Mode from '@dxos/plugin-agent/Mode';
@@ -42,7 +43,7 @@ export const storyParameters = {
   ],
 };
 
-/** The agent's objects, the team it knows, and the Discord channel config. */
+/** The agent's objects, the team it knows, and its Discord and email channel configs. */
 const TYPES: Type.AnyEntity[] = [
   Person.Person,
   Organization.Organization,
@@ -52,6 +53,7 @@ const TYPES: Type.AnyEntity[] = [
   Mode.Mode,
   Relay.Relay,
   AgentChannels.AgentChannels,
+  AgentEmail.AgentEmail,
   DiscordChannel.DiscordChannel,
 ];
 

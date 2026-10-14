@@ -28,7 +28,7 @@ export type EntityCardModel = {
 };
 
 export type EntityCardOptions = {
-  /** Classes by entity id (`rdf:type`), which the reified facts do not carry. */
+  /** Classes by entity id; otherwise the class the facts state for the entity (its term's `type`), if any. */
   types?: Readonly<Record<string, string>>;
   /** Labels by normalized predicate; the predicate as said otherwise. */
   labels?: Readonly<Record<string, string>>;
@@ -38,9 +38,32 @@ export type EntityCardOptions = {
   objects?: boolean;
 };
 
-const valueOf = (term: RDF.Term, types: EntityCardOptions['types']): EntityCardValue =>
+/** Display classes for the kinds the extractor assigns, so stated types read like the ones a caller names. */
+const KIND_TYPES: Readonly<Record<RDF.EntityKind, string>> = {
+  person: 'Person',
+  org: 'Organization',
+  place: 'Place',
+  event: 'Event',
+  concept: 'Concept',
+  thing: 'Thing',
+};
+
+/** Classes by entity id: the caller's first, then the first type the facts state for each entity. */
+const typesOf = (facts: readonly RDF.Fact[], types: EntityCardOptions['types']): Map<string, string> => {
+  const result = new Map(Object.entries(types ?? {}));
+  for (const { assertion } of facts) {
+    for (const term of [assertion.subject, assertion.object]) {
+      if (term.kind === 'entity' && term.type && !result.has(term.entity)) {
+        result.set(term.entity, KIND_TYPES[term.type]);
+      }
+    }
+  }
+  return result;
+};
+
+const valueOf = (term: RDF.Term, types: ReadonlyMap<string, string>): EntityCardValue =>
   term.kind === 'entity'
-    ? { kind: 'entity', id: term.entity, label: term.label ?? term.entity, type: types?.[term.entity] }
+    ? { kind: 'entity', id: term.entity, label: term.label ?? term.entity, type: types.get(term.entity) }
     : { kind: 'literal', label: term.literal };
 
 /** Appends `value` to the property for `predicate`, in first-seen order, without repeating a value. */
@@ -76,6 +99,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     cards.set(id, created);
     return created;
   };
+  const types = typesOf(facts, options.types);
 
   for (const { assertion } of facts) {
     if (assertion.subject.kind !== 'entity') {
@@ -84,7 +108,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     const predicate = RDF.Predicate.normalize(assertion.predicate);
     const label = RDF.Predicate.label(options.labels?.[predicate] ?? assertion.predicate);
     const subject = card(assertion.subject.entity, assertion.subject.label);
-    add(subject.properties, predicate, label, valueOf(assertion.object, options.types));
+    add(subject.properties, predicate, label, valueOf(assertion.object, types));
 
     if (assertion.object.kind === 'entity') {
       // Collected for every object; without `objects`, an object gets a card only if it is also a subject.
@@ -93,7 +117,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
         card(assertion.object.entity, assertion.object.label).inverse,
         predicate,
         inverseLabel,
-        valueOf(assertion.subject, options.types),
+        valueOf(assertion.subject, types),
       );
     }
   }
@@ -106,7 +130,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     .map(([id, { label, properties, inverse }]) => ({
       id,
       label,
-      type: options.types?.[id],
+      type: types.get(id),
       properties: [...properties.values()],
       inverse: [...inverse.values()],
     }));

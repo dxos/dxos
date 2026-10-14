@@ -235,6 +235,32 @@ export class RepoProxy extends Resource {
     return this._getOrLoadHandle<T>({ documentId });
   }
 
+  /**
+   * Moves a loaded handle back to stored changes, subscribed passive, leaving its document for collection.
+   * Refused while the host has not taken the handle's last change, since the stored changes would not hold it.
+   * @returns Whether the handle went passive.
+   */
+  deactivate(documentId: DocumentId, passive: PassiveDocument): boolean {
+    const handle = this._handles[documentId];
+    if (
+      !handle ||
+      this._pendingUpdateIds.has(documentId) ||
+      this._pendingCreations.has(handle._internalId) ||
+      !handle._isAcknowledged()
+    ) {
+      return false;
+    }
+    // Every listener, as in `release`: the entity manager attaches its own again when the document loads.
+    handle.off('change');
+    handle._setPassive(passive);
+    delete this._handles[documentId];
+    this._passiveHandles.set(documentId, handle);
+    this._deferredReleaseIds.delete(documentId);
+    this.#watchActivation(handle, documentId);
+    this.#subscribePassive(documentId);
+    return true;
+  }
+
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
     const handle = this.create<T>();
     handle.update(() => A.load(dump));
@@ -571,16 +597,21 @@ export class RepoProxy extends Resource {
     });
     if (passive) {
       this._passiveHandles.set(documentId, handle);
-      handle.once('activated', () => {
-        if (this._passiveHandles.get(documentId) === handle) {
-          this.#subscribeHandle(handle, documentId);
-        }
-      });
+      this.#watchActivation(handle, documentId);
       this.#subscribePassive(documentId);
     } else {
       this.#subscribeHandle(handle, documentId);
     }
     return handle;
+  }
+
+  /** Subscribes a passive handle as loaded once it loads, unless it was released meanwhile. */
+  #watchActivation(handle: DocHandleProxy<any>, documentId: DocumentId): void {
+    handle.once('activated', () => {
+      if (this._passiveHandles.get(documentId) === handle) {
+        this.#subscribeHandle(handle, documentId);
+      }
+    });
   }
 
   #subscribePassive(documentId: DocumentId): void {

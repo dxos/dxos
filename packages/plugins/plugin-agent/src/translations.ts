@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-import { AgentChannels, Goal } from '#types';
+import { AgentChannels, AgentEmail, Goal } from '#types';
 
 export const translations = [
   {
@@ -18,6 +18,13 @@ export const translations = [
         'typename.label_other': 'Agent channels',
         'object-name.placeholder': 'New agent channels',
       },
+      [Type.getTypename(AgentEmail.AgentEmail)]: {
+        'typename.label': 'Agent email',
+        'typename.label_zero': 'Agent emails',
+        'typename.label_one': 'Agent email',
+        'typename.label_other': 'Agent emails',
+        'object-name.placeholder': 'New agent email',
+      },
       [Type.getTypename(Goal.Goal)]: {
         'typename.label': 'Goal',
         'typename.label_zero': 'Goals',
@@ -27,6 +34,16 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Agent',
+        'email-channel.label': 'Email address',
+        'email-channel.description':
+          'The agent answers mail to this address; each email thread is its own conversation. Reconnect to apply changes.',
+        'email-mailbox-actions.label': 'Mailbox actions',
+        'email-mailbox-connect.label': 'Connect',
+        'email-mailbox-update.label': 'Update',
+        'email-mailbox-disconnect.label': 'Disconnect',
+        'email-mailbox-connected.label': 'Receiving mail',
+        'email-mailbox-disconnected.label': 'Not connected',
+        'email-mailbox-error.label': 'Mailbox error',
         'brain-companion.label': 'Brain',
         'activity-companion.label': 'Activity',
         'agent.heading': 'Agent',
@@ -49,6 +66,7 @@ export const translations = [
         'agent-knowledge-actions.label': 'Knowledge actions',
         'agent-knowledge-reset.label': 'Reset (forget all memories and goals)',
         'agent-knowledge-raw-facts.label': 'Show facts as triples',
+        'agent-knowledge-raw-predicates.label': 'Show predicates as TriG',
         'activity-error.label': 'That did not work',
         'activity-start.label': 'Connect channels',
         'activity-stop.label': 'Disconnect channels',
@@ -97,10 +115,19 @@ export const translations = [
         'agent-state-tasks.description': '{{open}} of {{total}}',
         'agent-knowledge-memories.label': 'Memories',
         'agent-knowledge-memories-empty.message': 'Nothing remembered yet.',
+        'agent-knowledge-loading.message': 'Reading the brain…',
+        'agent-knowledge-resetting.message': 'Wiping the brain…',
+        'agent-knowledge-error.message': 'Could not read the brain: {{error}}',
         'agent-state-channel-unnamed.label': 'Conversation',
         'agent-state-channel-mode.label': 'Mode: {{mode}}',
         'agent-knowledge-facts.label': 'Facts',
         'agent-knowledge-facts-empty.message': 'Nothing read yet.',
+        'agent-knowledge-entities.label': 'Entities',
+        'agent-knowledge-entities-empty.message': 'No entities known yet.',
+        'agent-knowledge-predicates.label': 'Predicates',
+        'agent-knowledge-predicate-minted.label': 'minted',
+        'agent-knowledge-predicate-count.label_one': '{{count}} fact',
+        'agent-knowledge-predicate-count.label_other': '{{count}} facts',
         'agent-knowledge-goals.label': 'Goals',
         'entity-card-type.label': 'type',
         'entity-card-name.label': 'name',

@@ -118,6 +118,15 @@ export class ObjectCore {
 
   #snapshot?: ObjectSnapshot = undefined;
 
+  /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
+  public activeAt = 0;
+
+  /** When this client last wrote to the document (`performance.now()`), or 0. */
+  public editedAt = 0;
+
+  /** Change listeners attached through doc accessors: an editor or store adapter holding the document. */
+  #accessorListeners = 0;
+
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `EntityStructure`.
@@ -284,6 +293,7 @@ export class ObjectCore {
       this.#snapshot = undefined;
       options.db.endSnapshot(this.id);
     }
+    this.activeAt = performance.now();
 
     const doc = this.doc;
     this.doc = undefined;
@@ -321,6 +331,23 @@ export class ObjectCore {
       return handle.doc();
     }
     throw new Error('Invalid ObjectCore state');
+  }
+
+  /** Whether something holds the document through an accessor (an editor, a store adapter). */
+  get hasAccessorListeners(): boolean {
+    return this.#accessorListeners > 0;
+  }
+
+  /**
+   * Moves a bound core back onto a snapshot of its document as it is now; the proxy and its subscribers
+   * stay, and the next write or document read loads the document again.
+   */
+  demote(snapshot: ObjectSnapshot): void {
+    invariant(this.docHandle && !this.doc, 'Only a core bound to a document is demoted.');
+    this.docHandle = undefined;
+    this.#snapshot = snapshot;
+    // Same values, so the targets are rebuilt from the snapshot without notifying anyone.
+    this.#reportingErrors(() => this.#refresh());
   }
 
   /** The record `mountPath` is rooted in, read without loading a snapshot's document. */
@@ -441,6 +468,7 @@ export class ObjectCore {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.handle?.on('change', listener);
             this.updates.on(listener);
+            this.#accessorListeners++;
           }
         },
         removeListener: (event, listener) => {
@@ -448,6 +476,7 @@ export class ObjectCore {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.handle?.off('change', listener);
             this.updates.off(listener);
+            this.#accessorListeners = Math.max(0, this.#accessorListeners - 1);
           }
         },
       },
