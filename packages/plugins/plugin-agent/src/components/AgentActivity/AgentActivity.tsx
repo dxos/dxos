@@ -5,6 +5,7 @@
 import React, { type MouseEvent, type PropsWithChildren, type ReactNode } from 'react';
 
 import { Section } from '@dxos/react-ui-components';
+import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
@@ -12,7 +13,6 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
@@ -35,20 +35,19 @@ const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRoot
   return (
     <Panel.Root role={role}>
       {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
+      {/* The form's frame and field spacing, so the sections read as the Agent form beside them does. */}
       <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport asChild>
-            <Layout.Container gap='lg'>
-              {error && (
-                <Banner.Root valence='error'>
-                  <Banner.Title>{t('activity-error.label')}</Banner.Title>
-                  <Banner.Body>{error}</Banner.Body>
-                </Banner.Root>
-              )}
-              {children}
-            </Layout.Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <Form.Viewport scroll>
+          <Layout.Container gutter='inherit' gap='sm'>
+            {error && (
+              <Banner.Root valence='error'>
+                <Banner.Title>{t('activity-error.label')}</Banner.Title>
+                <Banner.Body>{error}</Banner.Body>
+              </Banner.Root>
+            )}
+            {children}
+          </Layout.Container>
+        </Form.Viewport>
       </Panel.Body>
     </Panel.Root>
   );
