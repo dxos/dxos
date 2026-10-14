@@ -35,9 +35,6 @@ Bugs:
   the definition ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
 - The wasm compiler compiles `==`, `<` and the other comparisons on constructed values to `i32` compares of
   addresses: `some x == some x` is `0` in wasm and `true` in `deus eval` ([WASM.md](./WASM.md)).
-- The explorer writes builtin definitions as `def/#Bool.json`, but the app requests `def/%23Bool.json`,
-  which the local server does not decode; the bucket upload puts a raw `#` in the URL. Bucket uploads also
-  send `.js` and `.css` as `text/plain` ([EXPLORER.md](./EXPLORER.md)).
 - `\u{…}` escapes above U+FFFF lose their high bits in the TypeScript kernel's `Text.fromCodes`
   ([LANGUAGE.md](./LANGUAGE.md)).
 - The prover ignores tactic names it does not know ([LANGUAGE.md](./LANGUAGE.md#theorems-and-tactics)).

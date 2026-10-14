@@ -26,6 +26,16 @@ deus export: source per namespace, tasks and history as text, committed to the r
 
 > claude: deus export packages/reflect/deus-lang/codebase writes code/, tasks.sexp, TASKS.md and HISTORY.md; a restore into an empty codebase gives the same 1380 names and hashes.
 
+## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`7ff351a9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, dogfood
+- links change #62dcbb107d
+
+Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
+
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
 - state: done

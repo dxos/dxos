@@ -192,3 +192,7 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - 1
+
+---
+
+- one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself

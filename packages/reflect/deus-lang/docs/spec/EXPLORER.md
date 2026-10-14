@@ -1,7 +1,7 @@
 # Explorer site format
 
 `deus explore` writes the current branch of a codebase as a static site: a single-page app and the JSON
-files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md)). The writer is
+files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md), [D69](../DECISIONS.md)). The writer is
 [`deus/explorer.deus`](../../deus/explorer.deus); the uploader is `publishSite` in
 [`deus/cli.deus`](../../deus/cli.deus). Readers are the app in [`platform/explorer/`](../../platform/explorer)
 (`app.js`), which any static file server can host: the native server running
@@ -18,9 +18,12 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   meta.json                       the project, branches, counts and recent history
   names.json                      every visible name
   tasks.json                      every task, with links resolved and its history
-  def/<hash>.json                 one per visible definition
+  def/<page>.json                 one per visible definition
   change/<causal>.json            one per history node the app links to
 ```
+
+A definition's `<page>` is its hash, except that a builtin's `#` becomes `_` (`#Bool` is `def/_Bool.json`),
+since a URL path cannot carry a `#` and no hex hash starts with `_`.
 
 `<site>` is `--out <dir>`, or `<codebase>/cache/site` by default. Generation overwrites `meta.json`,
 `names.json`, `tasks.json`, the app files and every `def/` file of the current namespace. It never deletes
@@ -64,32 +67,41 @@ change  = {"causal": string, "message": string, "by"?: string}
 
 ## names.json
 
-An array with one `{"name", "kind", "hash"}` object per visible name, sorted by name. `kind` is one of the
-visible kinds above.
+An array with one object per visible name, sorted by name. The app lists, searches and previews names
+from this file alone, without opening their pages.
+
+| Field     | Type   | Content                                                                       |
+| --------- | ------ | ----------------------------------------------------------------------------- |
+| `name`    | string | the full name                                                                 |
+| `kind`    | string | one of the visible kinds above                                                |
+| `hash`    | string | its hash                                                                      |
+| `sig`     | string | its type scheme, as in `def`'s `signature` without the name, or `""`          |
+| `summary` | string | the first line of its doc comment, or `""`                                    |
+| `status`  | string | `pass` or `fail` from the cached verdict of a test or theorem, otherwise `""` |
 
 ```json
-[{"name":"Bool","kind":"type","hash":"#Bool"},{"name":"Code.cost","kind":"term","hash":"40a9c644c4cb0d1f8803e325159ea0318bf3ce481b4852cbbf5289458b8ec88e"},…]
+[{"name":"Bool","kind":"type","hash":"#Bool","sig":"","summary":"","status":""},{"name":"Code.cost","kind":"term","hash":"40a9c644c4cb0d1f8803e325159ea0318bf3ce481b4852cbbf5289458b8ec88e","sig":"Code -> Int","summary":"","status":""},…]
 ```
 
-## `def/<hash>.json`
+## `def/<page>.json`
 
 One file per distinct hash among visible names. When several visible names share a hash, each writes the
 same file in name order, so the file carries the alphabetically last of them in `name` and the others in
 `aliases`.
 
-| Field       | Type         | Content                                                                                  |
-| ----------- | ------------ | ---------------------------------------------------------------------------------------- |
-| `name`      | string       | the definition's full name                                                               |
-| `kind`      | string       | its kind                                                                                 |
-| `hash`      | string       | its hash, equal to the file name                                                         |
-| `aliases`   | string[]     | every other name bound to the hash, constructors and operations included                 |
-| `signature` | string       | `<last name segment> : <type scheme>`, or `""` when the metadata has no scheme           |
-| `doc`       | string\|null | the doc comment                                                                          |
-| `html`      | string       | the source as `deus view` prints it, without its `-- ` header lines, as highlighted HTML |
-| `deps`      | ref[]        | what the definition refers to, limited to hashes the namespace names, itself excluded    |
-| `users`     | ref[]        | visible definitions that refer to it, sorted by hash                                     |
-| `verdict`   | string       | the cached test or theorem verdict, or `""`; see below                                   |
-| `tasks`     | object[]     | `{"id","title","state"}` of each task linked to the name or the hash                     |
+| Field       | Type         | Content                                                                                                                |
+| ----------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `name`      | string       | the definition's full name                                                                                             |
+| `kind`      | string       | its kind                                                                                                               |
+| `hash`      | string       | its hash; the file name is its page                                                                                    |
+| `aliases`   | string[]     | every other name bound to the hash, constructors and operations included                                               |
+| `signature` | string       | `<last name segment> : <type scheme>`, or `""` when the metadata has no scheme                                         |
+| `doc`       | string\|null | the doc comment                                                                                                        |
+| `html`      | string       | the source as `deus view` prints it, without its `-- ` header lines, as highlighted HTML                               |
+| `deps`      | ref[]        | what the definition refers to, types in its signature included, limited to hashes the namespace names, itself excluded |
+| `users`     | ref[]        | visible definitions that refer to it, sorted by hash                                                                   |
+| `verdict`   | string       | the cached test or theorem verdict, or `""`; see below                                                                 |
+| `tasks`     | object[]     | `{"id","title","state"}` of each task linked to the name or the hash                                                   |
 
 In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and its first 10 characters when
 it has none.
@@ -118,12 +130,9 @@ that refers to one of `deps` is wrapped in `<a class=ref data-open="d:<hash>">�
 }
 ```
 
-Builtin types and abilities produce files named after their `#` IRI, such as `def/#Bool.json`. The app
-requests `def/%23Bool.json`, so a server must percent-decode the path to find them.
-
-Note: neither the bundled site server ([`platform/site.deus`](../../platform/site.deus)) nor the bucket
-upload handles this today: the server looks up `%23Bool.json` literally, and the upload URL carries a raw
-`#`, which curl treats as a fragment. Builtin cards fail to open on both.
+`deps` counts every hash the definition's object or its type scheme names: terms, constructors, operations
+and types, builtins included. So `Bool`'s `users` lists everything that takes or returns a `Bool`, which
+`deus dependents` (the update-propagation graph) does not.
 
 ## tasks.json
 
@@ -176,16 +185,16 @@ history node is not in the store.
 Written for each history node in `meta.json`'s `history` and in any task's `history`. It compares the node
 with its first parent (an empty namespace for a root node).
 
-| Field     | Type     | Content                                                           |
-| --------- | -------- | ----------------------------------------------------------------- |
-| `causal`  | string   | the node's hash                                                   |
-| `message` | string   | its message                                                       |
-| `parents` | string[] | its parents                                                       |
-| `added`   | ref[]    | visible names new in this node, with their hash then              |
-| `changed` | object[] | `{"name","from","hash"}`: visible names bound to a different hash |
-| `removed` | string[] | visible names no longer bound                                     |
-| `tasks`   | string[] | ids of tasks whose record differs from the parent's               |
-| `by`      | string   | optional, as in `change`                                          |
+| Field     | Type     | Content                                                                            |
+| --------- | -------- | ---------------------------------------------------------------------------------- |
+| `causal`  | string   | the node's hash                                                                    |
+| `message` | string   | its message                                                                        |
+| `parents` | string[] | its parents                                                                        |
+| `added`   | ref[]    | visible names new in this node, with their hash then                               |
+| `changed` | object[] | `{"name","from","hash","before","after"}`: visible names bound to a different hash |
+| `removed` | string[] | visible names no longer bound                                                      |
+| `tasks`   | string[] | ids of tasks whose record differs from the parent's                                |
+| `by`      | string   | optional, as in `change`                                                           |
 
 ```json
 {
@@ -200,26 +209,34 @@ with its first parent (an empty namespace for a root node).
 }
 ```
 
+`before` and `after` are the name's source in the parent and in the node, printed as for `html` but as plain
+text, so the app can show the change as a line diff. Pages written before these fields existed lack them,
+and the app then shows only the two hashes.
+
 Hashes in a change page are those of that moment; `def/` files exist only for current hashes, so the app
 opens a name's current page.
 
 ## App state in the URL
 
-The app keeps its open cards in the URL fragment as a comma-separated list, newest first:
+The app keeps its open cards in the URL fragment as a comma-separated list, in the order they are shown, and
+the view when it is not the code workspace:
 
 ```text
 fragment = key ("," key)*
-key      = "d:" hash | "t:" task-id | "c:" causal
+key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "v:" ("tasks" | "history")
 ```
 
-For example `index.html#d:595ca8a5…,t:e0757e4e`. Keys that do not match `^[dtc]:.` are ignored.
+For example `index.html#d:595ca8a5…,n:List,t:e0757e4e`. A card opened from another card goes right after it;
+one opened from the tree or the finder goes after the focused card. Keys that do not match `^[dtcnv]:.` are
+ignored, and an empty fragment shows the overview. Which card has focus, which are folded, and the tree's
+open namespaces are not kept; the source dialect (DEUS or TS) is kept per viewer in `localStorage`.
 
 ## Serving
 
 Any static file server works if it maps `/` to `index.html`, serves the files under their paths and
 percent-decodes request paths. The bundled server gives `.html` `text/html; charset=utf-8`, `.json`
-`application/json`, `.css` `text/css`, `.js` `text/javascript`, and other files
-`text/plain; charset=utf-8`. With no `--out` or `--publish`, `deus explore` starts it on `--port` (default
+`application/json`, `.css` `text/css`, `.js` `text/javascript`, `.svg`
+`image/svg+xml`, and other files `text/plain; charset=utf-8`. With no `--out` or `--publish`, `deus explore` starts it on `--port` (default
 8080).
 
 The Worker in `platform/explorer-worker/` proxies a published site: it maps `/` to `/index.html`, fetches
@@ -246,12 +263,8 @@ manifest = { sha256-hex " " path "\n" }
 A file is uploaded when its SHA-256 differs from the manifest's or it is missing there; `--force` ignores
 the manifest. After the upload, the manifest is rewritten with every file of the site. Files are never
 deleted from the remote. A bucket upload runs one `curl --parallel --parallel-max 16` with a signed `PUT`
-per file and content type `text/html; charset=utf-8` for `.html`, `application/json` for `.json`, and
-`text/plain; charset=utf-8` for anything else.
-
-Note: that last rule gives `app.js` and `app.css` the type `text/plain`. A browser refuses a module script
-served as `text/plain`, so a site served straight from the bucket, or through the Worker, which passes the
-type on, may not start.
+per file and the content type the bundled server uses (`Replicate.siteType`): a browser refuses a module
+script or a stylesheet sent as `text/plain`, and the Worker passes the type on.
 
 The manifest's existence marks a remote as hosting the explorer. Each `deus push <remote>` of the current
 branch then regenerates the site in `<codebase>/cache/site-<remote>` and publishes the changes the same

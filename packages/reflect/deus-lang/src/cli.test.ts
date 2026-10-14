@@ -58,9 +58,8 @@ describe('deus CLI', () => {
 
     // `view` prints source that compiles back to the same hashes: every definition, test, type and
     // ability of the toolchain, printed together so that mutually recursive ones are re-added as a group.
-    const names: { name: string; kind: string; hash: string }[] = JSON.parse(
-      deus('ls', '--json', '--codebase', codebase).stdout,
-    );
+    const names: { name: string; kind: string; hash: string; sig: string; summary: string; status: string }[] =
+      JSON.parse(deus('ls', '--json', '--codebase', codebase).stdout);
     const printed = names
       .filter((entry) => ['term', 'test', 'type', 'ability'].includes(entry.kind) && !entry.hash.startsWith('#'))
       .map((entry) => entry.name);
@@ -655,16 +654,23 @@ describe('deus CLI', () => {
     const area = names.find((entry) => entry.name === 'Shapes.area');
     const square = names.find((entry) => entry.name === 'Shapes.square');
     const map = names.find((entry) => entry.name === 'List.map');
-    expect(area?.kind).toBe('term');
+    expect(area).toMatchObject({ kind: 'term', sig: 'Int -> Int', summary: 'The area of a square.', status: '' });
     // Each definition is a JSON document: its source highlighted, with references opening their definitions.
     const page = readFileSync(join(out, 'def', `${area?.hash}.json`), 'utf8');
     const def = JSON.parse(page);
     expect(def.html).toContain('<span class=cm>/-- The area of a square. -/</span>');
     expect(def.html).toContain(`<a class=ref data-open="d:${square?.hash}">square</a>`);
-    expect(def.deps).toEqual([{ name: 'Shapes.square', hash: square?.hash }]);
+    // Types named only in a signature count as dependencies, so a type's page lists what uses it.
+    expect(def.deps).toEqual([
+      { name: 'Int', hash: '#Int' },
+      { name: 'Shapes.square', hash: square?.hash },
+    ]);
     expect(JSON.parse(readFileSync(join(out, 'def', `${square?.hash}.json`), 'utf8')).users).toEqual([
       { name: 'Shapes.area', hash: area?.hash },
     ]);
+    // A builtin's page is named without its `#`, which a URL path cannot carry.
+    const int = JSON.parse(readFileSync(join(out, 'def', '_Int.json'), 'utf8'));
+    expect(int.users).toContainEqual({ name: 'Shapes.area', hash: area?.hash });
     expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('<script type="module" src="app.js">');
     // Each change in the history has a page with what it did.
     const latest = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
@@ -686,6 +692,21 @@ describe('deus CLI', () => {
     const pushed = JSON.parse(deus('push', 'origin', '--json', ...c).stdout);
     expect(pushed.site).toBeGreaterThanOrEqual(3);
     expect(readFileSync(join(remote, 'site', 'names.json'), 'utf8')).toContain('Shapes.unit');
+
+    // A change that rebinds a name carries both sources, which the app shows as a diff.
+    deus('update', file('square.deus', 'def Shapes.square (side : Int) : Int := side * side + 0\n'), ...c);
+    deus('explore', '--out', out, ...c);
+    const rebound = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
+    const diff = JSON.parse(readFileSync(join(out, 'change', `${rebound}.json`), 'utf8'));
+    expect(diff.changed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'Shapes.square',
+          before: expect.stringMatching(/side \* side$/),
+          after: expect.stringMatching(/side \* side \+ 0$/),
+        }),
+      ]),
+    );
   });
 
   test(
