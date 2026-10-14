@@ -1,10 +1,19 @@
 # History of main
 
+- `dfc08c5d11` history: import 590 changes
+- `9aa61666e1` task: import from codebase/tasks.sexp
+- `c37c95c07d` merge #13952's branch: Parquet column statistics (by claude)
 - `1e5d40d2d6` cli: bring Cli.dispatch and Cli.main up to date with deus/ (by claude)
 - `87e96d9f73` close 4b1eb1a9 by #7886bef5ce (by claude)
 - `7886bef5ce` cli: origin and the R2 endpoint default for the toolchain codebase (D108) (by claude)
 - `a00feaab57` task: set 4b1eb1a9 state priority assignee labels details (by claude)
 - `6a48195085` task: open 4b1eb1a9 The CLI defaults origin and the R2 endpoint for the toolchain codebase (by claude)
+- `97932915fc` task: set 72207dc1 state details (by claude)
+- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
+- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
+- `5f3ee9bd61` history: import 580 changes
+- `bdbadcd847` task: import from tasks.sexp
+- `6e64e08bbb` task: comment on e76e36b0 (by claude)
 - `f06a7a09f3` history: import 577 changes
 - `8637e168f4` task: import from tasks.sexp
 - `8fb40df7ae` add code specs

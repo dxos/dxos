@@ -338,6 +338,38 @@ def plain (columnType : Text) (cells : List Cell) : List Int :=
         | _ => []
       le32 (List.length bytes) ++ bytes) cells
 
+/-- Byte lists in Parquet's order for statistics: unsigned, lexicographic. -/
+def bytesBefore (a : List Int) (b : List Int) : Bool :=
+  match (a, b) with
+  | ([], []) => false
+  | ([], _) => true
+  | (_, []) => false
+  | (x :: xs, y :: ys) => if x != y then x < y else bytesBefore xs ys
+
+/-- A cell's sort key as Parquet compares it: signed for INT64, the bytes for text, 0 or 1 for a boolean. -/
+def sortKey (columnType : Text) (c : Cell) : List Int :=
+  match c with
+  | Cell.int v => [if v < 0 then 0 else 1, Int.and (Int.ushr v 24) 255, Int.and (Int.shr v 16) 255, Int.and (Int.shr v 8) 255, Int.and v 255]
+  | Cell.bool v => [if v then 1 else 0]
+  | Cell.text t => if columnType == "time" then Text.length (trimZeros t) :: Text.utf8 (trimZeros t) else Text.utf8 t
+
+/--
+  ColumnMetaData field 12: the column's min and max as PLAIN values with no nulls, so a reader
+  (Basin SQL, through Iceberg) can skip files a filter excludes.
+-/
+def statistics (columnType : Text) (values : List Cell) : List (Int, Thrift) :=
+  match values with
+  | [] => []
+  | first :: rest =>
+    let pick := fun (wantLess : Bool) => List.foldl (fun best c =>
+      if bytesBefore (sortKey columnType c) (sortKey columnType best) == wantLess && sortKey columnType c != sortKey columnType best then c else best) first rest
+    let encoded := fun (c : Cell) =>
+      if columnType == "text" || columnType == "ref" then (match c with
+        | Cell.text t => Text.utf8 t
+        | _ => [])
+      else plain columnType [c]
+    [(12, Thrift.fields [(3, Thrift.i64 0), (5, Thrift.bin (encoded (pick false))), (6, Thrift.bin (encoded (pick true)))])]
+
 /-- The schema element of a column: required, with STRING or TIMESTAMP(MICROS, UTC) annotations. -/
 def schemaElement (c : Column) : Thrift :=
   let base := [(1, Thrift.i32 (physical c.columnType)), (3, Thrift.i32 0), (4, Thrift.bin (Text.utf8 c.columnName))]
@@ -354,7 +386,7 @@ def systemColumns : List Column := [Column.mk "event_id" "text", Column.mk "reco
 /-- All of a row's cells, system columns first. -/
 def allCells (r : Row) : List Cell := Cell.text r.eventId :: Cell.text r.recordedAt :: Cell.text r.recordedBy :: r.cells
 
-/-- A Parquet file holding `rows` of an event type: one row group, one uncompressed PLAIN page per column. -/
+/-- A Parquet file holding `rows` of an event type: one row group, one uncompressed PLAIN page per column; column_orders lets readers trust the min/max statistics. -/
 def write (t : EventType) (rows : List Row) : List Int :=
   let columns := systemColumns ++ t.columns
   let n := List.length rows
@@ -368,8 +400,9 @@ def write (t : EventType) (rows : List Row) : List Int :=
       let header := encode (Thrift.fields [(1, Thrift.i32 0), (2, Thrift.i32 (List.length data)), (3, Thrift.i32 (List.length data)),
         (5, Thrift.fields [(1, Thrift.i32 n), (2, Thrift.i32 0), (3, Thrift.i32 3), (4, Thrift.i32 3)])])
       let size := List.length header + List.length data
-      let meta := Thrift.fields [(2, Thrift.i64 offset), (3, Thrift.fields [(1, Thrift.i32 (physical c.columnType)), (2, Thrift.items 5 [Thrift.i32 0]),
-        (3, Thrift.items 8 [Thrift.bin (Text.utf8 c.columnName)]), (4, Thrift.i32 0), (5, Thrift.i64 n), (6, Thrift.i64 size), (7, Thrift.i64 size), (9, Thrift.i64 offset)])]
+      let meta := Thrift.fields [(2, Thrift.i64 offset), (3, Thrift.fields ([(1, Thrift.i32 (physical c.columnType)), (2, Thrift.items 5 [Thrift.i32 0]),
+        (3, Thrift.items 8 [Thrift.bin (Text.utf8 c.columnName)]), (4, Thrift.i32 0), (5, Thrift.i64 n), (6, Thrift.i64 size), (7, Thrift.i64 size), (9, Thrift.i64 offset)] ++
+          statistics c.columnType values))]
       chunks rest (index + 1) (offset + size) ((header ++ data, meta, size) :: acc)
   match chunks columns 0 4 [] with
   | (parts, _) =>
@@ -382,7 +415,8 @@ def write (t : EventType) (rows : List Row) : List Int :=
         | (_, meta, _) => meta) parts)), (2, Thrift.i64 total), (3, Thrift.i64 n)]]),
       (5, Thrift.items 12 [kv "deus.event.type" t.typeName, kv "deus.event.hash" t.typeHash,
         kv "deus.event.columns" (Text.join "," (List.map (fun c => c.columnName ++ ":" ++ c.columnType) t.columns))]),
-      (6, Thrift.bin (Text.utf8 "deus analytics"))])
+      (6, Thrift.bin (Text.utf8 "deus analytics")),
+      (7, Thrift.items 12 (List.map (fun _ => Thrift.fields [(1, Thrift.fields [])]) columns))])
     magic ++ List.concatMap (fun p => match p with
       | (bytes, _, _) => bytes) parts ++ footer ++ le32 (List.length footer) ++ magic
 
