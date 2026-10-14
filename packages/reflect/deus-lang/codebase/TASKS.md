@@ -27,6 +27,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > claude: The JS target thread could not reach R2 either: its deus pull origin was refused by the session's permission policy before any request. It restored from the git export and exported back (D102).
 
+> claude: The explorer graph-view thread (claude/project-thread-oixvu2) has no DEUS_R2_ENDPOINT, so it cannot deus pull or push either; it works on the git export (restore, update, export) until this lands.
+
 ## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
 
 - state: todo

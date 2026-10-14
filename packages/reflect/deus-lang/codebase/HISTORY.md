@@ -1,10 +1,13 @@
 # History of main
 
+- `6e64e08bbb` task: comment on e76e36b0 (by claude)
+- `f06a7a09f3` history: import 577 changes
+- `8637e168f4` task: import from tasks.sexp
+- `8fb40df7ae` add code specs
 - `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
 - `c1094317db` users exclude the definition itself (D101) (by claude)
 - `6ca942925a` history: import 586 changes
 - `b2dd88f2c9` task: import from tasks.sexp
-- `3c07f87183` add code specs
 - `9d9673a128` merge: the explorer's graph view (D99) (by claude)
 - `219688316c` history: import 448 changes
 - `dcd5501500` task: import from tasks.sexp
