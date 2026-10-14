@@ -22,13 +22,14 @@ import { CommandConfig } from '../services/index.ts';
 /** Matches the budget `Space.syncToEdge` gives its own wait, so neither half of a drain dominates. */
 const SPACE_READY_TIMEOUT = Duration.seconds(60);
 
-export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
-  Effect.gen(function* () {
-    const client = yield* ClientService;
-    // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
-    const space = client.spaces.get(spaceId);
-    return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
-  });
+export const getSpace = Effect.fnUntraced(function* (
+  spaceId: Key.SpaceId,
+): Effect.fn.Return<Space, SpaceNotFoundError, ClientService> {
+  const client = yield* ClientService;
+  // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
+  const space = client.spaces.get(spaceId);
+  return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
+});
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {

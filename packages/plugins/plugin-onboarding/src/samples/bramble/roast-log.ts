@@ -74,7 +74,6 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
   // matching how Composer creates objects of database types and the EID the type's views query by.
   // Building from the static schema would stamp the typename DXN instead and miss those filters.
   return [
-    // --- approved: past batches that cleared QC ---
     Obj.make(type, {
       title: 'Finca Esperanza Lot A — Batch 1',
       date: daysAgo(28),
@@ -126,7 +125,6 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes:
         'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
     }),
-    // --- cupped: awaiting final approval ---
     Obj.make(type, {
       title: 'Spring Blend v2 — Full-size trial',
       date: daysAgo(5),
@@ -144,7 +142,6 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes:
         'First full-size blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
     }),
-    // --- roasted: cooling / resting, not yet cupped ---
     Obj.make(type, {
       title: 'Finca Esperanza Lot A — Dev Batch',
       date: daysAgo(2),
@@ -175,7 +172,6 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       status: 'roasted',
       notes: "New producer our importer introduced. Resting overnight; cup before Diego's call with them.",
     }),
-    // --- planned: upcoming ---
     Obj.make(type, {
       title: 'Spring Blend v3 — Full-size trial',
       date: daysFromNow(3),

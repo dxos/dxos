@@ -14,7 +14,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
-import { useChatReportContext } from '../../components/Chat/context.ts';
+import { useChatReportContext } from '../../components/Chat/index.ts';
 
 const PLUGIN_PROMPT_NAME = 'PluginPrompt';
 

@@ -42,7 +42,7 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
   const metadata = space?.key && spacesInfo.find((info) => toPublicKey(info.key)?.equals(space?.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
-  const toggleActive = async () => {
+  const handleSpaceActiveToggle = async () => {
     const state = space!.state.get();
     if (state === SpaceState.SPACE_INACTIVE) {
       await space!.open();
@@ -51,7 +51,7 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
     }
   };
 
-  const toggleEdgeReplication = async () => {
+  const handleEdgeReplicationToggle = async () => {
     await space?.internal.setEdgeReplicationPreference(
       space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
         ? EdgeReplicationSetting.DISABLED
@@ -66,10 +66,10 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
         {!props.space && <DataSpaceSelector />}
         <Button.Root icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={() => forceUpdate({})} />
         <div className='grow' />
-        <Button.Root onClick={toggleActive}>
+        <Button.Root onClick={handleSpaceActiveToggle}>
           {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
         </Button.Root>
-        <Button.Root onClick={toggleEdgeReplication}>
+        <Button.Root onClick={handleEdgeReplicationToggle}>
           {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
             ? 'Disable backup to EDGE'
             : 'Enable backup to EDGE'}

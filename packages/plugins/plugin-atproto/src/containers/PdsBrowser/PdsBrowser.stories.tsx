@@ -69,7 +69,7 @@ const seed = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.db.flush({ indexes: true }));
   });
 
-const Story = () => {
+const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   if (!space) {
@@ -80,7 +80,7 @@ const Story = () => {
 
 const meta = {
   title: 'plugins/plugin-atproto/PdsBrowser',
-  render: Story,
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -106,7 +106,7 @@ const meta = {
     }),
   ],
   parameters: { layout: 'fullscreen' },
-} satisfies Meta<typeof Story>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

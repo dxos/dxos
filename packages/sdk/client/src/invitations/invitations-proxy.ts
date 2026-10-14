@@ -129,7 +129,7 @@ export class InvitationsProxy implements Invitations {
               ?.filter((invitation) => this._matchesInvitationContext(invitation))
               .filter((invitation) => !this._invitations.has(invitation.invitationId))
               .forEach((invitation) => {
-                type === QueryInvitationsResponse_Type.CREATED ? this.#share(invitation) : this.join(invitation);
+                type === QueryInvitationsResponse_Type.CREATED ? this._share(invitation) : this.join(invitation);
               });
             if (existing) {
               type === QueryInvitationsResponse_Type.CREATED
@@ -223,7 +223,7 @@ export class InvitationsProxy implements Invitations {
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
   share(options?: Partial<Invitation>): CancellableInvitation {
-    const { observable, created } = this.#share({ ...this.getInvitationOptions(), ...options });
+    const { observable, created } = this._share({ ...this.getInvitationOptions(), ...options });
     // Admits and accepts are reported by the services, which see each success once across tabs and reloads.
     if (created) {
       trace.events.emit(ClientTraceEvents.invitationCreate, invitationEventAttributes(observable.get()));
@@ -272,7 +272,7 @@ export class InvitationsProxy implements Invitations {
   }
 
   /** Tracks an invitation this peer hosts; `created` is false when it was already tracked. */
-  #share(invitation: Invitation): { observable: CancellableInvitation; created: boolean } {
+  private _share(invitation: Invitation): { observable: CancellableInvitation; created: boolean } {
     this._invitations.add(invitation.invitationId);
 
     const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);

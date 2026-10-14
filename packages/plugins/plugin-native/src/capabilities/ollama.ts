@@ -364,7 +364,7 @@ const formatError = (error: unknown): string =>
 const clientLayer = FetchHttpClient.layer;
 
 /**
- * Route a chunk of Ollama process output to the console by its structured log level. Ollama emits
+ * Route a chunk of Ollama process output to `@dxos/log` by its structured log level. Ollama emits
  * `INFO`/`WARN` to stderr alongside genuine errors, so only `level=ERROR` lines surface as errors.
  */
 const logSidecar = (chunk: string): void => {
@@ -372,14 +372,12 @@ const logSidecar = (chunk: string): void => {
     if (line.trim().length === 0) {
       continue;
     }
-    /* eslint-disable no-console */
     if (line.includes('level=ERROR')) {
-      console.error('[ollama]', line);
+      log.error('[ollama]', { line });
     } else if (line.includes('level=WARN')) {
-      console.warn('[ollama]', line);
+      log.warn('[ollama]', { line });
     } else {
-      console.log('[ollama]', line);
+      log.debug('[ollama]', { line });
     }
-    /* eslint-enable no-console */
   }
 };

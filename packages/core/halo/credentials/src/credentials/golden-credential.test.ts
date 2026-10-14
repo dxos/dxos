@@ -18,7 +18,7 @@ import {
 import { getCredentialAssertion } from './assertions.ts';
 import { createCredential } from './credential-factory.ts';
 import { issuerOf } from './credential-keys.ts';
-import { getCredentialProofPayload } from './signing.ts';
+import { getCredentialSigningPayload } from './signing.ts';
 import { GOLDEN_CREDENTIAL_BYTES_B64, GOLDEN_CREDENTIAL_PROOF_PAYLOAD } from './testing/golden-credential.ts';
 import { verifyCredential } from './verifier.ts';
 
@@ -36,7 +36,7 @@ describe('a credential signed by an earlier build', () => {
   test('and its signing payload is reproduced byte for byte', () => {
     // The payload is the whole signature format: a field that moves, gains a default, or serialises
     // differently shows up here as a diff rather than as an unverifiable credential in the field.
-    expect(Buffer.from(getCredentialProofPayload(fromBinary(CredentialSchema, golden))).toString('utf8')).toEqual(
+    expect(Buffer.from(getCredentialSigningPayload(fromBinary(CredentialSchema, golden))).toString('utf8')).toEqual(
       GOLDEN_CREDENTIAL_PROOF_PAYLOAD,
     );
   });
@@ -77,7 +77,7 @@ describe('a credential signed by this build', () => {
     });
 
     // `canonicalStringify` drops `@type`, so the flattened keys are what the signature covers.
-    const payload = JSON.parse(Buffer.from(getCredentialProofPayload(credential)).toString('utf8'));
+    const payload = JSON.parse(Buffer.from(getCredentialSigningPayload(credential)).toString('utf8'));
     expect(payload.subject.assertion).toEqual({
       deviceKey: deviceKey.toHex(),
       identityKey: issuer.toHex(),
@@ -99,8 +99,8 @@ describe('the assertion type_url a credential carries', () => {
     const { credential } = await makeCredential();
     const prefixed = withPrefixedAssertionUrl(credential);
 
-    expect(Buffer.from(getCredentialProofPayload(prefixed))).toEqual(
-      Buffer.from(getCredentialProofPayload(credential)),
+    expect(Buffer.from(getCredentialSigningPayload(prefixed))).toEqual(
+      Buffer.from(getCredentialSigningPayload(credential)),
     );
     expect(await verifyCredential(prefixed)).toEqual({ kind: 'pass' });
   });

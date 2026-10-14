@@ -68,7 +68,7 @@ const useReorderableStack = () => {
   return { items, eventHandler };
 };
 
-const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
+const DefaultStory = (props: MosaicStackProps<Obj.Any>) => {
   const { items, eventHandler } = useReorderableStack();
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -176,18 +176,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: DefaultStackStory,
+  render: DefaultStory,
 };
 
 export const DefaultDraggable: Story = {
-  render: DefaultStackStory,
+  render: DefaultStory,
   args: {
     draggable: true,
   },
 };
 
 export const DefaultDebug: Story = {
-  render: DefaultStackStory,
+  render: DefaultStory,
   args: {
     debug: true,
     draggable: true,

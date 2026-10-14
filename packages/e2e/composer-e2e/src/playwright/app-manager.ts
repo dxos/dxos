@@ -105,34 +105,36 @@ export class AppManager {
   shell!: ShellManager;
   deck!: DeckManager;
 
-  private readonly _inIframe: boolean | undefined = undefined;
-  private _initialized = false;
-  private _close?: () => Promise<void>;
-  private _invitationCode = new Trigger<string>();
-  private _authCode = new Trigger<string>();
+  readonly #browser: Browser | BrowserContext;
+  readonly #inIframe: boolean | undefined = undefined;
+  #initialized = false;
+  #close?: () => Promise<void>;
+  #invitationCode = new Trigger<string>();
+  #authCode = new Trigger<string>();
   // Rolling tail of console errors: the app reports operation failures generically to the user, and
   // the real cause only reaches `log.catch`.
-  private _consoleErrors: string[] = [];
+  #consoleErrors: string[] = [];
 
   // prettier-ignore
   constructor(
     // A context, not only a browser: an extension test must run in the persistent context the
     // extension is loaded into, and `setupPage` already accepts either.
-    private readonly _browser: Browser | BrowserContext,
+    browser: Browser | BrowserContext,
     inIframe?: boolean,
   ) {
-    this._inIframe = inIframe;
+    this.#browser = browser;
+    this.#inIframe = inIframe;
   }
 
   async init(): Promise<void> {
-    if (this._initialized) {
+    if (this.#initialized) {
       return;
     }
 
-    const { page, close } = await setupPage(this._browser, { url: INITIAL_URL });
+    const { page, close } = await setupPage(this.#browser, { url: INITIAL_URL });
     this.page = page;
-    this._close = close;
-    this.page.on('console', (message) => this._onConsoleMessage(message));
+    this.#close = close;
+    this.page.on('console', (message) => this.#onConsoleMessage(message));
 
     // Assert boot rather than proceed on a swallowed `false`, so a failed boot fails here instead of as
     // a bare `Test timeout` inside the first action. 30s is ~2x the slowest healthy boot (CI firefox
@@ -156,13 +158,13 @@ export class AppManager {
       .poll(() => this.page.evaluate((key) => window.localStorage.getItem(key), contentOpenKey), { timeout: 30_000 })
       .toBe('{"open":true}');
 
-    this.shell = new ShellManager(this.page, this._inIframe);
-    this._initialized = true;
+    this.shell = new ShellManager(this.page, this.#inIframe);
+    this.#initialized = true;
     this.deck = new DeckManager(this.page);
   }
 
   async close(): Promise<void> {
-    await this._close?.();
+    await this.#close?.();
   }
 
   //
@@ -356,14 +358,14 @@ export class AppManager {
   }
 
   async createDeviceInvitation(): Promise<string> {
-    this._invitationCode = new Trigger<string>();
-    this._authCode = new Trigger<string>();
+    this.#invitationCode = new Trigger<string>();
+    this.#authCode = new Trigger<string>();
     await this.page.getByTestId('devicesContainer.createInvitation').click();
-    return await this._invitationCode.wait();
+    return await this.#invitationCode.wait();
   }
 
   async getAuthCode(): Promise<string> {
-    return await this._authCode.wait();
+    return await this.#authCode.wait();
   }
 
   async logout(confirmInput = 'RESET'): Promise<void> {
@@ -402,12 +404,12 @@ export class AppManager {
   }
 
   async createSpaceInvitation(): Promise<string> {
-    this._invitationCode = new Trigger<string>();
-    this._authCode = new Trigger<string>();
+    this.#invitationCode = new Trigger<string>();
+    this.#authCode = new Trigger<string>();
     await this.page.getByTestId('membersContainer.createInvitation.more').click();
     await this.page.getByTestId('membersContainer.inviteOne').click();
     await this.page.getByTestId('membersContainer.createInvitation').click();
-    return await this._invitationCode.wait();
+    return await this.#invitationCode.wait();
   }
 
   async confirmRecoveryCode(): Promise<void> {
@@ -954,25 +956,25 @@ export class AppManager {
 
   /** The most recent browser console errors, newest last, for embedding in thrown diagnostics. */
   recentConsoleErrors(count = 5): string {
-    const tail = this._consoleErrors.slice(-count);
+    const tail = this.#consoleErrors.slice(-count);
     return tail.length > 0 ? tail.join(' | ') : '(none captured)';
   }
 
-  private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
+  async #onConsoleMessage(message: ConsoleMessage): Promise<void> {
     if (message.type() === 'error') {
-      this._consoleErrors.push(message.text());
-      if (this._consoleErrors.length > 20) {
-        this._consoleErrors.shift();
+      this.#consoleErrors.push(message.text());
+      if (this.#consoleErrors.length > 20) {
+        this.#consoleErrors.shift();
       }
     }
     try {
       const text = message.text();
       const json = JSON.parse(text.slice(text.indexOf('{')));
       if (json.invitationCode) {
-        this._invitationCode.wake(json.invitationCode);
+        this.#invitationCode.wake(json.invitationCode);
       }
       if (json.authCode) {
-        this._authCode.wake(json.authCode);
+        this.#authCode.wake(json.authCode);
       }
     } catch {}
   }

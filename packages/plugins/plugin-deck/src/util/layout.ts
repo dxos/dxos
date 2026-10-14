@@ -10,6 +10,7 @@ import { DeckSchema } from '#types';
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
+  /** Plank the opened subjects take the place of; see {@link addSubjectsToActiveDeck} for how it combines with `pivotId`. */
   replaceId?: string;
 };
 

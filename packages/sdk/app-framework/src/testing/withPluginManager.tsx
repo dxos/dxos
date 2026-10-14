@@ -90,9 +90,9 @@ type ManagedPluginManagerState = {
 };
 
 export type WithPluginManagerOptions = UseAppOptions & {
-  /** @deprecated */
+  /** @deprecated Contribute capabilities from a plugin module in `plugins` instead. */
   capabilities?: MaybeProvider<Capability.AnyContribution[], CapabilityManager.CapabilityManager>;
-  /** @deprecated */
+  /** @deprecated Use `setupEvents` instead. */
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
 };
 

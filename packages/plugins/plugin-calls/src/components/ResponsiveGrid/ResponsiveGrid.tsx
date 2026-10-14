@@ -74,7 +74,7 @@ export const ResponsiveGrid = <T extends object = any>({
     height: containerHeight = 0,
     ref: containerRef,
   } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
-  const [dividerHeight, setDividerHeight] = useState<number>(0);
+  const [dividerHeight, setDividerHeight] = useState(0);
   useEffect(() => {
     if (containerWidth && containerHeight) {
       const { height } = fitAspectRatio(containerWidth, containerHeight, ASPECT_RATIO);

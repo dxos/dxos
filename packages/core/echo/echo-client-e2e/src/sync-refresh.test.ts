@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -48,14 +49,15 @@ const openPeers = async (builder: EchoTestBuilder): Promise<Peers> => {
  * so a query issued straight after it can come back empty.
  */
 const readerCopy = async <T extends Obj.Any>(peers: Peers, id: string): Promise<T> => {
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const [found] = await peers.reader.query(Filter.id(id)).run();
-    if (found) {
-      return found as T;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error(`Object never reached the reader: ${id}`);
+  const found = await waitForCondition({
+    condition: async () => {
+      const [first] = await peers.reader.query(Filter.id(id)).run();
+      return first;
+    },
+    timeout: 5_000,
+    error: new Error(`Object never reached the reader: ${id}`),
+  });
+  return found as T;
 };
 
 /** Applies `mutate` on the writer and resolves once the reader's copy has been notified. */

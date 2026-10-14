@@ -24,7 +24,7 @@ export type TypeId = typeof TypeId;
 
 export interface Hook<Id extends string, T> extends Pipeable.Pipeable {
   readonly [TypeId]: {
-    _Data: T;
+    _Data: (payload: T) => T;
   };
   readonly id: Id;
   readonly strategy: Strategy;
@@ -32,13 +32,13 @@ export interface Hook<Id extends string, T> extends Pipeable.Pipeable {
 
 export type Any = {
   readonly [TypeId]: {
-    _Data: any;
+    _Data: (payload: any) => any;
   };
   readonly id: string;
   readonly strategy: Strategy;
 };
 
-export type Payload<E extends Any> = E[TypeId]['_Data'];
+export type Payload<E extends Any> = Parameters<E[TypeId]['_Data']>[0];
 
 /**
  * Handlers run in the subscriber's controller so they can emit further hooks; failures are defects
@@ -76,7 +76,7 @@ export const make =
   <const T>() =>
   <const Id extends string>(id: Id, options?: { strategy?: Strategy }): Hook<Id, T> => ({
     ...Pipeable.Prototype,
-    [TypeId]: { _Data: undefined as any },
+    [TypeId]: { _Data: (payload) => payload },
     id,
     strategy: options?.strategy ?? 'parallel',
   });

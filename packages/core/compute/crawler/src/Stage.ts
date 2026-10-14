@@ -8,7 +8,7 @@ import { Stage } from '@dxos/pipeline';
 
 import { type StateError } from './errors.ts';
 import * as StateStore from './StateStore.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 /**
  * An event-tap stage: applies `fn` to events matching `tags`, passes EVERY event through unchanged

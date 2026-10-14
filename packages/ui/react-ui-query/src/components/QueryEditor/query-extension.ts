@@ -337,8 +337,8 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
       'border-sky-500',
-      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs bg-sky-500')).text('type'),
-      Domino.of('span').classNames(mx('flex items-center px-1 text-fg-muted')).text(label),
+      Domino.of('span').classNames('flex items-center px-1 text-black text-xs bg-sky-500').text('type'),
+      Domino.of('span').classNames('flex items-center px-1 text-fg-muted').text(label),
     );
   }
 }

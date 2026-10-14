@@ -61,9 +61,11 @@ const makeServerLayer = <G, ROut, R>(
   const timingEnabled = RpcTiming.isEnabled(options?.timing);
   const timedGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
   const rpcGroup = asRpcGroup(timedGroup).middleware(DefectLogMiddleware);
-  const handlersLayer = timingEnabled
-    ? Layer.mergeAll(handlers, defectLogLayer, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-    : Layer.merge(handlers, defectLogLayer);
+  const handlersLayer = Layer.mergeAll(
+    handlers,
+    defectLogLayer,
+    timingEnabled ? RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)) : Layer.empty,
+  );
   return RpcServer.layer(asRpcGroup(rpcGroup), {
     disableTracing: options?.disableTracing ?? true,
     concurrency: options?.concurrency ?? 'unbounded',

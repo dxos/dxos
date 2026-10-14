@@ -22,8 +22,6 @@ import { BrainCapabilities } from '#types';
 export type FactStoreRegistry = {
   /** The singleton in-memory FactStore for a space (created on first use). */
   forSpace: (spaceId: string) => FactStoreApi;
-  /** A Layer providing `FactStore` for a space, wrapping the same instance `forSpace` returns. */
-  layerFor: (spaceId: string) => Layer.Layer<FactStore>;
   /**
    * Subscribe to fact mutations for a space; the listener fires after any `putFacts`/`clear` on that
    * space's store. Returns an unsubscribe. The in-memory FactStore is not otherwise observable, so
@@ -71,8 +69,7 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
     return () => void listeners.delete(listener);
   };
 
-  const layerFor = (spaceId: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, forSpace(spaceId));
-  return { forSpace, layerFor, subscribe };
+  return { forSpace, subscribe };
 };
 
 /**
@@ -91,7 +88,7 @@ export default Capability.makeModule(
       },
       (context) => {
         invariant(context.space, 'space context required for FactStore layer');
-        return registry.layerFor(context.space);
+        return Layer.succeed(FactStore, registry.forSpace(context.space));
       },
     );
 

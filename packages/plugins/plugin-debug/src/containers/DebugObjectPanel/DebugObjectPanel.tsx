@@ -23,19 +23,20 @@ export type DebugObjectPanelProps = Pick<
   canOpen?: (entity: Entity.Snapshot) => boolean;
 };
 
+/** Includes feeds so that feed-backed objects (e.g. synced games) resolve in the selection query. */
+const useSelectionQuery = (db: ReturnType<typeof Obj.getDatabase>, id: EntityId) =>
+  useMemo(
+    () =>
+      db
+        ? Query.select(Filter.id(id)).options({ deleted: 'include' }).from(db, { includeFeeds: true })
+        : Query.select(Filter.nothing()),
+    [db, id],
+  );
+
 export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(companionTo);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
-  // Include feeds so that feed-backed objects (e.g. synced games) resolve in the selection query.
-  const selectionQuery = useMemo(
-    () =>
-      db
-        ? Query.select(Filter.id(selectedId ?? companionTo.id))
-            .options({ deleted: 'include' })
-            .from(db, { includeFeeds: true })
-        : Query.select(Filter.nothing()),
-    [db, selectedId, companionTo.id],
-  );
+  const selectionQuery = useSelectionQuery(db, selectedId ?? companionTo.id);
   const [selectedObject] = useQuery(db, selectionQuery);
 
   return (

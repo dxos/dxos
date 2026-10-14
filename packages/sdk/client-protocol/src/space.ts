@@ -129,9 +129,6 @@ export interface Space extends Messenger {
 
   get members(): MulticastObservable<SpaceMember[]>;
 
-  /**
-   * @deprecated
-   */
   // TODO(wittjosiah): Audit and remove. This should not be exposed (or marked as internal).
   get internal(): SpaceInternal;
 
@@ -175,7 +172,4 @@ export const isSpace = (object: unknown): object is Space =>
   typeof object === 'object' && object != null && (object as Space)[SPACE_TAG] === true;
 
 // TODO(burdon): Create lower-level definition (HasId, db, etc.) and move to @dxos/echo.
-export const SpaceSchema: Schema.Codec<Space> = Schema.Any.pipe(
-  Schema.refine(isSpace),
-  Schema.annotate({ title: 'Space' }),
-);
+export const SpaceSchema: Schema.Codec<Space> = Schema.declare(isSpace).pipe(Schema.annotate({ title: 'Space' }));

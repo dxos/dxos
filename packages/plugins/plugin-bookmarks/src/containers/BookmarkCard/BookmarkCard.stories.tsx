@@ -13,7 +13,7 @@ import { Bookmark } from '#types';
 
 import { BookmarkCard } from './BookmarkCard.tsx';
 
-const CardStory = () => {
+const DefaultStory = () => {
   const bookmark = useMemo(
     () =>
       Bookmark.make({
@@ -33,7 +33,7 @@ const CardStory = () => {
 
 const meta = {
   title: 'plugins/plugin-bookmarks/containers/BookmarkCard',
-  render: () => <CardStory />,
+  render: () => <DefaultStory />,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

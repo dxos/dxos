@@ -38,9 +38,7 @@ export { ALL_NSIDS, NSID };
 const BSKY_PUBLIC_API = 'https://public.api.bsky.app/xrpc';
 const PLC_DIRECTORY = 'https://plc.directory';
 
-// ---------------------------------------------------------------------------
 // Schemas (subset of XRPC response shapes we consume)
-// ---------------------------------------------------------------------------
 
 const CreateSessionResponseSchema = Schema.Struct({
   did: Schema.String,
@@ -77,9 +75,7 @@ const ListRecordsResponseSchema = Schema.Struct({
 });
 export type ListRecordsEntry = Schema.Schema.Type<typeof ListRecordsEntrySchema>;
 
-// ---------------------------------------------------------------------------
 // XRPC primitives
-// ---------------------------------------------------------------------------
 
 const decodeJson =
   <T>(schema: Schema.Codec<T>) =>
@@ -159,9 +155,7 @@ const resolveRepo = (handleOrDid: string) =>
     return { did, pdsBaseUrl };
   });
 
-// ---------------------------------------------------------------------------
 // Session — an authenticated writer to a publisher's PDS repo.
-// ---------------------------------------------------------------------------
 
 /** Direct PDS auth via an app-password session token. */
 type AppPasswordSession = {
@@ -290,9 +284,7 @@ const resolveDefaultSpaceSession = (client: Client) =>
     } satisfies DpopProxySession;
   });
 
-// ---------------------------------------------------------------------------
 // Record operations — auth-mode agnostic; branch on the session.
-// ---------------------------------------------------------------------------
 
 /**
  * Proxy an XRPC call through Edge's `/atproto/proxy`, which attaches the DPoP proof signed with
@@ -384,9 +376,7 @@ export const listRecords = (
       );
 };
 
-// ---------------------------------------------------------------------------
 // Shared CLI option fragment for auth flags.
-// ---------------------------------------------------------------------------
 
 export const AUTH_OPTION_DESCRIPTIONS = {
   handle:

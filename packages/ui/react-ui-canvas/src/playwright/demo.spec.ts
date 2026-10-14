@@ -29,20 +29,19 @@ test.describe('demo', () => {
   test.skip(!process.env.DX_DEMO, 'set DX_DEMO=1 to record');
 
   test('post-M4 fixes', async ({ page }) => {
-    const settle = () => page.waitForTimeout(BEAT);
     const drag = async (from: { x: number; y: number }, to: { x: number; y: number }) => {
       await page.mouse.move(from.x, from.y);
       await page.mouse.down();
       await page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2, { steps: 12 });
       await page.mouse.move(to.x, to.y, { steps: 12 });
       await page.mouse.up();
-      await settle();
+      await page.waitForTimeout(BEAT);
     };
 
     await page.goto(DEFAULT_URL);
     await page.getByTestId('scene-view').waitFor({ state: 'visible', timeout: 45_000 });
     await page.getByTestId('scene-view').click({ position: { x: 700, y: 500 } });
-    await settle();
+    await page.waitForTimeout(BEAT);
 
     // A drawn box is the sweep, and a click that moved nothing creates nothing.
     await page.keyboard.press('r');
@@ -54,16 +53,16 @@ test.describe('demo', () => {
     for (const step of ['toolbar-zoom-in', 'toolbar-zoom-in', 'toolbar-zoom-out', 'toolbar-zoom-out']) {
       await page.getByTestId('toolbar-create').click();
       await page.getByRole('menuitem').first().click();
-      await settle();
+      await page.waitForTimeout(BEAT);
       await page.getByTestId(step).click();
-      await settle();
+      await page.waitForTimeout(BEAT);
     }
 
     // Snapping follows the drawn grid, and G hides it with the snap.
     await page.keyboard.press('g');
-    await settle();
+    await page.waitForTimeout(BEAT);
     await page.keyboard.press('g');
-    await settle();
+    await page.waitForTimeout(BEAT);
 
     // Links between bodies, ports on hover, and the smart route.
     await page.goto(FREEHAND_URL);
@@ -71,9 +70,9 @@ test.describe('demo', () => {
     await page.getByTestId('scene-view').click({ position: { x: 700, y: 700 } });
     await page.keyboard.press('l');
     await page.mouse.move(300, 300, { steps: 10 });
-    await settle();
+    await page.waitForTimeout(BEAT);
     await page.mouse.move(700, 400, { steps: 20 });
-    await settle();
+    await page.waitForTimeout(BEAT);
 
     const nodes = await page.locator('[data-node-id]').all();
     if (nodes.length >= 2) {
@@ -89,6 +88,6 @@ test.describe('demo', () => {
         await drag({ x: to.x + to.width / 2, y: to.y + to.height / 2 }, { x: to.x + to.width / 2 + 160, y: to.y + 40 });
       }
     }
-    await settle();
+    await page.waitForTimeout(BEAT);
   });
 });

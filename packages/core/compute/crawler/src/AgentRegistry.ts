@@ -11,7 +11,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 
 import { StateError } from './errors.ts';
 import { makeSql, migrate } from './internal/agent-registry-sql.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
 export type Identifier = {

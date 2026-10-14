@@ -16,6 +16,7 @@ const sortByPluginMeta = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.profile.name ?? a.meta.profile.key).localeCompare(b.meta.profile.name ?? b.meta.profile.key);
 
 export type RegistryArticleProps = {
+  /** Attention id of the registry article; attendable key for this view. */
   contextId: string;
   plugins: Plugin.Plugin[];
   /**

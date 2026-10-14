@@ -14,7 +14,8 @@ import { createConfig } from './options.ts';
  * NOTE: File level filtering isn't supported in storybooks.
  */
 declare global {
-  const DX_LOG: Log;
+  // eslint-disable-next-line no-var
+  var DX_LOG: Log;
 }
 
 /**
@@ -204,7 +205,7 @@ export const createLog = (): LogImp => {
 /**
  * Global logging function.
  */
-export const log: Log = ((globalThis as any).DX_LOG ??= createLog());
+export const log: Log = (globalThis.DX_LOG ??= createLog());
 
 const start = Date.now();
 let last = start;

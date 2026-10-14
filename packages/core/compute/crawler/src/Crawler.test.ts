@@ -21,7 +21,7 @@ import { extractFactsStage } from './stages/extract-facts.ts';
 import { extractTopics } from './stages/topics.ts';
 import * as StateStore from './StateStore.ts';
 import { TestLayer, THREADED_FIXTURE, servicesLayer } from './testing/index.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 

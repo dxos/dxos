@@ -103,20 +103,9 @@ export const make = (
     artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   } = {},
 ): Project => {
-  const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [], routines: [] });
-  if (!props.taskSet) {
-    const taskSet = TaskSet.make();
-    Obj.update(project, (project) => {
-      project.taskSet = Ref.make(taskSet);
-    });
-  }
-  if (!props.outline) {
-    const outline = Outline.make({ name: props.name });
-    Obj.update(project, (project) => {
-      project.outline = Ref.make(outline);
-    });
-  }
-  return project;
+  const outline = props.outline ?? Ref.make(Outline.make({ name: props.name }));
+  const taskSet = props.taskSet ?? Ref.make(TaskSet.make());
+  return Obj.make(Project, { ...props, taskSet, outline, artifacts: props.artifacts ?? [], routines: [] });
 };
 
 /** Adds a routine to the project as an owned child; `SetParent` on the field cascades it. */

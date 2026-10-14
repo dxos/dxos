@@ -27,7 +27,7 @@ export default Capability.makeModule(
 
     const transcriptionManagerProvider: TranscriptionCapabilities.TranscriptionManagerProvider = ({
       messageEnricher,
-    }) => {
+    } = {}) => {
       const client = capabilities.get(ClientCapabilities.Client);
       const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
       const transcriptionManager = new TranscriptionManagerImpl({

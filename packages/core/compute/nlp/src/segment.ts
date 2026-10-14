@@ -156,13 +156,15 @@ const buildPrompt = (
  *
  * Provides the LanguageModel internally; residual requirement is {@link AiService.AiService}.
  */
-export const segmentText = (source: string, options: SegmentTextOptions = {}) =>
-  Effect.gen(function* () {
+export const segmentText = Effect.fnUntraced(
+  function* (source: string, options: SegmentTextOptions = {}) {
     const { value } = yield* Effect.scoped(
       LanguageModel.generateObject({ schema: AnalyzedText, prompt: buildPrompt(source, options) }),
     );
     return alignSegments(source, toRawSegments(value), options.target);
-  }).pipe(Effect.provide(AiService.languageModel(SEGMENT_MODEL)));
+  },
+  Effect.provide(AiService.languageModel(SEGMENT_MODEL)),
+);
 
 /**
  * The pluggable analyzer contract, mirroring `Parser` for the editor extension and pipelines.

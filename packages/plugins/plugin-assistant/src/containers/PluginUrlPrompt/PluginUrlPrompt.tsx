@@ -16,7 +16,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
-import { useChatReportContext } from '../../components/Chat/context.ts';
+import { useChatReportContext } from '../../components/Chat/index.ts';
 
 const PLUGIN_URL_PROMPT_NAME = 'PluginUrlPrompt';
 

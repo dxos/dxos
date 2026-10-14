@@ -110,7 +110,7 @@ export class EdgeReplicant {
     const agentKey = toPublicKey(agentDevice?.deviceKey)?.toHex();
     invariant(agentKey, 'no agent key');
 
-    const response = await this._client!.edge.createSpace({ agentKey });
+    const response = await this._client.edge.createSpace({ agentKey });
     log.info('space created', { response });
 
     if (waitForSpace) {
@@ -172,7 +172,7 @@ export class EdgeReplicant {
   async waitForReplication({ spaceId, minDocuments }: { spaceId: SpaceId; minDocuments?: number }) {
     log.info('waiting for replication', { spaceId, minDocuments });
     invariant(this._client, 'no client');
-    const space = this._client!.spaces.get(spaceId);
+    const space = this._client.spaces.get(spaceId);
     invariant(space, 'space not found');
 
     const replicationIsDone = new Trigger();

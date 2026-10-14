@@ -33,9 +33,14 @@ export default Capability.makeModule(
     const client = yield* ClientCapabilities.Client;
 
     const spaceAtom = Atom.make<Space | undefined>(undefined).pipe(Atom.keepAlive);
-    const notificationsAtom = Atom.make((get) => {
+    // Built once per space so result changes recompute only the outer atom, not the query.
+    const queryAtom = Atom.make((get) => {
       const space = get(spaceAtom);
-      return space ? Notifications.order(get(space.db.query(Filter.type(Notifications.Notifications)).atom)) : [];
+      return space ? space.db.query(Filter.type(Notifications.Notifications)).atom : undefined;
+    });
+    const notificationsAtom = Atom.make((get) => {
+      const query = get(queryAtom);
+      return query ? Notifications.order(get(query)) : [];
     }).pipe(Atom.keepAlive);
 
     const announce = (message: Message.Message) =>

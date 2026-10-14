@@ -94,7 +94,7 @@ const createDiscordChannel = Effect.fnUntraced(function* (
   const list = yield* AgentChannels.loadForAgent(agent);
   if (list) {
     Obj.update(list, (list) => {
-      list.channels = [...list.channels, Ref.make(channel)];
+      list.channels.push(Ref.make(channel));
     });
   } else {
     yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));

@@ -80,12 +80,17 @@ class BufferedSpan implements RemoteSpan {
  * IDs, preserving the trace hierarchy.
  */
 export class BufferingTracingBackend implements TracingBackend {
+  /** Upper bound on retained spans so a process that never registers a real backend cannot grow without limit. */
+  static readonly MAX_BUFFERED_SPANS = 10_000;
+
   readonly #pending: BufferedSpan[] = [];
   #counter = 0;
 
   startSpan(options: StartSpanOptions): RemoteSpan {
     const span = new BufferedSpan(options, ++this.#counter);
-    this.#pending.push(span);
+    if (this.#pending.length < BufferingTracingBackend.MAX_BUFFERED_SPANS) {
+      this.#pending.push(span);
+    }
     return span;
   }
 

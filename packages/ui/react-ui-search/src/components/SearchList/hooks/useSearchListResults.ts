@@ -44,7 +44,7 @@ export const useSearchListResults = <T = unknown>({
   extract,
   minScore = 0,
 }: UseSearchListResultsOptions<T>) => {
-  const [query, setQuery] = useState<string>('');
+  const [query, setQuery] = useState('');
   const queryRef = useRef<string>('');
 
   // Update results when items change.

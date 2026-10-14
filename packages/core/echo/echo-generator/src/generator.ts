@@ -20,7 +20,7 @@ import {
 
 /**
  * Typed object generator.
- * @deprecated
+ * @deprecated Use generators in schema package.
  */
 export class TestObjectGenerator<T extends string = TestSchemaType> {
   // prettier-ignore

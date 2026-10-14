@@ -549,7 +549,7 @@ type ListboxItemGroupProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
  */
 const ListboxItemGroup = forwardRef<HTMLDivElement, ListboxItemGroupProps>(
   ({ classNames, style, children, ...props }, forwardedRef) => {
-    const { style: containerStyle, ...attributes } = containerAttributes({});
+    const { style: containerStyle, ...attributes } = containerAttributes();
     return (
       <ListboxPrimitive.ItemGroup
         {...props}

@@ -53,7 +53,7 @@ export interface TracksResponse extends ErrorResponse {
 
 export interface RenegotiationResponse extends ErrorResponse {}
 
-export type EncodedTrackName = string & { __brand: 'EncodedTrackName' };
+export type EncodedTrackName = string & { __brand: '@dxos/plugin-calls/EncodedTrackName' };
 
 export const TrackNameCodec = {
   encode: (trackData: TrackObject): EncodedTrackName => {

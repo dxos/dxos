@@ -35,7 +35,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
       return;
     }
 
-    const keydownHandler = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Escape': {
           onExit?.();
@@ -68,8 +68,8 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
       }
     };
 
-    window.addEventListener('keydown', keydownHandler);
-    return () => window.removeEventListener('keydown', keydownHandler);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [keys, count]);
 
   if (index === undefined || !count) {

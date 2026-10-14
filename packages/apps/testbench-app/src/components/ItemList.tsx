@@ -84,7 +84,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
               <Field.Root>
                 <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <Input.Checkbox
-                  checked={(object as any)[property]}
+                  checked={getValue(object, property)}
                   onCheckedChange={({ checked: state }) => setValue(object, property, !!state)}
                 />
               </Field.Root>

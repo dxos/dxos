@@ -137,10 +137,6 @@ export const createMarkdownDocuments = (
     bumpMarkdownBinding(fileId);
   };
 
-  //
-  // --- File watching: external editor → ECHO ---
-  //
-
   /**
    * Called by a per-file Tauri watcher when the file changes on disk.
    * Reads the new content, updates the atom state (marks not-modified), and
@@ -224,10 +220,6 @@ export const createMarkdownDocuments = (
     void Effect.runFork(startFileWatcher(file));
   };
 
-  //
-  // --- Identity persistence: file ↔ ECHO DXN ---
-  //
-
   /**
    * Persist the file→DXN mapping in two places so it survives across sessions:
    *  1. macOS extended attribute on the file itself (fast, per-file lookup).
@@ -258,10 +250,6 @@ export const createMarkdownDocuments = (
       }),
     );
   };
-
-  //
-  // --- Document creation and restoration ---
-  //
 
   /**
    * Get or create a Text object for a markdown file. If one already exists in
@@ -399,10 +387,6 @@ export const createMarkdownDocuments = (
         yield* writeFileMap(workspace.path, updatedFileMap);
       }
     });
-
-  //
-  // --- Public API ---
-  //
 
   const service: MarkdownDocuments = {
     markdownBindingAtom: (fileId: string) => markdownBindingGeneration(fileId),

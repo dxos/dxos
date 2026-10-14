@@ -68,19 +68,21 @@ export class DiagnosticsChannel {
    * Noop in the browser.
    */
   unref(): void {
-    if (this._serveChannel && typeof (this._serveChannel as any).unref === 'function') {
-      (this._serveChannel as any).unref();
-      (this._clientChannel as any).unref();
+    for (const channel of [this._serveChannel, this._clientChannel]) {
+      if (channel && 'unref' in channel && typeof channel.unref === 'function') {
+        channel.unref();
+      }
     }
   }
 
   serve(manager: DiagnosticsManager): void {
     invariant(this._serveChannel);
+    const serveChannel = this._serveChannel;
     const listener = async (event: MessageEvent) => {
       switch (event.data.type) {
         case 'DIAGNOSTICS_DISCOVER': {
           const diagnostics = manager.list();
-          this._serveChannel!.postMessage({
+          serveChannel.postMessage({
             type: 'DIAGNOSTICS_ANNOUNCE',
             diagnostics,
           } satisfies DiagnosticChannelMessage);
@@ -96,7 +98,7 @@ export class DiagnosticsChannel {
           }
 
           const data = await manager.fetch(request);
-          this._serveChannel!.postMessage({
+          serveChannel.postMessage({
             type: 'DIAGNOSTICS_RESPONSE',
             requestId,
             data,
@@ -106,8 +108,8 @@ export class DiagnosticsChannel {
       }
     };
 
-    this._serveChannel.addEventListener('message', listener);
-    this._ctx.onDispose(() => this._serveChannel!.removeEventListener('message', listener));
+    serveChannel.addEventListener('message', listener);
+    this._ctx.onDispose(() => serveChannel.removeEventListener('message', listener));
   }
 
   async discover(): Promise<DiagnosticMetadata[]> {

@@ -6,7 +6,7 @@ import { type KeyboardEvent, useCallback } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
-import { isToolKey, keyAction } from '../../model/keys.ts';
+import { isToolKey, keyAction, nudgeDirection } from '../../model/keys.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
@@ -151,10 +151,8 @@ export const useSceneKeys = ({
           }
           // Shift moves by a major cell rather than a minor one.
           const step = event.shiftKey ? major : grid;
-          const delta = {
-            x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
-            y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
-          };
+          const direction = nudgeDirection(event) ?? { x: 0, y: 0 };
+          const delta = { x: direction.x * step, y: direction.y * step };
           projection.apply({ kind: 'move', ids: selectedNodes, delta });
           event.preventDefault();
           break;

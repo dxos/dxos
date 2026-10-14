@@ -51,6 +51,9 @@ export const defaultFunctionContextOptions: Pick<FunctionContextOptions, 'defaul
  * - https://hyperformula.handsontable.com/guide/known-limitations.html#known-limitations
  * - https://github.com/handsontable/hyperformula/issues/892
  */
+/** Upper bound on cached results; a sheet whose arguments keep changing would otherwise grow the cache forever. */
+const MAX_CACHE_ENTRIES = 1_000;
+
 export class FunctionContext {
   // Mangle name with params.
   static createInvocationKey(name: string, ...args: any): string {
@@ -114,6 +117,18 @@ export class FunctionContext {
     this._subscriptions.set(name, unsubscribe);
   }
 
+  #setCache(key: string, entry: { value: InterpreterValue; ts: number }): void {
+    // Map iterates in insertion order, so re-inserting moves the key to newest.
+    this._cache.delete(key);
+    if (this._cache.size >= MAX_CACHE_ENTRIES) {
+      const oldest = this._cache.keys().next();
+      if (!oldest.done) {
+        this._cache.delete(oldest.value);
+      }
+    }
+    this._cache.set(key, entry);
+  }
+
   /**
    * Exec the function if TTL has expired.
    * Return the cached value.
@@ -140,13 +155,13 @@ export class FunctionContext {
         try {
           // Exec function.
           const value = await cb(...args);
-          this._cache.set(invocationKey, { value, ts: Date.now() });
+          this.#setCache(invocationKey, { value, ts: Date.now() });
           log('set', { cell, value });
           this._onUpdate({ name, cell });
         } catch (err) {
           // TODO(burdon): Show error to user.
           log.warn('failed', { cell, err });
-          this._cache.set(invocationKey, { value: new CellError(ErrorType.ERROR, 'Function failed.'), ts: Date.now() });
+          this.#setCache(invocationKey, { value: new CellError(ErrorType.ERROR, 'Function failed.'), ts: Date.now() });
         } finally {
           this._pending.delete(invocationKey);
         }

@@ -23,7 +23,7 @@ import { PullRequest, Task } from '@dxos/types';
 import { translations } from '#translations';
 import { GitHubOperation } from '#types';
 
-import { PullRequestsArticle } from '../containers/PullRequestsArticle/PullRequestsArticle.tsx';
+import PullRequestsArticle from '../containers/PullRequestsArticle/index.ts';
 
 const DAY = 24 * 60 * 60_000;
 const daysAgo = (days: number) => new Date(Date.now() - days * DAY).toISOString();

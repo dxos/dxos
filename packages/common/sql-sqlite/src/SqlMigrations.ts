@@ -47,12 +47,13 @@ export const splitStatements = (script: string): string[] =>
  * yield* SqlMigrations.apply(init);
  * ```
  */
-export const apply = (...scripts: ReadonlyArray<string>): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    for (const script of scripts) {
-      for (const statement of splitStatements(script)) {
-        yield* sql`${sql.literal(statement)}`;
-      }
+export const apply = Effect.fnUntraced(function* (
+  ...scripts: ReadonlyArray<string>
+): Effect.fn.Return<void, SqlError.SqlError, SqlClient.SqlClient> {
+  const sql = yield* SqlClient.SqlClient;
+  for (const script of scripts) {
+    for (const statement of splitStatements(script)) {
+      yield* sql`${sql.literal(statement)}`;
     }
-  });
+  }
+});

@@ -147,8 +147,7 @@ describe('convergence-key merging', () => {
     const loser = db.add(Obj.make(TestSchema.Person, { name: 'Alice (second writer)' }));
     setConvergenceKey(loser, 'org.example.alice');
 
-    const child = db.add(Obj.make(TestSchema.Task, { title: 'filed under Alice' }));
-    Obj.setParent(child, loser);
+    const child = db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: loser, title: 'filed under Alice' }));
     await db.flush();
     await waitForLiveCount(db, 1, TestSchema.Person);
 

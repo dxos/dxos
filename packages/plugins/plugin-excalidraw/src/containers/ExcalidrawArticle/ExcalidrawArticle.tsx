@@ -58,7 +58,7 @@ export const ExcalidrawArticle = ({
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
   const themeMode = Hooks.useThemeMode();
-  const [down, setDown] = useState<boolean>(false);
+  const [down, setDown] = useState(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   // Last selection reported to the host, so its echo back through `selection` is a no-op.
   const reportedSelectionRef = useRef<readonly string[]>([]);

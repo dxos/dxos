@@ -63,7 +63,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   formInline: Schema.optional(Schema.Boolean),
 
   /**
-   * @deprecated
+   * @deprecated Use `$id` for type identity.
    */
   // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe.
   type: Schema.optional(

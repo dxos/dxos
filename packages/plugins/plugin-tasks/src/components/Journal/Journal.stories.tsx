@@ -17,7 +17,7 @@ import { Journal, TasksUtil } from '#types';
 
 import { Journal as JournalComponent } from './Journal.tsx';
 
-const DefaultJournalStory = () => {
+const DefaultStory = () => {
   const [space] = useSpaces();
   const journal = useMemo(() => {
     if (space) {
@@ -77,7 +77,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => <DefaultJournalStory />,
+  render: () => <DefaultStory />,
 };
 
 export const Jounals: Story = {

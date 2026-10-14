@@ -19,7 +19,7 @@ import {
 // These carry identity as a hex `identityKey`/`ownerPublicKey`. They are retained so the Edge
 // continues to accept requests from, and the devtools CLI can still read responses produced by,
 // clients/servers that predate the DID migration (notably Composer, which deploys on a delay).
-// Drop in phase 7 once telemetry shows no legacy senders remain (see DX995_PHASE7_DROP_LEGACY.md).
+// Remove once telemetry shows no legacy senders remain.
 //
 // Each type omits the new DID field and re-adds the old hex field, so a `New | Legacy` union is
 // discriminable cast-free via `'identityDid' in value`.

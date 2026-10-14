@@ -24,7 +24,7 @@ import {
   updateActiveDeck,
   withViewTransition,
 } from '../util/index.ts';
-import * as Navigation from './navigation.ts';
+import * as Navigation from './Navigation.ts';
 import { computeActiveUpdates } from './set-active.ts';
 
 /**

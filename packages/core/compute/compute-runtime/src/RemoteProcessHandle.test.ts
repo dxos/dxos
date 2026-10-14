@@ -53,7 +53,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
             Stream.take(3),
           ),
         );
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     // The replay comes first and the stream CONTINUES with the pushed messages: a reader attaching
@@ -71,7 +71,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(control, source.monitor);
         return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(2)));
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect(textsOf([...collected])).toEqual(['buffered', 'during-replay']);
@@ -95,7 +95,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
             Stream.take(2),
           ),
         );
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     // The page plus the empty page that ends the replay — bounded, not a loop. The polled path would
@@ -113,7 +113,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
           subscribeToTraceMessages: () => Stream.fromIterable([traceMessage('live')]),
         });
         return yield* Stream.runCollect(handle.subscribeEphemeral());
-      }).pipe(Effect.provide(registryLayer()), Effect.timeout('5 seconds')),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())), Effect.timeout('5 seconds')),
     );
 
     expect(textsOf([...collected])).toEqual(['buffered', 'live']);
@@ -128,7 +128,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), RemoteTraceMonitor.noopMonitor);
         return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
-      }).pipe(Effect.provide(registryLayer()), Effect.timeout('5 seconds')),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())), Effect.timeout('5 seconds')),
     );
 
     expect(textsOf([...collected])).toEqual(['buffered']);
@@ -141,7 +141,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(makeControl([traceMessage('buffered')]));
         return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect(textsOf([...collected])).toEqual(['buffered']);
@@ -161,7 +161,7 @@ describe('RemoteProcessHandle event polling', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(control);
         return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect(textsOf([...collected])).toEqual(['after-outage']);
@@ -188,7 +188,7 @@ describe('RemoteProcessHandle event polling', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(control, undefined, Duration.millis(1), EchoOutput);
         return yield* Stream.runCollect(handle.subscribeOutputs().pipe(Stream.take(1)));
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect([...collected]).toEqual(['hello']);
@@ -202,7 +202,7 @@ describe('RemoteProcessHandle event polling', () => {
         const handle = yield* makeHandle(log.control, undefined, Duration.millis(1), EchoOutput);
         yield* handle.submitInput(undefined);
         return yield* Stream.runCollect(handle.subscribeOutputs());
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect([...collected]).toEqual(['reply']);
@@ -214,7 +214,7 @@ describe('RemoteProcessHandle event polling', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(log.control, undefined, Duration.millis(1), EchoOutput);
         return yield* Stream.runCollect(handle.subscribeOutputs());
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect([...collected]).toEqual(['earlier']);
@@ -229,7 +229,7 @@ describe('RemoteProcessHandle event polling', () => {
       Effect.gen(function* () {
         const handle = yield* makeHandle(control, undefined, Duration.millis(1));
         return yield* Stream.runCollect(handle.subscribeEphemeral()).pipe(Effect.exit);
-      }).pipe(Effect.provide(registryLayer())),
+      }).pipe(Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make()))),
     );
 
     expect(Exit.isFailure(exit)).toBe(true);
@@ -334,8 +334,6 @@ const makeLiveSource = () => {
     emit: (message: Trace.Message) => listeners.forEach((listener) => listener(message)),
   };
 };
-
-const registryLayer = () => Layer.succeed(Registry.AtomRegistry, Registry.make());
 
 /** Supplies the output codec `subscribeOutputs` needs; the process itself never runs here. */
 const EchoOutput = Operation.makeDurable({

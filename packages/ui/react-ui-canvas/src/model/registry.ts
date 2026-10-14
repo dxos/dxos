@@ -18,7 +18,7 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import { BoxNodeView, EllipseNodeView, FrameNodeView, NoteNodeView } from '../components/SceneLayer/SceneLayer.tsx';
+import { BoxNodeView, EllipseNodeView, FrameNodeView, NoteNodeView } from '../components/SceneLayer/index.ts';
 import { type PartEditing, type PartField } from '../utils/parts.ts';
 import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';

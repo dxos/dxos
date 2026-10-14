@@ -74,9 +74,10 @@ export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>
       openPromise = (async () => {
         const timingEnabled = RpcTiming.isEnabled(options?.timing);
         const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-        const handlersLayer = timingEnabled
-          ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-          : handlers;
+        const handlersLayer = Layer.merge(
+          handlers,
+          timingEnabled ? RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)) : Layer.empty,
+        );
         const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
           disableTracing: options?.disableTracing ?? true,
           concurrency: options?.concurrency ?? 'unbounded',
@@ -143,9 +144,10 @@ export const serve = <G, H extends Layer.Layer<never, never, never>>(
 
       const timingEnabled = RpcTiming.isEnabled(options?.timing);
       const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-      const handlersLayer = timingEnabled
-        ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-        : handlers;
+      const handlersLayer = Layer.merge(
+        handlers,
+        timingEnabled ? RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)) : Layer.empty,
+      );
       const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
         disableTracing: options?.disableTracing ?? true,
         concurrency: options?.concurrency ?? 'unbounded',

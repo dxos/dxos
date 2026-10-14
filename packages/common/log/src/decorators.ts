@@ -21,7 +21,7 @@ export const createMethodLogDecorator =
         F: '',
         L: 0,
         ...(meta ?? {}),
-        S: this as any,
+        S: this,
       } as CallMetadata;
 
       const formattedArgs = args.map((arg: any) => inspect(arg, false, 1, true)).join(', ');

@@ -56,7 +56,7 @@ const layouts: Record<ContainerType, FC<ContainerProps>> = {
   ),
 
   centered: ({ classNames, children }: ContainerProps) => (
-    <div className={mx('fixed inset-0 grid overflow-hidden place-items-center dx-deck-surface')}>
+    <div className={'fixed inset-0 grid overflow-hidden place-items-center dx-deck-surface'}>
       <div className={mx('flex flex-col dx-base-surface', classNames)}>{children}</div>
     </div>
   ),

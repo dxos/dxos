@@ -129,6 +129,7 @@ export const getCorePlugins = ({
     ...layoutPlugins,
     // Core because invitations reach the user only through its inbox materializer.
     MessengerPlugin.make(),
+    isTauri && !isMobile && !isPopover && NativePlugin.make(),
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,
@@ -136,7 +137,6 @@ export const getCorePlugins = ({
       downloadLogs: () => downloadLogs(logStore),
     }),
     OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
-    isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
     ProcessManagerPlugin.make(),
     ProgressPlugin.make(),

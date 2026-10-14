@@ -59,6 +59,55 @@ export type GraphProps<Node extends GraphNode.Any = any, Edge extends GraphEdge.
   }
 >;
 
+/**
+ * Wires the projector to the model and renderer, and runs the projector for the component's lifetime.
+ */
+const useProjector = <Node extends GraphNode.Any>(
+  projector: GraphProjector<Node>,
+  renderer: GraphRenderer<Node>,
+  model?: GraphModel.GraphModel<Node, any>,
+) => {
+  // Subscriptions.
+  useEffect(() => {
+    // Wire the renderer listener BEFORE calling updateData so the synchronous
+    // 'topology' emit (fired from inside onUpdate) reaches the renderer.
+    const cleanup = combine(
+      // Subscribe to model changes if reactive model.
+      model
+        ? model.subscribe(() => {
+            projector.updateData(model?.graph);
+          })
+        : undefined,
+
+      projector.updated.on(({ layout, kind }) => {
+        try {
+          // 'positions' is the per-tick fast path; 'topology' (and unset, for back-compat) is the full render.
+          if (kind === 'positions') {
+            renderer.applyPositions(layout);
+          } else {
+            renderer.render(layout);
+          }
+        } catch (error) {
+          log.catch(error);
+          void projector.stop();
+        }
+      }),
+    );
+
+    projector.updateData(model?.graph);
+
+    return cleanup;
+  }, [model, projector, renderer]);
+
+  // Start.
+  useEffect(() => {
+    void projector.start();
+    return () => {
+      void projector.stop();
+    };
+  }, [projector]);
+};
+
 const GraphInner = <Node extends GraphNode.Any = any, Edge extends GraphEdge.Any = any>(
   {
     classNames,
@@ -143,45 +192,7 @@ const GraphInner = <Node extends GraphNode.Any = any, Edge extends GraphEdge.Any
     [model, projector, renderer],
   );
 
-  // Subscriptions.
-  useEffect(() => {
-    // Wire the renderer listener BEFORE calling updateData so the synchronous
-    // 'topology' emit (fired from inside onUpdate) reaches the renderer.
-    const cleanup = combine(
-      // Subscribe to model changes if reactive model.
-      model
-        ? model.subscribe(() => {
-            projector.updateData(model?.graph);
-          })
-        : undefined,
-
-      projector.updated.on(({ layout, kind }) => {
-        try {
-          // 'positions' is the per-tick fast path; 'topology' (and unset, for back-compat) is the full render.
-          if (kind === 'positions') {
-            renderer.applyPositions(layout);
-          } else {
-            renderer.render(layout);
-          }
-        } catch (error) {
-          log.catch(error);
-          void projector.stop();
-        }
-      }),
-    );
-
-    projector.updateData(model?.graph);
-
-    return cleanup;
-  }, [model, projector, renderer]);
-
-  // Start.
-  useEffect(() => {
-    void projector.start();
-    return () => {
-      void projector.stop();
-    };
-  }, [projector]);
+  useProjector(projector, renderer, model);
 
   // Model-space pointer events. Attached to the SVG element so they fire across the entire
   // canvas (with pointer-events: all), not just over painted nodes. The dx-graph group's CTM

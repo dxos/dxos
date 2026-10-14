@@ -50,7 +50,7 @@ export const ComputeNode = GraphNode.GraphNode.pipe(
 
       /**
        * For switch nodes.
-       * @deprecated
+       * @deprecated Use `value` instead.
        */
       // TODO(dmaretskyi): Reuse `value`.
       enabled: Schema.optional(Schema.Boolean),

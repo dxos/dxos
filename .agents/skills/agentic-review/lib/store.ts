@@ -30,6 +30,14 @@ export type GroupManifestEntry = {
 /** `groups.json`'s shape: group number (zero-padded) → its manifest entry. */
 export type GroupsManifest = Record<string, GroupManifestEntry>;
 
+/** Narrows parsed `groups.json` to a manifest whose entries each carry a string `ruleId`; other fields are checked where used. */
+export const isGroupsManifest = (value: unknown): value is GroupsManifest =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.values(value).every(
+    (entry) => typeof entry === 'object' && entry !== null && 'ruleId' in entry && typeof entry.ruleId === 'string',
+  );
+
 /** A value a REVIEW.md frontmatter field may hold before serialization. */
 type FrontmatterValue = string | number | boolean | string[] | null | undefined;
 
@@ -136,11 +144,7 @@ export const ruleIdsFromReviewDir = (dir: string, review: ParsedFrontmatter | nu
     return [
       ...new Set(
         entries
-          .map((group) =>
-            typeof group === 'object' && group !== null && 'ruleId' in group
-              ? (group as { ruleId: unknown }).ruleId
-              : undefined,
-          )
+          .map((group) => (typeof group === 'object' && group !== null && 'ruleId' in group ? group.ruleId : undefined))
           .filter((id): id is string => typeof id === 'string' && id.length > 0),
       ),
     ];

@@ -407,56 +407,57 @@ const toolResultHeaderMessage = (toolCallId: string): string => `Result from ${t
  * stub `tool-result` parts first, then a `user` message with headers and file/text parts.
  * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
  */
-const convertToolMessage = (message: Message.Message): Effect.Effect<Prompt.Message[], PromptPreprocesorError, never> =>
-  Effect.gen(function* () {
-    const toolResults = message.blocks.filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+const convertToolMessage = Effect.fnUntraced(function* (
+  message: Message.Message,
+): Effect.fn.Return<Prompt.Message[], PromptPreprocesorError, never> {
+  const toolResults = message.blocks.filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
 
-    if (toolResults.length === 0) {
-      return [];
+  if (toolResults.length === 0) {
+    return [];
+  }
+
+  const contentBlockResults = toolResults.filter(
+    (block) => block.error == null && ContentBlock.isContentBlockResult(block.result),
+  );
+
+  if (contentBlockResults.length === 0) {
+    const content = yield* Effect.forEach(toolResults, buildToolResultPart);
+    return [Prompt.makeMessage('tool', { content })];
+  }
+
+  const toolParts: Prompt.ToolMessagePart[] = [];
+  const userParts: Prompt.UserMessagePart[] = [];
+
+  for (const block of toolResults) {
+    if (block.error != null) {
+      toolParts.push(makeToolResultPart(block, block.error, true));
+      continue;
     }
 
-    const contentBlockResults = toolResults.filter(
-      (block) => block.error == null && ContentBlock.isContentBlockResult(block.result),
-    );
+    if (ContentBlock.isContentBlockResult(block.result)) {
+      toolParts.push(makeToolResultPart(block, toolResultSeeBelowMessage(block.toolCallId), false));
+    } else {
+      toolParts.push(yield* buildToolResultPart(block));
+    }
+  }
 
-    if (contentBlockResults.length === 0) {
-      const content = yield* Effect.forEach(toolResults, buildToolResultPart);
-      return [Prompt.makeMessage('tool', { content })];
+  for (const block of toolResults) {
+    if (block.error != null || !ContentBlock.isContentBlockResult(block.result)) {
+      continue;
     }
 
-    const toolParts: Prompt.ToolMessagePart[] = [];
-    const userParts: Prompt.UserMessagePart[] = [];
-
-    for (const block of toolResults) {
-      if (block.error != null) {
-        toolParts.push(makeToolResultPart(block, block.error, true));
-        continue;
-      }
-
-      if (ContentBlock.isContentBlockResult(block.result)) {
-        toolParts.push(makeToolResultPart(block, toolResultSeeBelowMessage(block.toolCallId), false));
-      } else {
-        toolParts.push(yield* buildToolResultPart(block));
-      }
+    userParts.push(Prompt.makePart('text', { text: toolResultHeaderMessage(block.toolCallId) }));
+    for (const contentBlock of block.result.content) {
+      userParts.push(yield* contentBlockToUserMessagePart(contentBlock));
     }
+  }
 
-    for (const block of toolResults) {
-      if (block.error != null || !ContentBlock.isContentBlockResult(block.result)) {
-        continue;
-      }
-
-      userParts.push(Prompt.makePart('text', { text: toolResultHeaderMessage(block.toolCallId) }));
-      for (const contentBlock of block.result.content) {
-        userParts.push(yield* contentBlockToUserMessagePart(contentBlock));
-      }
-    }
-
-    const messages: Prompt.Message[] = [Prompt.makeMessage('tool', { content: toolParts })];
-    if (userParts.length > 0) {
-      messages.push(Prompt.makeMessage('user', { content: userParts }));
-    }
-    return messages;
-  });
+  const messages: Prompt.Message[] = [Prompt.makeMessage('tool', { content: toolParts })];
+  if (userParts.length > 0) {
+    messages.push(Prompt.makeMessage('user', { content: userParts }));
+  }
+  return messages;
+});
 
 const convertAssistantMessagePart: (
   block: ContentBlock.Any,

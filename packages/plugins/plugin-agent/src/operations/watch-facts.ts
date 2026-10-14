@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
     }) {
       const brain = yield* BrainService.BrainService;
       const agent = yield* Database.load(agentRef);
-      if ((yield* brain.subscriptions(agent.id)).length >= BrainService.MAX_TRIGGERS) {
+      if ((yield* BrainService.subscriptions(agent.id)).length >= BrainService.MAX_TRIGGERS) {
         return yield* Effect.fail(registryFull());
       }
       const requester = yield* Database.load(requesterRef);

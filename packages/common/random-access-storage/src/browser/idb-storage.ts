@@ -67,15 +67,13 @@ export class IDbStorage extends AbstractStorage {
         const objectStore = transaction.objectStore(this._store);
         objectStore.delete(range);
         transaction.oncomplete = () => {
-          (file as any).destroyed = true;
-          (file as any).unlinked = true;
-          (file as any).closed = true;
+          Object.assign(file, { destroyed: true, unlinked: true, closed: true });
           cb(null);
         };
         transaction.onerror = () => cb(transaction.error);
       });
     };
-    (file as any).deletable = true;
+    Object.assign(file, { deletable: true });
 
     return file;
   }

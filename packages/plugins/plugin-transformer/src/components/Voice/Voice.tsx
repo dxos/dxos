@@ -18,7 +18,7 @@ export type VoiceProps = {
 
 export const Voice = ({ active, debug, model = 'Xenova/whisper-base' }: VoiceProps) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcription, setTranscription] = useState<string>('');
+  const [transcription, setTranscription] = useState('');
 
   const {
     transcribe,

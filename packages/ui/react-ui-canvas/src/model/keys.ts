@@ -96,6 +96,24 @@ export const keyAction = (event: KeyEventLike): KeyAction | undefined => {
   return undefined;
 };
 
+/** The unit direction a nudge chord points (x right, y down), or none when the event is not one. */
+export const nudgeDirection = (event: KeyEventLike): { x: number; y: number } | undefined => {
+  const [up, down, left, right] = KEY_BINDINGS.nudge;
+  if (matchesBinding(event, up)) {
+    return { x: 0, y: -1 };
+  }
+  if (matchesBinding(event, down)) {
+    return { x: 0, y: 1 };
+  }
+  if (matchesBinding(event, left)) {
+    return { x: -1, y: 0 };
+  }
+  if (matchesBinding(event, right)) {
+    return { x: 1, y: 0 };
+  }
+  return undefined;
+};
+
 /** A key that reaches the tool palette: no command or option modifier, so typing a tool letter is unambiguous. */
 export const isToolKey = (event: KeyEventLike): boolean => !hasCommandKey(event) && !event.altKey;
 

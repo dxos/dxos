@@ -10,7 +10,7 @@ import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
 import { tapStage } from '../Stage.ts';
 import type * as StateStore from '../StateStore.ts';
-import type * as Type from '../types.ts';
+import type * as Type from '../Type.ts';
 
 /**
  * Per-message stage: fold each authored message into the agent registry, accumulating message

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Type from './types.ts';
+export * as Type from './Type.ts';
 export * from './errors.ts';
 export * from './Source.ts';
 export * as StateStore from './StateStore.ts';

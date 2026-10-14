@@ -32,14 +32,7 @@ import { discoverRules, listRepoFiles, matchRuleFiles } from '../lib/discover.ts
 import { mainMergeBase, repoRoot } from '../lib/git.ts';
 import { type Rule } from '../lib/mdl.ts';
 import { REVIEW_FILE, writeAppendix } from '../lib/review-doc.ts';
-import {
-  assertSafeSlug,
-  FULL_BASE,
-  GROUPS_MANIFEST,
-  type GroupsManifest,
-  REVIEWS_DIR,
-  readReview,
-} from '../lib/store.ts';
+import { assertSafeSlug, FULL_BASE, GROUPS_MANIFEST, isGroupsManifest, REVIEWS_DIR, readReview } from '../lib/store.ts';
 import {
   classify,
   DEFAULTS,
@@ -232,7 +225,10 @@ if (values.file?.length) {
   // Store mode: fill a prepared review's fragments, leaving what System One cannot judge.
   const store = resolveStore();
   const review = readReview(join(store, 'REVIEW.md'));
-  const manifest = JSON.parse(readFileSync(join(store, GROUPS_MANIFEST), 'utf8')) as GroupsManifest;
+  const manifest: unknown = JSON.parse(readFileSync(join(store, GROUPS_MANIFEST), 'utf8'));
+  if (!isGroupsManifest(manifest)) {
+    throw new Error(`${GROUPS_MANIFEST} is malformed: re-run prepare.ts with this version of the harness`);
+  }
   const base = reviewBase(review?.data?.base ? String(review.data.base) : null);
   const pairs: { rule: Rule; file: string; nn: string }[] = [];
   const skipped: { nn: string; ruleId: string; files: string[]; reason: string }[] = [];

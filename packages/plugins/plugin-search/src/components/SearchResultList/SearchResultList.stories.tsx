@@ -19,6 +19,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
+import * as Input from '@dxos/react-ui/Input';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
@@ -69,13 +70,7 @@ const DefaultStory = () => {
 
   return (
     <div className='flex flex-col gap-2 p-2 max-w-[32rem]'>
-      <input
-        type='text'
-        placeholder='Search…'
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        className='px-2 py-1 border border-separator rounded'
-      />
+      <Input.Root placeholder='Search…' value={query} onChange={(event) => setQuery(event.target.value)} />
       <SearchResultList results={enrichedResults} query={query} onSelect={handleSelect} />
     </div>
   );

@@ -171,15 +171,14 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
   ...(options.plugins ?? []),
 ];
 
-const seedInstructions = (instructions: Instructions.Instructions) =>
-  Effect.gen(function* () {
-    for (const skillRef of instructions.skills) {
-      const skill = yield* Database.load(skillRef);
-      yield* Database.add(skill);
-    }
-    yield* Database.add(instructions);
-    yield* Database.flush();
-  });
+const seedInstructions = Effect.fnUntraced(function* (instructions: Instructions.Instructions) {
+  for (const skillRef of instructions.skills) {
+    const skill = yield* Database.load(skillRef);
+    yield* Database.add(skill);
+  }
+  yield* Database.add(instructions);
+  yield* Database.flush();
+});
 
 const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spaceId }, Database.Service);
 

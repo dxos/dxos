@@ -131,8 +131,7 @@ describe('Parent Hierarchy', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     await using db = await peer.createDatabase();
     const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
-    const child = db.add(Obj.make(TestSchema.Person, { name: 'Child' }));
-    Obj.setParent(child, parent);
+    const child = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' }));
 
     db.remove(parent);
     expect(Obj.isDeleted(child)).toEqual(true);

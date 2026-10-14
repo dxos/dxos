@@ -38,7 +38,7 @@ import { ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
 import { getOperationFromTool } from '../tool-runtime/services.ts';
-import { type AiAssistantError } from '../util/index.ts';
+import { AiAssistantError } from '../util/index.ts';
 import { formatSystemPrompt, formatUserPrompt } from './format.ts';
 import { GenerationObserver } from './observer.ts';
 
@@ -169,49 +169,52 @@ export type TurnResult = {
  */
 export class Request {
   /** Prevents concurrent execution of session. */
-  private readonly _semaphore = Effect.runSync(Semaphore.make(1));
+  readonly #semaphore = Effect.runSync(Semaphore.make(1));
 
-  private readonly _observer: GenerationObserver;
-  private readonly _onOutput: (message: Message.Message) => Effect.Effect<void, never, never>;
+  readonly #observer: GenerationObserver;
+  readonly #onOutput: (message: Message.Message) => Effect.Effect<void, never, never>;
 
   /** Message history from queue. */
   // TODO(burdon): Evolve into supporting a git-like graph of messages.
-  private _history: Message.Message[] = [];
+  #history: Message.Message[] = [];
 
   /** Pending messages for this session (incl. the current prompt). */
-  private _pending: Message.Message[] = [];
+  #pending: Message.Message[] = [];
 
-  private _started = 0;
-  private _ended = 0;
-  private _toolCalls = 0;
+  #started = 0;
+  #ended = 0;
+  #toolCalls = 0;
   /** Turns of this request spent reporting a tool call the toolkit could not resolve. */
   #unresolvedTools = 0;
 
   /** The turn's prompt, sent on the ephemeral channel once the next model call is under way. */
   #announcement: Message.Message | undefined;
 
-  constructor(private readonly _options: Options = {}) {
-    this._observer = _options.observer ?? GenerationObserver.noop();
-    this._onOutput = _options.onOutput ?? (() => Effect.void);
+  readonly #options: Options;
+
+  constructor(options: Options = {}) {
+    this.#options = options;
+    this.#observer = options.observer ?? GenerationObserver.noop();
+    this.#onOutput = options.onOutput ?? (() => Effect.void);
   }
 
   get duration(): number {
-    return this._ended - this._started;
+    return this.#ended - this.#started;
   }
 
   get toolCalls(): number {
-    return this._toolCalls;
+    return this.#toolCalls;
   }
 
   get pending(): readonly Message.Message[] {
-    return this._pending;
+    return this.#pending;
   }
 
   private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, Trace.TraceService> =>
     Effect.gen({ self: this }, function* () {
-      this._pending.push(message);
-      yield* this._observer.onMessage(message);
-      if (this._options.persist === false) {
+      this.#pending.push(message);
+      yield* this.#observer.onMessage(message);
+      if (this.#options.persist === false) {
         return message;
       }
       for (const block of message.blocks) {
@@ -226,7 +229,7 @@ export class Request {
           block,
         });
       }
-      yield* this._onOutput(message);
+      yield* this.#onOutput(message);
       return message;
     });
 
@@ -246,7 +249,7 @@ export class Request {
 
   getToolCalls = () =>
     pipe(
-      [...this._history, ...this._pending],
+      [...this.#history, ...this.#pending],
       Array.reverse,
       Array.takeWhile((_) => _.sender.role === 'assistant'),
       Array.flatMap((_) => _.blocks.filter(ContentBlock.is('toolCall')).map((block) => ({ block, message: _ }))),
@@ -269,26 +272,26 @@ export class Request {
     instructions = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen({ self: this }, function* () {
-      this._started = Date.now();
-      this._history = [...history];
-      this._pending = [];
+      this.#started = Date.now();
+      this.#history = [...history];
+      this.#pending = [];
       // Per-run allowance: a reused Request must not inherit a spent budget from the previous run.
       this.#unresolvedTools = 0;
 
       const systemPrompt =
         formatted ?? (yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie));
 
-      if (this._options.summarizationThreshold !== undefined) {
+      if (this.#options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
-          yield* AiPreprocessor.preprocessPrompt([...this._history], {
+          yield* AiPreprocessor.preprocessPrompt([...this.#history], {
             system: systemPrompt,
           }),
         );
-        if (tokenCount > this._options.summarizationThreshold) {
+        if (tokenCount > this.#options.summarizationThreshold) {
           // A summarization pass is itself a model round-trip, so it can dominate the wait before
           // the turn the reader asked for even starts.
           yield* Trace.emitRequestPhase('summarizing');
-          const summary = yield* AiSummarizer.summarize([...this._history]);
+          const summary = yield* AiSummarizer.summarize([...this.#history]);
           yield* this._submitMessage(summary);
         }
       }
@@ -340,12 +343,12 @@ export class Request {
     Effect.gen({ self: this }, function* () {
       log('request', {
         system: { snippet: createSnippet(system), length: system.length },
-        pending: this._pending.length,
-        history: this._history.length,
+        pending: this.#pending.length,
+        history: this.#history.length,
       });
 
       yield* Trace.emitRequestPhase('encoding-prompt');
-      const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
+      const prompt = yield* AiPreprocessor.preprocessPrompt([...this.#history, ...this.#pending], {
         system,
         cacheControl: 'ephemeral',
       });
@@ -353,7 +356,7 @@ export class Request {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       markWork('request.prompt-encoded');
 
-      const observer = this._observer;
+      const observer = this.#observer;
       let currentMessageId: Obj.ID | null = null;
       let finishReason: ContentBlock.FinishReason | undefined;
 
@@ -471,7 +474,7 @@ export class Request {
       const toolCalls = this.getToolCalls();
 
       if (toolCalls.length === 0) {
-        this._ended = Date.now();
+        this.#ended = Date.now();
         return { messages, done: true, finishReason };
       } else if (!toolkit) {
         throw new Error('No toolkit provided');
@@ -501,7 +504,7 @@ export class Request {
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) =>
         Effect.gen(function* () {
           if (!toolkit) {
-            throw new Error('No toolkit provided');
+            return yield* Effect.fail(new AiAssistantError({ message: 'No toolkit provided' }));
           }
           // Tool execution is where an agentic turn spends most of its time, and it produces no
           // streamed content, so the tool's name is the only progress the reader has.
@@ -519,7 +522,7 @@ export class Request {
         }),
       );
 
-      this._toolCalls += toolResults.length;
+      this.#toolCalls += toolResults.length;
     }).pipe(Effect.withSpan('AiRequest.runTools'));
 
   /**
@@ -562,9 +565,9 @@ export class Request {
         yield* this.runTools({ toolkit });
       } while (true);
 
-      log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
-      return this._pending;
-    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
+      log('done', { pending: this.#pending.length, duration: this.duration, tools: this.#toolCalls });
+      return this.#pending;
+    }).pipe(this.#semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
 
 /**

@@ -711,7 +711,9 @@ export class FeedStore {
    */
   resetSyncState = (opts: {
     spaceId: SpaceId;
+    /** Namespace whose blocks and pull progress are reset. */
     feedNamespace: string;
+    /** Identifies the new server instance; pull progress restarts under this token. */
     serverToken: string;
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {

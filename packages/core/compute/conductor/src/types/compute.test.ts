@@ -9,24 +9,15 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
-import * as Operation from '@dxos/compute/Operation';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 
+import { operationServiceLayerStub } from '../testing/index.ts';
 import { ValueBag } from './compute.ts';
 
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(
-    Layer.mergeAll(
-      Layer.succeed(Operation.Service, {
-        invoke: () => Effect.die('Operation.Service not available in test.'),
-        schedule: () => Effect.die('Operation.Service not available in test.'),
-        invokePromise: async () => ({ error: new Error('Not available') }),
-      } as any),
-      registryLayerNoop,
-    ),
-  ),
+  Layer.provideMerge(Layer.mergeAll(operationServiceLayerStub, registryLayerNoop)),
   Layer.provideMerge(Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]))),
 );
 

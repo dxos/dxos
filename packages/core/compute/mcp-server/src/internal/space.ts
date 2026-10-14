@@ -93,7 +93,7 @@ const refUri = (record: Record<string, unknown>): string | undefined => {
  */
 export const qualifyRefs = (
   value: unknown,
-  spaceId: string,
+  spaceId: SpaceId,
   seen: WeakMap<object, unknown> = new WeakMap(),
 ): unknown => {
   if (value == null || typeof value !== 'object') {

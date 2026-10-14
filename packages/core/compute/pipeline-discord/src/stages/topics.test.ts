@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// ECHO integration for phase 3: the pipeline produces Topic objects per drained target and Person
+// ECHO integration: the pipeline produces Topic objects per drained target and Person
 // objects for question askers, both keyed by foreign key so re-runs upsert instead of duplicate.
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';

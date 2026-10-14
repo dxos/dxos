@@ -358,7 +358,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Maybe have been set by `create`.
+    // Redefine because `create` may already have set it.
     Object.defineProperty(target, inspectCustom, {
       enumerable: false,
       configurable: true,

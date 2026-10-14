@@ -49,7 +49,7 @@ export const EmojiPickerToolbarButton = ({
     defaultProp: defaultEmoji,
   });
 
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   return (
     <Popover.Root
@@ -114,7 +114,7 @@ export const EmojiPickerBlock = ({
     defaultProp: defaultEmoji,
   });
 
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   return (
     <Button.Group classNames={classNames}>

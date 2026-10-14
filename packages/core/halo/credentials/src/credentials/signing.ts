@@ -50,7 +50,7 @@ export const toProofSigningShape = (proof: Proof): Record<string, unknown> =>
  * @returns The input message to be signed for a given credential.
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
-export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
+export const getCredentialSigningPayload = (credential: Credential): Uint8Array => {
   // Resolved before the proof is zeroed: proto3 omits an empty bytes field, so zeroing first would
   // drop `proof.value` from the wire and the payload would lose its `"value":""` entry.
   const resolved = toSigningShape(credential);

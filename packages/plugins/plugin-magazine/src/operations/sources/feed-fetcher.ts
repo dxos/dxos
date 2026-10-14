@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Data from 'effect/Data';
 import type * as Effect from 'effect/Effect';
+
+import { BaseError } from '@dxos/errors';
 
 import { Subscription } from '#types';
 
@@ -17,10 +18,7 @@ export type FetchResult = {
 };
 
 /** Failure fetching or decoding a feed (network error, non-2xx response, or malformed body). */
-export class FeedFetchError extends Data.TaggedError('FeedFetchError')<{
-  message: string;
-  cause?: unknown;
-}> {}
+export class FeedFetchError extends BaseError.extend('FeedFetchError', 'Failed to fetch feed.') {}
 
 /** Generic feed fetcher — protocol-specific implementations return normalized Subscription objects. */
 export type FeedFetcher = (url: string, options?: FetchOptions) => Effect.Effect<FetchResult, FeedFetchError>;

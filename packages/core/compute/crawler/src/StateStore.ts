@@ -12,7 +12,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 
 import { type StateError } from './errors.ts';
 import { makeSql, migrate } from './internal/state-store-sql.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 

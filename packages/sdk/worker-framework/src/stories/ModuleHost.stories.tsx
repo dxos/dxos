@@ -85,7 +85,7 @@ const ModulePanel = ({ connection, info }: { connection: ModuleHostConnection; i
 
 type Session = { connection: ModuleHostConnection; blobUrl: string };
 
-const ModuleHostStory = () => {
+const DefaultStory = () => {
   const [blobSource, setBlobSource] = useState(DEFAULT_BLOB_SOURCE);
   const [session, setSession] = useState<Session>();
   const [modules, setModules] = useState<readonly ModuleInfo[]>([]);
@@ -155,5 +155,5 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = {
-  render: () => <ModuleHostStory />,
+  render: () => <DefaultStory />,
 };

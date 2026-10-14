@@ -369,8 +369,8 @@ const FENCE = /```[a-z]*\s*\n([\s\S]*?)```/i;
 
 const fenced = (text: string): string | undefined => FENCE.exec(text)?.[1];
 
-const isKind = (value: string): value is Kind => Schema.is(Kind)(value);
+const isKind = Schema.is(Kind);
 
-const isDriver = (value: string): value is Driver => Schema.is(Driver)(value);
+const isDriver = Schema.is(Driver);
 
-const isAchievement = (value: string): value is Achievement => Schema.is(Achievement)(value);
+const isAchievement = Schema.is(Achievement);

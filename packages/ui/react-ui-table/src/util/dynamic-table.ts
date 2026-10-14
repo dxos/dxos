@@ -46,7 +46,9 @@ export const getBaseSchema = ({
       ? getSchemaFromPropertyDefinitions(typename, properties)
       : (type ?? (jsonSchema ? getSchemaFromJsonSchema(jsonSchema, typename) : undefined));
   if (!resolved) {
-    throw new Error('invalid properties');
+    throw new Error(
+      `Invalid table definition for typename '${typename}': provide a type, properties, or a JSON schema.`,
+    );
   }
 
   return { typename: Type.getTypename(resolved)!, type: resolved };

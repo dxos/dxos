@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Fact } from '../types/index.ts';
-import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
+import * as FactStoreLive from './FactStoreLive.ts';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   assertion: {

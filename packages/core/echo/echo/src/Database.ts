@@ -512,7 +512,7 @@ export const isDatabase = (obj: unknown): obj is Database => {
   return obj ? typeof obj === 'object' && TypeId in obj && obj[TypeId] === TypeId : false;
 };
 
-export const Database: Schema.Codec<Database> = Schema.Any.pipe(Schema.refine(isDatabase));
+export const Database: Schema.Codec<Database> = Schema.declare(isDatabase);
 
 /**
  * Effect service tag for Database dependency injection.

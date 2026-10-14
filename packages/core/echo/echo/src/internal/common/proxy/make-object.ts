@@ -146,7 +146,7 @@ const setIdOnTarget = (target: any) => {
   // invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
   if ('id' in target && target.id !== undefined && target.id !== null) {
     if (!EntityId.isValid(target.id)) {
-      throw new Error('Invalid object id format.');
+      throw new Error(`Invalid object id format: ${String(target.id)}`);
     }
   } else {
     target.id = EntityId.random();

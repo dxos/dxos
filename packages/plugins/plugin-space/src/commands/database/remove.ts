@@ -5,6 +5,7 @@
 import * as Command from 'effect/cli/Command';
 import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -13,6 +14,8 @@ import { Database, Filter, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { printObjectRemoved } from './util.ts';
+
+class InvalidRemoveOptionsError extends Data.TaggedError('InvalidRemoveOptionsError')<{ message: string }> {}
 
 export const remove = Command.make(
   'remove',
@@ -25,7 +28,7 @@ export const remove = Command.make(
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
       if (Option.isSome(id) && Option.isSome(typename)) {
-        throw new Error('Cannot specify both typename and id');
+        return yield* new InvalidRemoveOptionsError({ message: 'Cannot specify both typename and id' });
       }
       let query: Query.Any;
       if (Option.isSome(id)) {
@@ -33,7 +36,7 @@ export const remove = Command.make(
       } else if (Option.isSome(typename)) {
         query = Query.select(Filter.type(DXN.make(typename.value)));
       } else {
-        throw new Error('Must specify typename or id');
+        return yield* new InvalidRemoveOptionsError({ message: 'Must specify typename or id' });
       }
       const objects = yield* Database.query(query).run;
       for (const object of objects) {

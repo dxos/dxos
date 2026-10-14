@@ -29,7 +29,6 @@ import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurface
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      // --- Article surface ---
       // The primary content view. `oneOf(object(Article, ...), object(Section, ...))`
       // registers this component for both full-article and inline-section roles.
       // The Article/Section tokens inherently require a string `attendableId` on
@@ -44,7 +43,6 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
-      // --- Object properties surface ---
       // Renders in the per-object properties panel (gear icon companion).
       // `AppSurface.object(AppSurface.ObjectProperties, Schema)` matches when viewing properties for this type.
       Surface.create({
@@ -55,7 +53,6 @@ export default Capability.makeModule(() =>
         props: ({ data: { subject } }) => ({ subject }),
       }),
 
-      // --- Status indicator surface ---
       // `AppSurface.StatusIndicator` renders in the application status bar.
       Surface.create({
         id: 'sampleStatus',
@@ -63,7 +60,6 @@ export default Capability.makeModule(() =>
         component: SampleStatusSurface,
       }),
 
-      // --- Companion article surface ---
       // Renders the plank companion panel for SampleItem objects.
       // `AppSurface.allOf()` composes two filters: the data must be a literal article
       // with id 'related' AND the companionTo must be a SampleItem.
@@ -78,7 +74,6 @@ export default Capability.makeModule(() =>
         props: ({ data: { companionTo } }) => ({ companionTo }),
       }),
 
-      // --- Deck companion surface ---
       // Renders the workspace-wide companion panel.
       // The variant id ('samplePanel') must match what AppNode.makeDeckCompanion passes
       // and what the deck consumer uses via AppSurface.deckCompanion('samplePanel').

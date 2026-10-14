@@ -221,8 +221,8 @@ export const feedEntityId = (chat: Chat): string | undefined => Task.refEntityId
  * The chat that owns `feed`. The chat owns its feed (`SetParent`), so the parent edge answers this
  * without a query; the scan is the fallback for a feed whose parent was never stamped.
  */
-export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Chat | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
+export const loadForFeed = Effect.fnUntraced(
+  function* (feed: Feed.Feed) {
     const parent = Obj.getParent(feed);
     if (parent && Obj.instanceOf(Chat, parent)) {
       return parent;
@@ -232,14 +232,17 @@ export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Chat | undefined, ne
     // A chat-less feed is legitimate (a bare `AiSession`, or a database with the type unregistered),
     // so callers get `undefined` rather than a failure — but a query that actually broke is logged,
     // since it is otherwise indistinguishable from the feed simply having no chat.
-  }).pipe(
-    Effect.catchCause((cause) =>
-      Effect.sync(() => {
-        log.warn('chat lookup failed; treating feed as chat-less', { feed: feed.id, cause: Cause.pretty(cause) });
-        return undefined;
-      }),
+  },
+  (effect, feed) =>
+    effect.pipe(
+      Effect.catchCause((cause) =>
+        Effect.sync(() => {
+          log.warn('chat lookup failed; treating feed as chat-less', { feed: feed.id, cause: Cause.pretty(cause) });
+          return undefined;
+        }),
+      ),
     ),
-  );
+);
 
 /** Bound on the parent walk below; a conversation sits one or two edges under its project. */
 const MAX_OWNER_DEPTH = 8;
@@ -262,14 +265,13 @@ export const peekProject = (chat: Chat): Project.Project | undefined => {
 };
 
 /** Loads the checklist in order, de-duplicated: a concurrent merge can land the same ref twice. */
-export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Database.Service> =>
-  Effect.gen(function* () {
-    const tasks = yield* Effect.forEach(chat.tasks, (task) =>
-      Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
-    );
+export const loadTasks = Effect.fnUntraced(function* (chat: Chat) {
+  const tasks = yield* Effect.forEach(chat.tasks, (task) =>
+    Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
+  );
 
-    return Task.dedupeById(tasks);
-  });
+  return Task.dedupeById(tasks);
+});
 
 /** Sync twin of {@link loadTasks}; an unresolved ref contributes nothing rather than throwing. */
 export const resolveTasks = (chat: Chat): Task.Task[] =>
@@ -283,15 +285,14 @@ export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') 
  * speak), or a placeholder when none exist. Ordinals match the task list UI, and non-default
  * status/dependencies are noted so the model can reason about readiness.
  */
-export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Database.Service> =>
-  Effect.gen(function* () {
-    const tasks = yield* loadTasks(chat);
-    if (tasks.length === 0) {
-      return 'No checklist found.';
-    }
+export const formatChecklist = Effect.fnUntraced(function* (chat: Chat) {
+  const tasks = yield* loadTasks(chat);
+  if (tasks.length === 0) {
+    return 'No checklist found.';
+  }
 
-    return formatTasks(tasks);
-  });
+  return formatTasks(tasks);
+});
 
 /**
  * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented

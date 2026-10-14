@@ -113,7 +113,7 @@ export const setupDiscordAgent = async ({
     db.add(AgentChannels.make({ agent, channels: [channel] }));
   } else if (!(await Promise.all(list.channels.map((ref) => ref.load()))).some(({ id }) => id === channel.id)) {
     Obj.update(list, (list) => {
-      list.channels = [...list.channels, Ref.make(channel)];
+      list.channels.push(Ref.make(channel));
     });
   }
 

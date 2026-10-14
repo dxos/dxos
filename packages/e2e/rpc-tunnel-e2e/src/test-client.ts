@@ -65,7 +65,7 @@ export class TestClient {
           log.info('Opening stream...');
           next(create(TestRpcResponseSchema, { data: String(this.value) }));
 
-          setInterval(() => {
+          const interval = setInterval(() => {
             this._value++;
             this._update.emit();
             next(create(TestRpcResponseSchema, { data: String(this.value) }));
@@ -75,6 +75,8 @@ export class TestClient {
               close();
             }
           }, 10);
+
+          return () => clearInterval(interval);
         }),
     };
 

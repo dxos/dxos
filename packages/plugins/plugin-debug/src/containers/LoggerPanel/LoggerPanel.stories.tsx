@@ -36,7 +36,7 @@ const emit = (file: string, level: 'info' | 'warn' | 'error') => {
 };
 
 /** The panel reads the process-wide log buffer, so the story emits into it rather than passing rows. */
-const Render = () => (
+const DefaultStory = () => (
   <div className='grid grid-rows-[min-content_1fr] h-[24rem] w-[48rem] max-w-full'>
     <Toolbar.Root>
       <Button.Root onClick={() => emit(FILES[0], 'info')}>Info</Button.Root>
@@ -50,7 +50,7 @@ const Render = () => (
 const meta = {
   title: 'plugins/plugin-debug/containers/LoggerPanel',
   component: LoggerPanel,
-  render: Render,
+  render: DefaultStory,
   decorators: [withAttention(), withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations },
 } satisfies Meta<typeof LoggerPanel>;

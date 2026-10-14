@@ -154,7 +154,7 @@ export const makeToolExecutionService = <E, R>(opts: {
             return Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: unknown) {
               if (toolkitHandler.tools[tool.name]) {
                 if (Tool.isProviderDefined(tool)) {
-                  throw new Error('Attempted to call a provider-defined tool');
+                  return yield* Effect.die(new Error('Attempted to call a provider-defined tool'));
                 }
 
                 // `handle` streams preliminary results before the final one; the toolkit

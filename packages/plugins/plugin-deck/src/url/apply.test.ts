@@ -13,7 +13,7 @@ import { DeckPlugin } from '#plugin';
 import { DeckCapabilities } from '#types';
 
 import { applyActive } from './apply.ts';
-import * as Navigation from './navigation.ts';
+import * as Navigation from './Navigation.ts';
 
 describe('applyActive', () => {
   afterEach(() => vi.unstubAllGlobals());

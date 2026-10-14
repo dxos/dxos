@@ -253,31 +253,16 @@ describe.skip('effect SQLite with IDBBatchAtomicVFS', () => {
       expect(results[0].name).toBe('Alice');
       expect(results[1].name).toBe('Bob');
 
-      // // Update data.
-      // await sqlite3.exec(db, `UPDATE users SET email = 'alice.updated@example.com' WHERE name = 'Alice'`);
+      // Update data.
+      yield* sql`UPDATE users SET email = 'alice.updated@example.com' WHERE name = 'Alice'`;
+      const updatedResults = yield* sql`SELECT email FROM users WHERE name = 'Alice'`;
+      expect(updatedResults[0].email).toBe('alice.updated@example.com');
 
-      // // Verify update.
-      // const updatedResults: Array<{ email: string }> = [];
-      // await sqlite3.exec(db, `SELECT email FROM users WHERE name = 'Alice'`, (row: any[]) => {
-      //   updatedResults.push({ email: row[0] });
-      // });
-      // expect(updatedResults[0].email).toBe('alice.updated@example.com');
-
-      // // Delete data.
-      // await sqlite3.exec(db, `DELETE FROM users WHERE name = 'Bob'`);
-
-      // // Verify deletion.
-      // const remainingResults: Array<{ name: string }> = [];
-      // await sqlite3.exec(db, 'SELECT name FROM users', (row: any[]) => {
-      //   remainingResults.push({ name: row[0] });
-      // });
-      // expect(remainingResults).toHaveLength(1);
-      // expect(remainingResults[0].name).toBe('Alice');
-
-      // // Close database.
-      // await sqlite3.close(db);
-
-      // await sleep(10000000);
+      // Delete data.
+      yield* sql`DELETE FROM users WHERE name = 'Bob'`;
+      const remainingResults = yield* sql`SELECT name FROM users`;
+      expect(remainingResults).toHaveLength(1);
+      expect(remainingResults[0].name).toBe('Alice');
     }, Effect.provide(TestLayer)),
   );
 });

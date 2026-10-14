@@ -87,7 +87,9 @@ export type AgentResponse = {
   chat: Chat.Chat;
   /** The message holding the request block. */
   message: Message.Message;
+  /** The id of the request block in {@link message} being answered. */
   requestId: string;
+  /** The id of the option chosen within that request block. */
   optionId: string;
 };
 

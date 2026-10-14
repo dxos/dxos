@@ -222,21 +222,16 @@ export const sessionServices = (run: { durationMillis: number; transcript?: read
  * reports why, rather than failing the run: one reading state a timed-out session never reached is a
  * result, not an error, and must not take the other nine with it.
  */
-export const runAll = (scorers: readonly Any[]): Effect.Effect<Scores, never, Services> =>
-  Effect.gen(function* () {
-    const scores: Record<string, Score> = {};
-    for (const scorer of scorers) {
-      // `Effect.try` around the verdict too: a scorer that throws on an unexpected shape scores
-      // nothing and says so.
-      const exit = yield* Effect.exit(
-        scorer.score.pipe(Effect.flatMap((result) => Effect.try(() => normalize(result)))),
-      );
-      scores[scorer.name] = Exit.isSuccess(exit)
-        ? { score: exit.value }
-        : { score: 0, error: Cause.pretty(exit.cause) };
-    }
-    return scores;
-  });
+export const runAll = Effect.fnUntraced(function* (scorers: readonly Any[]) {
+  const scores: Record<string, Score> = {};
+  for (const scorer of scorers) {
+    // `Effect.try` around the verdict too: a scorer that throws on an unexpected shape scores
+    // nothing and says so.
+    const exit = yield* Effect.exit(scorer.score.pipe(Effect.flatMap((result) => Effect.try(() => normalize(result)))));
+    scores[scorer.name] = Exit.isSuccess(exit) ? { score: exit.value } : { score: 0, error: Cause.pretty(exit.cause) };
+  }
+  return scores;
+});
 
 /** What a graded task hands its scorers: a session to grade against, or the marks it already recorded. */
 type Graded = { readonly runId?: string; readonly scores?: Scores };

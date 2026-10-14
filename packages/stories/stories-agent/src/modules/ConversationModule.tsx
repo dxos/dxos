@@ -78,7 +78,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
       <Panel.Header>{toolbar}</Panel.Header>
       <Panel.Body asChild>
         <Layout.Flex column classNames='min-h-0'>
-          {conversations.length === 0 && <p className='p-2 text-description'>No channel conversations yet.</p>}
+          {conversations.length === 0 && <p className='p-2 text-fg-muted'>No channel conversations yet.</p>}
           {[visible, chat]
             .filter(
               (conversation, index, all): conversation is AssistantChat.Chat =>

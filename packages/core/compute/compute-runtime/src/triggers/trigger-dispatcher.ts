@@ -530,6 +530,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     return entry;
   };
 
+  /** Applies a state transition through the ambient atom registry. */
+  private _updateState = (update: (state: TriggerDispatcherState) => TriggerDispatcherState) =>
+    Effect.map(Registry.AtomRegistry, (registry) => registry.update(this._state, update));
+
   /**
    * Publish the current per-trigger runtime state onto the observable dispatcher state so the UI
    * can render cursor/next-run/cooldown/retry status.
@@ -671,9 +675,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         invariant(Obj.instanceOf(Operation.PersistentOperation, serializedOperation));
         const functionDef = Operation.deserialize(serializedOperation);
 
-        const registry = yield* Registry.AtomRegistry;
-        registry.update(
-          this._state,
+        yield* this._updateState(
           Struct.evolve({
             invocations: Array.map((_) =>
               _.invocationId === invocation.invocationId ? { ..._, function: functionDef } : _,
@@ -1424,11 +1426,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     Effect.gen({ self: this }, function* () {
       const error = EffectEx.causeToError(cause);
       log.error('trigger dispatcher tick failed', { error });
-      const registry = yield* Registry.AtomRegistry;
-      registry.update(
-        this._state,
-        Struct.evolve({ errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS) }),
-      );
+      yield* this._updateState(Struct.evolve({ errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS) }));
     }).pipe(Effect.provide(this._services));
 
   private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {

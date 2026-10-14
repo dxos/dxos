@@ -128,11 +128,11 @@ export const define = <From extends MigrationSchemaInput, To extends MigrationSc
   const toSchema = Type.getSchema(options.to);
   const fromType = getSchemaURI(fromSchema);
   if (!fromType) {
-    throw new Error('Invalid from schema');
+    throw new Error(`Invalid from schema: ${Type.getTypename(options.from)}`);
   }
   const toType = getSchemaURI(toSchema);
   if (!toType) {
-    throw new Error('Invalid to schema');
+    throw new Error(`Invalid to schema: ${Type.getTypename(options.to)}`);
   }
 
   return {

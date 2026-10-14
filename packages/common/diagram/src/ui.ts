@@ -4,8 +4,8 @@
 
 //
 // MOSAIC (Model-Oriented System for Adaptive Interface Composition) UI-schematic dialect:
-// renders low-fidelity UI wireframes from the declarative app model. Phase 1 scope: a single
-// schema compiles to a form drawing — the recursive structure (nested objects, arrays) with each
+// renders low-fidelity UI wireframes from the declarative app model. Supports a single
+// schema compiled to a form drawing — the recursive structure (nested objects, arrays) with each
 // control (input, switch, checkbox, select) as a rectangle and its label as text above — wrapped
 // in the app-ontology containers (deck > plank > panel > form). Two renderers share the model:
 // ASCII (tests, chat) and scene commands (tldraw, via the standard dialect contract). Unrelated

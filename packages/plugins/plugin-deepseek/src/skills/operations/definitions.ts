@@ -9,10 +9,6 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
-const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
-  description: 'The sandbox holding the DeepSeek harness, as returned by InstallHarness.',
-});
-
 export const InstallHarness = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.deepseek.installHarness'),
@@ -52,7 +48,9 @@ export const RunHarness = Operation.make({
     icon: 'ph--terminal-window--regular',
   },
   input: Schema.Struct({
-    sandbox: SandboxRef,
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({
+      description: 'The sandbox holding the DeepSeek harness, as returned by InstallHarness.',
+    }),
     prompt: Schema.String.annotate({
       description: 'The task handed to the harness, as the operator would type it.',
     }),

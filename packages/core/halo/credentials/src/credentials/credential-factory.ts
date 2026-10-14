@@ -12,7 +12,7 @@ import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { type Chain, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type CredentialAssertion } from './assertions.ts';
-import { getCredentialProofPayload } from './signing.ts';
+import { getCredentialSigningPayload } from './signing.ts';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier.ts';
 
 export type CreateCredentialSignerProps = {
@@ -83,7 +83,7 @@ export const createCredential = async ({
   });
 
   // Set proof after creating signature.
-  const signedPayload = getCredentialProofPayload(credential);
+  const signedPayload = getCredentialSigningPayload(credential);
   invariant(credential.proof, 'Proof was not created.');
   credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {

@@ -16,710 +16,710 @@ _58 error(s), 646 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 953b2cea-1 - unresolved - harness-script-hygiene - .agents/skills/agentic-review/lib/store.ts:141
-- 953b2cea-2 - unresolved - harness-script-hygiene - .agents/skills/agentic-review/scripts/system-one.ts:235
-- 953b2cea-3 - unresolved - no-trivial-wrappers-over-official-apis - packages/apps/composer-app/scripts/score-perf.ts:63
-- 953b2cea-4 - unresolved - event-handler-naming-convention - packages/apps/composer-app/src/main.tsx:653
-- 953b2cea-5 - unresolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.core.tsx:139
-- 953b2cea-6 - unresolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:306
-- 953b2cea-7 - unresolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:312
-- 953b2cea-8 - unresolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:316
-- 953b2cea-9 - unresolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:347
-- 953b2cea-10 - unresolved - no-casts - packages/apps/testbench-app/src/components/Error.tsx:14
-- 953b2cea-11 - unresolved - setter-must-not-own-transaction - packages/apps/testbench-app/src/components/ItemList.tsx:68
-- 953b2cea-12 - unresolved - no-casts - packages/apps/testbench-app/src/components/ItemList.tsx:87
-- 953b2cea-13 - unresolved - structured-logging-not-console - packages/apps/testbench-app/src/components/SyncBench.tsx:88
-- 953b2cea-14 - unresolved - deprecated-tag-must-be-accurate - packages/common/async/src/event-emitter.ts:19
-- 953b2cea-15 - unresolved - no-casts - packages/common/async/src/events.ts:304
-- 953b2cea-16 - unresolved - namespace-export-with-internal-hiding - packages/common/async/src/index.ts:1
-- 953b2cea-17 - unresolved - no-sleep-in-test - packages/common/async/src/mutex.test.ts:75
-- 953b2cea-18 - unresolved - no-casts - packages/common/async/src/mutex.ts:108
-- 953b2cea-19 - unresolved - deprecated-tag-must-be-accurate - packages/common/async/src/observable-value.ts:12
-- 953b2cea-20 - unresolved - no-sleep-in-test - packages/common/async/src/persistent-lifecycle.test.ts:55
-- 953b2cea-21 - unresolved - no-env-vars-in-low-level-modules - packages/common/async/src/track-leaks.ts:8
-- 953b2cea-22 - unresolved - no-sleep-in-test - packages/common/crx-protocol/src/testing/conformance.test.ts:31
-- 953b2cea-23 - unresolved - deprecated-tag-must-be-accurate - packages/common/crypto/src/random.ts:17
-- 953b2cea-24 - unresolved - namespace-export-with-internal-hiding - packages/common/debug/src/index.ts:1
-- 953b2cea-25 - unresolved - structured-logging-not-console - packages/common/debug/src/log-method.ts:14
-- 953b2cea-26 - unresolved - structured-logging-not-console - packages/common/debug/src/timeout-warning.ts:18
-- 953b2cea-27 - unresolved - import-as-namespace-is-all-or-nothing - packages/common/diagram/src/index.ts:7
-- 953b2cea-28 - unresolved - import-as-namespace-is-all-or-nothing - packages/common/diagram/src/index.ts:12
-- 953b2cea-29 - unresolved - import-as-namespace-is-all-or-nothing - packages/common/diagram/src/index.ts:19
-- 953b2cea-30 - unresolved - comment-hygiene - packages/common/diagram/src/ui.ts:7
-- 953b2cea-31 - unresolved - no-casts - packages/common/effect-atom-solid/src/hooks/useAtomSet.ts:47
-- 953b2cea-32 - unresolved - no-casts - packages/common/effect-atom-solid/src/hooks/useAtomSuspense.ts:55
-- 953b2cea-33 - unresolved - no-casts - packages/common/effect-zod/src/effect-to-zod.ts:52
-- 953b2cea-34 - unresolved - no-casts - packages/common/effect/src/Hook.ts:79
-- 953b2cea-35 - unresolved - import-as-namespace-is-all-or-nothing - packages/common/effect/src/index.ts:6
-- 953b2cea-36 - unresolved - no-casts - packages/common/effect/src/internal/async-task-tagging.ts:27
-- 953b2cea-37 - unresolved - import-as-namespace-is-all-or-nothing - packages/common/effect/src/internal/index.ts:6
-- 953b2cea-38 - unresolved - no-precision-loss-on-generic-refactor - packages/common/effect/src/internal/json-path.ts:122
-- 953b2cea-39 - unresolved - no-casts - packages/common/feed-store/src/hypercore-wrapper.ts:172
-- 953b2cea-40 - unresolved - no-casts - packages/common/feed-store/src/hypercore-wrapper.ts:245
-- 953b2cea-41 - unresolved - namespace-export-with-internal-hiding - packages/common/feed-store/src/index.ts:1
-- 953b2cea-42 - unresolved - no-impossible-state-handling - packages/common/hypercore/src/crypto.ts:39
-- 953b2cea-43 - unresolved - no-casts - packages/common/hypercore/src/iterator.ts:22
-- 953b2cea-44 - unresolved - no-sleep-in-test - packages/common/hypercore/src/replicate.test.ts:309
-- 953b2cea-45 - unresolved - no-sleep-in-test - packages/common/hypercore/src/replicate.test.ts:378
-- 953b2cea-46 - unresolved - schema-declare-and-brand - packages/common/keys/src/DXN.ts:31
-- 953b2cea-47 - unresolved - no-casts - packages/common/keys/src/DXN.ts:222
-- 953b2cea-48 - unresolved - schema-declare-and-brand - packages/common/keys/src/EID.ts:48
-- 953b2cea-49 - unresolved - no-casts - packages/common/keys/src/EID.ts:170
-- 953b2cea-50 - unresolved - schema-declare-and-brand - packages/common/keys/src/URI.ts:13
-- 953b2cea-51 - unresolved - no-casts - packages/common/keys/src/URI.ts:34
-- 953b2cea-52 - unresolved - no-casts - packages/common/log/src/context.ts:297
-- 953b2cea-53 - unresolved - no-casts - packages/common/log/src/decorators.ts:24
-- 953b2cea-54 - unresolved - no-casts - packages/common/log/src/experimental/ownership.ts:77
-- 953b2cea-55 - unresolved - namespace-export-with-internal-hiding - packages/common/log/src/index.ts:1
-- 953b2cea-56 - unresolved - no-casts - packages/common/log/src/log.ts:207
-- 953b2cea-57 - unresolved - no-env-vars-in-low-level-modules - packages/common/log/src/processors/file-processor.ts:87
-- 953b2cea-58 - unresolved - no-casts - packages/common/random-access-storage/src/browser/idb-storage.ts:70
-- 953b2cea-59 - unresolved - no-casts - packages/common/random-access-storage/src/browser/web-fs.ts:252
-- 953b2cea-60 - unresolved - no-casts - packages/common/random-access-storage/src/common/memory-storage.ts:50
-- 953b2cea-61 - unresolved - deprecated-tag-must-be-accurate - packages/common/random-access-storage/src/common/storage.ts:12
-- 953b2cea-62 - unresolved - no-casts - packages/common/sql-sqlite/src/internal/opfs-client.ts:340
-- 953b2cea-63 - unresolved - effect-fn-not-hand-wrapped-gen - packages/common/sql-sqlite/src/OpfsWorker.ts:69
-- 953b2cea-64 - unresolved - no-casts - packages/common/sql-sqlite/src/OpfsWorker.ts:77
-- 953b2cea-65 - unresolved - effect-fn-not-hand-wrapped-gen - packages/common/sql-sqlite/src/SqlMigrations.ts:50
-- 953b2cea-66 - unresolved - test-asserts-real-behavior - packages/common/sql-sqlite/src/testing/sqlite-effect-idb.browser.test.ts:264
-- 953b2cea-67 - unresolved - bounded-live-state - packages/common/tracing/src/buffering-backend.ts:88
-- 953b2cea-68 - unresolved - no-casts - packages/common/tracing/src/diagnostics-channel.ts:71
-- 953b2cea-69 - unresolved - no-impossible-state-handling - packages/common/tracing/src/diagnostics-channel.ts:83
-- 953b2cea-70 - unresolved - namespace-export-with-internal-hiding - packages/common/tracing/src/index.ts:1
-- 953b2cea-71 - unresolved - consistent-private-field-convention - packages/common/tracing/src/trace-processor.ts:20
-- 953b2cea-72 - unresolved - schema-declare-and-brand - packages/common/util/src/id.ts:15
-- 953b2cea-73 - unresolved - namespace-export-with-internal-hiding - packages/common/util/src/index.ts:1
-- 953b2cea-74 - unresolved - consistent-file-naming-within-folder - packages/common/util/src/Position.test.ts:1
-- 953b2cea-75 - unresolved - no-sleep-in-test - packages/common/web-context-solid/src/consumer.test.tsx:103
-- 953b2cea-76 - unresolved - errors-extend-base-error - packages/core/compute/agent-code-mode/src/Wire.ts:28
-- 953b2cea-77 - unresolved - inject-dependencies-via-constructor - packages/core/compute/agent-code-mode/src/WorkerdHostWorker.ts:19
-- 953b2cea-78 - unresolved - consistent-file-naming-within-folder - packages/core/compute/agent-runtime/src/agent-service/AgentService.test.ts:1
-- 953b2cea-79 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/agent-runtime/src/agent-service/mcp-servers.ts:52
-- 953b2cea-80 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/ai/src/AiPreprocessor.ts:410
-- 953b2cea-81 - unresolved - effect-requirement-type-not-erased - packages/core/compute/ai/src/testing/tools.test.ts:52
-- 953b2cea-82 - unresolved - namespace-brand-key-prefixing - packages/core/compute/ai/src/tools/tool.ts:7
-- 953b2cea-83 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant-e2e/src/harness.ts:174
-- 953b2cea-84 - unresolved - comment-hygiene - packages/core/compute/assistant-evals/src/evals/web-search.eval.ts:19
-- 953b2cea-85 - unresolved - errors-extend-base-error - packages/core/compute/assistant-evals/src/runner.ts:60
-- 953b2cea-86 - unresolved - effect-requirement-type-not-erased - packages/core/compute/assistant-evals/src/Scorer.ts:217
-- 953b2cea-87 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant-evals/src/Scorer.ts:225
-- 953b2cea-88 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/skills/agent/operations/index.ts:10
-- 953b2cea-89 - unresolved - dependency-direction - packages/core/compute/assistant-toolkit/src/testing/plugins.tsx:13
-- 953b2cea-90 - unresolved - consistent-private-field-convention - packages/core/compute/assistant/src/request/AiRequest.ts:188
-- 953b2cea-91 - unresolved - no-mixed-promise-effect-lifecycle - packages/core/compute/assistant/src/request/AiRequest.ts:504
-- 953b2cea-92 - unresolved - declare-optional-services-with-noop-layers - packages/core/compute/assistant/src/request/format.ts:122
-- 953b2cea-93 - unresolved - inject-dependencies-via-constructor - packages/core/compute/assistant/src/session/AiContext.ts:71
-- 953b2cea-94 - unresolved - consistent-private-field-convention - packages/core/compute/assistant/src/session/AiContext.ts:99
-- 953b2cea-95 - unresolved - consistent-private-field-convention - packages/core/compute/assistant/src/session/AiSession.ts:88
-- 953b2cea-96 - unresolved - effect-requirement-type-not-erased - packages/core/compute/assistant/src/tool-runtime/services.ts:153
-- 953b2cea-97 - unresolved - no-mixed-promise-effect-lifecycle - packages/core/compute/assistant/src/tool-runtime/services.ts:157
-- 953b2cea-98 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Agent.ts:106
-- 953b2cea-99 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:224
-- 953b2cea-100 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:265
-- 953b2cea-101 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:286
-- 953b2cea-102 - unresolved - deprecated-tag-must-be-accurate - packages/core/compute/assistant/src/util/artifact.ts:16
-- 953b2cea-103 - unresolved - no-trivial-wrappers-over-official-apis - packages/core/compute/brain/src/CompilePrompt.ts:372
-- 953b2cea-104 - unresolved - bounded-live-state - packages/core/compute/compute-hyperformula/src/functions/async-function.ts:143
-- 953b2cea-105 - unresolved - namespace-export-with-internal-hiding - packages/core/compute/compute-runtime/src/index.ts:1
-- 953b2cea-106 - unresolved - consistent-file-naming-within-folder - packages/core/compute/compute-runtime/src/LayerStack.test.ts:1
-- 953b2cea-107 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/compute-runtime/src/LayerStack.ts:42
-- 953b2cea-108 - unresolved - no-env-vars-in-low-level-modules - packages/core/compute/compute-runtime/src/node-shell.ts:56
-- 953b2cea-109 - unresolved - effect-requirement-type-not-erased - packages/core/compute/compute-runtime/src/OperationProcess.ts:100
-- 953b2cea-110 - unresolved - bounded-live-state - packages/core/compute/compute-runtime/src/ProcessHandle.ts:684
-- 953b2cea-111 - unresolved - collect-dead-entities - packages/core/compute/compute-runtime/src/ProcessManager.ts:82
-- 953b2cea-112 - unresolved - bounded-live-state - packages/core/compute/compute-runtime/src/ProcessManager.ts:598
-- 953b2cea-113 - unresolved - declare-optional-services-with-noop-layers - packages/core/compute/compute-runtime/src/ProcessOperationInvoker.ts:293
-- 953b2cea-114 - unresolved - no-trivial-wrappers-over-official-apis - packages/core/compute/compute-runtime/src/RemoteProcessHandle.test.ts:338
-- 953b2cea-115 - unresolved - standalone-service-accessor - packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts:564
-- 953b2cea-116 - unresolved - namespace-service-layers - packages/core/compute/compute-runtime/src/triggers/trigger-state-store.ts:40
-- 953b2cea-117 - unresolved - namespace-service-layers - packages/core/compute/compute-runtime/src/triggers/trigger-state-store.ts:61
-- 953b2cea-118 - unresolved - no-mixed-promise-effect-lifecycle - packages/core/compute/compute/src/Credential.ts:97
-- 953b2cea-119 - unresolved - namespace-brand-key-prefixing - packages/core/compute/compute/src/Process.ts:32
-- 953b2cea-120 - unresolved - construct-populated-dont-mutate-after - packages/core/compute/compute/src/types/Project.ts:108
-- 953b2cea-121 - unresolved - construct-populated-dont-mutate-after - packages/core/compute/compute/src/types/Project.ts:114
-- 953b2cea-122 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/compute/src/types/Skill.ts:305
-- 953b2cea-123 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/compute/src/types/Skill.ts:322
-- 953b2cea-124 - unresolved - schema-persists-source-not-derived-duplicate - packages/core/compute/compute/src/types/Trigger.ts:64
-- 953b2cea-125 - unresolved - state-owned-once - packages/core/compute/compute/src/types/TriggerEvent.ts:54
-- 953b2cea-126 - unresolved - reuse-shared-test-layer - packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts:39
-- 953b2cea-127 - unresolved - no-impossible-state-handling - packages/core/compute/conductor/src/compiler/fiber-compiler.ts:242
-- 953b2cea-128 - unresolved - reuse-shared-test-layer - packages/core/compute/conductor/src/nodes/gpt/gpt.test.ts:29
-- 953b2cea-129 - unresolved - no-mixed-promise-effect-lifecycle - packages/core/compute/conductor/src/nodes/registry.ts:346
-- 953b2cea-130 - unresolved - deprecated-tag-must-be-accurate - packages/core/compute/conductor/src/sequence/Sequence.ts:26
-- 953b2cea-131 - unresolved - reuse-shared-test-layer - packages/core/compute/conductor/src/tests/gpt.test.ts:27
-- 953b2cea-132 - unresolved - reuse-shared-test-layer - packages/core/compute/conductor/src/tests/streaming.test.ts:30
-- 953b2cea-133 - unresolved - reuse-shared-test-layer - packages/core/compute/conductor/src/types/compute.test.ts:23
-- 953b2cea-134 - unresolved - deprecated-tag-must-be-accurate - packages/core/compute/conductor/src/types/graph.ts:53
-- 953b2cea-135 - unresolved - reuse-shared-test-layer - packages/core/compute/conductor/src/workflow/workflow.test.ts:39
-- 953b2cea-136 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/crawler/src/Crawler.ts:58
-- 953b2cea-137 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/crawler/src/Crawler.ts:207
-- 953b2cea-138 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/crawler/src/index.ts:5
-- 953b2cea-139 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/crawler/src/stages/topics.ts:44
-- 953b2cea-140 - unresolved - flat-layer-composition - packages/core/compute/crawler/src/StateStore.test.ts:115
-- 953b2cea-141 - unresolved - comment-hygiene - packages/core/compute/crawler/src/testing/index.ts:18
-- 953b2cea-142 - unresolved - declare-optional-services-with-noop-layers - packages/core/compute/edge-compute/src/EdgeProcessManager.ts:43
-- 953b2cea-143 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/extractor-lib/src/contact-extractor.ts:29
-- 953b2cea-144 - unresolved - construct-populated-dont-mutate-after - packages/core/compute/extractor-lib/src/contact.ts:67
-- 953b2cea-145 - unresolved - errors-extend-base-error - packages/core/compute/extractor/src/dispatch.ts:15
-- 953b2cea-146 - unresolved - consistent-file-naming-within-folder - packages/core/compute/extractor/src/ExtractionTemplate.test.ts:1
-- 953b2cea-147 - unresolved - namespace-export-with-internal-hiding - packages/core/compute/extractor/src/index.ts:1
-- 953b2cea-148 - unresolved - deprecated-tag-must-be-accurate - packages/core/compute/functions-runtime-cloudflare/src/functions-client.ts:28
-- 953b2cea-149 - unresolved - error-messages-carry-context - packages/core/compute/functions-runtime-cloudflare/src/internal/service-container.ts:61
-- 953b2cea-150 - unresolved - deprecated-tag-must-be-accurate - packages/core/compute/functions-runtime-cloudflare/src/queues-api.ts:20
-- 953b2cea-151 - unresolved - deprecated-tag-must-be-accurate - packages/core/compute/functions-runtime-cloudflare/src/space-proxy.ts:15
-- 953b2cea-152 - unresolved - structured-logging-not-console - packages/core/compute/functions-testing/src/testing/util.ts:48
-- 953b2cea-153 - unresolved - schema-field-uses-platform-reference-mechanism - packages/core/compute/link/src/Cursor.ts:38
-- 953b2cea-154 - unresolved - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:195
-- 953b2cea-155 - unresolved - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:211
-- 953b2cea-156 - unresolved - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:225
-- 953b2cea-157 - unresolved - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:268
-- 953b2cea-158 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/link/src/Cursor.ts:646
-- 953b2cea-159 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/mcp-client/src/McpToolkit.ts:57
-- 953b2cea-160 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/compute/mcp-server/src/internal/space.ts:96
-- 953b2cea-161 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/compute/mcp-server/src/McpServer.ts:65
-- 953b2cea-162 - unresolved - jsdoc-non-obvious-identifiers - packages/core/compute/mcp-server/src/McpServer.ts:313
-- 953b2cea-163 - unresolved - jsdoc-non-obvious-identifiers - packages/core/compute/mcp-server/src/McpServer.ts:494
-- 953b2cea-164 - unresolved - no-mixed-promise-effect-lifecycle - packages/core/compute/mcp-server/src/McpServer.ts:964
-- 953b2cea-165 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/nlp/src/parse.ts:34
-- 953b2cea-166 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/nlp/src/segment.ts:159
-- 953b2cea-167 - unresolved - namespace-export-with-internal-hiding - packages/core/compute/pipeline-discord/src/index.ts:1
-- 953b2cea-168 - unresolved - comment-hygiene - packages/core/compute/pipeline-discord/src/stages/topics.test.ts:5
-- 953b2cea-169 - unresolved - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/digest.test.ts:34
-- 953b2cea-170 - unresolved - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/topics.test.ts:24
-- 953b2cea-171 - unresolved - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/topics.test.ts:36
-- 953b2cea-172 - unresolved - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/topics.test.ts:42
-- 953b2cea-173 - unresolved - namespace-export-with-internal-hiding - packages/core/compute/pipeline-email/src/index.ts:1
-- 953b2cea-174 - unresolved - comment-hygiene - packages/core/compute/pipeline-email/src/testing/email-pipeline.test.ts:406
-- 953b2cea-175 - unresolved - errors-extend-base-error - packages/core/compute/pipeline-email/src/testing/parquet.ts:15
-- 953b2cea-176 - unresolved - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/topics-pipeline.test.ts:46
-- 953b2cea-177 - unresolved - schema-field-uses-platform-reference-mechanism - packages/core/compute/pipeline-email/src/types/Thread.ts:22
-- 953b2cea-178 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/pipeline-rdf/src/index.ts:5
-- 953b2cea-179 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/pipeline-rdf/src/store/index.ts:7
-- 953b2cea-180 - unresolved - errors-extend-base-error - packages/core/echo/blob/src/s3/s3-client.ts:26
-- 953b2cea-181 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/blob/src/s3/s3-uri.ts:92
-- 953b2cea-182 - unresolved - no-sleep-in-test - packages/core/echo/echo-client-e2e/src/automerge-retention.test.ts:57
-- 953b2cea-183 - unresolved - isolate-benchmark-setup-and-flaky-tests - packages/core/echo/echo-client-e2e/src/echo.bench.ts:54
-- 953b2cea-184 - unresolved - inline-obj-parent - packages/core/echo/echo-client-e2e/src/merge.test.ts:151
-- 953b2cea-185 - unresolved - consistent-file-naming-within-folder - packages/core/echo/echo-client-e2e/src/Obj.updateFrom.test.ts:1
-- 953b2cea-186 - unresolved - inline-obj-parent - packages/core/echo/echo-client-e2e/src/parent.test.ts:135
-- 953b2cea-187 - unresolved - no-sleep-in-test - packages/core/echo/echo-client-e2e/src/query.test.ts:1208
-- 953b2cea-188 - unresolved - inline-obj-parent - packages/core/echo/echo-client-e2e/src/query.test.ts:4303
-- 953b2cea-189 - unresolved - isolate-benchmark-setup-and-flaky-tests - packages/core/echo/echo-client-e2e/src/sqlite.bench.ts:36
-- 953b2cea-190 - unresolved - no-sleep-in-test - packages/core/echo/echo-client-e2e/src/sync-refresh.test.ts:56
-- 953b2cea-191 - unresolved - consistent-private-field-convention - packages/core/echo/echo-client/src/automerge/doc-handle-proxy.ts:106
-- 953b2cea-192 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:724
-- 953b2cea-193 - unresolved - consistent-private-field-convention - packages/core/echo/echo-client/src/automerge/repo-proxy.ts:1
-- 953b2cea-194 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-client/src/client/echo-client.ts:313
-- 953b2cea-195 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/client/index-query-source-provider.test.ts:275
-- 953b2cea-196 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/client/index-query-source-provider.ts:36
-- 953b2cea-197 - unresolved - consistent-private-field-convention - packages/core/echo/echo-client/src/core-db/entity-manager.ts:1
-- 953b2cea-198 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/core-db/entity-manager.ts:81
-- 953b2cea-199 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-client/src/core-db/entity-manager.ts:652
-- 953b2cea-200 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-client/src/core-db/entity-manager.ts:2082
-- 953b2cea-201 - unresolved - comment-hygiene - packages/core/echo/echo-client/src/core-db/object-core.ts:184
-- 953b2cea-202 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:93
-- 953b2cea-203 - unresolved - namespace-brand-key-prefixing - packages/core/echo/echo-client/src/core-db/types.ts:24
-- 953b2cea-204 - unresolved - comment-hygiene - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:117
-- 953b2cea-205 - unresolved - error-messages-carry-context - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:467
-- 953b2cea-206 - unresolved - comment-hygiene - packages/core/echo/echo-client/src/echo-handler/echo-proxy-target.ts:62
-- 953b2cea-207 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/errors.ts:33
-- 953b2cea-208 - unresolved - consistent-private-field-convention - packages/core/echo/echo-client/src/feed/feed-handle.ts:75
-- 953b2cea-209 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-client/src/feed/feed-handle.ts:722
-- 953b2cea-210 - unresolved - consistent-private-field-convention - packages/core/echo/echo-client/src/hypergraph.ts:75
-- 953b2cea-211 - unresolved - error-messages-carry-context - packages/core/echo/echo-client/src/hypergraph.ts:550
-- 953b2cea-212 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/hypergraph.ts:927
-- 953b2cea-213 - unresolved - namespace-export-with-internal-hiding - packages/core/echo/echo-client/src/index.ts:1
-- 953b2cea-214 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:22
-- 953b2cea-215 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:25
-- 953b2cea-216 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:28
-- 953b2cea-217 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:34
-- 953b2cea-218 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:35
-- 953b2cea-219 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:36
-- 953b2cea-220 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:50
-- 953b2cea-221 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:53
-- 953b2cea-222 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:58
-- 953b2cea-223 - unresolved - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:60
-- 953b2cea-224 - unresolved - deprecated-tag-must-be-accurate - packages/core/echo/echo-client/src/proxy-db/database.ts:84
-- 953b2cea-225 - unresolved - consistent-private-field-convention - packages/core/echo/echo-client/src/proxy-db/database.ts:308
-- 953b2cea-226 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/proxy-db/database.ts:1130
-- 953b2cea-227 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/query/query-api-stall.test.ts:67
-- 953b2cea-228 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/testing/echo-test-builder.ts:109
-- 953b2cea-229 - unresolved - deprecated-tag-must-be-accurate - packages/core/echo/echo-generator/src/data.ts:25
-- 953b2cea-230 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:748
-- 953b2cea-231 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:266
-- 953b2cea-232 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:353
-- 953b2cea-233 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:649
-- 953b2cea-234 - unresolved - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-host/src/automerge/automerge-host.ts:68
-- 953b2cea-235 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-host/src/automerge/automerge-host.ts:1801
-- 953b2cea-236 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-host/src/automerge/document-lease.ts:430
-- 953b2cea-237 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/automerge/mesh-echo-replicator-connection.ts:44
-- 953b2cea-238 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/echo/echo-host/src/automerge/subduction-migrations/index.ts:73
-- 953b2cea-239 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:85
-- 953b2cea-240 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/db-host/echo-host.ts:1
-- 953b2cea-241 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/db-host/feed-data-source.ts:53
-- 953b2cea-242 - unresolved - comment-hygiene - packages/core/echo/echo-host/src/db-host/query-invalidation.test.ts:24
-- 953b2cea-243 - unresolved - comment-hygiene - packages/core/echo/echo-host/src/db-host/space-state-manager.test.ts:41
-- 953b2cea-244 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/echo/echo-host/src/db-host/sqlite-health-check.ts:32
-- 953b2cea-245 - unresolved - no-mixed-promise-effect-lifecycle - packages/core/echo/echo-host/src/db-host/sqlite-health-check.ts:54
-- 953b2cea-246 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts:1
-- 953b2cea-247 - unresolved - use-context-scoped-cancellation - packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts:713
-- 953b2cea-248 - unresolved - error-messages-carry-context - packages/core/echo/echo-host/src/query/query-executor.ts:171
-- 953b2cea-249 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/query/query-executor.ts:670
-- 953b2cea-250 - unresolved - structured-logging-not-console - packages/core/echo/echo-host/src/query/query-executor.ts:849
-- 953b2cea-251 - unresolved - batch-queries-not-n-plus-1 - packages/core/echo/echo-host/src/query/query-executor.ts:1009
-- 953b2cea-252 - unresolved - consistent-private-field-convention - packages/core/echo/echo-host/src/query/query-planner.ts:66
-- 953b2cea-253 - unresolved - no-trivial-wrappers-over-official-apis - packages/core/echo/echo-host/src/query/sql/compile.test.ts:225
-- 953b2cea-254 - unresolved - scope-multi-tenant-queries-by-space - packages/core/echo/echo-host/src/query/sql/compile.ts:770
-- 953b2cea-255 - unresolved - inject-dependencies-via-constructor - packages/core/echo/echo-panproto/src/lens/registry.ts:14
-- 953b2cea-256 - unresolved - inject-dependencies-via-constructor - packages/core/echo/echo-panproto/src/runner.ts:25
-- 953b2cea-257 - unresolved - deprecated-tag-must-be-accurate - packages/core/echo/echo-protocol/src/document-structure.ts:76
-- 953b2cea-258 - unresolved - jsdoc-non-obvious-identifiers - packages/core/echo/echo-protocol/src/echo-feed-codec.ts:21
-- 953b2cea-259 - unresolved - namespace-export-with-internal-hiding - packages/core/echo/echo-protocol/src/index.ts:1
-- 953b2cea-260 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/echo/echo-protocol/src/query/index.ts:5
-- 953b2cea-261 - unresolved - errors-extend-base-error - packages/core/echo/echo-sqlite/src/errors.ts:9
-- 953b2cea-262 - unresolved - isolate-benchmark-setup-and-flaky-tests - packages/core/echo/echo-sqlite/src/testing/database.bench.ts:46
-- 953b2cea-263 - unresolved - schema-declare-and-brand - packages/core/echo/echo/src/Database.ts:515
-- 953b2cea-264 - unresolved - options-object-with-defaults - packages/core/echo/echo/src/Hypergraph.ts:82
-- 953b2cea-265 - unresolved - no-trivial-wrappers-over-official-apis - packages/core/echo/echo/src/internal/common/proxy/change.test.ts:15
-- 953b2cea-266 - unresolved - errors-extend-base-error - packages/core/echo/echo/src/internal/common/proxy/errors.ts:8
-- 953b2cea-267 - unresolved - error-messages-carry-context - packages/core/echo/echo/src/internal/common/proxy/make-object.ts:149
-- 953b2cea-268 - unresolved - comment-hygiene - packages/core/echo/echo/src/internal/common/proxy/typed-handler.ts:361
-- 953b2cea-269 - unresolved - name-for-general-behavior - packages/core/echo/echo/src/internal/common/types/model-symbols.ts:5
-- 953b2cea-270 - unresolved - deprecated-tag-must-be-accurate - packages/core/echo/echo/src/internal/Format/types.ts:53
-- 953b2cea-271 - unresolved - deprecated-tag-must-be-accurate - packages/core/echo/echo/src/internal/JsonSchema/json-schema-type.ts:66
-- 953b2cea-272 - unresolved - name-for-general-behavior - packages/core/echo/echo/src/internal/Obj/common.ts:11
-- 953b2cea-273 - unresolved - error-messages-carry-context - packages/core/echo/echo/src/internal/Ref/ref.ts:645
-- 953b2cea-274 - unresolved - error-messages-carry-context - packages/core/echo/echo/src/Migration.ts:131
-- 953b2cea-275 - unresolved - name-for-general-behavior - packages/core/echo/echo/src/Query.ts:727
-- 953b2cea-276 - unresolved - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:363
-- 953b2cea-277 - unresolved - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:379
-- 953b2cea-278 - unresolved - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:445
-- 953b2cea-279 - unresolved - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:521
-- 953b2cea-280 - unresolved - schema-persists-source-not-derived-duplicate - packages/core/echo/echo/src/View.ts:75
-- 953b2cea-281 - unresolved - scope-multi-tenant-queries-by-space - packages/core/echo/feed/src/feed-store.ts:572
-- 953b2cea-282 - unresolved - jsdoc-non-obvious-identifiers - packages/core/echo/feed/src/feed-store.ts:715
-- 953b2cea-283 - unresolved - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:45
-- 953b2cea-284 - unresolved - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:204
-- 953b2cea-285 - unresolved - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:379
-- 953b2cea-286 - unresolved - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:426
-- 953b2cea-287 - unresolved - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-server.ts:37
-- 953b2cea-288 - unresolved - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-server.ts:58
-- 953b2cea-289 - unresolved - deferred-callback-owns-its-context - packages/core/echo/index-core/src/data-source.ts:60
-- 953b2cea-290 - unresolved - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:350
-- 953b2cea-291 - unresolved - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:502
-- 953b2cea-292 - unresolved - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:593
-- 953b2cea-293 - unresolved - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:695
-- 953b2cea-294 - unresolved - scope-multi-tenant-queries-by-space - packages/core/echo/index-core/src/indexes/reverse-ref-index.ts:128
-- 953b2cea-295 - unresolved - scope-multi-tenant-queries-by-space - packages/core/echo/index-core/src/migrations/entity-meta/0004_queue_position.sql:13
-- 953b2cea-296 - unresolved - scope-multi-tenant-queries-by-space - packages/core/echo/index-core/src/migrations/reverse-ref/0001_init.sql:10
-- 953b2cea-297 - unresolved - name-for-general-behavior - packages/core/halo/credentials/src/credentials/signing.ts:52
-- 953b2cea-298 - unresolved - namespace-export-with-internal-hiding - packages/core/halo/credentials/src/index.ts:1
-- 953b2cea-299 - unresolved - error-messages-carry-context - packages/core/halo/credentials/src/state-machine/member-state-machine.ts:95
-- 953b2cea-300 - unresolved - namespace-export-with-internal-hiding - packages/core/halo/halo-react/src/index.ts:1
-- 953b2cea-301 - unresolved - deprecated-tag-must-be-accurate - packages/core/mesh/edge-client/src/base-http-client.ts:447
-- 953b2cea-302 - unresolved - consistent-private-field-convention - packages/core/mesh/edge-client/src/edge-client.ts:118
-- 953b2cea-303 - unresolved - errors-extend-base-error - packages/core/mesh/edge-client/src/edge-ws-muxer.ts:375
-- 953b2cea-304 - unresolved - errors-extend-base-error - packages/core/mesh/edge-client/src/errors.ts:7
-- 953b2cea-305 - unresolved - namespace-export-with-internal-hiding - packages/core/mesh/edge-client/src/index.ts:1
-- 953b2cea-306 - unresolved - errors-extend-base-error - packages/core/mesh/edge-client/src/service/edge-service.ts:38
-- 953b2cea-307 - unresolved - deprecated-tag-must-be-accurate - packages/core/mesh/messaging/src/signal-manager/edge-signal-manager.ts:63
-- 953b2cea-308 - unresolved - deprecated-tag-must-be-accurate - packages/core/mesh/messaging/src/signal-methods.ts:63
-- 953b2cea-309 - unresolved - namespace-export-with-internal-hiding - packages/core/mesh/network-manager/src/index.ts:1
-- 953b2cea-310 - unresolved - no-env-vars-in-low-level-modules - packages/core/mesh/network-manager/src/swarm/connection.ts:379
-- 953b2cea-311 - unresolved - no-trivial-wrappers-over-official-apis - packages/core/mesh/network-manager/src/transport/webrtc/testing/rtc-proxy-worker.ts:24
-- 953b2cea-312 - unresolved - name-for-general-behavior - packages/core/mesh/rpc-tunnel/src/ports/worker.ts:23
-- 953b2cea-313 - unresolved - error-messages-carry-context - packages/core/mesh/rpc/src/rpc.ts:477
-- 953b2cea-314 - unresolved - consistent-file-naming-within-folder - packages/core/mesh/rpc/src/RpcRouter.test.ts:1
-- 953b2cea-315 - unresolved - effect-fn-not-hand-wrapped-gen - packages/core/mesh/rpc/src/RpcRouter.ts:120
-- 953b2cea-316 - unresolved - deprecated-tag-must-be-accurate - packages/core/mesh/rpc/src/service.ts:171
-- 953b2cea-317 - unresolved - no-compat-shims - packages/core/protocols/src/edge/edge-deprecated.ts:15
-- 953b2cea-318 - unresolved - comment-hygiene - packages/core/protocols/src/edge/edge-deprecated.ts:22
-- 953b2cea-319 - unresolved - namespace-export-with-internal-hiding - packages/core/protocols/src/index.ts:1
-- 953b2cea-320 - unresolved - namespace-service-layers - packages/devtools/cli-util/src/services/command-config.ts:23
-- 953b2cea-321 - unresolved - import-as-namespace-is-all-or-nothing - packages/devtools/cli-util/src/util/index.ts:10
-- 953b2cea-322 - unresolved - effect-fn-not-hand-wrapped-gen - packages/devtools/cli-util/src/util/space.ts:25
-- 953b2cea-323 - unresolved - no-mixed-promise-effect-lifecycle - packages/devtools/cli-util/src/util/space.ts:39
-- 953b2cea-324 - unresolved - effect-requirement-type-not-erased - packages/devtools/cli/src/bin.ts:242
-- 953b2cea-325 - unresolved - avoid-full-collection-scans - packages/devtools/cli/src/commands/chat/non-interactive.ts:39
-- 953b2cea-326 - unresolved - functions-before-classes - packages/devtools/cli/src/commands/chat/processor.ts:37
-- 953b2cea-327 - unresolved - deprecated-tag-must-be-accurate - packages/devtools/cli/src/commands/function/deploy/echo.ts:56
-- 953b2cea-328 - unresolved - effect-requirement-type-not-erased - packages/devtools/cli/src/commands/repl.ts:97
-- 953b2cea-329 - unresolved - import-as-namespace-is-all-or-nothing - packages/devtools/cli/src/util/index.ts:13
-- 953b2cea-330 - unresolved - no-pointless-indirection - packages/devtools/devtools/src/components/MasterDetailTable.tsx:32
-- 953b2cea-331 - unresolved - no-pointless-indirection - packages/devtools/devtools/src/components/MasterDetailTable.tsx:89
-- 953b2cea-332 - unresolved - structured-logging-not-console - packages/devtools/devtools/src/components/ObjectsTree.tsx:156
-- 953b2cea-333 - unresolved - co-locate-tightly-coupled-code - packages/devtools/devtools/src/components/Tree.tsx:1
-- 953b2cea-334 - unresolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/echo/SchemaArticle/SchemaArticle.tsx:159
-- 953b2cea-335 - unresolved - event-handler-naming-convention - packages/devtools/devtools/src/containers/panels/echo/SpaceInfoArticle/SpaceInfoArticle.tsx:45
-- 953b2cea-336 - unresolved - event-handler-naming-convention - packages/devtools/devtools/src/containers/panels/echo/SpaceInfoArticle/SpaceInfoArticle.tsx:54
-- 953b2cea-337 - unresolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/edge/InvocationTraceArticle/ExceptionPanel.tsx:35
-- 953b2cea-338 - unresolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/edge/InvocationTraceArticle/ExceptionPanel.tsx:44
-- 953b2cea-339 - unresolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/edge/WorkflowArticle/WorkflowArticle.tsx:97
-- 953b2cea-340 - unresolved - reactive-state-via-atom-bridge - packages/devtools/devtools/src/hooks/useStats.ts:154
-- 953b2cea-341 - unresolved - reactive-state-via-atom-bridge - packages/devtools/devtools/src/hooks/useSwarmTrace.ts:43
-- 953b2cea-342 - unresolved - no-impossible-state-handling - packages/e2e/blade-runner/src/replicants/echo-replicant.ts:101
-- 953b2cea-343 - unresolved - no-impossible-state-handling - packages/e2e/blade-runner/src/replicants/edge-replicant.ts:113
-- 953b2cea-344 - unresolved - consistent-private-field-convention - packages/e2e/composer-e2e/src/playwright/app-manager.ts:216
-- 953b2cea-345 - unresolved - namespace-export-with-internal-hiding - packages/e2e/perf-harness/src/index.ts:1
-- 953b2cea-346 - unresolved - lifecycle-owned-by-its-resource - packages/e2e/rpc-tunnel-e2e/src/test-client.ts:68
-- 953b2cea-347 - unresolved - structured-logging-not-console - packages/experimental/discord-worker/src/worker.ts:235
-- 953b2cea-348 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-agent/src/containers/AgentActivity/AgentActivity.tsx:253
-- 953b2cea-349 - unresolved - standalone-service-accessor - packages/plugins/plugin-agent/src/operations/list-triggers.ts:18
-- 953b2cea-350 - unresolved - errors-extend-base-error - packages/plugins/plugin-assistant/src/chat-model/chat-model.ts:129
-- 953b2cea-351 - unresolved - flat-layer-composition - packages/plugins/plugin-assistant/src/chat-model/chat-model.ts:374
-- 953b2cea-352 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-assistant/src/components/ConnectorAuthMenu/ConnectorAuthMenu.stories.tsx:68
-- 953b2cea-353 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/components/index.ts:9
-- 953b2cea-354 - unresolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-assistant/src/components/Toolbox/Toolbox.tsx:88
-- 953b2cea-355 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx:20
-- 953b2cea-356 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx:17
-- 953b2cea-357 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx:19
-- 953b2cea-358 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/containers/QuestionCard/QuestionCard.stories.tsx:69
-- 953b2cea-359 - unresolved - structured-logging-not-console - packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.tsx:159
-- 953b2cea-360 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/hooks/useChatKeymap.ts:12
-- 953b2cea-361 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/hooks/useChatToolbarActions.ts:17
-- 953b2cea-362 - unresolved - structured-logging-not-console - packages/plugins/plugin-assistant/src/hooks/useDebug.ts:28
-- 953b2cea-363 - unresolved - reactive-state-via-atom-bridge - packages/plugins/plugin-assistant/src/hooks/useProcessEphemeralStatus.ts:94
-- 953b2cea-364 - unresolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-assistant/src/hooks/useSkillRegistry.test.tsx:22
-- 953b2cea-365 - unresolved - declare-optional-services-with-noop-layers - packages/plugins/plugin-assistant/src/operations/bind-chat-context.ts:28
-- 953b2cea-366 - unresolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-assistant/src/types/AssistantCapabilities.ts:90
-- 953b2cea-367 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.stories.tsx:72
-- 953b2cea-368 - unresolved - errors-extend-base-error - packages/plugins/plugin-atproto/src/errors.ts:8
-- 953b2cea-369 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-attention/src/stories/SelectionState.stories.tsx:118
-- 953b2cea-370 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-attention/src/stories/SelectionState.stories.tsx:128
-- 953b2cea-371 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-attention/src/testing.ts:5
-- 953b2cea-372 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx:94
-- 953b2cea-373 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx:127
-- 953b2cea-374 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-blogger/src/operations/index.ts:12
-- 953b2cea-375 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-bluesky/src/operations/index.ts:16
-- 953b2cea-376 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx:151
-- 953b2cea-377 - unresolved - story-for-new-ui-component - packages/plugins/plugin-bookmarks/src/components/Summary/Summary.tsx:1
-- 953b2cea-378 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.stories.tsx:16
-- 953b2cea-379 - unresolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-brain/src/capabilities/fact-store.ts:74
-- 953b2cea-380 - unresolved - standalone-service-accessor - packages/plugins/plugin-brain/src/operations/query-facts.ts:37
-- 953b2cea-381 - unresolved - consistent-private-field-convention - packages/plugins/plugin-calls/src/calls/call-manager.ts:1
-- 953b2cea-382 - unresolved - namespace-brand-key-prefixing - packages/plugins/plugin-calls/src/calls/types.ts:56
-- 953b2cea-383 - unresolved - no-impossible-state-handling - packages/plugins/plugin-calls/src/calls/util/calls-service.ts:361
-- 953b2cea-384 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-calls/src/components/Call/Toolbar.tsx:108
-- 953b2cea-385 - unresolved - no-pointless-indirection - packages/plugins/plugin-calls/src/components/Lobby/Lobby.tsx:101
-- 953b2cea-386 - unresolved - no-pointless-indirection - packages/plugins/plugin-calls/src/components/ResponsiveGrid/ResponsiveGrid.tsx:77
-- 953b2cea-387 - unresolved - no-pointless-indirection - packages/plugins/plugin-calls/src/components/ResponsiveGrid/ResponsivePanel.tsx:26
-- 953b2cea-388 - unresolved - errors-extend-base-error - packages/plugins/plugin-chess-com/src/errors.ts:7
-- 953b2cea-389 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx:37
-- 953b2cea-390 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx:76
-- 953b2cea-391 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx:93
-- 953b2cea-392 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx:103
-- 953b2cea-393 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-chess/src/containers/ChessCard/ChessCard.stories.tsx:20
-- 953b2cea-394 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-client/src/containers/ContactPickerContainer/ContactPickerContainer.tsx:99
-- 953b2cea-395 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx:27
-- 953b2cea-396 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-cloudflare/src/services/index.ts:5
-- 953b2cea-397 - unresolved - no-env-vars-in-low-level-modules - packages/plugins/plugin-code/src/agent-helper/server.ts:350
-- 953b2cea-398 - unresolved - reuse-shared-test-layer - packages/plugins/plugin-code/src/agents/claude-code.e2e.test.ts:103
-- 953b2cea-399 - unresolved - reuse-shared-test-layer - packages/plugins/plugin-code/src/agents/EdgeAgent.test.ts:172
-- 953b2cea-400 - unresolved - story-for-new-ui-component - packages/plugins/plugin-code/src/components/CodeToolbar/CodeToolbar.tsx:1
-- 953b2cea-401 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-computer/src/vite-plugin/index.ts:11
-- 953b2cea-402 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx:46
-- 953b2cea-403 - unresolved - story-for-new-ui-component - packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.tsx:1
-- 953b2cea-404 - unresolved - story-for-new-ui-component - packages/plugins/plugin-debug/src/components/SchemaTable/SchemaTable.tsx:1
-- 953b2cea-405 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-debug/src/containers/DebugObjectPanel/DebugObjectPanel.tsx:30
-- 953b2cea-406 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-debug/src/containers/LoggerPanel/LoggerPanel.stories.tsx:39
-- 953b2cea-407 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx:189
-- 953b2cea-408 - unresolved - story-for-new-ui-component - packages/plugins/plugin-deck/src/components/Companion/Companion.tsx:1
-- 953b2cea-409 - unresolved - story-for-new-ui-component - packages/plugins/plugin-deck/src/components/FoldSpine/FoldSpine.tsx:1
-- 953b2cea-410 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-deck/src/components/Pane/Pane.stories.tsx:44
-- 953b2cea-411 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/components/Plank/Plank.stories.tsx:68
-- 953b2cea-412 - unresolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-deck/src/components/Plank/Plank.stories.tsx:166
-- 953b2cea-413 - unresolved - fix-root-cause-not-symptom - packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx:46
-- 953b2cea-414 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:100
-- 953b2cea-415 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:123
-- 953b2cea-416 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-deck/src/url/index.ts:9
-- 953b2cea-417 - unresolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-deck/src/util/layout.ts:13
-- 953b2cea-418 - unresolved - no-bare-ref-schema-alias - packages/plugins/plugin-deepseek/src/skills/operations/definitions.ts:12
-- 953b2cea-419 - unresolved - business-logic-out-of-ui - packages/plugins/plugin-devtools/src/containers/GithubPanel/GithubComponent.tsx:70
-- 953b2cea-420 - unresolved - standalone-service-accessor - packages/plugins/plugin-discord/src/capabilities/connector.ts:60
-- 953b2cea-421 - unresolved - story-for-new-ui-component - packages/plugins/plugin-discord/src/components/DiscordSetup/DiscordSetup.tsx:1
-- 953b2cea-422 - unresolved - obj-update-push - packages/plugins/plugin-discord/src/operations/admin/bind-channel.ts:97
-- 953b2cea-423 - unresolved - no-pointless-indirection - packages/plugins/plugin-excalidraw/src/containers/ExcalidrawArticle/ExcalidrawArticle.tsx:61
-- 953b2cea-424 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx:94
-- 953b2cea-425 - unresolved - schema-persists-source-not-derived-duplicate - packages/plugins/plugin-explorer/src/types/Graph.ts:15
-- 953b2cea-426 - unresolved - inject-dependencies-via-constructor - packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts:38
-- 953b2cea-427 - unresolved - comment-hygiene - packages/plugins/plugin-file-system/src/capabilities/state/markdown-documents.ts:141
-- 953b2cea-428 - unresolved - story-for-new-ui-component - packages/plugins/plugin-file/src/components/FileInput/FileInput.tsx:1
-- 953b2cea-429 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-game/src/components/CreateGamePanel.tsx:1
-- 953b2cea-430 - unresolved - errors-extend-base-error - packages/plugins/plugin-game/src/util/load-game.ts:11
-- 953b2cea-431 - unresolved - story-for-new-ui-component - packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx:1
-- 953b2cea-432 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx:103
-- 953b2cea-433 - unresolved - story-for-new-ui-component - packages/plugins/plugin-github/src/components/PullRequestFiles/PullRequestFiles.tsx:1
-- 953b2cea-434 - unresolved - story-for-new-ui-component - packages/plugins/plugin-github/src/components/PullRequestOverview/PullRequestOverview.tsx:1
-- 953b2cea-435 - unresolved - story-for-new-ui-component - packages/plugins/plugin-github/src/components/PullRequestStatus/PullRequestStatus.tsx:1
-- 953b2cea-436 - unresolved - story-for-new-ui-component - packages/plugins/plugin-github/src/components/WalkthroughView/WalkthroughView.tsx:1
-- 953b2cea-437 - unresolved - no-invented-theme-tokens - packages/plugins/plugin-github/src/containers/PullRequestsArticle/PullRequestsArticle.tsx:217
-- 953b2cea-438 - unresolved - no-invented-theme-tokens - packages/plugins/plugin-github/src/containers/PullRequestsArticle/PullRequestsArticle.tsx:259
-- 953b2cea-439 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-github/src/GitHubPlugin.workerd.test.ts:1
-- 953b2cea-440 - unresolved - inject-dependencies-via-constructor - packages/plugins/plugin-github/src/hooks/useSyncPullRequest.ts:20
-- 953b2cea-441 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-github/src/services/index.ts:5
-- 953b2cea-442 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-github/src/stories/PullRequestArticle.stories.tsx:24
-- 953b2cea-443 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-github/src/stories/PullRequestsArticle.stories.tsx:26
-- 953b2cea-444 - unresolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-google/src/apis/GoogleContacts/api.ts:74
-- 953b2cea-445 - unresolved - comment-hygiene - packages/plugins/plugin-google/src/operations/mail/sync/tag-push.test.ts:209
-- 953b2cea-446 - unresolved - errors-extend-base-error - packages/plugins/plugin-heygen/src/services/heygen-provider-types.ts:60
-- 953b2cea-447 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-heygen/src/services/heygen-provider.stories.tsx:141
-- 953b2cea-448 - unresolved - errors-extend-base-error - packages/plugins/plugin-higgsfield/src/services/higgsfield-provider-types.ts:62
-- 953b2cea-449 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-ibkr/src/operations/operations.test.ts:273
-- 953b2cea-450 - unresolved - parent-ref-backs-parent-pointer - packages/plugins/plugin-ibkr/src/sync.ts:61
-- 953b2cea-451 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-illustrator/src/components/CreateDrawingPanel.tsx:1
-- 953b2cea-452 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-illustrator/src/components/SceneSvg.tsx:1
-- 953b2cea-453 - unresolved - no-hand-rolled-lists - packages/plugins/plugin-illustrator/src/containers/DrawingScores/DrawingScores.tsx:85
-- 953b2cea-454 - unresolved - errors-extend-base-error - packages/plugins/plugin-illustrator/src/util/load-drawing.ts:12
-- 953b2cea-455 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-inbox/src/components/InboxStack/InboxStack.tsx:638
-- 953b2cea-456 - unresolved - story-for-new-ui-component - packages/plugins/plugin-inbox/src/components/Initialize/Initialize.tsx:1
-- 953b2cea-457 - unresolved - story-for-new-ui-component - packages/plugins/plugin-inbox/src/components/MarkdownViewer/MarkdownViewer.tsx:1
-- 953b2cea-458 - unresolved - story-for-new-ui-component - packages/plugins/plugin-inbox/src/components/RelatedEvents/RelatedEvents.tsx:1
-- 953b2cea-459 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx:62
-- 953b2cea-460 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx:199
-- 953b2cea-461 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-inbox/src/containers/SaveFilterPopover/SaveFilterPopover.tsx:35
-- 953b2cea-462 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-inbox/src/operations/FeedCursor.test.ts:1
-- 953b2cea-463 - unresolved - functions-before-classes - packages/plugins/plugin-inbox/src/testing/builder.ts:97
-- 953b2cea-464 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.stories.tsx:86
-- 953b2cea-465 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx:53
-- 953b2cea-466 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-library/src/containers/BookArticle/BookArticle.tsx:37
-- 953b2cea-467 - unresolved - errors-extend-base-error - packages/plugins/plugin-library/src/operations/http.ts:15
-- 953b2cea-468 - unresolved - comment-hygiene - packages/plugins/plugin-magazine/src/operations/curate-magazine.ts:110
-- 953b2cea-469 - unresolved - no-impossible-state-handling - packages/plugins/plugin-magazine/src/operations/fetch-article-content.ts:22
-- 953b2cea-470 - unresolved - errors-extend-base-error - packages/plugins/plugin-magazine/src/operations/sources/feed-fetcher.ts:20
-- 953b2cea-471 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-magazine/src/stories/MagazineCurate.stories.tsx:41
-- 953b2cea-472 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-markdown/src/components/PreviewComponent/PreviewComponent.tsx:365
-- 953b2cea-473 - unresolved - barrel-imports-not-internal-paths - packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx:49
-- 953b2cea-474 - unresolved - dont-recompute-in-reactive-closures - packages/plugins/plugin-meeting/src/capabilities/app-graph-builder.ts:252
-- 953b2cea-475 - unresolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx:79
-- 953b2cea-476 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx:80
-- 953b2cea-477 - unresolved - dont-recompute-in-reactive-closures - packages/plugins/plugin-messenger/src/capabilities/inbox-materializer.ts:38
-- 953b2cea-478 - unresolved - structured-logging-not-console - packages/plugins/plugin-native/src/capabilities/ollama.ts:377
-- 953b2cea-479 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-navtree/src/components/Sidebar/L0Menu.tsx:356
-- 953b2cea-480 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-navtree/src/components/Sidebar/L0Menu.tsx:370
-- 953b2cea-481 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-navtree/src/components/types.ts:14
-- 953b2cea-482 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-navtree/src/components/types.ts:25
-- 953b2cea-483 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx:49
-- 953b2cea-484 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx:400
-- 953b2cea-485 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx:885
-- 953b2cea-486 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx:918
-- 953b2cea-487 - unresolved - reuse-existing-mechanism - packages/plugins/plugin-onboarding/src/credentials/util.ts:24
-- 953b2cea-488 - unresolved - comment-hygiene - packages/plugins/plugin-onboarding/src/samples/bramble/roast-log.ts:77
-- 953b2cea-489 - unresolved - subscribe-where-you-read - packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx:183
-- 953b2cea-490 - unresolved - dont-recompute-in-reactive-closures - packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts:48
-- 953b2cea-491 - unresolved - no-pointless-indirection - packages/plugins/plugin-presenter/src/components/Markdown/Panel.tsx:39
-- 953b2cea-492 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-presenter/src/components/Presenter/Layout.tsx:23
-- 953b2cea-493 - unresolved - event-handler-naming-convention - packages/plugins/plugin-presenter/src/components/Presenter/Pager.tsx:38
-- 953b2cea-494 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx:1
-- 953b2cea-495 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx:44
-- 953b2cea-496 - unresolved - no-hand-rolled-lists - packages/plugins/plugin-qa/src/containers/TestPlanArticle/TestPlanArticle.tsx:135
-- 953b2cea-497 - unresolved - no-hand-rolled-lists - packages/plugins/plugin-qa/src/containers/TestPlanArticle/TestPlanArticle.tsx:154
-- 953b2cea-498 - unresolved - comment-hygiene - packages/plugins/plugin-registry/src/commands/registry/util.ts:41
-- 953b2cea-499 - unresolved - no-hand-rolled-lists - packages/plugins/plugin-registry/src/components/DisableDependentsAlert/DisableDependentsAlert.tsx:50
-- 953b2cea-500 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-registry/src/components/PluginFailureBadge/PluginFailureBadge.tsx:47
-- 953b2cea-501 - unresolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-registry/src/containers/RegistryArticle/RegistryArticle.tsx:19
-- 953b2cea-502 - unresolved - standalone-service-accessor - packages/plugins/plugin-registry/src/operations/enable-plugins.ts:16
-- 953b2cea-503 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/assets.ts:44
-- 953b2cea-504 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/assets.ts:138
-- 953b2cea-505 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/resolve.ts:73
-- 953b2cea-506 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/resolve.ts:150
-- 953b2cea-507 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/resolve.ts:208
-- 953b2cea-508 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-routine/src/components/Schedule/Schedule.stories.tsx:18
-- 953b2cea-509 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-routine/src/components/TemplateEditor/TemplateForm.tsx:67
-- 953b2cea-510 - unresolved - subscribe-where-you-read - packages/plugins/plugin-routine/src/containers/SkillArticle/SkillArticle.tsx:26
-- 953b2cea-511 - unresolved - comment-hygiene - packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts:35
-- 953b2cea-512 - unresolved - comment-hygiene - packages/plugins/plugin-sample/src/capabilities/react-surface.ts:32
-- 953b2cea-513 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-sample/src/components/RelatedItemsList.tsx:1
-- 953b2cea-514 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-sandbox/src/local/LocalSandboxBackend.test.ts:1
-- 953b2cea-515 - unresolved - declare-optional-services-with-noop-layers - packages/plugins/plugin-sandbox/src/skills/functions/create-sandbox.ts:51
-- 953b2cea-516 - unresolved - inline-obj-parent - packages/plugins/plugin-sandbox/src/skills/functions/download-file.ts:30
-- 953b2cea-517 - unresolved - no-bare-ref-schema-alias - packages/plugins/plugin-script/src/skills/functions/definitions.ts:14
-- 953b2cea-518 - unresolved - fix-root-cause-not-symptom - packages/plugins/plugin-script/src/templates/commentary.ts:128
-- 953b2cea-519 - unresolved - fix-root-cause-not-symptom - packages/plugins/plugin-script/src/templates/commentary.ts:143
-- 953b2cea-520 - unresolved - flat-layer-composition - packages/plugins/plugin-script/src/templates/discord.ts:108
-- 953b2cea-521 - unresolved - no-native-form-controls - packages/plugins/plugin-search/src/components/SearchResultList/SearchResultList.stories.tsx:72
-- 953b2cea-522 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.tsx:82
-- 953b2cea-523 - unresolved - deprecated-tag-must-be-accurate - packages/plugins/plugin-search/src/hooks/useWebSearch.ts:28
-- 953b2cea-524 - unresolved - test-asserts-real-behavior - packages/plugins/plugin-search/src/search/exa.test.ts:67
-- 953b2cea-525 - unresolved - no-premature-abstraction - packages/plugins/plugin-sequencer/src/components/SequenceGrid/SequenceGrid.tsx:485
-- 953b2cea-526 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx:312
-- 953b2cea-527 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx:484
-- 953b2cea-528 - unresolved - comment-hygiene - packages/plugins/plugin-sequencer/src/util/lead-sheet.ts:8
-- 953b2cea-529 - unresolved - deprecated-tag-must-be-accurate - packages/plugins/plugin-sheet/src/model/sheet-model.ts:140
-- 953b2cea-530 - unresolved - errors-extend-base-error - packages/plugins/plugin-sheet/src/types/SheetUtil.ts:26
-- 953b2cea-531 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-sidekick/src/components/ActionItems.tsx:15
-- 953b2cea-532 - unresolved - co-locate-tightly-coupled-code - packages/plugins/plugin-sidekick/src/components/ProfileGrid.tsx:14
-- 953b2cea-533 - unresolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-sidekick/src/containers/SidekickArticle/SidekickArticle.tsx:18
-- 953b2cea-534 - unresolved - dont-recompute-in-reactive-closures - packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/spaces.ts:250
-- 953b2cea-535 - unresolved - dont-recompute-in-reactive-closures - packages/plugins/plugin-space/src/capabilities/dashboard.ts:41
-- 953b2cea-536 - unresolved - no-mixed-promise-effect-lifecycle - packages/plugins/plugin-space/src/commands/database/remove.ts:28
-- 953b2cea-537 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-space/src/commands/space/join/join.ts:49
-- 953b2cea-538 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-space/src/containers/AddToCollectionDialog/AddToCollectionDialog.tsx:123
-- 953b2cea-539 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/CollectionSection/CollectionSection.tsx:22
-- 953b2cea-540 - unresolved - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-space/src/containers/CollectionSection/CollectionSection.tsx:22
-- 953b2cea-541 - unresolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-space/src/containers/ImportSpaceDialog/ImportSpaceDialog.tsx:83
-- 953b2cea-542 - unresolved - no-hand-rolled-lists - packages/plugins/plugin-space/src/containers/SchemaContainer/SchemaContainer.tsx:34
-- 953b2cea-543 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.stories.tsx:76
-- 953b2cea-544 - unresolved - reactive-state-via-atom-bridge - packages/plugins/plugin-space/src/hooks/useEdgeStatus.ts:26
-- 953b2cea-545 - unresolved - avoid-full-collection-scans - packages/plugins/plugin-space/src/hooks/useRelatedObjects.ts:36
-- 953b2cea-546 - unresolved - fix-root-cause-not-symptom - packages/plugins/plugin-space/src/hooks/useRelatedObjects.ts:64
-- 953b2cea-547 - unresolved - setter-must-not-own-transaction - packages/plugins/plugin-space/src/migrations/settings-space.ts:98
-- 953b2cea-548 - unresolved - no-precision-loss-on-generic-refactor - packages/plugins/plugin-space/src/operations/add-relation.ts:44
-- 953b2cea-549 - unresolved - declare-optional-services-with-noop-layers - packages/plugins/plugin-space/src/operations/add-type.ts:45
-- 953b2cea-550 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx:184
-- 953b2cea-551 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-studio/src/containers/GalleryArticle/GalleryArticle.tsx:64
-- 953b2cea-552 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx:85
-- 953b2cea-553 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactVariants.tsx:56
-- 953b2cea-554 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-studio/src/operations/generate.test.ts:120
-- 953b2cea-555 - unresolved - effect-requirement-type-not-erased - packages/plugins/plugin-studio/src/operations/storyboard.test.ts:84
-- 953b2cea-556 - unresolved - business-logic-out-of-ui - packages/plugins/plugin-support/src/containers/DiscordPanel/DiscordComponent.tsx:103
-- 953b2cea-557 - unresolved - no-hand-rolled-lists - packages/plugins/plugin-support/src/containers/DiscordPanel/DiscordComponent.tsx:163
-- 953b2cea-558 - unresolved - consistent-file-naming-within-folder - packages/plugins/plugin-tasks/src/components/Journal/Journal.stories.tsx:20
-- 953b2cea-559 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.tsx:37
-- 953b2cea-560 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskAttachments.tsx:290
-- 953b2cea-561 - unresolved - inline-obj-parent - packages/plugins/plugin-tasks/src/util/task-order.test.ts:109
-- 953b2cea-562 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx:45
-- 953b2cea-563 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-testing/src/components/Layout/Layout.tsx:138
-- 953b2cea-564 - unresolved - no-pointless-indirection - packages/plugins/plugin-testing/src/components/Layout/Layout.tsx:227
-- 953b2cea-565 - unresolved - functions-before-classes - packages/plugins/plugin-tldraw/src/model/RecordBuilder.ts:170
-- 953b2cea-566 - unresolved - options-object-with-defaults - packages/plugins/plugin-transcription/src/types/TranscriptionCapabilities.ts:42
-- 953b2cea-567 - unresolved - no-pointless-indirection - packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx:21
-- 953b2cea-568 - unresolved - test-real-scenario-not-narrower-proxy - packages/plugins/plugin-trello/src/operations/handlers.test.ts:204
-- 953b2cea-569 - unresolved - follow-existing-lazy-loading-pattern - packages/plugins/plugin-trip/src/capabilities/index.ts:36
-- 953b2cea-570 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-trip/src/capabilities/marker-provider.tsx:131
-- 953b2cea-571 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-trip/src/containers/SegmentArticle/SegmentArticle.tsx:58
-- 953b2cea-572 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx:51
-- 953b2cea-573 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx:266
-- 953b2cea-574 - unresolved - functions-before-classes - packages/plugins/plugin-trip/src/testing/builder.ts:75
-- 953b2cea-575 - unresolved - setter-must-not-own-transaction - packages/plugins/plugin-trip/src/types/Segment.ts:204
-- 953b2cea-576 - unresolved - setter-must-not-own-transaction - packages/plugins/plugin-trip/src/types/Segment.ts:218
-- 953b2cea-577 - unresolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-video/src/capabilities/app-graph-builder.ts:32
-- 953b2cea-578 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx:27
-- 953b2cea-579 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx:73
-- 953b2cea-580 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-zen/src/containers/ZenArticle/ZenArticle.tsx:18
-- 953b2cea-581 - unresolved - comment-hygiene - packages/reflect/introspect-mcp/src/server/server.test.ts:86
-- 953b2cea-582 - unresolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/testing/react.tsx:15
-- 953b2cea-583 - unresolved - deprecated-tag-must-be-accurate - packages/sdk/app-framework/src/testing/withPluginManager.tsx:93
-- 953b2cea-584 - unresolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useActivationSignal.ts:10
-- 953b2cea-585 - unresolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useApp.tsx:23
-- 953b2cea-586 - unresolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useApp.tsx:25
-- 953b2cea-587 - unresolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useCapabilities.ts:15
-- 953b2cea-588 - unresolved - consistent-private-field-convention - packages/sdk/app-graph/src/AppGraphBuilder.ts:239
-- 953b2cea-589 - unresolved - no-compat-shims - packages/sdk/app-graph/src/AppGraphBuilder.ts:282
-- 953b2cea-590 - unresolved - consistent-file-naming-within-folder - packages/sdk/app-toolkit/src/app-framework/Tour.test.ts:1
-- 953b2cea-591 - unresolved - setter-must-not-own-transaction - packages/sdk/app-toolkit/src/echo/AppSpace.ts:97
-- 953b2cea-592 - unresolved - setter-must-not-own-transaction - packages/sdk/app-toolkit/src/echo/AppSpace.ts:147
-- 953b2cea-593 - unresolved - deprecated-tag-must-be-accurate - packages/sdk/app-toolkit/src/echo/AppSpace.ts:252
-- 953b2cea-594 - unresolved - namespace-export-with-internal-hiding - packages/sdk/app-toolkit/src/index.ts:1
-- 953b2cea-595 - unresolved - construct-populated-dont-mutate-after - packages/sdk/app-toolkit/src/types/AppSettings.ts:42
-- 953b2cea-596 - unresolved - no-precision-loss-on-generic-refactor - packages/sdk/app-toolkit/src/ui/components/AppSurface/AppSurface.ts:187
-- 953b2cea-597 - unresolved - test-asserts-real-behavior - packages/sdk/client-e2e/src/client.test.ts:134
-- 953b2cea-598 - unresolved - namespace-export-with-internal-hiding - packages/sdk/client-protocol/src/index.ts:1
-- 953b2cea-599 - unresolved - collapse-branches-via-identity-element - packages/sdk/client-protocol/src/Rpc.ts:64
-- 953b2cea-600 - unresolved - deprecated-tag-must-be-accurate - packages/sdk/client-protocol/src/space.ts:133
-- 953b2cea-601 - unresolved - schema-declare-and-brand - packages/sdk/client-protocol/src/space.ts:178
-- 953b2cea-602 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/agents/edge-agent-manager.ts:235
-- 953b2cea-603 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/agents/edge-agent-service.ts:95
-- 953b2cea-604 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/devices/devices-service.ts:130
-- 953b2cea-605 - unresolved - name-for-general-behavior - packages/sdk/client-services/src/internal/identity/identity-manager.ts:132
-- 953b2cea-606 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/identity/identity-manager.ts:616
-- 953b2cea-607 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/identity/identity-recovery-manager.ts:361
-- 953b2cea-608 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/identity/inbox-service.ts:398
-- 953b2cea-609 - unresolved - error-messages-carry-context - packages/sdk/client-services/src/internal/invitations/invitation-host-extension.ts:299
-- 953b2cea-610 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/invitations/invitations-handler.ts:668
-- 953b2cea-611 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/network/network-service.ts:161
-- 953b2cea-612 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/services/layer-specs.ts:447
-- 953b2cea-613 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/services/network-lifecycle.ts:49
-- 953b2cea-614 - unresolved - test-asserts-real-behavior - packages/sdk/client-services/src/internal/space/space-manager.browser.test.ts:32
-- 953b2cea-615 - unresolved - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/spaces/data-space-manager.ts:1157
-- 953b2cea-616 - unresolved - consistent-private-field-convention - packages/sdk/client/src/invitations/invitations-proxy.ts:275
-- 953b2cea-617 - unresolved - errors-extend-base-error - packages/sdk/client/src/services/agent-hosting-provider.ts:39
-- 953b2cea-618 - unresolved - barrel-imports-not-internal-paths - packages/sdk/examples/src/stories/examples.stories.tsx:12
-- 953b2cea-619 - unresolved - event-handler-naming-convention - packages/sdk/examples/src/template/src/components/NetworkToggle.tsx:12
-- 953b2cea-620 - unresolved - consistent-private-field-convention - packages/sdk/observability/src/extensions/otel/metrics.ts:81
-- 953b2cea-621 - unresolved - consistent-private-field-convention - packages/sdk/observability/src/extensions/otel/traces-browser.ts:40
-- 953b2cea-622 - unresolved - reactive-state-via-atom-bridge - packages/sdk/react-client/src/client/useClientStatus.ts:10
-- 953b2cea-623 - unresolved - no-echo-internal-in-sdk - packages/sdk/schema/src/annotations/atproto-record.ts:6
-- 953b2cea-624 - unresolved - no-echo-internal-in-sdk - packages/sdk/schema/src/annotations/factory.ts:5
-- 953b2cea-625 - unresolved - test-asserts-real-behavior - packages/sdk/schema/src/projection/projection.test.ts:612
-- 953b2cea-626 - unresolved - reactive-state-via-atom-bridge - packages/sdk/shell/src/panels/IdentityPanel/useEdgeAgentsHandlers.ts:47
-- 953b2cea-627 - unresolved - fix-root-cause-not-symptom - packages/sdk/shell/src/panels/JoinPanel/JoinPanel.tsx:217
-- 953b2cea-628 - unresolved - schema-field-uses-platform-reference-mechanism - packages/sdk/types/src/types/Message.ts:42
-- 953b2cea-629 - unresolved - name-for-general-behavior - packages/sdk/types/src/types/Pipeline.ts:20
-- 953b2cea-630 - unresolved - inject-dependencies-via-constructor - packages/sdk/types/src/types/TaskMigration.ts:66
-- 953b2cea-631 - unresolved - consistent-file-naming-within-folder - packages/sdk/versioning/src/Branch.test.ts:1
-- 953b2cea-632 - unresolved - collapse-branches-via-identity-element - packages/sdk/worker-framework/src/internal/rpc.ts:76
-- 953b2cea-633 - unresolved - collapse-branches-via-identity-element - packages/sdk/worker-framework/src/internal/rpc.ts:145
-- 953b2cea-634 - unresolved - consistent-file-naming-within-folder - packages/sdk/worker-framework/src/stories/ModuleHost.stories.tsx:88
-- 953b2cea-635 - unresolved - no-invented-theme-tokens - packages/stories/stories-agent/src/modules/ConversationModule.tsx:81
-- 953b2cea-636 - unresolved - no-invented-theme-tokens - packages/stories/stories-agent/src/modules/DiscordBotModule.tsx:122
-- 953b2cea-637 - unresolved - obj-update-push - packages/stories/stories-agent/src/testing/discord.ts:116
-- 953b2cea-638 - unresolved - obj-update-push - packages/stories/stories-agent/src/testing/support-team.ts:123
-- 953b2cea-639 - unresolved - namespace-export-with-internal-hiding - packages/ui/react-primitives/react-hooks/src/index.ts:1
-- 953b2cea-640 - unresolved - no-invented-theme-tokens - packages/ui/react-ui-assistant/src/components/MessageChrome/MessageChrome.tsx:134
-- 953b2cea-641 - unresolved - name-for-general-behavior - packages/ui/react-ui-canvas-compute/src/shapes/common/FunctionBody.tsx:26
-- 953b2cea-642 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/About/About.tsx:5
-- 953b2cea-643 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Breadcrumbs/Breadcrumbs.tsx:5
-- 953b2cea-644 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/ControlFrame/ControlFrame.tsx:11
-- 953b2cea-645 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/ControlFrame/ControlFrame.tsx:82
-- 953b2cea-646 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Grid/Grid.tsx:5
-- 953b2cea-647 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/LatticeGrid/LatticeGrid.tsx:5
-- 953b2cea-648 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Layers/Layers.tsx:5
-- 953b2cea-649 - unresolved - key-chords-live-in-the-table - packages/ui/react-ui-canvas/src/components/Layers/Layers.tsx:172
-- 953b2cea-650 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Palette/Palette.tsx:7
-- 953b2cea-651 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/PartEditor/PartEditor.tsx:46
-- 953b2cea-652 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/AlignField.tsx:6
-- 953b2cea-653 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/ClassField.tsx:5
-- 953b2cea-654 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/FontField.tsx:5
-- 953b2cea-655 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/LayerField.tsx:6
-- 953b2cea-656 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/Properties.tsx:15
-- 953b2cea-657 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/SceneField.tsx:5
-- 953b2cea-658 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/StyleGrid.tsx:5
-- 953b2cea-659 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx:11
-- 953b2cea-660 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx:78
-- 953b2cea-661 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:10
-- 953b2cea-662 - unresolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:77
-- 953b2cea-663 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:14
-- 953b2cea-664 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:721
-- 953b2cea-665 - unresolved - intents-not-coordinates - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:1370
-- 953b2cea-666 - unresolved - key-chords-live-in-the-table - packages/ui/react-ui-canvas/src/components/SceneView/useSceneKeys.ts:155
-- 953b2cea-667 - unresolved - named-react-imports - packages/ui/react-ui-canvas/src/components/Toolbar/Toolbar.tsx:12
-- 953b2cea-668 - unresolved - barrel-imports-not-internal-paths - packages/ui/react-ui-canvas/src/model/registry.ts:21
-- 953b2cea-669 - unresolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-canvas/src/playwright/demo.spec.ts:32
-- 953b2cea-670 - unresolved - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-components/src/components/Waveform/Waveform.tsx:28
-- 953b2cea-671 - unresolved - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-debug/src/components/Logger/Logger.tsx:268
-- 953b2cea-672 - unresolved - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-feed/src/components/Outline/Outline.tsx:372
-- 953b2cea-673 - unresolved - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/FieldEditor.tsx:1
-- 953b2cea-674 - unresolved - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/Form.tsx:1
-- 953b2cea-675 - unresolved - errors-extend-base-error - packages/ui/react-ui-form/src/components/layout/parser.ts:30
-- 953b2cea-676 - unresolved - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/ObjectForm.tsx:1
-- 953b2cea-677 - unresolved - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/ViewEditor.tsx:1
-- 953b2cea-678 - unresolved - no-pointless-indirection - packages/ui/react-ui-gameboard/src/components/Gameboard/Square.tsx:75
-- 953b2cea-679 - unresolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-graph/src/components/Graph/Graph.tsx:179
-- 953b2cea-680 - unresolved - no-premature-abstraction - packages/ui/react-ui-mcp/src/ToolForm.tsx:34
-- 953b2cea-681 - unresolved - co-locate-tightly-coupled-code - packages/ui/react-ui-menu/src/components/ActionMenu.stories.tsx:1
-- 953b2cea-682 - unresolved - consistent-file-naming-within-folder - packages/ui/react-ui-mosaic/src/components/Mosaic/Stack.stories.tsx:71
-- 953b2cea-683 - unresolved - themed-primitives-take-classNames - packages/ui/react-ui-mosaic/src/components/Mosaic/Tile.tsx:54
-- 953b2cea-684 - unresolved - no-pointless-indirection - packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx:52
-- 953b2cea-685 - unresolved - no-pointless-indirection - packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx:117
-- 953b2cea-686 - unresolved - no-pointless-indirection - packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx:53
-- 953b2cea-687 - unresolved - no-pointless-indirection - packages/ui/react-ui-query/src/components/QueryEditor/query-extension.ts:340
-- 953b2cea-688 - unresolved - no-pointless-indirection - packages/ui/react-ui-search/src/components/SearchList/hooks/useSearchListResults.ts:47
-- 953b2cea-689 - unresolved - error-messages-carry-context - packages/ui/react-ui-table/src/util/dynamic-table.ts:49
-- 953b2cea-690 - unresolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:24
-- 953b2cea-691 - unresolved - no-pointless-indirection - packages/ui/react-ui-thread/src/command.ts:40
-- 953b2cea-692 - unresolved - consistent-private-field-convention - packages/ui/react-ui-transcription/src/capture/media-stream-recorder.ts:147
-- 953b2cea-693 - unresolved - namespace-export-with-internal-hiding - packages/ui/react-ui-transcription/src/index.ts:1
-- 953b2cea-694 - unresolved - namespace-export-with-internal-hiding - packages/ui/react-ui-virtual/src/index.ts:1
-- 953b2cea-695 - unresolved - namespace-export-with-internal-hiding - packages/ui/react-ui/src/index.ts:1
-- 953b2cea-696 - unresolved - options-object-with-defaults - packages/ui/react-ui/src/next/components/Container/Container.tsx:104
-- 953b2cea-697 - unresolved - no-pointless-indirection - packages/ui/react-ui/src/testing/decorators/withLayout.tsx:59
-- 953b2cea-698 - unresolved - inject-dependencies-via-constructor - packages/ui/ui-editor/src/extensions/collab/awareness/awareness.ts:241
-- 953b2cea-699 - unresolved - errors-extend-base-error - packages/ui/ui-template/src/model.ts:184
-- 953b2cea-700 - unresolved - errors-extend-base-error - packages/ui/ui-template/src/parser.ts:21
-- 953b2cea-701 - unresolved - errors-extend-base-error - packages/ui/ui-template/src/system.ts:171
-- 953b2cea-702 - unresolved - options-object-with-defaults - packages/ui/ui-theme/src/plugins/ThemePlugin.ts:136
-- 953b2cea-703 - unresolved - name-for-general-behavior - packages/ui/ui-theme/src/util/hash-styles.ts:186
-- 953b2cea-704 - unresolved - namespace-export-with-internal-hiding - packages/ui/ui-types/src/index.ts:1
+- 953b2cea-1 - resolved - harness-script-hygiene - .agents/skills/agentic-review/lib/store.ts:141
+- 953b2cea-2 - resolved - harness-script-hygiene - .agents/skills/agentic-review/scripts/system-one.ts:235
+- 953b2cea-3 - resolved - no-trivial-wrappers-over-official-apis - packages/apps/composer-app/scripts/score-perf.ts:63
+- 953b2cea-4 - resolved - event-handler-naming-convention - packages/apps/composer-app/src/main.tsx:653
+- 953b2cea-5 - resolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.core.tsx:139
+- 953b2cea-6 - resolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:306
+- 953b2cea-7 - resolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:312
+- 953b2cea-8 - resolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:316
+- 953b2cea-9 - resolved - consistent-field-and-list-ordering - packages/apps/composer-app/src/plugin-defs.tsx:347
+- 953b2cea-10 - resolved - no-casts - packages/apps/testbench-app/src/components/Error.tsx:14
+- 953b2cea-11 - ignored - setter-must-not-own-transaction - packages/apps/testbench-app/src/components/ItemList.tsx:68
+- 953b2cea-12 - resolved - no-casts - packages/apps/testbench-app/src/components/ItemList.tsx:87
+- 953b2cea-13 - resolved - structured-logging-not-console - packages/apps/testbench-app/src/components/SyncBench.tsx:88
+- 953b2cea-14 - resolved - deprecated-tag-must-be-accurate - packages/common/async/src/event-emitter.ts:19
+- 953b2cea-15 - ignored - no-casts - packages/common/async/src/events.ts:304
+- 953b2cea-16 - ignored - namespace-export-with-internal-hiding - packages/common/async/src/index.ts:1
+- 953b2cea-17 - ignored - no-sleep-in-test - packages/common/async/src/mutex.test.ts:75
+- 953b2cea-18 - resolved - no-casts - packages/common/async/src/mutex.ts:108
+- 953b2cea-19 - ignored - deprecated-tag-must-be-accurate - packages/common/async/src/observable-value.ts:12
+- 953b2cea-20 - resolved - no-sleep-in-test - packages/common/async/src/persistent-lifecycle.test.ts:55
+- 953b2cea-21 - ignored - no-env-vars-in-low-level-modules - packages/common/async/src/track-leaks.ts:8
+- 953b2cea-22 - resolved - no-sleep-in-test - packages/common/crx-protocol/src/testing/conformance.test.ts:31
+- 953b2cea-23 - ignored - deprecated-tag-must-be-accurate - packages/common/crypto/src/random.ts:17
+- 953b2cea-24 - ignored - namespace-export-with-internal-hiding - packages/common/debug/src/index.ts:1
+- 953b2cea-25 - ignored - structured-logging-not-console - packages/common/debug/src/log-method.ts:14
+- 953b2cea-26 - ignored - structured-logging-not-console - packages/common/debug/src/timeout-warning.ts:18
+- 953b2cea-27 - ignored - import-as-namespace-is-all-or-nothing - packages/common/diagram/src/index.ts:7
+- 953b2cea-28 - ignored - import-as-namespace-is-all-or-nothing - packages/common/diagram/src/index.ts:12
+- 953b2cea-29 - ignored - import-as-namespace-is-all-or-nothing - packages/common/diagram/src/index.ts:19
+- 953b2cea-30 - resolved - comment-hygiene - packages/common/diagram/src/ui.ts:7
+- 953b2cea-31 - ignored - no-casts - packages/common/effect-atom-solid/src/hooks/useAtomSet.ts:47
+- 953b2cea-32 - resolved - no-casts - packages/common/effect-atom-solid/src/hooks/useAtomSuspense.ts:55
+- 953b2cea-33 - ignored - no-casts - packages/common/effect-zod/src/effect-to-zod.ts:52
+- 953b2cea-34 - resolved - no-casts - packages/common/effect/src/Hook.ts:79
+- 953b2cea-35 - ignored - import-as-namespace-is-all-or-nothing - packages/common/effect/src/index.ts:6
+- 953b2cea-36 - resolved - no-casts - packages/common/effect/src/internal/async-task-tagging.ts:27
+- 953b2cea-37 - ignored - import-as-namespace-is-all-or-nothing - packages/common/effect/src/internal/index.ts:6
+- 953b2cea-38 - ignored - no-precision-loss-on-generic-refactor - packages/common/effect/src/internal/json-path.ts:122
+- 953b2cea-39 - ignored - no-casts - packages/common/feed-store/src/hypercore-wrapper.ts:172
+- 953b2cea-40 - ignored - no-casts - packages/common/feed-store/src/hypercore-wrapper.ts:245
+- 953b2cea-41 - ignored - namespace-export-with-internal-hiding - packages/common/feed-store/src/index.ts:1
+- 953b2cea-42 - resolved - no-impossible-state-handling - packages/common/hypercore/src/crypto.ts:39
+- 953b2cea-43 - ignored - no-casts - packages/common/hypercore/src/iterator.ts:22
+- 953b2cea-44 - ignored - no-sleep-in-test - packages/common/hypercore/src/replicate.test.ts:309
+- 953b2cea-45 - ignored - no-sleep-in-test - packages/common/hypercore/src/replicate.test.ts:378
+- 953b2cea-46 - ignored - schema-declare-and-brand - packages/common/keys/src/DXN.ts:31
+- 953b2cea-47 - ignored - no-casts - packages/common/keys/src/DXN.ts:222
+- 953b2cea-48 - ignored - schema-declare-and-brand - packages/common/keys/src/EID.ts:48
+- 953b2cea-49 - ignored - no-casts - packages/common/keys/src/EID.ts:170
+- 953b2cea-50 - ignored - schema-declare-and-brand - packages/common/keys/src/URI.ts:13
+- 953b2cea-51 - ignored - no-casts - packages/common/keys/src/URI.ts:34
+- 953b2cea-52 - resolved - no-casts - packages/common/log/src/context.ts:297
+- 953b2cea-53 - resolved - no-casts - packages/common/log/src/decorators.ts:24
+- 953b2cea-54 - resolved - no-casts - packages/common/log/src/experimental/ownership.ts:77
+- 953b2cea-55 - ignored - namespace-export-with-internal-hiding - packages/common/log/src/index.ts:1
+- 953b2cea-56 - resolved - no-casts - packages/common/log/src/log.ts:207
+- 953b2cea-57 - ignored - no-env-vars-in-low-level-modules - packages/common/log/src/processors/file-processor.ts:87
+- 953b2cea-58 - resolved - no-casts - packages/common/random-access-storage/src/browser/idb-storage.ts:70
+- 953b2cea-59 - ignored - no-casts - packages/common/random-access-storage/src/browser/web-fs.ts:252
+- 953b2cea-60 - resolved - no-casts - packages/common/random-access-storage/src/common/memory-storage.ts:50
+- 953b2cea-61 - resolved - deprecated-tag-must-be-accurate - packages/common/random-access-storage/src/common/storage.ts:12
+- 953b2cea-62 - ignored - no-casts - packages/common/sql-sqlite/src/internal/opfs-client.ts:340
+- 953b2cea-63 - resolved - effect-fn-not-hand-wrapped-gen - packages/common/sql-sqlite/src/OpfsWorker.ts:69
+- 953b2cea-64 - ignored - no-casts - packages/common/sql-sqlite/src/OpfsWorker.ts:77
+- 953b2cea-65 - resolved - effect-fn-not-hand-wrapped-gen - packages/common/sql-sqlite/src/SqlMigrations.ts:50
+- 953b2cea-66 - resolved - test-asserts-real-behavior - packages/common/sql-sqlite/src/testing/sqlite-effect-idb.browser.test.ts:264
+- 953b2cea-67 - resolved - bounded-live-state - packages/common/tracing/src/buffering-backend.ts:88
+- 953b2cea-68 - resolved - no-casts - packages/common/tracing/src/diagnostics-channel.ts:71
+- 953b2cea-69 - resolved - no-impossible-state-handling - packages/common/tracing/src/diagnostics-channel.ts:83
+- 953b2cea-70 - ignored - namespace-export-with-internal-hiding - packages/common/tracing/src/index.ts:1
+- 953b2cea-71 - resolved - consistent-private-field-convention - packages/common/tracing/src/trace-processor.ts:20
+- 953b2cea-72 - ignored - schema-declare-and-brand - packages/common/util/src/id.ts:15
+- 953b2cea-73 - ignored - namespace-export-with-internal-hiding - packages/common/util/src/index.ts:1
+- 953b2cea-74 - ignored - consistent-file-naming-within-folder - packages/common/util/src/Position.test.ts:1
+- 953b2cea-75 - ignored - no-sleep-in-test - packages/common/web-context-solid/src/consumer.test.tsx:103
+- 953b2cea-76 - ignored - errors-extend-base-error - packages/core/compute/agent-code-mode/src/Wire.ts:28
+- 953b2cea-77 - ignored - inject-dependencies-via-constructor - packages/core/compute/agent-code-mode/src/WorkerdHostWorker.ts:19
+- 953b2cea-78 - ignored - consistent-file-naming-within-folder - packages/core/compute/agent-runtime/src/agent-service/AgentService.test.ts:1
+- 953b2cea-79 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/agent-runtime/src/agent-service/mcp-servers.ts:52
+- 953b2cea-80 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/ai/src/AiPreprocessor.ts:410
+- 953b2cea-81 - ignored - effect-requirement-type-not-erased - packages/core/compute/ai/src/testing/tools.test.ts:52
+- 953b2cea-82 - resolved - namespace-brand-key-prefixing - packages/core/compute/ai/src/tools/tool.ts:7
+- 953b2cea-83 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant-e2e/src/harness.ts:174
+- 953b2cea-84 - resolved - comment-hygiene - packages/core/compute/assistant-evals/src/evals/web-search.eval.ts:19
+- 953b2cea-85 - ignored - errors-extend-base-error - packages/core/compute/assistant-evals/src/runner.ts:60
+- 953b2cea-86 - ignored - effect-requirement-type-not-erased - packages/core/compute/assistant-evals/src/Scorer.ts:217
+- 953b2cea-87 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant-evals/src/Scorer.ts:225
+- 953b2cea-88 - ignored - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/skills/agent/operations/index.ts:10
+- 953b2cea-89 - ignored - dependency-direction - packages/core/compute/assistant-toolkit/src/testing/plugins.tsx:13
+- 953b2cea-90 - resolved - consistent-private-field-convention - packages/core/compute/assistant/src/request/AiRequest.ts:188
+- 953b2cea-91 - resolved - no-mixed-promise-effect-lifecycle - packages/core/compute/assistant/src/request/AiRequest.ts:504
+- 953b2cea-92 - ignored - declare-optional-services-with-noop-layers - packages/core/compute/assistant/src/request/format.ts:122
+- 953b2cea-93 - ignored - inject-dependencies-via-constructor - packages/core/compute/assistant/src/session/AiContext.ts:71
+- 953b2cea-94 - resolved - consistent-private-field-convention - packages/core/compute/assistant/src/session/AiContext.ts:99
+- 953b2cea-95 - resolved - consistent-private-field-convention - packages/core/compute/assistant/src/session/AiSession.ts:88
+- 953b2cea-96 - ignored - effect-requirement-type-not-erased - packages/core/compute/assistant/src/tool-runtime/services.ts:153
+- 953b2cea-97 - resolved - no-mixed-promise-effect-lifecycle - packages/core/compute/assistant/src/tool-runtime/services.ts:157
+- 953b2cea-98 - ignored - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Agent.ts:106
+- 953b2cea-99 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:224
+- 953b2cea-100 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:265
+- 953b2cea-101 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:286
+- 953b2cea-102 - resolved - deprecated-tag-must-be-accurate - packages/core/compute/assistant/src/util/artifact.ts:16
+- 953b2cea-103 - resolved - no-trivial-wrappers-over-official-apis - packages/core/compute/brain/src/CompilePrompt.ts:372
+- 953b2cea-104 - resolved - bounded-live-state - packages/core/compute/compute-hyperformula/src/functions/async-function.ts:143
+- 953b2cea-105 - ignored - namespace-export-with-internal-hiding - packages/core/compute/compute-runtime/src/index.ts:1
+- 953b2cea-106 - ignored - consistent-file-naming-within-folder - packages/core/compute/compute-runtime/src/LayerStack.test.ts:1
+- 953b2cea-107 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/compute-runtime/src/LayerStack.ts:42
+- 953b2cea-108 - ignored - no-env-vars-in-low-level-modules - packages/core/compute/compute-runtime/src/node-shell.ts:56
+- 953b2cea-109 - ignored - effect-requirement-type-not-erased - packages/core/compute/compute-runtime/src/OperationProcess.ts:100
+- 953b2cea-110 - ignored - bounded-live-state - packages/core/compute/compute-runtime/src/ProcessHandle.ts:684
+- 953b2cea-111 - resolved - collect-dead-entities - packages/core/compute/compute-runtime/src/ProcessManager.ts:82
+- 953b2cea-112 - ignored - bounded-live-state - packages/core/compute/compute-runtime/src/ProcessManager.ts:598
+- 953b2cea-113 - ignored - declare-optional-services-with-noop-layers - packages/core/compute/compute-runtime/src/ProcessOperationInvoker.ts:293
+- 953b2cea-114 - resolved - no-trivial-wrappers-over-official-apis - packages/core/compute/compute-runtime/src/RemoteProcessHandle.test.ts:338
+- 953b2cea-115 - resolved - standalone-service-accessor - packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts:564
+- 953b2cea-116 - ignored - namespace-service-layers - packages/core/compute/compute-runtime/src/triggers/trigger-state-store.ts:40
+- 953b2cea-117 - ignored - namespace-service-layers - packages/core/compute/compute-runtime/src/triggers/trigger-state-store.ts:61
+- 953b2cea-118 - ignored - no-mixed-promise-effect-lifecycle - packages/core/compute/compute/src/Credential.ts:97
+- 953b2cea-119 - resolved - namespace-brand-key-prefixing - packages/core/compute/compute/src/Process.ts:32
+- 953b2cea-120 - resolved - construct-populated-dont-mutate-after - packages/core/compute/compute/src/types/Project.ts:108
+- 953b2cea-121 - resolved - construct-populated-dont-mutate-after - packages/core/compute/compute/src/types/Project.ts:114
+- 953b2cea-122 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/compute/src/types/Skill.ts:305
+- 953b2cea-123 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/compute/src/types/Skill.ts:322
+- 953b2cea-124 - ignored - schema-persists-source-not-derived-duplicate - packages/core/compute/compute/src/types/Trigger.ts:64
+- 953b2cea-125 - ignored - state-owned-once - packages/core/compute/compute/src/types/TriggerEvent.ts:54
+- 953b2cea-126 - resolved - reuse-shared-test-layer - packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts:39
+- 953b2cea-127 - resolved - no-impossible-state-handling - packages/core/compute/conductor/src/compiler/fiber-compiler.ts:242
+- 953b2cea-128 - resolved - reuse-shared-test-layer - packages/core/compute/conductor/src/nodes/gpt/gpt.test.ts:29
+- 953b2cea-129 - resolved - no-mixed-promise-effect-lifecycle - packages/core/compute/conductor/src/nodes/registry.ts:346
+- 953b2cea-130 - resolved - deprecated-tag-must-be-accurate - packages/core/compute/conductor/src/sequence/Sequence.ts:26
+- 953b2cea-131 - resolved - reuse-shared-test-layer - packages/core/compute/conductor/src/tests/gpt.test.ts:27
+- 953b2cea-132 - resolved - reuse-shared-test-layer - packages/core/compute/conductor/src/tests/streaming.test.ts:30
+- 953b2cea-133 - resolved - reuse-shared-test-layer - packages/core/compute/conductor/src/types/compute.test.ts:23
+- 953b2cea-134 - resolved - deprecated-tag-must-be-accurate - packages/core/compute/conductor/src/types/graph.ts:53
+- 953b2cea-135 - resolved - reuse-shared-test-layer - packages/core/compute/conductor/src/workflow/workflow.test.ts:39
+- 953b2cea-136 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/crawler/src/Crawler.ts:58
+- 953b2cea-137 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/crawler/src/Crawler.ts:207
+- 953b2cea-138 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/crawler/src/index.ts:5
+- 953b2cea-139 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/crawler/src/stages/topics.ts:44
+- 953b2cea-140 - ignored - flat-layer-composition - packages/core/compute/crawler/src/StateStore.test.ts:115
+- 953b2cea-141 - resolved - comment-hygiene - packages/core/compute/crawler/src/testing/index.ts:18
+- 953b2cea-142 - ignored - declare-optional-services-with-noop-layers - packages/core/compute/edge-compute/src/EdgeProcessManager.ts:43
+- 953b2cea-143 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/extractor-lib/src/contact-extractor.ts:29
+- 953b2cea-144 - resolved - construct-populated-dont-mutate-after - packages/core/compute/extractor-lib/src/contact.ts:67
+- 953b2cea-145 - ignored - errors-extend-base-error - packages/core/compute/extractor/src/dispatch.ts:15
+- 953b2cea-146 - ignored - consistent-file-naming-within-folder - packages/core/compute/extractor/src/ExtractionTemplate.test.ts:1
+- 953b2cea-147 - ignored - namespace-export-with-internal-hiding - packages/core/compute/extractor/src/index.ts:1
+- 953b2cea-148 - ignored - deprecated-tag-must-be-accurate - packages/core/compute/functions-runtime-cloudflare/src/functions-client.ts:28
+- 953b2cea-149 - resolved - error-messages-carry-context - packages/core/compute/functions-runtime-cloudflare/src/internal/service-container.ts:61
+- 953b2cea-150 - ignored - deprecated-tag-must-be-accurate - packages/core/compute/functions-runtime-cloudflare/src/queues-api.ts:20
+- 953b2cea-151 - ignored - deprecated-tag-must-be-accurate - packages/core/compute/functions-runtime-cloudflare/src/space-proxy.ts:15
+- 953b2cea-152 - resolved - structured-logging-not-console - packages/core/compute/functions-testing/src/testing/util.ts:48
+- 953b2cea-153 - ignored - schema-field-uses-platform-reference-mechanism - packages/core/compute/link/src/Cursor.ts:38
+- 953b2cea-154 - ignored - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:195
+- 953b2cea-155 - ignored - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:211
+- 953b2cea-156 - ignored - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:225
+- 953b2cea-157 - ignored - setter-must-not-own-transaction - packages/core/compute/link/src/Cursor.ts:268
+- 953b2cea-158 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/link/src/Cursor.ts:646
+- 953b2cea-159 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/mcp-client/src/McpToolkit.ts:57
+- 953b2cea-160 - resolved - prefer-branded-types-over-raw-primitives - packages/core/compute/mcp-server/src/internal/space.ts:96
+- 953b2cea-161 - ignored - prefer-branded-types-over-raw-primitives - packages/core/compute/mcp-server/src/McpServer.ts:65
+- 953b2cea-162 - resolved - jsdoc-non-obvious-identifiers - packages/core/compute/mcp-server/src/McpServer.ts:313
+- 953b2cea-163 - resolved - jsdoc-non-obvious-identifiers - packages/core/compute/mcp-server/src/McpServer.ts:494
+- 953b2cea-164 - resolved - no-mixed-promise-effect-lifecycle - packages/core/compute/mcp-server/src/McpServer.ts:964
+- 953b2cea-165 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/nlp/src/parse.ts:34
+- 953b2cea-166 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/compute/nlp/src/segment.ts:159
+- 953b2cea-167 - ignored - namespace-export-with-internal-hiding - packages/core/compute/pipeline-discord/src/index.ts:1
+- 953b2cea-168 - resolved - comment-hygiene - packages/core/compute/pipeline-discord/src/stages/topics.test.ts:5
+- 953b2cea-169 - ignored - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/digest.test.ts:34
+- 953b2cea-170 - ignored - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/topics.test.ts:24
+- 953b2cea-171 - ignored - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/topics.test.ts:36
+- 953b2cea-172 - ignored - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/corpus/topics.test.ts:42
+- 953b2cea-173 - ignored - namespace-export-with-internal-hiding - packages/core/compute/pipeline-email/src/index.ts:1
+- 953b2cea-174 - resolved - comment-hygiene - packages/core/compute/pipeline-email/src/testing/email-pipeline.test.ts:406
+- 953b2cea-175 - ignored - errors-extend-base-error - packages/core/compute/pipeline-email/src/testing/parquet.ts:15
+- 953b2cea-176 - ignored - test-asserts-real-behavior - packages/core/compute/pipeline-email/src/topics-pipeline.test.ts:46
+- 953b2cea-177 - ignored - schema-field-uses-platform-reference-mechanism - packages/core/compute/pipeline-email/src/types/Thread.ts:22
+- 953b2cea-178 - ignored - import-as-namespace-is-all-or-nothing - packages/core/compute/pipeline-rdf/src/index.ts:5
+- 953b2cea-179 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/pipeline-rdf/src/store/index.ts:7
+- 953b2cea-180 - ignored - errors-extend-base-error - packages/core/echo/blob/src/s3/s3-client.ts:26
+- 953b2cea-181 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/blob/src/s3/s3-uri.ts:92
+- 953b2cea-182 - resolved - no-sleep-in-test - packages/core/echo/echo-client-e2e/src/automerge-retention.test.ts:57
+- 953b2cea-183 - ignored - isolate-benchmark-setup-and-flaky-tests - packages/core/echo/echo-client-e2e/src/echo.bench.ts:54
+- 953b2cea-184 - resolved - inline-obj-parent - packages/core/echo/echo-client-e2e/src/merge.test.ts:151
+- 953b2cea-185 - resolved - consistent-file-naming-within-folder - packages/core/echo/echo-client-e2e/src/Obj.updateFrom.test.ts:1
+- 953b2cea-186 - resolved - inline-obj-parent - packages/core/echo/echo-client-e2e/src/parent.test.ts:135
+- 953b2cea-187 - ignored - no-sleep-in-test - packages/core/echo/echo-client-e2e/src/query.test.ts:1208
+- 953b2cea-188 - resolved - inline-obj-parent - packages/core/echo/echo-client-e2e/src/query.test.ts:4303
+- 953b2cea-189 - ignored - isolate-benchmark-setup-and-flaky-tests - packages/core/echo/echo-client-e2e/src/sqlite.bench.ts:36
+- 953b2cea-190 - resolved - no-sleep-in-test - packages/core/echo/echo-client-e2e/src/sync-refresh.test.ts:56
+- 953b2cea-191 - ignored - consistent-private-field-convention - packages/core/echo/echo-client/src/automerge/doc-handle-proxy.ts:106
+- 953b2cea-192 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:724
+- 953b2cea-193 - ignored - consistent-private-field-convention - packages/core/echo/echo-client/src/automerge/repo-proxy.ts:1
+- 953b2cea-194 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-client/src/client/echo-client.ts:313
+- 953b2cea-195 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/client/index-query-source-provider.test.ts:275
+- 953b2cea-196 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/client/index-query-source-provider.ts:36
+- 953b2cea-197 - ignored - consistent-private-field-convention - packages/core/echo/echo-client/src/core-db/entity-manager.ts:1
+- 953b2cea-198 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/core-db/entity-manager.ts:81
+- 953b2cea-199 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-client/src/core-db/entity-manager.ts:652
+- 953b2cea-200 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-client/src/core-db/entity-manager.ts:2082
+- 953b2cea-201 - resolved - comment-hygiene - packages/core/echo/echo-client/src/core-db/object-core.ts:184
+- 953b2cea-202 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:93
+- 953b2cea-203 - resolved - namespace-brand-key-prefixing - packages/core/echo/echo-client/src/core-db/types.ts:24
+- 953b2cea-204 - resolved - comment-hygiene - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:117
+- 953b2cea-205 - resolved - error-messages-carry-context - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:467
+- 953b2cea-206 - resolved - comment-hygiene - packages/core/echo/echo-client/src/echo-handler/echo-proxy-target.ts:62
+- 953b2cea-207 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/errors.ts:33
+- 953b2cea-208 - ignored - consistent-private-field-convention - packages/core/echo/echo-client/src/feed/feed-handle.ts:75
+- 953b2cea-209 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-client/src/feed/feed-handle.ts:722
+- 953b2cea-210 - ignored - consistent-private-field-convention - packages/core/echo/echo-client/src/hypergraph.ts:75
+- 953b2cea-211 - resolved - error-messages-carry-context - packages/core/echo/echo-client/src/hypergraph.ts:550
+- 953b2cea-212 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/hypergraph.ts:927
+- 953b2cea-213 - ignored - namespace-export-with-internal-hiding - packages/core/echo/echo-client/src/index.ts:1
+- 953b2cea-214 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:22
+- 953b2cea-215 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:25
+- 953b2cea-216 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:28
+- 953b2cea-217 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:34
+- 953b2cea-218 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:35
+- 953b2cea-219 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:36
+- 953b2cea-220 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:50
+- 953b2cea-221 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:53
+- 953b2cea-222 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:58
+- 953b2cea-223 - ignored - dont-leak-internal-api-through-public-surface - packages/core/echo/echo-client/src/index.ts:60
+- 953b2cea-224 - ignored - deprecated-tag-must-be-accurate - packages/core/echo/echo-client/src/proxy-db/database.ts:84
+- 953b2cea-225 - ignored - consistent-private-field-convention - packages/core/echo/echo-client/src/proxy-db/database.ts:308
+- 953b2cea-226 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/proxy-db/database.ts:1130
+- 953b2cea-227 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/query/query-api-stall.test.ts:67
+- 953b2cea-228 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-client/src/testing/echo-test-builder.ts:109
+- 953b2cea-229 - resolved - deprecated-tag-must-be-accurate - packages/core/echo/echo-generator/src/data.ts:25
+- 953b2cea-230 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:748
+- 953b2cea-231 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:266
+- 953b2cea-232 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:353
+- 953b2cea-233 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:649
+- 953b2cea-234 - ignored - prefer-branded-types-over-raw-primitives - packages/core/echo/echo-host/src/automerge/automerge-host.ts:68
+- 953b2cea-235 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-host/src/automerge/automerge-host.ts:1801
+- 953b2cea-236 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-host/src/automerge/document-lease.ts:430
+- 953b2cea-237 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/automerge/mesh-echo-replicator-connection.ts:44
+- 953b2cea-238 - resolved - effect-fn-not-hand-wrapped-gen - packages/core/echo/echo-host/src/automerge/subduction-migrations/index.ts:73
+- 953b2cea-239 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:85
+- 953b2cea-240 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/db-host/echo-host.ts:1
+- 953b2cea-241 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/db-host/feed-data-source.ts:53
+- 953b2cea-242 - ignored - comment-hygiene - packages/core/echo/echo-host/src/db-host/query-invalidation.test.ts:24
+- 953b2cea-243 - ignored - comment-hygiene - packages/core/echo/echo-host/src/db-host/space-state-manager.test.ts:41
+- 953b2cea-244 - ignored - effect-fn-not-hand-wrapped-gen - packages/core/echo/echo-host/src/db-host/sqlite-health-check.ts:32
+- 953b2cea-245 - resolved - no-mixed-promise-effect-lifecycle - packages/core/echo/echo-host/src/db-host/sqlite-health-check.ts:54
+- 953b2cea-246 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts:1
+- 953b2cea-247 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts:713
+- 953b2cea-248 - ignored - error-messages-carry-context - packages/core/echo/echo-host/src/query/query-executor.ts:171
+- 953b2cea-249 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/query/query-executor.ts:670
+- 953b2cea-250 - resolved - structured-logging-not-console - packages/core/echo/echo-host/src/query/query-executor.ts:849
+- 953b2cea-251 - ignored - batch-queries-not-n-plus-1 - packages/core/echo/echo-host/src/query/query-executor.ts:1009
+- 953b2cea-252 - ignored - consistent-private-field-convention - packages/core/echo/echo-host/src/query/query-planner.ts:66
+- 953b2cea-253 - ignored - no-trivial-wrappers-over-official-apis - packages/core/echo/echo-host/src/query/sql/compile.test.ts:225
+- 953b2cea-254 - ignored - scope-multi-tenant-queries-by-space - packages/core/echo/echo-host/src/query/sql/compile.ts:770
+- 953b2cea-255 - ignored - inject-dependencies-via-constructor - packages/core/echo/echo-panproto/src/lens/registry.ts:14
+- 953b2cea-256 - ignored - inject-dependencies-via-constructor - packages/core/echo/echo-panproto/src/runner.ts:25
+- 953b2cea-257 - resolved - deprecated-tag-must-be-accurate - packages/core/echo/echo-protocol/src/document-structure.ts:76
+- 953b2cea-258 - resolved - jsdoc-non-obvious-identifiers - packages/core/echo/echo-protocol/src/echo-feed-codec.ts:21
+- 953b2cea-259 - ignored - namespace-export-with-internal-hiding - packages/core/echo/echo-protocol/src/index.ts:1
+- 953b2cea-260 - ignored - import-as-namespace-is-all-or-nothing - packages/core/echo/echo-protocol/src/query/index.ts:5
+- 953b2cea-261 - ignored - errors-extend-base-error - packages/core/echo/echo-sqlite/src/errors.ts:9
+- 953b2cea-262 - ignored - isolate-benchmark-setup-and-flaky-tests - packages/core/echo/echo-sqlite/src/testing/database.bench.ts:46
+- 953b2cea-263 - resolved - schema-declare-and-brand - packages/core/echo/echo/src/Database.ts:515
+- 953b2cea-264 - resolved - options-object-with-defaults - packages/core/echo/echo/src/Hypergraph.ts:82
+- 953b2cea-265 - ignored - no-trivial-wrappers-over-official-apis - packages/core/echo/echo/src/internal/common/proxy/change.test.ts:15
+- 953b2cea-266 - resolved - errors-extend-base-error - packages/core/echo/echo/src/internal/common/proxy/errors.ts:8
+- 953b2cea-267 - resolved - error-messages-carry-context - packages/core/echo/echo/src/internal/common/proxy/make-object.ts:149
+- 953b2cea-268 - resolved - comment-hygiene - packages/core/echo/echo/src/internal/common/proxy/typed-handler.ts:361
+- 953b2cea-269 - ignored - name-for-general-behavior - packages/core/echo/echo/src/internal/common/types/model-symbols.ts:5
+- 953b2cea-270 - resolved - deprecated-tag-must-be-accurate - packages/core/echo/echo/src/internal/Format/types.ts:53
+- 953b2cea-271 - resolved - deprecated-tag-must-be-accurate - packages/core/echo/echo/src/internal/JsonSchema/json-schema-type.ts:66
+- 953b2cea-272 - ignored - name-for-general-behavior - packages/core/echo/echo/src/internal/Obj/common.ts:11
+- 953b2cea-273 - resolved - error-messages-carry-context - packages/core/echo/echo/src/internal/Ref/ref.ts:645
+- 953b2cea-274 - resolved - error-messages-carry-context - packages/core/echo/echo/src/Migration.ts:131
+- 953b2cea-275 - ignored - name-for-general-behavior - packages/core/echo/echo/src/Query.ts:727
+- 953b2cea-276 - ignored - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:363
+- 953b2cea-277 - ignored - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:379
+- 953b2cea-278 - ignored - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:445
+- 953b2cea-279 - ignored - keep-parallel-apis-structurally-aligned - packages/core/echo/echo/src/Relation.ts:521
+- 953b2cea-280 - ignored - schema-persists-source-not-derived-duplicate - packages/core/echo/echo/src/View.ts:75
+- 953b2cea-281 - ignored - scope-multi-tenant-queries-by-space - packages/core/echo/feed/src/feed-store.ts:572
+- 953b2cea-282 - resolved - jsdoc-non-obvious-identifiers - packages/core/echo/feed/src/feed-store.ts:715
+- 953b2cea-283 - ignored - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:45
+- 953b2cea-284 - ignored - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:204
+- 953b2cea-285 - ignored - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:379
+- 953b2cea-286 - ignored - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-client.ts:426
+- 953b2cea-287 - ignored - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-server.ts:37
+- 953b2cea-288 - ignored - deferred-callback-owns-its-context - packages/core/echo/feed/src/sync-server.ts:58
+- 953b2cea-289 - ignored - deferred-callback-owns-its-context - packages/core/echo/index-core/src/data-source.ts:60
+- 953b2cea-290 - ignored - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:350
+- 953b2cea-291 - ignored - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:502
+- 953b2cea-292 - ignored - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:593
+- 953b2cea-293 - ignored - deferred-callback-owns-its-context - packages/core/echo/index-core/src/index-engine.ts:695
+- 953b2cea-294 - ignored - scope-multi-tenant-queries-by-space - packages/core/echo/index-core/src/indexes/reverse-ref-index.ts:128
+- 953b2cea-295 - ignored - scope-multi-tenant-queries-by-space - packages/core/echo/index-core/src/migrations/entity-meta/0004_queue_position.sql:13
+- 953b2cea-296 - ignored - scope-multi-tenant-queries-by-space - packages/core/echo/index-core/src/migrations/reverse-ref/0001_init.sql:10
+- 953b2cea-297 - resolved - name-for-general-behavior - packages/core/halo/credentials/src/credentials/signing.ts:52
+- 953b2cea-298 - ignored - namespace-export-with-internal-hiding - packages/core/halo/credentials/src/index.ts:1
+- 953b2cea-299 - resolved - error-messages-carry-context - packages/core/halo/credentials/src/state-machine/member-state-machine.ts:95
+- 953b2cea-300 - ignored - namespace-export-with-internal-hiding - packages/core/halo/halo-react/src/index.ts:1
+- 953b2cea-301 - ignored - deprecated-tag-must-be-accurate - packages/core/mesh/edge-client/src/base-http-client.ts:447
+- 953b2cea-302 - ignored - consistent-private-field-convention - packages/core/mesh/edge-client/src/edge-client.ts:118
+- 953b2cea-303 - ignored - errors-extend-base-error - packages/core/mesh/edge-client/src/edge-ws-muxer.ts:375
+- 953b2cea-304 - ignored - errors-extend-base-error - packages/core/mesh/edge-client/src/errors.ts:7
+- 953b2cea-305 - ignored - namespace-export-with-internal-hiding - packages/core/mesh/edge-client/src/index.ts:1
+- 953b2cea-306 - ignored - errors-extend-base-error - packages/core/mesh/edge-client/src/service/edge-service.ts:38
+- 953b2cea-307 - resolved - deprecated-tag-must-be-accurate - packages/core/mesh/messaging/src/signal-manager/edge-signal-manager.ts:63
+- 953b2cea-308 - resolved - deprecated-tag-must-be-accurate - packages/core/mesh/messaging/src/signal-methods.ts:63
+- 953b2cea-309 - ignored - namespace-export-with-internal-hiding - packages/core/mesh/network-manager/src/index.ts:1
+- 953b2cea-310 - ignored - no-env-vars-in-low-level-modules - packages/core/mesh/network-manager/src/swarm/connection.ts:379
+- 953b2cea-311 - ignored - no-trivial-wrappers-over-official-apis - packages/core/mesh/network-manager/src/transport/webrtc/testing/rtc-proxy-worker.ts:24
+- 953b2cea-312 - ignored - name-for-general-behavior - packages/core/mesh/rpc-tunnel/src/ports/worker.ts:23
+- 953b2cea-313 - resolved - error-messages-carry-context - packages/core/mesh/rpc/src/rpc.ts:477
+- 953b2cea-314 - ignored - consistent-file-naming-within-folder - packages/core/mesh/rpc/src/RpcRouter.test.ts:1
+- 953b2cea-315 - ignored - effect-fn-not-hand-wrapped-gen - packages/core/mesh/rpc/src/RpcRouter.ts:120
+- 953b2cea-316 - ignored - deprecated-tag-must-be-accurate - packages/core/mesh/rpc/src/service.ts:171
+- 953b2cea-317 - ignored - no-compat-shims - packages/core/protocols/src/edge/edge-deprecated.ts:15
+- 953b2cea-318 - resolved - comment-hygiene - packages/core/protocols/src/edge/edge-deprecated.ts:22
+- 953b2cea-319 - ignored - namespace-export-with-internal-hiding - packages/core/protocols/src/index.ts:1
+- 953b2cea-320 - ignored - namespace-service-layers - packages/devtools/cli-util/src/services/command-config.ts:23
+- 953b2cea-321 - ignored - import-as-namespace-is-all-or-nothing - packages/devtools/cli-util/src/util/index.ts:10
+- 953b2cea-322 - resolved - effect-fn-not-hand-wrapped-gen - packages/devtools/cli-util/src/util/space.ts:25
+- 953b2cea-323 - ignored - no-mixed-promise-effect-lifecycle - packages/devtools/cli-util/src/util/space.ts:39
+- 953b2cea-324 - ignored - effect-requirement-type-not-erased - packages/devtools/cli/src/bin.ts:242
+- 953b2cea-325 - ignored - avoid-full-collection-scans - packages/devtools/cli/src/commands/chat/non-interactive.ts:39
+- 953b2cea-326 - ignored - functions-before-classes - packages/devtools/cli/src/commands/chat/processor.ts:37
+- 953b2cea-327 - ignored - deprecated-tag-must-be-accurate - packages/devtools/cli/src/commands/function/deploy/echo.ts:56
+- 953b2cea-328 - ignored - effect-requirement-type-not-erased - packages/devtools/cli/src/commands/repl.ts:97
+- 953b2cea-329 - ignored - import-as-namespace-is-all-or-nothing - packages/devtools/cli/src/util/index.ts:13
+- 953b2cea-330 - resolved - no-pointless-indirection - packages/devtools/devtools/src/components/MasterDetailTable.tsx:32
+- 953b2cea-331 - resolved - no-pointless-indirection - packages/devtools/devtools/src/components/MasterDetailTable.tsx:89
+- 953b2cea-332 - resolved - structured-logging-not-console - packages/devtools/devtools/src/components/ObjectsTree.tsx:156
+- 953b2cea-333 - ignored - co-locate-tightly-coupled-code - packages/devtools/devtools/src/components/Tree.tsx:1
+- 953b2cea-334 - resolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/echo/SchemaArticle/SchemaArticle.tsx:159
+- 953b2cea-335 - resolved - event-handler-naming-convention - packages/devtools/devtools/src/containers/panels/echo/SpaceInfoArticle/SpaceInfoArticle.tsx:45
+- 953b2cea-336 - resolved - event-handler-naming-convention - packages/devtools/devtools/src/containers/panels/echo/SpaceInfoArticle/SpaceInfoArticle.tsx:54
+- 953b2cea-337 - resolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/edge/InvocationTraceArticle/ExceptionPanel.tsx:35
+- 953b2cea-338 - resolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/edge/InvocationTraceArticle/ExceptionPanel.tsx:44
+- 953b2cea-339 - resolved - no-pointless-indirection - packages/devtools/devtools/src/containers/panels/edge/WorkflowArticle/WorkflowArticle.tsx:97
+- 953b2cea-340 - ignored - reactive-state-via-atom-bridge - packages/devtools/devtools/src/hooks/useStats.ts:154
+- 953b2cea-341 - ignored - reactive-state-via-atom-bridge - packages/devtools/devtools/src/hooks/useSwarmTrace.ts:43
+- 953b2cea-342 - resolved - no-impossible-state-handling - packages/e2e/blade-runner/src/replicants/echo-replicant.ts:101
+- 953b2cea-343 - resolved - no-impossible-state-handling - packages/e2e/blade-runner/src/replicants/edge-replicant.ts:113
+- 953b2cea-344 - resolved - consistent-private-field-convention - packages/e2e/composer-e2e/src/playwright/app-manager.ts:216
+- 953b2cea-345 - ignored - namespace-export-with-internal-hiding - packages/e2e/perf-harness/src/index.ts:1
+- 953b2cea-346 - resolved - lifecycle-owned-by-its-resource - packages/e2e/rpc-tunnel-e2e/src/test-client.ts:68
+- 953b2cea-347 - ignored - structured-logging-not-console - packages/experimental/discord-worker/src/worker.ts:235
+- 953b2cea-348 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-agent/src/containers/AgentActivity/AgentActivity.tsx:253
+- 953b2cea-349 - resolved - standalone-service-accessor - packages/plugins/plugin-agent/src/operations/list-triggers.ts:18
+- 953b2cea-350 - resolved - errors-extend-base-error - packages/plugins/plugin-assistant/src/chat-model/chat-model.ts:129
+- 953b2cea-351 - ignored - flat-layer-composition - packages/plugins/plugin-assistant/src/chat-model/chat-model.ts:374
+- 953b2cea-352 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-assistant/src/components/ConnectorAuthMenu/ConnectorAuthMenu.stories.tsx:68
+- 953b2cea-353 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/components/index.ts:9
+- 953b2cea-354 - resolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-assistant/src/components/Toolbox/Toolbox.tsx:88
+- 953b2cea-355 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx:20
+- 953b2cea-356 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx:17
+- 953b2cea-357 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx:19
+- 953b2cea-358 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/containers/QuestionCard/QuestionCard.stories.tsx:69
+- 953b2cea-359 - ignored - structured-logging-not-console - packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.tsx:159
+- 953b2cea-360 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/hooks/useChatKeymap.ts:12
+- 953b2cea-361 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-assistant/src/hooks/useChatToolbarActions.ts:17
+- 953b2cea-362 - ignored - structured-logging-not-console - packages/plugins/plugin-assistant/src/hooks/useDebug.ts:28
+- 953b2cea-363 - ignored - reactive-state-via-atom-bridge - packages/plugins/plugin-assistant/src/hooks/useProcessEphemeralStatus.ts:94
+- 953b2cea-364 - resolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-assistant/src/hooks/useSkillRegistry.test.tsx:22
+- 953b2cea-365 - ignored - declare-optional-services-with-noop-layers - packages/plugins/plugin-assistant/src/operations/bind-chat-context.ts:28
+- 953b2cea-366 - resolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-assistant/src/types/AssistantCapabilities.ts:90
+- 953b2cea-367 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.stories.tsx:72
+- 953b2cea-368 - ignored - errors-extend-base-error - packages/plugins/plugin-atproto/src/errors.ts:8
+- 953b2cea-369 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-attention/src/stories/SelectionState.stories.tsx:118
+- 953b2cea-370 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-attention/src/stories/SelectionState.stories.tsx:128
+- 953b2cea-371 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-attention/src/testing.ts:5
+- 953b2cea-372 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx:94
+- 953b2cea-373 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx:127
+- 953b2cea-374 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-blogger/src/operations/index.ts:12
+- 953b2cea-375 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-bluesky/src/operations/index.ts:16
+- 953b2cea-376 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx:151
+- 953b2cea-377 - ignored - story-for-new-ui-component - packages/plugins/plugin-bookmarks/src/components/Summary/Summary.tsx:1
+- 953b2cea-378 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.stories.tsx:16
+- 953b2cea-379 - resolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-brain/src/capabilities/fact-store.ts:74
+- 953b2cea-380 - ignored - standalone-service-accessor - packages/plugins/plugin-brain/src/operations/query-facts.ts:37
+- 953b2cea-381 - resolved - consistent-private-field-convention - packages/plugins/plugin-calls/src/calls/call-manager.ts:1
+- 953b2cea-382 - resolved - namespace-brand-key-prefixing - packages/plugins/plugin-calls/src/calls/types.ts:56
+- 953b2cea-383 - resolved - no-impossible-state-handling - packages/plugins/plugin-calls/src/calls/util/calls-service.ts:361
+- 953b2cea-384 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-calls/src/components/Call/Toolbar.tsx:108
+- 953b2cea-385 - resolved - no-pointless-indirection - packages/plugins/plugin-calls/src/components/Lobby/Lobby.tsx:101
+- 953b2cea-386 - resolved - no-pointless-indirection - packages/plugins/plugin-calls/src/components/ResponsiveGrid/ResponsiveGrid.tsx:77
+- 953b2cea-387 - resolved - no-pointless-indirection - packages/plugins/plugin-calls/src/components/ResponsiveGrid/ResponsivePanel.tsx:26
+- 953b2cea-388 - ignored - errors-extend-base-error - packages/plugins/plugin-chess-com/src/errors.ts:7
+- 953b2cea-389 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx:37
+- 953b2cea-390 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx:76
+- 953b2cea-391 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx:93
+- 953b2cea-392 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx:103
+- 953b2cea-393 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-chess/src/containers/ChessCard/ChessCard.stories.tsx:20
+- 953b2cea-394 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-client/src/containers/ContactPickerContainer/ContactPickerContainer.tsx:99
+- 953b2cea-395 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx:27
+- 953b2cea-396 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-cloudflare/src/services/index.ts:5
+- 953b2cea-397 - ignored - no-env-vars-in-low-level-modules - packages/plugins/plugin-code/src/agent-helper/server.ts:350
+- 953b2cea-398 - resolved - reuse-shared-test-layer - packages/plugins/plugin-code/src/agents/claude-code.e2e.test.ts:103
+- 953b2cea-399 - resolved - reuse-shared-test-layer - packages/plugins/plugin-code/src/agents/EdgeAgent.test.ts:172
+- 953b2cea-400 - ignored - story-for-new-ui-component - packages/plugins/plugin-code/src/components/CodeToolbar/CodeToolbar.tsx:1
+- 953b2cea-401 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-computer/src/vite-plugin/index.ts:11
+- 953b2cea-402 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx:46
+- 953b2cea-403 - ignored - story-for-new-ui-component - packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.tsx:1
+- 953b2cea-404 - ignored - story-for-new-ui-component - packages/plugins/plugin-debug/src/components/SchemaTable/SchemaTable.tsx:1
+- 953b2cea-405 - resolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-debug/src/containers/DebugObjectPanel/DebugObjectPanel.tsx:30
+- 953b2cea-406 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-debug/src/containers/LoggerPanel/LoggerPanel.stories.tsx:39
+- 953b2cea-407 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx:189
+- 953b2cea-408 - ignored - story-for-new-ui-component - packages/plugins/plugin-deck/src/components/Companion/Companion.tsx:1
+- 953b2cea-409 - ignored - story-for-new-ui-component - packages/plugins/plugin-deck/src/components/FoldSpine/FoldSpine.tsx:1
+- 953b2cea-410 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-deck/src/components/Pane/Pane.stories.tsx:44
+- 953b2cea-411 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/components/Plank/Plank.stories.tsx:68
+- 953b2cea-412 - resolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-deck/src/components/Plank/Plank.stories.tsx:166
+- 953b2cea-413 - ignored - fix-root-cause-not-symptom - packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx:46
+- 953b2cea-414 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:100
+- 953b2cea-415 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:123
+- 953b2cea-416 - resolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-deck/src/url/index.ts:9
+- 953b2cea-417 - resolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-deck/src/util/layout.ts:13
+- 953b2cea-418 - resolved - no-bare-ref-schema-alias - packages/plugins/plugin-deepseek/src/skills/operations/definitions.ts:12
+- 953b2cea-419 - ignored - business-logic-out-of-ui - packages/plugins/plugin-devtools/src/containers/GithubPanel/GithubComponent.tsx:70
+- 953b2cea-420 - resolved - standalone-service-accessor - packages/plugins/plugin-discord/src/capabilities/connector.ts:60
+- 953b2cea-421 - ignored - story-for-new-ui-component - packages/plugins/plugin-discord/src/components/DiscordSetup/DiscordSetup.tsx:1
+- 953b2cea-422 - resolved - obj-update-push - packages/plugins/plugin-discord/src/operations/admin/bind-channel.ts:97
+- 953b2cea-423 - resolved - no-pointless-indirection - packages/plugins/plugin-excalidraw/src/containers/ExcalidrawArticle/ExcalidrawArticle.tsx:61
+- 953b2cea-424 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx:94
+- 953b2cea-425 - ignored - schema-persists-source-not-derived-duplicate - packages/plugins/plugin-explorer/src/types/Graph.ts:15
+- 953b2cea-426 - ignored - inject-dependencies-via-constructor - packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts:38
+- 953b2cea-427 - resolved - comment-hygiene - packages/plugins/plugin-file-system/src/capabilities/state/markdown-documents.ts:141
+- 953b2cea-428 - ignored - story-for-new-ui-component - packages/plugins/plugin-file/src/components/FileInput/FileInput.tsx:1
+- 953b2cea-429 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-game/src/components/CreateGamePanel.tsx:1
+- 953b2cea-430 - ignored - errors-extend-base-error - packages/plugins/plugin-game/src/util/load-game.ts:11
+- 953b2cea-431 - ignored - story-for-new-ui-component - packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx:1
+- 953b2cea-432 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx:103
+- 953b2cea-433 - ignored - story-for-new-ui-component - packages/plugins/plugin-github/src/components/PullRequestFiles/PullRequestFiles.tsx:1
+- 953b2cea-434 - ignored - story-for-new-ui-component - packages/plugins/plugin-github/src/components/PullRequestOverview/PullRequestOverview.tsx:1
+- 953b2cea-435 - ignored - story-for-new-ui-component - packages/plugins/plugin-github/src/components/PullRequestStatus/PullRequestStatus.tsx:1
+- 953b2cea-436 - ignored - story-for-new-ui-component - packages/plugins/plugin-github/src/components/WalkthroughView/WalkthroughView.tsx:1
+- 953b2cea-437 - resolved - no-invented-theme-tokens - packages/plugins/plugin-github/src/containers/PullRequestsArticle/PullRequestsArticle.tsx:217
+- 953b2cea-438 - resolved - no-invented-theme-tokens - packages/plugins/plugin-github/src/containers/PullRequestsArticle/PullRequestsArticle.tsx:259
+- 953b2cea-439 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-github/src/GitHubPlugin.workerd.test.ts:1
+- 953b2cea-440 - ignored - inject-dependencies-via-constructor - packages/plugins/plugin-github/src/hooks/useSyncPullRequest.ts:20
+- 953b2cea-441 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-github/src/services/index.ts:5
+- 953b2cea-442 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-github/src/stories/PullRequestArticle.stories.tsx:24
+- 953b2cea-443 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-github/src/stories/PullRequestsArticle.stories.tsx:26
+- 953b2cea-444 - resolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-google/src/apis/GoogleContacts/api.ts:74
+- 953b2cea-445 - resolved - comment-hygiene - packages/plugins/plugin-google/src/operations/mail/sync/tag-push.test.ts:209
+- 953b2cea-446 - ignored - errors-extend-base-error - packages/plugins/plugin-heygen/src/services/heygen-provider-types.ts:60
+- 953b2cea-447 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-heygen/src/services/heygen-provider.stories.tsx:141
+- 953b2cea-448 - ignored - errors-extend-base-error - packages/plugins/plugin-higgsfield/src/services/higgsfield-provider-types.ts:62
+- 953b2cea-449 - ignored - effect-requirement-type-not-erased - packages/plugins/plugin-ibkr/src/operations/operations.test.ts:273
+- 953b2cea-450 - ignored - parent-ref-backs-parent-pointer - packages/plugins/plugin-ibkr/src/sync.ts:61
+- 953b2cea-451 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-illustrator/src/components/CreateDrawingPanel.tsx:1
+- 953b2cea-452 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-illustrator/src/components/SceneSvg.tsx:1
+- 953b2cea-453 - ignored - no-hand-rolled-lists - packages/plugins/plugin-illustrator/src/containers/DrawingScores/DrawingScores.tsx:85
+- 953b2cea-454 - resolved - errors-extend-base-error - packages/plugins/plugin-illustrator/src/util/load-drawing.ts:12
+- 953b2cea-455 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-inbox/src/components/InboxStack/InboxStack.tsx:638
+- 953b2cea-456 - ignored - story-for-new-ui-component - packages/plugins/plugin-inbox/src/components/Initialize/Initialize.tsx:1
+- 953b2cea-457 - ignored - story-for-new-ui-component - packages/plugins/plugin-inbox/src/components/MarkdownViewer/MarkdownViewer.tsx:1
+- 953b2cea-458 - ignored - story-for-new-ui-component - packages/plugins/plugin-inbox/src/components/RelatedEvents/RelatedEvents.tsx:1
+- 953b2cea-459 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx:62
+- 953b2cea-460 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx:199
+- 953b2cea-461 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-inbox/src/containers/SaveFilterPopover/SaveFilterPopover.tsx:35
+- 953b2cea-462 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-inbox/src/operations/FeedCursor.test.ts:1
+- 953b2cea-463 - ignored - functions-before-classes - packages/plugins/plugin-inbox/src/testing/builder.ts:97
+- 953b2cea-464 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.stories.tsx:86
+- 953b2cea-465 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx:53
+- 953b2cea-466 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-library/src/containers/BookArticle/BookArticle.tsx:37
+- 953b2cea-467 - ignored - errors-extend-base-error - packages/plugins/plugin-library/src/operations/http.ts:15
+- 953b2cea-468 - resolved - comment-hygiene - packages/plugins/plugin-magazine/src/operations/curate-magazine.ts:110
+- 953b2cea-469 - resolved - no-impossible-state-handling - packages/plugins/plugin-magazine/src/operations/fetch-article-content.ts:22
+- 953b2cea-470 - resolved - errors-extend-base-error - packages/plugins/plugin-magazine/src/operations/sources/feed-fetcher.ts:20
+- 953b2cea-471 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-magazine/src/stories/MagazineCurate.stories.tsx:41
+- 953b2cea-472 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-markdown/src/components/PreviewComponent/PreviewComponent.tsx:365
+- 953b2cea-473 - resolved - barrel-imports-not-internal-paths - packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx:49
+- 953b2cea-474 - ignored - dont-recompute-in-reactive-closures - packages/plugins/plugin-meeting/src/capabilities/app-graph-builder.ts:252
+- 953b2cea-475 - resolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx:79
+- 953b2cea-476 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx:80
+- 953b2cea-477 - resolved - dont-recompute-in-reactive-closures - packages/plugins/plugin-messenger/src/capabilities/inbox-materializer.ts:38
+- 953b2cea-478 - resolved - structured-logging-not-console - packages/plugins/plugin-native/src/capabilities/ollama.ts:377
+- 953b2cea-479 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-navtree/src/components/Sidebar/L0Menu.tsx:356
+- 953b2cea-480 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-navtree/src/components/Sidebar/L0Menu.tsx:370
+- 953b2cea-481 - resolved - co-locate-tightly-coupled-code - packages/plugins/plugin-navtree/src/components/types.ts:14
+- 953b2cea-482 - resolved - co-locate-tightly-coupled-code - packages/plugins/plugin-navtree/src/components/types.ts:25
+- 953b2cea-483 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx:49
+- 953b2cea-484 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx:400
+- 953b2cea-485 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx:885
+- 953b2cea-486 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx:918
+- 953b2cea-487 - ignored - reuse-existing-mechanism - packages/plugins/plugin-onboarding/src/credentials/util.ts:24
+- 953b2cea-488 - resolved - comment-hygiene - packages/plugins/plugin-onboarding/src/samples/bramble/roast-log.ts:77
+- 953b2cea-489 - ignored - subscribe-where-you-read - packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx:183
+- 953b2cea-490 - ignored - dont-recompute-in-reactive-closures - packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts:48
+- 953b2cea-491 - resolved - no-pointless-indirection - packages/plugins/plugin-presenter/src/components/Markdown/Panel.tsx:39
+- 953b2cea-492 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-presenter/src/components/Presenter/Layout.tsx:23
+- 953b2cea-493 - resolved - event-handler-naming-convention - packages/plugins/plugin-presenter/src/components/Presenter/Pager.tsx:38
+- 953b2cea-494 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx:1
+- 953b2cea-495 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx:44
+- 953b2cea-496 - ignored - no-hand-rolled-lists - packages/plugins/plugin-qa/src/containers/TestPlanArticle/TestPlanArticle.tsx:135
+- 953b2cea-497 - ignored - no-hand-rolled-lists - packages/plugins/plugin-qa/src/containers/TestPlanArticle/TestPlanArticle.tsx:154
+- 953b2cea-498 - resolved - comment-hygiene - packages/plugins/plugin-registry/src/commands/registry/util.ts:41
+- 953b2cea-499 - ignored - no-hand-rolled-lists - packages/plugins/plugin-registry/src/components/DisableDependentsAlert/DisableDependentsAlert.tsx:50
+- 953b2cea-500 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-registry/src/components/PluginFailureBadge/PluginFailureBadge.tsx:47
+- 953b2cea-501 - resolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-registry/src/containers/RegistryArticle/RegistryArticle.tsx:19
+- 953b2cea-502 - ignored - standalone-service-accessor - packages/plugins/plugin-registry/src/operations/enable-plugins.ts:16
+- 953b2cea-503 - resolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/assets.ts:44
+- 953b2cea-504 - resolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/assets.ts:138
+- 953b2cea-505 - resolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/resolve.ts:73
+- 953b2cea-506 - resolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/resolve.ts:150
+- 953b2cea-507 - resolved - effect-requirement-type-not-erased - packages/plugins/plugin-registry/src/util/resolve.ts:208
+- 953b2cea-508 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-routine/src/components/Schedule/Schedule.stories.tsx:18
+- 953b2cea-509 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-routine/src/components/TemplateEditor/TemplateForm.tsx:67
+- 953b2cea-510 - resolved - subscribe-where-you-read - packages/plugins/plugin-routine/src/containers/SkillArticle/SkillArticle.tsx:26
+- 953b2cea-511 - resolved - comment-hygiene - packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts:35
+- 953b2cea-512 - resolved - comment-hygiene - packages/plugins/plugin-sample/src/capabilities/react-surface.ts:32
+- 953b2cea-513 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-sample/src/components/RelatedItemsList.tsx:1
+- 953b2cea-514 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-sandbox/src/local/LocalSandboxBackend.test.ts:1
+- 953b2cea-515 - ignored - declare-optional-services-with-noop-layers - packages/plugins/plugin-sandbox/src/skills/functions/create-sandbox.ts:51
+- 953b2cea-516 - ignored - inline-obj-parent - packages/plugins/plugin-sandbox/src/skills/functions/download-file.ts:30
+- 953b2cea-517 - ignored - no-bare-ref-schema-alias - packages/plugins/plugin-script/src/skills/functions/definitions.ts:14
+- 953b2cea-518 - ignored - fix-root-cause-not-symptom - packages/plugins/plugin-script/src/templates/commentary.ts:128
+- 953b2cea-519 - ignored - fix-root-cause-not-symptom - packages/plugins/plugin-script/src/templates/commentary.ts:143
+- 953b2cea-520 - ignored - flat-layer-composition - packages/plugins/plugin-script/src/templates/discord.ts:108
+- 953b2cea-521 - resolved - no-native-form-controls - packages/plugins/plugin-search/src/components/SearchResultList/SearchResultList.stories.tsx:72
+- 953b2cea-522 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.tsx:82
+- 953b2cea-523 - resolved - deprecated-tag-must-be-accurate - packages/plugins/plugin-search/src/hooks/useWebSearch.ts:28
+- 953b2cea-524 - resolved - test-asserts-real-behavior - packages/plugins/plugin-search/src/search/exa.test.ts:67
+- 953b2cea-525 - resolved - no-premature-abstraction - packages/plugins/plugin-sequencer/src/components/SequenceGrid/SequenceGrid.tsx:485
+- 953b2cea-526 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx:312
+- 953b2cea-527 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx:484
+- 953b2cea-528 - ignored - comment-hygiene - packages/plugins/plugin-sequencer/src/util/lead-sheet.ts:8
+- 953b2cea-529 - ignored - deprecated-tag-must-be-accurate - packages/plugins/plugin-sheet/src/model/sheet-model.ts:140
+- 953b2cea-530 - ignored - errors-extend-base-error - packages/plugins/plugin-sheet/src/types/SheetUtil.ts:26
+- 953b2cea-531 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-sidekick/src/components/ActionItems.tsx:15
+- 953b2cea-532 - ignored - co-locate-tightly-coupled-code - packages/plugins/plugin-sidekick/src/components/ProfileGrid.tsx:14
+- 953b2cea-533 - resolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-sidekick/src/containers/SidekickArticle/SidekickArticle.tsx:18
+- 953b2cea-534 - ignored - dont-recompute-in-reactive-closures - packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/spaces.ts:250
+- 953b2cea-535 - ignored - dont-recompute-in-reactive-closures - packages/plugins/plugin-space/src/capabilities/dashboard.ts:41
+- 953b2cea-536 - resolved - no-mixed-promise-effect-lifecycle - packages/plugins/plugin-space/src/commands/database/remove.ts:28
+- 953b2cea-537 - resolved - effect-requirement-type-not-erased - packages/plugins/plugin-space/src/commands/space/join/join.ts:49
+- 953b2cea-538 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-space/src/containers/AddToCollectionDialog/AddToCollectionDialog.tsx:123
+- 953b2cea-539 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/CollectionSection/CollectionSection.tsx:22
+- 953b2cea-540 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-space/src/containers/CollectionSection/CollectionSection.tsx:22
+- 953b2cea-541 - resolved - layout-only-wrapper-invisible-to-a11y - packages/plugins/plugin-space/src/containers/ImportSpaceDialog/ImportSpaceDialog.tsx:83
+- 953b2cea-542 - ignored - no-hand-rolled-lists - packages/plugins/plugin-space/src/containers/SchemaContainer/SchemaContainer.tsx:34
+- 953b2cea-543 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.stories.tsx:76
+- 953b2cea-544 - ignored - reactive-state-via-atom-bridge - packages/plugins/plugin-space/src/hooks/useEdgeStatus.ts:26
+- 953b2cea-545 - ignored - avoid-full-collection-scans - packages/plugins/plugin-space/src/hooks/useRelatedObjects.ts:36
+- 953b2cea-546 - ignored - fix-root-cause-not-symptom - packages/plugins/plugin-space/src/hooks/useRelatedObjects.ts:64
+- 953b2cea-547 - ignored - setter-must-not-own-transaction - packages/plugins/plugin-space/src/migrations/settings-space.ts:98
+- 953b2cea-548 - ignored - no-precision-loss-on-generic-refactor - packages/plugins/plugin-space/src/operations/add-relation.ts:44
+- 953b2cea-549 - ignored - declare-optional-services-with-noop-layers - packages/plugins/plugin-space/src/operations/add-type.ts:45
+- 953b2cea-550 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx:184
+- 953b2cea-551 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-studio/src/containers/GalleryArticle/GalleryArticle.tsx:64
+- 953b2cea-552 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx:85
+- 953b2cea-553 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactVariants.tsx:56
+- 953b2cea-554 - ignored - effect-requirement-type-not-erased - packages/plugins/plugin-studio/src/operations/generate.test.ts:120
+- 953b2cea-555 - ignored - effect-requirement-type-not-erased - packages/plugins/plugin-studio/src/operations/storyboard.test.ts:84
+- 953b2cea-556 - ignored - business-logic-out-of-ui - packages/plugins/plugin-support/src/containers/DiscordPanel/DiscordComponent.tsx:103
+- 953b2cea-557 - ignored - no-hand-rolled-lists - packages/plugins/plugin-support/src/containers/DiscordPanel/DiscordComponent.tsx:163
+- 953b2cea-558 - resolved - consistent-file-naming-within-folder - packages/plugins/plugin-tasks/src/components/Journal/Journal.stories.tsx:20
+- 953b2cea-559 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.tsx:37
+- 953b2cea-560 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskAttachments.tsx:290
+- 953b2cea-561 - resolved - inline-obj-parent - packages/plugins/plugin-tasks/src/util/task-order.test.ts:109
+- 953b2cea-562 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx:45
+- 953b2cea-563 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-testing/src/components/Layout/Layout.tsx:138
+- 953b2cea-564 - resolved - no-pointless-indirection - packages/plugins/plugin-testing/src/components/Layout/Layout.tsx:227
+- 953b2cea-565 - ignored - functions-before-classes - packages/plugins/plugin-tldraw/src/model/RecordBuilder.ts:170
+- 953b2cea-566 - resolved - options-object-with-defaults - packages/plugins/plugin-transcription/src/types/TranscriptionCapabilities.ts:42
+- 953b2cea-567 - resolved - no-pointless-indirection - packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx:21
+- 953b2cea-568 - ignored - test-real-scenario-not-narrower-proxy - packages/plugins/plugin-trello/src/operations/handlers.test.ts:204
+- 953b2cea-569 - resolved - follow-existing-lazy-loading-pattern - packages/plugins/plugin-trip/src/capabilities/index.ts:36
+- 953b2cea-570 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-trip/src/capabilities/marker-provider.tsx:131
+- 953b2cea-571 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-trip/src/containers/SegmentArticle/SegmentArticle.tsx:58
+- 953b2cea-572 - ignored - leaf-owns-its-subscription - packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx:51
+- 953b2cea-573 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx:266
+- 953b2cea-574 - ignored - functions-before-classes - packages/plugins/plugin-trip/src/testing/builder.ts:75
+- 953b2cea-575 - resolved - setter-must-not-own-transaction - packages/plugins/plugin-trip/src/types/Segment.ts:204
+- 953b2cea-576 - resolved - setter-must-not-own-transaction - packages/plugins/plugin-trip/src/types/Segment.ts:218
+- 953b2cea-577 - resolved - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-video/src/capabilities/app-graph-builder.ts:32
+- 953b2cea-578 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx:27
+- 953b2cea-579 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx:73
+- 953b2cea-580 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-zen/src/containers/ZenArticle/ZenArticle.tsx:18
+- 953b2cea-581 - ignored - comment-hygiene - packages/reflect/introspect-mcp/src/server/server.test.ts:86
+- 953b2cea-582 - resolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/testing/react.tsx:15
+- 953b2cea-583 - resolved - deprecated-tag-must-be-accurate - packages/sdk/app-framework/src/testing/withPluginManager.tsx:93
+- 953b2cea-584 - resolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useActivationSignal.ts:10
+- 953b2cea-585 - resolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useApp.tsx:23
+- 953b2cea-586 - resolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useApp.tsx:25
+- 953b2cea-587 - resolved - barrel-imports-not-internal-paths - packages/sdk/app-framework/src/ui/hooks/useCapabilities.ts:15
+- 953b2cea-588 - ignored - consistent-private-field-convention - packages/sdk/app-graph/src/AppGraphBuilder.ts:239
+- 953b2cea-589 - ignored - no-compat-shims - packages/sdk/app-graph/src/AppGraphBuilder.ts:282
+- 953b2cea-590 - ignored - consistent-file-naming-within-folder - packages/sdk/app-toolkit/src/app-framework/Tour.test.ts:1
+- 953b2cea-591 - ignored - setter-must-not-own-transaction - packages/sdk/app-toolkit/src/echo/AppSpace.ts:97
+- 953b2cea-592 - ignored - setter-must-not-own-transaction - packages/sdk/app-toolkit/src/echo/AppSpace.ts:147
+- 953b2cea-593 - resolved - deprecated-tag-must-be-accurate - packages/sdk/app-toolkit/src/echo/AppSpace.ts:252
+- 953b2cea-594 - ignored - namespace-export-with-internal-hiding - packages/sdk/app-toolkit/src/index.ts:1
+- 953b2cea-595 - resolved - construct-populated-dont-mutate-after - packages/sdk/app-toolkit/src/types/AppSettings.ts:42
+- 953b2cea-596 - ignored - no-precision-loss-on-generic-refactor - packages/sdk/app-toolkit/src/ui/components/AppSurface/AppSurface.ts:187
+- 953b2cea-597 - ignored - test-asserts-real-behavior - packages/sdk/client-e2e/src/client.test.ts:134
+- 953b2cea-598 - ignored - namespace-export-with-internal-hiding - packages/sdk/client-protocol/src/index.ts:1
+- 953b2cea-599 - resolved - collapse-branches-via-identity-element - packages/sdk/client-protocol/src/Rpc.ts:64
+- 953b2cea-600 - resolved - deprecated-tag-must-be-accurate - packages/sdk/client-protocol/src/space.ts:133
+- 953b2cea-601 - resolved - schema-declare-and-brand - packages/sdk/client-protocol/src/space.ts:178
+- 953b2cea-602 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/agents/edge-agent-manager.ts:235
+- 953b2cea-603 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/agents/edge-agent-service.ts:95
+- 953b2cea-604 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/devices/devices-service.ts:130
+- 953b2cea-605 - ignored - name-for-general-behavior - packages/sdk/client-services/src/internal/identity/identity-manager.ts:132
+- 953b2cea-606 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/identity/identity-manager.ts:616
+- 953b2cea-607 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/identity/identity-recovery-manager.ts:361
+- 953b2cea-608 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/identity/inbox-service.ts:398
+- 953b2cea-609 - ignored - error-messages-carry-context - packages/sdk/client-services/src/internal/invitations/invitation-host-extension.ts:299
+- 953b2cea-610 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/invitations/invitations-handler.ts:668
+- 953b2cea-611 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/network/network-service.ts:161
+- 953b2cea-612 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/services/layer-specs.ts:447
+- 953b2cea-613 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/services/network-lifecycle.ts:49
+- 953b2cea-614 - ignored - test-asserts-real-behavior - packages/sdk/client-services/src/internal/space/space-manager.browser.test.ts:32
+- 953b2cea-615 - ignored - declare-optional-services-with-noop-layers - packages/sdk/client-services/src/internal/spaces/data-space-manager.ts:1157
+- 953b2cea-616 - resolved - consistent-private-field-convention - packages/sdk/client/src/invitations/invitations-proxy.ts:275
+- 953b2cea-617 - ignored - errors-extend-base-error - packages/sdk/client/src/services/agent-hosting-provider.ts:39
+- 953b2cea-618 - ignored - barrel-imports-not-internal-paths - packages/sdk/examples/src/stories/examples.stories.tsx:12
+- 953b2cea-619 - resolved - event-handler-naming-convention - packages/sdk/examples/src/template/src/components/NetworkToggle.tsx:12
+- 953b2cea-620 - resolved - consistent-private-field-convention - packages/sdk/observability/src/extensions/otel/metrics.ts:81
+- 953b2cea-621 - resolved - consistent-private-field-convention - packages/sdk/observability/src/extensions/otel/traces-browser.ts:40
+- 953b2cea-622 - ignored - reactive-state-via-atom-bridge - packages/sdk/react-client/src/client/useClientStatus.ts:10
+- 953b2cea-623 - ignored - no-echo-internal-in-sdk - packages/sdk/schema/src/annotations/atproto-record.ts:6
+- 953b2cea-624 - ignored - no-echo-internal-in-sdk - packages/sdk/schema/src/annotations/factory.ts:5
+- 953b2cea-625 - ignored - test-asserts-real-behavior - packages/sdk/schema/src/projection/projection.test.ts:612
+- 953b2cea-626 - ignored - reactive-state-via-atom-bridge - packages/sdk/shell/src/panels/IdentityPanel/useEdgeAgentsHandlers.ts:47
+- 953b2cea-627 - ignored - fix-root-cause-not-symptom - packages/sdk/shell/src/panels/JoinPanel/JoinPanel.tsx:217
+- 953b2cea-628 - ignored - schema-field-uses-platform-reference-mechanism - packages/sdk/types/src/types/Message.ts:42
+- 953b2cea-629 - ignored - name-for-general-behavior - packages/sdk/types/src/types/Pipeline.ts:20
+- 953b2cea-630 - ignored - inject-dependencies-via-constructor - packages/sdk/types/src/types/TaskMigration.ts:66
+- 953b2cea-631 - ignored - consistent-file-naming-within-folder - packages/sdk/versioning/src/Branch.test.ts:1
+- 953b2cea-632 - resolved - collapse-branches-via-identity-element - packages/sdk/worker-framework/src/internal/rpc.ts:76
+- 953b2cea-633 - resolved - collapse-branches-via-identity-element - packages/sdk/worker-framework/src/internal/rpc.ts:145
+- 953b2cea-634 - resolved - consistent-file-naming-within-folder - packages/sdk/worker-framework/src/stories/ModuleHost.stories.tsx:88
+- 953b2cea-635 - resolved - no-invented-theme-tokens - packages/stories/stories-agent/src/modules/ConversationModule.tsx:81
+- 953b2cea-636 - resolved - no-invented-theme-tokens - packages/stories/stories-agent/src/modules/DiscordBotModule.tsx:122
+- 953b2cea-637 - resolved - obj-update-push - packages/stories/stories-agent/src/testing/discord.ts:116
+- 953b2cea-638 - resolved - obj-update-push - packages/stories/stories-agent/src/testing/support-team.ts:123
+- 953b2cea-639 - ignored - namespace-export-with-internal-hiding - packages/ui/react-primitives/react-hooks/src/index.ts:1
+- 953b2cea-640 - resolved - no-invented-theme-tokens - packages/ui/react-ui-assistant/src/components/MessageChrome/MessageChrome.tsx:134
+- 953b2cea-641 - ignored - name-for-general-behavior - packages/ui/react-ui-canvas-compute/src/shapes/common/FunctionBody.tsx:26
+- 953b2cea-642 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/About/About.tsx:5
+- 953b2cea-643 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Breadcrumbs/Breadcrumbs.tsx:5
+- 953b2cea-644 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/ControlFrame/ControlFrame.tsx:11
+- 953b2cea-645 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/ControlFrame/ControlFrame.tsx:82
+- 953b2cea-646 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Grid/Grid.tsx:5
+- 953b2cea-647 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/LatticeGrid/LatticeGrid.tsx:5
+- 953b2cea-648 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Layers/Layers.tsx:5
+- 953b2cea-649 - resolved - key-chords-live-in-the-table - packages/ui/react-ui-canvas/src/components/Layers/Layers.tsx:172
+- 953b2cea-650 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Palette/Palette.tsx:7
+- 953b2cea-651 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/PartEditor/PartEditor.tsx:46
+- 953b2cea-652 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/AlignField.tsx:6
+- 953b2cea-653 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/ClassField.tsx:5
+- 953b2cea-654 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/FontField.tsx:5
+- 953b2cea-655 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/LayerField.tsx:6
+- 953b2cea-656 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/Properties.tsx:15
+- 953b2cea-657 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/SceneField.tsx:5
+- 953b2cea-658 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Properties/StyleGrid.tsx:5
+- 953b2cea-659 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx:11
+- 953b2cea-660 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx:78
+- 953b2cea-661 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:10
+- 953b2cea-662 - resolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-canvas/src/components/SceneView/Dock.tsx:77
+- 953b2cea-663 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:14
+- 953b2cea-664 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:721
+- 953b2cea-665 - ignored - intents-not-coordinates - packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:1370
+- 953b2cea-666 - resolved - key-chords-live-in-the-table - packages/ui/react-ui-canvas/src/components/SceneView/useSceneKeys.ts:155
+- 953b2cea-667 - ignored - named-react-imports - packages/ui/react-ui-canvas/src/components/Toolbar/Toolbar.tsx:12
+- 953b2cea-668 - resolved - barrel-imports-not-internal-paths - packages/ui/react-ui-canvas/src/model/registry.ts:21
+- 953b2cea-669 - resolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-canvas/src/playwright/demo.spec.ts:32
+- 953b2cea-670 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-components/src/components/Waveform/Waveform.tsx:28
+- 953b2cea-671 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-debug/src/components/Logger/Logger.tsx:268
+- 953b2cea-672 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-feed/src/components/Outline/Outline.tsx:372
+- 953b2cea-673 - ignored - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/FieldEditor.tsx:1
+- 953b2cea-674 - ignored - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/Form.tsx:1
+- 953b2cea-675 - ignored - errors-extend-base-error - packages/ui/react-ui-form/src/components/layout/parser.ts:30
+- 953b2cea-676 - ignored - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/ObjectForm.tsx:1
+- 953b2cea-677 - ignored - co-locate-tightly-coupled-code - packages/ui/react-ui-form/src/components/ViewEditor.tsx:1
+- 953b2cea-678 - resolved - no-pointless-indirection - packages/ui/react-ui-gameboard/src/components/Gameboard/Square.tsx:75
+- 953b2cea-679 - resolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-graph/src/components/Graph/Graph.tsx:179
+- 953b2cea-680 - resolved - no-premature-abstraction - packages/ui/react-ui-mcp/src/ToolForm.tsx:34
+- 953b2cea-681 - ignored - co-locate-tightly-coupled-code - packages/ui/react-ui-menu/src/components/ActionMenu.stories.tsx:1
+- 953b2cea-682 - resolved - consistent-file-naming-within-folder - packages/ui/react-ui-mosaic/src/components/Mosaic/Stack.stories.tsx:71
+- 953b2cea-683 - ignored - themed-primitives-take-classNames - packages/ui/react-ui-mosaic/src/components/Mosaic/Tile.tsx:54
+- 953b2cea-684 - resolved - no-pointless-indirection - packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx:52
+- 953b2cea-685 - resolved - no-pointless-indirection - packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx:117
+- 953b2cea-686 - resolved - no-pointless-indirection - packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx:53
+- 953b2cea-687 - resolved - no-pointless-indirection - packages/ui/react-ui-query/src/components/QueryEditor/query-extension.ts:340
+- 953b2cea-688 - resolved - no-pointless-indirection - packages/ui/react-ui-search/src/components/SearchList/hooks/useSearchListResults.ts:47
+- 953b2cea-689 - resolved - error-messages-carry-context - packages/ui/react-ui-table/src/util/dynamic-table.ts:49
+- 953b2cea-690 - resolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx:24
+- 953b2cea-691 - resolved - no-pointless-indirection - packages/ui/react-ui-thread/src/command.ts:40
+- 953b2cea-692 - resolved - consistent-private-field-convention - packages/ui/react-ui-transcription/src/capture/media-stream-recorder.ts:147
+- 953b2cea-693 - ignored - namespace-export-with-internal-hiding - packages/ui/react-ui-transcription/src/index.ts:1
+- 953b2cea-694 - ignored - namespace-export-with-internal-hiding - packages/ui/react-ui-virtual/src/index.ts:1
+- 953b2cea-695 - ignored - namespace-export-with-internal-hiding - packages/ui/react-ui/src/index.ts:1
+- 953b2cea-696 - resolved - options-object-with-defaults - packages/ui/react-ui/src/next/components/Container/Container.tsx:104
+- 953b2cea-697 - resolved - no-pointless-indirection - packages/ui/react-ui/src/testing/decorators/withLayout.tsx:59
+- 953b2cea-698 - ignored - inject-dependencies-via-constructor - packages/ui/ui-editor/src/extensions/collab/awareness/awareness.ts:241
+- 953b2cea-699 - ignored - errors-extend-base-error - packages/ui/ui-template/src/model.ts:184
+- 953b2cea-700 - ignored - errors-extend-base-error - packages/ui/ui-template/src/parser.ts:21
+- 953b2cea-701 - ignored - errors-extend-base-error - packages/ui/ui-template/src/system.ts:171
+- 953b2cea-702 - resolved - options-object-with-defaults - packages/ui/ui-theme/src/plugins/ThemePlugin.ts:136
+- 953b2cea-703 - ignored - name-for-general-behavior - packages/ui/ui-theme/src/util/hash-styles.ts:186
+- 953b2cea-704 - ignored - namespace-export-with-internal-hiding - packages/ui/ui-types/src/index.ts:1
 
 ## Issues
 
@@ -3546,3 +3546,443 @@ This barrel blanket-re-exports 12 submodules with `export * from`, so every file
 - full-project pass (`prepare.ts --full`), one Sonnet subagent per rule group, no System One
 - each subagent searched its rule's in-scope files with grep, confirmed candidates by reading them, and recorded at most 25 clear violations, so a rule at 25 may have more
 - not reviewed: `unit: pr` rules judge a change set, not a tree (groups 20 `delete-dead-code-after-migration`, 39 `refactor-must-preserve-behavior`, 73 `catalog-is-dependency-source-of-truth`, 74 `ci-and-tooling-avoid-duplicate-mechanisms`, 75 `diff-scoped-to-pr-purpose`)
+
+### Fix pass
+
+- one Sonnet fixer per package batch; each fix typechecked with `tsc --noEmit` and linted with oxlint
+- 272 resolved, 432 ignored; reasons for each ignored issue below
+
+### Ignored
+
+- 953b2cea-11: The setter updates one property per call; changing it needs a caller-owned transaction redesign in a testbench component.
+- 953b2cea-15: Event<T> to Event<void> narrowing cannot be typed without a cast given variance; needs a design change.
+- 953b2cea-16: Replacing wildcard barrel with explicit exports changes the public API across the monorepo; out of scope.
+- 953b2cea-17: The sleep asserts a negative (promise stays unresolved), which a Trigger cannot express.
+- 953b2cea-19: No replacement API is identifiable without a design decision.
+- 953b2cea-21: Changing track-leaks to explicit enabling requires bootstrap changes in other packages.
+- 953b2cea-23: createId has many callers across other packages and no established replacement helper, so naming one needs a design decision.
+- 953b2cea-24: Restructuring the debug barrel's exports into internal/ and named exports changes the public surface used by many packages outside my scope.
+- 953b2cea-25: @dxos/log depends on @dxos/util which depends on @dxos/debug, so importing log in debug would create a dependency cycle.
+- 953b2cea-26: Same dependency cycle: @dxos/log -> @dxos/util -> @dxos/debug prevents debug from importing @dxos/log.
+- 953b2cea-27: Renaming many files to capitalized names is a large refactor touching every importer across the repo.
+- 953b2cea-28: Renaming many files to capitalized names is a large refactor touching every importer across the repo.
+- 953b2cea-29: Renaming many files to capitalized names is a large refactor touching every importer across the repo.
+- 953b2cea-31: W may itself be a function type so typeof narrowing cannot yield a callable updater without a design change to SetAtomFn typing.
+- 953b2cea-33: The loose AnyAst structural type underpins the whole converter; fixing needs a rewrite of the AST typing.
+- 953b2cea-35: Renaming dynamic-runtime.ts changes a published package.json subpath export used outside this package, so it needs a cross-package change.
+- 953b2cea-37: Renaming schema-ast.ts changes a published package.json subpath export, so it needs a cross-package change.
+- 953b2cea-38: Changing getValue and setValue from any to unknown would break many callers outside this package, so it is a larger refactor.
+- 953b2cea-39: The fix requires extending the hypercore typings in packages/common/typings, which is outside my packages.
+- 953b2cea-40: The fix requires extending the hypercore typings in packages/common/typings, which is outside my packages.
+- 953b2cea-41: Barrel refactor with internal/ directory affects the public surface and consumers; out of scope.
+- 953b2cea-43: Real, but streamx.Readable is not assignable to readable-stream's wrap parameter type; removing the cast fails typecheck and needs a typed adapter.
+- 953b2cea-44: The sleep is a pause in a replication performance benchmark with no replication event to await.
+- 953b2cea-45: The sleep follows the timing measurement in a benchmark test and has no observable condition to wait on.
+- 953b2cea-46: Switching the exported DXN type to Brand.Brand changes a widely used type across many packages outside my scope.
+- 953b2cea-47: The cast depends on the DXN brand redesign (46); fixing it alone is not possible without changing the exported schema type.
+- 953b2cea-48: Switching the exported EID type to Brand.Brand changes a widely used type across many packages.
+- 953b2cea-49: The cast depends on the EID brand redesign (48); not fixable in isolation.
+- 953b2cea-50: Switching the base URI type to Brand.Brand affects DXN, EID and all consumers across the repo.
+- 953b2cea-51: The cast depends on the URI brand redesign (50); not fixable in isolation.
+- 953b2cea-55: Restructuring the public barrel into internal/ with explicit exports is a large API refactor affecting many consumers.
+- 953b2cea-57: Moving env resolution to a bootstrap layer is a design change spanning other packages.
+- 953b2cea-59: The native object literal cannot satisfy RandomAccessStorage, which extends EventEmitter, without a redesign.
+- 953b2cea-62: The double cast is needed because Object.assign cannot narrow SqlClient.updateValues, and it already carries an explanatory comment; avoiding it needs a redesign.
+- 953b2cea-64: The VFS comes from @dxos/wa-sqlite and vfs_register expects the @effect/wa-sqlite type; the two are incompatible, so fixing it needs a cross-library type change.
+- 953b2cea-70: Restructuring the public barrel into internal/ and namespaces is a large API refactor affecting call sites outside the package.
+- 953b2cea-72: Changing the Id brand to Brand.Brand affects exported type and call sites outside this package.
+- 953b2cea-73: Restructuring a 65-module barrel is a large cross-package refactor.
+- 953b2cea-74: File rename of Position.test.ts was not applied; low value and risks parallel-agent/git churn.
+- 953b2cea-75: A negative assertion (no update) has no condition to wait for; a bounded wait is the practical option.
+- 953b2cea-76: @dxos/errors is not a dependency of agent-code-mode; adding it needs a package.json/lockfile change, and the error type is used across the package.
+- 953b2cea-77: The handler map is intentionally module-global because the worker entry is instantiated by the runtime and cannot take constructor injection; needs design decision.
+- 953b2cea-78: Sibling source file AgentService.ts is PascalCase, so the test name matches its subject; not a real inconsistency.
+- 953b2cea-81: Reported file is not in my assigned work verification scope and the cast likely needs typing changes in test helpers; not fixed.
+- 953b2cea-85: Errors are used with Effect catchTag-style handling; migrating to BaseError.extend changes semantics and needs a design decision.
+- 953b2cea-86: Removing the cast fails typecheck because the generic Exclude does not reduce; the cast is required.
+- 953b2cea-88: Renaming definitions.ts across eight skills is a broad refactor with many import sites.
+- 953b2cea-89: Moving UI test plugins to another package is a cross-package design change.
+- 953b2cea-92: Making ArtifactDiffResolver a required service with a noop layer changes the requirement channel for every formatUserPrompt caller and needs a design decision.
+- 953b2cea-93: The module-level map is deliberately shared across Binder instances on the same feed; a per-Binder counter would miss writes made by other binders and change behavior.
+- 953b2cea-96: Threading a generic requirement through makeHandler depends on the toolkit handler types and is a larger typing refactor.
+- 953b2cea-98: Converting loadChat to Effect.fnUntraced loses the explicit return type and breaks inference at call sites (Agent.ts resetChatHistory fails typecheck), so I reverted it.
+- 953b2cea-105: Replacing the wildcard barrel exports requires moving code under internal/ and updating consumers across packages; too large.
+- 953b2cea-106: Renaming 13 test files is a wide churn that I did not take on in this batch.
+- 953b2cea-108: Passing the base environment into the shell layer changes its signature and needs composition-root call-site changes.
+- 953b2cea-109: Removing the cast means threading the handler requirement through the process type, which is a design change.
+- 953b2cea-110: Choosing a retention cap and eviction policy for outputs is a design decision, since subscribeOutputs replay semantics depend on it.
+- 953b2cea-112: A live-process limit with a new typed error is a design decision that changes spawn's error type.
+- 953b2cea-113: Making RemoteOperationInvoker.Service a required service with a noop layer needs layer changes on every host outside this package.
+- 953b2cea-116: Moving layerKv off the class changes an exported symbol used in agent-runtime, plugin-routine and cli, which are outside my packages.
+- 953b2cea-117: Moving layerMemory and the accessors off the class changes an exported symbol used outside my packages.
+- 953b2cea-118: Widening getApiKey's error type changes an exported signature used by callers outside these packages; needs a typed-error design decision.
+- 953b2cea-124: Dropping raw or ast from the persisted schema is a data-model migration needing a design decision.
+- 953b2cea-125: Needs reader migration in Automation.stories.tsx and the dispatcher, outside the owned packages or a schema migration.
+- 953b2cea-140: shared is a built Context, not a Layer, so the suggested Layer.provide collapse does not directly apply; the pattern is a deliberate shared-client test setup.
+- 953b2cea-142: Changing the layer signature to require EdgeHttpClientService affects exported API and callers outside this package.
+- 953b2cea-145: @dxos/errors is not a dependency of the extractor package; adding it needs a package.json and lockfile change.
+- 953b2cea-146: Renaming the test file is a larger change than a contained fix; skipped.
+- 953b2cea-147: Replacing barrel wildcards needs a public-API redesign and call-site changes in other packages.
+- 953b2cea-148: The replacement client is not identifiable from the code, so the tag cannot be made accurate.
+- 953b2cea-150: The replacement API is unknown (the TODO only says queues will be integrated into echo), so I cannot name it.
+- 953b2cea-151: The replacement for SpaceProxy is not identifiable from the code.
+- 953b2cea-153: Moving externalId to Obj.Meta.foreignKeys is a schema/data-model change with cross-package consumers.
+- 953b2cea-154: Exported setter API used by other packages; changing to draft-based requires cross-package call-site changes.
+- 953b2cea-155: Exported setter API used by other packages; changing it requires cross-package call-site changes.
+- 953b2cea-156: Exported setter API used by other packages; changing it requires cross-package call-site changes.
+- 953b2cea-157: Exported setter API used by other packages; changing it requires cross-package call-site changes.
+- 953b2cea-161: These are exported host-facing request/option types that deliberately accept unvalidated string input; changing them is a cross-package API change.
+- 953b2cea-167: Converting the barrel to explicit exports and moving code to internal/ is a large public-surface refactor.
+- 953b2cea-169: Restoring the topTopics assertion makes the test fail; the digest shape has drifted and the fix needs a design decision.
+- 953b2cea-170: Restoring the commented assertions fails because the draft shape (threadIds etc.) changed; needs rewriting against the new API.
+- 953b2cea-171: Same as 170: the commented assertion uses a stale draft field and fails when restored.
+- 953b2cea-172: Same as 170: the commented assertions fail when restored against the current draft shape.
+- 953b2cea-173: Replacing wildcard barrel exports with namespaces changes the public API and every consumer outside this package.
+- 953b2cea-175: Switching ParquetReadError to BaseError.extend changes its constructor and shape and needs a decision; the class is also not shown to use the rule's required pattern without wider changes.
+- 953b2cea-176: Restoring the draft.summary assertion makes the test fail against current behavior; needs investigation of the pipeline, not a test-only edit.
+- 953b2cea-177: Changing Thread.messageIds to Refs or foreignKeys is a schema design change affecting stored data and consumers.
+- 953b2cea-178: The types/ directory is also the package's public ./types subpath export used by other packages, so renaming it is a cross-package change.
+- 953b2cea-180: Needs a new @dxos/errors dependency in blob and the S3 errors have custom constructors and callers.
+- 953b2cea-181: objectKey is called from plugin-s3 with a literal '_probe' space id, so a SpaceId type needs a cross-package change.
+- 953b2cea-183: Lazy memoized setup is deliberate; the doc comment states beforeAll/beforeEach are not guaranteed to finish before a bench's first call in vitest bench.
+- 953b2cea-187: The sleeps separate real timestamps for updated/created queries; fixing needs clock injection into ECHO, a larger design change.
+- 953b2cea-189: Same deliberate lazy-setup pattern as echo.bench.ts because hooks are not guaranteed to resolve before the first bench call.
+- 953b2cea-191: Convention unification across ~25 fields is a large mechanical refactor outside a contained fix.
+- 953b2cea-192: Test sleep is a deliberate macrotask turn to surface an unhandled rejection; replacing it needs test redesign.
+- 953b2cea-193: Large private-field convention unification across ~60 fields; not a contained change.
+- 953b2cea-194: Switching to ctx-scoped scheduling changes disposal/settle behavior and needs a design decision.
+- 953b2cea-195: Rewriting the slow-load simulation in the test needs test redesign.
+- 953b2cea-196: Changing LoadObjectProps.objectId to EntityId ripples to call sites; not contained.
+- 953b2cea-197: Large private-field convention unification; not contained.
+- 953b2cea-198: Branding many objectId parameters ripples through call sites and tests; too large.
+- 953b2cea-199: Ctx-scheduling the inactivity timeout changes promise settlement on disposal; needs design decision.
+- 953b2cea-200: Ctx-scoped scheduling would alter disposal semantics of satisfaction requests; needs design decision.
+- 953b2cea-202: Replacing seven sleeps in the stall test needs test redesign.
+- 953b2cea-207: Only partly fixed: spaceId on RepoClosedError is now SpaceId, but DocumentUnavailableError documentId was left as string, so the finding is not fully addressed.
+- 953b2cea-208: Private-field convention unification; not contained.
+- 953b2cea-209: Replacing the manual reconnect timer with ctx scheduling changes reconnect/cancel behavior; needs design decision.
+- 953b2cea-210: Private-field convention unification; not contained.
+- 953b2cea-212: Branding ObjectDiagnostic fields may ripple to external consumers; not verified contained.
+- 953b2cea-213: Restructuring the barrel into internal/ with explicit exports is a large cross-package refactor.
+- 953b2cea-214: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-215: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-216: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-217: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-218: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-219: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-220: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-221: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-222: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-223: Removing a root export may break consumers outside this package; needs cross-package verification.
+- 953b2cea-224: The replacement for pendingBatch is unknown and needs an owner decision; not changed.
+- 953b2cea-225: Private-field convention unification; not contained.
+- 953b2cea-226: Narrowing public method params to EntityId ripples to call sites outside the package.
+- 953b2cea-227: Negative-assertion sleep window needs test redesign.
+- 953b2cea-228: Branding the test-builder spaceId key may ripple through test callers; low value.
+- 953b2cea-230: Negative-traffic windows in a test need real elapsed time; a deterministic signal does not exist.
+- 953b2cea-231: Test sleeps need a larger test rewrite; out of scope for a minimal fix.
+- 953b2cea-232: Test sleep rewrite needs a test redesign; out of scope.
+- 953b2cea-233: Test sleep rewrite needs a test redesign; out of scope.
+- 953b2cea-234: Tried DocumentId; it conflicts with the external getContainingSpaceForDocument callback type (string) and call sites, so it needs a cross-package change.
+- 953b2cea-235: Timer lifecycle change in a large host needs a design decision; not a contained behavior-preserving fix.
+- 953b2cea-236: Lease eviction timer has no owning ctx; refactor needed.
+- 953b2cea-237: Mixing #private (new code) with legacy _private is allowed by CLAUDE.md; renaming is churn.
+- 953b2cea-239: CLAUDE.md permits #private in new code beside existing _private; not a defect.
+- 953b2cea-240: CLAUDE.md permits #private in new code beside existing _private; not a defect.
+- 953b2cea-241: CLAUDE.md permits #private in new code beside existing _private; not a defect.
+- 953b2cea-242: Banner removal across a large test file is cosmetic and low value; out of scope.
+- 953b2cea-243: Phase labels in the test describe sequential scenario steps; acceptable.
+- 953b2cea-244: testSqlite takes no parameters and returns an explicitly typed Effect; Effect.fnUntraced would not fit the declared signature cleanly, so a false positive.
+- 953b2cea-246: CLAUDE.md permits #private in new code beside existing _private; not a defect.
+- 953b2cea-247: Flush timer rework needs a design decision about batching and cancellation; out of scope.
+- 953b2cea-248: Query-item error messages need a shared factory across several sites; low value and out of scope.
+- 953b2cea-249: CLAUDE.md permits #private in new code beside existing _private; not a defect.
+- 953b2cea-251: Needs a new batched index lookup API; a larger refactor.
+- 953b2cea-252: CLAUDE.md permits #private in new code beside existing _private; not a defect.
+- 953b2cea-253: The local planSubquery is a required callback argument of planDeclinedByCompiler, not a hiding wrapper; false positive.
+- 953b2cea-254: Adding a spaceId constraint would change semantics for legitimate cross-space references; needs a design decision.
+- 953b2cea-255: Converting the global lens registry to an injected class is a large refactor that needs a design decision.
+- 953b2cea-256: Replacing the global registries with a runner class is a large refactor that needs a design decision.
+- 953b2cea-259: Replacing barrel wildcards with explicit exports and an internal/ directory is a large cross-package refactor.
+- 953b2cea-260: Renaming ast.ts to QueryAST.ts touches imports across packages; out of scope.
+- 953b2cea-261: Needs a new @dxos/errors dependency in echo-sqlite.
+- 953b2cea-262: The lazy init is deliberate and documented, because vitest bench does not await beforeAll before the first warmup call, so moving it would break the bench.
+- 953b2cea-265: Test-only helper used many times; inlining adds noise, low value.
+- 953b2cea-269: Renaming exported symbols to Entity* is a cross-package refactor.
+- 953b2cea-272: Renaming exported types is a cross-package refactor needing a naming decision.
+- 953b2cea-275: Renaming Query.all is a public API change with many call sites outside this package.
+- 953b2cea-276: Changing Relation.update return type is an API design decision.
+- 953b2cea-277: Parameter names are cosmetic across parallel modules; needs a convention decision and churn.
+- 953b2cea-278: Aligning getTypeURI signatures changes semantics and callers; design decision.
+- 953b2cea-279: Converting Relation.getKeys to dual is an API change with outside call sites.
+- 953b2cea-280: Persisting a single source for View.query is a schema/data migration decision.
+- 953b2cea-281: Making spaceId required on the request changes the exported API and its callers; needs a design decision.
+- 953b2cea-283: Removing ctx from the sync protocol is a large cross-module refactor affecting callers and the protocol design.
+- 953b2cea-284: Removing ctx from the sync protocol is a large cross-module refactor affecting callers and the protocol design.
+- 953b2cea-285: Removing ctx from the sync protocol is a large cross-module refactor affecting callers and the protocol design.
+- 953b2cea-286: Removing ctx from the sync protocol is a large cross-module refactor affecting callers and the protocol design.
+- 953b2cea-287: Removing ctx from the sync protocol is a large cross-module refactor affecting callers and the protocol design.
+- 953b2cea-288: Removing ctx from the sync protocol is a large cross-module refactor affecting callers and the protocol design.
+- 953b2cea-289: Removing the threaded ctx from index-core's Effect APIs is a large cross-cutting refactor with callers beyond a contained fix.
+- 953b2cea-290: Same ctx-parameter removal refactor across IndexEngine; needs design decision on deferred-callback context ownership.
+- 953b2cea-291: Same ctx-parameter removal refactor across IndexEngine; needs design decision.
+- 953b2cea-292: Same ctx-parameter removal refactor across IndexEngine; needs design decision.
+- 953b2cea-293: Same ctx-parameter removal refactor across IndexEngine; needs design decision.
+- 953b2cea-294: Needs spaceId parameter on ReverseRefIndex.query plus objectMeta join and caller changes; schema/design change beyond a minimal fix.
+- 953b2cea-295: Requires a new SQL migration and query changes; editing the shipped 0004 migration is unsafe.
+- 953b2cea-296: Requires a new migration adding spaceId to reverseRef; design decision, not contained.
+- 953b2cea-298: Barrel redesign affects consumers outside this package.
+- 953b2cea-300: Restructuring the barrel into internal/ with explicit exports is a large refactor affecting consumers.
+- 953b2cea-301: Replacement retry mechanism is not identifiable without a design decision; function is still actively used.
+- 953b2cea-302: Converting private fields across a large class is a broad refactor beyond a contained fix.
+- 953b2cea-303: Changing error base classes alters exported error types and behavior; needs design decision.
+- 953b2cea-304: Exported error classes are used across packages; migrating to BaseError needs cross-package changes.
+- 953b2cea-305: Restructuring the public barrel into internal/ would change the exported surface used by other packages.
+- 953b2cea-306: Migrating exported Data.TaggedError to BaseError changes the API and call sites; needs design decision.
+- 953b2cea-309: Barrel redesign affects consumers outside this package.
+- 953b2cea-310: Injecting the delay through the constructor needs a design decision and call-site changes.
+- 953b2cea-311: The post helper gives the worker typed messages (ProxyWorkerResponse); inlining self.postMessage would lose that, so it is not a trivial wrapper.
+- 953b2cea-312: Renaming the exported createWorkerPort requires cross-package call-site updates.
+- 953b2cea-314: Renaming the test file is cosmetic and needs a matching rename of RpcRouter.ts conventions; out of scope.
+- 953b2cea-315: Wrapped gen is inside a function that needs the Scope requirement and a larger refactor; not a contained change.
+- 953b2cea-316: Replacement (createProtoRpcPeer) is a judgment call for the options interfaces; not changed.
+- 953b2cea-317: Removing the legacy wire types requires migrating consumers outside this package.
+- 953b2cea-319: Barrel redesign affects consumers outside this package.
+- 953b2cea-320: Moving static layerTest/isJson out of the class changes exported API used by call sites in other packages.
+- 953b2cea-321: Renaming file to FormBuilder.ts touches imports across packages and needs a directive convention decision.
+- 953b2cea-323: Replacing the throw changes the error channel of spaceIdWithDefault, affecting callers across packages.
+- 953b2cea-324: Requires reworking layer composition for the CLI dispatcher; non-trivial design change.
+- 953b2cea-325: Query rewrite needs verification against ECHO filter semantics and live behavior; not a contained safe change.
+- 953b2cea-326: Refactoring ChatProcessor class to functions is a larger refactor.
+- 953b2cea-327: No replacement is identified in the codebase for upsertFunctionObject; requires author decision.
+- 953b2cea-328: Requires explicitly providing REPL services; non-trivial refactor.
+- 953b2cea-329: Renaming the file and adding a directive is a style choice with no clear need; skipped as out of scope.
+- 953b2cea-333: Moving components into directories is a larger restructure touching many imports; out of scope.
+- 953b2cea-340: Rewriting useStats onto Atoms is a larger design refactor.
+- 953b2cea-341: Rewriting useSwarmTrace onto Atoms is a larger design refactor.
+- 953b2cea-345: Restructuring a 20-submodule barrel is a large refactor with public API impact.
+- 953b2cea-347: Cloudflare worker without @dxos/log dependency; needs a design decision on logging in the worker.
+- 953b2cea-348: A shared useFeedQuery hook would be repeated across many containers outside plugin-agent, so it is a cross-package refactor.
+- 953b2cea-351: The provides are deliberately sequential: the space layer supplies requirements of ToolExecutionServices, so merging them into one mergeAll would change behavior.
+- 953b2cea-358: Story-only layout markup; swapping to Grid/Flex with ramp-step gaps is a stylistic choice needing visual verification, not a contained safe fix.
+- 953b2cea-359: The console.log is the intentional output of a user-invoked dxosDumpTrace debug helper whose purpose is console dump, not incidental logging.
+- 953b2cea-362: useDebug is an explicit user-triggered console dump using console.group; structured logging would hide the intended output.
+- 953b2cea-363: Rewriting the hook onto a stream-backed Atom is a large refactor needing a design decision.
+- 953b2cea-365: Declaring Plugin.Service with noop layers requires host-wide changes across packages; the optional read is deliberate and documented.
+- 953b2cea-368: Needs a new @dxos/errors dependency, and Effect TaggedError usage is tied to catchTag at call sites.
+- 953b2cea-370: Replacing the wrapper divs with Flex primitives needs layout changes that cannot be verified here.
+- 953b2cea-371: Renaming the testing module and its namespace affects imports across other packages.
+- 953b2cea-372: Moving the subscription into leaf components is a larger refactor.
+- 953b2cea-373: Moving the subscription into leaf components is a larger refactor.
+- 953b2cea-374: The file rename and directive change are not a contained fix.
+- 953b2cea-375: File rename plus directive touches many imports; needs convention decision.
+- 953b2cea-376: Toolbar migration to MenuBuilder is a larger UI refactor.
+- 953b2cea-377: Needs a new Summary story; out of scope for a contained fix.
+- 953b2cea-380: Adding a FactStore.query accessor touches several sites including crawler outside my packages; a design change.
+- 953b2cea-384: I found no is-* sizing token in use in the repo to replace w-[5rem], so the replacement would be a guess.
+- 953b2cea-388: Switching Data.TaggedError to BaseError changes error semantics used with Effect catchTag; needs a design decision.
+- 953b2cea-389: Needs a semantic sizing token design decision shared across other packages' popovers.
+- 953b2cea-390: Migrating the toolbar to menu actions is a larger refactor needing design decisions.
+- 953b2cea-391: Depends on the Layout.Grid gap ramp API and responsive variant handling; not a contained safe change.
+- 953b2cea-392: Flex component has no equivalent for the responsive @4xl hidden/flex behavior without a design decision.
+- 953b2cea-394: No semantic size token is evident for this min-width; needs a design decision.
+- 953b2cea-395: No semantic block-size token is evident for min-h-[15rem]; needs a design decision.
+- 953b2cea-396: File rename plus directive touches many imports; needs convention decision.
+- 953b2cea-397: Threading env through relay requires a wider signature change in the agent helper; not contained.
+- 953b2cea-400: Requires writing a new story; out of scope.
+- 953b2cea-401: File rename plus directive touches many imports; needs convention decision.
+- 953b2cea-402: Requires building a menu-action toolbar, a larger UI refactor.
+- 953b2cea-403: Requires a new story, out of scope.
+- 953b2cea-404: Requires writing a new story; out of scope.
+- 953b2cea-407: No obvious semantic size token for this input width; needs a design decision.
+- 953b2cea-408: Needs a new story, out of scope for a contained fix.
+- 953b2cea-409: Needs a new story, out of scope for a contained fix.
+- 953b2cea-413: Real but removing the debounce is a behavioral popover redesign needing UI verification.
+- 953b2cea-414: Converting Tabs.List to Grid via asChild with ramp gap risks changing rail spacing and cannot be visually verified here.
+- 953b2cea-419: Moving the GitHub fetch into an operation/service is a larger refactor.
+- 953b2cea-421: Requires a new story, out of scope for a contained fix.
+- 953b2cea-424: Rebuilding the toolbar on MenuBuilder/Menu.Root is a large refactor.
+- 953b2cea-425: Changing the persisted Graph schema is a design and migration decision.
+- 953b2cea-426: Moving module-level cache into per-activation state needs a restructure of the graph builder; not a contained change.
+- 953b2cea-428: Requires a new story, out of scope.
+- 953b2cea-429: Moving files into a directory changes import paths and exports; larger than a contained fix.
+- 953b2cea-430: Requires adding the @dxos/errors dependency to plugin-game (package.json and install), which is out of scope here.
+- 953b2cea-431: Requires a new story for CommentComposer, out of scope.
+- 953b2cea-432: No established semantic width token for popovers; needs a design decision.
+- 953b2cea-433: A PullRequestFiles story already exists in src/stories.
+- 953b2cea-434: A PullRequestOverview story already exists in src/stories.
+- 953b2cea-435: Requires a new story for PullRequestStatus, out of scope.
+- 953b2cea-436: Requires a new story for WalkthroughView, out of scope.
+- 953b2cea-440: Module-level cache is intentional so all mounts share the rate-limit guard; a per-instance tracker would defeat it.
+- 953b2cea-441: Rename touches many call sites and the 'directive' convention is unclear; needs a design decision.
+- 953b2cea-446: Requires adding the @dxos/errors dependency to plugin-heygen and changing constructors used by call sites; out of scope here.
+- 953b2cea-447: Story-only styling in a stories file; low value and needs a layout rewrite with Flex tokens.
+- 953b2cea-448: Converting Error subclasses to BaseError.extend changes error semantics and needs a design decision.
+- 953b2cea-449: Test helper typing change; the package already has pre-existing type errors in test files and the right generic fix needs layer design.
+- 953b2cea-450: Needs a schema design decision about adding a ref on Portfolio.
+- 953b2cea-451: Directory move with story is a larger refactor touching imports and needs a story.
+- 953b2cea-452: Directory moves of multiple components and stories is a larger refactor.
+- 953b2cea-453: Replacing with Listbox is a UI redesign needing visual verification.
+- 953b2cea-455: Layout.Flex does not accept an onClick prop (tsc error), so the div with a click handler stays.
+- 953b2cea-456: Requires adding a new story, which is out of scope for this batch.
+- 953b2cea-457: Requires adding a new story, which is out of scope for this batch.
+- 953b2cea-458: Requires adding a new story, which is out of scope for this batch.
+- 953b2cea-459: The suggested shared useFeedQuery hook spans many packages and needs a design decision.
+- 953b2cea-460: Grid does not obviously support the container-query responsive column template, so converting risks changing layout.
+- 953b2cea-461: Flex grow also adds overflow-hidden, which would change behavior (it could clip focus rings), so the div stays.
+- 953b2cea-463: Replacing the Builder class is a large refactor touching many call sites, stories and tests.
+- 953b2cea-465: Extracting a shared hook also affects plugin-map, outside my packages.
+- 953b2cea-466: Rewriting the toolbar as MenuBuilder actions is a larger refactor beyond a contained fix.
+- 953b2cea-467: plugin-library does not depend on @dxos/errors; adding the dependency and migrating the error is out of scope for a contained fix.
+- 953b2cea-472: The span is a dx-tag with inline icon; converting to Flex asChild risks changing styling and is cosmetic.
+- 953b2cea-474: Needs a per-db query atom cache design change; risk of altering reactive behavior.
+- 953b2cea-476: No known design-system toolbar height token to substitute without a design decision.
+- 953b2cea-479: The div is the trigger-cloned child of ActionMenu and carries the testid, with an explanatory comment already present.
+- 953b2cea-480: ScrollArea.Viewport classNames layout is not a wrapper div and replacing it needs a design-system decision.
+- 953b2cea-483: Needs a semantic size token decision shared across components; design decision.
+- 953b2cea-484: Large Welcome component restyle to Flex primitives needs visual verification via storybook.
+- 953b2cea-485: Same as 484; requires visual verification of responsive layout.
+- 953b2cea-486: Same as 484; separator replacement needs visual verification.
+- 953b2cea-487: Replacing with HubHttpClient needs cross-package changes for the unauthenticated case in edge-client.
+- 953b2cea-489: Needs restructuring rows into per-column subscribed components; larger refactor.
+- 953b2cea-490: Reworking the reactive query derivation needs a design change in the board model hook.
+- 953b2cea-492: Layout.Flex availability/props for column grow overflow-hidden is not verified, and the swap risks changing layout; needs design decision.
+- 953b2cea-494: Moving the component and story into a directory is a file restructure with call-site churn; out of scope.
+- 953b2cea-495: No shared semantic size token exists to swap in; needs a design decision.
+- 953b2cea-496: Replacing hand-rolled lists with Listbox is a UI refactor needing stories/design.
+- 953b2cea-497: Replacing runs list with Listbox/Accordion is a UI refactor needing design.
+- 953b2cea-499: Replacing the dependents list with a Listbox is a UI redesign needing visual verification, not a contained fix.
+- 953b2cea-500: No semantic width token exists here and the sibling popovers use the same arbitrary sizing; needs a design-system decision.
+- 953b2cea-502: Adding Plugin.getPlugins lives in app-framework, outside my packages.
+- 953b2cea-508: Story decorator wrapper; low-value change not worth the layout risk.
+- 953b2cea-509: No semantic size token identified for min-h-[120px]; needs a design decision.
+- 953b2cea-513: Moving four components with stories into directories touches many imports and the barrel; large refactor.
+- 953b2cea-515: Requires declaring the service and noop layers across runtimes; design change.
+- 953b2cea-516: Blob.fromBytes does not forward props (Obj.Parent) and lives in another package, so the fix needs a cross-package change.
+- 953b2cea-517: Six identical inlines of the same annotated ref add duplication for no benefit; the alias shares one description.
+- 953b2cea-518: Fixing Relation.getTarget lives in the echo package, outside this batch.
+- 953b2cea-519: Fixing Relation.getSource lives in the echo package, outside this batch.
+- 953b2cea-520: The chained provides are order-dependent (later layers satisfy earlier ones), so merging them would change behavior.
+- 953b2cea-522: A shared semantic token spans SearchDialog and AddToCollectionDialog and needs a design decision.
+- 953b2cea-526: Extracting a useScorePlayer hook is a large refactor of the player lifecycle.
+- 953b2cea-527: The relative-positioned wrapper hosts overlay positioning, so it is ad hoc layout and not a styling wrapper.
+- 953b2cea-528: The line is the heading underline of the documented lead-sheet format, not a bare separator.
+- 953b2cea-529: reset/recalculate have no real replacement API to name; they are still used internally and marked for removal.
+- 953b2cea-530: plugin-sheet lacks @dxos/errors dependency and ApiError has a subclass hierarchy; requires wider change.
+- 953b2cea-531: Restructuring components into directories with stories is a larger refactor touching many imports.
+- 953b2cea-532: Moving five components into their own directories with Props and stories is a large refactor and needs new stories.
+- 953b2cea-534: The query depends on the reactively derived ordering space, so hoisting needs a restructure of the closure.
+- 953b2cea-535: The queries depend on the reactive active space, so hoisting needs a keyed atom-family redesign.
+- 953b2cea-538: Needs a shared semantic token and a change in plugin-search, which is outside this batch.
+- 953b2cea-539: Needs a design decision on Grid subgrid and asChild with role semantics; not a contained change.
+- 953b2cea-540: No obvious semantic row-size token is available; needs a design decision.
+- 953b2cea-542: Switching to a non-selectable Listbox is a UI redesign needing its own verification.
+- 953b2cea-543: Story-only wrappers; low value and not worth the churn.
+- 953b2cea-544: Replacing the hook with a stream-fed atom is a larger refactor needing a design decision.
+- 953b2cea-545: No reverse-reference index exists; the TODO already tracks the limitation.
+- 953b2cea-546: The guard is a documented workaround for a pending upstream fix; logging per relation per render would be noisy.
+- 953b2cea-547: The private helper is called once per write and nothing needs batching with it; no real defect.
+- 953b2cea-548: The Obj-or-Ref union comes from the operation input schema, so changing it is a schema and API change.
+- 953b2cea-549: Optional ambient services are deliberate so headless hosts work; a noop-layer design is cross-package.
+- 953b2cea-550: Rebuilding the toolbar on MenuBuilder/Menu.Root is a larger UI refactor.
+- 953b2cea-551: Needs a refactor of the gallery tiles to own per-ref subscriptions; selection/index logic depends on resolved objects at list level.
+- 953b2cea-552: Requires restructuring the variant tiles and their consumers; larger refactor.
+- 953b2cea-553: Requires moving resolution into each tile with shared list logic; larger refactor.
+- 953b2cea-554: The cast is needed because opaqueHandler erases context; removing it requires reworking the test harness types.
+- 953b2cea-555: Same opaqueHandler context erasure; tightening R requires reworking the test harness.
+- 953b2cea-556: Moving Discord widget fetch into an Operation is a larger refactor.
+- 953b2cea-557: Replacing the channel list with Listbox is a UI refactor needing design.
+- 953b2cea-559: Rewriting the toolbar with MenuBuilder/Menu.Root is a larger UI refactor needing design decisions.
+- 953b2cea-560: The classes are part of a conditional mx() expression on the drop area, so swapping to Flex would restructure the element and risk behavior change.
+- 953b2cea-562: Needs leaf component restructuring (design change) beyond a contained fix.
+- 953b2cea-563: Fixed-position root wrapper is intentional layout; converting to Flex asChild is cosmetic and risky.
+- 953b2cea-565: Replacing the RecordBuilder class is a larger refactor touching its callers.
+- 953b2cea-568: Driving the real coordinator setCursors needs a test redesign.
+- 953b2cea-570: Refactoring marker-provider to per-leaf subscriptions is a larger redesign of the MarkerProvider hook.
+- 953b2cea-571: Migrating the SegmentArticle toolbar to MenuBuilder/Menu.Root is a larger UI refactor needing verification via storybook.
+- 953b2cea-572: Moving to per-tile useObject requires restructuring TripArticle's list and segment ordering logic; not contained.
+- 953b2cea-573: The div uses container-query responsive grid columns (@3xl) that Layout.Grid cols does not express; swapping would change behavior.
+- 953b2cea-574: TripBuilder is used across stories/tests; replacing the class is a broad refactor of test-data helpers.
+- 953b2cea-578: Converting VoxelToolbar to a Menu-based toolbar is a larger UI refactor.
+- 953b2cea-579: Extracting the audio engine lifecycle into a hook is a larger refactor of Mixer.
+- 953b2cea-580: ZenArticle has no toolbar; passing attendableId requires adding a menu toolbar, a design change.
+- 953b2cea-581: Restructuring the test into describe blocks is a broader test refactor; separators are low-value.
+- 953b2cea-588: The #frameBudget field and the _frameBudget() overridable method serve different roles (storage vs protected accessor), so not a naming inconsistency.
+- 953b2cea-589: Removing the backwards-compat action expansion requires updating call sites across other packages.
+- 953b2cea-591: Changing the signature to take a draft requires updating call sites outside the package or a design decision.
+- 953b2cea-592: Signature change breaks plugin-space call sites outside my packages.
+- 953b2cea-594: Restructuring the barrel into internal/ and explicit exports is a large refactor affecting consumers.
+- 953b2cea-596: Tightening the generic bounds risks breaking inference for many surface filter call sites across packages; needs a careful design pass.
+- 953b2cea-597: The assertions are deliberately disabled with a TODO because the functionality was unreliable.
+- 953b2cea-598: Reworking the barrel into internal/ plus explicit exports changes public surface across many call sites outside this package.
+- 953b2cea-602: Declaring optional edge services with noop layers is a cross-cutting design change across host stacks and LayerSpecs, not a contained fix.
+- 953b2cea-603: Same noop-layer redesign for EdgeConnectionService; requires host-wide layer changes outside this contained fix.
+- 953b2cea-604: Same noop-layer redesign; requires changes to every host that composes DevicesServiceLayer.
+- 953b2cea-605: Renaming the exported IdentityManager touches many call sites across packages and needs a naming decision.
+- 953b2cea-606: Same noop-layer redesign; needs LayerSpec and host changes beyond a contained fix.
+- 953b2cea-607: Same noop-layer redesign for EdgeHttpClientService; cross-cutting.
+- 953b2cea-608: Same noop-layer redesign; changes semantics of absent edge services and needs host-wide changes.
+- 953b2cea-609: The error is thrown precisely because no active invitation exists, so there is no invitation id or state to include; a typed error would be a design change.
+- 953b2cea-610: Same noop-layer redesign; cross-cutting.
+- 953b2cea-611: Same noop-layer redesign; cross-cutting.
+- 953b2cea-612: Same noop-layer redesign; requires changing LayerSpec requirements and all hosts.
+- 953b2cea-613: Same noop-layer redesign; cross-cutting.
+- 953b2cea-614: The test is already test.skip with the flow pending an unbuilt invitation factoring (TODO); restoring it needs new implementation work.
+- 953b2cea-615: Same noop-layer redesign for four optional services; cross-cutting.
+- 953b2cea-617: ProviderApiError is exported and converting to BaseError.extend is a contained but unverified API change; left as-is (not done).
+- 953b2cea-618: Template is not a package with a public entry; the import is of an example tree and needs a structural decision.
+- 953b2cea-622: Exposing client status as an Atom needs a cross-package client API change.
+- 953b2cea-623: Annotation.make creates user annotations with different semantics than createAnnotationHelper, so the swap is not behavior-preserving without a design decision.
+- 953b2cea-624: Same as 623: Annotation.make is not a drop-in replacement for createAnnotationHelper.
+- 953b2cea-625: Restoring the assertions requires fixing validation behavior, which is a design/behavior change beyond a contained fix.
+- 953b2cea-626: Needs an Atom/stream bridge design change in the shell hook; not a contained fix.
+- 953b2cea-627: Requires reworking the join state machine, a design change beyond a contained fix.
+- 953b2cea-628: Changing parentMessage to a Ref is a schema change affecting call sites in other packages.
+- 953b2cea-629: Renaming the exported Pipeline type needs a naming decision and updates across other packages.
+- 953b2cea-630: Converting to a TaskMigrationPlanner class changes the exported API used by other packages and is a larger refactor.
+- 953b2cea-631: False positive: sibling source files (Branch.ts, History.ts, Version.ts) are capitalized, so Branch.test.ts matches Branch.ts.
+- 953b2cea-639: Rewriting a 23-module barrel changes public API and every consumer's imports.
+- 953b2cea-641: Rename touches many shapes and needs a naming decision.
+- 953b2cea-642: Package tsconfig uses classic jsx ('react'), so removing the default React import breaks tsc (TS2686); needs a repo-wide jsx runtime change.
+- 953b2cea-643: Same: classic JSX runtime requires the React binding.
+- 953b2cea-644: Same: classic JSX runtime requires the React binding.
+- 953b2cea-645: React.PointerEvent types can't be fully fixed since the default import must stay under classic jsx.
+- 953b2cea-646: Same: classic JSX runtime requires the React binding.
+- 953b2cea-647: Same: classic JSX runtime requires the React binding.
+- 953b2cea-648: Same: classic JSX runtime requires the React binding.
+- 953b2cea-650: Same: classic JSX runtime requires the React binding.
+- 953b2cea-651: Default import must stay under classic jsx; partial change not worthwhile.
+- 953b2cea-652: Same: classic JSX runtime requires the React binding.
+- 953b2cea-653: Same: classic JSX runtime requires the React binding.
+- 953b2cea-654: Same: classic JSX runtime requires the React binding.
+- 953b2cea-655: Same: classic JSX runtime requires the React binding.
+- 953b2cea-656: Same: classic JSX runtime requires the React binding.
+- 953b2cea-657: Same: classic JSX runtime requires the React binding.
+- 953b2cea-658: Same: classic JSX runtime requires the React binding.
+- 953b2cea-659: Same: classic JSX runtime requires the React binding.
+- 953b2cea-660: Default import must stay under classic jsx; partial change not worthwhile.
+- 953b2cea-661: Same: classic JSX runtime requires the React binding.
+- 953b2cea-663: Same: classic JSX runtime requires the React binding.
+- 953b2cea-664: Default import must stay under classic jsx; partial change not worthwhile.
+- 953b2cea-665: Needs a design decision (new group intent in the projection) and a larger refactor.
+- 953b2cea-667: Same: classic JSX runtime requires the React binding.
+- 953b2cea-670: Needs design decision on sizing tokens for waveform pixel-precise bars.
+- 953b2cea-671: Needs design decision on equivalent semantic size tokens; no clear token mapping.
+- 953b2cea-672: No semantic width token matches this hover-card width; the arbitrary value is intentional and commented.
+- 953b2cea-673: Moving files into a directory is a restructure touching import paths and stories; out of scope for a contained fix.
+- 953b2cea-674: Grouping Form files into a directory is a large restructure with many call sites.
+- 953b2cea-675: Changing LayoutParseError to BaseError.extend alters an exported class and its usage; not a contained fix.
+- 953b2cea-676: Directory restructure across import paths; out of scope.
+- 953b2cea-677: Directory restructure across import paths; out of scope.
+- 953b2cea-681: Moving stories into per-component directories is a larger restructuring, out of scope.
+- 953b2cea-683: className is intentionally supplied by slotting parents and consumed via composableProps; removing it risks breaking slot usage.
+- 953b2cea-693: Splitting the barrel into internal/ and explicit exports is a larger refactor affecting consumers.
+- 953b2cea-694: Replacing barrel wildcards and moving code to internal/ changes the public surface and needs consumer updates and a design decision.
+- 953b2cea-695: Replacing the barrel wildcards with explicit exports and an internal/ split is a large public-surface refactor.
+- 953b2cea-698: Moving the hover bookkeeping into a ViewPlugin class is a non-trivial refactor of the collab extension.
+- 953b2cea-699: Needs a new @dxos/errors dependency (package.json and lockfile change) in ui-template, which is not contained.
+- 953b2cea-700: Same as 699: needs a new @dxos/errors dependency.
+- 953b2cea-701: Same as 699: needs a new @dxos/errors dependency.
+- 953b2cea-703: getStyles is exported and used by many call sites in other packages; rename is cross-package.
+- 953b2cea-704: Replacing 12 wildcard exports changes the public surface used by many packages outside this batch.
+- 953b2cea-590: A case-only rename (`Tour.test.ts` → `tour.test.ts`) breaks checkouts on case-insensitive filesystems; not worth it for a naming warning.

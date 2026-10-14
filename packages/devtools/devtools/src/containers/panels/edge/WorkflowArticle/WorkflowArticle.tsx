@@ -13,7 +13,6 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { mx } from '@dxos/ui-theme';
 
 import { ControlledSelector, MasterDetailTable } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -94,7 +93,7 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
             onSelectionChanged={setSelectedId}
           />
 
-          <div className={mx('h-full')}>
+          <div className='h-full'>
             {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
           </div>
         </div>

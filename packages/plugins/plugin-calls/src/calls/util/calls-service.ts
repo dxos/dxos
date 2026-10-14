@@ -357,8 +357,9 @@ export class CallsServicePeer extends Resource {
           }
 
           invariant(newTrackResponse.tracks);
+          const { tracks: pulledTracks } = newTrackResponse;
           const trackMap = tracks.reduce((acc, track) => {
-            const pulledTrackData = newTrackResponse.tracks?.find(
+            const pulledTrackData = pulledTracks.find(
               (t) => t.trackName === track.trackName && t.sessionId === track.sessionId,
             );
 

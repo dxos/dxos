@@ -11,7 +11,7 @@ export type ErrorProps = { noJoke?: boolean };
 
 export const Error = ({ noJoke }: ErrorProps) => {
   const error = useRouteError();
-  const stack = (error as any)?.stack;
+  const stack = error instanceof globalThis.Error ? error.stack : undefined;
   const [{ joke, punchline }, setJoke] = useState<any>({});
   const faceIcon = punchline ? 'ph--smiley-x-eyes--regular' : 'ph--smiley-blank--regular';
 

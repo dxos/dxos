@@ -12,6 +12,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
+import { keyAction } from '../../model/keys.ts';
 import { type Layer, type LayerId } from '../../model/types.ts';
 
 export type LayersPanelProps = Util.ThemedClassName<{
@@ -169,7 +170,7 @@ export const LayersPanel = ({
                 aria-label='Layers'
                 onKeyDown={(event) => {
                   // Enter on the list (as well as selecting the highlighted row) opens that row's name.
-                  if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
+                  if (keyAction(event) !== 'open' || event.target !== event.currentTarget || readonly || !onRename) {
                     return;
                   }
                   const active = event.currentTarget.getAttribute('aria-activedescendant');

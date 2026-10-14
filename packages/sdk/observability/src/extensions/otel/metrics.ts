@@ -78,7 +78,7 @@ export type OtelMetricsOptions = OtelOptions & {
 };
 
 export class OtelMetrics {
-  private _meterProvider: MeterProvider;
+  #meterProvider: MeterProvider;
   // Cached because re-creating an instrument per sample is pure allocation; one map per kind
   // keeps the lookup typed without a cast.
   readonly #counters = new Map<string, Counter>();
@@ -92,7 +92,7 @@ export class OtelMetrics {
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
     setDiagLogger(options.consoleDiagLogLevel);
 
-    this._meterProvider = new MeterProvider({
+    this.#meterProvider = new MeterProvider({
       resource: this.options.resource,
       // Each reader collects independently, so observable callbacks run once per destination
       // and must stay side-effect free.
@@ -189,7 +189,7 @@ export class OtelMetrics {
   }
 
   flush(): Promise<void> {
-    return this._meterProvider.forceFlush();
+    return this.#meterProvider.forceFlush();
   }
 
   close(): Promise<void> {
@@ -199,11 +199,11 @@ export class OtelMetrics {
     this.#gauges.clear();
     this.#histograms.clear();
     this.#observableGauges.clear();
-    return this._meterProvider.shutdown();
+    return this.#meterProvider.shutdown();
   }
 
   get #meter() {
-    return this._meterProvider.getMeter(METER_NAME);
+    return this.#meterProvider.getMeter(METER_NAME);
   }
 
   /** Returns the cached instrument; the first caller's unit/description wins, as OTel itself does. */

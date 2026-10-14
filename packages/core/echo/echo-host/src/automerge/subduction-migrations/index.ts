@@ -70,18 +70,16 @@ export const runMigrations = async (
   }
 };
 
-const hasMigration = (name: string) =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    const rows = yield* sql<{
-      n: number;
-    }>`SELECT count(*) AS n FROM automerge_subduction_migrations WHERE name = ${name}`;
-    return rows[0].n > 0;
-  });
+const hasMigration = Effect.fnUntraced(function* (name: string) {
+  const sql = yield* SqlClient.SqlClient;
+  const rows = yield* sql<{
+    n: number;
+  }>`SELECT count(*) AS n FROM automerge_subduction_migrations WHERE name = ${name}`;
+  return rows[0].n > 0;
+});
 
-const recordMigration = (name: string) =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    const appliedAt = Date.now();
-    yield* sql`INSERT OR IGNORE INTO automerge_subduction_migrations (name, applied_at) VALUES (${name}, ${appliedAt})`;
-  });
+const recordMigration = Effect.fnUntraced(function* (name: string) {
+  const sql = yield* SqlClient.SqlClient;
+  const appliedAt = Date.now();
+  yield* sql`INSERT OR IGNORE INTO automerge_subduction_migrations (name, applied_at) VALUES (${name}, ${appliedAt})`;
+});

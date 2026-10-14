@@ -214,7 +214,7 @@ const GroupSection = ({ group, onOpen }: { group: PullRequestRowGroup; onOpen: O
         <Layout.Flex align='center' gap='sm'>
           <Icon.Icon icon={group.icon} classNames='dx-text' data-hue={group.hue} />
           <span className='truncate'>{group.translate ? t(group.label) : group.label}</span>
-          <span className='text-description'>{group.rows.length}</span>
+          <span className='text-fg-muted'>{group.rows.length}</span>
         </Layout.Flex>
       </Listbox.ItemGroupLabel>
       {group.rows.map((row) => (
@@ -256,7 +256,7 @@ const PullRequestListRow = ({
             {t(`pull-request-state.${pullRequest.state}.label`)}
           </span>
         </Layout.Flex>
-        <Layout.Flex align='center' gap='sm' classNames='min-w-0 text-xs text-description'>
+        <Layout.Flex align='center' gap='sm' classNames='min-w-0 text-xs text-fg-muted'>
           {pullRequest.author && <span className='shrink-0'>{pullRequest.author}</span>}
           {time && (
             <time className='shrink-0' dateTime={time} title={new Date(time).toLocaleString()}>

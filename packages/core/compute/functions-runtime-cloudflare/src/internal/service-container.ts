@@ -58,7 +58,7 @@ export class ServiceContainer {
     const spaceId = EID.getSpaceId(queue);
     const queueId = EID.getEntityId(queue);
     if (!spaceId || !queueId) {
-      throw new Error('Invalid queue EID');
+      throw new Error(`Invalid queue EID: ${queue}`);
     }
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
@@ -78,7 +78,7 @@ export class ServiceContainer {
     const spaceId = EID.getSpaceId(queue);
     const queueId = EID.getEntityId(queue);
     if (!spaceId || !queueId) {
-      throw new Error('Invalid queue EID');
+      throw new Error(`Invalid queue EID: ${queue}`);
     }
     // TODO(dmaretskyi): EID does not encode the subspaceTag — defaulting to 'data'.
     await this._queueService.insertIntoQueue(this._executionContext, {

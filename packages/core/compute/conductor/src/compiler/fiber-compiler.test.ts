@@ -11,7 +11,6 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
-import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -20,7 +19,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
-import { TestRuntime } from '../testing/index.ts';
+import { TestRuntime, operationServiceLayerStub } from '../testing/index.ts';
 import {
   type ComputeGraph,
   ComputeGraphModel,
@@ -33,16 +32,7 @@ import {
 } from '../types/index.ts';
 
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(
-    Layer.mergeAll(
-      Layer.succeed(Operation.Service, {
-        invoke: () => Effect.die('Operation.Service not available in test.'),
-        schedule: () => Effect.die('Operation.Service not available in test.'),
-        invokePromise: async () => ({ error: new Error('Not available') }),
-      } as any),
-      registryLayerNoop,
-    ),
-  ),
+  Layer.provideMerge(Layer.mergeAll(operationServiceLayerStub, registryLayerNoop)),
   Layer.provideMerge(
     Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]), Trace.writerLayerNoop),
   ),

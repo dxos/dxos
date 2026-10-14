@@ -10,7 +10,6 @@
 import React, {
   type PropsWithChildren,
   type ReactNode,
-  type SyntheticEvent,
   createContext,
   useCallback,
   useContext,
@@ -73,9 +72,6 @@ const DockSlot = ({ id, setSlot }: { id: string; setSlot: DockContextValue['setS
   return <div ref={ref} />;
 };
 
-/** Stops a docked panel's events at the dock: through the portal they would reach the canvas root (hover, menus). */
-const stop = (event: SyntheticEvent) => event.stopPropagation();
-
 /**
  * The dock column: an accordion of the registered sections, any number open, each as tall as its panel, the column
  * scrolling them together. Nothing (and no space) while no panel is docked.
@@ -95,12 +91,12 @@ export const Dock = () => {
       <ScrollArea.Viewport>
         <Accordion.Root
           border={false}
-          onPointerDown={stop}
-          onPointerMove={stop}
-          onPointerUp={stop}
-          onDoubleClick={stop}
-          onContextMenu={stop}
-          onKeyDown={stop}
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerMove={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+          onContextMenu={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
           value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
           onValueChange={(open) =>
             setClosed(new Set(sections.filter((section) => !open.includes(section.id)).map((section) => section.id)))

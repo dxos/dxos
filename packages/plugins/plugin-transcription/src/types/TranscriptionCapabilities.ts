@@ -39,7 +39,7 @@ export type TranscriptionManagerProviderProps = {
   messageEnricher?: TranscriptMessageEnricher;
 };
 
-export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManager;
+export type TranscriptionManagerProvider = (props?: TranscriptionManagerProviderProps) => TranscriptionManager;
 
 export const TranscriptionManagerProvider = Capability.makeSingleton<TranscriptionManagerProvider>()(
   `${meta.profile.key}.capability.transcriptionManager`,

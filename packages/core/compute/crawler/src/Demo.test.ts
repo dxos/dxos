@@ -22,7 +22,7 @@ import { agentProfileStage } from './stages/agent-profile.ts';
 import { extractFactsStage } from './stages/extract-facts.ts';
 import { extractTopics } from './stages/topics.ts';
 import { type Fixture, TestLayer } from './testing/index.ts';
-import type * as Type from './types.ts';
+import type * as Type from './Type.ts';
 
 const FIXTURE_URL = new URL('../../pipeline-rdf/src/testing/discord-messages.json', import.meta.url);
 const fixture: Fixture = JSON.parse(readFileSync(FIXTURE_URL, 'utf8'));

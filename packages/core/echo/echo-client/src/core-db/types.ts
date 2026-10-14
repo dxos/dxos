@@ -21,7 +21,7 @@ type TargetKeyType = {
   path: Doc.KeyPath;
   namespace: string;
   type: 'record' | 'array';
-} & Brand.Brand<'TargetKey'>;
+} & Brand.Brand<'@dxos/echo-client/TargetKey'>;
 
 export type TargetKey = TargetKeyType;
 

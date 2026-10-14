@@ -33,23 +33,23 @@ export type MediaStreamRecorderProps = {
  * WebKit starts every context suspended, and a suspended context feeds an audio node nothing.
  */
 export class MediaStreamRecorder implements AudioRecorder {
-  private readonly _mediaStreamTrack: MediaStreamTrack;
-  private readonly _config: MediaStreamRecorderProps['config'];
-  private _onChunk?: (chunk: AudioChunk) => void;
+  readonly #mediaStreamTrack: MediaStreamTrack;
+  readonly #config: MediaStreamRecorderProps['config'];
+  #onChunk?: (chunk: AudioChunk) => void;
 
-  private _context?: AudioContext = undefined;
-  private _source?: MediaStreamAudioSourceNode = undefined;
-  private _node?: AudioWorkletNode | ScriptProcessorNode = undefined;
-  private _flushTimer?: ReturnType<typeof setInterval> = undefined;
+  #context?: AudioContext = undefined;
+  #source?: MediaStreamAudioSourceNode = undefined;
+  #node?: AudioWorkletNode | ScriptProcessorNode = undefined;
+  #flushTimer?: ReturnType<typeof setInterval> = undefined;
 
   /** Frames captured since the last flush, in render-quantum sized pieces. */
-  private _pending: Float32Array[] = [];
-  private _pendingLength = 0;
-  private _chunkStartedAt = 0;
+  #pending: Float32Array[] = [];
+  #pendingLength = 0;
+  #chunkStartedAt = 0;
 
   constructor({ mediaStreamTrack, config }: MediaStreamRecorderProps) {
-    this._mediaStreamTrack = mediaStreamTrack;
-    this._config = config;
+    this.#mediaStreamTrack = mediaStreamTrack;
+    this.#config = config;
   }
 
   /**
@@ -59,24 +59,24 @@ export class MediaStreamRecorder implements AudioRecorder {
   get wavConfig(): WavConfig {
     return {
       channels: 1,
-      sampleRate: this._context?.sampleRate ?? this._mediaStreamTrack.getSettings().sampleRate ?? 48_000,
+      sampleRate: this.#context?.sampleRate ?? this.#mediaStreamTrack.getSettings().sampleRate ?? 48_000,
       bitDepthCode: '16',
     };
   }
 
   get mediaStreamTrack() {
-    return this._mediaStreamTrack;
+    return this.#mediaStreamTrack;
   }
 
   setOnChunk(onChunk: (chunk: AudioChunk) => void): void {
-    this._onChunk = onChunk;
+    this.#onChunk = onChunk;
   }
 
   // `@synchronized` serializes start/stop so a rapid stop→start cycle (e.g. React StrictMode's
   // double-mount) cannot build a second graph over a context that is still tearing down.
   @synchronized
   async start(): Promise<void> {
-    if (this._context) {
+    if (this.#context) {
       return;
     }
 
@@ -91,7 +91,7 @@ export class MediaStreamRecorder implements AudioRecorder {
         await context.resume();
       }
 
-      source = context.createMediaStreamSource(new MediaStream([this._mediaStreamTrack]));
+      source = context.createMediaStreamSource(new MediaStream([this.#mediaStreamTrack]));
       node = await this.#createCaptureNode(context);
       source.connect(node);
       // The worklet emits nothing, but Chromium only pulls a graph that reaches a destination; a zeroed
@@ -106,35 +106,35 @@ export class MediaStreamRecorder implements AudioRecorder {
       throw err;
     }
 
-    this._context = context;
-    this._source = source;
-    this._node = node;
-    this._pending = [];
-    this._pendingLength = 0;
-    this._chunkStartedAt = Date.now();
-    this._flushTimer = setInterval(() => this.#flush(), this._config.interval);
+    this.#context = context;
+    this.#source = source;
+    this.#node = node;
+    this.#pending = [];
+    this.#pendingLength = 0;
+    this.#chunkStartedAt = Date.now();
+    this.#flushTimer = setInterval(() => this.#flush(), this.#config.interval);
   }
 
   @synchronized
   async stop(): Promise<void> {
-    if (!this._context) {
+    if (!this.#context) {
       return;
     }
 
-    if (this._flushTimer !== undefined) {
-      clearInterval(this._flushTimer);
-      this._flushTimer = undefined;
+    if (this.#flushTimer !== undefined) {
+      clearInterval(this.#flushTimer);
+      this.#flushTimer = undefined;
     }
     // Emit whatever the final interval captured before tearing the graph down, so the tail of an
     // utterance is not dropped on stop.
     this.#flush();
 
-    this._node?.disconnect();
-    this._source?.disconnect();
-    const context = this._context;
-    this._node = undefined;
-    this._source = undefined;
-    this._context = undefined;
+    this.#node?.disconnect();
+    this.#source?.disconnect();
+    const context = this.#context;
+    this.#node = undefined;
+    this.#source = undefined;
+    this.#context = undefined;
     await context.close();
   }
 
@@ -163,8 +163,8 @@ export class MediaStreamRecorder implements AudioRecorder {
   }
 
   #collect(frames: Float32Array): void {
-    this._pending.push(frames);
-    this._pendingLength += frames.length;
+    this.#pending.push(frames);
+    this.#pendingLength += frames.length;
   }
 
   /**
@@ -173,14 +173,14 @@ export class MediaStreamRecorder implements AudioRecorder {
    * what {@link AudioChunk} carries.
    */
   #flush(): void {
-    if (this._pendingLength === 0 || !this._onChunk) {
+    if (this.#pendingLength === 0 || !this.#onChunk) {
       return;
     }
 
-    const frames = this._pending;
-    const length = this._pendingLength;
-    this._pending = [];
-    this._pendingLength = 0;
+    const frames = this.#pending;
+    const length = this.#pendingLength;
+    this.#pending = [];
+    this.#pendingLength = 0;
 
     const samples = new Float64Array(length);
     let offset = 0;
@@ -193,8 +193,8 @@ export class MediaStreamRecorder implements AudioRecorder {
       offset += frame.length;
     }
 
-    const timestamp = this._chunkStartedAt;
-    this._chunkStartedAt = Date.now();
-    this._onChunk({ timestamp, data: samples });
+    const timestamp = this.#chunkStartedAt;
+    this.#chunkStartedAt = Date.now();
+    this.#onChunk({ timestamp, data: samples });
   }
 }

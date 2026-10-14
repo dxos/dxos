@@ -22,13 +22,13 @@ describe('MockComposer', () => {
 
   test('Composer -> extension ready is observed', async ({ expect }) => {
     const { extension, composer } = createMockPeer();
-    const received: string[] = [];
-    serve(extension, (message) => {
-      received.push(message._tag);
-      return undefined;
+    const received = new Promise<string>((resolve) => {
+      serve(extension, (message) => {
+        resolve(message._tag);
+        return undefined;
+      });
     });
     composer.channel.send(Message.make('page-actions.ready', { id: 'ready-1' }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(received).toContain('page-actions.ready');
+    expect(await received).toBe('page-actions.ready');
   });
 });
