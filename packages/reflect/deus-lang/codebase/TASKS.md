@@ -15,6 +15,13 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
+## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D81) (`95ca184f`)
+
+- state: todo
+- priority: high
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -39,6 +46,13 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
+
+## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D81) (`cf0e3937`)
+
+- state: todo
+- priority: high
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
 
 ## Work without git: the codebase is where the toolchain is developed, git only backs it up (`86d7b02a`)
 
@@ -109,6 +123,13 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - labels: bug, replication, spec
 
 From docs/spec/README.md, Known divergences.
+
+## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D81) (`a1b73fb8`)
+
+- state: todo
+- priority: medium
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
@@ -283,6 +304,16 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 - links change #1778b66c03
 
 A fresh container restored codebase/ (deus add code; task import) and got one new history; R2 credentials were absent, so pull was not an option. Export history as a restorable chain (causal nodes plus the namespace snapshot each names, as text), or append to HISTORY.md instead of replacing it.
+
+## Sorting case study: does immutability make DEUS slow, and does it need mutable memory (`8aa78a39`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: research
+- links change #448eda5928
+
+Measured in docs/IMMUTABILITY.md (D81): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
 
 ## Task viewer in the codebase explorer (`553faf09`)
 

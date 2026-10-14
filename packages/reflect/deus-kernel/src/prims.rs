@@ -115,7 +115,12 @@ fn table(machine: &Machine, value: &Value, mutable: bool) -> Result<Rc<RefCell<T
 }
 
 /// The array in `value` and `index` checked against its bounds.
-fn array(machine: &Machine, value: &Value, index: &Value, name: &str) -> Result<(Rc<RefCell<Vec<Value>>>, usize), Fail> {
+fn array(
+    machine: &Machine,
+    value: &Value,
+    index: &Value,
+    name: &str,
+) -> Result<(Rc<RefCell<Vec<Value>>>, usize), Fail> {
     let i = int(machine, index)?;
     match value {
         Value::Array(items) => {

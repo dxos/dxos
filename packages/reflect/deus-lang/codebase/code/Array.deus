@@ -1,0 +1,7 @@
+def Array.get : Array a -> Int -> a := prim "Array.get"
+
+def Array.length : Array a -> Int := prim "Array.length"
+
+def Array.make : Int -> a -> Array a := prim "Array.make"
+
+def Array.set : Array a -> Int -> a -> Unit := prim "Array.set"

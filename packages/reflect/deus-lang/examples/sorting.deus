@@ -1,5 +1,5 @@
 /-
-  Sorting with and without mutable memory: the case study behind D79
+  Sorting with and without mutable memory: the case study behind D81
   (docs/IMMUTABILITY.md).
 
   Every sort here is first-order and specialised to `Int`, so the same definitions run on the
@@ -134,7 +134,7 @@ def drainGo (acc : List Int) (h : Heap) : List Int :=
 def heapSort (xs : List Int) : List Int := drainGo [] (heapGo Heap.leaf xs)
 
 --
--- 4. In-place quicksort over a mutable `Array` (D79).
+-- 4. In-place quicksort over a mutable `Array` (D81).
 --
 
 def swap (a : Array Int) (i : Int) (j : Int) : Unit :=

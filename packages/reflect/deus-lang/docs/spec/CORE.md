@@ -196,17 +196,17 @@ A type or ability whose IRI starts with `#` is a builtin. Its hash is its IRI, a
 these values themselves, so the tags below are fixed. Outside Core (embedding results, values as JSON)
 a builtin `#Name` is written `urn:deus:builtin:Name` ([D68](../DECISIONS.md)).
 
-| Identity                   | Kind    | Constructors or operations, by tag / index |
-| -------------------------- | ------- | ------------------------------------------ |
-| `#Unit`                    | type    | 0 `unit`                                   |
-| `#Bool`                    | type    | 0 `false`, 1 `true`                        |
-| `#List`                    | type    | 0 `nil`, 1 `cons head tail`                |
-| `#Option`                  | type    | 0 `none`, 1 `some value`                   |
-| `#Pair`                    | type    | 0 `mk fst snd`                             |
-| `#Int`, `#Text`            | type    | none; primitive values                     |
-| `#Ref`, `#Array`, `#Dict`, `#MutMap` | type | none; opaque values made by primitives |
-| `#IO`                      | ability | see below                                  |
-| `#Defect`                  | ability | 0 `raise : Text -> a`                      |
+| Identity                             | Kind    | Constructors or operations, by tag / index |
+| ------------------------------------ | ------- | ------------------------------------------ |
+| `#Unit`                              | type    | 0 `unit`                                   |
+| `#Bool`                              | type    | 0 `false`, 1 `true`                        |
+| `#List`                              | type    | 0 `nil`, 1 `cons head tail`                |
+| `#Option`                            | type    | 0 `none`, 1 `some value`                   |
+| `#Pair`                              | type    | 0 `mk fst snd`                             |
+| `#Int`, `#Text`                      | type    | none; primitive values                     |
+| `#Ref`, `#Array`, `#Dict`, `#MutMap` | type    | none; opaque values made by primitives     |
+| `#IO`                                | ability | see below                                  |
+| `#Defect`                            | ability | 0 `raise : Text -> a`                      |
 
 Tuples are right-nested pairs: `(a, b, c)` is `#Pair a (#Pair b c)`. The unit value is `(con "#Unit" 0 0)`.
 
@@ -262,7 +262,7 @@ binds each to a DEUS name and gives its type. A wrong argument type is a defect.
 | `trace`                                     | 2       | writes `trace <label>: <value>` to stderr, returns the value                                                              |
 | `defect`                                    | 1       | raises a defect with the message                                                                                          |
 | `Ref.new`, `Ref.get`, `Ref.set`             | 1, 1, 2 | a mutable cell                                                                                                            |
-| `Array.make`, `Array.length`                | 2, 1    | a mutable array of `n` copies of a value (D79); its length                                                                |
+| `Array.make`, `Array.length`                | 2, 1    | a mutable array of `n` copies of a value (D81); its length                                                                |
 | `Array.get`, `Array.set`                    | 2, 3    | array, index (and value); an index outside `0 .. length` is a defect                                                      |
 | `Dict.fromList`                             | 1       | an immutable map from a list of pairs; later keys win                                                                     |
 | `Dict.lookup`, `Dict.contains`              | 2       | key first, then the map                                                                                                   |

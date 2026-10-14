@@ -27,7 +27,7 @@ def Prove.apply (pr : Prover) (f : Sym) (args : List Sym) : {Stuck, IO} Sym := i
   | Sym.primFn name prev =>
       let all := prev ++ args
       let arity := if name == "Int.neg" || name == "Text.length" || name == "Int.toText" || name == "Text.trim" || name == "Text.sha256" || name == "Text.fromCode" || name == "Text.concat" then 1 else if name == "Text.slice" || name == "Text.indexOf" then 3 else 2
-      if List.length all < arity then Sym.primFn name all else Prove.apply pr (primitive name (List.take arity all)) (List.drop arity all)
+      if List.length all < arity then Sym.primFn name all else Prove.apply pr (Prove.primitive name (List.take arity all)) (List.drop arity all)
   | Sym.call h prev => Sym.call h (prev ++ args)
   | _ => Sym.app f args
 
@@ -353,15 +353,12 @@ def Prove.isTrue (s : Sym) : Bool := s == trueSym
 --
 def Prove.key (s : Sym) : Text := show s
 
---
--- Which definitions may be unfolded.
---
-/-- Strips `n` leading lambdas: (arity, body). -/
+/-- `(lam (lam … b))` as (parameter count, b). -/
 def Prove.lambdas (core : Sexp) : (Int, Sexp) :=
   match core with
   | Sexp.list (Sexp.sym "lam" :: b :: []) =>
       match Prove.lambdas b with
-      | (n, body) => (n + 1, body)
+      | (n, inner) => (n + 1, inner)
   | _ => (0, core)
 
 /-- Rewrite rules from a proved lemma: its conclusion, conditioned on its hypotheses. -/
@@ -465,7 +462,7 @@ def Prove.norm (pr : Prover) (s : Sym) : {IO} Sym :=
           | Stuck.stuck x0 -> x1 => Sym.call h normed
         else Sym.call h normed
       | Option.none => Sym.call h normed
-  | Sym.prim name args => primitive name (List.map (fun a => Prove.norm pr a) args)
+  | Sym.prim name args => Prove.primitive name (List.map (fun a => Prove.norm pr a) args)
   | Sym.ite c yes no =>
       let cv := Prove.norm pr c
       if isTrue cv then Prove.norm pr yes else if isFalse cv then Prove.norm pr no else
@@ -544,19 +541,19 @@ def Prove.primitiveDirect (name : Text) (args : List Sym) : Sym :=
   | ("neq", a :: b :: []) =>
       match decideEq a b with
       | Option.some v => boolSym (not v)
-      | Option.none => Sym.ite (primitive "eq" [a, b]) falseSym trueSym
+      | Option.none => Sym.ite (Prove.primitive "eq" [a, b]) falseSym trueSym
   | ("le", Sym.int a :: Sym.int b :: []) => boolSym (a <= b)
   | ("lt", Sym.int a :: Sym.int b :: []) => boolSym (a < b)
   | ("le", Sym.text a :: Sym.text b :: []) => boolSym (a <= b)
   | ("lt", Sym.text a :: Sym.text b :: []) => boolSym (a < b)
   | ("le", a :: b :: []) => if a == b then trueSym else Sym.prim "le" [a, b]
   | ("lt", a :: b :: []) => if a == b then falseSym else Sym.prim "lt" [a, b]
-  | ("ge", a :: b :: []) => primitive "le" [b, a]
-  | ("gt", a :: b :: []) => primitive "lt" [b, a]
+  | ("ge", a :: b :: []) => Prove.primitive "le" [b, a]
+  | ("gt", a :: b :: []) => Prove.primitive "lt" [b, a]
   | ("append", Sym.text a :: Sym.text b :: []) => Sym.text (a ++ b)
   | ("append", Sym.data "#List" 0 [] :: b :: []) => b
   | ("append", a :: Sym.data "#List" 0 [] :: []) => a
-  | ("append", Sym.data "#List" 1 (h :: t :: []) :: b :: []) => Sym.data "#List" 1 [h, primitive "append" [t, b]]
+  | ("append", Sym.data "#List" 1 (h :: t :: []) :: b :: []) => Sym.data "#List" 1 [h, Prove.primitive "append" [t, b]]
   | ("implies", a :: b :: []) => if isTrue a then b else if isFalse a then trueSym else if isTrue b then trueSym else Sym.prim "implies" [a, b]
   | ("Text.length", Sym.text a :: []) => Sym.int (Text.length a)
   | ("Int.toText", Sym.int a :: []) => Sym.text (toText a)

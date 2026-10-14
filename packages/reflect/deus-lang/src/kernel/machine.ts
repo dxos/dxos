@@ -99,7 +99,7 @@ export class Cell {
   }
 }
 
-/** A mutable fixed-length array (`Array.make`, D79); compared by identity. */
+/** A mutable fixed-length array (`Array.make`, D81); compared by identity. */
 export class Vector {
   readonly items: Value[];
 
@@ -128,7 +128,18 @@ export class Continuation {
   }
 }
 
-export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation | Cell | HashTable | Vector;
+export type Value =
+  | number
+  | string
+  | boolean
+  | Con
+  | Closure
+  | Callable
+  | Pap
+  | Continuation
+  | Cell
+  | HashTable
+  | Vector;
 
 export const UNIT = new Con('#Unit', 0, []);
 export const NIL = new Con('#List', 0, []);

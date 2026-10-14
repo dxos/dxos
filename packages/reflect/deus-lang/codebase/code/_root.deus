@@ -12,6 +12,10 @@ structure Arm where
   pats : List Pat
   body : Expr
 
+/-- A mutable array of fixed length (D81). Like `Ref`, writes are not rolled back when a
+  continuation is resumed twice. An index outside `0 .. length` is a defect. -/
+inductive Array a @"#Array" where
+
 /-- What a task is about: a definition (its name, and its hash when linked) or a change. -/
 inductive Attachment @"urn:deus:task:Attachment" where
   | definition (name : Text) (hash : Text)

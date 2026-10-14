@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The sorting case study (D79, docs/IMMUTABILITY.md): times examples/sorting.deus on the
+// The sorting case study (D81, docs/IMMUTABILITY.md): times examples/sorting.deus on the
 // TypeScript kernel, the Rust kernel and compiled wasm, against JavaScript baselines.
 //
 //   node scripts/sort-bench.mjs [--sizes 10000,100000] [--wasm-sizes 10000,100000,1000000]
@@ -40,12 +40,17 @@ const best = (fn) => {
 const rows = [];
 const report = (backend, sort, n, ms, extra = '') => {
   rows.push({ backend, sort, n, ms: Math.round(ms * 10) / 10, extra });
-  console.log(`${backend.padEnd(10)} ${sort.padEnd(14)} ${String(n).padStart(8)} ${ms.toFixed(1).padStart(10)} ms  ${extra}`);
+  console.log(
+    `${backend.padEnd(10)} ${sort.padEnd(14)} ${String(n).padStart(8)} ${ms.toFixed(1).padStart(10)} ms  ${extra}`,
+  );
 };
 
 // Interpreters: whole-process time minus the time to start and generate the same input.
 const interpreters = [
-  ['ts-kernel', (expr) => execFileSync(process.execPath, [join(root, 'bin/deus.mjs'), 'eval', expr], { encoding: 'utf8' })],
+  [
+    'ts-kernel',
+    (expr) => execFileSync(process.execPath, [join(root, 'bin/deus.mjs'), 'eval', expr], { encoding: 'utf8' }),
+  ],
   ['rs-kernel', (expr) => execFileSync(kernel, ['eval', expr], { encoding: 'utf8' })],
 ];
 for (const [backend, run] of interpreters) {
@@ -66,7 +71,9 @@ for (const [backend, run] of interpreters) {
 
 // Steps: the machine-independent cost, the same on both kernels.
 for (const sort of benches) {
-  const steps = interpreters[0][1](`Code.cost (fun _ => Sorting.bench${sort} 10000 1) - Code.cost (fun _ => Sorting.benchInput 10000 1)`);
+  const steps = interpreters[0][1](
+    `Code.cost (fun _ => Sorting.bench${sort} 10000 1) - Code.cost (fun _ => Sorting.benchInput 10000 1)`,
+  );
   report('steps', sort, 10000, 0, `${steps.trim()} steps`);
 }
 
@@ -197,11 +204,14 @@ for (const n of wasmSizes) {
   const cases = [
     ['cons merge', () => toArray(consMerge(list))],
     ['cons quick', () => toArray(consQuick(list, null))],
-    ['Int32 quick', () => {
-      const a = Int32Array.from(toArray(list));
-      quickInPlace(a, 0, n);
-      return Array.from(a);
-    }],
+    [
+      'Int32 quick',
+      () => {
+        const a = Int32Array.from(toArray(list));
+        quickInPlace(a, 0, n);
+        return Array.from(a);
+      },
+    ],
     ['Int32 .sort', () => Array.from(Int32Array.from(toArray(list)).sort())],
   ];
   for (const [sort, fn] of cases) {

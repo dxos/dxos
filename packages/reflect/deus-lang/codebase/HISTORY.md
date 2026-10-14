@@ -1,5 +1,14 @@
 # History of main
 
+- `8020860c75` task: open a1b73fb8 TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D81) (by claude)
+- `94c0d1648a` task: open cf0e3937 Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D81) (by claude)
+- `d537d8fd8f` task: open 95ca184f Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D81) (by claude)
+- `8c98b7fd26` close 8aa78a39 by #448eda5928 (by claude)
+- `448eda5928` sorting case study (D81): mutable Array in both kernels, wasm and C; Ref and primitive inlining in the compiled back ends (by claude)
+- `e2a8b80692` task: set 8aa78a39 state assignee details (by claude)
+- `e3cdb18335` task: open 8aa78a39 Sorting case study: does immutability make DEUS slow, and does it need mutable memory (by claude)
+- `c0daf520e4` history: import 184 changes
+- `afa110cf75` task: import from tasks.sexp
 - `71eb24530c` export: merge 10 changes from codebase
 - `86db7b80c4` task: open e1cf2c6c Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
 - `259f06882e` task: open 72a1f2fb Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)

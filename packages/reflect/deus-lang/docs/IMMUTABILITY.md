@@ -2,14 +2,14 @@
 
 Dmytro asked whether writing programs functionally, with immutable data, leads to fundamentally
 inefficient code, and whether DEUS needs mutable memory ([USER.md](./USER.md)). This note answers
-with measurements and recommends a design, recorded as [D79](./DECISIONS.md).
+with measurements and recommends a design, recorded as [D81](./DECISIONS.md).
 
 ## Short answer
 
 1. **Not fundamentally.** Every pure sort here is O(n log n), the same as an in-place sort. Sorting
    has no asymptotic gap between pure and mutable code.
 2. **The constant factors are real, and memory is the bigger one.** Compiled to wasm, the best pure
-   sort is 2–3× slower than the in-place sort and allocates 17–26× more memory. The wasm back end
+   sort is 2–3× slower than the in-place sort (3.4× compiled to C) and allocates 17–26× more memory. The wasm back end
    never frees memory, so a pure sort of 10 million numbers would need about 5 GB, beyond wasm32's
    4 GB. That program cannot run at all today.
 3. **Yes, DEUS needs mutable memory: a mutable `Array`, now prototyped in both kernels and the wasm
@@ -22,29 +22,34 @@ with measurements and recommends a design, recorded as [D79](./DECISIONS.md).
 [`examples/sorting.deus`](../examples/sorting.deus) sorts pseudo-random `Int`s with seven programs.
 All of them are first-order, so the same definitions run on the interpreter and compile to wasm.
 
-| Sort         | Style                                                                                      |
-| ------------ | ------------------------------------------------------------------------------------------ |
-| `Merge`      | bottom-up merge sort on immutable lists                                                    |
-| `Quick`      | quicksort on immutable lists, with an accumulator instead of `++`                          |
-| `Heap`       | heap sort through a persistent leftist heap                                                |
-| `Array`      | in-place Lomuto quicksort on the new mutable `Array`                                       |
+| Sort         | Style                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `Merge`      | bottom-up merge sort on immutable lists                                                      |
+| `Quick`      | quicksort on immutable lists, with an accumulator instead of `++`                            |
+| `Heap`       | heap sort through a persistent leftist heap                                                  |
+| `Array`      | in-place Lomuto quicksort on the new mutable `Array`                                         |
 | `Persistent` | the same in-place quicksort through a **pure** interface: a persistent array (Baker's trick) |
-| `Prelude`    | `List.sort`, the prelude's generic merge sort (interpreters only: it takes a closure)     |
-| `Map`        | the in-place quicksort over `MutMap Int Int`, the mutable memory DEUS had already         |
+| `Prelude`    | `List.sort`, the prelude's generic merge sort (interpreters only: it takes a closure)        |
+| `Map`        | the in-place quicksort over `MutMap Int Int`, the mutable memory DEUS had already            |
 
 [`scripts/sort-bench.mjs`](../scripts/sort-bench.mjs) runs each on the TypeScript kernel (with its
-JIT), the Rust kernel, and as a compiled wasm module under Node 22. It compares them with the same
+JIT), the Rust kernel, and as a compiled wasm module under Node 22; the C back end is timed by hand. It compares them with the same
 algorithms in JavaScript. Times are the best of three runs, minus the time to generate the input.
 For wasm, "allocated" is the heap pointer after the run, which counts every byte the program
 allocated, since nothing is freed.
 
 ### Compiled wasm, against JavaScript
 
-| n         | Merge (list)            | Quick (list)           | Heap (persistent)        | **Array (in place)**     | Persistent (pure API)     |
-| --------- | ----------------------- | ---------------------- | ------------------------ | ------------------------ | ------------------------- |
-| 10 000    | 4.5 ms, 3.2 MiB         | 3.4 ms, 1.9 MiB        | 7.7 ms, 4.1 MiB          | **1.4 ms, 0.2 MiB**      | 7.2 ms, 5.1 MiB           |
-| 100 000   | 46 ms, 40 MiB           | 39 ms, 25 MiB          | 127 ms, 53 MiB           | **16 ms, 1.8 MiB**       | 85 ms, 61 MiB             |
-| 1 000 000 | 554 ms, 470 MiB         | 423 ms, 302 MiB        | 2 272 ms, 656 MiB        | **202 ms, 18 MiB**       | 965 ms, 766 MiB           |
+| n         | Merge (list)    | Quick (list)    | Heap (persistent) | **Array (in place)** | Persistent (pure API) |
+| --------- | --------------- | --------------- | ----------------- | -------------------- | --------------------- |
+| 10 000    | 4.5 ms, 3.2 MiB | 3.4 ms, 1.9 MiB | 7.7 ms, 4.1 MiB   | **1.4 ms, 0.2 MiB**  | 7.2 ms, 5.1 MiB       |
+| 100 000   | 46 ms, 40 MiB   | 39 ms, 25 MiB   | 127 ms, 53 MiB    | **16 ms, 1.8 MiB**   | 85 ms, 61 MiB         |
+| 1 000 000 | 554 ms, 470 MiB | 423 ms, 302 MiB | 2 272 ms, 656 MiB | **202 ms, 18 MiB**   | 965 ms, 766 MiB       |
+
+Native, through the C back end ([D80](./DECISIONS.md), clang `-O2`), at n = 1 000 000 (best of three,
+minus 17 ms to generate the input): Merge 862 ms, Quick 522 ms, Heap 1 843 ms, **Array 153 ms**,
+Persistent 1 153 ms. The list sorts are slower native than in wasm. Words are 8 bytes there, so they
+touch twice the fresh memory, and the time goes to page faults on memory that is never reused.
 
 | n         | JS cons-list merge | JS cons-list quick | JS `Int32Array` quick | JS `Int32Array.sort` |
 | --------- | ------------------ | ------------------ | --------------------- | -------------------- |
@@ -75,7 +80,8 @@ structure are identical. The difference is that wasm allocates by bumping a poin
 a collector, while V8 spends most of the JavaScript run in garbage collection. "Functional is slow"
 mostly means "allocating is slow".
 
-**In place wins 2–3× on time and 17–26× on memory, once compiled.** The in-place `Array` sort
+**In place wins 2–5× on time and 17–26× on memory, once compiled.** Native code shows it most:
+the in-place sort is 3.4× faster than the list quicksort and 5.6× faster than merge sort. The in-place `Array` sort
 (202 ms at 10⁶) is 2.1× faster than the list quicksort and 2.7× faster than merge sort. It matches
 V8's native `Int32Array.sort`. Memory is the larger effect: 18 MiB against 302–470 MiB. Because the
 wasm heap is never freed, the allocation is the peak footprint. A merge sort of n numbers allocates
@@ -102,7 +108,7 @@ hash tables, dynamic-programming tables and graph search all want O(1) indexed w
 substitutes (`Map`, a balanced tree) cost O(log n) per access. Sorting is the friendly case, and it
 already shows a 2–3× gap in time and a 20× gap in memory.
 
-## Recommendation (D79)
+## Recommendation (D81)
 
 Add mutable memory, but in a form that keeps DEUS pure where it matters: hashing, cached test
 results, the prover, and multi-shot handlers. Do it in two steps.
@@ -110,13 +116,13 @@ results, the prover, and multi-shot handlers. Do it in two steps.
 1. **Now: a mutable `Array` primitive** (`Array.make`, `length`, `get`, `set`), done in this
    commit. It works like `Ref` and `MutMap`: identity-compared, not rolled back by a resumed
    continuation, and outside the prover's pure primitives, so a theorem over it is tested rather
-   than proved. Both kernels implement it identically. The wasm compiler compiles it to a block
-   `[length, item…]` with a bounds check that traps. The compiler now also compiles `Ref` and
-   inlines calls to primitive-only definitions such as `Int.and`, which it used to refuse. Library
+   than proved. Both kernels implement it identically. The wasm and C back ends compile it to a block
+   `[length, item…]` with a bounds check that traps. They now also compile `Ref`, and inline calls
+   to primitive-only definitions such as `Int.and`, which they used to refuse. Library
    code that needs speed (the compiler, the codebase store, the type checker's unifier) can use
    `Array` today, as it already uses `Ref`.
 2. **Next: a pure `Array` that is updated in place when it is unique.** `Array.set : Array a -> Int
-   -> a -> Array a` returns a new array and leaves the old one unchanged. When the runtime can see
+-> a -> Array a` returns a new array and leaves the old one unchanged. When the runtime can see
    that nobody else holds the old array, it writes in place instead of copying. This is Lean 4's
    `Array` and Koka's "functional but in-place" (Perceus). Programs written in the pure style then
    run at the in-place speed measured above. The prerequisite is reference counting with reuse in
@@ -144,7 +150,8 @@ Rejected alternatives:
 These are filed in the codebase's task list ([`codebase/TASKS.md`](../codebase/TASKS.md)).
 
 - Reference counting with reuse (Perceus) in the wasm back end, so pure code frees memory and
-  reuses unique cells in place.
+  reuses unique cells in place. The native-compilation work filed the same for the C back end
+  (task `62d1bdda`); both should share one ownership analysis over Core.
 - A pure `Array.set` that writes in place when the array is unique: `Rc::get_mut` in the Rust
   kernel, the reference count in compiled code, a copy on the TypeScript kernel.
 - On the TypeScript kernel's JIT, make `Array.set` journal a write only when a deoptimisation could

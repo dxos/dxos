@@ -125,7 +125,7 @@ def set : Ref a -> a -> Unit := prim "Ref.set"
 end Ref
 
 /--
-  A mutable array of fixed length (D79). Like `Ref`, writes are not rolled back when a
+  A mutable array of fixed length (D81). Like `Ref`, writes are not rolled back when a
   continuation is resumed twice. An index outside `0 .. length` is a defect.
 -/
 inductive Array (a : Type) @"#Array" where

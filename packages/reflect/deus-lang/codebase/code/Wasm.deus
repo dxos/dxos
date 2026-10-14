@@ -20,6 +20,41 @@ structure Wasm.Scope @"urn:deus:wasm:Scope" where
   of times. Locals: 1 the block, 2 the pages missing. -/
 def Wasm.allocBody : List Int := List.concat [[35, 0, 33, 1], [35, 0, 32, 0, 106, 36, 0], [35, 0, 63, 0, 65, 16, 116, 75, 4, 64], [35, 0, 65, 16, 118, 65, 1, 106, 63, 0, 107, 33, 2], [32, 2, 63, 0, 32, 2, 63, 0, 74, 27, 64, 0, 26, 11], [32, 1, 11]]
 
+/-- `Array` primitives (D81) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
+  is the code for each argument. An index outside the array, or a negative length, traps.
+  `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`. -/
+def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
+  let unreachableIf := fun cond => cond ++ [4, 64, 0, 11]
+  let address := fun a i => localGet a ++ localGet i ++ [65, 2, 116, 106]
+  let checked := fun a i => unreachableIf (localGet i ++ localGet a ++ Wasm.load 0 ++ [79])
+  match (p, args) with
+  | ("Ref.new", v :: []) =>
+      let lr := Wasm.fresh next
+      [65, 4] ++ 16 :: uleb (List.length scope.fns) ++ localSet lr ++ localGet lr ++ v ++
+        Wasm.store 0 ++ localGet lr
+  | ("Ref.get", r :: []) => r ++ Wasm.load 0
+  | ("Ref.set", r :: v :: []) => r ++ v ++ Wasm.store 0 ++ [65, 0]
+  | ("Array.length", a :: []) => a ++ Wasm.load 0
+  | ("Array.get", a :: i :: []) =>
+      let la := Wasm.fresh next
+      let li := Wasm.fresh next
+      a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ Wasm.load 4
+  | ("Array.set", a :: i :: v :: []) =>
+      let la := Wasm.fresh next
+      let li := Wasm.fresh next
+      a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ Wasm.store 4 ++
+        [65, 0]
+  | ("Array.make", n :: x :: []) =>
+      let ln := Wasm.fresh next
+      let lx := Wasm.fresh next
+      let lp := Wasm.fresh next
+      let li := Wasm.fresh next
+      List.concat [n ++ localSet ln ++ x ++ localSet lx, unreachableIf (localGet ln ++ [65, 0, 72]), localGet ln ++ [65, 2, 116, 65, 4, 106] ++ 16 :: uleb (List.length scope.fns) ++ localSet lp, localGet lp ++ localGet ln ++ Wasm.store 0, [65, 0] ++ localSet li, [2, 64, 3, 64], localGet li ++ localGet ln ++ [78, 13, 1], address lp li ++ localGet lx ++ Wasm.store 4, localGet li ++ [65, 1, 106] ++ localSet li, [12, 0, 11, 11], localGet lp]
+  | _ => Throw.throw ("the primitive " ++ p ++ " is outside the wasm subset")
+
+/-- `Array t`, or unknown when `t` is. -/
+def Wasm.arrayOf (t : Sexp) : Sexp := if t == unknown then unknown else Sexp.list [Sexp.sym "tapp", tref "#Array", t]
+
 def Wasm.binary (name : Text) : Option Int := if name == "Int.add" then Option.some 106 else if name == "Int.sub" then Option.some 107 else if name == "Int.mul" then Option.some 108 else if name == "Int.div" then Option.some 109 else if name == "Int.mod" then Option.some 111 else if name == "Int.and" then Option.some 113 else if name == "Int.or" then Option.some 114 else if name == "Int.xor" then Option.some 115 else if name == "Int.shl" then Option.some 116 else if name == "Int.shr" then Option.some 117 else if name == "Int.ushr" then Option.some 118 else if name == "eq" then Option.some 70 else if name == "neq" then Option.some 71 else if name == "lt" then Option.some 72 else if name == "gt" then Option.some 74 else if name == "le" then Option.some 76 else if name == "ge" then Option.some 78 else Option.none
 
 /-- Compiles `main` and what it calls to a wasm module exporting it as `export`. -/
@@ -71,11 +106,7 @@ def Wasm.expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Boo
       setType scope local (typeOf scope env v)
       sub v ++ 33 :: uleb local ++ Wasm.expr scope (local :: env) next tail b
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []) :: a :: []) => [65, 0] ++ sub a ++ [107]
-  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: a :: b :: []) =>
-      match binary p with
-      | Option.some op => if isComparison p && not (isScalar (typeOf scope env a) || isScalar (typeOf scope env b)) then Throw.throw (p ++
-          " on values that are not known to be Int or Bool is outside the wasm subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e)) else sub a ++ sub b ++ [op]
-      | Option.none => Throw.throw ("the primitive " ++ p ++ " is outside the wasm subset")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: args) => if startsWith "Array." p || startsWith "Ref." p then array scope next p (List.map sub args) else Wasm.primitive scope env next e p args
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: args) =>
       let index := indexOf h
       match List.find (fun f => f.fnHash == h) fns with
@@ -105,21 +136,37 @@ def Wasm.fresh (next : Ref Int) : Int :=
   Ref.set next (local + 1)
   local
 
-/-- The functions `main` reaches, `main` first; a definition that is not a function is refused. -/
+/-- The functions `main` reaches, `main` first; a definition that is not a function is refused.
+  A definition that is only a primitive (`def Int.ushr := prim "Int.ushr"`) is inlined at its
+  calls, so `Int.and x y` compiles as `x &&& y` would. -/
 def Wasm.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
-  let rec go pending seen acc :=
+  let rec go pending seen acc prims :=
     match pending with
-    | [] => reverse acc
-    | h :: rest => if any (fun x => x == h) seen then go rest seen acc else
+    | [] => List.map
+        (fun f => Fn.mk f.fnHash f.fnArity (inlinePrims prims f.fnBody) f.fnType)
+        (reverse acc)
+    | h :: rest => if any (fun x => x == h) seen then go rest seen acc prims else
         match fetch h with
+        | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: p :: []) :: [])) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
             match unlam core with
             | (0, _) => Throw.throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
-            | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b (Wasm.storedType (meta h)) :: acc)
+            | (n, b) => go
+                (rest ++ refsOf b)
+                (h :: seen)
+                (Fn.mk h n b (Wasm.storedType (meta h)) :: acc)
+                prims
         | _ => Throw.throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
-  go [main] [] []
+  go [main] [] [] []
 
 def Wasm.i32 : Int := 127
+
+/-- `form` with each `(ref h)` that `prims` names replaced by its `(prim p)`. -/
+def Wasm.inlinePrims (prims : List (Text, Sexp)) (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => getOr (List.lookup h prims) form
+  | Sexp.list items => Sexp.list (List.map (Wasm.inlinePrims prims) items)
+  | _ => form
 
 /-- Whether `p` is a comparison, whose result is a `Bool`. -/
 def Wasm.isComparison (p : Text) : Bool := any (fun x => x == p) ["eq", "neq", "lt", "gt", "le", "ge"]
@@ -206,6 +253,13 @@ def Wasm.peel (n : Int) (t : Sexp) : (List Sexp, Sexp) := if n == 0 then ([], t)
       | (params, result) => (a :: params, result)
   | _ => (replicate n unknown, unknown)
 
+/-- A binary integer or comparison primitive applied to `args`. -/
+def Wasm.primitive (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : Text) (args : List Sexp) : {Throw Text} List Int :=
+  match (binary p, args) with
+  | (Option.some op, a :: b :: []) => if isComparison p && not (isScalar (typeOf scope env a) || isScalar (typeOf scope env b)) then Throw.throw (p ++
+      " on values that are not known to be Int or Bool is outside the wasm subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e)) else Wasm.expr scope env next false a ++ Wasm.expr scope env next false b ++ [op]
+  | _ => Throw.throw ("the primitive " ++ p ++ " is outside the wasm subset")
+
 def Wasm.refsOf (form : Sexp) : List Text :=
   match form with
   | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => [h]
@@ -255,6 +309,17 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
       | Option.some local => typeOfLocal scope local
       | Option.none => unknown
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []) :: _ :: []) => tref "#Int"
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.length" :: []) :: _ :: []) => tref "#Int"
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.make" :: []) :: _ :: x :: []) => arrayOf (Wasm.typeOf scope env x)
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.get" :: []) :: a :: _ :: []) =>
+      match Wasm.typeArgs (Wasm.typeOf scope env a) with
+      | t :: [] => t
+      | _ => unknown
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.set" :: []) :: _ :: _ :: _ :: []) => tref "#Unit"
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Ref.get" :: []) :: r :: []) =>
+      match Wasm.typeArgs (Wasm.typeOf scope env r) with
+      | t :: [] => t
+      | _ => unknown
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: _ :: _ :: []) => if isComparison p then tref "#Bool" else tref "#Int"
   | Sexp.list (Sexp.sym "if" :: _ :: t :: f :: []) =>
       let left := Wasm.typeOf scope env t
@@ -306,15 +371,12 @@ def Wasm.uleb (n : Int) : List Int :=
 
 def Wasm.unknown : Sexp := Sexp.list []
 
---
--- Which definitions may be unfolded.
---
-/-- Strips `n` leading lambdas: (arity, body). -/
+/-- `(lam (lam … b))` as (parameter count, b). -/
 def Wasm.unlam (core : Sexp) : (Int, Sexp) :=
   match core with
   | Sexp.list (Sexp.sym "lam" :: b :: []) =>
       match Wasm.unlam b with
-      | (n, body) => (n + 1, body)
+      | (n, inner) => (n + 1, inner)
   | _ => (0, core)
 
 def Wasm.vec (items : List (List Int)) : List Int := uleb (List.length items) ++ List.concat items
