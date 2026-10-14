@@ -35,6 +35,12 @@ the first token on its line (`bol`). The layout rule (below) uses only `bol` and
 | `/- … -/`  | Block comment. Block comments nest. An unterminated one runs to the end of the file.            |
 | `/-- … -/` | Doc comment: `/--` not followed by `/`. It is a token whose text is the trimmed body. It nests. |
 
+Ordinary comments never reach Core, but they are kept (D66). Comments before a declaration become its
+`lead` metadata. Comments before a statement of a block or before a match arm become `notes` on that
+node. A comment anywhere else (inside an expression, between a type's constructors, at the end of a file)
+goes to the next statement or declaration that takes comments. A blank line between two comments is
+kept. Identical definitions share one hash, so they share their comments.
+
 A doc comment is only accepted directly before a declaration (and its attributes). Anywhere else the
 parser rejects it. A doc comment before `namespace`, `end` or `open` is accepted and dropped.
 
@@ -516,9 +522,12 @@ A script that closes every goal gives the verdict `proof`, or `proof assuming te
 is only tested. A lemma that fails fails the theorem. The trusted base is written at the top of
 [`deus/prove.deus`](../../deus/prove.deus).
 
-Note: an unknown tactic name is a no-op, and so are `rfl` and `decide` inside a script. The header of
-`deus/prove.deus` lists them as script tactics, and the editor grammar highlights tactics the prover does
-not have (`exact`, `rw`, `apply`, `unfold`, `constructor`, `trivial`, `all_goals`). The prover also
+A step whose name is not one of `simp`, `intro`, `split`, `auto`, `induction`, `cases` and `trace` fails
+the theorem with `unknown tactic <name>` ([D71](../DECISIONS.md)), so a misspelled step cannot pass
+silently. `rfl` and `decide` are whole proofs, so inside a script they fail the same way.
+
+Note: the editor grammar highlights tactics the prover does not have (`exact`, `rw`, `apply`, `unfold`,
+`constructor`, `trivial`, `all_goals`). The prover also
 skips a `·` token, but the lexer rejects `·`.
 
 ## Errors

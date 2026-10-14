@@ -5,12 +5,39 @@
 //! Values as JSON, for embedders (a Cloudflare Worker, a browser): `Int` is a number, `Text` a
 //! string, `Bool` a boolean, `Unit` null, a list an array, and any other constructor
 //! `{"$": type, "tag": n, "fields": [...]}`. Functions cross as `{"$fn": true}` and cannot come
-//! back. A user type crosses by its IRI when the image names it (`iris`: hash → IRI).
+//! back. A user type crosses by its IRI when the image names it (`iris`: hash → IRI), and a builtin
+//! (`#Option`) as `urn:deus:builtin:Option` (D68), so every identity an embedder sees is a URI.
 
 use std::collections::HashMap;
 
 use crate::text::{json, Text};
 use crate::value::*;
+
+/// The prefix of a builtin's IRI; the rest is its name without the `#`.
+pub const BUILTIN: &str = "urn:deus:builtin:";
+
+/// The IRI an embedder sees for a type or ability: the image's IRI, `urn:deus:builtin:<Name>` for a
+/// builtin `#Name`, or the hash itself.
+pub fn iri_of(hash: &str, iris: &HashMap<String, String>) -> String {
+    match iris.get(hash) {
+        Some(iri) => iri.clone(),
+        None => match hash.strip_prefix('#') {
+            Some(name) => format!("{BUILTIN}{name}"),
+            None => hash.to_string(),
+        },
+    }
+}
+
+/// The identity an IRI from an embedder names; the inverse of [`iri_of`].
+fn identity_of(name: &str, hashes: &HashMap<String, String>) -> String {
+    match hashes.get(name) {
+        Some(hash) => hash.clone(),
+        None => match name.strip_prefix(BUILTIN) {
+            Some(builtin) => format!("#{builtin}"),
+            None => name.to_string(),
+        },
+    }
+}
 
 /// Encodes a value; `symbols` names constructor types.
 pub fn encode(value: &Value, symbols: &Symbols, iris: &HashMap<String, String>) -> String {
@@ -37,11 +64,7 @@ fn write(value: &Value, symbols: &Symbols, iris: &HashMap<String, String>, out: 
         }
         Value::Con(con) => {
             let hash = symbols.name(con.ty);
-            let name: Vec<u16> = iris
-                .get(hash)
-                .map_or(hash, |iri| iri.as_str())
-                .encode_utf16()
-                .collect();
+            let name: Vec<u16> = iri_of(hash, iris).encode_utf16().collect();
             out.push_str(&format!(
                 "{{\"$\":{},\"tag\":{},\"fields\":[",
                 json(&name),
@@ -256,11 +279,7 @@ fn to_value(
                 _ => Fields::new(),
             };
             let name = String::from_utf16_lossy(name);
-            let ty = symbols.intern(
-                hashes
-                    .get(&name)
-                    .map_or(name.as_str(), |hash| hash.as_str()),
-            );
+            let ty = symbols.intern(&identity_of(&name, hashes));
             if ty == BOOL {
                 Value::Bool(tag == 1)
             } else {

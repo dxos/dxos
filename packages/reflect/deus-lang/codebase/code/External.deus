@@ -4,9 +4,11 @@ def External.andThen (result : Result e a) (f : a -> {r} Result e b) : {r} Resul
   | Result.err error => Result.err error
 
 /-- The `container` block type. -/
+@[ext "org.dxos.deus.container@1.0"]
 def External.checkContainer (b : Block) : {MdlHost} List Text := problemsOf (containerOf b)
 
 /-- The `requirement` block type. -/
+@[ext "org.dxos.deus.requirement@1.0"]
 def External.checkRequirement (b : Block) : {MdlHost} List Text := problemsOf (requirementOf b)
 
 /-- A `container` block as data. -/
@@ -116,6 +118,9 @@ def External.problemsOf (r : Result (List Text) a) : List Text :=
   | Result.ok _ => []
   | Result.err found => found
 
+--
+-- MDL blocks.
+--
 def External.prop (b : Block) (key : Text) : Text := getOr (List.lookup key b.props) ""
 
 def External.registries : List Registry := [npm, crates, github, External.url]

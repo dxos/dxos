@@ -8,6 +8,8 @@
 structure Parser where
   toks : Ref (List Token)
   stop : Ref Int
+  -- Comments not yet attached, in source order; `notesBefore` hands them to the next statement.
+  notes : Ref (List Token)
 
 namespace Parser
 
@@ -48,6 +50,7 @@ def kindName : Kind -> Text
   | Kind.kw => "kw"
   | Kind.doc => "doc"
   | Kind.eof => "eof"
+  | Kind.comment => "comment"
 
 def errorAt (t : Token) (message : Text) : {Throw Text} a :=
   match t with
@@ -57,6 +60,39 @@ def errorAt (t : Token) (message : Text) : {Throw Text} a :=
 def error (p : Parser) (message : Text) : {Throw Text} a := errorAt (peek p) message
 
 def isKind (t : Token) (k : Kind) : Bool := t.kind == k
+
+/-- A comment's lines with the indentation of its first line removed from the later ones. -/
+def dedent (t : Token) : Text :=
+  match Text.lines t.value with
+  | [] => ""
+  | first :: rest =>
+    Text.join "\n" (first :: List.map (fun l =>
+      let rec lead i := if i < t.col && i < Text.length l && Text.code l i == ' ' then lead (i + 1) else i
+      Text.drop (lead 0) l) rest)
+
+/-- The comments written before `line`, one per line, removed from the queue; none if there are none. -/
+def notesBefore (p : Parser) (line : Int) : Option Text :=
+  let rec split ts acc :=
+    match ts with
+    | t :: rest => if t.line < line then split rest (t :: acc) else (List.reverse acc, ts)
+    | [] => (List.reverse acc, [])
+  -- A blank line between two comments is kept, so separate paragraphs stay separate.
+  let rec join ts previousEnd acc :=
+    match ts with
+    | [] => Text.concat (List.reverse acc)
+    | t :: rest =>
+      let gap := if previousEnd < 0 then "" else if t.line > previousEnd + 1 then "\n\n" else "\n"
+      join rest (t.line + List.length (Text.lines t.value) - 1) (dedent t :: gap :: acc)
+  match split (Ref.get p.notes) [] with
+  | ([], _) => none
+  | (taken, rest) =>
+    Ref.set p.notes rest
+    some (join taken (-1) [])
+
+def noted (note : Option Text) (e : Expr) : Expr :=
+  match note with
+  | some text => Expr.note text e
+  | none => e
 
 def isTok (t : Token) (value : Text) : Bool := (t.kind == Kind.sym || t.kind == Kind.kw) && t.value == value
 
@@ -102,7 +138,12 @@ def binop (op : Text) : Option (Int, Bool) :=
 --
 
 def file (p : Parser) : {Throw Text} List Decl :=
-  let rec go acc := if (peek p).kind == Kind.eof then List.reverse acc else go (decl p :: acc)
+  let rec go acc :=
+    let t := peek p
+    let lead := match notesBefore p (if t.kind == Kind.eof then t.line + 1 else t.line) with
+      | some text => [Decl.comment text]
+      | none => []
+    if t.kind == Kind.eof then List.reverse (lead ++ acc) else go (decl p :: lead ++ acc)
   go []
 
 def attrs (p : Parser) : {Throw Text} List Attr :=
@@ -374,6 +415,10 @@ def continues (p : Parser) (col : Int) : Bool :=
 
 /-- Statements at column `col`: `let` lines and expressions; the last one is the value. -/
 def stmts (p : Parser) (col : Int) : {Throw Text} Expr :=
+  let note := notesBefore p (peek p).line
+  noted note (statement p col)
+
+def statement (p : Parser) (col : Int) : {Throw Text} Expr :=
   if is p "let" then
     let letTok := next p
     let isRec := if is p "rec" then
@@ -608,6 +653,7 @@ def arms (p : Parser) : {Throw Text} List Arm :=
   let col := if first.bol then some first.col else none
   let rec go acc :=
     if moreArms p col then
+      let note := notesBefore p (peek p).line
       skip p
       let rec pats ps :=
         if is p "," then
@@ -616,7 +662,7 @@ def arms (p : Parser) : {Throw Text} List Arm :=
         else List.reverse ps
       let ps := pats [patt p]
       let _ := expect p "=>"
-      go (Arm.mk ps (armBody p col) :: acc)
+      go (Arm.mk ps (noted note (armBody p col)) :: acc)
     else List.reverse acc
   let result := go []
   if List.isEmpty result then error p "expected '|'" else result
@@ -629,6 +675,7 @@ def handleExpr (p : Parser) : {Throw Text} Expr :=
   let col := if first.bol then some first.col else none
   let rec go ret ops :=
     if moreArms p col then
+      let note := notesBefore p (peek p).line
       skip p
       if is p "return" then
         skip p
@@ -737,7 +784,8 @@ def patAtom (p : Parser) : {Throw Text} Pat :=
 
 /-- Parses a whole source file. -/
 def parse (source : Text) : {Throw Text} List Decl :=
-  let p := Parser.mk (Ref.new (Lexer.lex source)) (Ref.new 0)
+  let tokens := Lexer.lex source
+  let p := Parser.mk (Ref.new (List.filter (fun t => t.kind != Kind.comment) tokens)) (Ref.new 0) (Ref.new (List.filter (fun t => t.kind == Kind.comment) tokens))
   file p
 
 end Parser

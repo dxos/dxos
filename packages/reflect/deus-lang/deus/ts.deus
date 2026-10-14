@@ -1,5 +1,5 @@
 /-
-  The TypeScript-like dialect (D65): Core printed as JS/TS-shaped text, one more view of the same
+  The TypeScript-like dialect (D70): Core printed as JS/TS-shaped text, one more view of the same
   codebase. DEUS stays the primary syntax; this one is for reading. Locals are named by the
   printer's supply in the order `Print` draws them, so both dialects show the author's names.
 -/

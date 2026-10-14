@@ -91,7 +91,7 @@ impl Server {
                             index,
                             args,
                         }) => {
-                            let iri = machine.iris.get(&ability).cloned().unwrap_or(ability);
+                            let iri = crate::json::iri_of(&ability, &machine.iris);
                             let answer = self.answer(&mut machine, object, &iri, index, &args);
                             result = match answer {
                                 Ok(value) => machine.resume(value),

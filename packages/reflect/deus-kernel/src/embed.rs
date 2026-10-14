@@ -15,7 +15,7 @@
 use std::cell::RefCell;
 
 use crate::host::Host;
-use crate::json::{decode, encode, entry, string};
+use crate::json::{decode, encode, entry, iri_of, string};
 use crate::machine::{Machine, Options};
 use crate::sexp::{read_all, Sexp};
 use crate::text::text;
@@ -124,11 +124,7 @@ fn finish(machine: &mut Machine, result: Result<Value, Fail>) -> String {
                 .iter()
                 .map(|arg| encode(arg, &machine.symbols, &machine.iris))
                 .collect();
-            let iri = machine
-                .iris
-                .get(&ability)
-                .cloned()
-                .unwrap_or_else(|| ability.clone());
+            let iri = iri_of(&ability, &machine.iris);
             vec![
                 entry("state", "\"suspend\""),
                 entry("ability", &string(&iri)),
@@ -141,7 +137,7 @@ fn finish(machine: &mut Machine, result: Result<Value, Fail>) -> String {
             let trace: Vec<String> = machine
                 .defect_trace
                 .iter()
-                .map(|hash| string(hash))
+                .map(|hash| string(&iri_of(hash, &machine.iris)))
                 .collect();
             vec![
                 entry("state", "\"defect\""),

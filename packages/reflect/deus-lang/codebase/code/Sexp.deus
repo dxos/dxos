@@ -83,6 +83,7 @@ def Sexp.read (t : Text) : Sexp :=
 /-- Reads every form in a text. A reader written for speed: index loops, no tokens. -/
 def Sexp.readAll (t : Text) : List Sexp :=
   let n := Text.length t
+  -- Reads a string body starting after the opening quote; returns (text, next index).
   let rec readString i start acc :=
     let c := code t i
     if c == -1 then defect "sexp: unterminated string" else if c == 34 then (Text.concat (reverse (slice t start i :: acc)), i + 1) else if c == 92 then
@@ -95,6 +96,7 @@ def Sexp.readAll (t : Text) : List Sexp :=
       else readString (i + 2) (i + 2) (fromCode e :: piece :: acc)
     else readString (i + 1) start acc
   let rec atomEnd i := if isDelimiter (code t i) then i else atomEnd (i + 1)
+  -- stack: open lists (each reversed), innermost first; done: finished top-level forms, reversed.
   let rec go i stack done :=
     let c := code t i
     if i >= n then
@@ -126,4 +128,5 @@ def Sexp.readAll (t : Text) : List Sexp :=
       | (stack2, done2) => go j stack2 done2
   go 0 [] []
 
+-- The comments written before the declaration (D66).
 def Sexp.s (t : Text) : Sexp := Sexp.str t

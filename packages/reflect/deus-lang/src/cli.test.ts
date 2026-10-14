@@ -245,6 +245,43 @@ describe('deus CLI', () => {
     },
   );
 
+  test(
+    'runs QA flows for a web app in simulation and reports the first failing step',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'qa')];
+      deus('init', '--empty', ...c);
+      deus(
+        'add',
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        join(root, 'deus/sexp.deus'),
+        join(root, 'deus/mdl.deus'),
+        join(root, 'platform/web.deus'),
+        join(root, 'platform/qa.deus'),
+        join(root, 'examples/notes.deus'),
+        ...c,
+      );
+      const passing = deus('mdl', join(root, 'examples/notes.mdl'), '--json', ...c);
+      expect(JSON.parse(passing.stdout).map((row: { status: string }) => row.status)).toEqual(['ok', 'ok']);
+      expect(passing.code).toBe(0);
+
+      // A wrong expectation names the step and what the service answered; a malformed send is refused.
+      const doc = file(
+        'notes-wrong.mdl',
+        readFileSync(join(root, 'examples/notes.mdl'), 'utf8')
+          .replace('content == "hi there"', 'content == "bye"')
+          .replace('send: DELETE /notes/draft', 'send: DELETE notes'),
+      );
+      const failing = deus('mdl', doc, ...c);
+      expect(failing.code).toBe(1);
+      expect(failing.stdout).toContain(
+        "QA-1.3 (Follow the hello link; expect: The note's text is shown) failed: GET /notes/hello answered 200 hi there",
+      );
+      expect(failing.stdout).toContain('QA-2.2: send: DELETE notes is not VERB /path [payload]');
+    },
+  );
+
   test('files objects by layer, stores spec blocks, and records provenance', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'layers')];
     deus('init', '--empty', ...c);
@@ -442,6 +479,12 @@ describe('deus CLI', () => {
 
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
+
+    // `==` on constructed values would compare addresses (D69): refused rather than answered wrong.
+    deus('add', file('same.deus', 'def same (x : Int) : Bool := some x == some x\n'), ...c);
+    const compared = deus('build', 'same', '-o', join(scratch, 'same.wasm'), '--wasm', ...c);
+    expect(compared.code).toBe(1);
+    expect(compared.stderr).toContain('eq on values that are not known to be Int or Bool is outside the wasm subset');
   });
 
   test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
@@ -647,6 +690,70 @@ describe('deus CLI', () => {
       );
     },
   );
+
+  test('keeps ordinary comments as metadata through view and export', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'comments')];
+    deus('init', '--empty', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    const source = [
+      '-- Shapes measured in whole units.',
+      '',
+      '-- Squares only, for now.',
+      'def area (side : Int) : Int :=',
+      '  -- Negative sides are measured as positive.',
+      '  let s := if side < 0 then 0 - side else side',
+      '  match s with',
+      '  -- A point has no area.',
+      '  | 0 => 0',
+      '  | n => n * n',
+      '',
+      'def plain (side : Int) : Int := side * side',
+    ].join('\n');
+    deus('add', file('comments.deus', source), ...c);
+    // Comments are metadata: the definition hashes as it does without them.
+    const bare = ['--codebase', join(scratch, 'comments-bare')];
+    deus('init', '--empty', ...bare);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...bare);
+    const uncommented = source
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('--'))
+      .join('\n');
+    deus('add', file('uncommented.deus', uncommented), ...bare);
+    expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
+    const viewed = deus('view', 'area', ...c).stdout;
+    expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
+    expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
+    expect(viewed).toContain('-- A point has no area.');
+
+    // An export restored into an empty codebase exports the same text again.
+    const first = join(scratch, 'comments-export');
+    deus('export', first, ...c);
+    const restored = ['--codebase', join(scratch, 'comments-restored')];
+    deus('init', '--empty', ...restored);
+    expect(deus('add', join(first, 'code'), ...restored).code).toBe(0);
+    const second = join(scratch, 'comments-export-2');
+    deus('export', second, ...restored);
+    const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
+    expect(text(second)).toBe(text(first));
+    expect(text(first)).toContain('-- A point has no area.');
+    const hashOf = (args: string[]) =>
+      JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
+    expect(hashOf(restored)).toBe(hashOf(c));
+
+    // The history comes back as a record under the restore's own changes.
+    expect(deus('history', 'import', join(first, 'history.sexp'), ...restored).code).toBe(0);
+    const messages = (args: string[]) =>
+      JSON.parse(deus('log', '--n', '100', '--json', ...args).stdout).map((row: { message: string }) => row.message);
+    const before = messages(c);
+    const after = messages(restored);
+    expect(after[0]).toMatch(/^history: import \d+ changes$/);
+    expect(after.slice(-before.length)).toEqual(before);
+    const third = join(scratch, 'comments-export-3');
+    deus('export', third, ...restored);
+    expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
+      readFileSync(join(first, 'HISTORY.md'), 'utf8').split('\n\n')[1],
+    );
+  });
 
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'explore')];

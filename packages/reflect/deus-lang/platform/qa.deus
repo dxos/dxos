@@ -1,0 +1,125 @@
+/-
+  QA flows for web apps as MDL blocks: one journey that a human tester and an agent run from the
+  same text, after DXOS's QA dialect (`packages/reflect/deus/lang/qa.mdl`).
+
+    ```mdl
+    qa QA-1: a note survives being listed
+      handler: Notes.serve
+      steps:
+        - do: Store a note called hello
+          send: PUT /notes/hello hi there
+          expect: The note is stored
+          assert: status == 201
+        - do: Open the notebook's index page
+          send: GET /
+          expect: hello is listed as a link
+          assert: Text.contains "href=\"/notes/hello\"" content
+    ```
+
+  - `handler:` the web handler under test (`platform/web.deus`).
+  - Each step needs `do:` (the human instruction) and `expect:` (what both testers judge).
+  - `send:` is the agent's binding: `VERB /path [payload]`. A step without one is a human-only
+    step, which simulation skips.
+  - `assert:` a `Bool` expression over `status`, `content` and `response`; without one a step
+    holds when its status is below 400.
+  - `actor:` the object the step's request goes to (default `qa`), for handlers with `Actors`.
+
+  `deus mdl` runs the steps in order in `Web.simulateMany`, so a flow is deterministic and needs
+  no server; the first step that fails is reported with what it got.
+-/
+
+namespace Qa
+
+/-- One step of a flow: its fields in the document's order. -/
+def fieldsOf (item : List Text) : List (Text, Text) :=
+  List.filterMap (fun line => Mdl.keyValue (Text.trim line)) item
+
+/-- A `steps:` value split into items: a line without leading spaces starts one. -/
+def items (value : Text) : List (List (Text, Text)) :=
+  let rec go lines current acc :=
+    match lines with
+    | [] => List.reverse (if List.isEmpty current then acc else List.reverse current :: acc)
+    | line :: rest =>
+      if Text.startsWith "  " line then go rest (line :: current) acc
+      else go rest [line] (if List.isEmpty current then acc else List.reverse current :: acc)
+  List.map fieldsOf (go (Text.lines value) [] [])
+
+/-- DEUS source for a text literal. -/
+def literal (t : Text) : Text :=
+  "\"" ++ Text.replace "\n" "\\n" (Text.replace "\"" "\\\"" (Text.replace "\\" "\\\\" t)) ++ "\""
+
+/-- `VERB /path [payload]` as source for a `Request`; none when it has no path. -/
+def request (send : Text) : Option Text :=
+  let t := Text.trim send
+  let space := Text.indexOf t " " 0
+  if space <= 0 then none
+  else
+    let verb := Text.take space t
+    let rest := Text.trim (Text.drop (space + 1) t)
+    let gap := Text.indexOf rest " " 0
+    let url := if gap < 0 then rest else Text.take gap rest
+    let payload := if gap < 0 then "" else Text.trim (Text.drop (gap + 1) rest)
+    if Text.startsWith "/" url then some ("(Request.mk " ++ literal verb ++ " " ++ literal url ++ " " ++ literal payload ++ ")") else none
+
+/-- The problems with a step's fields, numbered as `QA-1.2`. -/
+def stepProblems (place : Text) (fields : List (Text, Text)) : List Text :=
+  let missing := List.filterMap (fun key => if Option.isNone (List.lookup key fields) then some (place ++ " needs " ++ key ++ ":") else none) ["do", "expect"]
+  let badSend := match List.lookup "send" fields with
+    | some send => if Option.isNone (request send) then [place ++ ": send: " ++ send ++ " is not VERB /path [payload]"] else []
+    | none => []
+  missing ++ badSend
+
+/-- Source for one step the agent can run: `(label, actor, request, judge)`. -/
+def stepSource (place : Text) (fields : List (Text, Text)) : Option Text :=
+  match Option.bind (List.lookup "send" fields) request with
+  | none => none
+  | some req =>
+    let label := place ++ " (" ++ Option.getOr (List.lookup "do" fields) "" ++ "; expect: " ++ Option.getOr (List.lookup "expect" fields) "" ++ ")"
+    let assert := Option.getOr (List.lookup "assert" fields) "status < 400"
+    some ("(" ++ literal label ++ ", " ++ literal (Option.getOr (List.lookup "actor" fields) "qa") ++ ", " ++ req ++
+      ", fun (status : Int) (content : Text) (response : Response) => " ++ assert ++ ")")
+
+/-- The first `n` characters of a response body, on one line. -/
+def excerpt (t : Text) : Text :=
+  let flat := Text.replace "\n" " " t
+  if Text.length flat > 120 then Text.take 120 flat ++ "…" else flat
+
+/--
+  Runs `steps` against `handler` in simulation and returns the first failure, or "" when every
+  step holds. The steps after a failure ran but are not judged, since they assumed it held.
+-/
+def simulate (handler : Request -> {Storage, Http, Actors, Alarm | r} Response) (steps : List (Text, Text, Request, Int -> Text -> Response -> Bool)) : {r} Text :=
+  match Web.simulateMany handler (List.map (fun s =>
+    match s with
+    | (_, actor, req, _) => (actor, req)) steps) with
+  | (responses, _, _) =>
+    let rec judge pairs :=
+      match pairs with
+      | [] => ""
+      | ((label, _, req, holds), response) :: rest =>
+        if holds response.status response.content response then judge rest
+        else label ++ " failed: " ++ req.verb ++ " " ++ req.url ++ " answered " ++ Int.toText response.status ++ " " ++ excerpt response.content
+    judge (List.zip steps responses)
+
+/-- The `qa` block type. -/
+@[ext "org.dxos.deus.qa@1.0"]
+def check (b : Block) : {MdlHost} List Text :=
+  let id := if Text.isEmpty b.blockId then "qa" else b.blockId
+  let steps := items (Option.getOr (List.lookup "steps" b.props) "")
+  let places := List.mapIndexed (fun i fields => (id ++ "." ++ Int.toText (i + 1), fields)) steps
+  let problems := List.concatMap (fun p => stepProblems (fst p) (snd p)) places
+  match List.lookup "handler" b.props with
+  | none => "qa needs handler:" :: problems
+  | some handler =>
+    if List.isEmpty steps then ["qa needs steps:"]
+    else if not (List.isEmpty problems) then problems
+    else
+      let runnable := List.filterMap (fun p => stepSource (fst p) (snd p)) places
+      if List.isEmpty runnable then []
+      else
+        match MdlHost.run ("Qa.simulate " ++ handler ++ " [" ++ Text.join ", " runnable ++ "]") with
+        | Result.err message => [message]
+        | Result.ok "" => []
+        | Result.ok failure => [failure]
+
+end Qa

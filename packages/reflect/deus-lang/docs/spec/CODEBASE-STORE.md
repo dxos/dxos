@@ -78,19 +78,20 @@ cache objects for the life of a process.
 
 The head symbol of an object names its kind, and the kind decides its layer (see [Layers](#layers)).
 
-| Head      | Kind                       | Form                                                           | Defined in                    |
-| --------- | -------------------------- | -------------------------------------------------------------- | ----------------------------- |
-| `term`    | a definition               | `(term core)`                                                  | [CORE.md](./CORE.md#objects)  |
-| `cycle`   | a recursive group of terms | `(cycle (term …) …)`                                           | [CORE.md](./CORE.md#objects)  |
-| `test`    | a test                     | `(test core)`                                                  | [CORE.md](./CORE.md#objects)  |
-| `theorem` | a theorem                  | `(theorem (binders type …) prop (proof "tactic" …))`           | [CORE.md](./CORE.md#objects)  |
-| `type`    | a type                     | `(type "iri" params (ctor arity field-type …) …)`              | [CORE.md](./CORE.md#objects)  |
-| `ability` | an ability                 | `(ability "iri" params (op arity type) …)`                     | [CORE.md](./CORE.md#objects)  |
-| `spec`    | an identified `.mdl` block | `(spec "block-type" "uri" "id" "title" ("key" "value") …)`     | [MDL.md](./MDL.md)            |
-| `ns`      | a namespace snapshot       | `(ns (n "name" entry) …)`                                      | [below](#namespace-snapshots) |
-| `causal`  | a history node             | `(causal (ns "h") (parents "h" …) (msg "text") [(tasks "h")])` | [below](#history-nodes)       |
-| `tasks`   | a tasks snapshot           | `(tasks (t "id" (ref "h")) …)`                                 | [below](#tasks)               |
-| `task`    | a task                     | `(task (id "…") (title "…") …)`                                | [below](#tasks)               |
+| Head      | Kind                            | Form                                                                         | Defined in                    |
+| --------- | ------------------------------- | ---------------------------------------------------------------------------- | ----------------------------- |
+| `term`    | a definition                    | `(term core)`                                                                | [CORE.md](./CORE.md#objects)  |
+| `cycle`   | a recursive group of terms      | `(cycle (term …) …)`                                                         | [CORE.md](./CORE.md#objects)  |
+| `test`    | a test                          | `(test core)`                                                                | [CORE.md](./CORE.md#objects)  |
+| `theorem` | a theorem                       | `(theorem (binders type …) prop (proof "tactic" …))`                         | [CORE.md](./CORE.md#objects)  |
+| `type`    | a type                          | `(type "iri" params (ctor arity field-type …) …)`                            | [CORE.md](./CORE.md#objects)  |
+| `ability` | an ability                      | `(ability "iri" params (op arity type) …)`                                   | [CORE.md](./CORE.md#objects)  |
+| `spec`    | an identified `.mdl` block      | `(spec "block-type" "uri" "id" "title" ("key" "value") …)`                   | [MDL.md](./MDL.md)            |
+| `ns`      | a namespace snapshot            | `(ns (n "name" entry) …)`                                                    | [below](#namespace-snapshots) |
+| `causal`  | a history node                  | `(causal (ns "h") (parents "h" …) (msg "text") [(tasks "h")] [(prior "h")])` | [below](#history-nodes)       |
+| `record`  | history imported from an export | `(record (entry "causal" "message" "by") …)`                                 | [below](#history-nodes)       |
+| `tasks`   | a tasks snapshot                | `(tasks (t "id" (ref "h")) …)`                                               | [below](#tasks)               |
+| `task`    | a task                          | `(task (id "…") (title "…") …)`                                              | [below](#tasks)               |
 
 Member `i` of a `cycle` with hash `h` is addressed as `h.i`; a cycle with one member is addressed as `h`.
 Only `h` is a file.
@@ -126,15 +127,17 @@ signatures as written, binder names, inferred types. The file is `(meta field �
 plus `\n`. Unlike objects, metadata can be rewritten (an `update` copies a definition's metadata to its
 new hash). The fields:
 
-| Field    | Form                           | On                     | Meaning                                                        |
-| -------- | ------------------------------ | ---------------------- | -------------------------------------------------------------- |
-| `sig`    | `(sig type)`                   | terms                  | the signature the author wrote                                 |
-| `doc`    | `(doc "text")`                 | any definition         | the `/-- … -/` comment                                         |
-| `locals` | `(locals "x" …)`               | terms, tests, theorems | binder names, in the order the printer draws them              |
-| `attrs`  | `(attrs ("attr" "value" …) …)` | terms                  | attributes such as `@[ext "<uri>"]` and `@[integration]`       |
-| `scheme` | `(scheme type)`                | terms, tests, theorems | the inferred type                                              |
-| `params` | `(params "a" …)`               | types, abilities       | the author's parameter names                                   |
-| `fields` | `(fields (c "name" …) …)`      | types                  | constructor field names, one `c` per constructor, `""` unnamed |
+| Field    | Form                           | On                     | Meaning                                                                                                               |
+| -------- | ------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `sig`    | `(sig type)`                   | terms                  | the signature the author wrote                                                                                        |
+| `doc`    | `(doc "text")`                 | any definition         | the `/-- … -/` comment                                                                                                |
+| `locals` | `(locals "x" …)`               | terms, tests, theorems | binder names, in the order the printer draws them                                                                     |
+| `attrs`  | `(attrs ("attr" "value" …) …)` | terms                  | attributes such as `@[ext "<uri>"]` and `@[integration]`                                                              |
+| `scheme` | `(scheme type)`                | terms, tests, theorems | the inferred type                                                                                                     |
+| `params` | `(params "a" …)`               | types, abilities       | the author's parameter names                                                                                          |
+| `fields` | `(fields (c "name" …) …)`      | types                  | constructor field names, one `c` per constructor, `""` unnamed                                                        |
+| `lead`   | `(lead "text")`                | any definition         | the ordinary comments written before the declaration (D66)                                                            |
+| `notes`  | `(notes (n i "text") …)`       | terms, tests           | comments before a statement or an arm; `i` is the pre-order index of that node among the list nodes of the Core (D66) |
 
 Sample (`meta/595ca8…`, the term above):
 
@@ -185,15 +188,16 @@ A history node (a causal node) records a namespace snapshot, its parents, a mess
 tasks snapshot:
 
 ```text
-causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " (tasks " hash ")" ] ")"
+causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " (tasks " hash ")" ] [ " (prior " hash ")" ] ")"
 ```
 
-| Field     | Meaning                                                                                     |
-| --------- | ------------------------------------------------------------------------------------------- |
-| `ns`      | hash of the namespace snapshot                                                              |
-| `parents` | zero parents for the first node, one for an ordinary change, two (ours, theirs) for a merge |
-| `msg`     | why the change was made                                                                     |
-| `tasks`   | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))        |
+| Field     | Meaning                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| `ns`      | hash of the namespace snapshot                                                                    |
+| `parents` | zero parents for the first node, one for an ordinary change, two (ours, theirs) for a merge       |
+| `msg`     | why the change was made                                                                           |
+| `tasks`   | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))              |
+| `prior`   | hash of a `record` of history imported from an export; omitted otherwise ([D67](../DECISIONS.md)) |
 
 A writer MUST omit `(tasks …)` when the branch has no tasks, so a node without tasks hashes as it did
 before tasks existed. Readers find fields by head and treat a missing field as empty.
@@ -217,6 +221,13 @@ change keeps the parent's namespace hash.
 History may be shallow. After retention GC ([D54](../DECISIONS.md)) a node can name parents the store
 does not have; readers MUST treat those parents as absent, so such a node acts as a root. "First-parent
 history" (`deus log`, `HISTORY.md`) follows the first parent the store has.
+
+A `record` holds history that this store never had as nodes: the first-parent history of the codebase an
+export came from, newest first, one `(entry causal message by)` per change, where `by` is the agent or
+`""`. `deus history import` writes it and a node naming it in `(prior …)`, with the parent's namespace
+and tasks. `deus log` and the export print the live first-parent history, then each record's entries in
+the order the nodes carrying them appear. An entry's causal hash names a node of the original store, so
+it is a label: readers MUST NOT follow it. A record is in the history layer.
 
 ## Branches and HEAD
 

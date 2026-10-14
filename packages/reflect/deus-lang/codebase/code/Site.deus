@@ -7,6 +7,7 @@ def Site.serve (request : Request) : {IO} Response :=
   let root := getOr (IO.getEnv "DEUS_SITE") "site"
   let path := getOr (head? (Text.split request.url "?")) "/"
   let file := if path == "/" then "/index.html" else path
+  -- A path that climbs out of the site is not served.
   if Text.contains ".." file then notFound path else
     match IO.readFile (root ++ file) with
     | Option.some content => Response.mk 200 content [("content-type", contentType file)]

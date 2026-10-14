@@ -47,6 +47,11 @@ def Highlight.htmlLinkedIn (dialect : Text) (links : Map Text Text) (source : Te
 
 def Highlight.isWordChar (c : Int) : Bool := isAlpha c || isDigit c || c == 95 || c == 46 || c == 63
 
+/-
+  Syntax highlighting of printed source, shared by the explorer (HTML) and the CLI (ANSI colours
+  on a terminal). Source splits into runs of one kind: kw(keyword), str(ing), cm (comment),
+  ty(pe or other capitalized name) and plain text.
+-/
 def Highlight.keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
 
 def Highlight.keywordsFor (dialect : Text) : Map Text Unit := if dialect == "ts" then tsKeywords else Highlight.keywords
@@ -87,7 +92,7 @@ def Highlight.runsWith (kws : Map Text Unit) (source : Text) : List (Text, Text)
 test Highlight.spansKinds := Highlight.html "def x : Int := \"a<b\" -- note" ==
   "<span class=kw>def</span> x : <span class=ty>Int</span> := <span class=str>\"a&lt;b\"</span> <span class=cm>-- note</span>"
 
-/-- Keywords of the TypeScript-like dialect (D65). -/
+/-- Keywords of the TypeScript-like dialect (D70). -/
 def Highlight.tsKeywords : Map Text Unit := Set.fromList ["function", "const", "return", "switch", "case", "if", "else", "try", "handle", "do", "uses", "type", "interface", "ability", "test", "theorem", "by", "prim", "sorry", "undefined", "true", "false"]
 
 test Highlight.tsKeywordsAndComments := htmlLinkedIn "ts" Map.empty "const x = 1; // note" ==

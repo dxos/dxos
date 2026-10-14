@@ -94,7 +94,7 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let node := Codebase.readCausal dir causal
   let before := match Codebase.parentsOf dir causal with
     | p :: _ => Codebase.readCausal dir p
-    | [] => Causal.mk "" [] "" ""
+    | [] => Causal.mk "" [] "" "" ""
   let nsAfter := Codebase.readNamespace dir node.snapshot
   let nsBefore := if Text.isEmpty before.snapshot then Map.empty else Codebase.readNamespace dir before.snapshot
   let visibleNames := fun (ns : Map Text Entry) => List.filter visible (Map.toList ns)
@@ -183,7 +183,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
       let source := match try (fun _ => Cli.viewEntryWith printer dir ns name e false) with
         | Result.ok text => Text.join "\n" (List.filter (fun l => not (Text.startsWith "-- " l)) (Text.lines text))
         | Result.err message => "-- " ++ message
-      -- The same definition in the TypeScript-like dialect (D65), shown when the viewer picks it.
+      -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
       let tsSource := match try (fun _ => Cli.viewEntryIn printer dir ns name e "ts") with
         | Result.ok text => Text.join "\n" (List.filter (fun l => not (Text.startsWith "// " l)) (Text.lines text))
         | Result.err message => "// " ++ message

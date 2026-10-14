@@ -71,6 +71,9 @@ def View.theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sex
       let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ replace " ," "," (replace "[ " "[" (replace " ]" "]" (join " " tactic)))
       "theorem " ++ name ++ binders ++ " : " ++ Print.expr p b env 2 0 ++ " := " ++ proofText
 
+/-
+  Printing declarations that are not plain definitions: types, abilities and theorems.
+-/
 def View.typeArgs (form : Sexp) : List Sexp := List.filter (fun x => head x == "ctor") (Sexp.args form)
 
 /-- `inductive T where | c (F) …` or `structure T where f : F …`. -/
@@ -79,7 +82,7 @@ def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) 
   | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
       let names := paramsFor meta count obj
       let fieldNames := fieldNamesFor meta
-      let ctors := List.map (nameParams names) (typeArgs obj)
+      let ctors := List.map (nameParams names) (View.typeArgs obj)
       let display := name
       if not (List.isEmpty fields) then
         let types := getOr (Option.map Sexp.args (head? ctors)) []

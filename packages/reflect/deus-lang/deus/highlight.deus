@@ -8,7 +8,7 @@ namespace Highlight
 
 def keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
 
-/-- Keywords of the TypeScript-like dialect (D65). -/
+/-- Keywords of the TypeScript-like dialect (D70). -/
 def tsKeywords : Map Text Unit := Set.fromList ["function", "const", "return", "switch", "case", "if", "else", "try", "handle", "do", "uses", "type", "interface", "ability", "test", "theorem", "by", "prim", "sorry", "undefined", "true", "false"]
 
 def keywordsFor (dialect : Text) : Map Text Unit := if dialect == "ts" then tsKeywords else keywords

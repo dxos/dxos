@@ -33,6 +33,7 @@ def Replicate.bucket (endpoint : Text) (name : Text) (prefix : Text) (config : T
   | Remote.put key text -> k =>
       let staged := config ++ "." ++ key
       gzipTo text staged
+      -- `If-None-Match: *` makes the write conditional: an existing bundle is never replaced.
       let result := curl ["-X", "PUT", "-H", "If-None-Match: *", "--data-binary", "@" ++ staged, base ++ "/" ++ folder ++ key]
       IO.remove staged
       match result with
@@ -42,6 +43,8 @@ def Replicate.bucket (endpoint : Text) (name : Text) (prefix : Text) (config : T
       curl ["-X", "DELETE", base ++ "/" ++ folder ++ key]
       k ()
   | Remote.writeAll files -> k =>
+      -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+      -- each repeats the credentials, and the batch config is as private as the remote's.
       let staged := config ++ ".d"
       let batch := config ++ ".batch"
       IO.mkdirp staged
@@ -134,6 +137,7 @@ def Replicate.compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, 
   let removable := List.filter
     (fun s => levelOf s.bundleName < level && not (List.isEmpty s.hashes) && all (fun h => Set.contains h covered) s.hashes)
     seen
+  -- Claims that are still heads survive their bundle in a claims-only bundle.
   let kept := List.filter
     (fun c => any (fun hc => hc == c) headClaims)
     (concatMap (fun s => s.claims) removable)
@@ -172,6 +176,9 @@ def Replicate.gunzip (path : Text) : {IO} Option Text := if not (IO.exists path)
   | (0, text, _) => Option.some text
   | _ => Option.none
 
+--
+-- Remotes.
+--
 /-- Compresses `text` into the file `out` with gzip; `-n` leaves out the name and time, so equal texts give equal files. -/
 def Replicate.gzipTo (text : Text) (out : Text) : {IO} Unit :=
   let staged := out ++ ".tmp"

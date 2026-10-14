@@ -62,6 +62,9 @@ def Observe.otlp (dir : Text) (service : Text) (body : Unit -> {Log, Trace, Metr
     | (file, json) => IO.appendFile (dir ++ "/" ++ file) (Json.render json ++ "\n")
   Observe.handleWith (fun _ => IO.wallClock ()) write body
 
+--
+-- OpenTelemetry (OTLP/JSON).
+--
 def Observe.otlpAttributes (attrs : List (Text, Text)) : Json := Json.arr (List.map
   (fun pair => Json.obj [("key", Json.str (fst pair)), ("value", Json.obj [("stringValue", Json.str (snd pair))])])
   attrs)

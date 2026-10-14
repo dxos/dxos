@@ -31,21 +31,13 @@ is fixed, the spec describes what the code does.
 
 Bugs:
 
-- `quoteText` in [`deus/print.deus`](../../deus/print.deus) writes control characters as `\u{<decimal>}`
-  but the lexer reads `\u{…}` as hex, so `deus view` of `"\u{1b}"` prints `"\u{27}"` and an update rehashes
-  the definition ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
-- The wasm compiler compiles `==`, `<` and the other comparisons on constructed values to `i32` compares of
-  addresses: `some x == some x` is `0` in wasm and `true` in `deus eval` ([WASM.md](./WASM.md)).
 - `\u{…}` escapes above U+FFFF lose their high bits in the TypeScript kernel's `Text.fromCodes`
   ([LANGUAGE.md](./LANGUAGE.md)).
-- The prover ignores tactic names it does not know ([LANGUAGE.md](./LANGUAGE.md#theorems-and-tactics)).
 - Type ascriptions (`(e : T)`, `let x : T := …`) are erased before checking, and a row written on a
   definition with no binders is not checked ([LANGUAGE.md](./LANGUAGE.md#static-semantics)).
 - Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.
   A file under `bundles/` whose name is not `<level>-<sha256>` makes a pull fail
   ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md)).
-- `deus export` drops attributes (`@[ext …]`, `@[integration]`), `.mdl` spec entries, the `project` file and
-  some doc comments, so a restored codebase is not the same codebase ([CODEBASE-TEXT.md](./CODEBASE-TEXT.md)).
 
 Docs that disagree with the code:
 

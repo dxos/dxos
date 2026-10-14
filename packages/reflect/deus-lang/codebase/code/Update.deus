@@ -7,6 +7,12 @@ def Update.dependentsOf (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Lis
     | Option.none => Option.none
   else Option.none) (Map.toList ns)))
 
+/-
+  Update propagation (Unison's `update`): when a definition gets a new hash, every definition
+  that depends on it, directly or not, is rewritten to the new hash and rehashed. Rehashing
+  goes through `Compile.hashTerms`, so recursive groups are hashed as cycles exactly as `add`
+  would hash them.
+-/
 def Update.isTermLike (e : Entry) : Bool :=
   match e with
   | Entry.term _ => true
@@ -28,6 +34,7 @@ def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) 
     (fun pair => isTermLike (snd pair) && not (Set.contains (fst pair) fresh))
     (Map.toList ns)
   let objectOf := fun h => getOr (readObject dir h) (Sexp.list [])
+  -- Grow the set of changed hashes until no candidate depends on one.
   let rec grow changed affected :=
     let next := List.filter (fun pair =>
       let h := hash (snd pair)
@@ -39,6 +46,7 @@ def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) 
         (foldl (fun s h => Set.insert h s) affected hs)
   let affected := grow (Set.fromList (Map.keys subst)) Map.empty
   if Map.size affected == 0 then (ns, []) else
+    -- One canonical name per affected hash; aliases follow it.
     let canonical := foldl (fun m pair =>
       let h := hash (snd pair)
       if Set.contains h affected && not (Map.contains h m) then Map.insert h (fst pair) m else m) Map.empty candidates

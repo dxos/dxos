@@ -2,7 +2,7 @@
 
 DEUS stores code as Core (see [CORE.md](./CORE.md)), not as text. A dialect is one way to print that
 Core. DEUS syntax ([LANGUAGE.md](./LANGUAGE.md)) is the primary dialect: agents and people write it, and
-`deus view` prints it so that it compiles back to the same hashes. The TypeScript-like dialect (D65) is a
+`deus view` prints it so that it compiles back to the same hashes. The TypeScript-like dialect (D70) is a
 second view of the same definitions, for readers who know JavaScript or TypeScript.
 
 - **Writer:** `deus view --dialect ts` ([`deus/ts.deus`](../../deus/ts.deus)), and `deus explore`,

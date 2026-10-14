@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The codebase explorer (D58, D66): a single page over the JSON that `deus explore` writes, modelled on
+// The codebase explorer (D58, D72): a single page over the JSON that `deus explore` writes, modelled on
 // Unison Share. A namespace tree, a finder (`/`), and a workspace of cards: definitions, namespaces, tasks
 // and changes. The open cards are kept in the URL fragment, in display order, so a view can be shared.
 
@@ -114,7 +114,7 @@ const resolve = (name, namespace) => {
 
 const ui = { focus: undefined, folded: new Set(), view: 'code', expanded: new Set(), dialect: 'deus' };
 
-/** The dialect sources are shown in (D65): DEUS, or TypeScript-like where a page has it; kept per viewer. */
+/** The dialect sources are shown in (D70): DEUS, or TypeScript-like where a page has it; kept per viewer. */
 const DIALECT_KEY = 'deus.dialect';
 
 try {

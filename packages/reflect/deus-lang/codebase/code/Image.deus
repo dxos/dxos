@@ -51,6 +51,10 @@ def Image.nominalForms (fetch : Text -> {Throw Text | r} Option Sexp) (defs : Li
     | Option.some (Sexp.list (Sexp.sym kind :: Sexp.str iri :: _)) => if kind == "type" || kind == "ability" then Option.some (Sexp.print (Sexp.node kind [Sexp.str h, Sexp.str iri])) else Option.none
     | _ => Option.none) hashes
 
+/-
+  Images: the closure of a definition as `(def "hash" core)` forms plus `(main "hash")`,
+  sorted by hash so the same code always yields the same bytes. The kernel loads images.
+-/
 /-- Hashes referenced by `(ref …)` in a form. -/
 def Image.refs (form : Sexp) (acc : List Text) : List Text :=
   match form with

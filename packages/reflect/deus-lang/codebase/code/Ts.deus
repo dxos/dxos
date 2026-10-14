@@ -34,6 +34,9 @@ def Ts.application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text)
     head ++ "(" ++
       Text.concat (List.map (fun a => "\n" ++ spaces (ind + 2) ++ Ts.expr p a env (ind + 2) 0 ++ ",") args) ++ "\n" ++ spaces ind ++ ")"
 
+--
+-- Types.
+--
 /-- The argument types of a run of pure arrows and what follows them; an arrow with a row ends the run. -/
 def Ts.arrows (t : Sexp) : (List Sexp, Sexp) :=
   match t with
@@ -85,6 +88,9 @@ def Ts.definition (p : Printer) (name : Text) (core : Sexp) (sig : Option Sexp) 
 /-- A block in expression position: `do { … }`, whose last statement is its value. -/
 def Ts.doBlock (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text := "do {\n" ++ spaces (ind + 2) ++ Ts.stmts p t env (ind + 2) false ++ "\n" ++ spaces ind ++ "}"
 
+--
+-- Declarations.
+--
 def Ts.docComment (doc : Option Text) : Text :=
   match doc with
   | Option.some d => "/** " ++ d ++ " */\n"
@@ -109,9 +115,11 @@ def Ts.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) 
       match Ts.params p t env with
       | (names, b, env2) =>
           let rendered := if isStatement b then functionBody p b env2 ind else Ts.expr p b env2 ind 1
+          -- A generated name (`x0`) the body never mentions was `_` in the source.
           let shown := List.map
             (fun x => if isGenerated x && not (Print.mentions x rendered) then "_" else x)
             names
+          -- A lone ignored parameter reads as none: JavaScript drops extra arguments.
           let paramText := if shown == ["_"] then "" else join ", " shown
           paren 1 prec ("(" ++ paramText ++ ") => " ++ rendered)
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
@@ -178,6 +186,11 @@ def Ts.ifStatement (p : Printer) (c : Sexp) (yes : Sexp) (no : Sexp) (env : List
 /-- An infix operator: DEUS's, except that text and list append read as `+`. -/
 def Ts.infixOf (name : Text) : Option (Text, Int) := if name == "append" then Option.some ("+", 65) else Print.infixOf name
 
+/-
+  The TypeScript-like dialect (D70): Core printed as JS/TS-shaped text, one more view of the same
+  codebase. DEUS stays the primary syntax; this one is for reading. Locals are named by the
+  printer's supply in the order `Print` draws them, so both dialects show the author's names.
+-/
 /-- Whether a term is an `if` that `&&` and `||` do not cover. -/
 def Ts.isPlainIf (t : Sexp) : Bool :=
   match t with
@@ -211,6 +224,9 @@ def Ts.params (p : Printer) (t : Sexp) (env : List Text) : (List Text, (Sexp, Li
     | _ => (reverse acc, x, env2)
   go t env []
 
+--
+-- Patterns.
+--
 def Ts.pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) :=
   match pat with
   | Sexp.list (Sexp.sym "pany" :: []) => ("_", env)
@@ -230,6 +246,7 @@ def Ts.pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) 
           | (at, env2) =>
               match Ts.pattern p b env2 with
               | (bt, env3) =>
+                  -- `[h, ...[x, ...t]]` reads as `[h, x, ...t]`, and nested pairs as one tuple.
                   let opener := if ty == "#Pair" then "#[" else "["
                   let sameKind :=
                     match b with
@@ -270,6 +287,7 @@ def Ts.stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (ret : Bool)
       let value := Ts.expr p v env ind 0
       "const " ++ name ++ " = " ++ value ++ ";" ++ nl ++ Ts.stmts p b (name :: env) ind ret
   | Sexp.list (Sexp.sym "seq" :: a :: b :: []) =>
+      -- A `let` before `;` scopes over that statement only, so it keeps a block of its own.
       let first := if head a == "match" || head a == "handle" || isPlainIf a then Ts.stmts p a env ind false else Ts.expr p a env ind 0 ++ ";"
       first ++ nl ++ Ts.stmts p b env ind ret
   | Sexp.list (Sexp.sym "letrec" :: Sexp.list fns :: b :: []) =>
@@ -342,6 +360,7 @@ def Ts.ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
   | Sexp.list (Sexp.sym "tfun" :: _) =>
       match arrows t with
       | (args, result) =>
+          -- `Unit -> a` reads as `() => a`, as `f(())` reads as `f()`.
           let argText := if args == [Sexp.node "tref" [Sexp.str "#Unit"]] then "" else join ", " (List.map (fun x => Ts.ty p x 3) args)
           paren
             (if hasUses result then 2 else 10)
@@ -357,7 +376,7 @@ def Ts.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (o
   | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
       let names := paramsFor meta count obj
       let fieldNames := fieldNamesFor meta
-      let ctors := List.map (nameParams names) (typeArgs obj)
+      let ctors := List.map (nameParams names) (View.typeArgs obj)
       if not (List.isEmpty fields) then
         let types := getOr (Option.map Sexp.args (head? ctors)) []
         let lines := List.map (fun pair =>

@@ -1,6 +1,6 @@
 test Counter.countsAcrossRequests :=
   let request := Request.mk "GET" "/" ""
-  match simulate Counter.serve [request, request, request] with
+  match Web.simulate Counter.serve [request, request, request] with
   | (responses, store) => List.map (fun r => r.content) responses == ["count 1", "count 2", "count 3"] && Map.lookup "count" store == Option.some "3"
 
 /-- Each request adds one and answers the new count; `?actor=` picks the object. -/
