@@ -104,7 +104,7 @@ uses its continuation `k` ([D97](../../docs/DECISIONS.md)):
 
 ```mdl
 req R-2: a handler whose clause resumes twice, or after more work, is refused by name
-  gap: task 508d9443
+  by: JsGen.Spec.refusesMultiShotHandlers
 ```
 
 That covers `Throw`, `Defect`, readers, writers, logging and every host-style ability. Handlers that
@@ -143,6 +143,15 @@ dotted property path. Arguments and results cross through codecs chosen by the s
 A binding that is not a function (`: Js`) reads the value at first use. The same codecs serve the
 exports. Calling a binding on a kernel is the defect `Js.import <module> <path>: JavaScript imports
 run only on the js target`.
+
+The binding must be the whole body of its definition. A `Js.import` inside an expression is refused
+with `<name> uses Js.import inside an expression`, because only a definition carries the signature
+the codecs come from.
+
+```mdl
+req R-3: Js.import inside an expression is refused, naming the definition
+  by: JsGen.Spec.refusesInlineImports
+```
 
 ## Source maps
 

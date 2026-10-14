@@ -70,6 +70,54 @@ theorem JsGen.Spec.mangleIsIdent (s : Text) : isIdent (mangle s) == true := by t
 
 test JsGen.Spec.namesAreIdentifiers := mangle "App.main" == "App$main" && mangle "class" != "class" && isIdent (mangle "List.map'")
 
+def JsGen.Spec.pickAbility : Text := "ability Pick where\n  pick : Unit -> Bool\n"
+
+/-- The message the js target refuses `root` of `source` with, compiled over the spec prelude, or ""
+  when it compiles. A definition named `Js.import` in `source` is the import binding. -/
+def JsGen.Spec.refusal (source : Text) (root : Text) : Text :=
+  match try (fun _ =>
+    let built := batch
+      Map.empty
+      (fun _ => Option.none)
+      (fun _ => Option.none)
+      "strict"
+      [parseFile "prelude.deus" Compile.Spec.prelude, parseFile "spec.deus" source]
+    let objects := Map.fromList built.objects
+    let metas := Map.fromList built.metas
+    let ns := Map.fromList built.entries
+    let jsImport :=
+      match Map.lookup "Js.import" ns with
+      | Option.some (Entry.term h) => h
+      | _ => ""
+    match Map.lookup root ns with
+    | Option.some (Entry.term h) =>
+        JsGen.compile
+          (fun x => Map.lookup x objects)
+          (fun x => Map.lookup x metas)
+          (fun _ _ => "")
+          ns
+          jsImport
+          [("main", h)]
+          "./deus-runtime.mjs"
+          "main.js.map"
+        ""
+    | _ => "no definition " ++ root) with
+  | Result.ok message => message
+  | Result.err message => message
+
+test JsGen.Spec.refusesInlineImports :=
+  let binding := "namespace Js\ndef import (module : Text) (path : Text) : a\nend Js\n"
+  let inline := refusal (binding ++ "def pair (u : Unit) : (Int, Int) := (Js.import \"m\" \"p\", 1)\n") "pair"
+  let bound := refusal (binding ++ "def value : Int := Js.import \"m\" \"p\"\n") "value"
+  Text.contains "pair uses Js.import inside an expression" inline && bound == ""
+
+test JsGen.Spec.refusesMultiShotHandlers :=
+  let resumesTwice := refusal (pickAbility ++
+    "def both (u : Unit) : Bool :=\n  handle Pick.pick () with\n  | Pick.pick x -> k => k (k Bool.true)\n") "both"
+  let resumesOnce := refusal (pickAbility ++
+    "def once (u : Unit) : Bool :=\n  handle Pick.pick () with\n  | Pick.pick x -> k => k Bool.true\n") "once"
+  Text.contains "the handler for Pick.pick uses its continuation" resumesTwice && resumesOnce == ""
+
 def JsGen.Spec.safeDiv (a : Int) (b : Int) : {Throw Text} Int := if b == 0 then Throw.throw "zero" else a / b
 
 def JsGen.Spec.sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else JsGen.Spec.sumTo (n - 1) (acc + n)

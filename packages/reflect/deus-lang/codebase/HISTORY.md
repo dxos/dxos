@@ -1,5 +1,8 @@
 # History of main
 
+- `e7cadb3cf0` export: merge 7 changes from codebase
+- `f5bf3f0de8` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `adbe79e87a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl
 - `28e7c11f97` task: open 6cffbc44 devex: a fresh container cannot run the full suite: the Rust wasm32 target and tsc are missing, and three threads re-diagnosed it (native, explorer, bindings)
 - `4216b258ab` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/lost-task.sexp
 - `8ad03b07e3` export: merge 7 changes from codebase
@@ -169,6 +172,13 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `7e4e80fa01` task: set 05658284 state
+- `c12e0556c6` task: comment on 05658284 (by claude)
+- `518cddbd4f` task: set 508d9443 state
+- `a69a1ed715` task: comment on 508d9443 (by claude)
+- `ae7acb3d31` JsGen.Spec: R-2 has its test; R-3 refuses inline Js.import (by claude)
+- `c138b36135` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
+- `44908d81fd` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
 - `00911c2f8b` task: comment on c62198a1 (by claude)
 - `ef3d1009b4` task: set c62198a1 state (by claude)
 - `c2c2882e4b` task: link c62198a1 to #1883dc98b6
