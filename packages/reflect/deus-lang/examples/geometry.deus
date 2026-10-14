@@ -1,5 +1,5 @@
 /-
-  TypeScript interop (D80): `deus bindings Geometry -o <dir>` writes a TypeScript module whose
+  TypeScript interop (D81): `deus bindings Geometry -o <dir>` writes a TypeScript module whose
   functions call these on the wasm kernel. TypeScript answers the `Log` ability and the `Throw Text`
   that `ratio` performs; `firstOf` is polymorphic, so it is reported and left out.
   src/bindings/bindings.test.ts drives it.

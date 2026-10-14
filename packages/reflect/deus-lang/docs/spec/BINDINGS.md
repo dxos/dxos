@@ -1,7 +1,7 @@
 # TypeScript bindings
 
 `deus bindings` writes a TypeScript module that calls DEUS functions with TypeScript values
-([D80](../DECISIONS.md)). The module runs them on the embeddable wasm kernel ([EMBEDDING.md](./EMBEDDING.md)),
+([D81](../DECISIONS.md)). The module runs them on the embeddable wasm kernel ([EMBEDDING.md](./EMBEDDING.md)),
 in Node, a browser or a Worker. TypeScript calls DEUS through the module's functions; DEUS calls TypeScript by
 performing an ability whose handler the TypeScript side supplies. The writer is
 [`deus/bindings.deus`](../../deus/bindings.deus); the runtime it copies is

@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "native", "worker", "server", "browser"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -1008,6 +1008,10 @@ def build (args : Args) : {IO, Throw Text} Unit :=
         match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
+      else if flag args "c" then
+        match try (fun _ => CGen.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        | Result.ok source => Build.cExecutable source out
+        | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
       else if flag args "browser" then Build.browser image out
       else if flag args "server" then Build.server image out
@@ -1019,7 +1023,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
   | _ => throw "usage: deus build <term> -o <file>"
 
 /--
-  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D80): a TypeScript module for the
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81): a TypeScript module for the
   functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads.
 -/
 def bindings (args : Args) : {IO, Throw Text} Unit :=
@@ -1278,6 +1282,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
+    "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]

@@ -1,17 +1,36 @@
 # History of main
 
-- `f55f8efcd0` task: open e69b5384 TypeScript bindings: run in-process on the TypeScript kernel too (by claude)
-- `ba9706cb05` task: open ef597118 TypeScript bindings: pass functions across (callbacks and closures)
-- `24786018c1` task: open e84ff062 TypeScript bindings: export polymorphic functions with codec parameters
-- `45a72f0783` task: comment on 207cac21 (by claude)
-- `312532e1eb` close 207cac21 by #e6755a8eeb (by claude)
-- `e6755a8eeb` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D80) (by claude)
-- `8d944ac3a0` task: set 207cac21 state (by claude)
-- `6e72aa4658` task: open 207cac21 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
-- `ee0d3f4cf3` history: import 163 changes
-- `ec9395650d` task: import from tasks.sexp
-- `299d342e26` add code specs
+- `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
+- `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
+- `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters
+- `39cbb23245` task: comment on 17d50ae5 (by claude)
+- `37bffc2ffa` close 17d50ae5 by #7510a284be (by claude)
+- `7510a284be` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D81) (by claude)
+- `a6ec8f1d0b` task: set 17d50ae5 state (by claude)
+- `faa4e8b624` task: open 17d50ae5 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `c0daf520e4` history: import 184 changes
+- `afa110cf75` task: import from tasks.sexp
+- `71eb24530c` export: merge 10 changes from codebase
+- `86db7b80c4` task: open e1cf2c6c Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
+- `259f06882e` task: open 72a1f2fb Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
+- `336d93ba48` task: open 610b2785 Native: closure conversion and partial application in the C back end (by claude)
+- `cf09e48794` task: open 62d1bdda Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
+- `00e0968450` task: set 7ca05fc5 details (by claude)
+- `97914d416e` close 7ca05fc5 by #9aa115afc5 (by claude)
+- `9aa115afc5` task: open 7ca05fc5 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
+- `4e8f52cb61` history: import 163 changes
+- `be6879448e` task: import from tasks.sexp
+- `47072308f5` add code specs
 - `b8fc2ca902` history: import 9 changes
+- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
+- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
+- `5ed69c23c8` task: set dfaad231 state
+- `28ca458c20` task: set dfaad231 details
+- `63d82046a6` task: set dfaad231 priority assignee labels
+- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
+- `cdef7f9a58` history: import 108 changes
+- `89c5f19d03` task: import 37 tasks
+- `b646385392` add code specs
 - `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
 - `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
 - `f157773921` task: set 2bbc3445 state (by claude)
@@ -81,15 +100,6 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
-- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
-- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
-- `5ed69c23c8` task: set dfaad231 state
-- `28ca458c20` task: set dfaad231 details
-- `63d82046a6` task: set dfaad231 priority assignee labels
-- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
-- `cdef7f9a58` history: import 108 changes
-- `89c5f19d03` task: import 37 tasks
-- `b646385392` add code specs
 - `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
 - `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
 - `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)

@@ -9,6 +9,12 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+
+- state: todo
+- priority: high
+- labels: native, perf
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -77,6 +83,24 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: closure conversion and partial application in the C back end (`610b2785`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
 - state: todo
@@ -95,23 +119,23 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
-## TypeScript bindings: export polymorphic functions with codec parameters (`e84ff062`)
+## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: interop, typescript
 
-Follow-up of 207cac21: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
 
-## TypeScript bindings: pass functions across (callbacks and closures) (`ef597118`)
+## TypeScript bindings: pass functions across (callbacks and closures) (`1474b99e`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: interop, typescript
 
-Follow-up of 207cac21: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
+Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 
@@ -147,14 +171,14 @@ From docs/spec/README.md, Known divergences.
 
 > claude: Filed by the TS-like dialect thread (D70).
 
-## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
+## TypeScript bindings: run in-process on the TypeScript kernel too (`353444f7`)
 
 - state: todo
 - priority: low
 - assignee: claude
 - labels: interop, typescript
 
-Follow-up of 207cac21: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
+Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -260,6 +284,15 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 
 Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
 
+## Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (`7ca05fc5`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #9aa115afc5
+
+deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is within 1.4x of or faster than wasm in V8 and 12-26x faster than the JIT. Numbers and roadmap in docs/spec/NATIVE.md (D80).
+
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 
 - state: done
@@ -295,17 +328,17 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 
 From docs/spec/README.md, Known divergences.
 
-## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`207cac21`)
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`17d50ae5`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: interop, typescript
-- links change #e6755a8eeb
+- links change #7510a284be
 
 From Dmytro: explore interop with ts and generating typescript binding types.
 
-> claude: Done (D80): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
+> claude: Done (D81): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
 
 ## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
 
