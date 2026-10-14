@@ -1,5 +1,8 @@
 # History of main
 
+- `753edf4687` history: import 646 changes
+- `c892328cc0` task: import from tasks.sexp
+- `fc7658bcb6` merge #13952's branch: JsGen.Spec refusals (22d58083) (by claude)
 - `7e4e80fa01` task: set 05658284 state
 - `c12e0556c6` task: comment on 05658284 (by claude)
 - `518cddbd4f` task: set 508d9443 state

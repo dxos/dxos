@@ -1,3 +1,6 @@
+(entry "753edf4687a74066442b5913732bebb30a4c8936fa1f1a7ecb44e3edd5af6718" "history: import 646 changes" "")
+(entry "c892328cc018e61b0e23a6170f1166e8e26bbded13ae47e9bccaff7371657a2a" "task: import from tasks.sexp" "")
+(entry "fc7658bcb651fe174ec922fa21a3f39b3ff101e7d4e008d571867e8d528ca26c" "merge #13952's branch: JsGen.Spec refusals (22d58083)" "claude")
 (entry "7e4e80fa0150762a53dc48dd1913052394d335ad848fd151f9f811b20ee0225e" "task: set 05658284 state" "")
 (entry "c12e0556c6eecbcd23020913242c860a0058a4198b18130d6ff45e93b32b1062" "task: comment on 05658284" "claude")
 (entry "518cddbd4f9fa4e6452b426690085497635723642897cb902cd771265979b73d" "task: set 508d9443 state" "")
