@@ -13,9 +13,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { NativeCapabilities, NativeEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const NativeSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [NativeCapabilities.Settings],
@@ -36,7 +33,7 @@ export const Ollama = Capability.lazyModule(
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {

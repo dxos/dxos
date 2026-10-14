@@ -322,21 +322,19 @@ export class ManagerState {
  * Tracks fibers forked by the manager's units so shutdown can interrupt in-flight work.
  */
 export class FiberTracker {
-  readonly #fibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
+  readonly #fibers = new Set<Fiber.Fiber<unknown, unknown>>();
 
   track(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Ref.update(this.#fibers, (fibers) => [...fibers, fiber]);
+    return Effect.sync(() => void this.#fibers.add(fiber));
   }
 
   untrack(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Ref.update(this.#fibers, (fibers) => fibers.filter((existing) => existing !== fiber));
+    return Effect.sync(() => void this.#fibers.delete(fiber));
   }
 
   /** Fire-and-forget: fork the effect and track the fiber until it settles. */
   fork(effect: Effect.Effect<unknown>): void {
-    const fiber = Effect.runFork(effect);
-    Effect.runSync(this.track(fiber));
-    Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
+    this.#trackUntilSettled(Effect.runFork(effect));
   }
 
   /**
@@ -345,18 +343,22 @@ export class FiberTracker {
    * cannot supply.
    */
   trackForked(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Effect.gen({ self: this }, function* () {
-      yield* this.track(fiber);
-      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
-    });
+    return Effect.sync(() => this.#trackUntilSettled(fiber));
   }
 
   interruptAll(): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
-      const fibers = yield* Ref.get(this.#fibers);
+      const fibers = [...this.#fibers];
+      this.#fibers.clear();
       yield* Effect.forEach(fibers, (fiber) => Fiber.interrupt(fiber), { concurrency: 'unbounded', discard: true });
-      yield* Ref.set(this.#fibers, []);
     });
+  }
+
+  // An exit observer rather than a forked `Fiber.await`: this runs per module activation, and each
+  // fork costs a scheduler hop (a clamped `setTimeout` in the browser).
+  #trackUntilSettled(fiber: Fiber.Fiber<unknown, unknown>): void {
+    this.#fibers.add(fiber);
+    fiber.addObserver(() => this.#fibers.delete(fiber));
   }
 }
 

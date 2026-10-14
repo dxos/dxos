@@ -14,9 +14,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { MeetingCapabilities, MeetingEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
   requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
@@ -42,7 +39,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
