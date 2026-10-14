@@ -55,7 +55,7 @@ const withCapabilities = Effect.provideService(
 
 const mailbox = (spaceId: string, handle = 'kai'): AgentMailbox.MailboxStatus => ({
   handle,
-  address: `${handle}@dx.pub`,
+  address: `${handle}@dxos.ai`,
   config: { spaceId, agent: 'a', channel: 'c', allowedSenders: ['dxos.org'] },
   threads: 2,
   pending: 0,
@@ -91,7 +91,7 @@ describe('email channel backend', () => {
     expect(toConnectionStatus(mailbox('OTHER'), 'SPACE')).toMatchObject({
       running: false,
       state: 'taken',
-      error: 'kai@dx.pub is taken.',
+      error: 'kai@dxos.ai is taken.',
     });
   });
 
