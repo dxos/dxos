@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DEUS in the browser</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <header>
+      <strong>DEUS</strong>
+      <span id="status">loading the kernel…</span>
+    </header>
+    <div id="layout">
+      <aside id="files">
+        <div class="title">Files <button id="new-file" title="New file">+</button></div>
+        <ol id="file-list"></ol>
+      </aside>
+      <section id="editor-pane">
+        <div class="title" id="file-name">no file</div>
+        <textarea id="editor" spellcheck="false" disabled></textarea>
+      </section>
+      <section id="terminal">
+        <pre id="output"></pre>
+        <form id="prompt">
+          <span>$ deus</span><input id="command" autocomplete="off" spellcheck="false" disabled />
+        </form>
+      </section>
+    </div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

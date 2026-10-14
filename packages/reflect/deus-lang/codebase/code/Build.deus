@@ -4,6 +4,20 @@ def Build.appended (image : Text) (out : Text) (trailer : Text) : {IO, Throw Fai
   let digits := toText (List.length (utf8 image))
   IO.appendFile out (image ++ repeat (20 - Text.length digits) "0" ++ digits ++ trailer)
 
+/-- Writes a static web page to the directory `out` that runs the image in the browser on the wasm
+  kernel: a terminal whose command lines run main with those arguments, with `IO` answered from an
+  in-memory file system the page edits (`deus-kernel/embed/host.mjs`, `platform/browser/`).
+  `deus.json` configures the page. -/
+def Build.browser (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
+  let page := require "DEUS_HOME" ++ "/platform/browser"
+  let crate := embedded image out
+  Build.tool
+    "cp"
+    [crate ++ "/embed/host.mjs", page ++ "/index.html", page ++ "/app.js", page ++ "/app.css", out]
+  IO.writeFile
+    (out ++ "/deus.json")
+    (Json.render (Json.obj [("cwd", Json.str "/work"), ("env", Json.obj [("HOME", Json.str "/home")]), ("files", Json.obj [])]))
+
 def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text) : {IO, Throw Failure} Unit :=
   let work := out ++ ".build"
   IO.mkdirp work
@@ -27,9 +41,24 @@ def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text
   if mac then Build.tool "codesign" ["--sign", "-", out] else ""
   IO.remove work
 
+/-- Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript
+  driver to the directory `out`; returns the kernel crate's directory. -/
+def Build.embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
+  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
+  if IO.exists wasm then "" else context "building the wasm kernel" [] (fun _ => Build.tool
+    "cargo"
+    ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
+  IO.mkdirp out
+  IO.writeFile (out ++ "/app.image") image
+  Build.tool "cp" [wasm, out ++ "/deus_kernel.wasm"]
+  Build.tool "cp" [crate ++ "/embed/kernel.mjs", out ++ "/kernel.mjs"]
+  crate
+
 /-
   `deus build`: a standalone executable for a term (D38), with `--native` a small one made from
-  the Rust kernel (D42), or with `--worker` a Cloudflare Worker serving an actor (D45).
+  the Rust kernel (D42), with `--worker` a Cloudflare Worker serving an actor (D45), or with `--browser` a static page
+  running it on the wasm kernel (D78).
 
   The executable is a Node single-executable application: the kernel, bundled into one script,
   plus the term's image as an asset. The tools are pinned by version and run through `npx`, so
@@ -103,15 +132,7 @@ def Build.tool (program : Text) (arguments : List Text) : {IO, Throw Failure} Te
   the Durable Object that serves it (`deus-kernel/embed/worker.mjs`) and `wrangler.toml`.
   `wrangler dev` in `out` serves it locally on workerd; `wrangler deploy` publishes it. -/
 def Build.worker (image : Text) (name : Text) (out : Text) : {IO, Throw Failure} Unit :=
-  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
-  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
-  if IO.exists wasm then "" else context "building the wasm kernel" [] (fun _ => Build.tool
-    "cargo"
-    ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
-  IO.mkdirp out
-  IO.writeFile (out ++ "/app.image") image
-  Build.tool "cp" [wasm, out ++ "/deus_kernel.wasm"]
-  Build.tool "cp" [crate ++ "/embed/kernel.mjs", out ++ "/kernel.mjs"]
+  let crate := embedded image out
   Build.tool "cp" [crate ++ "/embed/worker.mjs", out ++ "/worker.mjs"]
   IO.writeFile (out ++ "/wrangler.toml") (join
     "\n"

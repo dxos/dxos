@@ -84,6 +84,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 76  | 10-14 19:05 | 20m 00s        | `34324b58`  | namespace-tree snapshots and `deus migrate` (D72), full history kept on the remote, `--keep` removed (D73), bundles stay text (D74)                                                     |
 | 77  | 10-14 19:20 | 9m 00s         | `e1990e1f`  | a Unison-style codebase UI: finder by name and type, namespace pages, hover previews, change diffs; builtin pages and bucket content types fixed (D75, task dfaad231)                   |
 | 78  | 10-14 19:35 | 12m 00s        | `62a3bad2`  | the codebase catches up with the toolchain sources: stale references that exported as raw hashes renamed, codebase UI added (task b2166fc8)                                             |
-| 79  | 10-14 19:10 | 19m 00s        | this commit | Text.fromCodes surrogate pairs (D76); export names unnamed callees so it always restores (D77)                                                                                          |
+| 79  | 10-14 19:10 | 19m 00s        | `35f63ee2`  | Text.fromCodes surrogate pairs (D76); export names unnamed callees so it always restores (D77)                                                                                          |
+| 80  | 10-14 19:28 | 20m 40s        | this commit | DEUS in the browser: `deus build --browser`, an in-memory IO host for the wasm kernel, the whole toolchain as a page (D78, task 3b617154)                                               |
 
-Total from stage 1 to stage 79: 10h 23m.
+Total from stage 1 to stage 80: 10h 44m.

@@ -242,6 +242,29 @@ becomes a 500 response whose body is the result's JSON. It answers these request
 | `urn:deus:web:Alarm`   | 0        | `set milliseconds`             | `null`; later the actor gets `ALARM /alarm`    |
 | `#IO`                  | 0, 1, 15 | `print`, `eprint`, `wallClock` | as in the IO table                             |
 
+## The browser host
+
+[`deus-kernel/embed/host.mjs`](../../../deus-kernel/embed/host.mjs) runs images in a browser page
+([D78](../DECISIONS.md)). It uses no Node or DOM API, so the same module runs under Node's test runner.
+
+| Export                                                   | Meaning                                                                                                                                              |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createFiles(entries)`                                   | an in-memory file system from `{ [absolutePath]: text }`; directories exist implicitly, as the parents of files and of `mkdirp` paths                |
+| `ioHandler({ fs, args, env, cwd, stdin, out })`          | answers `#IO` op by op against `fs`; output accumulates in `out.stdout` and `out.stderr`                                                             |
+| `createDeus({ wasm, fs, env, abilities })`               | a kernel instance with a shared file system; `abilities` maps an IRI to `(op, args) => answer`, which may be asynchronous                            |
+| `deus.run(image, { entry, argument, args, cwd, stdin })` | runs one entry to completion and returns `{ stdout, stderr, code, result }`, `code` as the CLI's exit code ([CLI-JSON.md](./CLI-JSON.md#exit-codes)) |
+
+The host answers every `IO` operation in the table above. Relative paths resolve against `cwd`.
+`listDir` is sorted. `time` counts from the start of the run, `wallClock` comes from `Date.now()`, and
+`exec` answers exit code 127. `exit` abandons the run with its code. `writeBytes` stores each byte as
+one UTF-16 code unit.
+
+`deus build <term> -o <dir> --browser` writes a static page that runs the term's image with this host
+([IMAGE.md](./IMAGE.md#browser-page)). With the toolchain seed as the image, every CLI command runs in
+the page against the in-memory files. Measured in headless Chromium on the toolchain's own codebase
+(2,800 files): `ls` 0.37 s, `view` 0.8 s, `eval` 0.95 s, `test Json` 0.46 s. These are the native Rust
+kernel's times; most of the cost is the toolchain, plus about 60 ms per command to read the image again.
+
 ## The WASI kernel
 
 `cargo build --release --target wasm32-wasip1` builds the same machine as a WASI command
