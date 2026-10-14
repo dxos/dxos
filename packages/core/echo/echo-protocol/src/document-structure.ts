@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { invariant } from '@dxos/invariant';
 import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
@@ -15,6 +17,27 @@ import { createIdFromSpaceKey } from './space-id.ts';
 /** Largest JSON (characters) and stored changes (bytes) a client backs an object with instead of its document. */
 export const BACKED_OBJECT_LIMIT = 64 * 1024;
 
+/**
+ * Whether a client can back `structure` with its document's stored changes: the document's only object,
+ * with no links, and not merged into another.
+ */
+export const isBackable = (doc: DatabaseDirectory, structure: EntityStructure): boolean =>
+  Object.keys(doc.objects ?? {}).length === 1 &&
+  Object.keys(doc.links ?? {}).length === 0 &&
+  structure.system?.mergedInto === undefined;
+
+/**
+ * The JSON text a query row backs `structure` with, or `undefined` when it cannot be backed or the text
+ * exceeds {@link BACKED_OBJECT_LIMIT}.
+ */
+export const backingJson = (doc: DatabaseDirectory, structure: EntityStructure, json: unknown): string | undefined => {
+  if (!isBackable(doc, structure)) {
+    return undefined;
+  }
+  const text = JSON.stringify(json);
+  return text.length <= BACKED_OBJECT_LIMIT ? text : undefined;
+};
+
 export type SpaceState = {
   // Url of the root automerge document.
   rootUrl?: string;
@@ -25,6 +48,46 @@ export type SpaceState = {
  */
 export type EntityProp = string;
 export type EntityPropPath = EntityProp[];
+
+/**
+ * Escaped property path within an object.
+ *
+ * Escaping rules:
+ *
+ * - '.' -> '\.'
+ * - '\' -> '\\'
+ * - contact with .
+ */
+export const EscapedPropPath: Schema.Codec<string, string> & {
+  escape: (path: EntityPropPath) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => EntityPropPath;
+} = class extends Schema.String.annotate({ title: 'EscapedPropPath' }) {
+  static escape(path: EntityPropPath): EscapedPropPath {
+    return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
+  }
+
+  static unescape(path: EscapedPropPath): EntityPropPath {
+    const parts: string[] = [];
+    let current = '';
+
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] === '\\') {
+        invariant(i + 1 < path.length && (path[i + 1] === '.' || path[i + 1] === '\\'), 'Malformed escaping.');
+        current = current + path[i + 1];
+        i++;
+      } else if (path[i] === '.') {
+        parts.push(current);
+        current = '';
+      } else {
+        current += path[i];
+      }
+    }
+    parts.push(current);
+
+    return parts;
+  }
+};
+export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;
 
 /**
  * Link to all documents that hold objects in the space.

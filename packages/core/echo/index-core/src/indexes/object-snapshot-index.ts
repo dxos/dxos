@@ -71,21 +71,24 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
-   * Each document object's JSON text with the heads it was read at, in one read so the two agree.
-   * Objects stored without heads are omitted.
+   * Each document object's JSON text with the heads it was read at, in one read so the two agree, and
+   * the document's bytes where the host stored them. Objects stored without heads are omitted.
    */
-  queryBackings(
-    recordIds: readonly number[],
-  ): Effect.Effect<readonly { recordId: number; json: string; heads: string[] }[], SqlError.SqlError> {
+  queryBackings(recordIds: readonly number[]): Effect.Effect<readonly ObjectBacking[], SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
-      const results: { recordId: number; json: string; heads: string[] }[] = [];
+      const results: ObjectBacking[] = [];
       for (const chunk of chunkArray(recordIds)) {
-        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string }>`
-          SELECT recordId, snapshot, heads FROM objectSnapshot
+        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string; bytes: StoredBlob | null }>`
+          SELECT recordId, snapshot, heads, bytes FROM objectSnapshot
           WHERE recordId IN ${sql.in(chunk)} AND heads IS NOT NULL`;
         for (const row of rows) {
-          results.push({ recordId: row.recordId, json: row.snapshot, heads: JSON.parse(row.heads) });
+          results.push({
+            recordId: row.recordId,
+            json: row.snapshot,
+            heads: JSON.parse(row.heads),
+            ...(row.bytes !== null && { bytes: toUint8Array(row.bytes) }),
+          });
         }
       }
       return results;
@@ -164,15 +167,24 @@ export class ObjectSnapshotIndex implements Index {
           recordId,
           snapshot: JSON.stringify(merged),
           heads: object.heads ? JSON.stringify(object.heads) : null,
+          bytes: object.heads && object.bytes ? object.bytes : null,
         };
       });
 
       for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
-            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads
+            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, bytes = excluded.bytes
           `;
       }
     }),
   );
 }
+
+/** An object's JSON with the heads it was read at, and its document's bytes when the host stored them. */
+export type ObjectBacking = { recordId: number; json: string; heads: string[]; bytes?: Uint8Array };
+
+/** SQLite drivers hand a BLOB back as a `Uint8Array` (node, wa-sqlite) or an `ArrayBuffer` (Durable Object storage). */
+type StoredBlob = Uint8Array | ArrayBuffer;
+
+const toUint8Array = (blob: StoredBlob): Uint8Array => (blob instanceof Uint8Array ? blob : new Uint8Array(blob));
