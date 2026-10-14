@@ -1,5 +1,6 @@
 # History of main
 
+- `b8fc2ca902` history: import 9 changes
 - `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
 - `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
 - `f157773921` task: set 2bbc3445 state (by claude)
@@ -69,6 +70,15 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
+- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
+- `5ed69c23c8` task: set dfaad231 state
+- `28ca458c20` task: set dfaad231 details
+- `63d82046a6` task: set dfaad231 priority assignee labels
+- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
+- `cdef7f9a58` history: import 108 changes
+- `89c5f19d03` task: import 37 tasks
+- `b646385392` add code specs
 - `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
 - `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
 - `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
