@@ -1,5 +1,11 @@
 # History of main
 
+- `4ef7e0a283` close ec1edf34 by #9791b74c6b (by claude)
+- `9791b74c6b` the explorer's report tool: a screenshot filed as a labelled task (D86) (by claude)
+- `20d212c7e4` task: open ec1edf34 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
+- `07c79505a1` history: import 213 changes
+- `42c39f5638` task: import from tasks.sexp
+- `14b39bdcec` add code specs
 - `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
 - `44e512757f` close d2328509 by #0f3089d483 (by claude)
 - `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)

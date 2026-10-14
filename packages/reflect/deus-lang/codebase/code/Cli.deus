@@ -419,8 +419,9 @@ def Cli.expandPaths (paths : List Text) : {IO} List Text := concatMap (fun path 
 def Cli.explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let out := getOr (option args "out") (dir ++ "/cache/site")
-  let pages := Explorer.generate dir out
+  -- The console goes first, so meta.json can say whether the site has one.
   if flag args "console" || IO.exists (out ++ "/console/codebase.json") then console dir out else 0
+  let pages := Explorer.generate dir out
   match (option args "publish", option args "out") with
   | (Option.some name, _) =>
       match publishSite dir name out (flag args "force") with
@@ -951,9 +952,9 @@ def Cli.push (args : Args) : {IO, Throw Text} Unit :=
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
   let site := if IO.exists (siteManifest dir name) && branch == currentBranch dir then
     let out := dir ++ "/cache/site-" ++ name
-    Explorer.generate dir out
     -- A site published with its console keeps it, on the codebase as pushed (D84).
     if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir name)) "") then console dir out else 0
+    Explorer.generate dir out
     Option.some (snd (publishSite dir name out false))
   else Option.none
   let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []

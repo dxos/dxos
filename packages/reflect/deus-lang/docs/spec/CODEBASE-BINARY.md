@@ -239,11 +239,11 @@ request = "(request" { " (" field " " string ")" } " (assets" { " (asset " sha25
 field   = "kind" | "by" | "at" | "subject" | "note" | "title" | "details" | "link" | "labels" | "task"
 ```
 
-| `kind`         | Fields used                        | Applied as                                                                                   |
-| -------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| `comment`      | `subject`, `note`, assets          | a comment on `def:<name>` or `change:<causal>`                                               |
+| `kind`         | Fields used                                  | Applied as                                                                                                                            |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `comment`      | `subject`, `note`, assets                    | a comment on `def:<name>` or `change:<causal>`                                                                                        |
 | `task`         | `title`, `details`, `link`, `labels`, assets | a new task linked to the definition `link` names, if it exists, with the comma-separated `labels` (D86); assets go in a first comment |
-| `task-comment` | `task`, `note`, assets             | a comment on the task with that id or unique id prefix                                       |
+| `task-comment` | `task`, `note`, assets                       | a comment on the task with that id or unique id prefix                                                                                |
 
 `by` must be `github:<login>`, and it is recorded as the change's provenance; `at` is the time filed, in
 RFC 3339. `deus inbox` applies the requests to the current branch in name order, one change each, and

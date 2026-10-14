@@ -118,7 +118,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let branch := currentBranch dir
   IO.writeFile
     (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
+    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)

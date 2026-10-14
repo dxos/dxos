@@ -469,6 +469,15 @@ From docs/spec/README.md, Known divergences.
 
 Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
 
+## Explorer report tool: signed-in members file a screenshot of the current view as a task (`ec1edf34`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #9791b74c6b
+
 ## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
 
 - state: done

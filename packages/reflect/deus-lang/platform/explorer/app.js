@@ -1916,7 +1916,10 @@ const drawPage = async () => {
   const root = document.createElement('div');
   root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
   root.setAttribute('class', document.body.className);
-  root.setAttribute('style', `${tokens};width:${width}px;height:${height}px;overflow:hidden;background:var(--bg);color:var(--fg)`);
+  root.setAttribute(
+    'style',
+    `${tokens};width:${width}px;height:${height}px;overflow:hidden;background:var(--bg);color:var(--fg)`,
+  );
   root.append(...copy.childNodes);
   const markup = new XMLSerializer().serializeToString(root);
   const style = styleText.replace(/\bbody\b/g, '.page-shot').replace(/:root/g, '.page-shot');
@@ -1935,7 +1938,9 @@ const drawPage = async () => {
   const context = canvas.getContext('2d');
   context.scale(scale, scale);
   context.drawImage(image, 0, 0);
-  return new Promise((done, fail) => canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'));
+  return new Promise((done, fail) =>
+    canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+  );
 };
 
 /** Asks the browser to share this tab and keeps one frame: the fallback when the page cannot draw itself. */
@@ -1950,7 +1955,9 @@ const grabTab = async () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
-    return await new Promise((done, fail) => canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'));
+    return await new Promise((done, fail) =>
+      canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+    );
   } finally {
     stream.getTracks().forEach((track) => track.stop());
   }
@@ -1959,7 +1966,8 @@ const grabTab = async () => {
 /** What the reader was looking at, in words, for the report's details. */
 const placeOf = () => {
   const { keys } = parseFragment();
-  const what = ui.view === 'code' ? (keys.length > 0 ? keys.map(titleOf).join(', ') : 'the overview') : `the ${ui.view} view`;
+  const what =
+    ui.view === 'code' ? (keys.length > 0 ? keys.map(titleOf).join(', ') : 'the overview') : `the ${ui.view} view`;
   return `Reported from ${what}: ${location.href}\n${window.innerWidth}×${window.innerHeight}, ${navigator.userAgent}\n\n`;
 };
 
@@ -1982,7 +1990,9 @@ const report = async () => {
     form.details.value = placeOf();
   }
   if (shot) {
-    await attach(form, [new File([shot], `explorer-${new Date().toISOString().replace(/[:.]/g, '-')}.png`, { type: 'image/png' })]);
+    await attach(form, [
+      new File([shot], `explorer-${new Date().toISOString().replace(/[:.]/g, '-')}.png`, { type: 'image/png' }),
+    ]);
   } else {
     notify('Could not capture the page; attach a screenshot yourself');
   }
