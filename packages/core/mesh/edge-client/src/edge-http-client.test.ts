@@ -92,6 +92,69 @@ describe('EdgeHttpClient.request', () => {
     expect(targetCall?.[1]?.method).toBe('PUT');
     expect(targetCall?.[1]?.body).toBe(JSON.stringify({ spaceId: 'space' }));
   });
+
+  // WebKit never frees a cloned body whose other branch goes unread.
+  test('reads each response body once, without cloning it, and decodes every failure', async ({ expect }) => {
+    const json = { 'Content-Type': 'application/json' };
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const { pathname } = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+      switch (pathname) {
+        case '/auth':
+          return new Response(
+            JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl', expiresInMs: 60_000 } }),
+            {
+              status: 200,
+              headers: json,
+            },
+          );
+        case '/declined':
+          return new Response(JSON.stringify({ success: false, message: 'declined by edge' }), {
+            status: 200,
+            headers: json,
+          });
+        case '/refused':
+          return new Response(JSON.stringify({ success: false, message: 'refused by edge' }), {
+            status: 400,
+            headers: json,
+          });
+        case '/broken':
+          return new Response('bad request', { status: 400, headers: { 'Content-Type': 'text/plain' } });
+        default:
+          return new Response(JSON.stringify({ success: true, data: { running: true } }), {
+            status: 200,
+            headers: json,
+          });
+      }
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const clone = vi.spyOn(Response.prototype, 'clone');
+    try {
+      const client = new EdgeHttpClient('https://edge.example.com');
+      client.setIdentity({
+        peerKey: 'peer-key',
+        identityDid: 'did:halo:test',
+        presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
+      });
+
+      expect(await client.request(Context.default(), '/status', { method: 'GET' })).toEqual({ running: true });
+      await expect(client.request(Context.default(), '/declined', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('declined by edge'),
+        isRetryable: false,
+      });
+      await expect(client.request(Context.default(), '/refused', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('refused by edge'),
+      });
+      await expect(client.request(Context.default(), '/broken', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('HTTP code 400'),
+        cause: expect.objectContaining({ message: 'bad request' }),
+      });
+      expect(fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/declined'))).toHaveLength(1);
+      expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith('/auth'))).toBe(true);
+      expect(clone).not.toHaveBeenCalled();
+    } finally {
+      clone.mockRestore();
+    }
+  });
 });
 
 describe('EdgeHttpClient auth refresh', () => {

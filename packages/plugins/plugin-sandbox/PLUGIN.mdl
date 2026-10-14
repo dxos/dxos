@@ -15,7 +15,7 @@ URL back to load — the Coding (Dev) template's demo without a locally served C
 
 `exposePort` issues a URL that proxies any request to that port in the container with no `Authorization`,
 so a browser can fetch a manifest and import a module from it: on its own host,
-`https://<port>-<sandboxId>-<token><suffix>/` (`-dev.dx.pub` on dev, `.dx.pub` in production), or under
+`https://<port>-<sandboxId>-<token><suffix>/` (`-dev.dxos.ai` on dev, `.dxos.ai` in production), or under
 `<edge>/sandbox/preview/<sandboxId>/<port>/<token>/` where an env has no preview hosts. The random token is
 the only credential, and it is checked before the container is touched. Given the `command` that serves
 the port, the service starts it when it is not running and again whenever the container has slept, so the

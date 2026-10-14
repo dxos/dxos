@@ -8,7 +8,7 @@ import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -36,6 +36,7 @@ import { random } from '@dxos/random';
 import { Editor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as UiDialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import {
   createBasicExtensions,
@@ -52,6 +53,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
+import { Dialog } from '../Overlays/index.ts';
 import { Deck } from './Deck.tsx';
 
 type StoryItem = { id: string; title: string; icon: string };
@@ -290,6 +292,24 @@ const storyDeckState = Capability.makeModule(
   }),
 );
 
+const STORY_DIALOG = 'dxn:story:dialog';
+
+/** Opens the story dialog from a button, so focus starts outside it. */
+const DialogStory = () => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  return (
+    <>
+      <button
+        data-testid='story.dialog.open'
+        onClick={() => invokePromise(LayoutOperation.UpdateDialog, { subject: STORY_DIALOG, state: true })}
+      >
+        Open dialog
+      </button>
+      <Dialog />
+    </>
+  );
+};
+
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   // Shell state the Deck reads through the strict hooks on its first render, so it belongs on the
   // startup pass rather than the idle default these would otherwise normalize to.
@@ -336,6 +356,15 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               const title = subject?.title ?? String(data.attendableId);
               return <TestArticle title={title} content={contentFor(title)} />;
             },
+          }),
+          Surface.create({
+            id: 'storyDialog',
+            filter: AppSurface.component(AppSurface.Dialog, STORY_DIALOG),
+            component: () => (
+              <UiDialog.Content>
+                <input autoFocus data-testid='story.dialog.input' aria-label='Story dialog input' />
+              </UiDialog.Content>
+            ),
           }),
           Surface.create({
             id: 'storyArticleCompanion',
@@ -944,5 +973,22 @@ export const TestCompanionFitsTheDeck: Story = {
 
     // 3. Wide again.
     await waitFor(() => expect(companionClose(canvasElement)).not.toBeNull());
+  },
+};
+
+/** Closing a dialog returns focus to where it was, even though a field in the content took focus when it opened. */
+export const DialogReturnsFocus: Story = {
+  render: () => <DialogStory />,
+  play: async () => {
+    const body = within(document.body);
+    const open = await body.findByTestId('story.dialog.open', undefined, { timeout: 10_000 });
+    await userEvent.click(open);
+    await waitFor(() => expect(document.activeElement).toBe(body.getByTestId('story.dialog.input')), {
+      timeout: 5_000,
+    });
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByTestId('story.dialog.input')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(open));
   },
 };

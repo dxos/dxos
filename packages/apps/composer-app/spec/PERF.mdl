@@ -241,6 +241,32 @@ test QA-1: A project with a large task set and long documents
         answers. A live model's latency and variable tool use would otherwise be most of the number;
         this measures the app's side of an agent loop — streaming render, tool dispatch, the query
         itself — with a fixed 250 ms per turn that the wall time includes.
+    - name: Come back to the space
+      id: revisit-boot
+      do: Reopen the app at the fixture space, on the same profile.
+      expect: the app reaches ready with the space's navtree
+      note: |
+        The return visit, after every stage above has run with the space resident in the tab because
+        the fixture built it there. A new tab holds no document, so this and the next two stages are
+        where the app loads what its queries return — or answers them from the index without loading
+        anything. Read `echoObjectDocumentsLoaded` and `echoSnapshotObjects` beside the timings: the
+        first counts documents the tab loaded, the second objects it held from the index instead.
+    - name: Open the project again
+      id: revisit-open-project
+      do: Open the first project from the navtree and click the Tasks tab.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/$given.project.id"] }
+      expect: the task list renders and the first rows are visible
+      note: |
+        `reopen-project` on a cold tab: the time until a returning user sees their tasks. The list's
+        query covers all 200 tasks, and loading each one's document first is what this stage pays for.
+    - name: Load the rest of the tasks
+      id: revisit-load-tasks
+      do: Wait for the tab to go one second without loading an object or recomputing a query.
+      expect: every task the list's query returned is in the tab
+      note: |
+        The list is virtualized, so its first rows show while the rest of its query is still loading;
+        this stage holds the remainder, which would otherwise land uncounted between stages. Its wall
+        time includes the one-second quiet window.
   after:
     - name: Delete the fixture space
       do: Delete the space from its settings.

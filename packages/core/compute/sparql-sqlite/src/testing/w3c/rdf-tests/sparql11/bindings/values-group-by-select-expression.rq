@@ -1,0 +1,7 @@
+PREFIX : <http://example.org/>
+
+SELECT ?s (STR(?v) AS ?w) {
+  ?s :p ?o
+}
+GROUP BY ?s
+VALUES ?v { 1 }

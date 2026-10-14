@@ -12,12 +12,13 @@ import { StoryRole, StorySettingsToolbar } from '../modules/index.ts';
 import {
   type DiscordBotArgs,
   type FakeDiscordBot,
-  KAI_APPLICATION_ID,
+  KAI_APPLICATION_IDS,
   ModuleContainer,
   type ModuleLayout,
   createDecorators,
   edgeFake,
   ensureBotRecord,
+  getEdgeEnvironment,
   installFakeDiscordBot,
   setupAgent,
   setupDiscordAgent,
@@ -71,13 +72,13 @@ export const Setup: Story = {
     config: storyConfig(),
     onReady: async ({ db, invoker }) => {
       await setupAgent({ db, invoker, remote: true });
-      await ensureBotRecord(db, KAI_APPLICATION_ID);
+      await ensureBotRecord(db, KAI_APPLICATION_IDS[getEdgeEnvironment()]);
     },
   }),
   args: {
     layout: [
-      [companion('discord'), StoryRole.DiscordBot],
-      [companion('activity')],
+      [companion('discord'), companion('activity'), StoryRole.DiscordBot],
+      [StoryRole.AgentProperties, StoryRole.EmailChannel],
       [StoryRole.Conversation],
       [companion('brain')],
     ],

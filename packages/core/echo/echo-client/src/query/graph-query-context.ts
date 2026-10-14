@@ -2,17 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
+import { Event, type ReadOnlyEvent, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
-import { QueryAST } from '@dxos/echo-protocol';
+import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
+import {
+  type MergePlan,
+  compareWindowData,
+  createMergePlan,
+  evaluateCore,
+  keepRemoteEntry,
+  windowData,
+  writeAffects,
+} from './merge-plan.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
 import {
   getTargetSpacesForQuery,
@@ -37,6 +46,18 @@ export type GraphQueryContextProps = {
 export interface QuerySource {
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
+
+  /** Where entries come from. `local` and `registry` are in-process; anything else is remote evidence. */
+  readonly kind: QueryResult.Source;
+
+  /** Whether this source serves the current query at all. */
+  isServing(): boolean;
+
+  /** Answers integrated for the current query, re-runs that left it unchanged included; 0 when in-process. */
+  answers(): number;
+
+  /** Whether the current query's remote stream failed. */
+  isFailed(): boolean;
 
   // TODO(dmaretskyi): Make async.
   open(): void;
@@ -74,7 +95,8 @@ export interface QuerySource {
 }
 
 /**
- * Aggregates multiple query sources.
+ * The local query engine: answers from the in-process sources and merges remote answers as evidence, which
+ * local state revalidates before it is presented. See `docs/SYNC_QUERIES.md`.
  */
 export class GraphQueryContext implements QueryContext {
   private readonly _sources = new Set<QuerySource>();
@@ -82,6 +104,11 @@ export class GraphQueryContext implements QueryContext {
   private _query?: QueryAST.Query = undefined;
 
   private _ctx?: Context = undefined;
+
+  #plan?: MergePlan = undefined;
+
+  /** Remote answers integrated when a local write last fell in scope; the answer is stale until they pass it. */
+  #staleAt?: number = undefined;
 
   public changed = new Event<void>();
 
@@ -104,23 +131,32 @@ export class GraphQueryContext implements QueryContext {
       source.changed.on(this._ctx, () => {
         this.changed.emit();
       });
+      this.#watchLocalCommits(source);
     }
   }
 
   stop() {
     void this._ctx?.dispose();
+    this._ctx = undefined;
     for (const source of this.sources) {
       source.close();
     }
+    this.#staleAt = undefined;
     this._params.onStop();
   }
 
   getResults(): SourceEntry[] {
     // TODO: dedup by meta.key based on scope order (space results take precedence over registry).
-    if (!this._query) {
+    if (!this._query || !this.#plan) {
       return [];
     }
-    return Array.from(this._sources).flatMap((source) => source.getResults());
+    const local: SourceEntry[] = [];
+    const remote: SourceEntry[] = [];
+    for (const source of this._sources) {
+      (isInProcess(source) ? local : remote).push(...source.getResults());
+    }
+    const remoteAnswered = this.#servingRemotes().some((source) => source.answers() > 0);
+    return this.#merge(this._query, this.#plan, local, remote, remoteAnswered);
   }
 
   /**
@@ -139,6 +175,42 @@ export class GraphQueryContext implements QueryContext {
       return true;
     }
     return Array.from(this._sources).some((source) => source.isPending());
+  }
+
+  getCompleteness(): QueryResult.Completeness {
+    const plan = this.#plan;
+    if (!this._query || !plan) {
+      return 'pending';
+    }
+    const remote = this.#servingRemotes();
+    if (remote.length === 0 || this.#holdsAllIds(plan)) {
+      return 'complete';
+    }
+    if (remote.some((source) => source.isFailed())) {
+      return 'failed';
+    }
+    const answered = remote.filter((source) => source.answers() > 0);
+    if (answered.length === 0) {
+      // The working set claims text and timestamp queries it then declines, so the AST decides, not the source.
+      const localContributes =
+        plan.characteristics.synchronous &&
+        Array.from(this._sources).some((source) => isInProcess(source) && source.isServing());
+      return localContributes ? 'local-only' : 'pending';
+    }
+    if (this.#staleAt !== undefined && this.#remoteAnswers() <= this.#staleAt) {
+      return 'stale';
+    }
+    return answered.length < remote.length ? 'merged' : 'complete';
+  }
+
+  getSourceStates(): QueryResult.SourceState[] {
+    return Array.from(this._sources)
+      .filter((source) => source.isServing())
+      .map((source) => ({
+        source: source.kind,
+        state: source.isFailed() ? 'failed' : isInProcess(source) || source.answers() > 0 ? 'answered' : 'pending',
+        answers: source.answers(),
+      }));
   }
 
   async run(
@@ -183,7 +255,7 @@ export class GraphQueryContext implements QueryContext {
           count: results.length,
           query: Query.pretty(Query.fromAst(query)),
         });
-        return results;
+        return { inProcess: isInProcess(s), results };
       } catch (err) {
         log('run query error', {
           resolver: Object.getPrototypeOf(s).constructor.name,
@@ -196,12 +268,20 @@ export class GraphQueryContext implements QueryContext {
     if (runTasks.length === 0) {
       return [];
     }
-    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
-    return mergedResults;
+    const answers = await Promise.all(runTasks);
+    return this.#merge(
+      query,
+      createMergePlan(query),
+      answers.flatMap((answer) => (answer.inProcess ? answer.results : [])),
+      answers.flatMap((answer) => (answer.inProcess ? [] : answer.results)),
+      answers.some((answer) => !answer.inProcess),
+    );
   }
 
   update(query: QueryAST.Query): void {
     this._query = query;
+    this.#plan = createMergePlan(query);
+    this.#staleAt = undefined;
     for (const source of this._sources) {
       source.update(query);
     }
@@ -213,12 +293,127 @@ export class GraphQueryContext implements QueryContext {
       querySource.changed.on(this._ctx, () => {
         this.changed.emit();
       });
+      this.#watchLocalCommits(querySource);
     }
     if (this._query) {
       querySource.update(this._query);
     }
   }
+
+  /**
+   * In-process entries first, then every remote entry local evidence does not overrule. A property-ordered
+   * window also admits local matches that sort within the remote window, re-sorted and cut to its limit.
+   */
+  #merge(
+    query: QueryAST.Query,
+    plan: MergePlan,
+    local: SourceEntry[],
+    remote: SourceEntry[],
+    remoteAnswered: boolean,
+  ): SourceEntry[] {
+    const kept = remote.filter((entry) => keepRemoteEntry(plan, entry));
+    if (!plan.window) {
+      return [...local, ...kept];
+    }
+    // A window is the remote's to define; before it answers there is nothing to admit into. An empty answer is an
+    // answer, so local writes the index has not seen still enter it.
+    if (!remoteAnswered) {
+      return kept;
+    }
+    const { orders, limit } = plan.window;
+    // Sort data is read once per candidate, since a comparison against the live document re-reads it on
+    // every step of the sort, and only local matches that land inside the window are built into entries.
+    const candidates: WindowCandidate[] = kept.map((entry) => ({ id: entry.id, data: windowData(entry), entry }));
+    // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
+    const full = remote.length >= limit;
+    const boundary = full ? windowData(remote[remote.length - 1]) : undefined;
+    const admit = full ? (data: EntityStructure['data']) => compareWindowData(orders, data, boundary) <= 0 : undefined;
+    const seen = new Set(kept.map((entry) => entry.id));
+    for (const source of this._sources) {
+      if (!(source instanceof SpaceQuerySource) || !source.coversQuery(query)) {
+        continue;
+      }
+      for (const match of source.matchLocal(plan, admit)) {
+        if (seen.has(match.id)) {
+          continue;
+        }
+        seen.add(match.id);
+        candidates.push({ id: match.id, data: match.data, source });
+      }
+    }
+    // Stable, so entries the remote ordered as equals keep their order ahead of local matches that tie with them.
+    candidates.sort((left, right) => compareWindowData(orders, left.data, right.data));
+    const window: SourceEntry[] = [];
+    for (const candidate of candidates) {
+      if (window.length === limit) {
+        break;
+      }
+      const entry = 'entry' in candidate ? candidate.entry : candidate.source.entryFor(candidate.id);
+      if (entry) {
+        window.push(entry);
+      }
+    }
+    return window;
+  }
+
+  #watchLocalCommits(source: QuerySource): void {
+    if (this._ctx == null || !(source instanceof SpaceQuerySource)) {
+      return;
+    }
+    source.localCommits.on(this._ctx, (event) => this.#onLocalCommit(source, event));
+  }
+
+  /**
+   * A local write in scope marks a remote answer that local evidence cannot fully overrule as stale, and
+   * re-merges a query the working set does not serve itself (a window), whose entries it may now overrule.
+   */
+  #onLocalCommit(source: SpaceQuerySource, event: ItemsUpdatedEvent): void {
+    const plan = this.#plan;
+    if (!this._query || !plan || !source.coversQuery(this._query)) {
+      return;
+    }
+    if (!event.itemsUpdated.some(({ id }) => writeAffects(plan, source.coreById(id)))) {
+      return;
+    }
+    if (plan.staleOnLocalWrite && this.#servingRemotes().length > 0) {
+      this.#staleAt = this.#remoteAnswers();
+    }
+    if (!source.isServing()) {
+      this.changed.emit();
+    }
+  }
+
+  #servingRemotes(): QuerySource[] {
+    return Array.from(this._sources).filter((source) => !isInProcess(source) && source.isServing());
+  }
+
+  #remoteAnswers(): number {
+    return this.#servingRemotes().reduce((sum, source) => sum + source.answers(), 0);
+  }
+
+  /** A by-id query is whole once every id it names is loaded with a body in a space it covers. */
+  #holdsAllIds(plan: MergePlan): boolean {
+    if (!plan.ids || plan.ids.length === 0 || !this._query) {
+      return false;
+    }
+    const query = this._query;
+    const spaces = Array.from(this._sources).filter(
+      (source): source is SpaceQuerySource => source instanceof SpaceQuerySource && source.coversQuery(query),
+    );
+    return plan.ids.every((id) => spaces.some((source) => source.holdsBody(id)));
+  }
 }
+
+/** A loaded object local evaluation admits, with the document data a window orders it by. */
+type LocalMatch = { id: string; data: EntityStructure['data'] };
+
+/** A remote entry or a local match competing for a window's slots, with its sort data read once. */
+type WindowCandidate = { id: string; data: EntityStructure['data'] | undefined } & (
+  | { entry: SourceEntry }
+  | { source: SpaceQuerySource }
+);
+
+const isInProcess = (source: QuerySource): boolean => source.kind === 'local' || source.kind === 'registry';
 
 /**
  * Queries objects from the local working set.
@@ -226,9 +421,14 @@ export class GraphQueryContext implements QueryContext {
 export class SpaceQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
+  readonly kind = 'local';
+
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
   private _results?: SourceEntry<Obj.Any>[] = undefined;
+  readonly #covers = new WeakMap<QueryAST.Query, boolean>();
+  /** Present when a write can be applied to cached results as a delta instead of a full recompute. */
+  #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
 
@@ -254,6 +454,74 @@ export class SpaceQuerySource implements QuerySource {
     return this._database.spaceKey;
   }
 
+  /** Objects each local commit in this database wrote, delivered before the commit's db update event. */
+  get localCommits(): ReadOnlyEvent<ItemsUpdatedEvent> {
+    return this._database._localCommitEvent;
+  }
+
+  isServing(): boolean {
+    return this._query !== undefined;
+  }
+
+  answers(): number {
+    return 0;
+  }
+
+  isFailed(): boolean {
+    return false;
+  }
+
+  /** Whether `query` selects from this space, whether or not this source evaluates it itself. */
+  coversQuery(query: QueryAST.Query): boolean {
+    // Asked on every local write for every live query, and each answer walks the whole AST.
+    let covers = this.#covers.get(query);
+    if (covers === undefined) {
+      covers = this._isValidSourceForQuery(query) && this._servesSpaceScope(query);
+      this.#covers.set(query, covers);
+    }
+    return covers;
+  }
+
+  coreById(id: string): ObjectCore | undefined {
+    return this._database.getObjectCoreById(id, { load: false });
+  }
+
+  /** Whether the object is loaded here with a body, so local evaluation decides its membership. */
+  holdsBody(id: string): boolean {
+    return this.coreById(id)?.getObjectStructure() !== undefined;
+  }
+
+  /**
+   * Every object with an unindexed local write that local evaluation admits under the plan's flat filter and `admit`
+   * accepts by its document data, with that data.
+   */
+  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean): LocalMatch[] {
+    const matches: LocalMatch[] = [];
+    // Only an object with a local write the index has not seen can be missing from an index answer.
+    for (const id of this._database.unindexedWrites()) {
+      const core = this.coreById(id);
+      const data = core?.getObjectStructure()?.data;
+      // `admit` reads one sort key and runs first, so the full filter only sees objects inside the window.
+      if (
+        core &&
+        data !== undefined &&
+        (admit === undefined || admit(data)) &&
+        evaluateCore(plan, core) === true &&
+        // Every other working-set result waits for its strong dependencies, so an admitted one does too.
+        this._database.areStrongDepsSatisfied(core)
+      ) {
+        matches.push({ id, data });
+      }
+    }
+    return matches;
+  }
+
+  /** A working-set entry for a loaded object, as `matchLocal` admitted it. */
+  entryFor(id: string): SourceEntry<Obj.Unknown> | undefined {
+    const result = this._database.getObjectById<Obj.Unknown>(id, { deleted: true });
+    return result ? { id, result, match: { rank: 1 }, resolution: { source: 'local', time: 0 } } : undefined;
+  }
+
   open(): void {}
 
   close() {
@@ -266,19 +534,23 @@ export class SpaceQuerySource implements QuerySource {
       return;
     }
 
-    // Results haven't been computed yet — no stale cache to invalidate.
-    if (!this._results) {
-      return;
-    }
-
     if (!updateEvent) {
       this._results = undefined;
       this.changed.emit();
       return;
     }
 
+    if (this._results && this.#delta) {
+      if (this.#applyDelta(this._results, this.#delta, updateEvent)) {
+        this.changed.emit();
+      }
+      return;
+    }
+
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-    const resultIds = new Set(this._results.map((result) => result.id));
+    // Uncomputed results still signal a relevant write: a subscriber that has not read yet is notified of it
+    // before the write returns, rather than at whatever later event first computes its results.
+    const resultIds = new Set((this._results ?? []).map((result) => result.id));
     const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
       // If any updated object was in previous results, invalidate.
       if (resultIds.has(objectId)) {
@@ -372,11 +644,54 @@ export class SpaceQuerySource implements QuerySource {
     void this._ctx.dispose().catch(() => {});
     this._ctx = new Context();
     this._query = query;
+    this.#delta = deltaFor(query);
 
     this._database._updateEvent.on(this._ctx, this._onUpdate);
 
     this._results = undefined;
     this.changed.emit();
+  }
+
+  /**
+   * Applies written objects to the cached results, in the order a full recompute would produce, so a
+   * synchronous notification per write costs the write rather than a working-set scan. Falls back to a
+   * full recompute when an object's position is unknown.
+   *
+   * @returns whether membership changed.
+   */
+  #applyDelta(
+    results: SourceEntry<Obj.Any>[],
+    { filter, options }: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined },
+    event: ItemsUpdatedEvent,
+  ): boolean {
+    const entityManager = this._database._entityManager;
+    let next = results;
+    for (const { id } of event.itemsUpdated) {
+      const core = entityManager.getObjectCoreById(id, { load: false });
+      const matches = core != null && this._filterCore(core, filter, options);
+      const index = next.findIndex((entry) => entry.id === id);
+      if (index >= 0 && !matches) {
+        next = next.toSpliced(index, 1);
+      } else if (index < 0 && matches) {
+        const sequence = entityManager.objectSequence(id);
+        if (sequence === undefined) {
+          this._results = undefined;
+          return true;
+        }
+        const position = next.findIndex((entry) => (entityManager.objectSequence(entry.id) ?? Infinity) > sequence);
+        next = next.toSpliced(position < 0 ? next.length : position, 0, {
+          id,
+          result: this._database.getObjectById<Obj.Any>(id, { deleted: true }),
+          match: { rank: 1 },
+          resolution: { source: 'local', time: 0 },
+        });
+      }
+    }
+    if (next === results) {
+      return false;
+    }
+    this._results = next;
+    return true;
   }
 
   /**
@@ -481,6 +796,29 @@ export class SpaceQuerySource implements QuerySource {
     );
   }
 }
+
+/**
+ * The filter and options a write can be applied to as a delta: a single flat selection by type or wildcard
+ * with predicates a single document decides, which is exactly what `_filterCore` evaluates. By-id selection
+ * is excluded because the executor admits it on resolved rather than satisfied strong dependencies.
+ */
+const deltaFor = (
+  query: QueryAST.Query,
+): { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } | undefined => {
+  const simple = isSimpleSelectionQuery(query);
+  const { branches } = QueryAST.characteristics(query);
+  const [branch] = branches;
+  const eligible =
+    simple !== null &&
+    !simple.hasQueues &&
+    branches.length === 1 &&
+    branch.class === 'local-partial' &&
+    (branch.selection === 'type' || branch.selection === 'wildcard') &&
+    branch.predicates === 'local' &&
+    branch.traversal === 0 &&
+    branch.aggregate === 'none';
+  return eligible ? { filter: simple.filter, options: simple.options } : undefined;
+};
 
 const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
   switch (options?.deleted) {

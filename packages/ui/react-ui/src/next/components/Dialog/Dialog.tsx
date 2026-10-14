@@ -23,7 +23,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/Button.tsx';
-import { Container, DefaultGutterProvider } from '../Container/Container.tsx';
+import { Container, type ContainerProps, DefaultGutterProvider } from '../Container/Container.tsx';
 import { Group } from '../Group/Group.tsx';
 import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
@@ -250,24 +250,30 @@ DialogCloseTrigger.displayName = 'Dialog.CloseTrigger';
 // Body
 //
 
-type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> & {
-  children?: ReactNode;
-};
+type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> &
+  Pick<ContainerProps, 'gap'> & {
+    /** `center` holds the content in the middle of the Body, both ways, rather than at its start. */
+    align?: 'start' | 'center';
+    children?: ReactNode;
+  };
 
 /**
- * Composed scroll (decision 5): a `gutter='md'` Container as the viewport, so the thumb sits in the end gutter.
+ * Composed scroll (decision 5): a `gutter='md'` Container as the viewport, so the thumb sits in the end gutter; `gap`
+ * spaces its rows, since they are the Container's own items.
  * The element carries ScrollArea's `data-scope`, since parts cannot rescope a composed child (finding 10).
  */
-const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
-  <ScrollArea.Root {...props} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
-    <ScrollArea.Viewport asChild>
-      <Container gutter='md'>
-        {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
-        <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
-      </Container>
-    </ScrollArea.Viewport>
-  </ScrollArea.Root>
-));
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(
+  ({ classNames, gap, align, children, ...props }, forwardedRef) => (
+    <ScrollArea.Root {...props} data-align={align} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
+      <ScrollArea.Viewport asChild>
+        <Container gutter='md' gap={gap}>
+          {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
+          <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  ),
+);
 
 DialogBody.displayName = 'Dialog.Body';
 

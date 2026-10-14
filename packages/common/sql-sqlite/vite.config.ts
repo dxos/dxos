@@ -16,6 +16,9 @@ export default defineConfig({
     'platform/browser': 'src/platform/browser.ts',
     'platform/bun': 'src/platform/bun.ts',
     'platform/node': 'src/platform/node.ts',
+    'platform/sql-storage-browser': 'src/platform/sql-storage-browser.ts',
+    'platform/sql-storage-bun': 'src/platform/sql-storage-bun.ts',
+    'platform/sql-storage-node': 'src/platform/sql-storage-node.ts',
   },
   // Undeclared dep, reached only through this package — inlined rather than left for
   // consumers to resolve.
@@ -28,7 +31,7 @@ export default defineConfig({
     browser: {
       browsers: ['chromium'],
       // Pulled in only by `opfs-in-worker-test-worker.ts`, so vite discovers them once the worker boots.
-      optimizeDeps: ['effect/Deferred', 'effect/Fiber'],
+      optimizeDeps: ['effect/Deferred', 'effect/Fiber', 'effect/Option'],
     },
   },
 });

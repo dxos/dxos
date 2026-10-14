@@ -14,6 +14,7 @@ import * as Schedule from 'effect/Schedule';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
@@ -21,6 +22,7 @@ import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
 
 import { TAURI_LOCALHOST_PORTS } from '../constants.ts';
+import { saveBeforeLeaving, unsavedChangesToast } from '../unsaved-changes.ts';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
@@ -66,7 +68,20 @@ export default Capability.makeModule(
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
     const registry = yield* Capabilities.AtomRegistry;
-    const { invoke } = yield* Capabilities.OperationInvoker;
+    const { invoke, invokePromise } = yield* Capabilities.OperationInvoker;
+    const capabilities = yield* Capability.Service;
+
+    // The shell cannot hold a relaunch the way it holds a quit, so changes only this page has are saved first.
+    const relaunchSaved = async () => {
+      if (await saveBeforeLeaving(capabilities.getAll(AppCapabilities.UnsavedChanges))) {
+        await relaunch();
+      } else {
+        await invokePromise(
+          LayoutOperation.AddToast,
+          unsavedChangesToast('restart', () => void relaunch()),
+        );
+      }
+    };
 
     // The two disabled states are distinct to the reader: a dev server on macOS would update fine
     // once packaged, so reporting it as an unsupported platform is wrong.
@@ -153,7 +168,7 @@ export default Capability.makeModule(
         await doInstall();
       },
       apply: async () => {
-        await relaunch();
+        await relaunchSaved();
       },
     };
 
@@ -182,7 +197,7 @@ export default Capability.makeModule(
         duration: Infinity,
         actionLabel: ['update.label', { ns: meta.profile.key }],
         actionAlt: ['update.alt', { ns: meta.profile.key }],
-        onAction: () => relaunch(),
+        onAction: () => void relaunchSaved(),
       });
       return false;
     });

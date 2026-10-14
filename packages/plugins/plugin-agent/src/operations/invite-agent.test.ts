@@ -23,16 +23,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import {
-  AgentPresence,
-  type AgentSpace,
-  BrainService,
-  Goal,
-  Memory,
-  MemoryOperation,
-  Mode,
-  TriggerOperation,
-} from '#types';
+import { AgentPresence, type AgentSpace, BrainService, Goal, MemoryOperation, Mode, TriggerOperation } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 import { invitees } from '../capabilities/invitee-source.ts';
@@ -49,7 +40,6 @@ const TYPES = [
   Text.Text,
   Instructions.Instructions,
   Mode.Mode,
-  Memory.Memory,
   Goal.Goal,
   Person.Person,
   Organization.Organization,

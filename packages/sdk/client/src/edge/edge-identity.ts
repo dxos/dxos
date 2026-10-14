@@ -25,16 +25,19 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
       const rpc = client.services.rpc;
       const authCredential = await runServiceCall(
         Context.empty(),
-        rpc['IdentityService.createAuthCredential'](undefined),
-        { label: 'IdentityService.createAuthCredential' },
+        rpc,
+        'IdentityService.createAuthCredential',
+        undefined,
       );
       return runServiceCall(
         Context.empty(),
-        rpc['IdentityService.signPresentation']({
+        rpc,
+        'IdentityService.signPresentation',
+        {
           presentation: buf.create(PresentationSchema, { credentials: [authCredential] }),
           nonce: challenge,
-        }),
-        { timeout: RPC_TIMEOUT, label: 'IdentityService.signPresentation' },
+        },
+        { timeout: RPC_TIMEOUT },
       );
     },
   };

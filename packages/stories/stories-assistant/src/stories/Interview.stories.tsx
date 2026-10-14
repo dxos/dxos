@@ -11,7 +11,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
@@ -190,7 +189,6 @@ const INTERVIEW_TYPES = [
   Person.Person,
   Organization.Organization,
   HasSubject.HasSubject,
-  Memory.Memory,
   Goal.Goal,
   ProfileOf.ProfileOf,
 ];
@@ -226,18 +224,15 @@ const decorators = createDecorators({
 type SpaceSummary = {
   people: string[];
   goals: { title: string; status: Goal.Status }[];
-  memories: number;
 };
 
 /** What the interview has written, as plain data so a failed wait can report it. */
 const summarize = async (db: Database.Database): Promise<SpaceSummary> => {
   const people = await db.query(Filter.type(Person.Person)).run();
   const goals = await db.query(Filter.type(Goal.Goal)).run();
-  const memories = await db.query(Filter.type(Memory.Memory)).run();
   return {
     people: people.map(({ fullName }) => fullName ?? ''),
     goals: goals.map(({ title, status }) => ({ title, status })),
-    memories: memories.length,
   };
 };
 
@@ -325,13 +320,10 @@ export const TestInterviewScripted: Story = {
     await waitFor(() => expect(canvas.getByTestId('agent-state-people').textContent).toBe('1'));
     within(await canvas.findByRole('region', { name: 'Identity' })).getByText('Interview');
 
-    // 7. The space holds one interviewee, two confirmed goals and three memories.
+    // 7. The space holds one interviewee and two confirmed goals; the memories are in the agent's brain (step 6).
     await waitForSpace(
-      ({ people, goals, memories }) =>
-        people.length === 1 &&
-        goals.length === 2 &&
-        goals.every(({ status }) => status === 'confirmed') &&
-        memories >= 3,
+      ({ people, goals }) =>
+        people.length === 1 && goals.length === 2 && goals.every(({ status }) => status === 'confirmed'),
     );
   },
 };

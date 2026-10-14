@@ -8,5 +8,6 @@ export const AgentActivity: ComponentType<any> = lazy(() => import('./AgentActiv
 export const AgentKnowledge: ComponentType<any> = lazy(() => import('./AgentKnowledge/index.ts'));
 export const AgentPrivateChat: ComponentType<any> = lazy(() => import('./AgentPrivateChat/index.ts'));
 export const AgentsPanel: ComponentType<any> = lazy(() => import('./AgentsPanel/index.ts'));
+export const EmailChannelProperties: ComponentType<any> = lazy(() => import('./EmailChannelProperties/index.ts'));
 export const BrainStore: ComponentType<any> = lazy(() => import('./BrainStore/index.ts'));
 export const ProfileProperties: ComponentType<any> = lazy(() => import('./ProfileProperties/index.ts'));

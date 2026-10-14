@@ -103,7 +103,7 @@ export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions;
 /** The camera: fit and zoom, beside its own numbers; nothing here changes the scene. */
 export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarProps) => {
   return (
-    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
+    <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
       <Button.Root
         variant='ghost'
         iconOnly
@@ -152,7 +152,7 @@ export type ActionToolbarProps = Util.ThemedClassName<{
 /** Everything that changes the scene, plus snap, history, clipboard, creation and debug. */
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
-    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
+    <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
       <Button.Root
         variant='ghost'
         iconOnly

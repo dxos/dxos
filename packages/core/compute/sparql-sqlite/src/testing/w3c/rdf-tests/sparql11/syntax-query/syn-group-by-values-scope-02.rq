@@ -1,0 +1,9 @@
+# ?v is bound by the trailing VALUES clause, which is joined before the SELECT expressions are evaluated.
+
+PREFIX : <http://example/>
+
+SELECT ?s (STR(?v) AS ?w) WHERE {
+  ?s :p ?o
+}
+GROUP BY ?s
+VALUES ?v { 1 }

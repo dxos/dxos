@@ -6,7 +6,15 @@ import { DataFactory } from 'n3';
 import { describe, test } from 'vitest';
 
 import { type Fact } from './Fact.ts';
+import * as Graph from './Graph.ts';
 import * as Mapping from './Mapping.ts';
+import * as Vocab from './Vocab.ts';
+
+/** A fact as stored: its predicate carries the IRI it resolved to. */
+const stored = (fact: Fact): Fact => ({
+  ...fact,
+  assertion: { ...fact.assertion, predicateIri: Mapping.predicateOf(fact) },
+});
 
 const FACT: Fact = {
   id: 'fact-1',
@@ -23,12 +31,12 @@ const FACT: Fact = {
   sourceHash: 'h1',
 };
 
-describe('fact ↔ triples mapping', () => {
-  test('round-trips a fact through reified triples', ({ expect }) => {
+describe('fact ↔ quads mapping', () => {
+  test('round-trips a fact through its own graph', ({ expect }) => {
     const quads = Mapping.factToTriples(FACT);
     expect(quads.length).toBeGreaterThan(5);
     const [back] = Mapping.triplesToFacts(quads);
-    expect(back).toEqual(FACT);
+    expect(back).toEqual(stored(FACT));
   });
 
   test('round-trips a fact with a literal object and no agent', ({ expect }) => {
@@ -43,7 +51,7 @@ describe('fact ↔ triples mapping', () => {
       attribution: { source: 'dxn:queue:x:m3', generatedAtTime: '2026-06-08T00:00:00.000Z' },
     };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('round-trips a fact with wasDerivedFrom and span', ({ expect }) => {
@@ -58,13 +66,13 @@ describe('fact ↔ triples mapping', () => {
       },
     };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('round-trips the extraction pass', ({ expect }) => {
     const fact: Fact = { ...FACT, id: 'fact-pass', pass: 'pass-1' };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('round-trips entity display labels (preserving surface casing)', ({ expect }) => {
@@ -78,7 +86,7 @@ describe('fact ↔ triples mapping', () => {
       },
     };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('omits illocution triples when the fact has no illocution', ({ expect }) => {
@@ -96,25 +104,25 @@ describe('fact ↔ triples mapping', () => {
       illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' },
     };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('round-trips an illocution with only force', ({ expect }) => {
     const fact: Fact = { ...FACT, id: 'fact-6', illocution: { force: 'commissive' } };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('round-trips an illocution with force and mood only', ({ expect }) => {
     const fact: Fact = { ...FACT, id: 'fact-7', illocution: { force: 'directive', mood: 'imperative' } };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('round-trips an illocution with force and addressee only', ({ expect }) => {
     const fact: Fact = { ...FACT, id: 'fact-8', illocution: { force: 'expressive', addressee: 'carol@example.com' } };
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
-    expect(back).toEqual(fact);
+    expect(back).toEqual(stored(fact));
   });
 
   test('rejects an invalid stored force', ({ expect }) => {
@@ -126,8 +134,59 @@ describe('fact ↔ triples mapping', () => {
     expect(() => Mapping.triplesToFacts(quads)).toThrow();
   });
 
-  test('throws when a required predicate triple is missing', ({ expect }) => {
-    const quads = Mapping.factToTriples(FACT).filter((quad) => !quad.predicate.value.endsWith('#predicate'));
+  test('throws when required provenance is missing', ({ expect }) => {
+    const quads = Mapping.factToTriples(FACT).filter((quad) => !quad.predicate.value.endsWith('#factuality'));
     expect(() => Mapping.triplesToFacts(quads)).toThrow();
+  });
+
+  test('stores the statement as a triple in the graph, and its provenance about the graph', ({ expect }) => {
+    const quads = Mapping.factToTriples(FACT);
+    const graph = Vocab.factIri(FACT.id).value;
+    expect(
+      quads.filter((quad) => quad.graph.value === graph && quad.predicate.value === Mapping.predicateOf(FACT)),
+    ).toHaveLength(1);
+    expect(
+      quads.find((quad) => quad.predicate.value.endsWith('#quote') || quad.predicate.value.endsWith('#factuality'))
+        ?.subject.value,
+    ).toBe(graph);
+  });
+
+  test('keeps an IRI entity as itself, and its label and kind in the graph', ({ expect }) => {
+    const fact: Fact = {
+      ...FACT,
+      id: 'fact-iri',
+      assertion: {
+        subject: { kind: 'entity', entity: 'echo://SPACE/RICH', label: 'Rich Burdon', type: 'person' },
+        predicate: 'has role',
+        object: { kind: 'entity', entity: 'founder', label: 'Founder' },
+      },
+      attribution: { agent: 'did:key:z6Mk', source: 'https://dxos.org/team', generatedAtTime: '2026-10-13T00:00:00Z' },
+    };
+    const quads = Mapping.factToTriples(fact);
+    expect(quads[0].subject.value).toBe('echo://SPACE/RICH');
+    expect(quads[0].predicate.value).toBe('https://schema.org/jobTitle');
+    // A slug is local to the graph that mentions it.
+    expect(quads[0].object.value).toBe(`${Vocab.factIri('fact-iri').value}#founder`);
+    const [back] = Mapping.triplesToFacts(quads);
+    expect(back.assertion.subject).toEqual(fact.assertion.subject);
+    expect(back.assertion.object).toEqual(fact.assertion.object);
+    expect(back.attribution.agent).toBe('did:key:z6Mk');
+    // A known predicate reads back as the ontology's label.
+    expect(back.assertion.predicate).toBe('has role');
+  });
+
+  test('a graph holds several statements, each its own fact, sharing the provenance', ({ expect }) => {
+    const [first, second] = Graph.assign([
+      FACT,
+      {
+        ...FACT,
+        id: 'other',
+        assertion: { ...FACT.assertion, predicate: 'manages', object: { kind: 'entity', entity: 'bob' } },
+      },
+    ]);
+    expect(first.graph).toBe(second.graph);
+    expect(first.id).not.toBe(second.id);
+    const back = Mapping.triplesToFacts([...Mapping.factToTriples(first), ...Mapping.factToTriples(second)]);
+    expect(back).toEqual([first, second]);
   });
 });

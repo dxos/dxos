@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
-import { Organization, Person } from '@dxos/types';
+import { Channel, Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import {
@@ -18,9 +18,10 @@ import {
   AgentPrivateChat,
   AgentsPanel,
   BrainStore,
+  EmailChannelProperties,
   ProfileProperties,
 } from '#containers';
-import { AgentCompanion } from '#types';
+import { AgentCompanion, AgentEmail } from '#types';
 
 import { AGENTS_PANEL_PATH } from './agents-panel.ts';
 
@@ -70,6 +71,17 @@ export default Capability.makeModule(() =>
         id: 'accountAgents',
         filter: AppSurface.literal(AppSurface.Article, AGENTS_PANEL_PATH),
         component: AgentsPanel,
+      }),
+      // An email channel's address and sender allowlist, wherever its properties show (the agent's channel list too).
+      Surface.create({
+        id: 'emailChannelProperties',
+        filter: AppSurface.object(
+          AppSurface.ObjectProperties,
+          Channel.Channel,
+          (data) => data.subject.backend.kind === AgentEmail.BACKEND_KIND,
+        ),
+        component: EmailChannelProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({

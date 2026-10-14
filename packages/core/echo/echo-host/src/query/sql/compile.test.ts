@@ -74,6 +74,7 @@ const seed = Effect.gen(function* () {
     createdAt: 1000,
     updatedAt: 2000,
     data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra, ...data },
+    heads: [`heads-${id}`],
   });
   const objects: IndexerObject[] = [
     doc(ids.project, PROJECT, { name: 'live' }),
@@ -215,8 +216,6 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // `objectSnapshot` strips `@meta` from document rows, so these predicates have nothing to read
-  // there and the executor sends the plan to the in-memory path instead.
   it.effect('declines plans whose filters read object meta', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
@@ -537,6 +536,19 @@ describe('SqlPlanCompiler', () => {
       );
       expect(rows.every((row) => row.documentJson === null)).toBe(true);
       expect(rows.every((row) => row.documentId.startsWith('doc-'))).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('ships each document row its heads', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
+
+      const { rows } = yield* run(fixture, query);
+      expect(rows).toHaveLength(2);
+      for (const row of rows) {
+        expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
+      }
     }).pipe(Effect.provide(TestLayer)),
   );
 });

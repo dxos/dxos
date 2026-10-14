@@ -31,9 +31,9 @@ import {
   RelaySkill,
   SupportSkill,
 } from '#skills';
-import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
+import { AgentOperation, ChatParticipant, Goal, Knowledge, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
 
-import { testSpaceLayer } from '../brain/testing.ts';
+import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -51,7 +51,6 @@ const TYPES = [
   Person.Person,
   Organization.Organization,
   HasSubject.HasSubject,
-  Memory.Memory,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,
@@ -72,8 +71,10 @@ const SKILLS = [
   SupportSkill.make(),
 ];
 
+const brain = makeTestBrain();
+
 const TestLayer = AssistantTestLayer({
-  extraServices: testSpaceLayer,
+  extraServices: Layer.merge(testSpaceLayer, brain.layer),
   operationHandlers: AgentOperationHandlerSet,
   types: TYPES,
   skills: SKILLS,
@@ -163,20 +164,21 @@ describe('Modes', () => {
     'records a note with a markdown body attached to its subject',
     Effect.fnUntraced(
       function* ({ expect }) {
+        const { agent } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const rich = yield* Database.add(Person.make({ fullName: 'Rich Burdon' }));
         const body = '- The migration must take the write lock first.\n- Dima owns the fix.';
-        const { memory: memoryRef } = yield* Operation.invoke(MemoryOperation.Remember, {
+        const { memory: id } = yield* Operation.invoke(MemoryOperation.Remember, {
+          agent,
           content: 'Notes on the indexer migration race.',
           kind: 'note',
           subjects: [Ref.make<Obj.Unknown>(rich)],
           body,
         });
-        const memory = yield* Database.load(memoryRef);
-        expect(memory.kind).toBe('note');
-        expect(memory.body).toBeDefined();
-        if (memory.body) {
-          expect((yield* Database.load(memory.body)).content).toBe(body);
-        }
+        const { memories } = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(rich) });
+        expect(memories).toEqual([expect.objectContaining({ memory: id, kind: 'note' })]);
+        const store = brain.facts((yield* Database.load(agent)).id);
+        const facts = store ? yield* store.query({}) : [];
+        expect(Knowledge.fromFacts(facts).find((memory) => memory.id === id)?.body).toBe(body);
       },
       Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,

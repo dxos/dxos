@@ -141,8 +141,9 @@ jobs:
           - name: Check public packages don't depend on private packages
             run: pnpm run check-public-dependencies
 
-          - name: Check public packages are published
-            run: pnpm run check-packages-published
+          # Disabled: edge consumes new packages from pkg.pr.new builds, so a first npm publish is not a merge prerequisite.
+          # - name: Check public packages are published
+          #   run: pnpm run check-packages-published
 
           # Both sides of the spec <-> `.mdl` QA binding. In stage 1 because it needs no build and
           # because the failure it catches — a renamed test leaving a flow claiming coverage it no
@@ -207,7 +208,8 @@ jobs:
   # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated one.
   # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
-  # instead.
+  # instead. A PR or merge group confined to `docs/` skips it: the docs site is a separate Astro project
+  # that nothing in Composer imports.
   boot-budget:
     if: >-
       ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
@@ -240,11 +242,27 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
+      # A diff that will not resolve counts as touching code, so the budget runs.
+      - name: Scope
+        id: scope
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if changed=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$changed" | grep -qv '^docs/'; then
+            echo 'docs-only=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::only docs/ changed — skipping the boot budget.'
+          else
+            echo 'docs-only=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup
+        if: steps.scope.outputs.docs-only != 'true'
         uses: ./.depot/actions/setup
 
       - name: Check boot budget
         id: budget
+        if: steps.scope.outputs.docs-only != 'true'
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
@@ -261,7 +279,7 @@ jobs:
 
       - name: Record this PR's measurement
         id: head
-        if: env.COMPARE == 'true'
+        if: env.COMPARE == 'true' && steps.scope.outputs.docs-only != 'true'
         continue-on-error: true
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

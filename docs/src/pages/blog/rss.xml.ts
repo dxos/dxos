@@ -4,12 +4,11 @@
 
 import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
-import { getCollection } from 'astro:content';
+
+import { getPublishedPosts } from '../../utils/blog.ts';
 
 export const GET = async (context: APIContext) => {
-  const posts = (await getCollection('blog')).sort(
-    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
-  );
+  const posts = await getPublishedPosts();
 
   return rss({
     title: 'DXOS Blog',

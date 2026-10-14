@@ -2,8 +2,8 @@
 
 Status: draft 4 (2026-10-03) — goals, home space and workspaces; architecture as built for the first
 spike. Memory model:
-[MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `discord-service/src/agent-bot/` and that repo's
-`.agents/projects/interlocutor/DESIGN.md`.
+[MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `discord-service/src/agent-bot/` (Discord),
+`compute-service/src/email/` (email) and that repo's `.agents/projects/interlocutor/DESIGN.md`.
 
 ## Goals
 
@@ -119,6 +119,17 @@ Every chat — the agent's primary chat and one per Discord thread — is a chil
 they share instructions, skills and memory. `Agent.loadChat` skips chats carrying a foreign key, so a
 thread never becomes the primary chat. Person and Organization properties show the profile panel
 (goals and memories, live).
+
+### 6. Email
+
+An agent can also have an address: an Email channel (`AgentEmail` config: handle, display name,
+allowed senders) in its `AgentChannels`. Connecting it claims `<handle>@dxos.ai` (`@dev.dxos.ai`
+on dev) through `AgentMailbox.AgentMailboxService` (`PUT <edge>/compute/email/mailboxes/:handle`). On EDGE,
+compute-service's `email` handler hands that handle's mail to an `AgentMailbox` Durable Object,
+which keeps one chat per email thread (`ensureChannelChat`, keyed by the thread's reply token),
+runs the agent's turn, and mails the reply in the same thread. Allowed senders default to
+`braneframe.com` and `dxos.org`, because each email costs a turn and the agent reads it as
+instructions. The agent only answers: it does not start new email threads yet.
 
 ## Home space and workspaces
 

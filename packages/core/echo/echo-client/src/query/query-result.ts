@@ -203,6 +203,14 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return unsubscribe;
   }
 
+  get completeness(): QueryResult.Completeness {
+    return this._queryContext.getCompleteness();
+  }
+
+  get sources(): readonly QueryResult.SourceState[] {
+    return this._queryContext.getSourceStates();
+  }
+
   get atom(): Atom.Atom<T[]> {
     if (!this._atom) {
       this._atom = Atom.make((get) => {
@@ -334,7 +342,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const kept: SourceEntry<T>[] = [];
     const removed: SourceEntry<T>[] = [];
     for (const entry of entries) {
-      (isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted() ? removed : kept).push(entry);
+      // The working set already applied the deleted option, so only remote entries can carry a tombstone;
+      // skipping the rest keeps this off the per-write path of a synchronous notification.
+      const tombstone =
+        entry.resolution?.source !== 'local' && isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted();
+      (tombstone ? removed : kept).push(entry);
     }
     return { kept, removed };
   }

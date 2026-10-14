@@ -61,7 +61,13 @@ import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions, type SpaceDocumentHeads } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  type DocumentRetention,
+  EntityManager,
+  type LoadObjectOptions,
+  type SpaceDocumentHeads,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -80,6 +86,9 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the data being saved to disk.
    */
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** Whether a change exists only in this client, so losing the page would lose it. Synchronous, for `beforeunload`. */
+  hasUnsavedChanges(): boolean;
 
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
@@ -198,6 +207,9 @@ export type EchoDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Which loaded object documents the database keeps in memory. */
+  documentRetention?: DocumentRetention;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -337,6 +349,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      documentRetention: params.documentRetention,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 
@@ -382,6 +395,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   get _updateEvent() {
     return this._entityManager._updateEvent;
+  }
+
+  get _localCommitEvent() {
+    return this._entityManager._localCommitEvent;
   }
 
   get opened() {
@@ -834,6 +851,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
   }
 
+  hasUnsavedChanges(): boolean {
+    return (
+      this._entityManager.hasUnsavedChanges() ||
+      this.#retiredFeeds.size > 0 ||
+      [...this.#feeds.values()].some((handle) => handle.hasPendingWrites())
+    );
+  }
+
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
     await Promise.all([
@@ -1017,10 +1042,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (!this.#feedService) {
       return EMPTY_FEED_SYNC_STATE;
     }
-    const response = await runServiceCall(
-      this.#runtime,
-      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-    );
+    const response = await runServiceCall(this.#runtime, this.#feedService, 'FeedService.getSyncState', {
+      spaceId: this.spaceId,
+      namespaces: [],
+    });
     return aggregateFeedSyncState(response);
   }
 
@@ -1141,6 +1166,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   allObjectCores() {
     return this._entityManager.allObjectCores();
+  }
+
+  /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
+  unindexedWrites(): Iterable<string> {
+    return this._entityManager.unindexedWrites();
   }
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {

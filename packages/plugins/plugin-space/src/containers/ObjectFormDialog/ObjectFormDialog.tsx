@@ -264,7 +264,8 @@ const ObjectFormDialogBody = ({
   // Read inside the create effect so a caller passing an inline object literal does not re-run it.
   const defaultsRef = useRef(defaults);
   defaultsRef.current = defaults;
-  // Set by the confirm button, which is the one dismissal route that keeps what the form built.
+  // Set by the confirm button, which is the one dismissal route that keeps what the form built. Once set, the dialog
+  // is closing, and a further pick or Enter that reaches it before it unmounts must not create again.
   const confirmed = useRef(false);
 
   // Escape, the overlay, and the close affordance dismiss the dialog without reaching a handler, and
@@ -300,7 +301,7 @@ const ObjectFormDialogBody = ({
   const parent = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
 
   const handleConfirm = useCallback(() => {
-    if (!object || !target) {
+    if (!object || !target || confirmed.current) {
       return;
     }
 
@@ -336,8 +337,8 @@ const ObjectFormDialogBody = ({
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
     ({ metadata, data = {} }) =>
       Effect.gen(function* () {
-        if (!target) {
-          // TODO(wittjosiah): UI feedback.
+        if (!target || confirmed.current) {
+          // TODO(wittjosiah): UI feedback when there is no target.
           return;
         }
 

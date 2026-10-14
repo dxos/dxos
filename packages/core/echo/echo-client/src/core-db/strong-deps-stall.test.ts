@@ -12,6 +12,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
+import { getObjectCore } from '../echo-handler/index.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
 
 // Originally reproduced the stall observed in
@@ -290,6 +291,52 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
     expect(results.some((object) => object.id === mainObjectId)).toBe(false);
+  });
+
+  test('an index-placed object with an unreachable strong dep settles to undefined, as its document load does', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const mainObjectId = EntityId.random();
+    const depObjectId = EntityId.random();
+    const mainDocHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [mainObjectId]: {
+          meta: { keys: [] },
+          data: { title: 'main' },
+          system: { kind: 'object', type: { '/': EID.make({ entityId: depObjectId }) } },
+        },
+      },
+    });
+    const sourceBuilder = new EchoTestBuilder();
+    await openAndClose(sourceBuilder);
+    const sourcePeer = await sourceBuilder.createPeer();
+    const orphanDepHandle = await sourcePeer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: { [depObjectId]: { meta: { keys: [] }, data: { name: 'unreachable-dep' }, system: { kind: 'object' } } },
+    });
+    db.getSpaceRootDocHandle().change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
+      newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.url);
+    });
+    await sleep(200);
+
+    const doc = mainDocHandle.doc()!;
+    const placed = db._entityManager.placeIndexRow(mainObjectId, mainDocHandle.documentId, () => ({
+      structure: doc.objects![mainObjectId],
+      heads: A.getHeads(doc),
+      updatedAt: undefined,
+      bytes: A.save(doc),
+      documentId: mainDocHandle.documentId,
+    }));
+    expect(placed).toBeDefined();
+    const settled = db._entityManager.settleEntity(getObjectCore(placed!), { allowDeleted: true });
+    expect(await asyncTimeout(settled, 1000)).toBeUndefined();
   });
 
   // The same unsatisfied-dependency state, asked the two ways a caller actually asks.
