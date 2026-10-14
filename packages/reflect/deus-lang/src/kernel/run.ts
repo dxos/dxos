@@ -3,6 +3,7 @@
 //
 
 import { ExitSignal, type HostOptions, createHost } from './host.ts';
+import { createCompiler } from './jit.ts';
 import { DeusDefect, DeusPanic, Machine, UNIT } from './machine.ts';
 import { createPrims } from './prims.ts';
 import { Str, readAll } from './sexp.ts';
@@ -24,6 +25,10 @@ export const runImage = (image: string, options: HostOptions): RunResult => {
     return { code: 71, steps: 0 };
   }
   const machine = new Machine(createPrims(), createHost(options));
+  // Profiles and traces count the machine's own steps, so they run without compiled code.
+  if (process.env.DEUS_JIT !== '0' && !machine.profile && !machine.trace) {
+    machine.compiler = createCompiler(machine);
+  }
   const entry = forms.find((form) => Array.isArray(form) && form[0] === 'main');
   if (!Array.isArray(entry) || !(entry[1] instanceof Str)) {
     stderrOf('panic: malformed image: no (main "hash") form\n');

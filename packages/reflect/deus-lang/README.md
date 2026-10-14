@@ -32,6 +32,7 @@ node bin/deus.mjs build Cli.main -o deus                     # the CLI as a stan
 
 - [`docs/USER.md`](./docs/USER.md) — the user's requirements, verbatim. The golden standard.
 - [`docs/DECISIONS.md`](./docs/DECISIONS.md) — the decision log.
+- [`docs/TIMELINE.md`](./docs/TIMELINE.md) — each stage with the wall time it took.
 - [`docs/DESIGN.md`](./docs/DESIGN.md) — the language and the toolchain.
 - [`docs/CORE.md`](./docs/CORE.md) — the Core IR, object and image formats.
 - [`docs/PRIOR-ART.md`](./docs/PRIOR-ART.md) — what was taken from Unison, Lean, Koka, Effect-TS and others.

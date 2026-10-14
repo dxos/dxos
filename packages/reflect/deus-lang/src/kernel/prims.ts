@@ -150,9 +150,16 @@ export const createPrims = (): Map<string, Prim> => {
     }
     return cell.value;
   });
-  def('Ref.set', 2, ([cell, v]) => {
+  def('Ref.set', 2, ([cell, v], machine) => {
     if (!(cell instanceof Cell)) {
       throw new DeusDefect(`expected Ref, got ${show(cell)}`);
+    }
+    if (machine.jitDepth > 0) {
+      // Compiled code may be replayed by the machine, which must see the cell as it was.
+      const old = cell.value;
+      machine.journal.push(() => {
+        cell.value = old;
+      });
     }
     cell.value = v;
     return new Con('#Unit', 0, []);
@@ -191,12 +198,30 @@ export const createPrims = (): Map<string, Prim> => {
   def('MutMap.new', 1, () => new HashTable(new Map(), true));
   def('MutMap.get', 2, ([m, k]) => optional(table(m, true).get(key(k))));
   def('MutMap.has', 2, ([m, k]) => table(m, true).has(key(k)));
-  def('MutMap.set', 3, ([m, k, v]) => {
-    table(m, true).set(key(k), v);
+  // Records how to undo a write made by compiled code, which the machine may replay.
+  const journal = (machine: Machine, map: Map<string | number, Value>, k: string | number) => {
+    if (machine.jitDepth > 0) {
+      const had = map.has(k);
+      const old = map.get(k);
+      machine.journal.push(() => {
+        if (had && old !== undefined) {
+          map.set(k, old);
+        } else {
+          map.delete(k);
+        }
+      });
+    }
+  };
+  def('MutMap.set', 3, ([m, k, v], machine) => {
+    const map = table(m, true);
+    journal(machine, map, key(k));
+    map.set(key(k), v);
     return new Con('#Unit', 0, []);
   });
-  def('MutMap.delete', 2, ([m, k]) => {
-    table(m, true).delete(key(k));
+  def('MutMap.delete', 2, ([m, k], machine) => {
+    const map = table(m, true);
+    journal(machine, map, key(k));
+    map.delete(key(k));
     return new Con('#Unit', 0, []);
   });
   def('MutMap.size', 1, ([m]) => table(m, true).size);

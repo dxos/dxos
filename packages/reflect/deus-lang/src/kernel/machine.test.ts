@@ -79,6 +79,23 @@ describe('kernel', () => {
     expect(stderr).toBe('defect: division by zero\n  at #inner\n  at #outer\n  at #main\n');
   });
 
+  test('compiled code that performs an operation is replayed without repeating its writes', ({ expect }) => {
+    const { stdout } = run(`
+      (def "bump" (lam (seq (app (prim "Ref.set") (var 0) (app (prim "Int.add") (app (prim "Ref.get") (var 0)) (int 1))) (app (op "Ask" 0 1) (con "#Unit" 0 0)))))
+      (def "main" (lam (let (app (prim "Ref.new") (int 0))
+        (seq ${print('(handle (app (ref "bump") (var 0)) (on "Ask" 0 1 (app (var 0) (int 5))))')} ${print('(app (prim "Ref.get") (var 0))')}))))
+      (main "main")`);
+    expect(stdout).toBe('51');
+  });
+
+  test('a compiled self tail call that swaps its arguments', ({ expect }) => {
+    const { stdout } = run(`
+      (def "swap" (lam (lam (lam (if (app (prim "eq") (var 0) (int 0)) (app (con "#Pair" 0 2) (var 2) (var 1)) (app (ref "swap") (var 1) (var 2) (app (prim "Int.sub") (var 0) (int 1))))))))
+      (def "main" (lam ${print('(app (ref "swap") (int 1) (int 2) (int 3))')}))
+      (main "main")`);
+    expect(stdout).toBe('(2, 1)');
+  });
+
   test('a global whose evaluation was aborted is evaluated again, not reported as a cycle', ({ expect }) => {
     const caught = '(handle (ref "bad") (on "#Defect" 0 1 (var 1)))';
     const { stdout } = run(`

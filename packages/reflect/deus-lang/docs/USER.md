@@ -91,3 +91,7 @@ proposals are ideas to solve things, you need to evaluate and choose the best ap
 ---
 
 - perf is important -- directly influences iteration speed -- invest in it
+
+---
+
+- can you keep a timeline for me in md file in docs -- I wanna see how this evolves -- record real wall time since last stage in each stage

@@ -152,6 +152,23 @@ export const listTo = (list: Value): Value[] => {
  */
 export class DeusDefect extends Error {}
 
+/** Thrown by compiled code that needs the machine (an operation, a handler, a continuation). */
+class Deopt extends Error {}
+
+/** One instance, so throwing it costs no stack capture. */
+export const DEOPT = new Deopt('deoptimize');
+
+/** A compiled lambda: its closure's environment and exactly its arity of arguments. */
+export type JitFn = (env: Env, args: Value[]) => Value;
+
+/** Compiles lambdas to JavaScript (`jit.ts`); null when a lambda needs the machine. */
+export type Compiler = { compile: (lam: Term) => JitFn | null };
+
+/** After this many deoptimizations a lambda stays on the machine. */
+const DEOPT_LIMIT = 8;
+
+const DEOPTED: unique symbol = Symbol('deopted');
+
 /** How many definitions a defect's stack trace lists. */
 const TRACE_DEPTH = 32;
 
@@ -166,17 +183,17 @@ export const DEFECT = '#Defect';
 // monomorphic for V8; a child slot a variant does not use points back at the node itself.
 //
 
-const VAR = 0;
-const CONST = 1;
-const REF = 2;
-const LAM = 3;
-const APP = 4;
-const LET = 5;
-const SEQ = 6;
-const LETREC = 7;
-const IF = 8;
-const MATCH = 9;
-const HANDLE = 10;
+export const VAR = 0;
+export const CONST = 1;
+export const REF = 2;
+export const LAM = 3;
+export const APP = 4;
+export const LET = 5;
+export const SEQ = 6;
+export const LETREC = 7;
+export const IF = 8;
+export const MATCH = 9;
+export const HANDLE = 10;
 
 /** A loaded definition: its Core form, compiled lazily, and its value once evaluated. */
 export class Global {
@@ -216,6 +233,12 @@ export class Term {
   q = false;
   /** The definition this term belongs to, for stack traces. */
   owner = '';
+  /** LAM: its compiled JavaScript once tried (null: it needs the machine), and how often it deoptimized. */
+  jit: JitFn | null | undefined = undefined;
+  deopts = 0;
+  /** LAM: the global it is the body of, or its index among a letrec's free variables, for self tail calls. */
+  selfHash = '';
+  selfIndex = -1;
 
   constructor(t: number) {
     this.t = t;
@@ -228,7 +251,7 @@ export class Term {
 /** Kept for callers that name the lambda variant; every term is a `Term`. */
 export type LamTerm = Term;
 
-class Clause {
+export class Clause {
   readonly arity: number;
   readonly body: Term;
 
@@ -238,7 +261,7 @@ class Clause {
   }
 }
 
-class Case {
+export class Case {
   readonly pat: Pattern;
   readonly guard: Term | null;
   readonly body: Term;
@@ -250,13 +273,13 @@ class Case {
   }
 }
 
-const P_ANY = 0;
-const P_VAR = 1;
-const P_AS = 2;
-const P_LIT = 3;
-const P_CON = 4;
+export const P_ANY = 0;
+export const P_VAR = 1;
+export const P_AS = 2;
+export const P_LIT = 3;
+export const P_CON = 4;
 
-class Pattern {
+export class Pattern {
   readonly k: number;
   /** P_AS: the inner pattern. */
   p: Pattern;
@@ -294,7 +317,7 @@ const constTerm = (value: Value): Term => {
 /** Signals that a quick evaluation needs the full machine (an unevaluated global). */
 const SLOW: unique symbol = Symbol('slow');
 
-const lookupIn = (env: Env, index: number): Value => {
+export const lookupIn = (env: Env, index: number): Value => {
   let e = env;
   let i = index;
   while (e !== null) {
@@ -439,6 +462,9 @@ const compileNode = (form: Sexp, prims: Map<string, Prim>, owner: string): Term 
           throw new DeusPanic('core: letrec binds lambdas only');
         }
         return fn;
+      });
+      node.args.forEach((fn, index) => {
+        fn.selfIndex = node.args.length - 1 - index;
       });
       node.b = go(parts[2]);
       return node;
@@ -595,6 +621,11 @@ export class Machine {
   maxSteps: number = Number(process.env.DEUS_MAX_STEPS ?? Infinity);
   /** Entries per definition, kept when `DEUS_PROFILE` is set. */
   profile: Map<string, number> | undefined = process.env.DEUS_PROFILE ? new Map() : undefined;
+  /** Compiles lambdas to JavaScript; absent, everything runs on the machine. */
+  compiler: Compiler | undefined = undefined;
+  /** How many compiled calls are running, and undo actions for the mutations they made. */
+  jitDepth = 0;
+  readonly journal: (() => void)[] = [];
 
   readonly prims: Map<string, Prim>;
   readonly host: HostHandler;
@@ -651,6 +682,7 @@ export class Machine {
       global.term = compileTerm(global.form, this.prims, global.hash);
     }
     if (global.term.t === LAM) {
+      global.term.selfHash = global.hash;
       global.value = new Closure(global.term, null);
       return global.value;
     }
@@ -697,7 +729,64 @@ export class Machine {
     }
   }
 
-  run(start: Term, startEnv: Env): Value {
+  /**
+   * Runs a closure's compiled code. Compiled code never captures a continuation: when it needs
+   * one (an operation, a defect, a deep JS stack) it throws, its mutations are undone and the
+   * machine replays the call, so the result is the machine's.
+   */
+  enter(fn: Closure, args: Value[]): Value | typeof DEOPTED {
+    const lam = fn.lam;
+    let jit = lam.jit;
+    if (jit === undefined && this.compiler) {
+      jit = this.compiler.compile(lam);
+      lam.jit = jit;
+    }
+    if (!jit) {
+      return DEOPTED;
+    }
+    // A callback already known to need the machine would make this call deoptimize too.
+    for (const arg of args) {
+      if (arg instanceof Closure && arg.lam.jit === null) {
+        return DEOPTED;
+      }
+    }
+    const mark = this.journal.length;
+    this.jitDepth++;
+    try {
+      return jit(fn.env, args);
+    } catch (err) {
+      if (err === DEOPT || err instanceof DeusDefect || err instanceof RangeError) {
+        this.rollback(mark);
+        if (++lam.deopts > DEOPT_LIMIT) {
+          lam.jit = null;
+        }
+        return DEOPTED;
+      }
+      throw err;
+    } finally {
+      if (--this.jitDepth === 0) {
+        this.journal.length = 0;
+      }
+    }
+  }
+
+  rollback(mark: number): void {
+    while (this.journal.length > mark) {
+      const undo = this.journal.pop();
+      undo?.();
+    }
+  }
+
+  /** Runs a closure on the machine for compiled code; an operation nothing inside handles deoptimizes. */
+  runClosure(fn: Closure, args: Value[]): Value {
+    let env = fn.env;
+    for (const arg of args) {
+      env = { value: arg, next: env };
+    }
+    return this.run(fn.lam.a, env, true);
+  }
+
+  run(start: Term, startEnv: Env, nested = false): Value {
     const stack: Frame[] = [];
     let node: Term = start;
     let env: Env = startEnv;
@@ -720,6 +809,20 @@ export class Machine {
           if (args.length < n) {
             value = new Pap(fn, args);
             return true;
+          }
+          if (this.compiler && fn.lam.jit !== null) {
+            this.steps = steps;
+            const result = this.enter(fn, args.length === n ? args : args.slice(0, n));
+            steps = this.steps;
+            if (result !== DEOPTED) {
+              if (args.length === n) {
+                value = result;
+                return true;
+              }
+              fn = result;
+              args = args.slice(n);
+              continue;
+            }
           }
           let e = fn.env;
           for (let i = 0; i < n; i++) {
@@ -800,6 +903,10 @@ export class Machine {
     const perform = (op: OpFn, args: Value[]): boolean => {
       if (handleRequest(`${op.ability}/${op.index}`, args)) {
         return false;
+      }
+      if (nested) {
+        // The handler is outside this run, in a continuation compiled code cannot capture.
+        throw DEOPT;
       }
       this.steps = steps;
       value = this.host(op.ability, op.index, args);
