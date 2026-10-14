@@ -56,10 +56,10 @@ const administeredAgents: Effect.Effect<AgentSpace.Summary[], never, Capability.
     : [];
 });
 
-// Agents are added to a space from its members panel, as people are; until they are HALO identities, adding one
-// creates its presence there (`InviteAgent`) rather than admitting it as a member. Only an agent's admins may add it
-// elsewhere, so only the agents the member administers are offered, found through their own spaces, which an admin
-// is a member of even when the agent lives in someone else's space; EDGE enforces it when the presence registers.
+// Agents are added to a space from its members panel, as people are; adding one registers it with EDGE, admits its
+// identity and creates its presence there (`InviteAgent`). Only an agent's admins may add it elsewhere, so only the
+// agents the member administers are offered, found through their own spaces, which an admin is a member of even when
+// the agent lives in someone else's space; EDGE enforces it when the presence registers.
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.InviteeSource, {

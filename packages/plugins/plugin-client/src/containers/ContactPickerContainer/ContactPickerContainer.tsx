@@ -41,23 +41,11 @@ export type ContactPickerContainerProps = AppSurface.ContactPickerData;
 
 type SourcedInvitee = AppCapabilities.Invitee & { source: AppCapabilities.InviteeSource };
 
-export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const contacts = useContacts();
-  const members = useMembers(space.key);
-  const spaces = useSpaces();
-  const identity = useIdentity();
-  const [selected, setSelected] = useState<string>();
-  const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
-  const [joinUrl, setJoinUrl] = useState<string>();
-  const [pending, setPending] = useState(false);
+/** Who the space's `InviteeSource`s offer beside contacts, listed again whenever `revision` changes. */
+const useInvitees = (space: ContactPickerContainerProps['space'], revision: number): SourcedInvitee[] => {
   const manager = PluginManagerProvider.usePluginManager();
-  const operationInvoker = Hooks.useOperationInvoker();
   const sources = Hooks.useCapabilities(AppCapabilities.InviteeSource);
   const [invitees, setInvitees] = useState<SourcedInvitee[]>([]);
-  // Bumped after an invitee is added, so the sources list who is left.
-  const [added, setAdded] = useState(0);
-
   useEffect(() => {
     let cancelled = false;
     void EffectEx.runPromise(
@@ -71,7 +59,25 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
     return () => {
       cancelled = true;
     };
-  }, [manager, sources, space, added]);
+  }, [manager, sources, space, revision]);
+  return invitees;
+};
+
+export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const contacts = useContacts();
+  const members = useMembers(space.key);
+  const spaces = useSpaces();
+  const identity = useIdentity();
+  const [selected, setSelected] = useState<string>();
+  const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
+  const [joinUrl, setJoinUrl] = useState<string>();
+  const [pending, setPending] = useState(false);
+  const manager = PluginManagerProvider.usePluginManager();
+  const operationInvoker = Hooks.useOperationInvoker();
+  // Bumped after an invitee is added, so the sources list who is left.
+  const [added, setAdded] = useState(0);
+  const invitees = useInvitees(space, added);
   const invitee = invitees.find(({ key }) => key === selected);
 
   const memberKeys = useMemo(
