@@ -11,9 +11,8 @@ tasks:
     command: >-
       bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./MeetingRecorderPlugin
-      --to "{react,react-dom}"
+      --to "{react,react-dom,@dxos/react-ui,@dxos/lit-ui}"
       --conditions workerd,worker
-      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

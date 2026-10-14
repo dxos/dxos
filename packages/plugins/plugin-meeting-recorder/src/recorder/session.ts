@@ -127,7 +127,7 @@ export class MeetingSession {
     } catch (err) {
       // Without the screen & system audio permission the meeting is still worth recording.
       log.warn('system audio unavailable; recording the microphone only', { err });
-      await bridge.stopSystemAudio().catch(() => {});
+      await bridge.stopSystemAudio().catch((err) => log.catch(err));
       await source?.close();
     }
   }
