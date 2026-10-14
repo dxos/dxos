@@ -151,6 +151,39 @@ const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
  */
 export const ModuleTag: unique symbol = Symbol.for('@dxos/app-framework/ModuleTag');
 
+/** Symbol carrying a lazy module's body loader, so build tools can read where the body lives. */
+export const LoaderTag: unique symbol = Symbol.for('@dxos/app-framework/LoaderTag');
+
+/** Symbol carrying a wrapped loader's {@link LoaderAdapter}. */
+export const AdapterTag: unique symbol = Symbol.for('@dxos/app-framework/AdapterTag');
+
+/**
+ * Names, by module specifier, the transform a wrapper applies to what its source loader returns, so
+ * a build-time manifest can load the adapter as its own chunk; the specifier's default export is
+ * `(loaded, args) => ({ default: body })`, and `args` must be JSON.
+ */
+export type LoaderAdapter = { module: string; args?: unknown };
+
+/**
+ * Marks `wrapper` as a decorator of `source`, so build tools resolve the wrapped body, not the wrapper.
+ * A wrapper that changes what the loader returns must name that change as an `adapter`.
+ */
+export const wrapLoader = <F extends () => Promise<unknown>>(
+  wrapper: F,
+  source: () => Promise<unknown>,
+  adapter?: LoaderAdapter,
+): F => Object.assign(wrapper, { [LoaderTag]: getLoaderSource(source), [AdapterTag]: adapter });
+
+/** The loader that imports a module body, looking through any {@link wrapLoader} decorators. */
+export const getLoaderSource = (
+  loader: (() => Promise<unknown>) & { readonly [LoaderTag]?: () => Promise<unknown> },
+): (() => Promise<unknown>) => loader[LoaderTag] ?? loader;
+
+/** The {@link LoaderAdapter} a {@link wrapLoader} decorator declared, if any. */
+export const getLoaderAdapter = (
+  loader: (() => Promise<unknown>) & { readonly [AdapterTag]?: LoaderAdapter },
+): LoaderAdapter | undefined => loader[AdapterTag];
+
 /**
  * The interface definition of a capability.
  */
@@ -290,6 +323,10 @@ export const make: {
     ? <const S extends string>(id: S) => buildTag<unknown, S, 'multi'>(id, 'multi')
     : buildTag<unknown, string, 'multi'>(identifier, 'multi')) as any;
 
+/** Rebuilds a capability tag from its serialized identity, as read from a plugin manifest. */
+export const fromIdentifier = (identifier: string, arity: Arity): AnyTag =>
+  buildTag<unknown, string, Arity>(identifier, arity);
+
 /**
  * Defines a singleton capability: exactly one provider, `yield*` yields the implementation.
  * Curried like {@link make} (and Effect's `Context.Tag`/`Effect.Service`): `makeSingleton<T>()(nsid)`;
@@ -304,6 +341,13 @@ export const makeSingleton: {
   identifier === undefined
     ? <const S extends string>(id: S) => buildTag<unknown, S, 'single'>(id, 'single')
     : buildTag<unknown, string, 'single'>(identifier, 'single')) as any;
+
+/**
+ * Builds a capability tag from an identifier derived at runtime (e.g. a plugin key plus a name),
+ * keeping the identifier's literal type; static identifiers use {@link make} / {@link makeSingleton}.
+ */
+export const makeTag = <T, const S extends string, A extends Arity>(identifier: S, arity: A) =>
+  buildTag<T, S, A>(identifier, arity);
 
 /**
  * A unique string identifier with a Typescript type associated with it.
@@ -495,6 +539,8 @@ export interface Module<Options = void> {
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
   readonly environments?: readonly Environment[];
+  readonly [LoaderTag]?: () => Promise<unknown>;
+  readonly [AdapterTag]?: LoaderAdapter;
 }
 
 /**
@@ -573,6 +619,8 @@ export const lazyModule = <
 
   return Object.assign(lazyFn, {
     [ModuleTag]: name,
+    [LoaderTag]: getLoaderSource(loader),
+    [AdapterTag]: getLoaderAdapter(loader),
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,

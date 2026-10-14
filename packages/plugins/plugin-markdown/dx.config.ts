@@ -2,12 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { MarkdownNamespace } from './src/namespace.ts';
+import * as MarkdownCapabilities from './src/types/MarkdownCapabilities.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.markdown',
+    key: MarkdownNamespace.key,
     name: 'Markdown',
     author: 'DXOS',
     description: trim`
@@ -34,4 +43,61 @@ export default Config2.make({
     ],
     tags: ['beta'],
   },
+  modules: [
+    // Ordering-only: registers the anchor resolver and sort comparator once the app graph exists.
+    Capability.lazyModule(
+      'AnchorResolver',
+      {
+        requires: [AppCapabilities.AppGraph],
+        provides: [AppCapabilities.AnchorResolver],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/anchor-resolver.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'dx-module' } }), {
+      requires: [AppCapabilities.AppGraph],
+    }),
+    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } })),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+      provides: [MarkdownCapabilities.Settings],
+    }),
+    // Browser-only: requires attention's view state, which only the app shell provides.
+    Capability.lazyModule(
+      'MarkdownState',
+      {
+        requires: [AttentionCapabilities.ViewState],
+        provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+    ),
+    Capability.lazyModule(
+      'Tour',
+      { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/tour.ts', { with: { type: 'dx-module' } }),
+    ),
+    Capability.lazyModule(
+      'translations',
+      { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
+      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;
