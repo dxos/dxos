@@ -1551,8 +1551,12 @@ def task (args : Args) : {IO, Throw Text} Unit :=
           section "Comments" (List.map commentLine t.comments) ++
           section "History" (List.map (changeLine dir) history)))
   | ["set", id] =>
-    let t := applyFields args (Tasks.find tasks id)
-    saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
+    -- Options every command takes; any other name is a misspelt field, which would otherwise set nothing.
+    let unknown := List.filter (fun key => not (List.contains key (Tasks.fields ++ ["codebase", "by", "json", "quiet"]))) (Map.keys args.options)
+    if not (List.isEmpty unknown) then throw ("unknown task field " ++ Text.join ", " unknown ++ "; the fields are " ++ Text.join ", " Tasks.fields)
+    else
+      let t := applyFields args (Tasks.find tasks id)
+      saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
   | "comment" :: id :: words =>
     let t := Tasks.find tasks id
     saved (Tasks.comment t (Comment.mk author (Text.join " " words) (IO.wallClock ()) (attachments dir args))) ("task: comment on " ++ t.id)

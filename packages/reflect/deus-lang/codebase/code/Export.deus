@@ -43,7 +43,7 @@ test Export.Spec.restoresTasks := inStore (fun _ =>
   deus
     "cb"
     ["new", "Write", "laws", "--labels", "spec,dogfood", "--details", "line one\nline two"]
-    task
+    Cli.task
   Export.write "cb" "out"
   importTasks "cb2" "out/tasks.sexp"
   Map.toList (Tasks.current "cb") == Map.toList (Tasks.current "cb2"))

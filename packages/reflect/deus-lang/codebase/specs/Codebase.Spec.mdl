@@ -136,7 +136,7 @@ req R-13: an update rehashes every definition that depends on a changed one, inc
 
 ```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
-  gap: task 823f7b83
+  by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```
 
 ## Layers
@@ -148,7 +148,7 @@ req R-11: each layer depends only on the layers the table allows
 
 ```mdl
 req R-12: add and update refuse a batch that crosses layers
-  gap: task 823f7b83
+  by: Codebase.Spec.codeCannotNameATest | Codebase.Spec.codeMayNotDependOnTests | Codebase.Spec.testsMayDependOnCode
 ```
 
 ## Laws

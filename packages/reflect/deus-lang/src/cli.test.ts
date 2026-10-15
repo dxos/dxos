@@ -410,6 +410,10 @@ describe('deus CLI', () => {
         ...c,
       );
       const bug = JSON.parse(deus('task', 'new', 'Fix', 'x', '--link', 'A.x', '--json', ...c).stdout);
+      // An unknown field is refused, not ignored (task cb6c9a43).
+      const unknown = deus('task', 'set', bug.id, '--status', 'done', ...c);
+      expect(unknown.code).not.toBe(0);
+      expect(unknown.stderr).toMatch(/unknown task field status; the fields are title, state/);
       deus('update', file('m1.deus', 'def A.x : Int := 10\n'), '--closes', bug.id, ...c);
       deus('add', file('m2.deus', 'def A.w : Int := 4\n'), '--message', 'two', '--by', 'agent-m', ...c);
       const head = readFileSync(join(dir, 'branches/main'), 'utf8').trim();

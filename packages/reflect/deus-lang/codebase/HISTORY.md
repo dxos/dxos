@@ -1,5 +1,15 @@
 # History of main
 
+- `824371ab26` task: set dc22728a labels
+- `7c717d0d8c` task: open dc22728a Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (by claude)
+- `45201fcb2f` task: comment on cb6c9a43
+- `092f407f83` task: comment on 823f7b83
+- `09a900785c` task: set 823f7b83 state
+- `7a7d114a4e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws2.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `c25b4457b4` delete Codebase.Spec.crossings
+- `20a09010e5` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws2.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `89e951ba00` update deus (by claude)
+- `1af1cb4fff` task: set cb6c9a43 state
 - `f59d46337a` task: comment on a8150b0c
 - `2c33a39c84` task: set a8150b0c state
 - `a8086e5ba9` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus (by claude)

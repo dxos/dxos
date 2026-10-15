@@ -172,15 +172,6 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: types, devex
 
-## Laws for task, comment and history-record merges, and for add/update refusing layer crossings (`823f7b83`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: spec, codebase
-
-Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
-
 ## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
 
 - state: todo
@@ -302,19 +293,17 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 
 Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metadata; the explorer lists blocks only.
 
+## Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (`dc22728a`)
+
+- state: todo
+- priority: none
+- labels: spec, codebase
+
 ## Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (`8d6df186`)
 
 - state: todo
 - priority: none
 - labels: mdl, spec
-
-## deus task set ignores an unknown field (--status) instead of refusing it (`cb6c9a43`)
-
-- state: todo
-- priority: none
-- labels: cli, bug
-
-Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
 
 ## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
 
@@ -1080,6 +1069,17 @@ JS.mdl R-2 is a gap until a test compiles such a handler and checks the message.
 
 > claude: Done: JsGen.Spec.refusesMultiShotHandlers and JsGen.Spec.refusesInlineImports compile each case over the spec prelude and check the message; JsGen.Spec R-2 and R-3 cite them, and deus mdl JsGen.Spec reports no gaps.
 
+## Laws for task, comment and history-record merges, and for add/update refusing layer crossings (`823f7b83`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: spec, codebase
+
+Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
+
+> someone: Done: R-10 by three rfl theorems on Tasks.mergeTask; R-12 by three tests. Source cannot cross layers (code cannot name a test), and Cli.layerCrossings refuses a hand-built object that does.
+
 ## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
 
 - state: canceled
@@ -1462,4 +1462,14 @@ deus task new --by claude puts the author on the task but not on the change, so 
 - links change #ed7e98a85a
 
 Every argument after the name goes to the program, so --codebase cannot be given.
+
+## deus task set ignores an unknown field (--status) instead of refusing it (`cb6c9a43`)
+
+- state: done
+- priority: none
+- labels: cli, bug
+
+Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
+
+> someone: Done: task set refuses an option that is not a field (and not codebase, by, json, quiet), naming the fields; checked in src/cli.test.ts.
 
