@@ -242,7 +242,7 @@ export const Chapter5Growth: Story = chapter(4);
  * 1. After 20 seconds (or the next control) the OAuth box, its grant lines, the container and the agent fade in.
  * 2. The silos' molecules keep flowing across the change; the agent then starts reading through OAuth.
  */
-export const TransitionOAuth: TransitionStory = {
+export const TransitionAgents: TransitionStory = {
   render: ({ autostart }) => <DataFlowSequence scenes={transition(CHAPTERS.slice(0, 2), autostart)} />,
   args: { autostart: true },
 };
