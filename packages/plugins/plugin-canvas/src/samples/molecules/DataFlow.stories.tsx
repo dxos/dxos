@@ -10,6 +10,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { DataFlowSequence, type Scene } from './DataFlowSequence.tsx';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { type AppKind, type DataFlowSpec, type SourceSpec } from './layout.ts';
+import { type SimulationOptions } from './simulation.ts';
 
 const SPEC: DataFlowSpec = {
   sources: [
@@ -114,6 +115,10 @@ const EXTENDED: DataFlowSpec = {
   },
 };
 
+/** Busier apps than the simulation's defaults: they write up about every second and a half, and half of what settles in
+ * ECHO syncs down to them, rather than a third. */
+const APP_ACTIVITY: SimulationOptions = { upInterval: 1.5, subset: (body) => body.serial % 2 === 0 };
+
 /**
  * The chapters of the story, in order: the one source for each chapter's own story and for the sequence that plays them
  * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
@@ -124,6 +129,7 @@ const CHAPTERS: readonly Scene[] = [
     title: 'The Silo Problem',
     caption: 'Each application keeps its own data, fed only by its own source.',
     spec: MONOLITH,
+    options: APP_ACTIVITY,
     revealed: false,
     // Grid lines for the silos, dots once the agent arrives, and a plain field from ECHO on.
     grid: 'lines',
@@ -134,7 +140,7 @@ const CHAPTERS: readonly Scene[] = [
     title: 'Monolithic Agents',
     caption: 'One agent reaches into every source at once, beside the apps.',
     spec: MONOLITH,
-    options: { warmup: 8 },
+    options: { ...APP_ACTIVITY, warmup: 8 },
     grid: 'dots',
     stage: 'silos',
     duration: 11,
@@ -146,7 +152,7 @@ const CHAPTERS: readonly Scene[] = [
     caption: 'The sources feed one ECHO space, and the apps sync from it.',
     spec: APPS,
     // The apps open already holding content, so they are writing and syncing from the first frame.
-    options: { warmup: 16, prefill: true },
+    options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: false,
     // From here on the background is plain, so the eye stays on ECHO.
     grid: 'none',
@@ -157,7 +163,7 @@ const CHAPTERS: readonly Scene[] = [
     title: 'Spaces',
     caption: 'ECHO splits into spaces along the natural breaks in its data.',
     spec: APPS,
-    options: { warmup: 16 },
+    options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: true,
     grid: 'none',
     stage: 'echo',
@@ -168,7 +174,7 @@ const CHAPTERS: readonly Scene[] = [
     caption:
       'ECHO extends past every edge: new spaces, apps, agents and sources join while all that was there runs on.',
     spec: EXTENDED,
-    options: { warmup: 16 },
+    options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: true,
     grid: 'none',
     stage: 'echo',
