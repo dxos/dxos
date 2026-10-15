@@ -7,7 +7,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
@@ -19,11 +19,11 @@ import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { DiscordChannelForm, DiscordSetup } from '#components';
+import { DiscordSetup } from '#components';
 import { meta } from '#meta';
-import { DiscordAdminOperation, DiscordChannel } from '#types';
+import { DiscordAdminOperation } from '#types';
 
-import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl } from '../../constants.ts';
+import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl, kaiApplicationId } from '../../constants.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -61,7 +61,11 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
 
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connection = connections.find(({ connectorId }) => connectorId === DISCORD_USER_PROVIDER_ID);
-  const bot = useBot(db);
+  // The bot is this EDGE's Kai, whose token EDGE holds; a custom EDGE has none.
+  const config = useConfig();
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  const applicationId = kaiApplicationId(edgeUrl);
+  const consoleUrl = edgeConsoleUrl(edgeUrl);
 
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -84,38 +88,30 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
       setError(error?.message);
       setManaged([...(data?.guilds ?? [])]);
     }
-    if (bot) {
-      const { data, error } = await invokePromise(
-        DiscordAdminOperation.ListBotGuilds,
-        { applicationId: bot.applicationId, accessToken: bot.accessToken },
-        { spaceId },
-      );
+    if (applicationId) {
+      const { data, error } = await invokePromise(DiscordAdminOperation.ListBotGuilds, { applicationId }, { spaceId });
       setError((previous) => error?.message ?? previous);
       setInstalled([...(data?.guilds ?? [])]);
     }
-  }, [invokePromise, spaceId, connection, bot]);
+  }, [invokePromise, spaceId, connection, applicationId]);
 
   useEffect(() => {
     void refreshGuilds();
   }, [refreshGuilds]);
 
   const refreshChannels = useCallback(async () => {
-    if (!spaceId || !bot || !guildId) {
+    if (!spaceId || !applicationId || !guildId) {
       setChannels([]);
       return;
     }
     const [listed, bound] = await Promise.all([
-      invokePromise(
-        DiscordAdminOperation.ListGuildChannels,
-        { applicationId: bot.applicationId, accessToken: bot.accessToken, guildId },
-        { spaceId },
-      ),
-      invokePromise(DiscordAdminOperation.ListBindings, { applicationId: bot.applicationId }, { spaceId }),
+      invokePromise(DiscordAdminOperation.ListGuildChannels, { applicationId, guildId }, { spaceId }),
+      invokePromise(DiscordAdminOperation.ListBindings, { applicationId }, { spaceId }),
     ]);
     setError(listed.error?.message ?? bound.error?.message);
     setChannels([...(listed.data?.channels ?? [])]);
     setBindings([...(bound.data?.bindings ?? [])]);
-  }, [invokePromise, spaceId, bot, guildId]);
+  }, [invokePromise, spaceId, applicationId, guildId]);
 
   useEffect(() => {
     void refreshChannels();
@@ -148,21 +144,20 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
 
   const handleBind = useCallback(
     async (channel: DiscordAdminOperation.GuildChannel, bound: boolean) => {
-      if (!spaceId || !bot || !guildId) {
+      if (!spaceId || !applicationId || !guildId) {
         return;
       }
       setBusy(true);
       const { error } = bound
         ? await invokePromise(
             DiscordAdminOperation.UnbindChannel,
-            { applicationId: bot.applicationId, discordChannelId: channel.id },
+            { applicationId, discordChannelId: channel.id },
             { spaceId },
           )
         : await invokePromise(
             DiscordAdminOperation.BindChannel,
             {
-              applicationId: bot.applicationId,
-              accessToken: bot.accessToken,
+              applicationId,
               agent: Ref.make(agent),
               guildId,
               discordChannelId: channel.id,
@@ -174,7 +169,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
       await refreshChannels();
       setBusy(false);
     },
-    [invokePromise, spaceId, bot, guildId, agent, refreshChannels],
+    [invokePromise, spaceId, applicationId, guildId, agent, refreshChannels],
   );
 
   const installedIds = useMemo(() => new Set(installed.map(({ id }) => id)), [installed]);
@@ -198,9 +193,6 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
     [managed, installed],
   );
 
-  const config = useConfig();
-  const consoleUrl = edgeConsoleUrl(config.values.runtime?.services?.edge?.url);
-
   return (
     <DiscordSetup.Root
       role={role}
@@ -217,7 +209,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
         />
       }
     >
-      {!bot && <BotForm db={db} />}
+      {!applicationId && <Typography.Text tone='muted'>{t('discord-setup-no-bot.message')}</Typography.Text>}
 
       <Fieldset.Root>
         <Fieldset.Legend>{t('discord-setup-servers.label')}</Fieldset.Legend>
@@ -239,7 +231,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                   label={guild.name}
                   detail={isInstalled ? t('discord-setup-installed.label') : undefined}
                 >
-                  {bot && (
+                  {applicationId && (
                     <Button.Root
                       variant='ghost'
                       iconOnly
@@ -249,7 +241,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                       onClick={(event: MouseEvent<HTMLButtonElement>) => {
                         // The row selects the server; installing must not also select it.
                         event.stopPropagation();
-                        window.open(installUrl(bot.applicationId, guild.id), '_blank', 'noopener');
+                        window.open(installUrl(applicationId, guild.id), '_blank', 'noopener');
                       }}
                     />
                   )}
@@ -326,35 +318,4 @@ const isArchived = ({ category }: DiscordAdminOperation.GuildChannel): boolean =
 const entityIdOf = (uri: string): string | undefined => {
   const eid = EID.tryParse(uri);
   return eid ? EID.getEntityId(eid) : undefined;
-};
-
-/**
- * The bot the space is set up with: the Discord app named by a Discord channel config. A config not yet attached to
- * any channel (made by {@link BotForm}) is how a space records its bot before the first channel is bound.
- */
-const useBot = (db: Database.Database | undefined) => {
-  const configs = useQuery(db, Filter.type(DiscordChannel.DiscordChannel));
-  return useMemo(() => {
-    const config = configs.find(({ applicationId }) => applicationId.length > 0);
-    return config ? { applicationId: config.applicationId, accessToken: config.accessToken } : undefined;
-  }, [configs]);
-};
-
-/** Records the space's bot (its application id and token object) when it has none. */
-const BotForm = ({ db }: { db: Database.Database | undefined }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const handleSave = useCallback(
-    (properties: DiscordChannel.Properties) => {
-      db?.add(DiscordChannel.make({ ...properties, channels: [] }));
-    },
-    [db],
-  );
-  return (
-    <DiscordChannelForm
-      db={db}
-      label={t('discord-setup-bot.label')}
-      description={t('discord-setup-bot.description')}
-      onSave={handleSave}
-    />
-  );
 };

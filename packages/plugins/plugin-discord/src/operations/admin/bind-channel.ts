@@ -81,13 +81,18 @@ const createDiscordChannel = Effect.fnUntraced(function* (
     channelName,
   }: {
     applicationId: string;
-    accessToken: DiscordChannel.Properties['accessToken'];
+    accessToken?: DiscordChannel.Properties['accessToken'];
     guildId: string;
     discordChannelId: string;
     channelName?: string;
   },
 ) {
-  const config = DiscordChannel.make({ accessToken, applicationId, guildId, channels: [discordChannelId] });
+  const config = DiscordChannel.make({
+    ...(accessToken ? { accessToken } : {}),
+    applicationId,
+    guildId,
+    channels: [discordChannelId],
+  });
   const channel = yield* Database.add(
     Channel.make({ name: channelName ?? discordChannelId, backend: { kind: DiscordChannel.BACKEND_KIND, config } }),
   );

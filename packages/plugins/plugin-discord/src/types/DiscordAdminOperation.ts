@@ -52,10 +52,14 @@ export const ChannelBinding = Schema.Struct({
 
 export interface ChannelBinding extends Schema.Schema.Type<typeof ChannelBinding> {}
 
-/** Which Discord app (bot) the operation acts on, and the space object holding its token. */
+/** Which Discord app (bot) the operation acts on, and the space object holding its token (absent for Kai). */
 const Bot = {
   applicationId: Schema.String.annotate({ description: 'The Discord application (bot) id.' }),
-  accessToken: Ref.Ref(AccessToken.AccessToken).annotate({ description: 'The bot token.' }),
+  accessToken: Schema.optional(
+    Ref.Ref(AccessToken.AccessToken).annotate({
+      description: 'The bot token; absent for Kai, whose token EDGE holds.',
+    }),
+  ),
 };
 
 /** The guilds the signed-in user may administer (Manage Server, or owner). */

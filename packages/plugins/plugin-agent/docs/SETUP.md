@@ -61,11 +61,9 @@ holds `op://` references, and `pnpm dev:env` resolves them with `op inject` and 
 files. It needs the 1Password desktop app with CLI integration on (Settings → Developer); it prompts
 for approval, so no `op signin` is needed.
 
-1. The bot token is `op://eng/com.discord.bot.kai/credential` (Kai), which discord-service's
-   `secrets.jsonc` already names as `DISCORD_BOT_TOKEN_DEV`. In a dev environment it overrides the
-   token stored in the space, so you can test without managing tokens in Composer. To use another
-   bot, point that entry at its item (vault `eng`, reverse-DNS item name, field `credential`; item
-   names must not contain `/`, which `op://` references reject).
+1. Local Kai's token is the `DISCORD_KAI_BOT_TOKEN` field of discord-service's `secrets.jsonc`,
+   which EDGE uses for the app named by `DISCORD_KAI_APPLICATION_ID`. Composer knows each EDGE's
+   Kai id (plugin-discord's `KAI_APPLICATION_IDS`), so a space never holds a bot token.
 
 2. From the root of `<edge>` (the script is defined in the root `package.json`), write the `.env`
    files:
@@ -105,8 +103,9 @@ Then, in Composer at `http://localhost:5282`:
 
 1. **Settings → Plugins**: enable **Agent**, **Threads** and **Discord**.
 2. **Space settings → Agents → Add** to create an agent; it opens with your private chat.
-3. Open the agent's **Discord** companion. Sign in to Discord, then save the bot's **Application ID**
-   and token (the token is an `AccessToken`; EDGE uses `DISCORD_BOT_TOKEN_DEV` when set).
+3. Open the agent's **Discord** companion and sign in to Discord. The bot is the Kai app of the EDGE
+   Composer talks to (plugin-discord's `KAI_APPLICATION_IDS`); EDGE holds its token, so the space
+   records no bot.
 4. Pick your server (install the bot with **+** if it is not yet **Installed**), then connect a
    channel with its plug button. This creates a Discord-backed `Channel` in the agent's
    `AgentChannels`.

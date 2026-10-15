@@ -70,7 +70,8 @@ Discord threads and Composer chats see the same knowledge.
 - The **Activity** companion lists those channels with their connection status, Start / Stop /
   Refresh for all of them, the agent's skills and its channel conversations. A Discord channel's
   `ObjectProperties` surface is plugin-discord's form over the `DiscordChannel` config
-  (`{ accessToken, applicationId, guildId?, channels }`; the bot token is an `AccessToken` object).
+  (`{ accessToken?, applicationId, guildId?, channels }`). For Kai, EDGE holds the token and the config
+  names none; a team's own bot records an `AccessToken`.
 - Start / Stop / Refresh invoke plugin-thread's `connectChannel` / `disconnectChannel` /
   `getChannelStatus`, which dispatch to the Discord backend's `connection`: `PUT` / `DELETE` / `GET
 /discord/bots/:appId` through `EdgeHttpClient.request`, a generic call signed with the
