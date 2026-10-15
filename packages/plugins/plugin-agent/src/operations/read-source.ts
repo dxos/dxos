@@ -363,7 +363,7 @@ const extract = (
     : extractDocFacts(
         { text: body.text, source: uri },
         {
-          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id)),
+          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(AgentPresence.brainId(agent))),
           entities: knownEntities(members, entities),
         },
       ).pipe(
