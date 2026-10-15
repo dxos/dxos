@@ -88,17 +88,21 @@ the names, and writes nothing.
 
 ## Working through the codebase
 
-The codebase is the primary version control; git is its backup (D101). Start each task with
+The codebase is the primary version control (D101); github.com/dxos/deus-mirror backs it up every
+hour, and git holds only what is not in the codebase yet (D177). Start each task with
 `deus pull origin` and `deus merge origin.main` from the shared remote, and push each change when it
-lands, before exporting it to git. In a codebase whose project is `https://dxos.org/deus/toolchain`,
+lands. In a codebase whose project is `https://dxos.org/deus/toolchain`,
 `origin` defaults to `https://deus.dmytro-a80.workers.dev/v1/toolchain`, the DEUS Worker (D164): pulls
 need nothing, and pushes need an API key in `$DEUS_API_KEY` (see SPEC-PROCESS.md for where it is).
 
 Make changes in the codebase, not only in files: `deus update <file> --by <agent>` records who
 made them, and the task they close goes in with `--closes <id>`. File what you notice while
 working as tasks (`deus task new … --labels dogfood`). `deus push origin` sends the change to the
-remote and refreshes its explorer. `deus export <dir>` writes the codebase as text for a git
-commit (D64).
+remote and refreshes its explorer; when the remote moved, it pulls, merges and pushes again. A
+merge re-applies our edited definitions over theirs, so two sessions changing one recursive group
+(the whole CLI is one) do not conflict unless they edited the same definition. A change to the
+toolchain's own definitions also goes to git, through `python3 scripts/sync-deus.py <names…>`
+(SPEC-PROCESS.md).
 
 ## Deciding without waiting
 

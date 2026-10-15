@@ -235,10 +235,10 @@ same contract and are not described here.
 
 ## The `req`, `api` and `law` extensions
 
-[`platform/spec.deus`](../../platform/spec.deus) checks a spec written in the order of the process
+The [`Spec`](https://deus.dmytro-a80.workers.dev/#n:Spec) namespace in the codebase checks a spec written in the order of the process
 (D92): requirements, then the APIs and laws they rest on, then tests and theorems. A spec document
 keeps its laws in ` ```deus ` fences, so `deus add` compiles them next to the code they are about.
-[Codebase.Spec](../../codebase/specs/Codebase.Spec.mdl) is a full example.
+[Codebase.Spec](https://deus.dmytro-a80.workers.dev/#n:Codebase.Spec) is a full example.
 
 | Term  | URI                     | Term            | Properties                         |
 | ----- | ----------------------- | --------------- | ---------------------------------- |

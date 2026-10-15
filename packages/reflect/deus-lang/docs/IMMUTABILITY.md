@@ -24,7 +24,7 @@ statically, and the C back end by the reference counts it gained in D86.
 
 - **The language.** `Array.set : Array a -> Int -> a -> Array a` returns a new array; the old one
   is unchanged. Arrays compare by their items. The spec lives in the codebase as `Array.Spec`
-  ([export](../codebase/specs/Array.Spec.mdl), laws in [`code/Array.deus`](../codebase/code/Array.deus)):
+  ([export](https://deus.dmytro-a80.workers.dev/#n:Array.Spec), laws in [`Array`](https://deus.dmytro-a80.workers.dev/#n:Array)):
   seven laws are proved, three are tested, and `deus mdl` checks all 14 blocks.
 - **The kernels** keep versions (Baker's persistent arrays with Conchon and Filliâtre's rerooting):
   the newest version owns the items, each older one is a diff. A program that only writes to the
@@ -74,7 +74,7 @@ All of them are first-order, so the same definitions run on the interpreter and 
 | `Prelude`    | `List.sort`, the prelude's generic merge sort (interpreters only: it takes a closure)        |
 | `Map`        | the in-place quicksort over `MutMap Int Int`, the mutable memory DEUS had already            |
 
-[`scripts/sort-bench.mjs`](../scripts/sort-bench.mjs) runs each on the TypeScript kernel (with its
+[`legacy/scripts/sort-bench.mjs`](../legacy/scripts/sort-bench.mjs) runs each on the TypeScript kernel (with its
 JIT), the Rust kernel, and as a compiled wasm module under Node 22; the C back end is timed by hand. It compares them with the same
 algorithms in JavaScript. Times are the best of three runs, minus the time to generate the input.
 For wasm, "allocated" is the heap pointer after the run, which counts every byte the program
@@ -183,7 +183,7 @@ Rejected alternatives:
 
 ## Follow-up tasks
 
-These are filed in the codebase's task list ([`codebase/TASKS.md`](../codebase/TASKS.md)).
+These are filed in the codebase's task list ([the explorer's task board](https://deus.dmytro-a80.workers.dev/)).
 
 - Reference counting with reuse (Perceus) in the wasm and C back ends, so pure code frees memory
   and reuses unique cells in place (native-compilation work, tasks `62d1bdda` and `cf0e3937`). With

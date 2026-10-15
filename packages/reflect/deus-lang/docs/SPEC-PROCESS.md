@@ -8,8 +8,9 @@ how the process works in DEUS, what the backfill covered, and what it found and 
 
 A spec is a document in the codebase, named `<Subsystem>.Spec` (D99). Dmytro: "I want agents to
 record specs in codebase, not in github. and overall, most development at this point should be
-happening via-codebase". Nothing under `docs/spec/` holds a checked spec any more; the copies in
-[`codebase/specs/`](../codebase/specs) are the export, written by `deus export codebase`.
+happening via-codebase". Nothing under `docs/spec/` holds a checked spec any more, and git holds no
+copy either (D177): read one with `deus view Compile.Spec` or in the
+[explorer](https://deus.dmytro-a80.workers.dev/#n:Compile.Spec); github.com/dxos/deus-mirror keeps the hourly backup.
 
 Write it in this order:
 
@@ -44,14 +45,16 @@ is `deus.dmytro-a80.workers.dev`. A push without a key fails with the Worker's 4
 Keys are made, listed and revoked with `node scripts/deus-keys.mjs` and the account's Cloudflare
 token. The old remote, `r2://agent-artifacts/deus/toolchain`, is no longer written to.
 
-The export alone builds the toolchain (`deus compile codebase/code --main Cli.main` writes the seed, D161), so a
-change made only in the codebase needs no `deus/` file.
+Make every change with the CLI (`deus update … --by <agent>`, `deus task …`) and run `deus push origin`
+when it lands. That is the whole record: specs, tasks, history and code that is not part of the toolchain
+need no git commit (D177). A push that finds the remote moved pulls, merges and pushes again by itself,
+and `deus merge` re-applies our edited definitions over theirs when both sides touched one recursive
+group, so concurrent sessions rarely see a conflict.
 
-Make every change with the CLI (`deus update … --by <agent>`, `deus task …`), run `deus push origin`
-when a change lands, and only then `deus export codebase` and commit the export to git. If the
-remote is behind the git export (a change that was committed without a push), catch it up once
-after the pull: `deus update codebase/code codebase/specs --by <agent>`,
-`deus task import codebase/tasks.sexp`, `deus history import codebase/history.sexp`, then push.
+The toolchain itself is the exception while the kernel boots from `seed/deus.image` in git: after a
+change to a toolchain definition, `python3 scripts/sync-deus.py <names…>` writes those definitions from
+the codebase into `deus/`, rebuilds the seed and checks the fixpoint (about 30 s); commit `deus/` and
+the seed to #13952.
 
 The steps, for a new spec or a change to one:
 
@@ -60,8 +63,7 @@ deus view Compile.Spec > /tmp/compile.mdl   # the document as stored (skip for a
 $EDITOR /tmp/compile.mdl                    # blocks and prose; a ```deus fence holds new laws
 deus update /tmp/compile.mdl                # stores the blocks, their prose, and the fence's code
 deus mdl Compile.Spec                       # checks it from the codebase
-deus push origin                            # the change lands in the primary
-deus export codebase                        # the git backup: codebase/specs/Compile.Spec.mdl
+deus push origin                            # the change lands; nothing to commit to git
 ````
 
 A ```deus fence in the edited file compiles into the codebase like any source; the stored document
@@ -71,10 +73,11 @@ from the file stays in the codebase until `deus rm Compile.Spec.R-3`.
 
 `deus mdl` checks every block of every document: names exist with the stated types, every test and
 theorem named passes (checked now or from the cached verdict), and each law's theorem states what the
-spec says. A requirement with only a `gap:` is reported but does not fail. CI restores the export and
-runs `deus mdl` on it (`src/cli.test.ts`), and fails when the export no longer matches `deus/`. The
+spec says. A requirement with only a `gap:` is reported but does not fail. The specs are not in git (D177),
+so CI does not see them: run `deus mdl` on the pulled codebase before you push a change to a spec or to
+the code it covers (task d9242c83 tracks making the push run it). The
 block types are in [MDL.md](spec/MDL.md#the-req-api-and-law-extensions);
-[Codebase.Spec](../codebase/specs/Codebase.Spec.mdl) is the reference example.
+[Codebase.Spec](https://deus.dmytro-a80.workers.dev/#n:Codebase.Spec) is the reference example.
 
 Laws about pure functions are theorems over generated values. Laws about the store, the CLI or the
 explorer run inside `Codebase.Spec.inStore`, a fresh codebase in the deterministic simulation, so a
@@ -82,25 +85,21 @@ theorem can still state them (`inStore (fun dir => …) = true`) and `by test n`
 
 ## Merging #13952's branch
 
-Every thread merges the shared branch many times a day, and the same files conflict each time:
-DECISIONS.md and TIMELINE.md (two threads take the same next number), the seed and the codebase
-export. `python3 scripts/merge-base.py` does the whole merge without committing:
+The branch holds only what is not in the codebase yet: the kernels, `deus/` and the seed the kernel
+boots from, the Worker, scripts and docs (D177). Two kinds of file still conflict on most merges:
+DECISIONS.md and TIMELINE.md (two threads take the same next number) and the seed.
+`python3 scripts/merge-base.py` does the merge without committing:
 
 - it gives our new decisions and stages the next free numbers and prints each `D<old> -> D<new>`;
-- it merges each export file three ways, restores the result with both sides' tasks and history
-  into a fresh codebase, updates that from deus/ and rebuilds the seed with `deus image Cli.main`.
-  Importing into the local codebase instead reverted our codebase-only edits and left stale hashes
-  that exported as `Unnamed.deus`;
-- it exports again and makes the fresh codebase the local one, keeping the old one as
-  `<dir>.before-merge`. It refuses to start while the local codebase holds changes HEAD's export lacks.
-- A new name can make a short name in their export ambiguous (`deus: ambiguous name declared`):
-  rename ours with `deus mv` and rerun the script.
-  Rewrite our references to renamed decisions, run the tests, then commit and push at once.
+- it takes their seed, removes the old `codebase/` export if their side still has it, and when our
+  side changed `deus/` it compiles the merged `deus/` into a new seed and checks the fixpoint.
+
+Rewrite our references to renamed decisions, run the tests, then commit and push at once.
 
 ## Feature maps
 
 A spec says what one subsystem promises; a feature map says what the product is made of (D118). Dmytro:
-"we need feature-maps in codebase in addition to tasks". [`Toolchain.Features`](../codebase/specs/Toolchain.Features.mdl)
+"we need feature-maps in codebase in addition to tasks". [`Toolchain.Features`](https://deus.dmytro-a80.workers.dev/#n:Toolchain.Features)
 maps the toolchain: each `feature` block has a status and links its spec documents, definitions and
 tasks. Edit it like a spec (`deus view Toolchain.Features > f.mdl`, `deus update f.mdl`), and when a task
 starts or ends, keep the feature that owns it current. `deus features` prints the tree with open tasks,
@@ -111,7 +110,7 @@ and `deus mdl` fails a shipped feature with open work.
 `deus mdl` checks what a spec says; `deus mdl --coverage [documents…]` reports what it leaves out
 (D125): laws of the document that no `req` or `law` block cites, and public definitions (used
 outside their own namespace) in the namespaces its api blocks cover that no api block names. It
-reports, and never fails; the restore test keeps uncited laws at zero.
+reports, and never fails; keep uncited laws at zero.
 
 A law can cite its requirement from its own side with `@[req "Doc.R-1"]` (D130). The link counts as a
 citation when a document states that requirement, and `--coverage` lists links that name none. Only a
@@ -147,7 +146,7 @@ requirement's `by:` laws run under `deus mdl`, so list a law there when the requ
   end by `src/cli.test.ts`; the new laws confirm what the code does and pin it down at the level a
   regression would break first (a namespace node splitting past 64 items, merge cases, the order of
   definitions in a batch, metadata surviving an export).
-- **Backfilling the explorer's writing and console** (D82, D84, D93) added an API block of six signatures, five requirements and two laws to [Explorer.Spec](../codebase/specs/Explorer.Spec.mdl): comments reach
+- **Backfilling the explorer's writing and console** (D82, D84, D93) added an API block of six signatures, five requirements and two laws to [Explorer.Spec](https://deus.dmytro-a80.workers.dev/#n:Explorer.Spec): comments reach
   `comments.json`, the inbox opens a member's task with its labels and refuses anyone else, the
   console snapshot leaves out local state, and `meta.json` names the console. To state R-10 as a
   test, the snapshot's file list became its own function (`Explorer.snapshotFiles`). No new bug; the
@@ -158,7 +157,7 @@ requirement's `by:` laws run under `deus mdl`, so list a law there when the requ
 
 About 10 to 15 minutes per subsystem for a spec of 5 to 12 requirements, most of it reading the
 prose spec and the code to find the promises worth stating. The bindings thread reported the same,
-about 10 minutes. The checker itself (`platform/spec.deus`, 130 lines, and the `describe` host
+about 10 minutes. The checker itself (the `Spec` namespace, 130 lines then, and the `describe` host
 operation) took about 20 minutes. Checking adds 7 to 14 seconds to the self-test.
 
 ## What is awkward in `.mdl` today

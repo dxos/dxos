@@ -158,7 +158,7 @@ Int, Bool or a data type is outside the wasm subset, …`.
 
 `Wasm.compile`'s `fetch` answers a type's IRI as well as a hash, because a signature names a type by IRI
 (`(tref "urn:deus:Tree")`) while Core names its constructors by the type's hash. The checked spec is
-[WasmEquality.Spec](../../codebase/specs/WasmEquality.Spec.mdl).
+[WasmEquality.Spec](https://deus.dmytro-a80.workers.dev/#n:WasmEquality.Spec).
 
 ## Arrays and cells
 
@@ -182,7 +182,7 @@ argument's type, so a comparison of an element of an `Array Int` compiles.
 
 ### Unique arrays
 
-`Array.set` is pure ([D96](../DECISIONS.md), the codebase's [`Array.Spec`](../../codebase/specs/Array.Spec.mdl)): it returns a new array and the old
+`Array.set` is pure ([D96](../DECISIONS.md), the codebase's [`Array.Spec`](https://deus.dmytro-a80.workers.dev/#n:Array.Spec)): it returns a new array and the old
 one stays readable. `Array.setInPlace` and `Array.copy` are not in the language. A pass over Core,
 [`deus/unique.deus`](../../deus/unique.deus), runs after the functions are gathered. This back end
 never frees memory and its blocks carry no count, so uniqueness has to be proved statically; the C back

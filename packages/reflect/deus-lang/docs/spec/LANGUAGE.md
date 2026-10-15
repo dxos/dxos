@@ -415,30 +415,30 @@ in the same batch is a placeholder until the batch is hashed in dependency order
 `cycle` ([D5](../DECISIONS.md)). The Core forms are specified in [CORE.md](./CORE.md); stored objects are in
 [CODEBASE-STORE.md](./CODEBASE-STORE.md).
 
-| Surface                       | Core                                                                                                            |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `def f x y := e`              | `(term (lam (lam e)))`                                                                                          |
-| `def f : A -> B \| p => e …`  | one `lam` per pattern column, then `match` on `(var 0)` or on a tuple of the columns                            |
-| `test t := e`                 | `(test e)`                                                                                                      |
-| local name, global name       | `(var i)` (de Bruijn), `(ref "hash")`                                                                           |
-| constructor, operation        | `(con "T" tag arity)`, `(op "A" index arity)`                                                                   |
-| `42`, `"s"`, `()`, `true`     | `(int 42)`, `(text "s")`, `(con "#Unit" 0 0)`, `(con "#Bool" 1 0)`                                              |
-| `(a, b, c)`                   | `(app (con "#Pair" 0 2) a (app (con "#Pair" 0 2) b c))`                                                         |
-| `[a, b]`, `h :: t`            | nested `(con "#List" 1 2)` ending in `(con "#List" 0 0)`                                                        |
-| `a + b`, `a == b`, `xs ++ ys` | `(app (prim "Int.add") a b)`, `(prim "eq")`, `(prim "append")`; see the list below                              |
-| `a && b`, `a \|\| b`, `!a`    | `(if a b false)`, `(if a true b)`, `(if a false true)`                                                          |
-| `x \|> f`, `f <\| x`          | `(app f x)`, with nested applications flattened                                                                 |
-| `-e`                          | `(app (prim "Int.neg") e)`                                                                                      |
-| `fun x => e`                  | `(lam e)`; a non-variable parameter becomes `(lam (match (var 0) (case p e)))`                                  |
-| `let x := v` / `let _ := v`   | `(let v body)` / `(seq v body)`; other patterns become `match`                                                  |
-| `let rec f x := v`            | `(letrec ((lam v)) body)`                                                                                       |
-| `e₁` newline `e₂`             | `(seq e₁ e₂)`                                                                                                   |
-| `match a, b with …`           | `(match (pair a b) (case (pair-pattern) e) …)`                                                                  |
-| `handle e with …`             | `(handle e (ret r) (on "A" index arity h) …)`; `h` binds the arguments, then `k`                                |
-| `p.x`, `(e).x`                | `(app (ref "<accessor>") p)`                                                                                    |
-| `{ x := 1, y := 2 }`          | `(app (con "<hash>" 0 2) …)` in field order                                                                     |
-| `{ p with y := 3 }`           | `match` on `p` with a pattern of `(pvar)`s, then the constructor applied                                        |
-| `(e : T)`                     | `e` in the hashed Core; the checker reads `(ann T e)` ([Checking.Spec](../../codebase/specs/Checking.Spec.mdl)) |
+| Surface                       | Core                                                                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `def f x y := e`              | `(term (lam (lam e)))`                                                                                                        |
+| `def f : A -> B \| p => e …`  | one `lam` per pattern column, then `match` on `(var 0)` or on a tuple of the columns                                          |
+| `test t := e`                 | `(test e)`                                                                                                                    |
+| local name, global name       | `(var i)` (de Bruijn), `(ref "hash")`                                                                                         |
+| constructor, operation        | `(con "T" tag arity)`, `(op "A" index arity)`                                                                                 |
+| `42`, `"s"`, `()`, `true`     | `(int 42)`, `(text "s")`, `(con "#Unit" 0 0)`, `(con "#Bool" 1 0)`                                                            |
+| `(a, b, c)`                   | `(app (con "#Pair" 0 2) a (app (con "#Pair" 0 2) b c))`                                                                       |
+| `[a, b]`, `h :: t`            | nested `(con "#List" 1 2)` ending in `(con "#List" 0 0)`                                                                      |
+| `a + b`, `a == b`, `xs ++ ys` | `(app (prim "Int.add") a b)`, `(prim "eq")`, `(prim "append")`; see the list below                                            |
+| `a && b`, `a \|\| b`, `!a`    | `(if a b false)`, `(if a true b)`, `(if a false true)`                                                                        |
+| `x \|> f`, `f <\| x`          | `(app f x)`, with nested applications flattened                                                                               |
+| `-e`                          | `(app (prim "Int.neg") e)`                                                                                                    |
+| `fun x => e`                  | `(lam e)`; a non-variable parameter becomes `(lam (match (var 0) (case p e)))`                                                |
+| `let x := v` / `let _ := v`   | `(let v body)` / `(seq v body)`; other patterns become `match`                                                                |
+| `let rec f x := v`            | `(letrec ((lam v)) body)`                                                                                                     |
+| `e₁` newline `e₂`             | `(seq e₁ e₂)`                                                                                                                 |
+| `match a, b with …`           | `(match (pair a b) (case (pair-pattern) e) …)`                                                                                |
+| `handle e with …`             | `(handle e (ret r) (on "A" index arity h) …)`; `h` binds the arguments, then `k`                                              |
+| `p.x`, `(e).x`                | `(app (ref "<accessor>") p)`                                                                                                  |
+| `{ x := 1, y := 2 }`          | `(app (con "<hash>" 0 2) …)` in field order                                                                                   |
+| `{ p with y := 3 }`           | `match` on `p` with a pattern of `(pvar)`s, then the constructor applied                                                      |
+| `(e : T)`                     | `e` in the hashed Core; the checker reads `(ann T e)` ([Checking.Spec](https://deus.dmytro-a80.workers.dev/#n:Checking.Spec)) |
 
 In the table, `true` and `false` stand for `(con "#Bool" 1 0)` and `(con "#Bool" 0 0)`. Operators map to
 primitives: `+ - * / %` to `Int.add`, `Int.sub`, `Int.mul`, `Int.div`, `Int.mod`;
@@ -483,7 +483,7 @@ The checker is Hindley–Milner with Koka-style ability rows, run over Core ([D2
 Inferred types are stored as `(scheme …)` metadata. `DEUS_TYPECHECK=warn` reports type errors as warnings
 and `DEUS_TYPECHECK=0` skips checking (only for bootstrapping the checker).
 
-- Ascriptions are checked ([D95](../DECISIONS.md), [Checking.Spec](../../codebase/specs/Checking.Spec.mdl)): `(e : T)`, `let x : T := v`,
+- Ascriptions are checked ([D95](../DECISIONS.md), [Checking.Spec](https://deus.dmytro-a80.workers.dev/#n:Checking.Spec)): `(e : T)`, `let x : T := v`,
   a local function's result type and a binder written `(x : T)` in a lambda or a pattern. A type variable
   in an ascription is flexible. Ascriptions are not part of Core, so they do not change a hash.
 - A row written on a definition with no binders (`def x : {} Int := …`) bounds what its body performs.
