@@ -756,10 +756,6 @@ export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> 
 export const Scope = Schema.Union([SpaceScope, FeedScope, RegistryScope]);
 export type Scope = Schema.Schema.Type<typeof Scope>;
 
-/**
- * The subqueries a node selects from. Built once: a `Match.value` pipeline built per call allocated every clause
- * and its predicate on every node, and queries are walked on every result update.
- */
 const subqueries: (query: Query) => readonly Query[] = Match.type<Query>().pipe(
   Match.when({ type: 'filter' }, ({ selection }) => [selection]),
   Match.when({ type: 'reference-traversal' }, ({ anchor }) => [anchor]),
