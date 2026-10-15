@@ -3,14 +3,12 @@
 //
 
 // The replication API (D164): what `deus push` and `deus pull` talk to when a remote is an
-// `https://…/v1/<project>` URL. It maps one to one onto the CLI's `Remote` ability, over the
+// `https://…/v1/@owner/project` URL (D184; `/v1/<folder>` for projects older than addresses). It maps one to one onto the CLI's `Remote` ability, over the
 // bucket binding, so no client needs R2 credentials. Reads are open; every write carries an API
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
+import { addressOfFolder, isGrantable, projectAt } from './address.mjs';
 import { names, objects, packs } from './packs.mjs';
-
-/** A project is one folder of the bucket. */
-const PROJECT = /^[a-z0-9][a-z0-9-]{0,62}$/;
 
 /** `<level>-<sha256>`, the name of an immutable bundle (D50, D91). */
 const BUNDLE = /^[0-9]{1,3}-[0-9a-f]{64}$/;
@@ -45,10 +43,13 @@ export const remoteApi = async (request, env, ctx, url) => {
   if (parts[0] === 'keys') {
     return keysApi(request, env, ctx, parts.slice(1));
   }
-  const [project, area, ...rest] = parts;
-  if (!PROJECT.test(project ?? '')) {
-    throw new HttpError(404, 'no such project');
+  const target = projectAt(parts);
+  if (!target) {
+    throw new HttpError(404, 'no such project: a project is /v1/@owner/project');
   }
+  // Every handler below works on the project's folder, which is all the bucket knows of it.
+  const project = target.folder;
+  const [area, ...rest] = parts.slice(target.used);
   if (!env.BUCKET) {
     throw new HttpError(503, 'this worker has no bucket');
   }
@@ -284,8 +285,10 @@ export const authorize = async (request, env, ctx, scope, project) => {
     throw new HttpError(403, `this API key lacks the ${scope} scope`);
   }
   const projects = JSON.parse(row.projects);
-  if (project && projects !== '*' && !projects.includes(project)) {
-    throw new HttpError(403, `this API key cannot write to ${project}`);
+  // A key names projects by address or, from before addresses, by folder; either grants the project.
+  const address = project && addressOfFolder(project);
+  if (project && projects !== '*' && !projects.includes(project) && !(address && projects.includes(address))) {
+    throw new HttpError(403, `this API key cannot write to ${address ?? project}`);
   }
   const url = new URL(request.url);
   // The row is written after the response, so logging never slows or fails a write. Explorer files
@@ -335,8 +338,8 @@ const keysApi = async (request, env, ctx, rest) => {
     if (scopes.length === 0 || !scopes.every((scope) => SCOPES.includes(scope))) {
       throw new HttpError(400, `scopes are some of ${SCOPES.join(', ')}`);
     }
-    if (projects !== '*' && !(Array.isArray(projects) && projects.every((project) => PROJECT.test(project)))) {
-      throw new HttpError(400, 'projects is "*" or a list of project names');
+    if (projects !== '*' && !(Array.isArray(projects) && projects.every(isGrantable))) {
+      throw new HttpError(400, 'projects is "*" or a list of project addresses (@owner/project)');
     }
     const days = Number(body.expiresInDays);
     const minted = await mintKey();

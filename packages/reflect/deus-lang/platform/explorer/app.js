@@ -2728,6 +2728,24 @@ const report = async () => {
   }
 };
 
+/** The project's address `@owner/project` (Address.Spec, D184): the IRI itself, or read from a D49 IRI `https://<owner>.<tld>/…/<project>`. */
+const addressOf = (iri) => {
+  if (iri.startsWith('@')) {
+    return iri;
+  }
+  const match = /^https:\/\/([^./]+)\.[^/]+\/(?:.*\/)?([^/]+)$/.exec(iri);
+  return match ? `@${match[1].toLowerCase()}/${match[2].toLowerCase()}` : iri.replace(/^https?:\/\//, '');
+};
+
+/** A path link `/@owner/project/Name` (Address.Spec R-8) becomes the fragment `#n:Name` at `/@owner/project/`, so cards keep working by fragment. */
+const openPathLink = () => {
+  const match = /^(\/@[a-z0-9-]+\/[a-z0-9-]+\/)(.+)$/.exec(decodeURIComponent(location.pathname));
+  if (!match || location.hash.length > 1) {
+    return;
+  }
+  history.replaceState(null, '', `${match[1]}#n:${encodeURIComponent(match[2])}`);
+};
+
 const main = async () => {
   const [meta, names, tasks] = await Promise.all([load('meta.json'), load('names.json'), load('tasks.json')]);
   if (!meta || !names || !tasks) {
@@ -2743,7 +2761,9 @@ const main = async () => {
     }
   }
   index.tree = buildTree(names);
-  element('project').textContent = meta.project.replace(/^https?:\/\//, '');
+  element('project').textContent = addressOf(meta.project);
+  element('project').title = meta.project;
+  openPathLink();
   element('branch').textContent = meta.branch;
   element('open-count').textContent = meta.open > 0 ? String(meta.open) : '';
   if (index.tree.children.size < 12) {
