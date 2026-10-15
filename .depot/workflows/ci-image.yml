@@ -1,0 +1,92 @@
+name: CI image
+
+# Builds the snapshot that Check jobs start from (`runs-on.image`): the system packages the
+# `ghcr.io/dxos/gh-actions` container carried, moon's toolchains, Rust with libclang and Playwright's
+# browsers. A job then skips the image pull and the toolchain installs. The pnpm store stays out: a
+# snapshot's disk loads lazily, so `pnpm install` reading 4,000 packages from it took over 100 s, where
+# restoring the store from the cache and installing takes ~40 s. Everything baked is a cache: the setup
+# action installs whatever a branch pins that the snapshot lacks, so a stale snapshot is slower, never
+# wrong.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .prototools
+      - pnpm-lock.yaml
+      - tools/code-index-native/rust-toolchain.toml
+      - .depot/actions/setup/action.yml
+      - .depot/workflows/ci-image.yml
+  # Keeps the store close to main between lockfile pushes that skipped a rebuild.
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-image
+  cancel-in-progress: true
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  build:
+    runs-on: depot-ubuntu-24.04-4
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # The packages `.github/Dockerfile` installs, plus libclang for the Rust addon's bindgen step.
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+            build-essential ca-certificates curl git-lfs gpg jq libclang-dev libenchant-2-2 libpng++-dev \
+            libxtst-dev python3 bubblewrap ripgrep socat unzip xz-utils
+
+      # On PATH before moon's toolchain exists, as in the container: scripts that run ahead of
+      # `moon setup` call `node` and `pnpm` directly.
+      - name: Install Node and pnpm
+        env:
+          NODE_VERSION: '24.11.1'
+          PNPM_VERSION: '10.28.0'
+        run: |
+          curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.tar.xz
+          sudo mkdir -p /opt/nodejs
+          sudo tar -xf /tmp/node.tar.xz -C /opt/nodejs --strip-components=1
+          sudo ln -sf /opt/nodejs/bin/* /usr/local/bin/
+          sudo npm install -g --prefix /usr/local "pnpm@${PNPM_VERSION}"
+          node --version
+          pnpm --version
+
+      # Installs moon's toolchains and Rust, and the dependencies Playwright's CLI comes from.
+      - name: Setup
+        uses: ./.depot/actions/setup
+        with:
+          rust: 'true'
+
+      - name: Install Playwright browsers
+        run: |
+          pnpm exec playwright install-deps
+          pnpm exec playwright install chromium firefox webkit
+
+      # The setup action reads the marker to skip the toolchain and registry restores. The pnpm store and
+      # the workspace go, the latter with the client certificates the setup action wrote, which must not
+      # ship in the image.
+      - name: Mark the image
+        run: |
+          sudo mkdir -p /opt/dxos-ci
+          git rev-parse HEAD | sudo tee /opt/dxos-ci/commit
+          rm -rf "$(pnpm store path)"
+          find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+      - uses: depot/snapshot-action@v1
+        with:
+          image: t8fblrl00n.registry.depot.dev/dxos-ci:latest

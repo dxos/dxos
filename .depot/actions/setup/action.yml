@@ -29,6 +29,13 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # A job on the `ci-image.yml` snapshot already has the cargo registry and moon's toolchains, so it
+    # skips restoring them.
+    - name: Detect the CI image
+      id: image
+      run: echo "baked=$([ -f /opt/dxos-ci/commit ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
     # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
     #   It's not clear why, the Docker image is setup for the user to own the workspace.
     #   The checkout action also already runs this internally as a step as well.
@@ -142,6 +149,7 @@ runs:
     # TODO(wittjosiah): Install moon in docker image?
     - uses: moonrepo/setup-toolchain@v0
       with:
+        cache: ${{ steps.image.outputs.baked != 'true' }}
         # IMPORTANT: Keep in-sync with .prototools
         moon-version: '2.5.2'
         proto-version: '0.60.2'
@@ -156,7 +164,7 @@ runs:
     # Only a job whose crate inputs changed compiles, since moon's remote cache restores the addon and
     # skips `cargo-test` otherwise; the registry is cached because that compile would refetch every crate.
     - name: Cache cargo registry
-      if: ${{ inputs.rust == 'true' }}
+      if: ${{ inputs.rust == 'true' && steps.image.outputs.baked != 'true' }}
       uses: actions/cache@v4
       with:
         path: |
