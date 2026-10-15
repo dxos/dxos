@@ -30,7 +30,7 @@ def Checking.Spec.checks (source : Text) : Bool := isSome (compiled source)
 
 /-- The entries of `source` compiled alone in strict mode, or none when it fails to compile or check. -/
 def Checking.Spec.compiled (source : Text) : Option (List (Text, Entry)) :=
-  match try (fun _ => hbe595dabb3
+  match try (fun _ => batch
     Map.empty
     (fun _ => Option.none)
     (fun _ => Option.none)
