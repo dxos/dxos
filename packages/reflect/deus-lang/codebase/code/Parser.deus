@@ -349,7 +349,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
 
 /-- A comment's lines with the indentation of its first line removed from the later ones. -/
 def Parser.dedent (t : Token) : Text :=
-  match lines t.value with
+  match Text.lines t.value with
   | [] => ""
   | first :: rest => join "\n" (first :: List.map (fun l =>
       let rec lead i := if i < t.col && i < Text.length l && code l i == ' ' then lead (i + 1) else i
@@ -514,7 +514,7 @@ def Parser.notesBefore (p : Parser) (line : Int) : Option Text :=
     | [] => Text.concat (reverse acc)
     | t :: rest =>
         let gap := if previousEnd < 0 then "" else if t.line > previousEnd + 1 then "\n\n" else "\n"
-        join rest (t.line + List.length (lines t.value) - 1) (dedent t :: gap :: acc)
+        join rest (t.line + List.length (Text.lines t.value) - 1) (dedent t :: gap :: acc)
   match split (Ref.get p.notes) [] with
   | ([], _) => Option.none
   | (taken, rest) =>

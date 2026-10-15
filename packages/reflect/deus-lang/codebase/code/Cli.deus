@@ -1318,7 +1318,7 @@ def Cli.publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO
   let previous := if force then Map.empty else Map.fromList (filterMap (fun line =>
     match Text.split line " " with
     | sum :: path :: [] => Option.some (path, sum)
-    | _ => Option.none) (lines (getOr (IO.readFile manifest) "")))
+    | _ => Option.none) (Text.lines (getOr (IO.readFile manifest) "")))
   -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
   let files := List.filter (fun f => not (startsWith "assets/" f)) (filesUnder out "")
   let sums := List.map (fun f => (f, Text.sha256 (getOr (IO.readFile (out ++ "/" ++ f)) ""))) files

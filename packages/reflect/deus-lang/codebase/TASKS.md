@@ -124,6 +124,8 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 
 > claude: Tasks done: Tasks.Spec (8 reqs, D145); its R-8 found that --parent took any text, kept prefixes as typed and allowed cycles. Left: types, prover and check, image, wasm and C back ends.
 
+> claude: Image done: Image.Spec (4 reqs, no bug found). Left: prover and check beyond Checking.Spec, wasm and C back ends (the native thread's area).
+
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo

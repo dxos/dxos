@@ -1,5 +1,14 @@
 # History of main
 
+- `42f987d1f0` update deus (by merge)
+- `48837a0605` history: import 1000 changes
+- `579a9acc27` history: import 1009 changes
+- `594270c9d2` task: import from /tmp/tmp_q7zebks/tasks.sexp
+- `35ee3f9c65` add /tmp/tmp_q7zebks/merged/code /tmp/tmp_q7zebks/merged/specs
+- `69add6faeb` task: comment on 1ab6c044 (by claude)
+- `34925ba12f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `eab8f32cd2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
+- `b7f1509790` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
 - `8a33fd7308` update deus (by claude)
 - `3ed8cd0ba3` update deus (by merge)
 - `ddc1aecd8a` history: import 996 changes

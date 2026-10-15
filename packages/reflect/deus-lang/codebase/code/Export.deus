@@ -151,7 +151,7 @@ def Export.document (dir : Text) (ns : Map Text Entry) (d : Text) : {IO} Text :=
     match last? sorted with
     | Option.some (_, _, _, meta) => text meta "tail"
     | Option.none => ""
-  let bodyLines := lines (join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
+  let bodyLines := Text.lines (join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
   let isExtensions := fun l => startsWith "#" (trim l) && headingOf (trim l) == "Extensions"
   let body := if any isExtensions bodyLines then
     let at := findIndex isExtensions bodyLines

@@ -33,7 +33,7 @@ feature F-1: The language and its kernel
 feature F-2: Self-hosting toolchain: the seed compiles itself to the same bytes
   status: shipped
   parent: F-1
-  specs: Compile.Spec | Parser.Spec
+  specs: Compile.Spec | Parser.Spec | Image.Spec
   defs: Compile.batch | Cli.main | Image.build | Lexer.lex | Parser.parse
 ```
 

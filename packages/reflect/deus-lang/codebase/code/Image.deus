@@ -1,3 +1,47 @@
+/-- R-1: the closure of several roots is the same in any order. -/
+test Image.Spec.closureIgnoresRootOrder := Spec.closureOf ["u1", "m1"] == Spec.closureOf ["m1", "u1"] && Spec.closureOf ["m1", "u1"] == ["f1", "g1", "m1", "u1"]
+
+/-- R-1: main reaches f and g, once each, sorted; u is not reached. -/
+test Image.Spec.closureIsReachable := Spec.closureOf ["m1"] == ["f1", "g1", "m1"] && Spec.closureOf ["g1"] == ["g1"]
+
+/-- The hashes in `roots`' closure, in image order; empty when the build fails. -/
+def Image.Spec.closureOf (roots : List Text) : List Text :=
+  match try (fun _ => closure Spec.fetch roots) with
+  | Result.ok defs => List.map fst defs
+  | Result.err _ => []
+
+def Image.Spec.fetch (h : Text) : {Throw Text} Option Sexp := Map.lookup h Spec.objects
+
+/-- The image lines for `main`, or the error. -/
+def Image.Spec.lines (main : Text) : Result Text (List Text) := try (fun _ => Text.split (Image.build Spec.fetch main) "\n")
+
+/-- R-4: the image of m1 ends with its main line and a new line. -/
+test Image.Spec.mainLineLast :=
+  match Spec.lines "m1" with
+  | Result.ok ls =>
+      match reverse ls with
+      | "" :: last :: _ => last == "(main \"m1\")"
+      | _ => false
+  | Result.err _ => false
+
+/-- R-2: a reference to an absent hash fails with its name. -/
+test Image.Spec.missingDefinitionFails :=
+  match try (fun _ => closure (fun h => if h == "g1" then Option.none else Spec.fetch h) ["m1"]) with
+  | Result.err message => message == "missing definition #g1"
+  | Result.ok _ => false
+
+/-- R-3: T, which f constructs, has its line; the builtin Bool and the type only u uses do not. -/
+test Image.Spec.nominalLines :=
+  match Spec.lines "m1" with
+  | Result.ok ls => List.contains "(type \"t1\" \"urn:spec:T\")" ls && not (any (fun l => Text.contains "Unused" l || Text.contains "#Bool\" \"" l) ls)
+  | Result.err _ => false
+
+/-- A store of five objects: main calls f and g, f calls g, unused calls f; T is a user type, B builtin. -/
+def Image.Spec.objects : Map Text Sexp :=
+  let term := fun body => Sexp.node "term" [body]
+  let ref := fun h => Sexp.node "ref" [Sexp.str h]
+  Map.fromList [("m1", term (Sexp.node "app" [ref "f1", ref "g1"])), ("f1", term (Sexp.node "app" [ref "g1", Sexp.node "con" [Sexp.str "t1", Sexp.int 0]])), ("g1", term (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 1])), ("u1", term (Sexp.node "app" [ref "f1", Sexp.node "con" [Sexp.str "t2", Sexp.int 0]])), ("t1", Sexp.node "type" [Sexp.str "urn:spec:T"]), ("t2", Sexp.node "type" [Sexp.str "urn:spec:Unused"])]
+
 /-- The image text for an entry point. -/
 def Image.build (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} Text :=
   let defs := closure fetch [main]
