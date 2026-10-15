@@ -4,9 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { type StyleMap } from '../model/types.ts';
+import { DEFAULT_LOOK, defaultStyleSetRegistry, resolveLook } from '../model/style-set.ts';
+import { type Node, type StyleMap } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
-import { classedLink, classedNode, frameClasses, splitClassEdit } from './style.ts';
+import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
 
 describe('style classes', () => {
   const styles: StyleMap = {
@@ -50,5 +51,59 @@ describe('style classes', () => {
       classLook: { hue: 'red', lineStyle: 'dashed', rounded: false },
       own: { hue: 'blue' },
     });
+  });
+});
+
+describe('style sets', () => {
+  const box = { x: 0, y: 0, width: 200, height: 100 };
+  const {
+    scenes: [{ nodes }],
+  } = SceneBuilder.scene('s', [
+    SceneBuilder.rect('plain', box),
+    SceneBuilder.rect('blue', box).properties({ style: { hue: 'blue' } }),
+    SceneBuilder.rect('strong', box).properties({ style: { hue: 'red', tone: 1, rounded: true } }),
+    SceneBuilder.rect('outline', box).properties({ style: { hue: 'teal', tone: 0, lineStyle: 'dotted' } }),
+    SceneBuilder.rect('bare', box).properties({ style: { hue: 'pink', fill: false, border: false } }),
+    SceneBuilder.rect('guide', box).properties({ style: { hue: 'green', guide: true } }),
+    SceneBuilder.ellipse('round', box).properties({ style: { hue: 'violet', tone: 3 } }),
+  ]).build();
+
+  // The classes every node drew before style sets, spelled out so a change to the classic look fails here.
+  const before: Record<string, string[]> = {
+    plain: ['bg-base-surface', '', 'border-separator', '', 'rounded-sm'],
+    blue: ['bg-blue-surface', 'text-blue-fg', 'border-blue-border', '', 'rounded-sm'],
+    strong: ['bg-red-500', 'text-neutral-50', 'border-red-border', '', 'rounded-2xl'],
+    outline: ['bg-transparent', '', 'border-teal-border', 'border-dotted', 'rounded-sm'],
+    bare: ['', 'text-pink-fg', 'border-transparent', '', 'rounded-sm'],
+    guide: ['', '', 'border-green-border', 'border-dashed', 'rounded-sm'],
+    round: ['bg-violet-300', 'text-violet-900', 'border-violet-border', '', 'rounded-[50%]'],
+  };
+
+  test('classic draws every node exactly as before', ({ expect }) => {
+    const classic = resolveLook(defaultStyleSetRegistry, 'classic', undefined);
+    for (const [id, classes] of Object.entries(before)) {
+      const node: Node = nodes[id];
+      expect(frameClasses(node, false)).toEqual(classes);
+      expect(frameClasses(node, false, false, false, classic)).toEqual(classes);
+      expect(frameClasses(node, false, false, false, DEFAULT_LOOK)).toEqual(classes);
+    }
+    expect(surfaceClasses('blue', 1, classic)).toEqual(hueClasses('blue', 1));
+  });
+
+  test('another set restyles the same nodes', ({ expect }) => {
+    const glass = resolveLook(defaultStyleSetRegistry, 'glass', 'paper');
+    expect(frameClasses(nodes.blue, false, false, false, glass)).toEqual([
+      'bg-blue-100/60',
+      'text-blue-900',
+      'border-blue-900/15',
+      '',
+      'rounded-lg',
+    ]);
+    const outline = resolveLook(defaultStyleSetRegistry, 'outline', 'plain');
+    // Outline has no fill and labels in the default text colour; a theme hue outside the pickers draws as the nearest.
+    expect(frameClasses(nodes.blue, false, false, false, outline).slice(0, 2)).toEqual(['bg-transparent', '']);
+    expect(surfaceClasses('pink', 2, outline).border).toBe(surfaceClasses('red', 2, outline).border);
+    // Selection still draws in the focus colour.
+    expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
   });
 });

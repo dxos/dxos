@@ -7,6 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
+import { DEFAULT_LOOK, type SceneLook } from '../model/style-set.ts';
 import {
   type HorizontalAlign,
   type Link,
@@ -21,6 +22,7 @@ import {
   isFrameNode,
   showsContents,
 } from '../model/types.ts';
+import { FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, SURFACES } from './surfaces.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -159,19 +161,50 @@ export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
 });
 
 /**
- * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
- * dashed and unfilled.
+ * The classes a hue at a tone draws with in `look`'s style set: the canvas's own fills (`hueClasses`) for the `tone`
+ * surface; otherwise the set's surface for the hue (a theme hue outside the pickers draws as the nearest picker hue).
+ * Every surface drops its fill at tone 0.
  */
-/** The frame's classes; `ellipse` rounds it as an ellipse whatever the node's type (its definition asks for it). */
-export const frameClasses = (node: Node, selected: boolean, hovered = false, ellipse = false): string[] => {
+export const surfaceClasses = (
+  hue: string | undefined,
+  tone: NodeTone = DEFAULT_TONE,
+  look: SceneLook = DEFAULT_LOOK,
+): HueClasses => {
+  const { surface, label } = look.styleSet.node;
+  if (surface === 'tone') {
+    return hueClasses(hue, tone);
+  }
+  const key = hue === undefined ? 'default' : isStyleHue(hue) ? hue : NEAREST_HUE[hue];
+  const classes = SURFACES[surface][key ?? 'default'][look.tone];
+  return {
+    surface: tone === 0 && hue !== undefined ? 'bg-transparent' : classes.surface,
+    text: label === 'default' ? '' : classes.text,
+    border: classes.border,
+  };
+};
+
+/**
+ * Frame classes for a node in `look` (the classic set when unset): fill and text colour, border and corner radius from
+ * its style; a guide is dashed and unfilled. `ellipse` rounds it as an ellipse whatever the node's type (its
+ * definition asks for it).
+ */
+export const frameClasses = (
+  node: Node,
+  selected: boolean,
+  hovered = false,
+  ellipse = false,
+  look: SceneLook = DEFAULT_LOOK,
+): string[] => {
   const style = resolveStyle(node.style);
-  const hue = hueClasses(style.hue, style.tone);
+  const hue = surfaceClasses(style.hue, style.tone, look);
+  const { node: tokens, frame } = look.styleSet;
   const filled = style.fill && !style.guide;
   // A scene shape drawing its contents is a window onto another canvas, so it is opaque even in outline: the
   // grid behind it would read as part of the child scene.
   const opaque = isFrameNode(node) && showsContents(node);
   const clear = !filled || hue.surface === 'bg-transparent';
-  const surface = opaque && clear ? 'bg-base-surface' : filled ? hue.surface : '';
+  const surface = opaque && clear ? FRAME_FILLS[frame.contents][look.tone] : filled ? hue.surface : '';
+  const lineStyle = style.lineStyle ?? tokens.borderStyle;
   return [
     surface,
     // A guide's hue marks its edge (a group's backdrop); its title reads in the default text colour.
@@ -184,8 +217,12 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false, ell
           style.border === false && !style.guide && !isFrameNode(node)
           ? 'border-transparent'
           : hue.border,
-    style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',
-    ellipse || isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
+    style.guide || lineStyle === 'dashed' ? 'border-dashed' : lineStyle === 'dotted' ? 'border-dotted' : '',
+    ellipse || isEllipseNode(node)
+      ? 'rounded-[50%]'
+      : style.rounded
+        ? RADIUS_CLASSES[tokens.roundedRadius]
+        : RADIUS_CLASSES[tokens.radius],
   ];
 };
 
