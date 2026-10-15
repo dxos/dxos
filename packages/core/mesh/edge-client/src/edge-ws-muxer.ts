@@ -33,33 +33,30 @@ const FLAG_SEGMENT_SEQ = 1;
  */
 const FLAG_SEGMENT_SEQ_TERMINATED = 1 << 1;
 /**
- * 0000 0100 - flow-control frame, carrying no message. Alone it is a credit grant: a sequence of
- * `[channelId:u8][consumedBytes:u32 BE][consumedMessages:u32 BE]` entries, the receiver's cumulative consumption;
- * the repeat count is implicit in the frame length.
- *
- * Only ever sent when flow control was negotiated (`edge-ws-v2`): a V1 reader tests only `FLAG_SEGMENT_SEQ`, so it
- * would decode this as a message body and throw.
+ * 0000 0100 - flow-control frame with no message; alone, a grant of the receiver's cumulative consumption as
+ * `[channelId:u8][bytes:u32 BE][messages:u32 BE]` entries. Sent only under `edge-ws-v2`, since a V1 reader misparses it.
  */
 const FLAG_FLOW_CONTROL = 1 << 2;
-/**
- * 0000 1100 - sync: the sender's cumulative totals, `[channelId:u8][sentBytes:u32 BE][sentMessages:u32 BE]` for every
- * channel it has sent on, as of this point in the stream. A receiver rebuilt mid-connection (the router after
- * hibernation or a reset) has lost the totals its grants are counted against, and rebases onto these.
- */
+/** 0000 1100 - sync: the sender's cumulative sent totals per channel, which a receiver rebuilt mid-connection adopts. */
 const FLAG_SYNC = 1 << 3;
 /** 0001 0100 - sync request, with no body: the receiver asks the sender for a {@link FLAG_SYNC} frame. */
 const FLAG_SYNC_REQUEST = 1 << 4;
+/**
+ * 0010 0100 - pause: `[channelId:u8][retryAfterMs:u32 BE]` entries asking the sender to start no new message on a channel
+ * whose downstream is overloaded, so the sender's other channels keep flowing; it resumes on its own when the time is up.
+ */
+const FLAG_PAUSE = 1 << 5;
 
 /** Bytes per `[channelId][bytes][messages]` entry in a grant or sync frame. */
 const FLOW_CONTROL_ENTRY_BYTES = 9;
 
-/**
- * How long a channel stays out of credit before the sender restates its totals unasked. A receiver that was reset
- * while this end was stalled never grants again, and with every channel stalled nothing else would wake it.
- */
+/** Bytes per `[channelId][retryAfterMs]` entry in a pause frame. */
+const PAUSE_ENTRY_BYTES = 5;
+
+/** Stall before the sender restates its totals unasked, the only thing that reaches a receiver reset meanwhile. */
 const STALL_PROBE_INTERVAL = 5_000;
 
-/** Channel carrying messages with no service id under flow control, so they are accounted like everything else. */
+/** Channel for messages with no service id under flow control, so they are accounted too. */
 const UNCHANNELLED_ID = 0;
 
 const isSegment = (frame: Uint8Array): boolean => (frame[0] & FLAG_SEGMENT_SEQ) !== 0;
@@ -99,11 +96,8 @@ const OVERDRAFT_TOLERANCE = 1.5;
 export type FlowControlAmount = { bytes: number; messages: number };
 
 /**
- * Credit-based flow control for one connection; see `docs/design/flow-control/DESIGN.md` in dxos/edge.
- *
- * Both ends are bounded in bytes and in messages. Bytes bound memory and bandwidth; messages bound request count,
- * since the receiver dispatches every message downstream on its own (for a replicator, as one RPC into its Durable
- * Object) and a byte window alone admits thousands of small frames.
+ * Credit-based flow control for one connection, in bytes and in messages, since each message is its own request
+ * downstream; see `docs/design/flow-control/DESIGN.md` in dxos/edge.
  */
 export type FlowControlConfig = {
   /** Credit window in payload bytes for an outbound channel carrying `serviceId`. */
@@ -115,22 +109,13 @@ export type FlowControlConfig = {
   /** Messages the whole connection may have sent but not yet seen acknowledged, across every channel. */
   maxConnectionMessages: number;
 
-  /**
-   * Consumption on an inbound channel worth announcing. Must stay below the smallest window and message bound the peer
-   * sends with: grants are rate-limited, so a threshold the peer can never reach stalls it for good.
-   */
+  /** Consumption on an inbound channel worth announcing; below the peer's smallest bounds, or it stalls for good. */
   grantThreshold: FlowControlAmount;
 
-  /**
-   * Unannounced consumption across every inbound channel worth announcing, in messages. Must stay below the peer's
-   * {@link maxConnectionMessages}: spread over many channels, no single channel may ever reach {@link grantThreshold}.
-   */
+  /** Messages consumed across all inbound channels worth announcing, since spread thinly none reaches its own. */
   connectionGrantThreshold: number;
 
-  /**
-   * Received-but-unconsumed amount on an inbound channel past which {@link onOverdraft} fires. Credits are advisory,
-   * so a receiver that must not fall over needs a bound that does not depend on the peer cooperating.
-   */
+  /** Received-but-unconsumed amount on an inbound channel past which {@link onOverdraft} fires: credit is advisory. */
   overdraftLimit: FlowControlAmount;
 
   /** Received-but-unconsumed messages across every inbound channel past which {@link onOverdraft} fires. */
@@ -140,10 +125,7 @@ export type FlowControlConfig = {
   onOverdraft?: (info: { channelId: number; outstanding: FlowControlAmount; limit: FlowControlAmount }) => void;
 };
 
-/**
- * Flow control as `edge-ws-v2` specifies it, from the windows in `@dxos/protocols`; both ends of an EDGE socket use
- * this so their thresholds and bounds agree.
- */
+/** Flow control as `edge-ws-v2` specifies it; both ends of an EDGE socket use it so their bounds agree. */
 export const createFlowControlConfig = (onOverdraft?: FlowControlConfig['onOverdraft']): FlowControlConfig => {
   const windows = Object.values(EDGE_FLOW_CONTROL_WINDOWS);
   return {
@@ -198,11 +180,8 @@ export class WebSocketMuxer {
   private readonly _maxChunkLength: number;
   private readonly _flowControl: FlowControlConfig | undefined;
 
-  //
-  // Flow control. Outbound state tracks what this end may still send; inbound state tracks what it owes the peer a
-  // grant for. They are independent because each sender allocates channel ids on its own, so the peer's channel 3 is
-  // unrelated to ours. Every total is cumulative mod 2^32, which keeps grants idempotent and resync-safe.
-  //
+  // Flow control: outbound and inbound channel ids are allocated by each sender independently, and every total is
+  // cumulative mod 2^32 so grants stay idempotent and resync-safe.
 
   /** Per outbound channel: what has been handed to the socket. */
   private readonly _outSent = new Map<number, FlowControlAmount>();
@@ -217,11 +196,10 @@ export class WebSocketMuxer {
   private readonly _inConsumed = new Map<number, FlowControlAmount>();
   /** Per inbound channel: consumption last announced, so a grant is not emitted per message. */
   private readonly _inGranted = new Map<number, FlowControlAmount>();
-  /**
-   * Whether the peer's sync has arrived. Until it has, this end cannot tell whether its totals start where the peer's
-   * do (a new connection) or were lost mid-connection, so it withholds grants rather than send ones counted wrongly.
-   */
+  /** Whether the peer's sync has arrived; grants wait for it, since until then this end's totals may be stale. */
   private _inSynced = false;
+  /** Per outbound channel: when the peer's pause ends, in `Date.now()` time. */
+  private readonly _outPausedUntil = new Map<number, number>();
   private _stallProbeArmed = false;
 
   constructor(
@@ -346,14 +324,15 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Feeds one inbound frame. The result is passed back to {@link consumed} once the application is done with it, which
-   * is what extends the peer's credit. A frame the muxer itself discards (over the reassembly limits, or a sequence
-   * that fails to decode) is credited here before the throw, so the sender is not left short of credit for it.
+   * Feeds one inbound frame; pass the result to {@link consumed} once done with it, which extends the peer's credit.
+   * A frame the muxer itself discards is credited before the throw, so the sender is not left short.
    */
   public receiveFrame(data: Uint8Array): ReceivedFrame {
     if ((data[0] & FLAG_FLOW_CONTROL) !== 0) {
       if ((data[0] & FLAG_SYNC_REQUEST) !== 0) {
         this._sendSync();
+      } else if ((data[0] & FLAG_PAUSE) !== 0) {
+        this._applyPause(data);
       } else if ((data[0] & FLAG_SYNC) !== 0) {
         this._applySync(data);
       } else {
@@ -442,10 +421,8 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Reports that the application is done with a frame {@link receiveFrame} returned, possibly emitting a credit grant.
-   * Must be called on consumption, never on receipt: crediting arrival would move the unbounded buffer from the sender
-   * to the receiver rather than bounding it. A frame the application drops still has to be reported, or its credit
-   * is lost for the life of the connection.
+   * Reports a frame {@link receiveFrame} returned as done with, possibly granting credit: on consumption, not receipt,
+   * or the unbounded buffer just moves to this end. A dropped frame must be reported too, or its credit is lost.
    */
   public consumed(frame: ReceivedFrame): void {
     if (frame.channelId == null) {
@@ -469,12 +446,7 @@ export class WebSocketMuxer {
     this._inGranted.clear();
   }
 
-  /**
-   * Payload bytes queued for sending but not yet handed to the socket.
-   *
-   * Under flow control, non-zero means a channel is out of credit and this end is holding back: the only externally
-   * visible sign that backpressure is being applied, so it is what diagnostics and tests read.
-   */
+  /** Payload bytes queued but not yet handed to the socket; under flow control, what credit is holding back. */
   public get pendingBytes(): number {
     let pending = 0;
     for (const chunks of this._outMessageChunks.values()) {
@@ -485,12 +457,7 @@ export class WebSocketMuxer {
     return pending;
   }
 
-  /**
-   * Payload bytes handed to the socket that the peer has not reported consuming, across channels.
-   *
-   * Under flow control this is bounded by the sum of the channels' windows; that bound IS the backpressure. Without it
-   * nothing is ever acknowledged, so the figure only grows: it measures how far this end has run ahead of the peer.
-   */
+  /** Payload bytes written that the peer has not reported consuming; without flow control it only grows. */
   public get unacknowledgedBytes(): number {
     let outstanding = 0;
     for (const channelId of this._outSent.keys()) {
@@ -511,6 +478,27 @@ export class WebSocketMuxer {
   /** What an outbound channel has sent that the peer has not yet reported consuming. */
   public inFlight(channelId: number): FlowControlAmount {
     return difference(this._outSent.get(channelId), this._outAcknowledged.get(channelId));
+  }
+
+  /** When the peer's pause of an outbound channel ends, in `Date.now()` time, if it is paused. */
+  public pausedUntil(channelId: number): number | undefined {
+    const until = this._outPausedUntil.get(channelId);
+    return until !== undefined && until > Date.now() ? until : undefined;
+  }
+
+  /**
+   * Asks the peer to start no new message on one of its channels for `retryAfterMs`: the channel id is the one its
+   * frames arrive on. Its other channels keep flowing. A no-op without flow control, where the peer would not parse it.
+   */
+  public pause(channelId: number, retryAfterMs: number): void {
+    if (!this._flowControl) {
+      return;
+    }
+    const frame = new Uint8Array(1 + PAUSE_ENTRY_BYTES);
+    frame[0] = FLAG_FLOW_CONTROL | FLAG_PAUSE;
+    frame[1] = channelId;
+    new DataView(frame.buffer).setUint32(2, Math.max(0, Math.round(retryAfterMs)));
+    this._sendControl(frame);
   }
 
   /** Channel a service's messages are sent on, once it has sent one. */
@@ -630,7 +618,10 @@ export class WebSocketMuxer {
         chunk.trigger?.wake();
       }
       if (!progressed) {
-        this._armStallProbe();
+        // A paused channel needs no probe: its pause ends on a timer of its own.
+        if ([...this._outMessageChunks.keys()].some((channelId) => this.pausedUntil(channelId) === undefined)) {
+          this._armStallProbe();
+        }
         return;
       }
     }
@@ -674,6 +665,10 @@ export class WebSocketMuxer {
   private _canSend(channelId: number, chunk: MessageChunk): boolean {
     if (!this._flowControl) {
       return true;
+    }
+    // A message already under way finishes, so the peer is not left holding half of it for the whole pause.
+    if (!this._outOpenSequences.has(channelId) && this.pausedUntil(channelId) !== undefined) {
+      return false;
     }
     const inFlight = this.inFlight(channelId);
     if (
@@ -826,6 +821,26 @@ export class WebSocketMuxer {
     // Granted at once whatever the threshold: the peer may be stalled on any of these channels.
     if (channelIds.length > 0) {
       this._grant(channelIds);
+    }
+  }
+
+  private _applyPause(data: Uint8Array): void {
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    for (let offset = 1; offset + PAUSE_ENTRY_BYTES <= data.byteLength; offset += PAUSE_ENTRY_BYTES) {
+      const channelId = data[offset];
+      const retryAfterMs = view.getUint32(offset + 1);
+      this._outPausedUntil.set(channelId, Date.now() + retryAfterMs);
+      log('muxer channel paused by peer', { channelId, retryAfterMs });
+      // Nothing else wakes the send task when the pause ends: no grant is owed for a channel that sent nothing.
+      scheduleTask(
+        this._ctx,
+        () => {
+          if (this._outMessageChunks.size > 0) {
+            this._sendTask.schedule();
+          }
+        },
+        retryAfterMs,
+      );
     }
   }
 

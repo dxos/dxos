@@ -180,6 +180,12 @@ export class EdgeWsConnection extends Resource {
     return this._wsMuxer?.flowControlEnabled ?? false;
   }
 
+  /** When EDGE's pause of the service's channel ends, in `Date.now()` time, if EDGE paused it. */
+  public pausedUntil(serviceId: string): number | undefined {
+    const channelId = this._wsMuxer?.channelFor(serviceId);
+    return channelId === undefined ? undefined : this._wsMuxer?.pausedUntil(channelId);
+  }
+
   /**
    * Send, dropping the result.
    *

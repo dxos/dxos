@@ -61,7 +61,7 @@ export type EdgeStreamOptions = {
    */
   highWaterMark?: number;
 
-  /** Aborts the stream, failing any write waiting on credit. */
+  /** Aborts the stream, failing any write waiting on credit; a failed write's message may still be delivered. */
   signal?: AbortSignal;
 };
 
@@ -190,6 +190,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._currentConnection?.flowControlEnabled ?? false;
   }
 
+  /** @see EdgeWsConnection.pausedUntil */
+  pausedUntil(serviceId: string): number | undefined {
+    return this._currentConnection?.pausedUntil(serviceId);
+  }
+
   get identityDid() {
     return this._identity.identityDid;
   }
@@ -253,29 +258,16 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._currentConnection;
   }
 
-  /**
-   * {@link send}, resolving once the message has reached the socket rather than once it is queued.
-   *
-   * Under flow control that waits for the peer's credit, which is what {@link createStream} builds
-   * backpressure out of.
-   */
+  /** {@link send}, resolving once the message has reached the socket, which under flow control waits for credit. */
   public async sendAndWait(ctx: Context, message: Message): Promise<void> {
     const connection = await this._prepareSend(ctx, message);
     await connection.sendAndWait(message);
   }
 
   /**
-   * A stream of outbound messages on one service, with real end-to-end backpressure.
-   *
-   * Each write resolves only once the message has reached the socket, which under `edge-ws-v2`
-   * requires the peer to have extended credit for it -- so `writer.ready` reflects whether EDGE is
-   * keeping up, and `pipeTo` slows its source instead of buffering without bound. Without flow
-   * control negotiated the writes resolve as fast as the socket accepts them, the same as
-   * {@link send}.
-   *
-   * Each write goes to the connection live when it is made, and a reconnect starts the new socket
-   * with a fresh window; a write caught by the close rejects, which errors the stream, so callers
-   * recreate it from `onReconnected`.
+   * A stream of outbound messages on one service whose writes resolve once the message reaches the socket, which under
+   * `edge-ws-v2` waits for EDGE's credit, so `pipeTo` slows its source instead of buffering without bound.
+   * A write caught by a reconnect rejects and errors the stream, so callers recreate it from `onReconnected`.
    */
   public createStream({ serviceId, highWaterMark, signal }: EdgeStreamOptions): WritableStream<Message> {
     return new WritableStream<Message>(

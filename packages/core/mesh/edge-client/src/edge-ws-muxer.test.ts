@@ -48,6 +48,7 @@ const SOCKET_BUFFER_FULL = 1_000_000;
 const FLAG_FLOW_CONTROL = 4;
 const FLAG_SYNC = 8;
 const FLAG_SYNC_REQUEST = 16;
+const FLAG_PAUSE = 32;
 /** Two chunks is the floor the muxer enforces, so this is a small window that can still make progress. */
 const WINDOW = MAX_CHUNK_LENGTH * 4;
 const MAX_MESSAGES = 4;
@@ -767,6 +768,63 @@ describe('WebSocketMuxerTest', () => {
       expect(overdrafts).toEqual([5]);
     });
 
+    test('a paused channel starts no new message until its pause ends, and the others keep flowing', async ({
+      expect,
+    }) => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: SHORT_MESSAGE_CHUNK, flowControl: flowControl() });
+      await muxer.send(textMessage('a0', 'service-a'));
+      muxer.receiveFrame(pause(CHANNEL_ID, 6_000));
+      expect(muxer.pausedUntil(CHANNEL_ID)).toBe(Date.now() + 6_000);
+
+      const held = muxer.send(textMessage('a1', 'service-a'));
+      const flowing = muxer.send(textMessage('b0', 'service-b'));
+      await settle();
+      await flowing;
+      expect(dataFrames(socket.frames).map((frame) => frame[1])).toEqual([CHANNEL_ID, CHANNEL_ID + 1]);
+
+      // Paused, not out of credit: no stall probe restates totals while it waits.
+      await vi.advanceTimersByTimeAsync(5_500);
+      expect(socket.frames.filter((frame) => frame[0] === (FLAG_FLOW_CONTROL | FLAG_SYNC))).toHaveLength(0);
+
+      await vi.advanceTimersByTimeAsync(500);
+      await held;
+      expect(dataFrames(socket.frames).map((frame) => frame[1])).toEqual([CHANNEL_ID, CHANNEL_ID + 1, CHANNEL_ID]);
+      expect(muxer.pausedUntil(CHANNEL_ID)).toBeUndefined();
+    });
+
+    test('a message already under way finishes on a paused channel', async ({ expect }) => {
+      const socket = new TestSocket();
+      const window = MAX_CHUNK_LENGTH * 2;
+      const muxer = new WebSocketMuxer(socket, {
+        maxChunkLength: MAX_CHUNK_LENGTH,
+        flowControl: flowControl({ windowFor: () => window }),
+      });
+      const sent = muxer.send(textMessage('A'.repeat(MAX_CHUNK_LENGTH * 4)));
+      await settle();
+      expect(payloadBytes(socket.frames)).toBe(window);
+
+      muxer.receiveFrame(pause(CHANNEL_ID, 60_000));
+      muxer.receiveFrame(grant(CHANNEL_ID, window, 0));
+      await settle();
+      expect(payloadBytes(socket.frames)).toBe(window * 2);
+
+      muxer.destroy();
+      await expect(sent).rejects.toBeInstanceOf(WebSocketClosedError);
+    });
+
+    test('a pause frame names the channel and how long to stay silent', ({ expect }) => {
+      const socket = new TestSocket();
+      syncedMuxer(socket).pause(3, 1_500);
+      expect(socket.frames.at(-1)).toEqual(new Uint8Array([FLAG_FLOW_CONTROL | FLAG_PAUSE, 3, 0, 0, 0x05, 0xdc]));
+
+      // Without flow control the peer would read the frame as a message, so nothing is sent.
+      const plain = new TestSocket();
+      new WebSocketMuxer(plain).pause(3, 1_500);
+      expect(plain.frames).toHaveLength(0);
+    });
+
     // The cases below run the protocol's own windows end to end, since each is a property of how they relate.
     test('a swarm channel keeps flowing past its window', async ({ expect }) => {
       const pair = connectedPair();
@@ -925,6 +983,14 @@ const grant = (channelId: number, bytes: number, messages: number) =>
   encodeFlowControl(FLAG_FLOW_CONTROL, [[channelId, bytes, messages]]);
 
 const sync = (entries: [number, number, number][]) => encodeFlowControl(FLAG_FLOW_CONTROL | FLAG_SYNC, entries);
+
+const pause = (channelId: number, retryAfterMs: number) => {
+  const frame = new Uint8Array(6);
+  frame[0] = FLAG_FLOW_CONTROL | FLAG_PAUSE;
+  frame[1] = channelId;
+  new DataView(frame.buffer).setUint32(2, retryAfterMs);
+  return frame;
+};
 
 /** The grant frames among `frames`, decoded. */
 const grants = (frames: Uint8Array[]) =>
