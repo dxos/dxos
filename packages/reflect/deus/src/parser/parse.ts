@@ -21,6 +21,19 @@ const toLine = (raw: string, line: number): Line => ({
 
 const isBlank = (line: Line): boolean => line.text === '' || line.text.startsWith('#');
 
+/** Parses an inline value; when a stripped `#` comment broke it, the error says so. */
+const inlineValue = (text: string, commented: boolean, line: number): MdlValue => {
+  try {
+    return parseInline(text, line);
+  } catch (error) {
+    if (commented && error instanceof MdlSyntaxError) {
+      const message = error.message.replace(/ \(line \d+\)$/, '');
+      throw new MdlSyntaxError(`${message}; "#" starts a comment, so quote values that contain it`, line, error.column);
+    }
+    throw error;
+  }
+};
+
 const nextContent = (lines: Line[], start: number): number => {
   let index = start;
   for (;;) {
@@ -76,7 +89,8 @@ const blockScalar = (lines: Line[], start: number, indent: number): [string, num
 
 const parseEntry = (lines: Line[], index: number, text: string, indent: number): [string, MdlValue, number] => {
   const lineNumber = lines[index]?.line ?? 0;
-  const match = KEY.exec(stripComment(text));
+  const stripped = stripComment(text);
+  const match = KEY.exec(stripped);
   if (!match) {
     throw new MdlSyntaxError(`Expected "key: value", got "${text}"`, lineNumber);
   }
@@ -85,7 +99,7 @@ const parseEntry = (lines: Line[], index: number, text: string, indent: number):
     return [key, ...blockScalar(lines, index + 1, indent)];
   }
   if (rest !== undefined && rest !== '') {
-    return [key, parseInline(rest, lineNumber), index + 1];
+    return [key, inlineValue(rest, stripped !== text.trimEnd(), lineNumber), index + 1];
   }
   const childIndex = nextContent(lines, index + 1);
   const child = lines[childIndex];
@@ -138,7 +152,8 @@ const parseSequence = (lines: Line[], start: number, indent: number): [MdlValue[
       items.push(map);
       index = after;
     } else {
-      items.push(itemText === '' ? null : parseInline(stripComment(itemText), line.line));
+      const stripped = stripComment(itemText);
+      items.push(itemText === '' ? null : inlineValue(stripped, stripped !== itemText.trimEnd(), line.line));
       index++;
     }
   }

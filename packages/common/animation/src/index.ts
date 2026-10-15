@@ -5,3 +5,4 @@
 export * from './path.ts';
 export * from './random.ts';
 export * from './model/index.ts';
+export * from './script/index.ts';
