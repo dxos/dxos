@@ -99,13 +99,16 @@ export default Capability.makeModule(
           ),
         ),
         processManagerRuntime.runFork(
-          // Caught inside the loop so a transient read failure cannot kill reconciliation.
-          Database.getSyncState().pipe(
-            Effect.map(apply),
-            Effect.catchCause((cause) => reportSyncFailure('sync state read failed', space.id, cause)),
-            Effect.repeat(Schedule.spaced(RECONCILE_INTERVAL)),
-            Effect.provide(provide),
-          ),
+          // Only while a monitor is open: the stream opens one, and the re-read exists to close it. Caught
+          // inside the loop so a transient read failure cannot kill reconciliation.
+          Effect.suspend(() =>
+            monitors.has(key)
+              ? Database.getSyncState().pipe(
+                  Effect.map(apply),
+                  Effect.catchCause((cause) => reportSyncFailure('sync state read failed', space.id, cause)),
+                )
+              : Effect.void,
+          ).pipe(Effect.repeat(Schedule.spaced(RECONCILE_INTERVAL)), Effect.provide(provide)),
         ),
       ]);
     };
