@@ -125,7 +125,7 @@ const chapter = (index: number): Story => {
  * The whole story in one: every chapter in order, each under its caption, fading into the next.
  *
  * Test:
- * 1. Chapters advance by themselves every 20 to 30 seconds and loop; the counter shows which is playing.
+ * 1. Chapters advance by themselves every 20 to 30 seconds and stop at the last; the counter shows which is playing.
  * 2. The controls at the top right step back, pause or resume, and step forward.
  */
 export const Default: Story = {

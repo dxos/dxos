@@ -38,7 +38,7 @@ const BAR = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator
 
 /**
  * Plays a sequence of data-flow diagrams as one story: each scene runs for its duration under its caption, then fades
- * into the next, looping back to the first. Controls step back and forward or pause.
+ * into the next, stopping at the last. Controls step back and forward or pause.
  */
 export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlowSequenceProps) => {
   const [index, setIndex] = useState(start);
@@ -51,7 +51,11 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
 
   // Fades the current scene out, then swaps in the one at `next`, which fades in as it mounts.
   const go = (next: number) => {
-    const target = (next + scenes.length) % scenes.length;
+    // The sequence runs from the first scene to the last and stops there; it never wraps.
+    const target = Math.min(Math.max(next, 0), scenes.length - 1);
+    if (target === index) {
+      return;
+    }
     setMorphing(scene.stage !== undefined && scenes[target].stage === scene.stage);
     setShown(false);
     setTimeout(() => {
@@ -62,6 +66,10 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
 
   useEffect(() => {
     if (!playing) {
+      return;
+    }
+    if (index === scenes.length - 1) {
+      setPlaying(false);
       return;
     }
     const timer = setTimeout(() => go(index + 1), scene.duration * 1000);
@@ -100,6 +108,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
             iconOnly
             icon='ph--caret-left--regular'
             label='Previous scene'
+            disabled={index === 0}
             onClick={() => go(index - 1)}
           />
           <Button.Root
@@ -114,6 +123,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
             iconOnly
             icon='ph--caret-right--regular'
             label='Next scene'
+            disabled={index === scenes.length - 1}
             onClick={() => go(index + 1)}
           />
         </Toolbar.Root>
