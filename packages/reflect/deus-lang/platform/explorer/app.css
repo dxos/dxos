@@ -2177,3 +2177,134 @@ body.with-console #sidebar {
   letter-spacing: 0;
   text-transform: none;
 }
+
+/* Features (D118): each feature map as an indented tree, status coloured as the matching task state. */
+
+.k-feature {
+  --k: var(--k-spec);
+}
+
+.state.feature-shipped {
+  --s: var(--done);
+}
+
+.state.feature-building {
+  --s: var(--doing);
+}
+
+.state.feature-planned {
+  --s: var(--todo);
+}
+
+.state.feature-dropped {
+  --s: var(--canceled);
+}
+
+ul.features {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature {
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.feature.child {
+  border-left: 2px solid var(--line);
+  margin-left: calc((var(--depth) - 1) * 18px + 6px);
+  padding-left: 12px;
+}
+
+.feature:hover {
+  background: var(--hover);
+}
+
+.feature-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.feature-id {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.feature-title {
+  flex: 1 1 16ch;
+  min-width: 0;
+  font-size: 13.5px;
+}
+
+.feature-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-top: 3px;
+  font-size: 12.5px;
+}
+
+.feature-links a.ref,
+.feature-links code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* Task titles run long; one line each keeps a feature's tasks scannable, with the full title on hover. */
+.feature-links.tasks {
+  display: grid;
+  gap: 1px;
+}
+
+.feature-links.tasks a.task-link {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.feature-links a.task-link.closed {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.feature-label {
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.feature-problem,
+.feature-gap {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+}
+
+.feature-problem {
+  color: var(--doing);
+}
+
+.feature-gap {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.count.warn {
+  color: var(--doing);
+}
+
+.card[data-key='k:features'] .section h3 {
+  font-size: 13.5px;
+  letter-spacing: 0;
+  text-transform: none;
+}

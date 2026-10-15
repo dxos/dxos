@@ -767,6 +767,94 @@ const eventsSection = (events, hash) => {
 };
 
 //
+// Features (D118): each feature map as a tree, from `features.json`.
+//
+
+/** `features.json`, fetched only when `meta.json` counts features. */
+const loadFeatures = () => (index.meta.features > 0 ? load('features.json') : Promise.resolve(undefined));
+
+/** A feature status as a badge, coloured as the task state it corresponds to. */
+const featureStatus = (status) => `<span class="state feature-${escape(status)}">${escape(status)}</span>`;
+
+/** A spec document links to its namespace when the site has one; a definition to its page; a task to its card. */
+const featureLinks = (feature) => {
+  const specs = feature.specs.map((doc) =>
+    index.names.some((entry) => entry.name.startsWith(`${doc}.`))
+      ? `<a class="ref" data-open="n:${escape(doc)}">${escape(doc)}</a>`
+      : `<code>${escape(doc)}</code>`,
+  );
+  const defs = feature.defs.map((name) => {
+    const entry = index.byName.get(name);
+    return entry ? defLink(name, entry.hash) : `<code>${escape(name)}</code>`;
+  });
+  const tasks = feature.tasks.map((id) => {
+    const task = index.tasks.find((other) => other.id === id);
+    const open = feature.openTasks.includes(id);
+    return task
+      ? `<a class="task-link${open ? '' : ' closed'}" data-open="t:${escape(id)}" title="${escape(task.title)} (${escape(task.state)})">${escape(task.title)}</a>`
+      : `<code>${escape(id)}</code>`;
+  });
+  return [
+    ['Specs', specs],
+    ['Definitions', defs],
+    ['Tasks', tasks],
+  ]
+    .filter(([, links]) => links.length > 0)
+    .map(
+      ([label, links]) =>
+        `<div class="feature-links${label === 'Tasks' ? ' tasks' : ''}"><span class="feature-label">${label}</span>${links.join('')}</div>`,
+    )
+    .join('');
+};
+
+const featureRow = (feature) => {
+  const open = feature.openTasks.length;
+  const warnings = feature.problems.filter((problem) => !problem.startsWith('gap: '));
+  const gaps = feature.problems.filter((problem) => problem.startsWith('gap: '));
+  return (
+    `<li class="feature${feature.depth > 0 ? ' child' : ''}" style="--depth: ${Math.min(feature.depth, 4)}">` +
+    `<div class="feature-head">${featureStatus(feature.status)}<span class="feature-id">${escape(feature.id)}</span>` +
+    `<span class="feature-title">${escape(feature.title)}</span>` +
+    (feature.tasks.length > 0
+      ? `<span class="count" title="${open} of ${feature.tasks.length} tasks open">${open}/${feature.tasks.length} open</span>`
+      : '') +
+    '</div>' +
+    featureLinks(feature) +
+    warnings.map((problem) => `<p class="feature-problem">⚠ ${escape(problem)}</p>`).join('') +
+    gaps.map((problem) => `<p class="feature-gap">${escape(problem.slice('gap: '.length))}</p>`).join('') +
+    '</li>'
+  );
+};
+
+const featuresCard = (key, maps) => {
+  if (!maps || maps.length === 0) {
+    return missingCard(key, 'This site has no feature maps');
+  }
+  const all = maps.flatMap((map) => map.features);
+  const shipped = all.filter((feature) => feature.status === 'shipped').length;
+  const problems = all.filter((feature) => feature.problems.some((problem) => !problem.startsWith('gap: '))).length;
+  return card(key, {
+    iconHtml: '<span class="icon k-feature" title="features">◇</span>',
+    title: 'Features',
+    meta: `<span class="count">${shipped} of ${all.length} shipped</span>${problems > 0 ? ` <span class="count warn">${problems} with problems</span>` : ''}`,
+    body:
+      '<p class="muted">What the product is, feature by feature, from the feature maps in the codebase. Each feature links its specs, definitions and tasks.</p>' +
+      maps
+        .map((map) =>
+          section(
+            `<a class="ref" data-open="n:${escape(map.document)}">${escape(map.document)}</a>`,
+            map.features.length,
+            `<ul class="features">${map.features.map(featureRow).join('')}</ul>` +
+              (map.notes.length > 0
+                ? `<div class="feature-notes">${map.notes.map((note) => `<p class="feature-problem">⚠ ${escape(note)}</p>`).join('')}</div>`
+                : ''),
+          ),
+        )
+        .join(''),
+  });
+};
+
+//
 // Cards.
 //
 
@@ -1146,7 +1234,11 @@ const buildCard = async (key) => {
       return change ? changeCard(key, change, events) : missingCard(key, `No change ${short(value)}`);
     }
     case 'k':
-      return value === 'events' ? eventsCard(key, await loadEvents()) : kindCard(key, value);
+      return value === 'events'
+        ? eventsCard(key, await loadEvents())
+        : value === 'features'
+          ? featuresCard(key, await loadFeatures())
+          : kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1199,6 +1291,9 @@ const homeHtml = () => {
     `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
       ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
+      : '') +
+    (meta.features > 0
+      ? `<li><a data-open="k:features" title="What the product is, feature by feature"><span class="icon k-feature">◇</span><b>${meta.features}</b><span>features</span></a></li>`
       : '') +
     (meta.events > 0
       ? `<li><a data-open="k:events" title="What the analytics store recorded"><span class="icon k-event">◆</span><b>${meta.events}</b><span>events</span></a></li>`
@@ -1471,7 +1566,13 @@ const titleOf = (key) => {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
   }
   if (key.startsWith('k:')) {
-    return value === 'checks' ? 'Checks' : value === 'events' ? 'Events' : (KINDS[value]?.plural ?? value);
+    return value === 'checks'
+      ? 'Checks'
+      : value === 'events'
+        ? 'Events'
+        : value === 'features'
+          ? 'Features'
+          : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };

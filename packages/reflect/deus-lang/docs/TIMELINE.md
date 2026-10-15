@@ -136,6 +136,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 126 | 10-15 00:25 | 15m 00s | `1c91a00f` | devex: `scripts/merge-base.py` merges #13952's branch in one step: decisions and stages renumbered, seed rebuilt from the codebase in 3 s, export written back (task 602f4557) |
 | 127 | 10-15 00:40 | 15m 00s | `94bbc10d` | devex: the dogfood test takes 34 s (was 124 s) and the restore test 44 s (was 89 s); the restore compiles deus/ once, as an update that must change nothing |
 | 128 | 10-15 00:55 | 25m 00s | `6571da61` | C and wasm back ends compile `Dict`, `MutMap` and `Map`: an insertion-ordered hash table in the runtime, static constants inlined; word counts 140× faster than the JIT, 0 live words (D119, task 72a1f2fb) |
-| 129 | 10-15 00:55 | 15m 00s | this commit | devex: `scripts/setup.sh` makes a fresh container able to run the suite (pinned Rust with wasm targets, node_modules); `src/preflight.test.ts` names what is missing |
+| 129 | 10-15 00:55 | 15m 00s | `d5775f53` | devex: `scripts/setup.sh` makes a fresh container able to run the suite (pinned Rust with wasm targets, node_modules); `src/preflight.test.ts` names what is missing |
+| 130 | 10-15 01:35 | 40m 00s | this commit | the explorer shows feature maps (D120, task 381a725d): `features.json` as `deus features --json` prints it, a Features card with each map's tree, status badges, open-task counts, problems as warnings and links to specs, definitions and tasks, an overview tile; `Explorer.Spec` R-16/R-17 |
 
-Total from stage 1 to stage 129: 23h 27m.
+Total from stage 1 to stage 130: 24h 07m.

@@ -31,14 +31,6 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Explorer: show feature maps from deus features --json: the tree with status, open tasks and problems, each feature linking its specs, definitions and tasks (`381a725d`)
-
-- state: todo
-- priority: high
-- labels: explorer, features
-
-D115. deus features --json gives [{document, features: [{id, title, status, parent, depth, specs, defs, tasks, openTasks, problems}], notes}]. Toolchain.Features is the first map.
-
 ## Metadata changes on known hashes never replicate: push sends meta only with missing objects, import keeps the first (`f4afc2c0`)
 
 - state: todo
@@ -576,6 +568,16 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: explorer, analytics
 
 Done as task ca75d545 (D110, e98a2e51) by the explorer thread: events.json, an Events card, and tallies on definition and change cards.
+
+## Explorer: show feature maps from deus features --json: the tree with status, open tasks and problems, each feature linking its specs, definitions and tasks (`381a725d`)
+
+- state: done
+- priority: high
+- labels: explorer, features
+
+D115. deus features --json gives [{document, features: [{id, title, status, parent, depth, specs, defs, tasks, openTasks, problems}], notes}]. Toolchain.Features is the first map.
+
+> claude: Done (D120): Explorer.generate writes features.json with Cli.featuresJson (the same JSON as deus features --json) and meta.features; the Features card draws each map as a tree with status badges, open/all task counts, links to spec namespaces, definitions and tasks, problems as warnings and gaps muted; overview tile. Explorer.Spec R-16/R-17.
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 

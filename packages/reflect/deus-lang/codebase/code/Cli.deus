@@ -594,6 +594,9 @@ def Cli.extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text := Ma
       | _ => Option.none) (metaList (readMeta dir h) "attrs")
   | _ => []) (Map.toList ns))
 
+/-- The spec documents that hold `feature` blocks. -/
+def Cli.featureDocuments (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} List Text := List.filter (fun d => not (List.isEmpty (fst (featuresOf dir ns d)))) (specDocuments ns)
+
 /-- What `MdlHost.describe` says about `task:<id>` (its state and title) and `spec:<Doc>` names, which
   feature blocks link (D118); `none` for any other name. `tasks` caches the branch's tasks, read on
   first use. -/
@@ -613,14 +616,10 @@ def Cli.featureFact (dir : Text) (ns : Map Text Entry) (tasks : Ref (Option (Map
   | Option.none => Result.err (name ++ " is not in the codebase"))
 else if startsWith "spec:" name then Option.some (if List.contains (Text.drop 5 name) (specDocuments ns) then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase")) else Option.none
 
-/-- `deus features [documents…]`: the feature maps (D118), each a tree of features with their status
-  and open tasks, then what is wrong or missing. With no arguments, every document with a
-  `feature` block. -/
-def Cli.features (args : Args) : {IO, Throw Text} Unit :=
-  let dir := openCodebase args
-  let ns := Codebase.current dir
+/-- What `deus features` knows about a name: a definition's kind and whether it is only declared, a task, or a spec document. -/
+def Cli.featureFacts (dir : Text) (ns : Map Text Entry) : ({IO} Text) -> {IO, Throw Text} Result Text (List (Text, Text)) :=
   let tasks := Ref.new Option.none
-  let facts := fun name =>
+  fun name =>
     match featureFact dir ns tasks name with
     | Option.some answer => answer
     | Option.none =>
@@ -632,25 +631,43 @@ def Cli.features (args : Args) : {IO, Throw Text} Unit :=
               | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => isStub core
               | _ => false
             Result.ok ([("kind", Entry.kind e)] ++ (if stub then [("implemented", "false")] else []))
-  let docs := if List.isEmpty args.positional then List.filter (fun d => not (List.isEmpty (fst (featuresOf dir ns d)))) (specDocuments ns) else args.positional
-  let maps := List.map (fun d => (d, featuresOf dir ns d)) docs
-  let notes := fun fs bad => bad ++ orphans fs ++
-    concatMap (fun f => List.map (fun p => f.featureId ++ ": " ++ p) (Features.problems f facts)) fs
-  Cli.output args (fun _ => Json.arr (List.map (fun m =>
-    match m with
-    | (d, fs, bad) => Json.obj [("document", Json.str d), ("features", Json.arr (List.map (fun pair =>
+
+/-- Problems that span the map (unparsed blocks, orphans) followed by each feature's own. -/
+def Cli.featureNotes (facts : Text -> {IO, Throw Text} Result Text (List (Text, Text))) (fs : List Feature) (bad : List Text) : {IO, Throw Text} List Text := bad ++ orphans fs ++
+  concatMap (fun f => List.map (fun p => f.featureId ++ ": " ++ p) (Features.problems f facts)) fs
+
+/-- `deus features [documents…]`: the feature maps (D118), each a tree of features with their status
+  and open tasks, then what is wrong or missing. With no arguments, every document with a
+  `feature` block. -/
+def Cli.features (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let facts := featureFacts dir ns
+  let docs := if List.isEmpty args.positional then featureDocuments dir ns else args.positional
+  if Cli.flag args "json" then println (Json.render (featuresJson dir ns docs)) else
+    let text := join "\n\n" (List.map (fun d =>
+      match featuresOf dir ns d with
+      | (fs, bad) =>
+          let found := featureNotes facts fs bad
+          d ++ "\n" ++ Features.render fs facts ++
+            (if List.isEmpty found then "" else "\n" ++ join "\n" (List.map (fun n => "  " ++ n) found))) docs)
+    if Text.isEmpty text then () else println text
+
+/-- Feature maps as `deus features --json` prints them and the explorer's `features.json` holds them
+  (D118): per document, its features in tree order with status, links, open tasks and problems,
+  then notes on blocks that do not parse and features whose parent is missing. -/
+def Cli.featuresJson (dir : Text) (ns : Map Text Entry) (docs : List Text) : {IO, Throw Text} Json :=
+  let facts := featureFacts dir ns
+  Json.arr (List.map (fun d =>
+    match featuresOf dir ns d with
+    | (fs, bad) => Json.obj [("document", Json.str d), ("features", Json.arr (List.map (fun pair =>
         match pair with
         | (depth, f) =>
             let opened := List.filter (fun id =>
               match facts ("task:" ++ id) with
               | Result.ok known => isOpenState (prop0 known "state")
               | Result.err _ => false) f.taskIds
-            Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId), ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)), ("tasks", Json.arr (List.map Json.str f.taskIds)), ("openTasks", Json.arr (List.map Json.str opened)), ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))), ("notes", Json.arr (List.map Json.str (notes fs bad)))]) maps)) (fun _ => join "\n\n" (List.map (fun m =>
-    match m with
-    | (d, fs, bad) =>
-        let found := notes fs bad
-        d ++ "\n" ++ Features.render fs facts ++
-          (if List.isEmpty found then "" else "\n" ++ join "\n" (List.map (fun n => "  " ++ n) found))) maps))
+            Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId), ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)), ("tasks", Json.arr (List.map Json.str f.taskIds)), ("openTasks", Json.arr (List.map Json.str opened)), ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))), ("notes", Json.arr (List.map Json.str (featureNotes facts fs bad)))]) docs)
 
 /-- A document's `feature` blocks as features, in document order, with the blocks that do not parse. -/
 def Cli.featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} (List Feature, List Text) :=

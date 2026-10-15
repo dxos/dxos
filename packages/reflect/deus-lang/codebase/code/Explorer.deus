@@ -44,6 +44,13 @@ test Explorer.Spec.everyDefinitionHasAPage := inSite (fun _ =>
     (fun pair => IO.exists ("site/def/" ++ pageOf (Entry.hash (snd pair)) ++ ".json"))
     entries && IO.exists "site/def/_Bool.json" && Text.contains ("\"definitions\":" ++ toText (List.length entries) ++ ",") (Spec.file "meta.json"))
 
+test Explorer.Spec.featuresAreListed := inStore (fun _ =>
+  siteWithFeatures ()
+  let json := Spec.file "features.json"
+  let first := indexOf json "\"id\":\"F-1\"" 0
+  let second := indexOf json "\"id\":\"F-2\"" 0
+  Text.contains "\"document\":\"Demo.Features\"" json && first >= 0 && second > first && Text.contains "\"status\":\"shipped\",\"parent\":\"\",\"depth\":0" json && Text.contains "\"defs\":[\"area\"]" json && Text.contains "gap: nothing links this feature" json)
+
 def Explorer.Spec.file (path : Text) : {IO} Text := getOr (IO.readFile ("site/" ++ path)) ""
 
 test Explorer.Spec.generationIsStable := inSite (fun _ =>
@@ -77,6 +84,12 @@ test Explorer.Spec.metaCountsEvents := inStore (fun _ =>
   let before := Text.contains "\"events\":0," (Spec.file "meta.json")
   seeArea ()
   before && Text.contains "\"events\":1," (Spec.file "meta.json"))
+
+test Explorer.Spec.metaCountsFeatures := inStore (fun _ =>
+  site Spec.sample
+  let before := Text.contains "\"features\":0," (Spec.file "meta.json")
+  siteWithFeatures ()
+  before && Text.contains "\"features\":2," (Spec.file "meta.json"))
 
 test Explorer.Spec.metaNamesTheConsole := inSite (fun _ =>
   let without := Text.contains "\"console\":false" (Spec.file "meta.json")
@@ -133,6 +146,23 @@ def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
   IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ source)
   deus "cb" ["src"] (fun a => addOrUpdate a false)
   regenerate ()
+
+/-- Generates the sample site with a two-feature map: a shipped feature linked to `area`, and a planned child linked to nothing. -/
+def Explorer.Spec.siteWithFeatures (u : Unit) : {IO, Throw Text} Int :=
+  let fence := repeat 3 "`"
+  IO.mkdirp "src"
+  IO.writeFile
+    "src/f.mdl"
+    ("---\nid: org.dxos.deus.features.demo\nname: Demo.Features\nversion: 1.0\n---\n\n# Demo\n\n## Extensions\n\n| Term | URI |\n| --- | --- |\n| `feature` | `org.dxos.deus.feature@1.0` |\n\n" ++
+      fence ++
+      "mdl\nfeature F-1: Areas\n  status: shipped\n  defs: area\n" ++
+      fence ++
+      "\n\n" ++
+      fence ++
+      "mdl\nfeature F-2: Volumes\n  status: planned\n  parent: F-1\n" ++
+      fence ++
+      "\n")
+  site Spec.sample
 
 test Explorer.Spec.snapshotSkipsLocalState := inSite (fun _ =>
   forEach ["cache/site/x", "artifacts/a", "assets/0", "remotes/origin/url", "exports/k"] (fun f =>
@@ -302,9 +332,17 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     | Result.ok pair => pair
     | Result.err _ => (Json.obj [("project", Json.str project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
   IO.writeFile (out ++ "/events.json") (Json.render (fst events))
+  -- Feature maps (D118) for the Features card; a map that cannot be read leaves the card empty rather than the site missing.
+  let featureMaps :=
+    match try (fun _ =>
+      let docs := featureDocuments dir ns
+      (featuresJson dir ns docs, sum (List.map (fun d => List.length (fst (featuresOf dir ns d))) docs))) with
+    | Result.ok pair => pair
+    | Result.err _ => (Json.arr [], 0)
+  IO.writeFile (out ++ "/features.json") (Json.render (fst featureMaps))
   IO.writeFile
     (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("events", Json.num (snd events)), ("history", Json.arr (List.map (logJson dir) (fullLog dir historyLimit)))]))
+    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("events", Json.num (snd events)), ("features", Json.num (snd featureMaps)), ("history", Json.arr (List.map (logJson dir) (fullLog dir historyLimit)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)
