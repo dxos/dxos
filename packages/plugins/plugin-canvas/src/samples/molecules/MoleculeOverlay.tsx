@@ -281,7 +281,43 @@ export const GRIDS: readonly Grid[] = ['dots', 'lines', 'none'];
 /** The palette the overlay draws with. */
 const LookContext = createContext<Palette>(DARK_PALETTES.classic);
 
-/** A plain strip along the channel at any angle, flush with the blocks it joins at both ends. */
+/** Whether `point` lies on or within `rect`, give or take a pixel. */
+const touches = (point: { x: number; y: number }, rect: Block['frame']) =>
+  point.x >= rect.x - 1 &&
+  point.x <= rect.x + rect.width + 1 &&
+  point.y >= rect.y - 1 &&
+  point.y <= rect.y + rect.height + 1;
+
+/**
+ * The channel lengthened by its width at each end that meets one of `outlines`, so an angled end or a round rim leaves
+ * no gap once the outlines mask it; an end on anything else (a group container) stays where it is.
+ */
+const overreach = (channel: Channel, outlines: readonly Block['frame'][]): Channel => {
+  const { from, to, width } = channel;
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  const step = { x: ((to.x - from.x) / length) * width, y: ((to.y - from.y) / length) * width };
+  const reaches = (point: { x: number; y: number }) => outlines.some((rect) => touches(point, rect));
+  return {
+    ...channel,
+    from: reaches(from) ? { x: from.x - step.x, y: from.y - step.y } : from,
+    to: reaches(to) ? { x: to.x + step.x, y: to.y + step.y } : to,
+  };
+};
+
+/** A block's outer edge, filled: its base for a look that draws one, else its frame; round for a round block. */
+const BlockOutline = ({ rect, round, radius }: { rect: Block['frame']; round?: boolean; radius: number }) =>
+  round ? (
+    <circle
+      cx={rect.x + rect.width / 2}
+      cy={rect.y + rect.height / 2}
+      r={Math.min(rect.width, rect.height) / 2}
+      fill='black'
+    />
+  ) : (
+    <rect {...rect} rx={radius} fill='black' />
+  );
+
+/** A plain strip along the channel at any angle, between the two points it is given. */
 const channelPoints = ({ from, to, width }: Channel): string => {
   const length = Math.hypot(to.x - from.x, to.y - from.y);
   const normal = { x: ((from.y - to.y) / length) * (width / 2), y: ((to.x - from.x) / length) * (width / 2) };
@@ -680,6 +716,11 @@ export const MoleculeOverlay = ({
     .filter((sink) => sink.app && !sink.hidden)
     .map((sink) => ({ sink, rect: palette.base ? baseOf(sink) : sink.frame }));
   const extent = drawingExtent(layout);
+  // Channels overreach into the blocks they join and are cut at each block's outer edge, so they meet every rim
+  // exactly and never show through a translucent container.
+  const outlines = [...layout.sources, layout.hub, ...layout.sinks]
+    .filter((block) => !block.hidden)
+    .map((block) => ({ block, rect: palette.base ? baseOf(block) : block.frame }));
   return (
     <LookContext.Provider value={palette}>
       <DepthContext.Provider value={depth}>
@@ -697,11 +738,28 @@ export const MoleculeOverlay = ({
               <ContainerBase block={block} />
             </g>
           ))}
-          {channels.map((channel) => (
-            <g key={channel.id} opacity={visible(channel.id)}>
-              <ChannelShape channel={channel} />
-            </g>
-          ))}
+          {extent && (
+            <defs>
+              <mask id={`${base}-channels`} maskUnits='userSpaceOnUse' {...extent}>
+                <rect {...extent} fill='white' />
+                {outlines.map(({ block, rect }) => (
+                  <BlockOutline key={block.id} rect={rect} round={block.round} radius={radius} />
+                ))}
+              </mask>
+            </defs>
+          )}
+          <g mask={extent ? `url(#${base}-channels)` : undefined}>
+            {channels.map((channel) => (
+              <g key={channel.id} opacity={visible(channel.id)}>
+                <ChannelShape
+                  channel={overreach(
+                    channel,
+                    outlines.map(({ rect }) => rect),
+                  )}
+                />
+              </g>
+            ))}
+          </g>
           {blocks.map((block) => (
             <g key={block.id} opacity={visible(block.id)}>
               <Container block={block} />
@@ -713,19 +771,9 @@ export const MoleculeOverlay = ({
               <defs>
                 <mask id={`${base}-apps`} maskUnits='userSpaceOnUse' {...extent}>
                   <rect {...extent} fill='white' />
-                  {appBases.map(({ sink, rect }) =>
-                    sink.round ? (
-                      <circle
-                        key={sink.id}
-                        cx={rect.x + rect.width / 2}
-                        cy={rect.y + rect.height / 2}
-                        r={Math.min(rect.width, rect.height) / 2}
-                        fill='black'
-                      />
-                    ) : (
-                      <rect key={sink.id} {...rect} rx={radius} fill='black' />
-                    ),
-                  )}
+                  {appBases.map(({ sink, rect }) => (
+                    <BlockOutline key={sink.id} rect={rect} round={sink.round} radius={radius} />
+                  ))}
                 </mask>
               </defs>
               <g mask={`url(#${base}-apps)`}>
