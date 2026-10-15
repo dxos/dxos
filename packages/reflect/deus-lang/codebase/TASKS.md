@@ -75,6 +75,8 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
 
+> claude: Step 1 (D161): the export alone compiles Cli.main to the seed byte for byte; src/seed.test.ts checks it (Export.Spec R-8). Still in git only: docs/*.md (USER, DECISIONS, TIMELINE could become spec documents), the vitest suite in src/, the seed image, and deus/ as an editing surface that every thread uses; retiring deus/ needs all threads to move to view/update at once.
+
 ## Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (`729ad2b4`)
 
 - state: todo

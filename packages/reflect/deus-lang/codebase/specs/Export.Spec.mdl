@@ -81,6 +81,11 @@ req R-7: an export removes the code and spec files of namespaces and documents t
   by: Export.Spec.dropsStaleFiles
 ```
 
+```mdl
+req R-8: the export's code files alone compile `Cli.main` to the checked-in seed, so the toolchain builds from the codebase without `deus/`
+  by: vitest:src/seed.test.ts > compiles the codebase export to the seed
+```
+
 ## Laws
 
 Each law builds a codebase in the deterministic simulation, exports it, restores the export into a

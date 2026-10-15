@@ -42,6 +42,9 @@ defaults to `r2://agent-artifacts/deus/toolchain` and the endpoint to the DXOS a
 pulls work means the environment's network policy does not allow writes to
 `950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com`; it must be in Allowed domains.
 
+The export alone builds the toolchain (`deus compile codebase/code --main Cli.main` writes the seed, D161), so a
+change made only in the codebase needs no `deus/` file.
+
 Make every change with the CLI (`deus update … --by <agent>`, `deus task …`), run `deus push origin`
 when a change lands, and only then `deus export codebase` and commit the export to git. If the
 remote is behind the git export (a change that was committed without a push), catch it up once
