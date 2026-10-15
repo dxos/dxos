@@ -22,7 +22,7 @@ import {
   isFrameNode,
   showsContents,
 } from '../model/types.ts';
-import { FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, SURFACES } from './surfaces.ts';
+import { DEFAULT_TEXT, FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, SURFACES } from './surfaces.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -178,7 +178,7 @@ export const surfaceClasses = (
   const classes = SURFACES[surface][key ?? 'default'][look.tone];
   return {
     surface: tone === 0 && hue !== undefined ? 'bg-transparent' : classes.surface,
-    text: label === 'default' ? '' : classes.text,
+    text: label === 'default' ? DEFAULT_TEXT[look.tone] : classes.text,
     border: classes.border,
   };
 };

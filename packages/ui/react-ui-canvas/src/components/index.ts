@@ -3,6 +3,7 @@
 //
 
 export * from './About/index.ts';
+export * from './Background/index.ts';
 export * from './Breadcrumbs/index.ts';
 export * from './ControlFrame/index.ts';
 export * from './Grid/index.ts';

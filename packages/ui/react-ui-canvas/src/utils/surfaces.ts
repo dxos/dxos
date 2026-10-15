@@ -114,8 +114,8 @@ export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<Su
   outline: {
     default: {
       theme: { surface: 'bg-transparent', text: '', border: 'border-neutral-400 dark:border-neutral-500' },
-      light: { surface: 'bg-transparent', text: '', border: 'border-neutral-400' },
-      dark: { surface: 'bg-transparent', text: '', border: 'border-neutral-500' },
+      light: { surface: 'bg-transparent', text: 'text-neutral-900', border: 'border-neutral-400' },
+      dark: { surface: 'bg-transparent', text: 'text-neutral-100', border: 'border-neutral-500' },
     },
     neutral: {
       theme: {
@@ -202,8 +202,8 @@ export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<Su
   tint: {
     default: {
       theme: { surface: 'bg-white/60 dark:bg-white/10', text: '', border: 'border-black/10 dark:border-white/20' },
-      light: { surface: 'bg-white/60', text: '', border: 'border-black/10' },
-      dark: { surface: 'bg-white/10', text: '', border: 'border-white/20' },
+      light: { surface: 'bg-white/60', text: 'text-neutral-900', border: 'border-black/10' },
+      dark: { surface: 'bg-white/10', text: 'text-neutral-100', border: 'border-white/20' },
     },
     neutral: {
       theme: {
@@ -301,6 +301,12 @@ export const NEAREST_HUE: Record<string, StyleHue> = {
   pink: 'red',
   rose: 'red',
 };
+
+/**
+ * The default text colour: the theme's own, or spelled out when a background forces a tone, since the theme's could be
+ * the opposite one and vanish into the background.
+ */
+export const DEFAULT_TEXT: ByTone<string> = { theme: '', light: 'text-neutral-900', dark: 'text-neutral-100' };
 
 export const RADIUS_CLASSES: Record<Radius, string> = {
   'none': 'rounded-none',

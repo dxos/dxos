@@ -24,9 +24,11 @@ import React, {
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
+import { useSceneLook } from '../../hooks/useSceneLook.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
 import { NO_STYLES, type SceneStore } from '../../model/store.ts';
+import { type LinkKind } from '../../model/style-set.ts';
 import {
   type ElementId,
   type LineStyle,
@@ -52,6 +54,7 @@ import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../ut
 import { sceneLinkGeometry } from '../../utils/route.ts';
 import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
 import { alignClasses, classedLink, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
+import { BORDER_CLASSES, CANVAS_FILLS, CAPTION_TEXT } from '../../utils/surfaces.ts';
 import { TextPart } from '../PartEditor/PartEditor.tsx';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
@@ -180,7 +183,12 @@ export const SceneLayer = memo(
       [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
-    const linkWidth = LINK_WIDTH * lineWeight(depth, zoom);
+    const look = useSceneLook();
+    const weight = lineWeight(depth, zoom);
+    const linkWidth = look.styleSet.link.width * weight;
+    // End markers keep the line's own weight whatever the set draws the link as, so an arrowhead stays crisp.
+    const markerWidth = LINK_WIDTH * weight;
+    const canvasFill = CANVAS_FILLS.opaque[look.tone];
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
@@ -200,7 +208,8 @@ export const SceneLayer = memo(
                   id={`${markerId}-${hue ?? 'default'}`}
                   cell={cell}
                   hue={hue}
-                  width={linkWidth}
+                  width={markerWidth}
+                  canvasFill={canvasFill}
                 />
               ))}
             </defs>
@@ -224,24 +233,31 @@ export const SceneLayer = memo(
                         onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
                       />
                     )}
-                    <path
-                      d={path}
-                      className={mx(
-                        'fill-none',
+                    <LinkStroke
+                      id={`${markerId}-${link.id}`}
+                      kind={look.styleSet.link.kind}
+                      path={path}
+                      stroke={
                         plain
                           ? lineClasses(lines.get(link.id)?.hue).stroke
                           : selected?.has(link.id)
                             ? 'stroke-focus'
                             : hoveredLink === link.id
                               ? 'stroke-focus/50'
-                              : lineClasses(lines.get(link.id)?.hue).stroke,
-                      )}
-                      strokeWidth={linkWidth}
-                      strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
-                      strokeLinecap={lines.get(link.id)?.lineStyle === 'dotted' ? 'round' : undefined}
-                      data-link-id={link.id}
+                              : lineClasses(lines.get(link.id)?.hue).stroke
+                      }
+                      width={linkWidth}
+                      lineStyle={lines.get(link.id)?.lineStyle}
+                      linkId={link.id}
                     />
-                    {link.text && <LinkText path={path} text={link.text} />}
+                    {link.text && (
+                      <LinkText
+                        path={path}
+                        text={link.text}
+                        backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
+                        textClass={CAPTION_TEXT[look.tone]}
+                      />
+                    )}
                   </g>
                 ))}
               </svg>
@@ -338,7 +354,16 @@ const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | u
 const END_BOX = 0.25;
 
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: string | undefined; width: number }) => {
+type MarkersProps = {
+  id: string;
+  cell: number;
+  hue: string | undefined;
+  width: number;
+  /** The canvas colour a hollow end is filled with, so the line stops at its rim. */
+  canvasFill: string;
+};
+
+const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const line = lineClasses(hue);
   // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
   // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
@@ -386,11 +411,7 @@ const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: stri
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
-          <path
-            d='M 0 0 L 10 5 L 0 10 z'
-            className={mx('fill-base-surface', line.stroke)}
-            strokeWidth={outline(triangle, 12)}
-          />
+          <path d='M 0 0 L 10 5 L 0 10 z' className={mx(canvasFill, line.stroke)} strokeWidth={outline(triangle, 12)} />
         </marker>
       ))}
       {/* A circle centred on the connection point, filled with the canvas so the line stops at its rim. */}
@@ -405,26 +426,78 @@ const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: stri
           markerHeight={circle}
           markerUnits='userSpaceOnUse'
         >
-          <circle
-            cx={5}
-            cy={5}
-            r={4}
-            className={mx('fill-base-surface', line.stroke)}
-            strokeWidth={outline(circle, 10)}
-          />
+          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle, 10)} />
         </marker>
       ))}
     </>
   );
 };
 
-type LinkTextProps = { path: string; text: string };
+type LinkStrokeProps = {
+  /** Unique within the document, for a rails or glass link's mask. */
+  id: string;
+  kind: LinkKind;
+  path: string;
+  stroke: string;
+  width: number;
+  lineStyle: LineStyle['lineStyle'];
+  linkId: string;
+};
+
+/**
+ * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
+ * a faint strip; or glass, a translucent strip with fine edges.
+ */
+const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkStrokeProps) => {
+  const dash = dashArray(lineStyle, width);
+  if (kind === 'line') {
+    return (
+      <path
+        d={path}
+        className={mx('fill-none', stroke)}
+        strokeWidth={width}
+        strokeDasharray={dash}
+        strokeLinecap={lineStyle === 'dotted' ? 'round' : undefined}
+        data-link-id={linkId}
+      />
+    );
+  }
+  if (kind === 'tube') {
+    return (
+      <g strokeLinejoin='round' strokeDasharray={dash} data-link-id={linkId}>
+        <path d={path} className={mx('fill-none', stroke)} strokeWidth={width} />
+        <path d={path} className='fill-none stroke-white' strokeWidth={width * 0.45} opacity={0.4} />
+      </g>
+    );
+  }
+  // The edges are the strip with its middle masked out: an SVG stroke cannot be offset to either side of its path.
+  const rail = kind === 'rails' ? Math.max(1, width / 5) : Math.max(0.75, width / 10);
+  const maskId = `${id.replace(/[^\w-]/g, '_')}-edges`;
+  return (
+    <g strokeLinejoin='round' strokeDasharray={dash} data-link-id={linkId}>
+      <mask id={maskId} maskUnits='userSpaceOnUse' x={-1e6} y={-1e6} width={2e6} height={2e6}>
+        <path d={path} fill='none' stroke='white' strokeWidth={width} />
+        <path d={path} fill='none' stroke='black' strokeWidth={width - rail * 2} />
+      </mask>
+      <path d={path} className={mx('fill-none', stroke)} strokeWidth={width} opacity={kind === 'rails' ? 0.12 : 0.3} />
+      <path
+        d={path}
+        className={mx('fill-none', stroke)}
+        strokeWidth={width}
+        mask={`url(#${maskId})`}
+        opacity={kind === 'rails' ? 1 : 0.7}
+      />
+    </g>
+  );
+};
+
+type LinkTextProps = { path: string; text: string; backdrop: string; textClass: string };
 
 /** A caption's backdrop margin around its text, in scene units. */
 const LINK_TEXT_PAD = { x: 8, y: 2 };
 
 /** A link's caption at the middle of its route, over a halo of the canvas so it reads where it crosses lines. */
-const LinkText = ({ path, text }: LinkTextProps) => {
+const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
   const ref = useRef<SVGPathElement>(null);
   const textRef = useRef<SVGTextElement>(null);
   // The full caption, laid out but invisible, so it can be measured however much of it is shown.
@@ -479,14 +552,14 @@ const LinkText = ({ path, text }: LinkTextProps) => {
       {at && (
         <>
           {/* Opaque, so the caption reads over the lines it sits on. */}
-          {box && <rect {...box} rx={box.height / 2} className='fill-base-surface' data-link-text-box />}
+          {box && <rect {...box} rx={box.height / 2} className={backdrop} data-link-text-box />}
           <text
             ref={textRef}
             x={at.x}
             y={at.y}
             textAnchor='middle'
             dominantBaseline='central'
-            className='fill-fg-muted text-sm'
+            className={mx(textClass, 'text-sm')}
             data-link-text
           >
             {shown !== text && <title>{text}</title>}
@@ -576,8 +649,10 @@ const NodeFrame = memo(
     // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
     // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
     // The frame's border is 2px, thickened with the layer's lines (`lineWeight`); fading, it is padding instead.
-    const border = 2 * lineWeight(props.depth, props.zoom);
-    const thick = border !== 2;
+    const look = useSceneLook();
+    const nominal = look.styleSet.node.borderWidth;
+    const border = nominal * lineWeight(props.depth, props.zoom);
+    const thick = border !== nominal;
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
@@ -590,15 +665,17 @@ const NodeFrame = memo(
       ...fade,
     };
     const frameLook = props.opening
-      ? frameClasses(drawn, false, false, def?.ellipse).slice(1)
-      : frameClasses(drawn, selected, hovered, def?.ellipse);
+      ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
+      : frameClasses(drawn, selected, hovered, def?.ellipse, look);
     return (
       <>
         <div
           className={mx(
             'absolute box-border overflow-hidden',
             // Fading, the border becomes padding of the same width so the contents stay put.
-            ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
+            ...(chromeFade
+              ? [BORDER_CLASSES[nominal].padding, 'isolate']
+              : [BORDER_CLASSES[nominal].border, ...frameLook]),
             // Every text part inherits the face, as it does `fontSize`.
             drawn.style?.fontFamily === 'monospace' && 'font-mono',
             interactive && !node.locked && 'cursor-grab',
@@ -623,7 +700,7 @@ const NodeFrame = memo(
           {chromeFade && (
             <div
               aria-hidden
-              className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
+              className={mx('dx-cover -z-10', BORDER_CLASSES[nominal].border, 'pointer-events-none', ...frameLook)}
               style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
             />
           )}

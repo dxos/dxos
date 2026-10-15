@@ -18,7 +18,14 @@ import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
-import { SCENE_OVERLAY_ATTRIBUTE, useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
+import {
+  SCENE_OVERLAY_ATTRIBUTE,
+  SceneLookContext,
+  useRegistry,
+  useSceneProjection,
+  useViewport,
+  useWheel,
+} from '../../hooks/index.ts';
 import {
   type Drag,
   type InspectorMode,
@@ -41,6 +48,7 @@ import {
   defaultNodeRegistry,
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
+import { type StyleSetRegistry, defaultStyleSetRegistry, resolveLook } from '../../model/style-set.ts';
 import {
   type Bounds,
   type Camera,
@@ -89,6 +97,13 @@ import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { recordScenes, redo, undo } from '../../utils/undo.ts';
 import { About, type AboutStat } from '../About/About.tsx';
+import {
+  BackgroundField,
+  BackgroundFill,
+  GrainOverlay,
+  backgroundField,
+  drawsField,
+} from '../Background/Background.tsx';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -171,6 +186,12 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * item show only when given, as the host owns `inspectors`.
    */
   onInspectorsChange?: (mode: InspectorMode) => void;
+  /** The style sets and backgrounds `styleSet` and `background` name; the built-ins by default. */
+  styleSets?: StyleSetRegistry;
+  /** The style set every element draws with; classic when unset or unknown. */
+  styleSet?: string;
+  /** The background under the scene; the style set's own when unset or unknown. */
+  background?: string;
   children?: ReactNode;
 }>;
 
@@ -193,8 +214,12 @@ const SceneViewRoot = ({
   onReadonlyChange,
   inspectors = 'docked',
   onInspectorsChange,
+  styleSets = defaultStyleSetRegistry,
+  styleSet,
+  background,
   children,
 }: SceneViewRootProps) => {
+  const look = useMemo(() => resolveLook(styleSets, styleSet, background), [styleSets, styleSet, background]);
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -1031,37 +1056,40 @@ const SceneViewRoot = ({
       onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
       rootRef={rootRef}
+      look={look}
     >
-      <DockProvider>
-        {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
+      <SceneLookContext.Provider value={look}>
+        <DockProvider>
+          {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-        <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
-          <div
-            ref={rootRef}
-            tabIndex={0}
-            className={mx(
-              'relative grow h-full overflow-clip outline-none touch-none select-none',
-              tool.kind === 'hand' && 'cursor-grab',
-              tool.kind === 'node' && 'cursor-crosshair',
-            )}
-            style={{ contain: 'strict' }}
-            data-testid='scene-view'
-            onPointerDown={onBackgroundPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-            onPointerCancel={cancelDrag}
-            onPointerLeave={() => updateHover(undefined)}
-            onDoubleClick={onDoubleClick}
-            onContextMenu={onContextMenu}
-            onKeyDown={onKeyDown}
-          >
-            {children}
+          <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
+            <div
+              ref={rootRef}
+              tabIndex={0}
+              className={mx(
+                'relative grow h-full overflow-clip outline-none touch-none select-none',
+                tool.kind === 'hand' && 'cursor-grab',
+                tool.kind === 'node' && 'cursor-crosshair',
+              )}
+              style={{ contain: 'strict' }}
+              data-testid='scene-view'
+              onPointerDown={onBackgroundPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+              onPointerCancel={cancelDrag}
+              onPointerLeave={() => updateHover(undefined)}
+              onDoubleClick={onDoubleClick}
+              onContextMenu={onContextMenu}
+              onKeyDown={onKeyDown}
+            >
+              {children}
+            </div>
+            <Dock onClose={onInspectorsChange && (() => onInspectorsChange('floating'))} />
           </div>
-          <Dock onClose={onInspectorsChange && (() => onInspectorsChange('floating'))} />
-        </div>
-      </DockProvider>
+        </DockProvider>
+      </SceneLookContext.Provider>
     </SceneViewProvider>
   );
 };
@@ -1129,13 +1157,29 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     menu,
     closeMenu,
     menuAnchorRef,
+    look,
   } = useSceneViewContext('SceneView.Canvas');
 
   // Handles and ports belong to what is drawn: a hidden layer's elements show none.
   const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
 
+  const field = useMemo(
+    () => backgroundField(look.background, bounds, latticeBounds),
+    [look.background, bounds, latticeBounds],
+  );
+
   return (
     <>
+      <BackgroundFill background={look.background} />
+      {/* Under the snap grid, in its own camera layer, so the grid a gesture lands on stays on top. */}
+      {measured && drawsField(look.background) && (
+        <div
+          className='absolute pointer-events-none'
+          style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
+        >
+          <BackgroundField background={look.background} tone={look.tone} field={field} grid={grid} />
+        </div>
+      )}
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
           small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
@@ -1209,6 +1253,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         )}
         {overlay}
       </div>
+      <GrainOverlay background={look.background} />
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
       {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span

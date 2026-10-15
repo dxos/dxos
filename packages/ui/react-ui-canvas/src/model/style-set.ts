@@ -191,7 +191,7 @@ export const PAPER_BACKGROUND: Background = {
   grid: 'dots',
   washes: [],
   fade: false,
-  grain: 28 / 255,
+  grain: 18 / 255,
   grainHue: 'warm',
 };
 
