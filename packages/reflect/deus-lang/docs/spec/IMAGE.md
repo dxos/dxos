@@ -213,6 +213,12 @@ and `run` (command lines to run on load). [`platform/browser/playground.mjs`](..
 turns a page built from `Cli.main` into the playground: it adds the builtins and prelude for `deus init`,
 a sample program, and with `--codebase <dir>` every file of that codebase under `/codebase`.
 
+The page keeps what it changed in IndexedDB ([D175](../DECISIONS.md)): after each command and edit it
+stores every file whose text differs from `deus.json`'s, and `null` for each one removed, under the
+page's path. A reload applies them and skips `run`, since the codebase `init` made is already there;
+Reset drops them. Without IndexedDB (a private window, blocked storage) the page starts from
+`deus.json` every time.
+
 Sizes on 2026-10-15:
 
 | Part                                    | Bytes      | Gzipped |

@@ -4,7 +4,8 @@
 
 // A terminal for a DEUS image running in the page: each command line runs the image's main with those
 // arguments, against an in-memory file system the editor shows. The TypeScript kernel (kernel-ts.mjs)
-// runs by default; `?kernel=wasm` or `"kernel": "wasm"` in deus.json picks the wasm one.
+// runs by default; `?kernel=wasm` or `"kernel": "wasm"` in deus.json picks the wasm one. The files the
+// page changed are kept in IndexedDB, so a reload resumes where it left off; Reset drops them.
 
 import { createDeus, createFiles } from './host.mjs';
 
@@ -63,7 +64,8 @@ const [image, config = {}] = await Promise.all([
   fetch('app.image').then((response) => response.text()),
   fetchOptional('deus.json', 'json'),
 ]);
-const fs = createFiles(config.files ?? {});
+const base = config.files ?? {};
+const fs = createFiles(base);
 const env = config.env ?? {};
 const cwd = config.cwd ?? '/';
 const kernel = new URLSearchParams(location.search).get('kernel') ?? config.kernel ?? 'ts';
@@ -78,10 +80,68 @@ const load = async () => {
   const { runInBrowser } = await import('./kernel-ts.mjs');
   return { size: 0, run: async (args) => runInBrowser(image, { fs, args, env, cwd }) };
 };
+/** The page's changes to `base` in IndexedDB, keyed by the page's path: each changed file's text, or null if removed. */
+const saved = (() => {
+  const key = location.pathname;
+  const open = () =>
+    new Promise((resolve, reject) => {
+      const request = indexedDB.open('deus', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('changes');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  const call = async (mode, act) => {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const request = act(db.transaction('changes', mode).objectStore('changes'));
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+  return {
+    load: () => call('readonly', (store) => store.get(key)),
+    save: (changes) => call('readwrite', (store) => store.put(changes, key)),
+    clear: () => call('readwrite', (store) => store.delete(key)),
+  };
+})();
+const changes = () => {
+  const out = {};
+  for (const [path, text] of fs.files) {
+    if (base[path] !== text) {
+      out[path] = text;
+    }
+  }
+  for (const path of Object.keys(base)) {
+    if (!fs.files.has(path)) {
+      out[path] = null;
+    }
+  }
+  return out;
+};
+// A page without IndexedDB (a private window, blocked storage) still runs, from `base` every time.
+const stored = await saved.load().catch(() => undefined);
+const restored = stored && Object.keys(stored).length > 0 ? stored : undefined;
+for (const [path, text] of Object.entries(restored ?? {})) {
+  if (text === null) {
+    fs.remove(path);
+  } else {
+    fs.write(path, text);
+  }
+}
+let saving;
+const persist = () => {
+  clearTimeout(saving);
+  saving = setTimeout(() => saved.save(changes()).catch(() => {}), 300);
+};
+$('reset').onclick = async () => {
+  await saved.clear().catch(() => {});
+  location.reload();
+};
+
 const deus = await load();
 $('status').textContent =
   `${kernel} kernel${deus.size ? ` ${Math.round(deus.size / 1024)} KB` : ''}, image ${Math.round(image.length / 1024)} KB, ` +
-  `${fs.files.size} files; ready in ${Math.round(performance.now() - started)} ms`;
+  `${fs.files.size} files${restored ? ', restored' : ''}; ready in ${Math.round(performance.now() - started)} ms`;
 
 let current;
 const showFiles = () => {
@@ -107,12 +167,18 @@ const open = (path) => {
   editor.value = fs.read(path) ?? '';
   showFiles();
 };
-editor.oninput = () => current && fs.write(current, editor.value);
+editor.oninput = () => {
+  if (current) {
+    fs.write(current, editor.value);
+    persist();
+  }
+};
 $('new-file').onclick = () => {
   const name = prompt('New file', cwd + '/main.deus');
   if (name) {
     fs.write(fs.normalize(name.startsWith('/') ? name : cwd + '/' + name), '');
     open(fs.normalize(name.startsWith('/') ? name : cwd + '/' + name));
+    persist();
   }
 };
 
@@ -129,6 +195,7 @@ const execute = async (line) => {
   if (current) {
     editor.value = fs.read(current) ?? '';
   }
+  persist();
 };
 
 $('prompt').onsubmit = async (event) => {
@@ -158,7 +225,8 @@ showFiles();
 if (config.open) {
   open(config.open);
 }
-for (const line of config.run ?? []) {
+// A restored page already ran these; running `init` again would fail on the codebase it made.
+for (const line of restored ? [] : (config.run ?? [])) {
   await execute(line);
 }
 command.disabled = false;
