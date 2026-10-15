@@ -310,6 +310,79 @@ def Replicate.headsOf (dir : Text) (seen : List Seen) (branch : Text) : {IO, Thr
     (fun c => not (any (fun other => other != c && Map.contains c (ancestors dir other)) claimed))
     claimed
 
+/-- A remote served by the DEUS Worker (D164): `base` is `https://<host>/v1/<project>`. Reads are
+  open; writes send the API key that `config`, a private curl config file, holds as a header. A
+  listing is one name per line. Bundles travel gzipped, as in a bucket, and the Worker checks that
+  each one hashes to its name. -/
+def Replicate.http (base : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
+  let curl := fun arguments => IO.exec "curl" (["-sS", "--fail-with-body", "-K", config] ++ arguments)
+  let listing := fun url =>
+    match curl [url] with
+    | (0, out, _) => List.filter (fun n => not (Text.isEmpty n)) (Text.lines out)
+    | (_, out, err) => defect ("listing " ++ url ++ " failed: " ++ trim err ++ " " ++ trim out)
+  let send := fun what arguments =>
+    match curl arguments with
+    | (0, _, _) => ()
+    | (_, out, err) => defect (what ++ " failed: " ++ trim err ++ " " ++ trim out)
+  handle body () with
+  | Remote.list x0 -> k => k (listing (base ++ "/bundles"))
+  | Remote.keys under -> k => k (listing (base ++ "/files/" ++ under ++ "/"))
+  | Remote.download key file -> k =>
+      match curl ["-o", file, base ++ "/files/" ++ key] with
+      | (0, _, _) => k true
+      | _ =>
+          IO.exec "rm" ["-f", file]
+          k false
+  | Remote.upload key file mediaType -> k =>
+      send
+        ("uploading " ++ key)
+        ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/files/" ++ key]
+      k ()
+  | Remote.drop key -> k =>
+      send ("deleting " ++ key) ["-X", "DELETE", base ++ "/files/" ++ key]
+      k ()
+  | Remote.get key -> k =>
+      let staged := config ++ "." ++ key
+      let text :=
+        match curl ["-o", staged, base ++ "/bundles/" ++ key] with
+        | (0, _, _) => gunzip staged
+        | _ => Option.none
+      IO.exec "rm" ["-f", staged]
+      k text
+  | Remote.put key text -> k =>
+      let staged := config ++ "." ++ key
+      gzipTo text staged
+      -- The Worker answers 200 for a bundle it already has, so a repeated push is not an error.
+      let result := curl ["-X", "PUT", "-H", "content-type: application/gzip", "--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key]
+      IO.remove staged
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
+  | Remote.delete key -> k =>
+      send ("deleting " ++ key) ["-X", "DELETE", base ++ "/bundles/" ++ key]
+      k ()
+  | Remote.writeAll files -> k =>
+      -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+      -- each repeats the key, and the batch config is as private as the remote's.
+      let staged := config ++ ".d"
+      let batch := config ++ ".batch"
+      IO.mkdirp staged
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      let groups := mapIndexed (fun i pair =>
+        let path := fst pair
+        let file := staged ++ "/" ++ toText i
+        IO.writeFile file (snd pair)
+        user ++
+          "fail-with-body\noutput = \"/dev/null\"\nrequest = \"PUT\"\nheader = \"content-type: " ++ contentType path ++ "\"\ndata-binary = \"@" ++ file ++ "\"\nurl = \"" ++ base ++ "/files/" ++ path ++ "\"\n") files
+      IO.writeFile batch (join "next\n" groups)
+      let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+      IO.remove batch
+      IO.exec "rm" ["-rf", staged]
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("writing the site failed: " ++ trim err ++ " " ++ trim out)
+
 /-- Writes a bundle's objects and metadata into the store; returns what it holds. -/
 def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
   let items :=

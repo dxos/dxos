@@ -397,3 +397,35 @@ make sure to push changes to main git PR as well as the codebase r2
 ---
 
 can you message all existing sessions to pause work and push up to codebase and github main pr
+
+---
+
+lets create a new thread to make the clouflare side better
+
+I have token "op://CI/DEUS token/credential" that can access my account
+
+I'm thinking: new r2 bucket for codebase, and worker to push it and host the codebase app that reads live from codebase bucket
+
+how do we do permissions? perhaps d1 database for api keys for now is the simplest, can do something more complicated further. read-only is open, writes require key. r2 access goes through worker
+
+prep a plan and tell me
+
+---
+
+how do I set spend limit on my account
+
+---
+
+proceed with plan
+
+---
+
+r2 enabled
+
+---
+
+afterwards develop a strategy on how we can check pushes in the worker on push. in the order of priority:
+
+1. no destructive history ops
+2. policy on checks (what tests need to pass, etc..)
+3. .... -- extensible

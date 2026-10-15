@@ -36,11 +36,13 @@ deus project init https://dxos.org/deus/toolchain    # origin is now the shared 
 deus pull origin && deus merge origin.main           # the latest codebase
 ```
 
-Only `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are needed: for the toolchain project, `origin`
-defaults to `r2://agent-artifacts/deus/toolchain` and the endpoint to the DXOS account's R2
-(`$DEUS_R2_ENDPOINT` and `deus remote add origin …` still override them). A 403 on push while
-pulls work means the environment's network policy does not allow writes to
-`950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com`; it must be in Allowed domains.
+For the toolchain project, `origin` defaults to `https://deus.dmytro-a80.workers.dev/v1/toolchain`, the
+DEUS Worker in front of the private `deus-codebases` bucket (D164). Pulls need nothing. Pushes need
+`$DEUS_API_KEY`, a key with the `push`, `site`, `assets` and `inbox` scopes; this project's key is in
+`/mnt/project-files/.secrets/deus-api-key` (`export DEUS_API_KEY=$(cat …)`). The only domain to allow
+is `deus.dmytro-a80.workers.dev`. A push without a key fails with the Worker's 401, which says so.
+Keys are made, listed and revoked with `node scripts/deus-keys.mjs` and the account's Cloudflare
+token. The old remote, `r2://agent-artifacts/deus/toolchain`, is no longer written to.
 
 The export alone builds the toolchain (`deus compile codebase/code --main Cli.main` writes the seed, D161), so a
 change made only in the codebase needs no `deus/` file.

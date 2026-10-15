@@ -14,12 +14,31 @@ export type Bucket = {
   get(key: string): Promise<BucketObject | null>;
   head(key: string): Promise<object | null>;
   put(key: string, value: Uint8Array | string, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
-  list(options: { prefix: string }): Promise<{ objects: { key: string }[] }>;
+  delete(key: string): Promise<unknown>;
+  list(options: {
+    prefix: string;
+    cursor?: string;
+  }): Promise<{ objects: { key: string }[]; truncated?: boolean; cursor?: string }>;
+};
+
+/** The part of the D1 binding the worker uses. */
+export type Statement = {
+  bind(...values: unknown[]): Statement;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
+  run(): Promise<{ meta?: { changes?: number } }>;
+};
+
+export type Database = {
+  prepare(sql: string): Statement;
+  batch(statements: Statement[]): Promise<unknown>;
 };
 
 export type Env = {
-  ORIGIN: string;
+  /** The project whose explorer is served at `/`. */
   PREFIX?: string;
+  /** `0` skips checking that a pushed bundle hashes to its name. */
+  VERIFY_BUNDLES?: string;
   GITHUB_ORG?: string;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
@@ -27,6 +46,7 @@ export type Env = {
   GITHUB_OAUTH_URL?: string;
   GITHUB_API_URL?: string;
   BUCKET?: Bucket;
+  DB?: Database;
 };
 
 export type InboxAsset = { hash: string; type: string; name: string };

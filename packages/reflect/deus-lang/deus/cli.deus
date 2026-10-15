@@ -763,22 +763,16 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
 def defaultEndpoint : Text := "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com"
 
 def toolchainIri : Text := "https://dxos.org/deus/toolchain"
-def toolchainRemote : Text := "r2://agent-artifacts/deus/toolchain"
-
-/-- The public explorer of the toolchain's codebase, refreshed by every push to the shared remote. -/
-def explorerDemo : Text := "explorer-demo"
+/-- The shared remote, served by the DEUS Worker over its private bucket (D164); its explorer is the Worker's `/`. -/
+def toolchainRemote : Text := "https://deus.dmytro-a80.workers.dev/v1/toolchain"
 
 /--
-  Remotes the toolchain's own codebase has when none is configured: `origin`, the shared remote
-  every thread pulls and pushes, and `explorer-demo`, where its public explorer is hosted.
+  The remote the toolchain's own codebase has when none is configured: `origin`, which every
+  thread pulls and pushes.
 -/
 def defaultRemote (dir : Text) (name : Text) : {IO} Option Text :=
   match Project.read dir with
-  | some p =>
-    if p.projectIri != toolchainIri then none
-    else if name == "origin" then some toolchainRemote
-    else if name == explorerDemo then some "r2://agent-artifacts/deus/explorer-demo"
-    else none
+  | some p => if p.projectIri == toolchainIri && name == "origin" then some toolchainRemote else none
   | none => none
 
 /-- Whether `name` reaches the shared toolchain remote, configured or by default. -/
@@ -787,9 +781,10 @@ def isToolchainRemote (dir : Text) (name : Text) : {IO} Bool :=
   Option.getOr (Option.orElse configured (fun _ => defaultRemote dir name)) "" == toolchainRemote
 
 /--
-  Runs `body` against the remote `name`: a directory, or `r2://<bucket>/<prefix>` (an
-  S3-compatible bucket at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID`
-  and `$R2_SECRET_ACCESS_KEY`).
+  Runs `body` against the remote `name`: a directory, `https://<host>/v1/<project>` (the DEUS
+  Worker, D164; writes send `$DEUS_API_KEY`), or `r2://<bucket>/<prefix>` (an S3-compatible bucket
+  at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID` and
+  `$R2_SECRET_ACCESS_KEY`).
 -/
 def withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw Text} a) : {IO, Throw Text} a :=
   let url := match IO.readFile (dir ++ "/remotes/" ++ name ++ "/url") with
@@ -797,8 +792,21 @@ def withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw Tex
     | none =>
       match defaultRemote dir name with
       | some known => known
-      | none => throw ("no remote " ++ name ++ "; run `deus remote add " ++ name ++ " <dir|r2://bucket/prefix>`")
-  if Text.startsWith "r2://" url then
+      | none => throw ("no remote " ++ name ++ "; run `deus remote add " ++ name ++ " <dir|https://host/v1/project|r2://bucket/prefix>`")
+  if Text.startsWith "https://" url || Text.startsWith "http://" url then
+    -- Reads need no key; without one, a write gets the Worker's 401, which says what to set.
+    let config := dir ++ "/cache/remote-" ++ name ++ ".curl"
+    IO.mkdirp (dir ++ "/cache")
+    IO.exec "install" ["-m", "600", "/dev/null", config]
+    IO.writeFile config (match IO.getEnv "DEUS_API_KEY" with
+      | some key => "header = \"authorization: Bearer " ++ Text.trim key ++ "\"\n"
+      | none => "")
+    let result := try (fun _ => Replicate.http (if Text.endsWith "/" url then Text.take (Text.length url - 1) url else url) config body)
+    IO.remove config
+    match result with
+    | Result.ok value => value
+    | Result.err message => throw message
+  else if Text.startsWith "r2://" url then
     let path := Text.drop 5 url
     let slash := Text.indexOf path "/" 0
     let bucketName := if slash < 0 then path else Text.take slash path
@@ -820,7 +828,7 @@ def withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw Tex
     | Result.err message => throw message
   else Replicate.directory url body
 
-/-- `deus remote add <name> <dir|r2://bucket/prefix>` / `deus remote`: configure remotes. -/
+/-- `deus remote add <name> <dir|https://host/v1/project|r2://bucket/prefix>` / `deus remote`: configure remotes. -/
 def remote (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -834,7 +842,7 @@ def remote (args : Args) : {IO, Throw Text} Unit :=
     let urls := List.map (fun n => (n, Text.trim (Option.getOr (IO.readFile (dir ++ "/remotes/" ++ n ++ "/url")) ""))) names
     output args (fun _ => Json.arr (List.map (fun p => Json.obj [("remote", Json.str (fst p)), ("url", Json.str (snd p))]) urls))
       (fun _ => Text.join "\n" (List.map (fun p => fst p ++ "  " ++ snd p) urls))
-  | _ => throw "usage: deus remote [add <name> <dir|r2://bucket/prefix>]"
+  | _ => throw "usage: deus remote [add <name> <dir|https://host/v1/project|r2://bucket/prefix>]"
 
 def remoteName (args : Args) : Text := Option.getOr (List.head? args.positional) "origin"
 
@@ -848,7 +856,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
     let _ := Replicate.pushAssets dir
     bundle)
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch;
-  -- so does the public explorer of the toolchain, from whichever store pushes to the shared remote.
+  -- so does the shared toolchain remote on main, from whichever store pushes to it (D150, D164).
   let siteOf := fun (target : Text) =>
     let out := dir ++ "/cache/site-" ++ target
     -- A site published with its console keeps it, on the codebase as pushed (D84).
@@ -856,7 +864,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
     let _ := Explorer.generate dir out
     snd (publishSite dir target out false)
   let onMain := branch == Codebase.currentBranch dir && branch == "main"
-  let targets := (if IO.exists (siteManifest dir name) then [name] else []) ++ (if onMain && name != explorerDemo && isToolchainRemote dir name then [explorerDemo] else [])
+  let targets := if IO.exists (siteManifest dir name) || (onMain && isToolchainRemote dir name) then [name] else []
   let site := if branch == Codebase.currentBranch dir && not (List.isEmpty targets) then some (List.sum (List.map siteOf targets)) else none
   let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
   let siteText := Option.getOr (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site) ""
@@ -2091,7 +2099,8 @@ def usage : Text :=
     "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)",
     "",
     "replication",
-    "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix",
+    "  remote add <name> <dir|url|r2://b/p> a remote: a directory, the DEUS Worker (https://<host>/v1/<project>),",
+    "                                       or an R2 bucket and prefix",
     "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",

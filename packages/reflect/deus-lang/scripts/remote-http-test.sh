@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Serves the DEUS Worker (platform/worker) on local workerd with a local bucket and key database,
+# then pushes a codebase to it over HTTPS's plain sibling, pulls it into a fresh store, and
+# publishes its explorer (D164): the same commands threads run against the deployed Worker.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+work="$(mktemp -d)"
+wrangler="$(git rev-parse --show-toplevel)/node_modules/.bin/wrangler"
+server=""
+stop() { if [ -n "$server" ]; then kill -- "-$server" 2>/dev/null || true; fi; }
+trap 'stop; rm -rf "$work"' EXIT
+export WRANGLER_SEND_METRICS=false CI=1
+state="$work/state"
+deus() { node bin/deus.mjs "$@"; }
+
+# The key database, migrated, with one key that may do everything.
+(cd platform/worker && "$wrangler" d1 migrations apply deus-auth --local --persist-to "$state" >/dev/null)
+key="$(node -e "
+  const { mintKey } = await import('./platform/worker/remote.mjs');
+  const minted = await mintKey();
+  console.log(JSON.stringify(minted));
+" --input-type=module)"
+id="$(node -pe "JSON.parse(process.argv[1]).id" "$key")"
+hash="$(node -pe "JSON.parse(process.argv[1]).secretHash" "$key")"
+(cd platform/worker && "$wrangler" d1 execute deus-auth --local --persist-to "$state" --command \
+  "insert into api_keys (id, secret_hash, label, scopes, projects, created_at) values ('$id', '$hash', 'test', '[\"admin\"]', '\"*\"', 0)" >/dev/null)
+
+port="$(node -e "const s = require('net').createServer().listen(0, () => { console.log(s.address().port); s.close(); })")"
+(cd platform/worker && exec setsid "$wrangler" dev --port "$port" --ip 127.0.0.1 --persist-to "$state" --var PREFIX:demo >"$work/wrangler.log" 2>&1) &
+server=$!
+for _ in $(seq 1 90); do
+  if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$port/v1"; then break; fi
+  kill -0 "$server" 2>/dev/null || break
+  sleep 1
+done
+curl -sf "http://127.0.0.1:$port/v1" >/dev/null || { echo "workerd did not start"; cat "$work/wrangler.log"; exit 1; }
+remote="http://127.0.0.1:$port/v1/demo"
+
+# Without a key, a push is refused and says why.
+export DEUS_CODEBASE="$work/a"
+deus init >/dev/null
+deus add platform/web.deus examples/counter.deus >/dev/null
+deus remote add origin "$remote" >/dev/null
+if deus push origin >"$work/refused.log" 2>&1; then echo "a push without a key went through"; exit 1; fi
+grep -q 'writes need an API key' "$work/refused.log" || { cat "$work/refused.log"; exit 1; }
+
+export DEUS_API_KEY="$(node -pe "JSON.parse(process.argv[1]).key" "$key")"
+deus push origin
+deus explore --publish origin >/dev/null
+
+# A fresh store, with no key, pulls the same names.
+export DEUS_CODEBASE="$work/b"
+unset DEUS_API_KEY
+deus init >/dev/null
+deus remote add origin "$remote" >/dev/null
+deus pull origin
+deus merge origin.main >/dev/null
+diff <(DEUS_CODEBASE="$work/a" deus ls) <(deus ls) || { echo "the pulled store differs"; exit 1; }
+
+# The explorer of the project PREFIX is served at the Worker's root, from what the push wrote.
+page="$(curl -sf "http://127.0.0.1:$port/")"
+[[ "$page" == *"<html"* ]] || { echo "no explorer at /"; exit 1; }
+meta="$(curl -sf "http://127.0.0.1:$port/meta.json")"
+node -e "JSON.parse(process.argv[1])" "$meta" || { echo "no meta.json"; exit 1; }
+echo "remote: push, pull and the explorer work through the Worker on workerd"

@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { type ExpectStatic, afterAll, afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import worker, { type Bucket, type Env, requestToSexp, sexpToRequest } from '../platform/explorer-worker/worker.mjs';
+import worker, { type Bucket, type Env, requestToSexp, sexpToRequest } from '../platform/worker/worker.mjs';
 import { SEED_PATH } from './kernel/main.ts';
 import { runImage } from './kernel/run.ts';
 
@@ -81,7 +81,6 @@ describe('explorer worker', () => {
   beforeEach(() => {
     remote = mkdtempSync(join(scratch, 'remote-'));
     env = {
-      ORIGIN: 'https://bucket.test/site',
       PREFIX: 'project',
       GITHUB_ORG: 'dxos',
       GITHUB_CLIENT_ID: 'client',

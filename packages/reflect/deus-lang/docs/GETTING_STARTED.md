@@ -321,13 +321,12 @@ deus explore --out site             # or writes the files
 deus explore --publish origin       # or uploads them beside a remote's bundles
 ```
 
-A remote can be a directory or an R2 bucket (`deus remote add origin r2://bucket/prefix`). With a
-public bucket, `--publish` hosts the explorer, and a republish uploads only the files that
-changed. From then on, every `deus push` to that remote refreshes it. To give it a URL of its own,
-deploy [`platform/explorer-worker/`](../platform/explorer-worker) with `ORIGIN` set to the bucket's
-public `site/` URL. That Worker is a cache in front of the bucket, so it never needs redeploying.
-The toolchain's own codebase, with its tasks, is published at
-<https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html>.
+A remote can be a directory, the DEUS Worker (`deus remote add origin https://<host>/v1/<project>`), or
+an R2 bucket (`deus remote add origin r2://bucket/prefix`). `--publish` uploads the explorer beside
+the remote's bundles, and a republish uploads only the files that changed. From then on, every
+`deus push` to that remote refreshes it. The Worker in [`platform/worker/`](../platform/worker) serves
+the explorer of its `PREFIX` project at its root. The toolchain's own codebase, with its tasks, is
+published at <https://deus.dmytro-a80.workers.dev/>.
 
 ## Where to go next
 

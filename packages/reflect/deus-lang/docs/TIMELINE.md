@@ -190,5 +190,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 180 | 10-15 08:30 | 15m 00s | `2af209a4` | The codebase export compiles to the seed byte for byte, and the suite now checks it, so the toolchain builds without `deus/` (task 86d7b02a in part, Export.Spec R-8, D161). |
 | 181 | 10-15 09:05 | 35m 00s | `843ac72e` | `deus update` skips files unchanged since the last update while the codebase is as it left it: `deus update deus` with nothing changed takes 1.1 s instead of 17 s (Codebase.Spec R-22, D162). |
 | 182 | 10-15 09:30 | 25m 00s | this commit | `deus export` reuses printed definitions whose inputs are unchanged: 10.2 s to 5.7 s with identical files (Export.Spec R-9, D163). |
+| 183 | 10-15 09:10 | 36m 00s | this commit | Codebases move to a private R2 bucket behind the DEUS Worker: push and pull over HTTPS with D1 API keys, the explorer served from the bucket, the toolchain copied and `origin` switched (Remote.Spec, D164). |
 
-Total from stage 1 to stage 182: 48h 12m.
+Total from stage 1 to stage 183: 48h 48m.

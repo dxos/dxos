@@ -1,0 +1,26 @@
+# The DEUS Worker (D164): the replication API at /v1/ and the codebase explorer, over a private bucket.
+name = "deus"
+main = "worker.mjs"
+compatibility_date = "2026-07-01"
+account_id = "ba80533b56e4658ce26b198a040692a9"
+workers_dev = true
+
+[vars]
+# The project whose explorer is served at `/`; requests and attachments go to <PREFIX>/inbox/ and <PREFIX>/assets/ (D82).
+PREFIX = "toolchain"
+# Only active members of this GitHub organization may write from the explorer.
+GITHUB_ORG = "dxos"
+
+# Explorer sign-in also needs three secrets, set with `wrangler secret put`: GITHUB_CLIENT_ID and
+# GITHUB_CLIENT_SECRET (a GitHub OAuth app whose callback URL is https://<this worker's host>/auth/callback)
+# and SESSION_SECRET (random, 32+ bytes). Without them the explorer is read-only.
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "deus-codebases"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "deus-auth"
+database_id = "bcc70fb6-81db-4506-8883-ffce92cb6333"
+migrations_dir = "migrations"

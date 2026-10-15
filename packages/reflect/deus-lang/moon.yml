@@ -28,3 +28,9 @@ tasks:
     options:
       cache: false
       runInCI: false
+  # Pushes, pulls and publishes the explorer through the DEUS Worker on local workerd (D164).
+  remote-test:
+    command: bash scripts/remote-http-test.sh
+    options:
+      cache: false
+      runInCI: false

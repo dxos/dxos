@@ -1,7 +1,19 @@
 # History of main
 
+- `0568041d74` task: set e774b1fd state details (by claude)
+- `03dc2465ba` task: open 48eee846 deus mdl compares effect-row variables by name: an api signature written with {IO | r} fails against an inferred {IO | e}; compare up to renaming (by claude)
+- `362ac00a58` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164) (by claude)
+- `489fdc3cfa` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164) (by claude)
+- `73e0053c43` delete Cli.explorerDemo
+- `f5046d914e` Remotes served by the DEUS Worker over HTTPS (Replicate.http); origin of the toolchain is https://deus.dmytro-a80.workers.dev/v1/toolchain, whose own explorer each push of main refreshes (D164) (by claude)
+- `5b26d7c028` task: open 95822533 Push checks in the Worker, by priority: (1) no destructive history ops, (2) a policy on checks (which tests must pass), (3) extensible further checks; strategy first (by claude)
+- `5a80b84ed5` task: open 86720562 Worker builds the explorer JSON from bundles itself (wasm kernel or a Container), so a push sends only bundles (by claude)
+- `a3efae81c7` task: open 87c565cf deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now) (by claude)
+- `e27622c30a` task: open b096c56e Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push (by claude)
+- `232a5b6c82` task: set e774b1fd state (by claude)
+- `8651a2f882` task: open e774b1fd Cloudflare setup: codebases in a private R2 bucket behind one Worker (replication API over HTTPS, explorer, D1 API keys for writes) (by claude)
 - `62fcfd712a` history: import 1223 changes
-- `4415d0ca99` catch up with #13952 at c9951925 before the pause (by claude)
+- `4415d0ca99` catch up with #13952 at c9951925 before the pause
 - `9dcda60615` update deus (by merge)
 - `9fda888898` history: import 1208 changes
 - `b25522c80e` history: import 1209 changes

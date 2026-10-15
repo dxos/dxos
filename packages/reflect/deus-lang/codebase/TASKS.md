@@ -34,6 +34,15 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 - assignee: claude
 - labels: analytics, cloudflare
 
+## Push checks in the Worker, by priority: (1) no destructive history ops, (2) a policy on checks (which tests must pass), (3) extensible further checks; strategy first (`95822533`)
+
+- state: todo
+- priority: high
+- labels: cloudflare, vcs
+- parent: e774b1fd
+
+Dmytro 2026-10-15 08:42: afterwards develop a strategy on how we can check pushes in the worker on push.
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -179,6 +188,13 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - assignee: claude
 - labels: browser
 
+## Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push (`b096c56e`)
+
+- state: todo
+- priority: low
+- labels: cloudflare
+- parent: e774b1fd
+
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
 - state: todo
@@ -203,6 +219,26 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - priority: low
 - assignee: claude
 - labels: browser, perf, kernel
+
+## Worker builds the explorer JSON from bundles itself (wasm kernel or a Container), so a push sends only bundles (`86720562`)
+
+- state: todo
+- priority: low
+- labels: cloudflare
+- parent: e774b1fd
+
+## deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now) (`87c565cf`)
+
+- state: todo
+- priority: low
+- labels: cloudflare
+- parent: e774b1fd
+
+## deus mdl compares effect-row variables by name: an api signature written with {IO | r} fails against an inferred {IO | e}; compare up to renaming (`48eee846`)
+
+- state: todo
+- priority: low
+- labels: mdl, spec
 
 ## Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase (`3e686896`)
 
@@ -283,6 +319,15 @@ Dmytro: 'we need generated pretty ts apis with .d.ts'. Top-level functions, cons
 - links change #21fbd2e94f
 
 Dmytro: track tasks in codebase and make sure its up to date. The export on #13952 could not be restored: Cli and Replicate referred to old versions of Update.propagate, Project.reachable and five others, which print as raw hashes. Restored by naming them, then updated with every source under deus/ and platform/, including the codebase UI (dfaad231).
+
+## Cloudflare setup: codebases in a private R2 bucket behind one Worker (replication API over HTTPS, explorer, D1 API keys for writes) (`e774b1fd`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: cloudflare, vcs
+
+Landed (D164): bucket deus-codebases, D1 deus-auth, Worker deus at https://deus.dmytro-a80.workers.dev; CLI https remotes; toolchain copied; origin switched. Follow-ups: 95822533 (push checks), b096c56e, 87c565cf, 86720562.
 
 ## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`7ff351a9`)
 

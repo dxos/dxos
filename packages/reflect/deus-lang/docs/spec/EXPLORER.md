@@ -5,8 +5,8 @@ files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md), [D75](../DECISIO
 [`deus/explorer.deus`](../../deus/explorer.deus); the uploader is `publishSite` in
 [`deus/cli.deus`](../../deus/cli.deus). Readers are the app in [`platform/explorer/`](../../platform/explorer)
 (`app.js`), which any static file server can host: the native server running
-[`platform/site.deus`](../../platform/site.deus), a bucket, or the Worker in
-[`platform/explorer-worker/`](../../platform/explorer-worker). The JSON files are also a convenient read-only
+[`platform/site.deus`](../../platform/site.deus), a bucket, or the DEUS Worker in
+[`platform/worker/`](../../platform/worker). The JSON files are also a convenient read-only
 view of a codebase for other tools. This spec gives the layout, each file's schema, and how a site is
 published to a remote. The codebase it is generated from is described in [CODEBASE-STORE.md](./CODEBASE-STORE.md).
 
@@ -289,7 +289,8 @@ The hosted explorer lets members comment and file tasks ([D82](../DECISIONS.md))
 focuses it), and a New task form (`n`) that links the focused definition. Without it (a local `deus
 explore`, a bare bucket), the app is read-only as before.
 
-The Worker in [`platform/explorer-worker/`](../../platform/explorer-worker) answers these routes:
+The Worker in [`platform/worker/`](../../platform/worker) answers these routes (and the replication
+API under `/v1/`, [Remote.Spec](../../codebase/specs/Remote.Spec.mdl)):
 
 | Route                           | Who     | Does                                                                                    |
 | ------------------------------- | ------- | --------------------------------------------------------------------------------------- |
@@ -399,9 +400,9 @@ percent-decodes request paths. The bundled server gives `.html` `text/html; char
 `image/svg+xml`, and other files `text/plain; charset=utf-8`. With no `--out` or `--publish`, `deus explore` starts it on `--port` (default
 8080).
 
-The Worker in `platform/explorer-worker/` proxies a published site (and adds [writing](#writing)): it maps `/` to `/index.html`, fetches
-`ORIGIN + path` (ignoring the query), and caches successful responses for 60 seconds with
-`cache-control: public, max-age=60`.
+The Worker in `platform/worker/` serves the published site of its `PREFIX` project from the bucket (and adds
+[writing](#writing)): it maps `/` to `/index.html`, reads `<PREFIX>/site/<path>` (ignoring the query), and
+caches what it finds for 60 seconds with `cache-control: public, max-age=60`.
 
 ## Publishing
 

@@ -2,15 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-// Serves the codebase explorer from where `deus explore --publish` (and every `deus push` after
-// it) uploads it: `ORIGIN` is the public URL of a remote's `site/` folder. Responses are cached
-// briefly, so a push shows up within a minute.
+// The DEUS Worker (D164): the only thing that touches the codebases bucket. `/v1/` is the
+// replication API that `deus push` and `deus pull` use (remote.mjs); everything else is the
+// codebase explorer of the project `PREFIX`, read from that project's `site/` folder, where every
+// push of `main` writes it.
 //
-// Writes (D82): anyone may read; a GitHub user who belongs to `GITHUB_ORG` may also comment, file
-// tasks and attach images. The worker cannot run DEUS, so a write is stored in the remote's bucket
-// as a request, `<PREFIX>/inbox/<time>-<id>.sexp`, and its images as `<PREFIX>/assets/<sha256>`;
-// `deus inbox` applies the requests to the codebase. Without the OAuth settings the explorer stays
-// read-only.
+// Writes from the explorer (D82): anyone may read; a GitHub user who belongs to `GITHUB_ORG` may
+// also comment, file tasks and attach images. The worker cannot run DEUS, so a write is stored in
+// the project's folder as a request, `<PREFIX>/inbox/<time>-<id>.sexp`, and its images as
+// `<PREFIX>/assets/<sha256>`; `deus inbox` applies the requests to the codebase. Without the OAuth
+// settings the explorer stays read-only.
+
+import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
 const SESSION_DAYS = 7;
@@ -23,6 +26,9 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     try {
+      if (url.pathname === '/v1' || url.pathname.startsWith('/v1/')) {
+        return await remoteApi(request, env, ctx, url);
+      }
       if (url.pathname.startsWith('/auth/')) {
         return await auth(request, env, url);
       }
@@ -42,13 +48,6 @@ export default {
   },
 };
 
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-
 //
 // The static site.
 //
@@ -61,10 +60,17 @@ const site = async (request, env, ctx, url) => {
   if (cached) {
     return cached;
   }
-  const upstream = await fetch(`${env.ORIGIN.replace(/\/$/, '')}${path}`);
-  const response = new Response(upstream.body, upstream);
-  response.headers.set('cache-control', `public, max-age=${MAX_AGE}`);
-  if (upstream.ok && cache) {
+  const object = env.BUCKET && !path.includes('..') ? await env.BUCKET.get(`${prefix(env)}/site${path}`) : null;
+  if (!object) {
+    return new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
+  }
+  const response = new Response(object.body, {
+    headers: {
+      'content-type': object.httpMetadata?.contentType ?? 'application/octet-stream',
+      'cache-control': `public, max-age=${MAX_AGE}`,
+    },
+  });
+  if (cache) {
     ctx.waitUntil(cache.put(key, response.clone()));
   }
   return response;
@@ -474,12 +480,6 @@ const parseSexp = (source) => {
 // Helpers.
 //
 
-const json = (value, status = 200) =>
-  new Response(JSON.stringify(value), {
-    status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
-  });
-
 const redirect = (location, cookies = []) => {
   const headers = new Headers({ location, 'cache-control': 'no-store' });
   for (const value of cookies) {
@@ -501,8 +501,6 @@ const readCookie = (request, name) => {
 };
 
 const randomId = () => hex(crypto.getRandomValues(new Uint8Array(16)));
-
-const hex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 const base64url = (bytes) =>
   btoa(String.fromCharCode(...bytes))
