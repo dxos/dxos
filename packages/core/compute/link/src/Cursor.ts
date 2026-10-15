@@ -189,17 +189,46 @@ export const readSnapshot = <T extends object>(cursor: ExternalCursor, foreignId
 };
 
 /**
- * Writes `cursor.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
- * safe under ECHO's structural-sharing semantics.
+ * Writes `cursor.spec.snapshots[foreignId] = snapshot`, skipping the write when the stored snapshot is
+ * already equal. Every assignment is permanent Automerge history on the cursor, and syncs call this for
+ * every item on every run, so the write must cost O(changed entry), never O(map) or O(unchanged).
  */
 export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapshot: object): void => {
+  if (cursor.spec.kind === 'external' && snapshotEquals(readSnapshot(cursor, foreignId), snapshot)) {
+    return;
+  }
   Obj.update(cursor, (cursor) => {
     if (cursor.spec.kind !== 'external') {
       return;
     }
-    const existing = (cursor.spec.snapshots ?? {}) as Record<string, unknown>;
-    cursor.spec.snapshots = { ...existing, [foreignId]: snapshot };
+    if (cursor.spec.snapshots === undefined) {
+      cursor.spec.snapshots = { [foreignId]: snapshot };
+    } else {
+      cursor.spec.snapshots[foreignId] = snapshot;
+    }
   });
+};
+
+/** Structural equality over snapshot values, treating an `undefined` field as absent (ECHO drops them). */
+const snapshotEquals = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (typeof left !== 'object' || typeof right !== 'object' || left === null || right === null) {
+    return false;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => snapshotEquals(value, right[index]))
+    );
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const keys = new Set([...Object.keys(leftRecord), ...Object.keys(rightRecord)]);
+  return [...keys].every((key) => snapshotEquals(leftRecord[key], rightRecord[key]));
 };
 
 /**
