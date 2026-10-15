@@ -1717,7 +1717,7 @@ patchedDependencies:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
   memory-pager@1.5.0:
-    hash: 6c7595930d1a27374888086e4a5f6da4db7befe25f1f6263b94b5d0782fdb4dd
+    hash: 21c9214e21930a792429b9613bd1e4ee15578beeb2e326e626477e01da37f248
     path: patches/memory-pager@1.5.0.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
@@ -62601,7 +62601,7 @@ snapshots:
       inherits: 2.0.4
       inspect-custom-symbol: 1.1.1
       last-one-wins: 1.0.4
-      memory-pager: 1.5.0(patch_hash=6c7595930d1a27374888086e4a5f6da4db7befe25f1f6263b94b5d0782fdb4dd)
+      memory-pager: 1.5.0(patch_hash=21c9214e21930a792429b9613bd1e4ee15578beeb2e326e626477e01da37f248)
       merkle-tree-stream: 4.0.0
       nanoguard: 1.3.0
       nanoresource: 1.3.0
@@ -64363,7 +64363,7 @@ snapshots:
     dependencies:
       fs-monkey: 1.0.3
 
-  memory-pager@1.5.0(patch_hash=6c7595930d1a27374888086e4a5f6da4db7befe25f1f6263b94b5d0782fdb4dd): {}
+  memory-pager@1.5.0(patch_hash=21c9214e21930a792429b9613bd1e4ee15578beeb2e326e626477e01da37f248): {}
 
   meow@9.0.0:
     dependencies:
@@ -68180,7 +68180,7 @@ snapshots:
 
   sparse-bitfield@3.0.3:
     dependencies:
-      memory-pager: 1.5.0(patch_hash=6c7595930d1a27374888086e4a5f6da4db7befe25f1f6263b94b5d0782fdb4dd)
+      memory-pager: 1.5.0(patch_hash=21c9214e21930a792429b9613bd1e4ee15578beeb2e326e626477e01da37f248)
 
   spawn-wrap@3.0.0:
     dependencies:
