@@ -22,6 +22,10 @@
     flex-direction: column;
     align-items: stretch;
   }
+  /* In a toolbar, which adds no gap between its items, a group adds none between its own either. */
+  .dx-toolbar > .dx-toggle-group {
+    gap: 0;
+  }
   .dx-toolbar > .dx-toggle-group > .dx-control:not([data-square]) {
     margin-inline: var(--dx-control-inset);
   }

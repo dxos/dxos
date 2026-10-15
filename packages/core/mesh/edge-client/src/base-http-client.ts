@@ -6,7 +6,14 @@ import { sleep } from '@dxos/async';
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
+import {
+  EDGE_CLIENT_TAG_HEADER,
+  EDGE_CLIENT_TOO_OLD,
+  EdgeAuthChallengeError,
+  EdgeCallFailedError,
+  EdgeClientTooOldError,
+  type EdgeFailure,
+} from '@dxos/protocols';
 
 import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
@@ -155,27 +162,7 @@ export abstract class BaseHttpClient {
         log('call', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
-        if (response.ok) {
-          const contentType = response.headers.get('Content-Type') ?? '';
-          // No-content responses (204, empty body, non-JSON) — return undefined.
-          if (
-            response.status === 204 ||
-            response.headers.get('Content-Length') === '0' ||
-            !contentType.includes('application/json')
-          ) {
-            return undefined as T;
-          }
-          const body = await response.clone().json();
-          if (typeof body !== 'object' || body === null) {
-            return body;
-          }
-          if (!('success' in body)) {
-            return body;
-          }
-          if (body.success) {
-            return body.data;
-          }
-        } else if (response.status === 401 && hasVpChallenge(response) && !handledAuth) {
+        if (response.status === 401 && hasVpChallenge(response) && !handledAuth) {
           // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets a
           // VP challenge on its own 401s; upstream-forwarded 401s carry none, or carry an
           // unrelated scheme.
@@ -185,19 +172,36 @@ export abstract class BaseHttpClient {
         }
 
         const contentType = response.headers.get('Content-Type') ?? '';
-        const body: EdgeFailure = contentType.startsWith('application/json')
-          ? await response.clone().json()
-          : undefined;
+        const isJson = contentType.includes('application/json');
+        // No-content responses (204, empty body, non-JSON) — return undefined.
+        if (response.ok && (response.status === 204 || response.headers.get('Content-Length') === '0' || !isJson)) {
+          return undefined as T;
+        }
+
+        // One read for both branches: an OK envelope that failed falls through with this body.
+        const text = isJson ? await response.text() : undefined;
+        const parsed = text === undefined ? undefined : JSON.parse(text);
+        if (response.ok) {
+          if (typeof parsed !== 'object' || parsed === null || !('success' in parsed)) {
+            return parsed;
+          }
+          if (parsed.success) {
+            return parsed.data;
+          }
+        }
+        const body: EdgeFailure | undefined = parsed;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 
         if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
           processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
+        } else if (body?.success === false && body.data?.type === EDGE_CLIENT_TOO_OLD) {
+          processingError = new EdgeClientTooOldError(body, response.status);
         } else if (body?.success === false) {
           processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
           invariant(!response.ok, 'Expected response to not be ok.');
-          processingError = await EdgeCallFailedError.fromHttpFailure(response);
+          processingError = await EdgeCallFailedError.fromHttpFailure(response, text);
         }
       } catch (error: any) {
         // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
@@ -293,12 +297,16 @@ export abstract class BaseHttpClient {
    * device with no HALO chain (mid-invitation), and without this the rejection would surface from
    * `_call` as a failed request — turning a call that used to succeed unauthenticated into an error.
    */
-  private _prefetchAuthHeader(): Promise<void> {
+  protected _prefetchAuthHeader(): Promise<void> {
     if (this._authPrefetch) {
       return this._authPrefetch;
     }
     const prefetch: Promise<void> = this._prefetchAuthHeaderOnce()
       .catch((err) => {
+        // Unauthenticated would only be refused again, and silently; the caller has to see it.
+        if (err instanceof EdgeClientTooOldError) {
+          throw err;
+        }
         log.verbose('auth prefetch failed; proceeding unauthenticated', { err });
       })
       .finally(() => {

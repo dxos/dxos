@@ -164,7 +164,8 @@ export const parseDuration = (duration: string | number): number | undefined => 
 
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
-const parseTime = (value: string | number): number | undefined => {
+/** Parses an epoch-ms number or an ISO timestamp. */
+export const parseTime = (value: string | number): number | undefined => {
   const time = typeof value === 'number' ? value : Date.parse(value);
   return Number.isNaN(time) ? undefined : time;
 };

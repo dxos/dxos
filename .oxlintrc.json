@@ -62,6 +62,7 @@
     "@dxos/eslint-plugin-rules/operation-key-shape": "error",
     "@dxos/eslint-plugin-rules/prefer-sizing-utilities": "warn",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/no-error-class-name": "error",
     "@dxos/eslint-plugin-rules/no-similar-sibling-files": [
       "error",
       {
@@ -83,8 +84,6 @@
           "packages/plugins/plugin-support/src/hooks/useTours.ts",
           "packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts",
           "packages/sdk/app-toolkit/src/app-framework/AppCapability.ts",
-          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shape.tsx",
-          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shapes.tsx",
           "packages/ui/react-ui-menu/src/components/ActionLabel.tsx",
           "packages/ui/react-ui-menu/src/components/action-label.ts",
           "packages/ui/react-ui/src/providers/ThemeProvider/IconRegistry.tsx",

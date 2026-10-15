@@ -18,6 +18,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import {
   FeedTraceSink,
   ProcessManager,
+  ProcessOperationInvoker,
   RemoteProcessManager,
   RemoteTraceMonitor,
   TriggerDispatcher,
@@ -101,7 +102,7 @@ export type AssistantTestServices =
   | Operation.Service
   | ProcessManager.Service
   | RemoteProcessManager.Service
-  | ProcessManager.ProcessOperationInvoker.Service
+  | ProcessOperationInvoker.Service
   | Process.ManagerService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
@@ -139,7 +140,7 @@ export const AssistantTestLayer = (
   return Layer.empty.pipe(
     // Captures must sit above the layers they read (a provideMerge chain feeds upward).
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
-    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+    Layer.provideMerge(ProcessOperationInvoker.layer),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(UnifiedProcessManager.layer),
     // A local test stack has no EDGE, so both the manager's remote half and `location: 'edge'` see

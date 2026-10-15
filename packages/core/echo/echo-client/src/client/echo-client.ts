@@ -12,7 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { type BranchStore } from '../core-db/index.ts';
+import { type BranchStore, type DocumentRetention } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
@@ -57,6 +57,9 @@ export type ConstructDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Which loaded object documents the database keeps in memory. */
+  documentRetention?: DocumentRetention;
 };
 
 /**
@@ -116,16 +119,21 @@ export class EchoClient extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
 
-    this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-      service: this._queryService,
+    this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(this._queryService);
+    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+  }
+
+  #createIndexQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
+    return new IndexQuerySourceProvider({
+      service,
       runtime: this._runtime,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
         updateEvent: this._objectsUpdated,
+        subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
     });
-    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -151,6 +159,7 @@ export class EchoClient extends Resource {
     preloadSchemaOnOpen,
     spaceKey,
     branchStore,
+    documentRetention,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -165,6 +174,7 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
       branchStore,
+      documentRetention,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
@@ -223,15 +233,7 @@ export class EchoClient extends Resource {
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
-      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-        service: this._queryService,
-        runtime: this._runtime,
-        objectLoader: {
-          loadObject: this._loadObjectFromDocument.bind(this),
-          updateEvent: this._objectsUpdated,
-        },
-        graph: this._graph,
-      });
+      this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(queryService);
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
 
@@ -250,6 +252,14 @@ export class EchoClient extends Resource {
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }
+  }
+
+  private _subscriptionIds(spaceIds: readonly SpaceId[]): string[] {
+    const databases =
+      spaceIds.length > 0
+        ? spaceIds.flatMap((spaceId) => this._databases.get(spaceId) ?? [])
+        : [...this._databases.values()];
+    return databases.map((db) => db._entityManager._repoProxy.subscriptionId);
   }
 
   private async _loadObjectFromDocument({

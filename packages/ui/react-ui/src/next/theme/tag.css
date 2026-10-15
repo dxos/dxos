@@ -16,8 +16,11 @@
     gap: var(--dx-control-inset);
     flex-shrink: 0;
     max-width: 100%;
-    height: calc(var(--dx-control-size) - 2 * var(--dx-control-inset));
-    padding-inline: var(--dx-gap-size);
+    /* The line box alone: a tag sits in a row of text, so it adds no block inset of its own. */
+    height: var(--dx-label-line-height);
+    /* Half the gap: a tag is a label, not a control, so it takes less inset than a button. */
+    --dx-tag-padding: calc(var(--dx-gap-size) / 2);
+    padding-inline: var(--dx-tag-padding);
     border-radius: var(--radius-sm, 0.25rem);
     font-size: var(--dx-label-font-size);
     line-height: var(--dx-label-line-height);
@@ -96,9 +99,9 @@
     gap: inherit;
     align-self: stretch;
     min-width: 0;
-    margin-inline-start: calc(-1 * var(--dx-gap-size));
+    margin-inline-start: calc(-1 * var(--dx-tag-padding));
     padding-block: 0;
-    padding-inline: var(--dx-gap-size) 0;
+    padding-inline: var(--dx-tag-padding) 0;
     border-radius: inherit;
     background: transparent;
   }

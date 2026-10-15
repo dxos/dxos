@@ -9,6 +9,7 @@ import React, { useCallback } from 'react';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { Terra } from '#types';
 
@@ -123,7 +124,11 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
   return (
     // Semi-transparent floating surface (mirrors plugin-voxel's canvas-overlay HUD chrome) so
     // labels stay legible over the rendered planet regardless of terrain color underneath.
-    <div className='flex flex-col gap-4 p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'>
+    <Layout.Flex
+      column
+      gap='lg'
+      classNames='p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'
+    >
       <Form.Root<TerraFormValues>
         schema={FORM_SCHEMA}
         values={config}
@@ -140,7 +145,7 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
       <Button.Root icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
       <Input.Checkbox onCheckedChange={({ checked }) => handleWaterSheenChange(checked === true)} label='Water sheen' />
-    </div>
+    </Layout.Flex>
   );
 };
 

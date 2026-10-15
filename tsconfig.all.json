@@ -268,6 +268,9 @@
       "path": "packages/common/i18n/tsconfig.json"
     },
     {
+      "path": "tools/ident/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
@@ -484,6 +487,9 @@
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-handpan/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
     },
     {
@@ -539,6 +545,9 @@
     },
     {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-meeting-recorder/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
@@ -694,6 +703,9 @@
       "path": "packages/plugins/plugin-typesafe/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-uml/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
@@ -767,9 +779,6 @@
     },
     {
       "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-card/tsconfig.json"
@@ -898,7 +907,13 @@
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/sparql-sqlite/tsconfig.json"
+    },
+    {
       "path": "packages/common/sql-sqlite/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-agent/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"

@@ -152,4 +152,35 @@ describe('nudge', () => {
     const result = nudge([edge(200), edge(200)], { obstacles });
     expect(result.map((points) => points[0].x)).toEqual([64, 64]);
   });
+
+  test('separates a shared run even when that costs one crossing', ({ expect }) => {
+    // Both leave the left side of one box; the line from the upper port turns off first, so either order crosses once.
+    const box: Rect = { x: 100, y: 0, w: 100, h: 40 };
+    const near: Rect = { x: 300, y: 80, w: 100, h: 40 };
+    const far: Rect = { x: 300, y: 180, w: 100, h: 40 };
+    const result = nudge([
+      {
+        points: [
+          { x: 100, y: 10 },
+          { x: 50, y: 10 },
+          { x: 50, y: 100 },
+          { x: 300, y: 100 },
+        ],
+        source: box,
+        target: near,
+      },
+      {
+        points: [
+          { x: 100, y: 30 },
+          { x: 50, y: 30 },
+          { x: 50, y: 200 },
+          { x: 300, y: 200 },
+        ],
+        source: box,
+        target: far,
+      },
+    ]);
+    expect(overlapping(result[0], result[1])).toBe(false);
+    expect(result.every(orthogonal)).toBe(true);
+  });
 });

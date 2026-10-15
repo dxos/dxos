@@ -306,7 +306,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   return (
     // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
     <li ref={listRef} className='dx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
-      {item.icon && <Icon.Icon icon={item.icon} />}
+      {item.icon && <Icon.Icon icon={item.icon} hue={item.iconHue} />}
       <span className='dx-menu-item-text'>{Theme.toLocalizedString(item.label, t)}</span>
     </li>
   );

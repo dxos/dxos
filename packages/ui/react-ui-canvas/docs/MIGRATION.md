@@ -1,6 +1,7 @@
 # Migrating canvas-editor and canvas-compute to the scene engine
 
-Status: gap analysis and plan (2026-09-20). Inputs: `DESIGN.md` (the engine), the source of
+Status: M1–M5 done: `react-ui-canvas-editor` and `src/archive` are deleted and the package root exports the scene engine (updated 2026-10-09).
+Original gap analysis and plan: 2026-09-20. Inputs: `DESIGN.md` (the engine), the source of
 `packages/ui/react-ui-canvas-editor` and `packages/ui/react-ui-canvas-compute` on `main`, and their consumers
 (`plugin-conductor`, `plugin-debug`). Every feature the two packages implement is mapped to what the engine has
 today, what it needs, and which phase supplies it.
@@ -197,10 +198,69 @@ for M1–M3.
   scope still wired by `KeyboardContainer`; Composer's `optimizeDeps` regenerated. `plugin-debug`'s presets are
   untouched **by design** — they write shapes into `layout` exactly as the editor did, which is what the store
   reads. canvas-editor and canvas-compute keep exporting until M5.
-- **M5: retire.** Delete `react-ui-canvas-editor` and the old `react-ui-canvas` `Canvas` exports (DESIGN phase 4);
-  `react-ui-canvas-compute` keeps only the compute-specific code (controller, projection, shapes, bullets). Text
-  inline editing and undo (phase 2) are independent of this step but should precede the user-facing switch in M4
-  if conductor's users rely on note editing; today `onEdit` is unreachable in the editor, so they do not.
+- **M5: retire.** Delete `react-ui-canvas-editor` and `src/archive` (DESIGN phase 4); `react-ui-canvas-compute`
+  keeps only the compute-specific code. What still depends on them, and the steps, are §5.
 
 Rough size: M1 small (types + tests), M2 medium (UI, the largest surface), M3 medium (mostly moves), M4 medium
-(store + plugin), M5 small. Every step is verifiable with the existing stories plus one new story per step.
+(store + plugin), M5 large: six steps, one of them the rewrite of thirty shapes (§5.3). Every step is verifiable with the existing stories plus one new story per step.
+
+## 5. M5: removing `react-ui-canvas-editor` and `src/archive`
+
+Dependency map as of 2026-10-08 (imports counted per name, `src` only). Nothing outside the packages below imports
+either; the archive is re-exported from the package root (`src/index.ts`) and the `./types` entry point. The editor is
+also a declared workspace dependency (`package.json` and a `tsconfig.json` reference) of `react-ui-canvas-compute`,
+`plugin-conductor` and `plugin-debug`, is listed in `tsconfig.all.json`, and is named in app-framework's
+`vite-plugin/packages.ts`; step 6 removes each.
+
+### 5.1 Who still uses `src/archive`
+
+| Consumer                  | What                                                                                                                                                           | Replacement                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `react-ui-canvas-editor`  | `Canvas`, `useCanvasContext` (7 files), `ProjectionMapper`, `Markers`, `useWheel`, `zoomTo`, `zoomInPlace`, `getRelativePoint`, `Point` / `Dimension` / `Rect` | None: it goes with the editor (§5.3).                                              |
+| `plugin-sequencer`        | `CellGrid` (`SequenceGrid`: `createCellGridAtoms`, `toggleCell`, the grid component and its headers), `ToggleMode`                                             | _Done:_ moved into `plugin-sequencer` (step 2), its only user.                     |
+| `react-ui-canvas-compute` | `Point`, `Dimension` (one file, `testing/`)                                                                                                                    | _Done:_ the engine's `Point` / `Size` from `@dxos/react-ui-canvas/scene` (step 1). |
+
+### 5.2 Who still uses `react-ui-canvas-editor`
+
+| Consumer                  | What                                                                                                                                                                                               | Replacement                                                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `plugin-conductor`        | `KeyboardContainer` (hotkey scope)                                                                                                                                                                 | A plain attention/hotkey wrapper in the plugin (step 5). `CanvasBoard` now comes from `react-ui-canvas-compute` (step 4). |
+| `plugin-debug`            | Nothing: `CanvasBoard` / `CanvasGraphModel` come from `react-ui-canvas-compute` and the grid-to-pixel helper is local (step 4).                                                                    | _Done._                                                                                                                   |
+| `react-ui-canvas-compute` | Nothing: it owns `CanvasBoard` (`src/types/`, also the `./types` entry point), `CanvasGraphModel` and `GraphMonitor`, and `testing/circuits.ts` has its own `createNote` and grid helper (step 4). | _Done._                                                                                                                   |
+
+### 5.3 Steps (one PR each)
+
+1. **Small imports off the archive.** _Done (2026-10-08)._ compute's `testing` takes the engine's `Point` / `Size`;
+   plugin-sequencer's `ToggleMode` moved with the cell grid (step 2). The editor is the archive's only consumer.
+2. **Move the cell grid.** _Done (2026-10-08)._ `archive/components/CellGrid` is now
+   `plugin-sequencer/src/components/CellGrid` (with its `viewport.test.ts`), and plugin-sequencer no longer depends on
+   `@dxos/react-ui-canvas`.
+3. **Shapes as `NodeDef`s.** _Done (2026-10-08)._ Each compute shape module exports a `NodeDef` built with
+   `defineComputeNode` (schema with `z`, palette group, factory, ports from `createPorts` / `createFunctionPorts` with
+   the anchors' ids, sides and offsets), and its component takes `ComputeNodeViewProps` (the engine's view props). The
+   frame chrome (`Box`) reads the def from the registry the scene renders with, so `ComputeContext.registry` and
+   plugin-conductor's `ShapeRegistry` are gone, as are `scene/defs.ts`'s adapter, `NodeView.tsx` and `ports.ts`.
+   The editor's `TextBox` became compute's own (`shapes/common/TextBox.tsx`): the engine's `TextPart` edits only an
+   opened part and focuses on mount, which an always-on input cannot use. Step 5's compute part is folded in.
+4. **Own the board type.** _Done (2026-10-08)._ `CanvasBoard` (schema, `CanvasGraphModel`, shape types) lives in
+   `react-ui-canvas-compute/src/types` (root and `./types` exports) under the same ECHO typename
+   `org.dxos.type.canvasBoard` and version `0.1.0`; `types/canvas-board.test.ts` round-trips a board as the editor saved
+   it through a test database. plugin-conductor, plugin-debug and `createEchoStore` import it from compute, and
+   `GraphMonitor` is defined beside `useGraphMonitor`. The editor keeps its own identical copy of `types/` until step 6
+   deletes it, since the editor must not depend on compute; both declare the same type, so only compute's is
+   registered by plugin-conductor.
+5. **Drop the legacy paths.** _Done (2026-10-09)._ Compute's part was done with step 3 (`compute.stories.tsx`,
+   `useComputeGraphController`, `ComputeShapeLayout`, `computeShapes`) and plugin-debug's with step 4. plugin-conductor's
+   `KeyboardContainer` is removed without a replacement: it only activated a `@dxos/react-focus` hotkey scope, which
+   nothing in the engine registers into, since `SceneView` handles every shortcut in the `onKeyDown` of its own focused
+   root — so the shortcuts already apply only to the board the user is in.
+6. **Delete.** Remove `packages/ui/react-ui-canvas-editor`, `src/archive`, the root `src/index.ts` re-export and the
+   `./types` entry point of `@dxos/react-ui-canvas` (the root export then is the scene engine); drop the editor from
+   Composer's `optimizeDeps`, the app-framework allowlist (`vite-plugin/packages.ts`), `tsconfig.all.json`, and the
+   `package.json` dependency and `tsconfig.json` reference of each consumer above (then `pnpm install`). A changeset marks the removal as breaking.
+   _Done (2026-10-09)._ `src/index.ts` is the engine's barrel and `src/scene.ts` re-exports it, so `@dxos/react-ui-canvas`
+   and `@dxos/react-ui-canvas/scene` are the same module list; the editor's `@antv/graphlib` / `@antv/layout` left the
+   catalog with it.
+
+Order: 1 and 2 are independent of the rest and unblock the archive's removal except for the editor. 3–5 retire the
+editor; 6 needs all of them. Sizes: 1 small, 2 small (a move), 3 large (thirty shapes), 4 medium, 5 small, 6 small.

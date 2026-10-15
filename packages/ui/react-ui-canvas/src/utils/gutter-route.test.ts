@@ -116,6 +116,55 @@ describe('gutter route', () => {
     }
   });
 
+  test('a wall wider than the search margin is still routed round', ({ expect }) => {
+    // Eleven cells wide across row 0, between two ends in column 0: the way round lies beyond its ends.
+    const wall = cellNode('wall', -5, 0, 11, 1);
+    const route = gutterRoute(
+      [wall],
+      spec,
+      { point: { x: 0, y: -128 }, side: 's' },
+      { point: { x: 0, y: 128 }, side: 'n' },
+    );
+    expect(route).toBeDefined();
+    const { x, y, width, height } = cellBounds({ col: -5, row: 0, spanX: 11, spanY: 1 }, spec);
+    for (const [from, to] of (route ?? []).slice(1).map((point, index) => [route?.[index] ?? point, point])) {
+      // No segment passes through the wall's interior.
+      const crosses =
+        Math.min(from.x, to.x) < x + width &&
+        Math.max(from.x, to.x) > x &&
+        Math.min(from.y, to.y) < y + height &&
+        Math.max(from.y, to.y) > y;
+      expect(crosses).toBe(false);
+    }
+  });
+
+  test('a distant shape adds no lines to the search', ({ expect }) => {
+    // A shape a million pitches away is no obstacle; the route between B and D is found as without it.
+    const far = cellNode('far', 1_000_000, 1_000_000);
+    const ends = [
+      { point: { x: -256, y: 0 }, side: 'e' },
+      { point: { x: -128, y: 0 }, side: 'w' },
+    ] as const;
+    const started = performance.now();
+    const route = gutterRoute([...nodes, far], spec, ...ends);
+    expect(performance.now() - started).toBeLessThan(1_000);
+    expect(route).toEqual(gutterRoute(nodes, spec, ...ends));
+  });
+
+  test('a chain of abutting shapes does not widen a local search', ({ expect }) => {
+    // A row of cells running far to the right, each within reach of the next: only a failed local search
+    // may follow the chain, and B to D routes without it.
+    const chain = Array.from({ length: 400 }, (_, index) => cellNode(`chain-${index}`, index, 3));
+    const ends = [
+      { point: { x: -256, y: 0 }, side: 'e' },
+      { point: { x: -128, y: 0 }, side: 'w' },
+    ] as const;
+    const started = performance.now();
+    const route = gutterRoute([...nodes, ...chain], spec, ...ends);
+    expect(performance.now() - started).toBeLessThan(1_000);
+    expect(route).toEqual(gutterRoute(nodes, spec, ...ends));
+  });
+
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
     const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>

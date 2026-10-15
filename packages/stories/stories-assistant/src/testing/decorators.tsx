@@ -20,7 +20,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
@@ -63,7 +62,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
-import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storybook-testing';
+import { type StoryDecoratorsProps, createStoryDecorators, resolveStorySpace } from '@dxos/storybook-testing';
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
@@ -353,8 +352,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       const invoker = yield* Capabilities.OperationInvoker;
       const { invoke } = invoker;
       const client = yield* ClientCapabilities.Client;
-      const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
-      invariant(space, 'No space available after initialization.');
+      const space = yield* resolveStorySpace(client);
 
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via
       // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
@@ -386,12 +384,16 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const project = space.db.add(Project.make({ name: agentOptions.project }));
           Obj.setParent(agent, project);
         }
+        const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+        invariant(chat, 'Agent chat not found.');
+        // An agent's chat runs on EDGE unless told otherwise; the harness runs its agents in the story.
+        Obj.update(chat, (chat) => {
+          chat.remote = false;
+        });
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
-          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
-          invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });

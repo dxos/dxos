@@ -20,11 +20,13 @@ export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }
 
   return (
     <Panel.Root role={role} width='document'>
-      <Panel.Body classNames='grid grid-rows-[3fr_1fr]'>
-        <Mixer dream={dream} engine={engine} />
-        <Layout.Flex column classNames='p-2'>
-          <Oscilloscope mode='waveform' active={playing} source={outputNode} />
-        </Layout.Flex>
+      <Panel.Body asChild>
+        <Layout.Grid rows={[3, 1]}>
+          <Mixer dream={dream} engine={engine} />
+          <Layout.Flex column classNames='p-2'>
+            <Oscilloscope mode='waveform' active={playing} source={outputNode} />
+          </Layout.Flex>
+        </Layout.Grid>
       </Panel.Body>
     </Panel.Root>
   );

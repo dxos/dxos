@@ -149,7 +149,7 @@ describe('AiRequest.Request.run (telemetry)', () => {
 
       const modelSpans = exporter.getFinishedSpans().filter(({ name }) => name.startsWith('LanguageModel.'));
       expect(modelSpans).toHaveLength(2);
-      expect(modelSpans.every((span) => span.attributes['gen_ai.system'] !== undefined)).toEqual(true);
+      expect(modelSpans.every((span) => span.attributes['gen_ai.provider.name'] !== undefined)).toEqual(true);
     }).pipe(
       Effect.provide(
         testLayer([{ parts: [toolCall('Echo', { value: 'hello' })] }, { parts: [text('Echoed the value.')] }]),

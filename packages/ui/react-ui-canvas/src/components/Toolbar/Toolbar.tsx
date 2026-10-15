@@ -28,7 +28,12 @@ export type ToolbarActions = {
   path: SceneId[];
   nameOf: (id: SceneId) => string;
   onPath: (index: number) => void;
+  /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
+  /** The view is in fit mode. */
+  fitting?: boolean;
+  /** Back to true size (100%), about the view's centre. */
+  zoomReset: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
   snap: boolean;
@@ -75,12 +80,13 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
     <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
       <Button.Root
         variant='ghost'
+        iconOnly
+        icon='ph--arrow-up--regular'
+        label='Up'
         disabled={path.length < 2}
         data-testid='toolbar-up'
         onClick={() => actions.onPath(path.length - 2)}
-      >
-        Up
-      </Button.Root>
+      />
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>
@@ -97,14 +103,23 @@ export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions;
 /** The camera: fit and zoom, beside its own numbers; nothing here changes the scene. */
 export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarProps) => {
   return (
-    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
+    <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
       <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
-        label={`Fit (${shortcutFor('fit')})`}
+        label={`Fit (${shortcutFor('fit')}): keep the scene framed until you pan or zoom`}
+        classNames={mx(actions.fitting && 'bg-primary-500/20')}
         data-testid='toolbar-fit'
         onClick={actions.fit}
+      />
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon='ph--number-square-one--regular'
+        label={`Actual size (${shortcutFor('zoomReset')})`}
+        data-testid='toolbar-zoom-reset'
+        onClick={actions.zoomReset}
       />
       <Button.Root
         variant='ghost'
@@ -137,7 +152,7 @@ export type ActionToolbarProps = Util.ThemedClassName<{
 /** Everything that changes the scene, plus snap, history, clipboard, creation and debug. */
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
-    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
+    <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
       <Button.Root
         variant='ghost'
         iconOnly
@@ -151,7 +166,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         variant='ghost'
         iconOnly
         icon='ph--frame-corners--regular'
-        label={`Guides (${shortcutFor('guides')}): show the page frame and the lattice cells`}
+        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
         classNames={mx(actions.guides && 'bg-primary-500/20')}
         data-testid='toolbar-guides'
         onClick={actions.toggleGuides}

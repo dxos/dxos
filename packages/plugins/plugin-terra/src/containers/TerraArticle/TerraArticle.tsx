@@ -377,7 +377,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
         </ActionToolbar>
       </Panel.Header>
       <Panel.Body asChild>
-        <div className='relative grow'>
+        <div className='relative'>
           {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
           <canvas

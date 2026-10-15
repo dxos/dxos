@@ -73,3 +73,17 @@ export const normalize = (predicate: string): string => {
   }
   return tokens.join(' ');
 };
+
+/**
+ * The display form of a predicate or an inverse: lowercase kebab-case (`Works at` → `works-at`, `Known by` →
+ * `known-by`), so labels the extractor, the ontology and a UI author each write read as one vocabulary. Unlike
+ * {@link normalize} it keeps the words as said (no stemming, no dropped copula), since it is shown, not matched.
+ * Idempotent.
+ */
+export const label = (predicate: string): string =>
+  predicate
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');

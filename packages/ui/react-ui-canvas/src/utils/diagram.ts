@@ -10,17 +10,8 @@
 import { type Scene as Diagram } from '@dxos/diagram';
 
 import { type NodeRegistry } from '../model/registry.ts';
-import {
-  type ElementId,
-  type Link,
-  type Node,
-  type Point,
-  type Scene,
-  isClassNode,
-  isEllipseNode,
-  isNoteNode,
-  isRectNode,
-} from '../model/types.ts';
+import { type ElementId, type Link, type Point, type Scene, isEllipseNode } from '../model/types.ts';
+import { nodeTitle } from './parts.ts';
 import { curvePoint, linkGeometry, smartPoints } from './route.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -38,19 +29,6 @@ export type DiagramObjects = {
  * removes both and stays injective, so distinct ids never merge into one owner.
  */
 const objectId = (id: ElementId): string => encodeURIComponent(id);
-
-const nodeText = (node: Node): string | undefined => {
-  if (isRectNode(node) || isEllipseNode(node)) {
-    return node.label;
-  }
-  if (isClassNode(node)) {
-    return node.name;
-  }
-  if (isNoteNode(node)) {
-    return node.text;
-  }
-  return undefined;
-};
 
 /** The polyline a link is drawn along, in scene coordinates. */
 const linkPoints = (scene: Scene, registry: NodeRegistry, link: Link): Point[] | undefined => {
@@ -93,7 +71,7 @@ export const toDiagramObjects = (scene: Scene, registry: NodeRegistry): DiagramO
           y,
           w: width,
           h: height,
-          ...(node.style?.guide ? {} : { text: nodeText(node) }),
+          ...(node.style?.guide ? {} : { text: nodeTitle(registry, node) }),
         },
       ],
     });

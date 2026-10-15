@@ -13,11 +13,12 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as UiToolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Channel } from '@dxos/types';
-import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
+import { groupHoverControlItemWithTransition } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -69,7 +70,7 @@ export const Toolbar = ({
 
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
+    <Layout.Flex justify='center' classNames={['z-20 m-8', autoHideControls && groupHoverControlItemWithTransition]}>
       <UiToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
@@ -104,10 +105,10 @@ export const Toolbar = ({
         />
 
         {(participants !== undefined && (
-          <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-fg-subtle'>
+          <Layout.Flex center gap='sm' classNames='w-[5rem] text-xs text-fg-subtle'>
             <Icon.Icon icon='ph--users--regular' />
             <div>{participants}</div>
-          </div>
+          </Layout.Flex>
         )) || <UiToolbar.Separator variant='gap' />}
 
         {inRoom && (
@@ -177,7 +178,7 @@ export const Toolbar = ({
           />
         )}
       </UiToolbar.Root>
-    </div>
+    </Layout.Flex>
   );
 };
 

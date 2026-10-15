@@ -18,8 +18,10 @@
  * Tailwind CSS regeneration, which invalidates `main.css` through its
  * import graph and produces a 3–5-ping HMR storm per icon-sprite write
  * during cold-start (icons land in tight bursts as plugin chunks stream
- * in). Explicit `@source` directives below replace the auto-scan with a
- * stable, source-only set.
+ * in). The entry that imports this file declares the scan paths instead:
+ * `workspace.css` in this repo, or the stylesheet `ThemePlugin` generates for
+ * an installed copy, since paths relative to this file would reach the
+ * consumer's whole `node_modules`.
  */
 @import 'tailwindcss' source(none);
 
@@ -48,45 +50,6 @@
 
 /* Third-party integrations */
 @import './css/integrations/codemirror.css';
-
-/**
- * With `source(none)` on the Tailwind import above, these are the *only*
- * paths Tailwind scans for utility classes. Cover every workspace source
- * directory so lazy-loaded plugin / UI / SDK chunks don't surface new
- * utilities mid-session, and root-level HTML entrypoints (index.html,
- * internal.html, …) are visible too.
- *
- * Paths are relative to this file (`packages/ui/ui-theme/src/main.css`):
- *   ../../../          → `packages/`
- *   ../../../../tools/ → `tools/`
- *
- * Tailwind ignores `node_modules` and common build/output dirs by default,
- * so a broad workspace glob is safe *for scanning*.
- *
- * NOTE: Tailwind's scanner respects `.gitignore` (so `dist/` is never
- * scanned), but it hands Vite a coarse `dir-dependency` glob and Vite
- * re-expands that itself, ignoring only `node_modules`. That re-expansion
- * sweeps `dist/**` `.d.ts` files into the watch set and causes a `main.css`
- * HMR storm on every package rebuild. Build outputs are excluded from the
- * dev watcher in `plugins/ThemePlugin.ts` (`server.watch.ignored`) rather
- * than here, because `@source not` does NOT propagate to the glob Vite
- * re-expands.
- */
-@source '../../../**/*.{ts,tsx,html}';
-@source '../../../../tools/**/*.{ts,tsx,html}';
-
-/* Plain stylesheets outside this build (Next's theme, plugin overrides): scanning them keeps the theme variables they read (`var(--color-*)`) from being tree-shaken once no utility class names them. */
-@source '../../../**/src/**/*.css';
-
-/**
- * Exclude generated/static data files that have no Tailwind classes but are
- * large enough to dominate scan time. The oxide scanner tokenizes every byte;
- * a single 5MB geo-data file can pin Vite at 100% CPU for tens of seconds on
- * a cold start.
- */
-@source not '../../../ui/react-ui-geo/data/**';
-@source not '../../../ui/solid-ui-geo/data/**';
-@source not '../../../apps/composer-app/src/plugins/welcome/components/Welcome/hero-image.ts';
 
 /**
  * Force-emit CSS variables for the full color palette for all:

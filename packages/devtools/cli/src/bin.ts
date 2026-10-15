@@ -33,6 +33,7 @@ import {
   commandConfigLayer,
   debug,
   dx,
+  evaluateCommand,
   fn,
   hub,
   mailbox,
@@ -193,6 +194,7 @@ const program = Effect.gen(function* () {
       //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
       // Note: ClientPlugin already contributes ClientService via its layer, so we don't need to provide it again.
       chat,
+      evaluateCommand,
       fn,
       mailbox,
       mcp,

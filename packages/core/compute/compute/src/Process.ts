@@ -4,15 +4,16 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import type * as Exit from 'effect/Exit';
+import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Rpc from 'effect/rpc/Rpc';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
-import type * as Stream from 'effect/Stream';
+import * as Stream from 'effect/Stream';
 
 import { Annotation, type Database } from '@dxos/echo';
 import { type SpaceId, URI } from '@dxos/keys';
@@ -162,7 +163,7 @@ export interface Filter {
  * Whether `info` satisfies `filter`. Exported so every {@link Manager} filters identically rather
  * than each implementation growing its own notion of a match.
  */
-export const matchesFilter = (info: Process, filter: Filter = {}): boolean => {
+export const matchesFilter = (info: Data, filter: Filter = {}): boolean => {
   if (filter.key !== undefined && info.key !== filter.key) {
     return false;
   }
@@ -190,10 +191,20 @@ export const listFromTree =
   (filter?: Filter): Effect.Effect<readonly Process[]> =>
     Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
+export interface SubscribeEphemeralOptions {
+  /**
+   * Replay the buffered events before streaming new ones (the default), so a reader attaching mid-turn
+   * sees the turn so far. A reader that subscribes BEFORE causing the work it wants to follow passes
+   * `false`: the buffer then holds only earlier turns, which would read as the new one.
+   */
+  readonly replay?: boolean;
+}
+
 /**
- * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
+ * The plain fields of a {@link Process}: what a process tree holds, what crosses the wire, and what
+ * {@link make} turns back into a process.
  */
-export interface Process {
+export interface Data {
   readonly pid: ID;
   readonly parentPid: ID | null;
 
@@ -253,10 +264,6 @@ export interface Process {
   };
 }
 
-//
-// Handles.
-//
-
 export interface Status {
   readonly state: State;
   readonly exit: Option.Option<Exit.Exit<void>>;
@@ -265,25 +272,14 @@ export interface Status {
   readonly completedAt: Option.Option<Date>;
 }
 
-export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
-  readonly pid: ID;
-  readonly parentId: ID | null;
-
-  /**
-   * Process definition key ({@link Operation.Durable.key}) for this process.
-   */
-  readonly key: string;
-
-  /**
-   * Parameters of the process.
-   */
-  readonly params: Params;
-
-  /**
-   * What the process is running on behalf of. See {@link Environment}.
-   */
-  readonly environment: Environment;
-
+/**
+ * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
+ *
+ * Its {@link Data} fields are plain values; the rest are live members that talk to the runtime.
+ * A process read from a tree or list is a cheap snapshot that reaches its runtime only once a
+ * live member is used (see {@link make}).
+ */
+export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = any> extends Data {
   submitInput(input: _Input): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<_Output>;
 
@@ -297,9 +293,9 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
    * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
-   * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).
+   * on dispose.
    */
-  subscribeEphemeral(): Stream.Stream<Trace.Message>;
+  subscribeEphemeral(options?: SubscribeEphemeralOptions): Stream.Stream<Trace.Message>;
 
   terminate(): Effect.Effect<void>;
   readonly status: Status;
@@ -347,22 +343,23 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
+  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Process<_Input, _Output, _Rpcs>>;
 
   readonly rpc: RpcClient.RpcClient<_Rpcs>;
 }
 
-export namespace Handle {
-  // Widened to `any` Rpcs so the implemented `rpc: RpcClient<any>` is assignable
-  // regardless of a handle's concrete RPC group (variance, see design spec §4.4).
-  export type Any = Handle<any, any, any>;
-}
+// `any` Rpcs keeps every process assignable regardless of its concrete RPC group (variance, see design spec §4.4).
+export type Any = Process<any, any, any>;
 
 /**
  * Options for spawning a process.
  */
 export interface SpawnOptions {
-  /** Parent process ID — child inherits the parent's trace context. */
+  /**
+   * Parent process ID — child inherits the parent's trace context.
+   * Inside a process, its {@link ManagerService} defaults this to that process; pass `undefined`
+   * explicitly to spawn a detached process.
+   */
   readonly parentProcessId?: ID;
 
   /**
@@ -473,20 +470,81 @@ export interface Manager {
   spawn<I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
     options?: SpawnOptions & LocationOptions,
-  ): Effect.Effect<Handle<I, O, Rpcs>>;
+  ): Effect.Effect<Process<I, O, Rpcs>>;
 
   /**
-   * Handles on the processes at `options.location` matching `options`. Dormant entries require
-   * {@link Handle.hydrate} before inputs can be submitted.
+   * Live processes at `options.location` matching `options`. Dormant entries require
+   * {@link Process.hydrate} before inputs can be submitted.
    *
    * Dies when the location is a remote runtime that offers no process control.
    */
-  handles(options?: ListOptions & LocationOptions): Effect.Effect<readonly Handle.Any[]>;
+  handles(options?: ListOptions & LocationOptions): Effect.Effect<readonly Any[]>;
+
+  /**
+   * The live process `pid` at `options.location`. A process that has already exited
+   * replays its outputs, so its result stays readable after the exit.
+   *
+   * Dies when no such process is known, or when the location is a remote runtime that offers no
+   * process control.
+   */
+  attach<I, O, Rpcs extends Rpc.Any = never>(pid: ID, options?: LocationOptions): Effect.Effect<Process<I, O, Rpcs>>;
 }
+
+/**
+ * The first output of a single-output process (e.g. one running an operation), failing with the
+ * process's own cause when it fails without one.
+ */
+export const awaitOutput = <O>(handle: Process<any, O, any>): Effect.Effect<O> =>
+  handle.subscribeOutputs().pipe(
+    Stream.runHead,
+    Effect.flatMap(
+      Option.match({
+        onSome: Effect.succeed,
+        onNone: () => {
+          switch (handle.status.state) {
+            case State.FAILED:
+              return Effect.failCause(
+                handle.status.exit.pipe(
+                  Option.flatMap(Exit.getCause),
+                  Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
+                ),
+              );
+            case State.TERMINATED:
+              return Effect.die('Operation was terminated');
+            case State.SUCCEEDED:
+              return Effect.die('Process produced no output');
+            default:
+              // Outputs close on a live process only when its manager suspends it (app shutdown): the
+              // wait was cut short rather than answered.
+              return Effect.interrupt;
+          }
+        },
+      }),
+    ),
+  );
 
 export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Process.ManagerService',
 ) {}
+
+/**
+ * Spawns `durable` through the ambient {@link ManagerService} and submits `input`; read its result with
+ * {@link awaitOutput}.
+ */
+export const spawn = <I, O, Rpcs extends Rpc.Any = never>(
+  durable: Operation.Durable<I, O, any, Rpcs>,
+  input: I,
+  options?: SpawnOptions & LocationOptions,
+): Effect.Effect<Process<I, O, Rpcs>, never, ManagerService> =>
+  Effect.gen(function* () {
+    const manager = yield* ManagerService;
+    const handle = yield* manager.spawn(durable, {
+      ...(durable.name !== undefined ? { name: durable.name } : {}),
+      ...options,
+    });
+    yield* handle.submitInput(input);
+    return handle;
+  });
 
 /**
  * New process is spawned.

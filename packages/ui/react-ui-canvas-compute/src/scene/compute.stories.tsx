@@ -11,7 +11,6 @@ import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
   type FreehandProjectionOptions,
   SceneView,
@@ -28,7 +27,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DiagnosticOverlay } from '../components/index.ts';
 import { type ComputeGraphController, createComputeGraphController } from '../graph/index.ts';
 import { ComputeContext } from '../hooks/index.ts';
-import { computeShapes } from '../registry.ts';
+import { computeNodeRegistry } from '../registry.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -43,7 +42,6 @@ import {
 } from '../testing/index.ts';
 import { createStoryRuntime } from '../testing/services.ts';
 import { Bullets } from './Bullets.tsx';
-import { computeNodeRegistry } from './defs.ts';
 import { createComputeProjection } from './projection.ts';
 import { sceneFromCircuit } from './scene.ts';
 
@@ -71,7 +69,6 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     [controller],
   );
   const projection = useSceneProjection({ store, atoms, createProjection });
-  const shapeRegistry = useMemo(() => new ShapeRegistry(computeShapes), []);
   // A function body opening grows its node through the model, so links re-route with it.
   const resize = useCallback(
     (id: string, delta: number) => {
@@ -103,7 +100,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
 
   return (
     <div className='grid grid-cols-[1fr_360px] dx-fill'>
-      <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
+      <ComputeContext.Provider value={{ controller, resize }}>
         <div className={sidebar ? 'relative flex overflow-hidden' : 'relative flex overflow-hidden col-span-2'}>
           <SceneView.Root
             store={store}
@@ -188,7 +185,7 @@ const SidebarJson = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-canvas-compute/scene',
+  title: 'ui/react-ui-canvas-compute/Circuits',
   render: DefaultStory,
   decorators: [
     withRegistry,

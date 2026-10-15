@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -16,15 +17,26 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { type RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import { AgentOperation, FactEntry, Goal, Memory, MemoryOperation, Mode, Relay } from '#types';
+import {
+  AgentOperation,
+  BrainService,
+  ChatParticipant,
+  Goal,
+  MemoryOperation,
+  Mode,
+  Relay,
+  TriggerOperation,
+} from '#types';
 
-import { forgetFact } from './annotations.ts';
+import * as BrainInspection from '../brain/BrainInspection.ts';
+import { TEST_MEMBERS, makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -51,10 +63,14 @@ const FACTS = [
   { subject: 'Josiah', predicate: 'reviews', object: 'fix', quote: 'I will review the fix.', force: 'commissive' },
 ];
 
+/** Extraction calls made so far, so a test can tell a read that reached the model from one that did not. */
+const extractions = { count: 0 };
+
 const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
   if (!request.text.includes(EXTRACTION_PROMPT)) {
     return { parts: [text('Unexpected request.')] };
   }
+  extractions.count++;
   const facts = FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
     ...fact,
     factuality: 'CT+',
@@ -63,96 +79,113 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
   return { parts: [text(JSON.stringify({ facts }))] };
 };
 
-const TestLayer = AssistantTestLayer({
-  operationHandlers: AgentOperationHandlerSet,
-  types: [
-    Agent.Agent,
-    Chat.Chat,
-    Skill.Skill,
-    Feed.Feed,
-    Text.Text,
-    Instructions.Instructions,
-    Person.Person,
-    Organization.Organization,
-    HasSubject.HasSubject,
-    Memory.Memory,
-    Goal.Goal,
-    Mode.Mode,
-    Relay.Relay,
-    Message.Message,
-    Markdown.Document,
-    FactEntry.FactEntry,
-    FactEntry.ExtractionPass,
-  ],
-  skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
-  aiService: ScriptedLanguageModel.scriptedAiService(script),
-});
+const brain = makeTestBrain();
+
+const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
+  Layer.provideMerge(
+    AssistantTestLayer({
+      extraServices: Layer.merge(brain.layer, testSpaceLayer),
+      operationHandlers: AgentOperationHandlerSet,
+      types: [
+        Agent.Agent,
+        Chat.Chat,
+        Skill.Skill,
+        Feed.Feed,
+        Text.Text,
+        Instructions.Instructions,
+        Person.Person,
+        Organization.Organization,
+        HasSubject.HasSubject,
+        Goal.Goal,
+        Mode.Mode,
+        Relay.Relay,
+        Message.Message,
+        Markdown.Document,
+      ],
+      skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
+      aiService: ScriptedLanguageModel.scriptedAiService(script),
+    }),
+  ),
+);
+
+/** The agent's facts as its brain holds them. */
+const brainFacts = (agent: Agent.Agent) => BrainService.BrainService.use((service) => service.query(agent.id, {}));
+
+/** How many feeds the space holds: reading a source must not add one. */
+const feedCount = Database.query(Filter.type(Feed.Feed)).run.pipe(Effect.map((feeds) => feeds.length));
 
 describe('ReadSource', () => {
   it.effect(
-    "appends the transcript's facts, attributed to their speakers, to its annotation feed",
+    "pushes the document's facts, attributed to their speakers, to the agent's brain and writes nothing to the space",
     Effect.fnUntraced(
       function* ({ expect }) {
-        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dima',
+            preferredName: 'Dima',
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: TEST_MEMBERS.dima }],
+          }),
+        );
         const document = yield* Database.add(Markdown.make({ name: 'CI triage', content: TRANSCRIPT }));
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
         const chatsBefore = (yield* Database.query(Filter.type(Chat.Chat)).run).length;
+        const feedsBefore = yield* feedCount;
 
         const result = yield* Operation.invoke(AgentOperation.ReadSource, {
           agent: agentRef,
           source: Ref.make<Obj.Unknown>(document),
         });
-        expect(result.facts).toBe(3);
-        // A direct model call: reading creates no conversation.
+        expect(result).toEqual({ facts: 3, fired: [], undelivered: [] });
+        // A direct model call: reading creates no conversation, and the facts stay out of the space.
         expect((yield* Database.query(Filter.type(Chat.Chat)).run).length).toBe(chatsBefore);
+        expect(yield* feedCount).toBe(feedsBefore);
 
-        const [feed, ...others] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY }))
-          .run;
-        expect(others).toHaveLength(0);
-        expect(Obj.getParent(feed)?.id).toBe(agent.id);
-        // One entry per fact, then the marker closing the pass.
-        const entries = yield* Feed.query(feed, Filter.type(FactEntry.FactEntry)).run;
-        const [pass] = yield* Feed.query(feed, Filter.type(FactEntry.ExtractionPass)).run;
-        expect(entries).toHaveLength(3);
-        expect(pass).toMatchObject({ name: 'CI triage', facts: 3 });
-        expect(pass.source?.target?.id).toBe(document.id);
-        expect(result.pass?.target?.id).toBe(pass.id);
-        expect(entries.map(({ fact }) => fact.pass)).toEqual([pass.id, pass.id, pass.id]);
-        expect(Math.max(...entries.map(Feed.getPosition))).toBeLessThan(Feed.getPosition(pass));
-        const owns = entries.find(({ fact }) => fact.assertion.predicate === 'owns')?.fact;
-        expect(owns?.attribution).toMatchObject({ agent: 'dima', source: Obj.getURI(document) });
+        const facts = yield* brainFacts(agent);
+        expect(facts).toHaveLength(3);
+        const owns = facts.find((fact) => fact.assertion.predicate === 'owns');
+        expect(owns?.attribution).toMatchObject({
+          agent: TEST_MEMBERS.dima,
+          agentLabel: 'Dima',
+          source: Obj.getURI(document),
+        });
+        // A member named in a fact is keyed by their DID; the name stays the label.
+        expect(owns?.assertion.subject).toEqual({
+          kind: 'entity',
+          entity: TEST_MEMBERS.dima,
+          label: 'Dima',
+          type: 'person',
+        });
+        // Each statement lives in a named graph that carries its speaker's provenance.
+        expect(owns?.graph).toMatch(/^https:\/\/dxos\.org\/semantic\/graph\//);
         expect(owns?.attribution.generatedAtTime).toBeTypeOf('string');
-        expect(entries.find(({ fact }) => fact.assertion.predicate === 'reviews')?.fact.illocution?.force).toBe(
-          'commissive',
-        );
-        // A fact's entry is found by the fact's id.
-        const keyed = yield* Feed.query(
-          feed,
-          Filter.foreignKeys(FactEntry.FactEntry, [FactEntry.factKey(owns?.id ?? '')]),
-        ).run;
-        expect(keyed.map(({ fact }) => fact.assertion.predicate)).toEqual(['owns']);
+        expect(facts.find((fact) => fact.assertion.predicate === 'reviews')?.illocution?.force).toBe('commissive');
 
-        // Reading again appends to the same feed rather than opening another.
+        // A document is read whole every time; the brain keeps one copy of each fact.
         yield* Operation.invoke(AgentOperation.ReadSource, {
           agent: agentRef,
           source: Ref.make<Obj.Unknown>(document),
         });
-        expect(yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run).toHaveLength(1);
-        expect(yield* Feed.query(feed, Filter.type(FactEntry.FactEntry)).run).toHaveLength(6);
-        expect(yield* Feed.query(feed, Filter.type(FactEntry.ExtractionPass)).run).toHaveLength(2);
+        expect(yield* brainFacts(agent)).toHaveLength(3);
+        expect(yield* feedCount).toBe(feedsBefore);
 
-        // Recall finds the facts about a person, or said by them, by their name; Josiah's are left out.
+        // Recall finds the facts about a person, or said by them, by their DID; Josiah's are left out.
         const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dima) });
         expect(recalled.facts.map(({ fact }) => fact).sort()).toEqual([
           'Dima owns indexer',
-          'Dima owns indexer',
-          'race is in v12 index migration',
           'race is in v12 index migration',
         ]);
-        expect(recalled.facts[0]).toMatchObject({ speaker: 'dima', sourceName: 'CI triage' });
+        expect(recalled.facts[0]).toMatchObject({ speaker: 'Dima', sourceName: 'CI triage' });
         const searched = yield* Operation.invoke(MemoryOperation.Recall, { query: 'migration', limit: 1 });
         expect(searched.facts.map(({ fact }) => fact)).toEqual(['race is in v12 index migration']);
+
+        // The Brain companion lists what the brain returns, shaped as its Facts list shows it.
+        const snapshot = yield* Operation.invoke(TriggerOperation.InspectBrain, { agent: agentRef });
+        expect(
+          BrainInspection.make(snapshot)
+            .facts.map(({ text }) => text)
+            .sort(),
+        ).toEqual(['Dima owns indexer', 'Josiah reviews fix', 'race is in v12 index migration']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -161,15 +194,14 @@ describe('ReadSource', () => {
   );
 
   it.effect(
-    'reads a chat transcript with each message attributed to its sender',
+    'reads a chat incrementally from the cursor the brain keeps with its facts',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
         const chat = yield* Agent.loadChat(agent);
-        expect(chat).toBeDefined();
         if (!chat) {
-          return;
+          return expect.unreachable('The agent has a chat.');
         }
         const feed = yield* Database.load(chat.feed);
         const message = Message.make({
@@ -178,28 +210,32 @@ describe('ReadSource', () => {
         });
         yield* Feed.append(feed, [message]);
         yield* Database.flush();
+        const feedsBefore = yield* feedCount;
 
         const result = yield* Operation.invoke(AgentOperation.ReadSource, {
           agent: agentRef,
           source: Ref.make<Obj.Unknown>(chat),
         });
         expect(result.facts).toBe(1);
-        const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
-        const [entry] = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entry.fact.attribution).toMatchObject({
-          agent: 'dima',
+        const [fact] = yield* brainFacts(agent);
+        expect(fact.attribution).toMatchObject({
+          agent: TEST_MEMBERS.dima,
           source: Obj.getURI(message),
           generatedAtTime: message.created,
         });
-        const [pass] = yield* Feed.query(annotations, Filter.type(FactEntry.ExtractionPass)).run;
-        expect(pass.through).toBe(Obj.getURI(message));
+        expect(yield* BrainService.BrainService.use((service) => service.readThrough(agent.id, Obj.getURI(chat)))).toBe(
+          Obj.getURI(message),
+        );
+        expect(yield* feedCount).toBe(feedsBefore);
 
-        // A chat is read incrementally: nothing new appends nothing, and a new message adds only its facts.
+        // Nothing new reaches no model and pushes nothing; a new message adds only its facts.
+        const before = extractions.count;
         const unchanged = yield* Operation.invoke(AgentOperation.ReadSource, {
           agent: agentRef,
           source: Ref.make<Obj.Unknown>(chat),
         });
-        expect(unchanged).toEqual({ facts: 0 });
+        expect(unchanged).toEqual({ facts: 0, fired: [], undelivered: [] });
+        expect(extractions.count).toBe(before);
         const next = Message.make({
           sender: { role: 'user', name: 'Josiah' },
           blocks: [{ _tag: 'text', text: 'I will review the fix.' }],
@@ -211,8 +247,10 @@ describe('ReadSource', () => {
           source: Ref.make<Obj.Unknown>(chat),
         });
         expect(added.facts).toBe(1);
-        const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entries.map(({ fact }) => fact.assertion.predicate).sort()).toEqual(['owns', 'reviews']);
+        expect((yield* brainFacts(agent)).map((fact) => fact.assertion.predicate).sort()).toEqual(['owns', 'reviews']);
+        expect(yield* BrainService.BrainService.use((service) => service.readThrough(agent.id, Obj.getURI(chat)))).toBe(
+          Obj.getURI(next),
+        );
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -238,9 +276,8 @@ describe('ReadSource', () => {
         yield* Database.flush();
 
         yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
-        const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
-        const [entry] = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        expect(entry.fact.attribution.agent).toBe('dima');
+        const [fact] = yield* brainFacts(yield* Database.load(agentRef));
+        expect(fact.attribution.agent).toBe('did:halo:dima');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -249,7 +286,7 @@ describe('ReadSource', () => {
   );
 
   it.effect(
-    'ignores the facts of a pass whose marker is missing, and resumes a chat from the last marker',
+    'reads a chat again from the start once the brain has lost its facts',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
@@ -268,13 +305,15 @@ describe('ReadSource', () => {
         yield* Database.flush();
         yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
 
-        // Removing the marker leaves the pass as if it had stopped before completing.
-        const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
-        yield* Feed.remove(annotations, yield* Feed.query(annotations, Filter.type(FactEntry.ExtractionPass)).run);
-        yield* Database.flush();
+        // As the in-memory brain is after a reload: the facts and the cursor are gone together.
+        const store = brain.facts(agent.id);
+        if (!store) {
+          return expect.unreachable('The read stored facts.');
+        }
+        yield* store.clear();
         expect((yield* Operation.invoke(MemoryOperation.Recall, {})).facts).toEqual([]);
 
-        // With no marker there is no cursor, so the chat is read again from the start.
+        // With no cursor the chat is read again from the start, and the brain recovers its facts.
         const reread = yield* Operation.invoke(AgentOperation.ReadSource, {
           agent: agentRef,
           source: Ref.make<Obj.Unknown>(chat),
@@ -291,28 +330,33 @@ describe('ReadSource', () => {
   );
 
   it.effect(
-    'forgets a single fact',
+    "reads a prompt the feed holds twice once, and takes no facts from the agent's own replies",
     Effect.fnUntraced(
       function* ({ expect }) {
-        const document = yield* Database.add(Markdown.make({ name: 'CI triage', content: TRANSCRIPT }));
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
-        yield* Operation.invoke(AgentOperation.ReadSource, {
-          agent: agentRef,
-          source: Ref.make<Obj.Unknown>(document),
-        });
-        const [annotations] = yield* Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
-        const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
-        const owns = entries.find(({ fact }) => fact.assertion.predicate === 'owns');
-        if (!owns) {
-          return expect.unreachable('The document states who owns the indexer.');
+        const agent = yield* Database.load(agentRef);
+        const chat = yield* Agent.loadChat(agent);
+        if (!chat) {
+          return expect.unreachable('The agent has a chat.');
         }
+        const said = (role: 'user' | 'assistant', name: string, text: string) =>
+          Message.make({ sender: { role, name }, blocks: [{ _tag: 'text', text }] });
+        const feed = yield* Database.load(chat.feed);
+        yield* Feed.append(feed, [
+          // As a prompt queued for a running agent: once as queued, once as the turn's own copy.
+          said('user', 'Dima', 'I own the indexer.'),
+          said('user', 'Dima', 'I own the indexer.'),
+          said('assistant', 'Kai', 'The race is in the v12 index migration.'),
+        ]);
+        yield* Database.flush();
 
-        expect(yield* forgetFact(owns.fact.id)).toBe(1);
-        expect(yield* forgetFact(owns.fact.id)).toBe(0);
-        expect(yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run).toHaveLength(2);
-        expect((yield* Operation.invoke(MemoryOperation.Recall, {})).facts.map(({ fact }) => fact).sort()).toEqual([
-          'Josiah reviews fix',
-          'race is in v12 index migration',
+        const read = yield* Operation.invoke(AgentOperation.ReadSource, {
+          agent: agentRef,
+          source: Ref.make<Obj.Unknown>(chat),
+        });
+        expect(read.facts).toBe(1);
+        expect((yield* Operation.invoke(MemoryOperation.Recall, {})).facts.map(({ fact }) => fact)).toEqual([
+          'Dima owns indexer',
         ]);
       },
       Effect.provide(TestLayer),
@@ -330,6 +374,62 @@ describe('ReadSource', () => {
           Effect.exit,
         );
         expect(Exit.isFailure(exit)).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'recall finds facts minted under a person’s accounts in other sources, tied by strong identifiers only',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const dmytro = yield* Database.add(Person.make({ fullName: 'Dmytro Maretskyi' }));
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const fact = (
+          id: string,
+          subject: string,
+          predicate: string,
+          object: RDF.Fact['assertion']['object'],
+          source: string,
+        ): RDF.Fact => ({
+          id,
+          assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
+          factuality: { value: 'CT+', polarity: '+' },
+          attribution: { source, generatedAtTime: '2026-10-14T10:00:00.000Z' },
+          recordedAt: '2026-10-14T10:00:00.000Z',
+          extractor: { id: 'test', model: 'test', version: '1' },
+          sourceHash: id,
+        });
+        const brain = yield* BrainService.BrainService;
+        yield* brain.push(agent.id, [
+          // The roster resolved the name to the Person and named their Discord account.
+          fact(
+            'r1',
+            Obj.getURI(dmytro),
+            'has-account',
+            { kind: 'entity', entity: 'dmaretskyi' },
+            'https://dxos.org/team',
+          ),
+          // Discord keyed the speaker by their handle; they said where they are and gave their email address.
+          fact('d1', 'dmaretskyi', 'located-in', { kind: 'entity', entity: 'bangkok' }, 'discord'),
+          fact('d2', 'dmaretskyi', 'has-account', { kind: 'literal', literal: 'dmytro@braneframe.com' }, 'discord'),
+          // Someone else's account: no identifier ties it to Dmytro, so it is left out.
+          fact('o1', 'rich', 'has-account', { kind: 'entity', entity: 'richburdon' }, 'discord'),
+          // A stranger whose handle is Dmytro's first name: the name matches that fact directly, but never widens
+          // recall to the stranger's other facts.
+          fact('s1', 'stranger', 'has-account', { kind: 'entity', entity: 'dmytro' }, 'discord'),
+          fact('s2', 'stranger', 'located-in', { kind: 'entity', entity: 'lisbon' }, 'discord'),
+        ]);
+
+        const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dmytro) });
+        expect(recalled.facts.map(({ fact }) => fact).sort()).toEqual([
+          'dmaretskyi has account dmytro@braneframe.com',
+          'dmaretskyi located in bangkok',
+          `${Obj.getURI(dmytro)} has account dmaretskyi`,
+          'stranger has account dmytro',
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

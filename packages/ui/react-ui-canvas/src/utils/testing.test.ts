@@ -8,7 +8,7 @@ import { solve } from '../model/projections/constrained.ts';
 import { layoutGraph } from '../model/projections/dynamic.ts';
 import { MAJOR_GRID, type Point, type Scene } from '../model/types.ts';
 import { nodeBounds } from './shapes.ts';
-import { createClassSceneTree, createSceneTree } from './testing.ts';
+import { createModelSceneTree, createSceneTree } from './testing.ts';
 
 /** Every edge of every node lies on the grid, which is what move and resize snap to. */
 const offGrid = (scene: Scene): string[] =>
@@ -42,8 +42,8 @@ describe('initial layouts conform to the major grid', () => {
     }
   });
 
-  test('class scene tree fixture', ({ expect }) => {
-    const { scenes, root } = createClassSceneTree();
+  test('model scene tree fixture', ({ expect }) => {
+    const { scenes, root } = createModelSceneTree();
     expect(scenes.map(({ id }) => id)).toContain(root);
     // Three levels: the root, its two subsystems, and one leaf under each.
     expect(scenes).toHaveLength(5);

@@ -7,12 +7,13 @@ import React from 'react';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
-import { type Goal, type Memory } from '#types';
+import { type Goal, type Knowledge } from '#types';
 
 export type ProfileGoal = Pick<Goal.Goal, 'id' | 'title' | 'description' | 'horizon' | 'status'>;
-export type ProfileMemory = Pick<Memory.Memory, 'id' | 'content' | 'kind' | 'origin' | 'observedAt'>;
+export type ProfileMemory = Pick<Knowledge.Memory, 'id' | 'content' | 'kind' | 'origin' | 'observedAt'>;
 
 export type ProfileGraphProps = {
   goals: readonly ProfileGoal[];
@@ -29,7 +30,7 @@ export const GOAL_ICONS: Record<Goal.Status, string> = {
 };
 
 /** Icon per memory kind, shared with the agent state panel. */
-export const MEMORY_ICONS: Record<Memory.Kind, string> = {
+export const MEMORY_ICONS: Record<Knowledge.Kind, string> = {
   fact: 'ph--info--regular',
   preference: 'ph--heart--regular',
   goal: 'ph--flag--regular',
@@ -44,11 +45,7 @@ export const MEMORY_ICONS: Record<Memory.Kind, string> = {
 export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   if (goals.length === 0 && memories.length === 0) {
-    return (
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('profile-graph-empty.message')}
-      </Layout.Flex>
-    );
+    return <Status.Empty>{t('profile-graph-empty.message')}</Status.Empty>;
   }
 
   return (
@@ -67,11 +64,13 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
                 ),
               }))}
             >
-              <Listbox.Content>
-                {goals.map((goal) => (
-                  <Listbox.Item key={goal.id} id={goal.id} />
-                ))}
-              </Listbox.Content>
+              <Listbox.Viewport>
+                <Listbox.Content>
+                  {goals.map((goal) => (
+                    <Listbox.Item key={goal.id} id={goal.id} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
             </Listbox.Root>
           </section>
         </Layout.Flex>
@@ -92,11 +91,13 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
                 ].join(' · '),
               }))}
             >
-              <Listbox.Content>
-                {memories.map((memory) => (
-                  <Listbox.Item key={memory.id} id={memory.id} />
-                ))}
-              </Listbox.Content>
+              <Listbox.Viewport>
+                <Listbox.Content>
+                  {memories.map((memory) => (
+                    <Listbox.Item key={memory.id} id={memory.id} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
             </Listbox.Root>
           </section>
         </Layout.Flex>

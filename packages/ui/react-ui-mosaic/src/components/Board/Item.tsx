@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useLabel } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
@@ -25,6 +28,11 @@ import { useBoard } from './BoardContext.ts';
 
 const BOARD_ITEM_NAME = 'Board.Item';
 
+const useDescription = (object: Obj.Unknown | undefined): string | undefined =>
+  useAtomValue(
+    useMemo(() => Atom.make((get) => (object ? Obj.getDescription(get(Obj.atom(object))) : undefined)), [object]),
+  );
+
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
   MosaicTileProps<TItem>,
   'classNames' | 'location' | 'data' | 'debug' | 'draggable'
@@ -39,6 +47,8 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     // Refs don't trigger re-renders, so reading `.current` at render time leaves the prop null.
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
+    const label = useLabel(data);
+    const description = useDescription(data);
     const { model } = useBoard(BOARD_ITEM_NAME);
     const column = useBoardColumn();
     const items = useMemo(
@@ -57,9 +67,6 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     if (!data) {
       return null;
     }
-
-    const label = Obj.getLabel(data);
-    const description = Obj.getDescription(data);
 
     return (
       <Mosaic.Tile

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-agent",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Autonomous agents that converse in channels (Discord, freeq, local feeds) and Composer chats.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -78,6 +78,16 @@
       "types": "./dist/types/src/types/AgentChannels.d.ts",
       "import": "./dist/lib/AgentChannels.mjs"
     },
+    "./AgentEmail": {
+      "source": "./src/types/AgentEmail.ts",
+      "types": "./dist/types/src/types/AgentEmail.d.ts",
+      "import": "./dist/lib/AgentEmail.mjs"
+    },
+    "./AgentMailbox": {
+      "source": "./src/types/AgentMailbox.ts",
+      "types": "./dist/types/src/types/AgentMailbox.d.ts",
+      "import": "./dist/lib/AgentMailbox.mjs"
+    },
     "./AgentKnowledge": {
       "source": "./src/AgentKnowledge.ts",
       "types": "./dist/types/src/AgentKnowledge.d.ts",
@@ -123,11 +133,6 @@
       "types": "./dist/types/src/skills/ConversationSkill.d.ts",
       "import": "./dist/lib/ConversationSkill.mjs"
     },
-    "./FactEntry": {
-      "source": "./src/types/FactEntry.ts",
-      "types": "./dist/types/src/types/FactEntry.d.ts",
-      "import": "./dist/lib/FactEntry.mjs"
-    },
     "./Goal": {
       "source": "./src/types/Goal.ts",
       "types": "./dist/types/src/types/Goal.d.ts",
@@ -143,10 +148,10 @@
       "types": "./dist/types/src/skills/InterviewSkill.d.ts",
       "import": "./dist/lib/InterviewSkill.mjs"
     },
-    "./Memory": {
-      "source": "./src/types/Memory.ts",
-      "types": "./dist/types/src/types/Memory.d.ts",
-      "import": "./dist/lib/Memory.mjs"
+    "./Knowledge": {
+      "source": "./src/types/Knowledge.ts",
+      "types": "./dist/types/src/types/Knowledge.d.ts",
+      "import": "./dist/lib/Knowledge.mjs"
     },
     "./MemoryOperation": {
       "source": "./src/types/MemoryOperation.ts",
@@ -193,6 +198,11 @@
       "types": "./dist/types/src/skills/RelaySkill.d.ts",
       "import": "./dist/lib/RelaySkill.mjs"
     },
+    "./SupportSkill": {
+      "source": "./src/skills/SupportSkill.ts",
+      "types": "./dist/types/src/skills/SupportSkill.d.ts",
+      "import": "./dist/lib/SupportSkill.mjs"
+    },
     "./Trigger": {
       "source": "./src/types/Trigger.ts",
       "types": "./dist/types/src/types/Trigger.d.ts",
@@ -216,6 +226,12 @@
       "AgentChannels": [
         "dist/types/src/types/AgentChannels.d.ts"
       ],
+      "AgentEmail": [
+        "dist/types/src/types/AgentEmail.d.ts"
+      ],
+      "AgentMailbox": [
+        "dist/types/src/types/AgentMailbox.d.ts"
+      ],
       "AgentKnowledge": [
         "dist/types/src/AgentKnowledge.d.ts"
       ],
@@ -230,9 +246,6 @@
       ],
       "ConversationSkill": [
         "dist/types/src/skills/ConversationSkill.d.ts"
-      ],
-      "FactEntry": [
-        "dist/types/src/types/FactEntry.d.ts"
       ],
       "Goal": [
         "dist/types/src/types/Goal.d.ts"
@@ -272,6 +285,9 @@
       ],
       "RelaySkill": [
         "dist/types/src/skills/RelaySkill.d.ts"
+      ],
+      "SupportSkill": [
+        "dist/types/src/skills/SupportSkill.d.ts"
       ]
     }
   },
@@ -286,22 +302,29 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/brain": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
@@ -310,15 +333,18 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@types/n3": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "n3": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

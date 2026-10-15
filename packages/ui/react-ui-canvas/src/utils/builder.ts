@@ -17,16 +17,17 @@ import {
   type BuiltinNode,
   type BuiltinNodeType,
   type Endpoint,
+  type FrameNode,
   type Link,
   type LinkType,
   type Node,
   type NodeBase,
   type NodeStyle,
   type Point,
-  type PortalNode,
   type Scene,
   type SceneId,
 } from '../model/types.ts';
+import { DEFAULT_LAYER } from './layers.ts';
 import { initialKeys } from './order.ts';
 import { createNode } from './shapes.ts';
 
@@ -110,7 +111,7 @@ export class SceneElement {
     readonly elements: readonly BuilderElement[],
     readonly frame?: Box,
     readonly sceneName?: string,
-    readonly portal: NodeProperties<PortalNode> = {},
+    readonly portal: NodeProperties<FrameNode> = {},
   ) {}
 
   /** The scene's name (breadcrumbs, previews). */
@@ -124,7 +125,7 @@ export class SceneElement {
   }
 
   /** The scene shape's own properties (label, contents, style). */
-  properties(values: NodeProperties<PortalNode>): SceneElement {
+  properties(values: NodeProperties<FrameNode>): SceneElement {
     return new SceneElement(this.id, this.elements, this.frame, this.sceneName, {
       ...this.portal,
       ...values,
@@ -143,42 +144,59 @@ export class SceneElement {
 export type SceneTree = { root: SceneId; scenes: Scene[] };
 
 const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene[]): void => {
-  const nodes: Record<string, Node> = {};
-  const links: Record<string, Link> = {};
+  // Maps, so any id (`constructor`, `__proto__`) is an ordinary key; `fromEntries` keeps them own properties.
+  const nodes = new Map<string, Node>();
+  const links = new Map<string, Link>();
   const keys = initialKeys(element.elements.length);
-  const index = scenes.push({ id: element.id, name: element.sceneName, nodes, links }) - 1;
+  // Every element names its layer, so a fixture reads as a scene the editor wrote.
+  const index =
+    scenes.push({
+      id: element.id,
+      name: element.sceneName,
+      nodes: {},
+      links: {},
+      layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+    }) - 1;
   element.elements.forEach((child, order) => {
     const z = keys[order];
     switch (child.kind) {
       case 'node': {
-        const node = { ...child.node, z };
+        // A host's type starts from its own `create`, as a built-in starts from `createNode`, so a
+        // fixture sets only what it means and the type supplies the rest of its content.
+        const def = isBuiltinType(child.node.type) ? undefined : registry[child.node.type];
+        const fresh = def?.create({ id: child.node.id, z, center: child.node.center, size: child.node.size });
+        const node = { layer: DEFAULT_LAYER.id, ...fresh, ...child.node, z };
         check(registry, node);
-        nodes[node.id] = node;
+        claim(nodes, node.id, element.id);
+        nodes.set(node.id, node);
         break;
       }
       case 'link': {
         const id = child.linkId ?? uniqueId(links, linkId(child.link.source, child.link.target));
-        links[id] = { ...child.link, id, z };
+        claim(links, id, element.id);
+        links.set(id, { layer: DEFAULT_LAYER.id, ...child.link, id, z });
         break;
       }
       case 'scene': {
         if (!child.frame) {
           throw new Error(`Nested scene ${child.id} needs a frame: call at(box).`);
         }
-        const node: PortalNode = {
-          ...createNode({ type: 'scene', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
+        const node: FrameNode = {
+          ...createNode({ type: 'frame', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
+          layer: DEFAULT_LAYER.id,
           ...child.portal,
-          type: 'scene',
+          type: 'frame',
           scene: child.id,
         };
         check(registry, node);
-        nodes[node.id] = node;
+        claim(nodes, node.id, element.id);
+        nodes.set(node.id, node);
         buildScene(child, registry, scenes);
         break;
       }
     }
   });
-  scenes[index] = { ...scenes[index], nodes, links };
+  scenes[index] = { ...scenes[index], nodes: Object.fromEntries(nodes), links: Object.fromEntries(links) };
 };
 
 /** A node its type does not describe (a wrong value, or a property the type does not have) fails the build. */
@@ -193,14 +211,21 @@ const check = (registry: NodeRegistry, node: Node): void => {
   }
 };
 
+/** Two elements given one id would leave only the second, so the fixture fails instead. */
+const claim = (taken: ReadonlyMap<string, unknown>, id: string, sceneId: SceneId): void => {
+  if (taken.has(id)) {
+    throw new Error(`Duplicate id ${id} in scene ${sceneId}.`);
+  }
+};
+
 const linkId = (source: Endpoint, target: Endpoint): string => {
   const name = (end: Endpoint) => ('node' in end ? end.node : `${end.point.x},${end.point.y}`);
   return `${name(source)}-${name(target)}`;
 };
 
-const uniqueId = (taken: Record<string, unknown>, id: string): string => {
+const uniqueId = (taken: ReadonlyMap<string, unknown>, id: string): string => {
   let candidate = id;
-  for (let suffix = 2; candidate in taken; ++suffix) {
+  for (let suffix = 2; taken.has(candidate); ++suffix) {
     candidate = `${id}-${suffix}`;
   }
   return candidate;
@@ -221,7 +246,7 @@ function node(type: string, id: string, box: Box): NodeElement<NodeBase> {
   return new NodeElement<NodeBase>(base);
 }
 
-const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'class', 'note', 'scene'] satisfies BuiltinNodeType[];
+const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'note', 'frame'] satisfies BuiltinNodeType[];
 const isBuiltinType = (type: string): type is BuiltinNodeType => BUILTIN_TYPES.includes(type);
 
 type Ends = Pick<Link, 'source' | 'target'>;
@@ -244,7 +269,6 @@ export const SceneBuilder = {
   node,
   rect: (id: string, box: Box) => node('rect', id, box),
   ellipse: (id: string, box: Box) => node('ellipse', id, box),
-  class: (id: string, box: Box) => node('class', id, box),
   note: (id: string, box: Box) => node('note', id, box),
   link,
 };

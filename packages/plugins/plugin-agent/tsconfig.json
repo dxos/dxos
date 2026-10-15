@@ -28,6 +28,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/brain"
     },
     {
       "path": "../../core/compute/compute"
@@ -61,7 +67,13 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
       "path": "../../core/halo/halo-react"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
@@ -88,7 +100,13 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
@@ -97,7 +115,13 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

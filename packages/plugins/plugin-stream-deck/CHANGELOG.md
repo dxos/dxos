@@ -1,5 +1,34 @@
 # @dxos/plugin-stream-deck
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-status-bar@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

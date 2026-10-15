@@ -3,4 +3,3 @@
 //
 
 export * as DrawingSkill from './DrawingSkill.ts';
-export * as UmlSkill from './UmlSkill.ts';

@@ -12,9 +12,9 @@ import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import { type Player } from '@dxos/react-ui-gameboard';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { mx } from '@dxos/ui-theme';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
 import { meta } from '#meta';
@@ -80,21 +80,21 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}
-                classNames={mx('invisible @4xl:visible')}
+                classNames='invisible @4xl:visible'
                 onClick={() => setShowInfo((open) => !open)}
               />
             </Toolbar.Root>
           </Panel.Header>
         )}
         <Panel.Body>
-          <div
-            className={mx(
-              'grid dx-fill',
+          <Layout.Grid
+            classNames={[
+              'dx-fill',
               showInfo && '@4xl:grid-cols-[1fr_320px] gap-8',
               role === AppSurface.Article.role && 'p-4',
               role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0',
               role === AppSurface.Section.role && showInfo && '@4xl:aspect-auto',
-            )}
+            ]}
           >
             <Chessboard.Content>
               <Chessboard.Board classNames='border rounded-xs' orientation={orientation} />
@@ -112,7 +112,7 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
                 />
               </div>
             )}
-          </div>
+          </Layout.Grid>
         </Panel.Body>
       </Panel.Root>
     </Chessboard.Root>

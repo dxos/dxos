@@ -11,6 +11,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as NavTreeSurface from '@dxos/plugin-navtree/NavTreeSurface';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 import { isTauri } from '@dxos/util';
 
@@ -60,10 +61,10 @@ export const SpotlightLayout = () => {
   }, [updateState]);
 
   return (
-    <div className='grid inset-0 overflow-hidden' data-spotlight>
+    <Layout.Grid classNames='inset-0 overflow-hidden' data-spotlight>
       <Dialog.Root open={state.dialogOpen} modal={false}>
         <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={Status.Error} />
       </Dialog.Root>
-    </div>
+    </Layout.Grid>
   );
 };

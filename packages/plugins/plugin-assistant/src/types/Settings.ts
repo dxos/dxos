@@ -81,6 +81,13 @@ export const Settings = Schema.Struct({
         'Agent that one-click "Assign to agent" hands tasks to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
     }),
   ),
+  reportStruggles: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Report agent struggles',
+      description:
+        'After each agent turn, a small model reviews the conversation. If the agent struggled because of its instructions or tools, the conversation (including content from your space) is sent to the DXOS team to improve Composer. Requires telemetry to be enabled.',
+    }),
+  ),
   tracePanelDebug: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Trace panel debug',

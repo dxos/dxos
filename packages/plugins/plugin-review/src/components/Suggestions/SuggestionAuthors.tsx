@@ -6,6 +6,7 @@ import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { type Hue } from '@dxos/ui-theme';
 
@@ -39,7 +40,7 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
   }
 
   return (
-    <div role='group' aria-label={t('suggestion-authors.label')} className='flex flex-wrap gap-1 p-2'>
+    <Layout.Flex role='group' aria-label={t('suggestion-authors.label')} wrap gap='xs' classNames='p-2'>
       {authors.map(({ author, label, hue, hidden }) => (
         // The tag is the toggle (a clickable Tag is a button), the eye inside the pill.
         <Tag.Tag
@@ -57,7 +58,7 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
           <Icon.Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
         </Tag.Tag>
       ))}
-    </div>
+    </Layout.Flex>
   );
 };
 

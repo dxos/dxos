@@ -183,4 +183,12 @@ describe('GoalRules', () => {
       ]);
     });
   });
+  test('every fires once per period, also when each evaluation falls on a boundary', ({ expect }) => {
+    const createdAt = Date.parse('2027-01-04T09:00:00Z');
+    const day = 24 * 60 * 60_000;
+    const rules = GoalRules.make({ source: 'wake(practice) :- every(1d).', createdAt });
+    expect(rules.update({ at: createdAt + day }).wakes.map(({ label }) => label)).toEqual(['practice']);
+    expect(rules.update({ at: createdAt + 2 * day }).wakes.map(({ label }) => label)).toEqual(['practice']);
+    expect(rules.update({ at: createdAt + 2 * day + 1 }).wakes).toEqual([]);
+  });
 });

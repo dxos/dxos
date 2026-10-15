@@ -78,35 +78,37 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
             onValueChange={(id) => onSelect(id)}
           >
             {({ items }) => (
-              <OrderedList.Content scroll>
-                {items.map((row) => (
-                  <OrderedList.Item
-                    key={row.id}
-                    id={row.id}
-                    canDrag={false}
-                    highlightOnHover
-                    // A click on the selected row clears the selection; the list selects any other row itself.
-                    onClick={() => row.id === selectedId && onSelect(undefined)}
-                  >
-                    <OrderedList.ItemIcon>
-                      <Icon.Icon icon={row.icon} />
-                    </OrderedList.ItemIcon>
-                    <OrderedList.ItemText>{row.label}</OrderedList.ItemText>
-                    {row.adornment && (
-                      <Tooltip.Trigger asChild side='bottom' content={row.adornment.label}>
-                        <Icon.Icon icon={row.adornment.icon} />
-                      </Tooltip.Trigger>
-                    )}
-                  </OrderedList.Item>
-                ))}
-              </OrderedList.Content>
+              <OrderedList.Viewport>
+                <OrderedList.Content>
+                  {items.map((row) => (
+                    <OrderedList.Item
+                      key={row.id}
+                      id={row.id}
+                      canDrag={false}
+                      highlightOnHover
+                      // A click on the selected row clears the selection; the list selects any other row itself.
+                      onClick={() => row.id === selectedId && onSelect(undefined)}
+                    >
+                      <OrderedList.ItemIcon>
+                        <Icon.Icon icon={row.icon} />
+                      </OrderedList.ItemIcon>
+                      <OrderedList.ItemText>{row.label}</OrderedList.ItemText>
+                      {row.adornment && (
+                        <Tooltip.Trigger asChild side='bottom' content={row.adornment.label}>
+                          <Icon.Icon icon={row.adornment.icon} />
+                        </Tooltip.Trigger>
+                      )}
+                    </OrderedList.Item>
+                  ))}
+                </OrderedList.Content>
+              </OrderedList.Viewport>
             )}
           </OrderedList.Root>
         )}
       </Panel.Body>
     </Panel.Root>
-    <Panel.Root classNames='flex-1 min-w-0'>
-      <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
+    <Panel.Root classNames='flex-1'>
+      <Panel.Body classNames='flex flex-col'>{detail}</Panel.Body>
     </Panel.Root>
   </Layout.Flex>
 );
@@ -315,7 +317,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body classNames='flex flex-col dx-grow py-2'>
+      <Panel.Body classNames='flex flex-col py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <PaneList
           rows={collectionRows}

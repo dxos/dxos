@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Relation } from '@dxos/echo';
@@ -15,6 +17,7 @@ import {
 } from '@dxos/react-ui-thread';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
@@ -88,10 +91,14 @@ export const CommentThread = ({
   const [status] = useObject(thread, 'status');
   const [messages] = useObject(thread, 'messages');
 
-  const loadedMessages = useMemo(
-    () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
+  const loadedMessagesAtom = useMemo(
+    () =>
+      Atom.make((get) =>
+        (messages ?? []).map((ref) => get(ref.atom)).filter((message): message is Message.Message => !!message),
+      ),
     [messages],
   );
+  const loadedMessages = useAtomValue(loadedMessagesAtom);
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
@@ -143,7 +150,7 @@ export const CommentThread = ({
   }
 
   const headerControls = (
-    <div className='flex flex-row items-center gap-0.5 pe-2'>
+    <Layout.Flex align='center' classNames='gap-0.5 pe-2'>
       {status === 'staged' && <Tag.Tag hue='neutral'>{t('draft.button')}</Tag.Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
         <Button.Root
@@ -178,7 +185,7 @@ export const CommentThread = ({
           onClick={handleThreadDelete}
         />
       )}
-    </div>
+    </Layout.Flex>
   );
 
   const header = detached ? (

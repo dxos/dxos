@@ -171,6 +171,12 @@ WHERE ${this.#visible('c', deleted)} GROUP BY c.id`);
               return sql`CASE WHEN json_type(e.body, ${path}) IN ('integer', 'real', 'text')
   THEN json_extract(e.body, ${path}) END ${direction} NULLS LAST`;
             }
+            case 'annotation': {
+              const path = jsonPath(['@meta', 'annotations', order.key, ...(order.path ?? [])]);
+              // Booleans order as the 0/1 `json_extract` returns, as the host executors sort them.
+              return sql`CASE WHEN json_type(e.body, ${path}) IN ('integer', 'real', 'text', 'true', 'false')
+  THEN json_extract(e.body, ${path}) END ${direction} NULLS LAST`;
+            }
           }
         });
         return this.#cte(sql`SELECT w.id, w.rank, ROW_NUMBER() OVER (ORDER BY ${join([...terms, raw('w.id')], ', ')}) AS ord

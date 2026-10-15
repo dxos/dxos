@@ -7,10 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
-import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
 import { type Channel, Message } from '@dxos/types';
@@ -18,22 +16,14 @@ import { type Channel, Message } from '@dxos/types';
 import { DiscordChannel } from '#types';
 
 import { DiscordChannelError } from '../errors.ts';
-import { callBot, toConnectionStatus } from '../services/bot-gateway.ts';
+import {
+  type EdgeClientResolver,
+  appEdgeClient,
+  callBot,
+  callBotRoute,
+  toConnectionStatus,
+} from '../services/bot-gateway.ts';
 import { openDirectMessage, postText } from '../services/bot-rest.ts';
-
-/** Resolves the EDGE client that signs bot-route requests with the user's identity. */
-export type EdgeClientResolver = Effect.Effect<EdgeHttpClient, DiscordChannelError, Capability.Service>;
-
-/** The app's client; absent on EDGE itself, where the gateway routes are not called. */
-const appEdgeClient: EdgeClientResolver = Effect.gen(function* () {
-  const [client] = yield* Capability.getAll(ClientCapabilities.Client);
-  if (!client) {
-    return yield* Effect.fail(
-      new DiscordChannelError({ message: 'Starting a Discord bot needs the app client, which this host lacks.' }),
-    );
-  }
-  return client.edge.http;
-});
 
 export type DiscordChannelBackendOptions = {
   /** Where the EDGE client for the bot routes comes from; the app's client by default. */
@@ -41,9 +31,10 @@ export type DiscordChannelBackendOptions = {
 };
 
 /**
- * Discord channel backend: posts as the config's bot over Discord REST (a thread or DM channel id is
- * a Discord channel id), opens DMs from a person's `discord` identity, and starts the bot's EDGE
- * gateway, which is what receives messages and drives agent turns.
+ * Discord channel backend: starts the bot's EDGE gateway, which receives messages, drives agent turns and posts
+ * what agents write into their conversation chats (so the backend is `mirrored`). Direct sends post as the config's
+ * bot over Discord REST (a thread or DM channel id is a Discord channel id); a DM is named by the person's `discord`
+ * identity and opened by whoever posts to it first.
  */
 export const makeDiscordChannelBackend = ({
   edgeClient = appEdgeClient,
@@ -72,20 +63,39 @@ export const makeDiscordChannelBackend = ({
     }),
   // Posting from the article would bypass the agent, so the composer stays hidden.
   readOnly: () => true,
-  openDirect: (channel, person) =>
-    Effect.gen(function* () {
+  mirrored: true,
+  // No Discord call: EDGE's bot opens the DM with the token it holds when it posts the agent's message.
+  openDirect: (_channel, person) =>
+    Effect.sync(() => {
       const userId = person.identities?.find((identity) => identity.label === 'discord')?.value;
-      if (userId === undefined) {
-        return undefined;
-      }
-      const { token } = yield* loadBot(channel);
-      return yield* openDirectMessage(token, userId);
+      return userId === undefined ? undefined : DiscordChannel.pendingDmThread(userId);
     }),
   threads: {
     send: (channel, thread, message) =>
       Effect.gen(function* () {
         const { token } = yield* loadBot(channel);
-        return yield* post(token, thread, message);
+        const userId = DiscordChannel.pendingDmUser(thread);
+        const target = userId === undefined ? thread : yield* openDirectMessage(token, userId);
+        return yield* post(token, target, message);
+      }),
+    remove: (channel, thread) =>
+      Effect.gen(function* () {
+        // Through EDGE, which holds the bot's real token (a space may only record a placeholder) and reaches Discord
+        // without the browser's CORS limits.
+        const { config, spaceId } = yield* loadConfig(channel);
+        const accessToken = yield* Effect.tryPromise({
+          try: () => config.accessToken.load(),
+          catch: (cause) => new DiscordChannelError({ message: 'Could not load the bot token.', cause }),
+        });
+        const edge = yield* edgeClient;
+        const query = new URLSearchParams({ spaceId, accessToken: accessToken.id });
+        yield* callBotRoute(
+          edge,
+          config.applicationId,
+          `/threads/${encodeURIComponent(thread)}?${query.toString()}`,
+          { method: 'DELETE' },
+          DeletedAnswer,
+        );
       }),
   },
   connection: {
@@ -132,6 +142,9 @@ const post = (token: string, target: string, message: Message.Message) =>
     messageIds,
     properties: { discord: { channelId: target, messageId: messageIds.at(0), messageIds } },
   }));
+
+/** EDGE's answer to a thread deletion. */
+const DeletedAnswer = Schema.Struct({ deleted: Schema.Boolean });
 
 const loadConfig = (channel: Channel.Channel) =>
   Effect.gen(function* () {

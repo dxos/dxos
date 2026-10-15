@@ -7,6 +7,7 @@ import React from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
@@ -31,9 +32,9 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
       <span className='self-center grow ms-1'>{t('current-app.name', { ns: osTranslations })}</span>
       {variant === 'topbar' && (
         <div className='dx-cover pointer-events-none'>
-          <div className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
+          <Layout.Grid classNames='h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
             <Surface.Surface type={AppSurface.SearchInput} limit={1} />
-          </div>
+          </Layout.Grid>
         </div>
       )}
       <span className='grow' />

@@ -6,6 +6,7 @@ import React from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
@@ -63,11 +64,11 @@ export const RepositoryHistory = ({
           })}
         </ul>
         {hasMore && onLoadMore && (
-          <div className='p-2 grid'>
+          <Layout.Grid classNames='p-2'>
             <Button.Root variant='ghost' onClick={onLoadMore}>
               {t('history-more.button')}
             </Button.Root>
-          </div>
+          </Layout.Grid>
         )}
       </ScrollArea.Viewport>
     </ScrollArea.Root>

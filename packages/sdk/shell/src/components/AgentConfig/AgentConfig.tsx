@@ -27,10 +27,10 @@ export const AgentConfig = ({
   const { t } = Hooks.useTranslation(translationKey);
   const labelId = Hooks.useId('agentConfig__label');
   return (
-    <div className='p-1'>
-      <h2 className={mx('text-fg-muted', 'text-center mt-2')}>{t('agent.heading')}</h2>
+    <>
+      <Typography.Text tone='muted'>{t('agent.heading')}</Typography.Text>
       {validationMessage && (
-        <p role='alert' className={mx(textValence('error'), 'my-2')}>
+        <p role='alert' className={textValence('error')}>
           {validationMessage}
         </p>
       )}
@@ -41,7 +41,7 @@ export const AgentConfig = ({
         <>
           <div
             role='group'
-            className='my-2 flex gap-2 items-center'
+            className='flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
             <Avatar.Root
@@ -77,7 +77,7 @@ export const AgentConfig = ({
             )}
           </div>
           {agentStatus === 'created' && (
-            <p id='devices-panel.create-agent.description' className={mx('text-fg-muted', 'my-2')}>
+            <p id='devices-panel.create-agent.description' className='text-fg-muted'>
               {t('agent-requested.description')}
             </p>
           )}
@@ -86,7 +86,7 @@ export const AgentConfig = ({
         <>
           <Button.Root
             variant='ghost'
-            classNames='my-2 w-full justify-start gap-2 ps-0 pe-3'
+            classNames='w-full justify-start gap-2 ps-0 pe-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'
@@ -120,6 +120,6 @@ export const AgentConfig = ({
           )}
         </>
       )}
-    </div>
+    </>
   );
 };

@@ -9,7 +9,7 @@ import * as EffectScope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -285,6 +285,48 @@ describe('IndexQuerySource', () => {
     const results = await source.run(Context.default(), makeQuery(spaceId));
 
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
+  });
+
+  test('a row whose database closes under its load is dropped', async () => {
+    const spaceId = SpaceId$.random();
+    const [kept, closed] = [EntityId.random(), EntityId.random()];
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: kept, spaceId, rank: 0 },
+                  { id: closed, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => {
+          if (objectId === closed) {
+            throw new ContextDisposedError();
+          }
+          return { id: objectId } as unknown as Entity.Unknown;
+        },
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+    expect(results.map((entry) => entry.id)).toEqual([kept]);
   });
 
   // Regression: the one-shot budget covered hydration as well as the host round-trip, so a single

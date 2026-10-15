@@ -194,27 +194,31 @@ const CommentsList = ({
         onValueChange={handleSelect}
         items={resolved.map(({ comment }) => ({ value: comment.id, label: comment.id }))}
       >
-        <Listbox.Content aria-label='Comments' classNames='p-1'>
-          {resolved.map(({ comment, range }) => (
-            <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
-              <Listbox.ItemText classNames='grow'>
-                {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
-              </Listbox.ItemText>
-              <Listbox.ItemDescription>{range ? `${range.from}–${range.to}` : comment.cursor}</Listbox.ItemDescription>
-              <Button.Root
-                variant='ghost'
-                iconOnly
-                icon='ph--x--regular'
-                label='Delete comment'
-                onClick={(event) => {
-                  // Keep the row from selecting when the delete button is pressed.
-                  event.stopPropagation();
-                  handleDelete(comment.id);
-                }}
-              />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Comments' classNames='p-1'>
+            {resolved.map(({ comment, range }) => (
+              <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
+                <Listbox.ItemText classNames='grow'>
+                  {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
+                </Listbox.ItemText>
+                <Listbox.ItemDescription>
+                  {range ? `${range.from}–${range.to}` : comment.cursor}
+                </Listbox.ItemDescription>
+                <Button.Root
+                  variant='ghost'
+                  iconOnly
+                  icon='ph--x--regular'
+                  label='Delete comment'
+                  onClick={(event) => {
+                    // Keep the row from selecting when the delete button is pressed.
+                    event.stopPropagation();
+                    handleDelete(comment.id);
+                  }}
+                />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
     </div>
   );

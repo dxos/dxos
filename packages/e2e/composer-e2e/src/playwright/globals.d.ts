@@ -39,6 +39,7 @@ declare global {
        */
       makeRef: (uri: string) => { load: () => Promise<Record<string, unknown>> };
     };
+    pipeline: { get: () => { controlFeeds?: unknown[] } };
   };
 
   /** Set by the suite, not the app: survives only as long as the document it was set on. */
@@ -55,7 +56,7 @@ declare global {
   var dxos:
     | {
         spaces?: () => DebugSpace[];
-        client?: { halo: { identity: { get: () => DebugIdentity | undefined } } };
+        client?: { halo: { identity: { get: () => DebugIdentity | undefined }; devices: { get: () => unknown[] } } };
       }
     | undefined;
 

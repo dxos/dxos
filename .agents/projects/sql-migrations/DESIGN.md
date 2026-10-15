@@ -27,7 +27,7 @@ Each store owns its history table, since several packages share one physical dat
 | `core/echo/feed`                | `feed_migrations`                                                                                     |
 | `core/echo/index-core`          | `entity_meta_migrations`, `fts_index_migrations`, `reverse_ref_migrations`, `index_cursor_migrations` |
 | `core/echo/echo-host`           | `space_state_migrations`, `automerge_heads_migrations`, `automerge_chunks_migrations`                 |
-| `sdk/client-services`           | `metadata_migrations`, `hypercore_files_migrations`                                                   |
+| `sdk/client-services`           | `metadata_migrations`, `hypercore_files_migrations`, `blobs_migrations`                               |
 | `core/halo/keyring`             | `keyring_migrations`                                                                                  |
 | `core/compute/crawler`          | `state_store_migrations`, `agent_registry_migrations`                                                 |
 | `core/compute/pipeline-rdf`     | `rdf_migrations`                                                                                      |

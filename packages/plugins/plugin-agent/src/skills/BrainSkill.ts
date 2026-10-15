@@ -12,6 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, DXN, Ref } from '@dxos/echo';
+import { Space } from '@dxos/halo';
 import { trim } from '@dxos/util';
 
 import { BrainService, MemoryOperation } from '#types';
@@ -28,7 +29,7 @@ export const RunTriggers = Operation.make({
     description: "Records the facts of the conversation's latest turn and fires the agent's triggers they match.",
     icon: 'ph--lightning--regular',
   },
-  services: [Harness.HarnessService, Database.Service, AiService.AiService, BrainService.BrainService],
+  services: [Harness.HarnessService, Database.Service, AiService.AiService, BrainService.BrainService, Space.Service],
   input: Schema.Struct({}),
   output: Schema.Struct({
     facts: Schema.Number.annotate({ description: 'Facts recorded from the turn.' }),
@@ -70,6 +71,10 @@ export const make = (): Skill.Skill =>
       source: trim`
         You keep one memory across every conversation you are in. After each turn, what people said is
         recorded as facts; call ${tool(MemoryOperation.Recall)} when you need what someone said elsewhere.
+        It searches every fact recorded in this space — from every conversation, document and seeded source —
+        with your memories and goals. A query matches facts containing all of its words; when it matches
+        nothing you get everything about the subject instead, marked \`queryMatched: false\`. Someone not
+        found under one name may be under another they go by: their handle, nickname or full name.
 
         A message starting with "${WAKE_HEADER}" is not from the person you are talking to: you sent it to
         yourself because something they asked to hear about happened in another conversation. Tell them now,

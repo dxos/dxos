@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EDGE_URLS } from '@dxos/config';
+
 /** Stable id used by `plugin-connector` to look up the Discord Bot provider entry. */
 export const DISCORD_PROVIDER_ID = 'discord';
 
@@ -74,4 +76,22 @@ export const generateInviteUrl = (applicationId: string): string => {
     permissions: BOT_PERMISSIONS,
   });
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
+};
+
+/** Companion variant (and surface literal) of an agent's Discord setup: account, servers and routed channels. */
+export const DISCORD_AGENT_COMPANION = 'discord';
+
+/** Hub console page listing the Discord bots EDGE hosts; one hub serves every environment, picked by `env`. */
+const EDGE_CONSOLE_URL = 'https://hub.dev.dxos.network/console/edge/discord';
+
+/**
+ * The hub console's Discord page for the EDGE environment `edgeUrl` belongs to, or undefined when it is not one of
+ * the known environments (a custom EDGE has no console entry).
+ */
+export const edgeConsoleUrl = (edgeUrl: string | undefined): string | undefined => {
+  const origin = edgeUrl && URL.parse(edgeUrl)?.origin;
+  const environment = origin
+    ? Object.entries(EDGE_URLS).find(([, url]) => new URL(url).origin === origin)?.[0]
+    : undefined;
+  return environment && `${EDGE_CONSOLE_URL}?${new URLSearchParams({ env: environment })}`;
 };

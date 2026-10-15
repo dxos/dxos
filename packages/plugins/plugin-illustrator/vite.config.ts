@@ -20,7 +20,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'skills': 'src/skills/index.ts',
     'DrawingSkill': 'src/skills/DrawingSkill.ts',
-    'UmlSkill': 'src/skills/UmlSkill.ts',
     'translations': 'src/translations.ts',
     'util': 'src/util/index.ts',
     'Drawing': 'src/types/Drawing.ts',
@@ -33,5 +32,5 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, workerd: true },
+  test: { node: true, storybook: true, workerd: true },
 });

@@ -19,7 +19,9 @@ describe('diagram', () => {
     const scene = build([
       rect('scene:test/a', box(0, 0), 'A'),
       rect('scene:test/b', box(256, 0), 'B'),
-      SceneBuilder.link('line', 'scene:test/a', 'scene:test/b').id('scene:test/ab').properties({ directed: true }),
+      SceneBuilder.link('line', 'scene:test/a', 'scene:test/b')
+        .id('scene:test/ab')
+        .properties({ ends: { end: 'arrow' } }),
     ]);
     const { metrics, diagnostics } = Diagnostics.analyze(toDiagramObjects(scene, defaultNodeRegistry).objects);
     expect(metrics.nodes).toBe(2);

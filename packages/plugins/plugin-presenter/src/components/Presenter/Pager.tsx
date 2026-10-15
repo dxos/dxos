@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 export type PagerProps = {
   index?: number;
@@ -76,7 +77,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
   }
 
   return (
-    <div className='flex items-center text-neutral-500'>
+    <Layout.Flex align='center' classNames='text-neutral-500'>
       <Button.Root
         icon='ph--caret-double-left--regular'
         iconSize='xl'
@@ -117,7 +118,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => onChange?.(count - 1)}
       />
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -132,11 +133,11 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   }
 
   return (
-    <div className='flex items-center text-neutral-500 text-2xl'>
+    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl'>
       <div>
         {index + 1} / {count}
       </div>
-    </div>
+    </Layout.Flex>
   );
 };
 

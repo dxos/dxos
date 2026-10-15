@@ -164,49 +164,51 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
         onMove={handleMove}
       >
         {({ items }) => (
-          <OrderedList.Content>
-            {items.map((column) => (
-              <OrderedList.Item
-                key={column.view.uri}
-                id={column.view.uri}
-                open={expandedId === column.view.uri}
-                onOpenChange={(open) => setExpandedId(open ? column.view.uri : undefined)}
-              >
-                <OrderedList.DragHandle />
-                <OrderedList.ItemText />
-                <SystemButton.Remove
-                  label={t('delete-column.label')}
-                  onClick={() => handleDelete(column)}
-                  data-testid='column.delete'
-                />
-                {column.view.target && (
-                  <OrderedList.Detail>
-                    <Form.Root
-                      schema={ColumnFormSchema}
-                      values={column}
-                      onValuesChanged={handleColumnValuesChanged(column)}
-                    >
-                      <Form.Content>
-                        <Form.Fields />
-                      </Form.Content>
-                    </Form.Root>
-                    <ViewEditor
-                      ref={projectionRef}
-                      mode='tag'
-                      readonly
-                      type={type}
-                      view={column.view.target}
-                      registry={db?.graph.registry}
-                      db={db}
-                      tags={tags}
-                      types={types}
-                      onQueryChanged={handleQueryChanged}
-                    />
-                  </OrderedList.Detail>
-                )}
-              </OrderedList.Item>
-            ))}
-          </OrderedList.Content>
+          <OrderedList.Viewport>
+            <OrderedList.Content>
+              {items.map((column) => (
+                <OrderedList.Item
+                  key={column.view.uri}
+                  id={column.view.uri}
+                  open={expandedId === column.view.uri}
+                  onOpenChange={(open) => setExpandedId(open ? column.view.uri : undefined)}
+                >
+                  <OrderedList.DragHandle />
+                  <OrderedList.ItemText />
+                  <SystemButton.Remove
+                    label={t('delete-column.label')}
+                    onClick={() => handleDelete(column)}
+                    data-testid='column.delete'
+                  />
+                  {column.view.target && (
+                    <OrderedList.Detail>
+                      <Form.Root
+                        schema={ColumnFormSchema}
+                        values={column}
+                        onValuesChanged={handleColumnValuesChanged(column)}
+                      >
+                        <Form.Content>
+                          <Form.Fields />
+                        </Form.Content>
+                      </Form.Root>
+                      <ViewEditor
+                        ref={projectionRef}
+                        mode='tag'
+                        readonly
+                        type={type}
+                        view={column.view.target}
+                        registry={db?.graph.registry}
+                        db={db}
+                        tags={tags}
+                        types={types}
+                        onQueryChanged={handleQueryChanged}
+                      />
+                    </OrderedList.Detail>
+                  )}
+                </OrderedList.Item>
+              ))}
+            </OrderedList.Content>
+          </OrderedList.Viewport>
         )}
       </OrderedList.Root>
     </Form.FieldSet>

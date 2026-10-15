@@ -9,6 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -113,7 +114,7 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
           { value: 'skills', label: t('agent-state-skills.label'), icon: 'ph--sparkle--regular' },
         ]}
       >
-        <Listbox.Content scroll={false}>
+        <Listbox.Content>
           <Listbox.Item id='did'>
             <Listbox.ItemIcon />
             <Listbox.ItemText />
@@ -153,9 +154,9 @@ AgentStateIdentity.displayName = 'AgentState.Identity';
 //
 
 type AgentStateCounts = {
-  memories: { active: number; expired: number };
-  /** Facts read from sources into annotation feeds; absent when none were read. */
-  facts?: { count: number; sources: number };
+  memories: { active: number; superseded: number };
+  /** Facts in the agent's brain and how many people said them; absent when none were read. */
+  facts?: { count: number; speakers: number };
   goals: { proposed: number; confirmed: number };
   people: number;
   organizations: number;
@@ -174,7 +175,7 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
       id: 'memories',
       icon: 'ph--brain--regular',
       title: t('agent-state-memories.label'),
-      value: counts.memories.active + counts.memories.expired,
+      value: counts.memories.active + counts.memories.superseded,
       description: t('agent-state-memories.description', counts.memories),
     },
     ...(counts.facts
@@ -226,7 +227,7 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
       <Listbox.Root
         items={rows.map(({ id, icon, title, description }) => ({ value: id, label: title, icon, description }))}
       >
-        <Listbox.Content scroll={false}>
+        <Listbox.Content>
           {rows.map(({ id, value, description }) => (
             <Listbox.Item key={id} id={id}>
               <Listbox.ItemIcon />
@@ -266,11 +267,7 @@ const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => 
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <AgentStateSection view='conversations' label={t('agent-state-conversations.heading')}>
-      {channels.length === 0 && (
-        <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-          {t('agent-state-conversations-empty.message')}
-        </Layout.Flex>
-      )}
+      {channels.length === 0 && <Status.Empty>{t('agent-state-conversations-empty.message')}</Status.Empty>}
       <Listbox.Root
         items={channels.map((channel) => ({
           value: channel.id,
@@ -278,7 +275,7 @@ const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => 
           icon: 'ph--chat-circle--regular',
         }))}
       >
-        <Listbox.Content scroll={false}>
+        <Listbox.Content>
           {channels.map((channel) => (
             <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-state-channel-${channel.id}`}>
               <Listbox.ItemIcon />

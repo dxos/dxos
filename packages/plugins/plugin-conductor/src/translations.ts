@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor/types';
+import { CanvasBoard } from '@dxos/react-ui-canvas-compute/types';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';

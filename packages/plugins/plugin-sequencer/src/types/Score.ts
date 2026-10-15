@@ -23,6 +23,7 @@ export class Score extends Type.makeObject<Score>(DXN.make('org.dxos.type.score'
     timeSignature: Schema.optional(
       Schema.String.annotate({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
     ),
+    key: Schema.optional(Schema.String.annotate({ title: 'Key', examples: ['D minor', 'F major'] })),
     tracks: Schema.mutable(Schema.Array(Track)).pipe(Annotation.FormInputAnnotation.set(false)),
     sequences: Schema.mutable(Schema.Array(Sequence)).pipe(Annotation.FormInputAnnotation.set(false)),
     /**

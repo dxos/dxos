@@ -33,7 +33,7 @@ export type ChatProcessorOptions = {
   registry?: Registry.AtomRegistry;
 };
 
-// TODO(burdon): Factor out common guts from AiChatProcessor.
+// TODO(burdon): Factor out common guts from ChatModel.
 export class ChatProcessor {
   private readonly _runtime: Context.Context<AiChatServices>;
   private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;

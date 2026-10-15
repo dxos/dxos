@@ -2,6 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type EntityKind } from './Entity.ts';
+import type * as Ontology from './Ontology.ts';
+
+/** An entity the extractor may name: a mention of it is stored under its stable IRI rather than a graph-local one. */
+export type KnownEntity = {
+  /** Its stable IRI: an ECHO object URI, a member's DID, a `mailto:`. */
+  readonly iri: string;
+  readonly label: string;
+  readonly aliases?: ReadonlyArray<string>;
+  readonly type?: EntityKind;
+};
+
 /** A source document for fact extraction: the text plus provenance carried onto each fact. */
 export type ExtractDocument = {
   readonly text: string;
@@ -25,4 +37,11 @@ export type ExtractOptions = {
    * generation. Defaults to `true`.
    */
   readonly strict?: boolean;
+  /**
+   * The predicates the extractor is shown and reuses; a relation none of them fits mints a predicate in the
+   * ontology's namespace. Defaults to the seed ontology.
+   */
+  readonly ontology?: Ontology.Ontology;
+  /** Entities the extractor is shown by name; a mention that names one is stored under its IRI. */
+  readonly entities?: ReadonlyArray<KnownEntity>;
 };

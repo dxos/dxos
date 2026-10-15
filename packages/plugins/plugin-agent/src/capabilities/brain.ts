@@ -22,6 +22,9 @@ import { triggerRegistry } from '../triggers.ts';
 // triggers live in the app's registry, which the agent's state panel lists.
 //
 
+// One state for the app, so every build of the layer sees the same facts, rules and outboxes.
+const state = BrainMemory.makeState({ triggers: triggerRegistry });
+
 const BrainLayerSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -31,9 +34,7 @@ const BrainLayerSpec = LayerSpec.make(
   () =>
     Layer.effect(
       BrainService.BrainService,
-      AgentService.AgentService.pipe(
-        Effect.map((agents) => BrainMemory.make(agents, { triggers: triggerRegistry }).service),
-      ),
+      AgentService.AgentService.pipe(Effect.map((agents) => BrainMemory.make(agents, { state }).service)),
     ),
 );
 

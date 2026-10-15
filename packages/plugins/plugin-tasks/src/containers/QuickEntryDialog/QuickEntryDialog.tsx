@@ -12,6 +12,7 @@ import { Form, useFormContext } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
@@ -54,7 +55,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   }, [onSave, continueRef]);
 
   return (
-    <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
+    <Layout.Grid gap='form' classNames='grid-flow-col auto-cols-fr py-form-padding'>
       {onCancel && (
         <Button.Root
           iconEnd='ph--x--regular'
@@ -79,7 +80,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
         onClick={onSave}
         data-testid='save-button'
       />
-    </div>
+    </Layout.Grid>
   );
 };
 

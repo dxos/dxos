@@ -17,7 +17,7 @@ import {
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
-import { EdgeCredentialsHeaderCodec, edgeFlowControlWindow } from '@dxos/protocols';
+import { EdgeClientTooOldError, EdgeCredentialsHeaderCodec, edgeFlowControlWindow } from '@dxos/protocols';
 import {
   type EdgeStatus,
   EdgeStatus_ConnectionState,
@@ -31,6 +31,7 @@ import {
   presentCredentialsForChallenge,
   readAuthChallenge,
 } from './auth-challenge.ts';
+import { assertClientSupported, clientVersionHeaders, readJsonBody } from './client-version.ts';
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { EdgeWsConnection } from './edge-ws-connection.ts';
@@ -137,6 +138,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _baseHttpUrl: string;
   private _currentConnection?: EdgeWsConnection = undefined;
   private _ready = new Trigger();
+  /** Set when EDGE refused this SDK as outdated; a retry would carry the same version, so none is made. */
+  #refusal: EdgeClientTooOldError | undefined = undefined;
 
   constructor(
     private _identity: EdgeIdentity,
@@ -218,6 +221,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * context. Shared so the awaited path cannot drift from the fire-and-forget one.
    */
   private async _prepareSend(ctx: Context, message: Message): Promise<EdgeWsConnection> {
+    if (this.#refusal) {
+      throw this.#refusal;
+    }
     if (this._ready.state !== TriggerState.RESOLVED) {
       log('waiting for websocket');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
@@ -382,7 +388,22 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
     const identity = this._identity;
     const path = `/ws/${identity.identityDid}/${identity.peerKey}`;
-    const protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
+    this.#refusal = undefined;
+    let protocolHeader: string | undefined;
+    try {
+      protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
+    } catch (err) {
+      if (!(err instanceof EdgeClientTooOldError)) {
+        throw err;
+      }
+      // Returning, not throwing, ends PersistentLifecycle's backoff loop: every retry would be refused the same way.
+      log.warn('EDGE refused this SDK as outdated; not reconnecting until the app is updated', { data: err.data });
+      this.#refusal = err;
+      this._ready.throw(err);
+      this._ready.reset();
+      this.statusChanged.emit(this.status);
+      return undefined;
+    }
     if (this._identity !== identity) {
       log('identity changed during auth header request');
       return undefined;
@@ -539,7 +560,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return encodePresentationWsAuthHeader(authentication.presentation);
     }
 
-    const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });
+    const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET', headers: clientVersionHeaders() });
+    assertClientSupported(response, response.ok ? undefined : await readJsonBody(response));
     // Gate on a parsed VP challenge, not merely on a 401. A 401 forwarded from upstream can carry
     // an unrelated `WWW-Authenticate` (or none), and signing a challenge that isn't there would
     // throw instead of degrading to an unauthenticated attempt.

@@ -11,6 +11,7 @@ import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
@@ -35,12 +36,12 @@ export const ProgressStatusIndicator = () => {
             icon='ph--circle-notch--regular'
             iconOnly
             label={t('progress-indicator.label')}
-            iconClassNames={active.length > 0 && 'animate-spin-slow text-amber-500'}
+            iconClassNames={active.length > 0 && 'animate-spin-slow text-amber-text'}
           />
         </Popover.Trigger>
         {active.length > 0 && (
           <Popover.Content>
-            <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
+            <Layout.Flex column gap='xs' classNames='w-[18rem] p-1 overflow-hidden'>
               {active.map((monitor) => (
                 <ProgressMeter
                   key={monitor.name}
@@ -49,7 +50,7 @@ export const ProgressStatusIndicator = () => {
                   onCancel={() => registry.cancel(monitor.name)}
                 />
               ))}
-            </div>
+            </Layout.Flex>
           </Popover.Content>
         )}
       </Popover.Root>

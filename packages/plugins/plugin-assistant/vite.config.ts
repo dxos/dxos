@@ -14,6 +14,7 @@ export default defineConfig({
     'TracePanel': 'src/containers/TracePanel/TracePanel.tsx',
     'AssistantSkill': 'src/skills/assistant/AssistantSkill.ts',
     'PluginManagerSkill': 'src/skills/plugin-manager/PluginManagerSkill.ts',
+    'TurnReviewSkill': 'src/skills/turn-review/TurnReviewSkill.ts',
     'index': 'src/index.ts',
     'AssistantPlugin': 'src/AssistantPlugin.ts',
     'skills': 'src/skills/index.ts',

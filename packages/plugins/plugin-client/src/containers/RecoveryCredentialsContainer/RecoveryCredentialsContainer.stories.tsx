@@ -105,8 +105,10 @@ export const Revoke: Story = {
     window.confirm = () => true;
     try {
       await userEvent.click(canvas.getAllByRole('button', { name: 'Revoke' })[0]);
-      // The list re-renders off the HALO credential stream, with no explicit refresh.
-      await waitFor(async () => expect(canvas.getByText('Revoked')).toBeInTheDocument(), { timeout: 10_000 });
+      // The list re-renders off the HALO credential stream, with no explicit refresh; a revoked row is struck through.
+      await waitFor(async () => expect(canvas.getByText('Laptop passkey').closest('.line-through')).not.toBeNull(), {
+        timeout: 10_000,
+      });
       // The survivor is now the only active credential, so its revoke action is withdrawn.
       await expect(canvas.queryByRole('button', { name: 'Revoke' })).toBeNull();
       await expect(canvas.getByText(/only way back into your account/)).toBeInTheDocument();

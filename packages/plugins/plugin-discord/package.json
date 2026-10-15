@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-discord",
-  "version": "0.13.0",
-  "private": true,
+  "version": "0.14.0",
   "description": "DXOS plugin that integrates Discord as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -70,6 +69,11 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./DiscordAdminOperation": {
+      "source": "./src/types/DiscordAdminOperation.ts",
+      "types": "./dist/types/src/types/DiscordAdminOperation.d.ts",
+      "import": "./dist/lib/DiscordAdminOperation.mjs"
+    },
     "./DiscordChannel": {
       "source": "./src/types/DiscordChannel.ts",
       "types": "./dist/types/src/types/DiscordChannel.d.ts",
@@ -110,6 +114,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "DiscordAdminOperation": [
+        "dist/types/src/types/DiscordAdminOperation.d.ts"
+      ],
       "DiscordChannel": [
         "dist/types/src/types/DiscordChannel.d.ts"
       ],
@@ -134,7 +141,9 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -149,12 +158,15 @@
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-discord": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-agent": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -166,7 +178,6 @@
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",

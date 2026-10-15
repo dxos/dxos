@@ -681,6 +681,8 @@ export const runMailSync = (
                 )
               : undefined,
           dedupSeedTail: options.dedupSeedTail,
+          // The feed also holds the messages' attachment blobs, which carry no foreign keys.
+          dedupSeedType: Message.Message,
         }),
       ),
       Pipeline.abortWith(

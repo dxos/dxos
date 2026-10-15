@@ -17,11 +17,13 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Obj } from '@dxos/echo';
+import { useLabel } from '@dxos/echo-react';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import type * as Util from '@dxos/react-ui/Util';
@@ -198,10 +200,10 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
   const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
-  const title = Obj.getLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
+  const title = useLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
   const rail = (
-    <div className='grid grid-rows-[min-content_1fr]'>
+    <Layout.Grid rows={['min', 'fill']}>
       <div className='p-1 dx-toolbar-surface'>
         <Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
           <Menu.Trigger asChild>
@@ -266,7 +268,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
           <DragHandleGlyph />
         </Mosaic.DragHandle>
       </div>
-    </div>
+    </Layout.Grid>
   );
 
   return (
@@ -276,14 +278,16 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
       classNames='grid grid-cols-[var(--dx-rail-action)_1fr] dx-attention-surface border border-separator-subtle'
     >
       <div className='border-e border-separator-subtle'>
-        <div className='sticky top-0 flex flex-col items-center'>{rail}</div>
+        <Layout.Flex column align='center' classNames='sticky top-0'>
+          {rail}
+        </Layout.Flex>
       </div>
       <div {...attentionAttrs} className='min-w-0'>
         <span className='sr-only'>{title}</span>
         {isCollapsed ? (
-          <div className='h-(--dx-toolbar-size) flex p-1'>
+          <Layout.Flex classNames='h-(--dx-toolbar-size) p-1'>
             <h2 className='flex items-center font-medium'>{title}</h2>
-          </div>
+          </Layout.Flex>
         ) : (
           <Surface.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
         )}

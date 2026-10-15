@@ -26,6 +26,16 @@ export const MANAGE_CREDENTIALS_DIALOG = `${meta.profile.key}.ManageCredentialsD
 
 const supportsPasskeys = NativePasskey.getPasskeySupport() !== 'none';
 
+/** When a credential was issued, to the minute on a 24-hour clock, in the viewer's locale. */
+const ISSUED_FORMAT = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
 /** Icon per recovery kind, so a passkey is distinguishable from a recovery code at a glance. */
 const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
   'passkey': 'ph--key--regular',
@@ -122,7 +132,7 @@ export const RecoveryCredentialsContainer = () => {
                   label: credential.recovery?.label ?? credential.id ?? `${index}`,
                 }))}
               >
-                <Listbox.Content scroll={false} classNames='gap-1'>
+                <Listbox.Content classNames='gap-1'>
                   {recoveryCredentials.map((credential, index) => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
                     return (
@@ -131,22 +141,19 @@ export const RecoveryCredentialsContainer = () => {
                         <Listbox.ItemText classNames={revoked ? 'text-fg-subtle line-through' : undefined}>
                           {label ?? t(`recovery-kind-${kind}.label`)}
                         </Listbox.ItemText>
-                        <span className='text-fg-muted text-sm'>{credential.issuanceDate?.toLocaleString()}</span>
-                        {revoked ? (
-                          <span className='text-fg-subtle text-sm'>{t('credential-revoked.label')}</span>
-                        ) : (
-                          // Withheld on the last one: revoking it would leave no way to recover the
-                          // identity, and there is no self-service way back.
-                          lookupKey &&
-                          activeCount > 1 && (
-                            <Button.Root
-                              iconOnly
-                              label={t('revoke-credential.label')}
-                              icon='ph--trash--regular'
-                              variant='ghost'
-                              onClick={() => handleRevoke(lookupKey)}
-                            />
-                          )
+                        <span className='text-fg-muted text-sm'>
+                          {credential.issuanceDate && ISSUED_FORMAT.format(credential.issuanceDate)}
+                        </span>
+                        {/* Withheld on the last one: revoking it would leave no way to recover the identity, and there is
+                            no self-service way back. A revoked row says so by its strikethrough alone. */}
+                        {!revoked && lookupKey && activeCount > 1 && (
+                          <Button.Root
+                            iconOnly
+                            label={t('revoke-credential.label')}
+                            icon='ph--trash--regular'
+                            variant='ghost'
+                            onClick={() => handleRevoke(lookupKey)}
+                          />
                         )}
                       </Listbox.Item>
                     );

@@ -206,7 +206,6 @@ const ListboxMaster = ({ items, label }: { items: ListboxModule.Option[]; label:
   return (
     <MasterPane title={label} count={items.length}>
       <ListboxModule.Content
-        scroll={false}
         aria-label={label}
         onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && open()}
       >

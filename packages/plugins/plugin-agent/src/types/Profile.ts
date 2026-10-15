@@ -9,7 +9,7 @@ import { EID } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
 import * as Goal from './Goal.ts';
-import * as Memory from './Memory.ts';
+import * as Knowledge from './Knowledge.ts';
 
 /** True when the ref points at the entity, whether it is space-qualified or local. */
 export const refersTo = (ref: Pick<Ref.Unknown, 'uri'>, id: string): boolean => {
@@ -28,14 +28,10 @@ export const displayName = (subject: Obj.Unknown): string => {
   return Obj.getLabel(subject) ?? 'Unknown';
 };
 
-/** Newest first; the id breaks ties so equal timestamps keep a stable order. */
-export const byNewest = (left: Memory.Memory, right: Memory.Memory): number =>
-  right.observedAt.localeCompare(left.observedAt) || right.id.localeCompare(left.id);
-
 /** Goals that still matter: everything but dropped. */
 export const isLiveGoal = (goal: Goal.Goal): boolean => goal.status !== 'dropped';
 
-const KIND_SECTIONS: { kind: Memory.Kind; heading: string }[] = [
+const KIND_SECTIONS: { kind: Knowledge.Kind; heading: string }[] = [
   { kind: 'fact', heading: 'Facts' },
   { kind: 'preference', heading: 'Preferences' },
   { kind: 'goal', heading: 'Aspirations' },
@@ -55,7 +51,7 @@ const GOAL_SECTIONS: { heading: string; statuses: Goal.Status[] }[] = [
 export type RenderProps = {
   name: string;
   goals: readonly Goal.Goal[];
-  memories: readonly Memory.Memory[];
+  memories: readonly Knowledge.Memory[];
 };
 
 /**
@@ -77,7 +73,7 @@ export const render = ({ name, goals, memories }: RenderProps): string => {
     }
   }
 
-  const active = memories.filter((memory) => memory.status === 'active').sort(byNewest);
+  const active = memories.filter((memory) => memory.status === 'active').sort(Knowledge.byNewest);
   for (const { kind, heading } of KIND_SECTIONS) {
     const section = active.filter((memory) => memory.kind === kind);
     if (section.length > 0) {

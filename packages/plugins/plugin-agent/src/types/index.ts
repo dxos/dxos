@@ -4,12 +4,13 @@
 
 export * as AgentChannels from './AgentChannels.ts';
 export * as AgentCompanion from './AgentCompanion.ts';
+export * as AgentEmail from './AgentEmail.ts';
+export * as AgentMailbox from './AgentMailbox.ts';
 export * as AgentOperation from './AgentOperation.ts';
 export * as BrainService from './BrainService.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
-export * as FactEntry from './FactEntry.ts';
 export * as Goal from './Goal.ts';
-export * as Memory from './Memory.ts';
+export * as Knowledge from './Knowledge.ts';
 export * as MemoryOperation from './MemoryOperation.ts';
 export * as Mode from './Mode.ts';
 export * as ModeOperation from './ModeOperation.ts';

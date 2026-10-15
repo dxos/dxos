@@ -32,6 +32,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
@@ -70,6 +71,8 @@ type L0ItemRootProps = {
   item: AppGraphNode.Node;
   parent?: AppGraphNode.Node;
   path: string[];
+  dragging?: boolean;
+  dropTarget?: Edge | null;
   onMouseEnter?: () => void;
 };
 
@@ -118,7 +121,7 @@ const l0Breakpoints: Record<string, string> = {
 
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
-    ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
+    ({ item, parent, path, dragging, dropTarget, onMouseEnter, children }, forwardedRef) => {
       const { t } = Hooks.useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
@@ -142,6 +145,8 @@ const L0ItemRoot = memo(
               data-type={type}
               data-testid={testId}
               data-object-id={id}
+              {...(dragging && { 'data-dragging': true })}
+              {...(dropTarget && { 'data-drop-target': dropTarget })}
               {...(item.properties.pending === true && { 'aria-disabled': true })}
               onClick={handleClick}
               onMouseEnter={onMouseEnter}
@@ -170,6 +175,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const { t } = Hooks.useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
+  const [dragging, setDragging] = useState(false);
   const localizedString = Theme.toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
   const pending = item.properties.pending === true;
@@ -193,10 +199,12 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
           nativeSetDragImage?.(element, x, y);
         },
         onDragStart: () => {
+          setDragging(true);
           document.body.removeAttribute('data-drag-preview');
           itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
         },
         onDrop: () => {
+          setDragging(false);
           itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
         },
       }),
@@ -232,20 +240,29 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
 
   return (
-    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
-      <div
+    <L0ItemRoot
+      ref={itemElement}
+      item={item}
+      parent={parent}
+      path={path}
+      dragging={dragging}
+      dropTarget={closestEdge}
+      onMouseEnter={handleMouseEnter}
+    >
+      <Layout.Flex
         data-frame={true}
         {...(pending && { 'data-pending': true, 'aria-busy': true })}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
-        className={mx(
-          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
+        center
+        classNames={[
+          'dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
             ? 'p-2 group-hover/l0item:bg-current-surface'
             : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-current-surface',
-        )}
+        ]}
       >
         <ItemAvatar item={item} />
-      </div>
+      </Layout.Flex>
       <L0ItemActiveTabIndicator />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
@@ -341,7 +358,7 @@ export const L0Menu = ({
       {...landmark}
       data-tauri-drag-region='deep'
       classNames={[
-        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
+        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-s',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
         'w-(--dx-l0-size) dx-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
         '[body[data-platform="macos"]_&]:pt-[30px]',
@@ -363,9 +380,8 @@ export const L0Menu = ({
         </div>
       </ActionMenu>
 
-      {/* Space list. */}
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1' data-testid='navtree.workspaces'>
           {topLevelItems.map((item) => (
             <L0Item
               key={item.id}
@@ -380,13 +396,13 @@ export const L0Menu = ({
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
+      <Layout.Grid cols={1} classNames='auto-rows-(--dx-rail-action) pt-2'>
         {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}
-      </div>
+      </Layout.Grid>
 
-      <div className='grid dx-app-no-drag'>
+      <Layout.Grid classNames='dx-app-no-drag'>
         {userAccountItem ? (
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
@@ -399,11 +415,11 @@ export const L0Menu = ({
             />
           </L0ItemRoot>
         ) : (
-          <div className='flex w-full justify-center items-center'>
+          <Layout.Flex center classNames='w-full'>
             <UserAccountAvatar size='lg' />
-          </div>
+          </Layout.Flex>
         )}
-      </div>
+      </Layout.Grid>
     </Tabs.List>
   );
 };

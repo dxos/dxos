@@ -74,22 +74,23 @@ jobs:
   # every object in it. Each joiner is timed separately and sequentially — in parallel they would
   # contend for the same connection budget and measure each other.
   join-latency:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    # 4 vCPU: both jobs wait on EDGE, averaging under 10% of 8 vCPU and peaking at 6 GB.
+    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
+    runs-on:
+      size: 4x16
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 40
     services:
-      # The orchestrator talks to its replicants over Redis. A service container is reachable by
-      # service name, not on loopback, hence `DX_REDIS_HOST`.
+      # The orchestrator talks to its replicants over Redis. The job runs on the host, not in a container,
+      # so the service is reached on its mapped port.
       redis:
         image: redis:7
+        ports:
+          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
-      DX_REDIS_HOST: redis
+      DX_REDIS_HOST: localhost
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -158,22 +159,21 @@ jobs:
   # An hour of randomized commands against a fleet of real peers, asserted against an in-memory
   # model. Independent of `join-latency`: a red soak should not withhold a latency number.
   soak:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 4x16
+      image: *ci-image
     # Headroom over the run's own `maxRuntimeMs`, which stops issuing commands and proceeds to the
     # final assertion; hitting the job timeout instead cancels mid-flight and proves nothing.
     timeout-minutes: 90
     services:
       redis:
         image: redis:7
+        ports:
+          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
-      DX_REDIS_HOST: redis
+      DX_REDIS_HOST: localhost
     steps:
       - name: Checkout
         uses: actions/checkout@v5

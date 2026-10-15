@@ -12,23 +12,23 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatModel } from '../../chat-model/index.ts';
 
 export type ChatMcpErrorsProps = Util.ThemedClassName<{
-  processor: AiChatProcessor;
+  chatModel: ChatModel;
 }>;
 
 /**
  * Inline banner that lists MCP servers that failed to connect during the most recent request.
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
-export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => {
+export const ChatMcpErrors = ({ classNames, chatModel }: ChatMcpErrorsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const errors = useAtomValue(processor.mcpErrors);
+  const errors = useAtomValue(chatModel.mcpErrors);
 
   const handleDismiss = useCallback(() => {
-    processor.dismissMcpErrors();
-  }, [processor]);
+    chatModel.dismissMcpErrors();
+  }, [chatModel]);
 
   if (errors.length === 0) {
     return null;
@@ -44,19 +44,21 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
             label: `${error.url}::${error.protocol}`,
           }))}
         >
-          <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
-            {errors.map((error) => (
-              <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
-                {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
+          <Listbox.Viewport>
+            <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
+              {errors.map((error) => (
+                <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
+                  {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
                       the content's intrinsic width. */}
-                <span className='truncate min-w-0'>
-                  <span className='font-mono'>{error.url}</span>
-                  {' — '}
-                  <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
-                </span>
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
+                  <span className='truncate min-w-0'>
+                    <span className='font-mono'>{error.url}</span>
+                    {' — '}
+                    <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
+                  </span>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </Banner.Body>
     </Banner.Root>

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { UnknownNodeView } from '../components/SceneLayer/SceneLayer.tsx';
 import { nodePorts } from '../utils/ports.ts';
-import { createNode, nodeBounds } from '../utils/shapes.ts';
+import { createNode, nodeBounds, nominalSize } from '../utils/shapes.ts';
 import { nodeDef } from './node-def.ts';
 import {
   type CreateProps,
@@ -26,12 +26,12 @@ const functionDef: NodeDef = {
   type: 'function',
   name: 'Function',
   icon: 'ph--function--regular',
-  key: 'F',
+  key: 'U',
   group: 'compute',
   schema: FunctionNode,
   component: UnknownNodeView,
   create: ({ id, z, center, size }) => ({ type: 'function', id, z, center, size, fn: 'identity' }),
-  defaultSize: { width: 128, height: 64 },
+  defaultSize: { width: 2, height: 1 },
   ports: () => [
     { id: 'in', side: 'w', offset: 0.5, accepts: 'in' },
     { id: 'out', side: 'e', offset: 0.5, accepts: 'out' },
@@ -43,7 +43,12 @@ const registry: NodeRegistry = { ...defaultNodeRegistry, function: functionDef }
 describe('registry', () => {
   test('a host composes the scene schema from its registry', ({ expect }) => {
     const HostScene = createSceneSchema(Object.values(registry).map((def) => def.schema));
-    const fn = functionDef.create({ id: 'f', z: 'a', center: { x: 64, y: 64 }, size: functionDef.defaultSize });
+    const fn = functionDef.create({
+      id: 'f',
+      z: 'a',
+      center: { x: 64, y: 64 },
+      size: nominalSize(functionDef.defaultSize),
+    });
     const scene = { id: 's', nodes: { f: fn }, links: {} };
     expect(Schema.is(HostScene)(scene)).toBe(true);
     // The built-in schema rejects the host type; the engine still handles the node as a `NodeBase`.
@@ -73,13 +78,13 @@ describe('registry', () => {
 });
 
 describe('node registry', () => {
-  test('rectangle and scene share the box prototype and differ only where they say so', ({ expect }) => {
-    const { rect, scene } = defaultNodeRegistry;
+  test('rectangle and frame share the box prototype and differ only where they say so', ({ expect }) => {
+    const { rect, frame } = defaultNodeRegistry;
     expect(rect.component).toBe(boxPrototype.component);
     expect(rect.resizable).toBe(true);
-    expect(scene.resizable).toBe(rect.resizable);
-    expect(scene.portsPerSide).toBe(rect.portsPerSide);
-    expect(scene.openable).toBe(true);
+    expect(frame.resizable).toBe(rect.resizable);
+    expect(frame.portsPerSide).toBe(rect.portsPerSide);
+    expect(frame.openable).toBe(true);
     expect(rect.openable).toBeUndefined();
     // A prototype is not a type: the palette and the scene schema never see it.
     expect(Object.keys(defaultNodeRegistry)).not.toContain('box');

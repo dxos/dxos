@@ -33,12 +33,14 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { preloadLinkIndex } from './src/vite/preload-link-index.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -251,8 +253,8 @@ const PLUGIN_SHARED_PACKAGES = [
 ];
 
 /**
- * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
- * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (`main` publishes daily, and every
+ * deploy publishes the commit it builds) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
  * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
  * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
  */
@@ -538,6 +540,7 @@ export default defineConfig((env) => ({
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
+    preloadLinkIndex(),
     ShutdownPlugin(),
     ...sharedPlugins(env),
 
@@ -637,8 +640,9 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
-    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
+    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 

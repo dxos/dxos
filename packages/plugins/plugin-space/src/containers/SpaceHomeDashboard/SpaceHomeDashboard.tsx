@@ -53,7 +53,7 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
     'plugins': plugins,
   };
 
-  if (!space) {
+  if (!space || counts.length === 0) {
     return null;
   }
 

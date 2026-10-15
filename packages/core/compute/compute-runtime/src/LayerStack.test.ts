@@ -79,6 +79,30 @@ describe('LayerStack', () => {
     );
 
     it.effect(
+      'is a fallback: a spec providing the same tag wins, for direct resolution and for its consumers',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'spec' }),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolver = stack.getServiceResolver();
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, {}))).toEqual({ value: 'spec' });
+        expect(yield* resolveWithScope(resolver.resolve(ServiceB, {}))).toEqual({ value: 'b:spec' });
+      }),
+    );
+
+    it.effect(
       'resolves an ambient service no spec provides',
       Effect.fn(function* ({ expect }) {
         const stack = new LayerStack.LayerStack({

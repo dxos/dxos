@@ -812,6 +812,9 @@
   /* zag copies the content's z-index onto its positioner, so setting it here lifts the whole popup. */
   .dx-popup {
     z-index: var(--dx-layer-popup);
+    /* The popup is unpositioned, so its z-index alone stacks nothing: the arrow's `z-index: -1` needs it as a stacking
+       context to paint over the surface and its ring rather than under them, which cut the arrow to a sliver. */
+    isolation: isolate;
     min-width: var(--reference-width, 8rem);
     padding-block: var(--dx-control-inset);
     border-radius: var(--radius-sm, 0.25rem);
@@ -973,10 +976,14 @@
    * The gap is one control inset: square icon-only Buttons already sit in an inset cell, and every other control takes the
    * same inline margin, so any two adjacent items are three insets apart.
    */
-  /* A field in a toolbar (a search or filter input) takes the row's remaining width. */
+  /*
+   * A field in a toolbar (a search or filter input) takes the row's remaining width. Its inset is the field's padding,
+   * not its control's margin: the control fills the field, and a margin on top of that would overflow the toolbar.
+   */
   .dx-toolbar > .dx-field {
     flex: 1 1 auto;
     min-width: 0;
+    padding-inline: var(--dx-control-inset);
   }
   /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
   .dx-toolbar > :is(.dx-checkbox, .dx-switch) {
@@ -986,11 +993,9 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--dx-control-inset);
+    /* No gap or padding of its own: the items are block-sized controls, which carry their own spacing. */
     width: 100%;
     min-height: var(--dx-block-size);
-    /* Half a gap of inline padding (px-1 at md), so the end items are not flush with a pane's edge. */
-    padding-inline: calc(var(--dx-gap-size) / 2);
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
   }
@@ -1001,7 +1006,6 @@
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
-  .dx-toolbar > .dx-field > .dx-control,
   .dx-toolbar > .dx-select > .dx-control {
     margin-inline: var(--dx-control-inset);
   }

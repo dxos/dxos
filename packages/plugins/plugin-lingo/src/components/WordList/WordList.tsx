@@ -5,6 +5,7 @@
 import React from 'react';
 
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -32,7 +33,7 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
   const interactive = Boolean(onSelect);
 
   return (
-    <div role={interactive ? 'listbox' : 'list'} className={mx('flex flex-col divide-y divide-separator', classNames)}>
+    <Layout.Flex column role={interactive ? 'listbox' : 'list'} classNames={['divide-y divide-separator', classNames]}>
       {words.map((word) => (
         <div
           role={interactive ? 'option' : 'listitem'}
@@ -64,7 +65,7 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
           <ProgressPips word={word} />
         </div>
       ))}
-    </div>
+    </Layout.Flex>
   );
 };
 

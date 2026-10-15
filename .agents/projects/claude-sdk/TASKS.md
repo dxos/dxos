@@ -40,7 +40,7 @@ Work:
 
 - [x] External-turn path found: `Chat.feed` is a `Ref<Feed.Feed>`;
       `Feed.append(feed, items, { parent })` appends without going through
-      `useChatProcessor`. No plugin-assistant change needed for plumbing.
+      `useChatModel`. No plugin-assistant change needed for plumbing.
 - [x] `Wire` — projected message in transit (ECHO objects are not transferable).
 - [x] Middleware — NDJSON stream over POST, mounted by the vite plugin.
 - [x] `Agent.stories.tsx` — asserts rendered text, `Read` call/result still
@@ -89,11 +89,11 @@ The assertions were at fault, twice over:
 
 Retracted, so nobody rebuilds on them:
 
-- ~~"`AiChatProcessor.messages` reads in-memory atoms, never the feed."~~ `Chat.tsx`
+- ~~"`ChatModel.messages` reads in-memory atoms, never the feed."~~ `Chat.tsx`
   composes `feedMessages` (a reactive query) with the processor's atoms.
 - ~~"`AgentService` is the only supported door."~~ It is how the assistant drives a
   turn, not a precondition for a message rendering.
-- `AiChatProcessor.present()` was added on the first of these and has been
+- `ChatModel.present()` was added on the first of these and has been
   **removed** along with the `getChatProcessor` story hook.
 
 CONSEQUENCE FOR M3c: no new seam is needed. Routing Composer's chat input to the
@@ -159,7 +159,7 @@ when the agent host is wanted.
 
 ### M3b — the render path
 
-Root cause is known (see the FINDING section): `AiChatProcessor.messages` reads
+Root cause is known (see the FINDING section): `ChatModel.messages` reads
 in-memory atoms, never the feed. `present()` has landed and is necessary but not
 sufficient.
 

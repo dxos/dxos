@@ -9,6 +9,7 @@ import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type Capabilities, type ElementId, type Point, type Scene } from '../../model/types.ts';
 import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
+import { activeLayer } from '../../utils/layers.ts';
 import { between, topZ } from '../../utils/order.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
@@ -78,6 +79,7 @@ export const useSceneClipboard = ({
         createId,
         nodeZ: () => (nodeZ = between(nodeZ, undefined)),
         linkZ: () => (linkZ = between(linkZ, undefined)),
+        layer: activeLayer(scene, registry.get(atoms.layer)),
       });
       projection.apply(intent);
       registry.set(atoms.clipboard, { ...fragment, pasted: at ? fragment.pasted : fragment.pasted + 1 });
@@ -91,6 +93,8 @@ export const useSceneClipboard = ({
       snap,
       scene.nodes,
       scene.links,
+      scene,
+      atoms.layer,
       projection,
       select,
       createId,

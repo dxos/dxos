@@ -9,11 +9,18 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
-import { Organization, Person } from '@dxos/types';
+import { Channel, Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { AgentActivity, AgentKnowledge, AgentPrivateChat, ProfileProperties } from '#containers';
-import { AgentCompanion } from '#types';
+import {
+  AgentActivity,
+  AgentKnowledge,
+  AgentPrivateChat,
+  BrainStore,
+  EmailChannelProperties,
+  ProfileProperties,
+} from '#containers';
+import { AgentCompanion, AgentEmail } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -46,6 +53,27 @@ export default Capability.makeModule(() =>
         ),
         component: AgentActivity,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // A debug view of the brain store as held: raw facts, rules, their matching format and outboxes.
+      Surface.create({
+        id: 'agentBrainStore',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, AgentCompanion.BRAIN_STORE),
+          AppSurface.companion(AppSurface.Article, Agent.Agent),
+        ),
+        component: BrainStore,
+        props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // An email channel's address and sender allowlist, wherever its properties show (the agent's channel list too).
+      Surface.create({
+        id: 'emailChannelProperties',
+        filter: AppSurface.object(
+          AppSurface.ObjectProperties,
+          Channel.Channel,
+          (data) => data.subject.backend.kind === AgentEmail.BACKEND_KIND,
+        ),
+        component: EmailChannelProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({

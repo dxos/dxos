@@ -9,3 +9,6 @@ export const BRAIN = 'brain';
 
 /** Companion variant (and surface literal) of an agent's activity: channels, skills and conversations. */
 export const ACTIVITY = 'activity';
+
+/** Companion variant (and surface literal) of a debug view of the agent's brain store: facts, rules and outboxes as held. */
+export const BRAIN_STORE = 'brain-store';

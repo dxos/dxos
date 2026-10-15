@@ -121,7 +121,16 @@ export const Hook = Schema.Struct({
    * Must match the function's input schema.
    */
   input: Trigger.InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Run in the background (end-request only): the request settles without waiting for the hook, and
+   * the agent process awaits it before it finishes. For work the user should not wait on, e.g.
+   * reviewing the turn that just ended.
+   */
+  async: Schema.optional(Schema.Boolean.annotate({ title: 'Run in background' })),
 });
+
+export type Hook = Schema.Schema.Type<typeof Hook>;
 
 /**
  * Create a new Skill.

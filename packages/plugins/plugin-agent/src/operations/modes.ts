@@ -17,8 +17,9 @@ import {
   ModesSkill,
   NoteTakerSkill,
   RelaySkill,
+  SupportSkill,
 } from '#skills';
-import { Memory, Mode } from '#types';
+import { Knowledge, Mode } from '#types';
 
 import { loadCopies, openBinder } from './agent-skills.ts';
 import { AgentOperationError } from './errors.ts';
@@ -32,7 +33,7 @@ export const BASE_SKILL_KEYS: readonly string[] = [
   BrainSkill.key,
 ];
 
-type BuiltinMode = { name: string; description: string; skills: readonly string[]; records?: Memory.Kind[] };
+type BuiltinMode = { name: string; description: string; skills: readonly string[]; records?: Knowledge.Kind[] };
 
 /** The modes every agent starts with; people can add their own `Mode` objects beside them. */
 export const BUILTIN_MODES: readonly BuiltinMode[] = [
@@ -54,6 +55,12 @@ export const BUILTIN_MODES: readonly BuiltinMode[] = [
     description: 'Carries messages between people and reports back what they said.',
     skills: [RelaySkill.key],
     records: ['commitment'],
+  },
+  {
+    name: 'Support',
+    description: 'Answers community questions, gathers bug reports and hands what it cannot solve to the team.',
+    skills: [SupportSkill.key],
+    records: ['event', 'note'],
   },
 ];
 

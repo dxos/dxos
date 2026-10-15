@@ -225,7 +225,7 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
  * path, so an operation reachable in code mode is exactly the one a tool-calling agent would reach —
  * same registry, same handlers, same invocation options.
  */
-const projectOperations = Effect.fnUntraced(function* (skills: readonly Skill.Skill[]) {
+export const projectOperations = Effect.fnUntraced(function* (skills: readonly Skill.Skill[]) {
   const skillToolkit = yield* createToolkit({ skills });
   const handlers = yield* skillToolkit.handlers;
   return Record.toEntries(skillToolkit.toolkit.tools).map(([name, tool]): SandboxOperation => ({

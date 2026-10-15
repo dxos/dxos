@@ -46,7 +46,9 @@ export const layer: Layer.Layer<
 
     // Dies rather than failing: a remote manager built without control is a deployment fault, and
     // every other verb on this surface reports host failures as defects too.
-    const remoteControl = <K extends 'spawn' | 'list'>(verb: K): NonNullable<RemoteProcessManager.Manager[K]> => {
+    const remoteControl = <K extends 'spawn' | 'list' | 'attach'>(
+      verb: K,
+    ): NonNullable<RemoteProcessManager.Manager[K]> => {
       const control = remote[verb];
       if (control === undefined) {
         throw new Error('Remote process requested, but RemoteProcessManager offers no process control.');
@@ -70,7 +72,7 @@ export const layer: Layer.Layer<
       spawn: <I, O, Rpcs extends Rpc.Any = never>(
         definition: Operation.Durable<I, O, any, Rpcs>,
         { location, ...options }: Process.SpawnOptions & Process.LocationOptions = {},
-      ): Effect.Effect<Process.Handle<I, O, Rpcs>> =>
+      ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
         location?.kind === 'edge'
           ? Effect.suspend(() =>
               remoteControl('spawn')({ ...options, spaceId: location.space, key: definition.key, definition }),
@@ -80,6 +82,13 @@ export const layer: Layer.Layer<
         location?.kind === 'edge'
           ? Effect.suspend(() => remoteControl('list')({ ...options, spaceId: location.space }))
           : local.list(options),
+      attach: <I, O, Rpcs extends Rpc.Any = never>(
+        pid: Process.ID,
+        { location }: Process.LocationOptions = {},
+      ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
+        location?.kind === 'edge'
+          ? Effect.suspend(() => remoteControl('attach')({ spaceId: location.space, pid }))
+          : local.attach<I, O, Rpcs>(pid),
     } satisfies Process.Manager;
   }),
 );

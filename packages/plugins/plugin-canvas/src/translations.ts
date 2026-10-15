@@ -12,6 +12,8 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Canvas',
         'variant.label': 'Canvas',
+        'lock-drawing.label': 'Read only',
+        'unlock-drawing.label': 'Edit drawing',
       },
     },
   },

@@ -6,11 +6,12 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
+import { NOMINAL_SIZES, nominalSize } from '../utils/shapes.ts';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
 // The empty canvas: every gesture here lands on blank scene, so a create is never a hit on a fixture node.
-const DEFAULT_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--default', PORT);
+const DEFAULT_URL = storybookUrl('ui-react-ui-canvas-sceneview--default', PORT);
 
 test.describe('create sizing', () => {
   let page: Page;
@@ -103,10 +104,11 @@ test.describe('create sizing', () => {
       return (await scene.box(scene.node(id!))).width;
     };
 
-    // A new shape is the shared default (256 scene units) at any zoom, so on screen it scales with the zoom.
+    // A new rectangle is its nominal width (two major cells, 128 scene units) at any zoom, so on screen it
+    // scales with the zoom.
     const expectDefault = async () => {
       const width = await widthAt();
-      expect(Math.abs(width - (256 * (await scene.zoom())) / 100)).toBeLessThan(4);
+      expect(Math.abs(width - (nominalSize(NOMINAL_SIZES.rect).width * (await scene.zoom())) / 100)).toBeLessThan(4);
     };
     await expectDefault();
     await scene.zoomIn(2);
