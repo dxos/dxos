@@ -22,19 +22,10 @@ describe('deus CLI export restore', () => {
     // Feature maps link tasks by id (D118), so the restore brings the tasks too.
     expect(deus('task', 'import', join(root, 'codebase/tasks.sexp'), '--codebase', restored).code).toBe(0);
 
-    const self = join(scratch, 'export-self');
-    expect(deus('init', '--empty', '--codebase', self).code).toBe(0);
-    expect(deus('add', join(root, 'deus'), '--codebase', self).code).toBe(0);
-    const hashes = (codebase: string): Map<string, string> =>
-      new Map(
-        JSON.parse(deus('ls', '--json', '--codebase', codebase).stdout).map((entry: { name: string; hash: string }) => [
-          entry.name,
-          entry.hash,
-        ]),
-      );
-    const exported = hashes(restored);
-    const stale = [...hashes(self)].filter(([name, hash]) => exported.get(name) !== hash).map(([name]) => name);
-    expect(stale, 'run `deus export codebase` after changing deus/').toEqual([]);
+    // Compiling deus/ over the restore changes nothing exactly when the export matches deus/; it
+    // costs one compile, where a second codebase built from deus/ to compare hashes cost two.
+    const update = deus('update', join(root, 'deus'), '--codebase', restored);
+    expect(update.stdout.trim(), 'run `deus export codebase` after changing deus/').toBe('Nothing changed.');
 
     // JS.Spec's blocks compile with the js target, which copies $DEUS_HOME/platform/js/runtime.mjs.
     process.env.DEUS_HOME = root;
