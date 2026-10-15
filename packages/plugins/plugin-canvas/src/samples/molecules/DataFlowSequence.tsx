@@ -8,6 +8,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
+import { useTween } from './tween.ts';
 
 /** One scene of a sequence: a diagram, how long it plays, and the caption that says what it shows. */
 export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'grid' | 'revealed' | 'partitioned'> & {
@@ -47,6 +48,9 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
   // Whether the diagram fades with the caption: not between two scenes on one stage, where it runs on and morphs.
   const [morphing, setMorphing] = useState(false);
   const scene = scenes[index];
+  // Faded on animation frames rather than by CSS, so a frame-by-frame render steps them with everything else.
+  const captionOpacity = useTween(shown ? 1 : 0, FADE);
+  const diagramOpacity = useTween(shown || morphing ? 1 : 0, FADE);
   const lead = (scene.stage && scenes.find((candidate) => candidate.stage === scene.stage)) || scene;
 
   // Fades the current scene out, then swaps in the one at `next`, which fades in as it mounts.
@@ -81,8 +85,8 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
     <div className='dx-fill relative flex flex-col bg-base-surface'>
       {/* The caption has a strip of its own above the diagram, so the camera's fit never puts a block under it. */}
       <div
-        className='relative shrink-0 flex flex-col items-center gap-1 py-4 bg-base-surface transition-opacity'
-        style={{ opacity: shown ? 1 : 0, transitionDuration: `${FADE}ms` }}
+        className='relative shrink-0 flex flex-col items-center gap-1 py-4 bg-base-surface'
+        style={{ opacity: captionOpacity }}
       >
         <div className='absolute top-3 left-4 text-sm text-fg-muted'>
           {index + 1} / {scenes.length}
@@ -90,10 +94,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
         <div className='text-3xl'>{scene.title}</div>
         <div className='text-lg text-fg-muted'>{scene.caption}</div>
       </div>
-      <div
-        className='dx-grow relative transition-opacity'
-        style={{ opacity: shown || morphing ? 1 : 0, transitionDuration: `${FADE}ms` }}
-      >
+      <div className='dx-grow relative' style={{ opacity: diagramOpacity }}>
         <DataFlowView
           key={scene.stage ?? index}
           spec={scene.spec}

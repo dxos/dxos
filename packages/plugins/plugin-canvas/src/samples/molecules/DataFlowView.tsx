@@ -26,6 +26,7 @@ import {
 import { LOOKS, MoleculeOverlay, REVEAL_MS } from './MoleculeOverlay.tsx';
 import { type Arrivals, type SplitMove, planArrivals, planMove, planSplit } from './morph.ts';
 import { DataFlowSimulation, type SimulationOptions } from './simulation.ts';
+import { useRun, useTween } from './tween.ts';
 
 /** How many buckets a partitioned hub gets, and how long the morph to it takes. */
 const PARTITIONS = 3;
@@ -50,50 +51,6 @@ const driftDistanceAt = (seconds: number) => {
 /** How far past the hub's old edges the focus reaches (roughly the camera's margin), and how often it is moved. */
 const FOCUS_MARGIN = 160;
 const FOCUS_TICK = 250;
-
-/** Runs linearly from 0 to 1 over `duration` ms each time `key` changes (each phase of it eases itself); 1 while none. */
-const useRun = (key: number | undefined, duration: number): number => {
-  const [value, setValue] = useState(1);
-  useEffect(() => {
-    if (key === undefined) {
-      return;
-    }
-    const start = performance.now();
-    setValue(0);
-    let frame = requestAnimationFrame(function step(now) {
-      const t = Math.min(1, (now - start) / duration);
-      setValue(t);
-      if (t < 1) {
-        frame = requestAnimationFrame(step);
-      }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [key, duration]);
-  return value;
-};
-
-/** Runs linearly from where it is to `target` over `duration` ms whenever `target` changes, rendering each step. */
-const useTween = (target: number, duration: number): number => {
-  const [value, setValue] = useState(target);
-  useEffect(() => {
-    const from = value;
-    if (from === target) {
-      return;
-    }
-    const start = performance.now();
-    let frame = requestAnimationFrame(function step(now) {
-      const t = Math.min(1, (now - start) / duration);
-      setValue(from + (target - from) * t);
-      if (t < 1) {
-        frame = requestAnimationFrame(step);
-      }
-    });
-    return () => cancelAnimationFrame(frame);
-    // Restarted only by a new target, from wherever the last run left off.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target, duration]);
-  return value;
-};
 
 /** The rectangle every shown block's frame lies in. */
 const framesBounds = (layout: DataFlowLayout): Bounds | undefined => {

@@ -29,6 +29,7 @@ import {
   type Frame,
   type LatticeBond,
 } from './simulation.ts';
+import { useTween } from './tween.ts';
 
 const ATOM_RADIUS = 5.5;
 
@@ -914,16 +915,17 @@ export const MoleculeOverlay = ({
   );
   const visible = (id: string) =>
     relayout?.arrivals.windows.has(id.replace(/^channel-/, '')) ? arrival(id) : (shown.get(id) ?? 1);
-  // The monolithic agent's parts fade in together when it is revealed, and out when it is hidden again.
+  // The monolithic agent's parts fade in together when it is revealed, and out when it is hidden again (on animation
+  // frames, so a frame-by-frame render steps the fade too).
+  const revealing = useTween(revealed ? 1 : 0, REVEAL_MS);
+  const reveal = revealing < 0.5 ? 2 * revealing * revealing : 1 - (-2 * revealing + 2) ** 2 / 2;
   const monolithIds = new Set(
     layout.monolith
       ? [layout.monolith.group.id, layout.monolith.feed.id, layout.hub.id, layout.channels[layout.monolith.down].id]
       : [],
   );
   const fade = (id: string): React.CSSProperties =>
-    monolithIds.has(id)
-      ? { opacity: revealed ? visible(id) : 0, transition: `opacity ${REVEAL_MS}ms ease-in-out` }
-      : { opacity: visible(id) };
+    monolithIds.has(id) ? { opacity: reveal * visible(id) } : { opacity: visible(id) };
   const feeds = layout.monolith ? [layout.monolith.feed] : [];
   const blocks = [...layout.sources, ...feeds, layout.hub, ...layout.sinks].filter(
     (block) => !block.hidden && visible(block.id) > 0 && (!layout.focus || block === layout.hub),
