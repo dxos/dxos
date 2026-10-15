@@ -12,6 +12,14 @@
  * document), for whether a few large documents set Automerge's wasm high-water. `--syncs` counts the
  * worker's Subduction `syncWithPeer` calls per sample, beside its wasm. `--saves` counts the storage
  * adapter's saves by key kind (the second key segment: commits, blobs, remote heads), never ids.
+ * `--reasons` tallies why each index pass ran (the scheduler's reason names). `--churn` samples what
+ * each realm allocates from `--churn-from` ms after ready (60 s; 0 is each realm's first line), collected
+ * objects included, and reports it by code at the end: which code keeps an idle app allocating. `--no-gc` reads each realm's heap without collecting
+ * first, used and committed, as an idle app is never collected on demand. `--sync-state` totals each
+ * space's document counts against EDGE (local, remote, unsynced), counts only. `--count a,b` counts calls
+ * of the worker's methods by those names. `--rpc` counts the protobuf messages the worker encodes for the
+ * page, by message type. `--profiles <dir>` also writes each sampled profile there (call sites and sizes),
+ * for `alloc-report.mjs` to slice further.
  *
  * Usage: node scripts/memory/doc-loads.ts --archive <file.dxprofile> --dist <bundle> (--offline | --edge <url>)
  *        [--port 4530] [--debug-port 9350] [--idle-ms 180000] [--top 12] [--frames 8] [--boots 1]
@@ -19,7 +27,7 @@
 
 import { chromium } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -51,6 +59,14 @@ const { values } = parseArgs({
     'sizes': { type: 'boolean', default: false },
     'syncs': { type: 'boolean', default: false },
     'saves': { type: 'boolean', default: false },
+    'reasons': { type: 'boolean', default: false },
+    'churn': { type: 'boolean', default: false },
+    'churn-from': { type: 'string', default: '60000' },
+    'no-gc': { type: 'boolean', default: false },
+    'sync-state': { type: 'boolean', default: false },
+    'count': { type: 'string', default: '' },
+    'rpc': { type: 'boolean', default: false },
+    'profiles': { type: 'string' },
   },
 });
 if (!values.archive || !values.dist || values.offline === Boolean(values.edge)) {
@@ -155,7 +171,62 @@ const SAVES_CONDITION =
   saveMatch &&
   `((kinds, kind) => { kinds[kind] = (kinds[kind] ?? 0) + 1; })(globalThis.__dxSaveKinds ??= {}, String(${saveMatch[1]}[1])), false`;
 
+// The first statement of `async _runIndexPass(ctx, reasons) {`, whose second parameter counts reasons.
+const REASONS_AT = /async _runIndexPass\([\w$]+,([\w$]+)\)\{/.exec(source);
+if (values.reasons && !REASONS_AT) {
+  throw new Error(`${workerFile}: no _runIndexPass`);
+}
+const reasonsLocation =
+  REASONS_AT &&
+  (() => {
+    const at = REASONS_AT.index + REASONS_AT[0].length;
+    const head = source.slice(0, at);
+    return { lineNumber: head.split('\n').length - 1, columnNumber: at - (head.lastIndexOf('\n') + 1) };
+  })();
+const REASONS_CONDITION =
+  REASONS_AT &&
+  `((tally, reasons) => { for (const [reason, count] of Object.entries(reasons ?? {})) tally[reason] = (tally[reason] ?? 0) + count; tally.passes = (tally.passes ?? 0) + 1; })(globalThis.__dxIndexReasons ??= {}, ${REASONS_AT[1]}), false`;
+
+// Each `--count` method's first statement, every definition of that name in the worker chunk.
+const COUNTED = values.count
+  .split(',')
+  .filter(Boolean)
+  .flatMap((name) =>
+    [...source.matchAll(new RegExp(`[^\\w$.]${name.replace(/[$]/g, '\\$')}\\([^)]*\\)\\{`, 'g'))].map(({ index, 0: text }) => {
+      const at = index + text.length;
+      const head = source.slice(0, at);
+      return {
+        name,
+        location: { lineNumber: head.split('\n').length - 1, columnNumber: at - (head.lastIndexOf('\n') + 1) },
+      };
+    }),
+  );
+for (const name of values.count.split(',').filter(Boolean)) {
+  if (!COUNTED.some((counted) => counted.name === name)) {
+    throw new Error(`${workerFile}: no method ${name}`);
+  }
+}
+
+// `bufMessage`'s `encode: (value) => toBinary(messageSchema, value)`, minified.
+const RPC_ENCODE = /decode:([\w$]+)=>[\w$]+\(([\w$]+),\1\),encode:([\w$]+)=>/.exec(source);
+if (values.rpc && !RPC_ENCODE) {
+  throw new Error(`${workerFile}: no bufMessage encode`);
+}
+const rpcLocation =
+  RPC_ENCODE &&
+  (() => {
+    const at = RPC_ENCODE.index + RPC_ENCODE[0].length;
+    const head = source.slice(0, at);
+    return { lineNumber: head.split('\n').length - 1, columnNumber: at - (head.lastIndexOf('\n') + 1) };
+  })();
+const RPC_CONDITION =
+  RPC_ENCODE &&
+  `((tally, name) => { tally[name] = (tally[name] ?? 0) + 1; })(globalThis.__dxRpc ??= {}, String(${RPC_ENCODE[2]}?.typeName)), false`;
+
 const READ = `JSON.stringify({
+  rpc: globalThis.__dxRpc ?? {},
+  calls: globalThis.__dxCalls ?? {},
+  reasons: globalThis.__dxIndexReasons ?? {},
   saves: globalThis.__dxSaveKinds ?? {},
   syncs: globalThis.__dxSyncCalls ?? 0,
   sizes: globalThis.__dxLoadSizes ?? null,
@@ -267,15 +338,16 @@ const main = async () => {
             if (targetInfo.url.includes(workerFile)) {
               workerSession = sessionId;
               await cdp.send('Debugger.enable', {}, sessionId);
-              if (values.retained) {
-                // Collected objects excluded, so the profile is what the worker still holds when read.
+              const fromStart = values.churn && Number(values['churn-from']) === 0;
+              if (values.retained || fromStart) {
+                // Collected objects excluded for `--retained`, so the profile is what the worker still holds when read.
                 await cdp.send('HeapProfiler.enable', {}, sessionId);
                 await cdp.send(
                   'HeapProfiler.startSampling',
                   {
                     samplingInterval: 16_384,
-                    includeObjectsCollectedByMajorGC: false,
-                    includeObjectsCollectedByMinorGC: false,
+                    includeObjectsCollectedByMajorGC: fromStart,
+                    includeObjectsCollectedByMinorGC: fromStart,
                   },
                   sessionId,
                 );
@@ -296,6 +368,31 @@ const main = async () => {
                 await cdp.send(
                   'Debugger.setBreakpointByUrl',
                   { urlRegex: workerFile.replace(/[.]/g, '\\.'), ...location, condition: SYNCS_CONDITION },
+                  sessionId,
+                );
+              }
+              if (values.rpc && rpcLocation) {
+                await cdp.send(
+                  'Debugger.setBreakpointByUrl',
+                  { urlRegex: workerFile.replace(/[.]/g, '\\.'), ...rpcLocation, condition: RPC_CONDITION },
+                  sessionId,
+                );
+              }
+              for (const { name, location } of COUNTED) {
+                await cdp.send(
+                  'Debugger.setBreakpointByUrl',
+                  {
+                    urlRegex: workerFile.replace(/[.]/g, '\\.'),
+                    ...location,
+                    condition: `((calls) => { calls['${name}'] = (calls['${name}'] ?? 0) + 1; })(globalThis.__dxCalls ??= {}), false`,
+                  },
+                  sessionId,
+                );
+              }
+              if (values.reasons && reasonsLocation) {
+                await cdp.send(
+                  'Debugger.setBreakpointByUrl',
+                  { urlRegex: workerFile.replace(/[.]/g, '\\.'), ...reasonsLocation, condition: REASONS_CONDITION },
                   sessionId,
                 );
               }
@@ -328,6 +425,9 @@ const main = async () => {
             workerSession,
           );
           const read: {
+            rpc: Record<string, number>;
+            calls: Record<string, number>;
+            reasons: Record<string, number>;
             saves: Record<string, number>;
             syncs: number;
             stacks: [string, number][];
@@ -344,8 +444,10 @@ const main = async () => {
           previousCounters = read.counters;
           // Each realm's live heap after a collection, and its wasm linear memory per module.
           const realm = async (sessionId?: string) => {
-            await cdp.send('HeapProfiler.collectGarbage', {}, sessionId).catch(() => {});
-            const { usedSize } = await cdp.send('Runtime.getHeapUsage', {}, sessionId);
+            if (!values['no-gc']) {
+              await cdp.send('HeapProfiler.collectGarbage', {}, sessionId).catch(() => {});
+            }
+            const { usedSize, totalSize } = await cdp.send('Runtime.getHeapUsage', {}, sessionId);
             const { result: wasm } = await cdp.send(
               'Runtime.evaluate',
               { expression: 'JSON.stringify(globalThis.__dxosWasmMemory?.()?.byModule ?? {})', returnByValue: true },
@@ -354,9 +456,32 @@ const main = async () => {
             const byModule = Object.entries(JSON.parse(wasm.value) as Record<string, number>)
               .map(([name, bytes]) => `${name.replace(/-[\w]+\.wasm$/, '')} ${Math.round(bytes / 1048576)}`)
               .join(', ');
-            return `heap ${Math.round(usedSize / 1048576)} MiB, wasm ${byModule || 'none'}`;
+            const committed = values['no-gc'] ? ` of ${Math.round(totalSize / 1048576)} committed` : '';
+            return `heap ${Math.round(usedSize / 1048576)}${committed} MiB, wasm ${byModule || 'none'}`;
           };
           const memory = `  page: ${await realm()}\n  worker: ${await realm(workerSession)}`;
+          const syncState = values['sync-state']
+            ? (
+                await cdp.send('Runtime.evaluate', {
+                  expression: `(async () => {
+                    const total = { spaces: 0, inSync: 0, local: 0, remote: 0, unsynced: 0, peers: 0 };
+                    for (const space of globalThis.dxos?.spaces?.() ?? []) {
+                      const state = await space.db.getSyncState();
+                      const peers = (await space.db.getAutomergeSyncState()).peers?.length ?? 0;
+                      total.spaces++;
+                      total.peers += peers;
+                      total.local += state.localDocumentCount;
+                      total.remote += state.remoteDocumentCount;
+                      total.unsynced += state.unsyncedDocumentCount;
+                      total.inSync += state.unsyncedDocumentCount === 0 ? 1 : 0;
+                    }
+                    return JSON.stringify(total);
+                  })()`,
+                  awaitPromise: true,
+                  returnByValue: true,
+                })
+              ).result.value
+            : undefined;
           const newDocuments = read.distinct - previousDistinct;
           previousDistinct = read.distinct;
           const delta = [...now]
@@ -375,6 +500,19 @@ const main = async () => {
           );
           if (values.saves) {
             process.stdout.write(`  saves by kind so far: ${JSON.stringify(read.saves)}\n`);
+          }
+          if (values.rpc) {
+            const top = Object.entries(read.rpc).sort(([, left], [, right]) => right - left).slice(0, 12);
+            process.stdout.write(`  rpc messages encoded so far: ${JSON.stringify(Object.fromEntries(top))}\n`);
+          }
+          if (COUNTED.length > 0) {
+            process.stdout.write(`  calls so far: ${JSON.stringify(read.calls)}\n`);
+          }
+          if (syncState) {
+            process.stdout.write(`  sync state with EDGE: ${syncState}\n`);
+          }
+          if (values.reasons) {
+            process.stdout.write(`  index pass reasons so far: ${JSON.stringify(read.reasons)}\n`);
           }
           if (values.syncs) {
             process.stdout.write(`  syncWithPeer calls so far: ${read.syncs}\n`);
@@ -396,25 +534,76 @@ const main = async () => {
           }
         };
 
+        const churnFromStart = values.churn && Number(values['churn-from']) === 0;
+        if (values.retained || churnFromStart) {
+          // The page realm from its first line too, so what it holds (or allocated) is attributed whole.
+          await cdp.send('HeapProfiler.enable');
+          await cdp.send('HeapProfiler.startSampling', {
+            samplingInterval: 16_384,
+            includeObjectsCollectedByMajorGC: churnFromStart,
+            includeObjectsCollectedByMinorGC: churnFromStart,
+          });
+        }
         await page.goto(`${origin}/`, { timeout: 120_000 });
         const timeout = setTimeout(() => breakpointSet.reject(new Error(`never attached to ${workerFile}`)), 60_000);
         await breakpointSet.promise.finally(() => clearTimeout(timeout));
         await waitForReady(page);
         await sample('ready');
+        const realms = [undefined, workerSession];
         for (let elapsed = 30_000; elapsed <= Number(values['idle-ms']); elapsed += 30_000) {
           await sleep(30_000);
           await sample(`ready+${elapsed / 1000}s`);
+          if (values.churn && elapsed === Number(values['churn-from'])) {
+            for (const sessionId of realms) {
+              await cdp.send('HeapProfiler.enable', {}, sessionId);
+              await cdp.send(
+                'HeapProfiler.startSampling',
+                { samplingInterval: 16_384, includeObjectsCollectedByMajorGC: true, includeObjectsCollectedByMinorGC: true },
+                sessionId,
+              );
+            }
+          }
         }
-        if (values.retained) {
-          await cdp.send('HeapProfiler.collectGarbage', {}, workerSession);
-          const { profile } = await cdp.send('HeapProfiler.getSamplingProfile', {}, workerSession);
-          const { totalBytes, byCaller, byFunction } = allocationReport(profile, {
+        for (const [index, sessionId] of (values.churn ? realms : []).entries()) {
+          const { profile } = await cdp.send('HeapProfiler.getSamplingProfile', {}, sessionId);
+          if (values.profiles) {
+            mkdirSync(values.profiles, { recursive: true });
+            writeFileSync(
+              path.join(values.profiles, `boot${boot}-${index === 0 ? 'page' : 'worker'}-churn.heapprofile`),
+              JSON.stringify(profile),
+            );
+          }
+          const { totalBytes, byCaller, byFunction } = allocationReport(profile, { distDir: dist, top: Number(values.top) });
+          const span = (Number(values['idle-ms']) - Number(values['churn-from'])) / 1000;
+          process.stdout.write(
+            `\nallocated in the ${index === 0 ? 'page' : 'worker'} ${Number(values['churn-from']) === 0 ? `from its first line to ready+${span} s` : `over ${span} s idle`}: ${Math.round(totalBytes / 1048576)} MiB sampled\n  by first-party caller\n`,
+          );
+          for (const { name, bytes } of byCaller) {
+            process.stdout.write(`  ${(bytes / 1048576).toFixed(1).padStart(7)}  ${name}\n`);
+          }
+          process.stdout.write('  by allocating function\n');
+          for (const { name, bytes } of byFunction) {
+            process.stdout.write(`  ${(bytes / 1048576).toFixed(1).padStart(7)}  ${name}\n`);
+          }
+        }
+        for (const [realmName, sessionId] of values.retained ? ([['page', undefined], ['worker', workerSession]] as const) : []) {
+          await cdp.send('HeapProfiler.collectGarbage', {}, sessionId);
+          const { profile } = await cdp.send('HeapProfiler.getSamplingProfile', {}, sessionId);
+          if (values.profiles) {
+            mkdirSync(values.profiles, { recursive: true });
+            writeFileSync(path.join(values.profiles, `boot${boot}-${realmName}-retained.heapprofile`), JSON.stringify(profile));
+          }
+          const { totalBytes, byCaller, byFunction, byPackage } = allocationReport(profile, {
             distDir: dist,
             top: Number(values.top),
           });
           process.stdout.write(
-            `\nretained in the worker: ${Math.round(totalBytes / 1048576)} MiB sampled\n  by first-party caller\n`,
+            `\nretained in the ${realmName}: ${Math.round(totalBytes / 1048576)} MiB sampled\n  by package\n`,
           );
+          for (const { name, bytes } of byPackage) {
+            process.stdout.write(`  ${(bytes / 1048576).toFixed(1).padStart(7)}  ${name}\n`);
+          }
+          process.stdout.write('  by first-party caller\n');
           for (const { name, bytes } of byCaller) {
             process.stdout.write(`  ${(bytes / 1048576).toFixed(1).padStart(7)}  ${name}\n`);
           }

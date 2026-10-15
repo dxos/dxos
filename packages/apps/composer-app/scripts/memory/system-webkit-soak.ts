@@ -12,13 +12,16 @@
  * Usage: node scripts/memory/system-webkit-soak.ts --host <wkapp> --archive <file.dxprofile> --dist <bundle>
  *        (--edge <non-production EDGE URL> | --offline) [--telemetry <sink port>] [--port 4498] [--passes 8]
  *        [--idle-ms 60000] [--warmup-ms 0] [--drive <calls per round>] [--drive-rounds 3] [--drive-via client]
- *        [--devtools] [--watch <readings>]
+ *        [--devtools] [--idle-readings 1] [--gc-canary] [--watch <readings>]
  *
  * `--drive` ends with rounds of that many calls to a loopback route answering EDGE's JSON envelope
  * (512 KiB, gzipped), each read after two forced collections. `--drive-via` names the path per round,
  * comma-separated to cycle in one process: `client` (the app's EDGE HTTP client), `fetch`, `fetch-init`
  * (`_call`'s request options), `fetch-url`, `fetch-tag`, `fetch-clone`; `probe` counts body and stream
- * calls per path instead.
+ * calls per path instead. `--idle-readings` reads the idle footprint that many times, `--idle-ms` apart, with no
+ * forced collection, as a user's idle app is only ever collected on WebKit's own schedule. `--gc-canary` drops
+ * one promoted object in the page realm a minute and reports which have been finalized at each reading: only a
+ * full collection reclaims an old object, so it dates the page's full collections.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -59,6 +62,8 @@ const { values } = parseArgs({
     'devtools': { type: 'boolean', default: false },
     'watch': { type: 'string', default: '0' },
     'warmup-ms': { type: 'string', default: '0' },
+    'idle-readings': { type: 'string', default: '1' },
+    'gc-canary': { type: 'boolean', default: false },
   },
 });
 if (!values.host || !values.archive || !values.dist || values.offline === Boolean(values.edge)) {
@@ -160,6 +165,44 @@ const footprintOf = (pid: number, scratch: string): ProcessFootprint | undefined
     }
   }
   return { pid, name: typeof entry.name === 'string' ? entry.name : String(pid), bytes: entry.footprint, regions };
+};
+
+const VM_SIZE = /^([\d.]+)([KMG])$/;
+const vmMib = (text: string): number => {
+  const match = VM_SIZE.exec(text);
+  return match ? Number(match[1]) * { K: 1 / 1024, M: 1, G: 1024 }[match[2] as 'K' | 'M' | 'G'] : 0;
+};
+
+/**
+ * Dirty plus compressed MiB of each wasm linear memory in a WebContent process, every realm's, the
+ * dedicated worker's included. JSC reserves a memory with a guard of ~4 GB, so a memory is the
+ * writable run of regions that ends where an inaccessible reservation that large begins.
+ */
+const wasmMemoriesOf = (pid: number): number[] => {
+  let output = '';
+  try {
+    output = execFileSync('vmmap', ['-w', String(pid)], { encoding: 'utf8', maxBuffer: 256 << 20 });
+  } catch {
+    return [];
+  }
+  const regions = output.split('\n').flatMap((line) => {
+    const match = /^.+?\s+([0-9a-f]+)-([0-9a-f]+)\s+\[\s*(\S+)\s+\S+\s+(\S+)\s+(\S+)\]\s+(\S+)\//.exec(line);
+    return match
+      ? [{ start: match[1], end: match[2], size: vmMib(match[3]), used: vmMib(match[4]) + vmMib(match[5]), prot: match[6] }]
+      : [];
+  });
+  const endingAt = new Map(regions.map((region) => [region.end, region]));
+  return regions
+    .filter(({ prot, size }) => prot === '---' && size >= 3_000)
+    .map((guard) => {
+      let used = 0;
+      for (let region = endingAt.get(guard.start); region?.prot.startsWith('rw'); region = endingAt.get(region.start)) {
+        used += region.used;
+      }
+      return Math.round(used);
+    })
+    .filter((used) => used > 0)
+    .sort((left, right) => right - left);
 };
 
 /** System WebKit's helper processes; the host's are the ones that appear after it starts. */
@@ -317,6 +360,11 @@ const main = async (): Promise<number> => {
           `return globalThis.__dxosWasmMemory?.() ?? null;`,
         )
         .catch(() => null);
+      const contentPid = processes.find(({ name }) => name.includes('WebContent'))?.pid;
+      const wasm = contentPid === undefined ? [] : wasmMemoriesOf(contentPid);
+      const canary = values['gc-canary']
+        ? await host.evaluate<unknown>(`return globalThis.__gcCanary ?? null;`).catch(() => null)
+        : undefined;
       const sockets = offMachineSockets(pids);
       readings.push({
         stage: id,
@@ -324,14 +372,18 @@ const main = async (): Promise<number> => {
         processes,
         dom,
         pageWasm,
+        wasm,
+        connections: { refused: proxy.denied().length, tunnelled: proxy.tunnelled().length },
         result,
+        ...(canary === undefined ? {} : { canary }),
         offMachineSockets: sockets.length,
       });
       const page = content(processes);
       process.stdout.write(
         `${id.padEnd(14)} ${String(Math.round((Date.now() - started) / 1000)).padStart(4)} s  content ${String(mib(page?.bytes ?? 0)).padStart(5)} MiB` +
           `  gigacage ${String(mib(page?.regions['JS VM Gigacage'] ?? 0)).padStart(5)}  malloc ${String(mib(page?.regions['WebKit malloc'] ?? 0)).padStart(5)}` +
-          `  page wasm ${String(mib(pageWasm?.bytes ?? 0)).padStart(4)}  elements ${dom}${result === undefined ? '' : `  ${JSON.stringify(result)}`}\n`,
+          `  page wasm ${String(mib(pageWasm?.bytes ?? 0)).padStart(4)}  wasm [${wasm.join(',')}]  refused ${proxy.denied().length}  elements ${dom}${result === undefined ? '' : `  ${JSON.stringify(result)}`}` +
+          `${canary === undefined ? '' : `  canary ${JSON.stringify(canary)}`}\n`,
       );
       if (sockets.length > 0) {
         throw new Error(`sockets off the machine after ${id}: ${sockets.length}`);
@@ -385,6 +437,21 @@ const main = async (): Promise<number> => {
       await host.load(`${origin}/`);
       await waitForReady();
     });
+    if (values['gc-canary']) {
+      // Each canary is held 30 s, long enough to survive an eden collection, then dropped.
+      await host.evaluate(`
+        const state = { made: 0, finalized: [] };
+        const started = performance.now();
+        const registry = new FinalizationRegistry((id) => state.finalized.push([id, Math.round((performance.now() - started) / 1000)]));
+        setInterval(() => {
+          let held = { id: state.made++, pad: new Array(64).fill(0) };
+          registry.register(held, held.id);
+          setTimeout(() => { held = undefined; }, 30_000);
+        }, 60_000);
+        globalThis.__gcCanary = state;
+        return true;
+      `);
+    }
     await sleep(SETTLE_MS);
     if (values.devtools) {
       // As a developer's native app keeps it: the devtools plugin on, its overview expanded in the
@@ -407,7 +474,9 @@ const main = async (): Promise<number> => {
       }
       process.stdout.write(`devtools overview mounted: ${mounted}\n`);
     }
-    await stage('idle', () => sleep(idleMs));
+    for (let reading = 1; reading <= Number(values['idle-readings']); reading++) {
+      await stage(reading === 1 ? 'idle' : `idle-${reading}`, () => sleep(idleMs));
+    }
     // Readings after two collections each, so what stays is retained, not yet uncollected.
     for (let round = 1; round <= Number(values.watch); round++) {
       await sleep(idleMs);
