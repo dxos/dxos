@@ -366,7 +366,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
         (fqn, Entry.ability h i) :: mapIndexed (fun index op =>
           let (name, type) := op
           let arity := arrowCount type
-          if arity == 0 then Throw.throw (item.path ++ ": ability operation " ++ fqn ++ "." ++ name ++
+          if arity == 0 then Throw.throw (Item.path item ++ ": ability operation " ++ fqn ++ "." ++ name ++
             " needs an argument (use Unit)") else
             claim (fqn ++ "." ++ name)
             (fqn ++ "." ++ name, Entry.op h index arity)) ops
@@ -386,7 +386,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
   let templates := Map.fromList (concatMap (fun item => templateOf names item) items)
   -- Pass 2: bodies to Core with placeholders.
   forEach items (fun item =>
-    let ctx := Ctx.mk names (bodyScope item) (item.path ++ ": " ++ item.fqn) templates
+    let ctx := Ctx.mk names (bodyScope item) (Item.path item ++ ": " ++ item.fqn) templates
     let fqn := item.fqn
     match item.decl with
     | Decl.defn _ binders type body arms doc attributes pos =>
@@ -422,7 +422,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
           match b.annot with
           | Option.some t => tyCore names (bodyScope item) [] t
           | Option.none => Compile.node "tvar" [Sexp.s "?"]) binders
-        let (core, locals) := strip (lambda ctx params (fun locals => Resolve.expr ctx prop locals) [])
+        let (core, locals) := Resolve.strip (lambda ctx params (fun locals => Resolve.expr ctx prop locals) [])
         let form := Compile.node
           "theorem"
           [Sexp.list (Sexp.sym "binders" :: types), core, Compile.node "proof" (proofTokens names (bodyScope item) proof)]
@@ -574,11 +574,11 @@ def templateOf (names : Names) (item : Item) : {Throw Text} List (Text, Sexp) :=
             match expansion with
             | Expr.lam ps _ => ps
             | _ => []
-          let ctx := Ctx.mk names (bodyScope item) (item.path ++ ": " ++ item.fqn) Map.empty
-          let template := fst (strip (Resolve.expr ctx expansion []))
+          let ctx := Ctx.mk names (bodyScope item) (Item.path item ++ ": " ++ item.fqn) Map.empty
+          let template := fst (Resolve.strip (Resolve.expr ctx expansion []))
           match unusedHoles template (List.length params) with
           | [] => [("@" ++ item.fqn, template)]
-          | unused => Throw.throw (item.path ++ ": notation " ++ item.fqn ++ " never uses " ++
+          | unused => Throw.throw (Item.path item ++ ": notation " ++ item.fqn ++ " never uses " ++
               join ", " (List.map (fun i =>
                 match get? params i with
                 | Option.some (Pat.id n _ _) => n

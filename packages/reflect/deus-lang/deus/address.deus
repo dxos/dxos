@@ -5,38 +5,21 @@
   rest is the namespace path inside it. A source file names its place on its first line, the
   context header, `-- context: @dxos/toolchain/Cli` (`<!-- context: … -->` in `.mdl`).
 -/
+
 structure Address @"urn:deus:address:Address" where
   owner : Text
   project : Text
   path : Text
 
 namespace Address
-/-- The source without its context header, so the header never becomes a definition's comment: a
-  `.deus` file keeps the line empty, so error lines stay right; an `.mdl` file drops it, so its
-  front matter comes first. -/
-def withoutHeader (mdl : Bool) (source : Text) : Text :=
-  match Address.header source with
-  | Option.none => source
-  | Option.some _ =>
-      let newline := indexOf source "\n" 0
-      if newline < 0 then "" else Text.drop (if mdl then newline + 1 else newline) source
 
-/-- The context header in the first line of a `.deus` (`-- context: <address>`) or `.mdl` (`<!-- context: <address> -->`) file. -/
-def header (source : Text) : Option Address :=
-  let line := trim (getOr (head? (Text.lines source)) "")
-  if startsWith "-- context:" line then Address.parse (trim (Text.drop 11 line)) else if startsWith "<!-- context:" line && endsWith "-->" line then Address.parse (trim (Text.slice line 13 (Text.length line - 3))) else Option.none
-
-/-- `@owner/project`, `@owner/project/Path`, or either after `https://<host>/`. -/
-def parse (t : Text) : Option Address :=
-  let at := indexOf t "@" 0
-  if at < 0 then Option.none else
-    let prefix := Text.take at t
-    let prefixOk := Text.isEmpty prefix || startsWith "https://" prefix && endsWith "/" prefix
-    match Text.split (Text.drop (at + 1) t) "/" with
-    | owner :: project :: rest =>
-        let path := join "/" rest
-        if prefixOk && isOwner owner && isProject project && isPath path then Option.some (Address.mk owner project path) else Option.none
-    | _ => Option.none
+/-- `[a-z0-9]`, then up to `max - 1` of `[a-z0-9-]`, not ending in `-`: a GitHub login lowercased, or a project slug. -/
+def isSlug (max : Int) (t : Text) : Bool :=
+  let n := Text.length t
+  let ok := fun i =>
+    let c := Text.code t i
+    c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' && i > 0 && i < n - 1
+  n > 0 && n <= max && List.all ok (List.range 0 n)
 
 /-- An owner: a GitHub login, at most 39 characters. -/
 def isOwner (t : Text) : Bool := isSlug 39 t
@@ -49,46 +32,77 @@ def isPath (t : Text) : Bool :=
   let segmentOk := fun s => not (Text.isEmpty s) && not (Text.contains "/" s) && not (Text.contains " " s) && not (Text.contains "#" s)
   Text.isEmpty t || List.all segmentOk (Text.split t ".")
 
-/-- `[a-z0-9]`, then up to `max - 1` of `[a-z0-9-]`, not ending in `-`: a GitHub login lowercased, or a project slug. -/
-def isSlug (max : Int) (t : Text) : Bool :=
-  let n := Text.length t
-  let ok := fun i =>
-    let c := code t i
-    c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' && i > 0 && i < n - 1
-  n > 0 && n <= max && List.all ok (range 0 n)
-
-def print (a : Address) : Text := "@" ++ a.owner ++ "/" ++ a.project ++
-  (if Text.isEmpty (Address.path a) then "" else "/" ++ Address.path a)
-
-/-- A project's address: its IRI when that is an address (`deus project init @owner/project`), else read from a D49 IRI. -/
-def home (iri : Text) : Option Address := Option.orElse (Address.parse iri) (fun _ => ofIri iri)
-
-/-- A D49 project IRI `https://<owner>.<tld>/<…>/<project>` read as `@<owner>/<project>`, for projects made before addresses. -/
-def ofIri (iri : Text) : Option Address :=
-  let authority := authority iri
-  let labels := Text.split authority "."
-  let owner := toLower (getOr (head? labels) "")
-  let project := toLower (getOr (last? (Text.split iri "/")) "")
-  if List.length labels >= 2 && startsWith "https://" iri && isOwner owner && isProject project then Option.some (Address.mk owner project "") else Option.none
-
-/-- Problems with a file whose header is `a`, loaded into the project `home`: another project, or names outside the header's path. -/
-def violations (home : Address) (a : Address) (names : List Text) : List Text :=
-  let project := if Address.print (Address.projectOf a) == Address.print (Address.projectOf home) then [] else ["the file belongs to " ++ Address.print (Address.projectOf a) ++ ", not " ++
-    Address.print (Address.projectOf home)]
-  project ++ List.map
-    (fun name => name ++ " lies outside the file's context " ++ Address.print a)
-    (List.filter (fun name => not (within a name)) names)
+/-- `@owner/project`, `@owner/project/Path`, or either after `https://<host>/`. -/
+def parse (t : Text) : Option Address :=
+  let at := Text.indexOf t "@" 0
+  if at < 0 then Option.none
+  else
+    let prefix := Text.take at t
+    let prefixOk := Text.isEmpty prefix || Text.startsWith "https://" prefix && Text.endsWith "/" prefix
+    match Text.split (Text.drop (at + 1) t) "/" with
+    | owner :: project :: rest =>
+        let path := Text.join "/" rest
+        if prefixOk && isOwner owner && isProject project && isPath path then Option.some (Address.mk owner project path) else Option.none
+    | _ => Option.none
 
 /-- The project's own address, without a path. -/
 def projectOf (a : Address) : Address := Address.mk a.owner a.project ""
 
-/-- Whether `name` lies at or under `a`'s path (every name does when the path is empty). -/
-def within (a : Address) (name : Text) : Bool := Text.isEmpty (Address.path a) || name == Address.path a || startsWith (Address.path a ++ ".") name
-
-/-- The header line for a file at `a`; `mdl` picks the Markdown comment. -/
-def headerLine (mdl : Bool) (a : Address) : Text := if mdl then "<!-- context: " ++ Address.print a ++ " -->" else "-- context: " ++ Address.print a
+def print (a : Address) : Text := "@" ++ a.owner ++ "/" ++ a.project ++ (if Text.isEmpty a.path then "" else "/" ++ a.path)
 
 /-- The address of `name` inside `a`'s project. -/
 def child (a : Address) (name : Text) : Address := Address.mk a.owner a.project name
+
+/-- Whether `name` lies at or under `a`'s path (every name does when the path is empty). -/
+def within (a : Address) (name : Text) : Bool :=
+  Text.isEmpty a.path || name == a.path || Text.startsWith (a.path ++ ".") name
+
+/-- Projects whose bucket folder predates addresses; every other project lives at `<owner>/<project>`. -/
+def legacyFolders : List (Text, Text) := [("@dxos/toolchain", "toolchain")]
+
+/-- The project's folder in the codebases bucket (D164). -/
+def folder (a : Address) : Text :=
+  let key := print (projectOf a)
+  getOr (List.lookup key legacyFolders) (a.owner ++ "/" ++ a.project)
+
+/-- The explorer page of `a` on `host`: a path, so it can be linked and crawled like a Share page. -/
+def url (host : Text) (a : Address) : Text := "https://" ++ host ++ "/" ++ print a
+
+/-- A D49 project IRI `https://<owner>.<tld>/<…>/<project>` read as `@<owner>/<project>`, for projects made before addresses. -/
+def ofIri (iri : Text) : Option Address :=
+  let authority := Project.authority iri
+  let labels := Text.split authority "."
+  let owner := Text.toLower (getOr (List.head? labels) "")
+  let project := Text.toLower (getOr (List.last? (Text.split iri "/")) "")
+  if List.length labels >= 2 && Text.startsWith "https://" iri && isOwner owner && isProject project then Option.some (Address.mk owner project "") else Option.none
+
+/-- The context header in the first line of a `.deus` (`-- context: <address>`) or `.mdl` (`<!-- context: <address> -->`) file. -/
+def header (source : Text) : Option Address :=
+  let line := Text.trim (getOr (List.head? (Text.lines source)) "")
+  if Text.startsWith "-- context:" line then parse (Text.trim (Text.drop 11 line))
+  else if Text.startsWith "<!-- context:" line && Text.endsWith "-->" line then parse (Text.trim (Text.slice line 13 (Text.length line - 3)))
+  else Option.none
+
+/-- The header line for a file at `a`; `mdl` picks the Markdown comment. -/
+def headerLine (mdl : Bool) (a : Address) : Text :=
+  if mdl then "<!-- context: " ++ print a ++ " -->" else "-- context: " ++ print a
+
+/-- Problems with a file whose header is `a`, loaded into the project `home`: another project, or names outside the header's path. -/
+def violations (home : Address) (a : Address) (names : List Text) : List Text :=
+  let project := if print (projectOf a) == print (projectOf home) then [] else ["the file belongs to " ++ print (projectOf a) ++ ", not " ++ print (projectOf home)]
+  project ++ List.map (fun name => name ++ " lies outside the file's context " ++ print a) (List.filter (fun name => not (within a name)) names)
+
+/-- A project's address: its IRI when that is an address (`deus project init @owner/project`), else read from a D49 IRI. -/
+def home (iri : Text) : Option Address := Option.orElse (parse iri) (fun _ => ofIri iri)
+
+/-- The source without its context header, so the header never becomes a definition's comment: a
+  `.deus` file keeps the line empty, so error lines stay right; an `.mdl` file drops it, so its
+  front matter comes first. -/
+def withoutHeader (mdl : Bool) (source : Text) : Text :=
+  match header source with
+  | Option.none => source
+  | Option.some _ =>
+      let newline := Text.indexOf source "\n" 0
+      if newline < 0 then "" else Text.drop (if mdl then newline + 1 else newline) source
 
 end Address

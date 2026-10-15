@@ -130,12 +130,10 @@ def write(names, codebase):
         elif re.search(r'^-- an? (field|constructor) of ', shown[name], re.M):
             continue  # written with its type
         elif not namespace:
-            # A new top-level name (a type such as `Address`) goes before its namespace's block, or ends a root file.
-            path = namespaces.get(name) or namespaces[namespace]
-            lines = parsed[path][0]
-            close = next((i for i, line in enumerate(lines) if line == f'namespace {name}'), len(lines))
+            # A root declaration, often a type its namespace's functions share a name with, goes above that namespace.
+            path = namespaces.get(name) or namespaces['']
             print(f'  + {name}  ({path.name})')
-            edits.setdefault(path, []).append((close, close, source_of(shown[name], namespace) + '\n'))
+            edits.setdefault(path, []).append((0, 0, source_of(shown[name], '') + '\n'))
         elif namespace in namespaces:
             path = namespaces[namespace]
             lines = parsed[path][0]
@@ -177,6 +175,9 @@ def unknown(codebase):
         result = deus('compile', str(SOURCES), '--main', 'Cli.main', '-o', str(Path(scratch) / 'seed.image'), codebase=codebase, check=False)
     if result.returncode == 0:
         return None
+    ambiguous = re.search(r'ambiguous name (\S+):', result.stderr)
+    if ambiguous:
+        return (None, -1, 0, ambiguous.group(1))
     match = re.search(r'(?:(\S+\.deus): \S+:(\d+):(\d+): )?unknown (?:type|name|ability|constructor) (\S+)', result.stderr)
     if not match:
         sys.exit(f'deus/ does not compile:\n{result.stderr}')
@@ -202,6 +203,16 @@ def main():
         if not failure:
             break
         path, line, column, missing = failure
+        if line == -1:
+            # A name the codebase added made a short reference in an unchanged definition ambiguous; the codebase prints it qualified.
+            bare = re.compile(r'(?<![\w.])' + re.escape(missing) + r'\b')
+            users = [name for file in SOURCES.glob('*.deus') for name, first, end, _ in blocks(file)[1]
+                     if name not in names and bare.search('\n'.join(blocks(file)[0][first:end]).split(':=', 1)[-1])]
+            if not users:
+                sys.exit(f'{missing} is ambiguous in deus/ and no unchanged definition uses it bare')
+            names += users
+            write(users, codebase)
+            continue
         found = [name for name in theirs if name == missing or name.endswith('.' + missing)]
         if len(found) != 1:
             sys.exit(f'{path or "deus/"}:{line}:{column}: {missing} names {len(found)} codebase definitions, not one')
