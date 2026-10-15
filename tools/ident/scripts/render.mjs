@@ -9,11 +9,13 @@ import fs from 'node:fs';
 //
 //   moon run ident:render                          # everything (14 provocations x 2 lengths x 4 formats)
 //   moon run ident:render -- --id P03              # one provocation, all lengths and formats
+//   moon run ident:render -- --id OPEN,COMPOSER,END # several ids, comma-separated
 //   moon run ident:render -- --id P03 --length 10s --format 16x9
 //   moon run ident:render -- --id OPEN             # opening title only, all formats
 //   moon run ident:render -- --id TRAIL            # DXOS trail only, all formats
 //   moon run ident:render -- --id END              # end card only, all formats
 //   moon run ident:render-first-run                # only provocations marked firstRun
+//   moon run ident:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
 //   moon run ident:render -- --version 2           # file suffix _v02
 //
 // Set REMOTION_BROWSER to a Chrome/Chromium path to skip Remotion's browser download.
@@ -25,7 +27,8 @@ const opt = (name) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const firstRunOnly = args.includes('--first-run');
-const only = { id: opt('id'), length: opt('length'), format: opt('format') };
+const exclude = opt('exclude')?.split(',') ?? [];
+const only = { ids: opt('id')?.split(','), length: opt('length'), format: opt('format') };
 const version = String(opt('version') ?? '1').padStart(2, '0');
 const browserExecutable = process.env.REMOTION_BROWSER || null;
 // The DXOS trail is WebGL; headless Chrome's default GL backend cannot run its float-texture shaders.
@@ -46,7 +49,10 @@ const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptio
 
 const selected = comps.filter((c) => {
   const [id, length, format] = c.id.split('-');
-  if (only.id && id !== only.id) {
+  if (exclude.includes(id)) {
+    return false;
+  }
+  if (only.ids && !only.ids.includes(id)) {
     return false;
   }
   if (only.length && length !== only.length) {
