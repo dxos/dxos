@@ -9,6 +9,12 @@ structure Cli.Args where
   positional : List Text
   options : Map Text Text
 
+/-- A loaded expression: its hash, its type, and the data types its value may hold, for `quoteAt`. -/
+structure Cli.Compiled where
+  compiledHash : Text
+  compiledType : Sexp
+  compiledTypes : Map Text (Text, Sexp)
+
 /-- What every block of a `deus mdl` run reads from the namespace, built once: each lookup walked the
   whole namespace, once per name an api block named. -/
 structure Cli.MdlFacts where
@@ -484,7 +490,10 @@ def Cli.compile (args : Args) : {IO, Throw Text} Unit :=
   | Option.none => IO.print image
 
 /-- Compiles `def it := <source>` against the codebase and loads it; returns its hash. -/
-def Cli.compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Text :=
+def Cli.compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Text := (compileTyped dir ns source).compiledHash
+
+/-- Compiles `def it := <source>` against the codebase and loads it. -/
+def Cli.compileTyped (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Compiled :=
   let batch := batch
     ns
     (fun h => readObject dir h)
@@ -494,8 +503,9 @@ def Cli.compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Th
   match List.lookup "it" batch.entries with
   | Option.some (Entry.term h) =>
       let objects := Map.fromList batch.objects
-      Image.load (fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x)) [h]
-      h
+      let fetch := fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x)
+      Image.load fetch [h]
+      Compiled.mk h (Wasm.storedType (List.lookup h (Batch.metas batch))) (dataTypes fetch h)
   | _ => Throw.throw ("cannot compile " ++ source)
 
 /-- `deus mdl --coverage [documents…]`: each spec document's laws no block cites, the public
@@ -549,6 +559,23 @@ def Cli.coverage (args : Args) : {IO, Throw Text} Unit :=
     reports)) (fun _ => join "\n" (concatMap Coverage.render reports ++
     [toText (sum (List.map (fun c => List.length c.uncitedLaws) reports)) ++ " uncited laws, " ++
       toText (sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names, " ++ toText (sum (List.map (fun c => List.length c.danglingLinks) reports)) ++ " links to no requirement"]))
+
+/-- The constructors' field types of data type `t`, and the hash its constructors name, if `types` has it. -/
+def Cli.ctorsOf (types : Map Text (Text, Sexp)) (t : Sexp) : Option (Text, List (List Sexp)) :=
+  match Option.bind (headName t) (fun n => Map.lookup n types) with
+  | Option.some (hash, form) =>
+      let ctors := Wasm.ctorFields form
+      if List.isEmpty ctors then Option.none else Option.some (hash, List.map (List.map (Wasm.instantiate (Wasm.typeArgs t))) ctors)
+  | Option.none => Option.none
+
+/-- The data types a value of definition `h` may hold, by IRI: the built-in ones and those its code constructs. -/
+def Cli.dataTypes (fetch : Text -> {IO, Throw Text} Option Sexp) (h : Text) : {IO, Throw Text} Map Text (Text, Sexp) :=
+  let hashes := ["#Unit", "#Bool", "#List", "#Option", "#Pair"] ++
+    dedup (foldl (fun acc pair => nominal (snd pair) acc) [] (closure fetch [h]))
+  Map.fromList (filterMap (fun x =>
+    match fetch x with
+    | Option.some (Sexp.list (Sexp.sym "type" :: Sexp.str iri :: rest)) => Option.some (iri, x, Sexp.list (Sexp.sym "type" :: Sexp.str iri :: rest))
+    | _ => Option.none) hashes)
 
 --
 -- Commands: replication.
@@ -658,8 +685,14 @@ def Cli.eval (args : Args) : {IO, Throw Text} Unit :=
 
 /-- `source` compiled against `dir` and run with `Workspace` handled; the value as source. -/
 def Cli.evaluate (dir : Text) (passed : List Text) (source : Text) : {IO, Throw Text} Text :=
-  let value := withWorkspace dir passed (fun _ => Code.run (compileExpr dir (Codebase.current dir) source))
-  Print.expr (Print.printer (Codebase.current dir) []) (Sexp.read (Code.quote value)) [] 0 0
+  let compiled := compileTyped dir (Codebase.current dir) source
+  let value := withWorkspace dir passed (fun _ => Code.run compiled.compiledHash)
+  Print.expr
+    (Print.printer (Codebase.current dir) [])
+    (Sexp.read (quoteAt compiled.compiledTypes compiled.compiledType value))
+    []
+    0
+    0
 
 /-- Evaluates the constant `h` and keeps its value; `label` names it in the error a function gets (R-5). -/
 def Cli.evaluateArtifact (dir : Text) (h : Text) (label : Text) : {IO, Throw Text} Text :=
@@ -966,11 +999,13 @@ def Cli.jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Resu
     | Option.some (Entry.term h) =>
         let objects := Map.fromList batch.objects
         let metas := Map.fromList (Batch.metas batch)
-        Image.load (fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x)) [h]
+        let fetch := fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x)
+        Image.load fetch [h]
+        let types := dataTypes fetch h
         let printer := Print.printer ns []
         let render := fun quoted => Print.expr printer (Sexp.read quoted) [] 0 0
         let kernel :=
-          match guardDefect (fun _ => Code.quote (Code.run h)) with
+          match guardDefect (fun _ => quoteAt types (Wasm.storedType (Map.lookup h metas)) (Code.run h)) with
           | Result.ok q => render q
           | Result.err message => "defect: " ++ message
         let out := dir ++ "/cache/js-" ++ Text.take 16 (Text.sha256 (h ++ source))
@@ -1398,6 +1433,20 @@ def Cli.push (args : Args) : {IO, Throw Text} Unit :=
       args
       (fun _ => Json.obj ([("bundle", Json.null)] ++ siteJson))
       (fun _ => name ++ " already has " ++ branch ++ "." ++ siteText)
+
+/-- `value`, of type `t`, as Core text (D146). It is walked by its type, since a native build's values
+  do not carry their constructors' types: a Bool and an Int are the same words there, and so are the
+  nullary constructors of different types. A value whose type it does not know is quoted as it is. -/
+def Cli.quoteAt (types : Map Text (Text, Sexp)) (t : Sexp) (value : a) : Text := if t == tref "#Int" then "(int " ++ toText (cast value) ++ ")" else if t == tref "#Text" then "(text " ++ Sexp.print (Sexp.str (cast value)) ++ ")" else if t == tref "#Bool" then "(con \"#Bool\" " ++ toText (tag value) ++ " 0)" else
+  match ctorsOf types t with
+  | Option.some (hash, ctors) =>
+      let tag := tag value
+      let fields := getOr (get? ctors tag) []
+      let con := "(con " ++ Sexp.print (Sexp.str hash) ++ " " ++ toText tag ++ " " ++
+        toText (List.length fields) ++ ")"
+      if List.isEmpty fields then con else "(app " ++ con ++
+        Text.concat (mapIndexed (fun i f => " " ++ Cli.quoteAt types f (Code.field value i)) fields) ++ ")"
+  | Option.none => Code.quote value
 
 def Cli.readSource (path : Text) : {IO, Throw Text} Text :=
   match IO.readFile path with

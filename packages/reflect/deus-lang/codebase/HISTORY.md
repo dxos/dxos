@@ -1,5 +1,28 @@
 # History of main
 
+- `f0333cb41c` update deus (by claude)
+- `924f1988c5` history: import 1018 changes
+- `41f913e8af` history: import 1010 changes
+- `afb382de6b` task: import from /tmp/tmpm9ol3os0/tasks.sexp
+- `5f20adb985` add /tmp/tmpm9ol3os0/merged/code /tmp/tmpm9ol3os0/merged/specs
+- `42f987d1f0` update deus (by merge)
+- `48837a0605` history: import 1000 changes
+- `579a9acc27` history: import 1009 changes
+- `594270c9d2` task: import from /tmp/tmp_q7zebks/tasks.sexp
+- `35ee3f9c65` add /tmp/tmp_q7zebks/merged/code /tmp/tmp_q7zebks/merged/specs
+- `8a33fd7308` update deus (by claude)
+- `3ed8cd0ba3` update deus (by merge)
+- `ddc1aecd8a` history: import 996 changes
+- `f743293630` history: import 972 changes
+- `9ab8e1004e` task: import from /tmp/tmpuxmjym96/tasks.sexp
+- `322df425ff` add /tmp/tmpuxmjym96/merged/code /tmp/tmpuxmjym96/merged/specs
+- `e69797f657` task: link 60e88be8 to CGen.codeRuntime
+- `3d3f26560e` task: set 60e88be8 state
+- `fee8274c35` task: comment on 60e88be8 (by claude)
+- `315f4fea21` native Core interpreter (D143) (by claude)
+- `db80f8c8c0` history: import 965 changes
+- `506986bb97` task: import from codebase/tasks.sexp
+- `e9a7188d56` add codebase/code codebase/specs
 - `8fff0a3cc8` update deus (by claude)
 - `51b516c2ef` task: comment on 88004c30 (by claude)
 - `40660e52e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)

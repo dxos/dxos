@@ -135,18 +135,6 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 - assignee: claude
 - labels: wasm, perf, embedding
 
-## Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively (`60e88be8`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: native, perf
-- links `CGen.effPerform` (#4dce416f4f)
-
-> claude: IO host operations done (D129): every IO operation checks for a program handler, else the C runtime performs it; examples/command.deus agrees with deus run. Cli.main now stops at Code.run, which needs an evaluator in the C runtime.
-
-> claude: D136: the compile pipeline (lexer, parser, resolution, inference, lowering, image) now builds natively; examples/compiler.deus writes seed/deus.image byte for byte in 642 ms vs 7.4 s on the JIT. Cli.main still stops at Code.run.
-
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
@@ -1096,6 +1084,21 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - labels: native, perf, wasm
 
 Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 64-bit values in wasm stay.
+
+## Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively (`60e88be8`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: native, perf
+- links `CGen.effPerform` (#4dce416f4f)
+- links `CGen.codeRuntime` (#fd8001d054)
+
+> claude: IO host operations done (D129): every IO operation checks for a program handler, else the C runtime performs it; examples/command.deus agrees with deus run. Cli.main now stops at Code.run, which needs an evaluator in the C runtime.
+
+> claude: D136: the compile pipeline (lexer, parser, resolution, inference, lowering, image) now builds natively; examples/compiler.deus writes seed/deus.image byte for byte in 642 ms vs 7.4 s on the JIT. Cli.main still stops at Code.run.
+
+> claude: D143: Code.load, Code.has and Code.run run on a Core interpreter in the C runtime, so the native CLI runs eval, run and test with the kernels' output (44 toolchain tests: 251 ms vs 2,078 ms on the JIT). Left: Code.steps and Code.cost, and clauses that resume outside their tail (task e1cf2c6c).
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 

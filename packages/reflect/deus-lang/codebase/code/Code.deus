@@ -1,8 +1,14 @@
+/-- The same value at another type, which the caller knows it has. -/
+def Code.cast : a -> b := prim "Code.cast"
+
 /-- Machine steps a pure computation takes; its operations must be handled inside it. -/
 def Code.cost : (Unit -> a) -> Int := prim "Code.cost"
 
 /-- Hashes of the definitions on the stack when the last defect was raised, innermost first. -/
 def Code.defectTrace : Unit -> List Text := prim "Code.defectTrace"
+
+/-- Field `i` of a data value. -/
+def Code.field : a -> Int -> b := prim "Code.field"
 
 def Code.has : Text -> Bool := prim "Code.has"
 
@@ -17,3 +23,6 @@ def Code.run : Text -> a := prim "Code.run"
 
 /-- Machine steps so far: the deterministic cost model for performance requirements. -/
 def Code.steps : Unit -> Int := prim "Code.steps"
+
+/-- The tag of a data value, a Bool's being 0 or 1: with `field` and `cast`, for code that walks a value by its type (D146). -/
+def Code.tag : a -> Int := prim "Code.tag"

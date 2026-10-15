@@ -458,7 +458,7 @@ def Wasm.substitute (binding : Sexp -> Option Sexp) (t : Sexp) : Sexp :=
 /-- The result type of a primitive the C back end's runtime implements (D115), or unknown; a lookup's `Option` and a clause are named, since `typeOf` counts other two-argument results as `Int`. -/
 def Wasm.textPrimType (p : Text) : Sexp := if any
   (fun x => x == p)
-  ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text" else if any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int" else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"] else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown] else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown] else if p == "deus.io.readFile" || p == "deus.io.getEnv" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Text"] else if p == "deus.io.listDir" || p == "deus.io.args" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "deus.io.readStdin" || p == "deus.io.wallClock" then tref "#Text" else if p == "deus.io.time" then tref "#Int" else unknown
+  ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text" else if any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int" else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"] else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown] else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown] else if p == "deus.io.readFile" || p == "deus.io.getEnv" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Text"] else if p == "deus.io.listDir" || p == "deus.io.args" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "deus.io.readStdin" || p == "deus.io.wallClock" then tref "#Text" else if p == "deus.io.time" || p == "Code.tag" then tref "#Int" else if p == "Code.quote" then tref "#Text" else if p == "Code.has" then tref "#Bool" else unknown
 
 def Wasm.tref (t : Text) : Sexp := Sexp.list [Sexp.sym "tref", Sexp.str t]
 
@@ -508,6 +508,9 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "append" :: []) :: a :: b :: []) =>
       let left := Wasm.typeOf scope env a
       if left == unknown then Wasm.typeOf scope env b else left
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Code.field" :: []) :: _ :: _ :: []) =>
+      -- A field taken out by the interpreter's reflection (D146) is of any type.
+      unknown
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: rest) =>
       let known := textPrimType p
       if known != unknown then known else if List.length rest == 2 then if isComparison p then tref "#Bool" else tref "#Int" else unknown

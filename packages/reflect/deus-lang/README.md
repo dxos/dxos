@@ -38,7 +38,7 @@ deus push && deus pull && deus compact                       # immutable bundles
 deus task new Sort is not stable --link List.sort            # issues attached to definitions
 deus update fix.deus --closes 3f2a                           # …closed by the change that fixes them
 deus eval 'List.map Workspace.view (Workspace.names "Sort.")'  # script reads and edits in DEUS (D138)
-deus artifact App.bundle --out bundle.js                     # an @[artifact] constant, evaluated once (D146)
+deus artifact App.bundle --out bundle.js                     # an @[artifact] constant, evaluated once (D147)
 deus explore                                                 # browse the codebase on :8080
 deus explore --publish origin                                # …or host it beside the bundles
 deus export codebase                                         # the codebase as text, for git (D64)
