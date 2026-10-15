@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_LOOK, defaultThemeRegistry, resolveLook } from '../model/style-set.ts';
+import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/style-set.ts';
 import { type Node, type StyleMap } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
@@ -80,12 +80,10 @@ describe('style sets', () => {
   };
 
   test('classic draws every node exactly as before', ({ expect }) => {
-    const classic = resolveLook(defaultThemeRegistry, { theme: 'classic' });
+    const classic = CLASSIC_LOOK;
     for (const [id, classes] of Object.entries(before)) {
       const node: Node = nodes[id];
-      expect(frameClasses(node, false)).toEqual(classes);
       expect(frameClasses(node, false, false, false, classic)).toEqual(classes);
-      expect(frameClasses(node, false, false, false, DEFAULT_LOOK)).toEqual(classes);
     }
     // Classic's variants are the canvas's four tones, class for class.
     for (const tone of [0, 1, 2, 3] as const) {

@@ -9,7 +9,7 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { useSceneLook } from '../../hooks/useSceneLook.ts';
-import { DEFAULT_LOOK, type SceneLook, styleVariant } from '../../model/style-set.ts';
+import { CLASSIC_LOOK, DEFAULT_LOOK, type SceneLook, styleVariant } from '../../model/style-set.ts';
 import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '../../model/types.ts';
 import { TONES, variantClasses } from '../../utils/style.ts';
 import { BORDER_CLASSES } from '../../utils/surfaces.ts';
@@ -139,7 +139,7 @@ export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRendere
       <Form.Field path={jsonPath} label={label} readonly={readonly}>
         <StyleGrid
           // A link's colour is its hue's border whatever the set, so its row is the canvas's own outline.
-          look={fills ? undefined : DEFAULT_LOOK}
+          look={fills ? undefined : CLASSIC_LOOK}
           hue={getValue()}
           tone={fills ? style.tone : 0}
           tones={fills ? undefined : OUTLINE_TONES}

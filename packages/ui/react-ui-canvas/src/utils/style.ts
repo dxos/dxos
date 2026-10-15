@@ -205,7 +205,7 @@ export const surfaceClasses = (
 ): HueClasses => variantClasses(hue, styleVariant(look.styleSet, tone), look.tone);
 
 /**
- * Frame classes for a node in `look` (the classic set when unset): fill and text colour, border and corner radius from
+ * Frame classes for a node in `look` (the default flat look when unset): fill and text colour, border and corner radius from
  * its style; a guide is dashed and unfilled. `ellipse` rounds it as an ellipse whatever the node's type (its
  * definition asks for it).
  */

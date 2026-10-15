@@ -67,8 +67,10 @@ const LayerName = ({ layer, readonly, editing, onEditingChange, onRename }: Laye
       }
     }}
   >
-    <Editable.Preview data-testid={`layer-name-${layer.id}`} />
+    {/* Flush with the drag handle: the control's inline padding would indent the name from the row. */}
+    <Editable.Preview classNames='px-0' data-testid={`layer-name-${layer.id}`} />
     <Editable.Input
+      classNames='px-0'
       aria-label='Layer name'
       data-testid={`layer-input-${layer.id}`}
       // While a name is typed, the list's keys (typeahead, arrows, selection) must not take its keys; otherwise the

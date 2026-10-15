@@ -19,7 +19,6 @@ export type ThemeChoice = Schema.Schema.Type<typeof ThemeChoice>;
 
 /** The built-in style sets, by id, for a drawing that overrides its theme's. */
 export const StyleSetChoice = Schema.Union([
-  Schema.Literal('classic').annotate({ title: 'Classic' }),
   Schema.Literal('flat').annotate({ title: 'Flat' }),
   Schema.Literal('outline').annotate({ title: 'Outline' }),
   Schema.Literal('glass').annotate({ title: 'Glass' }),

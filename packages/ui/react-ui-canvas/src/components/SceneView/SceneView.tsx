@@ -1240,18 +1240,24 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
     [look.background, backgroundBounds, bounds, latticeBounds],
   );
   const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
+  // While editing, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws no lines too.
+  const snapLines = !readonly && look.background.grid === 'lines';
+  const fieldBackground = useMemo(
+    () => (snapLines ? { ...look.background, grid: 'none' as const } : look.background),
+    [snapLines, look.background],
+  );
 
   return (
     <>
       <BackgroundFill background={look.background} />
       {/* Under the snap grid, in its own camera layer, so the grid a gesture lands on stays on top. */}
-      {measured && drawsField(look.background) && (
+      {measured && drawsField(fieldBackground) && (
         <div
           className='absolute pointer-events-none'
           style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
         >
           <BackgroundField
-            background={look.background}
+            background={fieldBackground}
             tone={look.tone}
             field={field}
             grid={grid}
@@ -1262,8 +1268,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
           small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
-          cells, not the lines, so its cells are its grid. */}
-      {snapEnabled && !readonly && !(latticeOn && projection.lattice) && (
+          cells, not the lines, so its cells are its grid. The theme bar's grid choice decides whether they show. */}
+      {snapEnabled && snapLines && !(latticeOn && projection.lattice) && (
         <GridComponent
           size={grid}
           scale={camera.zoom}

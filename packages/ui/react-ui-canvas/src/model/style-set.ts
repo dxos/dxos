@@ -152,7 +152,7 @@ const CLASSIC_SHAPE = {
   label: 'surface',
 } as const;
 
-/** Today's look, its variants the canvas's four tones; existing drawings render with it unchanged. */
+/** The canvas's look before style sets, its variants the four tones; kept for nodes drawn outside any look, not offered. */
 export const CLASSIC_STYLE_SET: StyleSet = {
   id: 'classic',
   name: 'Classic',
@@ -265,9 +265,6 @@ export const PAPER_BACKGROUND: Background = {
   grainHue: 'warm',
 };
 
-/** What a view naming no theme draws: the classic shapes on the plain canvas; not offered as a theme to pick. */
-export const CLASSIC_THEME: Theme = { id: 'classic', name: 'Classic', styleSet: 'classic', background: 'plain' };
-
 export const GLASS_NIGHT_THEME: Theme = {
   id: 'glass-night',
   name: 'Glass night',
@@ -278,7 +275,8 @@ export const GLASS_NIGHT_THEME: Theme = {
 
 export const PAPER_THEME: Theme = { id: 'paper', name: 'Paper', styleSet: 'glass', background: 'paper', mode: 'light' };
 
-export const FLAT_THEME: Theme = { id: 'flat', name: 'Flat', styleSet: 'flat', background: 'dots', mode: 'dark' };
+/** The theme a view naming none draws: flat shapes on dots, light or dark with the app. */
+export const FLAT_THEME: Theme = { id: 'flat', name: 'Flat', styleSet: 'flat', background: 'dots' };
 
 /** Glass shapes on the bare dark canvas, with no washes or grid. */
 export const NIGHT_THEME: Theme = { id: 'night', name: 'Night', styleSet: 'glass', background: 'plain', mode: 'dark' };
@@ -286,7 +284,6 @@ export const NIGHT_THEME: Theme = { id: 'night', name: 'Night', styleSet: 'glass
 export const OUTLINE_THEME: Theme = { id: 'outline', name: 'Outline', styleSet: 'outline', background: 'lines' };
 
 export const DEFAULT_STYLE_SETS: Readonly<Record<string, StyleSet>> = {
-  classic: CLASSIC_STYLE_SET,
   flat: FLAT_STYLE_SET,
   outline: OUTLINE_STYLE_SET,
   glass: GLASS_STYLE_SET,
@@ -310,7 +307,7 @@ export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
 
 /** The ids of the built-ins, for pickers. */
 export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline'] as const;
-export const STYLE_SET_IDS = ['classic', 'flat', 'outline', 'glass'] as const;
+export const STYLE_SET_IDS = ['flat', 'outline', 'glass'] as const;
 export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper'] as const;
 
 //
@@ -344,9 +341,17 @@ export type SceneLook = {
   readonly tone: LookTone;
 };
 
-/** The look of a view that names nothing: the classic theme. */
+/** The look of a view that names nothing: the flat theme. */
 export const DEFAULT_LOOK: SceneLook = {
-  theme: CLASSIC_THEME,
+  theme: FLAT_THEME,
+  styleSet: FLAT_STYLE_SET,
+  background: DOTS_BACKGROUND,
+  tone: 'theme',
+};
+
+/** The canvas's pre-style-set look, for rows that must show a hue's four tones class for class; no theme offers it. */
+export const CLASSIC_LOOK: SceneLook = {
+  theme: { id: 'classic', name: 'Classic', styleSet: 'classic', background: 'plain' },
   styleSet: CLASSIC_STYLE_SET,
   background: PLAIN_BACKGROUND,
   tone: 'theme',
@@ -355,20 +360,20 @@ export const DEFAULT_LOOK: SceneLook = {
 const lookup = <T>(record: Readonly<Record<string, T>>, id: string | undefined): T | undefined =>
   id !== undefined && Object.hasOwn(record, id) ? record[id] : undefined;
 
-/** The theme `id` names, else classic: an unknown id (from a newer host, or a deleted theme) still draws. */
+/** The theme `id` names, else flat: an unknown id (from a newer host, or a deleted theme) still draws. */
 export const resolveTheme = (registry: ThemeRegistry, id: string | undefined): Theme =>
-  lookup(registry.themes, id) ?? CLASSIC_THEME;
+  lookup(registry.themes, id) ?? FLAT_THEME;
 
-/** The style set `id` names, else classic. */
+/** The style set `id` names, else flat. */
 export const resolveStyleSet = (registry: ThemeRegistry, id: string | undefined): StyleSet =>
-  lookup(registry.styleSets, id) ?? CLASSIC_STYLE_SET;
+  lookup(registry.styleSets, id) ?? FLAT_STYLE_SET;
 
 /** The background `id` names, else plain. */
 export const resolveBackground = (registry: ThemeRegistry, id: string | undefined): Background =>
   lookup(registry.backgrounds, id) ?? PLAIN_BACKGROUND;
 
 export type LookIds = {
-  /** The theme; classic when unset or unknown. */
+  /** The theme; flat when unset or unknown. */
   theme?: string;
   /** Overrides the theme's style set, when it names one the registry knows. */
   styleSet?: string;

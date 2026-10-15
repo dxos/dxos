@@ -8,10 +8,10 @@ import { describe, test } from 'vitest';
 import {
   Background,
   CLASSIC_STYLE_SET,
-  CLASSIC_THEME,
   DEFAULT_BACKGROUNDS,
   DEFAULT_STYLE_SETS,
   DEFAULT_THEMES,
+  FLAT_THEME,
   GLASS_STYLE_SET,
   PAPER_BACKGROUND,
   PLAIN_BACKGROUND,
@@ -56,11 +56,11 @@ describe('themes', () => {
     expect(() => Schema.decodeUnknownSync(Background)({ ...PLAIN_BACKGROUND, grain: 2 })).toThrow();
   });
 
-  test('ids resolve, and an unknown one falls back to classic', ({ expect }) => {
+  test('ids resolve, and an unknown one falls back to flat', ({ expect }) => {
     expect(resolveTheme(defaultThemeRegistry, 'paper').styleSet).toBe('glass');
-    expect(resolveTheme(defaultThemeRegistry, 'gone')).toBe(CLASSIC_THEME);
-    expect(resolveTheme(defaultThemeRegistry, undefined)).toBe(CLASSIC_THEME);
-    expect(resolveStyleSet(defaultThemeRegistry, 'gone')).toBe(CLASSIC_STYLE_SET);
+    expect(resolveTheme(defaultThemeRegistry, 'gone')).toBe(FLAT_THEME);
+    expect(resolveTheme(defaultThemeRegistry, undefined)).toBe(FLAT_THEME);
+    expect(resolveStyleSet(defaultThemeRegistry, 'gone')).toBe(DEFAULT_STYLE_SETS.flat);
     expect(resolveBackground(defaultThemeRegistry, 'gone')).toBe(PLAIN_BACKGROUND);
   });
 
@@ -91,11 +91,11 @@ describe('themes', () => {
       backgrounds: { plain: { ...PLAIN_BACKGROUND, name: 'Bare' } },
     });
     expect(resolveTheme(registry, 'mine')).toBe(mine);
-    // Classic is the fallback, not a theme on offer.
+    // Classic is gone; its id falls back to flat.
     expect(registry.themes.classic).toBeUndefined();
-    expect(resolveTheme(registry, 'classic')).toBe(CLASSIC_THEME);
+    expect(resolveTheme(registry, 'classic')).toBe(FLAT_THEME);
     expect(resolveBackground(registry, 'plain').name).toBe('Bare');
     // A name inherited from `Object.prototype` is no theme.
-    expect(resolveTheme(registry, 'toString')).toBe(CLASSIC_THEME);
+    expect(resolveTheme(registry, 'toString')).toBe(FLAT_THEME);
   });
 });

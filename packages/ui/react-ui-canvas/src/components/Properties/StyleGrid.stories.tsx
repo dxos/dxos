@@ -44,7 +44,7 @@ const meta: Meta<StoryArgs> = {
   args: {
     indeterminate: false,
     readonly: false,
-    styleSet: 'classic',
+    styleSet: 'flat',
   },
   argTypes: { styleSet: { control: 'inline-radio', options: STYLE_SET_IDS } },
 };
