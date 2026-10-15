@@ -33,7 +33,7 @@ import {
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
+import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId, resolveDrawingLook } from '#model';
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
@@ -70,6 +70,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const [snapshot] = useObject(canvas);
   const record = canvasRecordOf(snapshot.content);
   const lattice = record?.lattice === true;
+  // The drawing's look is shared with collaborators, so it wins over the viewer's own default.
+  const look = resolveDrawingLook(record, settings);
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
@@ -163,6 +165,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               nodes={nodes}
               createProjection={lattice ? createLatticeProjection : undefined}
               grid={record?.grid}
+              styleSet={look.styleSet}
+              background={look.background}
               readonly={readonly}
               onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}

@@ -52,6 +52,10 @@ export const CanvasRecord = Schema.Struct({
   grid: Schema.optional(Schema.Number),
   /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
   readonly: Schema.optional(Schema.Boolean),
+  /** The style set every collaborator sees, over each one's own default; an id the registry resolves. */
+  styleSet: Schema.optional(Schema.String),
+  /** The background every collaborator sees, over each one's own default and the style set's. */
+  background: Schema.optional(Schema.String),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
@@ -267,6 +271,18 @@ export const updateCanvasRecord = (content: ContentMap, values: Partial<Omit<Can
     content[CANVAS_KEY] = next;
   }
 };
+
+/**
+ * The style set and background a drawing draws with: its own (shared with collaborators) over the user's default; each
+ * stays unset when neither names one, so the engine falls back to classic and the set's own background.
+ */
+export const resolveDrawingLook = (
+  record: Pick<CanvasRecord, 'styleSet' | 'background'> | undefined,
+  defaults: { styleSet?: string; background?: string },
+): { styleSet?: string; background?: string } => ({
+  styleSet: record?.styleSet ?? defaults.styleSet,
+  background: record?.background ?? defaults.background,
+});
 
 /** The root scene id, when the content has been seeded. */
 export const rootOf = (content: ContentMap): SceneId | undefined => {
