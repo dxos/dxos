@@ -22,6 +22,7 @@ import { HttpError, json, listAll, readHead } from './remote.mjs';
 
 const ROOT = '/codebase';
 const HASH = /^[0-9a-f]{64}$/;
+const BUILTIN = /^#[A-Za-z][A-Za-z0-9_.]{0,99}$/;
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
 const PAGE = /^(_[A-Za-z][A-Za-z0-9_.]{0,99}|[0-9a-f]{64})\.json$/;
 /** Passes a run may take before it gives up: each one fetches everything the last one missed. */
@@ -82,7 +83,13 @@ const render = async (env, project, causal, path) => {
   }
   const site = await siteOf(files);
   if (path[0] === 'index.json') {
-    return run(files, () => explorer.raw.liveIndex(site));
+    const chain = await prefetchHistory(files);
+    const text = await run(files, () => explorer.raw.liveIndex(site));
+    // The next head's walk stops at this causal and reads the rest of the chain in parallel.
+    await env.BUCKET.put(chainKey(project, causal), JSON.stringify(chain), {
+      httpMetadata: { contentType: 'application/json' },
+    });
+    return text;
   }
   const name = path[1].slice(0, -'.json'.length);
   const hash = name.startsWith('_') ? `#${name.slice(1)}` : name;
@@ -186,6 +193,10 @@ const run = async (files, body) => {
       }
       return result;
     }
+    // Shown by `wrangler tail`: a pass that keeps missing a few files names a chain the prefetch should walk.
+    console.log(
+      `live ${files.project}@${files.causal.slice(0, 10)} pass ${pass}: ${files.missing.size} missing, e.g. ${[...files.missing].slice(0, 3).join(' ')}`,
+    );
     await fetchAll(files, [...files.missing]);
   }
   throw new HttpError(503, 'the explorer kept reading new objects; try again');
@@ -234,7 +245,7 @@ const prefetchNamespace = async (files) => {
           next.push(item[item.length - 1].s);
         } else if (item[0] === 'n' && Array.isArray(item[2])) {
           const hash = item[2][1]?.s;
-          if (hash && HASH.test(hash)) {
+          if (hash && (HASH.test(hash) || BUILTIN.test(hash))) {
             hashes.add(hash);
           }
         }
@@ -244,4 +255,61 @@ const prefetchNamespace = async (files) => {
   }
   const tasks = field('tasks');
   await fetchAll(files, [...[...hashes].flatMap((hash) => [`o${hash}`, `m${hash}`]), ...(tasks ? [`o${tasks}`] : [])]);
+};
+
+/** How many changes back the explorer's log reads (`Explorer.historyLimit`). */
+const HISTORY = 1000;
+
+const chainKey = (project, causal) => `${project}/live/${causal}/chain.json`;
+
+/** The fields of a history node: `ns`, `parents`, `tasks`, `prior`, `comments`, `metas`, `at`. */
+const causalFields = (text) => {
+  const fields = parseSexp(text).slice(1);
+  const field = (name) => fields.find((item) => Array.isArray(item) && item[0] === name);
+  return {
+    parents: (field('parents') ?? []).slice(1).map((item) => item.s),
+    snapshots: ['tasks', 'prior', 'comments']
+      .map((name) => field(name)?.[1]?.s)
+      .filter((hash) => hash && HASH.test(hash)),
+  };
+};
+
+/**
+ * Reads the first-parent chain the log and task histories walk (`Codebase.history`), and the task,
+ * record and comment snapshots each node points at. The walk is one lookup per node, so it stops at
+ * the first causal whose index stored its chain, and reads the rest of that chain all at once.
+ * Returns the chain from `causal`.
+ */
+const prefetchHistory = async (files) => {
+  const chain = [];
+  let at = files.causal;
+  while (at && chain.length < HISTORY) {
+    const [stored] = await Promise.all([
+      at === files.causal ? undefined : files.bucket.get(chainKey(files.project, at)),
+      fetchAll(files, [`o${at}`]),
+    ]);
+    if (stored) {
+      const rest = JSON.parse(await stored.text()).slice(0, HISTORY - chain.length);
+      await fetchAll(
+        files,
+        rest.map((hash) => `o${hash}`),
+      );
+      chain.push(...rest);
+      break;
+    }
+    const text = files.texts.get(`o${at}`);
+    if (!text) {
+      break;
+    }
+    chain.push(at);
+    at = causalFields(text).parents[0];
+  }
+  await fetchAll(
+    files,
+    chain.flatMap((hash) => {
+      const text = files.texts.get(`o${hash}`);
+      return text ? causalFields(text).snapshots.map((snapshot) => `o${snapshot}`) : [];
+    }),
+  );
+  return chain;
 };

@@ -97,7 +97,7 @@ describe('live explorer (D192)', () => {
       const map = index.names.find((entry: { name: string }) => entry.name === 'List.map');
       expect(await get(`/v1/toolchain/live/${head}/def/${map.hash}.json`)).toEqual(site(`def/${map.hash}.json`));
       // What a causal shows never changes, so it is kept in the bucket after the first request.
-      expect(readdirSync(join(bucket, 'toolchain', 'live', head)).sort()).toEqual(['def', 'index.json']);
+      expect(readdirSync(join(bucket, 'toolchain', 'live', head)).sort()).toEqual(['chain.json', 'def', 'index.json']);
       const change = await get(`/v1/toolchain/live/${head}/change/${head}.json`);
       expect(change.message).toBe(site(`change/${head}.json`).message);
     },
