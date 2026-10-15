@@ -82,7 +82,7 @@ export const Setup: Story = {
     persistent: true,
     layout: [
       [companion('discord'), StoryRole.DiscordBot],
-      [StoryRole.AgentProperties, StoryRole.EmailChannel],
+      [StoryRole.AgentProperties, companion('email')],
       [companion('activity'), StoryRole.Conversation],
       [companion('brain')],
     ],
