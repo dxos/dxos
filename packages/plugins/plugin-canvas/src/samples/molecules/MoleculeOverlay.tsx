@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { createContext, useContext, useEffect, useId, useState } from 'react';
+import React, { createContext, useContext, useEffect, useId, useMemo, useState } from 'react';
 
 import { type BackgroundGrid, STYLE_SET_IDS, lineClasses } from '@dxos/react-ui-canvas/scene';
 import { mx } from '@dxos/ui-theme';
@@ -19,6 +19,7 @@ import {
   appSlots,
   baseOf,
 } from './layout.ts';
+import { type HubMorph, type SplitMove, morphBlock, planSplit } from './morph.ts';
 import {
   AGENT_FADE,
   type AppItem,
@@ -295,6 +296,42 @@ const BlockOutline = ({ rect, round, radius }: { rect: Block['frame']; round?: b
   ) : (
     <rect {...rect} rx={radius} fill='black' />
   );
+
+/** The two phases of a split: the clusters slide sideways into their columns, then the buckets open around them. */
+export const splitPhases = (progress: number) => {
+  const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+  const clamp = (t: number) => Math.min(1, Math.max(0, t));
+  return { slide: ease(clamp(progress * 2)), open: ease(clamp(progress * 2 - 1)) };
+};
+
+/**
+ * The hub's docked molecules and bonds carried along a split, by `plan`: each cluster first slides whole into its
+ * bucket's column (one with no room fading where it is), then drops with the buckets as they open.
+ */
+const morphFrame = (plan: ReadonlyMap<string, SplitMove>, progress: number, { bodies, bonds }: Frame) => {
+  const { slide, open } = splitPhases(progress);
+  const at = (id: string) => {
+    const move = plan.get(id);
+    return move
+      ? { x: move.shift.x * slide, y: move.shift.y * open, opacity: move.kept ? 1 : 1 - slide }
+      : { x: 0, y: 0, opacity: 1 };
+  };
+  return {
+    bodies: bodies.map((body) => {
+      const { x, y, opacity } = at(body.id);
+      return { ...body, position: { x: body.position.x + x, y: body.position.y + y }, opacity: body.opacity * opacity };
+    }),
+    bonds: bonds.map((bond) => {
+      const { x, y, opacity } = at(bond.id.split(':')[0]);
+      return {
+        ...bond,
+        from: { x: bond.from.x + x, y: bond.from.y + y },
+        to: { x: bond.to.x + x, y: bond.to.y + y },
+        opacity: bond.opacity * opacity,
+      };
+    }),
+  };
+};
 
 /** Milliseconds the monolithic agent's parts take to fade in or out as it is revealed or hidden. */
 const REVEAL_MS = 2000;
@@ -674,6 +711,8 @@ export type MoleculeOverlayProps = {
   tone?: LookTone;
   /** Off, the monolithic agent and its feed are hidden; turned on, they fade in. */
   revealed?: boolean;
+  /** The hub part way to a partitioned one: drawn eased toward it, its docked molecules carried with their buckets. */
+  hubMorph?: HubMorph;
 };
 
 /**
@@ -681,15 +720,32 @@ export type MoleculeOverlayProps = {
  * and every molecule.
  */
 export const MoleculeOverlay = ({
-  layout,
+  layout: laidOut,
   simulation,
   running = true,
   molecules = true,
   look = 'glass',
   tone = 'dark',
   revealed = true,
+  hubMorph,
 }: MoleculeOverlayProps) => {
-  const { bodies, bonds, agents, apps, time } = useSimulationFrame(simulation, running && molecules);
+  const frame = useSimulationFrame(simulation, running && molecules);
+  const { agents, apps, time } = frame;
+  // The well stays whole while the clusters slide, so no seam shows where the buckets will part.
+  const opening = hubMorph ? splitPhases(hubMorph.progress).open : 0;
+  const layout =
+    hubMorph && opening > 0
+      ? { ...laidOut, hub: morphBlock(laidOut.hub, { ...hubMorph, progress: opening }) }
+      : laidOut;
+  // Planned once per frame and target, not per step of the morph, so every cluster keeps one destination throughout.
+  const plan = useMemo(
+    () =>
+      hubMorph
+        ? planSplit(laidOut.hub, hubMorph.target, frame.bodies, frame.bonds, laidOut.hubGrid.spacing)
+        : undefined,
+    [laidOut, hubMorph?.target, frame],
+  );
+  const { bodies, bonds } = plan && hubMorph ? morphFrame(plan, hubMorph.progress, frame) : frame;
   // Molecules in flight draw last, so they pass over the docked lattice rather than under it.
   const ordered = [...bodies]
     .filter((body) => !layout.focus || (body.zone === 'hub' && body.phase === 'docked'))

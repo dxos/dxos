@@ -162,6 +162,37 @@ const bucketsOf = (region: Rect, count: number): Rect[] => {
   }));
 };
 
+/** A hub in `frame` whose well holds a horizontal channel along its top and bottom with `count` buckets between them. */
+const partitionedBlock = (id: string, label: string, frame: Rect, count: number): Block => {
+  const well = wellOf(frame);
+  return {
+    id,
+    label,
+    frame,
+    well,
+    buckets: bucketsOf(
+      {
+        x: well.x,
+        y: well.y + LANE_WIDTH + LANE_GAP,
+        width: well.width,
+        height: well.height - 2 * (LANE_WIDTH + LANE_GAP),
+      },
+      count,
+    ),
+    lanes: {
+      top: well.y + LANE_WIDTH / 2,
+      bottom: well.y + well.height - LANE_WIDTH / 2,
+      left: well.x,
+      right: well.x + well.width,
+      width: LANE_WIDTH,
+    },
+  };
+};
+
+/** `hub` cut into `count` buckets in place: as wide as it was, as tall as a partitioned hub, its top where it was. */
+export const partitionHub = (hub: Block, count: number): Block =>
+  partitionedBlock(hub.id, hub.label, { ...hub.frame, height: PARTITIONED_HUB_HEIGHT }, count);
+
 /**
  * The lattice of each of a well's buckets, inset as a grid is: its sites must fall inside one of them. The margins
  * plus the gap keep neighbouring buckets more than a lattice step apart, so no molecule (its atoms joined by single
@@ -303,33 +334,10 @@ const layoutStacked = (spec: DataFlowSpec): DataFlowLayout => {
     width,
     height: partitions > 1 ? PARTITIONED_HUB_HEIGHT : HUB_HEIGHT,
   };
-  const hubWell = wellOf(hubFrame);
-  // Partitioned, the well holds a horizontal channel along its top and bottom with the buckets between them.
   const hub =
     partitions > 1
-      ? {
-          id: 'hub',
-          label: spec.hub.label,
-          frame: hubFrame,
-          well: hubWell,
-          buckets: bucketsOf(
-            {
-              x: hubWell.x,
-              y: hubWell.y + LANE_WIDTH + LANE_GAP,
-              width: hubWell.width,
-              height: hubWell.height - 2 * (LANE_WIDTH + LANE_GAP),
-            },
-            partitions,
-          ),
-          lanes: {
-            top: hubWell.y + LANE_WIDTH / 2,
-            bottom: hubWell.y + hubWell.height - LANE_WIDTH / 2,
-            left: hubWell.x,
-            right: hubWell.x + hubWell.width,
-            width: LANE_WIDTH,
-          },
-        }
-      : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: hubWell };
+      ? partitionedBlock('hub', spec.hub.label, hubFrame, partitions)
+      : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: wellOf(hubFrame) };
 
   const channels: Channel[] = sources.map((source) => ({
     id: `channel-${source.id}`,

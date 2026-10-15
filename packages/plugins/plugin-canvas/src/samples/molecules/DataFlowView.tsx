@@ -21,9 +21,37 @@ import {
   type DataFlowSpec,
   createDataFlowScene,
   layoutDataFlow,
+  partitionHub,
 } from './layout.ts';
 import { LOOKS, MoleculeOverlay } from './MoleculeOverlay.tsx';
 import { DataFlowSimulation, type SimulationOptions } from './simulation.ts';
+
+/** How many buckets a partitioned hub gets, and how long the morph to it takes. */
+const PARTITIONS = 3;
+const PARTITION_MS = 3000;
+
+/** Runs linearly from where it is to `target` over `duration` ms whenever `target` changes, rendering each step. */
+const useTween = (target: number, duration: number): number => {
+  const [value, setValue] = useState(target);
+  useEffect(() => {
+    const from = value;
+    if (from === target) {
+      return;
+    }
+    const start = performance.now();
+    let frame = requestAnimationFrame(function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      setValue(from + (target - from) * t);
+      if (t < 1) {
+        frame = requestAnimationFrame(step);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+    // Restarted only by a new target, from wherever the last run left off.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, duration]);
+  return value;
+};
 
 /** The rectangle every shown block's frame lies in. */
 const framesBounds = (layout: DataFlowLayout): Bounds | undefined => {
@@ -55,6 +83,11 @@ export type DataFlowViewProps = {
    * turned on, its parts fade in, it starts reading, and the camera widens to take it in.
    */
   revealed?: boolean;
+  /**
+   * Splits a one-bucket hub into three while on: the hub eases between the two over three seconds, its docked molecules
+   * carried with their buckets. Meant for a held frame (`running` off), which the morph only redraws.
+   */
+  partitioned?: boolean;
 };
 
 /**
@@ -69,6 +102,7 @@ export const DataFlowView = ({
   theme: chosenTheme,
   grid: initialGrid,
   revealed = true,
+  partitioned,
 }: DataFlowViewProps) => {
   // With no theme chosen, the diagram follows the app's light or dark mode: paper by day, the glow by night.
   const { themeMode } = useThemeContext();
@@ -78,10 +112,19 @@ export const DataFlowView = ({
   // Created per layout, not per reveal: a new store would reset the view; the reveal rewrites its one scene instead.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const store = useMemo(() => createMemoryStore([createDataFlowScene(layout, revealed)]), [layout]);
+  const morphing = partitioned !== undefined;
+  const morph = useMemo(
+    () => (morphing ? { target: partitionHub(layout.hub, PARTITIONS) } : undefined),
+    [layout, morphing],
+  );
+  // Linear: each phase of the split eases itself.
+  const progress = useTween(partitioned ? 1 : 0, PARTITION_MS);
+  // The scene takes the hub's end state at once, so the camera frames where the morph is heading.
+  const sceneLayout = morph && partitioned ? { ...layout, hub: morph.target } : layout;
   useLayoutEffect(() => {
-    const scene = createDataFlowScene(layout, revealed);
+    const scene = createDataFlowScene(sceneLayout, revealed);
     registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
-  }, [registry, store, layout, revealed]);
+  }, [registry, store, sceneLayout, revealed]);
   const simulation = useMemo(() => new DataFlowSimulation(layout, options), [layout, options]);
   useLayoutEffect(() => {
     simulation.agentReads = revealed;
@@ -102,7 +145,7 @@ export const DataFlowView = ({
       readonly
       theme={theme}
       backgroundGrid={grid}
-      refitKey={revealed ? 'revealed' : 'hidden'}
+      refitKey={`${revealed ? 'revealed' : 'hidden'}:${partitioned ? 'partitioned' : 'whole'}`}
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
@@ -117,6 +160,7 @@ export const DataFlowView = ({
             look={overlayLook}
             tone={look.theme.mode ?? 'dark'}
             revealed={revealed}
+            hubMorph={morph && progress > 0 ? { ...morph, progress } : undefined}
           />
         }
       />

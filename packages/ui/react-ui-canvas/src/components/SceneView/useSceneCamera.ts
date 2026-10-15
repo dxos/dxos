@@ -93,6 +93,7 @@ export const useSceneCamera = (
 
   const animateTo = useCallback(
     (target: Camera, done?: () => void, duration?: number) => {
+      const continuing = cancelRef.current !== undefined;
       cancelAnimation();
       setNavigation(true);
       targetRef.current = target;
@@ -108,6 +109,7 @@ export const useSceneCamera = (
           done?.();
         },
         duration,
+        continuing,
       );
     },
     [registry, atoms.camera, viewport, setCamera, cancelAnimation, setNavigation],

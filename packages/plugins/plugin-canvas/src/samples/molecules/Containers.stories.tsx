@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
@@ -70,3 +70,26 @@ const RADIAL: DataFlowSpec = {
 
 /** Nine sources around a round hub, which grows as a cluster from its centre. */
 export const Radial: StoryObj<DataFlowViewProps> = { args: { spec: RADIAL, molecules: true } };
+
+const ONE_BUCKET: DataFlowSpec = { ...HYPERGRAPH, hub: { label: 'ECHO' } };
+
+/** Toggles the split every few seconds, so the story plays it both ways on a loop. */
+const SplitLoop = (props: DataFlowViewProps) => {
+  const [partitioned, setPartitioned] = useState(false);
+  useEffect(() => {
+    const timer = setInterval(() => setPartitioned((value) => !value), SPLIT_PERIOD);
+    return () => clearInterval(timer);
+  }, []);
+  return <DataFlowView {...props} partitioned={partitioned} />;
+};
+
+const SPLIT_PERIOD = 5_000;
+
+/**
+ * The ECHO container's one bucket split into three at the lattice's natural break points: its clusters slide whole into
+ * their columns, then the buckets open around them.
+ */
+export const Split: StoryObj<DataFlowViewProps> = {
+  render: (args) => <SplitLoop {...args} />,
+  args: { spec: ONE_BUCKET, options: WARM, molecules: true, running: false },
+};
