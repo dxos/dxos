@@ -574,3 +574,7 @@ https://share.unison-lang.org/ -- it has everything by top-level org/user model
 perhaps we could have the same
 
 https://github.com/dxos/deus/Namespace.Term -- structure.. or something else -- I'll let you decide. but we need meta-structure to chunk by so everything is not just be file. its not just about the explorer but codebase too. how about every file is placed in context URI as a sorta pargma comment. pls eval my suggestions and decide
+
+---
+
+we should really invest in flows that prevent dataloss -- thats core

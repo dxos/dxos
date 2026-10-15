@@ -791,8 +791,9 @@ def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw 
         (ns2, name :: changed, conflicts)
       else (ns, changed, name :: conflicts)
     let (folded, changedNames, conflicted) := foldl step (oursNs, [], []) names
-    -- A taken name that uses a hash no name has would run code nobody can see or update (task 30884468).
-    let dangling := List.filter
+    -- A taken name that uses a hash no name has would run code nobody can see or update (task 30884468);
+    -- a merge that prefers theirs is `deus merge`'s retry, which recompiles such names itself.
+    let dangling := if not (List.isEmpty (Set.toList prefer)) then [] else List.filter
       (fun n => not (List.contains n conflicted))
       (dedup (List.map fst (danglingIn dir folded changedNames)))
     match ((folded, changedNames, conflicted ++ dangling), tasks) with

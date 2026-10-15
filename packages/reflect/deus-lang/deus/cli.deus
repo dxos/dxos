@@ -767,16 +767,27 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
           | Option.some (edited, text) =>
               match mergeWith dir other (Set.fromList names) with
               | MergeResult.merged h changed =>
+                  -- Names taken from theirs that call a definition of theirs our edit replaced are
+                  -- compiled again from their source, so they call ours (task 30884468).
+                  let theirsNs := readNamespace dir (readCausal dir theirs).snapshot
+                  let printer := Print.printer theirsNs []
+                  let stale := List.filter
+                    (fun n => not (List.contains n edited))
+                    (dedup (List.map fst (danglingIn dir (Codebase.current dir) changed)))
+                  let staleText := join "\n\n" (filterMap (fun name => Option.map
+                    (fun e => snd (viewParts printer dir theirsNs name e "deus"))
+                    (Map.lookup name theirsNs)) stale)
+                  let replay := edited ++ stale
                   let file := dir ++ "/cache/merge-edits.deus"
-                  IO.writeFile file text
-                  let replayed := try (fun _ => if List.isEmpty edited then () else addOrUpdate (Args.mk
+                  IO.writeFile file (text ++ "\n" ++ staleText ++ "\n")
+                  let replayed := try (fun _ => if List.isEmpty replay then () else addOrUpdate (Args.mk
                     [file]
-                    (Map.fromList [("codebase", dir), ("message", "merge " ++ other ++ ": re-apply " ++ join ", " edited), ("fresh", "true"), ("quiet", "true")])) true)
+                    (Map.fromList [("codebase", dir), ("message", "merge " ++ other ++ ": re-apply " ++ join ", " replay), ("fresh", "true"), ("quiet", "true")])) true)
                   IO.remove file
                   match replayed with
                   | Result.ok _ => merged
                       (headOf dir branch)
-                      (changed ++ List.map (fun n => n ++ " (re-applied)") edited)
+                      (changed ++ List.map (fun n => n ++ " (re-applied)") replay)
                   | Result.err message =>
                       -- Leave the branch as it was, so nothing of ours is lost.
                       setBranch dir branch ours
@@ -2599,7 +2610,14 @@ def sourceEdits (dir : Text) (base : Text) (ours : Text) (theirs : Text) : {IO, 
   let moved := List.filter
     (fun pair => Map.lookup (fst pair) baseNs != Option.some (snd pair) && replayable (snd pair))
     (Map.toList oursNs)
-  let edits := List.filter (fun name => source po oursNs name != source pb baseNs name) (List.map fst moved)
+  -- A spec block only our side has is kept by the merge itself, so it needs no replay and cannot clash.
+  let ownSpec := fun name =>
+    match Map.lookup name oursNs with
+    | Option.some (Entry.spec _) => Option.isNone (Map.lookup name baseNs) && Option.isNone (Map.lookup name theirsNs)
+    | _ => false
+  let edits := List.filter
+    (fun name => not (ownSpec name) && source po oursNs name != source pb baseNs name)
+    (List.map fst moved)
   let clash := fun name =>
     match Map.lookup name oursNs with
     | Option.some (Entry.spec _) => true
