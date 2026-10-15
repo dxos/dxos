@@ -116,24 +116,6 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
-## devex: merges into #13952 race and D-numbers collide (`602f4557`)
-
-- state: doing
-- priority: high
-- labels: devex, perf
-
-Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
-
-> claude: scripts/merge-base.py: fetch, merge, renumber decisions and stages, take theirs for seed and export, import their export into the local codebase, rebuild the seed with deus image Cli.main, export. Closing once it has handled a real merge.
-
-## devex: the seed fixpoint compiles the toolchain twice (17 s) (`9e2f6916`)
-
-- state: todo
-- priority: high
-- labels: devex, perf
-
-Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
-
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -205,16 +187,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - priority: medium
 - assignee: claude
 - labels: mdl, spec
-
-## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-> claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
-
-> claude: The Text work above landed as D115 (renumbered from D113 after a concurrent decision).
 
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
@@ -578,6 +550,8 @@ Done as task ca75d545 (D110, e98a2e51) by the explorer thread: events.json, an E
 D115. deus features --json gives [{document, features: [{id, title, status, parent, depth, specs, defs, tasks, openTasks, problems}], notes}]. Toolchain.Features is the first map.
 
 > claude: Done (D120): Explorer.generate writes features.json with Cli.featuresJson (the same JSON as deus features --json) and meta.features; the Features card draws each map as a tree with status badges, open/all task counts, links to spec namespaces, definitions and tasks, problems as warnings and gaps muted; overview tile. Explorer.Spec R-16/R-17.
+
+> claude: Decision renumbered on merge: the explorer feature maps are D121, not D120.
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
@@ -949,6 +923,18 @@ Every agent runs it before each commit; cache unchanged specs by hash.
 
 > claude: deus mdl 36 s to 7 s (D114): one printer per run instead of two per described name, and checkTheorem builds its printer only to describe a failure. Output byte-identical (mdl --json).
 
+## devex: merges into #13952 race and D-numbers collide (`602f4557`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+
+Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
+
+> claude: scripts/merge-base.py: fetch, merge, renumber decisions and stages, take theirs for seed and export, import their export into the local codebase, rebuild the seed with deus image Cli.main, export. Closing once it has handled a real merge.
+
+> claude: scripts/merge-base.py handled a real merge (D119, 2d06100d): decisions and stages renumbered, seed rebuilt and fixpoint held, export written, suite green.
+
 ## devex: the dogfood test takes 124 s (`f264430b`)
 
 - state: done
@@ -968,6 +954,16 @@ Its view round-trip re-adds the whole printed toolchain; blocked on the printed-
 Restore once into a shared codebase, or reuse the dogfood codebase.
 
 > claude: 89 s to 44 s: D113/D114, and the test now compiles deus/ once (deus update over the restore must say Nothing changed) instead of building a second codebase to compare hashes.
+
+## devex: the seed fixpoint compiles the toolchain twice (17 s) (`9e2f6916`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+
+Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
+
+> claude: deus image Cli.main writes the seed from the codebase in 3.4 s, byte-identical to compiling deus/ (checked on every merge today). README's 'Changing the compiler' now uses it; the fixpoint compile is checked once before a commit and in CI.
 
 ## devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x (`44892ca0`)
 
@@ -1099,6 +1095,17 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 - labels: native, perf
 
 > claude: Duplicate of 72a1f2fb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
+
+- state: done
+- priority: medium
+- labels: native, perf
+- links change #c886759cc6
+
+> claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
+
+> claude: The Text work above landed as D115 (renumbered from D113 after a concurrent decision).
 
 ## Native: closure conversion and partial application in the C back end (`610b2785`)
 

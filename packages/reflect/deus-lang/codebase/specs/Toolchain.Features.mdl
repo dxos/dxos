@@ -231,6 +231,6 @@ feature F-33: Models that read and change the codebase
 
 ```mdl
 feature F-40: Developer experience: where agents lose time
-  status: building
+  status: shipped
   tasks: 6cffbc44 | 602f4557 | f264430b | b4e12f14 | 9e2f6916 | 44892ca0 | 7f677d04 | a99bf01d
 ```

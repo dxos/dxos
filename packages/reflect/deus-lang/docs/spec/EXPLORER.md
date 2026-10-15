@@ -22,7 +22,7 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   change/<causal>.json            one per history node the app links to
   comments.json                   comments on definitions and changes, by subject (D82)
   events.json                     what the analytics store recorded (D110)
-  features.json                   the feature maps, as `deus features --json` prints them (D120)
+  features.json                   the feature maps, as `deus features --json` prints them (D121)
   assets/<sha256>                 the files comments and tasks attach
   console/                        with --console: the console's kernel, toolchain and codebase (D84)
 ```
@@ -66,7 +66,7 @@ change  = {"causal": string, "message": string, "by"?: string}
 | `open`        | number   | how many tasks are `todo` or `doing`                              |
 | `console`     | boolean  | whether the site has a [console](#console) (D84)                  |
 | `events`      | number   | how many [events](#eventsjson) the codebase recorded (D110)       |
-| `features`    | number   | how many [features](#featuresjson) the feature maps hold (D120)   |
+| `features`    | number   | how many [features](#featuresjson) the feature maps hold (D121)   |
 | `history`     | change[] | the branch's 30 most recent history nodes, newest first           |
 
 ```json
@@ -251,7 +251,7 @@ those filed under a prefix of its hash.
 ## features.json
 
 The feature maps ([D118](../DECISIONS.md)), as `Cli.featuresJson` writes them: the JSON `deus features --json`
-prints, one object per spec document that holds `feature` blocks (D120):
+prints, one object per spec document that holds `feature` blocks (D121):
 
 | Field      | Type     | Content                                                                                                       |
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------------- |

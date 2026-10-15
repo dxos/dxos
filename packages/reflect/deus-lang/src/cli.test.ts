@@ -583,6 +583,7 @@ describe('deus CLI', () => {
         join(root, 'examples/texts.deus'),
         join(root, 'examples/structural.deus'),
         join(root, 'examples/tables.deus'),
+        join(root, 'examples/rendered.deus'),
         ...c,
       );
       // Definitions that differ only in their annotations share a hash: its stored scheme fits both
@@ -631,6 +632,8 @@ describe('deus CLI', () => {
         ['Structural.structural', [200]],
         // Dict, MutMap and Map (D119).
         ['Tables.all', [1000]],
+        // show, Text.utf8, Text.fromCodes and Text.sha256 (D120).
+        ['Rendered.digestLine', [40]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -706,6 +709,7 @@ describe('deus CLI', () => {
         join(root, 'examples/texts.deus'),
         join(root, 'examples/structural.deus'),
         join(root, 'examples/tables.deus'),
+        join(root, 'examples/rendered.deus'),
         ...c,
       );
       for (const [name, args] of [
@@ -713,6 +717,7 @@ describe('deus CLI', () => {
         ['Texts.all', [30]],
         ['Structural.structural', [200]],
         ['Tables.all', [1000]],
+        ['Rendered.digestBytes', [40]],
         ['Bench.trees', [2]],
         ['Bench.queens', [6]],
         ['Sorting.benchMerge', [300, 7]],

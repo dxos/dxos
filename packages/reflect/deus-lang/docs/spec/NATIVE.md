@@ -19,8 +19,9 @@ definitions used as values, calls of unknown functions, and `letrec`, so the pre
 patterns, and `==`, `<`, `compare` on texts. `==`, `<` and `compare` on data compare structurally
 ([D117](../DECISIONS.md)). `Dict` and `MutMap` are hash tables in the runtime, and a constant
 such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](../DECISIONS.md)).
-`show`, `Text.sha256`, `Text.utf8`, `Text.fromCodes` and comparing arrays or functions are still
-refused. Error messages for refused forms
+`show` is type-directed, one rendering function per type, and `Text.utf8`, `Text.fromCodes` and
+`Text.sha256` are in the runtime ([D120](../DECISIONS.md)). Comparing arrays or functions, and `show`
+on a value whose type the compiler does not know, are still refused. Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
@@ -216,6 +217,19 @@ words, natively and in wasm built through C.
 
 The JIT time is a `deus eval` minus a `deus eval` of one word.
 
+## Rendering values
+
+`show` renders as the kernels do: numbers and booleans as JavaScript prints them, texts as JSON,
+lists, pairs, options and arrays in their own forms, other data as `(name field…)` where the name is
+the first 8 characters of the type's hash and the tag, and functions, refs and tables as
+`<function>`. The C back end knows every type at compile time, so it writes one `deus_showK` per type
+a program shows, as it does for comparisons (D117); each appends to one unique text, which grows in
+place. A value whose type the compiler does not know is refused, since an `Int` and a `Bool` look the
+same at run time. [`examples/rendered.deus`](../../examples/rendered.deus) shows nested data with
+texts that need escaping and a surrogate pair, and digests the result; it agrees with the
+interpreter and ends with 0 live words. `Text.sha256` agrees with `sha256sum` at every padding
+boundary.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
@@ -277,7 +291,8 @@ it now. The rest of the language needs these, in order of how much code they unl
    holds itself.
 3. **Text and the other primitives:** `Text` done (D115), with the kernels' UTF-16 semantics,
    ported from the Rust kernel's `text.rs`; structural equality and order of data (D117).
-   Insertion-ordered maps (`Dict`, `MutMap`) and `Map` (D119). `show` remains.
+   Insertion-ordered maps (`Dict`, `MutMap`) and `Map` (D119); `show`, `Text.utf8`, `Text.fromCodes`
+   and `Text.sha256` (D120).
 4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an
    operation. Functions with an empty row compile as they do now. Handlers compile by evidence
    passing (Koka): a handler is a record passed to the code under it. An operation whose handler
