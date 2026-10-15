@@ -101,7 +101,7 @@ Network = {
     nodes?: { type: NodeType; count: [min: number, max: number] };
     networks?: { template: string; count: [min: number, max: number]; depth: number };
   };
-  layout?: { at?: [x: number, y: number]; radius?: number };
+  layout?: { at?: [x: number, y: number]; near?: string; radius?: number };
 };
 
 Node = { id: string; type: NodeType; props?: { app?: AppName; color?: string; label?: string } };
@@ -117,10 +117,11 @@ inputs always produce the same graph.
 
 Each expanded network and node has a path id such as `home/phone` or `cloud/s2/s2a/server-1`.
 Scripts address nodes by path, and selectors match many at once: `cloud/**` is everything under the
-cloud, and `ring-*` matches by name.
+cloud, `ring-*` matches by name, and commas separate alternatives (`home, local-*`).
 
 A layout pass places generated networks. It packs child networks inside their parent and scatters
-outer networks around the cloud without overlaps. `layout.at` pins one network in place.
+outer networks around the cloud without overlaps. `layout.at` pins one network in place, and
+`layout.near` places a network at the free spot nearest a named sibling.
 
 ### Node type registry
 
