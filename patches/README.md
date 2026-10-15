@@ -27,6 +27,20 @@ DX_STORYBOOK_BROWSER=webkit pnpm --dir packages/ui/react-ui exec vitest run --pr
 Measured on 1.43.3: it fails without the patch and passes with it, in WebKit only. A pass without the
 patch means the upgrade carries the fix, and the patch and this section can go.
 
+## `memory-pager@1.5.0`
+
+**What.** Starts each level of the pager's radix tree as an empty array that grows as pages are set,
+instead of preallocating all 32,768 slots.
+
+**Why.** hypercore 9 (vendored in `@dxos/vendor-hypercore`) builds four pagers per feed for its
+bitfields, and each preallocated level cost 128 KB in V8 (256 KB in JSC) however few pages the feed
+held. On a profile with ~120 feeds that was 62 MB of the ECHO worker's heap in Chromium, and about
+twice that in the WebKit the desktop app runs. Lookups and `toBuffer` are unchanged: a slot never
+set reads `undefined` either way.
+
+**Retesting after an upgrade.** memory-pager has not had a release since 1.5.0. If one appears, check
+its constructor: a `new Array(32768)` there means the patch is still needed.
+
 ## `dfx@1.0.15`
 
 **What.** Rewrites dfx's `effect/unstable/*` imports to the top-level paths Effect 4.0.0 moved them to
