@@ -426,7 +426,7 @@ export enum EdgeWebsocketProtocol {
   /**
    * Adds per-channel credit-based flow control on top of V1 framing.
    *
-   * Must be negotiated rather than sniffed: a V1 reader tests only `FLAG_SEGMENT_SEQ`, so it decodes
+   * Must be negotiated rather than sniffed: a V1 reader tests only `FrameFlag.SEGMENT_SEQ`, so it decodes
    * a V2 credit frame as a message body and throws. See docs/design/flow-control/DESIGN.md in
    * dxos/edge.
    */

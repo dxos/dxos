@@ -33,8 +33,14 @@ const SEGMENTED_CONTENT = 'A'.repeat(4 * MAX_CHUNK_LENGTH);
 
 // Wire format, restated so a change to the muxer's own constants cannot pass unnoticed.
 const CHANNEL_ID = 1;
-const FLAG_SEGMENT_SEQ = 1;
-const FLAG_SEGMENT_SEQ_TERMINATED = 2;
+const FrameFlag = {
+  SEGMENT_SEQ: 1,
+  SEGMENT_SEQ_TERMINATED: 2,
+  FLOW_CONTROL: 4,
+  SYNC: 8,
+  SYNC_REQUEST: 16,
+  PAUSE: 32,
+} as const;
 const WIRE_SEGMENT_BYTES = 16_384;
 
 const WS_CONNECTING = 0;
@@ -45,10 +51,6 @@ const WS_CLOSED = 3;
 // The muxer waits once the socket buffers this much.
 const SOCKET_BUFFER_FULL = 1_000_000;
 
-const FLAG_FLOW_CONTROL = 4;
-const FLAG_SYNC = 8;
-const FLAG_SYNC_REQUEST = 16;
-const FLAG_PAUSE = 32;
 /** Two chunks is the floor the muxer enforces, so this is a small window that can still make progress. */
 const WINDOW = MAX_CHUNK_LENGTH * 4;
 const MAX_MESSAGES = 4;
@@ -126,9 +128,9 @@ describe('WebSocketMuxerTest', () => {
     expect(socket.frames).toHaveLength(4);
     const [first, second, last, unsegmented] = socket.frames;
     expect([first[0], second[0], last[0]]).toEqual([
-      FLAG_SEGMENT_SEQ,
-      FLAG_SEGMENT_SEQ,
-      FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED,
+      FrameFlag.SEGMENT_SEQ,
+      FrameFlag.SEGMENT_SEQ,
+      FrameFlag.SEGMENT_SEQ | FrameFlag.SEGMENT_SEQ_TERMINATED,
     ]);
     expect([first[1], second[1], last[1]]).toEqual([CHANNEL_ID, CHANNEL_ID, CHANNEL_ID]);
     expect([first.byteLength, second.byteLength]).toEqual([2 + WIRE_SEGMENT_BYTES, 2 + WIRE_SEGMENT_BYTES]);
@@ -528,7 +530,7 @@ describe('WebSocketMuxerTest', () => {
       const socket = new TestSocket();
       new WebSocketMuxer(socket, { flowControl: flowControl() });
 
-      expect(socket.frames).toEqual([new Uint8Array([FLAG_FLOW_CONTROL | FLAG_SYNC_REQUEST])]);
+      expect(socket.frames).toEqual([new Uint8Array([FrameFlag.FLOW_CONTROL | FrameFlag.SYNC_REQUEST])]);
     });
 
     test('every message is segment-framed so it can be accounted', async ({ expect }) => {
@@ -539,7 +541,7 @@ describe('WebSocketMuxerTest', () => {
       const [frame, ...rest] = dataFrames(socket.frames);
       expect(rest).toHaveLength(0);
       // Segment + terminator, never the unsegmented shape.
-      expect(frame[0]).toBe(FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED);
+      expect(frame[0]).toBe(FrameFlag.SEGMENT_SEQ | FrameFlag.SEGMENT_SEQ_TERMINATED);
       expect(muxer.inFlight(CHANNEL_ID)).toEqual({ bytes: frame.byteLength - 2, messages: 1 });
     });
 
@@ -787,7 +789,7 @@ describe('WebSocketMuxerTest', () => {
 
       // Paused, not out of credit: no stall probe restates totals while it waits.
       await vi.advanceTimersByTimeAsync(5_500);
-      expect(socket.frames.filter((frame) => frame[0] === (FLAG_FLOW_CONTROL | FLAG_SYNC))).toHaveLength(0);
+      expect(socket.frames.filter((frame) => frame[0] === (FrameFlag.FLOW_CONTROL | FrameFlag.SYNC))).toHaveLength(0);
 
       await vi.advanceTimersByTimeAsync(500);
       await held;
@@ -837,7 +839,9 @@ describe('WebSocketMuxerTest', () => {
     test('a pause frame names the channel and how long to stay silent', ({ expect }) => {
       const socket = new TestSocket();
       syncedMuxer(socket).pause(3, 1_500);
-      expect(socket.frames.at(-1)).toEqual(new Uint8Array([FLAG_FLOW_CONTROL | FLAG_PAUSE, 3, 0, 0, 0x05, 0xdc]));
+      expect(socket.frames.at(-1)).toEqual(
+        new Uint8Array([FrameFlag.FLOW_CONTROL | FrameFlag.PAUSE, 3, 0, 0, 0x05, 0xdc]),
+      );
 
       // Without flow control the peer would read the frame as a message, so nothing is sent.
       const plain = new TestSocket();
@@ -946,14 +950,14 @@ class TestSocket {
 /** The terminating chunk of a segmented sequence on {@link CHANNEL_ID}. */
 const terminatorChunk = (payload: Uint8Array) => {
   const data = segmentChunk(payload);
-  data[0] |= FLAG_SEGMENT_SEQ_TERMINATED;
+  data[0] |= FrameFlag.SEGMENT_SEQ_TERMINATED;
   return data;
 };
 
 /** A non-terminating chunk of a segmented sequence on {@link CHANNEL_ID}. */
 const segmentChunk = (payload: Uint8Array) => {
   const data = new Uint8Array(2 + payload.byteLength);
-  data[0] = FLAG_SEGMENT_SEQ;
+  data[0] = FrameFlag.SEGMENT_SEQ;
   data[1] = CHANNEL_ID;
   data.set(payload, 2);
   return data;
@@ -981,7 +985,7 @@ const syncedMuxer = (socket: TestSocket, overrides?: Partial<FlowControlConfig>)
   return muxer;
 };
 
-const dataFrames = (frames: Uint8Array[]) => frames.filter((frame) => (frame[0] & FLAG_FLOW_CONTROL) === 0);
+const dataFrames = (frames: Uint8Array[]) => frames.filter((frame) => (frame[0] & FrameFlag.FLOW_CONTROL) === 0);
 
 /** Payload bytes across data frames, excluding the 2-byte framing header and any flow-control frames. */
 const payloadBytes = (frames: Uint8Array[]) =>
@@ -1000,13 +1004,14 @@ const encodeFlowControl = (flags: number, entries: [number, number, number][]): 
 };
 
 const grant = (channelId: number, bytes: number, messages: number) =>
-  encodeFlowControl(FLAG_FLOW_CONTROL, [[channelId, bytes, messages]]);
+  encodeFlowControl(FrameFlag.FLOW_CONTROL, [[channelId, bytes, messages]]);
 
-const sync = (entries: [number, number, number][]) => encodeFlowControl(FLAG_FLOW_CONTROL | FLAG_SYNC, entries);
+const sync = (entries: [number, number, number][]) =>
+  encodeFlowControl(FrameFlag.FLOW_CONTROL | FrameFlag.SYNC, entries);
 
 const pause = (channelId: number, retryAfterMs: number) => {
   const frame = new Uint8Array(6);
-  frame[0] = FLAG_FLOW_CONTROL | FLAG_PAUSE;
+  frame[0] = FrameFlag.FLOW_CONTROL | FrameFlag.PAUSE;
   frame[1] = channelId;
   new DataView(frame.buffer).setUint32(2, retryAfterMs);
   return frame;
@@ -1015,7 +1020,7 @@ const pause = (channelId: number, retryAfterMs: number) => {
 /** The grant frames among `frames`, decoded. */
 const grants = (frames: Uint8Array[]) =>
   frames
-    .filter((frame) => frame[0] === FLAG_FLOW_CONTROL)
+    .filter((frame) => frame[0] === FrameFlag.FLOW_CONTROL)
     .map((frame) => {
       const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
       return Array.from({ length: (frame.byteLength - 1) / 9 }, (_, index) => ({

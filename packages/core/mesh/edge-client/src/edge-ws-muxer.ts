@@ -19,33 +19,40 @@ import { concatUint8Arrays } from '@dxos/util';
 
 import { protocol } from './defs.ts';
 
-/**
- * 0000 0001 - message contains a part of segmented message chunk sequence.
- * The next byte defines a channel id and the rest of the message contains a part of Message proto binary.
- * Messages from different channels might interleave.
- * When the flag is NOT set the rest of the message should be interpreted as the valid Message proto binary.
- */
-const FLAG_SEGMENT_SEQ = 1;
-/**
- * 0000 0010 - message terminates a segmented message chunk sequence.
- * All the chunks accumulated for the channel specified by the second byte can be concatenated
- * and interpreted as a valid Message proto binary.
- */
-const FLAG_SEGMENT_SEQ_TERMINATED = 1 << 1;
-/**
- * 0000 0100 - flow-control frame with no message; alone, a grant of the receiver's cumulative consumption as
- * `[channelId:u8][bytes:u32 BE][messages:u32 BE]` entries. Sent only under `edge-ws-v2`, since a V1 reader misparses it.
- */
-const FLAG_FLOW_CONTROL = 1 << 2;
-/** 0000 1100 - sync: the sender's cumulative sent totals per channel, which a receiver rebuilt mid-connection adopts. */
-const FLAG_SYNC = 1 << 3;
-/** 0001 0100 - sync request, with no body: the receiver asks the sender for a {@link FLAG_SYNC} frame. */
-const FLAG_SYNC_REQUEST = 1 << 4;
-/**
- * 0010 0100 - pause: `[channelId:u8][retryAfterMs:u32 BE]` entries asking the sender to start no new message on a channel
- * whose downstream is overloaded, so the sender's other channels keep flowing; it resumes on its own when the time is up.
- */
-const FLAG_PAUSE = 1 << 5;
+/** Bits of a frame's first byte: data frames set the segment bits, control frames `FLOW_CONTROL` plus at most one. */
+const FrameFlag = {
+  /**
+   * 0000 0001 - message contains a part of segmented message chunk sequence.
+   * The next byte defines a channel id and the rest of the message contains a part of Message proto binary.
+   * Messages from different channels might interleave.
+   * When the flag is NOT set the rest of the message should be interpreted as the valid Message proto binary.
+   */
+  SEGMENT_SEQ: 1,
+  /**
+   * 0000 0010 - message terminates a segmented message chunk sequence.
+   * All the chunks accumulated for the channel specified by the second byte can be concatenated
+   * and interpreted as a valid Message proto binary.
+   */
+  SEGMENT_SEQ_TERMINATED: 1 << 1,
+  /**
+   * 0000 0100 - flow-control frame with no message; alone, a grant of the receiver's cumulative consumption as
+   * `[channelId:u8][bytes:u32 BE][messages:u32 BE]` entries. Sent only under `edge-ws-v2`, since a V1 reader
+   * misparses it.
+   */
+  FLOW_CONTROL: 1 << 2,
+  /**
+   * 0000 1100 - sync: the sender's cumulative sent totals per channel, which a receiver rebuilt mid-connection adopts.
+   */
+  SYNC: 1 << 3,
+  /** 0001 0100 - sync request, with no body: the receiver asks the sender for a {@link FrameFlag.SYNC} frame. */
+  SYNC_REQUEST: 1 << 4,
+  /**
+   * 0010 0100 - pause: `[channelId:u8][retryAfterMs:u32 BE]` entries asking the sender to start no new message on a
+   * channel whose downstream is overloaded, so the sender's other channels keep flowing; it resumes on its own when the
+   * time is up.
+   */
+  PAUSE: 1 << 5,
+} as const;
 
 /** Bytes per `[channelId][bytes][messages]` entry in a grant or sync frame. */
 const FLOW_CONTROL_ENTRY_BYTES = 9;
@@ -59,8 +66,8 @@ const STALL_PROBE_INTERVAL = 5_000;
 /** Channel for messages with no service id under flow control, so they are accounted too. */
 const UNCHANNELLED_ID = 0;
 
-const isSegment = (frame: Uint8Array): boolean => (frame[0] & FLAG_SEGMENT_SEQ) !== 0;
-const isTerminator = (frame: Uint8Array): boolean => (frame[0] & FLAG_SEGMENT_SEQ_TERMINATED) !== 0;
+const isSegment = (frame: Uint8Array): boolean => (frame[0] & FrameFlag.SEGMENT_SEQ) !== 0;
+const isTerminator = (frame: Uint8Array): boolean => (frame[0] & FrameFlag.SEGMENT_SEQ_TERMINATED) !== 0;
 
 /**
  * https://developers.cloudflare.com/durable-objects/platform/limits/
@@ -218,7 +225,7 @@ export class WebSocketMuxer {
       'Flow control needs a message bound the grant threshold can reach.',
     );
     if (this._flowControl) {
-      this._sendControl(new Uint8Array([FLAG_FLOW_CONTROL | FLAG_SYNC_REQUEST]));
+      this._sendControl(new Uint8Array([FrameFlag.FLOW_CONTROL | FrameFlag.SYNC_REQUEST]));
     }
   }
 
@@ -328,12 +335,12 @@ export class WebSocketMuxer {
    * A frame the muxer itself discards is credited before the throw, so the sender is not left short.
    */
   public receiveFrame(data: Uint8Array): ReceivedFrame {
-    if ((data[0] & FLAG_FLOW_CONTROL) !== 0) {
-      if ((data[0] & FLAG_SYNC_REQUEST) !== 0) {
+    if ((data[0] & FrameFlag.FLOW_CONTROL) !== 0) {
+      if ((data[0] & FrameFlag.SYNC_REQUEST) !== 0) {
         this._sendSync();
-      } else if ((data[0] & FLAG_PAUSE) !== 0) {
+      } else if ((data[0] & FrameFlag.PAUSE) !== 0) {
         this._applyPause(data);
-      } else if ((data[0] & FLAG_SYNC) !== 0) {
+      } else if ((data[0] & FrameFlag.SYNC) !== 0) {
         this._applySync(data);
       } else {
         this._applyGrants(data);
@@ -341,7 +348,7 @@ export class WebSocketMuxer {
       return { byteLength: 0 };
     }
 
-    if ((data[0] & FLAG_SEGMENT_SEQ) === 0) {
+    if ((data[0] & FrameFlag.SEGMENT_SEQ) === 0) {
       // Only a pre-V2 peer sends this shape: under flow control every message is segment-framed, so that it carries a
       // channel to account against.
       return { message: buf.fromBinary(MessageSchema, data.slice(1)), byteLength: data.byteLength - 1 };
@@ -349,7 +356,7 @@ export class WebSocketMuxer {
 
     const flags = data[0];
     const channelId = data[1];
-    const terminated = (flags & FLAG_SEGMENT_SEQ_TERMINATED) !== 0;
+    const terminated = (flags & FrameFlag.SEGMENT_SEQ_TERMINATED) !== 0;
     // Measured before the copy, so an over-limit chunk is rejected without allocating it.
     const chunkLength = Math.max(0, data.byteLength - 2);
     const frame: ReceivedFrame = { channelId, byteLength: chunkLength };
@@ -495,7 +502,7 @@ export class WebSocketMuxer {
       return;
     }
     const frame = new Uint8Array(1 + PAUSE_ENTRY_BYTES);
-    frame[0] = FLAG_FLOW_CONTROL | FLAG_PAUSE;
+    frame[0] = FrameFlag.FLOW_CONTROL | FrameFlag.PAUSE;
     frame[1] = channelId;
     new DataView(frame.buffer).setUint32(2, Math.max(0, Math.round(retryAfterMs)));
     this._sendControl(frame);
@@ -543,7 +550,7 @@ export class WebSocketMuxer {
     let offset = 0;
     do {
       const isLastChunk = offset + this._maxChunkLength >= binary.byteLength;
-      const flags = isLastChunk ? FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED : FLAG_SEGMENT_SEQ;
+      const flags = isLastChunk ? FrameFlag.SEGMENT_SEQ | FrameFlag.SEGMENT_SEQ_TERMINATED : FrameFlag.SEGMENT_SEQ;
       frames.push(
         concatUint8Arrays(new Uint8Array([flags, channelId]), binary.subarray(offset, offset + this._maxChunkLength)),
       );
@@ -769,12 +776,12 @@ export class WebSocketMuxer {
       this._inGranted.set(channelId, consumed);
       return [channelId, consumed];
     });
-    this._sendControl(encodeFlowControl(FLAG_FLOW_CONTROL, entries));
+    this._sendControl(encodeFlowControl(FrameFlag.FLOW_CONTROL, entries));
   }
 
   /** States this end's cumulative totals for every channel it has sent on, ahead of anything it sends later. */
   private _sendSync(): void {
-    this._sendControl(encodeFlowControl(FLAG_FLOW_CONTROL | FLAG_SYNC, [...this._outSent.entries()]));
+    this._sendControl(encodeFlowControl(FrameFlag.FLOW_CONTROL | FrameFlag.SYNC, [...this._outSent.entries()]));
   }
 
   private _sendControl(frame: Uint8Array): void {
