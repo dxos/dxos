@@ -322,7 +322,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
               locals
               attributes
               (commentMeta item.lead notes spellings)
-    | Decl.thm _ binders prop proof doc _ pos =>
+    | Decl.thm _ binders prop proof doc attributes pos =>
         let params := List.map (fun b => Pat.id b.binder [] pos) binders
         let types := List.map (fun b =>
           match b.annot with
@@ -334,7 +334,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
               "theorem"
               [Sexp.list (Sexp.sym "binders" :: types), core, Compile.node "proof" (proofTokens names (bodyScope item) proof)]
             Ref.set pending (Pending.mk fqn "theorem" form form :: Ref.get pending)
-            addMeta ("@" ++ fqn) doc Option.none locals (commentMeta item.lead [] [])
+            addMetaWith ("@" ++ fqn) doc Option.none locals attributes (commentMeta item.lead [] [])
     | _ => ())
   -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
   let typeObjectMap := Map.fromList (Ref.get typeObjects)

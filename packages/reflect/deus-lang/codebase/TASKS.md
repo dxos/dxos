@@ -165,13 +165,6 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: wasm, perf, embedding
 
-## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec
-
 ## Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively (`60e88be8`)
 
 - state: todo
@@ -273,6 +266,12 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - priority: low
 - assignee: claude
 - labels: browser, perf, kernel
+
+## deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (`a08c4408`)
+
+- state: todo
+- priority: low
+- labels: codebase, cli
 
 ## law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (`0d7b0142`)
 
@@ -1080,6 +1079,15 @@ JS.mdl R-2 is a gap until a test compiles such a handler and checks the message.
 Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 
 > someone: Done: R-10 by three rfl theorems on Tasks.mergeTask; R-12 by three tests. Source cannot cross layers (code cannot name a test), and Cli.layerCrossings refuses a hand-built object that does.
+
+## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
+> claude: Done (D130): @[req "Doc.R-1"] on a test or theorem counts as a citation when the requirement exists; deus mdl --coverage lists links to requirements no document states. Theorems now keep their attributes (they were dropped). Coverage.Spec R-5..R-7.
 
 ## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
 

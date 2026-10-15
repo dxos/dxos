@@ -106,6 +106,10 @@ and `deus mdl` fails a shipped feature with open work.
 outside their own namespace) in the namespaces its api blocks cover that no api block names. It
 reports, and never fails; the restore test keeps uncited laws at zero.
 
+A law can cite its requirement from its own side with `@[req "Doc.R-1"]` (D130). The link counts as a
+citation when a document states that requirement, and `--coverage` lists links that name none. Only a
+requirement's `by:` laws run under `deus mdl`, so list a law there when the requirement depends on it.
+
 ## Before and after
 
 | Measure                                  | Before                   | After                                                            |

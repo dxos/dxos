@@ -102,7 +102,7 @@ feature F-14: Specs in the codebase: requirements, APIs and laws checked by deus
   status: building
   parent: F-10
   specs: Compile.Spec | View.Spec | Coverage.Spec
-  defs: Cli.mdl | Spec.checkReq | Cli.coverage | Coverage.covers
+  defs: Cli.mdl | Spec.checkReq | Cli.coverage | Coverage.covers | Coverage.linked
   tasks: 908495a0 | 8d6df186 | 6a3b0ebe | a2da28e2 | 1ab6c044 | 2a2b87a2 | 0d7b0142
 ```
 

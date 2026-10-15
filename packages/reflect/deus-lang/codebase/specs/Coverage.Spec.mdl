@@ -39,6 +39,13 @@ api A-2: Coverage definitions other namespaces use
   - Coverage.namespaceOf : Text -> Text
 ```
 
+```mdl
+api A-3: links from laws to requirements
+  signatures:
+  - Coverage.reqLinks : List Sexp -> List Text
+  - Coverage.linked : Map Text Unit -> List (Text, List Text) -> SpecCoverage -> SpecCoverage
+```
+
 ## Requirements
 
 ```mdl
@@ -59,6 +66,25 @@ req R-3: an api signature is one line, so a row such as {IO | e} in its type doe
 ```mdl
 req R-4: deus mdl --coverage prints each document's omissions, or that it is covered, and does not fail on them
   by: Coverage.Spec.rendersCovered | Coverage.Spec.rendersOmissions
+```
+
+A law can also point at the requirement it backs, from its own side: `@[req "Coverage.Spec.R-1"]` on a test
+or a theorem (task 6a3b0ebe). The link saves listing the law in the requirement's `by:`, and `--coverage`
+checks that the requirement it names exists.
+
+```mdl
+req R-5: a theorem keeps its attributes, as a test and a definition do, so a link on it is stored and printed
+  by: Coverage.Spec.theoremKeepsAttributes
+```
+
+```mdl
+req R-6: a law whose @[req] link names a requirement some document states is covered
+  by: Coverage.Spec.linkCovers | Coverage.Spec.linksReadFromAttributes
+```
+
+```mdl
+req R-7: a link to a requirement no document states is reported by --coverage, and the document is not covered
+  by: Coverage.Spec.danglingLinkReported | Coverage.Spec.rendersDanglingLinks
 ```
 
 ## Theorems

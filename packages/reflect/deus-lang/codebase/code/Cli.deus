@@ -447,8 +447,9 @@ def Cli.compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Th
       h
   | _ => Throw.throw ("cannot compile " ++ source)
 
-/-- `deus mdl --coverage [documents…]`: each spec document's laws no block cites, and the public
-  definitions in its api namespaces that no api block names (D125). Omissions are reported, not failed. -/
+/-- `deus mdl --coverage [documents…]`: each spec document's laws no block cites, the public
+  definitions in its api namespaces that no api block names (D125), and `@[req]` links to no
+  requirement. Omissions are reported, not failed. -/
 def Cli.coverage (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
@@ -470,6 +471,9 @@ def Cli.coverage (args : Args) : {IO, Throw Text} Unit :=
     match pair with
     | (name, Entry.term _) => if Set.contains name public then Option.some name else Option.none
     | _ => Option.none) entries
+  let reqs := Set.fromList (filterMap
+    (fun pair => if (snd pair).blockType == "req" then Option.some (fst pair ++ "." ++ (snd pair).blockId) else Option.none)
+    blocks)
   let stored := specDocuments ns
   let wanted := if List.isEmpty args.positional then stored else List.filter (fun d => List.contains d stored) args.positional
   let reports := List.map (fun d =>
@@ -478,17 +482,22 @@ def Cli.coverage (args : Args) : {IO, Throw Text} Unit :=
       | (name, Entry.test _) => if documentOf name == d then Option.some name else Option.none
       | (name, Entry.theorem _) => if documentOf name == d then Option.some name else Option.none
       | _ => Option.none) entries
-    covers
+    let links := filterMap (fun law =>
+      match Map.lookup law ns with
+      | Option.some (Entry.test h) => Option.some (law, reqLinks (metaList (readMeta dir h) "attrs"))
+      | Option.some (Entry.theorem h) => Option.some (law, reqLinks (metaList (readMeta dir h) "attrs"))
+      | _ => Option.none) laws
+    linked reqs links (covers
       d
       (filterMap (fun pair => if fst pair == d then Option.some (snd pair) else Option.none) blocks)
       laws
       named
-      terms) wanted
+      terms)) wanted
   Cli.output args (fun _ => Json.arr (List.map
-    (fun c => Json.obj [("document", Json.str c.coverageDoc), ("uncitedLaws", Json.arr (List.map Json.str c.uncitedLaws)), ("unnamedApi", Json.arr (List.map Json.str c.unnamedApi))])
+    (fun c => Json.obj [("document", Json.str c.coverageDoc), ("uncitedLaws", Json.arr (List.map Json.str c.uncitedLaws)), ("unnamedApi", Json.arr (List.map Json.str c.unnamedApi)), ("danglingLinks", Json.arr (List.map Json.str c.danglingLinks))])
     reports)) (fun _ => join "\n" (concatMap Coverage.render reports ++
     [toText (sum (List.map (fun c => List.length c.uncitedLaws) reports)) ++ " uncited laws, " ++
-      toText (sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names"]))
+      toText (sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names, " ++ toText (sum (List.map (fun c => List.length c.danglingLinks) reports)) ++ " links to no requirement"]))
 
 --
 -- Commands: replication.

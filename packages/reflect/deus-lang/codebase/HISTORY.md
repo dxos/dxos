@@ -1,5 +1,14 @@
 # History of main
 
+- `12657c0b4c` task: set a08c4408 priority (by claude)
+- `588c02d414` task: open a08c4408 deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (by claude)
+- `9f09a18d5a` task: comment on 6a3b0ebe (by claude)
+- `2729e504ce` task: set 6a3b0ebe state (by claude)
+- `e2aa18e5c6` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `4d4c5a4dfa` update deus (by claude)
+- `f0b3c7c980` update deus (by claude)
+- `bf66525861` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/covlaws.deus (by claude)
+- `cc272ef328` update deus/coverage.deus (by claude)
 - `dc4eacbf29` task: comment on dc22728a
 - `e13eed389e` task: set dc22728a state
 - `00e007e47f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/export.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Export.Spec.mdl (by claude)
