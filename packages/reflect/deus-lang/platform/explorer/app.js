@@ -2737,13 +2737,15 @@ const addressOf = (iri) => {
   return match ? `@${match[1].toLowerCase()}/${match[2].toLowerCase()}` : iri.replace(/^https?:\/\//, '');
 };
 
-/** A path link `/@owner/project/Name` (Address.Spec R-8) becomes the fragment `#n:Name` at `/@owner/project/`, so cards keep working by fragment. */
+/** A path link `/@owner/project/Name` (Address.Spec R-8) becomes a fragment at `/@owner/project/`, `#d:<hash>` for a definition and `#n:Name` for a namespace, so cards keep working by fragment. */
 const openPathLink = () => {
   const match = /^(\/@[a-z0-9-]+\/[a-z0-9-]+\/)(.+)$/.exec(decodeURIComponent(location.pathname));
   if (!match || location.hash.length > 1) {
     return;
   }
-  history.replaceState(null, '', `${match[1]}#n:${encodeURIComponent(match[2])}`);
+  const entry = index.byName.get(match[2]);
+  const key = entry ? `d:${entry.hash}` : `n:${match[2]}`;
+  history.replaceState(null, '', `${match[1]}#${encodeURIComponent(key)}`);
 };
 
 const main = async () => {
