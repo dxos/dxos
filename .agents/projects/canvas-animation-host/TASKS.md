@@ -40,7 +40,7 @@ typecheck, commit.
 
 ## Phase 4 — ship
 
-- [ ] T12 `pnpm format`, lint, tests, verify stories on :9009, changeset, draft PR (submit-pr).
+- [ ] T12 (draft PR #13996 open; screenshots and ready pending) `pnpm format`, lint, tests, verify stories on :9009, changeset, draft PR (submit-pr).
 
 ## Notes (2026-10-15)
 
