@@ -30,6 +30,10 @@ export const nativeFor = (env) => {
   if (existsSync(binary)) {
     return { binary };
   }
+  const failed = join(dir, 'failed.log');
+  if (existsSync(failed)) {
+    return { failed };
+  }
   if (spawnSync('cc', ['--version'], { stdio: 'ignore' }).status !== 0) {
     return {};
   }
@@ -60,12 +64,12 @@ export const startNativeBuild = ({ dir }) => {
   child.unref();
 };
 
-/** Builds `Cli.main` with the C back end into `dir/deus`, from a codebase holding the export. */
+/** Builds `Cli.main` with the C back end into `dir/deus` from `deus/`, or writes `dir/failed.log`. */
 const build = (dir) => {
   const codebase = join(mkdtempSync(join(tmpdir(), 'deus-native-')), 'codebase');
   const deus = (...args) =>
     execFileSync(process.execPath, [join(home, 'bin/deus.mjs'), ...args, '--codebase', codebase], {
-      stdio: 'ignore',
+      stdio: ['ignore', 'ignore', 'pipe'],
       env: { ...process.env, DEUS_NATIVE: '0' },
     });
   try {
@@ -73,8 +77,11 @@ const build = (dir) => {
     deus('add', join(home, 'deus'));
     deus('build', 'Cli.main', '-o', join(dir, 'deus.tmp'), '--c');
     renameSync(join(dir, 'deus.tmp'), join(dir, 'deus'));
-    rmSync(join(dir, 'deus.tmp.c'), { force: true });
+  } catch (error) {
+    // Kept until the seed changes, so the launcher warns instead of rebuilding on every command.
+    writeFileSync(join(dir, 'failed.log'), `${error.message}\n${error.stderr ?? ''}`);
   } finally {
+    rmSync(join(dir, 'deus.tmp.c'), { force: true });
     rmSync(dirname(codebase), { recursive: true, force: true });
     rmSync(join(dir, 'lock'), { force: true });
   }

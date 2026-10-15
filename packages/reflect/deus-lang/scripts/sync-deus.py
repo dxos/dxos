@@ -9,7 +9,7 @@ The codebase is the primary copy of the toolchain; deus/ is what the seed is com
 For each name, this replaces its declaration in the deus/ file that holds it with what `deus view`
 prints from the codebase (a new name goes at the end of its namespace's file, a new namespace gets a
 file), adds what those definitions use that deus/ lacks, then compiles deus/ into seed/deus.image and
-checks that the new seed compiles itself to itself and that deus/ compiles to the codebase's hashes (D181).
+checks that the new seed compiles itself to itself and that deus/ compiles to the codebase's hashes (D183).
 
     python3 scripts/sync-deus.py                # every definition whose hash differs (codebase at $DEUS_CODEBASE)
     python3 scripts/sync-deus.py Cli.push       # only these

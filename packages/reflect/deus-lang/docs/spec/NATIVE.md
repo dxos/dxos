@@ -359,10 +359,12 @@ took 550 s. It is now 13 lists of 40 lines, which takes 0.5 s.
 JIT otherwise ([D171](../DECISIONS.md)). The build is keyed by the seed's SHA-256 and lives in
 `~/.cache/deus/native/<hash>/deus` (`$XDG_CACHE_HOME` moves it). When it is missing and `cc`
 exists, the first command starts one in the background (`scripts/native.mjs`: `deus add
-codebase/code`, then `deus build Cli.main --c`, about 2 minutes at low priority), and that command
+deus`, then `deus build Cli.main --c`, about 2 minutes at low priority), and that command
 and the ones after it run on the JIT until the build lands. `DEUS_NATIVE=0` turns it off; CI and a
-`DEUS_SEED` override never use it. The export compiles to the seed byte for byte (D161), so the
-build is the same CLI.
+`DEUS_SEED` override never use it. `deus/` compiles to the seed, so the build is the same CLI. A
+build that fails writes `failed.log` next to where the binary would be, and every command then
+warns on stderr that it runs on the JIT and names the log; deleting the log retries, and a new seed
+gets a fresh attempt.
 
 | A fresh session on the hosted codebase (one run) | TS kernel with JIT | native CLI |
 | ------------------------------------------------ | -----------------: | ---------: |
@@ -375,6 +377,10 @@ build is the same CLI.
 The pull fetches the bundles it has not seen in one `Remote.getAll`, which the Worker remote runs as
 one `curl --parallel`: 10.0 s natively before. The rest of it is the import, mostly printing objects
 to check their hashes, which it now does once per object instead of twice.
+
+Packs (D180) arrived later as one GET each, which put a fresh native pull back at 30.3 s with about
+50 packs. `Remote.downloadAll` fetches them the same way, in one `curl --parallel`, and the pull
+is 7.3 s again; the packs alone take 1.3 s instead of 20.5 s.
 
 ## Benchmarks
 

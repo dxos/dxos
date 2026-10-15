@@ -7,6 +7,8 @@
 // bucket binding, so no client needs R2 credentials. Reads are open; every write carries an API
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
+import { names, objects, packs } from './packs.mjs';
+
 /** A project is one folder of the bucket. */
 const PROJECT = /^[a-z0-9][a-z0-9-]{0,62}$/;
 
@@ -52,6 +54,19 @@ export const remoteApi = async (request, env, ctx, url) => {
   }
   if (area === 'bundles') {
     return bundles(request, env, ctx, project, rest);
+  }
+  if (area === 'packs') {
+    return packs(request, env, ctx, project, rest);
+  }
+  if (area === 'objects' || area === 'meta') {
+    return objects(request, env, project, area, rest);
+  }
+  if (area === 'names') {
+    return names(request, env, project, rest);
+  }
+  if (area === 'files' && rest[0] === 'packs') {
+    // `Remote.keys`, `download` and `upload` reach packs through the files API the CLI already speaks.
+    return packs(request, env, ctx, project, rest.slice(1));
   }
   if (area === 'files' && FOLDERS.includes(rest[0])) {
     return files(request, env, ctx, project, rest[0], rest.slice(1));
@@ -116,10 +131,40 @@ const bundles = async (request, env, ctx, project, rest) => {
   throw new HttpError(405, 'method not allowed');
 };
 
+/** Where a branch's head lives: one small object, moved by conditional writes (D181). */
+const headKey = (project, branch) => `${project}/heads/${branch}`;
+
+/**
+ * A branch's head and the etag that moves it. Heads moved before D181 are D1 rows: reading one
+ * costs no write, and the first push after D181 copies it to the bucket.
+ */
+export const readHead = async (env, project, branch) => {
+  const object = await env.BUCKET.get(headKey(project, branch));
+  if (object) {
+    return { causal: (await object.text()).trim(), etag: object.etag };
+  }
+  const row = await env.DB?.prepare('select causal from heads where project = ? and branch = ?')
+    .bind(project, branch)
+    .first();
+  return row ? { causal: row.causal } : undefined;
+};
+
+/** Moves the head from `current` (or creates it), or returns false when another push moved it first. */
+const writeHead = async (env, project, branch, causal, current) => {
+  const onlyIf = current?.etag ? { etagMatches: current.etag } : new Headers({ 'if-none-match': '*' });
+  const written = await env.BUCKET.put(headKey(project, branch), causal, {
+    onlyIf,
+    httpMetadata: { contentType: 'text/plain' },
+  });
+  return written !== null;
+};
+
 /**
  * Moves the branch head a push claims, or answers why not (D167). The bundle is stored only after
  * the head moves, and a retry of the same push finds the head already there, so a failed store
  * never blocks the branch. Only compaction, which re-claims existing heads, may omit the claim.
+ * The compare-and-swap is an R2 conditional write (D181): D1's Free plan allows 100,000 row writes
+ * a day, which explorer uploads used up, and a push then could not move its head.
  */
 const moveHead = async (request, env, project, logged) => {
   const header = request.headers.get('x-deus-claim');
@@ -134,32 +179,14 @@ const moveHead = async (request, env, project, logged) => {
   }
   const [, branch, head, baseList] = match;
   const bases = baseList === '-' ? [] : baseList.split(',');
-  const now = Date.now();
-  const current = await env.DB.prepare('select causal from heads where project = ? and branch = ?')
-    .bind(project, branch)
-    .first();
+  const current = await readHead(env, project, branch);
   if (current?.causal === head) {
     return undefined;
   }
-  const moved = current
-    ? bases.includes(current.causal)
-      ? await env.DB.prepare(
-          'update heads set causal = ?, updated_at = ?, key_id = ? where project = ? and branch = ? and causal = ?',
-        )
-          .bind(head, now, logged.keyId, project, branch, current.causal)
-          .run()
-      : undefined
-    : await env.DB.prepare(
-        'insert into heads (project, branch, causal, updated_at, key_id) values (?, ?, ?, ?, ?) on conflict do nothing',
-      )
-        .bind(project, branch, head, now, logged.keyId)
-        .run();
-  if (moved?.meta.changes === 1) {
+  if ((!current || bases.includes(current.causal)) && (await writeHead(env, project, branch, head, current))) {
     return undefined;
   }
-  const latest = await env.DB.prepare('select causal from heads where project = ? and branch = ?')
-    .bind(project, branch)
-    .first();
+  const latest = await readHead(env, project, branch);
   return json(
     {
       error: `${branch} moved to #${(latest?.causal ?? '').slice(0, 10)} since you pulled; run \`deus pull\` and \`deus merge\`, then push again`,
@@ -213,7 +240,7 @@ const files = async (request, env, ctx, project, folder, rest) => {
 };
 
 /** Every key under `prefix`, without it, following R2's pages. */
-const listAll = async (bucket, prefix) => {
+export const listAll = async (bucket, prefix) => {
   const keys = [];
   let cursor;
   do {
@@ -261,10 +288,13 @@ export const authorize = async (request, env, ctx, scope, project) => {
     throw new HttpError(403, `this API key cannot write to ${project}`);
   }
   const url = new URL(request.url);
-  // The row is written after the response, so logging never slows or fails a write.
+  // The row is written after the response, so logging never slows or fails a write. Explorer files
+  // are not audited and `last_used_at` moves at most hourly: a push uploads hundreds of site files,
+  // and D1's Free plan allows 100,000 row writes a day (D181).
   const logged = (response) => {
-    ctx.waitUntil(
-      env.DB.batch([
+    const writes = [];
+    if (scope !== 'site') {
+      writes.push(
         env.DB.prepare('insert into audit (at, key_id, method, path, status) values (?, ?, ?, ?, ?)').bind(
           now,
           id,
@@ -272,9 +302,14 @@ export const authorize = async (request, env, ctx, scope, project) => {
           url.pathname,
           response.status,
         ),
-        env.DB.prepare('update api_keys set last_used_at = ? where id = ?').bind(now, id),
-      ]),
-    );
+      );
+    }
+    if (!row.last_used_at || row.last_used_at < now - 3600 * 1000) {
+      writes.push(env.DB.prepare('update api_keys set last_used_at = ? where id = ?').bind(now, id));
+    }
+    if (writes.length > 0) {
+      ctx.waitUntil(env.DB.batch(writes).catch((error) => console.error(error)));
+    }
     return response;
   };
   return Object.assign(logged, { keyId: id, scopes: scopes.includes('admin') ? SCOPES : scopes });

@@ -6,12 +6,15 @@
 export type BucketObject = {
   body: ReadableStream | Uint8Array | string;
   httpMetadata?: { contentType?: string };
+  /** The stored size, and for a ranged read the bytes returned (packs, D180). */
+  size?: number;
+  range?: { offset: number; length: number };
   text(): Promise<string>;
 };
 
 /** The part of the R2 binding the worker uses. */
 export type Bucket = {
-  get(key: string): Promise<BucketObject | null>;
+  get(key: string, options?: { range?: { offset: number; length?: number } }): Promise<BucketObject | null>;
   head(key: string): Promise<object | null>;
   put(key: string, value: Uint8Array | string, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
   delete(key: string): Promise<unknown>;

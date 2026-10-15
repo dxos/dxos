@@ -55,7 +55,7 @@ The toolchain itself is the exception while the kernel boots from `seed/deus.ima
 change to the toolchain in the codebase, `python3 scripts/sync-deus.py` finds every definition whose
 hash in the codebase differs from what `deus/` compiles to, writes them and any definitions they newly
 use into `deus/`, rebuilds the seed, checks the fixpoint and checks that `deus/` now compiles to the
-codebase's hashes (D181; about 1 min for 30 definitions); commit `deus/` and the seed to #13952. Do it
+codebase's hashes (D183; about 1 min for 30 definitions); commit `deus/` and the seed to #13952. Do it
 whenever the codebase's toolchain moves: a seed behind the codebase runs old code, such as an old
 `deus merge`.
 
@@ -79,7 +79,7 @@ theorem named passes (checked now or from the cached verdict), and each law's th
 spec says. A requirement with only a `gap:` is reported but does not fail. The specs are not in git (D177),
 so CI does not see them. Instead `deus push` runs `deus mdl` on every document with a block, law or
 test that changed since `origin.<branch>` (a code change reaches the laws and tests whose hashes it
-changes) and refuses the push when one fails; `--no-check` skips that (D180). The
+changes) and refuses the push when one fails; `--no-check` skips that (D182). The
 block types are in [MDL.md](spec/MDL.md#the-req-api-and-law-extensions);
 [Codebase.Spec](https://deus.dmytro-a80.workers.dev/#n:Codebase.Spec) is the reference example.
 
