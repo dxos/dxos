@@ -336,10 +336,14 @@ export const toTrash = async (bucket, project, folder, name) => {
   if (!object) {
     return;
   }
-  await bucket.put(`${project}/trash/${folder}/${name}`, new Uint8Array(await new Response(object.body).arrayBuffer()), {
-    httpMetadata: object.httpMetadata,
-    customMetadata: { deletedAt: String(Date.now()) },
-  });
+  await bucket.put(
+    `${project}/trash/${folder}/${name}`,
+    new Uint8Array(await new Response(object.body).arrayBuffer()),
+    {
+      httpMetadata: object.httpMetadata,
+      customMetadata: { deletedAt: String(Date.now()) },
+    },
+  );
   await bucket.delete(key);
 };
 

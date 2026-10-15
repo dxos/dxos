@@ -369,9 +369,9 @@ describe('replication API', () => {
     // A deleted bundle moves to the trash, out of every listing, so a compaction bug never loses history.
     expect(unlogged()).toEqual(['toolchain/heads/main', `toolchain/trash/bundles/${bundle.name}`]);
     expect(await (await call('/v1/toolchain/bundles/')).text()).toBe('');
-    expect(gunzipSync((await bucket.get(`toolchain/trash/bundles/${bundle.name}`))?.body ?? new Uint8Array()).toString()).toBe(
-      '(bundle a)',
-    );
+    expect(
+      gunzipSync((await bucket.get(`toolchain/trash/bundles/${bundle.name}`))?.body ?? new Uint8Array()).toString(),
+    ).toBe('(bundle a)');
     // Compaction leaves the head log, so every head the branch had stays named.
     expect(bucket.keys().filter((key) => key.includes('/headlog/main/'))).toHaveLength(1);
   });

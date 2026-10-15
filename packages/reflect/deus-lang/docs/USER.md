@@ -610,3 +610,11 @@ get oriented what changed in the codebase and continue working autonomously
 ---
 
 I upgraded to workers paid
+
+---
+
+update project core instructions to say that threads dont need my permission to deploy
+
+---
+
+some threads still blocked, restart them as new threads
