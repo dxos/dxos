@@ -41,7 +41,8 @@ export const AgentEmailSetup = ({ role, agent, attendableId }: AgentEmailSetupPr
     [name],
   );
 
-  // A ref, not state: a second submit can land before a re-render would show the first one in flight.
+  // A ref, not state: a second submit can land before a re-render would show the first one in flight. A create that
+  // succeeds keeps it held, since the form stays up until the query returns the new channel; only a failure releases it.
   const creating = useRef(false);
   const handleCreate = useCallback(
     async (properties: AgentEmail.Properties) => {
@@ -49,14 +50,13 @@ export const AgentEmailSetup = ({ role, agent, attendableId }: AgentEmailSetupPr
         return;
       }
       creating.current = true;
-      try {
-        const { error } = await invokePromise(
-          AgentOperation.CreateEmailChannel,
-          { agent: Ref.make(agent), ...properties },
-          { spaceId: db.spaceId },
-        );
-        setError(error?.message);
-      } finally {
+      const { error } = await invokePromise(
+        AgentOperation.CreateEmailChannel,
+        { agent: Ref.make(agent), ...properties },
+        { spaceId: db.spaceId },
+      );
+      setError(error?.message);
+      if (error) {
         creating.current = false;
       }
     },
