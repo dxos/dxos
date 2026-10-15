@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -9,9 +10,10 @@ import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import { Expando } from '@dxos/schema';
 
 import * as AccessToken from './AccessToken.ts';
@@ -550,6 +552,84 @@ describe('token accessors', () => {
     Cursor.clearToken(cursor);
     expect(Cursor.readToken(cursor)).toBeUndefined();
     expect(Cursor.readSnapshot(cursor, 'msg-1')).toEqual({ flagged: true });
+  });
+});
+
+describe('snapshots', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const DESCRIPTION_LENGTH = 200;
+
+  const makeExternalCursor = async () => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, AccessToken.AccessToken, Expando.Expando] });
+    const token = db.add(AccessToken.make({ source: 'github.com', token: 'secret' }));
+    const target = db.add(Expando.make({ name: 'project' }));
+    const cursor = db.add(Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) }));
+    invariant(Cursor.isExternal(cursor));
+    return cursor;
+  };
+
+  const countOps = (cursor: Cursor.Cursor) => A.stats(getObjectCore(cursor).getDoc()).numOps;
+
+  const makeSnapshot = (index: number) => ({
+    title: `Issue ${index}`,
+    description: 'x'.repeat(DESCRIPTION_LENGTH),
+    status: 'todo',
+  });
+
+  // Replacing the whole map on every write grew a GitHub sync cursor to 45M ops for 650 KB of data.
+  test('writeSnapshot costs ops for the snapshot written, not for every snapshot stored', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    const count = 100;
+
+    const opsBefore = countOps(cursor);
+    for (let index = 0; index < count; index++) {
+      Cursor.writeSnapshot(cursor, String(index), makeSnapshot(index));
+    }
+    const totalOps = countOps(cursor) - opsBefore;
+
+    // In place: ≈ count × 200 = 20,000 ops. Whole-map replacement: ≈ count² / 2 × 200 = 1,000,000 ops.
+    expect(totalOps).toBeLessThan(count * DESCRIPTION_LENGTH * 2);
+    expect(Cursor.readSnapshot(cursor, '0')).toEqual(makeSnapshot(0));
+    expect(Cursor.readSnapshot(cursor, String(count - 1))).toEqual(makeSnapshot(count - 1));
+  });
+
+  test('writeSnapshot of an unchanged snapshot writes nothing', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeSnapshot(cursor, '1', makeSnapshot(1));
+
+    const opsBefore = countOps(cursor);
+    Cursor.writeSnapshot(cursor, '1', makeSnapshot(1));
+    expect(countOps(cursor)).toBe(opsBefore);
+  });
+
+  test('writeSnapshot rewrites only the fields that changed', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeSnapshot(cursor, '1', makeSnapshot(1));
+    Cursor.writeSnapshot(cursor, '2', makeSnapshot(2));
+
+    const opsBefore = countOps(cursor);
+    Cursor.writeSnapshot(cursor, '1', { ...makeSnapshot(1), status: 'done' });
+    expect(countOps(cursor) - opsBefore).toBeLessThan(DESCRIPTION_LENGTH);
+    expect(Cursor.readSnapshot(cursor, '1')).toEqual({ ...makeSnapshot(1), status: 'done' });
+    expect(Cursor.readSnapshot(cursor, '2')).toEqual(makeSnapshot(2));
+  });
+
+  test('writeSnapshot drops fields the new snapshot omits or leaves undefined', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeSnapshot(cursor, '1', { title: 'a', description: 'b', status: 'todo' });
+
+    Cursor.writeSnapshot(cursor, '1', { title: 'a', description: undefined });
+    expect(Object.keys(Cursor.readSnapshot(cursor, '1') ?? {})).toEqual(['title']);
+    expect(Cursor.readSnapshot(cursor, '1')).toEqual({ title: 'a' });
   });
 });
 

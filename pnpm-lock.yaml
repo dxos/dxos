@@ -5309,6 +5309,9 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/schema
     devDependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../echo/echo-client

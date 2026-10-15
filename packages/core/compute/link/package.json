@@ -31,6 +31,7 @@
     "@dxos/schema": "workspace:*"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "effect": "catalog:",

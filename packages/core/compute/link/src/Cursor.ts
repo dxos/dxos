@@ -178,6 +178,34 @@ export const recordError = (cursor: Cursor, message: string): void => {
   });
 };
 
+/** ECHO proxies report `Object.prototype`, so stored records pass alongside plain object literals. */
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
+
+/**
+ * Structural equality over JSON-like snapshot values, treating an `undefined` field as absent. Any
+ * other object compares by identity, so an unrecognized value is re-written rather than kept stale.
+ */
+const isSnapshotEqual = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) {
+    return true;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return left.length === right.length && left.every((item, index) => isSnapshotEqual(item, right[index]));
+  }
+  if (isPlainRecord(left) && isPlainRecord(right)) {
+    const leftKeys = Object.keys(left).filter((key) => left[key] !== undefined);
+    const rightKeys = Object.keys(right).filter((key) => right[key] !== undefined);
+    return leftKeys.length === rightKeys.length && leftKeys.every((key) => isSnapshotEqual(left[key], right[key]));
+  }
+  return false;
+};
+
 /**
  * Reads `cursor.spec.snapshots[foreignId]` typed as `T` — the last-seen remote fields an external
  * sync recorded for a foreign id, driving the per-field three-way merge (see the `mergeField`/
@@ -189,16 +217,39 @@ export const readSnapshot = <T extends object>(cursor: ExternalCursor, foreignId
 };
 
 /**
- * Writes `cursor.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
- * safe under ECHO's structural-sharing semantics.
+ * Writes `cursor.spec.snapshots[foreignId] = snapshot`, touching only changed fields and skipping an
+ * unchanged snapshot: Automerge keeps every write in history, so replacing the whole map made each
+ * write cost the size of every snapshot stored so far.
  */
 export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapshot: object): void => {
+  if (isSnapshotEqual(readSnapshot(cursor, foreignId), snapshot)) {
+    return;
+  }
+
   Obj.update(cursor, (cursor) => {
     if (cursor.spec.kind !== 'external') {
       return;
     }
-    const existing = (cursor.spec.snapshots ?? {}) as Record<string, unknown>;
-    cursor.spec.snapshots = { ...existing, [foreignId]: snapshot };
+    if (cursor.spec.snapshots === undefined) {
+      cursor.spec.snapshots = { [foreignId]: snapshot };
+      return;
+    }
+
+    const current = cursor.spec.snapshots[foreignId];
+    if (!isPlainRecord(current) || !isPlainRecord(snapshot)) {
+      cursor.spec.snapshots[foreignId] = snapshot;
+      return;
+    }
+    for (const key of Object.keys(current)) {
+      if (snapshot[key] === undefined) {
+        delete current[key];
+      }
+    }
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (value !== undefined && !isSnapshotEqual(current[key], value)) {
+        current[key] = value;
+      }
+    }
   });
 };
 
