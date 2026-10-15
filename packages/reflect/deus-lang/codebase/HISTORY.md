@@ -1,5 +1,10 @@
 # History of main
 
+- `3c29e9b402` Tables test expects the new word counts (by claude)
+- `99c28a3bd0` C and wasm back ends compile Dict, MutMap and Map (D119) (by claude)
+- `e5cd37dfe0` history: import 731 changes
+- `55f90bb61b` task: import from codebase/tasks.sexp
+- `78e2018de0` add codebase/code codebase/specs
 - `2a6b52e147` task: set 602f4557 state
 - `4b890c0dac` task: comment on 602f4557 (by claude)
 - `3cfdea41af` history: import 707 changes

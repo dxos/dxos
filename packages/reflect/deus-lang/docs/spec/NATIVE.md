@@ -17,8 +17,10 @@ definitions used as values, calls of unknown functions, and `letrec`, so the pre
 ([D115](../DECISIONS.md)): literals, `++` on texts and on lists, `Text.length`, `code`, `slice`,
 `fromCode`, `concat`, `join`, `split`, `indexOf`, `trim`, `Int.toText`, `Int.fromText`, text
 patterns, and `==`, `<`, `compare` on texts. `==`, `<` and `compare` on data compare structurally
-([D117](../DECISIONS.md)). Maps, `show`, `Text.sha256`, `Text.utf8`, `Text.fromCodes` and comparing
-arrays or functions are still refused. Error messages for refused forms
+([D117](../DECISIONS.md)). `Dict` and `MutMap` are hash tables in the runtime, and a constant
+such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](../DECISIONS.md)).
+`show`, `Text.sha256`, `Text.utf8`, `Text.fromCodes` and comparing arrays or functions are still
+refused. Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
@@ -195,6 +197,25 @@ it was the last one added, so the C back end compiled the other's comparisons wr
 scheme fits both (`a -> Int -> List a -> Int`, [D116](../DECISIONS.md)), and comparisons on a type
 variable are decided at run time.
 
+## Maps
+
+`Dict` and `MutMap` are one block of kind `K_TABLE`: `[size, used, entries, index]`. `entries` is an
+array of key-value pairs in insertion order, and `index` an open-addressed array of entry numbers,
+at most half full. A delete marks its entry, and growth moves the live entries to new arrays, so
+`keys` returns them in the order the kernels do: a key set again after its delete moves to the end.
+Keys are `Int` or `Text`, as in the kernels. `Map` is prelude code, an AVL tree; its keys are type
+variables, so they compare at run time, which works for `Int` and `Text`.
+
+[`examples/tables.deus`](../../examples/tables.deus) counts words, deletes and sets keys again, builds
+a `Dict` from pairs and fills a `Map`. Every program agrees with the interpreter and ends with 0 live
+words, natively and in wasm built through C.
+
+| Program (best of three)    | TS kernel with JIT | C, clang -O2 |
+| -------------------------- | -----------------: | -----------: |
+| `Tables.wordCounts 300000` |           2,250 ms |        16 ms |
+
+The JIT time is a `deus eval` minus a `deus eval` of one word.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
@@ -256,7 +277,7 @@ it now. The rest of the language needs these, in order of how much code they unl
    holds itself.
 3. **Text and the other primitives:** `Text` done (D115), with the kernels' UTF-16 semantics,
    ported from the Rust kernel's `text.rs`; structural equality and order of data (D117).
-   Insertion-ordered maps (`Dict`, `MutMap`) and `show` remain.
+   Insertion-ordered maps (`Dict`, `MutMap`) and `Map` (D119). `show` remains.
 4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an
    operation. Functions with an empty row compile as they do now. Handlers compile by evidence
    passing (Koka): a handler is a record passed to the code under it. An operation whose handler

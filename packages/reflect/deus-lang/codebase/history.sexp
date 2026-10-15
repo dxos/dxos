@@ -1,3 +1,8 @@
+(entry "3c29e9b402502d1daf87dd1273dabaf57652cc5964c04a4b271f377afb29e3cd" "Tables test expects the new word counts" "claude")
+(entry "99c28a3bd09623487e4e1ea16b7f662bd7ccdbf09867063bd2d985b0881fa6d9" "C and wasm back ends compile Dict, MutMap and Map (D119)" "claude")
+(entry "e5cd37dfe0d57cc6b0c9ce961adcf304a372e1afc6793c2552e5973ff96e6154" "history: import 731 changes" "")
+(entry "55f90bb61b122ba421dbfcfa011f0baafe8c2617b812adb7e0e97fd191b8fbed" "task: import from codebase/tasks.sexp" "")
+(entry "78e2018de02923c30dadae8e8f1e279fbfba1ab8d4fb14f00413ac559c0d617f" "add codebase/code codebase/specs" "")
 (entry "2a6b52e147745c66c568cb9988293bdbc548ef4291e9e52e2450bd43100e92af" "task: set 602f4557 state" "")
 (entry "4b890c0dac0313155075aa46a7501af813bc8dd4771a8c9114408e558e92f25b" "task: comment on 602f4557" "claude")
 (entry "3cfdea41af56174e897ced5dffc6ae5ae68690bccec2d56a4e5b9e9a50c2563c" "history: import 707 changes" "")

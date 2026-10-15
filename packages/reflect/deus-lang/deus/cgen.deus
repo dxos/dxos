@@ -84,18 +84,19 @@ def prelude (nullary : Int) : Text :=
     "/* A block's header, the word before it: its count times 256, plus its kind. */",
     "#define PHDR(p) ((p)[-1])",
     "#define HDR(v) PHDR(UNBOX(v))",
+    "#define K_TABLE 252",
     "#define K_TEXT 253",
     "#define K_REF 254",
     "#define K_ARRAY 255",
     "#define UNIQUE(v) (HDR(v) < 512)",
     "static inline V *deus_block(V kind, V body) { V words = body + 1; V *h; deus_live += words; if (deus_live > deus_peak) deus_peak = deus_live; if (words <= 256 && (h = deus_free_lists[words])) deus_free_lists[words] = (V *)(uintptr_t)h[0]; else if (words <= 256 || !(h = deus_big_take(words))) h = deus_raw(words); h[0] = 256 | kind; return h + 1; }",
-    "static inline V deus_body(V *p) { V k = PHDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k == K_TEXT ? 2 + (p[1] + 3) / 4 : k + 1; }",
+    "static inline V deus_body(V *p) { V k = PHDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k == K_TEXT ? 2 + (p[1] + 3) / 4 : k == K_TABLE ? 4 : k + 1; }",
     "static inline void deus_release(V *p) { V words = deus_body(p) + 1; deus_live -= words; if (words <= 256) { p[-1] = (V)(uintptr_t)deus_free_lists[words]; deus_free_lists[words] = p - 1; } else { p[-1] = (V)(uintptr_t)deus_big; p[0] = words; deus_big = p - 1; } }",
     "static V *deus_stack, deus_sp, deus_cap;",
     "static void deus_push(V v) { if (deus_sp == deus_cap) { V cap = deus_cap ? 2 * deus_cap : 1024; V *bigger = deus_raw(cap); for (V i = 0; i < deus_sp; i++) bigger[i] = deus_stack[i]; deus_stack = bigger; deus_cap = cap; } deus_stack[deus_sp++] = v; }",
     "static void deus_free(V *p) {",
     "  for (;;) {",
-    "    V k = PHDR(p) & 255; V *from = k == K_REF ? p : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k == K_TEXT ? 0 : k;",
+    "    V k = PHDR(p) & 255; V *from = k == K_REF ? p : k == K_TABLE ? p + 2 : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k == K_TEXT ? 0 : k == K_TABLE ? 2 : k;",
     "    for (V i = 0; i < n; i++) { V c = from[i]; if (IS_PTR(c)) { if (!UNIQUE(c)) HDR(c) -= 256; else deus_push(c); } }",
     "    deus_release(p);",
     "    if (deus_sp == 0) return;",
@@ -156,6 +157,27 @@ def prelude (nullary : Int) : Text :=
     "/* `++` on lists: the unique prefix of the first list is relinked in place, the rest copied (D115). Consumes both. */",
     "static V deus_list_append(V a, V b) { V r, *slot = &r, c = a; int mine = 1; while (UNBOX(c)[0]) { V *p = UNBOX(c); if (mine && UNIQUE(c)) { *slot = c; slot = &p[2]; } else { if (mine) HDR(c) -= 256; mine = 0; V n = deus_cons(deus_dup(p[1]), 0); *slot = n; slot = &UNBOX(n)[2]; } c = p[2]; } *slot = b; return r; }",
     "static V deus_append_any(V a, V b) { if (IS_TEXT(a)) { V r = deus_text_extend(a, b); deus_drop(b); return r; } return deus_list_append(a, b); }",
+    "/* Dict and MutMap (D119): a block [size, used, entries, index] of kind K_TABLE. `entries` is an array of",
+    "   key-value pairs in insertion order, a deleted key being DEUS_NOKEY; `index` an open-addressed array of",
+    "   entry numbers, -1 where empty, at most half full. Keys are Int or Text, as in the kernels. All borrow. */",
+    "#define DEUS_NOKEY ((V)1 << 62)",
+    "static uint32_t deus_hash(V k) { if (IS_TEXT(k)) { uint32_t h = 2166136261u; V n = TLEN(k); uint16_t *x = TU(k); for (V i = 0; i < n; i++) h = (h ^ x[i]) * 16777619u; return h; } if (IS_PTR(k)) __builtin_trap(); uint32_t h = (uint32_t)k * 2654435761u; return h ^ (h >> 16); }",
+    "static inline V deus_key_eq(V a, V b) { return a == b || (IS_TEXT(a) && IS_TEXT(b) && deus_text_eq(a, b)); }",
+    "static V deus_table_new(V unit) { (void)unit; V *t = deus_block(K_TABLE, 4); t[0] = 0; t[1] = 0; t[2] = deus_array(16, DEUS_NOKEY); t[3] = deus_array(16, -1); return BOX(t); }",
+    "static V deus_table_find(V *t, V k) { V *ix = UNBOX(t[3]) + 1, *es = UNBOX(t[2]) + 1; V mask = UNBOX(t[3])[0] - 1; for (V i = deus_hash(k) & mask;; i = (i + 1) & mask) { V e = ix[i]; if (e < 0) return -1; if (deus_key_eq(es[2 * e], k)) return e; } }",
+    "static void deus_table_index(V *t, V k, V e) { V *ix = UNBOX(t[3]) + 1; V mask = UNBOX(t[3])[0] - 1; V i = deus_hash(k) & mask; while (ix[i] >= 0) i = (i + 1) & mask; ix[i] = e; }",
+    "/* Room for twice the live entries: the live ones move, in order, to new arrays, and the index is rebuilt. */",
+    "static void deus_table_grow(V *t) { V cap = 2 * t[0] + 8, icap = 16; while (icap < 2 * cap) icap *= 2; V *old = UNBOX(t[2]) + 1, used = t[1]; V es = deus_array(2 * cap, DEUS_NOKEY); V *to = UNBOX(es) + 1; V n = 0; for (V e = 0; e < used; e++) if (old[2 * e] != DEUS_NOKEY) { to[2 * n] = old[2 * e]; to[2 * n + 1] = old[2 * e + 1]; old[2 * e] = DEUS_NOKEY; old[2 * e + 1] = 0; n++; } deus_drop(t[2]); deus_drop(t[3]); t[2] = es; t[3] = deus_array(icap, -1); t[1] = n; for (V e = 0; e < n; e++) deus_table_index(t, to[2 * e], e); }",
+    "static V deus_table_set(V m, V k, V v) { V *t = UNBOX(m); V e = deus_table_find(t, k); if (e >= 0) { V *s = UNBOX(t[2]) + 2 + 2 * e; V old = *s; *s = deus_dup(v); deus_drop(old); } else { if (2 * (t[1] + 1) > UNBOX(t[2])[0]) deus_table_grow(t); e = t[1]++; t[0]++; V *s = UNBOX(t[2]) + 1 + 2 * e; s[0] = deus_dup(k); s[1] = deus_dup(v); deus_table_index(t, k, e); } return STATIC(&deus_nullary[0]); }",
+    "static V deus_table_get(V m, V k) { V *t = UNBOX(m); V e = deus_table_find(t, k); if (e < 0) return STATIC(&deus_nullary[0]); V *p = deus_block(1, 2); p[0] = 1; p[1] = deus_dup(UNBOX(t[2])[2 + 2 * e]); return BOX(p); }",
+    "static V deus_table_has(V m, V k) { return deus_table_find(UNBOX(m), k) >= 0; }",
+    "static V deus_table_delete(V m, V k) { V *t = UNBOX(m); V e = deus_table_find(t, k); if (e >= 0) { V *s = UNBOX(t[2]) + 1 + 2 * e; deus_drop(s[0]); deus_drop(s[1]); s[0] = DEUS_NOKEY; s[1] = 0; t[0]--; } return STATIC(&deus_nullary[0]); }",
+    "static V deus_table_size(V m) { return UNBOX(m)[0]; }",
+    "static V deus_table_keys(V m) { V *t = UNBOX(m), *es = UNBOX(t[2]) + 1, r, *slot = &r; for (V e = 0; e < t[1]; e++) if (es[2 * e] != DEUS_NOKEY) { V c = deus_cons(deus_dup(es[2 * e]), 0); *slot = c; slot = &UNBOX(c)[2]; } *slot = STATIC(&deus_nullary[0]); return r; }",
+    "/* A list of pairs [0, key, value]; a later key replaces an earlier one's value, as in the kernels. */",
+    "static V deus_dict_from_list(V xs) { V d = deus_table_new(0); for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { V *pair = UNBOX(UNBOX(c)[1]); deus_table_set(d, pair[1], pair[2]); } return d; }",
+    "static V deus_dict_lookup(V k, V d) { return deus_table_get(d, k); }",
+    "static V deus_dict_contains(V k, V d) { return deus_table_has(d, k); }",
     ""]
 
 /-- A C integer literal; the most negative `Int` has no literal of its own. -/
@@ -605,7 +627,11 @@ def textFunction (p : Text) : Option Text :=
     ("Text.length", "TLEN"), ("Text.code", "deus_text_code"), ("Text.slice", "deus_text_slice"),
     ("Text.fromCode", "deus_text_from_code"), ("Text.concat", "deus_text_concat"), ("Text.join", "deus_text_join"),
     ("Text.split", "deus_text_split"), ("Text.indexOf", "deus_text_index"), ("Text.trim", "deus_text_trim"),
-    ("Int.toText", "deus_int_text"), ("Int.fromText", "deus_text_int")]
+    ("Int.toText", "deus_int_text"), ("Int.fromText", "deus_text_int"),
+    ("Dict.fromList", "deus_dict_from_list"), ("Dict.lookup", "deus_dict_lookup"), ("Dict.contains", "deus_dict_contains"),
+    ("Dict.size", "deus_table_size"), ("Dict.keys", "deus_table_keys"), ("MutMap.new", "deus_table_new"),
+    ("MutMap.get", "deus_table_get"), ("MutMap.has", "deus_table_has"), ("MutMap.set", "deus_table_set"),
+    ("MutMap.delete", "deus_table_delete"), ("MutMap.size", "deus_table_size"), ("MutMap.keys", "deus_table_keys")]
 
 /-- The index of the equality and order functions of data type `t`, registering them on first use. -/
 def structIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
@@ -658,9 +684,9 @@ def structFunctions (scope : Wasm.Scope) (k : Int) (acc : List Text) : {Throw Te
 
 /-- How many arguments a primitive the C back end compiles takes, or 0. -/
 def primArity (p : Text) : Int :=
-  if List.any (fun x => x == p) ["Text.length", "Text.fromCode", "Text.concat", "Text.trim", "Int.toText", "Int.fromText"] then 1
-  else if List.any (fun x => x == p) ["Text.slice", "Text.indexOf"] then 3
-  else if Option.isSome (macro p) || Option.isSome (infix p) || List.any (fun x => x == p) ["Text.code", "Text.join", "Text.split", "append", "compare"] then 2
+  if List.any (fun x => x == p) ["Text.length", "Text.fromCode", "Text.concat", "Text.trim", "Int.toText", "Int.fromText", "Dict.fromList", "Dict.size", "Dict.keys", "MutMap.new", "MutMap.size", "MutMap.keys"] then 1
+  else if List.any (fun x => x == p) ["Text.slice", "Text.indexOf", "MutMap.set"] then 3
+  else if Option.isSome (macro p) || Option.isSome (infix p) || List.any (fun x => x == p) ["Text.code", "Text.join", "Text.split", "append", "compare", "Dict.lookup", "Dict.contains", "MutMap.get", "MutMap.has", "MutMap.delete"] then 2
   else 0
 
 /--
