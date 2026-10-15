@@ -278,6 +278,10 @@ def textPrimType (p : Text) : Sexp :=
   else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"]
   else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown]
   else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown]
+  else if p == "deus.io.readFile" || p == "deus.io.getEnv" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Text"]
+  else if p == "deus.io.listDir" || p == "deus.io.args" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
+  else if p == "deus.io.readStdin" || p == "deus.io.wallClock" then tref "#Text"
+  else if p == "deus.io.time" then tref "#Int"
   else unknown
 
 /-- `Array t`, or unknown when `t` is. -/
