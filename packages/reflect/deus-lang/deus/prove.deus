@@ -845,7 +845,7 @@ def proveTheorem (pr : Prover) (names : List Text) (types : List Sexp) (prop : S
   let steps := parseSteps proof
   -- A misspelled tactic would otherwise do nothing, and the proof could still pass on the others.
   match List.find (fun step => not (List.contains step.tactic tactics)) steps with
-  | some step => Result.err ("unknown tactic " ++ step.tactic ++ "; the tactics are " ++ Text.join ", " tactics ++ ", and a whole proof can be rfl, decide, test n or sorry")
+  | some step => Result.err ("unknown tactic " ++ step.tactic ++ "; the tactics are " ++ Text.join ", " tactics ++ ", and a whole proof can be rfl, decide, test n (using g…) or sorry")
   | none =>
     let rec run remaining goals :=
       match remaining with

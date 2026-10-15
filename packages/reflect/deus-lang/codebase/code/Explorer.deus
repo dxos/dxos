@@ -7,7 +7,7 @@ test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
       startsWith "{\"name\":\"zArea\"" page && Text.contains "\"aliases\":[\"area\"]" page
   | Option.none => false)
 
-theorem Explorer.Spec.assetNamesAreLong (t : Text) : Assets.isHash t == true -> Text.length t == 64 := by test 100
+theorem Explorer.Spec.assetNamesAreLong (t : Text) : Assets.isHash t == true -> Text.length t == 64 := by test 100 using hashLike
 
 theorem Explorer.Spec.builtinPagesHaveNoHash (t : Text) : pageOf ("#" ++ t) == "_" ++ t := by test 100
 
@@ -59,6 +59,11 @@ test Explorer.Spec.generationIsStable := inSite (fun _ =>
   let first := snapshot ()
   regenerate ()
   first == snapshot ())
+
+/-- A generator of asset names: a SHA-256 in hex, or one cut short, so `isHash` sees both (random text never is one). -/
+def Explorer.Spec.hashLike (seed : Int) : Text :=
+  let h := Text.sha256 (toText seed)
+  if seed % 2 == 0 then h else Text.take ((if seed < 0 then 0 - seed else seed) % 64) h
 
 test Explorer.Spec.htmlIsEscaped :=
   let html := htmlLinked Map.empty "def f (a : Int) : Bool := a < 2 && a > 0 -- \"q\" & r"
