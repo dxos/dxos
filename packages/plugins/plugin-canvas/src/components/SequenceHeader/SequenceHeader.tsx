@@ -45,7 +45,7 @@ export const SequenceHeader = ({
 }: SequenceHeaderProps) => (
   <div className='relative w-full shrink-0 bg-base-surface' data-testid='sequence-header'>
     <div className='flex flex-col items-center gap-1 py-4' style={{ opacity }}>
-      <div className='absolute top-3 left-4 text-sm text-fg-muted' data-testid='sequence-counter'>
+      <div className='absolute top-3 left-4 text-sm text-fg-muted tabular-nums' data-testid='sequence-counter'>
         {index + 1} / {count}
       </div>
       <div className='text-3xl'>{title}</div>
