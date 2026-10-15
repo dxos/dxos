@@ -152,6 +152,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 142 | 10-15 03:55 | 20m 00s | `a041d369` | specs name 134 more public definitions in api blocks, each type checked by `deus mdl`; `deus mdl --coverage` reports 39 (was 173), all in Explorer.Spec and WasmEquality.Spec (task 8d6df186) |
 | 143 | 10-15 04:10 | 15m 00s | `7819f9ac` | laws for comment-thread merges (Codebase.Spec R-14) and history imports (Export.Spec R-6), which describe what merges already do (task dc22728a) |
 | 144 | 10-15 04:30 | 20m 00s | `f7b9b6c0` | devex: the CLI tests are three files (native back ends, replication, the rest), so the suite takes 119 s (was 154 s); splitting the restore test too made it 137 s, since four cores are already busy |
-| 145 | 10-15 04:40 | 10m 00s | this commit | devex: `runImage` parses an image once per process, so an in-process CLI call costs half (a one-line `add` 90 ms, was 180 ms) and the suite takes 107 s (was 119 s) |
+| 145 | 10-15 04:40 | 10m 00s | `eef0e37e` | devex: `runImage` parses an image once per process, so an in-process CLI call costs half (a one-line `add` 90 ms, was 180 ms) and the suite takes 107 s (was 119 s) |
+| 146 | 10-15 04:50 | 10m 00s | this commit | devex: `scripts/vitest.config.mjs` runs the package suite alone with a worker per core, from any directory: 84 s on 4 cores (107 s with vitest's default), and the README names it |
 
-Total from stage 1 to stage 145: 28h 07m.
+Total from stage 1 to stage 146: 28h 17m.
