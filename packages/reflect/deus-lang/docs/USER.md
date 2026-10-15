@@ -512,3 +512,11 @@ run it once now
 the mirror is a backup in codebase in case we break codebase
 
 it should have codebase files commited in its native format, as well as have a directory tree where every term is losslesly rendered, one files per term, with proper path
+
+---
+
+hold off for now, I need to setup proper cf org
+
+---
+
+cloudflare account setup, you can continue
