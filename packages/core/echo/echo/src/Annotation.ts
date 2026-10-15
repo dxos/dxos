@@ -24,6 +24,7 @@ export {
   IconAnnotation,
   IconFromRefAnnotation,
   LabelAnnotation,
+  RawStringAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,

@@ -15,11 +15,14 @@ import { EchoObjectSchema } from '../Entity/index.ts';
 import {
   LabelAnnotation,
   PropertyMeta,
+  RawStringAnnotation,
   SetParentAnnotation,
   TypenameSchema,
   VersionSchema,
+  containsRawStringAnnotation,
   getLabelWithSchema,
   getTypeAnnotation,
+  hasRawStringAnnotation,
 } from './annotations.ts';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
@@ -182,5 +185,21 @@ describe('SetParentAnnotation', () => {
   test('reads the structured value', ({ expect }) => {
     const field = Schema.String.pipe(SetParentAnnotation.set({ override: false }));
     expect(SetParentAnnotation.get(field)).toEqual(Option.some({ value: true, override: false }));
+  });
+});
+
+describe('RawStringAnnotation', () => {
+  const RawRecord = Schema.Record(Schema.String, Schema.Any).pipe(RawStringAnnotation.set(true));
+
+  test('is found through an optional wrapper', ({ expect }) => {
+    const struct = Schema.Struct({ snapshots: RawRecord.pipe(Schema.optional) });
+    const [property] = struct.ast.propertySignatures;
+    expect(hasRawStringAnnotation(property.type)).toBe(true);
+    expect(hasRawStringAnnotation(Schema.String.ast)).toBe(false);
+  });
+
+  test('containment covers nested fields and is false for schemas without it', ({ expect }) => {
+    expect(containsRawStringAnnotation(Schema.Struct({ spec: Schema.Struct({ cache: RawRecord }) }).ast)).toBe(true);
+    expect(containsRawStringAnnotation(Schema.Struct({ title: Schema.String }).ast)).toBe(false);
   });
 });
