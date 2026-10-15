@@ -196,6 +196,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 186 | 10-15 10:09 | 19m 00s | `8b0847fc` | A push cannot fork a branch: the CLI refuses a head that leaves out a remote head, and the Worker moves each branch head in D1 only from the head a push names (Remote.Spec, D167). |
 | 187 | 10-15 10:30 | 21m 00s | `b7bf9712` | `deus export --terms` writes one file per definition at its namespace path, and an hourly routine mirrors the codebase (store files, Worker bundles and the per-term tree) to dxos/deus-mirror (Export.Spec R-10, R-11, D168). |
 | 188 | 10-15 10:40 | 15m 00s | `a2aa2900` | The seeded analytics events are pushed through the Worker to `toolchain/events/` on the new account, and the publisher lists them through the Worker for Basin (D169); Basin Catalog setup is with the Cloudflare thread |
-| 189 | 10-15 10:45 | 5m 00s | this commit | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D170, task d780de91) |
+| 189 | 10-15 10:45 | 5m 00s | `2bb8eec2` | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D170, task d780de91) |
+| 190 | 10-15 11:15 | 30m 00s | this commit | Bundles can be lines: a pull hashes and stores each object's line with no parse or print, 44.8 s to 11.9 s for a fresh pull from a line remote; pushes stay columnar until sessions read lines (D171, task ed106f59) |
 
-Total from stage 1 to stage 189: 50h 28m.
+Total from stage 1 to stage 190: 50h 58m.

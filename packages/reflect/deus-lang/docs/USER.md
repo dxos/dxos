@@ -527,3 +527,23 @@ recite core instructions and continue working:
 
 - focus on devex and perf, make sure sessions can use hosted codebase as the main record efficiently without workarounds
 - on https://github.com/dxos/dxos/pull/13952 put any legacy unsued files under legacy/ dir in the package
+
+---
+
+are you done?
+
+---
+
+are you done?
+
+---
+
+are you done?
+
+---
+
+tell me full instruction. git checkout cd, cloudflare_account_id env
+
+---
+
+https://github.com/dxos/dxos/pull/13952 is no longer main backup since https://github.com/dxos/deus-mirror exists. codebase backup goes to mirror. and the PR is for things not yet inside the codebase

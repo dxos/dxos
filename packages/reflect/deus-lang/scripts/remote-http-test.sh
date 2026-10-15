@@ -10,6 +10,8 @@ server=""
 stop() { if [ -n "$server" ]; then kill -- "-$server" 2>/dev/null || true; fi; }
 trap 'stop; rm -rf "$work"' EXIT
 export WRANGLER_SEND_METRICS=false CI=1
+# Sessions carry the deployed Worker's key, which `remote add` would store for this local one.
+unset DEUS_API_KEY
 state="$work/state"
 deus() { node bin/deus.mjs "$@"; }
 
