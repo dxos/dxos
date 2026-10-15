@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext } from '@dxos/async';
+import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext, timeoutUnlessProgress } from '@dxos/async';
 import { type Context, ContextDisposedError, Resource } from '@dxos/context';
 import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -17,7 +17,6 @@ import {
   isLockHeld,
   lockOrRpcTimeoutError,
   requestExclusiveLock,
-  timeoutUnlessProgress,
   waitWithLockOrRpcTimeout,
 } from './internal/locks.ts';
 import { workerErrorFromEvent } from './internal/worker-errors.ts';

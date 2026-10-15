@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReadOnlyEvent, asyncTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 
 import { WorkerConnectionError } from '../errors.ts';
 
@@ -14,29 +14,6 @@ export const lockOrRpcTimeoutError = (operation: string, timeout = LOCK_OR_RPC_W
 
 export const waitWithLockOrRpcTimeout = <T>(promise: Promise<T>, operation: string): Promise<T> =>
   asyncTimeout(promise, LOCK_OR_RPC_WAIT_TIMEOUT, lockOrRpcTimeoutError(operation));
-
-/**
- * Like {@link asyncTimeout}, except each `progress` event restarts the deadline: the wait fails only
- * after `timeout` ms without progress, so work that keeps reporting (a worker migrating a large
- * database) is not cut off for taking long.
- */
-export const timeoutUnlessProgress = <T>(
-  promise: Promise<T>,
-  timeout: number,
-  progress: ReadOnlyEvent<any>,
-  error: Error,
-): Promise<T> =>
-  new Promise<T>((resolve, reject) => {
-    let timer = setTimeout(() => reject(error), timeout);
-    const unsubscribe = progress.on(() => {
-      clearTimeout(timer);
-      timer = setTimeout(() => reject(error), timeout);
-    });
-    void promise.then(resolve, reject).finally(() => {
-      clearTimeout(timer);
-      unsubscribe();
-    });
-  });
 
 /**
  * Whether a Web Lock is currently held anywhere in this origin.

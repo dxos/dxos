@@ -11,6 +11,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { Event, timeoutUnlessProgress } from '@dxos/async';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -77,7 +78,7 @@ export default Capability.makeModule(
     yield* Effect.gen(function* () {
       // Bounded so a handshake that never completes becomes a failure the app can surface,
       // rather than leaving every suspended consumer waiting on a promise that never settles.
-      yield* Effect.tryPromise(() => client.initialize()).pipe(Effect.timeout(initializeTimeout));
+      yield* Effect.tryPromise(() => untilStalled(client, client.initialize(), initializeTimeout));
       performance.mark('milestone:client-initialize:end');
       log('client.initialize() returned successfully');
       if (onClientInitialized) {
@@ -180,7 +181,7 @@ export default Capability.makeModule(
       ? Layer.effect(
           ClientService,
           Effect.tryPromise({
-            try: () => client.waitUntilInitialized({ timeout: initializeTimeout }),
+            try: () => untilStalled(client, client.waitUntilInitialized(), initializeTimeout),
             catch: (error) => new ClientInitError({ context: { initializeTimeout }, cause: error }),
           }).pipe(Effect.as(client)),
         )
@@ -203,3 +204,17 @@ export default Capability.makeModule(
     ];
   }),
 );
+
+/**
+ * Waits for `promise`, failing after `timeout` ms in which the client reports no index status: a
+ * worker migrating or rebuilding a large index on its first boot after an upgrade is slow, not hung.
+ */
+const untilStalled = async <T>(client: Client, promise: Promise<T>, timeout: number): Promise<T> => {
+  const progress = new Event();
+  const subscription = client.indexStatus.subscribe(() => progress.emit());
+  try {
+    return await timeoutUnlessProgress(promise, timeout, progress);
+  } finally {
+    subscription.unsubscribe();
+  }
+};

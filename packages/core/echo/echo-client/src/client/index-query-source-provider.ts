@@ -68,13 +68,16 @@ export type IndexQueryProviderProps = {
   graph: Hypergraph.Hypergraph;
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
+  /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */
+  indexProgress?: ReadOnlyEvent<unknown>;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
 };
 
 /**
  * Budget for the host's index response, and for that alone: it is cleared the moment the host
- * answers, so a query that timed out here genuinely means the index never responded.
+ * answers, so a query that timed out here genuinely means the index never responded. Index
+ * progress restarts it, since a host rebuilding its index after an upgrade answers late but does answer.
  */
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -100,6 +103,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       graph: this._params.graph,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
+      indexProgress: this._params.indexProgress,
     });
   }
 }
@@ -111,6 +115,8 @@ export type IndexQuerySourceProps = {
   graph: Hypergraph.Hypergraph;
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
+  /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */
+  indexProgress?: ReadOnlyEvent<unknown>;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
 };
@@ -294,6 +300,7 @@ export class IndexQuerySource implements QuerySource {
       }
       settled = true;
       clearTimeout(timeout);
+      unsubscribeProgress?.();
       cleanup?.();
       run();
     };
@@ -302,9 +309,12 @@ export class IndexQuerySource implements QuerySource {
     // otherwise lazy and would hang if the host never responds.
     const queryTimeout = this._params.queryTimeout ?? QUERY_SERVICE_TIMEOUT;
     const hydrationTimeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const timeout = setTimeout(() => {
-      settle(() => reject(new TimeoutError(queryTimeout, 'index query')));
-    }, queryTimeout);
+    const expire = () => settle(() => reject(new TimeoutError(queryTimeout, 'index query')));
+    let timeout = setTimeout(expire, queryTimeout);
+    let unsubscribeProgress = this._params.indexProgress?.on(() => {
+      clearTimeout(timeout);
+      timeout = setTimeout(expire, queryTimeout);
+    });
 
     cleanup = subscribeStream(
       this._params.runtime,
@@ -326,6 +336,8 @@ export class IndexQuerySource implements QuerySource {
               // bounded per record and must not be charged to it — doing so reported a stalled
               // document as an "index query" timeout, naming the wrong subsystem.
               clearTimeout(timeout);
+              unsubscribeProgress?.();
+              unsubscribeProgress = undefined;
               const { results, stalled } = await this._mapRecords(
                 new Context(),
                 queryId,
