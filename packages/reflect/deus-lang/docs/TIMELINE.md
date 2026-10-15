@@ -202,6 +202,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 192 | 10-15 11:20 | 10m 00s | `8d647cd5` | Bundles can be lines: a pull hashes and stores each object's line with no parse or print, 44.8 s to 11.9 s for a fresh pull from a line remote; pushes stay columnar until sessions read lines (D172, task ed106f59) |
 | 193 | 10-15 11:30 | 10m 00s | `2c51b124` | The browser page runs the TypeScript kernel by default, 6-16x faster than the wasm kernel on today's codebase in Chromium; the TS kernel imports nothing from node and `deus build --browser` bundles it (D173). The playground's codebase snapshot leaves out local layers (58 to 36 MB). |
 | 194 | 10-15 11:15 | 0m 00s | `20e239c2` | The explorer names a long call's arguments by their parameters, inlay-hint style (`key:` `name:` before `Composer.meta`'s strings); `deus view` prints none (View.Spec R-5, D174, task 31f514e2) |
-| 195 | 10-15 11:45 | 15m 00s | this commit | The browser page keeps its changed files in IndexedDB, so a playground codebase survives a reload; Reset drops them (D175). |
+| 195 | 10-15 11:45 | 15m 00s | `6bf0668b` | The browser page keeps its changed files in IndexedDB, so a playground codebase survives a reload; Reset drops them (D175). |
+| 196 | 10-15 11:36 | 0m 00s | this commit | Nested one-arm matches on tuples (React hook state) print as `let (a, b) := …` lines, `const #[a, b] = …;` in the TS view (View.Spec R-6, D176, task c43ac3db) |
 
-Total from stage 1 to stage 195: 51h 58m.
+Total from stage 1 to stage 196: 51h 58m.
