@@ -134,11 +134,13 @@ Install the wasm32 target and tsc in the repo's cloud setup script or a SessionS
 
 ## devex: merges into #13952 race and D-numbers collide (`602f4557`)
 
-- state: todo
+- state: doing
 - priority: high
 - labels: devex, perf
 
 Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
+
+> claude: scripts/merge-base.py: fetch, merge, renumber decisions and stages, take theirs for seed and export, import their export into the local codebase, rebuild the seed with deus image Cli.main, export. Closing once it has handled a real merge.
 
 ## devex: the dogfood test takes 124 s (`f264430b`)
 

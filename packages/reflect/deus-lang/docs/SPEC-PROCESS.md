@@ -73,6 +73,18 @@ Laws about pure functions are theorems over generated values. Laws about the sto
 explorer run inside `Codebase.Spec.inStore`, a fresh codebase in the deterministic simulation, so a
 theorem can still state them (`inStore (fun dir => …) = true`) and `by test n` still generates inputs.
 
+## Merging #13952's branch
+
+Every thread merges the shared branch many times a day, and the same files conflict each time:
+DECISIONS.md and TIMELINE.md (two threads take the same next number), the seed and the codebase
+export. `python3 scripts/merge-base.py` does the whole merge without committing:
+
+- it gives our new decisions and stages the next free numbers and prints each `D<old> -> D<new>`;
+- it takes theirs for the seed and export, imports their export into the local codebase and
+  rebuilds the seed from it with `deus image Cli.main`;
+- it exports again.
+  Rewrite our references to renamed decisions, run the tests, then commit and push at once.
+
 ## Feature maps
 
 A spec says what one subsystem promises; a feature map says what the product is made of (D118). Dmytro:
