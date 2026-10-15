@@ -1,5 +1,15 @@
 # History of main
 
+- `f6943ca15f` update deus (by merge)
+- `a32d485ec2` history: import 1023 changes
+- `b4c300f712` history: import 1033 changes
+- `38cdddd0e3` task: import from /tmp/tmpqt177wfu/tasks.sexp
+- `ce4f088fce` add /tmp/tmpqt177wfu/merged/code /tmp/tmpqt177wfu/merged/specs
+- `7750353b5d` task: comment on 60e88be8
+- `2e8d17b108` update deus (by claude)
+- `dd574bcb24` history: import 1018 changes
+- `86e15f924a` task: import from codebase/tasks.sexp
+- `e9798bf694` add codebase/code codebase/specs
 - `f0333cb41c` update deus (by claude)
 - `924f1988c5` history: import 1018 changes
 - `41f913e8af` history: import 1010 changes

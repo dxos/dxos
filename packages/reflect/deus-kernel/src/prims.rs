@@ -360,6 +360,20 @@ prims! {
     };
     "Code.quote", 1, |m, a| Ok(Value::Text(text::text(&print(&quote_value(m, &a[0])))));
     "Code.has", 1, |m, a| bool_of(m.has(&string(&txt(m, &a[0])?)));
+    // Reflection for code that walks a value by its type (D143), as in the TypeScript kernel.
+    "Code.tag", 1, |m, a| match &a[0] {
+        Value::Bool(flag) => Ok(Value::Int(i32::from(*flag))),
+        Value::Con(con) => Ok(Value::Int(con.tag as i32)),
+        other => defect(format!("Code.tag takes a data value, got {}", m.show(other))),
+    };
+    "Code.field", 2, |m, a| {
+        let index = int(m, &a[1])?;
+        match &a[0] {
+            Value::Con(con) if index >= 0 && (index as usize) < con.fields.len() => Ok(con.fields[index as usize].clone()),
+            other => defect(format!("Code.field: no field {index} in {}", m.show(other))),
+        }
+    };
+    "Code.cast", 1, |_m, a| Ok(a[0].clone());
     "Code.steps", 1, |m, a| Ok(Value::Int(m.steps as i32));
     "Code.cost", 1, |m, a| Ok(Value::Int(m.measure(&a[0])? as i32));
     "Code.defectTrace", 1, |m, a| Ok(list_from(m.defect_trace.iter().map(|hash| Value::Text(text::text(hash))).collect()));
