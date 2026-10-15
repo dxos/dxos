@@ -27,10 +27,13 @@ export const pendingDmUser = (thread: string): string | undefined =>
 
 /** The bot and the Discord channels it serves; the create-channel form edits these. */
 export const Properties = Schema.Struct({
-  accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
-    title: 'Bot token',
-    description: 'The Discord bot token the gateway connects with.',
-  }),
+  // Absent for Kai, whose token EDGE holds; only a team's own bot records one.
+  accessToken: Schema.optional(
+    Ref.Ref(AccessToken.AccessToken).annotate({
+      title: 'Bot token',
+      description: 'Your own Discord bot token; leave empty for Kai.',
+    }),
+  ),
   applicationId: Schema.String.annotate({
     title: 'Application ID',
     description: 'The Discord application (bot) id.',
@@ -77,7 +80,7 @@ export const BotConfig = Schema.Struct({
   spaceId: Schema.String,
   agent: Schema.optional(Schema.String),
   applicationId: Schema.String,
-  accessTokenId: Schema.String,
+  accessTokenId: Schema.optional(Schema.String),
   channels: Schema.Array(Schema.String),
   binding: Schema.optional(Schema.String),
 });

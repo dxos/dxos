@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AppGraphBuilder,
   ChannelBackend,
   Connector,
   OperationHandler,
@@ -16,6 +17,7 @@ import {
 import { meta } from '#meta';
 
 export const DiscordPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(ChannelBackend),
   Plugin.addModule(Connector),
   Plugin.addModule(OperationHandler),
