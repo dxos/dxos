@@ -307,10 +307,19 @@ def inlinePrims (prims : List (Text, Sexp)) (form : Sexp) : Sexp :=
   | Sexp.list items => Sexp.list (List.map (inlinePrims prims) items)
   | _ => form
 
+/-- A literal, or a constructor applied to literals: a constant that costs nothing to rebuild at each use. -/
+def isStaticValue (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list [Sexp.sym "int", _] => true
+  | Sexp.list [Sexp.sym "text", _] => true
+  | Sexp.list [Sexp.sym "con", _, _, Sexp.int 0] => true
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", _, _, _] :: args) => List.all isStaticValue args
+  | _ => false
+
 /--
   The functions `main` reaches, `main` first; a definition that is not a function is refused.
   A definition that is only a primitive (`def Int.ushr := prim "Int.ushr"`) is inlined at its
-  calls, so `Int.and x y` compiles as `x &&& y` would.
+  calls, so `Int.and x y` compiles as `x &&& y` would, and so is a static constant (`Map.empty`).
 -/
 def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
   let rec go pending seen acc prims :=
@@ -323,7 +332,7 @@ def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw
         | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", p]]) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | some (Sexp.list [Sexp.sym "term", core]) =>
           match unlam core with
-          | (0, _) => throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
+          | (0, _) => if isStaticValue core then go rest (h :: seen) acc ((h, core) :: prims) else throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
           | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b (storedType (meta h)) :: acc) prims
         | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
   go [main] [] [] []
