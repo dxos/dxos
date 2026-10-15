@@ -22,5 +22,6 @@ export const resolveStorySpace = (client: Client): Effect.Effect<Space> =>
     }
     const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get().find(AppSpace.isVisibleSpace);
     invariant(space, 'No space available after initialization.');
+    yield* Effect.promise(() => space.waitUntilReady());
     return space;
   });

@@ -35,7 +35,6 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
