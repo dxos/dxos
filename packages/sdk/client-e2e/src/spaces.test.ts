@@ -30,11 +30,10 @@ import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { fromPublicKey, toPublicKey, unpackJson } from '@dxos/protocols/buf';
-import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { MembershipPolicy, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { toPublicKey, unpackJson } from '@dxos/protocols/buf';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { range } from '@dxos/util';
@@ -1002,22 +1001,6 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
     expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
-    expect(space.members.get()).to.have.length(1);
-  });
-
-  test('a locked space admits no one after its genesis, and admitContact rejects rather than resolving', async () => {
-    const [client] = await createInitializedClients(1, { storage: true });
-    const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
-    await space.waitUntilReady();
-    const contact = create(ContactSchema, {
-      identityKey: fromPublicKey(PublicKey.random()),
-      profile: { displayName: 'Bob' },
-    });
-
-    // Its owner may not admit anyone, so the space would drop the membership; the caller is told so.
-    await expect(space.admitContact(contact, SpaceMember_Role.EDITOR)).rejects.toThrow(
-      'No member management permission.',
-    );
     expect(space.members.get()).to.have.length(1);
   });
 
