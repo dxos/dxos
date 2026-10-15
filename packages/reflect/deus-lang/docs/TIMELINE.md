@@ -189,7 +189,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 179 | 10-15 08:15 | 25m 00s | `bee0613b` | A law's `statement:` is compared as compiled Core, so any spelling of the claim is accepted (task 0d7b0142, Compile.Spec R-19, D160); Toolchain.Features F-4 now tracks the open prover-cache task, and `deus mdl` reports 275 ok and 6 known gaps. |
 | 180 | 10-15 08:30 | 15m 00s | `2af209a4` | The codebase export compiles to the seed byte for byte, and the suite now checks it, so the toolchain builds without `deus/` (task 86d7b02a in part, Export.Spec R-8, D161). |
 | 181 | 10-15 09:05 | 35m 00s | `843ac72e` | `deus update` skips files unchanged since the last update while the codebase is as it left it: `deus update deus` with nothing changed takes 1.1 s instead of 17 s (Codebase.Spec R-22, D162). |
-| 182 | 10-15 09:30 | 25m 00s | `6bf0668b` | `deus export` reuses printed definitions whose inputs are unchanged: 10.2 s to 5.7 s with identical files (Export.Spec R-9, D163). |
+| 182 | 10-15 09:30 | 25m 00s | `d21b7bc3` | `deus export` reuses printed definitions whose inputs are unchanged: 10.2 s to 5.7 s with identical files (Export.Spec R-9, D163). |
 | 183 | 10-15 09:10 | 36m 00s | `4d2421c9` | Codebases move to a private R2 bucket behind the DEUS Worker: push and pull over HTTPS with D1 API keys, the explorer served from the bucket, the toolchain copied and `origin` switched (Remote.Spec, D164). |
 | 184 | 10-15 09:25 | 15m 00s | `ba589da6` | History nodes record when they were made; `deus log` and the explorer's History view show the time (Codebase.Spec R-23, D165). |
 | 185 | 10-15 09:50 | 25m 00s | `3a2224e6` | The explorer publishes its indexes as one version named by `site/HEAD`, and the Worker pins each page to the version it loaded, so a push never shows a mix; DEUS on the wasm kernel measured too large to build the site in a Worker (D166). |
@@ -203,6 +203,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 193 | 10-15 11:30 | 10m 00s | `2c51b124` | The browser page runs the TypeScript kernel by default, 6-16x faster than the wasm kernel on today's codebase in Chromium; the TS kernel imports nothing from node and `deus build --browser` bundles it (D173). The playground's codebase snapshot leaves out local layers (58 to 36 MB). |
 | 194 | 10-15 11:15 | 0m 00s | `20e239c2` | The explorer names a long call's arguments by their parameters, inlay-hint style (`key:` `name:` before `Composer.meta`'s strings); `deus view` prints none (View.Spec R-5, D174, task 31f514e2) |
 | 195 | 10-15 11:45 | 15m 00s | `6bf0668b` | The browser page keeps its changed files in IndexedDB, so a playground codebase survives a reload; Reset drops them (D175). |
-| 196 | 10-15 11:50 | 65m 00s | this commit | Git stops holding the codebase: `codebase/` leaves #13952 (D176); push skips held objects, pulls and merges by itself when the remote moved, and merge re-applies our edits inside shared recursive groups; `sync-deus.py` writes changed toolchain definitions into `deus/` and the seed; unused files move to `legacy/` (D177) |
+| 196 | 10-15 11:36 | 0m 00s | `d21b7bc3` | Nested one-arm matches on tuples (React hook state) print as `let (a, b) := …` lines, `const #[a, b] = …;` in the TS view (View.Spec R-6, D176, task c43ac3db) |
+| 197 | 10-15 11:50 | 65m 00s | this commit | Git stops holding the codebase: `codebase/` leaves #13952 (D177); push skips held objects, pulls and merges by itself when the remote moved, and merge re-applies our edits inside shared recursive groups; `sync-deus.py` writes changed toolchain definitions into `deus/` and the seed; unused files move to `legacy/` (D178) |
 
-Total from stage 1 to stage 196: 53h 03m.
+Total from stage 1 to stage 197: 53h 03m.

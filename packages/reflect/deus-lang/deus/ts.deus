@@ -45,14 +45,24 @@ def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (ret : Bool) : 
       | (name, fn) => localFunction p name fn inner ind) (List.zip names fns)
     Text.join nl defs ++ nl ++ stmts p b inner ind ret
   | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
-    let scrutText := expr p scrut env ind 0
-    let arms := List.map (fun c =>
-      match c with
-      | Sexp.list [Sexp.sym "case", pat, b] =>
-        match pattern p pat env with
-        | (text, env2) => nl ++ "  " ++ (if text == "_" then "default" else "case " ++ text) ++ ":\n" ++ Print.spaces (ind + 4) ++ stmts p b env2 (ind + 4) ret
-      | _ => "") cases
-    "switch (" ++ scrutText ++ ") {" ++ Text.concat arms ++ nl ++ "}"
+    -- A one-arm match on a tuple is a destructuring `const` (D176).
+    let single := match cases with
+      | [Sexp.list [Sexp.sym "case", pat, b]] => if Print.destructures pat then Option.some (pat, b) else Option.none
+      | _ => Option.none
+    match single with
+    | Option.some (pat, b) =>
+      let value := expr p scrut env ind 0
+      match pattern p pat env with
+      | (text, env2) => "const " ++ text ++ " = " ++ value ++ ";" ++ nl ++ stmts p b env2 ind ret
+    | Option.none =>
+        let scrutText := expr p scrut env ind 0
+        let arms := List.map (fun c =>
+          match c with
+          | Sexp.list [Sexp.sym "case", pat, b] =>
+            match pattern p pat env with
+            | (text, env2) => nl ++ "  " ++ (if text == "_" then "default" else "case " ++ text) ++ ":\n" ++ Print.spaces (ind + 4) ++ stmts p b env2 (ind + 4) ret
+          | _ => "") cases
+        "switch (" ++ scrutText ++ ") {" ++ Text.concat arms ++ nl ++ "}"
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
     let bodyText := stmts p b env (ind + 2) ret
     let rendered := List.map (fun c =>

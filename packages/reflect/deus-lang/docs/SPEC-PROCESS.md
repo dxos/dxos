@@ -9,7 +9,7 @@ how the process works in DEUS, what the backfill covered, and what it found and 
 A spec is a document in the codebase, named `<Subsystem>.Spec` (D99). Dmytro: "I want agents to
 record specs in codebase, not in github. and overall, most development at this point should be
 happening via-codebase". Nothing under `docs/spec/` holds a checked spec any more, and git holds no
-copy either (D176): read one with `deus view Compile.Spec` or in the
+copy either (D177): read one with `deus view Compile.Spec` or in the
 [explorer](https://deus.dmytro-a80.workers.dev/#n:Compile.Spec); github.com/dxos/deus-mirror keeps the hourly backup.
 
 Write it in this order:
@@ -47,7 +47,7 @@ token. The old remote, `r2://agent-artifacts/deus/toolchain`, is no longer writt
 
 Make every change with the CLI (`deus update … --by <agent>`, `deus task …`) and run `deus push origin`
 when it lands. That is the whole record: specs, tasks, history and code that is not part of the toolchain
-need no git commit (D176). A push that finds the remote moved pulls, merges and pushes again by itself,
+need no git commit (D177). A push that finds the remote moved pulls, merges and pushes again by itself,
 and `deus merge` re-applies our edited definitions over theirs when both sides touched one recursive
 group, so concurrent sessions rarely see a conflict.
 
@@ -73,7 +73,7 @@ from the file stays in the codebase until `deus rm Compile.Spec.R-3`.
 
 `deus mdl` checks every block of every document: names exist with the stated types, every test and
 theorem named passes (checked now or from the cached verdict), and each law's theorem states what the
-spec says. A requirement with only a `gap:` is reported but does not fail. The specs are not in git (D176),
+spec says. A requirement with only a `gap:` is reported but does not fail. The specs are not in git (D177),
 so CI does not see them: run `deus mdl` on the pulled codebase before you push a change to a spec or to
 the code it covers (task d9242c83 tracks making the push run it). The
 block types are in [MDL.md](spec/MDL.md#the-req-api-and-law-extensions);
@@ -86,7 +86,7 @@ theorem can still state them (`inStore (fun dir => …) = true`) and `by test n`
 ## Merging #13952's branch
 
 The branch holds only what is not in the codebase yet: the kernels, `deus/` and the seed the kernel
-boots from, the Worker, scripts and docs (D176). Two kinds of file still conflict on most merges:
+boots from, the Worker, scripts and docs (D177). Two kinds of file still conflict on most merges:
 DECISIONS.md and TIMELINE.md (two threads take the same next number) and the seed.
 `python3 scripts/merge-base.py` does the merge without committing:
 

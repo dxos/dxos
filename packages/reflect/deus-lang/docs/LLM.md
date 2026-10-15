@@ -89,7 +89,7 @@ the names, and writes nothing.
 ## Working through the codebase
 
 The codebase is the primary version control (D101); github.com/dxos/deus-mirror backs it up every
-hour, and git holds only what is not in the codebase yet (D176). Start each task with
+hour, and git holds only what is not in the codebase yet (D177). Start each task with
 `deus pull origin` and `deus merge origin.main` from the shared remote, and push each change when it
 lands. In a codebase whose project is `https://dxos.org/deus/toolchain`,
 `origin` defaults to `https://deus.dmytro-a80.workers.dev/v1/toolchain`, the DEUS Worker (D164): pulls

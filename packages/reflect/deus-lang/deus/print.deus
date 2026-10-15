@@ -273,7 +273,30 @@ def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
       match pair with
       | (name, fn) => "let rec " ++ name ++ lambdaHead p fn inner ind) (List.zip names fns)
     Text.join nl defs ++ nl ++ stmts p b inner ind
+  | Sexp.list [Sexp.sym "match", scrut, Sexp.list [Sexp.sym "case", pat, b]] =>
+    if destructures pat then
+      -- Binder names come in pre-order, so the value is printed before the pattern.
+      let value := body p scrut env ind
+      match pattern p pat env with
+      | (text, env2) => "let " ++ text ++ " :=" ++ value ++ nl ++ stmts p b env2 ind
+    else expr p t env ind 0
   | _ => expr p t env ind 0
+
+/--
+  Whether a one-arm match on `pat` reads as `let pat := value` (D176): a tuple of names, `_` and
+  tuples, which always matches. `let` of a plain name compiles to `let`, not `match`, so it is not one.
+-/
+def destructures (pat : Sexp) : Bool :=
+  match pat with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Pair" :: _ :: subs) => List.all alwaysMatches subs
+  | _ => false
+
+def alwaysMatches (pat : Sexp) : Bool :=
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => true
+  | Sexp.list [Sexp.sym "pvar"] => true
+  | Sexp.list [Sexp.sym "pas", inner] => alwaysMatches inner
+  | _ => destructures pat
 
 /-- ` x y :=` plus the body, for a lambda printed as a local function. -/
 def lambdaHead (p : Printer) (fn : Sexp) (env : List Text) (ind : Int) : Text :=

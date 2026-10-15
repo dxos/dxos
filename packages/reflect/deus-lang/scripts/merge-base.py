@@ -9,7 +9,7 @@ Merges PR #13952's branch into the current branch the way every DEUS thread has 
    theirs and appends our new rows: decisions get the next free D-numbers, and stages the next
    stage numbers. Their "this commit" row gets their commit's hash.
 3. Takes their seed, drops the old codebase export (the codebase is the primary copy and
-   github.com/dxos/deus-mirror its backup, D176), and when deus/ changed on both sides compiles the
+   github.com/dxos/deus-mirror its backup, D177), and when deus/ changed on both sides compiles the
    merged deus/ into a new seed and checks that it compiles itself to itself.
 
 It prints each decision it renumbered as `D<old> -> D<new>`. Rewrite our own references to those

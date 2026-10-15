@@ -63,7 +63,7 @@ describe('deus CLI replication', () => {
       const stale = deus('push', ...b, '--no-merge');
       expect(stale.code).not.toBe(0);
       expect(stale.stderr).toContain('run `deus pull origin` and `deus merge origin.main`, then push again');
-      // Without --no-merge, the push pulls and merges the remote itself and pushes again (D176).
+      // Without --no-merge, the push pulls and merges the remote itself and pushes again (D177).
       const merged = deus('push', ...b);
       expect(merged.code).toBe(0);
       expect(merged.stderr).toContain('origin moved since the last pull; merging it and pushing again');
@@ -71,7 +71,7 @@ describe('deus CLI replication', () => {
       expect(deus('merge', 'origin.main', ...a).stdout).toMatch(/^Fast-forwarded/);
       expect(deus('view', 'y', ...a).stdout).toContain('def y');
 
-      // Both sides changing one recursive group merge when they edited different members (D176).
+      // Both sides changing one recursive group merge when they edited different members (D177).
       deus(
         'add',
         file(
