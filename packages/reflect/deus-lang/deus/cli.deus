@@ -682,11 +682,29 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
 /-- The DXOS account's R2 endpoint, so a thread needs only the access keys. -/
 def defaultEndpoint : Text := "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com"
 
-/-- `origin` of the toolchain's own codebase when none is configured: the shared remote every thread pulls and pushes. -/
+def toolchainIri : Text := "https://dxos.org/deus/toolchain"
+def toolchainRemote : Text := "r2://agent-artifacts/deus/toolchain"
+
+/-- The public explorer of the toolchain's codebase, refreshed by every push to the shared remote. -/
+def explorerDemo : Text := "explorer-demo"
+
+/--
+  Remotes the toolchain's own codebase has when none is configured: `origin`, the shared remote
+  every thread pulls and pushes, and `explorer-demo`, where its public explorer is hosted.
+-/
 def defaultRemote (dir : Text) (name : Text) : {IO} Option Text :=
   match Project.read dir with
-  | some p => if name == "origin" && p.projectIri == "https://dxos.org/deus/toolchain" then some "r2://agent-artifacts/deus/toolchain" else none
+  | some p =>
+    if p.projectIri != toolchainIri then none
+    else if name == "origin" then some toolchainRemote
+    else if name == explorerDemo then some "r2://agent-artifacts/deus/explorer-demo"
+    else none
   | none => none
+
+/-- Whether `name` reaches the shared toolchain remote, configured or by default. -/
+def isToolchainRemote (dir : Text) (name : Text) : {IO} Bool :=
+  let configured := Option.map Text.trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))
+  Option.getOr (Option.orElse configured (fun _ => defaultRemote dir name)) "" == toolchainRemote
 
 /--
   Runs `body` against the remote `name`: a directory, or `r2://<bucket>/<prefix>` (an
@@ -749,14 +767,17 @@ def push (args : Args) : {IO, Throw Text} Unit :=
     let bundle := Replicate.push dir name branch
     let _ := Replicate.pushAssets dir
     bundle)
-  -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
-  let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
-      let out := dir ++ "/cache/site-" ++ name
-      -- A site published with its console keeps it, on the codebase as pushed (D84).
-      let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir name)) "") then Explorer.console dir out else 0
-      let _ := Explorer.generate dir out
-      some (snd (publishSite dir name out false))
-    else none
+  -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch;
+  -- so does the public explorer of the toolchain, from whichever store pushes to the shared remote.
+  let siteOf := fun (target : Text) =>
+    let out := dir ++ "/cache/site-" ++ target
+    -- A site published with its console keeps it, on the codebase as pushed (D84).
+    let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir target)) "") then Explorer.console dir out else 0
+    let _ := Explorer.generate dir out
+    snd (publishSite dir target out false)
+  let onMain := branch == Codebase.currentBranch dir && branch == "main"
+  let targets := (if IO.exists (siteManifest dir name) then [name] else []) ++ (if onMain && name != explorerDemo && isToolchainRemote dir name then [explorerDemo] else [])
+  let site := if branch == Codebase.currentBranch dir && not (List.isEmpty targets) then some (List.sum (List.map siteOf targets)) else none
   let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
   let siteText := Option.getOr (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site) ""
   match pushed with

@@ -384,4 +384,14 @@ we need feature-maps in codebase in addition to tasks
 
 ---
 
+<<<<<<< HEAD
 make sure to push changes to main git PR as well as the codebase r2
+=======
+
+https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html#v:history hasn't been updated
+
+---
+
+(decision card) Republish on every push
+
+> > > > > > > 33a355516e269e27b2e585b019f12a97555fd155

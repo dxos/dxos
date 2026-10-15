@@ -1,5 +1,23 @@
 # History of main
 
+- `b4d4574fd5` update deus (by merge)
+- `8f83f622dc` history: import 1089 changes
+- `e811e5c581` history: import 1089 changes
+- `2d93c9ff64` task: import from /tmp/tmpz_fan1oe/tasks.sexp
+- `622bd6d819` add /tmp/tmpz_fan1oe/merged/code /tmp/tmpz_fan1oe/merged/specs
+- `7893825340` task: comment on 696086fe (by claude)
+- `db4f9eb668` history: import 1103 changes
+- `5fc5ecf78c` merge #13952's branch: curried lambdas (D149) (by claude)
+- `81e37b7ddb` history: import 1076 changes
+- `3864fd494c` task: import from codebase/tasks.sexp
+- `73e67efac2` update codebase/code codebase/specs
+- `339f7670dc` task: open f308d451 Updating one member of a recursive group leaves dependents pointing at the old group (by claude)
+- `fda461f03d` re-resolve Artifact and Workspace specs to the current Cli group (by claude)
+- `6824aaf040` close 696086fe by #40884fb595 (by claude)
+- `40884fb595` a push to the shared toolchain remote refreshes the public explorer demo (D149) (by claude)
+- `b3eccf8399` history: import 1062 changes
+- `c76e0bd86d` task: import from tasks.sexp
+- `2d7a9fee76` merge #13952's branch: artifact constants (D146-D148) (by claude)
 - `fb5919dc2b` update deus (by merge)
 - `12932fa816` history: import 1076 changes
 - `40f0c9ea7e` history: import 1070 changes
