@@ -208,5 +208,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 198 | 10-15 12:00 | 10m 00s | `85404ae7` | The native CLI builds from `deus/` again after the export left git: `deus explore` 34 s to 3.1 s, the same files (D177, task e8051c5b) |
 | 199 | 10-15 11:48 | 0m 00s | `1d96c726` | DECISIONS and TIMELINE name the tuple-let task by its codebase id (ff933d6a) |
 | 200 | 10-15 12:05 | 10m 00s | this commit | A native CLI build that fails leaves `failed.log` in its cache directory, and every command then warns on stderr that it runs on the JIT, instead of retrying silently. |
+| 201 | 10-15 11:55 | 0m 00s | this commit | Syntax extensions: `notation` declarations add syntax as content-addressed definitions, scoped to a namespace; `deus view` prints code through them and they never change a hash. `React.Jsx` writes React elements as JSX (Syntax.Spec, D179, tasks 407ba227 and 44336375) |
 
-Total from stage 1 to stage 200: 53h 23m.
+Total from stage 1 to stage 201: 53h 23m.
