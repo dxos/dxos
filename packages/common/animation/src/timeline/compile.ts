@@ -7,6 +7,7 @@ import { type MdlBlock, MdlSyntaxError, parseMdl } from '@dxos/deus/parser';
 import { type Graph, type NetworkTemplate, TemplateError, buildGraph, emptyGraph } from '../model/index.ts';
 import { type Diagnostic, type FlowScript, type FlowStep, VIEWS, readFlow } from '../script/index.ts';
 import { boundsOf, circlesOf, resolvePose } from './camera.ts';
+import { compilePackets } from './packets.ts';
 import { matchedPaths, withDescendants } from './select.ts';
 import { type CameraPose, type TimedStep, type Timeline } from './types.ts';
 
@@ -194,5 +195,7 @@ export const compile = (source: string, template: NetworkTemplate, options: Comp
   compileVisibility(timeline, timed, diagnostics);
   compileProps(timeline, timed, diagnostics);
   compileText(timeline, timed);
+  timeline.packets = compilePackets(graph, timed, timeline.duration, seed, diagnostics);
+  timeline.maxTravel = timeline.packets.reduce((max, packet) => Math.max(max, packet.travel), 0);
   return { timeline, diagnostics };
 };
