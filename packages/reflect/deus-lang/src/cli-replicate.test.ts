@@ -29,6 +29,13 @@ describe('deus CLI replication', () => {
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), '--message', 'prelude', ...a);
       expect(deus('push', ...a).stdout).toMatch(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/);
       expect(deus('push', ...a).stdout).toBe('origin already has main.\n');
+      // Only the shared toolchain remote refreshes the public explorer; a toolchain store pushing elsewhere does not.
+      const toolchain = ['--codebase', join(scratch, 'replica-toolchain')];
+      deus('init', '--empty', ...toolchain);
+      deus('project', 'init', 'https://dxos.org/deus/toolchain', ...toolchain);
+      deus('remote', 'add', 'origin', join(scratch, 'remote-toolchain'), ...toolchain);
+      deus('add', file('t.deus', 'def t : Int := 1\n'), ...toolchain);
+      expect(deus('push', ...toolchain)).toMatchObject({ stdout: expect.stringMatching(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/), code: 0 });
       deus('pull', ...b);
       expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
       // Builtin objects travel with the bundle, so the clone types constructor patterns.
