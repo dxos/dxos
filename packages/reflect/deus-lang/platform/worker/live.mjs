@@ -60,7 +60,7 @@ export const live = async (request, env, ctx, project, rest) => {
   if (stored) {
     return page(stored.body);
   }
-  const text = await render(env, project, causal, more);
+  const text = await render(env, ctx, project, causal, more);
   ctx.waitUntil(env.BUCKET.put(key, text, { httpMetadata: { contentType: 'application/json' } }));
   return page(text);
 };
@@ -70,8 +70,21 @@ const page = (body) =>
     headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=31536000, immutable' },
   });
 
-const render = async (env, project, causal, path) => {
+const render = async (env, ctx, project, causal, path) => {
   const files = filesAt(env.BUCKET, project, causal);
+  await warm(files);
+  const before = files.texts.size;
+  try {
+    return await draw(env, files, project, causal, path);
+  } finally {
+    // A cold isolate starts from the newest snapshot of what was read, so it fetches only what changed since.
+    if (files.texts.size > before) {
+      ctx.waitUntil(saveSnapshot(files));
+    }
+  }
+};
+
+const draw = async (env, files, project, causal, path) => {
   // The branches are the bucket's heads (D181), so the explorer lists them as a pull would.
   files.branches = await listAll(env.BUCKET, `${project}/heads/`);
   if (path[0] === 'change') {
@@ -322,4 +335,35 @@ const prefetchHistory = async (files) => {
     }),
   );
   return chain;
+};
+
+/** Where an isolate keeps everything it read for a project, so the next cold one reads it at once. */
+const snapshotKey = (project) => `${project}/live/files.json.gz`;
+
+/** Fills an empty isolate's files from the project's snapshot, when there is one. */
+const warm = async (files) => {
+  if (files.texts.size > 0) {
+    return;
+  }
+  const object = await files.bucket.get(snapshotKey(files.project));
+  if (!object) {
+    return;
+  }
+  const text = await new Response(
+    new Blob([await new Response(object.body).arrayBuffer()]).stream().pipeThrough(new DecompressionStream('gzip')),
+  ).text();
+  for (const [key, value] of JSON.parse(text)) {
+    if (!files.texts.has(key)) {
+      files.texts.set(key, value);
+    }
+  }
+};
+
+/** Writes what the isolate has read for the project: objects never change, so a snapshot is never wrong, only short. */
+const saveSnapshot = async (files) => {
+  const entries = [...files.texts].filter(([, value]) => value !== null);
+  const body = await new Response(
+    new Blob([JSON.stringify(entries)]).stream().pipeThrough(new CompressionStream('gzip')),
+  ).arrayBuffer();
+  await files.bucket.put(snapshotKey(files.project), body, { httpMetadata: { contentType: 'application/gzip' } });
 };
