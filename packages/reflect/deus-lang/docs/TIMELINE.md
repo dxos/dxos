@@ -207,7 +207,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 197 | 10-15 11:50 | 65m 00s | `060df49d` | Git stops holding the codebase: `codebase/` leaves #13952 (D177); push skips held objects, pulls and merges by itself when the remote moved, and merge re-applies our edits inside shared recursive groups; `sync-deus.py` writes changed toolchain definitions into `deus/` and the seed; unused files move to `legacy/` (D178) |
 | 198 | 10-15 12:00 | 10m 00s | `85404ae7` | The native CLI builds from `deus/` again after the export left git: `deus explore` 34 s to 3.1 s, the same files (D177, task e8051c5b) |
 | 199 | 10-15 11:48 | 0m 00s | `1d96c726` | DECISIONS and TIMELINE name the tuple-let task by its codebase id (ff933d6a) |
-| 200 | 10-15 12:05 | 10m 00s | this commit | A native CLI build that fails leaves `failed.log` in its cache directory, and every command then warns on stderr that it runs on the JIT, instead of retrying silently. |
-| 201 | 10-15 11:55 | 0m 00s | this commit | Syntax extensions: `notation` declarations add syntax as content-addressed definitions, scoped to a namespace; `deus view` prints code through them and they never change a hash. `React.Jsx` writes React elements as JSX (Syntax.Spec, D179, tasks 407ba227 and 44336375) |
+| 200 | 10-15 12:05 | 10m 00s | `7b3d6e4e` | A native CLI build that fails leaves `failed.log` in its cache directory, and every command then warns on stderr that it runs on the JIT, instead of retrying silently. |
+| 201 | 10-15 11:55 | 0m 00s | `f1778aed` | Syntax extensions: `notation` declarations add syntax as content-addressed definitions, scoped to a namespace; `deus view` prints code through them and they never change a hash. `React.Jsx` writes React elements as JSX (Syntax.Spec, D179, tasks 407ba227 and 44336375) |
+| 202 | 10-15 12:15 | 1h 25m | this commit | Packs: each bundle gets a binary index, and the Worker merges them into one, so a name or object is found with ranged R2 reads, not whole files. A name lookup takes 64–400 ms warm (was 15–40 s), an object 0.5 s, at 1–7 ms CPU; heads move in R2 so pushes no longer hit D1's daily write limit (D180, D181, Pack.Spec, task dbfa42ad) |
 
-Total from stage 1 to stage 201: 53h 23m.
+Total from stage 1 to stage 202: 54h 48m.

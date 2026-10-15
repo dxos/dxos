@@ -12,25 +12,46 @@ import worker, { type Bucket, type Database, type Env, type Statement } from '..
 
 /** An R2 binding in memory; `list` pages by two, so callers must follow the cursor. */
 export const memoryBucket = (): Bucket & { keys(): string[] } => {
-  const store = new Map<string, { bytes: Uint8Array; type?: string }>();
+  const store = new Map<string, { bytes: Uint8Array; type?: string; etag: string }>();
+  let writes = 0;
   return {
     keys: () => [...store.keys()].sort(),
-    get: async (key) => {
+    get: async (key, options) => {
       const entry = store.get(key);
-      return entry
-        ? {
-            body: entry.bytes,
-            httpMetadata: { contentType: entry.type },
-            text: async () => new TextDecoder().decode(entry.bytes),
-          }
-        : null;
+      if (!entry) {
+        return null;
+      }
+      const offset = options?.range?.offset ?? 0;
+      const length = options?.range?.length ?? entry.bytes.length - offset;
+      const bytes = entry.bytes.subarray(offset, offset + length);
+      return {
+        body: bytes,
+        etag: entry.etag,
+        size: entry.bytes.length,
+        range: options?.range ? { offset, length } : undefined,
+        httpMetadata: { contentType: entry.type },
+        text: async () => new TextDecoder().decode(bytes),
+      };
     },
     head: async (key) => (store.has(key) ? {} : null),
     put: async (key, value, options) => {
+      // Conditional writes as R2 makes them: `If-None-Match: *` creates only, `etagMatches` replaces only that version.
+      const current = store.get(key);
+      const onlyIf = options?.onlyIf;
+      if (
+        onlyIf instanceof Headers
+          ? onlyIf.get('if-none-match') === '*' && current
+          : onlyIf?.etagMatches !== undefined && current?.etag !== onlyIf.etagMatches
+      ) {
+        return null;
+      }
+      const etag = String(++writes);
       store.set(key, {
         bytes: typeof value === 'string' ? new TextEncoder().encode(value) : value,
         type: options?.httpMetadata?.contentType,
+        etag,
       });
+      return { etag };
     },
     delete: async (key) => {
       store.delete(key);
@@ -97,6 +118,42 @@ const claim = (head: string, ...bases: string[]) => ({
 const bundleOf = async (text: string) => {
   const bytes = new TextEncoder().encode(text);
   return { name: `0-${await sha256(bytes)}`, body: new Uint8Array(gzipSync(bytes)) };
+};
+
+/** A pack as Pack.Spec lays it out (D180), built here independently of the CLI's `Pack.index`. */
+const packOf = async (lines: string[]) => {
+  const encoder = new TextEncoder();
+  const text = encoder.encode(`DEUSLN1\n${lines.map((line) => `${line}\n`).join('')}`);
+  const records: { key: number[]; kind: number; offset: number; length: number }[] = [];
+  let offset = encoder.encode('DEUSLN1\n').length;
+  for (const line of lines) {
+    const length = encoder.encode(line).length;
+    const [kind, id] = line.split(' ');
+    if (kind === 'obj' || kind === 'meta') {
+      const keyHex = /^[0-9a-f]{64}$/.test(id) ? id : await sha256(encoder.encode(id));
+      const key = Array.from({ length: 32 }, (_, index) => parseInt(keyHex.slice(index * 2, index * 2 + 2), 16));
+      records.push({ key, kind: kind === 'obj' ? 1 : 2, offset, length });
+    }
+    offset += length + 1;
+  }
+  const order = (left: (typeof records)[number], right: (typeof records)[number]) => {
+    const differs = left.key.findIndex((byte, index) => byte !== right.key[index]);
+    return differs >= 0 ? left.key[differs] - right.key[differs] : left.kind - right.kind;
+  };
+  records.sort(order);
+  const index = new Uint8Array(1024 + 48 * records.length);
+  const view = new DataView(index.buffer);
+  for (let byte = 0; byte < 256; byte++) {
+    view.setUint32(byte * 4, records.filter((record) => record.key[0] <= byte).length);
+  }
+  records.forEach((record, at) => {
+    const start = 1024 + 48 * at;
+    index.set(record.key, start);
+    view.setUint32(start + 36, record.offset);
+    view.setUint32(start + 40, record.length);
+    index[start + 44] = record.kind;
+  });
+  return { text, index };
 };
 
 describe('replication API', () => {
@@ -178,25 +235,25 @@ describe('replication API', () => {
       const bundle = await bundleOf(text);
       return call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: bundle.body, key, headers });
     };
-    const head = () => db.sqlite.prepare('select causal from heads').get();
+    const head = async () => ({ causal: await (await bucket.get('toolchain/heads/main'))?.text() });
     expect((await push('(bundle 0)', {})).status).toBe(428);
     expect((await push('(bundle 0)', { 'x-deus-claim': 'main nonsense -' })).status).toBe(400);
     expect((await push('(bundle 1)', claim(hash('1')))).status).toBe(201);
     expect((await push('(bundle 2)', claim(hash('2'), hash('1')))).status).toBe(201);
-    expect(head()).toEqual({ causal: hash('2') });
+    expect(await head()).toEqual({ causal: hash('2') });
 
     // Another session that pulled before the last push is refused and told what to do; nothing is stored.
     const stale = await push('(bundle 3)', claim(hash('3'), hash('1')));
     expect(stale.status).toBe(409);
     expect(await stale.json()).toMatchObject({ head: hash('2') });
-    expect(bucket.keys()).toHaveLength(2);
+    expect(bucket.keys().filter((key) => key.includes('/bundles/'))).toHaveLength(2);
     // The first push of a branch that already has a head is stale too.
     expect((await push('(bundle 4)', claim(hash('4')))).status).toBe(409);
     // A retried push whose head already moved (its store failed) goes through.
     expect((await push('(bundle 2 again)', claim(hash('2'), hash('1')))).status).toBe(201);
     // A merge of concurrent heads names every head it joins.
     expect((await push('(bundle 5)', claim(hash('5'), hash('9'), hash('2')))).status).toBe(201);
-    expect(head()).toEqual({ causal: hash('5') });
+    expect(await head()).toEqual({ causal: hash('5') });
     // Compaction re-claims existing heads, so a compact key may omit the claim.
     expect(
       (
@@ -209,6 +266,34 @@ describe('replication API', () => {
     ).toBe(201);
   });
 
+  test('heads move in the bucket, so pushes work when D1 takes no writes (D181)', async ({ expect }) => {
+    const key = await insertKey(db, ['push']);
+    // A head D1 recorded before D181 is where the branch is.
+    db.sqlite
+      .prepare('insert into heads (project, branch, causal, updated_at, key_id) values (?, ?, ?, ?, ?)')
+      .run('toolchain', 'main', hash('1'), 0, 'old');
+    // D1's daily row writes are used up: every write fails.
+    const prepare = db.prepare;
+    db.prepare = (sql) => {
+      const statement = prepare(sql);
+      return /^\s*(insert|update)/i.test(sql)
+        ? {
+            ...statement,
+            bind: () => ({ ...statement, run: async () => Promise.reject(new Error('D1_ERROR: row write limit')) }),
+          }
+        : statement;
+    };
+    const push = async (text: string, headers: Record<string, string>) => {
+      const bundle = await bundleOf(text);
+      return call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: bundle.body, key, headers });
+    };
+    expect((await push('(bundle stale)', claim(hash('2')))).status).toBe(409);
+    expect((await push('(bundle 2)', claim(hash('2'), hash('1')))).status).toBe(201);
+    expect(await (await bucket.get('toolchain/heads/main'))?.text()).toBe(hash('2'));
+    expect((await push('(bundle 3)', claim(hash('3'), hash('1')))).status).toBe(409);
+    expect((await push('(bundle 3)', claim(hash('3'), hash('2')))).status).toBe(201);
+  });
+
   test('only a compact key deletes bundles', async ({ expect }) => {
     const bundle = await bundleOf('(bundle a)');
     await call(`/v1/toolchain/bundles/${bundle.name}`, {
@@ -219,9 +304,9 @@ describe('replication API', () => {
     });
     const remove = (key: string) => call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'DELETE', key });
     expect((await remove(await insertKey(db, ['push']))).status).toBe(403);
-    expect(bucket.keys()).toHaveLength(1);
+    expect(bucket.keys()).toEqual([`toolchain/bundles/${bundle.name}`, 'toolchain/heads/main']);
     expect((await remove(await insertKey(db, ['compact']))).status).toBe(200);
-    expect(bucket.keys()).toEqual([]);
+    expect(bucket.keys()).toEqual(['toolchain/heads/main']);
   });
 
   test('files are written under the scope of their folder and listed across pages', async ({ expect }) => {
@@ -292,5 +377,73 @@ describe('replication API', () => {
       body: JSON.stringify({ label: 'x', scopes: ['everything'] }),
     });
     expect(invalid.status).toBe(400);
+  });
+
+  test('finds objects and names through pack indexes (D180)', async ({ expect }) => {
+    const key = await insertKey(db, ['push']);
+    const bundle = await bundleOf('(bundle packed)');
+    const [root, child, part, causal, term, top] = ['1', '2', '3', '4', '5', '6'].map(hash);
+    const pack = await packOf([
+      `branch main ${causal}`,
+      'obj #Option (type "#Option")',
+      `obj ${root} (ns (n "top" (term "${top}")) (sub "A" "${child}"))`,
+      `obj ${child} (ns (part "${part}"))`,
+      `obj ${part} (ns (n "b" (term "${term}")))`,
+      `obj ${causal} (causal (ns "${root}") (parents) (msg "m"))`,
+      `obj ${term} (term "é ✓ \\"quoted\\"")`,
+      `obj ${top} (term 1)`,
+      `obj ${top}.1 (term 2)`,
+      `meta ${term} (meta (doc "ünï"))`,
+    ]);
+    const put = (path: string, body: Uint8Array) => call(`/v1/toolchain/${path}`, { method: 'PUT', body, key });
+    // A pack only describes a bundle the remote holds, and its index goes up last.
+    expect((await put(`packs/${bundle.name}`, pack.text)).status).toBe(409);
+    expect((await put(`bundles/${bundle.name}`, bundle.body)).status).toBe(428);
+    expect(
+      (
+        await call(`/v1/toolchain/bundles/${bundle.name}`, {
+          method: 'PUT',
+          body: bundle.body,
+          key,
+          headers: claim(causal),
+        })
+      ).status,
+    ).toBe(201);
+    expect((await put(`packs/${bundle.name}.idx`, pack.index)).status).toBe(409);
+    expect((await put(`packs/${bundle.name}`, new TextEncoder().encode('(bundle)'))).status).toBe(400);
+    expect((await put(`files/packs/${bundle.name}`, pack.text)).status).toBe(201);
+    expect((await put(`packs/${bundle.name}.idx`, pack.index.subarray(0, 1024 + 47))).status).toBe(400);
+    expect((await put(`packs/${bundle.name}.idx`, pack.index)).status).toBe(201);
+    expect(await (await call('/v1/toolchain/files/packs/')).text()).toBe(`${bundle.name}\n${bundle.name}.idx\n`);
+
+    // Lookups read ranges only: no whole pack or index is fetched.
+    const reads: { key: string; ranged: boolean }[] = [];
+    const get = bucket.get;
+    bucket.get = async (path, options) => {
+      reads.push({ key: path, ranged: options?.range !== undefined });
+      return get(path, options);
+    };
+    expect(await (await call(`/v1/toolchain/objects/${term}`)).text()).toBe('(term "é ✓ \\"quoted\\"")');
+    expect(await (await call(`/v1/toolchain/meta/${term}`)).text()).toBe('(meta (doc "ünï"))');
+    expect(await (await call('/v1/toolchain/objects/%23Option')).text()).toBe('(type "#Option")');
+    expect(await (await call(`/v1/toolchain/objects/${top}.1`)).text()).toBe('(term 2)');
+    expect((await call(`/v1/toolchain/objects/${hash('9')}`)).status).toBe(404);
+    expect(await (await call('/v1/toolchain/names/main/A.b')).json()).toEqual({
+      name: 'A.b',
+      branch: 'main',
+      head: causal,
+      entry: `(term "${term}")`,
+      hash: term,
+      text: '(term "é ✓ \\"quoted\\"")',
+    });
+    expect(await (await call('/v1/toolchain/names/main/top')).json()).toMatchObject({ hash: top, text: '(term 1)' });
+    expect((await call('/v1/toolchain/names/main/A.c')).status).toBe(404);
+    expect(reads.filter((read) => read.key.includes('/packs/') && !read.ranged)).toEqual([]);
+
+    // Any client can read a pack in ranges.
+    const ranged = await call(`/v1/toolchain/packs/${bundle.name}`, { headers: { range: 'bytes=0-6' } });
+    expect(ranged.status).toBe(206);
+    expect(ranged.headers.get('content-range')).toBe(`bytes 0-6/${pack.text.length}`);
+    expect(await ranged.text()).toBe('DEUSLN1');
   });
 });

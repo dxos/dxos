@@ -1,0 +1,566 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// Packs (D180, Pack.Spec): beside each bundle, its objects as line text (`packs/<bundle>`) and a
+// binary index of the lines sorted by hash (`packs/<bundle>.idx`). The Worker merges every pack's
+// index into one combined index (`packindex`), which an isolate keeps in memory, so a lookup is a
+// binary search and one ranged read of the line, however large the codebase.
+
+import { HttpError, authorize, json, listAll, readHead } from './remote.mjs';
+
+/** `<bundle>` or `<bundle>.idx`. */
+const PACK = /^([0-9]{1,3}-[0-9a-f]{64})(\.idx)?$/;
+
+const HASH = /^[0-9a-f]{64}$/;
+
+/** Ids that are not hashes: a builtin (`#Option`) or a recursive group's member (`<hash>.1`). */
+const BUILTIN = /^#[A-Za-z][A-Za-z0-9_.]{0,99}$/;
+const MEMBER = /^[0-9a-f]{64}\.[0-9]{1,6}$/;
+
+const FANOUT = 1024;
+
+const RECORD = 48;
+
+const KINDS = { objects: 1, meta: 2 };
+
+/** How long a pack listing is reused; packs are immutable, so only new ones can be missed. */
+const LIST_SECONDS = 5;
+
+/** Per bucket: the listing, each index's fanout, and recently read lines (both immutable). */
+const state = new WeakMap();
+
+const stateOf = (bucket) => {
+  let entry = state.get(bucket);
+  if (!entry) {
+    entry = { listed: undefined, fanouts: new Map(), lines: new Map() };
+    state.set(bucket, entry);
+  }
+  return entry;
+};
+
+/** `/v1/<project>/packs/…`: list, read with ranges, and write under the `push` scope. */
+export const packs = async (request, env, ctx, project, rest) => {
+  const folder = `${project}/packs/`;
+  if (rest.length === 0 || (rest.length === 1 && rest[0] === '')) {
+    if (request.method === 'POST') {
+      // Adds every listed pack to the combined index: for packs written before it existed.
+      const logged = await authorize(request, env, ctx, 'push', project);
+      const names = (await listAll(env.BUCKET, folder))
+        .filter((name) => name.endsWith('.idx'))
+        .map((name) => name.slice(0, -4));
+      return logged(json({ packs: await mergeCombined(env.BUCKET, project, names) }));
+    }
+    if (request.method !== 'GET') {
+      throw new HttpError(405, 'method not allowed');
+    }
+    return listing(await listAll(env.BUCKET, folder));
+  }
+  const match = rest.length === 1 ? PACK.exec(rest[0]) : null;
+  if (!match) {
+    throw new HttpError(404, 'not a pack name');
+  }
+  const key = folder + rest[0];
+  if (request.method === 'GET') {
+    return read(env.BUCKET, key, request.headers.get('range'));
+  }
+  if (request.method === 'PUT') {
+    const logged = await authorize(request, env, ctx, 'push', project);
+    const [, bundle, index] = match;
+    // A pack only ever describes a bundle the remote holds, so bundles stay the remote's record.
+    if (!(await env.BUCKET.head(`${project}/bundles/${bundle}`))) {
+      throw new HttpError(409, `no bundle ${bundle} for this pack`);
+    }
+    const bytes = new Uint8Array(await request.arrayBuffer());
+    if (index) {
+      if (!(await env.BUCKET.head(folder + bundle))) {
+        throw new HttpError(409, 'the pack goes up before its index');
+      }
+      checkIndex(bytes);
+    } else if (new TextDecoder().decode(bytes.subarray(0, 8)) !== 'DEUSLN1\n') {
+      throw new HttpError(400, 'a pack is line text starting DEUSLN1');
+    }
+    if (await env.BUCKET.head(key)) {
+      return logged(json({ pack: rest[0], stored: false }, 200));
+    }
+    await env.BUCKET.put(key, bytes, {
+      httpMetadata: { contentType: index ? 'application/octet-stream' : 'text/plain; charset=utf-8' },
+    });
+    if (index) {
+      await mergeCombined(env.BUCKET, project, [bundle]);
+    }
+    return logged(json({ pack: rest[0], stored: true }, 201));
+  }
+  throw new HttpError(405, 'method not allowed');
+};
+
+/** Rejects an index whose fanout is not a non-decreasing count of its records. */
+const checkIndex = (bytes) => {
+  if (bytes.length < FANOUT || (bytes.length - FANOUT) % RECORD !== 0) {
+    throw new HttpError(400, 'an index is 1024 fanout bytes and 48-byte records');
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let previous = 0;
+  for (let byte = 0; byte < 256; byte++) {
+    const count = view.getUint32(byte * 4);
+    if (count < previous) {
+      throw new HttpError(400, 'the fanout decreases');
+    }
+    previous = count;
+  }
+  if (previous !== (bytes.length - FANOUT) / RECORD) {
+    throw new HttpError(400, 'the fanout does not count the records');
+  }
+};
+
+/** Parses `bytes=<first>-[<last>]`; other forms (suffixes, several ranges) read the whole file. */
+const parseRange = (header) => {
+  const match = /^bytes=(\d+)-(\d*)$/.exec(header ?? '');
+  if (!match) {
+    return undefined;
+  }
+  const offset = Number(match[1]);
+  return match[2] === '' ? { offset } : { offset, length: Number(match[2]) - offset + 1 };
+};
+
+const read = async (bucket, key, rangeHeader) => {
+  const range = parseRange(rangeHeader);
+  const object = await bucket.get(key, range ? { range } : undefined);
+  if (!object) {
+    throw new HttpError(404, 'no such pack');
+  }
+  const headers = {
+    'content-type': object.httpMetadata?.contentType ?? 'application/octet-stream',
+    // A pack never changes once its index is listed, so a cached copy is always right.
+    'cache-control': 'public, max-age=31536000, immutable',
+    'accept-ranges': 'bytes',
+  };
+  if (!range) {
+    return new Response(object.body, { headers });
+  }
+  const offset = object.range?.offset ?? range.offset;
+  const length = object.range?.length ?? range.length ?? object.size - offset;
+  return new Response(object.body, {
+    status: 206,
+    headers: { ...headers, 'content-range': `bytes ${offset}-${offset + length - 1}/${object.size}` },
+  });
+};
+
+const listing = (names) =>
+  new Response(names.map((name) => `${name}\n`).join(''), {
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+  });
+
+/** The bytes `[offset, offset + length)` of `key`. */
+const bytesAt = async (bucket, key, offset, length) => {
+  const object = await bucket.get(
+    key,
+    length === undefined && offset === 0 ? undefined : { range: { offset, length } },
+  );
+  if (!object) {
+    throw new HttpError(404, `no ${key}`);
+  }
+  return new Uint8Array(await new Response(object.body).arrayBuffer());
+};
+
+/** The bundles whose pack is complete (its index is listed), listed at most every few seconds. */
+const packed = async (bucket, project) => {
+  const entry = stateOf(bucket);
+  const cached = entry.listed?.get(project);
+  if (cached && cached.at > Date.now() - LIST_SECONDS * 1000) {
+    return cached.names;
+  }
+  const names = (await listAll(bucket, `${project}/packs/`))
+    .filter((name) => name.endsWith('.idx'))
+    .map((name) => name.slice(0, -4));
+  entry.listed ??= new Map();
+  entry.listed.set(project, { at: Date.now(), names });
+  return names;
+};
+
+const fanoutOf = async (bucket, indexKey) => {
+  const { fanouts } = stateOf(bucket);
+  let fanout = fanouts.get(indexKey);
+  if (!fanout) {
+    const bytes = await bytesAt(bucket, indexKey, 0, FANOUT);
+    fanout = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    fanouts.set(indexKey, fanout);
+  }
+  return fanout;
+};
+
+const compareKey = (records, at, key) => {
+  for (let index = 0; index < 32; index++) {
+    const diff = records[at + index] - key[index];
+    if (diff !== 0) {
+      return diff;
+    }
+  }
+  return 0;
+};
+
+/** The index key of an object id: a hash's bytes, or any other id's SHA-256. */
+const keyOf = async (id) => {
+  const hexKey = HASH.test(id)
+    ? id
+    : Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id))), (byte) =>
+        byte.toString(16).padStart(2, '0'),
+      ).join('');
+  return Uint8Array.from({ length: 32 }, (_, index) => parseInt(hexKey.slice(index * 2, index * 2 + 2), 16));
+};
+
+/** The record for (`key`, `kind`) among `count` sorted records in `records`, as its byte offset there, or -1. */
+const search = (records, first, last, key, kind) => {
+  while (first <= last) {
+    const middle = (first + last) >> 1;
+    const at = middle * RECORD;
+    const order = compareKey(records, at, key) || records[at + 44] - kind;
+    if (order < 0) {
+      first = middle + 1;
+    } else if (order > 0) {
+      last = middle - 1;
+    } else {
+      return at;
+    }
+  }
+  return -1;
+};
+
+/** How many lines an isolate keeps; namespace nodes near the root are read by nearly every lookup. */
+const LINE_CACHE = 4096;
+
+/** `obj <id> <text>` without its first two fields, kept in the isolate since packs never change. */
+const lineAt = async (bucket, project, bundle, offset, length) => {
+  const { lines } = stateOf(bucket);
+  const cacheKey = `${project}/${bundle}/${offset}`;
+  const cached = lines.get(cacheKey);
+  if (cached !== undefined) {
+    lines.delete(cacheKey);
+    lines.set(cacheKey, cached);
+    return cached;
+  }
+  const line = new TextDecoder().decode(await bytesAt(bucket, `${project}/packs/${bundle}`, offset, length));
+  const text = line.slice(line.indexOf(' ', line.indexOf(' ') + 1) + 1);
+  lines.set(cacheKey, text);
+  if (lines.size > LINE_CACHE) {
+    lines.delete(lines.keys().next().value);
+  }
+  return text;
+};
+
+//
+// The combined index: every pack's records in one file, so a lookup searches memory and reads one line.
+//
+
+const COMBINED = (project) => `${project}/packindex`;
+
+const MAGIC = 'DEUSIX1\n';
+
+/**
+ * Parses the combined index: `DEUSIX1\n`, a u32 byte length and that many bytes of pack names (one
+ * per line; a record's ordinal is its pack's line), the fanout, then 48-byte records sorted by key
+ * and kind: key (32), ordinal (u32), offset (u32), length (u32), kind (1), 3 zero bytes.
+ */
+const parseCombined = (bytes, etag) => {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const namesLength = view.getUint32(8);
+  const names = new TextDecoder()
+    .decode(bytes.subarray(12, 12 + namesLength))
+    .split('\n')
+    .filter(Boolean);
+  const fanoutAt = 12 + namesLength;
+  return {
+    etag,
+    names,
+    fanout: new DataView(bytes.buffer, bytes.byteOffset + fanoutAt, FANOUT),
+    records: bytes.subarray(fanoutAt + FANOUT),
+  };
+};
+
+const encodeCombined = (names, records) => {
+  const namesBytes = new TextEncoder().encode(names.map((name) => `${name}\n`).join(''));
+  const out = new Uint8Array(12 + namesBytes.length + FANOUT + records.length);
+  out.set(new TextEncoder().encode(MAGIC), 0);
+  const view = new DataView(out.buffer);
+  view.setUint32(8, namesBytes.length);
+  out.set(namesBytes, 12);
+  const fanoutAt = 12 + namesBytes.length;
+  const counts = new Uint32Array(256);
+  for (let at = 0; at < records.length; at += RECORD) {
+    counts[records[at]]++;
+  }
+  let total = 0;
+  for (let byte = 0; byte < 256; byte++) {
+    total += counts[byte];
+    view.setUint32(fanoutAt + byte * 4, total);
+  }
+  out.set(records, fanoutAt + FANOUT);
+  return out;
+};
+
+/** The combined index, reused while its etag is unchanged and rechecked every few seconds. */
+const combined = async (bucket, project) => {
+  const entry = stateOf(bucket);
+  entry.combined ??= new Map();
+  const cached = entry.combined.get(project);
+  if (cached && cached.at > Date.now() - LIST_SECONDS * 1000) {
+    return cached.index;
+  }
+  const head = await bucket.head(COMBINED(project));
+  let index = cached?.index;
+  if (!head) {
+    index = undefined;
+  } else if (!index || index.etag !== head.etag) {
+    const object = await bucket.get(COMBINED(project));
+    index = object
+      ? parseCombined(new Uint8Array(await new Response(object.body).arrayBuffer()), object.etag)
+      : undefined;
+  }
+  entry.combined.set(project, { at: Date.now(), index });
+  return index;
+};
+
+/**
+ * Adds the packs of `bundles` to the combined index, with a conditional write so concurrent merges
+ * retry instead of losing each other's packs. Returns how many packs the index then holds.
+ */
+export const mergeCombined = async (bucket, project, bundles) => {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const object = await bucket.get(COMBINED(project));
+    const current = object
+      ? parseCombined(new Uint8Array(await new Response(object.body).arrayBuffer()), object.etag)
+      : { names: [], records: new Uint8Array(0) };
+    const todo = [...new Set(bundles)].filter((bundle) => !current.names.includes(bundle));
+    if (todo.length === 0) {
+      return current.names.length;
+    }
+    const names = [...current.names];
+    const added = [];
+    for (const bundle of todo) {
+      const ordinal = names.push(bundle) - 1;
+      const index = await bytesAt(bucket, `${project}/packs/${bundle}.idx`, 0, undefined);
+      const view = new DataView(index.buffer, index.byteOffset, index.byteLength);
+      for (let at = FANOUT; at < index.length; at += RECORD) {
+        if (view.getUint32(at + 32) !== 0) {
+          throw new HttpError(500, `pack ${bundle} is past 4 GB`);
+        }
+        const record = new Uint8Array(RECORD);
+        record.set(index.subarray(at, at + 32));
+        const out = new DataView(record.buffer);
+        out.setUint32(32, ordinal);
+        out.setUint32(36, view.getUint32(at + 36));
+        out.setUint32(40, view.getUint32(at + 40));
+        record[44] = index[at + 44];
+        added.push(record);
+      }
+    }
+    const order = (left, right) => compareKey(left, 0, right) || left[44] - right[44];
+    added.sort(order);
+    // Both lists are sorted, so one merge pass keeps the whole index sorted.
+    const merged = new Uint8Array(current.records.length + added.length * RECORD);
+    let from = 0;
+    let next = 0;
+    let to = 0;
+    while (from < current.records.length || next < added.length) {
+      const old = from < current.records.length ? current.records.subarray(from, from + RECORD) : undefined;
+      if (old && (next >= added.length || order(old, added[next]) <= 0)) {
+        merged.set(old, to);
+        from += RECORD;
+      } else {
+        merged.set(added[next], to);
+        next++;
+      }
+      to += RECORD;
+    }
+    const written = await bucket.put(COMBINED(project), encodeCombined(names, merged), {
+      onlyIf: object ? { etagMatches: object.etag } : new Headers({ 'if-none-match': '*' }),
+      httpMetadata: { contentType: 'application/octet-stream' },
+    });
+    if (written !== null) {
+      stateOf(bucket).combined?.delete(project);
+      return names.length;
+    }
+  }
+  throw new HttpError(503, 'the combined pack index kept changing; try again');
+};
+
+/** The text of object `id` (`kind` 1) or its metadata (2) in any pack of the project, or undefined. */
+export const lookup = async (bucket, project, id, kind) => {
+  const key = await keyOf(id);
+  const [index, listed] = await Promise.all([combined(bucket, project), packed(bucket, project)]);
+  if (index) {
+    const low = key[0] === 0 ? 0 : index.fanout.getUint32((key[0] - 1) * 4);
+    const at = search(index.records, low, index.fanout.getUint32(key[0] * 4) - 1, key, kind);
+    if (at >= 0) {
+      const view = new DataView(index.records.buffer, index.records.byteOffset + at, RECORD);
+      return lineAt(bucket, project, index.names[view.getUint32(32)], view.getUint32(36), view.getUint32(40));
+    }
+  }
+  // Packs the combined index does not hold yet are searched one by one, all at once.
+  const covered = new Set(index?.names ?? []);
+  const found = await Promise.all(
+    listed
+      .filter((bundle) => !covered.has(bundle))
+      .map(async (bundle) => {
+        const indexKey = `${project}/packs/${bundle}.idx`;
+        const fanout = await fanoutOf(bucket, indexKey);
+        const low = key[0] === 0 ? 0 : fanout.getUint32((key[0] - 1) * 4);
+        const high = fanout.getUint32(key[0] * 4);
+        if (low === high) {
+          return undefined;
+        }
+        const records = await bytesAt(bucket, indexKey, FANOUT + low * RECORD, (high - low) * RECORD);
+        const at = search(records, 0, high - low - 1, key, kind);
+        if (at < 0) {
+          return undefined;
+        }
+        const view = new DataView(records.buffer, records.byteOffset + at, RECORD);
+        return lineAt(bucket, project, bundle, view.getUint32(32) * 2 ** 32 + view.getUint32(36), view.getUint32(40));
+      }),
+  );
+  return found.find((text) => text !== undefined);
+};
+
+/** `/v1/<project>/objects/<id>` and `/v1/<project>/meta/<id>`: one object's canonical text. */
+export const objects = async (request, env, project, area, rest) => {
+  const id = decodeURIComponent(rest.join('/'));
+  if (request.method !== 'GET') {
+    throw new HttpError(405, 'method not allowed');
+  }
+  if (rest.length !== 1 || !(HASH.test(id) || BUILTIN.test(id) || MEMBER.test(id))) {
+    throw new HttpError(404, 'an object is named by its hash or a builtin id');
+  }
+  const text = await lookup(env.BUCKET, project, id, KINDS[area]);
+  if (text === undefined) {
+    throw new HttpError(404, `no ${area === 'meta' ? 'metadata' : 'object'} ${id} in this project's packs`);
+  }
+  return new Response(text, {
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=31536000, immutable' },
+  });
+};
+
+//
+// Names: a branch head's namespace tree, walked object by object.
+//
+
+/** Reads one canonical S-expression into nested arrays; strings become `{ s }`, symbols stay strings. */
+export const parseSexp = (text) => {
+  let at = 0;
+  const skip = () => {
+    while (at < text.length && /\s/.test(text[at])) {
+      at++;
+    }
+  };
+  const value = () => {
+    skip();
+    const char = text[at];
+    if (char === '(') {
+      at++;
+      const items = [];
+      skip();
+      while (text[at] !== ')') {
+        if (at >= text.length) {
+          throw new HttpError(500, 'an object ends inside a list');
+        }
+        items.push(value());
+        skip();
+      }
+      at++;
+      return items;
+    }
+    if (char === '"') {
+      let out = '';
+      at++;
+      while (text[at] !== '"') {
+        if (text[at] === '\\') {
+          const next = text[at + 1];
+          if (next === 'u') {
+            out += String.fromCharCode(parseInt(text.slice(at + 2, at + 6), 16));
+            at += 6;
+            continue;
+          }
+          out += { n: '\n', t: '\t', r: '\r' }[next] ?? next;
+          at += 2;
+          continue;
+        }
+        out += text[at++];
+      }
+      at++;
+      return { s: out };
+    }
+    const start = at;
+    while (at < text.length && !/[\s()"]/.test(text[at])) {
+      at++;
+    }
+    return text.slice(start, at);
+  };
+  return value();
+};
+
+const fieldOf = (form, name) => form.find((item) => Array.isArray(item) && item[0] === name);
+
+/** A namespace node's items with its parts expanded, as `Codebase.nodeItems` reads them. */
+const nodeItems = async (bucket, project, hash) => {
+  const text = await lookup(bucket, project, hash, 1);
+  if (text === undefined) {
+    throw new HttpError(404, `missing namespace node ${hash}`);
+  }
+  // Parts are read all at once: one after another, a large node costs a round trip per part.
+  const expanded = await Promise.all(
+    parseSexp(text)
+      .slice(1)
+      .map((item) => (Array.isArray(item) && item[0] === 'part' ? nodeItems(bucket, project, item[1].s) : [item])),
+  );
+  return expanded.flat();
+};
+
+/** A full name's entry under namespace node `hash`, reading only the nodes on its path (`Codebase.lookupName`). */
+const entryOf = async (bucket, project, hash, name) => {
+  const items = await nodeItems(bucket, project, hash);
+  const entry = items.find((item) => item[0] === 'n' && item[1]?.s === name);
+  if (entry) {
+    return entry[2];
+  }
+  // Split as `Codebase.splitName` does: at the first dot after the first character, with a rest.
+  const dot = name.indexOf('.', 1);
+  const child =
+    dot >= 1 && dot + 1 < name.length && items.find((item) => item[0] === 'sub' && item[1]?.s === name.slice(0, dot));
+  return child ? entryOf(bucket, project, child[2].s, name.slice(dot + 1)) : undefined;
+};
+
+/** Prints an entry back as canonical text, as the snapshot holds it. */
+const printSexp = (form) =>
+  Array.isArray(form) ? `(${form.map(printSexp).join(' ')})` : typeof form === 'object' ? JSON.stringify(form.s) : form;
+
+/** `/v1/<project>/names/<branch>/<Name>`: the entry, hash and text of a name at the branch's head. */
+export const names = async (request, env, project, rest) => {
+  if (request.method !== 'GET') {
+    throw new HttpError(405, 'method not allowed');
+  }
+  const [branch, name] = rest.map(decodeURIComponent);
+  if (rest.length !== 2 || !branch || !name) {
+    throw new HttpError(404, 'a name is looked up as /names/<branch>/<Name>');
+  }
+  const head = await readHead(env, project, branch);
+  if (!head) {
+    throw new HttpError(404, `no branch ${branch}`);
+  }
+  const causal = await lookup(env.BUCKET, project, head.causal, 1);
+  if (causal === undefined) {
+    throw new HttpError(404, `the head ${head.causal} is in no pack yet`);
+  }
+  const snapshot = fieldOf(parseSexp(causal).slice(1), 'ns')?.[1]?.s;
+  const entry = snapshot && (await entryOf(env.BUCKET, project, snapshot, name));
+  if (!entry) {
+    throw new HttpError(404, `no ${name} on ${branch}`);
+  }
+  const hash = entry[1]?.s;
+  return json({
+    name,
+    branch,
+    head: head.causal,
+    entry: printSexp(entry),
+    hash,
+    text: hash ? ((await lookup(env.BUCKET, project, hash, 1)) ?? null) : null,
+  });
+};

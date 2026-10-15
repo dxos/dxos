@@ -562,3 +562,7 @@ how do we make those nested matches look nice?
 ---
 
 what about supporting syntax extensions the way lean already does so? then we can have dsls for JS feats, JSX
+
+---
+
+focus on codebase format -- efficient binary format to lookup terms and be able to skip stuff and read with ranged reads on r2 to not fetch whole files

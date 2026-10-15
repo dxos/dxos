@@ -45,6 +45,10 @@ export default {
         return await asset(env, url);
       }
     } catch (error) {
+      if (!(error instanceof HttpError)) {
+        // Shown by `wrangler tail`; the client only learns that the Worker failed.
+        console.error(error);
+      }
       return json(
         { error: error instanceof HttpError ? error.message : 'internal error' },
         error instanceof HttpError ? error.status : 500,
