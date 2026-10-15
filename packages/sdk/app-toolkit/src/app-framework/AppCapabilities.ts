@@ -313,6 +313,29 @@ export const AiModelResolver = Capability$.make<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
 >()('org.dxos.app-framework.capability.aiModelResolver');
 
+/** Someone other than a contact whom a space's members panel can add, e.g. one of your agents. */
+export type Invitee = Readonly<{
+  /** Unique within its source; never an identity key. */
+  key: string;
+  label: string;
+}>;
+
+/**
+ * Invitees beside contacts, offered by the contact picker of a space's members panel. Agents come this way, since
+ * adding one is more than admitting its identity: it is registered with EDGE and gets a presence in the space.
+ */
+export type InviteeSource = Readonly<{
+  /** Who `space` can add; listed again after each add. */
+  list: (space: Space) => Effect$.Effect<readonly Invitee[], never, Capability$.Service>;
+  /** Adds one of them to `space`. */
+  add: (space: Space, key: string) => Effect$.Effect<void, Error, Capability$.Service | Operation.Service>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const InviteeSource = Capability$.make<InviteeSource>()('org.dxos.app-toolkit.capability.inviteeSource');
+
 export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
 /**

@@ -6,6 +6,10 @@ import { describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { PublicKey } from '@dxos/keys';
+import { createBuf, fromPublicKey } from '@dxos/protocols/buf';
+import { SpaceMemberSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Expando } from '@dxos/schema';
 
 import * as AppSpace from './AppSpace.ts';
@@ -33,6 +37,21 @@ describe('space tags', () => {
   test('isLegacyDefaultSpace matches the deprecated personal tag', ({ expect }) => {
     expect(AppSpace.isLegacyDefaultSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
     expect(AppSpace.isLegacyDefaultSpace(makeSpace([]))).toBe(false);
+  });
+});
+
+describe('agent identities', () => {
+  test("an agent space's owner is an agent, which the contact picker leaves to its invitee source", ({ expect }) => {
+    const agent = PublicKey.random();
+    const admin = PublicKey.random();
+    const member = (key: PublicKey, role: SpaceMember_Role) =>
+      createBuf(SpaceMemberSchema, { identity: { identityKey: fromPublicKey(key) }, role });
+    const kai = {
+      tags: [AppSpace.AGENT_SPACE_TAG],
+      members: { get: () => [member(agent, SpaceMember_Role.OWNER), member(admin, SpaceMember_Role.ADMIN)] },
+    };
+    const team = { tags: [], members: { get: () => [member(admin, SpaceMember_Role.OWNER)] } };
+    expect(AppSpace.agentIdentityKeys([kai, team]).map((key) => key.toHex())).toEqual([agent.toHex()]);
   });
 });
 
