@@ -37,6 +37,23 @@ test Codebase.Spec.codeMayNotDependOnTests := crossingsOf (Batch.mk
   []
   []) == ["A.f (code) -> T.t (tests)"]
 
+/-- A comment by `author` saying `note`. -/
+def Codebase.Spec.comment (author : Text) (note : Text) : Comment := Comment.mk author note "1" []
+
+/-- R-14: comments added on both sides to one thread are all kept, ours first. -/
+test Codebase.Spec.commentThreadsMergeAsUnions := inStore (fun dir => mergedThreads
+  dir
+  [("def:x", [Spec.comment "a" "one"])]
+  [("def:x", [Spec.comment "a" "one", Spec.comment "b" "two"])]
+  [("def:x", [Spec.comment "a" "one", Spec.comment "c" "three"])] == [("def:x", ["one", "two", "three"])])
+
+/-- R-14: a thread only one side has, or only one side changed, takes that side. -/
+test Codebase.Spec.commentThreadsTakeTheChangedSide := inStore (fun dir => mergedThreads
+  dir
+  [("def:x", [Spec.comment "a" "one"])]
+  [("def:x", [Spec.comment "a" "one"])]
+  [("def:x", [Spec.comment "a" "one", Spec.comment "c" "three"]), ("def:y", [Spec.comment "c" "four"])] == [("def:x", ["one", "three"]), ("def:y", ["four"])])
+
 /-- `source` as a batch, or the error compiling it. -/
 def Codebase.Spec.compiles (source : Text) : Result Text Batch := try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "off" [parseFile "t.deus" source])
 
@@ -118,6 +135,14 @@ def Codebase.Spec.merged (b : Task) (o : Task) (t : Task) : Result (List Text) (
   match mergeTask b o t with
   | Result.ok m => Result.ok (m.title, m.state, m.labels)
   | Result.err fields => Result.err fields
+
+/-- The threads `Comments.merge` gives for `base`, `ours` and `theirs`, each a map from subject to its comments. -/
+def Codebase.Spec.mergedThreads (dir : Text) (base : List (Text, List Comment)) (ours : List (Text, List Comment)) (theirs : List (Text, List Comment)) : {IO, Throw Text} List (Text, List Text) :=
+  let stored := fun threads => Map.fromList (List.map (fun pair => (fst pair, Codebase.put dir (threadToSexp (snd pair)))) threads)
+  let merged := Comments.merge dir (stored base) (stored ours) (stored theirs)
+  List.map
+    (fun pair => (fst pair, List.map (fun c => c.note) (Comments.read dir (snd pair))))
+    (Map.toList (Comments.snapshotOf dir (Causal.mk "" [] "" "" "" merged)))
 
 /-- A namespace whose entries are terms named by the hash of their name. -/
 def Codebase.Spec.namespaceOf (names : List Text) : Map Text Entry := Map.fromList (List.map (fun n => (n, Entry.term (Text.sha256 n))) names)

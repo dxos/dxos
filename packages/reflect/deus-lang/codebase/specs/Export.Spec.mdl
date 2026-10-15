@@ -71,6 +71,11 @@ req R-5: exporting twice writes the same files
   by: Export.Spec.exportIsStable
 ```
 
+```mdl
+req R-6: histories imported more than once, as a merge imports both sides', export each change once
+  by: Export.Spec.historiesMergeAsSets
+```
+
 ## Laws
 
 Each law builds a codebase in the deterministic simulation, exports it, restores the export into a

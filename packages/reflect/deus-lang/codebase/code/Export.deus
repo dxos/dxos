@@ -1,12 +1,25 @@
 /-- Runs a CLI command against a simulated codebase; its output is discarded. -/
 def Export.Spec.deus (dir : Text) (words : List Text) (command : Args -> {IO, Throw Text} Unit) : {IO, Throw Text} Unit := command (parseArgs (words ++ ["--codebase", dir, "--quiet"]))
 
+/-- The `(entry …)` lines of a `history.sexp`. -/
+def Export.Spec.entries (path : Text) : {IO} List Text := List.filter (fun l => startsWith "(entry" l) (Text.split (getOr (IO.readFile path) "") "\n")
+
 test Export.Spec.exportIsStable := inStore (fun _ =>
   roundTrip Spec.sample specSample
   let files := fun u => List.map (fun f => (f, IO.readFile ("out/code/" ++ f))) (IO.listDir "out/code")
   let first := files ()
   Export.write "cb" "out"
   first == files () && not (List.isEmpty first))
+
+/-- R-6: importing a history twice, as a merge imports both sides', exports each change once. -/
+test Export.Spec.historiesMergeAsSets := inStore (fun _ =>
+  roundTrip Spec.sample specSample
+  importHistory "cb2" "out/history.sexp"
+  importHistory "cb2" "out/history.sexp"
+  Export.write "cb2" "out2"
+  let ours := Spec.entries "out/history.sexp"
+  let merged := Spec.entries "out2/history.sexp"
+  not (List.isEmpty ours) && List.all (fun l => List.length (List.filter (fun m => m == l) merged) == 1) ours)
 
 test Export.Spec.namesUnnamedCallees := inStore (fun _ =>
   IO.mkdirp "src"

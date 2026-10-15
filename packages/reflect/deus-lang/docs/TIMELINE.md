@@ -149,6 +149,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 139 | 10-15 03:25 | 45m 00s | `5ca2594b` | Native C: a definition with no parameters is a constant computed once and kept immortal, so a constant `Ref` is one cell; constructors and operations used as values become lambdas; the abort analysis is linear (toolchain build from 10+ min to 40 s); `examples/constants.deus` in the C and wasm tests (D127); task 60e88be8 filed for IO host operations |
 | 140 | 10-15 03:35 | 25m 00s | `08744427` | a field name two structures share resolves by the receiver's inferred type, so structures no longer need prefixed field names (D128, Checking.Spec R-8, task 31d3c1cd); spec first, three theorems red before the fix; hashes are unchanged; `merge-base.py` merges tasks task by task, since importing both sides' tasks in turn had reverted 908495a0 and 31d3c1cd |
 | 141 | 10-15 03:40 | 15m 00s | `20c090c7` | Native C: `IO` operations no handler takes are performed by the C runtime, and a program of `Unit` builds to a command (D129); `examples/command.deus` (wc, word frequency, files, `exec`, `exit`) agrees with `deus run`, 17x faster on word frequency; task 60e88be8 left open for `Code.run` |
-| 142 | 10-15 03:55 | 20m 00s | this commit | specs name 134 more public definitions in api blocks, each type checked by `deus mdl`; `deus mdl --coverage` reports 39 (was 173), all in Explorer.Spec and WasmEquality.Spec (task 8d6df186) |
+| 142 | 10-15 03:55 | 20m 00s | `a041d369` | specs name 134 more public definitions in api blocks, each type checked by `deus mdl`; `deus mdl --coverage` reports 39 (was 173), all in Explorer.Spec and WasmEquality.Spec (task 8d6df186) |
+| 143 | 10-15 04:10 | 15m 00s | this commit | laws for comment-thread merges (Codebase.Spec R-14) and history imports (Export.Spec R-6), which describe what merges already do (task dc22728a) |
 
-Total from stage 1 to stage 142: 27h 22m.
+Total from stage 1 to stage 143: 27h 37m.

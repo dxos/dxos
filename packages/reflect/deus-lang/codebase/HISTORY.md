@@ -1,5 +1,8 @@
 # History of main
 
+- `dc4eacbf29` task: comment on dc22728a
+- `e13eed389e` task: set dc22728a state
+- `00e007e47f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/export.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Export.Spec.mdl (by claude)
 - `7c437fa2f3` history: import 854 changes (by merge)
 - `38b5a5a4bd` history: import 854 changes
 - `bc05359a9b` task: import from /tmp/tmp355x44qi/tasks.sexp

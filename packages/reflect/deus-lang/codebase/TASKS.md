@@ -289,12 +289,6 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 
 Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metadata; the explorer lists blocks only.
 
-## Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (`dc22728a`)
-
-- state: todo
-- priority: none
-- labels: spec, codebase
-
 ## Name the 39 public definitions deus mdl --coverage still reports, in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm) (`8d6df186`)
 
 - state: todo
@@ -1454,6 +1448,14 @@ History rows link nowhere; a change page could list the definitions it added or 
 - links change #e2a4045a8a
 
 inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
+
+## Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (`dc22728a`)
+
+- state: done
+- priority: none
+- labels: spec, codebase
+
+> someone: Done: Codebase.Spec R-14 (comment threads merge as unions; two sim tests) and Export.Spec R-6 (a history imported twice exports each change once). Both describe existing behaviour: no code change.
 
 ## Task changes do not record who made them as provenance (`3d6508e4`)
 

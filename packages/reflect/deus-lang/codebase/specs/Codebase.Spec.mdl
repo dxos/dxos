@@ -175,6 +175,11 @@ req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```
 
+```mdl
+req R-14: comment threads merge as unions: a thread one side changed takes that side, and comments both sides added are all kept, ours first
+  by: Codebase.Spec.commentThreadsMergeAsUnions | Codebase.Spec.commentThreadsTakeTheChangedSide
+```
+
 ## Layers
 
 ```mdl
