@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import { type DataFlowSpec, createDataFlowScene, layoutDataFlow } from './layout.ts';
+import { type DataFlowSpec, createDataFlowScene, layoutDataFlow, partitionHub } from './layout.ts';
 import {
   createRandom,
   generateMolecule,
@@ -17,6 +17,7 @@ import {
   hexToPoint,
   pointToHex,
 } from './molecule.ts';
+import { planSplit } from './morph.ts';
 import { DataFlowSimulation } from './simulation.ts';
 
 const SPEC: DataFlowSpec = {
@@ -449,6 +450,53 @@ describe('simulation', () => {
     run(first, 10);
     run(second, 10);
     expect(second.bodies).toEqual(first.bodies);
+  });
+
+  test('splits the hub in place, moving its clusters whole into the new buckets', ({ expect }) => {
+    const layout = layoutDataFlow({ ...SPEC, hub: { label: 'Hub', partitions: 1 } });
+    const simulation = new DataFlowSimulation(layout, { seed: 4, warmup: 40 });
+    const target = partitionHub(layout.hub, 3);
+    const before = simulation.frame();
+    const plan = planSplit(layout.hub, target, before.bodies, before.bonds, layout.hubGrid.spacing);
+    expect(plan.size).toBeGreaterThan(0);
+    simulation.split(target, plan);
+
+    // A cluster lies wholly inside one bucket: no molecule, and no bond, crosses between two.
+    const buckets = target.buckets ?? [];
+    const bucketOf = (point: { x: number; y: number }) =>
+      buckets.findIndex(
+        (bucket) =>
+          point.x >= bucket.x &&
+          point.x <= bucket.x + bucket.width &&
+          point.y >= bucket.y &&
+          point.y <= bucket.y + bucket.height,
+      );
+    const check = () => {
+      const { bodies, bonds } = simulation.frame();
+      for (const body of bodies.filter((body) => body.zone === 'hub' && body.phase === 'docked')) {
+        const homes = new Set(
+          body.offsets.map((offset) => bucketOf({ x: body.position.x + offset.x, y: body.position.y + offset.y })),
+        );
+        expect(homes.size).toBe(1);
+        expect(homes.has(-1)).toBe(false);
+      }
+      // Every bond joins two atoms that are there: none is left dangling where a molecule used to be.
+      const atoms = bodies
+        .filter((body) => body.zone === 'hub')
+        .flatMap((body) =>
+          body.offsets.map((offset) => ({ x: body.position.x + offset.x, y: body.position.y + offset.y })),
+        );
+      const atomAt = (point: { x: number; y: number }) =>
+        atoms.some((atom) => Math.hypot(atom.x - point.x, atom.y - point.y) < 1);
+      for (const bond of bonds.filter((bond) => bond.zone === 'hub' && bond.opacity > 0)) {
+        expect(bucketOf(bond.from)).toBe(bucketOf(bond.to));
+        expect(atomAt(bond.from) && atomAt(bond.to)).toBe(true);
+      }
+    };
+    check();
+    // What arrives afterwards lands in the buckets too.
+    run(simulation, 30);
+    check();
   });
 
   test('clamps a long frame step', () => {

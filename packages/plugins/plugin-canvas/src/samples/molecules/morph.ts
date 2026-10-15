@@ -6,7 +6,15 @@ import { type Block, type Rect } from './layout.ts';
 import { type Body, type LatticeBond } from './simulation.ts';
 
 /** A one-bucket hub part way to its partitioned `target`: `progress` runs from 0 (as laid out) to 1 (the target). */
-export type HubMorph = { target: Block; progress: number };
+export type HubMorph = {
+  target: Block;
+  progress: number;
+  /**
+   * The split already made in the simulation, by this plan: its molecules sit in their new places and are drawn sliding
+   * in from their old ones. Unset, the morph only redraws a held frame, planning the split itself.
+   */
+  applied?: ReadonlyMap<string, SplitMove>;
+};
 
 type Point = { x: number; y: number };
 
@@ -19,9 +27,12 @@ const mixRect = (from: Rect, to: Rect, progress: number): Rect => ({
   height: mix(from.height, to.height, progress),
 });
 
+/** The space a one-bucket hub's lattice fills: its one bucket when laid out partitioned, else its well. */
+const regionOf = (hub: Block): Rect => hub.buckets?.[0] ?? hub.well;
+
 /** Where each of the target's buckets starts: the well cut into equal pieces with no frame between them. */
 const startBuckets = (hub: Block, { target }: HubMorph): Rect[] => {
-  const { well } = hub;
+  const well = regionOf(hub);
   const buckets = target.buckets ?? [];
   const width = well.width / buckets.length;
   return buckets.map((_, index) => ({ ...well, x: well.x + index * width, width }));
@@ -85,7 +96,8 @@ export const planSplit = (
     return { ids: members.map((body) => body.id), left, right, centre: (left + right) / 2 };
   });
 
-  const middle = hub.well.x + hub.well.width / 2;
+  const region = regionOf(hub);
+  const middle = region.x + region.width / 2;
   const ordered = [...clusters].sort((a, b) => a.centre - b.centre);
   const [first, centre, last] = target.buckets ?? [];
   const room = (bucket: Rect) => bucket.width - 2 * WALL_ROOM * spacing;
@@ -128,7 +140,7 @@ export const planSplit = (
 
   // Rows alternate their offset, so a vertical move keeps the grid only in steps of two rows.
   const rise = spacing * Math.sqrt(3);
-  const lift = Math.round((centre.y + centre.height / 2 - (hub.well.y + hub.well.height / 2)) / rise) * rise;
+  const lift = Math.round((centre.y + centre.height / 2 - (region.y + region.height / 2)) / rise) * rise;
   const moves = new Map<string, SplitMove>();
   for (const cluster of clusters) {
     cluster.ids.forEach((id) => moves.set(id, { shift: { x: 0, y: 0 }, kept: false }));

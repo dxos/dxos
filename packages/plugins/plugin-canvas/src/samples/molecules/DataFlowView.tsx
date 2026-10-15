@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   type BackgroundGrid,
@@ -24,6 +24,7 @@ import {
   partitionHub,
 } from './layout.ts';
 import { LOOKS, MoleculeOverlay } from './MoleculeOverlay.tsx';
+import { type SplitMove, planSplit } from './morph.ts';
 import { DataFlowSimulation, type SimulationOptions } from './simulation.ts';
 
 /** How many buckets a partitioned hub gets, and how long the morph to it takes. */
@@ -84,8 +85,8 @@ export type DataFlowViewProps = {
    */
   revealed?: boolean;
   /**
-   * Splits a one-bucket hub into three while on: the hub eases between the two over three seconds, its docked molecules
-   * carried with their buckets. Meant for a held frame (`running` off), which the morph only redraws.
+   * Splits a one-bucket hub into three while on: its clusters slide into their buckets' columns, then the buckets open,
+   * over three seconds. Running, the simulation is split too; held (`running` off), the morph only redraws the frame.
    */
   partitioned?: boolean;
 };
@@ -112,6 +113,7 @@ export const DataFlowView = ({
   // Created per layout, not per reveal: a new store would reset the view; the reveal rewrites its one scene instead.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const store = useMemo(() => createMemoryStore([createDataFlowScene(layout, revealed)]), [layout]);
+  const simulation = useMemo(() => new DataFlowSimulation(layout, options), [layout, options]);
   const morphing = partitioned !== undefined;
   const morph = useMemo(
     () => (morphing ? { target: partitionHub(layout.hub, PARTITIONS) } : undefined),
@@ -119,13 +121,37 @@ export const DataFlowView = ({
   );
   // Linear: each phase of the split eases itself.
   const progress = useTween(partitioned ? 1 : 0, PARTITION_MS);
+  // Running, the split is made in the simulation, so what arrives afterwards lands in the new buckets; held, the morph
+  // only redraws the frame. The ref keeps one toggle to one split, however often the effect runs.
+  const [applied, setApplied] = useState<ReadonlyMap<string, SplitMove>>();
+  const splitRef = useRef<{ simulation: DataFlowSimulation; on: boolean }>(undefined);
+  useLayoutEffect(() => {
+    if (!morph || !running) {
+      return;
+    }
+    const on = partitioned === true;
+    const last = splitRef.current;
+    if (last?.simulation === simulation ? last.on === on : !on) {
+      return;
+    }
+    splitRef.current = { simulation, on };
+    if (on) {
+      const { bodies, bonds } = simulation.frame();
+      const plan = planSplit(layout.hub, morph.target, bodies, bonds, layout.hubGrid.spacing);
+      simulation.split(morph.target, plan);
+      setApplied(plan);
+    } else {
+      // Merging moves nothing: the molecules stay put while the buckets close around them.
+      simulation.merge(layout.hub);
+      setApplied(new Map());
+    }
+  }, [morph, running, partitioned, simulation, layout]);
   // The scene takes the hub's end state at once, so the camera frames where the morph is heading.
   const sceneLayout = morph && partitioned ? { ...layout, hub: morph.target } : layout;
   useLayoutEffect(() => {
     const scene = createDataFlowScene(sceneLayout, revealed);
     registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
   }, [registry, store, sceneLayout, revealed]);
-  const simulation = useMemo(() => new DataFlowSimulation(layout, options), [layout, options]);
   useLayoutEffect(() => {
     simulation.agentReads = revealed;
   }, [simulation, revealed]);
@@ -160,7 +186,9 @@ export const DataFlowView = ({
             look={overlayLook}
             tone={look.theme.mode ?? 'dark'}
             revealed={revealed}
-            hubMorph={morph && progress > 0 ? { ...morph, progress } : undefined}
+            hubMorph={
+              morph && progress > 0 ? { ...morph, progress, applied: running ? applied : undefined } : undefined
+            }
           />
         }
       />

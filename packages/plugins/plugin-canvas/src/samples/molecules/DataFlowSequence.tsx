@@ -10,12 +10,12 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 
 /** One scene of a sequence: a diagram, how long it plays, and the caption that says what it shows. */
-export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'revealed'> & {
+export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'revealed' | 'partitioned'> & {
   title: string;
   caption: string;
   /**
    * Consecutive scenes on one stage share a single diagram, which runs on between them rather than fading: the first
-   * scene's spec and options set it up, and each scene changes only what it reveals.
+   * scene's spec and options set it up, and each scene changes only what it reveals or how its hub is split.
    */
   stage?: string;
   /** Seconds the scene plays before the next. */
@@ -99,6 +99,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
           options={lead.options}
           theme={scene.theme}
           revealed={scene.revealed}
+          partitioned={scene.partitioned}
         />
       </div>
       <div className='absolute top-2 right-2 w-max'>

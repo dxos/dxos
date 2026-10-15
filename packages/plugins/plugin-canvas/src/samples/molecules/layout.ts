@@ -69,7 +69,7 @@ export type DataFlowVariant = 'stacked' | 'radial' | 'silos';
 export type DataFlowSpec = {
   variant?: DataFlowVariant;
   sources: readonly SourceSpec[];
-  /** `partitions` splits the hub's well into that many visible buckets. */
+  /** `partitions` splits the hub's well into that many visible buckets; one lays it out partitioned, ready to split. */
   hub: { label: string; partitions?: number };
   /** The stacked variant's sinks (agents or applications), side by side under the hub; the radial variant has none. */
   sinks?: readonly { label: string; app?: AppKind }[];
@@ -327,17 +327,17 @@ const layoutStacked = (spec: DataFlowSpec): DataFlowLayout => {
     sourceBlock(source, { x: index * (SOURCE_SIZE.width + GAP), y: 0, ...SOURCE_SIZE }, spacing),
   );
 
-  const partitions = spec.hub.partitions ?? 1;
+  // Set at all (even to one), the hub is laid out partitioned: as tall, with its lanes, so it can split in place later.
+  const partitions = spec.hub.partitions;
   const hubFrame = {
     x: 0,
     y: SOURCE_SIZE.height + CHANNEL_HEIGHT,
     width,
-    height: partitions > 1 ? PARTITIONED_HUB_HEIGHT : HUB_HEIGHT,
+    height: partitions ? PARTITIONED_HUB_HEIGHT : HUB_HEIGHT,
   };
-  const hub =
-    partitions > 1
-      ? partitionedBlock('hub', spec.hub.label, hubFrame, partitions)
-      : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: wellOf(hubFrame) };
+  const hub = partitions
+    ? partitionedBlock('hub', spec.hub.label, hubFrame, partitions)
+    : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: wellOf(hubFrame) };
 
   const channels: Channel[] = sources.map((source) => ({
     id: `channel-${source.id}`,

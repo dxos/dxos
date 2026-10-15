@@ -308,13 +308,25 @@ export const splitPhases = (progress: number) => {
  * The hub's docked molecules and bonds carried along a split, by `plan`: each cluster first slides whole into its
  * bucket's column (one with no room fading where it is), then drops with the buckets as they open.
  */
-const morphFrame = (plan: ReadonlyMap<string, SplitMove>, progress: number, { bodies, bonds }: Frame) => {
+const morphFrame = (
+  plan: ReadonlyMap<string, SplitMove>,
+  progress: number,
+  { bodies, bonds }: Frame,
+  applied: boolean,
+) => {
   const { slide, open } = splitPhases(progress);
+  // Applied, the molecules already sit where they end up, so the slide runs from their old places up to nothing.
+  const back = applied ? 1 : 0;
   const at = (id: string) => {
     const move = plan.get(id);
-    return move
-      ? { x: move.shift.x * slide, y: move.shift.y * open, opacity: move.kept ? 1 : 1 - slide }
-      : { x: 0, y: 0, opacity: 1 };
+    if (!move) {
+      return { x: 0, y: 0, opacity: 1 };
+    }
+    if (!move.kept) {
+      // An applied split decays a dropped molecule itself.
+      return { x: 0, y: 0, opacity: applied ? 1 : 1 - slide };
+    }
+    return { x: move.shift.x * (slide - back), y: move.shift.y * (open - back), opacity: 1 };
   };
   return {
     bodies: bodies.map((body) => {
@@ -322,7 +334,9 @@ const morphFrame = (plan: ReadonlyMap<string, SplitMove>, progress: number, { bo
       return { ...body, position: { x: body.position.x + x, y: body.position.y + y }, opacity: body.opacity * opacity };
     }),
     bonds: bonds.map((bond) => {
-      const { x, y, opacity } = at(bond.id.split(':')[0]);
+      // Either end's body carries the bond: a newly landed one may be outside the plan while its partner is in it.
+      const [owner, partner] = bond.id.split(':');
+      const { x, y, opacity } = at(plan.has(owner) ? owner : partner);
       return {
         ...bond,
         from: { x: bond.from.x + x, y: bond.from.y + y },
@@ -738,14 +752,17 @@ export const MoleculeOverlay = ({
       ? { ...laidOut, hub: morphBlock(laidOut.hub, { ...hubMorph, progress: opening }) }
       : laidOut;
   // Planned once per frame and target, not per step of the morph, so every cluster keeps one destination throughout.
-  const plan = useMemo(
+  const applied = hubMorph?.applied;
+  const planned = useMemo(
     () =>
-      hubMorph
+      hubMorph && !applied
         ? planSplit(laidOut.hub, hubMorph.target, frame.bodies, frame.bonds, laidOut.hubGrid.spacing)
         : undefined,
-    [laidOut, hubMorph?.target, frame],
+    [laidOut, hubMorph?.target, applied, frame],
   );
-  const { bodies, bonds } = plan && hubMorph ? morphFrame(plan, hubMorph.progress, frame) : frame;
+  const plan = applied ?? planned;
+  const { bodies, bonds } =
+    plan && hubMorph ? morphFrame(plan, hubMorph.progress, frame, applied !== undefined) : frame;
   // Molecules in flight draw last, so they pass over the docked lattice rather than under it.
   const ordered = [...bodies]
     .filter((body) => !layout.focus || (body.zone === 'hub' && body.phase === 'docked'))

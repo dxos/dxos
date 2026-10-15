@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppSlot, type DataFlowLayout, type HexGrid, type Rect, appSlots, regionsOf } from './layout.ts';
+import {
+  type AppSlot,
+  type Block,
+  type DataFlowLayout,
+  type HexGrid,
+  type Rect,
+  appSlots,
+  regionsOf,
+} from './layout.ts';
 import {
   type Hex,
   type Molecule,
@@ -370,6 +378,55 @@ class Crystal {
     return this.#bonds;
   }
 
+  /**
+   * This lattice on the same grid with new `regions`: each body in `moves` is carried that many sites along with its
+   * bonds, the rest keep their sites. Of those, each in `checked` (on its way, its sites only reserved) keeps them only if
+   * they are still free and inside a region; the bodies that lose theirs are returned, for the caller to send away.
+   */
+  rebuilt(
+    regions: readonly Rect[] | undefined,
+    moves: ReadonlyMap<string, Hex>,
+    checked: ReadonlySet<string> = new Set(),
+  ): { crystal: Crystal; displaced: string[] } {
+    const crystal = new Crystal(this.grid, this.#shape, regions);
+    const byBody = new Map<string, { site: Hex; occupant: Occupant }[]>();
+    for (const [key, occupant] of this.#sites) {
+      const [q, r] = key.split(',').map(Number);
+      const move = moves.get(occupant.body);
+      const site = move ? { q: q + move.q, r: r + move.r } : { q, r };
+      byBody.set(occupant.body, [...(byBody.get(occupant.body) ?? []), { site, occupant }]);
+    }
+    const moveOf = (body: string) => {
+      const move = moves.get(body);
+      return move ? `${move.q},${move.r}` : '';
+    };
+    // A reservation bonded to a body that moved away would land bonded to nothing.
+    const stranded = (body: string) =>
+      this.#bonds.some((bond) => bond.bodies.includes(body) && moveOf(bond.bodies[0]) !== moveOf(bond.bodies[1]));
+    // Settled bodies first, so a reservation is tested against where they now sit.
+    const ordered = [...byBody].sort(([a], [b]) => Number(checked.has(a)) - Number(checked.has(b)));
+    const displaced: string[] = [];
+    for (const [body, sites] of ordered) {
+      if (checked.has(body) && (stranded(body) || !sites.every(({ site }) => crystal.#free(site)))) {
+        displaced.push(body);
+        continue;
+      }
+      sites.forEach(({ site, occupant }) => crystal.#sites.set(hexKey(site), occupant));
+    }
+    const step = (site: Hex, body: string): Hex => {
+      const move = moves.get(body);
+      return move ? { q: site.q + move.q, r: site.r + move.r } : site;
+    };
+    // A bond survives only with both its bodies, carried the same way.
+    crystal.#bonds = this.#bonds
+      .filter(
+        (bond) =>
+          !bond.bodies.some((body) => displaced.includes(body)) && moveOf(bond.bodies[0]) === moveOf(bond.bodies[1]),
+      )
+      .map((bond) => ({ ...bond, from: step(bond.from, bond.bodies[0]), to: step(bond.to, bond.bodies[0]) }));
+    return { crystal, displaced };
+  }
+
   /** The share of the lattice's usable sites taken, from 0 to 1. */
   get fill(): number {
     if (this.#capacity === undefined) {
@@ -668,12 +725,12 @@ class Crystal {
  * at once (see {@link Gate}), so traffic the other way waits, while traffic the same way follows at a distance.
  */
 export class DataFlowSimulation {
-  readonly #layout: DataFlowLayout;
+  #layout: DataFlowLayout;
   readonly #options: typeof DEFAULTS;
   readonly #spawnAgents?: { first: number; every: number };
   readonly #subset: (body: Body) => boolean;
   readonly #random: Random;
-  readonly #hub: Crystal;
+  #hub: Crystal;
   /** One lattice per sink, by agent; an application has none. */
   readonly #sinks: (Crystal | undefined)[];
   /** Each application's content slots and what fills them, by sink. */
@@ -698,6 +755,52 @@ export class DataFlowSimulation {
   #serial = 0;
 
   #agentReads = true;
+
+  /**
+   * Splits the hub into `target`'s buckets: each docked molecule `plan` keeps moves by its shift (whole lattice steps),
+   * taking its sites and bonds along, and each it drops decays; what arrives from now on lands in the new buckets.
+   */
+  split(target: Block, plan: ReadonlyMap<string, { shift: Point; kept: boolean }>): void {
+    const { spacing } = this.#layout.hubGrid;
+    const row = (spacing * Math.sqrt(3)) / 2;
+    const moves = new Map<string, Hex>();
+    for (const body of this.#bodies) {
+      const move = plan.get(body.id);
+      if (!move || body.zone !== 'hub' || body.phase !== 'docked') {
+        continue;
+      }
+      if (!move.kept) {
+        this.#evict(body);
+        continue;
+      }
+      const r = Math.round(move.shift.y / row);
+      const step = { q: Math.round(move.shift.x / spacing - r / 2), r };
+      moves.set(body.id, step);
+      body.position = { x: body.position.x + move.shift.x, y: body.position.y + move.shift.y };
+      body.sites = body.sites?.map((site) => ({ q: site.q + step.q, r: site.r + step.r }));
+    }
+    // A molecule already on its way keeps the place it was given if that is still good in the new buckets; one whose
+    // place fell in a gutter, or under a cluster that moved, fades where it is.
+    const inFlight = new Set(
+      this.#bodies.filter((body) => body.zone === 'hub' && body.phase === 'travelling').map((body) => body.id),
+    );
+    const { crystal, displaced } = this.#hub.rebuilt(target.buckets && regionsOf(target.buckets), moves, inFlight);
+    this.#hub = crystal;
+    for (const body of this.#bodies.filter((body) => displaced.includes(body.id))) {
+      this.#releaseAll(body);
+      body.sites = undefined;
+      body.phase = 'leaving';
+      body.age = 0;
+      body.route = [];
+    }
+    this.#layout = { ...this.#layout, hub: target };
+  }
+
+  /** Merges a split hub back into `hub`'s one region; every molecule stays where it is, which that region holds. */
+  merge(hub: Block): void {
+    this.#hub = this.#hub.rebuilt(hub.buckets && regionsOf(hub.buckets), new Map()).crystal;
+    this.#layout = { ...this.#layout, hub };
+  }
 
   /** Whether the monolithic agent reads the sources; off, it is not yet in the picture and takes nothing. */
   get agentReads(): boolean {

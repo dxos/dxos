@@ -37,7 +37,8 @@ const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent'
 
 const APPS: DataFlowSpec = {
   ...SPEC,
-  hub: { label: 'ECHO' },
+  // One bucket, laid out partitioned so the next chapter can split it in place.
+  hub: { label: 'ECHO', partitions: 1 },
   sinks: [
     { label: 'Docs', app: 'document' },
     { label: 'Sheets', app: 'spreadsheet' },
@@ -79,12 +80,24 @@ const CHAPTERS: readonly Scene[] = [
     stage: 'silos',
     duration: 20,
   },
+  // Chapters 3 and 4 share a stage too: the one ECHO space splits into three along its natural breaks.
   {
     title: 'A shared ECHO',
     caption: 'The sources feed one ECHO space, and the apps sync from it.',
     spec: APPS,
     options: { warmup: 16 },
+    partitioned: false,
+    stage: 'echo',
     duration: 24,
+  },
+  {
+    title: 'Spaces',
+    caption: 'ECHO splits into spaces along the natural breaks in its data.',
+    spec: APPS,
+    options: { warmup: 16 },
+    partitioned: true,
+    stage: 'echo',
+    duration: 20,
   },
   {
     title: 'Apps and agents together',
@@ -117,8 +130,8 @@ export default meta;
 type Story = StoryObj<DataFlowViewProps>;
 
 const chapter = (index: number): Story => {
-  const { title, spec, options, revealed } = CHAPTERS[index];
-  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed } };
+  const { title, spec, options, revealed, partitioned } = CHAPTERS[index];
+  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned } };
 };
 
 /**
@@ -141,8 +154,11 @@ export const Chapter2Monolith: Story = chapter(1);
 /** The sources feed one ECHO space, and the apps sync their content from it. */
 export const Chapter3Echo: Story = chapter(2);
 
+/** The one ECHO space splits into three along the natural breaks in its lattice; molecules then land in the new spaces. */
+export const Chapter4Spaces: Story = chapter(3);
+
 /** Applications and agents side by side on the same partitioned ECHO space. */
-export const Chapter4Mixed: Story = chapter(3);
+export const Chapter5Mixed: Story = chapter(4);
 
 /**
  * Chapters 1 and 2 on one stage: the silos run, then the monolithic agent fades in over them and the camera widens.
