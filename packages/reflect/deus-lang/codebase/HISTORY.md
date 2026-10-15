@@ -1,5 +1,30 @@
 # History of main
 
+- `bf1d51f864` update deus (by merge)
+- `c562dd221e` history: import 955 changes
+- `f9a2c9e537` history: import 940 changes
+- `06284d784b` task: import from /tmp/tmpsro5r533/tasks.sexp
+- `34d0771186` add /tmp/tmpsro5r533/merged/code /tmp/tmpsro5r533/merged/specs
+- `0cbf27c419` task: comment on cda44092 (by claude)
+- `119e671691` task: set cda44092 state (by claude)
+- `72f35cce64` update deus (by claude)
+- `4fc07ff59d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
+- `2bdda0f75f` delete Unnamed.h2fee9e6b7d Unnamed.h3f84493ccc
+- `ee4306fafb` task: open cda44092 Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (by claude)
+- `e0c7da7ab6` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ws.mdl (by claude)
+- `db7865d2ee` update deus (by merge)
+- `cb3bc9db09` history: import 935 changes
+- `462f79b35e` history: import 931 changes
+- `68f57dfa92` task: import from /tmp/tmppqybtjes/tasks.sexp
+- `95f0dfe88e` add /tmp/tmppqybtjes/merged/code /tmp/tmppqybtjes/merged/specs
+- `e227cdbd69` task: comment on 10b95384 (by claude)
+- `8d474ded61` task: set 10b95384 state (by claude)
+- `7cea805ca8` update deus (by claude)
+- `958149a60d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ws.mdl (by claude)
+- `4f1e55d2d6` update deus (by claude)
+- `9be4411da3` update deus (by claude)
+- `25cac1d555` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Workspace.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/wslaws.deus (by claude)
+- `34bb23ab7b` update deus (by claude)
 - `ada6a4b8ce` Rehash after wasm.deus (D140) (by claude)
 - `faad5a9a36` Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140) (by claude)
 - `18f95dee7d` history: import 935 changes

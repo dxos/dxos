@@ -1,0 +1,32 @@
+/-- R-4: an expression `deus eval` compiles performs `Workspace` against the store. -/
+test Workspace.Spec.evaluateHandlesWorkspace := inStore (fun dir =>
+  withWorkspace
+    dir
+    ["--codebase", dir]
+    (fun _ => Workspace.update (Workspace.Spec.lib ++ "def A.f : Int := 1\n"))
+  evaluate dir ["--codebase", dir] "Workspace.names \"A.\"" == "[\"A.f\"]")
+
+/-- Runs `body` with `Workspace` handled in a fresh simulated codebase that holds `lib`. -/
+def Workspace.Spec.inWorkspace (body : Unit -> {Workspace, IO, Throw Text} Bool) : Bool := inStore (fun dir => withWorkspace dir ["--codebase", dir] (fun _ =>
+  Workspace.update (Workspace.Spec.lib ++ "def A.f : Int := 1\ndef A.g : Int := 2\ndef B.h : Int := 3\n")
+  body ()))
+
+/-- The builtins the sources use and the `Workspace` ability, so a snippet compiled in the store can perform it. -/
+def Workspace.Spec.lib : Text := Compile.Spec.prelude ++
+  "inductive List a @\"#List\" where\n  | nil\n  | cons (head : a) (tail : List a)\nability Workspace @\"urn:deus:workspace:Workspace\" where\n  names : Text -> List Text\n  view : Text -> Text\n  update : Text -> Unit\n  run : List Text -> Unit\n"
+
+/-- R-1: the names under `A.`, and not `B.h`. -/
+test Workspace.Spec.namesListsPrefix := inWorkspace (fun _ => Workspace.names "A." == ["A.f", "A.g"])
+
+/-- R-3: `mv` renames, and `names` sees the new name. -/
+test Workspace.Spec.runRunsCommands := inWorkspace (fun _ =>
+  Workspace.run ["mv", "A.f", "A.k"]
+  Workspace.names "A." == ["A.g", "A.k"])
+
+/-- R-1: a definition's source. -/
+test Workspace.Spec.viewPrintsSource := inWorkspace (fun _ => Text.contains "def A.f : Int := 1" (Workspace.view "A.f"))
+
+/-- R-2: a later view sees the update. -/
+test Workspace.Spec.viewSeesUpdate := inWorkspace (fun _ =>
+  Workspace.update "def A.f : Int := 5\n"
+  Text.contains ":= 5" (Workspace.view "A.f"))

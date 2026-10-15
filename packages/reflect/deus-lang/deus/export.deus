@@ -144,6 +144,9 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
   IO.mkdirp (out ++ "/code")
   List.forEach files (fun f =>
     IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (Text.join "\n\n" (List.filterMap (fun pair => if fst pair == f then some (snd pair) else none) sources) ++ "\n"))
+  -- A file left from a namespace the codebase no longer holds would bring its names back on restore (R-7).
+  removeStale (out ++ "/code") ".deus" files
+  removeStale (out ++ "/specs") ".mdl" documents
   let tasks := List.sortBy Tasks.order (Map.values (Tasks.current dir))
   IO.writeFile (out ++ "/tasks.sexp") (Text.concat (List.map (fun t => Sexp.print (Tasks.toSexp t) ++ "\n") (List.sortBy (fun a b => compare a.id b.id) tasks)))
   IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
@@ -255,6 +258,13 @@ def mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Text) : {I
     let _ := if Map.toList merged == Map.toList ours then "" else Codebase.commitTasks dir (Tasks.putSnapshot dir merged) message
     recordBase dir out file
     (Map.size file, conflicts)
+
+/-- Removes the files in `path` ending in `suffix` whose stem is not in `kept`. -/
+def removeStale (path : Text) (suffix : Text) (kept : List Text) : {IO} Unit :=
+  if IO.isDir path then
+    let keep := Set.fromList (List.map (fun stem => stem ++ suffix) kept)
+    List.forEach (IO.listDir path) (fun f => if Text.endsWith suffix f && not (Set.contains f keep) then IO.remove (path ++ "/" ++ f) else ())
+  else ()
 
 /-- Before an export overwrites `out`, takes in the tasks and history another codebase wrote there. -/
 def mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=

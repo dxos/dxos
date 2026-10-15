@@ -87,15 +87,6 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
 
-## deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (`10b95384`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: dogfood, llm
-
-From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
-
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -811,6 +802,17 @@ Reported by the explorer thread on #13952's branch (code/Cli.deus line 45). The 
 
 > claude: Cause: JIT replays (D113). A type error throws from deep inside the checker's List.forEach callback, so each group's forEach replayed. Fixed in the kernel: with a type error in Print.printer, deus compile deus reports it in 6 s instead of 78 s.
 
+## deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (`10b95384`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, llm
+
+From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
+
+> claude: Done (D137), closed through it: deus eval 'Workspace.run ["task", "set", "10b95384", "--state", "done"]'. The Workspace ability (names, view, update, run) is handled by Cli.withWorkspace under deus eval. Workspace.Spec R-1..R-4.
+
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
 - state: done
@@ -1242,6 +1244,15 @@ From docs/spec/README.md, Known divergences.
 - links change #8cb84289e1
 
 Found writing law statements (D91): deus view Sort.insertSorted.
+
+## Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (`cda44092`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: codebase, vcs
+
+> claude: They were Cli.withRemote and Analytics.command from before D108, still in the export because deus export never removed a file it no longer wrote. Removed both names (nothing used them) and export now deletes stale code/*.deus and specs/*.mdl files (D139, Export.Spec R-7).
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 

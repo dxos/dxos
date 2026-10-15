@@ -76,6 +76,11 @@ req R-6: histories imported more than once, as a merge imports both sides', expo
   by: Export.Spec.historiesMergeAsSets
 ```
 
+```mdl
+req R-7: an export removes the code and spec files of namespaces and documents the codebase no longer holds, so a restore cannot bring a removed name back
+  by: Export.Spec.dropsStaleFiles
+```
+
 ## Laws
 
 Each law builds a codebase in the deterministic simulation, exports it, restores the export into a

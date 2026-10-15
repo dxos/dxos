@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -847,13 +847,43 @@ def compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw 
     h
   | _ => throw ("cannot compile " ++ source)
 
-/-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it. -/
+/-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it; the expression may perform `Workspace`. -/
 def eval (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
-  let ns := Codebase.current dir
-  let value := Code.run (compileExpr dir ns (Text.join " " args.positional))
-  let text := Print.expr (Print.printer ns []) (Sexp.read (Code.quote value)) [] 0 0
+  let text := evaluate dir (forwarded args) (Text.join " " args.positional)
   output args (fun _ => Json.obj [("value", Json.str text)]) (fun _ => text)
+
+/-- The options a command run under `Workspace` passes on: the codebase and the author. -/
+def forwarded (args : Args) : List Text :=
+  List.concatMap (fun key =>
+    match option args key with
+    | some value => ["--" ++ key, value]
+    | none => []) ["codebase", "by"]
+
+/-- `source` compiled against `dir` and run with `Workspace` handled; the value as source. -/
+def evaluate (dir : Text) (passed : List Text) (source : Text) : {IO, Throw Text} Text :=
+  let value := withWorkspace dir passed (fun _ => Code.run (compileExpr dir (Codebase.current dir) source))
+  Print.expr (Print.printer (Codebase.current dir) []) (Sexp.read (Code.quote value)) [] 0 0
+
+/-- Runs `body` with `Workspace` handled against `dir`; `passed` goes to every command it runs. -/
+def withWorkspace (dir : Text) (passed : List Text) (body : Unit -> {Workspace, IO, Throw Text} a) : {IO, Throw Text} a :=
+  handle body () with
+  | Workspace.names prefix -> k => k (List.filter (fun name => Text.startsWith prefix name) (Map.keys (Codebase.current dir)))
+  | Workspace.view name -> k =>
+    let ns := Codebase.current dir
+    k (match lookupName ns name with
+      | (full, e) => viewEntryIn (Print.printer ns []) dir ns full e "deus")
+  | Workspace.update source -> k =>
+    -- The source goes through a file, as `deus update` reads one.
+    IO.mkdirp (dir ++ "/tmp")
+    let path := dir ++ "/tmp/workspace-" ++ Text.take 16 (Text.sha256 source) ++ ".deus"
+    IO.writeFile path source
+    addOrUpdate (parseArgs ([path, "--quiet"] ++ passed)) true
+    IO.remove path
+    k ()
+  | Workspace.run argv -> k =>
+    dispatch (argv ++ passed)
+    k ()
 
 --
 -- Commands: documents.
@@ -1732,7 +1762,8 @@ def usage : Text :=
     "",
     "running",
     "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",
-    "  eval <expr>                          evaluate an expression",
+    "  eval <expr>                          evaluate an expression; it may use Workspace.names, .view,",
+    "                                       .update and .run to read and change the codebase",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
     "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D125)",

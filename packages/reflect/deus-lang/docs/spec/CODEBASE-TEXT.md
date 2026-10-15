@@ -46,6 +46,10 @@ because the `structure` declaration defines it. `spec` entries and `lib.<name>.`
 treatment: spec entries are skipped, and library names are printed like any other names (in
 `code/lib.deus`).
 
+An export deletes each `code/*.deus` and `specs/*.mdl` file it did not write this time, so a namespace
+or document removed from the codebase does not come back on the next restore ([D139](../DECISIONS.md)).
+Other files in those folders stay.
+
 ### Files and order
 
 The file for a name is its first dot-separated segment (`Codebase.objectPath` goes to `code/Codebase.deus`);
