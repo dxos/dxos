@@ -220,6 +220,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 210 | 10-15 13:05 | 20m 00s | `4968adb1` | A merge refuses definitions that call a hash no name has, after a stale-seed merge left three such names in the codebase (D186, task 30884468); a fresh session's pull is 8 s, push 11-14 s, `update deus/` 2.3 s (tasks 87d792ad, eb2c8018) |
 | 211 | 10-15 13:30 | 25m 00s | `d62d2823` | A merge where both sides only rehashed a shared dependent keeps both edits: the retry recompiles the dependent from their source (D187, task 2a6740c2) |
 | 212 | 10-15 13:55 | 25m 00s | `54a174f0` | Names leave a codebase only by a recorded deletion (D188, [DataSafety.Spec](https://deus.dmytro-a80.workers.dev/#n:DataSafety.Spec)): `deus merge` refuses a result that drops names neither side deleted, `deus push` refuses a head that lost names with no single-parent deletion (`--allow-drop` overrides), merge and push refuse a CLI older than the codebase's `Safety.epoch` and the Worker answers 426; the Worker logs every head move under `headlog/`, kept through compaction; `deus audit`, `deus heads` and `deus restore` find and bring back a loss; deus-mirror's hourly snapshot audits since the last one |
+| 213 | 10-15 13:27 | 11m 00s | this commit | Plan for splitting the toolchain codebase into `@dxos/base`, `@dxos/toolchain`, `@dxos/web` and `@dxos/examples`, computed from the store's object graph and written into Address.Spec; unprefixed names through library mounts filed as the first step (D189) |
 
-
-Total from stage 1 to stage 212: 57h 32m.
+Total from stage 1 to stage 213: 57h 43m.
