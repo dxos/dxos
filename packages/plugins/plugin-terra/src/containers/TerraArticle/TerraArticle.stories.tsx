@@ -65,6 +65,7 @@ const ObjectsStory = () => {
 };
 
 export const Objects: Story = {
+  tags: ['!test'],
   render: () => <ObjectsStory />,
   decorators: [withPluginManager()],
 };

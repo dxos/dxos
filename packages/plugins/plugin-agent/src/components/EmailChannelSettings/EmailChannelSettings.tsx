@@ -120,3 +120,27 @@ const MailboxBanner = ({ status, error }: Pick<EmailChannelSettingsProps, 'statu
     </Banner.Root>
   );
 };
+
+export type EmailChannelCreateProps = {
+  values?: Partial<AgentEmail.Properties>;
+  onCreate?: (values: AgentEmail.Properties) => void;
+};
+
+/** The form that gives an agent its address; saving creates the email channel, which is then connected separately. */
+export const EmailChannelCreate = ({ values, onCreate }: EmailChannelCreateProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  return (
+    <Form.Root<AgentEmail.Properties> schema={AgentEmail.Properties} values={values} onSave={onCreate}>
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet label={t('email-channel.label')} description={t('email-channel-create.description')}>
+            <Form.Fields />
+          </Form.FieldSet>
+          <Form.Actions />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
+  );
+};
+
+EmailChannelCreate.displayName = 'EmailChannelCreate';

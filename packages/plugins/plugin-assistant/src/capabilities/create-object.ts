@@ -3,18 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
-import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { isTruthy } from '@dxos/util';
@@ -77,28 +72,6 @@ export default Capability.makeModule(
               { spaceId: options.db.spaceId },
             );
           }),
-      },
-      experimentalTypes && {
-        id: Type.getTypename(Agent.Agent),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentSkill.make());
-
-            return yield* Operation.invoke(
-              SpaceOperation.AddObject,
-              {
-                object,
-                target: options.target,
-              },
-              { spaceId: options.db.spaceId },
-            );
-          }).pipe(
-            Effect.provide(
-              ServiceResolver.provide({ space: options.db.spaceId }, Database.Service).pipe(
-                Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
-              ),
-            ),
-          ),
       },
     ];
 

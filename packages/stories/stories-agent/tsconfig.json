@@ -16,9 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -26,9 +23,6 @@
     },
     {
       "path": "../../core/compute/assistant"
-    },
-    {
-      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
