@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useId, useState } from 'react';
 
-import { DEFAULT_GRID, MAJOR_GRID, lineClasses } from '@dxos/react-ui-canvas/scene';
+import { type BackgroundGrid, STYLE_SET_IDS, lineClasses } from '@dxos/react-ui-canvas/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -28,9 +28,6 @@ import {
 } from './simulation.ts';
 
 const ATOM_RADIUS = 5.5;
-
-/** The colour a settled hub molecule fades to: off-white, light enough to read as neutral and still show on white. */
-const SETTLED = 'fill-neutral-300 stroke-neutral-300';
 
 /** Magenta, which the canvas's own line colours lack, so the diagram can give a source that hue too. */
 const EXTRA_HUES: Record<string, { stroke: string; fill: string }> = {
@@ -101,13 +98,17 @@ const DepthDefs = ({ raised, inset }: { raised: string; inset: string }) => (
 );
 
 /**
- * How containers, channels and app content are drawn: `classic`, raised gray frames on darker bases with white,
- * inset wells and shaded tubes; `flat`, dark cards with hairline borders and solid channels; `outline`, line art with no
- * fills and channels as rails; `glass`, translucent frosted cards and channels.
+ * How containers, channels and app content are drawn: one of the canvas's built-in style sets, so the sample and the
+ * canvas name their looks alike. `classic`, raised gray frames on darker bases with white, inset wells and shaded tubes;
+ * `flat`, cards with hairline borders and solid channels; `outline`, line art with no fills and channels as rails;
+ * `glass`, translucent frosted cards and channels.
  */
-export type Look = 'classic' | 'flat' | 'outline' | 'glass';
+export type Look = (typeof STYLE_SET_IDS)[number];
 
-export const LOOKS: readonly Look[] = ['classic', 'flat', 'outline', 'glass'];
+export const LOOKS: readonly Look[] = STYLE_SET_IDS;
+
+/** Whether the background under the diagram is light or dark, which picks a look's palette. */
+export type LookTone = 'light' | 'dark';
 
 type Palette = {
   /** The base a frame sits on; none for a look without one. */
@@ -123,8 +124,8 @@ type Palette = {
   /** Whether the well takes the inner shadow. */
   inset: boolean;
   channel: 'tube' | 'solid' | 'rails' | 'glass';
-  /** Whether soft glows in the sources' colours sit behind the containers, for translucent cards to show through. */
-  backdrop?: boolean;
+  /** The colour a settled hub molecule (and its bonds) fades to: neutral, yet still clear of the background. */
+  molecule: string;
   /** App content: settled content, title and header bars, faint bars, empty soft slots, empty outlined slots, outlines. */
   settled: string;
   decor: string;
@@ -134,7 +135,7 @@ type Palette = {
   outline: string;
 };
 
-const PALETTES: Record<Look, Palette> = {
+const DARK_PALETTES: Record<Look, Palette> = {
   classic: {
     base: 'fill-neutral-500',
     frame: 'fill-neutral-300',
@@ -144,6 +145,7 @@ const PALETTES: Record<Look, Palette> = {
     well: 'fill-white',
     inset: true,
     channel: 'tube',
+    molecule: 'fill-neutral-300 stroke-neutral-300',
     settled: 'fill-neutral-400',
     decor: 'fill-neutral-400',
     faint: 'fill-neutral-200',
@@ -160,6 +162,7 @@ const PALETTES: Record<Look, Palette> = {
     well: 'fill-neutral-900',
     inset: false,
     channel: 'solid',
+    molecule: 'fill-neutral-300 stroke-neutral-300',
     settled: 'fill-neutral-600',
     decor: 'fill-neutral-600',
     faint: 'fill-neutral-700',
@@ -177,6 +180,7 @@ const PALETTES: Record<Look, Palette> = {
     wellStroke: 'stroke-neutral-700',
     inset: false,
     channel: 'rails',
+    molecule: 'fill-neutral-300 stroke-neutral-300',
     settled: 'fill-neutral-500',
     decor: 'fill-neutral-500',
     faint: 'fill-neutral-700',
@@ -194,7 +198,7 @@ const PALETTES: Record<Look, Palette> = {
     wellStroke: 'stroke-white/10',
     inset: false,
     channel: 'glass',
-    backdrop: true,
+    molecule: 'fill-neutral-300 stroke-neutral-300',
     settled: 'fill-white/40',
     decor: 'fill-white/40',
     faint: 'fill-white/15',
@@ -204,167 +208,78 @@ const PALETTES: Record<Look, Palette> = {
   },
 };
 
-/** A hue as a text colour, so a gradient stop can take it as `currentColor`. */
-const HUE_TEXT: Record<string, string> = {
-  neutral: 'text-neutral-border',
-  red: 'text-red-border',
-  orange: 'text-orange-border',
-  amber: 'text-amber-border',
-  green: 'text-green-border',
-  teal: 'text-teal-border',
-  sky: 'text-sky-border',
-  blue: 'text-blue-border',
-  violet: 'text-violet-border',
-  fuchsia: 'text-fuchsia-border',
+/** The looks retuned for a light background such as paper: dark labels, mid-gray content, dark hairlines. */
+const LIGHT_PALETTES: Record<Look, Palette> = {
+  classic: DARK_PALETTES.classic,
+  flat: {
+    frame: 'fill-neutral-100',
+    frameStroke: 'stroke-neutral-300',
+    raised: false,
+    group: 'fill-neutral-50',
+    label: 'fill-neutral-700',
+    well: 'fill-white',
+    wellStroke: 'stroke-neutral-200',
+    inset: false,
+    channel: 'solid',
+    molecule: 'fill-neutral-400 stroke-neutral-400',
+    settled: 'fill-neutral-400',
+    decor: 'fill-neutral-400',
+    faint: 'fill-neutral-200',
+    empty: 'fill-neutral-100',
+    emptyStroke: 'fill-none stroke-neutral-300',
+    outline: 'fill-none stroke-neutral-300',
+  },
+  outline: {
+    frame: 'fill-none',
+    frameStroke: 'stroke-neutral-500',
+    raised: false,
+    group: 'fill-none',
+    label: 'fill-neutral-700',
+    well: 'fill-none',
+    wellStroke: 'stroke-neutral-300',
+    inset: false,
+    channel: 'rails',
+    molecule: 'fill-neutral-400 stroke-neutral-400',
+    settled: 'fill-neutral-500',
+    decor: 'fill-neutral-500',
+    faint: 'fill-neutral-300',
+    empty: 'fill-none stroke-neutral-300',
+    emptyStroke: 'fill-none stroke-neutral-300',
+    outline: 'fill-none stroke-neutral-400',
+  },
+  glass: {
+    frame: 'fill-white/55',
+    frameStroke: 'stroke-black/10',
+    raised: false,
+    group: 'fill-white/30',
+    label: 'fill-neutral-800',
+    well: 'fill-black/5',
+    wellStroke: 'stroke-black/10',
+    inset: false,
+    channel: 'glass',
+    molecule: 'fill-neutral-400 stroke-neutral-400',
+    settled: 'fill-neutral-400',
+    decor: 'fill-neutral-400',
+    faint: 'fill-black/10',
+    empty: 'fill-black/5',
+    emptyStroke: 'fill-none stroke-black/15',
+    outline: 'fill-none stroke-black/20',
+  },
 };
 
-/** How far the backdrop reaches beyond the diagram. */
-const BACKDROP_PAD = 240;
+/** Each look's palette for a light and a dark background. */
+const PALETTES: Record<LookTone, Record<Look, Palette>> = { light: LIGHT_PALETTES, dark: DARK_PALETTES };
 
 /**
- * The grid the backdrop shows, aligned with the canvas's own: `dots` at every minor grid point, `lines` along the minor
- * and (stronger) major grid lines, or `none`.
+ * The grid behind the containers, aligned with the canvas's own: `dots` at every minor grid point, `lines` along the
+ * minor and (stronger) major grid lines, or `none`. The canvas's background draws it.
  */
-export type Grid = 'dots' | 'lines' | 'none';
+export type Grid = BackgroundGrid;
 
 export const GRIDS: readonly Grid[] = ['dots', 'lines', 'none'];
 
-/** A pattern of the grid, tiled from the scene's origin so it lines up with the canvas's own grid. */
-const GridPattern = ({ id, grid }: { id: string; grid: Grid }) => {
-  switch (grid) {
-    case 'dots':
-      // Offset by half a cell so each dot sits on a grid point rather than being cut at the tile's corner.
-      return (
-        <pattern
-          id={id}
-          x={-DEFAULT_GRID / 2}
-          y={-DEFAULT_GRID / 2}
-          width={DEFAULT_GRID}
-          height={DEFAULT_GRID}
-          patternUnits='userSpaceOnUse'
-        >
-          <circle cx={DEFAULT_GRID / 2} cy={DEFAULT_GRID / 2} r={1} className='fill-white/12' />
-        </pattern>
-      );
-    case 'lines':
-      return (
-        <pattern id={id} width={MAJOR_GRID} height={MAJOR_GRID} patternUnits='userSpaceOnUse'>
-          <g className='stroke-white/10' strokeWidth={1}>
-            {Array.from({ length: MAJOR_GRID / DEFAULT_GRID }, (_, index) => (
-              <g key={index}>
-                <line x1={index * DEFAULT_GRID} y1={0} x2={index * DEFAULT_GRID} y2={MAJOR_GRID} />
-                <line x1={0} y1={index * DEFAULT_GRID} x2={MAJOR_GRID} y2={index * DEFAULT_GRID} />
-              </g>
-            ))}
-          </g>
-          <g className='stroke-white/20' strokeWidth={1}>
-            <line x1={0} y1={0} x2={0} y2={MAJOR_GRID} />
-            <line x1={0} y1={0} x2={MAJOR_GRID} y2={0} />
-          </g>
-        </pattern>
-      );
-    case 'none':
-      return null;
-  }
-};
-
-/** The washes' strongest opacity, the side of the noise tile in screen pixels, and its pixels' opacity (of 255). */
-const WASH_STRENGTH = 0.22;
-const NOISE_SIZE = 128;
-const NOISE_ALPHA = 16;
-
-/**
- * Gradient stops falling from `strength` to nothing along a smoothstep curve from `start` (0 to 1) outward, many of them,
- * so a fade has no straight segments whose ends show as rings.
- */
-const easedStops = (strength: number, start = 0) =>
-  Array.from({ length: 9 }, (_, index) => {
-    const t = index / 8;
-    const fall = t * t * (3 - 2 * t);
-    return { offset: start + (1 - start) * t, opacity: strength * (1 - fall) };
-  });
-
-/**
- * A small tile of faint random gray noise as a data URL, laid over the whole view at one pixel per screen pixel: it breaks
- * up the steps a dim gradient makes on a dark screen, which read as bands. In the scene it would be resampled with the
- * camera's zoom and smoothed away. Drawn once on a canvas in the browser; undefined until then, or
- * where there is no canvas to draw it.
- */
-export const useNoise = (): string | undefined => {
-  const [noise, setNoise] = useState<string>();
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = NOISE_SIZE;
-    canvas.height = NOISE_SIZE;
-    const context = canvas.getContext('2d');
-    if (!context) {
-      return;
-    }
-    const image = context.createImageData(NOISE_SIZE, NOISE_SIZE);
-    for (let index = 0; index < image.data.length; index += 4) {
-      const value = Math.floor(Math.random() * 256);
-      image.data[index] = value;
-      image.data[index + 1] = value;
-      image.data[index + 2] = value;
-      image.data[index + 3] = NOISE_ALPHA;
-    }
-    context.putImageData(image, 0, 0);
-    setNoise(canvas.toDataURL());
-  }, []);
-  return noise;
-};
-
-/**
- * The field behind the containers, for translucent cards to show through: the grid and two broad colour washes across
- * the whole diagram. Neither follows any one block, so no container gets a halo of its own.
- */
-const Backdrop = ({ layout, id, grid }: { layout: DataFlowLayout; id: string; grid: Grid }) => {
-  const frames = [...layout.sources, layout.hub, ...layout.sinks]
-    .filter((block) => !block.hidden)
-    .map((block) => block.frame);
-  if (frames.length === 0) {
-    return null;
-  }
-  const left = Math.min(...frames.map((frame) => frame.x)) - BACKDROP_PAD;
-  const top = Math.min(...frames.map((frame) => frame.y)) - BACKDROP_PAD;
-  const right = Math.max(...frames.map((frame) => frame.x + frame.width)) + BACKDROP_PAD;
-  const bottom = Math.max(...frames.map((frame) => frame.y + frame.height)) + BACKDROP_PAD;
-  const field = { x: left, y: top, width: right - left, height: bottom - top };
-  const wash = (name: string, hue: string, cx: number, cy: number) => (
-    <g className={HUE_TEXT[hue]}>
-      <defs>
-        <radialGradient id={`${id}-${name}`} cx={cx} cy={cy} r={0.75}>
-          {easedStops(WASH_STRENGTH).map(({ offset, opacity }) => (
-            <stop key={offset} offset={offset} stopColor='currentColor' stopOpacity={opacity} />
-          ))}
-        </radialGradient>
-      </defs>
-      <rect {...field} fill={`url(#${id}-${name})`} />
-    </g>
-  );
-  return (
-    <g mask={`url(#${id}-fade)`}>
-      <defs>
-        <GridPattern id={`${id}-grid`} grid={grid} />
-        {/* Fades the field out towards its edges, so it melts into the canvas rather than ending in a hard rectangle. */}
-        <radialGradient id={`${id}-fade-gradient`} r={0.5}>
-          {easedStops(1, 0.3).map(({ offset, opacity }) => (
-            <stop key={offset} offset={offset} stopColor='white' stopOpacity={opacity} />
-          ))}
-        </radialGradient>
-        <mask id={`${id}-fade`} maskUnits='userSpaceOnUse' {...field}>
-          <rect {...field} fill={`url(#${id}-fade-gradient)`} />
-        </mask>
-      </defs>
-      {wash('wash-a', 'violet', 0.2, 0.15)}
-      {wash('wash-b', 'teal', 0.85, 0.9)}
-      {grid !== 'none' && <rect {...field} fill={`url(#${id}-grid)`} />}
-    </g>
-  );
-};
-
 /** The palette the overlay draws with. */
-const LookContext = createContext<Palette>(PALETTES.classic);
+const LookContext = createContext<Palette>(DARK_PALETTES.classic);
 
 /** A plain strip along the channel at any angle, flush with the blocks it joins at both ends. */
 const channelPoints = ({ from, to, width }: Channel): string => {
@@ -545,22 +460,25 @@ const Container = ({ block }: { block: Block }) => {
 };
 
 /** Bonds across molecules: where each docked molecule attached to the lattice's edge. */
-const BondLines = ({ bonds }: { bonds: readonly LatticeBond[] }) => (
-  <g strokeWidth={BOND_WIDTH}>
-    {bonds.map((bond) => (
-      <line
-        key={bond.id}
-        x1={bond.from.x}
-        y1={bond.from.y}
-        x2={bond.to.x}
-        y2={bond.to.y}
-        opacity={bond.opacity}
-        // In the hub the bonds settle to the same off-white as its molecules.
-        className={bond.zone === 'hub' ? SETTLED : lineClasses('neutral').stroke}
-      />
-    ))}
-  </g>
-);
+const BondLines = ({ bonds }: { bonds: readonly LatticeBond[] }) => {
+  const { molecule } = useContext(LookContext);
+  return (
+    <g strokeWidth={BOND_WIDTH}>
+      {bonds.map((bond) => (
+        <line
+          key={bond.id}
+          x1={bond.from.x}
+          y1={bond.from.y}
+          x2={bond.to.x}
+          y2={bond.to.y}
+          opacity={bond.opacity}
+          // In the hub the bonds settle to the same off-white as its molecules.
+          className={bond.zone === 'hub' ? molecule : lineClasses('neutral').stroke}
+        />
+      ))}
+    </g>
+  );
+};
 
 /** The atoms and bonds of `body` in one colour. */
 const Atoms = ({ body, hue, opacity }: { body: Body; hue: string; opacity?: number }) => {
@@ -583,6 +501,7 @@ const Atoms = ({ body, hue, opacity }: { body: Body; hue: string; opacity?: numb
 };
 
 const MoleculeShape = ({ body }: { body: Body }) => {
+  const { molecule } = useContext(LookContext);
   const tint = body.tint ?? 0;
   return (
     <g transform={`translate(${body.position.x} ${body.position.y})`} opacity={body.opacity}>
@@ -597,7 +516,7 @@ const MoleculeShape = ({ body }: { body: Body }) => {
       )}
       {tint < 1 && <Atoms body={body} hue={body.hue} opacity={1 - tint} />}
       {tint > 0 && (
-        <g opacity={tint} className={SETTLED} strokeWidth={BOND_WIDTH}>
+        <g opacity={tint} className={molecule} strokeWidth={BOND_WIDTH}>
           {body.molecule.bonds.map(([from, to]) => (
             <line
               key={`${from}-${to}`}
@@ -687,6 +606,24 @@ const AppView = ({ block, items, time }: { block: Block; items: readonly (AppIte
   );
 };
 
+/** Room around the blocks the app mask covers, so a molecule in flight beyond them is never clipped. */
+const MASK_PAD = 2000;
+
+/** The rectangle every block lies in, padded by `MASK_PAD`; undefined when no block is shown. */
+const drawingExtent = (layout: DataFlowLayout) => {
+  const frames = [...layout.sources, layout.hub, ...layout.sinks, ...(layout.monolith ? [layout.monolith.group] : [])]
+    .filter((block) => !block.hidden)
+    .map((block) => baseOf(block));
+  if (frames.length === 0) {
+    return undefined;
+  }
+  const left = Math.min(...frames.map((frame) => frame.x)) - MASK_PAD;
+  const top = Math.min(...frames.map((frame) => frame.y)) - MASK_PAD;
+  const right = Math.max(...frames.map((frame) => frame.x + frame.width)) + MASK_PAD;
+  const bottom = Math.max(...frames.map((frame) => frame.y + frame.height)) + MASK_PAD;
+  return { x: left, y: top, width: right - left, height: bottom - top };
+};
+
 export type MoleculeOverlayProps = {
   layout: DataFlowLayout;
   simulation: DataFlowSimulation;
@@ -694,8 +631,8 @@ export type MoleculeOverlayProps = {
   /** Off, only the containers and channels are drawn and nothing moves. */
   molecules?: boolean;
   look?: Look;
-  /** The grid behind the containers, for a look with a backdrop. */
-  grid?: Grid;
+  /** The background's tone, which picks the look's palette. */
+  tone?: LookTone;
 };
 
 /**
@@ -708,7 +645,7 @@ export const MoleculeOverlay = ({
   running = true,
   molecules = true,
   look = 'glass',
-  grid = 'dots',
+  tone = 'dark',
 }: MoleculeOverlayProps) => {
   const { bodies, bonds, agents, apps, time } = useSimulationFrame(simulation, running && molecules);
   // Molecules in flight draw last, so they pass over the docked lattice rather than under it.
@@ -735,23 +672,19 @@ export const MoleculeOverlay = ({
   // A group container sits under everything inside it, so it is drawn whole before any other container.
   const groups = layout.monolith && !layout.focus ? [layout.monolith.group] : [];
   const channels = layout.focus ? [] : layout.channels.filter((channel) => visible(channel.id) > 0);
-  // A molecule inside an application has slipped behind it (on its way in or out), so it is not drawn: a translucent
-  // frame would otherwise show it through the app.
-  const appRects = layout.sinks.filter((sink) => sink.app).map((sink) => baseOf(sink));
-  const behind = (body: Body) =>
-    appRects.some(
-      (rect) =>
-        body.cursor.x >= rect.x &&
-        body.cursor.x <= rect.x + rect.width &&
-        body.cursor.y >= rect.y &&
-        body.cursor.y <= rect.y + rect.height,
-    );
+  // Molecules slide under an application's container as they enter or leave it, clipped exactly at its visible edge:
+  // the base for a look that draws one, else the frame.
+  const palette = PALETTES[tone][look];
+  const radius = palette.base ? FRAME_RADIUS + BASE_INSET : FRAME_RADIUS;
+  const appBases = layout.sinks
+    .filter((sink) => sink.app && !sink.hidden)
+    .map((sink) => ({ sink, rect: palette.base ? baseOf(sink) : sink.frame }));
+  const extent = drawingExtent(layout);
   return (
-    <LookContext.Provider value={PALETTES[look]}>
+    <LookContext.Provider value={palette}>
       <DepthContext.Provider value={depth}>
         <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
           <DepthDefs {...depth} />
-          {PALETTES[look].backdrop && !layout.focus && <Backdrop layout={layout} id={base} grid={grid} />}
           {/* Bases first, then the channels over their rims, then the containers, so a channel runs into its frame. */}
           {groups.map((group) => (
             <g key={group.id}>
@@ -775,9 +708,34 @@ export const MoleculeOverlay = ({
               {block.app && <AppView block={block} items={apps[layout.sinks.indexOf(block)] ?? []} time={time} />}
             </g>
           ))}
-          {molecules && <BondLines bonds={bonds} />}
-          {molecules &&
-            ordered.filter((body) => !behind(body)).map((body) => <MoleculeShape key={body.id} body={body} />)}
+          {molecules && extent && (
+            <>
+              <defs>
+                <mask id={`${base}-apps`} maskUnits='userSpaceOnUse' {...extent}>
+                  <rect {...extent} fill='white' />
+                  {appBases.map(({ sink, rect }) =>
+                    sink.round ? (
+                      <circle
+                        key={sink.id}
+                        cx={rect.x + rect.width / 2}
+                        cy={rect.y + rect.height / 2}
+                        r={Math.min(rect.width, rect.height) / 2}
+                        fill='black'
+                      />
+                    ) : (
+                      <rect key={sink.id} {...rect} rx={radius} fill='black' />
+                    ),
+                  )}
+                </mask>
+              </defs>
+              <g mask={`url(#${base}-apps)`}>
+                <BondLines bonds={bonds} />
+                {ordered.map((body) => (
+                  <MoleculeShape key={body.id} body={body} />
+                ))}
+              </g>
+            </>
+          )}
         </svg>
       </DepthContext.Provider>
     </LookContext.Provider>

@@ -22,27 +22,43 @@ const SPEC: DataFlowSpec = {
   sinks: [{ label: 'Agent' }],
 };
 
-/**
- * Test:
- * 1. Molecules of each source's colour form on the hex grid of the four boxes at the top, then flow down the middle of
- *    their channels.
- * 2. In the hub each moves sideways along the empty lane above the band to a random section, drops onto the lattice,
- *    bonds to its edge (shifting its atoms to fill a gap) and blinks three times in step with the others.
- * 3. Every third docked molecule (dashed ring) syncs a copy down to the agent; now and then the agent writes one that
- *    rises to the hub and, sometimes, back to its source's grid.
- * 4. Both lattices are caches: past its lifetime a molecule fades from the exposed edge, taking its agent copy with it.
- * 5. Untick `running` to freeze the frame; wheel and drag still pan and zoom the canvas.
- */
-const meta: Meta<DataFlowViewProps> = {
-  title: 'plugins/plugin-canvas/samples/DataFlow',
-  render: (args) => <DataFlowView {...args} />,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { spec: SPEC, running: true },
+const SILOS: DataFlowSpec = {
+  ...SPEC,
+  variant: 'silos',
+  sinks: [
+    { label: 'Inbox', app: 'list' },
+    { label: 'Document', app: 'document' },
+    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Board', app: 'kanban' },
+  ],
 };
 
-export default meta;
+const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent' }, group: { label: 'OAuth' } };
 
-export const Default: StoryObj<DataFlowViewProps> = {};
+const APPS: DataFlowSpec = {
+  ...SPEC,
+  sinks: [
+    { label: 'Docs', app: 'document' },
+    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Board', app: 'kanban' },
+    { label: 'Chat', app: 'messaging' },
+  ],
+};
+
+const MIXED: DataFlowSpec = {
+  ...SPEC,
+  sinks: [
+    { label: 'Docs', app: 'document' },
+    { label: 'Agent 1' },
+    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Agent 2' },
+  ],
+};
+
+const AGENTS: DataFlowSpec = {
+  ...SPEC,
+  sinks: [{ label: 'Agent 1' }, { label: 'Agent 2' }, { label: 'Agent 3' }],
+};
 
 const RADIAL: DataFlowSpec = {
   variant: 'radial',
@@ -60,85 +76,11 @@ const RADIAL: DataFlowSpec = {
   hub: { label: 'Hypergraph' },
 };
 
-const AGENTS: DataFlowSpec = {
-  ...SPEC,
-  sinks: [{ label: 'Agent 1' }, { label: 'Agent 2' }, { label: 'Agent 3' }],
-};
-
-const SPAWN = { spawnAgents: { first: 2, every: 10 } };
-
 /**
- * Up to three agents, none at first: once the hub is syncing they appear one by one under it, each catching up on what
- * the hub already holds before sharing in the ongoing sync.
+ * The chapters of the story, in order: the one source for each chapter's own story and for the sequence that plays them
+ * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
  */
-export const Agents: StoryObj<DataFlowViewProps> = { args: { spec: AGENTS, options: SPAWN } };
-
-const APPS: DataFlowSpec = {
-  ...SPEC,
-  sinks: [
-    { label: 'Docs', app: 'document' },
-    { label: 'Sheets', app: 'spreadsheet' },
-    { label: 'Board', app: 'kanban' },
-    { label: 'Chat', app: 'messaging' },
-  ],
-};
-
-/**
- * Applications in place of agents, all open from the start: a molecule flowing down to an app stops at the end of its
- * channel and lights up the content it brings (a text line, a cell, a card); now and then a piece of content lights up
- * and a molecule leaves from the channel's mouth for the hub.
- */
-export const Apps: StoryObj<DataFlowViewProps> = { args: { spec: APPS } };
-
-const SILOS: DataFlowSpec = {
-  ...SPEC,
-  variant: 'silos',
-  sinks: [
-    { label: 'Inbox', app: 'list' },
-    { label: 'Document', app: 'document' },
-    { label: 'Sheets', app: 'spreadsheet' },
-    { label: 'Board', app: 'kanban' },
-  ],
-};
-
-/**
- * Silos: each source feeds only its own application, down a channel of its own, with no hub to mix them; now and then
- * an app writes a piece of its content back up to its source. Molecules stay in the channels; the apps light up.
- */
-export const Silos: StoryObj<DataFlowViewProps> = { args: { spec: SILOS } };
-
-const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent' }, group: { label: 'OAuth' } };
-
-/**
- * The silos with one monolithic agent, a peer of the applications, that reads every source at once: as molecules form,
- * copies of about half of them appear in the OAuth container above the agent's channel and drop into its lattice,
- * while the originals still flow down to their own apps.
- */
-export const Monolith: StoryObj<DataFlowViewProps> = { args: { spec: MONOLITH } };
-
-/** Nine sources around a round hub, which grows as a cluster from its centre; there is no agent below. */
-export const Radial: StoryObj<DataFlowViewProps> = { args: { spec: RADIAL } };
-
-const MIXED: DataFlowSpec = {
-  ...SPEC,
-  sinks: [
-    { label: 'Docs', app: 'document' },
-    { label: 'Agent 1' },
-    { label: 'Sheets', app: 'spreadsheet' },
-    { label: 'Agent 2' },
-  ],
-};
-
-/** A few seconds of flow before a scene appears, so it opens with its lattices already growing. */
-const WARM = { warmup: 8 };
-
-/** Longer, for a scene whose sinks only start syncing once the hub holds a few molecules. */
-const WARMER = { warmup: 16 };
-
-/** Longest, for agents, which fill only from the share of the hub synced down to them. */
-const WARMEST = { warmup: 30 };
-
-const SCENES: Scene[] = [
+export const CHAPTERS: readonly Scene[] = [
   {
     title: 'Silos',
     caption: 'Each application keeps its own data, fed only by its own source.',
@@ -149,33 +91,84 @@ const SCENES: Scene[] = [
     title: 'A monolithic agent',
     caption: 'One agent reaches into every source at once, beside the apps.',
     spec: MONOLITH,
-    options: WARM,
+    options: { warmup: 8 },
     duration: 20,
   },
   {
     title: 'A shared hypergraph',
     caption: 'The sources feed one partitioned hypergraph, and the apps sync from it.',
     spec: APPS,
-    options: WARMER,
+    options: { warmup: 16 },
     duration: 24,
   },
   {
     title: 'Apps and agents together',
     caption: 'Applications and agents share the same hypergraph, side by side.',
     spec: MIXED,
-    options: WARMEST,
+    // Agents fill only from the share of the hub synced down to them, so they need the longest start.
+    options: { warmup: 30 },
     duration: 24,
+  },
+  {
+    title: 'Agents arrive',
+    caption: 'Agents join one by one, each catching up on the hypergraph before sharing in its sync.',
+    spec: AGENTS,
+    options: { spawnAgents: { first: 2, every: 10 }, warmup: 8 },
+    duration: 30,
   },
 ];
 
 /**
- * The whole story in one: silos, then a monolithic agent beside them, then a shared hypergraph between the sources and
- * the apps, then apps and agents together on it. Each scene plays under its caption and fades into the next.
+ * Test:
+ * 1. Molecules of each source's colour form on the hex grid of the boxes at the top, then flow down their channels.
+ * 2. In the hub each drops onto the lattice in a random section, bonds to its edge and blinks in step with the others;
+ *    every third docked molecule (dashed ring) syncs a copy down to the agents and apps below.
+ * 3. Both lattices are caches: past its lifetime a molecule fades from the exposed edge.
+ * 4. The panel at the bottom right picks the background (paper, glow, plain) and its grid.
+ * 5. Untick `running` to freeze the frame; wheel and drag still pan and zoom the canvas.
+ */
+const meta: Meta<DataFlowViewProps> = {
+  title: 'plugins/plugin-canvas/samples/DataFlow',
+  render: (args) => <DataFlowView {...args} />,
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
+  args: { spec: SPEC, running: true, background: 'paper' },
+};
+
+export default meta;
+
+type Story = StoryObj<DataFlowViewProps>;
+
+const chapter = (index: number): Story => {
+  const { title, spec, options } = CHAPTERS[index];
+  return { name: `${index + 1}. ${title}`, args: { spec, options } };
+};
+
+/**
+ * The whole story in one: every chapter in order, each under its caption, fading into the next.
  *
  * Test:
- * 1. Scenes advance by themselves about every 20 seconds and loop; the counter shows which is playing.
+ * 1. Chapters advance by themselves every 20 to 30 seconds and loop; the counter shows which is playing.
  * 2. The controls at the top right step back, pause or resume, and step forward.
  */
-export const Story: StoryObj<DataFlowViewProps> = {
-  render: () => <DataFlowSequence scenes={SCENES} />,
+export const Chapter0Story: Story = {
+  name: '0. The whole story',
+  render: () => <DataFlowSequence scenes={CHAPTERS} />,
 };
+
+/** Each source feeds only its own application, with no hub to mix them; now and then an app writes back. */
+export const Chapter1Silos: Story = chapter(0);
+
+/** One monolithic agent beside the apps reads every source at once through its OAuth container. */
+export const Chapter2Monolith: Story = chapter(1);
+
+/** The sources feed one partitioned hypergraph, and the apps sync their content from it. */
+export const Chapter3Hypergraph: Story = chapter(2);
+
+/** Applications and agents side by side on the same hypergraph. */
+export const Chapter4Mixed: Story = chapter(3);
+
+/** Up to three agents, none at first, appearing one by one once the hub is syncing. */
+export const Chapter5Agents: Story = chapter(4);
+
+/** Nine sources around a round hub, which grows as a cluster from its centre; not a chapter of the story. */
+export const Radial: Story = { name: 'Radial', args: { spec: RADIAL } };
