@@ -668,6 +668,8 @@ platform/js/react.deus: a Hooks ability handled by React's hooks; examples/react
 
 The hosted explorer stays at its last manual publish (the 19:18 one) because nothing republishes it. Once threads push to r2://agent-artifacts/deus/toolchain (D101), a CI job, or deus push itself, should run deus explore --publish for the explorer URL. A CI job needs Dmytro's go-ahead and an R2 token that can write agent-artifacts; the existing CI R2 token covers only the Composer asset buckets.
 
+> claude: Recorded as D150 (renumbered from D149 on merge).
+
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 
 - state: done
