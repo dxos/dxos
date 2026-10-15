@@ -343,7 +343,11 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
   let metaOf := fun h => if startsWith "@" h then Map.lookup h metaMap else storeMeta h
   let prims := primTypes (Ref.get pending) metaMap base storeMeta
   let warnings := Ref.new []
-  let schemes := if typeMode == "off" then Map.empty else typecheck objectOf metaOf prims (Ref.get pending) (typeMode == "warn") warnings
+  let picks := Ref.new Map.empty
+  let schemes := if typeMode == "off" then Map.empty else typecheck objectOf metaOf prims (Ref.get pending) (typeMode == "warn") warnings picks
+  Ref.set pending (List.map
+    (fun p => Pending.mk p.name p.wrap (unpick (Ref.get picks) p.core) (unpick (Ref.get picks) p.checked))
+    (Ref.get pending))
   Ref.set metas (List.map (fun pair =>
     match Map.lookup (fst pair) schemes with
     | Option.some scheme => (fst pair, Sexp.list (Sexp.asList (snd pair) ++ [Compile.node "scheme" [scheme]]))
@@ -625,7 +629,7 @@ def Compile.typeForm (names : Names) (item : Item) (iri : Text) (params : List T
     (i (List.length fields) :: List.map (fun t => tyCore names scope params t) fields)) ctors)
 
 /-- Infers every pending definition's type, dependencies first; returns "@name" to scheme. -/
-def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Text -> {Throw Text | r} Option Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) : {Throw Text | r} Map Text Sexp :=
+def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Text -> {Throw Text | r} Option Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) (picks : Ref (Map Text Sexp)) : {Throw Text | r} Map Text Sexp :=
   let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
   let depMap := Compile.dependencies byName
   let deps := fun name => getOr (Map.lookup name depMap) []
@@ -641,7 +645,7 @@ def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf 
       members
     let groupSchemes := Ref.new (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) (Ref.get schemes) signed)
     let unsigned := Map.filter (fun key _ => not (isSome (List.lookup key signed))) vars
-    let env := TypeEnv.mk objectOf metaOf (Ref.new unsigned) groupSchemes prims
+    let env := TypeEnv.mk objectOf metaOf (Ref.new unsigned) groupSchemes prims picks
     forEach members (fun p =>
       let key := "@" ++ p.name
       catch (fun _ =>

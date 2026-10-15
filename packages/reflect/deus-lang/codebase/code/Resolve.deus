@@ -128,7 +128,7 @@ def Resolve.expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw T
   | Expr.ann x t =>
       -- Checked (D95), then removed before hashing by `unnote`.
       Compile.node "ann" [tyCore ctx.names ctx.scope [] t, go x]
-  | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field) [go x]
+  | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field 0) [go x]
   | Expr.note text x => Compile.node "note" [Sexp.s text, go x]
   | Expr.spelled text x => Compile.node "spelled" [Sexp.s text, go x]
 
@@ -138,14 +138,23 @@ def Resolve.failAt (ctx : Ctx) (pos : Pos) (message : Text) : {Throw Text} a := 
 
 def Resolve.falseCore : Sexp := Compile.node "con" [Sexp.s "#Bool", i 0, i 0]
 
-def Resolve.fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) : {Throw Text} Sexp :=
+/-- The accessor for `.field`, the `nth` access at `pos`. A field several structures share becomes
+  `(pick field key owners accessors…)`, which the checker resolves by the receiver's type (R-8). -/
+def Resolve.fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) (nth : Int) : {Throw Text} Sexp :=
+  let accessor := fun owner =>
+    match Dict.lookup (owner ++ "." ++ field) (ctx.names).index with
+    | Option.some e => coreOfEntry ctx pos (owner ++ "." ++ field) e
+    | Option.none => failAt ctx pos ("missing accessor " ++ owner ++ "." ++ field)
   match getOr (Dict.lookup field (ctx.names).fieldOwners) [] with
-  | owner :: [] =>
-      match Dict.lookup (owner ++ "." ++ field) (ctx.names).index with
-      | Option.some e => coreOfEntry ctx pos (owner ++ "." ++ field) e
-      | Option.none => failAt ctx pos ("missing accessor " ++ owner ++ "." ++ field)
+  | owner :: [] => accessor owner
   | [] => failAt ctx pos ("unknown field " ++ field)
-  | owners => failAt ctx pos ("ambiguous field " ++ field ++ ": " ++ join ", " (sort owners))
+  | owners =>
+      let sorted := sort owners
+      let key := ctx.origin ++ ":" ++ toText pos.atLine ++ ":" ++ toText pos.atCol ++
+        (if nth == 0 then "" else "." ++ toText nth)
+      Compile.node
+        "pick"
+        ([Sexp.s field, Sexp.s key, Sexp.s (join ", " sorted)] ++ List.map accessor sorted)
 
 def Resolve.flattenApp (f : Sexp) (args : List Sexp) : Sexp :=
   match f with
@@ -456,6 +465,9 @@ def Resolve.unnote (form : Sexp) : (Sexp, (List (Int, Text), List (Int, Text))) 
     | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: inner :: []) => go inner count acc ((count, text) :: spellings)
     | Sexp.list (Sexp.sym "ann" :: _ :: inner :: []) => go inner count acc spellings
     | Sexp.list (Sexp.sym "annlocal" :: _ :: inner :: []) => go inner count acc spellings
+    | Sexp.list (Sexp.sym "pick" :: _) =>
+        -- A pick becomes one accessor reference, one list node, before the Core is stored.
+        (x, count + 1, acc, spellings)
     | Sexp.list items =>
         let rec each rest out c a sp :=
           match rest with
@@ -468,6 +480,17 @@ def Resolve.unnote (form : Sexp) : (Sexp, (List (Int, Text), List (Int, Text))) 
   match go form 0 [] [] with
   | (core, _, notes, spellings) => (core, reverse notes, reverse spellings)
 
+/-- Replaces each `(pick …)` by the accessor the checker chose for its key; one it did not choose
+  (types off, or a receiver of unknown type) is the ambiguity it was. -/
+def Resolve.unpick (chosen : Map Text Sexp) (form : Sexp) : {Throw Text} Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "pick" :: Sexp.str field :: Sexp.str key :: Sexp.str owners :: _) =>
+      match Map.lookup key chosen with
+      | Option.some accessor => accessor
+      | Option.none => Throw.throw (key ++ ": ambiguous field " ++ field ++ ": " ++ owners ++ " (annotate the receiver's type)")
+  | Sexp.list items => Sexp.list (List.map (fun x => Resolve.unpick chosen x) items)
+  | _ => form
+
 def Resolve.valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
   let index := localIndex locals name
   if index >= 0 then Compile.node "var" [i index] else
@@ -477,9 +500,9 @@ def Resolve.valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option
       -- `p.x.y`: field access on a local.
       let fields := Text.split (Text.drop (dot + 1) name) "."
       foldl
-        (fun acc field => Resolve.app (fieldAccessor ctx pos field) [acc])
+        (fun acc pair => Resolve.app (fieldAccessor ctx pos (snd pair) (fst pair)) [acc])
         (Compile.node "var" [i headIndex])
-        fields
+        (mapIndexed (fun i f => (i, f)) fields)
     else
       match Names.lookup ctx.names name ctx.scope isValue true with
       | Option.some (fqn, e) => coreOfEntry ctx pos fqn e

@@ -39,7 +39,7 @@ feature F-2: Self-hosting toolchain: the seed compiles itself to the same bytes
 
 ```mdl
 feature F-3: Types with effect rows and abilities
-  status: building
+  status: shipped
   parent: F-1
   specs: Checking.Spec
   defs: Types.infer | Compile.typecheck
@@ -85,7 +85,7 @@ feature F-12: Tasks: issues kept with the code
   status: building
   parent: F-10
   defs: Tasks.save | Tasks.merge
-  tasks: 823f7b83 | cb6c9a43
+  tasks: 823f7b83 | cb6c9a43 | dc22728a
 ```
 
 ```mdl

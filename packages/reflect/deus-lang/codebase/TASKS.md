@@ -165,13 +165,6 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: wasm, perf, embedding
 
-## Field names are global: two structures with a field of the same name make every unannotated access ambiguous, so event types had to rename kind, reason, url and command (`31d3c1cd`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: types, devex
-
 ## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
 
 - state: todo
@@ -186,6 +179,8 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: native, perf
 - links `CGen.effPerform` (#4dce416f4f)
+
+> claude: IO host operations done (D129): every IO operation checks for a program handler, else the C runtime performs it; examples/command.deus agrees with deus run. Cli.main now stops at Code.run, which needs an evaluator in the C runtime.
 
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
@@ -246,13 +241,6 @@ Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is
 - labels: interop, typescript
 
 Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
-
-## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec
 
 ## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
 
@@ -1067,6 +1055,15 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## Field names are global: two structures with a field of the same name make every unannotated access ambiguous, so event types had to rename kind, reason, url and command (`31d3c1cd`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: types, devex
+
+> someone: Done (Checking.Spec R-8, D128): x.f with f in several structures resolves by the receiver's inferred type; unknown receivers stay ambiguous. (Re-closed: the merge had reverted it.)
+
 ## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
 
 - state: done
@@ -1318,6 +1315,15 @@ Follow-up of 207cac21: a parameter or result of function type is skipped. A TS c
 - links change #87b9ac35c4
 
 Profile: Map.foldr 2.0M and Entry.hash 1.7M entries of 8 s, from Codebase.namesOf per definition. Invert the namespace once.
+
+## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
+> someone: Done (Coverage.Spec, D125): deus mdl --coverage lists laws no block cites and public definitions no api names; the 170 it found are task 8d6df186. (Re-closed: a merge had reverted this task.)
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 

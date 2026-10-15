@@ -98,6 +98,17 @@ req R-7: == and != on a function type are type errors; on a full application the
   by: Checking.Spec.equalFunctionsRejected | Checking.Spec.unequalFunctionsRejected | Checking.Spec.equalResultsChecked
 ```
 
+## Fields two structures share
+
+A field name may belong to several structures (task 31d3c1cd). `x.kind` then names the field of
+`x`'s structure, as the checker infers it; the stored Core calls that structure's accessor, so the
+hash is the one `P.A.kind x` has. A receiver whose type the checker does not know is ambiguous.
+
+```mdl
+req R-8: x.f with f in several structures picks the field of x's inferred structure, or is ambiguous
+  by: Checking.Spec.annotatedFieldResolves | Checking.Spec.inferredFieldResolves | Checking.Spec.pickedFieldIsChecked | Checking.Spec.unknownReceiverAmbiguous | Checking.Spec.pickedFieldKeepsHash
+```
+
 ## Theorems
 
 Each theorem compiles a small source with `Compile.batch` and states whether it type-checks. The sources
