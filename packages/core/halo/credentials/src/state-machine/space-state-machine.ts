@@ -7,12 +7,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
-import {
-  type Credential,
-  MembershipPolicy,
-  type SpaceMember,
-  SpaceMember_Role,
-} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, MembershipPolicy, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -40,15 +35,7 @@ export interface SpaceState {
 
   getMemberRole(memberKey: PublicKey): SpaceMember_Role;
   hasMembershipManagementPermission(memberKey: PublicKey): boolean;
-  canWriteMember(issuer: PublicKey, member: MemberWrite): boolean;
 }
-
-/** A membership an issuer would write: whose, at what role, and whether it is an AI agent's. */
-export type MemberWrite = {
-  key: PublicKey;
-  role: SpaceMember_Role;
-  agent?: boolean;
-};
 
 export type ProcessOptions = {
   /** Absent when the credential came from the space's credentials document rather than a feed. */
@@ -226,8 +213,7 @@ export class SpaceStateMachine implements SpaceState {
           log.warn('Space must have a genesis credential before adding members.');
           return false;
         }
-        const subject = toPublicKey(credential.subject?.id);
-        if (!subject || !this.canWriteMember(issuer, { key: subject, role: assertion.role, agent: assertion.agent })) {
+        if (!this._canInviteNewMembers(issuer)) {
           log.warn(`Space member is not authorized to invite new members: ${issuer}`);
           return false;
         }
@@ -301,24 +287,6 @@ export class SpaceStateMachine implements SpaceState {
     return this._canInviteNewMembers(memberKey);
   }
 
-  /**
-   * Whether the issuer may write the member's membership: anyone who manages members may; in a locked space, which
-   * takes no members after its genesis, its owner may still admit an AI agent's identity and change its role, short of
-   * admin, so the agent works there as a member without opening the space to anyone else.
-   */
-  public canWriteMember(issuer: PublicKey, { key, role, agent }: MemberWrite): boolean {
-    if (this._canInviteNewMembers(issuer)) {
-      return true;
-    }
-    return (
-      this._membershipPolicy === MembershipPolicy.LOCKED &&
-      (agent === true || isAgent(this._members.members.get(key)?.assertion)) &&
-      this._members.getRole(issuer) === SpaceMember_Role.OWNER &&
-      role !== SpaceMember_Role.ADMIN &&
-      role !== SpaceMember_Role.OWNER
-    );
-  }
-
   private _canInviteNewMembers(key: PublicKey): boolean {
     if (this._membershipPolicy === MembershipPolicy.LOCKED) {
       // When locked, only the space key can add the initial owner during genesis.
@@ -332,8 +300,6 @@ export class SpaceStateMachine implements SpaceState {
     );
   }
 }
-
-const isAgent = (assertion: SpaceMember | undefined): boolean => assertion?.agent === true;
 
 // TODO(dmaretskyi): Simplify.
 class CredentialConsumer<T extends CredentialProcessor> {

@@ -22,7 +22,6 @@ import {
   waitForSpace,
 } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
-import { getCredentialAssertion } from '@dxos/credentials';
 import { Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
@@ -1006,51 +1005,20 @@ describe('Spaces', () => {
     expect(space.members.get()).to.have.length(1);
   });
 
-  test("a locked space's owner admits an agent's identity, and no one else", async () => {
+  test('a locked space admits no one after its genesis, and admitContact rejects rather than resolving', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
     await space.waitUntilReady();
-    const contact = (identityKey: PublicKey, displayName: string) =>
-      create(ContactSchema, { identityKey: fromPublicKey(identityKey), profile: { displayName } });
-    const memberKeys = () => space.members.get().map((member) => toPublicKey(member.identity?.identityKey)?.toHex());
+    const contact = create(ContactSchema, {
+      identityKey: fromPublicKey(PublicKey.random()),
+      profile: { displayName: 'Bob' },
+    });
 
-    const person = PublicKey.random();
-    const agent = PublicKey.random();
-    // Refused when asked, rather than written and then dropped by the space.
-    await expect(space.admitContact(contact(person, 'Bob'), SpaceMember_Role.EDITOR)).rejects.toThrow(
+    // Its owner may not admit anyone, so the space would drop the membership; the caller is told so.
+    await expect(space.admitContact(contact, SpaceMember_Role.EDITOR)).rejects.toThrow(
       'No member management permission.',
     );
-    await space.admitContact(contact(agent, 'Kai'), SpaceMember_Role.EDITOR, { agent: true });
-    await expect.poll(memberKeys).toContain(agent.toHex());
-    expect(memberKeys()).not.toContain(person.toHex());
-    // Not even as an admin.
-    await expect(
-      space.admitContact(contact(PublicKey.random(), 'Ann'), SpaceMember_Role.ADMIN, { agent: true }),
-    ).rejects.toThrow('No member management permission.');
-    expect(
-      space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(agent)),
-    ).toMatchObject({ role: SpaceMember_Role.EDITOR, identity: { profile: { displayName: 'Kai' } } });
-
-    // Its owner removes it again.
-    await space.updateMemberRole({ memberKey: agent, newRole: SpaceMember_Role.REMOVED });
-    await expect
-      .poll(() => space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(agent))?.role)
-      .toEqual(SpaceMember_Role.REMOVED);
-
-    // The membership carries the marker only where the space needs it, since older peers cannot verify it.
-    const shared = await client.spaces.create();
-    await shared.waitUntilReady();
-    await shared.admitContact(contact(agent, 'Kai'), SpaceMember_Role.EDITOR, { agent: true });
-    const markers = async (target: Space) =>
-      (await target.internal.getCredentials()).flatMap((credential) => {
-        const assertion = getCredentialAssertion(credential);
-        return assertion.$typeName === 'dxos.halo.credentials.SpaceMember' &&
-          toPublicKey(credential.subject?.id)?.equals(agent)
-          ? [assertion.agent ?? false]
-          : [];
-      });
-    await expect.poll(() => markers(shared)).toEqual([false]);
-    expect(await markers(space)).toEqual([true, true]);
+    expect(space.members.get()).to.have.length(1);
   });
 
   test('space membership policy defaults to INVITE', async () => {

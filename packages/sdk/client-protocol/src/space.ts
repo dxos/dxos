@@ -166,11 +166,8 @@ export interface Space extends Messenger {
   // TODO(burdon): Create invitation?
   // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
-  /**
-   * Admits a known identity directly, without an invitation; the guest completes with `joinBySpaceKey`. With `agent`,
-   * the identity is an AI agent's, which the owner of a locked space may still admit; elsewhere it is admitted as anyone.
-   */
-  admitContact(contact: Contact, role?: SpaceMember_Role, options?: { agent?: boolean }): Promise<void>;
+  /** Admits a known identity directly, without an invitation; the guest completes with `joinBySpaceKey`. */
+  admitContact(contact: Contact, role?: SpaceMember_Role): Promise<void>;
   updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 }
 

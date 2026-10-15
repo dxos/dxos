@@ -28,15 +28,15 @@ const makeSpace = (
     membershipPolicy = MembershipPolicy.INVITE,
   }: { refuse?: boolean; membershipPolicy?: MembershipPolicy } = {},
 ) => {
-  const admitted: { contact: Contact; role?: SpaceMember_Role; agent?: boolean }[] = [];
+  const admitted: { contact: Contact; role?: SpaceMember_Role }[] = [];
   const space: MemberSpace = {
     membershipPolicy,
     members: { get: () => members },
-    admitContact: async (contact, role, options) => {
+    admitContact: async (contact, role) => {
       if (refuse) {
         throw new Error('Not an admin of the space.');
       }
-      admitted.push({ contact, role, agent: options?.agent });
+      admitted.push({ contact, role });
     },
   };
   return { space, admitted };
@@ -46,15 +46,13 @@ describe('admitAgent', () => {
   const owner = PublicKey.random();
   const kai = PublicKey.random();
 
-  test("admits the agent's identity as an editor, named after the agent and marked as one", async ({ expect }) => {
+  test("admits the agent's identity as an editor, named after the agent", async ({ expect }) => {
     const { space, admitted } = makeSpace([member(owner, SpaceMember_Role.OWNER)]);
     await EffectEx.runPromise(admitAgent(space, kai, 'Kai'));
     expect(admitted).toHaveLength(1);
     expect(toPublicKey(admitted[0].contact.identityKey)?.equals(kai)).toBe(true);
     expect(admitted[0].contact.profile?.displayName).toBe('Kai');
     expect(admitted[0].role).toBe(SpaceMember_Role.EDITOR);
-    // The marker a locked space's owner admits it by.
-    expect(admitted[0].agent).toBe(true);
   });
 
   test('leaves a current member as it is, and admits one that was removed', async ({ expect }) => {
@@ -77,9 +75,9 @@ describe('admitAgent', () => {
     ];
     const shared = makeSpace(members).space;
     expect([owner, admin, editor].map((key) => mayAdmitAgent(shared, key))).toEqual([true, true, false]);
-    // A locked space takes no members after its genesis but an agent its owner admits.
+    // A locked space admits no one after its genesis, an agent no more than a person.
     const locked = makeSpace(members, { membershipPolicy: MembershipPolicy.LOCKED }).space;
-    expect([owner, admin, editor].map((key) => mayAdmitAgent(locked, key))).toEqual([true, false, false]);
+    expect([owner, admin, editor].map((key) => mayAdmitAgent(locked, key))).toEqual([false, false, false]);
     expect(mayAdmitAgent(shared, PublicKey.random())).toBe(false);
   });
 
@@ -147,5 +145,9 @@ describe('missingJoin', () => {
     expect(missingJoin({ agent: agent(), self: creator, hasSpace: holds, space: home(removed) })).toBeUndefined();
     const asEditor = makeSpace([member(creator.identityKey, SpaceMember_Role.EDITOR)]).space;
     expect(missingJoin({ agent: agent(), self: creator, hasSpace: holds, space: asEditor })).toBeUndefined();
+    const personal = makeSpace([member(creator.identityKey, SpaceMember_Role.OWNER)], {
+      membershipPolicy: MembershipPolicy.LOCKED,
+    }).space;
+    expect(missingJoin({ agent: agent(), self: creator, hasSpace: holds, space: personal })).toBeUndefined();
   });
 });

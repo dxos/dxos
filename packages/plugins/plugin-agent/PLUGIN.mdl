@@ -694,7 +694,7 @@ feat F-7: An agent's own space
   req F-7.3: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead (op:inviteAgent).
   req F-7.4: While the plugin's setting creates agents with identities (F-7.8), the account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
   req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
-  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent; in a locked space the membership is also marked as an agent (`SpaceMember.agent`). A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no other members after its genesis, but its owner admits an agent and manages its role, short of admin. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails before EDGE registers the space. The client refuses an admission the space would drop (`AuthorizationError`) rather than writing it. The agent marker is not checked: a locked space's owner can admit any identity marked as an agent, short of admin; it opens only the owner's own space. A client older than the marker rejects an agent's membership of a locked space, so the agent is not a member there on that client until it updates.
+  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent. Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership, and inviting one into such a space fails before EDGE registers it. The client refuses an admission the space would drop (`AuthorizationError`) rather than writing it.
   req F-7.7: With the setting on (F-7.8), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
   req F-7.8: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were, and the Agents panel and the agents offered by "Add from contacts" are hidden. On, creating an agent gives it its identity (F-7.7). An agent keeps the identity it was given when the setting is turned off.
 ```
@@ -805,11 +805,12 @@ scenario T-11: An agent is admitted to a space as a member   # admit-agent.test.
   # covers [F-7.6, F-7.7]
   given: a space owned by someone else
   then:
-    - the agent's identity is admitted as an editor, named after the agent and marked as one
+    - the agent's identity is admitted as an editor, named after the agent
+    - a space's owner and admins may admit it and an editor may not; in a locked space no one may, its owner included
     - a current member is left as it is, and one that was removed is admitted again
     - a space that refuses the admission fails it with AdmitAgentError
     - for the agent's creator, missingJoin names the step a failed join left undone: the membership, the admission, or both; nothing when both happened
-    - missingJoin names nothing for anyone but the creator, for an agent without a DID or its records, for an agent an admin removed, or where the creator may not admit it
+    - missingJoin names nothing for anyone but the creator, for an agent without a DID or its records, for an agent an admin removed, or where the creator may not admit it, as in a locked space
 ```
 
 ```mdl
@@ -842,7 +843,7 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
   which exists any more, so Discord conversations do not reach the agent.
 - The intended shape: an agent is a member of the spaces it is invited to, people talk to it there as a
   bot in their chats, and each person has one conversation with it at the top level (L0), not one per space.
-  As built, an agent with an identity is a member of each space it is in (F-7.6), but people talk to it
+  As built, an agent with an identity is a member of each shared space it is in (F-7.6), but people talk to it
   through a presence (an `Agent` keyed to its home); the member's one conversation is their private chat in
   the agent's home space, which the presence's article opens; its messages carry no identity (`sender` is
   `{ role: 'assistant' }`); and chats in a space do not wake the agent.

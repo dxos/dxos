@@ -225,8 +225,6 @@ export type CreateAdmissionCredentialsOptions = {
   tags?: string[];
   /** Automerge URL of the space root document, for a space that has one. */
   spaceRootUrl?: string;
-  /** Admits an AI agent's identity (`SpaceMember.agent`), which a locked space's owner may. */
-  agent?: boolean;
 };
 
 export const createAdmissionCredentials = async ({
@@ -240,7 +238,6 @@ export const createAdmissionCredentials = async ({
   invitationCredentialId,
   tags,
   spaceRootUrl,
-  agent,
 }: CreateAdmissionCredentialsOptions): Promise<FeedMessage_Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -254,7 +251,6 @@ export const createAdmissionCredentials = async ({
         spaceRootUrl,
         invitationCredentialId: invitationCredentialId && fromPublicKey(invitationCredentialId),
         tags: tags ?? [],
-        ...(agent ? { agent } : {}),
       }),
     }),
   ]);

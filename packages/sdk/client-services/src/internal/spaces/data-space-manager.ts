@@ -75,7 +75,6 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
-  MembershipPolicy,
   type ProfileDocument,
   SpaceDeletedSchema,
   SpaceMember_Role as SpaceMemberRole,
@@ -756,12 +755,10 @@ export class DataSpaceManager extends Resource {
       throw new AlreadyJoinedError();
     }
 
-    // Marked only where it is needed: a peer on protocols that predate the field cannot verify it.
-    const agent = options.agent && space.spaceState.membershipPolicy === MembershipPolicy.LOCKED;
     // Refused here, not written: the space drops a membership its issuer may not write, so the caller would see an
     // admission succeed that never takes effect.
     const issuer = this.signingContext.identityKey;
-    if (!space.spaceState.canWriteMember(issuer, { key: options.identityKey, role: options.role, agent })) {
+    if (!space.spaceState.hasMembershipManagementPermission(issuer)) {
       throw new AuthorizationError({
         message: 'No member management permission.',
         context: { spaceKey: space.key, role: space.spaceState.getMemberRole(issuer) },
@@ -784,7 +781,6 @@ export class DataSpaceManager extends Resource {
       invitationCredentialId: options.delegationCredentialId,
       tags: space.spaceState.tags,
       spaceRootUrl,
-      agent,
     });
 
     // TODO(dmaretskyi): Refactor.

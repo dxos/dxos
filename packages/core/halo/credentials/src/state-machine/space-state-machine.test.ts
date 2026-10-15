@@ -487,62 +487,6 @@ describe('SpaceStateMachine', () => {
     expect(spaceState.members.size).toEqual(1);
   });
 
-  test("a locked space's owner admits an agent and manages its role, short of admin", async ({ expect }) => {
-    const keyring = new Keyring();
-    const space = await keyring.createKey();
-    const owner = await keyring.createKey();
-    const agent = await keyring.createKey();
-    const person = await keyring.createKey();
-    const feed = await keyring.createKey();
-
-    const spaceState = new SpaceStateMachine(space);
-    /** Writes a membership as the client does: issued by `issuer`, after the membership chain's current heads. */
-    const write = async (issuer: PublicKey, subject: PublicKey, member: { role: SpaceMember_Role; agent?: boolean }) =>
-      spaceState.process(
-        await createCredential({
-          issuer,
-          subject,
-          assertion: create(SpaceMemberSchema, {
-            spaceKey: fromPublicKey(space),
-            genesisFeedKey: fromPublicKey(feed),
-            ...member,
-          }),
-          parentCredentialIds: spaceState.membershipChainHeads,
-          signer: keyring,
-        }),
-        { sourceFeed: feed },
-      );
-
-    await spaceState.process(
-      await createCredential({
-        issuer: space,
-        subject: space,
-        assertion: create(SpaceGenesisSchema, {
-          spaceKey: fromPublicKey(space),
-          membershipPolicy: MembershipPolicy.LOCKED,
-        }),
-        signer: keyring,
-      }),
-      { sourceFeed: feed },
-    );
-    expect(await write(space, owner, { role: SpaceMember_Role.OWNER })).toEqual(true);
-
-    // A person is refused; an agent's identity, marked as one, is admitted.
-    expect(await write(owner, person, { role: SpaceMember_Role.EDITOR })).toEqual(false);
-    expect(await write(owner, agent, { role: SpaceMember_Role.EDITOR, agent: true })).toEqual(true);
-    expect(spaceState.getMemberRole(agent)).toEqual(SpaceMember_Role.EDITOR);
-    expect(spaceState.hasMembershipManagementPermission(owner)).toEqual(false);
-
-    // An admin could manage members, so the agent never becomes one; nor does the agent admit others.
-    expect(await write(owner, agent, { role: SpaceMember_Role.ADMIN, agent: true })).toEqual(false);
-    expect(await write(agent, person, { role: SpaceMember_Role.EDITOR, agent: true })).toEqual(false);
-
-    // The membership marks the agent, so its owner removes it without repeating the marker.
-    expect(await write(owner, agent, { role: SpaceMember_Role.REMOVED })).toEqual(true);
-    expect(spaceState.getMemberRole(agent)).toEqual(SpaceMember_Role.REMOVED);
-    expect(spaceState.getMemberRole(person)).toEqual(SpaceMember_Role.REMOVED);
-  });
-
   test('locked space allows admitted feeds for existing members', async ({ expect }) => {
     const keyring = new Keyring();
     const space = await keyring.createKey();

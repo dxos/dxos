@@ -14,13 +14,13 @@ import { MembershipPolicy, SpaceMember_Role } from '@dxos/protocols/buf/dxos/hal
 export type MemberSpace = {
   readonly membershipPolicy: MembershipPolicy;
   readonly members: { get(): SpaceMember[] };
-  admitContact(contact: Contact, role?: SpaceMember_Role, options?: { agent?: boolean }): Promise<void>;
+  admitContact(contact: Contact, role?: SpaceMember_Role): Promise<void>;
 };
 
-/** The space would not admit the agent's identity: only a space's admins can admit members. */
+/** The space would not admit the agent's identity: only a shared space's admins can admit members. */
 export class AdmitAgentError extends BaseError.extend(
   'AdmitAgentError',
-  "Only a space's admins can add an agent to its members.",
+  "Only a shared space's admins can add an agent to its members.",
 ) {}
 
 const roleOf = (space: Pick<MemberSpace, 'members'>, identityKey: PublicKey): SpaceMember_Role | undefined =>
@@ -33,21 +33,20 @@ export const isMember = (space: Pick<MemberSpace, 'members'>, identityKey: Publi
 };
 
 /**
- * Whether `self` may admit an agent's identity to the space, as the space decides it (`SpaceStateMachine.canWriteMember`):
- * its admins and owner, or in a locked space, which takes no other members after its genesis, its owner alone.
+ * Whether `self` may admit an agent's identity to the space, as the space decides it: its admins and owner. A locked
+ * (personal or private) space admits no one after its genesis, an agent no more than a person.
  */
 export const mayAdmitAgent = (space: Pick<MemberSpace, 'members' | 'membershipPolicy'>, self: PublicKey): boolean => {
+  if (space.membershipPolicy === MembershipPolicy.LOCKED) {
+    return false;
+  }
   const role = roleOf(space, self);
-  return (
-    role === SpaceMember_Role.OWNER ||
-    (space.membershipPolicy !== MembershipPolicy.LOCKED && role === SpaceMember_Role.ADMIN)
-  );
+  return role === SpaceMember_Role.OWNER || role === SpaceMember_Role.ADMIN;
 };
 
 /**
  * Admits the agent's identity to the space as an editor, named after the agent, so the space's members include it.
- * Admitted as an agent, which a locked (personal or private) space's owner may still do though the space takes no
- * other members after its genesis. Nothing when it is a current member already.
+ * Nothing when it is a current member already.
  */
 export const admitAgent = (
   space: MemberSpace,
@@ -64,7 +63,6 @@ export const admitAgent = (
               ...(name ? { profile: { displayName: name } } : {}),
             }),
             SpaceMember_Role.EDITOR,
-            { agent: true },
           ),
         catch: (cause) => new AdmitAgentError({ cause }),
       });
