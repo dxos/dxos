@@ -173,7 +173,10 @@ that share their provenance (source, speaker, time, quote, factuality, extractio
   know is minted in the **brain's namespace** (`https://dxos.org/semantic/brain/<id>/`) from its relation
   key. Every predicate is an `rdf:Property` described in the ontology graph (`graph:ontology`) — label,
   shorthand, synonyms, definition, domain/range, defining vocabulary, and for a minted one when, by what
-  and from which quote — never inside a statement graph (`FactStore.predicates` reads them back).
+  and from which quote — never inside a statement graph (`FactStore.predicates` reads them back). The IRI is
+  the join key; the shorthand, label and synonyms are wordings that resolve to it, and the label is what a UI
+  shows, in kebab-case. The vocabularies, the wordings and why they differ from the IRIs:
+  [docs/ONTOLOGY.md](./docs/ONTOLOGY.md).
 - **Merging** predicates is `owl:equivalentProperty` (`Ontology.merge`): the merged one stays readable,
   deprecated, and a query for either matches both. Seed predicates list the `dx:` IRIs they were stored
   under before moving to shared vocabularies as equivalents, so older facts still match.
@@ -291,8 +294,9 @@ Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide 
   (`{ literal }`).
 - **Entity** — a normalized mention (person/org/place/event/concept/thing). The `entity` slug is the
   join key (`DXOS` and `dxos` collapse); `label` keeps the display surface form.
-- **Predicate** — the relation (a short verb phrase). Open strings in v1; a normalized **relation key**
-  for matching paraphrases (`works at` = `employed by`) is planned.
+- **Predicate** — the relation: an IRI from the ontology (`schema:worksFor`), reached from any of its
+  wordings (`works at`, `employed by`) through the normalized **relation key**; see
+  [docs/ONTOLOGY.md](./docs/ONTOLOGY.md).
 - **Factuality** — the author's epistemic stance on the proposition: a **FactBank** value
   (`CT`/`PR`/`PS` × `±`, plus `CTu` polarity-unknown and `Uu` uncommitted), `polarity`, `confidence`
   (0–1), and `nature` (epistemic = knowledge, aleatory = chance).

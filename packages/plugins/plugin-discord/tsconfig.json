@@ -91,6 +91,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -101,9 +104,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-form"

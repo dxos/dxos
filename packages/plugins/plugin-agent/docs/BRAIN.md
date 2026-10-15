@@ -185,11 +185,14 @@ Decided 2026-10-13 (formerly QUESTIONS.md 1 and 2):
   another graph). A `Fact` is one statement: its `id` is derived from the graph and the triple, so a
   fact read twice is stored once. Facts stored before this were reified; pipeline-rdf's migration
   `0002_named_graphs` made each a one-statement graph that keeps its id.
-- **Predicates are IRIs from an extensible ontology** (`RDF.Ontology`): `dx:hasRole`, `dx:memberOf`,
-  `dx:knowsAbout`, … plus the goal vocabulary (`dx:worksOn`, …), each with its label, synonyms,
-  description, domain, range and inverse. A surface form the ontology knows maps onto its predicate;
-  one it does not know mints a `dx:` IRI from its relation key, so the same phrasing in two documents
-  still meets. The brain's `Vocabulary` is built from the same ontology.
+- **Predicates are IRIs from an extensible ontology** (`RDF.Ontology`), seeded from shared
+  vocabularies under their own IRIs (`schema:jobTitle`, `schema:memberOf`, `foaf:knows`,
+  `dcterms:creator`), with `dx:` only for what none of them names (`dx:claim`, `dx:worksOn`, …). Each
+  has a label, synonyms, description, domain, range and inverse. A surface form the ontology knows maps
+  onto its predicate; one it does not know mints an IRI in the brain's namespace from its relation key,
+  so the same phrasing in two documents still meets. The brain's `Vocabulary` is built from the same
+  ontology. Wordings, labels and the vocabularies: pipeline-rdf's
+  [docs/ONTOLOGY.md](../../../core/compute/pipeline-rdf/docs/ONTOLOGY.md).
 - **Entities are IRIs where one is known**: a member by DID, a person or organization in the space by
   its object URI (`echo://<spaceId>/<objectId>`), an email by `mailto:`, a page by its URL; otherwise
   a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.

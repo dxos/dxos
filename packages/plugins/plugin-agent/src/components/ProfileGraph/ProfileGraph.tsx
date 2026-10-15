@@ -7,6 +7,7 @@ import React from 'react';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { type Goal, type Knowledge } from '#types';
@@ -44,11 +45,7 @@ export const MEMORY_ICONS: Record<Knowledge.Kind, string> = {
 export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   if (goals.length === 0 && memories.length === 0) {
-    return (
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('profile-graph-empty.message')}
-      </Layout.Flex>
-    );
+    return <Status.Empty>{t('profile-graph-empty.message')}</Status.Empty>;
   }
 
   return (

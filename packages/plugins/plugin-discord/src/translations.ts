@@ -37,6 +37,7 @@ export const translations = [
         'discord-setup-install.label': 'Install',
         'discord-setup-reinstall.label': 'Reinstall (update permissions)',
         'discord-setup-refresh.label': 'Refresh',
+        'discord-setup-console.label': 'Open the EDGE console',
         'discord-setup-connected.label': 'Connected channels',
         'discord-setup-connected-empty.label': 'No channels connected yet.',
         'discord-setup-channels.label': 'Channels',

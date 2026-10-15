@@ -632,6 +632,32 @@ describe('Worker session lifetime', () => {
     await sleep(0);
     expect(order).toEqual(['session', 'session', 'runtime']);
   });
+  test('a tab reconnects when its worker shuts down but its teardown never finishes', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const shutdowns: Array<() => void> = [];
+    const createWorker = createWorkerFactory(keys.storageLockKey, {
+      shutdownTimeout: 100,
+      createRuntime: ({ requestShutdown }) =>
+        Effect.gen(function* () {
+          shutdowns.push(requestShutdown);
+          yield* Effect.addFinalizer(() => Effect.never);
+          return { createSession: () => Effect.void };
+        }),
+    });
+    const { connection } = makeConnection(hub, keys, undefined, { createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+
+    const reconnected = new Trigger();
+    connection.reconnected.on(() => {
+      reconnected.wake();
+    });
+    shutdowns[0]();
+    await asyncTimeout(reconnected.wait(), 10_000);
+  });
 });
 
 describe('Worker displacement', () => {
