@@ -194,7 +194,8 @@ inputs random values rarely hit (D135).
 such as `x < x + 1`, which is false because `Int` wraps.
 
 Verdicts are cached by hash. Re-running `deus check` after an unrelated change checks nothing
-again.
+again. A verdict is keyed by the theorem alone, so after upgrading `deus`, `deus check --fresh`
+checks every selected theorem again and replaces its kept verdict.
 
 ## Recipe 3: An HTTP service as a native binary
 

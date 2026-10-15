@@ -158,6 +158,8 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 
 results/<h> keeps a verdict for the theorem hash h; a change to Prove or Check that would turn a pass into a fail (or back) is invisible until the cache is cleared, and deus check --force does not bypass it. Key results by the theorem hash and the checker's own hash, or clear results when the seed changes. Found while adding Prove.Spec: an empty-cache run had to be done by hand.
 
+> claude: Partial (D158): `deus check --fresh` / `deus test --fresh` ignore kept verdicts, so a checker upgrade can be applied by hand. Keying the verdict by checker identity is still open.
+
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo

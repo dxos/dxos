@@ -14,6 +14,19 @@ test Prove.Spec.decideRefusesFalse := Spec.verdict "theorem T.five : 2 + 2 == 5 
 test Prove.Spec.equalityByDifference := Spec.verdict "theorem T.succ (n : Int) : n + 1 != n := by simp\n" "T.succ" == "pass proof" && Spec.verdict "theorem T.twice (n : Int) (m : Int) : 2 * n + m == m + n + n := by simp\n" "T.twice" ==
   "pass proof"
 
+/-- R-8: a kept verdict with made-up evidence stays without `--fresh` and is replaced with it; a kept fail would exit the run. -/
+test Prove.Spec.freshIgnoresKeptVerdicts := storeText (fun dir =>
+  let ns := cliUpdate dir "theorem T.fresh : 1 + 1 == 2 := by decide\n"
+  match Map.lookup "T.fresh" ns with
+  | Option.some e =>
+      let kept := dir ++ "/results/" ++ Entry.hash e
+      IO.writeFile kept "(pass \"stale\" 7)\n"
+      try (fun _ => dispatch ["check", "T.", "--codebase", dir])
+      let before := getOr (IO.readFile kept) ""
+      try (fun _ => dispatch ["check", "T.", "--fresh", "--codebase", dir])
+      before ++ " then " ++ getOr (IO.readFile kept) ""
+  | Option.none => "missing") == "(pass \"stale\" 7)\n then (pass \"decide\" 1)\n"
+
 /-- R-6: `n * n >= 0` is left as one goal, shown. -/
 test Prove.Spec.goalsLeftAreShown := startsWith
   "fail 1 goal(s) left; first:"

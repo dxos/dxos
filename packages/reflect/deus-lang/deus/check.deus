@@ -353,6 +353,8 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   let prefix := Option.getOr (List.head? args.positional) ""
   let runIntegration := Cli.flag args "integration"
+  -- A kept verdict is keyed by the theorem alone, so after a checker change it may be stale (Prove.Spec R-8).
+  let fresh := Cli.flag args "fresh"
   let selected := List.filter (fun pair =>
     Text.startsWith prefix (fst pair) &&
       (wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration")) &&
@@ -368,7 +370,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
       let integration := not wantTheorems && hasAttr dir h "integration"
       let started := IO.time ()
       -- An integration test talks to the real world, so its result is never reused.
-      let outcome := match (if integration then none else cached dir h) with
+      let outcome := match (if integration || fresh then none else cached dir h) with
         | some v => (name, v, true)
         | none =>
           Image.load (Cli.fetcher dir) [h]

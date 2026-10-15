@@ -70,6 +70,16 @@ req R-7: an unknown tactic is refused by name, with the list of tactics
   by: Prove.Spec.unknownTacticRefused
 ```
 
+## Kept verdicts
+
+A verdict is kept under the theorem's hash (`results/<hash>`), so a theorem is checked once. The hash
+does not cover the checker, so after a change to the prover a kept verdict can be stale (task 79f72c44).
+
+```mdl
+req R-8: deus check --fresh checks every selected theorem again, ignoring kept verdicts, and keeps the new ones
+  by: Prove.Spec.freshIgnoresKeptVerdicts
+```
+
 ## Laws
 
 Each law adds a theorem to a fresh simulated store and checks it (`Testing.Spec.verdict`). The laws run
