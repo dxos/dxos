@@ -148,7 +148,7 @@ def Codebase.Spec.forked (sideChanges : Map Text Entry -> Map Text Entry) (mainC
 test Codebase.Spec.illTypedDependentFails := inStore (fun dir =>
   let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"
   match try (fun _ => cliUpdate dir "def A.f (t : Text) : Text := \"x\"\n") with
-  | Result.err message => Text.contains "A.g" message && Map.lookup "A.f" (Codebase.current dir) == Map.lookup "A.f" before
+  | Result.err message => Text.contains "A.g: type mismatch" message && Text.contains "(calling A.f)" message && Map.lookup "A.f" (Codebase.current dir) == Map.lookup "A.f" before
   | Result.ok _ => false)
 
 /-- Runs a store action in a fresh simulated codebase; a thrown error is `false`. -/

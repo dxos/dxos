@@ -55,12 +55,12 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := propagate
+    let propagated := catch (fun _ => propagate
       dir
       ns2
       subst
       (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
-      (checkTypes ())
+      (checkTypes ())) (fun e => Throw.throw (join "\n" (List.map (nameCallee ns2) (Text.split e "\n"))))
     let ns3 := fst propagated
     let message := getOr
       (option args "message")

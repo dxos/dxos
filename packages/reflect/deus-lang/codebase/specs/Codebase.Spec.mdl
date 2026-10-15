@@ -203,7 +203,7 @@ req R-18: an update that drops a structure's field, a type's constructor or an a
 ```
 
 ```mdl
-req R-19: an update whose change leaves a dependent outside it ill-typed fails, names that dependent, and commits nothing; a change its dependents still type-check against goes through
+req R-19: an update whose change leaves a dependent outside it ill-typed fails, names that dependent and the definition it calls, and commits nothing; a change its dependents still type-check against goes through
   by: Codebase.Spec.illTypedDependentFails | Codebase.Spec.welltypedDependentFollows
 ```
 
