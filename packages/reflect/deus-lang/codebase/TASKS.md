@@ -31,6 +31,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+> claude: Slice 1 (D146, Artifact.Spec): @[artifact] constants. deus artifact <name> [--out f] evaluates once and keeps the value at artifacts/value-<hash>; run, image, build and serve fill missing ones first and use kept values, so images carry the value, not its inputs. Left: embedding files (an asset reference as a constant), and a Bytes value so a binary need not be Text.
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -1107,6 +1109,8 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 > someone: D147: Code.steps and Code.cost now count interpreter steps natively; native deus mdl passes all 241 blocks in 7.2 s vs 19.7 s on node.
 
 > someone: D148: curried lambdas take all arguments without intermediate closures; 199 tests 2.0 s natively vs 9.4 s on node.
+
+> someone: Correction: the curried-lambda change is D149, not D148 (renumbered on merge).
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 

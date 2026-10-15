@@ -797,7 +797,59 @@ def compact (args : Args) : {IO, Throw Text} Unit :=
 -- Commands: running.
 --
 
-def fetcher (dir : Text) : Text -> {IO} Option Sexp := fun h => Codebase.readObject dir h
+/-- Objects for images and the machine: a cached `@[artifact]` constant is its kept value (Artifact.Spec R-4). -/
+def fetcher (dir : Text) : Text -> {IO} Option Sexp := fun h =>
+  match cachedValue dir h with
+  | some value => some (Sexp.node "term" [value])
+  | none => Codebase.readObject dir h
+
+/-- The value kept for the `@[artifact]` constant `h`, as Core; `none` until it is evaluated (Artifact.Spec). -/
+def cachedValue (dir : Text) (h : Text) : {IO} Option Sexp := Option.map Sexp.read (IO.readFile (artifactPath dir h))
+
+def artifactPath (dir : Text) (h : Text) : Text := dir ++ "/artifacts/value-" ++ h
+
+/-- Whether `h` is marked `@[artifact]`; the text test first spares parsing every definition's metadata. -/
+def isArtifact (dir : Text) (h : Text) : {IO} Bool :=
+  match IO.readFile (dir ++ "/meta/" ++ h) with
+  | some text => Text.contains "artifact" text && Check.hasAttr dir h "artifact"
+  | none => false
+
+/-- Evaluates every uncached `@[artifact]` constant `roots` reach and keeps its value; returns their hashes. -/
+def ensureArtifacts (dir : Text) (roots : List Text) : {IO, Throw Text} List Text :=
+  let wanted := List.filter (fun h => isArtifact dir h && Option.isNone (cachedValue dir h))
+    (List.map fst (Image.closure (fun h => Codebase.readObject dir h) roots))
+  List.map (fun h => evaluateArtifact dir h ("#" ++ short h)) wanted
+
+/-- Evaluates the constant `h` and keeps its value; `label` names it in the error a function gets (R-5). -/
+def evaluateArtifact (dir : Text) (h : Text) (label : Text) : {IO, Throw Text} Text :=
+  Image.load (fun x => Codebase.readObject dir x) [h]
+  let quoted := Code.quote (Code.run h)
+  if Text.contains "(prim \"<function>\")" quoted then throw (label ++ " is a function; an @[artifact] must be a first-order constant")
+  else
+    IO.mkdirp (dir ++ "/artifacts")
+    IO.writeFile (artifactPath dir h) (quoted ++ "\n")
+    h
+
+/--
+  `deus artifact <name> [--out file]`: evaluates an `@[artifact]` constant once and keeps its value
+  under its hash (task 88004c30); `--out` writes a Text value's characters to a file.
+-/
+def artifact (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let name := Option.getOr (List.head? args.positional) ""
+  match lookupName ns name with
+  | (_, Entry.term h) =>
+    if not (isArtifact dir h) then throw (name ++ " is not marked @[artifact]") else ()
+    let fresh := Option.isNone (cachedValue dir h)
+    let _ := if fresh then evaluateArtifact dir h name else h
+    match (option args "out", cachedValue dir h) with
+    | (some out, some (Sexp.list [Sexp.sym "text", Sexp.str value])) => IO.writeFile out value
+    | (some _, _) => throw (name ++ " is not a Text value, so --out cannot write it")
+    | _ => ()
+    if flag args "quiet" then () else output args (fun _ => Json.obj [("name", Json.str name), ("hash", Json.str h), ("evaluated", Json.bool fresh)])
+      (fun _ => (if fresh then "Evaluated and kept " else "Already kept ") ++ name ++ " " ++ short h ++ ".")
+  | _ => throw "usage: deus artifact <constant> [--out file]"
 
 /-- The last defect's stack as `    at <hash>` lines, stable enough to cache with a verdict. -/
 def defectTrace (u : Unit) : Text :=
@@ -824,6 +876,7 @@ def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
   | name :: programArgs =>
     match lookupName ns name with
     | (_, Entry.term h) =>
+      let _ := ensureArtifacts dir [h]
       Image.load (fetcher dir) [h]
       let f := Code.run h
       -- External artifacts are cached in the codebase's cache layer, by hash.
@@ -1284,6 +1337,7 @@ def image (args : Args) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   match lookupName ns (Option.getOr (List.head? args.positional) "") with
   | (_, Entry.term h) =>
+    let _ := ensureArtifacts dir [h]
     let text := Image.build (fetcher dir) h
     match option args "out" with
     | some out => IO.writeFile out text
@@ -1300,6 +1354,7 @@ def serve (args : Args) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   match lookupName ns (Option.getOr (List.head? args.positional) "") with
   | (_, Entry.term h) =>
+    let _ := ensureArtifacts dir [h]
     let image := Image.build (fetcher dir) h
     let out := dir ++ "/artifacts/server-" ++ Text.sha256 image
     let built := if IO.exists out then Result.ok () else try (fun _ =>
@@ -1418,6 +1473,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
 def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} Unit :=
   match (lookupName ns (Option.getOr (List.head? args.positional) ""), option args "out") with
   | ((_, Entry.term h), some out) =>
+    let _ := ensureArtifacts dir [h]
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
       if flag args "wasm" then
@@ -1835,6 +1891,8 @@ def usage : Text :=
     "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",
     "  eval <expr>                          evaluate an expression; it may use Workspace.names, .view,",
     "                                       .update and .run to read and change the codebase",
+    "  artifact <constant> [--out file]     evaluate an @[artifact] constant once and keep its value by hash;",
+    "                                       run, image, build and serve then use the kept value",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
     "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D125)",
@@ -1907,6 +1965,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       match leadingOptions rest with
       | (options, program) => run (parseArgs options) program
     else if command == "eval" then eval args
+    else if command == "artifact" then artifact args
     else if command == "mdl" then mdl args
     else if command == "features" then features args
     else if command == "test" then Check.tests args
