@@ -93,6 +93,16 @@ export const IdentityLifecycle = Capability.lazyModule(
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
+export const IndexProgress = Capability.lazyModule(
+  'IndexProgress',
+  {
+    // ProgressRegistry is read optionally in the body, so a host without plugin-progress loses only the meter.
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./index-progress.ts'),
+);
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {
