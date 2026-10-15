@@ -41,6 +41,14 @@ req R-4: using names one generator per binder
   by: Testing.Spec.generatorCountChecked
 ```
 
+A statement `P -> Q` reads `implies P Q`, which is strict, so a case that failed `P` still evaluated `Q`:
+`n != 0 -> n / n == 1` divided by zero (task 7ef8bf45).
+
+```mdl
+req R-5: by test checks the conclusion only on cases that meet every hypothesis, and fails when no case does
+  by: Testing.Spec.hypothesesFilterCases | Testing.Spec.vacuousTheoremFails
+```
+
 ## Theorems
 
 The laws are the definitions under `Testing.Spec`: `deus ls Testing.Spec.` lists them and `deus view` prints them.

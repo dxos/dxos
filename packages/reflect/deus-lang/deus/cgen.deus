@@ -150,7 +150,7 @@ def prelude (nullary : Int) : Text :=
     "static V deus_literal(const uint16_t *u, V n) { V r = deus_text_of(u, n); HDR(r) = ((V)1 << 48) | K_TEXT; deus_live -= deus_body(UNBOX(r)) + 1; return r; }",
     "/* A constant's value (D125) keeps a count no program brings to one, like a literal's. */",
     "static void deus_immortal(V v) { if (IS_PTR(v)) HDR(v) = ((V)1 << 48) | (HDR(v) & 255); }",
-    "/* Values whose type the compiler does not know (D136): a text is a heap block of kind K_TEXT, an Int is not a block,",
+    "/* Values whose type the compiler does not know (D137): a text is a heap block of kind K_TEXT, an Int is not a block,",
     "   a nullary constructor is its static block and any other is [tag, fields…] of kind its field count. */",
     "#define IS_TEXT(v) (IS_PTR(v) && (HDR(v) & 255) == K_TEXT)",
     "static V deus_tag_any(V v) { if (IS_PTR(v)) { if ((HDR(v) & 255) >= K_TABLE) __builtin_trap(); return UNBOX(v)[0]; } return (V)((V *)(uintptr_t)v - deus_nullary); }",
@@ -762,7 +762,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
             else if tail && f.fnArity == ctx.cArity then "{ " ++ decls ++ "MUSTTAIL return " ++ call ++ "; }"
             else ret (if decls == "" then call else "({ " ++ decls ++ call ++ "; })")
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys) :: xs) =>
-    -- A call that already has all its arguments returns a function, which the rest apply (D136).
+    -- A call that already has all its arguments returns a function, which the rest apply (D137).
     if List.length ys < arityOf ctx h then form ctx env tail owned token (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys ++ xs))
     else ret (applyUnknown ctx env owned token (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys)) xs)
   | Sexp.list (Sexp.sym "app" :: f :: xs) => ret (applyUnknown ctx env owned token f xs)
@@ -971,7 +971,7 @@ def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
       match infix p with
       | some op => lend (fun vs => "(V)(deus_text_cmp" ++ args vs ++ " " ++ op ++ " 0)")
       | none => none
-    -- Data whose type is only partly known, as `Option b` from a polymorphic call, compares at run time (D136).
+    -- Data whose type is only partly known, as `Option b` from a polymorphic call, compares at run time (D137).
     else if (Wasm.isComparison p || p == "compare") && not (List.isEmpty types) && not (List.any Wasm.isScalar types) && not (List.any comparesOpaque types) then
       if p == "compare" then lend (fun vs => "deus_cmp_any" ++ args vs)
       else if p == "eq" then lend (fun vs => "deus_eq_any" ++ args vs)
@@ -1507,7 +1507,7 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
     else
       let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (effHost a i) (List.map (effLower abilities) (List.take k xs))
       if n == k then performed else Sexp.list (Sexp.sym "app" :: performed :: List.map (effLower abilities) (List.drop k xs))
-  -- `defect` raises `Defect.raise`, which a handler may take, as the kernels do (D136).
+  -- `defect` raises `Defect.raise`, which a handler may take, as the kernels do (D137).
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], x] =>
     effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [effLower abilities x]
   | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
@@ -1534,7 +1534,7 @@ def usesDefect (e : Sexp) : Bool :=
   | Sexp.list items => List.any usesDefect items
   | _ => false
 
-/-- Whether `e` calls a host primitive of `IO` (D129) or reports a defect no handler takes (D136). -/
+/-- Whether `e` calls a host primitive of `IO` (D129) or reports a defect no handler takes (D137). -/
 def usesHost (e : Sexp) : Bool :=
   match e with
   | Sexp.list [Sexp.sym "prim", Sexp.str p] => Text.startsWith "deus.io." p || p == "deus.defect"

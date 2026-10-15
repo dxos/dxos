@@ -23,7 +23,7 @@ such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](.
 `Text.sha256` are in the runtime ([D120](../DECISIONS.md)). Comparing arrays or functions, and `show`
 on a value whose type the compiler does not know, are still refused; `==`, `<` and `compare` on
 data whose type it knows only in part, as `Option b` from a polymorphic call, are decided at run
-time by tag and fields ([D136](../DECISIONS.md)). Effect handlers compile when
+time by tag and fields ([D137](../DECISIONS.md)). Effect handlers compile when
 every clause resumes in tail position or not at all ([D124](../DECISIONS.md)); a clause that resumes
 anywhere else is refused. A definition with no parameters is computed once, on first use, and
 kept for the rest of the run, so a constant `Ref` is one cell however often it is named; its value
@@ -291,12 +291,12 @@ stderr and exit status, and ends with 0 live words.
 
 JIT times are a `deus run` minus a `deus run` on a tiny file. A `defect` raises `Defect.raise`, so
 a handler of it takes the defect as on the kernels; one no handler takes prints `defect: …` and
-ends the run with status 70, without the kernels' trace of definitions ([D136](../DECISIONS.md)).
+ends the run with status 70, without the kernels' trace of definitions ([D137](../DECISIONS.md)).
 
 ## The compiler, natively
 
 `deus compile`'s whole pipeline (lexer, parser, name resolution, type inference, lowering to Core
-and the image writer) builds with the C back end ([D136](../DECISIONS.md)).
+and the image writer) builds with the C back end ([D137](../DECISIONS.md)).
 [`examples/compiler.deus`](../../examples/compiler.deus) wraps it as a command, and the command
 writes `seed/deus.image` byte for byte from `deus/`, ending with 0 live words.
 

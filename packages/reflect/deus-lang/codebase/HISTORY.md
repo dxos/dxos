@@ -1,5 +1,20 @@
 # History of main
 
+- `df5727a9a3` Renumber D136 to D137 (by claude)
+- `9bd05183e7` update deus (by merge)
+- `0004ee2d41` history: import 923 changes
+- `be0b310f6c` history: import 920 changes
+- `38bb9d4f65` task: import from /tmp/tmpf4vx0azz/tasks.sexp
+- `76784d8bc0` add /tmp/tmpf4vx0azz/merged/code /tmp/tmpf4vx0azz/merged/specs
+- `ea0d21d5e6` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ex.deus (by claude)
+- `383fa9c836` task: comment on 7ef8bf45 (by claude)
+- `5555eef319` task: set 7ef8bf45 state (by claude)
+- `12b7ee844e` update deus (by claude)
+- `6b96eb98a2` update deus (by claude)
+- `5999a6962c` update deus (by claude)
+- `732fd1ad9c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ts.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/hyp.deus (by claude)
+- `04a1f5bd95` task: comment on 2a2b87a2 (by claude)
+- `e2aba1a255` task: set 2a2b87a2 state (by claude)
 - `167b1b0553` task: comment on 60e88be8 (by claude)
 - `c4de611752` Rehash after wasm.deus (D136) (by claude)
 - `8148f1d5b4` Native C: the compiler builds natively; definitions by hash, defects as Defect requests, partly typed comparisons, no over-application loop (D136) (by claude)

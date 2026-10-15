@@ -10,6 +10,12 @@ def Check.below (state : Ref Int) (n : Int) : Int :=
   let r := and (nextRandom state) 2147483647
   if n <= 0 then 0 else r % n
 
+/-- A proposition's body under its binders. -/
+def Check.bodyOf (prop : Sexp) : Sexp :=
+  match prop with
+  | Sexp.list (Sexp.sym "lam" :: body :: []) => Check.bodyOf body
+  | _ => prop
+
 def Check.cached (dir : Text) (h : Text) : {IO} Option Verdict := Option.map (fun t => Check.fromSexp (Sexp.read t)) (IO.readFile (dir ++ "/results/" ++ h))
 
 def Check.caseCore (prop : Sexp) (args : List Sexp) : Sexp := if List.isEmpty args then prop else Sexp.list (Sexp.sym "app" :: prop :: args)
@@ -204,6 +210,12 @@ def Check.headAndArgs (t : Sexp) : (Sexp, List Sexp) :=
   | Sexp.list (Sexp.sym "tapp" :: f :: args) => (f, args)
   | _ => (t, [])
 
+/-- The hypotheses of `H1 -> H2 -> C`, in order. -/
+def Check.hypothesesOf (body : Sexp) : List Sexp :=
+  match body with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "implies" :: []) :: hyp :: rest :: []) => hyp :: Check.hypothesesOf rest
+  | _ => []
+
 def Check.interestingInts : List Int := [0, 1, -1, 2, 7, -100, 2147483647, -2147483648]
 
 /-- A lemma's verdict, checking (and caching) it first if needed. -/
@@ -355,10 +367,16 @@ def Check.testCases (prop : Sexp) (types : List Sexp) (generators : List Text) (
     match g with
     | Option.some ref => Sexp.list [Sexp.sym "app", Sexp.node "ref" [Sexp.str ref], Sexp.node "int" [Sexp.int (nextRandom state)]]
     | Option.none => Check.generate typeDecls state t 4
-  let cases := List.map (fun _ => mapIndexed (fun i t => draw t (get? generators i)) types) (range 0 count)
-  match runCases prop cases describe with
-  | Option.none => Verdict.pass "test" count
-  | Option.some reason => Verdict.fail reason
+  let drawn := List.map (fun _ => mapIndexed (fun i t => draw t (get? generators i)) types) (range 0 count)
+  -- `implies` is strict, so a case that fails a hypothesis is skipped; one whose hypothesis defects still runs, and reports it.
+  let hypotheses := List.map (fun hyp => withBody prop hyp) (hypothesesOf (bodyOf prop))
+  let cases := List.filter
+    (fun args => not (any (fun hyp => Check.evalCore (caseCore hyp args) == Result.ok false) hypotheses))
+    drawn
+  if List.isEmpty cases && count > 0 then Verdict.fail ("no case of " ++ toText count ++ " met the hypotheses") else
+    match runCases prop cases describe with
+    | Option.none => Verdict.pass "test" (List.length cases)
+    | Option.some reason => Verdict.fail reason
 
 def Check.tests (args : Args) : {IO, Throw Text} Unit := Check.run args false
 
@@ -394,3 +412,9 @@ def Check.verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option
           if integration then () else remember dir h v
           Option.some v
   | _ => Option.none
+
+/-- `prop` with its body under the binders replaced by `body`. -/
+def Check.withBody (prop : Sexp) (body : Sexp) : Sexp :=
+  match prop with
+  | Sexp.list (Sexp.sym "lam" :: inner :: []) => Sexp.list [Sexp.sym "lam", Check.withBody inner body]
+  | _ => body

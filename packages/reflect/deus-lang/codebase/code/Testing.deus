@@ -18,6 +18,9 @@ test Testing.Spec.generatorIsADependency := inStore (fun dir =>
     (Spec.lib ++ "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always\n")
   refersTo dir ns "T.seven" "T.always")
 
+/-- R-5: a case that fails a hypothesis is skipped, so the conclusion's division never sees 0. -/
+test Testing.Spec.hypothesesFilterCases := Spec.verdict "theorem T.div (n : Int) : n != 0 -> n / n == 1 := by test 50\n" "T.div" == "pass test"
+
 /-- A generator that always gives 7. -/
 def Testing.Spec.lib : Text := View.Spec.prelude ++ "def T.always (seed : Int) : Int := 7\n"
 
@@ -37,6 +40,11 @@ test Testing.Spec.unknownGeneratorRejected := not (checks "def T.always (seed : 
 /-- R-1: every case is 7. -/
 test Testing.Spec.usingDrawsFromGenerator := Spec.verdict "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always\n" "T.seven" ==
   "pass test"
+
+/-- R-5: a theorem none of whose cases meets its hypotheses has no evidence. -/
+test Testing.Spec.vacuousTheoremFails := startsWith
+  "fail no case"
+  (Spec.verdict "theorem T.never (n : Int) : n != n -> n == 0 := by test 20\n" "T.never")
 
 /-- The verdict of the theorem `name` in `source`, added to a fresh store and checked. -/
 def Testing.Spec.verdict (source : Text) (name : Text) : Text := storeText (fun dir =>

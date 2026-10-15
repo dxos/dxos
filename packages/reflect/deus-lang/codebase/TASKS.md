@@ -162,25 +162,12 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 
 The tools searchDefinitions and viewDefinition were checked with composer.invoke only; the test identity had no account. Add an autocue step where the assistant answers a DEUS question with the tools.
 
-## Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (`2a2b87a2`)
-
-- state: todo
-- priority: medium
-- labels: spec
-
 ## TS kernel JIT: Ref.set journals a closure on every write; journal only when a deoptimisation can replay the entry (Array.set no longer journals, D96) (`a1b73fb8`)
 
 - state: todo
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
-
-## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (`7ef8bf45`)
-
-- state: todo
-- priority: medium
-- labels: prover
-- links `Check.generate` (#ba17124ee9)
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
@@ -1209,6 +1196,14 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
 
+## Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (`2a2b87a2`)
+
+- state: done
+- priority: medium
+- labels: spec
+
+> claude: Already fixed: the restore test runs deus mdl on the restored export and asserts 0 failed, 0 unchecked (src/restore.test.ts), and it passes at ab2f3e7f.
+
 ## Test that the JS back end refuses Js.import inside an expression (`05658284`)
 
 - state: done
@@ -1218,6 +1213,15 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 JsGen.gather throws '<name> uses Js.import inside an expression'. Add a test beside the multi-shot refusal test (task 508d9443).
 
 > claude: Done: JsGen.Spec.refusesMultiShotHandlers and JsGen.Spec.refusesInlineImports compile each case over the spec prelude and check the message; JsGen.Spec R-2 and R-3 cite them, and deus mdl JsGen.Spec reports no gaps.
+
+## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (`7ef8bf45`)
+
+- state: done
+- priority: medium
+- labels: prover
+- links `Check.generate` (#ba17124ee9)
+
+> claude: Done (D136): by test skips a case whose hypothesis is false and fails when none is left; a hypothesis that defects still runs and reports it. Testing.Spec R-5.
 
 ## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
 

@@ -1,5 +1,5 @@
 /-
-  The DEUS compiler as a native command (D136): `deus compile`'s pipeline (lexer, parser,
+  The DEUS compiler as a native command (D137): `deus compile`'s pipeline (lexer, parser,
   resolution, type inference and lowering to Core) built by the C back end. It writes the same
   image the kernels do, so it can rebuild the seed.
 

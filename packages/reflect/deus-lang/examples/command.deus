@@ -2,7 +2,7 @@
   A command-line program in the C back end (D129). `IO` operations that no handler in the
   program takes are performed by the C runtime: printing, files, directories, arguments, the
   environment, clocks, `exec` and `exit`. A handler of `IO` written in the program still wins.
-  A defect no handler takes ends the run with status 70, as `deus run` does (D136).
+  A defect no handler takes ends the run with status 70, as `deus run` does (D137).
 
     deus add examples/command.deus && deus build Command.main -o command --c
     ./command count notes.txt

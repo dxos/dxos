@@ -35,7 +35,7 @@ def scaledSum (n : Int) : Int :=
   handle List.foldl (fun s x => s + x) 0 (List.map Scale.scale (List.range 0 n)) with
   | Scale.scale x -> resume => resume (x * 3)
 
-/-- A constant whose value is a function, applied where it is named (D136). -/
+/-- A constant whose value is a function, applied where it is named (D137). -/
 def bump : Int -> Int := List.foldl (fun f _ => fun x => f x + 1) (fun x => x) [1, 2, 3]
 
 /-- The value of key `k`, from a polymorphic lookup whose result type the C back end knows only in part. -/
@@ -44,7 +44,7 @@ def pick (xs : List (a, b)) (k : a) : Option b :=
   | [] => Option.none
   | p :: rest => if fst p == k then Option.some (snd p) else pick rest k
 
-/-- `==`, `<` and `compare` on `Option (List Int)` values typed `Option b`, decided at run time (D136). -/
+/-- `==`, `<` and `compare` on `Option (List Int)` values typed `Option b`, decided at run time (D137). -/
 def partly (n : Int) : Int :=
   let table := List.map (fun i => (i, if i % 3 == 0 then Option.none else Option.some [i, i + 1])) (List.range 0 n)
   List.foldl (fun acc i =>
