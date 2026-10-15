@@ -89,6 +89,8 @@ export type DataFlowViewProps = {
   partitioned?: boolean;
   /** Keeps one simulation running as `spec` changes, moving it to each new layout in place rather than starting over. */
   continuous?: boolean;
+  /** Off, the canvas's toolbars are hidden, leaving the diagram alone on screen (as during playback). */
+  chrome?: boolean;
 };
 
 /**
@@ -105,6 +107,7 @@ export const DataFlowView = ({
   revealed = true,
   partitioned,
   continuous = false,
+  chrome = true,
 }: DataFlowViewProps) => {
   // With no theme chosen, the diagram follows the app's light or dark mode: paper by day, the glow by night.
   const { themeMode } = useThemeContext();
@@ -253,9 +256,13 @@ export const DataFlowView = ({
           />
         }
       />
-      <SceneView.Navigation />
-      <SceneView.Debug />
-      <SceneView.Theme />
+      {chrome && (
+        <>
+          <SceneView.Navigation />
+          <SceneView.Debug />
+          <SceneView.Theme />
+        </>
+      )}
     </SceneView.Root>
   );
 };

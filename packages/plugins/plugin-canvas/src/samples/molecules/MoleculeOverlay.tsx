@@ -33,6 +33,9 @@ import { useTween } from './tween.ts';
 
 const ATOM_RADIUS = 5.5;
 
+/** Bonds a quarter darker than the atoms they join, so a molecule's structure reads as lines between its particles. */
+const BOND_SHADE = { filter: 'brightness(0.75)' } as const;
+
 /** Magenta, which the canvas's own line colours lack, so the diagram can give a source that hue too. */
 const EXTRA_HUES: Record<string, { stroke: string; fill: string }> = {
   fuchsia: { stroke: 'stroke-fuchsia-border', fill: 'fill-fuchsia-border' },
@@ -670,7 +673,7 @@ const Container = ({ block, fading }: { block: Block; fading?: readonly number[]
 const BondLines = ({ bonds }: { bonds: readonly LatticeBond[] }) => {
   const { molecule } = useContext(LookContext);
   return (
-    <g strokeWidth={BOND_WIDTH}>
+    <g strokeWidth={BOND_WIDTH} style={BOND_SHADE}>
       {bonds.map((bond) => (
         <line
           key={bond.id}
@@ -693,7 +696,7 @@ const Atoms = ({ body, hue, opacity }: { body: Body; hue: string; opacity?: numb
   const { offsets } = body;
   return (
     <g opacity={opacity}>
-      <g className={stroke} strokeWidth={BOND_WIDTH}>
+      <g className={stroke} strokeWidth={BOND_WIDTH} style={BOND_SHADE}>
         {body.molecule.bonds.map(([from, to]) => (
           <line key={`${from}-${to}`} x1={offsets[from].x} y1={offsets[from].y} x2={offsets[to].x} y2={offsets[to].y} />
         ))}
@@ -723,7 +726,7 @@ const MoleculeShape = ({ body }: { body: Body }) => {
       )}
       {tint < 1 && <Atoms body={body} hue={body.hue} opacity={1 - tint} />}
       {tint > 0 && (
-        <g opacity={tint} className={molecule} strokeWidth={BOND_WIDTH}>
+        <g opacity={tint} className={molecule} strokeWidth={BOND_WIDTH} style={BOND_SHADE}>
           {body.molecule.bonds.map(([from, to]) => (
             <line
               key={`${from}-${to}`}

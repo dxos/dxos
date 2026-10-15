@@ -239,7 +239,7 @@ export const DOTS_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'dots', na
 
 export const LINES_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'lines', name: 'Lines', grid: 'lines' };
 
-/** Two broad colour washes over dots, fading at the edges, with grain to dither the dim gradients' bands. */
+/** Two broad colour washes over dots, fading at the edges; drawn dithered on the GPU, so they need no grain. */
 export const GLOW_BACKGROUND: Background = {
   id: 'glow',
   name: 'Glow',
@@ -250,7 +250,7 @@ export const GLOW_BACKGROUND: Background = {
     { hue: 'teal', x: 0.85, y: 0.9, strength: 0.22 },
   ],
   fade: true,
-  grain: 8 / 255,
+  grain: 0,
 };
 
 /** Warm off-white paper with a fine fibre grain and faint dots. */

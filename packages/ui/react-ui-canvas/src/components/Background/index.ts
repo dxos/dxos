@@ -3,3 +3,4 @@
 //
 
 export * from './Background.tsx';
+export * from './WashCanvas.tsx';

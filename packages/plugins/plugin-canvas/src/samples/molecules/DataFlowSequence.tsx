@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { mx } from '@dxos/ui-theme';
 
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { useTween } from './tween.ts';
@@ -48,6 +49,9 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
   // Whether the diagram fades with the caption: not between two scenes on one stage, where it runs on and morphs.
   const [morphing, setMorphing] = useState(false);
   const scene = scenes[index];
+  // While it plays, every panel stays out of the picture unless the pointer is over the diagram.
+  const [hovered, setHovered] = useState(false);
+  const chrome = !playing || hovered;
   // Faded on animation frames rather than by CSS, so a frame-by-frame render steps them with everything else.
   const captionOpacity = useTween(shown ? 1 : 0, FADE);
   const diagramOpacity = useTween(shown || morphing ? 1 : 0, FADE);
@@ -82,7 +86,11 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
 
   return (
     // The canvas's own surface behind the scenes, so a cross-fade dips to the background rather than to black.
-    <div className='dx-fill relative flex flex-col bg-base-surface'>
+    <div
+      className='dx-fill relative flex flex-col bg-base-surface'
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+    >
       {/* The caption has a strip of its own above the diagram, so the camera's fit never puts a block under it. */}
       <div
         className='relative shrink-0 flex flex-col items-center gap-1 py-4 bg-base-surface'
@@ -104,9 +112,11 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
           grid={scene.grid}
           revealed={scene.revealed}
           partitioned={scene.partitioned}
+          chrome={chrome}
         />
       </div>
-      <div className='absolute top-2 right-2 w-max'>
+      {/* Hidden rather than removed, so the controls keep their place and still answer a script's clicks. */}
+      <div className={mx('absolute top-2 right-2 w-max', !chrome && 'invisible')}>
         <Toolbar.Root classNames={BAR}>
           <Button.Root
             variant='ghost'

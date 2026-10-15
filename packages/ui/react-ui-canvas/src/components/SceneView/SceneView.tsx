@@ -120,6 +120,7 @@ import {
   backgroundField,
   drawsField,
 } from '../Background/Background.tsx';
+import { WashCanvas, supportsWashCanvas } from '../Background/WashCanvas.tsx';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -1281,14 +1282,25 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
   const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
   // While editing, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws no lines too.
   const snapLines = !readonly && look.background.grid === 'lines';
+  // With WebGL, the surface and washes are drawn per pixel on the GPU (smooth, with no grain needed); the SVG field then
+  // draws only the grid. Without it (a test DOM), the SVG draws the washes as before.
+  const gpuWashes = look.background.washes.length > 0 && supportsWashCanvas();
   const fieldBackground = useMemo(
-    () => (snapLines ? { ...look.background, grid: 'none' as const } : look.background),
-    [snapLines, look.background],
+    () => ({
+      ...look.background,
+      ...(snapLines && { grid: 'none' as const }),
+      ...(gpuWashes && { washes: [] }),
+    }),
+    [snapLines, gpuWashes, look.background],
   );
 
   return (
     <>
-      <BackgroundFill background={look.background} />
+      {gpuWashes ? (
+        <WashCanvas background={look.background} field={field} camera={camera} />
+      ) : (
+        <BackgroundFill background={look.background} />
+      )}
       {/* Under the snap grid, in its own camera layer, so the grid a gesture lands on stays on top. */}
       {measured && drawsField(fieldBackground) && (
         <div
