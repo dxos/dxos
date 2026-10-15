@@ -21,9 +21,6 @@ export const homeKey = (home: string) => ({ source: HOME_SOURCE, id: home });
 export const homeOf = (agent: Agent.Agent): string | undefined =>
   Obj.getMeta(agent).keys.find((key) => key.source === HOME_SOURCE)?.id;
 
-/** The URI naming the agent's brain: its home agent's, the same for every presence of it. */
-export const brainOf = (agent: Agent.Agent): string => homeOf(agent) ?? Obj.getURI(agent);
-
 /** Where an agent is: its space and its id there. */
 export type Location = { spaceId: SpaceId; agentId: EntityId };
 
