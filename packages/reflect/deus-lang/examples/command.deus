@@ -2,6 +2,7 @@
   A command-line program in the C back end (D129). `IO` operations that no handler in the
   program takes are performed by the C runtime: printing, files, directories, arguments, the
   environment, clocks, `exec` and `exit`. A handler of `IO` written in the program still wins.
+  A defect no handler takes ends the run with status 70, as `deus run` does (D136).
 
     deus add examples/command.deus && deus build Command.main -o command --c
     ./command count notes.txt
@@ -43,6 +44,11 @@ def quiet (n : Int) : {IO} Int :=
     | IO.print t -> resume => resume (Ref.set printed (Ref.get printed + Text.length t))
   Ref.get printed
 
+/-- A defect raised under a handler of `Defect.raise`, which takes it instead of ending the run. -/
+def caught (word : Text) : Int :=
+  handle Text.length (defect ("bad " ++ word)) + 1 with
+  | Defect.raise message -> _ => 0 - Text.length message
+
 def main (u : Unit) : {IO} Unit :=
   match IO.args () with
   | ["count", path] =>
@@ -58,6 +64,8 @@ def main (u : Unit) : {IO} Unit :=
     match IO.exec "sh" ["-c", "echo out; echo err >&2; exit 3"] with
     | (code, out, err) => println (Int.toText code ++ " " ++ Text.trim out ++ " " ++ Text.trim err)
   | ["env", name] => println (Option.getOr (IO.getEnv name) "unset")
+  | ["caught", word] => println (Int.toText (caught word))
+  | ["defect", word] => println (Int.toText (Text.length (defect ("unhandled " ++ word))))
   | _ =>
-    let _ := eprintln "usage: command count|freq|roundtrip|quiet|exec|env …"
+    let _ := eprintln "usage: command count|freq|roundtrip|quiet|exec|env|caught|defect …"
     IO.exit 2

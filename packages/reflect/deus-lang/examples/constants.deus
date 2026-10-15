@@ -35,9 +35,26 @@ def scaledSum (n : Int) : Int :=
   handle List.foldl (fun s x => s + x) 0 (List.map Scale.scale (List.range 0 n)) with
   | Scale.scale x -> resume => resume (x * 3)
 
+/-- A constant whose value is a function, applied where it is named (D136). -/
+def bump : Int -> Int := List.foldl (fun f _ => fun x => f x + 1) (fun x => x) [1, 2, 3]
+
+/-- The value of key `k`, from a polymorphic lookup whose result type the C back end knows only in part. -/
+def pick (xs : List (a, b)) (k : a) : Option b :=
+  match xs with
+  | [] => Option.none
+  | p :: rest => if fst p == k then Option.some (snd p) else pick rest k
+
+/-- `==`, `<` and `compare` on `Option (List Int)` values typed `Option b`, decided at run time (D136). -/
+def partly (n : Int) : Int :=
+  let table := List.map (fun i => (i, if i % 3 == 0 then Option.none else Option.some [i, i + 1])) (List.range 0 n)
+  List.foldl (fun acc i =>
+    let a := pick table i
+    let b := pick table (n - 1 - i)
+    acc + (if a == b then 1 else 0) + 10 * (if a < b then 1 else 0) + 100 * (compare a b + 1)) 0 (List.range 0 n)
+
 /-- Every program here, as one number the tests compare across back ends. -/
 def constantsAll (n : Int) : Int :=
   let t := tallied n 0
-  t + 1000000 * Ref.get visits + someAll n + scaledSum n
+  t + 1000000 * Ref.get visits + someAll n + scaledSum n + bump n + 7 * partly n
 
-test constantsSmall := constantsAll 20 == 20027850
+test constantsSmall := constantsAll 20 == 20042573

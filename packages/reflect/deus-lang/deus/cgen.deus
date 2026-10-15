@@ -150,10 +150,12 @@ def prelude (nullary : Int) : Text :=
     "static V deus_literal(const uint16_t *u, V n) { V r = deus_text_of(u, n); HDR(r) = ((V)1 << 48) | K_TEXT; deus_live -= deus_body(UNBOX(r)) + 1; return r; }",
     "/* A constant's value (D125) keeps a count no program brings to one, like a literal's. */",
     "static void deus_immortal(V v) { if (IS_PTR(v)) HDR(v) = ((V)1 << 48) | (HDR(v) & 255); }",
-    "/* Values whose type the compiler does not know: a text is a heap block of kind K_TEXT, an Int is not a block. */",
+    "/* Values whose type the compiler does not know (D136): a text is a heap block of kind K_TEXT, an Int is not a block,",
+    "   a nullary constructor is its static block and any other is [tag, fields…] of kind its field count. */",
     "#define IS_TEXT(v) (IS_PTR(v) && (HDR(v) & 255) == K_TEXT)",
-    "static V deus_cmp_any(V a, V b) { if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_cmp(a, b); if (IS_PTR(a) || IS_PTR(b)) __builtin_trap(); return (a > b) - (a < b); }",
-    "static V deus_eq_any(V a, V b) { if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_eq(a, b); if (IS_PTR(a) || IS_PTR(b)) __builtin_trap(); return a == b; }",
+    "static V deus_tag_any(V v) { if (IS_PTR(v)) { if ((HDR(v) & 255) >= K_TABLE) __builtin_trap(); return UNBOX(v)[0]; } return (V)((V *)(uintptr_t)v - deus_nullary); }",
+    "static V deus_cmp_any(V a, V b) { if (a == b) return 0; if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_cmp(a, b); if (!IS_PTR(a) && !IS_PTR(b)) return (a > b) - (a < b); V x = deus_tag_any(a), y = deus_tag_any(b); if (x != y || !IS_PTR(a) || !IS_PTR(b)) return (x > y) - (x < y); for (V i = 1, k = HDR(a) & 255; i <= k; i++) { V c = deus_cmp_any(UNBOX(a)[i], UNBOX(b)[i]); if (c) return c; } return 0; }",
+    "static V deus_eq_any(V a, V b) { if (a == b) return 1; if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_eq(a, b); if (!IS_PTR(a) && !IS_PTR(b)) return 0; if (deus_tag_any(a) != deus_tag_any(b) || !IS_PTR(a) || !IS_PTR(b)) return 0; for (V i = 1, k = HDR(a) & 255; i <= k; i++) if (!deus_eq_any(UNBOX(a)[i], UNBOX(b)[i])) return 0; return 1; }",
     "static V deus_text_concat(V xs) { static struct { V h, n, cap; } empty = {0, 0, 0}; return deus_text_join(STATIC(&empty.n), xs); }",
     "static inline V deus_int_cmp(V x, V y) { return (x > y) - (x < y); }",
     "/* `++` on lists: the unique prefix of the first list is relinked in place, the rest copied (D115). Consumes both. */",
@@ -300,6 +302,8 @@ def ioRuntime : Text :=
     "static V deus_io_remove(V path) { char *p = deus_cstr(path); deus_rm(p); free(p); return UNIT; }",
     "static V deus_io_args(V unused) { (void)unused; V r = UNIT; for (int i = deus_argc; i-- > 1;) r = deus_cons(deus_text_cs(deus_argv[i]), r); return r; }",
     "static V deus_io_exit(V code) { fflush(stdout); exit((int)code); }",
+    "/* A defect no handler takes ends the run as `deus run` does, with status 70. */",
+    "static V deus_defect(V message) { fflush(stdout); fputs(\"defect: \", stderr); deus_io_put(stderr, message); fputs(\"\\n\", stderr); exit(70); }",
     "static V deus_io_time(V unused) { (void)unused; struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); int64_t ms = (int64_t)(t.tv_sec - deus_start.tv_sec) * 1000 + (t.tv_nsec - deus_start.tv_nsec) / 1000000; return W((uint32_t)ms); }",
     "static V deus_io_readStdin(V unused) { (void)unused; size_t n; uint8_t *b = deus_slurp(0, &n); if (!b) return deus_text(0); V r = deus_text_utf8_of(b, n); free(b); return r; }",
     "static V deus_io_writeBytes(V path, V bytes) { char *p = deus_cstr(path); deus_mkparent(p); FILE *f = fopen(p, \"wb\"); free(p); if (!f) __builtin_trap(); for (V c = bytes; UNBOX(c)[0]; c = UNBOX(c)[2]) { V b = UNBOX(c)[1]; fputc(IS_PTR(b) ? 0 : (int)(b & 255), f); } fclose(f); return UNIT; }",
@@ -331,7 +335,8 @@ def ioRuntime : Text :=
     "  return deus_pair(code, deus_pair(so, se));",
     "}",
     "#else",
-    "static V deus_io_trap(void) { __builtin_trap(); }"] ++ List.map (fun name => "#define deus_io_" ++ name ++ "(...) deus_io_trap()") ioOperations ++ ["#endif"])
+    "static V deus_io_trap(void) { __builtin_trap(); }",
+    "#define deus_defect(...) deus_io_trap()"] ++ List.map (fun name => "#define deus_io_" ++ name ++ "(...) deus_io_trap()") ioOperations ++ ["#endif"])
 
 /-- A C integer literal; the most negative `Int` has no literal of its own. -/
 def lit (n : Int) : Text := if n == -2147483648 then "(-2147483647 - 1)" else "(V)" ++ Int.toText n
@@ -380,11 +385,11 @@ structure FnCtx @"urn:deus:cgen:FnCtx" where
   cSelf : Int
   cArity : Int
   cNext : Ref Int
-  cBorrow : List (Int, List Bool)
+  cBorrow : Dict Int (List Bool)
   cLifted : Ref (List Text)
 
 /-- Which parameters of function `index` are borrowed: the caller keeps ownership (D86). -/
-def borrowsOf (ctx : FnCtx) (index : Int) : List Bool := Option.getOr (List.lookup index ctx.cBorrow) []
+def borrowsOf (ctx : FnCtx) (index : Int) : List Bool := Option.getOr (Dict.lookup index ctx.cBorrow) []
 
 def borrowsAt (flags : List Bool) (k : Int) : Bool := Option.getOr (List.get? flags k) false
 
@@ -392,15 +397,15 @@ def fresh (ctx : FnCtx) : Int := Wasm.fresh ctx.cNext
 
 /-- The index and definition of the function `h`. -/
 def arityOf (ctx : FnCtx) (h : Text) : {Throw Text} Int :=
-  let found := List.find (fun f => f.fnHash == h) ctx.cScope.fns
+  let found := Wasm.findFn ctx.cScope h
   if Option.isNone found then throw ("unknown function #" ++ Text.take 10 h)
   else Option.getOr (Option.map (fun f => f.fnArity) found) 0
 
 def callee (ctx : FnCtx) (h : Text) (argc : Int) : {Throw Text} (Int, Wasm.Fn) :=
-  match List.find (fun f => f.fnHash == h) ctx.cScope.fns with
-  | some f =>
+  match Dict.lookup h ctx.cScope.byHash with
+  | some (index, f) =>
     if f.fnArity != argc then throw ("#" ++ Text.take 10 h ++ " takes " ++ Int.toText f.fnArity ++ " arguments but is applied to " ++ Int.toText argc ++ "; partial application is outside the C subset")
-    else (List.findIndex (fun g => g.fnHash == h) ctx.cScope.fns, f)
+    else (index, f)
   | none => throw ("unknown function #" ++ Text.take 10 h)
 
 --
@@ -464,23 +469,23 @@ def isLocal (env : List Int) (l : Int) (e : Sexp) : Bool :=
   any use but as the container of an `Array` or `Ref` access, or as an argument a callee borrows
   (a call to `self` only in the same position, so a jump to the top keeps it borrowed).
 -/
-def consumes (borrow : List (Int, List Bool)) (fns : List Wasm.Fn) (self : Int) (param : Int) (env : List Int) (l : Int) (e : Sexp) : Bool :=
-  let again := fun (x : Sexp) => consumes borrow fns self param env l x
+def consumes (borrow : Dict Int (List Bool)) (table : Dict Text (Int, Wasm.Fn)) (self : Int) (param : Int) (env : List Int) (l : Int) (e : Sexp) : Bool :=
+  let again := fun (x : Sexp) => consumes borrow table self param env l x
   match e with
   | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
-  | Sexp.list [Sexp.sym "let", v, b] => again v || consumes borrow fns self param (-1 :: env) l b
+  | Sexp.list [Sexp.sym "let", v, b] => again v || consumes borrow table self param (-1 :: env) l b
   | Sexp.list [Sexp.sym "lam", b] => isIn (freeLocals (-1 :: env) b) l
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
     again scrutinee || List.any (fun c =>
       match c with
-      | Sexp.list [Sexp.sym "case", pat, b] => consumes borrow fns self param (List.replicate (binders pat) (-1) ++ env) l b
+      | Sexp.list [Sexp.sym "case", pat, b] => consumes borrow table self param (List.replicate (binders pat) (-1) ++ env) l b
       | _ => false) cases
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: x :: rest) =>
     let container := (Text.startsWith "Array." p || Text.startsWith "Ref." p) && p != "Array.make" && p != "Array.set" && p != "Ref.new" && isLocal env l x
     (not container && again x) || List.any again rest
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
-    let index := List.findIndex (fun f => f.fnHash == h) fns
-    let flags := Option.getOr (List.lookup index borrow) []
+    let index := Option.getOr (Option.map fst (Dict.lookup h table)) (-1)
+    let flags := Option.getOr (Dict.lookup index borrow) []
     List.any (fun pair =>
       match pair with
       | (k, x) => if isLocal env l x then not (borrowsAt flags k && (index != self || k == param)) else again x) (List.mapIndexed (fun k x => (k, x)) xs)
@@ -488,14 +493,16 @@ def consumes (borrow : List (Int, List Bool)) (fns : List Wasm.Fn) (self : Int) 
   | _ => false
 
 /-- The borrowed parameters of every function: the largest set no body consumes. -/
-def inferBorrow (fns : List Wasm.Fn) : List (Int, List Bool) :=
-  let initial := List.mapIndexed (fun i f => (i, List.map (fun t => not (Wasm.isScalar t)) (fst (Wasm.peel f.fnArity f.fnType)))) fns
-  let rec step borrow :=
-    let next := List.mapIndexed (fun i f =>
-      let flags := Option.getOr (List.lookup i borrow) []
-      let env := List.reverse (List.range 0 f.fnArity)
-      (i, List.mapIndexed (fun k b => b && not (consumes borrow fns i k env k f.fnBody)) flags)) fns
-    if next == borrow then borrow else step next
+def inferBorrow (fns : List Wasm.Fn) (table : Dict Text (Int, Wasm.Fn)) : Dict Int (List Bool) :=
+  let initial := List.map (fun f => List.map (fun t => not (Wasm.isScalar t)) (fst (Wasm.peel f.fnArity f.fnType))) fns
+  let rec step flagsList :=
+    let borrow := Dict.fromList (List.mapIndexed (fun i flags => (i, flags)) flagsList)
+    let next := List.map (fun pair =>
+      match pair with
+      | (i, (f, flags)) =>
+        let env := List.reverse (List.range 0 f.fnArity)
+        List.mapIndexed (fun k b => b && not (consumes borrow table i k env k f.fnBody)) flags) (List.mapIndexed (fun i x => (i, x)) (List.zip fns flagsList))
+    if next == flagsList then borrow else step next
   step initial
 
 /-- A reuse token: the C local holding a dead block's memory, and its field count. -/
@@ -576,7 +583,7 @@ def mover (ctx : FnCtx) (env : List Int) (xs : List Sexp) (l : Int) : Option Int
   List.foldl (fun acc pair =>
     match pair with
     | (k, x) =>
-      if isLocal env l x && not (List.any (consumes ctx.cBorrow ctx.cScope.fns ctx.cSelf (-1) env l) (List.drop (k + 1) xs)) then some k else acc) none (List.mapIndexed (fun k x => (k, x)) xs)
+      if isLocal env l x && not (List.any (consumes ctx.cBorrow ctx.cScope.byHash ctx.cSelf (-1) env l) (List.drop (k + 1) xs)) then some k else acc) none (List.mapIndexed (fun k x => (k, x)) xs)
 
 /--
   Each of `xs`, evaluated in order into a fresh local: the declarations, the C for each value,
@@ -653,7 +660,7 @@ def lambdaClosure (ctx : FnCtx) (env : List Int) (owned : List Int) (b : Sexp) :
     let k := List.length (Ref.get ctx.cLifted)
     let captures := List.mapIndexed (fun i l => (l, i + 2)) free
     let typed := List.map (fun pair => (snd pair, Wasm.typeOfLocal ctx.cScope (fst pair))) captures
-    let scope := Wasm.Scope.mk ctx.cScope.fns ctx.cScope.datatypes (Ref.new typed) ctx.cScope.eqs
+    let scope := Wasm.Scope.mk ctx.cScope.fns ctx.cScope.byHash ctx.cScope.datatypes (Ref.new typed) ctx.cScope.eqs
     let inner := FnCtx.mk scope (-1) 2 (Ref.new (2 + List.length free)) ctx.cBorrow ctx.cLifted
     -- Reserve the slot first, so closures nested in `b` take the next numbers.
     let _ := Ref.set ctx.cLifted (Ref.get ctx.cLifted ++ [""])
@@ -755,17 +762,21 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
             else if tail && f.fnArity == ctx.cArity then "{ " ++ decls ++ "MUSTTAIL return " ++ call ++ "; }"
             else ret (if decls == "" then call else "({ " ++ decls ++ call ++ "; })")
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys) :: xs) =>
-    form ctx env tail owned token (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys ++ xs))
-  | Sexp.list (Sexp.sym "app" :: f :: x :: rest) =>
-    -- An unknown function: the closure is borrowed by the first call; each later one consumes the closure before it.
-    match sequence ctx env owned token [true] (f :: x :: rest) with
-    | (decls, values, after) =>
-      match values with
-      | fv :: xv :: more =>
-        let call := List.foldl (fun c v => "deus_apply_drop(" ++ c ++ ", " ++ v ++ ")") ("deus_apply(" ++ fv ++ ", " ++ xv ++ ")") more
-        ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })")
-      | _ => throw "an application without arguments"
+    -- A call that already has all its arguments returns a function, which the rest apply (D136).
+    if List.length ys < arityOf ctx h then form ctx env tail owned token (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys ++ xs))
+    else ret (applyUnknown ctx env owned token (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys)) xs)
+  | Sexp.list (Sexp.sym "app" :: f :: xs) => ret (applyUnknown ctx env owned token f xs)
   | other => throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
+
+/-- An unknown function `f` applied to `xs`: the closure is borrowed by the first call; each later one consumes the closure before it. -/
+def applyUnknown (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (f : Sexp) (xs : List Sexp) : {Throw Text} Text :=
+  match sequence ctx env owned token [true] (f :: xs) with
+  | (decls, values, after) =>
+    match values with
+    | fv :: xv :: more =>
+      let call := List.foldl (fun c v => "deus_apply_drop(" ++ c ++ ", " ++ v ++ ")") ("deus_apply(" ++ fv ++ ", " ++ xv ++ ")") more
+      "({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })"
+    | _ => throw "an application without arguments"
 
 /-- A Text literal (D115): made on first use and kept, so it is a heap block like any other text. -/
 def textLiteral (t : Text) : Text :=
@@ -781,6 +792,7 @@ def lending (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
 /-- The runtime function of a primitive on `Text` (D115). -/
 def textFunction (p : Text) : Option Text :=
   if Text.startsWith "deus.io." p then some ("deus_io_" ++ Text.drop 8 p)
+  else if p == "deus.defect" then some "deus_defect"
   else List.lookup p [
     ("Text.length", "TLEN"), ("Text.code", "deus_text_code"), ("Text.slice", "deus_text_slice"),
     ("Text.fromCode", "deus_text_from_code"), ("Text.concat", "deus_text_concat"), ("Text.join", "deus_text_join"),
@@ -959,7 +971,20 @@ def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
       match infix p with
       | some op => lend (fun vs => "(V)(deus_text_cmp" ++ args vs ++ " " ++ op ++ " 0)")
       | none => none
+    -- Data whose type is only partly known, as `Option b` from a polymorphic call, compares at run time (D136).
+    else if (Wasm.isComparison p || p == "compare") && not (List.isEmpty types) && not (List.any Wasm.isScalar types) && not (List.any comparesOpaque types) then
+      if p == "compare" then lend (fun vs => "deus_cmp_any" ++ args vs)
+      else if p == "eq" then lend (fun vs => "deus_eq_any" ++ args vs)
+      else if p == "neq" then lend (fun vs => "!deus_eq_any" ++ args vs)
+      else
+        match infix p with
+        | some op => lend (fun vs => "(V)(deus_cmp_any" ++ args vs ++ " " ++ op ++ " 0)")
+        | none => none
     else none
+
+/-- Whether values of type `t` are arrays, cells or functions, which no comparison takes apart. -/
+def comparesOpaque (t : Sexp) : Bool :=
+  Wasm.headName t == some "#Array" || Wasm.headName t == some "#Ref" || Sexp.head t == "tfun"
 
 /--
   A primitive. `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83). Their
@@ -1098,12 +1123,13 @@ def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.r
 
 /-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
 def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
-  let borrow := inferBorrow fns
+  let table := Wasm.fnTable fns
+  let borrow := inferBorrow fns table
   let lifted := Ref.new []
   let structs := Ref.new []
   let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
   let bodies := List.mapIndexed (fun i f =>
-    let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) structs
+    let scope := Wasm.Scope.mk fns table datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) structs
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
     let env := List.reverse (List.range 0 f.fnArity)
     let header := "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\n"
@@ -1146,7 +1172,7 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let nullary := List.foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
   let codes := Ref.get lifted
   let codeDecls := List.mapIndexed (fun k _ => "static V c" ++ Int.toText k ++ "(V, V);") codes
-  let comparisons := structFunctions (Wasm.Scope.mk fns datatypes (Ref.new []) structs) 0 []
+  let comparisons := structFunctions (Wasm.Scope.mk fns table datatypes (Ref.new []) structs) 0 []
   let comparisonDecls := List.mapIndexed (fun k t =>
     if Sexp.head t == "show" then "static V deus_show" ++ Int.toText k ++ "(V, V);"
     else "static V deus_eq" ++ Int.toText k ++ "(V, V); static V deus_cmp" ++ Int.toText k ++ "(V, V);") (Ref.get structs)
@@ -1317,7 +1343,7 @@ def effAborting (e : Sexp) : {Throw Text} Bool :=
 /-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` has it. -/
 def effCallAborts (aborts : Map Text Bool) (h : Sexp) : Bool :=
   match h with
-  | Sexp.list [Sexp.sym "prim", _] => false
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => p == "defect"
   | Sexp.list (Sexp.sym "con" :: _) => false
   | Sexp.list [Sexp.sym "ref", Sexp.str r] => Map.contains r aborts
   | _ => true
@@ -1335,7 +1361,7 @@ def effCalls (e : Sexp) : (Bool, List Text) :=
     match all (h :: xs) with
     | (d, cs) =>
       match h with
-      | Sexp.list [Sexp.sym "prim", _] => (d, cs)
+      | Sexp.list [Sexp.sym "prim", Sexp.str p] => (d || p == "defect", cs)
       | Sexp.list (Sexp.sym "con" :: _) => (d, cs)
       | Sexp.list [Sexp.sym "ref", Sexp.str r] => (d, r :: cs)
       | _ => (true, cs)
@@ -1451,7 +1477,9 @@ def ioOperations : List Text := ["print", "eprint", "readFile", "writeFile", "ex
 
 /-- The host primitive for operation `i` of ability `a`, if the C runtime has one. -/
 def effHost (a : Text) (i : Int) : Option Text :=
-  if a == "#IO" then Option.map (fun name => "deus.io." ++ name) (List.get? ioOperations i) else none
+  if a == "#IO" then Option.map (fun name => "deus.io." ++ name) (List.get? ioOperations i)
+  else if a == "#Defect" && i == 0 then some "deus.defect"
+  else none
 
 /--
   A handler: its clauses installed as closures, the body run, the handler removed, then the value
@@ -1479,6 +1507,9 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
     else
       let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (effHost a i) (List.map (effLower abilities) (List.take k xs))
       if n == k then performed else Sexp.list (Sexp.sym "app" :: performed :: List.map (effLower abilities) (List.drop k xs))
+  -- `defect` raises `Defect.raise`, which a handler may take, as the kernels do (D136).
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], x] =>
+    effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [effLower abilities x]
   | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
   | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
@@ -1486,7 +1517,7 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
 
 /-- `fns` with handlers and operations rewritten into Core over the runtime (D124); unchanged when none performs or handles. -/
 def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
-  let abilities := List.dedup (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody) fns)
+  let abilities := List.dedup (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody ++ (if usesDefect f.fnBody then ["#Defect"] else [])) fns)
   if List.isEmpty abilities then fns
   else
     let rebuild := fun (f : Wasm.Fn) (body : Sexp) => Wasm.Fn.mk f.fnHash f.fnArity body f.fnType
@@ -1496,10 +1527,17 @@ def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
       else fns
     List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
 
-/-- Whether `e` calls a host primitive of `IO` (D129). -/
+/-- Whether `e` raises a defect with the `defect` primitive. -/
+def usesDefect (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "prim", Sexp.str "defect"] => true
+  | Sexp.list items => List.any usesDefect items
+  | _ => false
+
+/-- Whether `e` calls a host primitive of `IO` (D129) or reports a defect no handler takes (D136). -/
 def usesHost (e : Sexp) : Bool :=
   match e with
-  | Sexp.list [Sexp.sym "prim", Sexp.str p] => Text.startsWith "deus.io." p
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => Text.startsWith "deus.io." p || p == "deus.defect"
   | Sexp.list items => List.any usesHost items
   | _ => false
 

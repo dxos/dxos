@@ -21,7 +21,9 @@ patterns, and `==`, `<`, `compare` on texts. `==`, `<` and `compare` on data com
 such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](../DECISIONS.md)).
 `show` is type-directed, one rendering function per type, and `Text.utf8`, `Text.fromCodes` and
 `Text.sha256` are in the runtime ([D120](../DECISIONS.md)). Comparing arrays or functions, and `show`
-on a value whose type the compiler does not know, are still refused. Effect handlers compile when
+on a value whose type the compiler does not know, are still refused; `==`, `<` and `compare` on
+data whose type it knows only in part, as `Option b` from a polymorphic call, are decided at run
+time by tag and fields ([D136](../DECISIONS.md)). Effect handlers compile when
 every clause resumes in tail position or not at all ([D124](../DECISIONS.md)); a clause that resumes
 anywhere else is refused. A definition with no parameters is computed once, on first use, and
 kept for the rest of the run, so a constant `Ref` is one cell however often it is named; its value
@@ -287,8 +289,28 @@ stderr and exit status, and ends with 0 live words.
 | `Command.main freq <file> 3`              |           9,700 ms |    555 ms |
 | `Command.main count <file>`               |           2,000 ms |    268 ms |
 
-JIT times are a `deus run` minus a `deus run` on a tiny file. The toolchain itself (`Cli.main`)
-still stops at `Code.run`, which needs an evaluator in the runtime.
+JIT times are a `deus run` minus a `deus run` on a tiny file. A `defect` raises `Defect.raise`, so
+a handler of it takes the defect as on the kernels; one no handler takes prints `defect: …` and
+ends the run with status 70, without the kernels' trace of definitions ([D136](../DECISIONS.md)).
+
+## The compiler, natively
+
+`deus compile`'s whole pipeline (lexer, parser, name resolution, type inference, lowering to Core
+and the image writer) builds with the C back end ([D136](../DECISIONS.md)).
+[`examples/compiler.deus`](../../examples/compiler.deus) wraps it as a command, and the command
+writes `seed/deus.image` byte for byte from `deus/`, ending with 0 live words.
+
+| Compiling `deus/` to an image (best of three) | TS kernel with JIT | C, cc -O2 |
+| --------------------------------------------- | -----------------: | --------: |
+| `deus compile deus --main Cli.main`           |           7,350 ms |    642 ms |
+| lexing all of `deus/` (880 KB)                |            ~750 ms |     55 ms |
+| parsing all of `deus/`                        |          ~1,800 ms |     99 ms |
+
+The JIT's first two rows include about 450 ms of start-up. Two fixes made the toolchain buildable:
+the C back end now finds definitions by hash in a table instead of a list, which took the
+parser's build from 7 s to 2 s, and a call that returns a function and is applied again no longer
+loops between two rewrites. The rest of `Cli.main` still stops at `Code.run`, which needs an
+evaluator in the runtime.
 
 ## Benchmarks
 

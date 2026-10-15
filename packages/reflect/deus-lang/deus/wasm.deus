@@ -66,9 +66,17 @@ structure Fn @"urn:deus:wasm:Fn" where
 -/
 structure Scope @"urn:deus:wasm:Scope" where
   fns : List Fn
+  -- Each definition by its hash, with its index: lookups at every call stay constant time on large programs.
+  byHash : Dict Text (Int, Fn)
   datatypes : List (Text, Sexp)
   typed : Ref (List (Int, Sexp))
   eqs : Ref (List Sexp)
+
+/-- Each definition of `fns` by its hash, with its index, for `Scope.byHash`. -/
+def fnTable (fns : List Fn) : Dict Text (Int, Fn) := Dict.fromList (List.mapIndexed (fun i f => (f.fnHash, (i, f))) fns)
+
+/-- The definition `h` of the scope. -/
+def findFn (scope : Scope) (h : Text) : Option Fn := Option.map snd (Dict.lookup h scope.byHash)
 
 /-- `(lam (lam … b))` as (parameter count, b). -/
 def unlam (core : Sexp) : (Int, Sexp) :=
@@ -261,7 +269,7 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
     let left := typeOf scope env t
     if left == unknown then typeOf scope env f else left
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
-    match List.find (fun f => f.fnHash == h) scope.fns with
+    match findFn scope h with
     | some f =>
       match peel (List.length args) f.fnType with
       | (params, result) =>
@@ -392,7 +400,7 @@ def pattern (scope : Scope) (next : Ref Int) (v : Int) (env : List Int) (pat : S
 def expr (scope : Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Sexp) : {Throw Text} List Int :=
   let sub := fun (x : Sexp) => expr scope env next false x
   let fns := scope.fns
-  let indexOf := fun (h : Text) => List.findIndex (fun f => f.fnHash == h) fns
+  let indexOf := fun (h : Text) => Option.getOr (Option.map fst (Dict.lookup h scope.byHash)) (-1)
   match e with
   | Sexp.list [Sexp.sym "int", Sexp.int n] => 65 :: sleb n
   | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => [65, tag]
@@ -429,7 +437,7 @@ def expr (scope : Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Se
     else primitive scope env next e p args
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
     let index := indexOf h
-    match List.find (fun f => f.fnHash == h) fns with
+    match findFn scope h with
     | some f =>
       if f.fnArity != List.length args then throw ("#" ++ Text.take 10 h ++ " takes " ++ Int.toText f.fnArity ++ " arguments but is applied to " ++ Int.toText (List.length args) ++ "; partial application is outside the wasm subset")
       else List.concatMap sub args ++ ((if tail then 18 else 16) :: uleb index)
@@ -573,10 +581,11 @@ def allocBody : List Int :=
 -/
 def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
   let eqs := Ref.new []
+  let table := fnTable fns
   let codes := List.map (fun f =>
     let next := Ref.new f.fnArity
     let env := List.reverse (List.range 0 f.fnArity)
-    let scope := Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType)))) eqs
+    let scope := Scope.mk fns table datatypes (Ref.new (List.mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType)))) eqs
     let code := expr scope env next true f.fnBody ++ [11]
     let extra := Ref.get next - f.fnArity
     let locals := if extra == 0 then vec [] else vec [uleb extra ++ [i32]]
@@ -585,7 +594,7 @@ def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Th
   let alloc := List.length fns
   let allocEntry := vec [[2, i32]] ++ allocBody
   -- Generating one equality function can register another (a field's type), so this runs to a fixpoint.
-  let eqScope := Scope.mk fns datatypes (Ref.new []) eqs
+  let eqScope := Scope.mk fns table datatypes (Ref.new []) eqs
   let rec equalities j acc :=
     match List.get? (Ref.get eqs) j with
     | some t =>
