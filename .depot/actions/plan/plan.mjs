@@ -26,14 +26,12 @@ const main = () => {
     browsers,
     node: affected?.some(([, task]) => NODE_TASKS.has(task)) ?? true,
     browser: affected?.some(([, task]) => BROWSER_TASKS.has(task)) ?? true,
-    memory: affected?.some(([project, task]) => project === 'echo-client-e2e' && task === 'test') ?? true,
     composer: affected?.some(([project, task]) => project === 'composer-e2e' && task === 'e2e') ?? true,
     rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
   };
   const outputs = {
     'node': String(plan.node),
     'browser': String(plan.browser),
-    'memory': String(plan.memory),
     'composer-browsers': JSON.stringify(plan.composer ? browsers : []),
     'rest-browsers': JSON.stringify(plan.rest ? browsers : []),
   };

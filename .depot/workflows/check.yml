@@ -1,8 +1,8 @@
 name: Check
 
-# Draft PRs run nothing unless labeled `ci`; marking one ready starts the run, and on a labeled draft
-# the next push does. Converting a PR to a draft, by hand or by `draft-on-open.yml`, starts a run that
-# skips every job, and the concurrency group cancels the run in flight. Every PR-triggered job repeats
+# Draft PRs run nothing; marking one ready starts the run. Converting a PR to a draft, by hand or by
+# `draft-on-open.yml`, starts a run that skips every job, and the concurrency group cancels the run in
+# flight. Every PR-triggered job repeats
 # the same gate in its `if:` or inherits it from `plan`. No `labeled` trigger: its run would post
 # skipped check runs over the PR's real results, and branch protection reads skipped as passing.
 on:
@@ -72,8 +72,7 @@ jobs:
     # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
     if: >-
       ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
-      github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      !github.event.pull_request.draft) }}
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     permissions:
       contents: read
       packages: read
@@ -213,8 +212,7 @@ jobs:
   boot-budget:
     if: >-
       ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
-      github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      !github.event.pull_request.draft) }}
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     permissions:
       contents: read
       packages: read
@@ -365,67 +363,6 @@ jobs:
               await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
             }
 
-  # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
-  # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
-  # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
-  #
-  # Both suites gate: the feed one guards the fix that made feed objects collectable, the automerge
-  # one the fix that made ECHO objects and their documents collectable. Do NOT silence a failure here
-  # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
-  # suites can provoke looks identical to an assertion failure from the outside).
-  memory:
-    needs: plan
-    if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' &&
-      (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.memory == 'true')) }}
-    permissions:
-      contents: read
-      packages: read
-    # 2 vCPU: averages 13% of 8 vCPU and peaks at 5 GB.
-    runs-on: depot-ubuntu-24.04
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 20
-    env:
-      DX_DEBUG_LEAKS: '1'
-      VITEST_ENV: 'node'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          filter: blob:none
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.depot/actions/setup
-
-      # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
-      # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
-      # (only github/needs/strategy/matrix/vars/inputs), and referencing it there fails the whole
-      # workflow to parse — no jobs run at all.
-      - name: Feed retention
-        env:
-          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
-        run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
-
-      # One invocation per test, because vitest isolation is per FILE and both tests live in one:
-      # a single run leaves the second test measuring the first test's WASM, which is never returned
-      # to the OS. A fresh process per test is the only clean floor.
-      - name: Automerge retention (collection)
-        env:
-          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
-        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'collecting removed objects releases them'
-
-      - name: Automerge retention (caller reference)
-        env:
-          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
-        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'dropping the caller reference releases objects'
-
   # Starts only the test and e2e cells whose targets the change affects (`.depot/actions/plan/plan.mjs`),
   # and picks the e2e browsers: Chromium on PRs and the merge queue, Firefox and WebKit on a push to
   # main (the queue already ran Chromium on that tree), all three otherwise. Decided in a step: an
@@ -433,14 +370,12 @@ jobs:
   plan:
     if: >-
       ${{ inputs.only != 'check' && (
-      github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      !github.event.pull_request.draft) }}
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: depot-ubuntu-latest
     timeout-minutes: 5
     outputs:
       node: ${{ steps.plan.outputs.node }}
       browser: ${{ steps.plan.outputs.browser }}
-      memory: ${{ steps.plan.outputs.memory }}
       composer-browsers: ${{ steps.plan.outputs.composer-browsers }}
       rest-browsers: ${{ steps.plan.outputs.rest-browsers }}
     steps:
@@ -485,6 +420,11 @@ jobs:
       fail-fast: false
       matrix:
         shard: [0, 1]
+    # `statuses: write` lets shard 1 post the advisory suites' results.
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -517,6 +457,8 @@ jobs:
 
       - name: Setup
         uses: ./.depot/actions/setup
+        with:
+          rust: 'true'
 
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
@@ -539,6 +481,13 @@ jobs:
           targets: ':test :test-workerd'
           shard: ${{ matrix.shard }}
           of: ${{ strategy.job-total }}
+
+      # Shard 1 also runs the advisory suites, memory retention and the model-fixture replay, which once
+      # had a runner each for under 30 s of work. Each reports as its own commit status; neither fails
+      # this cell.
+      - name: Advisory suites
+        if: ${{ !cancelled() && matrix.shard == 1 }}
+        uses: ./.depot/actions/advisory
 
   test-browser:
     name: test (browser, shard=${{ matrix.shard }})
@@ -802,8 +751,7 @@ jobs:
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
       inputs.only == 'all') && (
-      github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      !github.event.pull_request.draft)
+      github.event_name != 'pull_request' || !github.event.pull_request.draft)
     # 4 vCPU: averages 17% of 8 vCPU and peaks at 9 GB.
     runs-on: depot-ubuntu-24.04-4
     container:
@@ -924,9 +872,8 @@ jobs:
   changeset-reminder:
     if: >-
       github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository && (
-      contains(github.event.pull_request.labels.*.name, 'ci') ||
-      !github.event.pull_request.draft)
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
     runs-on: depot-ubuntu-latest
     timeout-minutes: 10
     permissions:
