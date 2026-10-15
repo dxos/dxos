@@ -129,7 +129,7 @@ feature F-17: Work without git: files and artifacts in the codebase
   status: building
   parent: F-10
   specs: Artifact.Spec
-  defs: Cli.artifact | Cli.ensureArtifacts
+  defs: Cli.artifact | Cli.ensureArtifacts | Cli.embed | Embed.text
   tasks: 88004c30
 ```
 

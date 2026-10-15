@@ -1,0 +1,3 @@
+/-- A file embedded with `deus embed`: the asset store holds its text under `sha`, and the `@[artifact]`
+  constant naming it keeps that text as its value (Artifact.Spec R-6); evaluated any other way, it never loaded. -/
+def Embed.text (sha : Text) : Text := defect ("the embedded file " ++ sha ++ " was not loaded from the asset store")

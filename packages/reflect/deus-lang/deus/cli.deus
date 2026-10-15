@@ -822,8 +822,14 @@ def ensureArtifacts (dir : Text) (roots : List Text) : {IO, Throw Text} List Tex
 
 /-- Evaluates the constant `h` and keeps its value; `label` names it in the error a function gets (R-5). -/
 def evaluateArtifact (dir : Text) (h : Text) (label : Text) : {IO, Throw Text} Text :=
-  Image.load (fun x => Codebase.readObject dir x) [h]
-  let quoted := Code.quote (Code.run h)
+  let quoted := match embeddedAsset dir h with
+    | some sha =>
+      match IO.readFile (Assets.path dir sha) with
+      | some text => Code.quote text
+      | none => throw (label ++ " embeds the file " ++ sha ++ ", which is not in the asset store")
+    | none =>
+      Image.load (fun x => Codebase.readObject dir x) [h]
+      Code.quote (Code.run h)
   if Text.contains "(prim \"<function>\")" quoted then throw (label ++ " is a function; an @[artifact] must be a first-order constant")
   else
     IO.mkdirp (dir ++ "/artifacts")
@@ -850,6 +856,43 @@ def artifact (args : Args) : {IO, Throw Text} Unit :=
     if flag args "quiet" then () else output args (fun _ => Json.obj [("name", Json.str name), ("hash", Json.str h), ("evaluated", Json.bool fresh)])
       (fun _ => (if fresh then "Evaluated and kept " else "Already kept ") ++ name ++ " " ++ short h ++ ".")
   | _ => throw "usage: deus artifact <constant> [--out file]"
+
+/-- The asset an embedded constant names: its body is exactly `Embed.text "<sha256>"` (Artifact.Spec R-6). -/
+def embeddedAsset (dir : Text) (h : Text) : {IO, Throw Text} Option Text :=
+  match Codebase.readObject dir h with
+  | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "ref", Sexp.str callee], Sexp.list [Sexp.sym "text", Sexp.str sha]]]) =>
+    match Map.lookup "Embed.text" (Codebase.current dir) with
+    | some e => if Entry.hash e == callee then some sha else none
+    | none => none
+  | _ => none
+
+/--
+  `deus embed <file> --as <Name>` keeps the file's text in the asset store under its SHA-256 and
+  defines `Name` as `Embed.text "<sha256>"`, so git carries the hash and never the text (task 88004c30).
+-/
+def embed (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match (args.positional, option args "as") with
+  | ([file], some name) =>
+    match IO.readFile file with
+    | none => throw ("no file " ++ file)
+    | some text =>
+      let sha := Text.sha256 text
+      if Assets.has dir sha then ()
+      else
+        IO.mkdirp (dir ++ "/assets")
+        IO.writeFile (Assets.path dir sha) text
+      let source := dir ++ "/cache/embed.deus"
+      IO.mkdirp (dir ++ "/cache")
+      IO.writeFile source ("/-- Embedded from " ++ Assets.baseName file ++ " (deus embed). -/\n@[artifact]\ndef " ++ name ++ " : Text := Embed.text \"" ++ sha ++ "\"\n")
+      let author := match option args "by" with
+        | some agent => ["--by", agent]
+        | none => []
+      addOrUpdate (parseArgs ([source, "--codebase", dir, "--quiet"] ++ author)) true
+      IO.remove source
+      if flag args "quiet" then () else output args (fun _ => Json.obj [("name", Json.str name), ("sha256", Json.str sha)])
+        (fun _ => "Embedded " ++ file ++ " as " ++ name ++ " " ++ Text.take 10 sha ++ ".")
+  | _ => throw "usage: deus embed <file> --as <Name>"
 
 /-- The last defect's stack as `    at <hash>` lines, stable enough to cache with a verdict. -/
 def defectTrace (u : Unit) : Text :=
@@ -1893,6 +1936,8 @@ def usage : Text :=
     "                                       .update and .run to read and change the codebase",
     "  artifact <constant> [--out file]     evaluate an @[artifact] constant once and keep its value by hash;",
     "                                       run, image, build and serve then use the kept value",
+    "  embed <file> --as <Name>             keep a text file in the asset store and define Name as its text,",
+    "                                       an @[artifact] that names only the file's SHA-256",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
     "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D125)",
@@ -1966,6 +2011,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       | (options, program) => run (parseArgs options) program
     else if command == "eval" then eval args
     else if command == "artifact" then artifact args
+    else if command == "embed" then embed args
     else if command == "mdl" then mdl args
     else if command == "features" then features args
     else if command == "test" then Check.tests args

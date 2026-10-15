@@ -17,8 +17,40 @@ test Artifact.Spec.changeEvaluatesAgain := inStore (fun dir =>
 /-- `deus <words> --codebase dir`, quietly. -/
 def Artifact.Spec.cli (dir : Text) (words : List Text) : {IO, Throw Text} Unit := dispatch (words ++ ["--codebase", dir, "--quiet"])
 
+/-- `deus embed <file> --as <name>` on a file holding `text`; returns the text's SHA-256. -/
+def Artifact.Spec.embedFile (dir : Text) (file : Text) (text : Text) (name : Text) : {IO, Throw Text} Text :=
+  cliUpdate dir embedLib
+  IO.writeFile file text
+  cli dir ["embed", file, "--as", name]
+  Text.sha256 text
+
+/-- R-6: after `deus embed`, the store holds the text under its SHA-256 and the constant is an artifact naming it. -/
+test Artifact.Spec.embedKeepsTheFile := inStore (fun dir =>
+  let sha := embedFile dir "page1.txt" "<p>e1</p>" "A.page1"
+  match Map.lookup "A.page1" (Codebase.current dir) with
+  | Option.some e => IO.readFile (Assets.path dir sha) == Option.some "<p>e1</p>" && isArtifact dir (Entry.hash e) && embeddedAsset dir (Entry.hash e) == Option.some sha
+  | Option.none => false)
+
+/-- `Artifact.Spec.lib` with `Embed.text`, which `deus embed` names. -/
+def Artifact.Spec.embedLib : Text := Artifact.Spec.lib ++ "def Embed.text (sha : Text) : Text := sha\n"
+
+/-- R-7: after the file is removed, a run of `A.main` still writes the embedded text. -/
+test Artifact.Spec.embeddedValueIsTheText := inStore (fun dir =>
+  embedFile dir "page2.txt" "<p>e2</p>" "A.page2"
+  IO.remove "page2.txt"
+  cliUpdate dir (embedLib ++ "def A.main (u : Unit) : Unit := IO.writeFile \"out\" A.page2\n")
+  dispatch ["run", "--codebase", dir, "A.main"]
+  IO.readFile "out" == Option.some "<p>e2</p>")
+
 /-- How many times `A.big` has been evaluated. -/
 def Artifact.Spec.evaluations (u : Unit) : {IO} Int := Text.length (getOr (IO.readFile "evaluations") "")
+
+/-- R-8: the exported code names the hash and not the embedded text. -/
+test Artifact.Spec.exportNamesTheHash := inStore (fun dir =>
+  let sha := embedFile dir "page3.txt" "<p>e3-only-in-the-store</p>" "A.page3"
+  cli dir ["export", "exported"]
+  let code := getOr (IO.readFile "exported/code/A.deus") ""
+  Text.contains sha code && not (Text.contains "e3-only-in-the-store" code))
 
 /-- R-5: an artifact that is a function, or takes a parameter, is refused with its name. -/
 test Artifact.Spec.functionsAreRefused := inStore (fun dir =>
@@ -42,6 +74,14 @@ test Artifact.Spec.imageHoldsTheValue := inStore (fun dir =>
 
 /-- The builtins the program uses: `IO` up to `appendFile`, in the kernel's order. -/
 def Artifact.Spec.lib : Text := "inductive Option a @\"#Option\" where\n  | none\n  | some (value : a)\nability IO @\"#IO\" where\n  print : Text -> Unit\n  eprint : Text -> Unit\n  readFile : Text -> Option Text\n  writeFile : Text -> Text -> Unit\n  exists : Text -> Bool\n  listDir : Text -> List Text\n  mkdirp : Text -> Unit\n  remove : Text -> Unit\n  args : Unit -> List Text\n  exit : Int -> a\n  time : Unit -> Int\n  readStdin : Unit -> Text\n  writeBytes : Text -> List Int -> Unit\n  getEnv : Text -> Option Text\n  isDir : Text -> Bool\n  wallClock : Unit -> Text\n  appendFile : Text -> Text -> Unit\ninductive List a @\"#List\" where\n  | nil\n  | cons (head : a) (tail : List a)\n"
+
+/-- R-9: an embedded constant whose hash is not in the store fails with its name and the hash. -/
+test Artifact.Spec.missingFileIsNamed := inStore (fun dir =>
+  let sha := Text.sha256 "never embedded"
+  cliUpdate dir (embedLib ++ "@[artifact]\ndef A.lost : Text := Embed.text \"" ++ sha ++ "\"\n")
+  match try (fun _ => cli dir ["artifact", "A.lost"]) with
+  | Result.err message => Text.contains "A.lost" message && Text.contains sha message
+  | Result.ok _ => false)
 
 /-- `A.big` notes each evaluation in the file `evaluations`; `A.main` writes it to `out`. -/
 def Artifact.Spec.program (base : Text) : Text := Artifact.Spec.lib ++ "def A.base : Text := \"" ++ base ++

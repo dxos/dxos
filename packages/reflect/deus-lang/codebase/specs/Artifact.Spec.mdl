@@ -31,6 +31,14 @@ api A-1: cached constants
   - Cli.artifact : Args -> {IO, Throw Text} Unit
 ```
 
+```mdl
+api A-2: embedded files
+  signatures:
+  - Cli.embed : Args -> {IO, Throw Text} Unit
+  - Cli.embeddedAsset : Text -> Text -> {IO, Throw Text} Option Text
+  - Embed.text : Text -> Text
+```
+
 ## Requirements
 
 ```mdl
@@ -56,6 +64,33 @@ req R-4: an image of a program that uses a cached constant holds its value, not 
 ```mdl
 req R-5: only a first-order constant can be an artifact: a function, or a definition with parameters, is refused by name
   by: Artifact.Spec.functionsAreRefused
+```
+
+## Embedded files
+
+A file a program needs, such as a page, a stylesheet or a fixture, lives in the codebase rather than in
+git. `deus embed <file> --as <Name>` keeps the file's text in the asset store (D82) under its SHA-256
+and defines `Name` as the artifact `Embed.text "<sha256>"`. The definition names only the hash, so
+its own hash changes exactly when the file's text does, and the store's copy is the kept value.
+
+```mdl
+req R-6: deus embed <file> --as <Name> keeps the file's text in the asset store under its SHA-256 and defines Name as an @[artifact] constant Embed.text "<sha256>"
+  by: Artifact.Spec.embedKeepsTheFile
+```
+
+```mdl
+req R-7: a program that uses an embedded constant gets the file's text from the store, after the file itself is gone
+  by: Artifact.Spec.embeddedValueIsTheText
+```
+
+```mdl
+req R-8: the git export names an embedded file by its hash and never carries its text
+  by: Artifact.Spec.exportNamesTheHash
+```
+
+```mdl
+req R-9: an embedded constant whose file is missing from the store fails, naming the constant and the hash
+  by: Artifact.Spec.missingFileIsNamed
 ```
 
 ## Laws

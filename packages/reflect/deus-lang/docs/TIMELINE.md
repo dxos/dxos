@@ -174,5 +174,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 164 | 10-15 12:50 | 30m 00s | `95758124` | The native interpreter counts steps, so `Code.cost` works natively (D147): native `deus mdl` passes all 241 blocks, as node does, in 7.2 s vs 19.7 s |
 | 165 | 10-15 13:00 | 10m 00s | `17aa6510` | The Rust kernel gains `Code.tag`, `Code.field` and `Code.cast` (D146), which `deus eval` now calls: without them the wasm `eval` printed nothing and deus-kernel's embed test failed on CI. |
 | 166 | 10-15 12:50 | 45m 00s | `35374e3c` | `@[artifact]` constants (task 88004c30, Artifact.Spec R-1..R-5): `deus artifact <name>` evaluates one once and keeps its value under its hash; `run`, `image`, `build` and `serve` fill missing values first and use kept ones, so an image carries the value instead of what it was computed from (D148) |
+| 167 | 10-15 05:45 | 40m 00s | this commit | Embedded files (task 88004c30, Artifact.Spec R-6..R-9): `deus embed <file> --as <Name>` keeps the text in the asset store and defines an `@[artifact]` naming its SHA-256, so the file lives in the codebase and git carries only the hash (D149). Also logged Dmytro's message on pushing to both git and R2; this container has no R2 keys, noted on task e76e36b0. |
 
-Total from stage 1 to stage 166: 40h 52m.
+Total from stage 1 to stage 167: 41h 32m.

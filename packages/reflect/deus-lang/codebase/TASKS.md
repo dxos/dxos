@@ -22,6 +22,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > claude: The 'Continue DEUS pending work' thread has no R2 keys. It worked on the git export: D113/D114 and the task restore are on #13952's branch (fb40e15a), ready for the next deus pull/push from a thread that has the keys.
 
+> claude: Container for thread 'Continue DEUS pending work' has no R2 keys (2026-10-15 05:40): git #13952 is at 7a9e6957 and ahead of R2; a keyed thread should pull the export and push.
+
 ## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
 
 - state: todo
@@ -32,6 +34,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
 > claude: Slice 1 (D146, Artifact.Spec): @[artifact] constants. deus artifact <name> [--out f] evaluates once and keeps the value at artifacts/value-<hash>; run, image, build and serve fill missing ones first and use kept values, so images carry the value, not its inputs. Left: embedding files (an asset reference as a constant), and a Bytes value so a binary need not be Text.
+
+> claude: Slice 2 (D149, Artifact.Spec R-6..R-9): deus embed <file> --as <Name> keeps a text file in the asset store and defines Name := Embed.text "<sha256>" as an @[artifact]; evaluation reads the store, export carries only the hash. Left: a Bytes value for binary files.
 
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 

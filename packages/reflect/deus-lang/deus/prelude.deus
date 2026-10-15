@@ -317,6 +317,16 @@ def isSpace (c : Int) : Bool := c == ' ' || c == '\n' || c == '\t' || c == '\r'
 
 end Text
 
+namespace Embed
+
+/--
+  A file embedded with `deus embed`: the asset store holds its text under `sha`, and the `@[artifact]`
+  constant naming it keeps that text as its value (Artifact.Spec R-6); evaluated any other way, it never loaded.
+-/
+def text (sha : Text) : Text := defect ("the embedded file " ++ sha ++ " was not loaded from the asset store")
+
+end Embed
+
 /-
   Map: an AVL tree ordered by the structural `compare`.
 -/
