@@ -578,3 +578,35 @@ https://github.com/dxos/deus/Namespace.Term -- structure.. or something else -- 
 ---
 
 we should really invest in flows that prevent dataloss -- thats core
+
+---
+
+- are you able to read the project and what happened there?
+
+---
+
+- also read: (a handoff from the "Codebase meta-structure" thread: owner / project / namespace structure, D184, D185, D189; pending publish of @dxos/base and @dxos/examples, blocked on the API key)
+
+---
+
+more core instructions:
+
+1. work autonomously, USER.md, decision log
+2. you are allowed to deploy to the deus cloudflare account where worker is
+3. check that you have DEUS_API_KEY and access to cloudflare account
+
+---
+
+its this one "op://CI/DEUS token/credential"
+
+---
+
+since your context can go off track make sure to write down all key facts in files
+
+---
+
+get oriented what changed in the codebase and continue working autonomously
+
+---
+
+I upgraded to workers paid

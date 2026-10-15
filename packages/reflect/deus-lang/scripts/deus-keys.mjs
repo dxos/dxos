@@ -9,6 +9,7 @@
 //
 //   node scripts/deus-keys.mjs new --label <text> --scopes push,site [--projects toolchain] [--days n] [--out file]
 //   node scripts/deus-keys.mjs list
+//   node scripts/deus-keys.mjs grant <id> <project…>   (adds projects: @owner/project or @owner/*)
 //   node scripts/deus-keys.mjs revoke <id>
 //
 // A new key is printed once (or written to --out, readable only by its owner); only its hash is kept.
@@ -18,6 +19,7 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { isGrantable } from '../platform/worker/address.mjs';
 import { SCOPES, mintKey } from '../platform/worker/remote.mjs';
 
 const workerDir = join(dirname(import.meta.dirname), 'platform/worker');
@@ -90,9 +92,26 @@ if (command === 'new') {
     const used = row.last_used_at ? new Date(row.last_used_at).toISOString() : 'never';
     console.log(`${row.id}  ${state.padEnd(7)}  ${row.scopes}  ${row.projects}  used ${used}  ${row.label}`);
   }
+} else if (command === 'grant' && rest.length >= 2 && /^[0-9a-f]{16}$/.test(rest[0])) {
+  const [id, ...added] = rest;
+  if (!added.every(isGrantable)) {
+    throw new Error('a project is @owner/project or @owner/*');
+  }
+  const [row] = sql(`select projects from api_keys where id = ${literal(id)}`);
+  if (!row) {
+    throw new Error(`no key ${id}`);
+  }
+  const current = JSON.parse(row.projects);
+  if (current === '*') {
+    console.log(`${id} already reaches every project.`);
+  } else {
+    const projects = [...new Set([...current, ...added])];
+    sql(`update api_keys set projects = ${literal(JSON.stringify(projects))} where id = ${literal(id)}`);
+    console.log(`${id} now reaches ${projects.join(', ')}.`);
+  }
 } else if (command === 'revoke' && rest.length === 1 && /^[0-9a-f]{16}$/.test(rest[0])) {
   sql(`update api_keys set revoked_at = ${Date.now()} where id = ${literal(rest[0])}`);
   console.log(`Revoked ${rest[0]}.`);
 } else {
-  throw new Error('usage: deus-keys.mjs new|list|revoke <id>');
+  throw new Error('usage: deus-keys.mjs new|list|grant <id> <project…>|revoke <id>');
 }
