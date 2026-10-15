@@ -24,7 +24,9 @@ const ROOT = '/codebase';
 const HASH = /^[0-9a-f]{64}$/;
 const BUILTIN = /^#[A-Za-z][A-Za-z0-9_.]{0,99}$/;
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
-const PAGE = /^(_[A-Za-z][A-Za-z0-9_.]{0,99}|[0-9a-f]{64})\.json$/;
+const PAGE = /^(_[A-Za-z][A-Za-z0-9_.]{0,99}|[0-9a-f]{64}(\.[0-9]{1,6})?)\.json$/;
+/** A member of a recursive group: its group's hash and its position. */
+const MEMBER = /^[0-9a-f]{64}\.[0-9]{1,6}$/;
 /** Passes a run may take before it gives up: each one fetches everything the last one missed. */
 const MAX_PASSES = 30;
 
@@ -259,7 +261,7 @@ const prefetchNamespace = async (files) => {
           next.push(item[item.length - 1].s);
         } else if (item[0] === 'n' && Array.isArray(item[2])) {
           const hash = item[2][1]?.s;
-          if (hash && (HASH.test(hash) || BUILTIN.test(hash))) {
+          if (hash && (HASH.test(hash) || MEMBER.test(hash) || BUILTIN.test(hash))) {
             hashes.add(hash);
           }
         }

@@ -33,7 +33,7 @@ const directoryBucket = (folder: string): Bucket => {
     head: async (key) => (read(key) ? {} : null),
     put: async (key, value) => {
       mkdirSync(dirname(join(folder, key)), { recursive: true });
-      writeFileSync(join(folder, key), value);
+      writeFileSync(join(folder, key), value instanceof ArrayBuffer ? new Uint8Array(value) : value);
     },
     delete: async () => {},
     list: async ({ prefix }) => {
@@ -59,7 +59,16 @@ describe('live explorer (D192)', () => {
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), '--message', 'prelude', ...c);
       deus(
         'add',
-        file('area.deus', '/-- The area of a square. -/\ndef area (side : Int) : Int := side * side\n'),
+        file(
+          'area.deus',
+          [
+            '/-- The area of a square. -/',
+            'def area (side : Int) : Int := side * side',
+            'def isEven (n : Int) : Bool := if n == 0 then true else isOdd (n - 1)',
+            'def isOdd (n : Int) : Bool := if n == 0 then false else isEven (n - 1)',
+            '',
+          ].join('\n'),
+        ),
         '--message',
         'area',
         ...c,
@@ -80,7 +89,11 @@ describe('live explorer (D192)', () => {
 
       const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
       const get = async (path: string) => {
-        const response = await worker.fetch(new Request(`https://deus.test${path}`), env, { waitUntil: () => {} });
+        const pending: Promise<unknown>[] = [];
+        const response = await worker.fetch(new Request(`https://deus.test${path}`), env, {
+          waitUntil: (promise: Promise<unknown>) => pending.push(promise),
+        });
+        await Promise.all(pending);
         expect(response.status, path).toBe(200);
         return response.json();
       };
@@ -94,10 +107,15 @@ describe('live explorer (D192)', () => {
 
       const area = index.names.find((entry: { name: string }) => entry.name === 'area');
       expect(await get(`/v1/toolchain/live/${head}/def/${area.hash}.json`)).toEqual(site(`def/${area.hash}.json`));
+      // A member of a recursive group is named by its group's hash and its position.
+      const member = index.names.find((entry: { hash: string }) => /\.[0-9]+$/.test(entry.hash));
+      expect(await get(`/v1/toolchain/live/${head}/def/${member.hash}.json`)).toEqual(site(`def/${member.hash}.json`));
       const map = index.names.find((entry: { name: string }) => entry.name === 'List.map');
       expect(await get(`/v1/toolchain/live/${head}/def/${map.hash}.json`)).toEqual(site(`def/${map.hash}.json`));
       // What a causal shows never changes, so it is kept in the bucket after the first request.
       expect(readdirSync(join(bucket, 'toolchain', 'live', head)).sort()).toEqual(['chain.json', 'def', 'index.json']);
+      // What the Worker read is kept as one snapshot, so a cold isolate starts from it.
+      expect(readdirSync(join(bucket, 'toolchain', 'live'))).toContain('files.json.gz');
       const change = await get(`/v1/toolchain/live/${head}/change/${head}.json`);
       expect(change.message).toBe(site(`change/${head}.json`).message);
     },
