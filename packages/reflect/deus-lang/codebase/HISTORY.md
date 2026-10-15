@@ -1,5 +1,10 @@
 # History of main
 
+- `e86da1f72b` task: comment on 84ec6ef7
+- `61fa96e18f` task: set 84ec6ef7 state
+- `1a34186c1e` update deus (by claude)
+- `bbdb65838f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/eq/Checking.Spec.mdl (by claude)
+- `73876a5f17` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/eq/laws.deus (by claude)
 - `4979d8c660` history: import 767 changes (by merge)
 - `529810a14a` task: import from /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/tasks.sexp
 - `9fb0f089b8` update /tmp/tmpfy_mjmgx/merged/Cli.deus /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl (by merge)

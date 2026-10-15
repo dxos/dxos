@@ -230,14 +230,6 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - labels: prover
 - links `Check.generate` (#ba17124ee9)
 
-## Type checker: a test comparing a partial application with == passes the checker and returns false (Compile.Spec.apiReportsDeclarationsAsGaps after withHost gained a parameter); updates should reject it (`84ec6ef7`)
-
-- state: todo
-- priority: medium
-- labels: types, devex
-
-Found when D114 added a printer parameter to Cli.withHost: the spec failed at run time, not at update.
-
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
@@ -1227,6 +1219,16 @@ Found writing law statements (D91): deus view Sort.insertSorted.
 - links change #a40db3f119
 
 From docs/spec/README.md, Known divergences.
+
+## Type checker: a test comparing a partial application with == passes the checker and returns false (Compile.Spec.apiReportsDeclarationsAsGaps after withHost gained a parameter); updates should reject it (`84ec6ef7`)
+
+- state: done
+- priority: medium
+- labels: types, devex
+
+Found when D114 added a printer parameter to Cli.withHost: the spec failed at run time, not at update.
+
+> someone: Done (Checking.Spec R-7): == and != reject an operand of function type at update, with 'is an argument missing?'. The toolchain passes it (fixpoint holds).
 
 ## Type headers print an ability by its IRI's last segment, so MdlHost (urn:deus:mdl:Host) prints as Host; print the ability's own name (`ab1ed867`)
 

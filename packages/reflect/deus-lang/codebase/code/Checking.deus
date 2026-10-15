@@ -39,6 +39,12 @@ def Checking.Spec.compiled (source : Text) : Option (List (Text, Entry)) :=
   | Result.ok b => Option.some b.entries
   | Result.err _ => Option.none
 
+/-- R-7: `==` on two partial applications is a type error, not a comparison that is always false. -/
+theorem Checking.Spec.equalFunctionsRejected : checks (twoArgs ++ "def t (x : Int) : Bool := f x == f 2\n") == false := by rfl
+
+/-- R-7: a full application compares as its result. -/
+theorem Checking.Spec.equalResultsChecked : checks (twoArgs ++ "def t (x : Int) : Bool := f x 1 == f 2 1\n") == true := by rfl
+
 /-- An ability to perform, declared in each source that needs one. -/
 def Checking.Spec.failAbility : Text := "ability Fail where\n  fail : Int -> Int\n"
 
@@ -64,3 +70,9 @@ theorem Checking.Spec.patternBinderChecked : checks "def f (x : Int) : Int :=\n 
 
 /-- The builtin types the sources use, declared by IRI as `deus/builtins.deus` does. -/
 def Checking.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
+
+/-- `f` takes two arguments, so `f 1` is a function. -/
+def Checking.Spec.twoArgs : Text := "def f (x : Int) (y : Int) : Int := x\n"
+
+/-- R-7: `!=` refuses functions too. -/
+theorem Checking.Spec.unequalFunctionsRejected : checks (twoArgs ++ "def t (x : Int) : Bool := f x != f 2\n") == false := by rfl
