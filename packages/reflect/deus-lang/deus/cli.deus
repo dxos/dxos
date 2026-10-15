@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -2066,10 +2066,16 @@ def export (args : Args) : {IO, Throw Text} Unit :=
   match List.head? args.positional with
   | none => throw "usage: deus export <dir>"
   | some out =>
-    match Export.write dir out with
-    | (files, definitions, tasks) =>
-      output args (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
-        (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++ " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
+    if flag args "terms" then
+      match Export.writeTerms dir out with
+      | (definitions, documents) =>
+        output args (fun _ => Json.obj [("definitions", Json.num definitions), ("documents", Json.num documents)])
+          (fun _ => "Exported " ++ Int.toText definitions ++ " definitions and " ++ Int.toText documents ++ " spec documents to " ++ out ++ ", one file each.")
+    else
+      match Export.write dir out with
+      | (files, definitions, tasks) =>
+        output args (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
+          (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++ " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
 
 /-- `deus history import <history.sexp>`: the history of an export, kept under the restore (D67). -/
 def history (args : Args) : {IO, Throw Text} Unit :=
@@ -2168,6 +2174,7 @@ def usage : Text :=
     "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
+    "  export <dir> --terms                 one file per definition at its namespace path (A/B/c.deus), specs as A/B.mdl",
     "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",

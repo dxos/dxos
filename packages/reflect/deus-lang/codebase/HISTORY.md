@@ -1,36 +1,43 @@
 # History of main
 
-- `aff4165a4a` close b642762b by #199edd07ef (by claude)
-- `199edd07ef` Pushes cannot fork a branch: bases in bundles, x-deus-claim, Worker head CAS (D167) (by claude)
-- `ccfaafcaf2` task: open ed106f59 Binary bundle format with an offset table (by claude)
-- `758623d8aa` task: open b642762b A push cannot fork a branch: CLI base check and Worker head CAS (by claude)
-- `3dd269d458` task: set 86720562 title details (by claude)
-- `a2aef23e10` task: open 112d3cd9 Explorer reads the Worker indexes and renders in the page (by claude)
-- `e910ae7977` task: open f0ade986 Worker indexes each pushed bundle from a queue (by claude)
-- `0917c52524` task: open d9fb935f Index namespace: read bundles into data indexes, compiled to JS for the Worker (by claude)
-- `61b49e1157` close b096c56e by #eb507d73ce (by claude)
-- `eb507d73ce` Explorer: publish the top-level files as one version named by site/HEAD (D166) (by claude)
-- `cd9b706528` task: set 86720562 details (by claude)
-- `c9c811eb34` task: open fd34a928 Build only the explorer pages a bundle changes (by claude)
-- `8bc1c3e8a8` task: open 7b7a26ad Wasm kernel reclaims memory during long runs (by claude)
-- `3cfde3d582` Codebase.Spec R-23: history node times (D165) (by claude)
-- `499112d837` Codebase.Spec: tests for history node times (D165) (by claude)
-- `e812f6291c` close 36e1527d by #32f335f3bf (by claude)
-- `32f335f3bf` History nodes carry the time they were made (at, seconds since the epoch); deus log and the explorer's History view show it (D165) (by claude)
-- `0bb1c84f50` task: set 36e1527d state (by claude)
-- `a92c226233` task: open 36e1527d Explorer History view shows each change's timestamp (by claude)
-- `0568041d74` task: set e774b1fd state details (by claude)
-- `03dc2465ba` task: open 48eee846 deus mdl compares effect-row variables by name: an api signature written with {IO | r} fails against an inferred {IO | e}; compare up to renaming (by claude)
-- `362ac00a58` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164) (by claude)
-- `489fdc3cfa` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164) (by claude)
+- `39ceb324c7` merge origin.main into main
+- `f708c539ee` task: open 778cdac2 A freshly pulled store exports history without (by agent): provenance is not replicated in bundles (by claude)
+- `e1b9329234` task: set 24382769 state details (by claude)
+- `edfe83e6c1` Export.Spec R-10, R-11: the per-term export (D168) (by claude)
+- `698e38f85f` deus export --terms: one file per definition at its namespace path (D168) (by claude)
+- `32d2016847` task: set 24382769 state (by claude)
+- `cf61ed5b5c` task: open 24382769 deus export --terms: one file per term for the deus-mirror backup (by claude)
+- `aff4165a4a` close b642762b by #199edd07ef
+- `199edd07ef` Pushes cannot fork a branch: bases in bundles, x-deus-claim, Worker head CAS (D167)
+- `ccfaafcaf2` task: open ed106f59 Binary bundle format with an offset table
+- `758623d8aa` task: open b642762b A push cannot fork a branch: CLI base check and Worker head CAS
+- `3dd269d458` task: set 86720562 title details
+- `a2aef23e10` task: open 112d3cd9 Explorer reads the Worker indexes and renders in the page
+- `e910ae7977` task: open f0ade986 Worker indexes each pushed bundle from a queue
+- `0917c52524` task: open d9fb935f Index namespace: read bundles into data indexes, compiled to JS for the Worker
+- `61b49e1157` close b096c56e by #eb507d73ce
+- `eb507d73ce` Explorer: publish the top-level files as one version named by site/HEAD (D166)
+- `cd9b706528` task: set 86720562 details
+- `c9c811eb34` task: open fd34a928 Build only the explorer pages a bundle changes
+- `8bc1c3e8a8` task: open 7b7a26ad Wasm kernel reclaims memory during long runs
+- `3cfde3d582` Codebase.Spec R-23: history node times (D165)
+- `499112d837` Codebase.Spec: tests for history node times (D165)
+- `e812f6291c` close 36e1527d by #32f335f3bf
+- `32f335f3bf` History nodes carry the time they were made (at, seconds since the epoch); deus log and the explorer's History view show it (D165)
+- `0bb1c84f50` task: set 36e1527d state
+- `a92c226233` task: open 36e1527d Explorer History view shows each change's timestamp
+- `0568041d74` task: set e774b1fd state details
+- `03dc2465ba` task: open 48eee846 deus mdl compares effect-row variables by name: an api signature written with {IO | r} fails against an inferred {IO | e}; compare up to renaming
+- `362ac00a58` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164)
+- `489fdc3cfa` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164)
 - `73e0053c43` delete Cli.explorerDemo
-- `f5046d914e` Remotes served by the DEUS Worker over HTTPS (Replicate.http); origin of the toolchain is https://deus.dmytro-a80.workers.dev/v1/toolchain, whose own explorer each push of main refreshes (D164) (by claude)
-- `5b26d7c028` task: open 95822533 Push checks in the Worker, by priority: (1) no destructive history ops, (2) a policy on checks (which tests must pass), (3) extensible further checks; strategy first (by claude)
-- `5a80b84ed5` task: open 86720562 Worker builds the explorer JSON from bundles itself (wasm kernel or a Container), so a push sends only bundles (by claude)
-- `a3efae81c7` task: open 87c565cf deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now) (by claude)
-- `e27622c30a` task: open b096c56e Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push (by claude)
-- `232a5b6c82` task: set e774b1fd state (by claude)
-- `8651a2f882` task: open e774b1fd Cloudflare setup: codebases in a private R2 bucket behind one Worker (replication API over HTTPS, explorer, D1 API keys for writes) (by claude)
+- `f5046d914e` Remotes served by the DEUS Worker over HTTPS (Replicate.http); origin of the toolchain is https://deus.dmytro-a80.workers.dev/v1/toolchain, whose own explorer each push of main refreshes (D164)
+- `5b26d7c028` task: open 95822533 Push checks in the Worker, by priority: (1) no destructive history ops, (2) a policy on checks (which tests must pass), (3) extensible further checks; strategy first
+- `5a80b84ed5` task: open 86720562 Worker builds the explorer JSON from bundles itself (wasm kernel or a Container), so a push sends only bundles
+- `a3efae81c7` task: open 87c565cf deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now)
+- `e27622c30a` task: open b096c56e Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push
+- `232a5b6c82` task: set e774b1fd state
+- `8651a2f882` task: open e774b1fd Cloudflare setup: codebases in a private R2 bucket behind one Worker (replication API over HTTPS, explorer, D1 API keys for writes)
 - `62fcfd712a` history: import 1223 changes
 - `4415d0ca99` catch up with #13952 at c9951925 before the pause
 - `9dcda60615` update deus (by merge)

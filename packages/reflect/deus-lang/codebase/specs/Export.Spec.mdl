@@ -28,6 +28,7 @@ api A-1: writing and restoring an export
   - Export.importTasks : Text -> Text -> {IO, Throw Text} Int
   - Export.importHistory : Text -> Text -> {IO, Throw Text} Int
   - Export.withUnnamed : Text -> Map Text Entry -> {IO} Map Text Entry
+  - Export.writeTerms : Text -> Text -> {IO, Throw Text} (Int, Int)
 ```
 
 ```mdl
@@ -89,6 +90,21 @@ req R-8: the export's code files alone compile `Cli.main` to the checked-in seed
 ```mdl
 req R-9: an export reuses a definition's printed text while its name, hash, metadata, the names its hash goes by and the names of what it refers to are unchanged, and writes the same files an export without the cache writes
   by: Export.Spec.cachedViewFollowsRename
+```
+
+## One file per definition
+
+`deus export <dir> --terms` writes the tree the deus-mirror backup keeps beside the store files (D168):
+each definition at `A/B/c.deus`, each spec document at `A/B.mdl`, and `FILES` listing them.
+
+```mdl
+req R-10: the files `deus export --terms` lists in FILES, added to a fresh codebase, give back the same namespace snapshot
+  by: Export.Spec.termsRestoreTheSnapshot
+```
+
+```mdl
+req R-11: a per-term export removes the files its previous run listed and this one did not write, and leaves other files alone
+  by: Export.Spec.termsDropStaleFiles
 ```
 
 ## Laws

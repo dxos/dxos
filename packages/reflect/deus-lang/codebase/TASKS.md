@@ -181,6 +181,14 @@ Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is
 
 Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
+## deus link <name…>: print explorer deeplinks for definitions and namespaces (`99b72271`)
+
+- state: todo
+- priority: medium
+- labels: cli, explorer, devex
+
+From Dmytro: 'maybe good to have cli be able to gen links'. The hosted explorer opens #n:<Namespace> and #d:<full hash>, comma-separated for several cards (e.g. https://deus.dmytro-a80.workers.dev/#n:Asset,d:<h1>,d:<h2>). deus link resolves names against the current codebase and prints one URL with all of them; the base comes from the remote's explorer URL, with --base to override. Also useful: task show and log printing links.
+
 ## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
 
 - state: todo
@@ -234,6 +242,14 @@ Dmytro (2026-10-15 09:49): indexing should be async, and offload as much as poss
 - state: todo
 - priority: low
 - labels: mdl, spec
+
+## A freshly pulled store exports history without (by agent): provenance is not replicated in bundles (`778cdac2`)
+
+- state: todo
+- priority: none
+- labels: bug, replication
+
+Found while building the deus-mirror snapshot (D168): after deus pull into a fresh store, deus export rewrites HISTORY.md/history.sexp entries without the (by claude) suffix, so every export from a fresh store churns those lines in git.
 
 ## Binary bundle format with an offset table (`ed106f59`)
 
@@ -1716,6 +1732,14 @@ inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
 deus task new --by claude puts the author on the task but not on the change, so HISTORY.md shows task changes without (by ...).
 
 > claude: This comment is the first task change with provenance.
+
+## deus export --terms: one file per term for the deus-mirror backup (`24382769`)
+
+- state: done
+- priority: none
+- labels: devex, export
+
+Shipped as deus export <dir> --terms (D168), Export.Spec R-10/R-11. Used by the hourly deus-mirror routine.
 
 ## deus run takes the codebase only from the environment (`9caae4c1`)
 

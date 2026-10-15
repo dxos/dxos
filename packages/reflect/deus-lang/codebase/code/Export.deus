@@ -110,6 +110,31 @@ def Export.Spec.snapshotOf (dir : Text) : {IO, Throw Text} Text := (readCausal d
 
 def Export.Spec.specSample : Text := "---\nname: S\n---\n## Extensions\n\n| Term | URI |\n| --- | --- |\n| `note` | `org.example.note@1.0` |\n\n```mdl\nnote N-1: a note\n  text: hello\n  more:\n  - one\n  - two\n```\n"
 
+/-- R-11: a listed file the per-term export did not write this time is gone; an unlisted one stays. -/
+test Export.Spec.termsDropStaleFiles := inStore (fun _ =>
+  termsRoundTrip Export.Spec.sample specSample
+  IO.writeFile "terms/Gone.deus" "def Gone.x : Int := 1\n"
+  IO.writeFile "terms/notes.txt" "kept"
+  IO.writeFile "terms/FILES" (getOr (IO.readFile "terms/FILES") "" ++ "Gone.deus\n")
+  writeTerms "cb" "terms"
+  IO.readFile "terms/Gone.deus" == Option.none && IO.readFile "terms/notes.txt" == Option.some "kept" && IO.readFile "terms/area.deus" != Option.none)
+
+theorem Export.Spec.termsRestoreTheSnapshot (t : Text) (k : Int) : inStore (fun _ =>
+    termsRoundTrip (Export.Spec.program t k) specSample
+    Spec.snapshotOf "cb" == Spec.snapshotOf "cb2") == true := by test 20
+
+/-- Adds `src/` to `cb`, writes its per-term tree to `terms`, and adds the listed files to `cb2`. -/
+def Export.Spec.termsRoundTrip (source : Text) (spec : Text) : {IO, Throw Text} Unit :=
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ source)
+  IO.writeFile "src/s.mdl" spec
+  deus "cb" ["src"] (fun a => addOrUpdate a false)
+  writeTerms "cb" "terms"
+  Codebase.init "cb2"
+  deus "cb2" (List.map (fun path => "terms/" ++ path) (List.filter
+    (fun line => not (Text.isEmpty line))
+    (Text.lines (getOr (IO.readFile "terms/FILES") "")))) (fun a => addOrUpdate a false)
+
 /-- Where the codebase keeps the tasks it last exchanged with the export at `out`, keyed by its absolute path. -/
 def Export.basePath (dir : Text) (out : Text) : {IO} Text :=
   let absolute := if startsWith "/" out then out else getOr (IO.getEnv "PWD") "" ++ "/" ++ out
@@ -379,6 +404,9 @@ def Export.taskMarkdown (t : Task) : Text :=
   "## " ++ t.title ++ " (`" ++ t.id ++ "`)\n\n" ++ field "state" (stateText t.state) ++
     field "priority" (priorityText t.priority) ++ field "assignee" t.assignee ++ field "labels" (join ", " t.labels) ++ field "parent" t.parent ++ Text.concat (List.map link t.links) ++ (if Text.isEmpty t.details then "" else "\n" ++ t.details ++ "\n") ++ Text.concat (List.map (fun c => "\n> " ++ c.author ++ ": " ++ c.note ++ "\n") t.comments) ++ "\n"
 
+/-- Where `writeTerms` puts a definition or spec document: its name's segments as directories. -/
+def Export.termPath (name : Text) (suffix : Text) : Text := join "/" (Text.split name ".") ++ suffix
+
 def Export.topOf (name : Text) : Text :=
   match Text.split name "." with
   | _ :: [] => "_root"
@@ -470,3 +498,37 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
           (if Text.isEmpty agent then "" else " (by " ++ agent ++ ")") ++ "\n") history))
   recordBase dir out (Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir))))
   (List.length files, List.length sources, List.length tasks)
+
+/-- The codebase as one file per definition (D168), for a mirror people browse: `<out>/A/B/c.deus`
+  holds `A.B.c` as `deus view` prints it, and each spec document is `<out>/A/B.mdl`. `<out>/FILES`
+  lists them, so adding those files to a fresh codebase gives back the same snapshot (Export.Spec
+  R-10); a file the previous run listed and this one did not write is removed. Returns (definitions,
+  documents). -/
+def Export.writeTerms (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int) :=
+  let ns := withUnnamed dir (Codebase.current dir)
+  let printer := Print.printer ns []
+  let global := Text.sha256 (join "\n" (List.map
+    (fun pair => fst pair ++ "=" ++ snd pair)
+    (Map.toList printer.typeNames ++ Map.toList printer.declared)))
+  let code := filterMap (fun pair =>
+    match pair with
+    | (name, e) => if exported e then
+        let body := cachedView printer global dir ns name e
+        if Text.isEmpty (trim body) then Option.none else Option.some (termPath name ".deus", body ++ "\n")
+      else Option.none) (Map.toList ns)
+  let specs := List.map (fun d => (termPath d ".mdl", document dir ns d)) (specDocuments ns)
+  let files := code ++ specs
+  let written := Set.fromList (List.map fst files)
+  let previous := List.filter
+    (fun line => not (Text.isEmpty line))
+    (Text.lines (getOr (IO.readFile (out ++ "/FILES")) ""))
+  forEach
+    previous
+    (fun path => if Set.contains path written then () else IO.remove (out ++ "/" ++ path))
+  forEach files (fun pair =>
+    IO.mkdirp (out ++ "/" ++ directoryOf (fst pair))
+    IO.writeFile (out ++ "/" ++ fst pair) (snd pair))
+  IO.writeFile
+    (out ++ "/FILES")
+    (Text.concat (List.map (fun path => path ++ "\n") (sort (List.map fst files))))
+  (List.length code, List.length specs)
