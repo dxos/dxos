@@ -8,7 +8,7 @@
 The codebase is the primary copy of the toolchain; deus/ is what the seed is compiled from in git.
 For each name, this replaces its declaration in the deus/ file that holds it with what `deus view`
 prints from the codebase (a new name goes at the end of its namespace's file, a new namespace gets a
-file), adds what those definitions use that deus/ lacks, then compiles deus/ into seed/deus.image and
+file), deletes what the codebase no longer has, adds what those definitions use that deus/ lacks, then compiles deus/ into seed/deus.image and
 checks that the new seed compiles itself to itself and that deus/ compiles to the codebase's hashes (D183).
 
     python3 scripts/sync-deus.py                # every definition whose hash differs (codebase at $DEUS_CODEBASE)
@@ -97,8 +97,8 @@ def hashes(codebase):
     return {entry['name']: (entry['hash'], entry['kind']) for entry in json.loads(deus('ls', '--json', codebase=codebase).stdout)}
 
 
-def changed(codebase):
-    """The names deus/ defines whose hash in the codebase differs from what deus/ compiles to."""
+def compared(codebase):
+    """(names whose codebase hash differs from what deus/ compiles to, names deus/ defines that the codebase lacks)."""
     with tempfile.TemporaryDirectory(prefix='deus-sync-') as scratch:
         store = Path(scratch) / 'codebase'
         deus('init', '--empty', codebase=store)
@@ -106,7 +106,27 @@ def changed(codebase):
         ours = hashes(store)
     theirs = hashes(codebase)
     kept = ('op', 'ctor')
-    return sorted(name for name, (hash, kind) in ours.items() if kind not in kept and name in theirs and theirs[name][0] != hash)
+    mine = {name: hash for name, (hash, kind) in ours.items() if kind not in kept}
+    return (sorted(name for name, hash in mine.items() if name in theirs and theirs[name][0] != hash),
+            sorted(name for name in mine if name not in theirs))
+
+
+def changed(codebase):
+    return compared(codebase)[0]
+
+
+def drop(names):
+    """Deletes the declarations of `names` from deus/, so a later whole-file `deus update` cannot bring back what the codebase deleted (DataSafety.Spec)."""
+    for path in sorted(SOURCES.glob('*.deus')):
+        lines, found = blocks(path)
+        doomed = [(first, end, name) for name, first, end, _ in found if name in names]
+        for first, end, name in sorted(doomed, reverse=True):
+            print(f'  - {name}  ({path.name})')
+            del lines[first:end]
+            while first < len(lines) and first > 0 and lines[first].strip() == '' and lines[first - 1].strip() == '':
+                del lines[first]
+        if doomed:
+            path.write_text('\n'.join(lines))
 
 
 def write(names, codebase):
@@ -191,11 +211,15 @@ def main():
     parser.add_argument('names', nargs='*', help='the definitions to write into deus/; without names, every one whose hash differs')
     args = parser.parse_args()
     codebase = Path(args.codebase)
-    names = args.names or changed(codebase)
-    if not names:
+    if args.names:
+        names, deleted = list(args.names), []
+    else:
+        names, deleted = compared(codebase)
+    if not names and not deleted:
         print('deus/ already compiles to the codebase\'s definitions; nothing to write.')
         return 0
 
+    drop(set(deleted))
     write(names, codebase)
     theirs = hashes(codebase)
     for _ in range(2000):
@@ -239,10 +263,13 @@ def main():
         if image.read_bytes() != again.read_bytes():
             sys.exit('the new seed does not compile itself to itself; deus/ is written, the seed is not')
         shutil.copyfile(image, SEED)
-    left = changed(codebase)
+    left, extra = compared(codebase)
     if left:
         sys.exit(f'deus/ still differs from the codebase in {len(left)} definitions, among them {", ".join(left[:5])}')
-    print(f'Wrote {len(names)} definitions into deus/ and rebuilt the seed; it compiles itself to itself and to the codebase\'s hashes.')
+    if extra and not args.names:
+        sys.exit(f'deus/ still defines {len(extra)} names the codebase lacks, among them {", ".join(extra[:5])}')
+    print(f'Wrote {len(names)} definitions into deus/, removed {len(deleted)} the codebase deleted, and rebuilt the seed; '
+          'it compiles itself to itself and to the codebase\'s hashes.')
     return 0
 
 
