@@ -80,9 +80,13 @@ DECISIONS.md and TIMELINE.md (two threads take the same next number), the seed a
 export. `python3 scripts/merge-base.py` does the whole merge without committing:
 
 - it gives our new decisions and stages the next free numbers and prints each `D<old> -> D<new>`;
-- it takes theirs for the seed and export, imports their export into the local codebase and
-  rebuilds the seed from it with `deus image Cli.main`;
+- it takes theirs for the seed and export, imports the export files they changed (merged three ways
+  with ours) into the local codebase and rebuilds the seed with `deus image Cli.main`. Importing a
+  file they left alone would revert our codebase-only edits, since updating from a file sets every
+  name in it;
 - it exports again.
+- A new name can make a short name in their export ambiguous (`deus: ambiguous name declared`):
+  rename ours with `deus mv` and rerun the script.
   Rewrite our references to renamed decisions, run the tests, then commit and push at once.
 
 ## Feature maps

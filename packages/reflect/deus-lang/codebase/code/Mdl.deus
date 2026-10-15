@@ -196,7 +196,7 @@ def Mdl.unquote (t : Text) : Text := if Text.length t >= 2 && startsWith "`" t &
 
 /-- The core language's own rules: every block type is declared, and block ids are unique. -/
 def Mdl.validate (doc : Doc) : List Text :=
-  let terms := List.map fst (Mdl.declared doc)
+  let terms := List.map fst (declared doc)
   let undeclared := filterMap
     (fun b => if b.blockType == "ext" || any (fun term => term == b.blockType) terms then Option.none else Option.some ("line " ++ toText b.lineNo ++ ": block type `" ++ b.blockType ++
       "` is not in the Extensions table"))

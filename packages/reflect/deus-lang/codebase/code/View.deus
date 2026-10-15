@@ -1,11 +1,11 @@
 /-- R-3: an ability prints by its declared name. -/
-theorem View.Spec.abilityByName : Map.lookup "urn:deus:mdl:Host" (declaredNames Spec.declared) == Option.some "MdlHost" := by rfl
+theorem View.Spec.abilityByName : Map.lookup "urn:deus:mdl:Host" (declaredNames codebaseNames) == Option.some "MdlHost" := by rfl
 
 /-- R-2: a builtin drops its `#`. -/
 theorem View.Spec.builtinIri : iriName "#Int" == "Int" := by rfl
 
 /-- A codebase declaring the ability `Mdl.MdlHost` as `urn:deus:mdl:Host` and the type `Tasks.Task` as `urn:deus:task:Task`. -/
-def View.Spec.declared : Map Text Entry := Map.fromList [("Mdl.MdlHost", Entry.ability "h1" "urn:deus:mdl:Host"), ("Tasks.Task", Entry.type "h2" "urn:deus:task:Task" [])]
+def View.Spec.codebaseNames : Map Text Entry := Map.fromList [("Mdl.MdlHost", Entry.ability "h1" "urn:deus:mdl:Host"), ("Tasks.Task", Entry.type "h2" "urn:deus:task:Task" [])]
 
 /-- L-1: the printed text compiles to the hash it was printed from. -/
 theorem View.Spec.hypothesesRoundTrip : (match printed twoSource "u" with
@@ -44,7 +44,7 @@ def View.Spec.printed (source : Text) (name : Text) : Option (Text, Text) :=
   | Result.err _ => Option.none
 
 /-- `Task -> {Host} Int`, as a scheme stores it. -/
-def View.Spec.scheme : Sexp := Sexp.list [Sexp.sym "tfun", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:task:Task"], Sexp.list [Sexp.sym "tref", Sexp.str "#Int"], Sexp.list [Sexp.sym "eff", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:mdl:Host"]]]
+def View.Spec.taskToHost : Sexp := Sexp.list [Sexp.sym "tfun", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:task:Task"], Sexp.list [Sexp.sym "tref", Sexp.str "#Int"], Sexp.list [Sexp.sym "eff", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:mdl:Host"]]]
 
 /-- R-1: hypotheses keep their order. -/
 theorem View.Spec.twoHypotheses : Spec.view twoSource "u" ==
@@ -53,10 +53,10 @@ theorem View.Spec.twoHypotheses : Spec.view twoSource "u" ==
 def View.Spec.twoSource : Text := "theorem u (x : Int) (y : Int) : x == 1 -> y == x -> y == 1 := by sorry\n"
 
 /-- R-3: a scheme naming the ability and the type prints both by name. -/
-theorem View.Spec.typeByName : displaySchemeNamed (declaredNames Spec.declared) Spec.scheme == "Task -> {MdlHost} Int" := by rfl
+theorem View.Spec.typeByName : displaySchemeNamed (declaredNames codebaseNames) taskToHost == "Task -> {MdlHost} Int" := by rfl
 
 /-- R-3: an IRI no name declares prints as its last segment. -/
-theorem View.Spec.undeclaredByIri : displaySchemeNamed Map.empty Spec.scheme == "Task -> {Host} Int" := by rfl
+theorem View.Spec.undeclaredByIri : displaySchemeNamed Map.empty taskToHost == "Task -> {Host} Int" := by rfl
 
 def View.Spec.view (source : Text) (name : Text) : Text := getOr (Option.map snd (printed source name)) ""
 

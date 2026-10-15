@@ -138,6 +138,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 128 | 10-15 00:55 | 25m 00s | `6571da61` | C and wasm back ends compile `Dict`, `MutMap` and `Map`: an insertion-ordered hash table in the runtime, static constants inlined; word counts 140× faster than the JIT, 0 live words (D119, task 72a1f2fb) |
 | 129 | 10-15 00:55 | 15m 00s | `2d06100d` | devex: `scripts/setup.sh` makes a fresh container able to run the suite (pinned Rust with wasm targets, node_modules); `src/preflight.test.ts` names what is missing |
 | 130 | 10-15 01:05 | 10m 00s | `8250c00f` | devex: the seed is rebuilt from the codebase with `deus image Cli.main` (3 s, same bytes as the fixpoint compile); merge-base.py handled a real merge; Toolchain.Features F-40 shipped, edited through `deus view`/`update` |
-| 131 | 10-15 01:25 | 20m 00s | this commit | type headers and `MdlHost.describe` print a type or ability by its declared name, so `MdlHost` no longer prints as `Host` (D120, View.Spec R-3, task ab1ed867); written spec first through the codebase, two theorems red before the fix |
+| 131 | 10-15 01:30 | 25m 00s | `6ec07891` | C and wasm back ends compile `show` by one rendering function per type, and `Text.utf8`, `Text.fromCodes`, `Text.sha256`; output equal to the interpreter's, 0 live words (D120, closes task 72a1f2fb) |
+| 132 | 10-15 01:45 | 20m 00s | this commit | type headers and `MdlHost.describe` print a type or ability by its declared name, so `MdlHost` no longer prints as `Host` (D121, View.Spec R-3, task ab1ed867); written spec first through the codebase, two theorems red before the fix; `merge-base.py` now imports only the export files the other side changed, since importing all of them reverted our codebase-only spec edits |
 
-Total from stage 1 to stage 131: 23h 47m.
+Total from stage 1 to stage 132: 23h 52m.
