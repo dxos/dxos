@@ -129,6 +129,13 @@ def write(names, codebase):
             edits.setdefault(path, []).append((first, end, source_of(shown[name], namespace)))
         elif re.search(r'^-- an? (field|constructor) of ', shown[name], re.M):
             continue  # written with its type
+        elif not namespace:
+            # A new top-level name (a type such as `Address`) goes before its namespace's block, or ends a root file.
+            path = namespaces.get(name) or namespaces[namespace]
+            lines = parsed[path][0]
+            close = next((i for i, line in enumerate(lines) if line == f'namespace {name}'), len(lines))
+            print(f'  + {name}  ({path.name})')
+            edits.setdefault(path, []).append((close, close, source_of(shown[name], namespace) + '\n'))
         elif namespace in namespaces:
             path = namespaces[namespace]
             lines = parsed[path][0]

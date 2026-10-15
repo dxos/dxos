@@ -545,22 +545,31 @@ export const names = async (request, env, project, rest) => {
   if (!head) {
     throw new HttpError(404, `no branch ${branch}`);
   }
-  const causal = await lookup(env.BUCKET, project, head.causal, 1);
-  if (causal === undefined) {
-    throw new HttpError(404, `the head ${head.causal} is in no pack yet`);
-  }
-  const snapshot = fieldOf(parseSexp(causal).slice(1), 'ns')?.[1]?.s;
-  const entry = snapshot && (await entryOf(env.BUCKET, project, snapshot, name));
-  if (!entry) {
+  const found = await nameAt(env.BUCKET, project, head.causal, name);
+  if (!found) {
     throw new HttpError(404, `no ${name} on ${branch}`);
   }
+  return json({ name, branch, head: head.causal, ...found });
+};
+
+/**
+ * A name's entry, hash and object text in the namespace of history node `causal`, or undefined
+ * when it has none; throws a 404 when the node is in no pack yet.
+ */
+export const nameAt = async (bucket, project, causal, name) => {
+  const node = await lookup(bucket, project, causal, 1);
+  if (node === undefined) {
+    throw new HttpError(404, `the head ${causal} is in no pack yet`);
+  }
+  const snapshot = fieldOf(parseSexp(node).slice(1), 'ns')?.[1]?.s;
+  const entry = snapshot && (await entryOf(bucket, project, snapshot, name));
+  if (!entry) {
+    return undefined;
+  }
   const hash = entry[1]?.s;
-  return json({
-    name,
-    branch,
-    head: head.causal,
+  return {
     entry: printSexp(entry),
     hash,
-    text: hash ? ((await lookup(env.BUCKET, project, hash, 1)) ?? null) : null,
-  });
+    text: hash ? ((await lookup(bucket, project, hash, 1)) ?? null) : null,
+  };
 };

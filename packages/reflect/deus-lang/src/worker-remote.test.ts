@@ -266,6 +266,65 @@ describe('replication API', () => {
     ).toBe(201);
   });
 
+  test('every head move is logged, and a codebase refuses CLIs older than its Safety.epoch (DataSafety.Spec)', async ({
+    expect,
+  }) => {
+    const key = await insertKey(db, ['push']);
+    const push = async (text: string, headers: Record<string, string>) => {
+      const bundle = await bundleOf(text);
+      return call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: bundle.body, key, headers });
+    };
+    // Head 1's namespace has `Safety.epoch` = 2, in a pack the Worker reads it from.
+    const [root, epoch, first] = ['a', 'b', '1'].map(hash);
+    const bundle = await bundleOf('(bundle epoch)');
+    const pack = await packOf([
+      `branch main ${first}`,
+      `obj ${root} (ns (sub "Safety" "${epoch}"))`,
+      `obj ${epoch} (ns (n "epoch" (term "${hash('c')}")))`,
+      `obj ${hash('c')} (term (int 2))`,
+      `obj ${first} (causal (ns "${root}") (parents) (msg "m"))`,
+    ]);
+    expect(
+      (
+        await call(`/v1/toolchain/bundles/${bundle.name}`, {
+          method: 'PUT',
+          body: bundle.body,
+          key,
+          headers: claim(first),
+        })
+      ).status,
+    ).toBe(201);
+    for (const [path, body] of [
+      [`packs/${bundle.name}`, pack.text],
+      [`packs/${bundle.name}.idx`, pack.index],
+    ] as const) {
+      expect((await call(`/v1/toolchain/${path}`, { method: 'PUT', body, key })).status).toBe(201);
+    }
+
+    // A CLI without the header, or with an older epoch, is refused and told to update; the head stays.
+    const old = await push('(bundle 2)', claim(hash('2'), first));
+    expect(old.status).toBe(426);
+    expect(await old.json()).toMatchObject({ epoch: 2 });
+    expect((await push('(bundle 2)', { ...claim(hash('2'), first), 'x-deus-epoch': '1' })).status).toBe(426);
+    expect((await push('(bundle 2)', { ...claim(hash('2'), first), 'x-deus-epoch': '2' })).status).toBe(201);
+    // Head 2 is in no pack, so it asks for nothing: a push is never stuck behind the packs.
+    expect((await push('(bundle 3)', claim(hash('3'), hash('2')))).status).toBe(201);
+
+    // The log keeps every head in order, and no client can write or delete it.
+    const logged = (await (await call('/v1/toolchain/headlog/main')).text()).trim().split('\n');
+    expect(logged.map((line) => line.slice(14))).toEqual([first, hash('2'), hash('3')]);
+    expect(JSON.parse((await (await bucket.get(`toolchain/headlog/main/${logged[1]}`))?.text()) ?? '{}')).toMatchObject(
+      {
+        causal: hash('2'),
+        previous: first,
+      },
+    );
+    expect(
+      (await call(`/v1/toolchain/headlog/main/${logged[0]}`, { method: 'DELETE', key: await insertKey(db, ['admin']) }))
+        .status,
+    ).toBe(405);
+  });
+
   test('heads move in the bucket, so pushes work when D1 takes no writes (D181)', async ({ expect }) => {
     const key = await insertKey(db, ['push']);
     // A head D1 recorded before D181 is where the branch is.
@@ -304,9 +363,12 @@ describe('replication API', () => {
     });
     const remove = (key: string) => call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'DELETE', key });
     expect((await remove(await insertKey(db, ['push']))).status).toBe(403);
-    expect(bucket.keys()).toEqual([`toolchain/bundles/${bundle.name}`, 'toolchain/heads/main']);
+    const unlogged = () => bucket.keys().filter((key) => !key.includes('/headlog/'));
+    expect(unlogged()).toEqual([`toolchain/bundles/${bundle.name}`, 'toolchain/heads/main']);
     expect((await remove(await insertKey(db, ['compact']))).status).toBe(200);
-    expect(bucket.keys()).toEqual(['toolchain/heads/main']);
+    expect(unlogged()).toEqual(['toolchain/heads/main']);
+    // Compaction leaves the head log, so every head the branch had stays named.
+    expect(bucket.keys().filter((key) => key.includes('/headlog/main/'))).toHaveLength(1);
   });
 
   test('files are written under the scope of their folder and listed across pages', async ({ expect }) => {

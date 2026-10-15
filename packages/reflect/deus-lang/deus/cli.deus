@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
+def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -64,8 +64,8 @@ def die (message : Text) : {IO} a :=
 
 def readSource (path : Text) : {IO, Throw Text} Text :=
   match IO.readFile path with
-  | some text => text
-  | none => throw ("cannot read " ++ path)
+  | Option.some text => withoutHeader (endsWith ".mdl" path) text
+  | Option.none => Throw.throw ("cannot read " ++ path)
 
 /-- Expands directories to the `.deus` and `.mdl` files they contain, sorted. -/
 def expandPaths (paths : List Text) : {IO} List Text :=
@@ -149,6 +149,9 @@ def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) 
 -- Commands: compiling.
 --
 
+--
+-- Commands: compiling.
+--
 --
 -- Commands: compiling.
 --
@@ -372,15 +375,12 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let sources := List.map (fun path => (path, Text.sha256 (readSource path))) (expandPaths args.positional)
   let known := if isUpdate && not (Cli.flag args "fresh") then recordedSources dir else Option.none
   let skipped := unchangedSources known sources
-  let batch := catch (fun _ => batch
-    ns
-    (fun h => readObject dir h)
-    (fun h => readMeta dir h)
-    (checkTypes ())
-    (parseIn
-      dir
-      ns
-      (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources)))) (fun e => Throw.throw (nameCallee ns e))
+  let parsed := parseIn dir ns (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources))
+  let misplaced := contextProblems dir parsed
+  if not (List.isEmpty misplaced) then Throw.throw ("these files do not match their context header (Address.Spec R-5):\n  " ++ join "\n  " misplaced) else ()
+  let batch := catch
+    (fun _ => batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) parsed)
+    (fun e => Throw.throw (nameCallee ns e))
   Cli.warn batch
   let entries := batch.entries ++ specEntries dir args.positional
   let replaced := changes ns entries
@@ -733,6 +733,9 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
       let branch := currentBranch dir
       let ours := headOf dir branch
       let theirs := headOf dir other
+      -- A CLI older than either side's data-safety epoch runs a merge that side no longer trusts (DataSafety.Spec).
+      Safety.requireEpoch dir ours "merge into"
+      Safety.requireEpoch dir theirs "merge"
       let merged := fun h changed => Cli.output
         args
         (fun _ => Json.obj [("result", Json.str "merged"), ("causal", Json.str h), ("changed", Json.arr (List.map Json.str changed))])
@@ -829,6 +832,101 @@ def undo (args : Args) : {IO, Throw Text} Unit :=
         (fun _ => "Undid " ++ short head ++ "; now at " ++ short parent ++ ".")
   | [] => Throw.throw "nothing to undo"
 
+/-- A history node named by a branch, a whole hash, or a hash prefix of a node on some branch or remote claim. -/
+def resolveCausal (dir : Text) (ref : Text) : {IO, Throw Text} Text :=
+  let bare := if Text.startsWith "#" ref then Text.drop 1 ref else ref
+  match Codebase.branchHead dir ref with
+  | Option.some h => h
+  | Option.none => if Text.length bare == 64 && IO.exists (objectPath dir bare) then bare else
+      let known := List.foldl
+        (fun m b => List.foldl (fun acc k => Map.insert k () acc) m (Map.keys (Codebase.ancestors dir (headOf dir b))))
+        Map.empty
+        (Codebase.branches dir)
+      match List.filter (fun h => Text.startsWith bare h) (Map.keys known) with
+      | h :: [] => h
+      | [] => Throw.throw ("no branch or history node " ++ ref)
+      | _ => Throw.throw ("several history nodes start with " ++ ref ++ "; give more of the hash")
+
+/-- `deus heads [remote] [--branch b]`: every head the remote's bundles ever claimed for the branch,
+  newest first, so any earlier state can be named for `deus restore` (DataSafety.Spec). -/
+def heads (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let branch := getOr (option args "branch") "main"
+  let folder := Replicate.seenDir dir name
+  let claimed := dedup (sort (filterMap
+    (fun c => if fst c == branch then Option.some (snd c) else Option.none)
+    (concatMap
+      (fun f => (Replicate.seenFromText f (getOr (IO.readFile (folder ++ "/" ++ f)) "")).claims)
+      (if IO.isDir folder then IO.listDir folder else []))))
+  let rows := List.sortBy (fun a b => compare (snd (snd b)) (snd (snd a))) (filterMap (fun h =>
+    if IO.exists (objectPath dir h) then
+      let c := readCausal dir h
+      Option.some (h, (c.message, c.at))
+    else Option.none) claimed)
+  Cli.output
+    args
+    (fun _ => Json.arr (List.map (fun r => Json.obj [
+      ("causal", Json.str (fst r)),
+      ("message", Json.str (fst (snd r))),
+      ("at", Json.str (snd (snd r)))]) rows))
+    (fun _ => if List.isEmpty rows then "No heads of " ++ branch ++ " seen from " ++ name ++ "; run `deus pull " ++ name ++ "`." else
+      join "\n" (List.map (fun r =>
+        short (fst r) ++ "  " ++ Codebase.utcTime (getOr (fromText (snd (snd r))) 0) ++ "  " ++ fst (snd r)) rows))
+
+/-- `deus restore <branch|causal> [--names a,b]`: brings back, as one new change, the names that
+  history node had and the current branch lacks (or only the named ones). It adds and never
+  replaces, so a name changed since keeps its new definition (DataSafety.Spec). -/
+def restore (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ref := getOr (head? args.positional) ""
+  if Text.isEmpty ref then Throw.throw "usage: deus restore <branch|causal> [--names a,b]" else ()
+  let from := resolveCausal dir ref
+  let ns := Codebase.current dir
+  let missing := Safety.missingSince dir (readCausal dir from).snapshot (readCausal dir (headOf dir (currentBranch dir))).snapshot
+  let wanted :=
+    match option args "names" with
+    | Option.some list =>
+        let picked := Set.fromList (List.map trim (Text.split list ","))
+        List.filter (fun pair => Set.contains (fst pair) picked) missing
+    | Option.none => missing
+  let restored := List.map fst wanted
+  if List.isEmpty wanted then () else
+    commit dir (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns wanted)
+      ("restore " ++ Int.toText (List.length wanted) ++ " names from " ++ short from)
+    ()
+  Cli.output
+    args
+    (fun _ => Json.obj [("from", Json.str from), ("restored", Json.arr (List.map Json.str restored))])
+    (fun _ => if List.isEmpty restored then "Nothing to restore: the branch has every name " ++ short from ++ " had." else
+      "Restored " ++ Int.toText (List.length restored) ++ " names from " ++ short from ++ ":\n" ++
+        join "\n" (List.map (fun n => "  " ++ n) restored))
+
+/-- `deus audit [--since <branch|causal>]`: checks the current branch's history (since that node)
+  for merges that dropped names neither side deleted, and lists the deletions; exits 1 on a drop (DataSafety.Spec). -/
+def audit (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let head := headOf dir (currentBranch dir)
+  let since := match option args "since" with
+    | Option.some s => [resolveCausal dir s]
+    | Option.none => []
+  let (lostNodes, deletedNodes) := Safety.audit dir since head
+  let described := fun pairs => List.map (fun pair => (fst pair, ((readCausal dir (fst pair)).message, snd pair))) pairs
+  let lost := described lostNodes
+  let deleted := described deletedNodes
+  let rows := fun xs => Json.arr (List.map (fun x => Json.obj [
+    ("causal", Json.str (fst x)),
+    ("message", Json.str (fst (snd x))),
+    ("names", Json.arr (List.map Json.str (snd (snd x))))]) xs)
+  let lines := fun xs => join "\n" (List.map (fun x =>
+    "  " ++ short (fst x) ++ " " ++ fst (snd x) ++ ": " ++ Safety.listed (snd (snd x))) xs)
+  Cli.output
+    args
+    (fun _ => Json.obj [("head", Json.str head), ("lost", rows lost), ("deleted", rows deleted)])
+    (fun _ => (if List.isEmpty lost then "No merge dropped a name." else "Merges that dropped names neither side deleted:\n" ++ lines lost) ++
+      (if List.isEmpty deleted then "" else "\nDeletions:\n" ++ lines deleted))
+  if List.isEmpty lost then () else IO.exit 1
+
 /-- `deus migrate`: rewrites history so every snapshot is a namespace tree (D72). Causal hashes
   change, so a remote that already holds the old history should be replaced by a new one. -/
 def migrate (args : Args) : {IO, Throw Text} Unit :=
@@ -866,8 +964,8 @@ def layers (args : Args) : {IO, Throw Text} Unit :=
       match row with
       | (name, place, replicated, count) => Text.padRight 12 name ++ Text.padRight 14 place ++ Text.padRight 12 (if replicated then "replicated" else "local") ++ Int.toText count) rows))
 
-/-- `deus project`: the project's IRI, its libraries, and the size of its subgraph.
-  `deus project init <iri>`: names the codebase's project. -/
+/-- `deus project`: the project's IRI and address, its libraries, and the size of its subgraph.
+  `deus project init <iri|@owner/project>`: names the codebase's project (D49, D184). -/
 def project (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -875,6 +973,7 @@ def project (args : Args) : {IO, Throw Text} Unit :=
       match Project.read dir with
       | Option.some p => Throw.throw ("this codebase is already the project " ++ p.projectIri)
       | Option.none =>
+          if startsWith "@" iri && Address.parse iri == Option.none then Throw.throw (iri ++ " is not an address: @owner/project, both lowercase letters, digits and dashes") else ()
           Project.write dir (Project.mk iri [])
           Cli.output
             args
@@ -887,17 +986,19 @@ def project (args : Args) : {IO, Throw Text} Unit :=
           let parts := subgraph dir (Codebase.current dir)
           Cli.output
             args
-            (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (authority p.projectIri)), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))), ("libs", Json.arr (List.map
+            (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (authority p.projectIri)), ("address", Json.str (getOr (Option.map Address.print (home p.projectIri)) "")), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))), ("libs", Json.arr (List.map
               (fun l => Json.obj [("name", Json.str l.libName), ("iri", Json.str l.libIri), ("release", Json.str l.release)])
               p.libs))])
             (fun _ => join
               "\n"
-              ([p.projectIri ++ "  (authority " ++ authority p.projectIri ++ ")", "  owns " ++ Int.toText (List.length (fst parts)) ++ " definitions; " ++
+              ([p.projectIri ++ "  (authority " ++ authority p.projectIri ++ ")", "  address " ++ getOr
+                (Option.map Address.print (home p.projectIri))
+                "none (the IRI does not name an owner)", "  owns " ++ Int.toText (List.length (fst parts)) ++ " definitions; " ++
                 Int.toText (List.length (snd parts)) ++ " come from libraries"] ++
                 List.map
                   (fun l => "  lib." ++ l.libName ++ "  " ++ l.libIri ++ " @ " ++ short l.release)
                   p.libs))
-  | _ => Throw.throw "usage: deus project [init <iri>]"
+  | _ => Throw.throw "usage: deus project [init <iri|@owner/project>]"
 
 /-- `deus lib install <name> <codebase> [--branch b]`: mounts that project's branch head under `lib.<name>`. -/
 def lib (args : Args) : {IO, Throw Text} Unit :=
@@ -1018,7 +1119,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let name := remoteName args
   let branch := getOr (option args "branch") (currentBranch dir)
   let attempt := fun _ => withRemote dir name (fun _ =>
-    let bundle := Replicate.push dir name branch
+    let bundle := Replicate.push dir name branch (Cli.flag args "allow-drop")
     pushAssets dir
     bundle)
   let rec pushing tries :=
@@ -1033,6 +1134,11 @@ def push (args : Args) : {IO, Throw Text} Unit :=
         Cli.merge (Args.mk [name ++ "." ++ branch] (Map.remove "json" args.options))
         pushing (tries - 1)
       else Throw.throw message
+  -- A CLI older than the codebase's data-safety epoch may push what its merge got wrong (DataSafety.Spec).
+  Safety.requireEpoch dir (headOf dir branch) "push"
+  match Codebase.branchHead dir (name ++ "." ++ branch) with
+  | Option.some h => Safety.requireEpoch dir h "push to"
+  | Option.none => ()
   let checked := if branch == currentBranch dir && not (Cli.flag args "no-check") then touchedSpecs dir name branch else []
   let failed := if List.isEmpty checked then [] else
     let ns := Codebase.current dir
@@ -2378,6 +2484,8 @@ def usage : Text :=
     "  switch <branch>                      change branch",
     "  merge <branch>                       three-way merge into the current branch",
     "  log [--n N] / undo                   history / step the branch back",
+    "  audit [--since <branch|causal>]      merges that dropped names neither side deleted, and the deletions",
+    "  restore <branch|causal> [--names …]  add back the names that node had and the branch lacks",
     "  history import <history.sexp>        keep an export's history under a restored codebase",
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "  migrate                              rewrite history with namespace-tree snapshots",
@@ -2398,7 +2506,9 @@ def usage : Text :=
     "replication",
     "  remote add <name> <dir|url|r2://b/p> a remote: a directory, the DEUS Worker (https://<host>/v1/<project>),",
     "                                       or an R2 bucket and prefix",
-    "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
+    "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks; refuses to drop",
+    "                                       names no change deleted unless --allow-drop",
+    "  heads [remote] [--branch b]          every head the remote claimed for the branch, newest first",
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
     "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer",
@@ -2454,7 +2564,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print Cli.usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
+      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then Cli.heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)
@@ -2542,5 +2652,23 @@ def notationTypes (ns : Map Text Entry) : Option (Text, Text) :=
   match (Map.lookup "Syntax.Notation" ns, Map.lookup "Syntax.Part" ns) with
   | (Option.some (Entry.type n _ _), Option.some (Entry.type t _ _)) => Option.some (n, t)
   | _ => Option.none
+
+/-- Problems with the context headers of `parsed` files (Address.Spec R-5): a header naming another
+  project than the codebase's, or a declaration outside the header's path. Files without one pass. -/
+def contextProblems (dir : Text) (parsed : List (Text, List Decl)) : {IO, Throw Text} List Text :=
+  let items := Compile.collect parsed
+  concatMap (fun file =>
+    let path := fst file
+    match Address.header (getOr (IO.readFile path) "") with
+    | Option.none => []
+    | Option.some here =>
+        let home :=
+          match Project.read dir with
+          | Option.some p => getOr (home p.projectIri) here
+          | Option.none => here
+        let names := List.map
+          fqn
+          (List.filter (fun item => Item.path item == path && not (Text.isEmpty item.fqn)) items)
+        List.map (fun problem => path ++ ": " ++ problem) (violations home here names)) parsed
 
 end Cli

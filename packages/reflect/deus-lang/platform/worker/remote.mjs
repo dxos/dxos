@@ -7,7 +7,7 @@
 // bucket binding, so no client needs R2 credentials. Reads are open; every write carries an API
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
-import { names, objects, packs } from './packs.mjs';
+import { nameAt, names, objects, packs } from './packs.mjs';
 
 /** A project is one folder of the bucket. */
 const PROJECT = /^[a-z0-9][a-z0-9-]{0,62}$/;
@@ -63,6 +63,9 @@ export const remoteApi = async (request, env, ctx, url) => {
   }
   if (area === 'names') {
     return names(request, env, project, rest);
+  }
+  if (area === 'headlog') {
+    return headLog(request, env, project, rest);
   }
   if (area === 'files' && rest[0] === 'packs') {
     // `Remote.keys`, `download` and `upload` reach packs through the files API the CLI already speaks.
@@ -183,7 +186,19 @@ const moveHead = async (request, env, project, logged) => {
   if (current?.causal === head) {
     return undefined;
   }
+  const required = current ? await requiredEpoch(env.BUCKET, project, current.causal) : 0;
+  const sent = Number(request.headers.get('x-deus-epoch') ?? '0') || 0;
+  if (sent < required) {
+    return json(
+      {
+        error: `${branch} needs a deus with data-safety epoch ${required} (Safety.epoch) or newer, and this one has ${sent}: its merge or push may lose data; update deus by merging #13952, then push again`,
+        epoch: required,
+      },
+      426,
+    );
+  }
   if ((!current || bases.includes(current.causal)) && (await writeHead(env, project, branch, head, current))) {
+    await logHead(env, project, branch, head, current?.causal, logged.keyId);
     return undefined;
   }
   const latest = await readHead(env, project, branch);
@@ -194,6 +209,71 @@ const moveHead = async (request, env, project, logged) => {
     },
     409,
   );
+};
+
+//
+// Data safety (DataSafety.Spec): the epoch a codebase asks of the CLIs that push to it, and the log of every head a branch had.
+//
+
+/** Per bucket: the epoch each history node's namespace asks for; a node never changes, so neither does its answer. */
+const epochs = new WeakMap();
+
+/**
+ * The data-safety epoch history node `causal` asks for: its `Safety.epoch` term, or 0 without one.
+ * A head that is in no pack yet asks for nothing, so a push is never stuck behind the packs.
+ */
+export const requiredEpoch = async (bucket, project, causal) => {
+  let known = epochs.get(bucket);
+  if (!known) {
+    known = new Map();
+    epochs.set(bucket, known);
+  }
+  const key = `${project}/${causal}`;
+  if (known.has(key)) {
+    return known.get(key);
+  }
+  const found = await nameAt(bucket, project, causal, 'Safety.epoch').catch((error) => {
+    if (error instanceof HttpError && error.status === 404) {
+      return null;
+    }
+    throw error;
+  });
+  if (found === null) {
+    return 0;
+  }
+  const epoch = Number(/^\(term \(int (\d+)\)\)$/.exec(found?.text ?? '')?.[1] ?? 0);
+  known.set(key, epoch);
+  return epoch;
+};
+
+/** Where the log of a branch's heads lives: one immutable object per move, named by time and head. */
+const headLogKey = (project, branch) => `${project}/headlog/${branch}/`;
+
+const LOGGED = /^[0-9]{13}-[0-9a-f]{64}$/;
+
+/** Records that `branch` moved to `causal`, so every head it ever had stays findable even after compaction. */
+const logHead = async (env, project, branch, causal, previous, keyId) => {
+  const at = Date.now();
+  await env.BUCKET.put(
+    `${headLogKey(project, branch)}${String(at).padStart(13, '0')}-${causal}`,
+    JSON.stringify({ causal, previous: previous ?? null, at, key: keyId ?? null }),
+    { httpMetadata: { contentType: 'application/json' } },
+  );
+};
+
+/** `/v1/<project>/headlog/<branch>`: every head the branch had, oldest first, one `<ms>-<causal>` per line; never written by clients. */
+const headLog = async (request, env, project, rest) => {
+  if (request.method !== 'GET') {
+    throw new HttpError(405, 'the head log is written only by pushes');
+  }
+  const branch = rest
+    .filter((segment) => segment !== '')
+    .map(decodeURIComponent)
+    .join('/');
+  if (!CLAIM.test(`${branch} ${'0'.repeat(64)} -`)) {
+    throw new HttpError(404, 'the head log is read as /headlog/<branch>');
+  }
+  return lines((await listAll(env.BUCKET, headLogKey(project, branch))).filter((name) => LOGGED.test(name)));
 };
 
 //

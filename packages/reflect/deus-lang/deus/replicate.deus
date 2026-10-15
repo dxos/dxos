@@ -279,8 +279,9 @@ def pull (dir : Text) (remote : Text) : {Remote, IO, Throw Text} List (Text, Lis
       (snd pair))
     (branch, heads)) (branchesOf seen)
 
-/-- Uploads what `branch` reaches and the remote lacks, with a claim for its head, and its pack; none if up to date. -/
-def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text} Option Text :=
+/-- Uploads what `branch` reaches and the remote lacks, with a claim for its head, and its pack; none if up to date.
+  Refuses a head that lacks names the remote's heads have and no pushed node deleted, unless `allowDrop` (DataSafety.Spec). -/
+def push (dir : Text) (remote : Text) (branch : Text) (allowDrop : Bool) : {Remote, IO, Throw Text} Option Text :=
   let seen := Replicate.sync dir remote
   let head := headOf dir branch
   let claimed := any (fun s => any (fun c => c == (branch, head)) s.claims) seen
@@ -296,6 +297,10 @@ def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text}
     Option.none
   else if not (List.isEmpty behind) then Throw.throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++
     Text.take 10 (getOr (head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again") else
+    let dropped := if allowDrop then [] else Safety.unrecordedDrops dir bases head
+    if List.isEmpty dropped then () else Throw.throw ("this push would remove names from " ++ remote ++ "." ++ branch ++
+      " that no change in it deleted: " ++ Safety.listed dropped ++ "; bring them back with `deus restore " ++ remote ++ "." ++ branch ++
+      "`, delete them on purpose with `deus rm`, or push with --allow-drop")
     let known := Set.fromList (concatMap (fun s => s.hashes) seen)
     let missing := missingFrom dir [head] known
     let text := basedBundle dir [(branch, head)] (List.map (fun b => (branch, b)) bases) missing
@@ -608,7 +613,9 @@ def http (base : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO
         match claimHeader text with
         | Option.some header => ["-H", "x-deus-claim: " ++ header]
         | Option.none => []
-      let result := curl (["-X", "PUT", "-H", "content-type: application/gzip"] ++ claim ++
+      -- The Worker refuses a push from a CLI whose data-safety epoch is older than the codebase's (DataSafety.Spec).
+      let epoch := ["-H", "x-deus-epoch: " ++ Int.toText Safety.epoch]
+      let result := curl (["-X", "PUT", "-H", "content-type: application/gzip"] ++ claim ++ epoch ++
         ["--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key])
       IO.remove staged
       match result with
@@ -787,16 +794,6 @@ def importForms (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
 def packedNames (u : Unit) : {Remote} Map Text Unit := Set.fromList (filterMap
   (fun k => if endsWith ".idx" k then Option.some (Text.take (Text.length k - 4) k) else Option.none)
   (Remote.keys "packs"))
-
-/-- A pack's line text, fetched whole: a pull wants every object in it. -/
-def readPack (dir : Text) (name : Text) : {Remote, IO} Option Text :=
-  let staged := dir ++ "/cache/pull-" ++ name
-  IO.mkdirp (dir ++ "/cache")
-  if Remote.download ("packs/" ++ name) staged then
-    let text := IO.readFile staged
-    IO.remove staged
-    text
-  else Option.none
 
 /-- Writes the packs (D173) of seen bundles the remote has none for; returns their names. A seen bundle's
   objects are all in the store, and a hash it lists that the store lacks was never in the bundle either. -/
