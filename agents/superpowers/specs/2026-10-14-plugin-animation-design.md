@@ -41,29 +41,34 @@ The spike that settled the visual language is in two artifacts:
 | Audience           | Both: recorded videos and live presentation, with recording as a first-class export. |
 | Script format      | A new MDL `flow` block with animation verbs, in `@dxos/deus`.                        |
 | Network definition | Parametric templates expanded with a seed.                                           |
-| Renderer           | three.js through @react-three/fiber, keeping the spike's flat 2.5D look.             |
+| Host               | plugin-canvas: animations are canvas drawings; plugin-animation adds time to them.   |
+| Renderer           | react-ui-canvas's DOM/CSS rendering, keeping the spike's flat 2.5D look.             |
+| Camera             | Canvas camera plus tilt and spin, used read-only (presentation); editing stays 2D.   |
+| Compound objects   | Sub-graphs, like canvas scenes today; any group converts into one.                   |
 | Runtime            | A deterministic timeline: scene state is `evaluate(timeline, t)`.                    |
 | Interactive mode   | Taking over the camera pauses playback; Resume returns to the script.                |
 | Recording          | Extend autocue with an `animation` op.                                               |
 
 Approaches considered for the runtime: a sequential step runner (no scrubbing, runs differ, long
-scripts drift) and extending `react-ui-canvas` (a 2D frame model that does not fit nested networks or
-3D devices). The deterministic timeline won because scrubbing, frame-exact recording and testing all
+scripts drift) and animating canvas through its clock-driven camera tweens (not scrubbable, nothing
+but the camera moves). The deterministic timeline won because scrubbing, frame-exact recording and testing all
 fall out of it.
 
-R3F won over Babylon (plugin-spacetime, plugin-terra) because device screens show real React content
-through drei `<Html transform>`. Babylon would need GUI textures, which means rebuilding text layout
-and scrolling on a canvas. plugin-voxel is the model for plugin wiring, not for its scene code: it
-uses a perspective camera, one mesh per voxel and a DOM probe per voxel to resolve colours.
+The renderer was first planned as three.js (R3F). On 2026-10-15 it moved to plugin-canvas after a
+comparison with the molecule animation work, which already runs on canvas. Canvas draws every node
+as HTML and the camera as one CSS transform, which is how the spike drew its 2.5D devices, and the
+spike held about 400 nodes at interactive rates. Canvas also brings the editor, layers, nested
+scenes, persistence and selection, which a three.js scene would have to rebuild.
 
 ## Packages
 
-| Package                                                       | Role                                                                                                                                                             | Depends on                                                                          |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `@dxos/animation` (`packages/common/animation`, new)          | Network model, template expansion, layout, script compiler, timeline and `evaluate(t)`. Pure TypeScript with no React or three.js, so it runs and tests in Node. | `effect`, `@dxos/deus` (parser)                                                     |
-| `@dxos/deus` (existing)                                       | The `flow` dialect (`lang/animation.mdl`): grammar, lint, completion, and an exported parser for `flow` blocks.                                                  | none new                                                                            |
-| `plugin-animation` (`packages/plugins/plugin-animation`, new) | The `Animation` ECHO type, R3F scene, level-of-detail rendering, screen apps, player, interactive mode, editors, operations and skill.                           | `@dxos/animation`, `@dxos/deus`, `three`, `@react-three/fiber`, `@react-three/drei` |
-| autocue (`.agents/skills/autocue`)                            | A new `animation` op that plays a flow in the app and records it.                                                                                                | Playwright, ffmpeg                                                                  |
+| Package                                                       | Role                                                                                                                                                                                                        | Depends on                                                                |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `@dxos/animation` (`packages/common/animation`, new)          | Network model, template expansion, layout, script compiler, timeline and `evaluate(t)`. Pure TypeScript with no React or three.js, so it runs and tests in Node.                                            | `effect`, `@dxos/deus` (parser)                                           |
+| `@dxos/deus` (existing)                                       | The `flow` dialect (`lang/animation.mdl`): grammar, lint, completion, and an exported parser for `flow` blocks.                                                                                             | none new                                                                  |
+| `plugin-animation` (`packages/plugins/plugin-animation`, new) | The `Animation` ECHO type, a timeline projection over a canvas drawing, device node types and screen apps, the packet overlay, the player and presentation camera, the `flow` editor, operations and skill. | `@dxos/animation`, `@dxos/deus`, `plugin-canvas`, `@dxos/react-ui-canvas` |
+| `plugin-canvas`, `@dxos/react-ui-canvas` (existing)           | Compound objects, the Objects panel, the presentation camera (tilt and spin) and a time-override seam. See **Canvas integration**.                                                                          | none new                                                                  |
+| autocue (`.agents/skills/autocue`)                            | A new `animation` op that plays a flow in the app and records it.                                                                                                                                           | Playwright, ffmpeg                                                        |
 
 All new packages are private and depend on in-repo packages with `workspace:*`.
 
@@ -218,59 +223,79 @@ The compiler reports diagnostics, which `@dxos/deus` shows as lint in the editor
 `plugin-cloudflare/PLUGIN.mdl:110` uses `flow QA-1:` for a QA test, which the QA tooling does not see
 because it matches `test` blocks only. Rename it to `test` so `flow` has one meaning.
 
-## Rendering
+## Canvas integration
 
-### Scene and camera
+### Compound objects
 
-The scene is an R3F `<Canvas>` with drei's `<OrthographicCamera makeDefault>`. A camera rig maps the
-evaluated pose (`target`, `tilt`, `spin`, `zoom`) onto the camera position and orthographic zoom
-every frame. Iso is tilt 55° and spin −35°; top is tilt 0°; any other angle is allowed.
+A compound object is a sub-graph: a child scene shown through a frame node, which is how canvas
+groups selections today. Any group, or any selection, converts into a compound object, and a compound
+object can be opened, edited and nested. A generated network (a cloud of servers, a local network of
+devices) is a compound object whose children the template produced. Editing a generated child keeps
+the edit; regenerating is an explicit action.
 
-### Style
+### Objects panel
 
-The look follows the spike: a bright hemisphere light plus one directional light, flat Lambert
-materials, and white bodies built from layered rounded slabs. Shadows are offset soft quads rather
-than shadow maps. Theme colours are resolved once and cached.
+An Objects panel sits beside the Layers panel and shows the scene's compound objects as a tree. From
+it the user selects an object, frames it in view, enters it, renames it, hides it, and converts a
+selection into a new compound object. A timeline's selectors use the same paths the panel shows.
+
+### Layouts
+
+A layout is not an object of its own. It is the strategy a compound object uses to place its
+children: belt, hex, even fill, stacked or radial data flow. It runs as a canvas Projection, which
+derives the scene from the stored one, so a layout can be re-run when its parameters change.
+
+### Layers
+
+Canvas layers are used as they are. `show` and `hide` can target a layer as well as an object, for
+example to reveal the cloud layer.
+
+### Time
+
+Playback never writes to the drawing. A read-only projection derives each frame's scene from the
+stored scene and `evaluate(timeline, t)`: positions, visibility, properties and the app on each
+screen. Packets and other particles draw in one overlay, as the molecule animation does, rather than
+as canvas nodes, because rebuilding hundreds of nodes every frame through React is the expensive path.
+A simulation (such as the molecule data flow) becomes a timeline track: it runs at a fixed time step
+from its seed, its frames are recorded, and `evaluate` samples them.
+
+### Camera
+
+The canvas camera gains `tilt` and `spin` in front of its existing transform. Isometric is tilt 55°
+and spin −35°; top is tilt 0°. A tilted camera is read-only: selection, dragging and hit-testing stay
+2D-only until the inverse projection onto the ground plane exists. Portals keep their children in
+the same plane under tilt.
 
 ### Level of detail
 
-The level of detail depends on a node's size on screen in pixels (footprint × zoom). It does not use
-camera distance, which is constant for an orthographic camera.
+The level of detail depends on a node's size on screen in pixels (footprint × zoom).
 
-| Level        | On-screen size | Drawn as                                                                 |
-| ------------ | -------------- | ------------------------------------------------------------------------ |
-| L0 close-up  | over 120 px    | 3D body and a live screen: React content through drei `<Html transform>` |
-| L1 body      | 24 to 120 px   | 3D body with a flat-colour screen and no DOM                             |
-| L2 schematic | under 24 px    | Instanced flat outline; servers drawn as squares                         |
+| Level       | On-screen size | Drawn as                                       |
+| ----------- | -------------- | ---------------------------------------------- |
+| L0 close-up | over 110 px    | 2.5D body and a live screen with React content |
+| L1 body     | 26 to 110 px   | 2.5D body with a static screen                 |
+| L2 circle   | under 26 px    | A circle sized to the node's footprint         |
 
-Nodes are also drawn as circles whenever the camera tilts past halfway from isometric to top, so the switch to
-the top view reads as a switch from devices to a network diagram. Levels crossfade over 300 ms. `set lod` forces a level for a selection. At most 6 L0 screens are
-live at once (configurable), chosen by distance from the centre of the view. This cap is the main
-guard against DOM cost.
+Nodes are also drawn as circles whenever the camera tilts past halfway from isometric to top, so the
+switch to the top view reads as a switch from devices to a network diagram. At most 6 live screens
+are mounted at once, chosen by distance from the centre of the view.
 
 ### Screen apps
 
-The screen apps are chat, editor, sheet, table, kanban and video call, ported from the spike as React
-components inside the plugin. Each renders as a pure function of `(t, seed, props)` instead of using
-timers, so scrubbing and frame-exact recording show the right content. A `set` can change a node's
-app mid-flow.
+Chat, editor, sheet, table, kanban and video call, ported from the spike as React components. Each
+renders as a pure function of `(t, seed, props)` instead of using timers, so scrubbing and
+frame-exact recording show the right content.
 
 ### Networks, links and packets
 
-Ground discs are instanced circles coloured by kind: devices are blue, servers light red, and the
-cloud red. Nested networks sit 0.5 units higher than their parent so the discs do not z-fight.
-
-Links are dotted lines drawn from rim to rim with a fixed screen-pixel width.
-
-Packets are instanced sprites with a constant screen size. A packet's path runs from its node to its
-network's rim, along the link to the next network's rim, and into the target node. Packets moving
-between a nested network and its parent pass through the child's rim only.
+Networks draw as ground discs coloured by kind: devices blue, servers light red, the cloud red. Links
+are dotted lines from rim to rim with a fixed screen width. A packet's path runs from its node to its
+network's rim, along the link, and into the target node.
 
 ### Performance
 
-The target is 500 nodes and 200 packets at 60 fps on a laptop. Discs, L1 and L2 bodies, outlines and
-packets are instanced, so draw calls grow with the number of node types, not the number of nodes. A
-stress story measures it.
+The target is 500 nodes and 200 packets at 60 fps on a laptop. Node bodies switch to circles when
+small, live screens are capped, and packets draw in one overlay. A stress story measures it.
 
 ## Player and interactive mode
 
@@ -338,8 +363,8 @@ In both modes the flow's `caption`, `mark` and `narration` entries go straight i
 | Phase | Delivers                                                                                                        |
 | ----- | --------------------------------------------------------------------------------------------------------------- |
 | P1    | `@dxos/animation`: model, expansion, layout, compiler, timeline, `evaluate`; the `flow` grammar in `@dxos/deus` |
-| P2    | Plugin scene: node registry, levels of detail, discs and links, with stories                                    |
-| P3    | Player, packets and screen apps on timeline time                                                                |
+| P2    | plugin-canvas: compound objects, Objects panel, presentation camera (tilt, spin), time-override seam            |
+| P3    | plugin-animation on canvas: device node types, levels of detail, timeline projection, packet overlay, player    |
 | P4    | Interactive takeover                                                                                            |
 | P5    | Operations, skill and autocue export                                                                            |
 
@@ -350,5 +375,6 @@ In both modes the flow's `caption`, `mark` and `narration` entries go straight i
 - Zoom-dependent detail: `packages/ui/react-ui-canvas/src/model/registry.ts:45`.
 - Packets along edges: `packages/ui/react-ui-graph/src/graph/renderer/bullets.ts:23`.
 - State as a function of time: `packages/plugins/plugin-terra/src/sim/engine.ts`.
-- R3F plugin wiring: `packages/plugins/plugin-voxel`.
+- Canvas portals, layers and projections: `packages/ui/react-ui-canvas/src` (`SceneLayer.tsx`, `utils/layers.ts`, `model/projection.ts`).
+- Simulation drawn over canvas: the molecule data-flow sample (`plugin-canvas/src/samples/molecules`, branch `claude/data-molecule-animation-c37783`).
 - QA dialect to mirror: `packages/reflect/deus/lang/qa.mdl`.

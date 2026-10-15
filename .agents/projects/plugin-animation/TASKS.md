@@ -52,9 +52,17 @@ Decentralized animations. Execution: native, per user ("go as far as you can").
 - [ ] **List continuation** with `-` followed by several spaces.
 - [ ] **Code-point sort** everywhere instead of `localeCompare`.
 
-## Phase 2: Plugin scene
+## Phase 2: Unify with plugin-canvas
 
-R3F scene, node type registry, level of detail, discs and links, with stories. Needs its own plan.
+Decided 2026-10-15 (spec §Decisions, §Canvas integration): plugin-canvas hosts animations; CSS/DOM
+rendering replaces three.js; tilted (isometric) camera is read-only presentation; compound objects are
+sub-graphs like scenes, any group converts into one, and an Objects panel lists them.
+
+### Tasks
+
+- [ ] **plugin-canvas changes** — compound objects, Objects panel, presentation camera (tilt/spin), time-override seam. Spun off as a separate session (task chip).
+- [ ] **Share the model with the molecule work** — not yet (user, 2026-10-15); revisit once the canvas changes land.
+- [ ] **P3 plan** — plugin-animation on canvas: device node types, LOD, timeline projection, packet overlay, player.
 
 ### References
 
