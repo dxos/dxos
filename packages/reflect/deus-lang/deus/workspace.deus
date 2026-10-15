@@ -1,5 +1,5 @@
 /-
-  The codebase as an ability (D137): a snippet `deus eval` runs can read and change the codebase
+  The codebase as an ability (D138): a snippet `deus eval` runs can read and change the codebase
   it runs against, so an agent scripts a change in DEUS instead of chaining CLI calls.
   `Cli.withWorkspace` handles it.
 -/

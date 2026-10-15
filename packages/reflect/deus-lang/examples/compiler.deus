@@ -1,0 +1,23 @@
+/-
+  The DEUS compiler as a native command (D137): `deus compile`'s pipeline (lexer, parser,
+  resolution, type inference and lowering to Core) built by the C back end. It writes the same
+  image the kernels do, so it can rebuild the seed.
+
+    deus add deus examples/compiler.deus && deus build NativeCompiler.main -o deusc --c
+    ./deusc seed.image deus
+-/
+
+namespace NativeCompiler
+
+/-- `deusc <out> <paths…>` compiles the paths with `Cli.main` as the entry and writes its image to `out`. -/
+def main (u : Unit) : {IO} Unit :=
+  match IO.args () with
+  | out :: paths =>
+    match try (fun _ => Cli.compile (Cli.Args.mk paths (Map.fromList [("out", out), ("main", "Cli.main")]))) with
+    | Result.ok _ => ()
+    | Result.err message =>
+      let _ := eprintln message
+      IO.exit 1
+  | _ =>
+    let _ := eprintln "usage: deusc <out> <paths…>"
+    IO.exit 2

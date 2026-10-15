@@ -137,6 +137,8 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 
 > claude: IO host operations done (D129): every IO operation checks for a program handler, else the C runtime performs it; examples/command.deus agrees with deus run. Cli.main now stops at Code.run, which needs an evaluator in the C runtime.
 
+> claude: D136: the compile pipeline (lexer, parser, resolution, inference, lowering, image) now builds natively; examples/compiler.deus writes seed/deus.image byte for byte in 642 ms vs 7.4 s on the JIT. Cli.main still stops at Code.run.
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
@@ -157,6 +159,13 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
+
+## Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (`cda44092`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: codebase, vcs
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 

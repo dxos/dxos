@@ -160,6 +160,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 150 | 10-15 07:30 | 50m 00s | `f4225f95` | metadata replicates: each commit records a metadata snapshot that pushes carry and fast-forwards and merges apply (D134, task f4afc2c0, new Replicate.Spec R-1..R-4) |
 | 151 | 10-15 08:05 | 35m 00s | `ab2f3e7f` | custom generators for tested theorems, `by test N using g` (D135, task 1cbfdd30, new Testing.Spec R-1..R-4); the namespace laws draw from `Codebase.Spec.dottedNames` |
 | 152 | 10-15 08:25 | 20m 00s | `f87c9a2b` | `by test` skips cases that fail a hypothesis, so `P -> Q` no longer evaluates `Q` where `P` is false (D136, task 7ef8bf45, Testing.Spec R-5) |
-| 153 | 10-15 09:05 | 40m 00s | this commit | `deus eval` with a `Workspace` ability: a snippet reads and changes the codebase (D137, task 10b95384, new Workspace.Spec R-1..R-4); `--quiet` is a boolean flag |
+| 153 | 10-15 08:40 | 1h 35m | `687dc9f7` | The DEUS compiler builds natively: `examples/compiler.deus` writes the seed image byte for byte in 642 ms vs 7.4 s on the JIT (D137). Definitions found by hash in a table, defects as `Defect.raise`, partly typed comparisons at run time, and an over-application loop fixed |
+| 154 | 10-15 09:05 | 40m 00s | this commit | `deus eval` with a `Workspace` ability: a snippet reads and changes the codebase (D138, task 10b95384, new Workspace.Spec R-1..R-4); `--quiet` is a boolean flag |
 
-Total from stage 1 to stage 153: 32h 32m.
+Total from stage 1 to stage 154: 34h 07m.

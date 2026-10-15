@@ -7,7 +7,7 @@ version: 1.0
 # The codebase as an ability
 
 `deus eval` evaluates an expression against the codebase; with the `Workspace` ability that
-expression can also read and change it (task 10b95384, [D137](../../docs/DECISIONS.md)). An agent
+expression can also read and change it (task 10b95384, [D138](../../docs/DECISIONS.md)). An agent
 that would chain `deus ls`, `deus view`, an edit and `deus update` sends one snippet instead:
 
 ```

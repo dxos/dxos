@@ -290,10 +290,11 @@ def Unique.rewriteAll (fns : List Fn) (datatypes : List (Text, Sexp)) : List Fn 
     match peel f.fnArity f.fnType with
     | (params, result) => Info.mk f.fnHash params result (List.map isArray params) (isStruct result)) fns
   let infos := Unique.infer fns start
+  let table := fnTable fns
   List.map (fun pair =>
     match pair with
     | (f, i) =>
-        let scope := Wasm.Scope.mk fns datatypes (Ref.new []) (Ref.new [])
+        let scope := Wasm.Scope.mk fns table datatypes (Ref.new []) (Ref.new [])
         let cx := Unique.Cx.mk infos scope i.resultType (Ref.new f.fnArity)
         let owned := filterMap
           (fun k => if isArray (getOr (get? i.params k) unknown) && not (getOr (get? i.borrowed k) false) then Option.some k else Option.none)

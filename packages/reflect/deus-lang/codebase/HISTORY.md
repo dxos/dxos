@@ -1,5 +1,24 @@
 # History of main
 
+- `ee4306fafb` task: open cda44092 Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (by claude)
+- `e0c7da7ab6` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ws.mdl (by claude)
+- `db7865d2ee` update deus (by merge)
+- `cb3bc9db09` history: import 935 changes
+- `462f79b35e` history: import 931 changes
+- `68f57dfa92` task: import from /tmp/tmppqybtjes/tasks.sexp
+- `95f0dfe88e` add /tmp/tmppqybtjes/merged/code /tmp/tmppqybtjes/merged/specs
+- `df5727a9a3` Renumber D136 to D137 (by claude)
+- `9bd05183e7` update deus (by merge)
+- `0004ee2d41` history: import 923 changes
+- `be0b310f6c` history: import 920 changes
+- `38bb9d4f65` task: import from /tmp/tmpf4vx0azz/tasks.sexp
+- `76784d8bc0` add /tmp/tmpf4vx0azz/merged/code /tmp/tmpf4vx0azz/merged/specs
+- `167b1b0553` task: comment on 60e88be8 (by claude)
+- `c4de611752` Rehash after wasm.deus (D136) (by claude)
+- `8148f1d5b4` Native C: the compiler builds natively; definitions by hash, defects as Defect requests, partly typed comparisons, no over-application loop (D136) (by claude)
+- `9120895940` history: import 914 changes
+- `ef1387a893` task: import from codebase/tasks.sexp
+- `0b2eaf7131` add codebase/code codebase/specs
 - `e227cdbd69` task: comment on 10b95384 (by claude)
 - `8d474ded61` task: set 10b95384 state (by claude)
 - `7cea805ca8` update deus (by claude)

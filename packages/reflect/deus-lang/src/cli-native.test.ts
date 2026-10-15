@@ -328,17 +328,40 @@ describe('deus CLI native back ends', () => {
         ['roundtrip', join(scratch, 'roundtrip')],
         ['quiet', '12'],
         ['exec'],
+        ['caught', 'word'],
+        ['defect', 'word'],
         ['count', join(scratch, 'missing.txt')],
         [],
       ]) {
         const native = spawnSync(out, args, { encoding: 'utf8', env: { ...process.env, DEUS_HEAP_STATS: '1' } });
         const interpreted = deus('run', ...c, 'Command.main', ...args);
         expect([native.status, native.stdout]).toEqual([interpreted.code, interpreted.stdout]);
-        expect(native.stderr.replace(/heap: .*\n/, '')).toBe(interpreted.stderr);
+        // A native defect names no definitions, so the interpreter's trace lines are left out.
+        expect(native.stderr.replace(/heap: .*\n/, '')).toBe(interpreted.stderr.replace(/^ +at .*\n/gm, ''));
         if (native.status === 0) {
           expect(native.stderr).toContain(', 0 live,');
         }
       }
+    },
+  );
+
+  test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
+    'builds the compiler natively, and it writes the seed image',
+    { timeout: 240_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'compiler')];
+      deus('init', '--empty', ...c);
+      expect(deus('add', join(root, 'deus'), join(root, 'examples/compiler.deus'), ...c).code).toBe(0);
+      const out = join(scratch, 'deusc');
+      expect(deus('build', 'NativeCompiler.main', '-o', out, '--c', ...c).code).toBe(0);
+      const image = join(scratch, 'native.image');
+      const run = spawnSync(out, [image, join(root, 'deus')], {
+        encoding: 'utf8',
+        env: { ...process.env, DEUS_HEAP_STATS: '1' },
+      });
+      expect(run.status).toBe(0);
+      expect(run.stderr).toContain(', 0 live,');
+      expect(readFileSync(image, 'utf8')).toBe(readFileSync(join(root, 'seed/deus.image'), 'utf8'));
     },
   );
 

@@ -13,6 +13,7 @@ structure Wasm.Fn @"urn:deus:wasm:Fn" where
   function the module needs, in function order (D100). -/
 structure Wasm.Scope @"urn:deus:wasm:Scope" where
   fns : List Fn
+  byHash : Dict Text (Int, Fn)
   datatypes : List (Text, Sexp)
   typed : Ref (List (Int, Sexp))
   eqs : Ref (List Sexp)
@@ -174,7 +175,7 @@ def Wasm.eqIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
 def Wasm.expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Sexp) : {Throw Text} List Int :=
   let sub := fun x => Wasm.expr scope env next false x
   let fns := scope.fns
-  let indexOf := fun h => findIndex (fun f => f.fnHash == h) fns
+  let indexOf := fun h => getOr (Option.map fst (Dict.lookup h scope.byHash)) (-1)
   match e with
   | Sexp.list (Sexp.sym "int" :: Sexp.int n :: []) => 65 :: sleb n
   | Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int tag :: Sexp.int 0 :: []) => [65, tag]
@@ -207,7 +208,7 @@ def Wasm.expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Boo
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: args) => if startsWith "Array." p || startsWith "Ref." p then array scope next p (List.map sub args) else Wasm.primitive scope env next e p args
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: args) =>
       let index := indexOf h
-      match List.find (fun f => f.fnHash == h) fns with
+      match findFn scope h with
       | Option.some f => if f.fnArity != List.length args then Throw.throw ("#" ++ Text.take 10 h ++ " takes " ++ toText f.fnArity ++ " arguments but is applied to " ++
           toText (List.length args) ++ "; partial application is outside the wasm subset") else concatMap sub args ++ (if tail then 18 else 16) :: uleb index
       | Option.none => Throw.throw ("unknown function #" ++ Text.take 10 h)
@@ -221,6 +222,13 @@ def Wasm.fieldType (scope : Wasm.Scope) (typeHash : Text) (tag : Int) (i : Int) 
       | Option.some fields => getOr (Option.map (Wasm.instantiate (Wasm.typeArgs scrutinee)) (get? fields i)) unknown
       | Option.none => unknown
   | Option.none => unknown
+
+/-- The definition `h` of the scope. -/
+def Wasm.findFn (scope : Wasm.Scope) (h : Text) : Option Fn := Option.map snd (Dict.lookup h scope.byHash)
+
+-- Each definition by its hash, with its index: lookups at every call stay constant time on large programs.
+/-- Each definition of `fns` by its hash, with its index, for `Scope.byHash`. -/
+def Wasm.fnTable (fns : List Fn) : Dict Text (Int, Fn) := Dict.fromList (mapIndexed (fun i f => (f.fnHash, i, f)) fns)
 
 def Wasm.fresh (next : Ref Int) : Int :=
   let local := Ref.get next
@@ -319,11 +327,13 @@ def Wasm.matchType (pattern : Sexp) (actual : Sexp) : List (Sexp, Sexp) :=
   per data type compared (D100); `main` is exported as `export`. -/
 def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
   let eqs := Ref.new []
+  let table := fnTable fns
   let codes := List.map (fun f =>
     let next := Ref.new f.fnArity
     let env := reverse (range 0 f.fnArity)
     let scope := Wasm.Scope.mk
       fns
+      table
       datatypes
       (Ref.new (mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType))))
       eqs
@@ -335,7 +345,7 @@ def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) 
   let alloc := List.length fns
   let allocEntry := vec [[2, Wasm.i32]] ++ allocBody
   -- Generating one equality function can register another (a field's type), so this runs to a fixpoint.
-  let eqScope := Wasm.Scope.mk fns datatypes (Ref.new []) eqs
+  let eqScope := Wasm.Scope.mk fns table datatypes (Ref.new []) eqs
   let rec equalities j acc :=
     match get? (Ref.get eqs) j with
     | Option.some t =>
@@ -506,7 +516,7 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
       let left := Wasm.typeOf scope env t
       if left == unknown then Wasm.typeOf scope env f else left
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: args) =>
-      match List.find (fun f => f.fnHash == h) scope.fns with
+      match findFn scope h with
       | Option.some f =>
           match peel (List.length args) f.fnType with
           | (params, result) =>
