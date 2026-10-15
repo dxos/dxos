@@ -10,7 +10,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { DATA_FLOW_SCENE_ID, type DataFlowSpec, createDataFlowScene, layoutDataFlow } from './layout.ts';
-import { type Grid, type Look, MoleculeOverlay } from './MoleculeOverlay.tsx';
+import { type Grid, type Look, MoleculeOverlay, useNoise } from './MoleculeOverlay.tsx';
 import { DataFlowSimulation, type SimulationOptions } from './simulation.ts';
 
 export type DataFlowViewProps = {
@@ -60,9 +60,10 @@ export const DataFlowView = ({
   options,
   running = true,
   molecules = true,
-  look,
+  look = 'glass',
   grid: initialGrid = 'dots',
 }: DataFlowViewProps) => {
+  const noise = useNoise();
   const layout = useMemo(() => layoutDataFlow(spec), [spec]);
   const store = useMemo(() => createMemoryStore([createDataFlowScene(layout)]), [layout]);
   const simulation = useMemo(() => new DataFlowSimulation(layout, options), [layout, options]);
@@ -82,6 +83,10 @@ export const DataFlowView = ({
           />
         }
       />
+      {/* Screen-space grain over the glass look's backdrop, so its dim gradients show no bands at any zoom. */}
+      {look === 'glass' && noise && (
+        <div className='dx-cover pointer-events-none' style={{ backgroundImage: `url(${noise})` }} />
+      )}
       <SceneView.Navigation />
       <SceneView.Debug />
       <GridPanel grid={grid} onChange={setGrid} />

@@ -268,9 +268,10 @@ const GridPattern = ({ id, grid }: { id: string; grid: Grid }) => {
   }
 };
 
-/** The washes' strongest opacity, and the side of the noise tile in scene units. */
+/** The washes' strongest opacity, the side of the noise tile in screen pixels, and its pixels' opacity (of 255). */
 const WASH_STRENGTH = 0.22;
 const NOISE_SIZE = 128;
+const NOISE_ALPHA = 16;
 
 /**
  * Gradient stops falling from `strength` to nothing along a smoothstep curve from `start` (0 to 1) outward, many of them,
@@ -284,10 +285,12 @@ const easedStops = (strength: number, start = 0) =>
   });
 
 /**
- * A small tile of faint random gray noise as a data URL, drawn once on a canvas in the browser; undefined until then, or
+ * A small tile of faint random gray noise as a data URL, laid over the whole view at one pixel per screen pixel: it breaks
+ * up the steps a dim gradient makes on a dark screen, which read as bands. In the scene it would be resampled with the
+ * camera's zoom and smoothed away. Drawn once on a canvas in the browser; undefined until then, or
  * where there is no canvas to draw it.
  */
-const useNoise = (): string | undefined => {
+export const useNoise = (): string | undefined => {
   const [noise, setNoise] = useState<string>();
   useEffect(() => {
     const canvas = document.createElement('canvas');
@@ -303,7 +306,7 @@ const useNoise = (): string | undefined => {
       image.data[index] = value;
       image.data[index + 1] = value;
       image.data[index + 2] = value;
-      image.data[index + 3] = 10;
+      image.data[index + 3] = NOISE_ALPHA;
     }
     context.putImageData(image, 0, 0);
     setNoise(canvas.toDataURL());
@@ -316,7 +319,6 @@ const useNoise = (): string | undefined => {
  * the whole diagram. Neither follows any one block, so no container gets a halo of its own.
  */
 const Backdrop = ({ layout, id, grid }: { layout: DataFlowLayout; id: string; grid: Grid }) => {
-  const noise = useNoise();
   const frames = [...layout.sources, layout.hub, ...layout.sinks]
     .filter((block) => !block.hidden)
     .map((block) => block.frame);
@@ -353,16 +355,9 @@ const Backdrop = ({ layout, id, grid }: { layout: DataFlowLayout; id: string; gr
         <mask id={`${id}-fade`} maskUnits='userSpaceOnUse' {...field}>
           <rect {...field} fill={`url(#${id}-fade-gradient)`} />
         </mask>
-        {noise && (
-          <pattern id={`${id}-noise`} width={NOISE_SIZE} height={NOISE_SIZE} patternUnits='userSpaceOnUse'>
-            <image href={noise} width={NOISE_SIZE} height={NOISE_SIZE} />
-          </pattern>
-        )}
       </defs>
       {wash('wash-a', 'violet', 0.2, 0.15)}
       {wash('wash-b', 'teal', 0.85, 0.9)}
-      {/* Fine noise over the washes breaks up the steps a dim gradient makes on a dark screen, which read as bands. */}
-      {noise && <rect {...field} fill={`url(#${id}-noise)`} />}
       {grid !== 'none' && <rect {...field} fill={`url(#${id}-grid)`} />}
     </g>
   );
