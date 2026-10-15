@@ -32,6 +32,13 @@ api A-1: coverage of one document
   - Coverage.render : SpecCoverage -> List Text
 ```
 
+```mdl
+api A-2: Coverage definitions other namespaces use
+  signatures:
+  - Coverage.apiNames : Block -> List Text
+  - Coverage.namespaceOf : Text -> Text
+```
+
 ## Requirements
 
 ```mdl

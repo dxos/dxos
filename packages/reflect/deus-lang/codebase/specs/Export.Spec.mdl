@@ -30,6 +30,15 @@ api A-1: writing and restoring an export
   - Export.withUnnamed : Text -> Map Text Entry -> {IO} Map Text Entry
 ```
 
+```mdl
+api A-2: Export definitions other namespaces use
+  signatures:
+  - Export.document : Text -> Map Text Entry -> Text -> {IO} Text
+  - Export.documentOf : Text -> Text
+  - Export.importComments : Text -> Text -> {IO, Throw Text} Int
+  - Export.specDocuments : Map Text Entry -> List Text
+```
+
 ## Round trip
 
 ```mdl

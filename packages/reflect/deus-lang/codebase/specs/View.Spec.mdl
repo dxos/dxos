@@ -36,6 +36,17 @@ api A-1: printing theorems and types
   - Types.displaySchemeNamed : Map Text Text -> Sexp -> Text
 ```
 
+```mdl
+api A-2: View definitions other namespaces use
+  signatures:
+  - View.abilityDecl : Printer -> Map Text Entry -> Text -> Entry -> Sexp -> Option Sexp -> Text
+  - View.fieldNamesFor : Option Sexp -> List (List Text)
+  - View.nameParams : List Text -> Sexp -> Sexp
+  - View.paramsFor : Option Sexp -> Int -> Sexp -> List Text
+  - View.typeArgs : Sexp -> List Sexp
+  - View.typeDecl : Printer -> Map Text Entry -> Text -> Entry -> Sexp -> Option Sexp -> Text
+```
+
 ## Theorems with hypotheses
 
 A theorem's statement is `P₁ -> … -> Pₙ -> Q` at its top level only: the parser reads `->` there and

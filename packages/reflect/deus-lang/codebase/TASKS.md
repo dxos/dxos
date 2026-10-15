@@ -293,11 +293,13 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - priority: none
 - labels: spec, codebase
 
-## Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (`8d6df186`)
+## Name the 39 public definitions deus mdl --coverage still reports, in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm) (`8d6df186`)
 
 - state: todo
 - priority: none
-- labels: mdl, spec
+- labels: mdl, spec, explorer, native
+
+> someone: 134 named in api blocks of Analytics, Checking, Codebase, Compile, Coverage, Export, Features, JsGen and View specs (each type checked by deus mdl). 39 remain, all in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm), which the explorer and native threads own; left for them. Kept the D125 rule: excluding spec-law users only removed 10.
 
 ## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
 

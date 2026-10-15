@@ -32,6 +32,15 @@ api A-1: parsing and batch compilation
   - Resolve.hashFor : Text -> Sexp -> Text
 ```
 
+```mdl
+api A-2: Compile definitions other namespaces use
+  signatures:
+  - Compile.hashTerms : List Pending -> Map Text Text -> (Map Text Text, List (Text, Sexp))
+  - Compile.n : Int -> Sexp
+  - Compile.node : Text -> List Sexp -> Sexp
+  - Compile.s : Text -> Sexp
+```
+
 ## Hashes follow meaning
 
 ```mdl

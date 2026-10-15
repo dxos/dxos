@@ -52,6 +52,42 @@ api A-3: history and branches
   - Codebase.merge : Text -> Text -> {IO, Throw Text} MergeResult
 ```
 
+```mdl
+api A-4: Codebase definitions other namespaces use
+  signatures:
+  - Codebase.allObjects : Text -> {IO} List Text
+  - Codebase.ancestors : Text -> Text -> {IO, Throw Text} Map Text Unit
+  - Codebase.branchHead : Text -> Text -> {IO} Option Text
+  - Codebase.branches : Text -> {IO} List Text
+  - Codebase.commitComments : Text -> Text -> Text -> {IO, Throw Text} Text
+  - Codebase.commitPrior : Text -> Sexp -> Text -> {IO, Throw Text} Text
+  - Codebase.commitTasks : Text -> Text -> Text -> {IO, Throw Text} Text
+  - Codebase.current : Text -> {IO, Throw Text} Map Text Entry
+  - Codebase.currentBranch : Text -> {IO} Text
+  - Codebase.diffNamespaces : Text -> Text -> Text -> {IO, Throw Text} List (Text, (Option Entry, Option Entry))
+  - Codebase.headOf : Text -> Text -> {IO, Throw Text} Text
+  - Codebase.history : Text -> Text -> Int -> {IO, Throw Text} List (Text, Causal)
+  - Codebase.isCodebase : Text -> {IO} Bool
+  - Codebase.layers : List (Text, (Text, Bool))
+  - Codebase.metaField : Option Sexp -> Text -> Option Sexp
+  - Codebase.metaList : Option Sexp -> Text -> List Sexp
+  - Codebase.migrate : Text -> {IO, Throw Text} (Int, Int)
+  - Codebase.nameIndex : Map Text Entry -> Map Text Text
+  - Codebase.namesByHash : Map Text Entry -> Map Text (List Text)
+  - Codebase.namesOf : Map Text Entry -> Text -> List Text
+  - Codebase.parentsOf : Text -> Text -> {IO, Throw Text} List Text
+  - Codebase.readCausal : Text -> Text -> {IO, Throw Text} Causal
+  - Codebase.readMeta : Text -> Text -> {IO} Option Sexp
+  - Codebase.recordEntries : Text -> Text -> {IO} List (Text, (Text, Text))
+  - Codebase.rewrite : Sexp -> Map Text Text -> Sexp
+  - Codebase.setBranch : Text -> Text -> Text -> {IO} Unit
+  - Codebase.snapshotsOf : Causal -> List Text
+  - Codebase.store : Text -> Batch -> {IO} Unit
+  - Codebase.validBranch : Text -> Bool
+  - Codebase.writeMeta : Text -> Text -> Sexp -> {IO} Unit
+  - Codebase.writeObject : Text -> Text -> Sexp -> {IO} Unit
+```
+
 ## Hashes and object files
 
 ```mdl
