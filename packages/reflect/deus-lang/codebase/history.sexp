@@ -1,3 +1,7 @@
+(entry "2fec4821dd504dd103db0862a83cd66663feb69db551551c1bf182343308cc75" "C and wasm back ends compile handlers whose clauses resume in tail position or abort (D122, task e1cf2c6c)" "claude")
+(entry "fbbadac4d24b404e5ee1476c684521ac135c363ea36af5fbd9ed3fa5ae2fed2f" "history: import 767 changes" "")
+(entry "9f01cc3113dc5b056b8369bb3b5d40c984274bf9d4985608e701426129d35c08" "task: import from codebase/tasks.sexp" "")
+(entry "b338ac8eae3c61f704ad9e3e7980c2d9fc5845745060ef4b83d8242e04801d1c" "add codebase/code codebase/specs" "")
 (entry "5fff9cd9f21bfbe8fb3de1b4313fc53e55ef79b16087815cabe1ef294cd03ef6" "task: comment on 381a725d" "claude")
 (entry "67f6bc1321d61c112dd0aa3f5d7be50badbedba31956969e9077542cbda3886c" "export: merge tasks from codebase" "")
 (entry "1c433a64f15d07cf40b3b1939c741ddaeaa448b445ec4bc05c6e9238ba9cdeb9" "update deus" "merge")

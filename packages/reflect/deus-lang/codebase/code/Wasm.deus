@@ -67,6 +67,7 @@ def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (Li
       List.concat [n ++ localSet ln ++ x ++ localSet lx, unreachableIf (localGet ln ++ [65, 0, 72]), localGet ln ++ [65, 2, 116, 65, 4, 106] ++ 16 :: uleb (List.length scope.fns) ++ localSet lp, localGet lp ++ localGet ln ++ Wasm.store 0, [65, 0] ++ localSet li, [2, 64, 3, 64], localGet li ++ localGet ln ++ [78, 13, 1], address lp li ++ localGet lx ++ Wasm.store 4, localGet li ++ [65, 1, 106] ++ localSet li, [12, 0, 11, 11], localGet lp]
   | _ => Throw.throw ("the primitive " ++ p ++ " is outside the wasm subset")
 
+-- Two-argument runtime calls that return blocks, which the arithmetic default below would count as `Int`.
 /-- `Array t`, or unknown when `t` is. -/
 def Wasm.arrayOf (t : Sexp) : Sexp := if t == unknown then unknown else Sexp.list [Sexp.sym "tapp", tref "#Array", t]
 
@@ -436,7 +437,7 @@ def Wasm.substitute (binding : Sexp -> Option Sexp) (t : Sexp) : Sexp :=
 /-- The result type of a primitive on `Text` (the C back end's runtime, D115), or unknown. -/
 def Wasm.textPrimType (p : Text) : Sexp := if any
   (fun x => x == p)
-  ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text" else if any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int" else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"] else unknown
+  ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text" else if any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int" else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"] else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown] else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown] else unknown
 
 def Wasm.tref (t : Text) : Sexp := Sexp.list [Sexp.sym "tref", Sexp.str t]
 

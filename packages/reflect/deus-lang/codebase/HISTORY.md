@@ -1,5 +1,9 @@
 # History of main
 
+- `2fec4821dd` C and wasm back ends compile handlers whose clauses resume in tail position or abort (D122, task e1cf2c6c) (by claude)
+- `fbbadac4d2` history: import 767 changes
+- `9f01cc3113` task: import from codebase/tasks.sexp
+- `b338ac8eae` add codebase/code codebase/specs
 - `5fff9cd9f2` task: comment on 381a725d (by claude)
 - `67f6bc1321` export: merge tasks from codebase
 - `1c433a64f1` update deus (by merge)

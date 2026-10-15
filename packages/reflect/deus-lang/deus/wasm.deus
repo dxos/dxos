@@ -276,6 +276,9 @@ def textPrimType (p : Text) : Sexp :=
   else if List.any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int"
   else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
   else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"]
+  -- Two-argument runtime calls that return blocks, which the arithmetic default below would count as `Int`.
+  else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown]
+  else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown]
   else unknown
 
 /-- `Array t`, or unknown when `t` is. -/

@@ -178,6 +178,29 @@ def prelude (nullary : Int) : Text :=
     "static V deus_dict_from_list(V xs) { V d = deus_table_new(0); for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { V *pair = UNBOX(UNBOX(c)[1]); deus_table_set(d, pair[1], pair[2]); } return d; }",
     "static V deus_dict_lookup(V k, V d) { return deus_table_get(d, k); }",
     "static V deus_dict_contains(V k, V d) { return deus_table_has(d, k); }",
+    "/* Handlers (D122). The abort marker is no value a program makes: not an Int, not a block. */",
+    "#ifdef __wasm__",
+    "#define DEUS_ABORT ((V)1 << 40)",
+    "#else",
+    "#define DEUS_ABORT ((V)(uintptr_t)deus_base - 8)",
+    "#endif",
+    "/* An installed clause is a record [parent, frame, ability, op, clause]; a handler's first record is its frame, with no clause.",
+    "   `deus_hctx` is the innermost visible record. A running clause hides its handler and the ones inside it. */",
+    "static V *deus_hrec, deus_hn, deus_hcap, deus_hctx = -1, *deus_cst, deus_cn, deus_ccap, deus_abort_frame = -1, deus_abort_value;",
+    "static V *deus_grow(V *p, V used, V *cap, V need) { if (used + need <= *cap) return p; V c = *cap ? 2 * *cap : 64; while (used + need > c) c *= 2; V *q = deus_raw(c); for (V i = 0; i < used; i++) q[i] = p[i]; *cap = c; return q; }",
+    "#define HREC(r, f) deus_hrec[5 * (r) + (f)]",
+    "static V deus_hpush(V parent, V frame, V a, V i, V c) { deus_hrec = deus_grow(deus_hrec, 5 * deus_hn, &deus_hcap, 5); V r = deus_hn++; HREC(r, 0) = parent; HREC(r, 1) = frame; HREC(r, 2) = a; HREC(r, 3) = i; HREC(r, 4) = c; return r; }",
+    "static V deus_handle_enter(V unused) { (void)unused; V f = deus_hpush(deus_hctx, deus_hn, -1, -1, 0); deus_hctx = f; return f; }",
+    "static V deus_handle_add(V f, V a, V i, V c) { deus_hctx = deus_hpush(deus_hctx, f, a, i, deus_dup(c)); return STATIC(&deus_nullary[0]); }",
+    "static V deus_handle_exit(V f) { deus_hctx = HREC(f, 0); for (V r = f; r < deus_hn; r++) deus_drop(HREC(r, 4)); deus_hn = f; return STATIC(&deus_nullary[0]); }",
+    "/* The clause for operation `i` of ability `a`, run with its handler hidden until `deus_clause_done`; none is a defect. */",
+    "static V deus_clause(V a, V i) { for (V r = deus_hctx; r >= 0; r = HREC(r, 0)) if (HREC(r, 2) == a && HREC(r, 3) == i) { V f = HREC(r, 1); deus_cst = deus_grow(deus_cst, 2 * deus_cn, &deus_ccap, 2); deus_cst[2 * deus_cn] = deus_hctx; deus_cst[2 * deus_cn + 1] = f; deus_cn++; deus_hctx = HREC(f, 0); return deus_dup(HREC(r, 4)); } __builtin_trap(); }",
+    "static V deus_clause_done(V v) { deus_cn--; deus_hctx = deus_cst[2 * deus_cn]; return deus_dup(v); }",
+    "static V deus_abort_to(V v) { if (v == DEUS_ABORT) return v; deus_abort_frame = deus_cst[2 * deus_cn - 1]; deus_abort_value = deus_dup(v); return DEUS_ABORT; }",
+    "static V deus_caught(V f, V r) { return r == DEUS_ABORT && deus_abort_frame == f; }",
+    "static V deus_caught_value(V unused) { (void)unused; deus_abort_frame = -1; return deus_abort_value; }",
+    "static V deus_aborted(V r) { return r == DEUS_ABORT; }",
+    "static V deus_abort_marker(V unused) { (void)unused; return DEUS_ABORT; }",
     "/* UTF-8, as the kernels encode a text: a lone surrogate becomes U+FFFD. `o` needs 3 bytes a unit. */",
     "static V deus_utf8(const uint16_t *x, V n, uint8_t *o) { V k = 0; for (V i = 0; i < n; i++) { uint32_t c = x[i]; if (c >= 0xd800 && c < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000) c = 0x10000 + ((c - 0xd800) << 10) + (x[++i] - 0xdc00); else if (c >= 0xd800 && c < 0xe000) c = 0xfffd; if (c < 0x80) o[k++] = (uint8_t)c; else if (c < 0x800) { o[k++] = (uint8_t)(0xc0 | c >> 6); o[k++] = (uint8_t)(0x80 | (c & 63)); } else if (c < 0x10000) { o[k++] = (uint8_t)(0xe0 | c >> 12); o[k++] = (uint8_t)(0x80 | (c >> 6 & 63)); o[k++] = (uint8_t)(0x80 | (c & 63)); } else { o[k++] = (uint8_t)(0xf0 | c >> 18); o[k++] = (uint8_t)(0x80 | (c >> 12 & 63)); o[k++] = (uint8_t)(0x80 | (c >> 6 & 63)); o[k++] = (uint8_t)(0x80 | (c & 63)); } } return k; }",
     "/* A scratch buffer of `bytes` bytes is a text block, so it comes from and returns to the heap. */",
@@ -488,6 +511,8 @@ def shift (amount : Int) (cut : Int) (e : Sexp) : Sexp :=
       match c with
       | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, shift amount (cut + binders pat) b]
       | other => other) cases)
+  | Sexp.list [Sexp.sym "ret", b] => Sexp.list [Sexp.sym "ret", shift amount (cut + 1) b]
+  | Sexp.list [Sexp.sym "on", a, i, Sexp.int k, b] => Sexp.list [Sexp.sym "on", a, i, Sexp.int k, shift amount (cut + k + 1) b]
   | Sexp.list items => Sexp.list (List.map (shift amount cut) items)
   | _ => e
 
@@ -648,7 +673,11 @@ def textFunction (p : Text) : Option Text :=
     ("Dict.size", "deus_table_size"), ("Dict.keys", "deus_table_keys"), ("MutMap.new", "deus_table_new"),
     ("MutMap.get", "deus_table_get"), ("MutMap.has", "deus_table_has"), ("MutMap.set", "deus_table_set"),
     ("MutMap.delete", "deus_table_delete"), ("MutMap.size", "deus_table_size"), ("MutMap.keys", "deus_table_keys"),
-    ("Text.utf8", "deus_text_utf8"), ("Text.fromCodes", "deus_text_from_codes"), ("Text.sha256", "deus_text_sha256")]
+    ("Text.utf8", "deus_text_utf8"), ("Text.fromCodes", "deus_text_from_codes"), ("Text.sha256", "deus_text_sha256"),
+    ("deus.abortValue", "deus_abort_marker"), ("deus.aborted", "deus_aborted"), ("deus.abortTo", "deus_abort_to"),
+    ("deus.caught", "deus_caught"), ("deus.caughtValue", "deus_caught_value"), ("deus.handleEnter", "deus_handle_enter"),
+    ("deus.handleAdd", "deus_handle_add"), ("deus.handleExit", "deus_handle_exit"), ("deus.clause", "deus_clause"),
+    ("deus.clauseDone", "deus_clause_done")]
 
 /-- The index of the equality and order functions of data type `t`, registering them on first use. -/
 def structIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
@@ -1081,6 +1110,220 @@ def liftAll (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
   let done := List.map (fun f => Wasm.Fn.mk f.fnHash f.fnArity (liftExpr f.fnHash next out f.fnBody) f.fnType) fns
   done ++ Ref.get out
 
+--
+-- Effects (D122). A clause that resumes only in tail position needs no captured continuation:
+-- performing calls it, and its tail `k x` returns `x` to the performer. A clause tail that does
+-- not resume aborts: it stores its value and returns the abort marker, which every caller that
+-- may see it checks and passes on, dropping what it owns, up to the handler. Both are rewritten
+-- into Core over the `deus.*` runtime functions before lambda lifting, so reference counting
+-- covers the new paths as it covers any other code.
+--
+
+def eVar (i : Int) : Sexp := Sexp.list [Sexp.sym "var", Sexp.int i]
+
+def eInt (n : Int) : Sexp := Sexp.list [Sexp.sym "int", Sexp.int n]
+
+def eLet (v : Sexp) (b : Sexp) : Sexp := Sexp.list [Sexp.sym "let", v, b]
+
+def eIf (c : Sexp) (t : Sexp) (f : Sexp) : Sexp := Sexp.list [Sexp.sym "if", c, t, f]
+
+def eSeq (a : Sexp) (b : Sexp) : Sexp := Sexp.list [Sexp.sym "seq", a, b]
+
+/-- `b` under `n` lambdas. -/
+def eLams (n : Int) (b : Sexp) : Sexp := if n == 0 then b else Sexp.list [Sexp.sym "lam", eLams (n - 1) b]
+
+/-- The abort marker, as a value. -/
+def effAbort : Sexp := Unique.applyPrim "deus.abortValue" [eInt 0]
+
+/-- Whether variable `d` occurs free in `e`. -/
+def effOccurs (d : Int) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => i == d
+  | Sexp.list [Sexp.sym "lam", b] => effOccurs (d + 1) b
+  | Sexp.list [Sexp.sym "let", v, b] => effOccurs d v || effOccurs (d + 1) b
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    List.any (effOccurs (d + n)) fs || effOccurs (d + n) b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    effOccurs d scrutinee || List.any (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => effOccurs (d + binders pat) b
+      | _ => false) cases
+  | Sexp.list [Sexp.sym "ret", b] => effOccurs (d + 1) b
+  | Sexp.list [Sexp.sym "on", _, _, Sexp.int k, b] => effOccurs (d + k + 1) b
+  | Sexp.list items => List.any (effOccurs d) items
+  | _ => false
+
+def effResumeError : Text := "a handler that resumes other than in tail position is outside the C subset"
+
+/--
+  A clause body whose continuation is variable `d`: a tail `k x` becomes `x`, and any other tail
+  aborts to the handler with its value. `k` anywhere else is refused.
+-/
+def effClauseTails (d : Int) (e : Sexp) : {Throw Text} Sexp :=
+  let plain := fun (x : Sexp) => if effOccurs d x then throw effResumeError else x
+  match e with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "var", Sexp.int i], x] => if i == d then plain x else Unique.applyPrim "deus.abortTo" [plain e]
+  | Sexp.list [Sexp.sym "let", v, b] => eLet (plain v) (effClauseTails (d + 1) b)
+  | Sexp.list [Sexp.sym "seq", a, b] => eSeq (plain a) (effClauseTails d b)
+  | Sexp.list [Sexp.sym "if", c, t, f] => eIf (plain c) (effClauseTails d t) (effClauseTails d f)
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    Sexp.list (Sexp.sym "match" :: plain scrutinee :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, effClauseTails (d + binders pat) b]
+      | other => plain other) cases)
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    if List.any (effOccurs (d + n)) fs then throw effResumeError
+    else Sexp.list [Sexp.sym "letrec", Sexp.list fs, effClauseTails (d + n) b]
+  | _ => if e == effAbort then e else Unique.applyPrim "deus.abortTo" [plain e]
+
+/-- Whether `e` has a handler clause with a tail that does not resume. -/
+def effAborting (e : Sexp) : {Throw Text} Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "on", _, _, _, b] => Text.indexOf (Sexp.print (effClauseTails 0 b)) "deus.abortTo" 0 >= 0 || effAborting b
+  | Sexp.list items => List.any effAborting items
+  | _ => false
+
+/-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` names it. -/
+def effCallAborts (aborts : List Text) (h : Sexp) : Bool :=
+  match h with
+  | Sexp.list [Sexp.sym "prim", _] => false
+  | Sexp.list (Sexp.sym "con" :: _) => false
+  | Sexp.list [Sexp.sym "ref", Sexp.str r] => List.contains r aborts
+  | _ => true
+
+/-- Whether evaluating `e` may return the abort marker; making a closure never does. -/
+def effMayAbort (aborts : List Text) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "lam", _] => false
+  | Sexp.list (Sexp.sym "handle" :: _) => true
+  | Sexp.list (Sexp.sym "app" :: h :: xs) => effCallAborts aborts h || List.any (effMayAbort aborts) (h :: xs)
+  | Sexp.list [Sexp.sym "letrec", _, b] => effMayAbort aborts b
+  | Sexp.list items => List.any (effMayAbort aborts) items
+  | _ => false
+
+/-- The definitions that may return the abort marker: those that perform, handle or call an unknown function, and their callers. -/
+def effAbortingFns (fns : List Wasm.Fn) (known : List Text) : List Text :=
+  let more := List.filter (fun f => not (List.contains f.fnHash known) && effMayAbort known f.fnBody) fns
+  if List.isEmpty more then known else effAbortingFns fns (known ++ List.map (fun f => f.fnHash) more)
+
+/-- Whether evaluating `e` can neither abort nor observe the order it runs in. -/
+def effAtomic (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "var" :: _) => true
+  | Sexp.list (Sexp.sym "ref" :: _) => true
+  | Sexp.list (Sexp.sym "int" :: _) => true
+  | Sexp.list (Sexp.sym "text" :: _) => true
+  | Sexp.list (Sexp.sym "con" :: _) => true
+  | Sexp.list (Sexp.sym "prim" :: _) => true
+  | Sexp.list (Sexp.sym "op" :: _) => true
+  | Sexp.list (Sexp.sym "lam" :: _) => true
+  | _ => false
+
+/-- `v` bound, then the abort marker if it is one, else `b`, which sees `v` as variable 0. -/
+def effChecked (v : Sexp) (b : Sexp) : Sexp := eLet v (eIf (Unique.applyPrim "deus.aborted" [eVar 0]) effAbort b)
+
+/--
+  `build` of `xs`, evaluated in order. An operand that may abort is bound and checked first, and
+  so is every operand before it that is not atomic, so the order of evaluation stays.
+-/
+def effHoist (aborts : List Text) (xs : List Sexp) (done : List Sexp) (build : List Sexp -> Sexp) : Sexp :=
+  match xs with
+  | [] => build done
+  | x :: rest =>
+    let next := fun (u : Unit) => effHoist aborts (List.map (shift 1 0) rest) (List.map (shift 1 0) done ++ [eVar 0]) build
+    if effMayAbort aborts x then effChecked (effNorm aborts x) (next ())
+    else if not (effAtomic x) && List.any (effMayAbort aborts) rest then eLet (effNorm aborts x) (next ())
+    else effHoist aborts rest (done ++ [effNorm aborts x]) build
+
+/-- `e` with every value that may be the abort marker checked before it is used; in tail position it is returned as it is. -/
+def effNorm (aborts : List Text) (e : Sexp) : Sexp :=
+  let may := effMayAbort aborts
+  -- `e`'s first part bound and checked, the rest (a form whose first part is a placeholder) shifted under it.
+  let first := fun (x : Sexp) (form : Sexp) =>
+    match shift 1 0 form with
+    | Sexp.list (h :: _ :: rest) => effChecked (effNorm aborts x) (Sexp.list (h :: eVar 0 :: rest))
+    | other => other
+  match e with
+  | Sexp.list [Sexp.sym "lam", b] => Sexp.list [Sexp.sym "lam", effNorm aborts b]
+  | Sexp.list (Sexp.sym "app" :: parts) => effHoist aborts parts [] (fun ps => Sexp.list (Sexp.sym "app" :: ps))
+  | Sexp.list [Sexp.sym "let", v, b] => if may v then effChecked (effNorm aborts v) (effNorm aborts b) else eLet (effNorm aborts v) (effNorm aborts b)
+  | Sexp.list [Sexp.sym "seq", a, b] => if may a then effChecked (effNorm aborts a) (shift 1 0 (effNorm aborts b)) else eSeq (effNorm aborts a) (effNorm aborts b)
+  | Sexp.list [Sexp.sym "if", c, t, f] =>
+    let branches := eIf (eInt 0) (effNorm aborts t) (effNorm aborts f)
+    if may c then first c branches else eIf (effNorm aborts c) (effNorm aborts t) (effNorm aborts f)
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    let normed := List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, effNorm aborts b]
+      | other => other) cases
+    if may scrutinee then first scrutinee (Sexp.list (Sexp.sym "match" :: eInt 0 :: normed))
+    else Sexp.list (Sexp.sym "match" :: effNorm aborts scrutinee :: normed)
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] => Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (effNorm aborts) fs), effNorm aborts b]
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
+    Sexp.list (Sexp.sym "handle" :: effNorm aborts b :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "ret", rb] => Sexp.list [Sexp.sym "ret", effNorm aborts rb]
+      | Sexp.list [Sexp.sym "on", a, i, k, body] => Sexp.list [Sexp.sym "on", a, i, k, effNorm aborts body]
+      | other => other) clauses)
+  | _ => e
+
+/-- `xs` bound in order around `body`, which sees the last of them as variable 0. -/
+def effBind (xs : List Sexp) (body : Sexp) : Sexp :=
+  match xs with
+  | [] => body
+  | x :: rest => eLet x (effBind (List.map (shift 1 0) rest) body)
+
+/-- Performing operation `i` of ability `a` with `k` arguments: the arguments, then the clause, called with the handler hidden. -/
+def effPerform (a : Int) (i : Int) (args : List Sexp) : Sexp :=
+  let k := List.length args
+  let call := Sexp.list (Sexp.sym "app" :: eVar 0 :: List.map (fun j => eVar (k - j)) (List.range 0 k))
+  effBind args (eLet (Unique.applyPrim "deus.clause" [eInt a, eInt i]) (eLet call (Unique.applyPrim "deus.clauseDone" [eVar 0])))
+
+/--
+  A handler: its clauses installed as closures, the body run, the handler removed, then the value
+  an aborting clause left for it, the abort marker passed on, or the `ret` clause.
+-/
+def effHandler (abilities : List Text) (b : Sexp) (clauses : List Sexp) : {Throw Text} Sexp :=
+  let added := List.filterMap (fun c =>
+    match c with
+    | Sexp.list [Sexp.sym "on", Sexp.str a, Sexp.int i, Sexp.int k, body] =>
+      let clause := eLams k (shift (-1) 1 (effLower abilities (effClauseTails 0 body)))
+      some (Unique.applyPrim "deus.handleAdd" [eVar 0, eInt (List.findIndex (fun x => x == a) abilities), eInt i, shift 1 0 clause])
+    | _ => none) clauses
+  let returned := match List.find (fun c => Sexp.head c == "ret") clauses with
+    | some (Sexp.list [Sexp.sym "ret", rb]) => shift 1 1 (effLower abilities rb)
+    | _ => eVar 0
+  let after := eSeq (Unique.applyPrim "deus.handleExit" [eVar 1]) (eIf (Unique.applyPrim "deus.caught" [eVar 1, eVar 0]) (Unique.applyPrim "deus.caughtValue" [eInt 0]) (eIf (Unique.applyPrim "deus.aborted" [eVar 0]) effAbort returned))
+  eLet (Unique.applyPrim "deus.handleEnter" [eInt 0]) (List.foldr (fun x acc => eSeq x acc) (eLet (shift 1 0 b) after) added)
+
+/-- `e` with its operations performed and its handlers installed through the runtime. -/
+def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
+  match e with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "op", Sexp.str a, Sexp.int i, Sexp.int k] :: xs) =>
+    let n := List.length xs
+    if n < k then throw "an operation applied to fewer arguments than it takes is outside the C subset"
+    else
+      let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (List.map (effLower abilities) (List.take k xs))
+      if n == k then performed else Sexp.list (Sexp.sym "app" :: performed :: List.map (effLower abilities) (List.drop k xs))
+  | Sexp.list [Sexp.sym "op", _, _, _] => throw "an operation used as a value is outside the C subset"
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
+  | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
+  | _ => e
+
+/-- `fns` with handlers and operations rewritten into Core over the runtime (D122); unchanged when none performs or handles. -/
+def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
+  let abilities := List.dedup (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody) fns)
+  if List.isEmpty abilities then fns
+  else
+    let rebuild := fun (f : Wasm.Fn) (body : Sexp) => Wasm.Fn.mk f.fnHash f.fnArity body f.fnType
+    let normed := if List.any (fun f => effAborting f.fnBody) fns then
+        let aborts := effAbortingFns fns []
+        List.map (fun f => rebuild f (effNorm aborts f.fnBody)) fns
+      else fns
+    List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
+
 /-- The data types whose constructors `form` applies. -/
 def builtTypes (form : Sexp) : List Text :=
   match form with
@@ -1090,7 +1333,7 @@ def builtTypes (form : Sexp) : List Text :=
 
 /-- Compiles `main` and what it calls to C exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
-  let fns := liftAll (Wasm.gather fetch meta main)
+  let fns := liftAll (effects (Wasm.gather fetch meta main))
   -- The types the code builds as well as the ones it matches, so comparisons know their constructors.
   let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody ++ builtTypes f.fnBody) fns)
   -- A definition that is only a primitive is inlined at its calls and gathers to nothing.

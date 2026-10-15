@@ -1,0 +1,64 @@
+/-
+  Effect handlers in the C back end (D122). A clause that resumes in tail position becomes a call,
+  and one that does not aborts to its handler, passing the value up through checked returns. Both
+  `try` and handlers written here compile; a clause that resumes anywhere else is refused.
+
+    deus add examples/handled.deus && deus build Handled.handledAll -o handled --c
+-/
+
+namespace Handled
+
+ability Meter where
+  advance : Int -> Int
+
+ability Journal where
+  record : Text -> Unit
+
+/-- Each `advance` returns its argument doubled, by a clause that resumes in tail position. -/
+def metered (n : Int) (acc : Int) : {Meter} Int := if n == 0 then acc else metered (n - 1) (acc + Meter.advance n)
+
+def countTo (n : Int) : Int :=
+  handle metered n 0 with
+  | Meter.advance x -> resume => resume (x * 2)
+
+def parseAll (xs : List Text) (acc : Int) : {Throw Text} Int :=
+  match xs with
+  | [] => acc
+  | x :: rest =>
+    match Int.fromText x with
+    | some v => parseAll rest (acc + v)
+    | none => throw ("not a number: " ++ x)
+
+/-- A `throw` deep in a recursion unwinds through every frame to `try`. -/
+def unwound (n : Int) : Int :=
+  let xs := List.map (fun i => if i == n - 3 then "x" ++ Int.toText i else Int.toText i) (List.range 0 n)
+  match try (fun _ => parseAll xs 0) with
+  | Result.ok v => v
+  | Result.err e => 0 - Text.length e
+
+/-- A handler that keeps state in a `Ref`, under one that a `throw` passes through. -/
+def journaled (n : Int) : Int :=
+  let lines := Ref.new 0
+  let result := try (fun _ =>
+    handle List.forEach (List.range 0 n) (fun i => if i == 7 then throw "seven" else Journal.record (Int.toText i)) with
+    | Journal.record t -> resume => resume (Ref.set lines (Ref.get lines + Text.length t)))
+  match result with
+  | Result.ok _ => Ref.get lines
+  | Result.err e => 1000 * Ref.get lines + Text.length e
+
+/-- A clause that throws to an outer handler instead of resuming, and a handler that throws again with context. -/
+def capped (limit : Int) (n : Int) : Int :=
+  let counted := fun (_ : Unit) =>
+    handle metered n 0 with
+    | Meter.advance x -> resume => if x > limit then throw ("over " ++ Int.toText x) else resume (x + 1)
+  let rethrown := fun (_ : Unit) =>
+    handle counted () with
+    | throw e -> _ => throw ("capped: " ++ e)
+  match try rethrown with
+  | Result.ok v => v
+  | Result.err e => 0 - Text.length e
+
+/-- Every program here, as one number the tests compare across back ends. -/
+def handledAll (n : Int) : Int := countTo n + unwound n + journaled n + capped (n / 2) n + 100000 * capped (n + 1) n
+
+test handledSmall := handledAll 20 == 23007393
