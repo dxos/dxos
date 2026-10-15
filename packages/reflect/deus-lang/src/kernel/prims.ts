@@ -295,6 +295,23 @@ export const createPrims = (): Map<string, Prim> => {
   });
   def('Code.quote', 1, ([v]) => print(quoteValue(v)));
   def('Code.has', 1, ([hash], machine) => machine.globals.has(text(hash)));
+  // Reflection for code that walks a value by its type (D143), so it renders a Bool or a nullary constructor exactly.
+  def('Code.tag', 1, ([v]) => {
+    if (typeof v === 'boolean') {
+      return v ? 1 : 0;
+    }
+    if (!(v instanceof Con)) {
+      throw new DeusDefect(`Code.tag takes a data value, got ${show(v)}`);
+    }
+    return v.tag;
+  });
+  def('Code.field', 2, ([v, i]) => {
+    if (!(v instanceof Con) || int(i) < 0 || int(i) >= v.fields.length) {
+      throw new DeusDefect(`Code.field: no field ${int(i)} in ${show(v)}`);
+    }
+    return v.fields[int(i)];
+  });
+  def('Code.cast', 1, ([v]) => v);
   def('Code.steps', 1, (_args, machine) => machine.steps);
   def('Code.defectTrace', 1, (_args, machine) => listFrom(machine.defectTrace));
   // Steps on the machine alone: compiled code counts calls, not steps, and both kernels must agree.

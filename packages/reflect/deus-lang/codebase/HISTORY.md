@@ -1,5 +1,12 @@
 # History of main
 
+- `e69797f657` task: link 60e88be8 to CGen.codeRuntime
+- `3d3f26560e` task: set 60e88be8 state
+- `fee8274c35` task: comment on 60e88be8 (by claude)
+- `315f4fea21` native Core interpreter (D143) (by claude)
+- `db80f8c8c0` history: import 965 changes
+- `506986bb97` task: import from codebase/tasks.sexp
+- `e9a7188d56` add codebase/code codebase/specs
 - `bf1d51f864` update deus (by merge)
 - `c562dd221e` history: import 955 changes
 - `f9a2c9e537` history: import 940 changes

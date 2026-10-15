@@ -163,6 +163,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 153 | 10-15 08:40 | 1h 35m | `687dc9f7` | The DEUS compiler builds natively: `examples/compiler.deus` writes the seed image byte for byte in 642 ms vs 7.4 s on the JIT (D137). Definitions found by hash in a table, defects as `Defect.raise`, partly typed comparisons at run time, and an over-application loop fixed |
 | 154 | 10-15 09:05 | 40m 00s | `1e5b59c9` | `deus eval` with a `Workspace` ability: a snippet reads and changes the codebase (D138, task 10b95384, new Workspace.Spec R-1..R-4); `--quiet` is a boolean flag |
 | 155 | 10-15 09:25 | 20m 00s | `81451f12` | `deus export` removes the code and spec files it no longer writes, so `Unnamed.deus` (two pre-D108 versions of `Cli.withRemote` and `Analytics.command`) is gone and cannot come back on restore (D139, task cda44092, Export.Spec R-7) |
-| 156 | 10-15 09:50 | 50m 00s | this commit | The whole `deus` CLI builds natively; `Code.*` raises a defect there (D140). Native `deus add` of the toolchain: 1.2 s vs 10.8 s, identical store. Writing the CLI's C: 129 s to 17 s |
+| 156 | 10-15 09:50 | 50m 00s | `7c2032a8` | The whole `deus` CLI builds natively; `Code.*` raises a defect there (D140). Native `deus add` of the toolchain: 1.2 s vs 10.8 s, identical store. Writing the CLI's C: 129 s to 17 s |
+| 157 | 10-15 11:20 | 1h 30m | this commit | The native CLI runs `eval`, `run` and `test` through a Core interpreter in its C runtime (D143): 44 tests in 251 ms vs 2,078 ms on the JIT, same output; `deus eval` prints by type with `Code.tag`, `Code.field` and `Code.cast` |
 
-Total from stage 1 to stage 156: 35h 17m.
+Total from stage 1 to stage 157: 36h 47m.

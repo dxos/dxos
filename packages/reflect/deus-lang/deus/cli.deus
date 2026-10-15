@@ -839,13 +839,59 @@ def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
 
 /-- Compiles `def it := <source>` against the codebase and loads it; returns its hash. -/
 def compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Text :=
+  (compileTyped dir ns source).compiledHash
+
+/-- A loaded expression: its hash, its type, and the data types its value may hold, for `quoteAt`. -/
+structure Compiled where
+  compiledHash : Text
+  compiledType : Sexp
+  compiledTypes : Map Text (Text, Sexp)
+
+/-- Compiles `def it := <source>` against the codebase and loads it. -/
+def compileTyped (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Compiled :=
   let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" ("def it := " ++ source)]
   match List.lookup "it" batch.entries with
   | some (Entry.term h) =>
     let objects := Map.fromList batch.objects
-    Image.load (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) [h]
-    h
+    let fetch := fun (x : Text) => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)
+    Image.load fetch [h]
+    Compiled.mk h (Wasm.storedType (List.lookup h batch.metas)) (dataTypes fetch h)
   | _ => throw ("cannot compile " ++ source)
+
+/-- The data types a value of definition `h` may hold, by IRI: the built-in ones and those its code constructs. -/
+def dataTypes (fetch : Text -> {IO, Throw Text} Option Sexp) (h : Text) : {IO, Throw Text} Map Text (Text, Sexp) :=
+  let hashes := ["#Unit", "#Bool", "#List", "#Option", "#Pair"] ++ List.dedup (List.foldl (fun acc pair => Image.nominal (snd pair) acc) [] (Image.closure fetch [h]))
+  Map.fromList (List.filterMap (fun x =>
+    match fetch x with
+    | some (Sexp.list (Sexp.sym "type" :: Sexp.str iri :: rest)) => some (iri, (x, Sexp.list (Sexp.sym "type" :: Sexp.str iri :: rest)))
+    | _ => none) hashes)
+
+/-- The constructors' field types of data type `t`, and the hash its constructors name, if `types` has it. -/
+def ctorsOf (types : Map Text (Text, Sexp)) (t : Sexp) : Option (Text, List (List Sexp)) :=
+  match Option.bind (Wasm.headName t) (fun n => Map.lookup n types) with
+  | some (hash, form) =>
+    let ctors := Wasm.ctorFields form
+    if List.isEmpty ctors then none else some (hash, List.map (List.map (Wasm.instantiate (Wasm.typeArgs t))) ctors)
+  | none => none
+
+/--
+  `value`, of type `t`, as Core text (D143). It is walked by its type, since a native build's values
+  do not carry their constructors' types: a Bool and an Int are the same words there, and so are the
+  nullary constructors of different types. A value whose type it does not know is quoted as it is.
+-/
+def quoteAt (types : Map Text (Text, Sexp)) (t : Sexp) (value : a) : Text :=
+  if t == Wasm.tref "#Int" then "(int " ++ Int.toText (Code.cast value) ++ ")"
+  else if t == Wasm.tref "#Text" then "(text " ++ Sexp.print (Sexp.str (Code.cast value)) ++ ")"
+  else if t == Wasm.tref "#Bool" then "(con \"#Bool\" " ++ Int.toText (Code.tag value) ++ " 0)"
+  else
+    match ctorsOf types t with
+    | some (hash, ctors) =>
+      let tag := Code.tag value
+      let fields := Option.getOr (List.get? ctors tag) []
+      let con := "(con " ++ Sexp.print (Sexp.str hash) ++ " " ++ Int.toText tag ++ " " ++ Int.toText (List.length fields) ++ ")"
+      if List.isEmpty fields then con
+      else "(app " ++ con ++ Text.concat (List.mapIndexed (fun i f => " " ++ quoteAt types f (Code.field value i)) fields) ++ ")"
+    | none => Code.quote value
 
 /-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it; the expression may perform `Workspace`. -/
 def eval (args : Args) : {IO, Throw Text} Unit :=
@@ -862,8 +908,9 @@ def forwarded (args : Args) : List Text :=
 
 /-- `source` compiled against `dir` and run with `Workspace` handled; the value as source. -/
 def evaluate (dir : Text) (passed : List Text) (source : Text) : {IO, Throw Text} Text :=
-  let value := withWorkspace dir passed (fun _ => Code.run (compileExpr dir (Codebase.current dir) source))
-  Print.expr (Print.printer (Codebase.current dir) []) (Sexp.read (Code.quote value)) [] 0 0
+  let compiled := compileTyped dir (Codebase.current dir) source
+  let value := withWorkspace dir passed (fun _ => Code.run compiled.compiledHash)
+  Print.expr (Print.printer (Codebase.current dir) []) (Sexp.read (quoteAt compiled.compiledTypes compiled.compiledType value)) [] 0 0
 
 /-- Runs `body` with `Workspace` handled against `dir`; `passed` goes to every command it runs. -/
 def withWorkspace (dir : Text) (passed : List Text) (body : Unit -> {Workspace, IO, Throw Text} a) : {IO, Throw Text} a :=
@@ -1412,10 +1459,12 @@ def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result T
     | some (Entry.term h) =>
       let objects := Map.fromList batch.objects
       let metas := Map.fromList batch.metas
-      Image.load (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) [h]
+      let fetch := fun (x : Text) => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)
+      Image.load fetch [h]
+      let types := dataTypes fetch h
       let printer := Print.printer ns []
       let render := fun (quoted : Text) => Print.expr printer (Sexp.read quoted) [] 0 0
-      let kernel := match guardDefect (fun _ => Code.quote (Code.run h)) with
+      let kernel := match guardDefect (fun _ => quoteAt types (Wasm.storedType (Map.lookup h metas)) (Code.run h)) with
         | Result.ok q => render q
         | Result.err message => "defect: " ++ message
       let out := dir ++ "/cache/js-" ++ Text.take 16 (Text.sha256 (h ++ source))

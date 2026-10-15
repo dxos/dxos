@@ -389,12 +389,15 @@ describe('deus CLI native back ends', () => {
       expect(deus('view', 'Structural.structural', ...target).stdout).toBe(
         run('view', 'Structural.structural', ...target).stdout,
       );
-      expect(deus('test', ...target).stdout).toContain('1 passed');
-      // Evaluating needs a kernel, so it is a defect the CLI reports.
-      const evaluated = run('eval', '1 + 1', ...target);
-      expect([evaluated.status, evaluated.stderr]).toEqual([
+      // The interpreter in the C runtime (D143) runs what the kernels run: tests, and expressions printed by their types.
+      expect(run('test', ...target).stdout).toBe('  ✓ Structural.structuralSmall\n1 passed, 0 failed\n');
+      for (const source of ['1 + 1', '[1 == 1, false]', 'Option.some ((), "a")', 'Structural.structural']) {
+        expect(run('eval', source, ...target).stdout).toBe(deus('eval', source, ...target).stdout);
+      }
+      const cost = run('eval', 'Code.cost (fun _ => 1)', ...target);
+      expect([cost.status, cost.stderr]).toEqual([
         70,
-        'defect: Code.has needs a kernel, which a native build does not have\n',
+        "defect: Code.steps and Code.cost count the kernels' machine steps, which the native interpreter does not count\n",
       ]);
     },
   );

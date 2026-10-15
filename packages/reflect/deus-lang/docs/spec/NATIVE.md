@@ -311,13 +311,42 @@ the C back end now finds definitions by hash in a table instead of a list, which
 parser's build from 7 s to 2 s, and a call that returns a function and is applied again no longer
 loops between two rewrites.
 
-The whole CLI, `Cli.main`, builds too ([D140](../DECISIONS.md)). A native build has no kernel to
-load or run Core, so `Code.load`, `Code.run` and the other `Code.*` primitives raise a defect that
-names the primitive, and the CLI's boundaries report it: `eval`, `run` and `test` exit with status
-70, while the commands that read and write the codebase work. The native `deus add` of the whole
+The whole CLI, `Cli.main`, builds too ([D140](../DECISIONS.md)). The native `deus add` of the whole
 export takes 1.2 s against 10.8 s on the JIT and writes the same store, byte for byte. Building it
-takes about 95 s: 17 s to write 6.3 MB of C (129 s before data types were found in a table too) and
+takes about 100 s: 17 s to write 6.6 MB of C (129 s before data types were found in a table too) and
 70 s for `cc -O2`.
+
+## Running Core natively
+
+A native program that calls `Code.load`, `Code.has` or `Code.run` gets a Core interpreter in its C
+runtime ([D143](../DECISIONS.md)), so the native CLI runs `eval`, `run` and `test` as the kernels
+do. It is the kernels' machine over the compiled code's values: a closure it returns is called like
+any compiled closure, and its operations go through the same handler records (D124), so the CLI's
+compiled handlers (`Workspace`, `Defect`, a test's boundary) take what interpreted code performs.
+
+| The toolchain, natively (milliseconds, one run) | TS kernel with JIT | native CLI |
+| ----------------------------------------------- | -----------------: | ---------: |
+| `deus test`: 44 tests, cold                     |              2,078 |        251 |
+| `deus run Command.main quiet 100000`            |              1,680 |         54 |
+| `deus run Command.main freq` on 110 KB          |                604 |        158 |
+| `deus run Command.main count` on 110 KB         |                412 |         14 |
+
+The outputs match the JIT's byte for byte, except that a native defect lists no stack. What the
+interpreter does not do:
+
+- A handler clause resumes only in its tail, as compiled clauses do (D124): `k v` returns `v` to
+  the operation, and any other tail aborts to the handler. Calling `k` elsewhere is a defect.
+- `Code.steps` and `Code.cost` count the kernels' machine steps, which it does not count, so they
+  are defects; `Code.defectTrace` is empty.
+- It never frees. Every block it makes or receives is made immortal, so compiled code that shares
+  one never writes into it, and `Array.set` copies the array.
+- Values do not carry their types, so `show`, `trace` and `Code.quote` in interpreted code render
+  a Bool as 0 or 1 and guess the nullary constructors. `deus eval` prints by the expression's type
+  instead (`Cli.quoteAt`, with the new `Code.tag`, `Code.field` and `Code.cast`), on every kernel.
+
+A long list literal in the CLI's source, such as the interpreter's 480 lines of C, nested deeply
+enough that the JIT overflowed its stack and replayed on every element: writing that one constant
+took 550 s. It is now 13 lists of 40 lines, which takes 0.5 s.
 
 ## Benchmarks
 

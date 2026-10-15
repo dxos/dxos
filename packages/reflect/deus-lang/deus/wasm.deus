@@ -265,6 +265,8 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "append"], a, b] =>
     let left := typeOf scope env a
     if left == unknown then typeOf scope env b else left
+  -- A field taken out by the interpreter's reflection (D143) is of any type.
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Code.field"], _, _] => unknown
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
     let known := textPrimType p
     if known != unknown then known
@@ -294,7 +296,9 @@ def textPrimType (p : Text) : Sexp :=
   else if p == "deus.io.readFile" || p == "deus.io.getEnv" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Text"]
   else if p == "deus.io.listDir" || p == "deus.io.args" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
   else if p == "deus.io.readStdin" || p == "deus.io.wallClock" then tref "#Text"
-  else if p == "deus.io.time" then tref "#Int"
+  else if p == "deus.io.time" || p == "Code.tag" then tref "#Int"
+  else if p == "Code.quote" then tref "#Text"
+  else if p == "Code.has" then tref "#Bool"
   else unknown
 
 /-- `Array t`, or unknown when `t` is. -/
