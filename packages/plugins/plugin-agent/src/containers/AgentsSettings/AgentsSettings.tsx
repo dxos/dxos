@@ -3,25 +3,27 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Agent from '@dxos/assistant/Agent';
-import { Filter, Order, Query, Type } from '@dxos/echo';
+import { type Database, Filter, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
-import { AgentOperation } from '#types';
 
+import { createAgent } from '../../capabilities/create-agent.ts';
 import { agentDeckSubject } from '../../constants.ts';
 
 // The add-agent action uses Form's `settings` variant for its labeled-row chrome; there are no fields to bind.
@@ -49,17 +51,21 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
     [space, invokePromise],
   );
 
+  // Named before it is created: with the plugin's setting on, EDGE names the agent's identity and space at creation.
+  const [name, setName] = useState('');
+  const create = Hooks.useSpaceCallback(space?.db.spaceId, [], (db: Database.Database, agentName: string) =>
+    createAgent(db, { name: agentName }),
+  );
   const handleAdd = useCallback(async () => {
     if (!space) {
       return;
     }
-    const { data } = await invokePromise(AgentOperation.CreateAgent, { name: '' }, { spaceId: space.db.spaceId });
-    const eid = data && EID.tryParse(data.agent.uri);
-    const id = eid && EID.getEntityId(eid);
-    if (id) {
-      open(id);
+    const agent = await create(space.db, name.trim()).catch((error) => log.error('agent not created', { error }));
+    if (agent) {
+      setName('');
+      open(agent.id);
     }
-  }, [space, invokePromise, open]);
+  }, [space, create, name, open]);
 
   const handleDelete = useCallback(
     (agent: Agent.Agent) => {
@@ -76,9 +82,18 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
         <Form.Content>
           <Form.FieldSet label={t('agents-section.label')} description={t('agents-section.description')}>
             <Form.Field standalone label={t('add-agent.label')} description={t('add-agent.description')}>
-              <Button.Root onClick={() => void handleAdd()} data-testid='agentPlugin.addAgent'>
-                {t('add-agent.button')}
-              </Button.Root>
+              <Layout.Flex align='center' gap='sm'>
+                <Input.Root
+                  placeholder={t('new-agent.name')}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => event.key === 'Enter' && void handleAdd()}
+                  data-testid='agentPlugin.addAgentName'
+                />
+                <Button.Root onClick={() => void handleAdd()} data-testid='agentPlugin.addAgent'>
+                  {t('add-agent.button')}
+                </Button.Root>
+              </Layout.Flex>
             </Form.Field>
           </Form.FieldSet>
 
