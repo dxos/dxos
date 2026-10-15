@@ -43,12 +43,10 @@ concurrency:
 jobs:
   evals:
     # 4 vCPU: the run waits on model calls, averaging 6% of 8 vCPU and peaking at 9 GB.
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
+    runs-on:
+      size: 4x16
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 120
     # No job-level `defaults.run.working-directory`: Depot applies it inside composite actions too,
     # and Setup reads `.moon/workspace.yml` relative to the repository root.

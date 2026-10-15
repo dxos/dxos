@@ -28,12 +28,10 @@ jobs:
     if: >-
       github.event_name != 'pull_request' || (github.event.pull_request.user.login == 'dmaretskyi' &&
       !github.event.pull_request.draft)
-    runs-on: depot-ubuntu-24.04
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
+    runs-on:
+      size: 2x8
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 5
     steps:
       # Full history (blobs on demand) for the merge-base and the per-commit drift count.
