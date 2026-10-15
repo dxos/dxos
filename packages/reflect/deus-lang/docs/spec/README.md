@@ -13,9 +13,15 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [CODEBASE-STORE.md](./CODEBASE-STORE.md) | The codebase directory (`~/.deus`): objects, metadata, branches, layers, tasks        |
 | [Codebase.Spec](https://deus.dmytro-a80.workers.dev/#n:Codebase.Spec) | Checked spec of the store: requirements, APIs and laws, with their evidence     |
 | [CODEBASE-TEXT.md](./CODEBASE-TEXT.md) | The text export written by `deus export` and kept in git                               |
+<<<<<<< HEAD
 | [Export.Spec](https://deus.dmytro-a80.workers.dev/#n:Export.Spec) | Checked spec of the export: restoring gives back the same codebase                |
 | [Compile.Spec](https://deus.dmytro-a80.workers.dev/#n:Compile.Spec)           | Checked spec of the compiler: hashes follow meaning, printing compiles back          |
 | [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Replication bundles: naming, contents, the `DEUSCOL1` columnar encoding, gzip      |
+=======
+| [Export.Spec](../../codebase/specs/Export.Spec.mdl) | Checked spec of the export: restoring gives back the same codebase                |
+| [Compile.Spec](../../codebase/specs/Compile.Spec.mdl)           | Checked spec of the compiler: hashes follow meaning, printing compiles back          |
+| [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Where a codebase lives (store, Worker, R2, D1, mirror), names, branches and heads, and the replication bundles: naming, contents, `DEUSCOL1`, gzip |
+>>>>>>> 6bf0668ba7eb4c10575053459e17c95a4a798381
 | [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
 | [Bindings.Spec](https://deus.dmytro-a80.workers.dev/#n:Bindings.Spec)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |

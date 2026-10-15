@@ -3,7 +3,7 @@
 # Copyright 2026 DXOS.org
 #
 
-"""Writes toolchain definitions from the codebase into deus/ and rebuilds the seed (D171).
+"""Writes toolchain definitions from the codebase into deus/ and rebuilds the seed (D176).
 
 The codebase is the primary copy of the toolchain; deus/ is what the seed is compiled from in git.
 For each name, this replaces its declaration in the deus/ file that holds it with what `deus view`

@@ -191,14 +191,15 @@ def unitOnly (args : List Sexp) : Bool :=
 def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
   let supply := Ref.get p.supply
   let fresh := Ref.get p.fresh
-  let flat := expr p f env ind 100 ++ "(" ++ Text.join ", " (List.map (fun a => expr p a env ind 0) args) ++ ")"
+  let names := Print.hintNames p f args
+  let flat := expr p f env ind 100 ++ "(" ++ Text.join ", " (List.mapIndexed (fun i a => Print.hinted names i (expr p a env ind 0)) args) ++ ")"
   if unitOnly args then expr p f env ind 100 ++ "()"
   else if Print.fits ind flat || List.length args < 2 then flat
   else
     Ref.set p.supply supply
     Ref.set p.fresh fresh
     let head := expr p f env ind 100
-    head ++ "(" ++ Text.concat (List.map (fun a => "\n" ++ Print.spaces (ind + 2) ++ expr p a env (ind + 2) 0 ++ ",") args) ++ "\n" ++ Print.spaces ind ++ ")"
+    head ++ "(" ++ Text.concat (List.mapIndexed (fun i a => "\n" ++ Print.spaces (ind + 2) ++ Print.hinted names i (expr p a env (ind + 2) 0) ++ ",") args) ++ "\n" ++ Print.spaces ind ++ ")"
 
 --
 -- Patterns.

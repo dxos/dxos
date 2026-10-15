@@ -262,11 +262,27 @@ The host answers every `IO` operation in the table above. Relative paths resolve
 `exec` answers exit code 127. `exit` abandons the run with its code. `writeBytes` stores each byte as
 one UTF-16 code unit.
 
-`deus build <term> -o <dir> --browser` writes a static page that runs the term's image with this host
-([IMAGE.md](./IMAGE.md#browser-page)). With the toolchain seed as the image, every CLI command runs in
-the page against the in-memory files. Measured in headless Chromium on the toolchain's own codebase
-(2,800 files): `ls` 0.37 s, `view` 0.8 s, `eval` 0.95 s, `test Json` 0.46 s. These are the native Rust
-kernel's times; the cost is the toolchain itself, since the kernel reads the image once per instance ([D170](../DECISIONS.md)).
+`deus build <term> -o <dir> --browser` writes a static page that runs the term's image
+([IMAGE.md](./IMAGE.md#browser-page)), by default on the TypeScript kernel rather than this one
+([D173](../DECISIONS.md)). [`src/kernel/browser.ts`](../../src/kernel/browser.ts) is that kernel without
+node: `runInBrowser(image, { fs, args, env, cwd, stdin })` answers `IO` from the same in-memory file system
+synchronously and returns `{ code, stdout, stderr, steps, replays }`. Its `Text.sha256` is plain
+JavaScript ([`src/kernel/sha256.ts`](../../src/kernel/sha256.ts)), about 25 ms per MB, because a browser's
+`crypto.subtle` only answers asynchronously.
+
+Measured in headless Chromium with the toolchain seed on the toolchain's codebase (15,000 files), in ms:
+
+| Command                   | TypeScript kernel | wasm kernel |
+| ------------------------- | ----------------- | ----------- |
+| `init` (empty files)      | 914               | 1,503       |
+| `ls Json`                 | 152               | 1,366       |
+| `view Json.render`        | 371               | 3,854       |
+| `eval List.sum [1, 2, 3]` | 590               | 3,698       |
+| `test Json`               | 220               | 2,791       |
+| `find escape`             | 136               | 2,175       |
+
+The TypeScript kernel compiles hot definitions to JavaScript and keeps the parsed image between runs; the
+wasm kernel reads the image once per instance too ([D170](../DECISIONS.md)) but interprets every step.
 
 ## The WASI kernel
 

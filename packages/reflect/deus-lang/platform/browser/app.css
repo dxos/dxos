@@ -43,6 +43,10 @@ header {
   color: var(--muted);
   font-size: 12px;
 }
+#reset {
+  margin-left: auto;
+  font-size: 12px;
+}
 #layout {
   flex: 1;
   display: grid;

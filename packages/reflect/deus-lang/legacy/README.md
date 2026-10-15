@@ -1,6 +1,6 @@
 # Legacy
 
-Files nothing in the package builds, tests or runs any more, kept for the record (D172). Each one
+Files nothing in the package builds, tests or runs any more, kept for the record (D177). Each one
 still works from here, but no CI job or script depends on it, and it is not kept up to date.
 
 | File | What it was for |
@@ -11,4 +11,4 @@ still works from here, but no CI job or script depends on it, and it is not kept
 | `examples/composer/autocue/deus-plugin.mjs` | The Autocue flow that recorded the Composer plugin demo (D102). |
 
 The codebase export that used to live in `codebase/` is gone rather than kept here: the codebase is
-the primary copy and github.com/dxos/deus-mirror its hourly backup (D171).
+the primary copy and github.com/dxos/deus-mirror its hourly backup (D176).

@@ -353,6 +353,29 @@ A long list literal in the CLI's source, such as the interpreter's 480 lines of 
 enough that the JIT overflowed its stack and replayed on every element: writing that one constant
 took 550 s. It is now 13 lists of 40 lines, which takes 0.5 s.
 
+## The native CLI by default
+
+`bin/deus.mjs` runs a native build of the checked-in seed when one is cached, and the seed on the
+JIT otherwise ([D171](../DECISIONS.md)). The build is keyed by the seed's SHA-256 and lives in
+`~/.cache/deus/native/<hash>/deus` (`$XDG_CACHE_HOME` moves it). When it is missing and `cc`
+exists, the first command starts one in the background (`scripts/native.mjs`: `deus add
+codebase/code`, then `deus build Cli.main --c`, about 2 minutes at low priority), and that command
+and the ones after it run on the JIT until the build lands. `DEUS_NATIVE=0` turns it off; CI and a
+`DEUS_SEED` override never use it. The export compiles to the seed byte for byte (D161), so the
+build is the same CLI.
+
+| A fresh session on the hosted codebase (one run) | TS kernel with JIT | native CLI |
+| ------------------------------------------------ | -----------------: | ---------: |
+| `deus pull origin` (12 bundles)                  |             34,447 |      5,229 |
+| `deus merge origin.main`                         |              3,183 |         92 |
+| `deus view Cli.main`                             |                724 |         25 |
+| `deus task list` through `bin/deus.mjs`          |                387 |         64 |
+| `deus compile codebase/code --main Cli.main`     |             11,260 |        959 |
+
+The pull fetches the bundles it has not seen in one `Remote.getAll`, which the Worker remote runs as
+one `curl --parallel`: 10.0 s natively before. The rest of it is the import, mostly printing objects
+to check their hashes, which it now does once per object instead of twice.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
