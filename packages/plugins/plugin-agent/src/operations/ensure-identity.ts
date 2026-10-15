@@ -100,7 +100,7 @@ export const missingJoin = ({
 
 /**
  * Admits the agent's identity to the space it was created in, when the creator may admit members there; a creator who
- * may not leaves the agent working without the membership (F-7.6). Fails while the space is not open yet, to be retried.
+ * may not leaves the agent working without the membership (F-7.2). Fails while the space is not open yet, to be retried.
  */
 const admitHere = Effect.fnUntraced(function* (
   space: MemberSpace | undefined,
