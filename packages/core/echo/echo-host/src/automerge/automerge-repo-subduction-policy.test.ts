@@ -1158,8 +1158,6 @@ describe('SubductionPolicy', () => {
     });
   });
 
-  // A sync round asks only the peers the policy would serve the document to (DXOS patch to the
-  // fork's `SubductionSource`), so with one EDGE peer per space a round no longer asks every space.
   describe('round peer selection', () => {
     test('a round never asks a peer the policy would refuse the document', async () => {
       const server1Signer = MemorySigner.generate();
@@ -1172,7 +1170,6 @@ describe('SubductionPolicy', () => {
         },
         filterAuthorizedFetch: async (peerId, ids) => (peerId.toString() === refused ? [] : ids),
       });
-      // Only the client knows server1's id, so a request naming it is the client's.
       const asked: string[] = [];
       const syncWithPeer = Subduction.prototype.syncWithPeer;
       const spy = vi.spyOn(Subduction.prototype, 'syncWithPeer').mockImplementation(function (
@@ -1189,11 +1186,8 @@ describe('SubductionPolicy', () => {
       });
       const [client, , server2] = repos;
 
-      // Created before any connection, so only a round a connection starts can move it.
       const handle = client.create<{ text?: string }>({ text: 'from-client' });
       await waitForSubductionSave(repos);
-      // server2 first: a round with no allowed peer asks every peer, as for a document whose space
-      // is not known yet, so server1 joins once a round has a peer to ask.
       await connectAdapters([adapters[1]], { repoPairs: [repoPairs[1]] });
       await expect
         .poll(async () => (await server2.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
@@ -1201,7 +1195,6 @@ describe('SubductionPolicy', () => {
       const askedBefore = asked.length;
       await connectAdapters([adapters[0]], { repoPairs: [repoPairs[0]] });
 
-      // server1's connection starts a round, which asks server2 again and leaves server1 out.
       await expect.poll(() => asked.length, { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(askedBefore);
       expect(asked).not.toContain(refused);
     });
