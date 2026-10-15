@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
+import { EID } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
 import { AgentPresence, BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
@@ -30,6 +31,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       ongoing,
     }) {
       const brain = yield* BrainService.BrainService;
+      const { db } = yield* Database.Service;
       const agent = yield* Database.load(agentRef);
       if ((yield* brain.subscriptions(AgentPresence.brainId(agent))).length >= BrainService.MAX_TRIGGERS) {
         return yield* Effect.fail(registryFull());
@@ -99,6 +101,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         ...(ongoing ? { ongoing } : {}),
         rules,
         createdAt,
+        // The goal and recipient live in this space, so what the watch wakes is delivered here (`AgentPresence.delivers`).
+        origin: EID.make({ spaceId: db.spaceId, entityId: agent.id }),
       };
       if (!(yield* brain.subscribe(trigger))) {
         return yield* Effect.fail(registryFull());

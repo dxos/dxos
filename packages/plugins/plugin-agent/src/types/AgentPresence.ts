@@ -36,6 +36,15 @@ export const locate = (uri: string): Location | undefined => {
 };
 
 /**
+ * Whether the agent, in `spaceId`, delivers what a watch with this `origin` wakes: the space the watch was set from
+ * holds its goal and recipient, so it delivers there; a watch stored before watches recorded one is the home's.
+ */
+export const delivers = (agent: Agent.Agent, spaceId: SpaceId, origin: string | undefined): boolean => {
+  const space = origin === undefined ? undefined : locate(origin)?.spaceId;
+  return space === undefined ? homeOf(agent) === undefined : space === spaceId;
+};
+
+/**
  * The name `BrainService` keys the agent's brain by: its identity's DID, which every presence of it carries, so every
  * space it is in shares one brain. An agent without an identity keeps the brain named by its home agent's id.
  */

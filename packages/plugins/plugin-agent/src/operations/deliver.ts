@@ -66,6 +66,9 @@ export const pushFacts: (
  * (and the conversation `transcript`, when a turn caused them) under the relay rules. A one-time
  * subscription also marks its goal achieved and is removed; an ongoing one acknowledges its events and
  * keeps watching. Subscriptions whose goal closed meanwhile are removed undelivered.
+ *
+ * Only the subscriptions set in this space (`AgentPresence.delivers`): another space's goal and recipient do not
+ * resolve here. Their events stay queued for that space, where EDGE's brain delivers them (`RunDue`).
  */
 export const deliver: (
   agent: Agent.Agent,
@@ -76,10 +79,14 @@ export const deliver: (
   AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
 > = Effect.fnUntraced(function* (agent, transcript) {
   const brain = yield* BrainService.BrainService;
+  const { db } = yield* Database.Service;
   const fired: string[] = [];
   const undelivered: string[] = [];
 
-  for (const subscription of yield* brain.subscriptions(AgentPresence.brainId(agent))) {
+  const subscriptions = (yield* brain.subscriptions(AgentPresence.brainId(agent))).filter(({ origin }) =>
+    AgentPresence.delivers(agent, db.spaceId, origin),
+  );
+  for (const subscription of subscriptions) {
     const allEvents = yield* brain.take(subscription.id);
     if (allEvents.length === 0) {
       continue;

@@ -684,6 +684,7 @@ feat F-6: An agent in several spaces
   req F-6.5: An agent's brain is named by its identity's DID (`AgentPresence.brainId`), which every presence of it carries, so every space it is in shares one brain: its facts, its triggers and its wakes. An agent without an identity keeps a brain named by its home agent's id. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
   req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
   req F-6.7: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE first, which refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
+  req F-6.8: A watch is delivered in the space it was set from, where its goal and recipient live. `TriggerOperation.WatchFacts` records the agent there as the watch's origin, and an agent delivers only the watches set in its own space, so a turn elsewhere leaves them queued. EDGE's brain delivers those from its alarm, a minute after the facts that woke them or when their time comes, by running `TriggerOperation.RunDue` as the agent in each such space it still serves. A watch stored before watches recorded their origin is delivered at the agent's home. The in-app brain has no alarm, so there such a watch waits until a turn in its own space wakes a watch.
 ```
 
 ```mdl
@@ -809,6 +810,17 @@ scenario T-11: An agent is admitted to a space as a member   # admit-agent.test.
     - a space that refuses the admission fails it with AdmitAgentError
     - for the agent's creator, missingJoin names the step a failed join left undone: the membership, the admission, or both; nothing when both happened
     - missingJoin names nothing for anyone but the creator, for an agent without a DID or its records, for an agent an admin removed, or where the creator may not admit it
+```
+
+```mdl
+scenario T-12: A watch is delivered where it was set   # triggers.test.ts
+  # covers [F-6.8]
+  given: Kai with two watches on Dima, one set in Kai's space and one through Kai in another space
+  when: a fact of Dima's is pushed in Kai's space
+  then:
+    - only the watch set here fires, and its recipient gets one update
+    - the other watch's wake stays queued for its own space
+    - an agent delivers a watch in the space it was set from, and its home delivers one stored without an origin
 ```
 
 ## Not built

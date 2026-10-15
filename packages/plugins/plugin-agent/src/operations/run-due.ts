@@ -16,8 +16,10 @@ const handler: Operation.WithHandler<typeof TriggerOperation.RunDue> = TriggerOp
     Effect.fnUntraced(function* ({ agent: agentRef }) {
       const agent = yield* Database.load(agentRef);
       const brain = yield* BrainService.BrainService;
-      const queued = yield* brain.tick(AgentPresence.brainId(agent));
-      const { fired, undelivered } = queued > 0 ? yield* deliver(agent) : { fired: [], undelivered: [] };
+      yield* brain.tick(AgentPresence.brainId(agent));
+      // Delivers whatever this space has queued, not only what the tick woke: EDGE's brain ticks itself, and wakes a
+      // watch set here from facts said in another space, before it runs this.
+      const { fired, undelivered } = yield* deliver(agent);
       const nextDueAt = yield* brain.nextDueAt(AgentPresence.brainId(agent));
       return { fired, undelivered, ...(nextDueAt ? { nextDueAt } : {}) };
     }),
