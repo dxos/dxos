@@ -12,3 +12,6 @@ export const ACTIVITY = 'activity';
 
 /** Companion variant (and surface literal) of a debug view of the agent's brain store: facts, rules and outboxes as held. */
 export const BRAIN_STORE = 'brain-store';
+
+/** Companion variant (and surface literal) of the agent's email address: its handle, allowed senders and mailbox. */
+export const EMAIL = 'email';

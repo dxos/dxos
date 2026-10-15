@@ -62,11 +62,15 @@ Discord threads and Composer chats see the same knowledge.
 ### 1. Setup (Composer)
 
 - `createAgent` makes an `Agent` (instructions, primary chat, the agent-conversation and interview skills).
-- The agent's **Activity** companion edits its `AgentChannels` (`{ agent, channels: Ref<Channel>[] }`,
-  parented to the agent) with a channel picker, and below it renders each channel's
-  `ObjectProperties` surface. For a Discord-backed channel that is plugin-discord's form over the
-  `DiscordChannel` config (`{ accessToken, applicationId, guildId?, channels }`; the bot token is an
-  `AccessToken` object), the bot status and Start / Stop / Refresh.
+- Agents live under **space settings → Agents**, beside Members and Connections; `Agent` is not a
+  user type, so agents are not listed with the space's content. Each agent's companions set up where
+  it talks: plugin-discord's **Discord** companion signs in, installs the bot in a server and binds
+  channels; plugin-agent's **Email** companion creates and connects its address. Both add `Channel`s
+  to the agent's `AgentChannels` (`{ agent, channels: Ref<Channel>[] }`, parented to the agent).
+- The **Activity** companion lists those channels with their connection status, Start / Stop /
+  Refresh for all of them, the agent's skills and its channel conversations. A Discord channel's
+  `ObjectProperties` surface is plugin-discord's form over the `DiscordChannel` config
+  (`{ accessToken, applicationId, guildId?, channels }`; the bot token is an `AccessToken` object).
 - Start / Stop / Refresh invoke plugin-thread's `connectChannel` / `disconnectChannel` /
   `getChannelStatus`, which dispatch to the Discord backend's `connection`: `PUT` / `DELETE` / `GET
 /discord/bots/:appId` through `EdgeHttpClient.request`, a generic call signed with the
@@ -123,7 +127,7 @@ thread never becomes the primary chat. Person and Organization properties show t
 ### 6. Email
 
 An agent can also have an address: an Email channel (`AgentEmail` config: handle, display name,
-allowed senders) in its `AgentChannels`. Connecting it claims `<handle>@dxos.ai` (`@dev.dxos.ai`
+allowed senders) in its `AgentChannels`, created from the agent's Email companion (`createEmailChannel`). Connecting it claims `<handle>@dxos.ai` (`@dev.dxos.ai`
 on dev) through `AgentMailbox.AgentMailboxService` (`PUT <edge>/compute/email/mailboxes/:handle`). On EDGE,
 compute-service's `email` handler hands that handle's mail to an `AgentMailbox` Durable Object,
 which keeps one chat per email thread (`ensureChannelChat`, keyed by the thread's reply token),

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import { Channel } from '@dxos/types';
@@ -91,13 +91,6 @@ const createDiscordChannel = Effect.fnUntraced(function* (
   const channel = yield* Database.add(
     Channel.make({ name: channelName ?? discordChannelId, backend: { kind: DiscordChannel.BACKEND_KIND, config } }),
   );
-  const list = yield* AgentChannels.loadForAgent(agent);
-  if (list) {
-    Obj.update(list, (list) => {
-      list.channels = [...list.channels, Ref.make(channel)];
-    });
-  } else {
-    yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
-  }
+  yield* AgentChannels.addChannel(agent, channel);
   return { channel, config };
 });

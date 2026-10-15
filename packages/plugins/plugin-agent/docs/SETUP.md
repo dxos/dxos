@@ -104,16 +104,15 @@ DX_EDGE_BASE_URL=http://localhost:8787 moon run composer-app:serve -- --port 528
 Then, in Composer at `http://localhost:5282`:
 
 1. **Settings → Plugins**: enable **Agent**, **Threads** and **Discord**.
-2. Connect Discord in the space's integrations by pasting the bot token. This creates the
-   `AccessToken` object the Discord channel refers to (EDGE uses `DISCORD_BOT_TOKEN_DEV` when set).
-3. Create a **channel** with the **Discord** backend: pick the bot token, enter the **Application ID**
-   and the Discord **channel ID**. This is plugin-discord's `DiscordChannel` config on a `Channel`.
-4. **Assistant → Agents → +** to create an agent.
-5. Open the agent → **Activity** companion → **Channels**: pick the Discord channel. Its bot settings
-   appear below the picker.
-6. **Start bot** in the channel's toolbar: the status (polled every 5 s) should read **Connected**.
-   Otherwise the banner says why (the watchdog retries every 30 s). The same controls are on the
-   channel's own properties panel.
+2. **Space settings → Agents → Add** to create an agent; it opens with your private chat.
+3. Open the agent's **Discord** companion. Sign in to Discord, then save the bot's **Application ID**
+   and token (the token is an `AccessToken`; EDGE uses `DISCORD_BOT_TOKEN_DEV` when set).
+4. Pick your server (install the bot with **+** if it is not yet **Installed**), then connect a
+   channel with its plug button. This creates a Discord-backed `Channel` in the agent's
+   `AgentChannels`.
+5. **Start** in the agent's **Activity** companion: the channel's status (polled every 5 s) should read
+   **Connected**. Otherwise the banner says why (the watchdog retries every 30 s). The same controls
+   are on the channel's own properties panel.
 
 ## 5. Test
 
@@ -138,10 +137,10 @@ Then, in Composer at `http://localhost:5282`:
 
 ## Email
 
-1. Open the agent → **Activity**, add a channel, and pick **Email**. Set the address (`kai`), a
-   display name, and the allowed senders (empty means `braneframe.com` and `dxos.org`).
-2. Open the channel's properties and press **Connect**. Against dev EDGE the panel shows
-   `kai@dev.dxos.ai` with its thread and message counts; "taken" means another space holds the handle.
+1. Open the agent's **Email** companion. Set the address (`kai`), a display name, and the allowed
+   senders (empty means `braneframe.com` and `dxos.org`), then **Save**.
+2. Press **Connect** in the same companion. Against dev EDGE it shows `kai@dev.dxos.ai` with its
+   thread and message counts; "taken" means another space holds the handle.
 3. Mail `kai@dev.dxos.ai` from an allowed address. The reply arrives in the same thread, and each new
    email thread is its own chat under the agent.
 

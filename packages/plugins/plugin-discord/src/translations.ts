@@ -25,6 +25,7 @@ export const translations = [
         'sync-toast.error.label': 'Sync failed',
         'discord-setup-error.label': 'Discord setup failed',
         'discord-setup.title': 'Discord',
+        'discord-companion.label': 'Discord',
         'discord-setup-actions.label': 'Discord setup actions',
         'discord-setup-sign-out.label': 'Sign out of Discord',
         'discord-setup-connect.label': 'Connect Discord',
