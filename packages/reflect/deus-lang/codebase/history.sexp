@@ -1,3 +1,6 @@
+(entry "23c8aff6156e6001a46507d64a5fc85a0abd8ec365f96cfc94db4a88b7b63a7b" "task: set a8150b0c priority labels" "")
+(entry "db5b5e73e9da99ce276ce39901031410625dc10f5a7b4a7f51a3b20847d02d5e" "task: open a8150b0c deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore)" "claude")
+(entry "c485df95ac0d539077d6f7ada711b5fdba3387f4979729c16d1a48e896c1b0cd" "task: comment on 602f4557" "")
 (entry "cc4e504a885059756d4695ebffe26a2cc6a2464da8a4446480887cb8bd6dc595" "update deus" "claude")
 (entry "1b9e2d9cb14ee3248918fe0a04295820682522daaa759cc0e197c4b2457e2196" "history: import 796 changes" "claude")
 (entry "9cec7dd037546932b18d602c216695bdae55c1f99dcb7156bcd4f2dd0c95a550" "task: import from /tmp/tmpszia9cai/tasks.sexp" "")

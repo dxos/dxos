@@ -116,6 +116,12 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
+## deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (`a8150b0c`)
+
+- state: todo
+- priority: high
+- labels: codebase, devex
+
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -924,6 +930,8 @@ Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge scrip
 > claude: scripts/merge-base.py: fetch, merge, renumber decisions and stages, take theirs for seed and export, import their export into the local codebase, rebuild the seed with deus image Cli.main, export. Closing once it has handled a real merge.
 
 > claude: scripts/merge-base.py handled a real merge (D119, 2d06100d): decisions and stages renumbered, seed rebuilt and fixpoint held, export written, suite green.
+
+> someone: Fixed the Unnamed.deus bug the native thread found at 64b55ea3: merge-base.py now merges the export files three ways, restores them with both sides' tasks and history into a fresh codebase, and makes that the local one (old kept as <dir>.before-merge). It refuses to start when the local codebase has changes HEAD's export lacks. Used for the merge at the D124 -> D125 commit; Unnamed.deus has no # references.
 
 ## devex: the dogfood test takes 124 s (`f264430b`)
 

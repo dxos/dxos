@@ -1,5 +1,8 @@
 # History of main
 
+- `23c8aff615` task: set a8150b0c priority labels
+- `db5b5e73e9` task: open a8150b0c deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (by claude)
+- `c485df95ac` task: comment on 602f4557
 - `cc4e504a88` update deus (by claude)
 - `1b9e2d9cb1` history: import 796 changes (by claude)
 - `9cec7dd037` task: import from /tmp/tmpszia9cai/tasks.sexp
