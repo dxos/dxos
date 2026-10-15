@@ -160,13 +160,6 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
 
-## Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (`cda44092`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: codebase, vcs
-
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
@@ -1251,6 +1244,15 @@ From docs/spec/README.md, Known divergences.
 - links change #8cb84289e1
 
 Found writing law statements (D91): deus view Sort.insertSorted.
+
+## Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (`cda44092`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: codebase, vcs
+
+> claude: They were Cli.withRemote and Analytics.command from before D108, still in the export because deus export never removed a file it no longer wrote. Removed both names (nothing used them) and export now deletes stale code/*.deus and specs/*.mdl files (D139, Export.Spec R-7).
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 

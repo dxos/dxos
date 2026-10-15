@@ -1,3 +1,8 @@
+(entry "0cbf27c4193089dd46645e58c1cd92076dfb11877731497922ef28fc379cf59e" "task: comment on cda44092" "claude")
+(entry "119e671691427c7b54e3970c8d738c606af8ec6c9c53edf331967446fd1dd21b" "task: set cda44092 state" "claude")
+(entry "72f35cce6463cb4c2b5026da93994e387f67b739ea4e501ecaf72d5a1f7b8130" "update deus" "claude")
+(entry "4fc07ff59d969fb0df090e586aee091bee39dc69f2ee3cd3427a4df6b86cb5ee" "update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl" "claude")
+(entry "2bdda0f75f1cae3976f3760de870a40a9b7a60bf7bb9c5800d51a5748c1e3c8a" "delete Unnamed.h2fee9e6b7d Unnamed.h3f84493ccc" "")
 (entry "ee4306fafb960f20d26fe6929cb7b97223700d1d259ca7e676dfe5dda4be908b" "task: open cda44092 Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge" "claude")
 (entry "e0c7da7ab64cb720082b4c3e4212cf0a612e8864f42266daed63a949d3bcaff4" "update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ws.mdl" "claude")
 (entry "db7865d2ee4735697dcd2fea2d93accb5930782fe3d16e5b0669b24ad7e56d65" "update deus" "merge")
