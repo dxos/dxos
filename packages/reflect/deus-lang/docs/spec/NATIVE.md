@@ -324,20 +324,22 @@ do. It is the kernels' machine over the compiled code's values: a closure it ret
 any compiled closure, and its operations go through the same handler records (D124), so the CLI's
 compiled handlers (`Workspace`, `Defect`, a test's boundary) take what interpreted code performs.
 
-| The toolchain, natively (milliseconds, one run) | TS kernel with JIT | native CLI |
-| ----------------------------------------------- | -----------------: | ---------: |
-| `deus test`: 44 tests, cold                     |              2,078 |        251 |
-| `deus run Command.main quiet 100000`            |              1,680 |         54 |
-| `deus run Command.main freq` on 110 KB          |                604 |        158 |
-| `deus run Command.main count` on 110 KB         |                412 |         14 |
+| The toolchain, natively (milliseconds, one run)   | TS kernel with JIT | native CLI |
+| ------------------------------------------------- | -----------------: | ---------: |
+| `deus test`: 44 tests, cold                       |              2,078 |        251 |
+| `deus run Command.main quiet 100000`              |              1,680 |         54 |
+| `deus run Command.main freq` on 110 KB            |                604 |        158 |
+| `deus run Command.main count` on 110 KB           |                412 |         14 |
+| `deus mdl` on the toolchain codebase (241 blocks) |             19,700 |      7,200 |
 
 The outputs match the JIT's byte for byte, except that a native defect lists no stack. What the
 interpreter does not do:
 
 - A handler clause resumes only in its tail, as compiled clauses do (D124): `k v` returns `v` to
   the operation, and any other tail aborts to the handler. Calling `k` elsewhere is a defect.
-- `Code.steps` and `Code.cost` count the kernels' machine steps, which it does not count, so they
-  are defects; `Code.defectTrace` is empty.
+- `Code.steps` and `Code.cost` count the terms it evaluates, as the machine does, but its counts
+  are not the kernels': a perf requirement's order holds natively, its exact step counts need not.
+  `Code.defectTrace` is empty.
 - It never frees. Every block it makes or receives is made immortal, so compiled code that shares
   one never writes into it, and `Array.set` copies the array.
 - Values do not carry their types, so `show`, `trace` and `Code.quote` in interpreted code render

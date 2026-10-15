@@ -170,6 +170,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 160 | 10-15 11:20 | 35m 00s | `478e0e62` | Parser.Spec, the checked spec of the lexer and parser (task 1ab6c044): six requirements on precedence, Unicode spellings, literals, comments, layout and error positions. Its R-6 caught an unterminated string reported at column 0 of the last line; it now points at the opening quote (D144). `Codebase.put` prints an object once, not twice |
 | 161 | 10-15 11:50 | 30m 00s | `9d0f8058` | Tasks.Spec, the checked spec of the task model (task 1ab6c044): eight requirements on stored text, states and priorities, labels, links, ids, order, saving and parents. Its R-8 ran red: `--parent` took any text, kept a prefix as typed and allowed a cycle; it now resolves to another task's full id and refuses cycles (D145) |
 | 162 | 10-15 12:05 | 15m 00s | `466091a7` | Image.Spec, the checked spec of images (task 1ab6c044): closure, missing definitions, type lines and the main line, from a map of objects. No bug found; an api block must spell a row variable as `deus view` does (`e`), the known `0d7b0142` |
-| 163 | 10-15 12:20 | 1h 30m | this commit | The native CLI runs `eval`, `run` and `test` through a Core interpreter in its C runtime (D146): 44 tests in 251 ms vs 2,078 ms on the JIT, same output; `deus eval` prints by type with `Code.tag`, `Code.field` and `Code.cast` |
+| 163 | 10-15 12:20 | 1h 30m | `0ea46628` | The native CLI runs `eval`, `run` and `test` through a Core interpreter in its C runtime (D146): 44 tests in 251 ms vs 2,078 ms on the JIT, same output; `deus eval` prints by type with `Code.tag`, `Code.field` and `Code.cast` |
+| 164 | 10-15 12:50 | 30m 00s | this commit | The native interpreter counts steps, so `Code.cost` works natively (D147): native `deus mdl` passes all 241 blocks, as node does, in 7.2 s vs 19.7 s |
 
-Total from stage 1 to stage 163: 39h 27m.
+Total from stage 1 to stage 164: 39h 57m.

@@ -402,6 +402,8 @@ def codeRuntime : Text :=
      "static V deus_ilam(V c, V x);",
      "static V deus_ipap(V c, V x);",
      "static V deus_kmark;",
+     "/* Steps of the interpreter, its cost model: one per term it enters, so a cost grows as the kernels' does. */",
+     "static uint32_t deus_isteps;",
      "#define DEUS_K STATIC(&deus_kmark)",
      "static DE *deus_ipush(DE *e, V v) { DE *c = deus_iarena(sizeof(DE)); c->v = v; c->next = e; return c; }",
      "static V deus_iclosure(DT *lam, DE *e) { V *p = deus_block(2, 3); p[0] = (V)(uintptr_t)deus_ilam; p[1] = (V)(uintptr_t)lam; p[2] = (V)(uintptr_t)e; return deus_keep(BOX(p)); }",
@@ -429,10 +431,10 @@ def codeRuntime : Text :=
      "static V deus_idefect(V message) {",
      "  static DT op; if (!op.cname) { static uint16_t u[] = { '#', 'D', 'e', 'f', 'e', 'c', 't' }; static DS name; name.k = DS_SYM; name.u = u; name.n = 7; op.t = DT_OP; op.name = &name; op.cname = \"#Defect\"; op.arity = 1; op.tag = -2; }",
      "  return deus_iperform(&op, &message);",
-     "}",
-     "static V deus_idefect_c(const char *m) { return deus_idefect(deus_keep(deus_text_cs(m))); }",
-     "static V deus_idefect_show(const char *m, V v) { V s = deus_put(deus_text_cap(0, 16), m); return deus_idefect(deus_keep(deus_ishow(s, v))); }"],
-    ["static V deus_ihost(V i, V *a) {",
+     "}"],
+    ["static V deus_idefect_c(const char *m) { return deus_idefect(deus_keep(deus_text_cs(m))); }",
+     "static V deus_idefect_show(const char *m, V v) { V s = deus_put(deus_text_cap(0, 16), m); return deus_idefect(deus_keep(deus_ishow(s, v))); }",
+     "static V deus_ihost(V i, V *a) {",
      "  switch (i) {",
      "    case 0: return deus_io_print(a[0]); case 1: return deus_io_eprint(a[0]); case 2: return deus_keep(deus_io_readFile(a[0])); case 3: return deus_io_writeFile(a[0], a[1]);",
      "    case 4: return deus_io_exists(a[0]); case 5: return deus_keep(deus_io_listDir(a[0])); case 6: return deus_io_mkdirp(a[0]); case 7: return deus_io_remove(a[0]);",
@@ -469,10 +471,10 @@ def codeRuntime : Text :=
      "  for (V i = 0; i < n; i++) { uint16_t u = x[i]; if (u == '\"' || u == '\\\\') { o[k++] = '\\\\'; o[k++] = u; } else if (u == 10) { o[k++] = '\\\\'; o[k++] = 'n'; } else if (u == 9) { o[k++] = '\\\\'; o[k++] = 't'; } else if (u == 13) { o[k++] = '\\\\'; o[k++] = 'r'; } else if (u < 32 || u == 127) { o[k++] = '\\\\'; o[k++] = 'u'; o[k++] = '0'; o[k++] = '0'; o[k++] = hex[u >> 4]; o[k++] = hex[u & 15]; } else o[k++] = u; }",
      "  o[k++] = '\"'; TLEN(j) = k; V r = deus_text_extend(s, j); deus_drop(j); return r;",
      "}",
-     "/* `Code.quote` without types: the constructors' type names are not in a value here, so they quote as `?`. */",
-     "static V deus_iquote(V s, V v) {",
-     "  if (!IS_PTR(v)) {"],
-    ["    if ((uintptr_t)v - (uintptr_t)deus_nullary < sizeof deus_nullary) { char b[40]; snprintf(b, sizeof b, \"(con \\\"?\\\" %d 0)\", (int)((V *)(uintptr_t)v - deus_nullary)); return deus_put(s, b); }",
+     "/* `Code.quote` without types: the constructors' type names are not in a value here, so they quote as `?`. */"],
+    ["static V deus_iquote(V s, V v) {",
+     "  if (!IS_PTR(v)) {",
+     "    if ((uintptr_t)v - (uintptr_t)deus_nullary < sizeof deus_nullary) { char b[40]; snprintf(b, sizeof b, \"(con \\\"?\\\" %d 0)\", (int)((V *)(uintptr_t)v - deus_nullary)); return deus_put(s, b); }",
      "    s = deus_put(s, \"(int \"); s = deus_show_int(s, v); return deus_put(s, \")\");",
      "  }",
      "  V k = HDR(v) & 255;",
@@ -509,10 +511,10 @@ def codeRuntime : Text :=
      "static V deus_code_tag(V v) { if (IS_PTR(v)) return UNBOX(v)[0]; if ((uintptr_t)v - (uintptr_t)deus_nullary < sizeof deus_nullary) return (V)((V *)(uintptr_t)v - deus_nullary); return v; }",
      "",
      "static V deus_iprim(V id, V *a) {",
-     "  switch (id) {",
-     "    case P_ADD: return ADD(a[0], a[1]); case P_SUB: return SUB(a[0], a[1]); case P_MUL: return MUL(a[0], a[1]);",
-     "    case P_DIV: if (a[1] == 0) return deus_idefect_c(\"division by zero\"); return DIV(a[0], a[1]);"],
-    ["    case P_MOD: if (a[1] == 0) return deus_idefect_c(\"division by zero\"); return MOD(a[0], a[1]);",
+     "  switch (id) {"],
+    ["    case P_ADD: return ADD(a[0], a[1]); case P_SUB: return SUB(a[0], a[1]); case P_MUL: return MUL(a[0], a[1]);",
+     "    case P_DIV: if (a[1] == 0) return deus_idefect_c(\"division by zero\"); return DIV(a[0], a[1]);",
+     "    case P_MOD: if (a[1] == 0) return deus_idefect_c(\"division by zero\"); return MOD(a[0], a[1]);",
      "    case P_NEG: return SUB(0, a[0]); case P_AND: return a[0] & a[1]; case P_OR: return a[0] | a[1]; case P_XOR: return a[0] ^ a[1];",
      "    case P_SHL: return SHL(a[0], a[1]); case P_SHR: return SHR(a[0], a[1]); case P_USHR: return USHR(a[0], a[1]);",
      "    case P_ITEXT: return deus_keep(deus_int_text(a[0])); case P_IFROM: return deus_keep(deus_text_int(a[0]));",
@@ -549,17 +551,18 @@ def codeRuntime : Text :=
      "    case P_DKEYS: case P_MKEYS: return deus_keep(deus_table_keys(a[0]));",
      "    case P_MNEW: return deus_keep(deus_table_new(0));",
      "    case P_MGET: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_keep(deus_table_get(a[0], a[1]));",
-     "    case P_MHAS: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_table_has(a[0], a[1]);",
-     "    case P_MSET: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_table_set(a[0], a[1], a[2]);",
-     "    case P_MDEL: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_table_delete(a[0], a[1]);"],
-    ["    case P_SHOW: return deus_keep(deus_ishow(deus_text_cap(0, 16), a[0]));",
+     "    case P_MHAS: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_table_has(a[0], a[1]);"],
+    ["    case P_MSET: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_table_set(a[0], a[1], a[2]);",
+     "    case P_MDEL: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); return deus_table_delete(a[0], a[1]);",
+     "    case P_SHOW: return deus_keep(deus_ishow(deus_text_cap(0, 16), a[0]));",
      "    case P_TRACE: { V s = deus_put(deus_text_cap(0, 16), \"trace \"); s = deus_text_extend(s, a[0]); s = deus_put(s, \": \"); s = deus_ishow(s, a[1]); s = deus_put(s, \"\\n\"); deus_io_eprint(s); deus_drop(s); return a[1]; }",
      "    case P_DEFECT: return deus_idefect(a[0]);",
      "    case P_LOAD: return deus_iload(a[0]);",
      "    case P_QUOTE: return deus_keep(deus_iquote(deus_text_cap(0, 16), a[0]));",
      "    case P_HAS: return deus_global(TU(a[0]), TLEN(a[0])) != 0;",
      "    case P_DTRACE: return UNIT;",
-     "    case P_STEPS: case P_COST: return deus_idefect_c(\"Code.steps and Code.cost count the kernels' machine steps, which the native interpreter does not count\");",
+     "    case P_STEPS: return W(deus_isteps);",
+     "    case P_COST: { uint32_t before = deus_isteps; V r = deus_iapply(a[0], UNIT); return r == DEUS_ABORT ? r : W(deus_isteps - before); }",
      "    case P_RUN: return deus_irun(a[0]);",
      "    case P_TAG: return deus_code_tag(a[0]);",
      "    case P_FIELD: return UNBOX(a[0])[a[1] + 1];",
@@ -588,11 +591,11 @@ def codeRuntime : Text :=
      "  if (f == DEUS_K) return deus_idefect_c(\"a handler clause resumes its continuation outside its tail, which the native interpreter does not do\");",
      "  if (!IS_PTR(f) || (HDR(f) & 255) >= K_TABLE) return deus_idefect_show(\"cannot apply \", f);",
      "  if (UNBOX(f)[0] == (V)(uintptr_t)deus_ilam) return deus_ilam(f, x);",
-     "  if (UNBOX(f)[0] == (V)(uintptr_t)deus_ipap) return deus_ipap(f, x);",
-     "  return deus_keep(deus_apply(f, deus_keep(x)));",
+     "  if (UNBOX(f)[0] == (V)(uintptr_t)deus_ipap) return deus_ipap(f, x);"],
+    ["  return deus_keep(deus_apply(f, deus_keep(x)));",
      "}",
-     ""],
-    ["/* A value for a callee term that takes `arity` arguments, applied to none yet. */",
+     "",
+     "/* A value for a callee term that takes `arity` arguments, applied to none yet. */",
      "static V deus_icallee(DT *t) { return t->arity == 0 ? deus_icall(t, 0, 0) : deus_ipap_of(t, 0, 0, 0); }",
      "static DE *deus_ibind(DP *p, V v, DE *e, int *ok) {",
      "  switch (p->k) {",
@@ -627,12 +630,13 @@ def codeRuntime : Text :=
      "/* Evaluates `t` in `e`; a tail call, a tail `let`, `match` or `if` loops rather than recursing. */",
      "static V deus_ieval(DT *t, DE *e) {",
      "  for (;;) {",
-     "    switch (t->t) {",
-     "      case DT_VAR: { V i = t->i; while (i-- > 0) e = e->next; return e->v; }",
+     "    deus_isteps++;",
+     "    switch (t->t) {"],
+    ["      case DT_VAR: { V i = t->i; while (i-- > 0) e = e->next; return e->v; }",
      "      case DT_CONST: return t->v;",
      "      case DT_REF: return deus_ivalue(deus_iglobal(t));",
-     "      case DT_LAM: return deus_iclosure(t, e);"],
-    ["      case DT_PRIM: case DT_CON: case DT_OP: return deus_icallee(t);",
+     "      case DT_LAM: return deus_iclosure(t, e);",
+     "      case DT_PRIM: case DT_CON: case DT_OP: return deus_icallee(t);",
      "      case DT_APP: {",
      "        DT *h = t->a; V n = t->n, buf[8], *args = n <= 8 ? buf : deus_iarena((size_t)n * sizeof(V)), f;",
      "        int direct = (h->t == DT_PRIM || h->t == DT_CON || h->t == DT_OP) && n >= h->arity && h->arity > 0;",
@@ -667,12 +671,12 @@ def codeRuntime : Text :=
      "      case DT_HANDLE: {",
      "        V f = deus_handle_enter(0);",
      "        for (V i = 0; i < t->ncl; i++) { DClause *cl = &t->cls[i]; if (cl->a == -2) cl->a = deus_iability(cl->abil); deus_handle_add(f, cl->a, cl->i, deus_ipap_of(cl->fn, e, 0, 0)); }",
-     "        V r = deus_ieval(t->a, e);",
-     "        deus_handle_exit(f);",
+     "        V r = deus_ieval(t->a, e);"],
+    ["        deus_handle_exit(f);",
      "        if (deus_caught(f, r)) return deus_keep(deus_caught_value(0));",
      "        if (r == DEUS_ABORT || !t->ret) return r;",
-     "        e = deus_ipush(e, r); t = t->ret; continue;"],
-    ["      }",
+     "        e = deus_ipush(e, r); t = t->ret; continue;",
+     "      }",
      "      default: return deus_idefect_c(\"unknown term\");",
      "    }",
      "  }",
@@ -680,6 +684,7 @@ def codeRuntime : Text :=
      "/* A clause body: its tails resume (`k v` returns `v` to the operation) or abort to the handler, as compiled clauses do (D124). */",
      "static V deus_itail(DT *t, DE *e) {",
      "  for (;;) {",
+     "    deus_isteps++;",
      "    switch (t->t) {",
      "      case DT_LET: { V v; EV(v, t->a, e); e = deus_ipush(e, v); t = t->b; continue; }",
      "      case DT_SEQ: { V v; EV(v, t->a, e); (void)v; t = t->b; continue; }",
@@ -706,13 +711,13 @@ def codeRuntime : Text :=
      "  deus_istack();",
      "  V n = TLEN(source), pos = 0; uint16_t *x = deus_iarena((size_t)(n ? n : 1) * 2); memcpy(x, TU(source), (size_t)n * 2);",
      "  for (DS *f; (f = deus_ds_read(x, n, &pos));) {",
-     "    if (f->k != DS_LIST || f->n != 3 || !deus_ds_is(f->xs[0], \"def\") || f->xs[1]->k != DS_STR) continue;",
-     "    DS *h = f->xs[1]; if (deus_global(h->u, h->n)) continue;",
+     "    if (f->k != DS_LIST || f->n != 3 || !deus_ds_is(f->xs[0], \"def\") || f->xs[1]->k != DS_STR) continue;"],
+    ["    DS *h = f->xs[1]; if (deus_global(h->u, h->n)) continue;",
      "    DG *g = deus_iarena(sizeof(DG)); memset(g, 0, sizeof(DG)); g->hash = h; g->form = f->xs[2];",
      "    DG **b = &deus_gtab[deus_ds_hash(h->u, h->n) & ((1 << DEUS_GBITS) - 1)]; g->next = *b; *b = g;",
      "  }",
-     "  return UNIT;"],
-    ["}",
+     "  return UNIT;",
+     "}",
      "/* `Code.run`: the value of a loaded definition, its effects reaching the caller's handlers. */",
      "static V deus_irun(V hash) {",
      "  DG *g = deus_global(TU(hash), TLEN(hash));",
@@ -726,6 +731,8 @@ def codeRuntime : Text :=
      "static V deus_code_quote(V v) { return deus_iquote(deus_text_cap(0, 16), v); }",
      "static V deus_code_field(V v, V i) { return deus_dup(UNBOX(v)[i + 1]); }",
      "static V deus_code_cast(V v) { return deus_dup(v); }",
+     "static V deus_code_steps(V unused) { (void)unused; return W(deus_isteps); }",
+     "static V deus_code_cost(V thunk) { uint32_t before = deus_isteps; V r = deus_iapply(thunk, UNIT); return r == DEUS_ABORT ? r : W(deus_isteps - before); }",
      "static V deus_code_defectTrace(V unused) { (void)unused; return UNIT; }",
      "#else",
      "static V deus_code_trap(void) { __builtin_trap(); }",
@@ -737,6 +744,8 @@ def codeRuntime : Text :=
      "#define deus_code_field(...) deus_code_trap()",
      "#define deus_code_cast(...) deus_code_trap()",
      "#define deus_code_defectTrace(...) deus_code_trap()",
+     "#define deus_code_steps(...) deus_code_trap()",
+     "#define deus_code_cost(...) deus_code_trap()",
      "#endif"]])
 
 /--
@@ -2030,10 +2039,8 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
   -- `defect` raises `Defect.raise`, which a handler may take, as the kernels do (D137).
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], x] =>
     effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [effLower abilities x]
-  -- The interpreter counts no machine steps, so `Code.steps` and `Code.cost` raise a defect a handler may report (D146).
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
-    if p == "Code.steps" || p == "Code.cost" then effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [Sexp.list [Sexp.sym "text", Sexp.str (p ++ " counts the kernels' machine steps, which a native build does not count")]]
-    else Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: List.map (effLower abilities) rest)
+    Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: List.map (effLower abilities) rest)
   | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
   | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
@@ -2055,11 +2062,11 @@ def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
       else fns
     List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
 
-/-- Whether primitive `p` may raise a defect or return the abort marker in native code: `defect`, `Code.run`, and the step counts (D146). -/
-def raisesDefect (p : Text) : Bool := p == "defect" || p == "Code.run" || p == "Code.steps" || p == "Code.cost"
+/-- Whether primitive `p` may raise a defect or return the abort marker in native code: `defect`, and `Code.run` and `Code.cost`, which run code (D146). -/
+def raisesDefect (p : Text) : Bool := p == "defect" || p == "Code.run" || p == "Code.cost"
 
 /-- The `Code` primitives the interpreter answers (D146), each as `deus_code_<name>`. -/
-def codeFunctions : List Text := ["Code.load", "Code.has", "Code.run", "Code.quote", "Code.tag", "Code.field", "Code.cast", "Code.defectTrace"]
+def codeFunctions : List Text := ["Code.load", "Code.has", "Code.run", "Code.quote", "Code.tag", "Code.field", "Code.cast", "Code.defectTrace", "Code.steps", "Code.cost"]
 
 /-- Whether `e` calls the interpreter. -/
 def usesCode (e : Sexp) : Bool :=

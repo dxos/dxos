@@ -1098,6 +1098,8 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 
 > claude: D143: Code.load, Code.has and Code.run run on a Core interpreter in the C runtime, so the native CLI runs eval, run and test with the kernels' output (44 toolchain tests: 251 ms vs 2,078 ms on the JIT). Left: Code.steps and Code.cost, and clauses that resume outside their tail (task e1cf2c6c).
 
+> someone: D147: Code.steps and Code.cost now count interpreter steps natively; native deus mdl passes all 241 blocks in 7.2 s vs 19.7 s on node.
+
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 
 - state: canceled
