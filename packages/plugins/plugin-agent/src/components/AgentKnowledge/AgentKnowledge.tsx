@@ -278,12 +278,11 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
       getText={(fact) => [fact.text, fact.source, fact.speaker].filter(Boolean).join(' ')}
       before={
         raw && (
-          <pre
+          <TurtleSnippet
             data-testid='agent-knowledge-fact-prefixes'
-            className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
-          >
-            {TRIG_PREFIXES}
-          </pre>
+            className='p-2 overflow-x-auto text-xs select-text cursor-text'
+            source={TRIG_PREFIXES}
+          />
         )
       }
       renderItem={(fact) => (
@@ -411,12 +410,11 @@ const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicates
       before={
         raw &&
         trig && (
-          <pre
+          <TurtleSnippet
             data-testid='agent-knowledge-predicates-trig'
-            className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
-          >
-            {trig}
-          </pre>
+            className='p-2 overflow-x-auto text-xs select-text cursor-text'
+            source={trig}
+          />
         )
       }
       renderItem={(predicate) => <PredicateCard predicate={predicate} />}
