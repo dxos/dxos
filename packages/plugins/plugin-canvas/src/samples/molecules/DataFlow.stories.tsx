@@ -64,7 +64,7 @@ const AGENTS: DataFlowSpec = {
  * The chapters of the story, in order: the one source for each chapter's own story and for the sequence that plays them
  * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
  */
-export const CHAPTERS: readonly Scene[] = [
+const CHAPTERS: readonly Scene[] = [
   {
     title: 'Silos',
     caption: 'Each application keeps its own data, fed only by its own source.',
@@ -134,8 +134,7 @@ const chapter = (index: number): Story => {
  * 1. Chapters advance by themselves every 20 to 30 seconds and loop; the counter shows which is playing.
  * 2. The controls at the top right step back, pause or resume, and step forward.
  */
-export const Chapter0Story: Story = {
-  name: '0. The whole story',
+export const Default: Story = {
   render: () => <DataFlowSequence scenes={CHAPTERS} />,
 };
 
