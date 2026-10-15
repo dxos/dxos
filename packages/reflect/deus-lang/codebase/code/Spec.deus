@@ -33,12 +33,15 @@ def Spec.checkReq (b : Block) : {MdlHost} List Text :=
   | names => concatMap evidenceProblems names
 
 /-- Problems with one piece of evidence: it must be a test or a theorem that passes. -/
-def Spec.evidenceProblems (name : Text) : {MdlHost} List Text :=
-  match MdlHost.describe name with
+def Spec.evidenceProblems (name : Text) : {MdlHost} List Text := evidenceProblemsOf (fun n => MdlHost.describe n) name
+
+/-- `evidenceProblems` with the facts about a name given: a law must pass; a vitest test the suite runs is `external` (Compile.Spec R-17). -/
+def Spec.evidenceProblemsOf (facts : Text -> {e} Result Text (List (Text, Text))) (name : Text) : {e} List Text :=
+  match facts name with
   | Result.err message => [message]
-  | Result.ok facts =>
-      let verdict := prop0 facts "verdict"
-      if Text.isEmpty verdict then [name ++ " is a " ++ prop0 facts "kind" ++ ", not a test or a theorem"] else if verdict == "pass" then [] else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"] else [name ++ " fails: " ++ prop0 facts "reason"]
+  | Result.ok found =>
+      let verdict := prop0 found "verdict"
+      if Text.isEmpty verdict then [name ++ " is a " ++ prop0 found "kind" ++ ", not a test or a theorem"] else if verdict == "pass" || verdict == "external" then [] else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"] else [name ++ " fails: " ++ prop0 found "reason"]
 
 /-- Items of a list property: separated by `|` or by lines. -/
 def Spec.items (t : Text) : List Text := List.filter (fun w => not (Text.isEmpty w)) (List.map trim (Text.split (replace "\n" "|" t) "|"))

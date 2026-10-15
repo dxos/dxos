@@ -1,5 +1,12 @@
 # History of main
 
+- `dba42704d0` task: set a2da28e2 state (by claude)
+- `16df66a274` task: comment on a2da28e2 (by claude)
+- `1603432908` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bind.mdl (by claude)
+- `d2878ca400` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/spec.deus (by claude)
+- `2669a5c6a3` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/vitestlaws.deus (by claude)
+- `eebc439ea3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/compile.mdl (by claude)
+- `c14cb80614` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/spec.deus (by claude)
 - `bcfddbca2f` task: comment on 1ab6c044 (by claude)
 - `ddee5f7174` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
 - `a534f7cb29` task: open 79f72c44 Theorem verdicts are cached by the theorem's hash alone, so a prover change never rechecks them (by claude)

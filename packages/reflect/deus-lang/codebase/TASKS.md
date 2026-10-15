@@ -83,15 +83,6 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
 
-## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec
-
-Gap R-8 in docs/spec/COMPILE.mdl.
-
 ## Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (`729ad2b4`)
 
 - state: todo
@@ -1008,6 +999,17 @@ From docs/spec/README.md, Known divergences.
 def T.id (n : Int) : Int := n hashes the same as id and views as a -> a; Embed.text and Embed.bytes, with equal bodies, both got Text -> a. The hash ignores annotations, so names that share a body share the first one's type. Either hash the declared signature or keep types per name (as D132 did for docs).
 
 > claude: Sound as is: the shared scheme is the generalization of every sharer's (D116), i.e. the body's own type, so callers admit nothing unsound. Fixed the display (D153, View.Spec R-4): view and api blocks show a shared name's own signature.
+
+## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
+Gap R-8 in docs/spec/COMPILE.mdl.
+
+> claude: Done (D157, Compile.Spec R-17, R-18): by: vitest:<file> > <test name>. Compile.Spec R-8 and Bindings.Spec R-1, R-6..R-11 now cite their tests.
 
 ## Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (`c50cd76e`)
 

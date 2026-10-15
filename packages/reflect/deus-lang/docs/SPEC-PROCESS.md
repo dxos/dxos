@@ -14,7 +14,9 @@ happening via-codebase". Nothing under `docs/spec/` holds a checked spec any mor
 Write it in this order:
 
 1. **Requirements.** One `req` block per promise, in a sentence a reviewer can check. Each names its
-   evidence in `by:`; until the evidence exists, `gap:` names the task that adds it.
+   evidence in `by:`; until the evidence exists, `gap:` names the task that adds it. Evidence is a
+   law, or a TypeScript test cited as `vitest:<file> > <test name>` when it needs the whole toolchain
+   or a host tool: `deus mdl` checks that the file declares the test, and the suite runs it (D157).
 2. **APIs.** One `api` block per group of entry points, `Name : Type` per line, the type as
    `deus view` shows it. A name declared without a body (D94) is reported as a known gap.
 3. **Laws.** One `law` block per property that must hold for all inputs, naming its theorem, with

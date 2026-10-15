@@ -178,6 +178,25 @@ def Compile.Spec.verdictText (name : Text) : {IO, Throw Text} Text :=
       | _ => "none"
   | Option.none => "none"
 
+/-- R-17: a file declaring `test('adds two', …)` answers for `vitest:t.test.ts > adds two`. -/
+test Compile.Spec.vitestCitedByName := storeText (fun _ =>
+  IO.writeFile "t.test.ts" "test('adds two', () => expect(1 + 1).toBe(2));\n"
+  match vitestFact "t.test.ts > adds two" with
+  | Result.ok facts => getOr (List.lookup "verdict" facts) ""
+  | Result.err message => message) == "external"
+
+/-- R-17: evidence the suite runs counts, as a passing law does. -/
+test Compile.Spec.vitestEvidenceAccepted := List.isEmpty (evidenceProblemsOf
+  (fun _ => Result.ok [("kind", "vitest"), ("verdict", "external")])
+  "vitest:t.test.ts > adds two")
+
+/-- R-18: a test the file lacks is named, with the file. -/
+test Compile.Spec.vitestMissingNamed := storeText (fun _ =>
+  IO.writeFile "u.test.ts" "test('adds two', () => {});\n"
+  match vitestFact "u.test.ts > adds three" with
+  | Result.ok _ => "accepted"
+  | Result.err message => message) == "vitest:u.test.ts > adds three: u.test.ts declares no test named adds three"
+
 def Compile.accessorCore (hash : Text) (count : Int) (index : Int) : Sexp := Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
   "case"
   [Compile.node "pcon" ([Sexp.s hash, i 0] ++ replicate count (Compile.node "pvar" [])), Compile.node "var" [i (count - 1 - index)]]]]

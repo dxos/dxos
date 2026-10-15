@@ -111,7 +111,22 @@ law L-4: printed source compiles back to the same hashes
 
 ```mdl
 req R-8: every definition of the toolchain prints back to its own hash
-  gap: task a2da28e2; the vitest "adds the compiler to a codebase…" in src/cli.test.ts covers it
+  by: vitest:src/dogfood.test.ts > adds the compiler to a codebase and passes its own tests and theorems
+```
+
+Some evidence is a TypeScript test, because it needs the whole toolchain or a host tool: a `req` cites one
+as `vitest:<file> > <test name>`, the file relative to the working directory or to `$DEUS_HOME`. `deus mdl`
+checks that the file declares a test of that name and leaves running it to the suite, which CI runs on
+every push (task a2da28e2).
+
+```mdl
+req R-17: a req may cite a vitest test, and deus mdl accepts it when the file declares a test of that name
+  by: Compile.Spec.vitestCitedByName | Compile.Spec.vitestEvidenceAccepted
+```
+
+```mdl
+req R-18: a cited vitest test the file does not declare fails the requirement, naming the file and the test
+  by: Compile.Spec.vitestMissingNamed
 ```
 
 ## Declarations without a body

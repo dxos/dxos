@@ -25,7 +25,7 @@ test is [`src/bindings/bindings.test.ts`](../../src/bindings/bindings.test.ts), 
 
 ```mdl
 req R-1: each exported DEUS function is a top-level `export declare function f(…): Promise<R>` in the `.d.ts`
-  gap: task a2da28e2, strict tsc on a consumer in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ```mdl
@@ -50,32 +50,32 @@ req R-5: the kernel applies an entry to one value, so only a function of exactly
 
 ```mdl
 req R-6: a variant type with fields gets a constructor object: `Shape.circle(2)` builds a `Shape`
-  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ```mdl
 req R-7: values round-trip: what TypeScript passes decodes in DEUS as the same value, and back
-  gap: task a2da28e2, every export of the example in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ```mdl
 req R-8: the module works with no setup; `configure` sets module-level options, `load` makes a separate instance
-  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ```mdl
 req R-9: `Throw` needs no handler: an unhandled `throw` rejects with `DeusThrow`, a defect with `DeusDefect`
-  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ```mdl
 req R-10: a function that cannot be exported is listed with its reason, on stderr, in JSON and in the module
-  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ```mdl
 req R-11: the output needs nothing from this package: the runtime and the kernel are copied next to the module
-  gap: task a2da28e2, importing the module from a scratch directory in src/bindings/bindings.test.ts checks it
+  by: vitest:src/bindings/bindings.test.ts > TypeScript calls DEUS functions and answers their abilities
 ```
 
 ## API
