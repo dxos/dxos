@@ -243,7 +243,8 @@ camera distance, which is constant for an orthographic camera.
 | L1 body      | 24 to 120 px   | 3D body with a flat-colour screen and no DOM                             |
 | L2 schematic | under 24 px    | Instanced flat outline; servers drawn as squares                         |
 
-Levels crossfade over 300 ms. `set lod` forces a level for a selection. At most 6 L0 screens are
+Nodes are also drawn as circles whenever the camera tilts past halfway from isometric to top, so the switch to
+the top view reads as a switch from devices to a network diagram. Levels crossfade over 300 ms. `set lod` forces a level for a selection. At most 6 L0 screens are
 live at once (configurable), chosen by distance from the centre of the view. This cap is the main
 guard against DOM cost.
 

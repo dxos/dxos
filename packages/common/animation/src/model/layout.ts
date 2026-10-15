@@ -23,6 +23,8 @@ export type PackOptions = {
   gap?: number;
   /** Scatters free items across a band this wide outside the pinned items before packing. */
   spread?: number;
+  /** 0–1: how far belt items stray from the belt's centre line and their even angle. */
+  jitter?: number;
 };
 
 type Placed = { x: number; y: number; r: number };
@@ -34,7 +36,7 @@ type Placed = { x: number; y: number; r: number };
 export const pack = (
   items: PackItem[],
   random: Random,
-  { gap = ROOT_GAP, spread }: PackOptions = {},
+  { gap = ROOT_GAP, spread, jitter = 0.5 }: PackOptions = {},
 ): { positions: Record<string, Vec2>; radius: number } => {
   const placed: Placed[] = [];
   const positions: Record<string, Vec2> = {};
@@ -68,8 +70,8 @@ export const pack = (
       return undefined;
     }
     const step = (Math.PI * 2) / belt.length;
-    const angle = beltPhase + index * step + (random.next() - 0.5) * step * 0.2;
-    const distance = Math.max(inner + gap + item.radius, ring + (random.next() - 0.5) * (spread ?? 0) * 0.5);
+    const angle = beltPhase + index * step + (random.next() - 0.5) * step * 0.4 * jitter;
+    const distance = Math.max(inner + gap + item.radius, ring + (random.next() - 0.5) * (spread ?? 0) * jitter);
     return [Math.cos(angle) * distance, Math.sin(angle) * distance];
   };
   const cursors = new Map<string, number>();
@@ -257,7 +259,7 @@ export const layout = (graph: Graph, seed: number, options: PackOptions = {}): G
       return { key: path, radius: size(path), at: network.at, near: network.near };
     }),
     random.fork('roots'),
-    { gap: options.gap ?? ROOT_GAP, spread: options.spread },
+    { gap: options.gap ?? ROOT_GAP, spread: options.spread, jitter: options.jitter },
   );
 
   const place = (path: Path, center: Vec2): void => {

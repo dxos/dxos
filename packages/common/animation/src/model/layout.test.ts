@@ -181,6 +181,12 @@ describe('belt and uniform distribution', () => {
     expect(Math.min(...gaps)).toBeGreaterThan(0.4 * ((2 * Math.PI) / sites.length));
   });
 
+  test('jitter 0 puts every outer network on one ring', ({ expect }) => {
+    const graph = buildGraph({ ...template, layout: { gap: 600, spread: 2000, jitter: 0 } }, 4);
+    const radials = sites.map((site) => distance(getNetwork(graph, site.id).center, [0, 0]));
+    expect(Math.max(...radials) - Math.min(...radials)).toBeLessThan(1);
+  });
+
   test('networks and servers inside the cloud spread across it', ({ expect }) => {
     const graph = buildGraph(template, 4);
     const network = getNetwork(graph, 'cloud');

@@ -25,6 +25,8 @@ import { STYLES } from './styles.ts';
 
 /** Below this on-screen radius a node is drawn as a circle. */
 const CIRCLE_PX = 26;
+/** Below this camera tilt (halfway from isometric to top) nodes are drawn as circles. */
+const TOP_TILT = 27.5;
 /** At or above this on-screen radius a device screen shows live app content. */
 const LIVE_PX = 110;
 const MAX_LIVE = 6;
@@ -172,7 +174,7 @@ const paint = (
     view.el.style.visibility = visible > 0.001 ? 'visible' : 'hidden';
     view.el.style.transform = visible < 1 ? `scale3d(${visible},${visible},${visible})` : '';
     const pixels = NODE_RADIUS[view.node.type] * zoom;
-    view.el.classList.toggle('far', pixels < CIRCLE_PX);
+    view.el.classList.toggle('far', pixels < CIRCLE_PX || pose.tilt < TOP_TILT);
     if (item && view.feed && pixels >= LIVE_PX && visible > 0) {
       const [x, y] = project(pose, zoom, width, height, view.node.position);
       live.push([Math.hypot(x - width / 2, y - height / 2), view, item.props]);
@@ -229,6 +231,9 @@ const paint = (
   context.globalAlpha = 1;
 };
 
+/** Playback position per flow, kept outside React so a remount (e.g. a story arg change) resumes where it was. */
+const playback = new Map<string, { time: number; playing: boolean }>();
+
 export type NetworkFlowsProps = {
   /** MDL source holding a `flow` block. */
   flow: string;
@@ -244,9 +249,18 @@ export const NetworkFlows = ({ flow, template }: NetworkFlowsProps) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const timeRef = useRef(0);
-  const playingRef = useRef(true);
-  const [playing, setPlaying] = useState(true);
+  const session = useMemo(() => {
+    const existing = playback.get(flow);
+    if (existing) {
+      return existing;
+    }
+    const created = { time: 0, playing: true };
+    playback.set(flow, created);
+    return created;
+  }, [flow]);
+  const timeRef = useRef(session.time);
+  const playingRef = useRef(session.playing);
+  const [playing, setPlaying] = useState(session.playing);
   const [state, setState] = useState<SceneState>(() => evaluate(timeline, 0));
 
   useEffect(() => {
@@ -257,7 +271,7 @@ export const NetworkFlows = ({ flow, template }: NetworkFlowsProps) => {
       return;
     }
     const scene = buildScene(camera, timeline);
-    timeRef.current = 0;
+    timeRef.current = Math.min(timeRef.current, timeline.duration);
     let last = performance.now();
     let frame = 0;
     let shown = -1;
@@ -266,8 +280,10 @@ export const NetworkFlows = ({ flow, template }: NetworkFlowsProps) => {
       last = now;
       if (playingRef.current) {
         timeRef.current = Math.min(timeline.duration, timeRef.current + delta * 1000);
+        session.time = timeRef.current;
         if (timeRef.current >= timeline.duration) {
           playingRef.current = false;
+          session.playing = false;
           setPlaying(false);
         }
       }
@@ -281,13 +297,15 @@ export const NetworkFlows = ({ flow, template }: NetworkFlowsProps) => {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [timeline]);
+  }, [timeline, session]);
 
   const play = (value: boolean) => {
     if (value && timeRef.current >= timeline.duration) {
       timeRef.current = 0;
     }
     playingRef.current = value;
+    session.playing = value;
+    session.time = timeRef.current;
     setPlaying(value);
   };
   const seek = (time: number) => {

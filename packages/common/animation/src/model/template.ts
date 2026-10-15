@@ -101,9 +101,16 @@ export const NetworkTemplate = Schema.Struct({
   networks: Schema.Array(NetworkSpec),
   templates: Schema.optional(Schema.Record(Schema.String, NetworkSpec)),
   links: Schema.optional(Schema.Array(LinkSpec)),
-  /** Top-level placement: `gap` between root networks; `spread` scatters them across a band this wide around pinned ones. */
+  /**
+   * Top-level placement: `gap` between root networks; `spread` puts them in an evenly spaced belt this wide
+   * around the pinned ones; `jitter` (0–1, default 0.5) is how far each strays from the belt's centre line.
+   */
   layout: Schema.optional(
-    Schema.Struct({ gap: Schema.optional(Schema.Number), spread: Schema.optional(Schema.Number) }),
+    Schema.Struct({
+      gap: Schema.optional(Schema.Number),
+      spread: Schema.optional(Schema.Number),
+      jitter: Schema.optional(Schema.Number),
+    }),
   ),
 });
 export type NetworkTemplate = Schema.Schema.Type<typeof NetworkTemplate>;
