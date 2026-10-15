@@ -1,3 +1,59 @@
+/-- R-4: a comment inside a comment ends with the outer one. -/
+test Parser.Spec.blockCommentsNest := Spec.same "/- outer /- inner -/ still outer -/\ndef f : Int := 1\n" "def f : Int := 1\n"
+
+/-- The text of an error `body` throws; empty when it throws none. -/
+def Parser.Spec.errorOf (body : Unit -> {Throw Text} a) : Text :=
+  match try body with
+  | Result.err message => message
+  | Result.ok _ => ""
+
+/-- R-5: an `if` and a `let` over several lines are their one-line forms. -/
+test Parser.Spec.layoutIsTheOneLiner := Spec.same
+  "def f (a : Int) : Int :=\n  if a == 0\n  then 1\n  else 2\n"
+  "def f (a : Int) : Int := if a == 0 then 1 else 2\n" && Spec.same
+  "def f (a : Int) : Int :=\n  let b := a + 1\n  b * 2\n"
+  "def f (a : Int) : Int := let b := a + 1; b * 2\n"
+
+/-- R-1: `a - b - c` is `(a - b) - c`. -/
+test Parser.Spec.minusGroupsLeft :=
+  let head := "def f (a : Int) (b : Int) (c : Int) : Int := "
+  Spec.same (head ++ "a - b - c\n") (head ++ "(a - b) - c\n") && not (Spec.same (head ++ "a - b - c\n") (head ++ "a - (b - c)\n"))
+
+/-- R-3: `1_000` is 1000 and `0xff` is 255. -/
+test Parser.Spec.numberSpellings := Spec.same "def f : Int := 1_000\n" "def f : Int := 1000\n" && Spec.same "def f : Int := 0xff\n" "def f : Int := 255\n"
+
+/-- R-6: a parse error starts with the line and column of the token it stopped at. -/
+test Parser.Spec.parseErrorNamesLine := startsWith "3:0: " (errorOf (fun _ => Parser.parse "def f (a : Int) : Int :=\n  a +\n"))
+
+/-- R-1: `a |> g |> h` and `h <| g <| a` are both `h (g a)`. -/
+test Parser.Spec.pipesGroup :=
+  let defs := "def g (n : Int) : Int := n + 1\ndef h (n : Int) : Int := n * 2\n"
+  let head := defs ++ "def f (a : Int) : Int := "
+  Spec.same (head ++ "a |> g |> h\n") (head ++ "h (g a)\n") && Spec.same (head ++ "h <| g <| a\n") (head ++ "h (g a)\n")
+
+/-- Whether `a` and `b` compile `f` to the same hash. -/
+def Parser.Spec.same (a : Text) (b : Text) : Bool :=
+  let ha := Compile.Spec.hashOf a "f"
+  isSome ha && ha == Compile.Spec.hashOf b "f"
+
+/-- R-1: `a + b * c` is `a + (b * c)`, not `(a + b) * c`. -/
+test Parser.Spec.timesBindsTighter :=
+  let head := "def f (a : Int) (b : Int) (c : Int) : Int := "
+  Spec.same (head ++ "a + b * c\n") (head ++ "a + (b * c)\n") && not (Spec.same (head ++ "a + b * c\n") (head ++ "(a + b) * c\n"))
+
+/-- R-3: `"\u{41}"` is `"A"`. -/
+test Parser.Spec.unicodeEscape := Spec.same "def f : Text := \"\\u{41}\"\n" "def f : Text := \"A\"\n"
+
+/-- R-2: each Unicode spelling compiles as its ASCII one. -/
+test Parser.Spec.unicodeSpellings :=
+  let head := "def f (a : Int) (b : Int) : Bool := "
+  Spec.same
+    "def f (g : Int → Int) (a : Int) : Int := g a\n"
+    "def f (g : Int -> Int) (a : Int) : Int := g a\n" && Spec.same (head ++ "a ≠ b\n") (head ++ "a != b\n") && Spec.same (head ++ "a ≤ b\n") (head ++ "a <= b\n") && Spec.same (head ++ "a ≥ b\n") (head ++ "a >= b\n") && Spec.same "def f (a : Int) : Int := a × 3\n" "def f (a : Int) : Int := a * 3\n" && Spec.same "def f : Int -> Int := λ x => x + 1\n" "def f : Int -> Int := fun x => x + 1\n"
+
+/-- R-6: the unterminated string starts at line 1, column 9. -/
+test Parser.Spec.unterminatedStringPointsAtQuote := errorOf (fun _ => lex "def f := \"abc") == "1:9: unterminated string"
+
 def Parser.app (p : Parser) : {Throw Text} Expr :=
   let f := atom p
   let rec go acc := if startsArg p then go (atom p :: acc) else reverse acc

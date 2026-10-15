@@ -48,10 +48,12 @@ def writeObject (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
   let path := objectPath dir h
   if IO.exists path then () else IO.writeFile path (Sexp.print form ++ "\n")
 
-/-- Stores a form under the hash of its text and returns the hash. -/
+/-- Stores a form under the hash of its text and returns the hash; the text is printed once, for both. -/
 def put (dir : Text) (form : Sexp) : {IO} Text :=
-  let h := Text.sha256 (Sexp.print form)
-  writeObject dir h form
+  let text := Sexp.print form
+  let h := Text.sha256 text
+  let path := objectPath dir h
+  if IO.exists path then () else IO.writeFile path (text ++ "\n")
   h
 
 def readMeta (dir : Text) (h : Text) : {IO} Option Sexp :=

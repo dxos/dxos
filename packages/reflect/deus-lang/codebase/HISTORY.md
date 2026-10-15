@@ -1,5 +1,11 @@
 # History of main
 
+- `3a31a3937b` update deus (by claude)
+- `5211044678` task: comment on 1ab6c044 (by claude)
+- `6c643003be` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `a5d37eb90e` update deus (by claude)
+- `32c3dc8160` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/parser.mdl (by claude)
+- `cb7214d86e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/parser.mdl (by claude)
 - `2f3955cad4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cb.mdl (by claude)
 - `1dcbd7e801` update deus (by claude)
 - `456e4c15d2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law19.deus (by claude)

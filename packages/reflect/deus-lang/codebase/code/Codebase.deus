@@ -926,10 +926,12 @@ def Codebase.ownFields (meta : Sexp) : List Sexp := List.filter
   shallow: its oldest nodes have parents nobody keeps, and they act as roots. -/
 def Codebase.parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text := List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents
 
-/-- Stores a form under the hash of its text and returns the hash. -/
+/-- Stores a form under the hash of its text and returns the hash; the text is printed once, for both. -/
 def Codebase.put (dir : Text) (form : Sexp) : {IO} Text :=
-  let h := Text.sha256 (Sexp.print form)
-  writeObject dir h form
+  let text := Sexp.print form
+  let h := Text.sha256 text
+  let path := objectPath dir h
+  if IO.exists path then () else IO.writeFile path (text ++ "\n")
   h
 
 def Codebase.putMetaNode (dir : Text) (subs : Map Text Text) : {IO} Text := Codebase.put dir (Sexp.node

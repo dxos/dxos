@@ -166,6 +166,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 156 | 10-15 09:50 | 50m 00s | `de5f61f2` | The whole `deus` CLI builds natively; `Code.*` raises a defect there (D140). Native `deus add` of the toolchain: 1.2 s vs 10.8 s, identical store. Writing the CLI's C: 129 s to 17 s |
 | 157 | 10-15 10:05 | 40m 00s | `c5febbcf` | Devex perf: `deus export` 12.2 s to 7.9 s and a cached `deus mdl` 11.4 s to 9.8 s, since each view header and each described name walked the whole namespace (D141). `deus update` now removes a dropped field's accessor, constructor or operation, which had left `Cli.MdlFacts.declared` behind and broke the restore (D142, Codebase.Spec R-18). `scripts/merge-base.py` renumbers decisions in one pass, since D140 -> D141 then D141 -> D142 had turned both references into D142 |
 | 158 | 10-15 10:35 | 30m 00s | `58d3f800` | `deus update` type-checks the dependents it rehashes and refuses a change that leaves one ill-typed, naming it (D143, task 53e409cd, Codebase.Spec R-19); about 1 s on an update that rehashed 161 |
-| 159 | 10-15 10:45 | 10m 00s | this commit | An ill-typed dependent's error names the definition it calls, not its hash (D143, Codebase.Spec R-19) |
+| 159 | 10-15 10:45 | 10m 00s | `f7b3f1b9` | An ill-typed dependent's error names the definition it calls, not its hash (D143, Codebase.Spec R-19) |
+| 160 | 10-15 11:20 | 35m 00s | this commit | Parser.Spec, the checked spec of the lexer and parser (task 1ab6c044): six requirements on precedence, Unicode spellings, literals, comments, layout and error positions. Its R-6 caught an unterminated string reported at column 0 of the last line; it now points at the opening quote (D144). `Codebase.put` prints an object once, not twice |
 
-Total from stage 1 to stage 159: 36h 37m.
+Total from stage 1 to stage 160: 37h 12m.

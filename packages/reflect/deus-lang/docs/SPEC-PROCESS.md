@@ -176,6 +176,6 @@ Each is a codebase task (ids in brackets):
 ## Next
 
 New work follows the process: a spec change comes first in the same commit as the code. The rest of
-the toolchain (lexer and parser, types, prover, tasks, replication, update, image, the wasm and C back
+the toolchain (types, prover, tasks, image, the wasm and C back
 ends) gets checked specs as it is touched (`1ab6c044`), and Bindings.Spec's requirements table became `req`
 blocks with the move into the codebase (D99).
