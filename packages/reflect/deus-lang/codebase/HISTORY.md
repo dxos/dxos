@@ -1,5 +1,9 @@
 # History of main
 
+- `8eecb18772` task: comment on 31d3c1cd
+- `ac7e65f717` task: set 31d3c1cd state
+- `4e56d55f5f` update deus (by claude)
+- `1a899feb4b` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/fld/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/fld/Checking.Spec.mdl (by claude)
 - `824371ab26` task: set dc22728a labels
 - `7c717d0d8c` task: open dc22728a Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (by claude)
 - `45201fcb2f` task: comment on cb6c9a43

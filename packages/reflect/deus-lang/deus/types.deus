@@ -343,6 +343,8 @@ structure TypeEnv (r : Effect) where
   group : Ref (Map Text TType)
   schemes : Ref (Map Text Sexp)
   prims : Text -> {Throw Text | r} Option Sexp
+  -- The accessor chosen for each `(pick …)` key, which `Resolve.unpick` writes into the Core (R-8).
+  picks : Ref (Map Text Sexp)
 
 /-- A definition's type: in this batch (monomorphic while its group is inferred), stored, or unknown. -/
 def globalType (u : Unifier) (env : TypeEnv {r}) (h : Text) : TType :=
@@ -422,6 +424,11 @@ def infer (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (locals : List TType) (ro
     let inner := freshRow u
     let result := infer u env b (a :: locals) inner
     TType.fn a inner result
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "pick" :: Sexp.str field :: Sexp.str key :: Sexp.str owners :: candidates) :: receiver :: rest) =>
+    let tr := infer u env receiver locals row
+    let accessor := pickField u env field key owners candidates tr
+    let tf := call u (infer u env accessor locals row) tr row
+    List.foldl (fun acc arg => call u acc (infer u env arg locals row) row) tf rest
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
     let callee := match f with
       | Sexp.list [Sexp.sym "ref", Sexp.str h] => if Text.startsWith "@" h then Text.drop 1 h else "#" ++ Text.take 10 h
@@ -507,6 +514,24 @@ def refuseFunction (u : Unifier) (f : Sexp) (t : TType) : {Throw Text} Unit :=
       | _ => ()
     else ()
   | _ => ()
+
+/-- The accessor among `candidates` whose structure is the receiver's, recorded under `key` (R-8). -/
+def pickField (u : Unifier) (env : TypeEnv {r}) (field : Text) (key : Text) (owners : Text) (candidates : List Sexp) (receiver : TType) : {Throw Text | r} Sexp :=
+  let ownerOf := fun (c : Sexp) =>
+    match resolve u (infer u env c [] (freshRow u)) with
+    | TType.fn a _ _ =>
+      match resolve u a with
+      | TType.con iri _ => iri
+      | _ => ""
+    | _ => ""
+  match resolve u receiver with
+  | TType.con iri _ =>
+    match List.filter (fun c => ownerOf c == iri) candidates with
+    | [c] =>
+      Ref.set env.picks (Map.insert key c (Ref.get env.picks))
+      c
+    | _ => throw ("ambiguous field " ++ field ++ ": " ++ owners ++ ", and " ++ display u receiver ++ " is none of them")
+  | _ => throw ("ambiguous field " ++ field ++ ": " ++ owners ++ " (annotate the receiver's type)")
 
 /-- Checks a term against an expected type; a lambda takes its parameter and row from it. -/
 def checkAgainst (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (expected : TType) (locals : List TType) (row : TRow) : {Throw Text | r} Unit :=

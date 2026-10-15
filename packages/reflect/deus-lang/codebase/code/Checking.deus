@@ -1,3 +1,6 @@
+/-- R-8: an annotated receiver picks its structure's field. -/
+theorem Checking.Spec.annotatedFieldResolves : checks (twoKinds ++ "def f (x : P.A) : Int := x.kind\n") == true := by rfl
+
 /-- R-1: an ascription that holds compiles. -/
 theorem Checking.Spec.ascriptionHolds : checks "def f (x : Int) : Int := (x : Int) + 1\n" == true := by rfl
 
@@ -53,6 +56,9 @@ def Checking.Spec.hashOf (source : Text) (name : Text) : Option Entry :=
   | Option.some entries => List.lookup name entries
   | Option.none => Option.none
 
+/-- R-8: an inferred receiver does too: `x` is a `P.B` by the time the lambda is checked. -/
+theorem Checking.Spec.inferredFieldResolves : checks (twoKinds ++ "def g (y : P.B) : Bool := apply y (fun x => x.kind)\n") == true := by rfl
+
 /-- R-4: a lambda binder's type is checked. -/
 theorem Checking.Spec.lambdaBinderChecked : checks "def f (x : Int) : Int := (fun (n : Bool) => 1) x\n" == false := by rfl
 
@@ -68,11 +74,25 @@ theorem Checking.Spec.letFunctionResult : checks "def f (x : Int) : Int :=\n  le
 /-- R-4: a pattern binder's type is checked. -/
 theorem Checking.Spec.patternBinderChecked : checks "def f (x : Int) : Int :=\n  match x with\n  | (n : Bool) => 1\n" == false := by rfl
 
+/-- R-8: the field the type picks is checked: `P.B.kind` is a `Bool`, not an `Int`. -/
+theorem Checking.Spec.pickedFieldIsChecked : checks (twoKinds ++ "def f (x : P.B) : Int := x.kind\n") == false := by rfl
+
+/-- R-8: a picked field hashes as the accessor written out. -/
+theorem Checking.Spec.pickedFieldKeepsHash : (isSome (Checking.Spec.hashOf (twoKinds ++ "def f (x : P.A) : Int := x.kind\n") "f") && Checking.Spec.hashOf (twoKinds ++ "def f (x : P.A) : Int := x.kind\n") "f" ==
+    Checking.Spec.hashOf (twoKinds ++ "def f (x : P.A) : Int := P.A.kind x\n") "f") ==
+    true := by rfl
+
 /-- The builtin types the sources use, declared by IRI as `deus/builtins.deus` does. -/
 def Checking.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
 
 /-- `f` takes two arguments, so `f 1` is a function. -/
 def Checking.Spec.twoArgs : Text := "def f (x : Int) (y : Int) : Int := x\n"
 
+/-- Two structures with a field `kind`, and a function that applies its second argument to its first. -/
+def Checking.Spec.twoKinds : Text := "structure P.A where\n  kind : Int\nstructure P.B where\n  kind : Bool\ndef apply (x : a) (f : a -> b) : b := f x\n"
+
 /-- R-7: `!=` refuses functions too. -/
 theorem Checking.Spec.unequalFunctionsRejected : checks (twoArgs ++ "def t (x : Int) : Bool := f x != f 2\n") == false := by rfl
+
+/-- R-8: a receiver whose type is unknown stays ambiguous. -/
+theorem Checking.Spec.unknownReceiverAmbiguous : checks (twoKinds ++ "def h x := x.kind\n") == false := by rfl

@@ -165,13 +165,6 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: wasm, perf, embedding
 
-## Field names are global: two structures with a field of the same name make every unannotated access ambiguous, so event types had to rename kind, reason, url and command (`31d3c1cd`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: types, devex
-
 ## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
 
 - state: todo
@@ -1058,6 +1051,15 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 - links change #0f3089d483
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
+
+## Field names are global: two structures with a field of the same name make every unannotated access ambiguous, so event types had to rename kind, reason, url and command (`31d3c1cd`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: types, devex
+
+> someone: Done (Checking.Spec R-8): x.f with f in several structures resolves to the field of x's inferred structure; the resolver emits (pick f key owners accessors…), Types.pickField chooses by the receiver's type, Resolve.unpick writes the accessor into the Core before hashing. Unknown receiver: ambiguous, with 'annotate the receiver's type'. Record literals {f := …} still pick by field set.
 
 ## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
 

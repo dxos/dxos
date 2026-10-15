@@ -9,6 +9,7 @@ structure Types.TypeEnv r where
   group : Ref (Map Text TType)
   schemes : Ref (Map Text Sexp)
   prims : Text -> {Throw Text | r} Option Sexp
+  picks : Ref (Map Text Sexp)
 
 /-- An application `f a₁ … aₙ`. -/
 def Types.application (u : Unifier) (env : TypeEnv {r}) (f : Sexp) (args : List Sexp) (locals : List TType) (row : TRow) : {Throw Text | r} TType :=
@@ -199,6 +200,7 @@ def Types.fromSexp (u : Unifier) (s : Sexp) (vars : Ref (Map Text TType)) (rowVa
       (Types.fromSexp u b vars rowVars params openArrows)
   | _ => freshType u
 
+-- The accessor chosen for each `(pick …)` key, which `Resolve.unpick` writes into the Core (R-8).
 /-- A definition's type: in this batch (monomorphic while its group is inferred), stored, or unknown. -/
 def Types.globalType (u : Unifier) (env : TypeEnv {r}) (h : Text) : TType :=
   match Map.lookup h (Ref.get env.group) with
@@ -270,6 +272,11 @@ def Types.infer (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (locals : List TTyp
       let inner := freshRow u
       let result := Types.infer u env b (a :: locals) inner
       TType.fn a inner result
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "pick" :: Sexp.str field :: Sexp.str key :: Sexp.str owners :: candidates) :: receiver :: rest) =>
+      let tr := Types.infer u env receiver locals row
+      let accessor := pickField u env field key owners candidates tr
+      let tf := Types.call u (Types.infer u env accessor locals row) tr row
+      foldl (fun acc arg => Types.call u acc (Types.infer u env arg locals row) row) tf rest
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
       let callee :=
         match f with
@@ -424,6 +431,25 @@ def Types.pattern (u : Unifier) (env : TypeEnv {r}) (pat : Sexp) (t : TType) (bi
             binds
             (zip subs padded)
   | _ => binds
+
+/-- The accessor among `candidates` whose structure is the receiver's, recorded under `key` (R-8). -/
+def Types.pickField (u : Unifier) (env : TypeEnv {r}) (field : Text) (key : Text) (owners : Text) (candidates : List Sexp) (receiver : TType) : {Throw Text | r} Sexp :=
+  let ownerOf := fun c =>
+    match Types.resolve u (Types.infer u env c [] (freshRow u)) with
+    | TType.fn a _ _ =>
+        match Types.resolve u a with
+        | TType.con iri _ => iri
+        | _ => ""
+    | _ => ""
+  match Types.resolve u receiver with
+  | TType.con iri _ =>
+      match List.filter (fun c => ownerOf c == iri) candidates with
+      | c :: [] =>
+          Ref.set env.picks (Map.insert key c (Ref.get env.picks))
+          c
+      | _ => Throw.throw ("ambiguous field " ++ field ++ ": " ++ owners ++ ", and " ++ Types.display u receiver ++
+          " is none of them")
+  | _ => Throw.throw ("ambiguous field " ++ field ++ ": " ++ owners ++ " (annotate the receiver's type)")
 
 /-- `==` and `!=` compare closures by identity, so on a function they are always false: a type error (R-7). -/
 def Types.refuseFunction (u : Unifier) (f : Sexp) (t : TType) : {Throw Text} Unit :=

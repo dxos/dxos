@@ -309,14 +309,22 @@ def coreOfEntry (ctx : Ctx) (pos : Pos) (fqn : Text) (e : Entry) : {Throw Text} 
   | Entry.op a index arity => node "op" [s a, n index, n arity]
   | _ => failAt ctx pos (fqn ++ " is not a value")
 
-def fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) : {Throw Text} Sexp :=
-  match Option.getOr (Dict.lookup field ctx.names.fieldOwners) [] with
-  | [owner] =>
+/--
+  The accessor for `.field`, the `nth` access at `pos`. A field several structures share becomes
+  `(pick field key owners accessors…)`, which the checker resolves by the receiver's type (R-8).
+-/
+def fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) (nth : Int) : {Throw Text} Sexp :=
+  let accessor := fun (owner : Text) =>
     match Dict.lookup (owner ++ "." ++ field) ctx.names.index with
     | some e => coreOfEntry ctx pos (owner ++ "." ++ field) e
     | none => failAt ctx pos ("missing accessor " ++ owner ++ "." ++ field)
+  match Option.getOr (Dict.lookup field ctx.names.fieldOwners) [] with
+  | [owner] => accessor owner
   | [] => failAt ctx pos ("unknown field " ++ field)
-  | owners => failAt ctx pos ("ambiguous field " ++ field ++ ": " ++ Text.join ", " (List.sort owners))
+  | owners =>
+    let sorted := List.sort owners
+    let key := ctx.origin ++ ":" ++ Int.toText pos.atLine ++ ":" ++ Int.toText pos.atCol ++ (if nth == 0 then "" else "." ++ Int.toText nth)
+    node "pick" ([s field, s key, s (Text.join ", " sorted)] ++ List.map accessor sorted)
 
 def valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
   let index := localIndex locals name
@@ -327,7 +335,7 @@ def valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) 
     if headIndex >= 0 then
       -- `p.x.y`: field access on a local.
       let fields := Text.split (Text.drop (dot + 1) name) "."
-      List.foldl (fun acc field => app (fieldAccessor ctx pos field) [acc]) (node "var" [n headIndex]) fields
+      List.foldl (fun acc pair => app (fieldAccessor ctx pos (snd pair) (fst pair)) [acc]) (node "var" [n headIndex]) (List.mapIndexed (fun i f => (i, f)) fields)
     else
       match Names.lookup ctx.names name ctx.scope Entry.isValue true with
       | some (fqn, e) => coreOfEntry ctx pos fqn e
@@ -545,7 +553,7 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.record base fields pos => record ctx base fields pos locals
   -- Checked (D95), then removed before hashing by `unnote`.
   | Expr.ann x t => node "ann" [tyCore ctx.names ctx.scope [] t, go x]
-  | Expr.proj x field pos => app (fieldAccessor ctx pos field) [go x]
+  | Expr.proj x field pos => app (fieldAccessor ctx pos field 0) [go x]
   | Expr.note text x => node "note" [s text, go x]
   | Expr.spelled text x => node "spelled" [s text, go x]
 
@@ -593,6 +601,19 @@ def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Te
     match unnote named with
     | (core, notes, spellings) => (core, List.reverse names, notes, spellings, unmark named)
 
+/--
+  Replaces each `(pick …)` by the accessor the checker chose for its key; one it did not choose
+  (types off, or a receiver of unknown type) is the ambiguity it was.
+-/
+def unpick (chosen : Map Text Sexp) (form : Sexp) : {Throw Text} Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "pick" :: Sexp.str field :: Sexp.str key :: Sexp.str owners :: _) =>
+    match Map.lookup key chosen with
+    | some accessor => accessor
+    | none => throw (key ++ ": ambiguous field " ++ field ++ ": " ++ owners ++ " (annotate the receiver's type)")
+  | Sexp.list items => Sexp.list (List.map (fun x => unpick chosen x) items)
+  | _ => form
+
 /-- Removes comments and number spellings, keeping ascriptions: the Core the checker reads (D95). -/
 def unmark (form : Sexp) : Sexp :=
   match form with
@@ -616,6 +637,8 @@ def unnote (form : Sexp) : (Sexp, List (Int, Text), List (Int, Text)) :=
     | Sexp.list [Sexp.sym "spelled", Sexp.str text, inner] => go inner count acc ((count, text) :: spellings)
     | Sexp.list [Sexp.sym "ann", _, inner] => go inner count acc spellings
     | Sexp.list [Sexp.sym "annlocal", _, inner] => go inner count acc spellings
+    -- A pick becomes one accessor reference, one list node, before the Core is stored.
+    | Sexp.list (Sexp.sym "pick" :: _) => (x, count + 1, acc, spellings)
     | Sexp.list items =>
       let rec each rest out c a sp :=
         match rest with
