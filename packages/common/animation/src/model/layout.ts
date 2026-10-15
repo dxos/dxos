@@ -6,13 +6,24 @@ import { type Path } from '../path.ts';
 import { type Random, createRandom } from '../random.ts';
 import { type Graph, NODE_RADIUS, type Vec2, getNetwork, getNode } from './graph.ts';
 
-const GAP = 60;
-const PADDING = 80;
+/** Device networks breathe; server networks pack tight. */
+const SPACING = {
+  devices: { gap: 60, padding: 80 },
+  servers: { gap: 16, padding: 30 },
+  cloud: { gap: 16, padding: 30 },
+} as const;
+const ROOT_GAP = 60;
 const MIN_STEP = 16;
 const MAX_STEPS = 20_000;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 export type PackItem = { key: string; radius: number; at?: Vec2; near?: string };
+
+export type PackOptions = {
+  gap?: number;
+  /** Scatters free items across a band this wide outside the pinned items before packing. */
+  spread?: number;
+};
 
 type Placed = { x: number; y: number; r: number };
 
@@ -23,7 +34,7 @@ type Placed = { x: number; y: number; r: number };
 export const pack = (
   items: PackItem[],
   random: Random,
-  gap = GAP,
+  { gap = ROOT_GAP, spread }: PackOptions = {},
 ): { positions: Record<string, Vec2>; radius: number } => {
   const placed: Placed[] = [];
   const positions: Record<string, Vec2> = {};
@@ -40,6 +51,7 @@ export const pack = (
     }
   }
 
+  const inner = placed.reduce((max, p) => Math.max(max, Math.hypot(p.x, p.y) + p.r), 0);
   const cursors = new Map<string, number>();
   const queue = items.filter((item) => !item.at).sort((a, b) => b.radius - a.radius || a.key.localeCompare(b.key));
   while (queue.length > 0) {
@@ -56,7 +68,14 @@ export const pack = (
     if (!item) {
       break;
     }
-    const origin = (item.near !== undefined ? positions[item.near] : undefined) ?? [0, 0];
+    const scatter = (): Vec2 => {
+      const angle = random.next() * Math.PI * 2;
+      const distance = inner + gap + item.radius + random.next() * (spread ?? 0);
+      return [Math.cos(angle) * distance, Math.sin(angle) * distance];
+    };
+    const origin =
+      (item.near !== undefined ? positions[item.near] : undefined) ??
+      (spread !== undefined && spread > 0 ? scatter() : [0, 0]);
     const originKey = `${origin[0]},${origin[1]}`;
     const phase = random.next() * Math.PI * 2;
     // The step scales with the circles involved so the spiral reaches large neighbours in few steps.
@@ -87,10 +106,35 @@ export const pack = (
   return { positions, radius };
 };
 
+/** The `count` hexagonal-lattice points nearest the centre: the densest packing for equal circles. */
+export const hexPack = (count: number, radius: number, gap: number): Vec2[] => {
+  const pitch = 2 * radius + gap;
+  const rings = Math.ceil(Math.sqrt(count)) + 1;
+  const points: Vec2[] = [];
+  for (let row = -rings; row <= rings; row++) {
+    for (let column = -rings; column <= rings; column++) {
+      points.push([(column + row / 2) * pitch, ((row * Math.sqrt(3)) / 2) * pitch]);
+    }
+  }
+  return points
+    .sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]) || a[1] - b[1] || a[0] - b[0])
+    .slice(0, count);
+};
+
 /** Places every network and node: children are packed inside their parent, roots around the origin. */
-export const layout = (graph: Graph, seed: number): Graph => {
+export const layout = (graph: Graph, seed: number, options: PackOptions = {}): Graph => {
   const random = createRandom(seed).fork('layout');
   const local: Record<Path, Record<string, Vec2>> = {};
+  const hex = (items: PackItem[], gap: number): { positions: Record<string, Vec2>; radius: number } => {
+    const itemRadius = items[0]?.radius ?? 0;
+    const points = hexPack(items.length, itemRadius, gap);
+    const positions: Record<string, Vec2> = {};
+    items.forEach((item, index) => {
+      positions[item.key] = points[index] ?? [0, 0];
+    });
+    const radius = points.reduce((max, [x, y]) => Math.max(max, Math.hypot(x, y) + itemRadius), 0);
+    return { positions, radius };
+  };
 
   const size = (path: Path): number => {
     const network = getNetwork(graph, path);
@@ -106,9 +150,14 @@ export const layout = (graph: Graph, seed: number): Graph => {
         };
       }),
     ];
-    const { positions, radius } = pack(items, random.fork(path));
+    const spacing = SPACING[network.kind];
+    const gap = network.gap ?? spacing.gap;
+    const radii = new Set(items.map((item) => item.radius));
+    const uniform =
+      network.networks.length === 0 && items.length > 1 && radii.size === 1 && items.every((item) => !item.at);
+    const { positions, radius } = uniform ? hex(items, gap) : pack(items, random.fork(path), { gap });
     local[path] = positions;
-    network.radius = Math.max(network.radius, radius + PADDING);
+    network.radius = Math.max(network.radius, radius + (network.padding ?? spacing.padding));
     return network.radius;
   };
 
@@ -118,6 +167,7 @@ export const layout = (graph: Graph, seed: number): Graph => {
       return { key: path, radius: size(path), at: network.at, near: network.near };
     }),
     random.fork('roots'),
+    { gap: options.gap ?? ROOT_GAP, spread: options.spread },
   );
 
   const place = (path: Path, center: Vec2): void => {

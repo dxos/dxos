@@ -45,6 +45,8 @@ export const expand = (template: NetworkTemplate, seed: number): Graph => {
       radius: spec.layout?.radius ?? 0,
       at: spec.layout?.at,
       near: spec.layout?.near,
+      gap: spec.layout?.gap,
+      padding: spec.layout?.padding,
     };
     graph.networks[path] = network;
     if (parent) {

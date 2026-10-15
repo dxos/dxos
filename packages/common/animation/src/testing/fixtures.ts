@@ -32,10 +32,11 @@ export const CENTRALIZED_TEMPLATE: NetworkTemplate = {
       layout: { near: 'cloud' },
       nodes: [{ id: 'laptop', type: 'laptop', props: { app: 'editor' } }],
     },
-    ...sites(16),
+    ...sites(32),
   ],
   templates: { region: REGION },
   links: [{ rule: 'cloud', scope: '*', ratio: 1 }],
+  layout: { gap: 500, spread: 9000 },
 };
 
 export const CENTRALIZED_FLOW = `flow C-1: Centralized
@@ -85,13 +86,14 @@ export const DECENTRALIZED_TEMPLATE: NetworkTemplate = {
       layout: { near: 'home' },
       generate: { nodes: { type: index % 2 === 0 ? 'phone' : 'laptop', count: [1, 3] } },
     })),
-    ...sites(10),
+    ...sites(20),
   ],
   templates: { region: REGION },
   links: [
     { rule: 'nearby', k: 2, scope: 'home, local-*, site-*' },
     { rule: 'cloud', scope: '*', ratio: 0.6 },
   ],
+  layout: { gap: 400, spread: 7000 },
 };
 
 export const DECENTRALIZED_FLOW = `flow D-1: Decentralized

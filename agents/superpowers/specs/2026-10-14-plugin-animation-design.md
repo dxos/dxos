@@ -121,7 +121,8 @@ cloud, `ring-*` matches by name, and commas separate alternatives (`home, local-
 
 A layout pass places generated networks. It packs child networks inside their parent and scatters
 outer networks around the cloud without overlaps. `layout.at` pins one network in place, and
-`layout.near` places a network at the free spot nearest a named sibling.
+`layout.near` places a network at the free spot nearest a named sibling. Server-only networks pack on a hexagonal grid with tighter spacing than device networks, and a template-level
+`layout: { gap, spread }` scatters the outer networks across a band around the cloud.
 
 ### Node type registry
 

@@ -41,7 +41,7 @@ Decentralized animations. Execution: native, per user ("go as far as you can").
 
 ### Follow-ups (deferred minors and observations)
 
-- [ ] **Constellation spacing** — root networks pack tightly against the cloud rim; add a root-level gap or `spread` so outer networks read as a constellation.
+- [x] **Constellation spacing** — template `layout: { gap, spread }` scatters root networks; server-only networks pack on a hex grid; fixtures have 2× outer networks.
 - [ ] **Latest zero-length caption wins** — several zero-length captions show the first, not the last.
 - [ ] **Diagnostic.line** — zero-based while the message says line+1; document or make one-based.
 - [ ] **Reject tab indentation** with a clear message.

@@ -40,8 +40,17 @@ export interface NetworkSpec {
       readonly depth: number;
     };
   };
-  /** `at` is relative to the parent's centre; `near` places the network beside a sibling; `radius` is a minimum. */
-  readonly layout?: { readonly at?: readonly [number, number]; readonly near?: string; readonly radius?: number };
+  /**
+   * `at` is relative to the parent's centre; `near` places the network beside a sibling; `radius` is a minimum;
+   * `gap` and `padding` space the network's children (defaults are tighter for servers than for devices).
+   */
+  readonly layout?: {
+    readonly at?: readonly [number, number];
+    readonly near?: string;
+    readonly radius?: number;
+    readonly gap?: number;
+    readonly padding?: number;
+  };
 }
 
 export const NetworkSpec: Schema.Codec<NetworkSpec> = Schema.Struct({
@@ -67,6 +76,8 @@ export const NetworkSpec: Schema.Codec<NetworkSpec> = Schema.Struct({
       at: Schema.optional(Point),
       near: Schema.optional(Schema.String),
       radius: Schema.optional(Schema.Number),
+      gap: Schema.optional(Schema.Number),
+      padding: Schema.optional(Schema.Number),
     }),
   ),
 });
@@ -90,5 +101,9 @@ export const NetworkTemplate = Schema.Struct({
   networks: Schema.Array(NetworkSpec),
   templates: Schema.optional(Schema.Record(Schema.String, NetworkSpec)),
   links: Schema.optional(Schema.Array(LinkSpec)),
+  /** Top-level placement: `gap` between root networks; `spread` scatters them across a band this wide around pinned ones. */
+  layout: Schema.optional(
+    Schema.Struct({ gap: Schema.optional(Schema.Number), spread: Schema.optional(Schema.Number) }),
+  ),
 });
 export type NetworkTemplate = Schema.Schema.Type<typeof NetworkTemplate>;

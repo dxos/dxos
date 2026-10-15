@@ -32,6 +32,8 @@ export type GraphNetwork = {
   radius: number;
   at?: Vec2;
   near?: string;
+  gap?: number;
+  padding?: number;
 };
 
 /** A link joins two networks; packets cross it from rim to rim. */

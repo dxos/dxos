@@ -10,4 +10,4 @@ import { type NetworkTemplate } from './template.ts';
 
 /** Expands, lays out and links a template. */
 export const buildGraph = (template: NetworkTemplate, seed: number): Graph =>
-  resolveLinks(layout(expand(template, seed), seed), template.links ?? [], seed);
+  resolveLinks(layout(expand(template, seed), seed, template.layout), template.links ?? [], seed);

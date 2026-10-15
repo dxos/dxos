@@ -104,3 +104,40 @@ describe('layout', () => {
     ).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe('density and spread', () => {
+  const servers = (kind: 'servers' | 'devices'): NetworkTemplate => ({
+    networks: [{ id: 'n', kind, generate: { nodes: { type: 'server', count: [40, 40] } } }],
+  });
+
+  test('server networks pack tighter than device networks', ({ expect }) => {
+    const dense = getNetwork(buildGraph(servers('servers'), 1), 'n').radius;
+    const loose = getNetwork(buildGraph(servers('devices'), 1), 'n').radius;
+    expect(dense).toBeLessThan(loose * 0.85);
+  });
+
+  test('spread scatters root networks away from the cloud and each other', ({ expect }) => {
+    const sites = Array.from({ length: 12 }, (_, index) => ({
+      id: `site-${index + 1}`,
+      kind: 'devices' as const,
+      nodes: [{ id: 'p', type: 'phone' as const }],
+    }));
+    const cloud = {
+      id: 'cloud',
+      kind: 'cloud' as const,
+      layout: { at: [0, 0] as const },
+      generate: { nodes: { type: 'server' as const, count: [30, 30] as const } },
+    };
+    const packed = buildGraph({ networks: [cloud, ...sites] }, 2);
+    const spread = buildGraph({ networks: [cloud, ...sites], layout: { spread: 8000, gap: 400 } }, 2);
+    const mean = (graph: Graph) =>
+      sites.reduce((sum, site) => sum + distance(getNetwork(graph, site.id).center, [0, 0]), 0) / sites.length;
+    expect(mean(spread)).toBeGreaterThan(mean(packed) + 2000);
+    const roots = spread.roots.map((path) => getNetwork(spread, path));
+    roots.forEach((a, i) =>
+      roots
+        .slice(i + 1)
+        .forEach((b) => expect(distance(a.center, b.center)).toBeGreaterThanOrEqual(a.radius + b.radius + 400)),
+    );
+  });
+});
