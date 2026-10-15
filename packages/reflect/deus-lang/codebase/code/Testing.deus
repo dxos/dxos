@@ -15,7 +15,7 @@ test Testing.Spec.generatorIsADependency := inStore (fun dir =>
   let ns := updated
     dir
     Map.empty
-    (Spec.lib ++ "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always\n")
+    (Testing.Spec.lib ++ "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always\n")
   refersTo dir ns "T.seven" "T.always")
 
 /-- R-5: a case that fails a hypothesis is skipped, so the conclusion's division never sees 0. -/
@@ -48,7 +48,7 @@ test Testing.Spec.vacuousTheoremFails := startsWith
 
 /-- The verdict of the theorem `name` in `source`, added to a fresh store and checked. -/
 def Testing.Spec.verdict (source : Text) (name : Text) : Text := storeText (fun dir =>
-  let ns := updated dir Map.empty (Spec.lib ++ source)
+  let ns := updated dir Map.empty (Testing.Spec.lib ++ source)
   match Map.lookup name ns with
   | Option.some (Entry.theorem h) =>
       match lemmaVerdict dir ns h with

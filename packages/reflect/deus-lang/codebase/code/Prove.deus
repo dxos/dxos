@@ -55,7 +55,7 @@ def Prove.boolSym (b : Bool) : Sym := if b then trueSym else falseSym
 def Prove.canonical (s : Sym) : Sym :=
   match linear s with
   | (k, terms) =>
-      let collected := foldl (fun m t => update (key (fst t)) (fun old =>
+      let collected := foldl (fun m t => Map.update (key (fst t)) (fun old =>
         match old with
         | Option.some (atom, c) => (atom, c + snd t)
         | Option.none => (fst t, snd t)) m) Map.empty terms

@@ -817,6 +817,21 @@ inductive Verdict where
   | fail (reason : Text)
   | unchecked
 
+/-
+  The codebase as an ability (D137): a snippet `deus eval` runs can read and change the codebase
+  it runs against, so an agent scripts a change in DEUS instead of chaining CLI calls.
+  `Cli.withWorkspace` handles it.
+-/
+/-- `names prefix` lists the names that start with `prefix`; `view name` is a name's source as
+  `deus view` prints it; `update source` adds or replaces the definitions in `source`, as
+  `deus update` does; `run argv` runs any `deus` command, such as `["task", "set", "3f2a", "--state", "done"]`.
+  Each operation sees the codebase as the ones before it left it. -/
+ability Workspace @"urn:deus:workspace:Workspace" where
+  names : Text -> List Text
+  view : Text -> Text
+  update : Text -> Unit
+  run : List Text -> Unit
+
 /-- The state of one simulated run. -/
 structure World where
   files : Ref (Map Text Text)

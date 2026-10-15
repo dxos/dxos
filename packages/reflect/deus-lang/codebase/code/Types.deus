@@ -511,7 +511,7 @@ def Types.rowArgument (text : Text) (tail : Option Int) (seen : Ref (Map Text Te
 def Types.rowCounts (r : TRow) (acc : Map Int Int) : Map Int Int :=
   match r with
   | TRow.extend l rest => Types.rowCounts rest (rowVarCounts l acc)
-  | TRow.var id => update id (fun old => getOr old 0 + 1) acc
+  | TRow.var id => Map.update id (fun old => getOr old 0 + 1) acc
   | TRow.empty => acc
 
 def Types.rowFromSexp (u : Unifier) (effs : List Sexp) (vars : Ref (Map Text TType)) (rowVars : Ref (Map Text TRow)) (params : List TType) (openArrows : Bool) : TRow :=
