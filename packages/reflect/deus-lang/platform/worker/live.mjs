@@ -17,7 +17,7 @@
 import { addressOfFolder } from './address.mjs';
 import * as runtime from './gen/deus-runtime.mjs';
 import * as explorer from './gen/explorer-live.js';
-import { lookup, parseSexp } from './packs.mjs';
+import { lookupMany, parseSexp } from './packs.mjs';
 import { HttpError, json, listAll, readHead } from './remote.mjs';
 
 const ROOT = '/codebase';
@@ -27,8 +27,6 @@ const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
 const PAGE = /^(_[A-Za-z][A-Za-z0-9_.]{0,99}|[0-9a-f]{64})\.json$/;
 /** Passes a run may take before it gives up: each one fetches everything the last one missed. */
 const MAX_PASSES = 30;
-/** Pack lookups in flight at once while a pass's misses are fetched. */
-const PARALLEL = 64;
 
 /** `/v1/<project>/live/…`. */
 export const live = async (request, env, ctx, project, rest) => {
@@ -215,17 +213,20 @@ const run = async (files, body) => {
   throw new HttpError(503, 'the explorer kept reading new objects; try again');
 };
 
-/** Fetches pack entries (`o<hash>` objects, `m<hash>` metadata), `PARALLEL` at a time; an absent one is kept as null. */
+/** Fetches pack entries (`o<hash>` objects, `m<hash>` metadata) in one batch; an absent one is kept as null. */
 const fetchAll = async (files, keys) => {
-  const queue = keys.filter((key) => !files.texts.has(key));
-  const worker = async () => {
-    while (queue.length > 0) {
-      const key = queue.pop();
-      const text = await lookup(files.bucket, files.project, key.slice(1), key[0] === 'o' ? 1 : 2);
-      files.texts.set(key, text ?? null);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(PARALLEL, queue.length) }, worker));
+  const todo = [...new Set(keys)].filter((key) => !files.texts.has(key));
+  if (todo.length === 0) {
+    return;
+  }
+  const found = await lookupMany(
+    files.bucket,
+    files.project,
+    todo.map((key) => [key.slice(1), key[0] === 'o' ? 1 : 2]),
+  );
+  for (const key of todo) {
+    files.texts.set(key, found.get(`${key[0] === 'o' ? 1 : 2}:${key.slice(1)}`) ?? null);
+  }
 };
 
 /**

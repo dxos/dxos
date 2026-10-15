@@ -421,6 +421,80 @@ export const lookup = async (bucket, project, id, kind) => {
   return found.find((text) => text !== undefined);
 };
 
+/** Lines of one pack closer than this are read with one ranged read, the bytes between them discarded. */
+const GAP = 256 * 1024;
+
+/** Ranged reads in flight at once; a Worker keeps at most six connections open anyway. */
+const SPANS_IN_FLIGHT = 6;
+
+/**
+ * `lookup` for many (`id`, `kind`) pairs at once, as a Map from `kind:id` to text (absent when no pack
+ * has it). Lines the combined index places are read pack by pack, nearby lines in one ranged read, so
+ * thousands of objects cost a few hundred reads; the rest go through `lookup`.
+ */
+export const lookupMany = async (bucket, project, wanted) => {
+  const found = new Map();
+  const index = await combined(bucket, project);
+  const byPack = new Map();
+  const rest = [];
+  for (const [id, kind] of wanted) {
+    const key = await keyOf(id);
+    let at = -1;
+    if (index) {
+      const low = key[0] === 0 ? 0 : index.fanout.getUint32((key[0] - 1) * 4);
+      at = search(index.records, low, index.fanout.getUint32(key[0] * 4) - 1, key, kind);
+    }
+    if (at < 0) {
+      rest.push([id, kind]);
+      continue;
+    }
+    const view = new DataView(index.records.buffer, index.records.byteOffset + at, RECORD);
+    const bundle = index.names[view.getUint32(32)];
+    const lines = byPack.get(bundle) ?? [];
+    lines.push({ id, kind, offset: view.getUint32(36), length: view.getUint32(40) });
+    byPack.set(bundle, lines);
+  }
+  const spans = [];
+  for (const [bundle, lines] of byPack) {
+    lines.sort((left, right) => left.offset - right.offset);
+    let span;
+    for (const line of lines) {
+      if (span && line.offset - span.end <= GAP) {
+        span.lines.push(line);
+        span.end = Math.max(span.end, line.offset + line.length);
+      } else {
+        span = { bundle, start: line.offset, end: line.offset + line.length, lines: [line] };
+        spans.push(span);
+      }
+    }
+  }
+  const decoder = new TextDecoder();
+  const readSpan = async (span) => {
+    const bytes = await bytesAt(bucket, `${project}/packs/${span.bundle}`, span.start, span.end - span.start);
+    for (const line of span.lines) {
+      const text = decoder.decode(bytes.subarray(line.offset - span.start, line.offset - span.start + line.length));
+      found.set(`${line.kind}:${line.id}`, text.slice(text.indexOf(' ', text.indexOf(' ') + 1) + 1));
+    }
+  };
+  const queue = [...spans];
+  await Promise.all(
+    Array.from({ length: Math.min(SPANS_IN_FLIGHT, queue.length) }, async () => {
+      while (queue.length > 0) {
+        await readSpan(queue.pop());
+      }
+    }),
+  );
+  await Promise.all(
+    rest.map(async ([id, kind]) => {
+      const text = await lookup(bucket, project, id, kind);
+      if (text !== undefined) {
+        found.set(`${kind}:${id}`, text);
+      }
+    }),
+  );
+  return found;
+};
+
 /** `/v1/<project>/objects/<id>` and `/v1/<project>/meta/<id>`: one object's canonical text. */
 export const objects = async (request, env, project, area, rest) => {
   const id = decodeURIComponent(rest.join('/'));
