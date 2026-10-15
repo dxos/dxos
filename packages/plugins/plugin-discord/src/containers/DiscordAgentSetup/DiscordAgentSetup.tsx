@@ -165,8 +165,9 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             },
             { spaceId },
           );
-      setError(error?.message);
       await refreshChannels();
+      // After the refresh, which would otherwise clear the bind's error.
+      setError(error?.message);
       setBusy(false);
     },
     [invokePromise, spaceId, applicationId, guildId, agent, refreshChannels],
