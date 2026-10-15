@@ -378,6 +378,10 @@ The pull fetches the bundles it has not seen in one `Remote.getAll`, which the W
 one `curl --parallel`: 10.0 s natively before. The rest of it is the import, mostly printing objects
 to check their hashes, which it now does once per object instead of twice.
 
+Packs (D180) arrived later as one GET each, which put a fresh native pull back at 30.3 s with about
+50 packs. `Remote.downloadAll` fetches them the same way, in one `curl --parallel`, and the pull
+is 7.3 s again; the packs alone take 1.3 s instead of 20.5 s.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
