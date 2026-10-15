@@ -53,6 +53,15 @@ api A-2: the tree
   - Features.render : List Feature -> (Text -> {e} Result Text (List (Text, Text))) -> {e} Text
 ```
 
+```mdl
+api A-3: Features definitions other namespaces use
+  signatures:
+  - Features.fact : List (Text, Text) -> Text -> Text
+  - Features.isOpenState : Text -> Bool
+  - Features.items : Text -> List Text
+  - Features.prop : Block -> Text -> Text
+```
+
 ## What a feature block must say
 
 A status outside the four is a mistake, not a fifth status. Every link must resolve: a definition by

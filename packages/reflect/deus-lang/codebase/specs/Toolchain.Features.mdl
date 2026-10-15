@@ -102,7 +102,7 @@ feature F-14: Specs in the codebase: requirements, APIs and laws checked by deus
   status: building
   parent: F-10
   specs: Compile.Spec | View.Spec | Coverage.Spec
-  defs: Cli.mdl | Spec.checkReq | Cli.coverage | Coverage.covers
+  defs: Cli.mdl | Spec.checkReq | Cli.coverage | Coverage.covers | Coverage.linked
   tasks: 908495a0 | 8d6df186 | 6a3b0ebe | a2da28e2 | 1ab6c044 | 2a2b87a2 | 0d7b0142
 ```
 
@@ -118,8 +118,9 @@ feature F-15: Export to git and restore from it
 feature F-16: Replication and the shared R2 remote
   status: building
   parent: F-10
-  defs: Replicate.push | Replicate.pull
-  tasks: e76e36b0 | f4afc2c0
+  specs: Replicate.Spec
+  defs: Replicate.push | Replicate.pull | Codebase.recordMetas | Codebase.mergeMetas
+  tasks: e76e36b0 | f4afc2c0 | 4c9147ce
 ```
 
 ```mdl

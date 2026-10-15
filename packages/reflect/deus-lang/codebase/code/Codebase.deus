@@ -8,12 +8,17 @@ structure Codebase.Causal where
   tasks : Text
   prior : Text
   threads : Text
+  metas : Text
 
 inductive Codebase.MergeResult where
   | upToDate
   | fastForward (head : Text)
   | merged (head : Text) (changed : List Text)
   | conflicts (names : List Text)
+
+/-- R-15: so is a new attribute. -/
+test Codebase.Spec.attributeChangeListed := inStore (fun dir => metaChanges dir (updated dir Map.empty "test A.t := true\n") "@[req \"A.R-1\"]\ntest A.t := true\n" ==
+  ["A.t"])
 
 test Codebase.Spec.builtinsAreNotDependencies := Codebase.dependencies (Sexp.node
   "term"
@@ -23,6 +28,9 @@ theorem Codebase.Spec.causalRoundTrip (c : Causal) : causalFromSexp (causalToSex
 
 /-- `A.f`, `B.g` calling it, and `C.h` calling `B.g`. -/
 def Codebase.Spec.chain : Text := "def A.f := \"one\"\ndef B.g := A.f\ndef C.h := B.g\n"
+
+/-- R-15: a new body is an update, listed as one, not as metadata. -/
+test Codebase.Spec.changedHashUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f := 1\n") "/-- Two. -/\ndef A.f := 2\n" == [])
 
 /-- R-12: source cannot cross layers, since code cannot name a test. -/
 test Codebase.Spec.codeCannotNameATest :=
@@ -37,6 +45,23 @@ test Codebase.Spec.codeMayNotDependOnTests := crossingsOf (Batch.mk
   []
   []) == ["A.f (code) -> T.t (tests)"]
 
+/-- A comment by `author` saying `note`. -/
+def Codebase.Spec.comment (author : Text) (note : Text) : Comment := Comment.mk author note "1" []
+
+/-- R-14: comments added on both sides to one thread are all kept, ours first. -/
+test Codebase.Spec.commentThreadsMergeAsUnions := inStore (fun dir => mergedThreads
+  dir
+  [("def:x", [Spec.comment "a" "one"])]
+  [("def:x", [Spec.comment "a" "one", Spec.comment "b" "two"])]
+  [("def:x", [Spec.comment "a" "one", Spec.comment "c" "three"])] == [("def:x", ["one", "two", "three"])])
+
+/-- R-14: a thread only one side has, or only one side changed, takes that side. -/
+test Codebase.Spec.commentThreadsTakeTheChangedSide := inStore (fun dir => mergedThreads
+  dir
+  [("def:x", [Spec.comment "a" "one"])]
+  [("def:x", [Spec.comment "a" "one"])]
+  [("def:x", [Spec.comment "a" "one", Spec.comment "c" "three"]), ("def:y", [Spec.comment "c" "four"])] == [("def:x", ["one", "three"]), ("def:y", ["four"])])
+
 /-- `source` as a batch, or the error compiling it. -/
 def Codebase.Spec.compiles (source : Text) : Result Text Batch := try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "off" [parseFile "t.deus" source])
 
@@ -45,15 +70,43 @@ def Codebase.Spec.crossingsOf (b : Batch) : List Text :=
   match Sim.run 7 (fun _ => layerCrossings "cb" b) with
   | (found, _) => found
 
+/-- R-17: a dependent outside the update follows the name it called. -/
+test Codebase.Spec.dependentFollowsTheName := inStore (fun dir =>
+  let v2 := updated
+    dir
+    (updated dir Map.empty "def A.f := \"one\"\ndef B.h x := A.f\n")
+    "def A.g := \"one\"\ndef A.f := A.g\n"
+  refersTo dir v2 "B.h" "A.f")
+
 /-- R-13: a dependent outside the update follows the changed definition. -/
 test Codebase.Spec.dependentsFollowAnUpdate := inStore (fun dir =>
   let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\n"
   refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
 
+/-- R-15: a new doc comment on an unchanged body is a metadata change. -/
+test Codebase.Spec.docChangeListed := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f := 1\n") "/-- One. -/\ndef A.f := 1\n" == ["A.f"])
+
+/-- `name`'s doc comment as the store holds it, or `""`. -/
+def Codebase.Spec.docOf (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} Text :=
+  match Map.lookup name ns with
+  | Option.some e =>
+      match metaField (Option.map (metaFor name) (readMeta dir (Entry.hash e))) "doc" with
+      | Option.some d => asText d
+      | Option.none => ""
+  | Option.none => ""
+
 /-- Names with dots in every position the tree splits at, from generated words. -/
 def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => [w, "A." ++ w, "A.B." ++ w, w ++ ".x", "." ++ w, w ++ "."]) words
 
+/-- A generator of names with dots in every position the tree splits at. -/
+def Codebase.Spec.dottedNames (seed : Int) : List Text := dotted (wordsOf seed)
+
 test Codebase.Spec.emptyNamespaceHash := inStore (fun dir => putNamespace dir Map.empty == "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595")
+
+/-- R-17: `A.g` takes over `A.f`'s old body, and so its hash; the new `A.f` still calls `A.g`, not itself. -/
+test Codebase.Spec.extractedBodyKeepsItsName := inStore (fun dir =>
+  let v2 := updated dir (updated dir Map.empty "def A.f := \"one\"\n") "def A.g := \"one\"\ndef A.f := A.g\n"
+  refersTo dir v2 "A.f" "A.g")
 
 /-- Two branches from one commit: `main` changes `a`, `side` changes `b`; then `side` merges into `main`. -/
 def Codebase.Spec.forked (sideChanges : Map Text Entry -> Map Text Entry) (mainChanges : Map Text Entry -> Map Text Entry) (dir : Text) : {IO, Throw Text} (MergeResult, Map Text Entry) :=
@@ -78,11 +131,19 @@ def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
   | (held, _) => held
 
 test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (headOf dir "main") ==
-  Causal.mk "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595" [] "init" "" "" "")
+  Causal.mk "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595" [] "init" "" "" "" "")
+
+/-- R-16: the second name, added later, leaves the first name's doc. -/
+test Codebase.Spec.laterAddKeepsOtherDoc := inStore (fun dir =>
+  let ns := updated dir (updated dir Map.empty "/-- One. -/\ndef A.f := 1\n") "/-- Two. -/\ndef B.g := 1\n"
+  Spec.docOf dir ns "A.f" == "One." && Spec.docOf dir ns "B.g" == "Two.")
 
 test Codebase.Spec.layersFollowTheTable := List.map
   (fun kind => (kind, mayDependOn (layerOf (Sexp.node kind []))))
   ["term", "cycle", "type", "ability", "spec", "test", "theorem", "ns", "causal", "tasks", "task"] == [("term", ["code"]), ("cycle", ["code"]), ("type", ["code"]), ("ability", ["code"]), ("spec", ["spec"]), ("test", ["code", "tests"]), ("theorem", ["code", "proofs"]), ("ns", ["code", "tests", "proofs", "history"]), ("causal", ["code", "tests", "proofs", "history"]), ("tasks", ["code", "tests", "proofs", "history"]), ("task", ["code", "tests", "proofs", "history"])]
+
+/-- R-15: printing renames locals, so a local's new name is not reported. -/
+test Codebase.Spec.localRenameUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f x := x\n") "def A.f y := y\n" == [])
 
 test Codebase.Spec.mergeFastForwards := inStore (fun dir =>
   let root := commit dir (Spec.namespaceOf ["a"]) "base"
@@ -119,10 +180,31 @@ def Codebase.Spec.merged (b : Task) (o : Task) (t : Task) : Result (List Text) (
   | Result.ok m => Result.ok (m.title, m.state, m.labels)
   | Result.err fields => Result.err fields
 
+/-- The threads `Comments.merge` gives for `base`, `ours` and `theirs`, each a map from subject to its comments. -/
+def Codebase.Spec.mergedThreads (dir : Text) (base : List (Text, List Comment)) (ours : List (Text, List Comment)) (theirs : List (Text, List Comment)) : {IO, Throw Text} List (Text, List Text) :=
+  let stored := fun threads => Map.fromList (List.map (fun pair => (fst pair, Codebase.put dir (threadToSexp (snd pair)))) threads)
+  let merged := Comments.merge dir (stored base) (stored ours) (stored theirs)
+  List.map
+    (fun pair => (fst pair, List.map (fun c => c.note) (Comments.read dir (snd pair))))
+    (Map.toList (Comments.snapshotOf dir (Causal.mk "" [] "" "" "" merged "")))
+
+/-- The names an update of `ns` from `source` changes only the metadata of. -/
+def Codebase.Spec.metaChanges (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} List Text :=
+  let b := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) "off" [parseFile "t.deus" source]
+  metadataChanged ns b.entries (fun h => readMeta dir h) (Map.fromList (Batch.metas b))
+
 /-- A namespace whose entries are terms named by the hash of their name. -/
 def Codebase.Spec.namespaceOf (names : List Text) : Map Text Entry := Map.fromList (List.map (fun n => (n, Entry.term (Text.sha256 n))) names)
 
-theorem Codebase.Spec.namespaceRoundTrip (words : List Text) : readsBack (Spec.namespaceOf (dotted words)) == true := by test 30
+theorem Codebase.Spec.namespaceRoundTrip (names : List Text) : readsBack (Spec.namespaceOf names) == true := by test 30 using dottedNames
+
+/-- R-16: updating the first name again changes its doc only. -/
+test Codebase.Spec.ownUpdateReplacesOwnDoc := inStore (fun dir =>
+  let ns := updated
+    dir
+    (updated dir (updated dir Map.empty "/-- One. -/\ndef A.f := 1\n") "/-- Two. -/\ndef B.g := 1\n")
+    "/-- Three. -/\ndef A.f := 1\n"
+  Spec.docOf dir ns "A.f" == "Three." && Spec.docOf dir ns "B.g" == "Two.")
 
 theorem Codebase.Spec.putNamesByHash (t : Text) (u : Text) : inStore (fun dir =>
     let form := Sexp.node "x" [Sexp.str t, Sexp.list [Sexp.sym "y", Sexp.str u]]
@@ -144,8 +226,27 @@ def Codebase.Spec.refersTo (dir : Text) (ns : Map Text Entry) (name : Text) (dep
       (Codebase.dependencies (getOr (readObject dir (Entry.hash e)) (Sexp.list [])))
   | _ => false
 
-theorem Codebase.Spec.snapshotIgnoresOrder (words : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf (dotted words)) ==
-    putNamespace dir (Spec.namespaceOf (reverse (dotted words)))) == true := by test 30
+/-- R-16: a second name whose own fields match leaves the file as it was, so replicas that saw the names in another order agree. -/
+test Codebase.Spec.sameFieldsKeepTheOwner := inStore (fun dir =>
+  let ns := updated dir (updated dir Map.empty "/-- One. -/\ndef A.f := 1\n") "/-- One. -/\ndef B.g := 1\n"
+  match Map.lookup "B.g" ns with
+  | Option.some e =>
+      match readMeta dir (Entry.hash e) with
+      | Option.some m => metaField (Option.some m) "owner" == Option.some (Sexp.str "A.f") && not (any (fun item => head item == "for") (Sexp.args m))
+      | Option.none => false
+  | Option.none => false)
+
+/-- R-15: the same source again changes nothing. -/
+test Codebase.Spec.sameMetadataUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "/-- One. -/\ndef A.f := 1\n") "/-- One. -/\ndef A.f := 1\n" ==
+  [])
+
+/-- R-16: two docs for one body, added together. -/
+test Codebase.Spec.sharedHashKeepsEachDoc := inStore (fun dir =>
+  let ns := updated dir Map.empty "/-- One. -/\ndef A.f := 1\n/-- Two. -/\ndef B.g := 1\n"
+  Spec.docOf dir ns "A.f" == "One." && Spec.docOf dir ns "B.g" == "Two.")
+
+theorem Codebase.Spec.snapshotIgnoresOrder (names : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf names) == putNamespace dir (Spec.namespaceOf (reverse names))) ==
+    true := by test 30 using dottedNames
 
 /-- A task with a title, a state and labels; every other field empty. -/
 def Codebase.Spec.task (title : Text) (state : TaskState) (labels : List Text) : Task := Task.mk "t1" title state 0 "" labels "" "" [] []
@@ -183,6 +284,15 @@ test Codebase.Spec.unchangedTextFollowsRehashedDependent := inStore (fun dir =>
   let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\ndef C.h := B.g\n"
   refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
 
+/-- R-16: a hash with one name stores no per-name entries. -/
+test Codebase.Spec.unsharedHasNoEntries := inStore (fun dir =>
+  let ns := updated dir Map.empty "/-- One. -/\ndef A.f := 1\n"
+  match Map.lookup "A.f" ns with
+  | Option.some e => Spec.docOf dir ns "A.f" == "One." && not (any
+      (fun item => head item == "for")
+      (getOr (Option.map Sexp.args (readMeta dir (Entry.hash e))) []))
+  | Option.none => false)
+
 /-- `source` compiled over `ns` and stored at `dir`, then propagated as `deus update` does: the new namespace. -/
 def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Map Text Entry :=
   let b := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) "off" [parseFile "t.deus" source]
@@ -192,7 +302,7 @@ def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {
     match Map.lookup (fst pair) ns with
     | Option.some old => if Entry.hash old != Entry.hash (snd pair) then Option.some (Entry.hash old, Entry.hash (snd pair)) else Option.none
     | Option.none => Option.none) b.entries)
-  fst (propagate dir next subst)
+  fst (propagate dir next subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) b.entries)))
 
 /-- Three hundred names at the root and three hundred under `N`: both nodes split into parts. -/
 def Codebase.Spec.wide : List Text := concatMap (fun i => ["name" ++ toText i, "N.name" ++ toText i]) (range 0 300)
@@ -201,6 +311,13 @@ test Codebase.Spec.wideNamespaceRoundTrip := readsBack (Spec.namespaceOf wide) &
   match readObject dir (putNamespace dir (Spec.namespaceOf wide)) with
   | Option.some (Sexp.list (_ :: Sexp.list (Sexp.sym "part" :: _ :: []) :: _)) => true
   | _ => false)
+
+/-- Up to four short words from a two-letter alphabet, so names collide and share prefixes. -/
+def Codebase.Spec.wordsOf (seed : Int) : List Text :=
+  let n := if seed < 0 then 0 - seed else seed
+  List.map
+    (fun i => Text.take (1 + n / (i * 3 + 1) % 3) (if n / (i + 1) % 2 == 0 then "aba" else "bab"))
+    (range 0 (n % 5))
 
 /-- Hashes of every object in the store. -/
 def Codebase.allObjects (dir : Text) : {IO} List Text := concatMap (fun shard => IO.listDir (dir ++ "/objects/" ++ shard)) (IO.listDir (dir ++ "/objects"))
@@ -212,6 +329,11 @@ def Codebase.ancestors (dir : Text) (h : Text) : {IO, Throw Text} Map Text Unit 
     | [] => seen
     | x :: rest => if Set.contains x seen then go rest seen else go (parentsOf dir x ++ rest) (Set.insert x seen)
   go [h] Map.empty
+
+/-- Writes the metadata files that differ from `metas`, without noting them for a commit; the hashes written. -/
+def Codebase.applyMetas (dir : Text) (metas : Map Text Sexp) : {IO} List Text := filterMap (fun pair => if readMeta dir (fst pair) == Option.some (snd pair) then Option.none else
+  writeMetaFile dir (fst pair) (snd pair)
+  Option.some (fst pair)) (Map.toList metas)
 
 def Codebase.branchHead (dir : Text) (branch : Text) : {IO} Option Text := Option.map trim (IO.readFile (dir ++ "/branches/" ++ branch))
 
@@ -227,18 +349,21 @@ def Codebase.causalFromSexp (form : Sexp) : Causal :=
     (first "tasks")
     (first "prior")
     (first "comments")
+    (first "metas")
 
-/-- A node without tasks, a prior record or comments prints as it did before those existed, so its hash is unchanged. -/
+/-- A node without tasks, a prior record, comments or metadata prints as it did before those existed, so its hash is unchanged. -/
 def Codebase.causalToSexp (c : Causal) : Sexp :=
   let tasks := if Text.isEmpty c.tasks then [] else [Sexp.node "tasks" [Sexp.str c.tasks]]
   let prior := if Text.isEmpty c.prior then [] else [Sexp.node "prior" [Sexp.str c.prior]]
   let comments := if Text.isEmpty c.threads then [] else [Sexp.node "comments" [Sexp.str c.threads]]
+  let metas := if Text.isEmpty (Causal.metas c) then [] else [Sexp.node "metas" [Sexp.str (Causal.metas c)]]
   Sexp.node
     "causal"
     ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++
       tasks ++
       prior ++
-      comments)
+      comments ++
+      metas)
 
 /-- The causal hashes a task links as changes. -/
 def Codebase.changeLinks (form : Sexp) : List Text :=
@@ -253,10 +378,11 @@ def Codebase.commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, T
   let parent := headOf dir branch
   let previous := readCausal dir parent
   let snapshot := putNamespace dir ns
-  if snapshot == previous.snapshot then parent else
+  let metas := recordMetas dir ns (Causal.metas previous)
+  if snapshot == previous.snapshot && metas == Causal.metas previous then parent else
     let c := Codebase.put
       dir
-      (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads))
+      (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads metas))
     setBranch dir branch c
     c
 
@@ -268,7 +394,14 @@ def Codebase.commitComments (dir : Text) (comments : Text) (message : Text) : {I
   if comments == previous.threads then parent else
     let c := Codebase.put
       dir
-      (causalToSexp (Causal.mk previous.snapshot [parent] message previous.tasks "" comments))
+      (causalToSexp (Causal.mk
+        previous.snapshot
+        [parent]
+        message
+        previous.tasks
+        ""
+        comments
+        (Causal.metas previous)))
     setBranch dir branch c
     c
 
@@ -284,7 +417,8 @@ def Codebase.commitPrior (dir : Text) (record : Sexp) (message : Text) : {IO, Th
     message
     previous.tasks
     (Codebase.put dir record)
-    previous.threads))
+    previous.threads
+    (Causal.metas previous)))
   setBranch dir branch c
   c
 
@@ -296,7 +430,7 @@ def Codebase.commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Thr
   if tasks == previous.tasks then parent else
     let c := Codebase.put
       dir
-      (causalToSexp (Causal.mk previous.snapshot [parent] message tasks "" previous.threads))
+      (causalToSexp (Causal.mk previous.snapshot [parent] message tasks "" previous.threads (Causal.metas previous)))
     setBranch dir branch c
     c
 
@@ -356,6 +490,9 @@ def Codebase.diffNamespaces (dir : Text) (a : Text) (b : Text) : {IO, Throw Text
     match pair with
     | (name, before, after) => if before == after then Option.none else Option.some (name, before, after)) (Map.toList joined)
 
+/-- The name a `(for name …)` entry is for. -/
+def Codebase.forName (entry : Sexp) : Text := getOr (Option.map asText (head? (Sexp.args entry))) ""
+
 /-- The least general type that both `a` and `b` are instances of: where they differ, a type
   variable, the same one for the same pair of differences. -/
 def Codebase.generalize (a : Sexp) (b : Sexp) (pairs : Ref (List ((Sexp, Sexp), Sexp))) : Sexp :=
@@ -372,6 +509,9 @@ def Codebase.generalize (a : Sexp) (b : Sexp) (pairs : Ref (List ((Sexp, Sexp), 
         (fun pair => fst pair == snd pair || isNode (fst pair) && isNode (snd pair))
         (zip xs ys) then Sexp.list (Sexp.sym x :: List.map (fun pair => Codebase.generalize (fst pair) (snd pair) pairs) (zip xs ys)) else fresh ()
     | _ => fresh ()
+
+/-- `items` grouped by `key`, in key order. -/
+def Codebase.groupBy (key : a -> Text) (items : List a) : List (Text, List a) := Map.toList (foldl (fun m x => Map.insert (key x) (x :: getOr (Map.lookup (key x) m) []) m) Map.empty items)
 
 def Codebase.headOf (dir : Text) (branch : Text) : {IO, Throw Text} Text :=
   match branchHead dir branch with
@@ -395,7 +535,7 @@ def Codebase.init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then
   IO.mkdirp (dir ++ "/provenance")
   IO.mkdirp (dir ++ "/cache")
   let snapshot := putNamespace dir Map.empty
-  let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" "" "" ""))
+  let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" "" "" "" ""))
   setBranch dir "main" c
   IO.writeFile (dir ++ "/HEAD") "main\n"
 
@@ -448,6 +588,10 @@ def Codebase.merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
   let ours := headOf dir branch
   let theirs := headOf dir other
   if ours == theirs || Set.contains theirs (ancestors dir ours) then MergeResult.upToDate else if Set.contains ours (ancestors dir theirs) then
+    applyMetas dir (mergeMetas
+      (readMetas dir (Causal.metas (readCausal dir ours)))
+      (readMetas dir (Causal.metas (readCausal dir ours)))
+      (readMetas dir (Causal.metas (readCausal dir theirs))))
     setBranch dir branch theirs
     MergeResult.fastForward theirs
   else
@@ -492,13 +636,23 @@ def Codebase.merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
     match (foldl step (oursNs, [], []) names, tasks) with
     | ((ns, changed, []), merged, []) =>
         let snapshot := putNamespace dir ns
+        let baseMetas :=
+          match base with
+          | Option.some b => readMetas dir (Causal.metas b)
+          | Option.none => Map.empty
+        let metas := mergeMetas
+          baseMetas
+          (readMetas dir (Causal.metas oursNode))
+          (readMetas dir (Causal.metas theirsNode))
+        applyMetas dir metas
         let c := Codebase.put dir (causalToSexp (Causal.mk
           snapshot
           [ours, theirs]
           ("merge " ++ other ++ " into " ++ branch)
           (Tasks.putSnapshot dir merged)
           ""
-          comments))
+          comments
+          (putMetas dir "" (Map.toList metas))))
         setBranch dir branch c
         MergeResult.merged c (reverse changed)
     | ((_, _, conflicts), _, taskConflicts) => MergeResult.conflicts (reverse conflicts ++ taskConflicts)
@@ -515,6 +669,37 @@ def Codebase.mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Opt
 /-- Metadata for a hash that already has some: names with different annotations can share a hash,
   since Core has no types, so the stored scheme becomes one that fits every name (D116). -/
 def Codebase.mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
+  let merged := mergeScheme old new
+  -- Another name owned the file: its fields move to a `(for …)` entry, and the new owner's leaves.
+  match (old, Option.map asText (metaField (Option.some new) "owner")) with
+  | (Option.some o, Option.some name) =>
+      let previous := getOr (Option.map asText (metaField old "owner")) name
+      if previous != name && ownFields o == ownFields new then
+        -- The owner's fields are this name's too: keep the file, so the order names arrive in does not matter.
+        Sexp.list (Sexp.sym "meta" :: List.filter
+          (fun item => not (head item == "for" && forName item == name))
+          (Sexp.args (mergeScheme (Option.some new) o)))
+      else
+        let others := List.filter
+          (fun item => head item == "for" && forName item != name && forName item != previous)
+          (Sexp.args o)
+        let moved := if previous == name then [] else [Sexp.node "for" (Sexp.str previous :: ownFields o)]
+        Sexp.list (Sexp.asList merged ++ others ++ moved)
+  | _ => merged
+
+/-- Three-way merge of metadata snapshots, hash by hash: a side that changed wins, and two changes merge as `mergeMeta` does. -/
+def Codebase.mergeMetas (base : Map Text Sexp) (ours : Map Text Sexp) (theirs : Map Text Sexp) : Map Text Sexp := Map.fromList (filterMap (fun k =>
+  let b := Map.lookup k base
+  let o := Map.lookup k ours
+  let t := Map.lookup k theirs
+  match (o, t) with
+  | (Option.some x, Option.some y) => Option.some (k, if x == y || b == t then x else if b == o then y else mergeMeta (Option.some x) y)
+  | (Option.some x, Option.none) => Option.some (k, x)
+  | (Option.none, Option.some y) => Option.some (k, y)
+  | (Option.none, Option.none) => Option.none) (Set.toList (Set.fromList (Map.keys ours ++ Map.keys theirs))))
+
+/-- `new`, with its scheme generalized over `old`'s when they differ (D116). -/
+def Codebase.mergeScheme (old : Option Sexp) (new : Sexp) : Sexp :=
   match (metaField old "scheme", metaField (Option.some new) "scheme") with
   | (Option.some a, Option.some b) => if a == b then new else
       let general := generalize a b (Ref.new [])
@@ -529,6 +714,17 @@ def Codebase.metaField (form : Option Sexp) (key : Text) : Option Sexp :=
   | Option.none => Option.none
   | Option.some m => Option.bind (List.find (fun x => head x == key) (Sexp.args m)) (fun x => head? (Sexp.args x))
 
+/-- `meta` as `name` wrote it: the shared scheme with `name`'s own fields, from its `(for name …)` entry when another name owns the file. -/
+def Codebase.metaFor (name : Text) (meta : Sexp) : Sexp :=
+  let shared := List.filter (fun item => head item != "for") (Sexp.args meta)
+  match List.find (fun item => head item == "for" && forName item == name) (Sexp.args meta) with
+  | Option.some entry => Sexp.list (Sexp.sym "meta" :: List.filter (fun item => head item == "scheme") shared ++
+      List.drop 1 (Sexp.args entry))
+  | Option.none => Sexp.list (Sexp.sym "meta" :: shared)
+
+/-- The character of `h` that picks its node at `level` (0 or 1) of a metadata snapshot. -/
+def Codebase.metaKey (h : Text) (level : Int) : Text := Text.slice h level (level + 1)
+
 def Codebase.metaList (form : Option Sexp) (key : Text) : List Sexp :=
   match form with
   | Option.none => []
@@ -536,6 +732,15 @@ def Codebase.metaList (form : Option Sexp) (key : Text) : List Sexp :=
       match List.find (fun x => head x == key) (Sexp.args m) with
       | Option.some x => Sexp.args x
       | Option.none => []
+
+/-- A snapshot node's children by key; empty for `""`. -/
+def Codebase.metaSubs (dir : Text) (h : Text) : {IO, Throw Text} Map Text Text := if Text.isEmpty h then Map.empty else
+  match readObject dir h with
+  | Option.some form => Map.fromList (filterMap (fun item =>
+      match item with
+      | Sexp.list (Sexp.sym "sub" :: Sexp.str k :: Sexp.str child :: []) => Option.some (k, child)
+      | _ => Option.none) (Sexp.args form))
+  | Option.none => Throw.throw ("missing metadata snapshot #" ++ h)
 
 /-- Rewrites history so every snapshot is a namespace tree (D72). Each causal node is rebuilt after
   its parents and the changes its tasks link, so links follow the rewrite; branches and provenance
@@ -563,7 +768,8 @@ def Codebase.migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
           c.message
           tasks
           c.prior
-          c.threads))
+          c.threads
+          (Causal.metas c)))
         MutMap.set memo h moved
         moved
   let moves := filterMap (fun branch =>
@@ -663,6 +869,11 @@ def Codebase.objectCache : MutMap Text Sexp := MutMap.new ()
 
 def Codebase.objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
 
+/-- The fields of a metadata file that belong to its owner: all but the scheme, the owner and other names' entries. -/
+def Codebase.ownFields (meta : Sexp) : List Sexp := List.filter
+  (fun item => head item != "scheme" && head item != "owner" && head item != "for")
+  (Sexp.args meta)
+
 /-- The parents of a causal node that the store has. History a remote trimmed before D73 is
   shallow: its oldest nodes have parents nobody keeps, and they act as roots. -/
 def Codebase.parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text := List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents
@@ -672,6 +883,28 @@ def Codebase.put (dir : Text) (form : Sexp) : {IO} Text :=
   let h := Text.sha256 (Sexp.print form)
   writeObject dir h form
   h
+
+def Codebase.putMetaNode (dir : Text) (subs : Map Text Text) : {IO} Text := Codebase.put dir (Sexp.node
+  "metas"
+  (List.map
+    (fun pair => Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (snd pair)])
+    (Map.toList subs)))
+
+/-- A metadata snapshot `previous` with `changes` (hash, metadata) written over it; its root hash. -/
+def Codebase.putMetas (dir : Text) (previous : Text) (changes : List (Text, Sexp)) : {IO, Throw Text} Text := if List.isEmpty changes then previous else
+  -- Two levels of sixteen-way nodes over leaves: a change rewrites one leaf and its two parents.
+  putMetaNode dir (foldl (fun root group =>
+    let mid := metaSubs dir (getOr (Map.lookup (fst group) root) "")
+    let mid2 := foldl (fun m leafGroup =>
+      let old := getOr (Map.lookup (fst leafGroup) m) ""
+      let leaf := foldl
+        (fun l c => Map.insert (fst c) (snd c) l)
+        (if Text.isEmpty old then Map.empty else readMetas dir old)
+        (reverse (snd leafGroup))
+      Map.insert (fst leafGroup) (Codebase.put dir (Sexp.node
+        "metas"
+        (List.map (fun pair => Sexp.node "m" [Sexp.str (fst pair), snd pair]) (Map.toList leaf)))) m) mid (groupBy (fun c => metaKey (fst c) 1) (snd group))
+    Map.insert (fst group) (putMetaNode dir mid2) root) (metaSubs dir previous) (groupBy (fun c => metaKey (fst c) 0) changes))
 
 /-- Stores a namespace as a tree split at each name's first dot (D72): `List.map` is `map` in the
   `List` node, which its parent names by hash, and wide nodes split into parts. Changing one
@@ -712,6 +945,18 @@ def Codebase.readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
 
 def Codebase.readMeta (dir : Text) (h : Text) : {IO} Option Sexp := Option.map Sexp.read (IO.readFile (dir ++ "/meta/" ++ h))
 
+/-- A metadata snapshot's (hash, metadata) pairs; empty for `""`. -/
+def Codebase.readMetas (dir : Text) (root : Text) : {IO, Throw Text} Map Text Sexp :=
+  let rec go h acc :=
+    match readObject dir h with
+    | Option.none => Throw.throw ("missing metadata snapshot #" ++ h)
+    | Option.some form => foldl (fun m item =>
+        match item with
+        | Sexp.list (Sexp.sym "sub" :: Sexp.str _ :: Sexp.str child :: []) => go child m
+        | Sexp.list (Sexp.sym "m" :: Sexp.str k :: meta :: []) => Map.insert k meta m
+        | _ => m) acc (Sexp.args form)
+  if Text.isEmpty root then Map.empty else go root Map.empty
+
 /-- The names under a namespace node, flat (`List.map`); reads tree nodes and older flat snapshots alike. -/
 def Codebase.readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
   let rec go prefix node acc := foldl (fun m item =>
@@ -741,6 +986,19 @@ def Codebase.recordEntries (dir : Text) (h : Text) : {IO} List (Text, (Text, Tex
       | _ => Option.none) (Sexp.args form)
   | Option.none => []
 
+/-- The metadata snapshot after `previous`: the hashes written since the last commit, with their
+  files' current metadata (D134). A history without one starts it from every hash `ns` names. -/
+def Codebase.recordMetas (dir : Text) (ns : Map Text Entry) (previous : Text) : {IO, Throw Text} Text :=
+  let path := dir ++ "/metas.dirty"
+  let dirty :=
+    match IO.readFile path with
+    | Option.some text => List.filter (fun line => not (Text.isEmpty line)) (Text.split text "\n")
+    | Option.none => []
+  let hashes := dedup (sort (if Text.isEmpty previous then dirty ++ List.map (fun pair => Entry.hash (snd pair)) (Map.toList ns) else dirty))
+  let root := putMetas dir previous (filterMap (fun h => Option.map (fun m => (h, m)) (readMeta dir h)) hashes)
+  if IO.exists path then IO.remove path else ()
+  root
+
 /-- Replaces hashes throughout a form (used by update propagation). -/
 def Codebase.rewrite (form : Sexp) (subst : Map Text Text) : Sexp :=
   match form with
@@ -753,8 +1011,10 @@ def Codebase.rewrite (form : Sexp) (subst : Map Text Text) : Sexp :=
 
 def Codebase.setBranch (dir : Text) (branch : Text) (causal : Text) : {IO} Unit := IO.writeFile (dir ++ "/branches/" ++ branch) (causal ++ "\n")
 
-/-- The objects a history node points at besides its parents: its namespace, its tasks, its prior record, its comments. -/
-def Codebase.snapshotsOf (c : Causal) : List Text := List.filter (fun h => not (Text.isEmpty h)) [c.snapshot, c.tasks, c.prior, c.threads]
+/-- The objects a history node points at besides its parents: its namespace, its tasks, its prior record, its comments, its metadata. -/
+def Codebase.snapshotsOf (c : Causal) : List Text := List.filter
+  (fun h => not (Text.isEmpty h))
+  [c.snapshot, c.tasks, c.prior, c.threads, Causal.metas c]
 
 --
 -- Namespaces.
@@ -768,7 +1028,7 @@ def Codebase.splitName (name : Text) : Option (Text, Text) :=
 def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
   forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
   forEach
-    b.metas
+    (Batch.metas b)
     (fun pair => writeMeta dir (fst pair) (mergeMeta (readMeta dir (fst pair)) (snd pair)))
 
 --
@@ -776,7 +1036,12 @@ def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
 --
 def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && List.all (fun c => isAlpha c || isDigit c || c == '-' || c == '_' || c == '.') (utf8 name)
 
-def Codebase.writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
+/-- Writes `h`'s metadata and notes `h` for the next commit's metadata snapshot (`recordMetas`). -/
+def Codebase.writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
+  writeMetaFile dir h form
+  IO.appendFile (dir ++ "/metas.dirty") (h ++ "\n")
+
+def Codebase.writeMetaFile (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
 
 def Codebase.writeObject (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
   let path := objectPath dir h

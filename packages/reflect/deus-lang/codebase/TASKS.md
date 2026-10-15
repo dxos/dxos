@@ -31,26 +31,6 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Metadata changes on known hashes never replicate: push sends meta only with missing objects, import keeps the first (`f4afc2c0`)
-
-- state: todo
-- priority: high
-- labels: replication, spec, codebase, bug
-- links `Replicate.import` (#cbbdb9bbaa)
-
-Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
-
-> claude: Seen 2026-10-14 by the native thread: a fresh clone of r2://agent-artifacts/deus/toolchain (origin.main #9db52bfe04) exports specs/JsGen.Spec.mdl with R-3's prose under the wrong blocks; the long-lived store and the git export are right. Cause: Replicate.push bundles meta only for objects the remote lacks, and Replicate.import writes meta only where none exists, so a meta-only change (spec prose, docs, D116 schemes) never reaches the remote, and a clone keeps whichever bundle it imports first. A local deus update cannot repair R2. Proposed fix: make a metadata change a content-addressed object (metaset hash form) that the causal node of the change references, so it replicates and compacts like any object, and apply metasets in causal order on merge (descendant wins; concurrent ones merge as Codebase.mergeMeta does). Subsumes 4c9147ce. Until then, export only from a long-lived store and diff codebase/specs against git before committing an export.
-
-## Names that share a hash keep only the last name's doc, comments and parameter names (`62f3f4d0`)
-
-- state: todo
-- priority: high
-- labels: codebase, bug
-- links `Codebase.mergeMeta` (#20fb7353e5)
-
-Core has no types or names, so two definitions with the same body share a hash and one metadata file. Codebase.store keeps the newest doc, lead comments and locals (D116 merges only the scheme), so updating deus/wasm.deus gives Prove.lambdas the doc of Wasm.unlam, and view, export and the explorer print it under both names. Workaround: deus update deus/prove.deus afterwards. Proposed fix: keep name-specific fields per name when they differ, as (for "<fqn>" doc lead locals…) entries in the shared meta, written by mergeMeta from the batch's fqn, and read through one Codebase.metaFor meta name used by view, export, the explorer and bindings. Found by the native thread, 2026-10-14.
-
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -149,28 +129,12 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 - assignee: claude
 - labels: dogfood, spec
 
-## Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (`1cbfdd30`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec, prover
-
-Raised by the bindings thread too (D87): random Text almost never collides.
-
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
-
-## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec
 
 ## Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively (`60e88be8`)
 
@@ -182,19 +146,13 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 
 > claude: IO host operations done (D129): every IO operation checks for a program handler, else the C runtime performs it; examples/command.deus agrees with deus run. Cli.main now stops at Code.run, which needs an evaluator in the C runtime.
 
+> claude: D136: the compile pipeline (lexer, parser, resolution, inference, lowering, image) now builds natively; examples/compiler.deus writes seed/deus.image byte for byte in 642 ms vs 7.4 s on the JIT. Cli.main still stops at Code.run.
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
 - priority: medium
 - labels: native, perf
-
-## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
-
-- state: todo
-- priority: medium
-- labels: codebase, bug
-
-Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D116. Merge the scheme with Codebase.mergeMeta on import.
 
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
@@ -289,17 +247,13 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 
 Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metadata; the explorer lists blocks only.
 
-## Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (`dc22728a`)
+## Name the 39 public definitions deus mdl --coverage still reports, in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm) (`8d6df186`)
 
 - state: todo
 - priority: none
-- labels: spec, codebase
+- labels: mdl, spec, explorer, native
 
-## Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (`8d6df186`)
-
-- state: todo
-- priority: none
-- labels: mdl, spec
+> someone: 134 named in api blocks of Analytics, Checking, Codebase, Compile, Coverage, Export, Features, JsGen and View specs (each type checked by deus mdl). 39 remain, all in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm), which the explorer and native threads own; left for them. Kept the D125 rule: excluding spec-law users only removed 10.
 
 ## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
 
@@ -616,6 +570,30 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 > claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
 
 > claude: Built as comments on Core, the user's choice (D66): lead and notes metadata, restored by the printer. Character literals still print as numbers; filed separately.
+
+## Metadata changes on known hashes never replicate: push sends meta only with missing objects, import keeps the first (`f4afc2c0`)
+
+- state: done
+- priority: high
+- labels: replication, spec, codebase, bug
+- links `Replicate.import` (#cbbdb9bbaa)
+
+Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
+
+> claude: Seen 2026-10-14 by the native thread: a fresh clone of r2://agent-artifacts/deus/toolchain (origin.main #9db52bfe04) exports specs/JsGen.Spec.mdl with R-3's prose under the wrong blocks; the long-lived store and the git export are right. Cause: Replicate.push bundles meta only for objects the remote lacks, and Replicate.import writes meta only where none exists, so a meta-only change (spec prose, docs, D116 schemes) never reaches the remote, and a clone keeps whichever bundle it imports first. A local deus update cannot repair R2. Proposed fix: make a metadata change a content-addressed object (metaset hash form) that the causal node of the change references, so it replicates and compacts like any object, and apply metasets in causal order on merge (descendant wins; concurrent ones merge as Codebase.mergeMeta does). Subsumes 4c9147ce. Until then, export only from a long-lived store and diff codebase/specs against git before committing an export.
+
+> claude: Done (D134): commits record a metadata snapshot (two-level tree of objects, keyed by hash prefix) that the causal node names; pushes carry it, fast-forwards write it, merges merge it hash by hash. Replicate.Spec R-1..R-4. The R2 remote picks this up on the next push from a store on the new seed.
+
+## Names that share a hash keep only the last name's doc, comments and parameter names (`62f3f4d0`)
+
+- state: done
+- priority: high
+- labels: codebase, bug
+- links `Codebase.mergeMeta` (#20fb7353e5)
+
+Core has no types or names, so two definitions with the same body share a hash and one metadata file. Codebase.store keeps the newest doc, lead comments and locals (D116 merges only the scheme), so updating deus/wasm.deus gives Prove.lambdas the doc of Wasm.unlam, and view, export and the explorer print it under both names. Workaround: deus update deus/prove.deus afterwards. Proposed fix: keep name-specific fields per name when they differ, as (for "<fqn>" doc lead locals…) entries in the shared meta, written by mergeMeta from the batch's fqn, and read through one Codebase.metaFor meta name used by view, export, the explorer and bindings. Found by the native thread, 2026-10-14.
+
+> claude: Done (D132): a term's metadata names its owner; another name sharing the hash keeps its doc, comments, locals and attributes in a (for "<name>" …) entry, and view, describe and the explorer read Codebase.metaFor name. Codebase.Spec R-16. Fixing it exposed a propagation bug (D133, R-17): a batch definition calling another that took over its old body was rewired to call itself.
 
 ## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
 
@@ -1007,6 +985,17 @@ Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
 
 Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
 
+## Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (`1cbfdd30`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec, prover
+
+Raised by the bindings thread too (D87): random Text almost never collides.
+
+> claude: Done (D135): by test N using g draws each binder from g applied to a random Int; the generator is a dependency of the theorem and a counterexample prints as (g seed). Testing.Spec R-1..R-4. Codebase.Spec L-2 and L-3 use Codebase.Spec.dottedNames. Bindings.Spec.crowded is the bindings thread's to convert.
+
 ## Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (`55a3e9d5`)
 
 - state: done
@@ -1084,6 +1073,15 @@ JS.mdl R-2 is a gap until a test compiles such a handler and checks the message.
 Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 
 > someone: Done: R-10 by three rfl theorems on Tasks.mergeTask; R-12 by three tests. Source cannot cross layers (code cannot name a test), and Cli.layerCrossings refuses a hand-built object that does.
+
+## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
+> claude: Done (D130): @[req "Doc.R-1"] on a test or theorem counts as a citation when the requirement exists; deus mdl --coverage lists links to requirements no document states. Theorems now keep their attributes (they were dropped). Coverage.Spec R-5..R-7.
 
 ## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
 
@@ -1188,6 +1186,16 @@ From docs/spec/README.md, Known divergences.
 - links change #02ade21de7
 
 > claude: Dmytro: render the shared codebase format in other dialects, DEUS stays primary. First dialect: TypeScript-like, view and explorer only; parsing back is a follow-up.
+
+## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
+
+- state: done
+- priority: medium
+- labels: codebase, bug
+
+Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D116. Merge the scheme with Codebase.mergeMeta on import.
+
+> claude: Done with f4afc2c0 (D134): a pulled store takes the pusher's metadata snapshot, scheme included, and a merge merges schemes with mergeMeta.
 
 ## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
 
@@ -1390,6 +1398,14 @@ Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/
 
 > claude: Duplicate of 353444f7: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
 
+## deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (`a08c4408`)
+
+- state: done
+- priority: low
+- labels: codebase, cli
+
+> claude: Done (D131): update lists '* name (metadata)' when only a definition's doc comment, attributes or comments changed; --json has a metadata array. Codebase.Spec R-15.
+
 ## Break long lines in deus view output (`d7eba020`)
 
 - state: done
@@ -1452,6 +1468,14 @@ History rows link nowhere; a change page could list the definitions it added or 
 - links change #e2a4045a8a
 
 inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
+
+## Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (`dc22728a`)
+
+- state: done
+- priority: none
+- labels: spec, codebase
+
+> someone: Done: Codebase.Spec R-14 (comment threads merge as unions; two sim tests) and Export.Spec R-6 (a history imported twice exports each change once). Both describe existing behaviour: no code change.
 
 ## Task changes do not record who made them as provenance (`3d6508e4`)
 

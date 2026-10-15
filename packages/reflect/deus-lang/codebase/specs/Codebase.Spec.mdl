@@ -35,6 +35,13 @@ api A-1: the object store
 ```
 
 ```mdl
+api A-5: metadata shared by names with one hash
+  signatures:
+  - Codebase.metaFor : Text -> Sexp -> Sexp
+  - Codebase.mergeMeta : Option Sexp -> Sexp -> Sexp
+```
+
+```mdl
 api A-2: namespace snapshots
   signatures:
   - Codebase.putNamespace : Text -> Map Text Entry -> {IO} Text
@@ -50,6 +57,42 @@ api A-3: history and branches
   - Codebase.causalToSexp : Causal -> Sexp
   - Codebase.causalFromSexp : Sexp -> Causal
   - Codebase.merge : Text -> Text -> {IO, Throw Text} MergeResult
+```
+
+```mdl
+api A-4: Codebase definitions other namespaces use
+  signatures:
+  - Codebase.allObjects : Text -> {IO} List Text
+  - Codebase.ancestors : Text -> Text -> {IO, Throw Text} Map Text Unit
+  - Codebase.branchHead : Text -> Text -> {IO} Option Text
+  - Codebase.branches : Text -> {IO} List Text
+  - Codebase.commitComments : Text -> Text -> Text -> {IO, Throw Text} Text
+  - Codebase.commitPrior : Text -> Sexp -> Text -> {IO, Throw Text} Text
+  - Codebase.commitTasks : Text -> Text -> Text -> {IO, Throw Text} Text
+  - Codebase.current : Text -> {IO, Throw Text} Map Text Entry
+  - Codebase.currentBranch : Text -> {IO} Text
+  - Codebase.diffNamespaces : Text -> Text -> Text -> {IO, Throw Text} List (Text, (Option Entry, Option Entry))
+  - Codebase.headOf : Text -> Text -> {IO, Throw Text} Text
+  - Codebase.history : Text -> Text -> Int -> {IO, Throw Text} List (Text, Causal)
+  - Codebase.isCodebase : Text -> {IO} Bool
+  - Codebase.layers : List (Text, (Text, Bool))
+  - Codebase.metaField : Option Sexp -> Text -> Option Sexp
+  - Codebase.metaList : Option Sexp -> Text -> List Sexp
+  - Codebase.migrate : Text -> {IO, Throw Text} (Int, Int)
+  - Codebase.nameIndex : Map Text Entry -> Map Text Text
+  - Codebase.namesByHash : Map Text Entry -> Map Text (List Text)
+  - Codebase.namesOf : Map Text Entry -> Text -> List Text
+  - Codebase.parentsOf : Text -> Text -> {IO, Throw Text} List Text
+  - Codebase.readCausal : Text -> Text -> {IO, Throw Text} Causal
+  - Codebase.readMeta : Text -> Text -> {IO} Option Sexp
+  - Codebase.recordEntries : Text -> Text -> {IO} List (Text, (Text, Text))
+  - Codebase.rewrite : Sexp -> Map Text Text -> Sexp
+  - Codebase.setBranch : Text -> Text -> Text -> {IO} Unit
+  - Codebase.snapshotsOf : Causal -> List Text
+  - Codebase.store : Text -> Batch -> {IO} Unit
+  - Codebase.validBranch : Text -> Bool
+  - Codebase.writeMeta : Text -> Text -> Sexp -> {IO} Unit
+  - Codebase.writeObject : Text -> Text -> Sexp -> {IO} Unit
 ```
 
 ## Hashes and object files
@@ -75,7 +118,7 @@ req R-2: builtin hashes (starting with #) are never dependencies
 ```mdl
 law L-2: a namespace reads back as written, as a whole and name by name
   theorem: Codebase.Spec.namespaceRoundTrip
-  statement: (words : List Text) : Codebase.Spec.readsBack (Codebase.Spec.namespaceOf (Codebase.Spec.dotted words)) = true
+  statement: (names : List Text) : Codebase.Spec.readsBack (Codebase.Spec.namespaceOf names) = true
 ```
 
 ```mdl
@@ -135,8 +178,33 @@ req R-13: an update rehashes every definition that depends on a changed one, inc
 ```
 
 ```mdl
+req R-15: an update that changes only a definition's metadata (its doc comment or attributes) names the definition, and one that changes nothing, changes the hash, or renames only locals does not name it as metadata
+  by: Codebase.Spec.docChangeListed | Codebase.Spec.attributeChangeListed | Codebase.Spec.sameMetadataUnlisted | Codebase.Spec.changedHashUnlisted | Codebase.Spec.localRenameUnlisted
+```
+
+Core has no names, so two definitions with one body share a hash and one metadata file (task 62f3f4d0). The file
+names its owner, the name that last wrote it; every other name keeps its own fields (doc, comments, locals,
+attributes, annotation) in a `(for "<name>" …)` entry, and readers take a name's view of the file with
+`Codebase.metaFor`. Only the inferred scheme is shared.
+
+```mdl
+req R-16: names that share a hash keep their own doc comments, whether added together or apart, and a name's update replaces only its own; a name whose fields match the owner's changes nothing
+  by: Codebase.Spec.sharedHashKeepsEachDoc | Codebase.Spec.laterAddKeepsOtherDoc | Codebase.Spec.ownUpdateReplacesOwnDoc | Codebase.Spec.unsharedHasNoEntries | Codebase.Spec.sameFieldsKeepTheOwner
+```
+
+```mdl
+req R-17: when a definition in an update takes over another's old body, and so its old hash, what the update compiled keeps calling it, while dependents outside the update follow the name they called
+  by: Codebase.Spec.extractedBodyKeepsItsName | Codebase.Spec.dependentFollowsTheName
+```
+
+```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
+```
+
+```mdl
+req R-14: comment threads merge as unions: a thread one side changed takes that side, and comments both sides added are all kept, ours first
+  by: Codebase.Spec.commentThreadsMergeAsUnions | Codebase.Spec.commentThreadsTakeTheChangedSide
 ```
 
 ## Layers

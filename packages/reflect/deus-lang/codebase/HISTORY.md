@@ -1,10 +1,76 @@
 # History of main
 
+- `167b1b0553` task: comment on 60e88be8 (by claude)
+- `c4de611752` Rehash after wasm.deus (D136) (by claude)
+- `8148f1d5b4` Native C: the compiler builds natively; definitions by hash, defects as Defect requests, partly typed comparisons, no over-application loop (D136) (by claude)
+- `9120895940` history: import 914 changes
+- `ef1387a893` task: import from codebase/tasks.sexp
+- `0b2eaf7131` add codebase/code codebase/specs
+- `9a00388d01` task: comment on 1cbfdd30 (by claude)
+- `ff9390afe5` task: set 1cbfdd30 state (by claude)
+- `369b918ac7` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
+- `f49a2afd29` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/gen.deus (by claude)
+- `0fbec2ed18` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
+- `748e608d43` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
+- `e924d4ea64` update deus (by claude)
+- `383c50b0bd` update deus (by claude)
+- `8473c595b7` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Testing.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/testlaws.deus (by claude)
+- `3c1e9887c9` task: comment on 4c9147ce (by claude)
+- `267f6a3ed2` task: comment on f4afc2c0 (by claude)
+- `0f37d9cae8` task: set 4c9147ce state (by claude)
+- `8258e3ffa5` task: set f4afc2c0 state (by claude)
+- `65f4d17190` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `88063d835c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/wd.deus (by claude)
+- `bf9fc7bbce` update deus (by claude)
+- `df0bddebfb` update deus/codebase.deus (by claude)
+- `6e76b24ac2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Replicate.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/replaws.deus (by claude)
+- `8d7b7bc294` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/causalfix.deus (by claude)
+- `dccf008e03` task: set f4afc2c0 state (by claude)
+- `e0570babd4` update deus/codebase.deus (by claude)
+- `775fe75cbc` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r16b.deus (by claude)
+- `10e4683a29` task: comment on 62f3f4d0 (by claude)
+- `a1b9427e75` task: set 62f3f4d0 state (by claude)
+- `c11a4a13e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r17b.deus (by claude)
+- `2415ef1e0a` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd.deus (by claude)
+- `6feaefdb00` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r17.deus (by claude)
+- `96b1935261` update deus (by claude)
+- `11de0af5bb` update deus (by claude)
+- `9386f5d977` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r16.deus (by claude)
+- `92da89313a` update deus/codebase.deus (by claude)
+- `7ece3c0cd9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cslaw2.deus (by claude)
+- `a5519693a3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cslaw2.deus (by claude)
+- `0bf5d34791` update deus/update.deus (by claude)
+- `32ab93249f` task: comment on a08c4408 (by claude)
+- `fb25502efc` task: set a08c4408 state (by claude)
+- `e68a32b382` update deus (by claude)
+- `9aed252676` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cslaws.deus (by claude)
+- `f88fae0566` update deus/update.deus (by claude)
+- `12657c0b4c` task: set a08c4408 priority (by claude)
+- `588c02d414` task: open a08c4408 deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (by claude)
+- `9f09a18d5a` task: comment on 6a3b0ebe (by claude)
+- `2729e504ce` task: set 6a3b0ebe state (by claude)
+- `e2aa18e5c6` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `4d4c5a4dfa` update deus (by claude)
+- `f0b3c7c980` update deus (by claude)
+- `bf66525861` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/covlaws.deus (by claude)
+- `cc272ef328` update deus/coverage.deus (by claude)
+- `dc4eacbf29` task: comment on dc22728a
+- `e13eed389e` task: set dc22728a state
+- `00e007e47f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/export.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Export.Spec.mdl (by claude)
+- `7c437fa2f3` history: import 854 changes (by merge)
+- `38b5a5a4bd` history: import 854 changes
+- `bc05359a9b` task: import from /tmp/tmp355x44qi/tasks.sexp
+- `5c215aa568` add /tmp/tmp355x44qi/merged/code /tmp/tmp355x44qi/merged/specs
 - `51139cae5f` task: comment on 60e88be8 (by claude)
 - `577b95ae84` Native C: IO host operations; a program of Unit builds to a command (D129) (by claude)
 - `2f3a69291e` history: import 849 changes
 - `7c4b0ea752` task: import from codebase/tasks.sexp
 - `c9b261c701` add codebase/code codebase/specs
+- `9b6101917c` task: set 8d6df186 title labels
+- `42e26b44dd` task: comment on 8d6df186
+- `f5d7314079` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Analytics.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Checking.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Compile.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Coverage.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Export.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Features.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/JsGen.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/View.Spec.mdl (by claude)
+- `72b0c44c55` update deus (by claude)
+- `65bd4845f2` update deus (by claude)
 - `f05d65e1ff` task: comment on 31d3c1cd
 - `1d3dff7d9a` task: comment on 908495a0
 - `16bed1ea32` task: set 31d3c1cd state

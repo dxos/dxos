@@ -106,3 +106,11 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
 with its wasm targets, and this package's `node_modules`. `src/preflight.test.ts` fails first and
 names anything that is still missing, so a native, browser or bindings test does not fail later for
 that reason.
+
+`scripts/vitest.config.mjs` runs the package's suite alone, with a worker per core (it is
+CPU-bound, and vitest's default leaves one idle):
+
+```sh
+npx vitest run --config scripts/vitest.config.mjs                         # 82 s on 4 cores
+npx vitest run --config scripts/vitest.config.mjs src/restore.test.ts     # one file
+```

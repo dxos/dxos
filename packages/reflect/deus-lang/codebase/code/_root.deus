@@ -628,6 +628,7 @@ structure SpecCoverage @"urn:deus:coverage:SpecCoverage" where
   coverageDoc : Text
   uncitedLaws : List Text
   unnamedApi : List Text
+  danglingLinks : List Text
 
 /-- A Durable Object's own transactional storage. -/
 ability Storage @"urn:deus:web:Storage" where

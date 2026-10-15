@@ -40,6 +40,15 @@ api A-1: the compiler and its text helpers
   - JsGen.unvlq : Text -> Int
 ```
 
+```mdl
+api A-2: JsGen definitions other namespaces use
+  signatures:
+  - JsGen.abilitiesOf : Sexp -> List Text
+  - JsGen.isIdent : Text -> Bool
+  - JsGen.refsOf : Sexp -> List Text
+  - JsGen.substitute : List Sexp -> Sexp -> Sexp
+```
+
 ## Output
 
 | File             | Content                                                                         |

@@ -113,7 +113,7 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let node := Codebase.readCausal dir causal
   let before := match Codebase.parentsOf dir causal with
     | p :: _ => Codebase.readCausal dir p
-    | [] => Causal.mk "" [] "" "" "" ""
+    | [] => Causal.mk "" [] "" "" "" "" ""
   let diff := Codebase.diffNamespaces dir before.snapshot node.snapshot
   let added := List.filterMap (fun change =>
     match change with
@@ -207,7 +207,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)
     Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h),
-      ("sig", Json.str (signature (metaFor h))), ("summary", Json.str (summaryOf (docOf (metaFor h)))),
+      ("sig", Json.str (signature (Option.map (Codebase.metaFor (fst pair)) (metaFor h)))), ("summary", Json.str (summaryOf (docOf (Option.map (Codebase.metaFor (fst pair)) (metaFor h))))),
       ("status", Json.str (if checked (snd pair) then statusOf (verdictOf dir h) else ""))]) entries)))
   IO.writeFile (out ++ "/tasks.json") (Json.render (Json.arr (List.map (fun t => taskJson dir ns (historyOf t) t) tasks)))
   -- Comments on definitions and changes (D82), by subject, and the assets they and tasks attach.
@@ -242,7 +242,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
       -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
       let users := List.filter (fun u => u != h) (List.dedup (List.sort (Option.getOr (Map.lookup h dependents) [])))
       let named := fun (hs : List Text) => Json.arr (List.map (fun x => refJson (Option.getOr (Map.lookup x index) (Cli.short x)) x) hs)
-      let meta := metaFor h
+      let meta := Option.map (Codebase.metaFor name) (metaFor h)
       let sig := signature meta
       IO.writeFile (out ++ "/def/" ++ pageOf h ++ ".json") (Json.render (Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h),
         ("aliases", Json.arr (List.map Json.str (List.filter (fun other => other != name) (Option.getOr (Map.lookup h namesByHash) [])))),

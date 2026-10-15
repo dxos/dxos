@@ -47,6 +47,41 @@ api A-1: the checker's view of Core
   - Types.signatureRow : Unifier -> List Sexp -> Ref (Map Text TType) -> Ref (Map Text TRow) -> TRow
 ```
 
+```mdl
+api A-2: Resolve definitions other namespaces use
+  signatures:
+  - Resolve.arrowCount : Ty -> Int
+  - Resolve.equations : Ctx -> List Arm -> List (Option Text) -> {Throw Text} Sexp
+  - Resolve.expr : Ctx -> Expr -> List (Option Text) -> {Throw Text} Sexp
+  - Resolve.iriFor : Text -> Option Text -> Text
+  - Resolve.isStub : Sexp -> Bool
+  - Resolve.lambda : Ctx -> List Pat -> (List (Option Text) -> {Throw Text} Sexp) -> List (Option Text) -> {Throw Text} Sexp
+  - Resolve.n : Int -> Sexp
+  - Resolve.node : Text -> List Sexp -> Sexp
+  - Resolve.s : Text -> Sexp
+  - Resolve.stripNoted : Sexp -> (Sexp, (List Text, (List (Int, Text), (List (Int, Text), Sexp))))
+  - Resolve.stub : Text -> Sexp -> Sexp
+  - Resolve.stubOf : Sexp -> Option (Text, Text)
+  - Resolve.tuple : List Sexp -> Sexp
+  - Resolve.tyCore : Names -> Scope -> List Text -> Ty -> {Throw Text} Sexp
+  - Resolve.unpick : Map Text Sexp -> Sexp -> {Throw Text} Sexp
+```
+
+```mdl
+api A-3: Types definitions other namespaces use
+  signatures:
+  - Types.bool : TType
+  - Types.checkAgainst : Unifier -> TypeEnv {e} -> Sexp -> TType -> List TType -> TRow -> {Throw Text | e} Unit
+  - Types.checkRigid : Unifier -> Ref (Map Text TType) -> Ref (Map Text TRow) -> {Throw Text} Unit
+  - Types.freshRow : Unifier -> TRow
+  - Types.freshType : Unifier -> TType
+  - Types.infer : Unifier -> TypeEnv {e} -> Sexp -> List TType -> TRow -> {Throw Text | e} TType
+  - Types.newUnifier : Unit -> Unifier
+  - Types.scheme : Unifier -> TType -> Sexp
+  - Types.signatureType : Unifier -> Sexp -> Ref (Map Text TType) -> Ref (Map Text TRow) -> TType
+  - Types.unify : Unifier -> TType -> TType -> {Throw Text} Unit
+```
+
 ## Ascriptions
 
 ```mdl

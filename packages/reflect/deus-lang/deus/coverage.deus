@@ -9,6 +9,7 @@ structure SpecCoverage @"urn:deus:coverage:SpecCoverage" where
   coverageDoc : Text
   uncitedLaws : List Text
   unnamedApi : List Text
+  danglingLinks : List Text
 
 namespace Coverage
 
@@ -46,14 +47,32 @@ def covers (doc : Text) (blocks : List Block) (laws : List Text) (named : Map Te
   SpecCoverage.mk doc
     (List.filter (fun n => not (Set.contains n citedHere)) laws)
     (List.filter (fun n => Set.contains (namespaceOf n) spaces && not (Set.contains n named)) public)
+    []
+
+/-- The requirements a law's attributes name, `@[req "Doc.R-1"]`. -/
+def reqLinks (attrs : List Sexp) : List Text :=
+  List.filterMap (fun a =>
+    match a with
+    | Sexp.list [Sexp.str "req", Sexp.str target] => some target
+    | _ => none) attrs
+
+/--
+  `c` with its laws' links to requirements applied: `links` pairs each law with the requirements it
+  names, and `reqs` holds every requirement, as `Doc.R-1`, that a document states.
+-/
+def linked (reqs : Map Text Unit) (links : List (Text, List Text)) (c : SpecCoverage) : SpecCoverage :=
+  let backed := Set.fromList (List.filterMap (fun l => if List.any (fun t => Set.contains t reqs) (snd l) then some (fst l) else none) links)
+  let dangling := List.concatMap (fun l => List.filterMap (fun t => if Set.contains t reqs then none else some (fst l ++ " -> " ++ t)) (snd l)) links
+  SpecCoverage.mk c.coverageDoc (List.filter (fun n => not (Set.contains n backed)) c.uncitedLaws) c.unnamedApi (c.danglingLinks ++ dangling)
 
 /-- The text report: the document, then each kind of omission on its own line. -/
 def render (c : SpecCoverage) : List Text :=
-  if List.isEmpty c.uncitedLaws && List.isEmpty c.unnamedApi then [c.coverageDoc ++ ": covered"]
+  if List.isEmpty c.uncitedLaws && List.isEmpty c.unnamedApi && List.isEmpty c.danglingLinks then [c.coverageDoc ++ ": covered"]
   else
     let groups := Names.groups (List.map (fun n => (namespaceOf n, n)) c.unnamedApi)
     [c.coverageDoc] ++
       (if List.isEmpty c.uncitedLaws then [] else ["  laws no block cites: " ++ Text.join ", " c.uncitedLaws]) ++
+      (if List.isEmpty c.danglingLinks then [] else ["  links to no requirement: " ++ Text.join ", " c.danglingLinks]) ++
       List.map (fun g =>
         match g with
         | (space, names) => "  " ++ space ++ ": " ++ Int.toText (List.length names) ++ " public definition(s) no api block names: " ++ Text.join ", " (List.sort (List.map Names.lastSegment names))) (List.sortBy (fun a b => compare (fst a) (fst b)) groups)

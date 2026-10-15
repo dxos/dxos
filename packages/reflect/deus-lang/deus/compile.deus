@@ -115,18 +115,28 @@ def proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Te
     match e with
     | Entry.theorem _ => true
     | _ => false
-  let rec go rest inside acc :=
+  let isTerm := fun (e : Entry) =>
+    match e with
+    | Entry.term _ => true
+    | _ => false
+  -- Names in `[…]` are lemmas; names after `using` are generators (D135).
+  let rec go rest inside generators acc :=
     match rest with
     | [] => List.reverse acc
     | t :: more =>
-      if t == "[" then go more true (s t :: acc)
-      else if t == "]" then go more false (s t :: acc)
+      if t == "[" then go more true generators (s t :: acc)
+      else if t == "]" then go more false generators (s t :: acc)
+      else if t == "using" then go more inside true (s t :: acc)
+      else if generators then
+        match Names.lookup names t scope isTerm true with
+        | some (_, e) => go more inside generators (node "ref" [s (Entry.hash e)] :: acc)
+        | none => throw ("unknown generator " ++ t)
       else if inside && t != "," then
         match Names.lookup names t scope isLemma true with
-        | some (_, e) => go more inside (node "ref" [s (Entry.hash e)] :: acc)
+        | some (_, e) => go more inside generators (node "ref" [s (Entry.hash e)] :: acc)
         | none => throw ("unknown lemma " ++ t)
-      else go more inside (s t :: acc)
-  go tokens false []
+      else go more inside generators (s t :: acc)
+  go tokens false false []
 
 /-- Placeholder references `(ref "@Name")` in a form. -/
 def placeholders (form : Sexp) (acc : List Text) : List Text :=
@@ -367,7 +377,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | (core, locals, notes, spellings, checked) =>
         Ref.set pending (Pending.mk fqn "test" core checked :: Ref.get pending)
         addMetaWith ("@" ++ fqn) doc none locals attributes (commentMeta item.lead notes spellings)
-    | Decl.thm _ binders prop proof doc _ pos =>
+    | Decl.thm _ binders prop proof doc attributes pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
       let types := List.map (fun b =>
         match b.annot with
@@ -377,7 +387,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | (core, locals) =>
         let form := node "theorem" [Sexp.list (Sexp.sym "binders" :: types), core, node "proof" (proofTokens names (bodyScope item) proof)]
         Ref.set pending (Pending.mk fqn "theorem" form form :: Ref.get pending)
-        addMeta ("@" ++ fqn) doc none locals (commentMeta item.lead [] [])
+        addMetaWith ("@" ++ fqn) doc none locals attributes (commentMeta item.lead [] [])
     | _ => ())
   -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
   let typeObjectMap := Map.fromList (Ref.get typeObjects)
@@ -405,7 +415,10 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | (name, Entry.test h) => (name, Entry.test (resolveHash h))
       | (name, Entry.theorem h) => (name, Entry.theorem (resolveHash h))
       | other => other) entries
-    let finalMetas := List.map (fun pair => (resolveHash (fst pair), snd pair)) (Ref.get metas)
+    -- A term's metadata names its owner, since names that share a body share the file (Codebase.metaFor).
+    let finalMetas := List.map (fun pair =>
+      if Text.startsWith "@" (fst pair) then (resolveHash (fst pair), Sexp.list (Sexp.asList (snd pair) ++ [node "owner" [s (Text.drop 1 (fst pair))]]))
+      else pair) (Ref.get metas)
     Batch.mk (List.reverse (Ref.get typeObjects) ++ termObjects) finalEntries finalMetas (List.reverse (Ref.get warnings))
 
 /--

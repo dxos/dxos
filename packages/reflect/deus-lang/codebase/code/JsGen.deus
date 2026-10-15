@@ -83,7 +83,7 @@ def JsGen.Spec.refusal (source : Text) (root : Text) : Text :=
       "strict"
       [parseFile "prelude.deus" Compile.Spec.prelude, parseFile "spec.deus" source]
     let objects := Map.fromList built.objects
-    let metas := Map.fromList built.metas
+    let metas := Map.fromList (Batch.metas built)
     let ns := Map.fromList built.entries
     let jsImport :=
       match Map.lookup "Js.import" ns with
@@ -866,10 +866,13 @@ def JsGen.structureOf (mod : JsModule) (iri : Text) : Option (Text, (List Text, 
       | _ => Option.none
   | _ => Option.none
 
-/-- `t` with the declaration's parameters `(tvar i)` replaced by `args`. -/
+--
+-- Codecs.
+--
+/-- The type of a field, at the arguments of the type that holds it. -/
 def JsGen.substitute (args : List Sexp) (t : Sexp) : Sexp :=
   match t with
-  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) => getOr (get? args i) t
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.int k :: []) => getOr (get? args k) t
   | Sexp.list items => Sexp.list (List.map (JsGen.substitute args) items)
   | _ => t
 

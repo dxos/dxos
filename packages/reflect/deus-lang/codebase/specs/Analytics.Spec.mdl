@@ -58,6 +58,45 @@ api A-3: references and counts
   - Analytics.siteJson : Text -> Text -> Map Text Entry -> Int -> {IO, Throw Text} Json
 ```
 
+```mdl
+api A-4: Analytics definitions other namespaces use
+  signatures:
+  - Analytics.backfillHistory : Text -> EventType -> Text -> {IO, Throw Text} Int
+  - Analytics.backfillTimeline : Text -> EventType -> Text -> {IO, Throw Text} Int
+  - Analytics.columnTypeOf : Sexp -> Option Text
+  - Analytics.columnsJson : List Column -> Json
+  - Analytics.command : Args -> {IO, Throw Text} Unit
+  - Analytics.counts : Text -> List EventType -> {IO} List (EventType, (Int, Int))
+  - Analytics.find : Text -> Map Text Entry -> Text -> {IO, Throw Text} EventType
+  - Analytics.importFile : Text -> Text -> Map Text Entry -> List EventType -> Text -> {IO, Throw Text} Int
+  - Analytics.isHex : Text -> Bool
+  - Analytics.nameIri : Text -> Text -> Text
+  - Analytics.parseCell : Text -> Map Text Entry -> Column -> Text -> {Throw Text} Cell
+  - Analytics.parts : Text -> (Text, Text)
+  - Analytics.projectOf : Text -> {IO} Text
+  - Analytics.recordRun : Text -> List EventType -> Map Text Entry -> Text -> Text -> Bool -> Bool -> Bool -> Text -> Int -> Text -> Int -> {IO} Unit
+  - Analytics.recordWrites : Text -> Map Text Entry -> Text -> Text -> List Text -> {IO} Unit
+  - Analytics.recorder : Unit -> {IO} Text
+  - Analytics.rowJson : EventType -> Row -> Json
+  - Analytics.rowLine : EventType -> Row -> Text
+  - Analytics.tallyCount : (Text, (Text, Int)) -> Int
+  - Analytics.typeLine : (EventType, (Int, Int)) -> Text
+  - Analytics.typesNow : Text -> {IO} List EventType
+  - Analytics.usage : Text
+```
+
+```mdl
+api A-5: Parquet definitions other namespaces use
+  signatures:
+  - Parquet.decimalLE64 : Text -> List Int
+  - Parquet.le64Decimal : List Int -> Text
+  - Parquet.magic : List Int
+  - Parquet.readLE32 : Array Int -> Int -> Int
+  - Parquet.systemColumns : List Column
+  - Parquet.toArray : List Int -> Array Int
+  - Parquet.trimZeros : Text -> Text
+```
+
 ## Event types
 
 ```mdl

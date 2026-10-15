@@ -3,7 +3,7 @@ def Set.contains (x : a) (s : Map a Unit) : Bool := Map.contains x s
 /-- A set of Text or Int for fast membership tests (built once). -/
 def Set.dict (xs : List a) : Dict a Unit := Dict.fromList (List.map (fun x => (x, ())) xs)
 
-def Set.empty : Map k v := Map.tip
+def Set.empty : Map a Unit := Map.tip
 
 def Set.fromList (xs : List a) : Map a Unit := foldl (fun s x => Set.insert x s) Map.tip xs
 

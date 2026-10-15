@@ -218,7 +218,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let before :=
     match parentsOf dir causal with
     | p :: _ => readCausal dir p
-    | [] => Causal.mk "" [] "" "" "" ""
+    | [] => Causal.mk "" [] "" "" "" "" ""
   let diff := diffNamespaces dir before.snapshot node.snapshot
   let added := filterMap (fun change =>
     match change with
@@ -346,7 +346,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)
-    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf dir h) else ""))]) entries)))
+    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (Option.map (Codebase.metaFor (fst pair)) (metaFor h)))), ("summary", Json.str (summaryOf (Explorer.docOf (Option.map (Codebase.metaFor (fst pair)) (metaFor h))))), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf dir h) else ""))]) entries)))
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))
@@ -387,7 +387,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
         -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
         let users := List.filter (fun u => u != h) (dedup (sort (getOr (Map.lookup h dependents) [])))
         let named := fun hs => Json.arr (List.map (fun x => refJson (getOr (Map.lookup x index) (short x)) x) hs)
-        let meta := metaFor h
+        let meta := Option.map (Codebase.metaFor name) (metaFor h)
         let sig := Explorer.signature meta
         IO.writeFile
           (out ++ "/def/" ++ pageOf h ++ ".json")

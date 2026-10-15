@@ -286,13 +286,14 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       match c with
       | (name, _, _) => name) replaced))
   else
+    let retagged := Update.metadataChanged ns batch.entries (fun h => Codebase.readMeta dir h) (Map.fromList batch.metas)
     Codebase.store dir batch
     let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
     let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := Update.propagate dir ns2 subst
+    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
     let ns3 := fst propagated
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
@@ -310,14 +311,15 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     if flag args "quiet" then () else output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         match c with
-        | (name, _, new) => entryJson name new) replaced)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
+        | (name, _, new) => entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
       (fun _ =>
         let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
         let updatedLines := List.map (fun c =>
           match c with
           | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
         let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
-        let lines := addedLines ++ updatedLines ++ propagatedLines
+        let metadataLines := List.map (fun name => "  * " ++ name ++ " (metadata)") retagged
+        let lines := addedLines ++ updatedLines ++ metadataLines ++ propagatedLines
         if List.isEmpty lines then "Nothing changed." else Text.join "\n" lines)
 
 --
@@ -369,7 +371,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
   let core := dialect == "core"
   let ts := dialect == "ts"
   let h := Entry.hash e
-  let meta := Codebase.readMeta dir h
+  let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
   let comment := if ts then "// " else "-- "
   let typeLine := match Codebase.metaField meta "scheme" with
     | some scheme => comment ++ ": " ++ Types.displaySchemeNamed (Types.declaredNames ns) scheme ++ "\n"
@@ -871,7 +873,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : 
   | none => throw (name ++ " is not in the codebase")
   | some e =>
     let h := Entry.hash e
-    let meta := Codebase.readMeta dir h
+    let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
     let typed := match Codebase.metaField meta "scheme" with
       | some scheme => [("type", Types.displaySchemeNamed (Types.declaredNames ns) scheme)]
       | none => []
@@ -1122,8 +1124,9 @@ def checkMdl (args : Args) : {IO, Throw Text} Unit :=
   if count "fail" > 0 then IO.exit 1 else ()
 
 /--
-  `deus mdl --coverage [documents…]`: each spec document's laws no block cites, and the public
-  definitions in its api namespaces that no api block names (D125). Omissions are reported, not failed.
+  `deus mdl --coverage [documents…]`: each spec document's laws no block cites, the public
+  definitions in its api namespaces that no api block names (D125), and `@[req]` links to no
+  requirement. Omissions are reported, not failed.
 -/
 def coverage (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1146,6 +1149,7 @@ def coverage (args : Args) : {IO, Throw Text} Unit :=
     match pair with
     | (name, Entry.term _) => if Set.contains name public then some name else none
     | _ => none) entries
+  let reqs := Set.fromList (List.filterMap (fun pair => if (snd pair).blockType == "req" then some (fst pair ++ "." ++ (snd pair).blockId) else none) blocks)
   let stored := Export.specDocuments ns
   let wanted := if List.isEmpty args.positional then stored else List.filter (fun d => List.contains d stored) args.positional
   let reports := List.map (fun d =>
@@ -1154,12 +1158,18 @@ def coverage (args : Args) : {IO, Throw Text} Unit :=
       | (name, Entry.test _) => if Export.documentOf name == d then some name else none
       | (name, Entry.theorem _) => if Export.documentOf name == d then some name else none
       | _ => none) entries
-    Coverage.covers d (List.filterMap (fun pair => if fst pair == d then some (snd pair) else none) blocks) laws named terms) wanted
+    let links := List.filterMap (fun law =>
+      match Map.lookup law ns with
+      | some (Entry.test h) => some (law, Coverage.reqLinks (Codebase.metaList (Codebase.readMeta dir h) "attrs"))
+      | some (Entry.theorem h) => some (law, Coverage.reqLinks (Codebase.metaList (Codebase.readMeta dir h) "attrs"))
+      | _ => none) laws
+    Coverage.linked reqs links (Coverage.covers d (List.filterMap (fun pair => if fst pair == d then some (snd pair) else none) blocks) laws named terms)) wanted
   output args
-    (fun _ => Json.arr (List.map (fun c => Json.obj [("document", Json.str c.coverageDoc), ("uncitedLaws", Json.arr (List.map Json.str c.uncitedLaws)), ("unnamedApi", Json.arr (List.map Json.str c.unnamedApi))]) reports))
+    (fun _ => Json.arr (List.map (fun c => Json.obj [("document", Json.str c.coverageDoc), ("uncitedLaws", Json.arr (List.map Json.str c.uncitedLaws)), ("unnamedApi", Json.arr (List.map Json.str c.unnamedApi)), ("danglingLinks", Json.arr (List.map Json.str c.danglingLinks))]) reports))
     (fun _ => Text.join "\n" (List.concatMap Coverage.render reports ++
       [Int.toText (List.sum (List.map (fun c => List.length c.uncitedLaws) reports)) ++ " uncited laws, " ++
-        Int.toText (List.sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names"]))
+        Int.toText (List.sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names, " ++
+        Int.toText (List.sum (List.map (fun c => List.length c.danglingLinks) reports)) ++ " links to no requirement"]))
 
 /-- `acc` with each name `h`'s object refers to that lies outside `name`'s namespace. -/
 def usedOutside (dir : Text) (byHash : Map Text (List Text)) (name : Text) (h : Text) (acc : Map Text Unit) : {IO, Throw Text} Map Text Unit :=

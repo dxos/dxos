@@ -9,7 +9,7 @@ def WasmEquality.Spec.built (source : Text) (main : Text) : Option (List Int) :=
   | Result.ok b =>
       match List.lookup main b.entries with
       | Option.some (Entry.term h) =>
-          match try (fun _ => Wasm.compile (Spec.lookup b.objects) (fun x => List.lookup x b.metas) h main) with
+          match try (fun _ => Wasm.compile (Spec.lookup b.objects) (fun x => List.lookup x (Batch.metas b)) h main) with
           | Result.ok bytes => Option.some bytes
           | Result.err _ => Option.none
       | _ => Option.none
