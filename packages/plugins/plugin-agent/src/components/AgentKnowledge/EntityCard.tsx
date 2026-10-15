@@ -42,9 +42,16 @@ export type EntityCardProps = {
   onClose?: () => void;
 };
 
-/** A key and its value side by side, the key a fixed width so the values line up down the card. */
-const KeyValue = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <Layout.Grid cols={['6rem', 'fill']} gap='sm' align='center'>
+export type EntityCardFieldProps = { label: string; children: React.ReactNode };
+
+/**
+ * A key and its value side by side, the key a fixed width so the values line up down the card: the read-only form row
+ * every knowledge card (entities, predicates) is built from. A text value goes in `Card.Text`, whose block padding the
+ * key's has, so their first lines share a baseline.
+ */
+export const EntityCardField = ({ label, children }: EntityCardFieldProps) => (
+  // Top-aligned, so a key stays on its value's first line when the value wraps (a description, a run of chips).
+  <Layout.Grid cols={['6rem', 'fill']} gap='sm' align='start'>
     <Card.Text variant='muted' truncate>
       {label}
     </Card.Text>
@@ -64,10 +71,13 @@ const Values = ({
   onSelect?: (id: string) => void;
 }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const rest = values.length - MAX_VALUES;
+  const entities = values.filter((value) => value.kind === 'entity');
+  // Text values (a memory's claims) are sentences, not links, so the card counts them; choosing the row opens them.
+  const statements = values.length - entities.length;
+  const rest = entities.length - MAX_VALUES;
   return (
     <>
-      {values.slice(0, MAX_VALUES).map((value) =>
+      {entities.slice(0, MAX_VALUES).map((value) =>
         value.kind === 'entity' ? (
           <Tag.Tag
             key={value.id}
@@ -96,6 +106,11 @@ const Values = ({
           {t('entity-card-more.label', { count: rest })}
         </Tag.Tag>
       )}
+      {statements > 0 && (
+        <Card.Text data-testid='entity-card-statements'>
+          {t('entity-card-statements.label', { count: statements })}
+        </Card.Text>
+      )}
     </>
   );
 };
@@ -120,6 +135,8 @@ const PropertyRows = ({
       <Card.Row
         key={key}
         icon={icons?.[property.predicate] ?? icon}
+        // A value can wrap onto several lines (a run of chips), so the icon stays with the key's line.
+        align='start'
         current={currentProperty === key}
         onClick={
           onSelectProperty
@@ -131,9 +148,9 @@ const PropertyRows = ({
         }
         data-testid='entity-card-property'
       >
-        <KeyValue label={property.label}>
+        <EntityCardField label={property.label}>
           <Values values={property.values} hues={hues} onSelect={onSelect ? (id) => onSelect(id, key) : undefined} />
-        </KeyValue>
+        </EntityCardField>
       </Card.Row>
     );
   });
@@ -161,23 +178,17 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
         ref={forwardedRef}
       >
         <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
-          <KeyValue label={t('entity-card-type.label')}>
+          <EntityCardField label={t('entity-card-type.label')}>
             <Card.Text truncate>{card.type ?? '—'}</Card.Text>
-          </KeyValue>
+          </EntityCardField>
         </Card.Row>
-        <Layout.Separator />
         <Card.Row icon={NAME_ICON}>
-          <KeyValue label={t('entity-card-name.label')}>
+          <EntityCardField label={t('entity-card-name.label')}>
             <Card.Text truncate>{card.label}</Card.Text>
-          </KeyValue>
+          </EntityCardField>
         </Card.Row>
         <PropertyRows direction='out' properties={card.properties} icon={PROPERTY_ICON} {...rows} />
-        {card.inverse.length > 0 && (
-          <>
-            <Layout.Separator />
-            <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
-          </>
-        )}
+        <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
       </Card.Root>
     );
   },
