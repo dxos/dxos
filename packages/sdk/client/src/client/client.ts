@@ -3,6 +3,8 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
@@ -36,6 +38,7 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -88,6 +91,8 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _indexStatusUpdate = new Event<DataService.IndexStatus | null>();
+  private readonly _indexStatus = MulticastObservable.from(this._indexStatusUpdate, null);
   private readonly _fatalErrorUpdate = new Event<Error | null>();
   private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
@@ -122,6 +127,7 @@ export class Client {
   private _ctx = new Context();
   private _config?: Config;
   private _statusStreamCleanup?: () => void;
+  private _indexStatusStreamCleanup?: () => void;
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
@@ -220,6 +226,15 @@ export class Client {
   /**
    * Client services system status.
    */
+  /**
+   * What the ECHO index is doing (migrating, rebuilding, idle), for a boot screen or progress
+   * indicator. Reported by the worker while the client opens, then streamed from the host;
+   * `null` until the host first reports.
+   */
+  get indexStatus(): MulticastObservable<DataService.IndexStatus | null> {
+    return this._indexStatus;
+  }
+
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
   }
@@ -434,6 +449,14 @@ export class Client {
       const rpc = services.rpc;
       this._echoClient._updateServices({ dataService: rpc, queryService: rpc, feedService: rpc });
       await this._echoClient._notifyReconnect();
+      this._subscribeIndexStatus();
+    });
+    // Reported while the services open, before the index status stream below can be reached.
+    services.hostStatus?.on((status) => {
+      const decoded = Schema.decodeUnknownOption(DataService.IndexStatus)(status);
+      if (Option.isSome(decoded)) {
+        this._indexStatusUpdate.emit(decoded.value);
+      }
     });
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -616,6 +639,8 @@ export class Client {
       },
     );
 
+    this._subscribeIndexStatus();
+
     log('client._open: waiting for status trigger...');
     const err = await trigger.wait();
     if (err) {
@@ -705,11 +730,31 @@ export class Client {
     );
   }
 
+  /** Follows the host's index status; re-run after a reconnect, which closes the previous stream. */
+  private _subscribeIndexStatus(): void {
+    invariant(this._services);
+    this._indexStatusStreamCleanup?.();
+    this._indexStatusStreamCleanup = subscribeStream(
+      this._effectRuntime,
+      this._services.rpc['DataService.subscribeIndexStatus'](),
+      {
+        onData: (status) => this._indexStatusUpdate.emit(status),
+        onError: (err) => {
+          if (!(err instanceof RpcClosedError)) {
+            log.warn('index status stream failed', { err });
+          }
+        },
+      },
+    );
+  }
+
   private async _close(): Promise<void> {
     log.verbose('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStreamCleanup?.();
     this._statusStreamCleanup = undefined;
+    this._indexStatusStreamCleanup?.();
+    this._indexStatusStreamCleanup = undefined;
     await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
     await this._shellClientServer?.close();

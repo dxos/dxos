@@ -73,6 +73,16 @@ describe('Client.waitUntilInitialized', () => {
   });
 });
 
+describe('Client.indexStatus', () => {
+  test('follows the host index status once open', async () => {
+    const client = new Client();
+    onTestFinished(() => client.destroy());
+    expect(client.indexStatus.get()).toBeNull();
+    await client.initialize();
+    await expect.poll(() => client.indexStatus.get(), { timeout: 5_000 }).toEqual({ phase: 'idle', done: 0, total: 0 });
+  });
+});
+
 describe('Client.fatalError', () => {
   test('a status stream failure after open is fatal, destroying the client is not', async () => {
     const testBuilder = new TestBuilder();

@@ -19,7 +19,7 @@ import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type QueryService } from '@dxos/protocols/rpc';
 
 import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
@@ -68,6 +68,98 @@ describe('EchoHost.updateIndexes', () => {
       host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [written] }),
     );
     expect(rows.map((row) => row.objectId)).toEqual([written]);
+  });
+});
+
+describe('EchoHost index status', () => {
+  test('reports migrations while it applies them, then idle', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new EchoHost({ runtime });
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+
+    const migrating = statuses.filter((status) => status.phase === 'migrating');
+    expect(migrating[0]).toMatchObject({ done: 0 });
+    expect(migrating.at(-1)?.done).toBe(migrating[0].total);
+    expect(host.indexStatus.current.phase).toBe('idle');
+  });
+
+  test('reports a rebuild after the snapshot cursors are reset, and idle once it drains', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const spaceId = SpaceId.random();
+    const first = new EchoHost({ runtime });
+    await first.open(Context.default());
+    for (let i = 0; i < 3; i++) {
+      await first.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceId },
+        objects: { [EntityId.random()]: EntityStructure.makeObject({ type: TEST_TYPE, data: {} }) },
+        links: {},
+      });
+    }
+    await RuntimeProvider.runPromise(runtime)(
+      first.feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          data: new Uint8Array([123, 125]),
+        },
+      ]),
+    );
+    await first.flush(Context.default());
+    await first.updateIndexes();
+    expect(first.indexStatus.current.phase).toBe('idle');
+    await first.close();
+
+    // As a cursor-resetting migration leaves the index on the next boot.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE indexName = 'objectSnapshot'`;
+      }),
+    );
+
+    const host = new EchoHost({ runtime });
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+    const documents = 3 + 1; // The objects' documents plus the space root.
+    expect(statuses.find((status) => status.phase === 'indexing')).toMatchObject({ done: 0 });
+    expect(statuses.find((status) => status.phase === 'indexing')?.total).toBeGreaterThanOrEqual(documents);
+
+    await host.updateIndexes();
+    await expect.poll(() => host.indexStatus.current.phase).toBe('idle');
+  });
+
+  test('the data service streams the current status, then each change', async () => {
+    const { host } = await setup();
+    const received: DataService.IndexStatus[] = [];
+    const fiber = Effect.runFork(
+      Stream.runForEach(host.dataService['DataService.subscribeIndexStatus'](), (status) =>
+        Effect.sync(() => received.push(status)),
+      ),
+    );
+    onTestFinished(() => {
+      void EffectEx.runPromise(Fiber.interrupt(fiber));
+    });
+
+    await expect.poll(() => received).toEqual([{ phase: 'idle', done: 0, total: 0 }]);
+    host.indexStatus.setBacklog(5);
+    await expect.poll(() => received.at(-1)).toEqual({ phase: 'indexing', done: 0, total: 5 });
   });
 });
 

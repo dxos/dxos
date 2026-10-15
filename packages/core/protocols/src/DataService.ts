@@ -301,6 +301,19 @@ export const GarbageCollectionReport = Schema.Struct({
 export interface GarbageCollectionReport extends Schema.Schema.Type<typeof GarbageCollectionReport> {}
 
 /**
+ * What the host's index is doing, for a boot screen or progress indicator: running index migrations,
+ * catching the index up to the stored documents and feed blocks, or neither. `done` of `total` counts
+ * migrations while migrating and documents plus feed blocks while indexing; `total` can grow while
+ * indexing as new data arrives.
+ */
+export const IndexStatus = Schema.Struct({
+  phase: Schema.Literals(['migrating', 'indexing', 'idle']),
+  done: Schema.Number,
+  total: Schema.Number,
+});
+export interface IndexStatus extends Schema.Schema.Type<typeof IndexStatus> {}
+
+/**
  * Effect RPC definitions for `dxos.echo.service.DataService`.
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
  */
@@ -374,6 +387,14 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('subscribeSpaceSyncState', {
     payload: GetSpaceSyncStateRequest,
     success: SpaceSyncState,
+    error: serviceError,
+    stream: true,
+  }),
+  /**
+   * The host's index status: the current value at once, then each change.
+   */
+  Rpc.make('subscribeIndexStatus', {
+    success: IndexStatus,
     error: serviceError,
     stream: true,
   }),

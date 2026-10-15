@@ -194,6 +194,11 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
+  /** A function host indexes nothing of its own, so its index is always idle. */
+  ['DataService.subscribeIndexStatus'](): EffectStream.Stream<DataService.IndexStatus, Error> {
+    return EffectStream.make({ phase: 'idle' as const, done: 0, total: 0 });
+  }
+
   ['DataService.getDocumentHeads'](
     _request: DataService.GetDocumentHeadsRequest,
   ): Effect.Effect<DataService.GetDocumentHeadsResponse, BaseError> {

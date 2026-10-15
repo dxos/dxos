@@ -11,6 +11,7 @@ import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal'
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
@@ -34,6 +35,13 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes/index.ts';
+import * as ActivityMigrations from './migrations/activity/index.ts';
+import * as ConvergenceKeyIntentMigrations from './migrations/convergence-key-intents/index.ts';
+import * as EntityMetaMigrations from './migrations/entity-meta/index.ts';
+import * as FtsMigrations from './migrations/fts/index.ts';
+import * as ObjectSnapshotMigrations from './migrations/object-snapshot/index.ts';
+import * as ReverseRefMigrations from './migrations/reverse-ref/index.ts';
+import * as TrackerMigrations from './migrations/tracker/index.ts';
 import { isUnauthorizedFunctionError } from './utils.ts';
 
 /**
@@ -224,6 +232,9 @@ const samePositions = (left: readonly IndexCursor[], right: readonly IndexCursor
 type IndexLeg = { index: Index; indexName: string };
 
 export class IndexEngine {
+  /** Indexes every source object passes through, under the names their cursors are tracked by. */
+  static readonly primaryIndexNames: readonly string[] = [INDEX_NAMES.objectSnapshot, INDEX_NAMES.reverseRef];
+
   readonly #sql: SqlClient.SqlClient;
 
   // The engine owns its stores outright; a caller that wants to read one constructs its own
@@ -257,7 +268,8 @@ export class IndexEngine {
     this.#indexedObjectSource = new IndexedObjectSource(sql);
   }
 
-  migrate() {
+  /** Applies every store's pending migrations; `onProgress` receives the running count applied. */
+  migrate(opts: { onProgress?: (applied: number) => void } = {}) {
     return Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const version = yield* sql<{ version: string }>`SELECT sqlite_version() AS version`.pipe(
@@ -270,14 +282,47 @@ export class IndexEngine {
           new Error(`SQLite ${version} is below the ${MIN_SQLITE_VERSION.join('.')} the index requires`),
         );
       }
-      yield* this.#tracker.migrate();
-      yield* this.#objectMetaIndex.migrate();
-      yield* this.#ftsIndex.migrate();
-      yield* this.#objectSnapshotIndex.migrate();
-      yield* this.#reverseRefIndex.migrate();
-      yield* this.#activityIndex.migrate();
-      yield* this.#convergenceKeyIntents.migrate();
+      let applied = 0;
+      for (const { migrations, table, migrate } of this.#stores()) {
+        const pending = opts.onProgress ? (yield* SqlMigrations.pending(migrations, table)).length : 0;
+        yield* migrate();
+        if (pending > 0) {
+          applied += pending;
+          opts.onProgress?.(applied);
+        }
+      }
     });
+  }
+
+  /**
+   * How many index migrations {@link migrate} would apply. Read before migrating, so a host can say
+   * an upgrade is about to rewrite the index rather than appear to hang.
+   */
+  pendingMigrations(): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      let count = 0;
+      for (const { migrations, table } of this.#stores()) {
+        count += (yield* SqlMigrations.pending(migrations, table)).length;
+      }
+      return count;
+    });
+  }
+
+  /** Each store's migrations, in the order {@link migrate} applies them. */
+  #stores() {
+    return [
+      { ...TrackerMigrations, migrate: () => this.#tracker.migrate() },
+      { ...EntityMetaMigrations, migrate: () => this.#objectMetaIndex.migrate() },
+      { ...FtsMigrations, migrate: () => this.#ftsIndex.migrate() },
+      { ...ObjectSnapshotMigrations, migrate: () => this.#objectSnapshotIndex.migrate() },
+      { ...ReverseRefMigrations, migrate: () => this.#reverseRefIndex.migrate() },
+      { ...ActivityMigrations, migrate: () => this.#activityIndex.migrate() },
+      { ...ConvergenceKeyIntentMigrations, migrate: () => this.#convergenceKeyIntents.migrate() },
+    ].map(({ MIGRATIONS, MIGRATIONS_TABLE, migrate }) => ({
+      migrations: MIGRATIONS,
+      table: MIGRATIONS_TABLE,
+      migrate,
+    }));
   }
 
   /**

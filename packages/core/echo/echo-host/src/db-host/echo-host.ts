@@ -58,6 +58,7 @@ import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
+import { IndexStatusTracker, countIndexBacklog } from './index-status.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
@@ -79,6 +80,9 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
  */
 const FTS_FLUSH_IDLE_MS = 1_000;
 const FTS_FLUSH_MAX_DELAY_MS = 10_000;
+
+/** How often the index backlog is recounted while a pass leaves work behind. */
+const INDEX_STATUS_INTERVAL_MS = 1_000;
 
 import { type QueryExecutorMode } from '../query/index.ts';
 
@@ -181,6 +185,12 @@ export class EchoHost extends Resource {
 
   private readonly _indexScheduler: IndexScheduler;
 
+  /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
+  readonly indexStatus = new IndexStatusTracker();
+
+  /** When the backlog was last counted; it is recounted at most this often while indexing. */
+  #backlogCountedAt = 0;
+
   private _feedService: FeedService.Handlers;
 
   readonly #indexTransactionLimits: Partial<IndexTransactionLimits> | undefined;
@@ -281,6 +291,7 @@ export class EchoHost extends Resource {
       // cooperative loop apply uniformly to the RPC handler path.
       updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
+      indexStatus: this.indexStatus,
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
 
@@ -380,8 +391,17 @@ export class EchoHost extends Resource {
       yieldBetweenTransactions: yieldBehindQueuedTasks,
     });
 
-    log('echo-host: running index engine migration...');
-    await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
+    // Reported before migrating, so a migration that rewrites a large index reads as progress rather than a hang.
+    const pendingMigrations = await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.pendingMigrations());
+    log('echo-host: running index engine migration...', { pending: pendingMigrations });
+    if (pendingMigrations > 0) {
+      this.indexStatus.set({ phase: 'migrating', done: 0, total: pendingMigrations });
+    }
+    await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.migrate({
+        onProgress: (applied) => this.indexStatus.set({ phase: 'migrating', done: applied, total: pendingMigrations }),
+      }),
+    );
     log('echo-host: index engine migration done');
 
     log('echo-host: running feed store migration...');
@@ -393,6 +413,13 @@ export class EchoHost extends Resource {
     log('echo-host: opening automerge host...');
     await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
+
+    // Counted once every store is migrated: a cursor-resetting migration shows up here as the rebuild it starts.
+    const backlog = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
+    this.#backlogCountedAt = performance.now();
+    log('echo-host: index backlog', { backlog });
+    this.indexStatus.set({ phase: 'idle', done: 0, total: 0 });
+    this.indexStatus.setBacklog(backlog);
 
     log('echo-host: opening query service...');
     await this._queryService.open(ctx);
@@ -1211,6 +1238,26 @@ export class EchoHost extends Resource {
    * `ctx` the decorator hands back carries the pass span, and `EffectEx.withContext` is what
    * carries it across into the Effect world.
    */
+  /**
+   * Moves {@link indexStatus} on after a pass. A drained pass ends any rebuild; documents that never
+   * load keep no cursor and would otherwise hold the status at indexing for good.
+   */
+  async #refreshIndexStatus(drained: boolean): Promise<void> {
+    if (drained) {
+      this.indexStatus.setBacklog(0);
+      return;
+    }
+    if (performance.now() - this.#backlogCountedAt < INDEX_STATUS_INTERVAL_MS) {
+      return;
+    }
+    this.#backlogCountedAt = performance.now();
+    const remaining = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
+    // Catch-up on documents that already have cursors counts as nothing; leave a rebuild in progress as it is.
+    if (remaining > 0 || this.indexStatus.current.phase !== 'indexing') {
+      this.indexStatus.setBacklog(remaining);
+    }
+  }
+
   @trace.span({
     op: 'indexer',
     // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
@@ -1348,6 +1395,8 @@ export class EchoHost extends Resource {
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }
+
+      await this.#refreshIndexStatus(combinedResult.drained);
 
       return {
         updated: combinedResult.updated,
