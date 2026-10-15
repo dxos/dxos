@@ -321,8 +321,6 @@ const ObjectFormDialogBody = ({
 
   const handleCancel = useCallback(() => closeRef.current?.click(), []);
 
-  // Detached, as in the live path: the dialog closes before the object is created, so nothing is left
-  // waiting on the result, and a teardown interrupting the create or the navigation is not an error.
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
     ({ metadata, data = {} }) =>
       Effect.gen(function* () {
