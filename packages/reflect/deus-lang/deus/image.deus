@@ -43,31 +43,29 @@ def nominal (form : Sexp) (acc : List Text) : List Text :=
   | Sexp.list items => List.foldl (fun a x => nominal x a) acc items
   | _ => acc
 
-/--
-  `(type "hash" "iri")` and `(ability "hash" "iri")` for each user type and ability the
+/-- `(type "hash" "iri")` and `(ability "hash" "iri")` for each user type and ability the
   definitions use: an embedder (a Worker) speaks in stable IRIs, while Core names a type by the
-  hash of its shape.
--/
+  hash of its shape. -/
 def nominalForms (fetch : Text -> {Throw Text | r} Option Sexp) (defs : List (Text, Sexp)) : {Throw Text | r} List Text :=
-  let hashes := List.dedup (List.sort (List.foldl (fun acc pair => nominal (snd pair) acc) [] defs))
-  List.filterMap (fun h =>
+  let hashes := dedup (sort (foldl (fun acc pair => nominal (snd pair) acc) [] defs))
+  filterMap (fun h =>
     match fetch h with
-    | some (Sexp.list (Sexp.sym kind :: Sexp.str iri :: _)) =>
-      if kind == "type" || kind == "ability" then some (Sexp.print (Sexp.node kind [Sexp.str h, Sexp.str iri])) else none
-    | _ => none) hashes
+    | Option.some (Sexp.list (Sexp.sym kind :: Sexp.str iri :: _)) => if kind == "type" || kind == "ability" then Option.some (Sexp.print (Sexp.node kind [Sexp.str h, Sexp.str iri])) else Option.none
+    | _ => Option.none) hashes
 
 def defForm (pair : (Text, Sexp)) : Text :=
-  match pair with
-  | (h, core) => Sexp.print (Sexp.node "def" [Sexp.str h, core])
+  let (h, core) := pair
+  Sexp.print (Sexp.node "def" [Sexp.str h, core])
 
 /-- The image text for an entry point. -/
 def build (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} Text :=
   let defs := closure fetch [main]
-  Text.join "\n" (List.map defForm defs ++ nominalForms fetch defs ++ [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
+  join "\n" (List.map defForm defs ++ nominalForms fetch defs ++
+    [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
 
 /-- Loads definitions into the running machine (for `run` and the test runner). -/
 def load (fetch : Text -> {Throw Text | r} Option Sexp) (roots : List Text) : {Throw Text | r} Unit :=
   let pending := List.filter (fun pair => not (Code.has (fst pair))) (closure fetch roots)
-  if List.isEmpty pending then () else Code.load (Text.join "\n" (List.map defForm pending))
+  if List.isEmpty pending then () else Code.load (join "\n" (List.map defForm pending))
 
 end Image

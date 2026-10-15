@@ -1,0 +1,51 @@
+namespace Pack
+/-- A pack's index (D173): 256 big-endian u32 counts, where count `b` is how many records have a key whose
+  first byte is at most `b`, then one 48-byte record per line sorted by key and kind: the key (32 bytes),
+  the line's byte offset in the pack (u64), its byte length without the newline (u32), the kind (1 byte)
+  and 3 zero bytes. A reader finds a hash with two ranged reads of the index and one of the pack. -/
+def index (text : Text) : List Int :=
+  let records := sort (Pack.entries text)
+  let counts := foldl (fun m r =>
+    let (k, _, _, _) := r
+    let b := firstByte k
+    Map.insert b (getOr (Map.lookup b m) 0 + 1) m) Map.empty records
+  let rec fanout b total acc := if b > 255 then reverse acc else
+    let next := total + getOr (Map.lookup b counts) 0
+    fanout (b + 1) next (next :: acc)
+  concatMap u32 (fanout 0 0 []) ++ concatMap (fun r =>
+    let (k, kind, offset, size) := r
+    hexBytes k ++ [0, 0, 0, 0] ++ u32 offset ++ u32 size ++ [kind, 0, 0, 0]) records
+
+/-- The `obj` and `meta` lines of a line bundle (D172) as (key, kind, byte offset, byte length), kind 1 for an object and 2 for its metadata. -/
+def entries (text : Text) : List (Text, (Int, (Int, Int))) :=
+  let rec go lines offset acc :=
+    match lines with
+    | [] => reverse acc
+    | line :: rest =>
+        let size := List.length (utf8 line)
+        let kind := if startsWith "obj " line then 1 else if startsWith "meta " line then 2 else 0
+        if kind == 0 then go rest (offset + size + 1) acc else
+          let start := indexOf line " " 0 + 1
+          go
+            rest
+            (offset + size + 1)
+            ((Pack.key (Text.slice line start (indexOf line " " start)), kind, offset, size) :: acc)
+  go (Text.split text "\n") 0 []
+
+/-- The first byte of a key. -/
+def firstByte (k : Text) : Int := Pack.hexDigit (code k 0) * 16 + Pack.hexDigit (code k 1)
+
+/-- `n` as four big-endian bytes. -/
+def u32 (n : Int) : List Int := [and (ushr n 24) 255, and (ushr n 16) 255, and (ushr n 8) 255, and n 255]
+
+/-- The bytes a lowercase hex text spells. -/
+def hexBytes (h : Text) : List Int := List.map
+  (fun i => Pack.hexDigit (code h (2 * i)) * 16 + Pack.hexDigit (code h (2 * i + 1)))
+  (range 0 (Text.length h / 2))
+
+/-- The index key of an object id: a hash's own 32 bytes, or for any other id (a builtin `#Option`, a recursive group's member `<hash>.1`) the SHA-256 of the id. -/
+def key (h : Text) : Text := if Text.length h == 64 && not (startsWith "#" h) then h else Text.sha256 h
+
+def hexDigit (c : Int) : Int := if c >= 97 then c - 87 else c - 48
+
+end Pack

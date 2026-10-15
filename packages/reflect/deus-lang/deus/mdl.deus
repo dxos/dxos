@@ -244,11 +244,10 @@ def toSexp (uri : Text) (b : Block) : Sexp :=
 /-- A spec object as its extension's URI and the block. -/
 def fromSexp (form : Sexp) : (Text, Block) :=
   match Sexp.args form with
-  | kind :: uri :: ident :: title :: props =>
-    (Sexp.asText uri, Block.mk (Sexp.asText kind) (Sexp.asText ident) (Sexp.asText title) (List.filterMap (fun p =>
+  | kind :: uri :: ident :: title :: props => (asText uri, Block.mk (asText kind) (asText ident) (asText title) (filterMap (fun p =>
       match p with
-      | Sexp.list [key, value] => some (Sexp.asText key, Sexp.asText value)
-      | _ => none) props) 0)
+      | Sexp.list (key :: value :: []) => Option.some (asText key, asText value)
+      | _ => Option.none) props) 0)
   | _ => ("", Block.mk "" "" "" [] 0)
 
 /-- A block printed back as MDL. -/

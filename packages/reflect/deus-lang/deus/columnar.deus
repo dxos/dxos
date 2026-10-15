@@ -54,86 +54,82 @@ def encode (forms : List Sexp) : Text :=
   let stringRefs := Ref.new []
   let hashRefs := Ref.new []
   let ints := Ref.new []
-  let emit := fun (kind : Text) (refs : Ref (List Int)) (n : Int) =>
+  let emit := fun kind refs n =>
     Ref.set shape (kind :: Ref.get shape)
     Ref.set refs (n :: Ref.get refs)
   let rec walk x :=
     match x with
     | Sexp.list items =>
-      Ref.set shape ("(" :: Ref.get shape)
-      List.forEach items walk
-      Ref.set shape (")" :: Ref.get shape)
+        Ref.set shape ("(" :: Ref.get shape)
+        forEach items walk
+        Ref.set shape (")" :: Ref.get shape)
     | Sexp.sym name => emit "s" symbolRefs (intern symbolIndex symbols name)
-    | Sexp.str value =>
-      if isHash value then emit "h" hashRefs (intern hashIndex hashes value)
-      else emit "t" stringRefs (intern stringIndex strings value)
+    | Sexp.str value => if Columnar.isHash value then emit "h" hashRefs (intern hashIndex hashes value) else emit "t" stringRefs (intern stringIndex strings value)
     | Sexp.int n => emit "i" ints n
-  List.forEach forms walk
-  let dictionary := fun (values : Ref (List Text)) => Sexp.print (Sexp.list (List.map Sexp.str (List.reverse (Ref.get values))))
-  Text.join "\n" [header, Text.concat (List.reverse (Ref.get shape)), dictionary symbols, dictionary strings,
-    Text.concat (List.reverse (Ref.get hashes)), numbers symbolRefs, numbers stringRefs, numbers hashRefs, numbers ints]
+  forEach forms walk
+  let dictionary := fun values => Sexp.print (Sexp.list (List.map Sexp.str (reverse (Ref.get values))))
+  join
+    "\n"
+    [Columnar.header, Text.concat (reverse (Ref.get shape)), dictionary symbols, dictionary strings, Text.concat (reverse (Ref.get hashes)), numbers symbolRefs, numbers stringRefs, numbers hashRefs, numbers ints]
 
 def parseNumbers (line : Text) : List Int :=
   List.filterMap (fun x => if Text.isEmpty x then none else Int.fromText x) (Text.split line " ")
 
 def parseDictionary (line : Text) : Dict Int Text :=
   match Sexp.read line with
-  | Sexp.list items => Dict.fromList (List.mapIndexed (fun i x => (i, Sexp.asText x)) items)
+  | Sexp.list items => Dict.fromList (mapIndexed (fun i x => (i, asText x)) items)
   | _ => defect "columnar: bad dictionary"
 
 def decode (t : Text) : List Sexp :=
   match Text.split t "\n" with
-  | [_, shape, symbolLine, stringLine, hashes, symbolLine2, stringLine2, hashLine, intLine] =>
-    let symbols := parseDictionary symbolLine
-    let strings := parseDictionary stringLine
-    let symbolRefs := Ref.new (parseNumbers symbolLine2)
-    let stringRefs := Ref.new (parseNumbers stringLine2)
-    let hashRefs := Ref.new (parseNumbers hashLine)
-    let ints := Ref.new (parseNumbers intLine)
-    let next := fun (refs : Ref (List Int)) =>
-      match Ref.get refs with
-      | x :: rest =>
-        Ref.set refs rest
-        x
-      | [] => defect "columnar: a column ended early"
-    let entry := fun (dict : Dict Int Text) (i : Int) =>
-      match Dict.lookup i dict with
-      | some x => x
-      | none => defect ("columnar: no entry " ++ Int.toText i)
-    let n := Text.length shape
-    let rec go i stack done :=
-      if i >= n then
+  | _ :: shape :: symbolLine :: stringLine :: hashes :: symbolLine2 :: stringLine2 :: hashLine :: intLine :: [] =>
+      let symbols := parseDictionary symbolLine
+      let strings := parseDictionary stringLine
+      let symbolRefs := Ref.new (parseNumbers symbolLine2)
+      let stringRefs := Ref.new (parseNumbers stringLine2)
+      let hashRefs := Ref.new (parseNumbers hashLine)
+      let ints := Ref.new (parseNumbers intLine)
+      let next := fun refs =>
+        match Ref.get refs with
+        | x :: rest =>
+            Ref.set refs rest
+            x
+        | [] => defect "columnar: a column ended early"
+      let entry := fun dict i =>
+        match Dict.lookup i dict with
+        | Option.some x => x
+        | Option.none => defect ("columnar: no entry " ++ Int.toText i)
+      let n := Text.length shape
+      let rec go i stack done := if i >= n then
         match stack with
-        | [] => List.reverse done
+        | [] => reverse done
         | _ => defect "columnar: unbalanced ("
       else
-        let c := Text.code shape i
-        if c == '(' then go (i + 1) ([] :: stack) done
-        else if c == ')' then
+        let c := code shape i
+        if c == '(' then go (i + 1) ([] :: stack) done else if c == ')' then
           match stack with
           | [] => defect "columnar: unbalanced )"
           | top :: rest =>
-            match Sexp.push (Sexp.list (List.reverse top)) rest done with
-            | (stack2, done2) => go (i + 1) stack2 done2
+              let (stack2, done2) := Sexp.push (Sexp.list (reverse top)) rest done
+              go (i + 1) stack2 done2
         else
-          let form := if c == 's' then Sexp.sym (entry symbols (next symbolRefs))
-            else if c == 't' then Sexp.str (entry strings (next stringRefs))
-            else if c == 'h' then
-              let h := next hashRefs
-              Sexp.str (Text.slice hashes (h * 64) (h * 64 + 64))
-            else Sexp.int (next ints)
-          match Sexp.push form stack done with
-          | (stack2, done2) => go (i + 1) stack2 done2
-    go 0 [] []
+          let form := if c == 's' then Sexp.sym (entry symbols (next symbolRefs)) else if c == 't' then Sexp.str (entry strings (next stringRefs)) else if c == 'h' then
+            let h := next hashRefs
+            Sexp.str (Text.slice hashes (h * 64) (h * 64 + 64))
+          else Sexp.int (next ints)
+          let (stack2, done2) := Sexp.push form stack done
+          go (i + 1) stack2 done2
+      go 0 [] []
   | _ => defect "columnar: expected 9 lines"
 
 /-- Reads either encoding: columnar text, or plain s-expressions (bundles written before D60). -/
-def read (t : Text) : List Sexp := if Text.startsWith header t then decode t else Sexp.readAll t
+def read (t : Text) : List Sexp := if startsWith Columnar.header t then Columnar.decode t else readAll t
 
 test roundTrips :=
-  let bundle := Sexp.node "bundle" [Sexp.node "obj" [Sexp.str (Text.sha256 "a"), Sexp.node "term" [Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]]]],
-    Sexp.node "meta" [Sexp.str (Text.sha256 "a"), Sexp.node "doc" [Sexp.str "line one\nline \"two\""]], Sexp.node "n" [Sexp.int (0 - 3), Sexp.list []]]
+  let bundle := Sexp.node "bundle" [Sexp.node
+    "obj"
+    [Sexp.str (Text.sha256 "a"), Sexp.node "term" [Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]]]], Sexp.node "meta" [Sexp.str (Text.sha256 "a"), Sexp.node "doc" [Sexp.str "line one\nline \"two\""]], Sexp.node "n" [Sexp.int (0 - 3), Sexp.list []]]
   let forms := [bundle, Sexp.str (Text.sha256 "a")]
-  read (encode forms) == forms && read (Sexp.print bundle) == [bundle]
+  Columnar.read (Columnar.encode forms) == forms && Columnar.read (Sexp.print bundle) == [bundle]
 
 end Columnar

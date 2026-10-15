@@ -101,29 +101,26 @@ def userName (cx : Cx) (iri : Text) : {Throw Text} Text :=
   | none => throw ("type " ++ iri ++ " has no name in the codebase")
 
 /-- The TypeScript type of a DEUS type; `vars` names the enclosing declaration's parameters. -/
-def tsType (cx : Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text :=
+def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text :=
   match t with
-  | Sexp.list [Sexp.sym "tvar", Sexp.int i] =>
-    match List.get? vars i with
-    | some v => v
-    | none => throw ("unknown type parameter " ++ Int.toText i)
-  | Sexp.list [Sexp.sym "tvar", Sexp.str v] => throw ("polymorphic in " ++ v ++ "; only monomorphic functions are exported")
-  | Sexp.list (Sexp.sym "tfun" :: _) => throw "takes or returns a function"
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) =>
+      match get? vars i with
+      | Option.some v => v
+      | Option.none => Throw.throw ("unknown type parameter " ++ Int.toText i)
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.str v :: []) => Throw.throw ("polymorphic in " ++ v ++ "; only monomorphic functions are exported")
+  | Sexp.list (Sexp.sym "tfun" :: _) => Throw.throw "takes or returns a function"
   | _ =>
-    match applied t with
-    | some ("#Int", []) => "number"
-    | some ("#Text", []) => "string"
-    | some ("#Bool", []) => "boolean"
-    | some ("#Unit", []) => "void"
-    | some ("#List", [x]) => "ReadonlyArray<" ++ tsType cx vars x ++ ">"
-    | some ("#Option", [x]) =>
-      if undefinable x then throw "an Option of Unit or Option has no unambiguous TypeScript form"
-      else tsType cx vars x ++ " | undefined"
-    | some ("#Pair", [a, b]) => "readonly [" ++ Text.join ", " (List.map (tsType cx vars) (tupleItems a b)) ++ "]"
-    | some (iri, args) =>
-      if isBuiltin iri then throw ("no TypeScript form for " ++ iri)
-      else userName cx iri ++ generics (List.map (tsType cx vars) args)
-    | none => throw ("no TypeScript form for " ++ Sexp.print t)
+      match applied t with
+      | Option.some ("#Int", []) => "number"
+      | Option.some ("#Text", []) => "string"
+      | Option.some ("#Bool", []) => "boolean"
+      | Option.some ("#Unit", []) => "void"
+      | Option.some ("#List", x :: []) => "ReadonlyArray<" ++ Bindings.tsType cx vars x ++ ">"
+      | Option.some ("#Option", x :: []) => if undefinable x then Throw.throw "an Option of Unit or Option has no unambiguous TypeScript form" else Bindings.tsType cx vars x ++ " | undefined"
+      | Option.some ("#Pair", a :: b :: []) => "readonly [" ++ join ", " (List.map (Bindings.tsType cx vars) (Bindings.tupleItems a b)) ++
+          "]"
+      | Option.some (iri, args) => if isBuiltin iri then Throw.throw ("no TypeScript form for " ++ iri) else userName cx iri ++ Ts.generics (List.map (Bindings.tsType cx vars) args)
+      | Option.none => Throw.throw ("no TypeScript form for " ++ Sexp.print t)
 
 /-- `(a, (b, c))` flattens to three items, as DEUS writes `(a, b, c)`; longer tuples nest in the last. -/
 def tupleItems (a : Sexp) (b : Sexp) : List Sexp :=
@@ -136,25 +133,25 @@ def generics (args : List Text) : Text := if List.isEmpty args then "" else "<" 
 def codecVar (v : Text) : Text := "codec" ++ v
 
 /-- An expression for the codec of `t`; codecs of user types are hoisted functions. -/
-def codec (cx : Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text :=
+def codec (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text :=
   match t with
-  | Sexp.list [Sexp.sym "tvar", Sexp.int i] =>
-    match List.get? vars i with
-    | some v => codecVar v
-    | none => throw ("unknown type parameter " ++ Int.toText i)
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) =>
+      match get? vars i with
+      | Option.some v => codecVar v
+      | Option.none => Throw.throw ("unknown type parameter " ++ Int.toText i)
   | _ =>
-    match applied t with
-    | some ("#Int", []) => "$rt.int"
-    | some ("#Text", []) => "$rt.text"
-    | some ("#Bool", []) => "$rt.bool"
-    | some ("#Unit", []) => "$rt.unit"
-    | some ("#List", [x]) => "$rt.list(" ++ codec cx vars x ++ ")"
-    | some ("#Option", [x]) => "$rt.option(" ++ codec cx vars x ++ ")"
-    | some ("#Pair", [a, b]) =>
-      let items := List.map (codec cx vars) (tupleItems a b)
-      (if List.length items == 3 then "$rt.triple(" else "$rt.pair(") ++ Text.join ", " items ++ ")"
-    | some (iri, args) => userName cx iri ++ "$(" ++ Text.join ", " (List.map (codec cx vars) args) ++ ")"
-    | none => throw ("no codec for " ++ Sexp.print t)
+      match applied t with
+      | Option.some ("#Int", []) => "$rt.int"
+      | Option.some ("#Text", []) => "$rt.text"
+      | Option.some ("#Bool", []) => "$rt.bool"
+      | Option.some ("#Unit", []) => "$rt.unit"
+      | Option.some ("#List", x :: []) => "$rt.list(" ++ Bindings.codec cx vars x ++ ")"
+      | Option.some ("#Option", x :: []) => "$rt.option(" ++ Bindings.codec cx vars x ++ ")"
+      | Option.some ("#Pair", a :: b :: []) =>
+          let items := List.map (Bindings.codec cx vars) (Bindings.tupleItems a b)
+          (if List.length items == 3 then "$rt.triple(" else "$rt.pair(") ++ join ", " items ++ ")"
+      | Option.some (iri, args) => userName cx iri ++ "$(" ++ join ", " (List.map (Bindings.codec cx vars) args) ++ ")"
+      | Option.none => Throw.throw ("no codec for " ++ Sexp.print t)
 
 /-- User type IRIs mentioned in a type. -/
 def iris (t : Sexp) (acc : List Text) : List Text :=
@@ -191,15 +188,16 @@ def ctorNames (ns : Map Text Entry) (h : Text) : List (Int, Text) :=
     | _ => none) (Map.toList ns)
 
 /-- Field names per constructor: a structure's from its entry, others from metadata; `_i` when unnamed. -/
-def fieldNames (cx : Cx) (name : Text) (meta : Option Sexp) (tag : Int) (count : Int) : List Text :=
-  let fromEntry := match Map.lookup name cx.cxEntries with
-    | some (Entry.type _ _ fields) => if tag == 0 then fields else []
+def fieldNames (cx : Bindings.Cx) (name : Text) (meta : Option Sexp) (tag : Int) (count : Int) : List Text :=
+  let fromEntry :=
+    match Map.lookup name cx.cxEntries with
+    | Option.some (Entry.type _ _ fields) => if tag == 0 then fields else []
     | _ => []
-  let named := if List.length fromEntry == count then fromEntry else Option.getOr (List.get? (View.fieldNamesFor meta) tag) []
+  let named := if List.length fromEntry == count then fromEntry else getOr (get? (fieldNamesFor meta) tag) []
   List.map (fun i =>
-    match List.get? named i with
-    | some n => if Text.isEmpty n then "_" ++ Int.toText i else n
-    | none => "_" ++ Int.toText i) (List.range 0 count)
+    match get? named i with
+    | Option.some n => if Text.isEmpty n then "_" ++ Int.toText i else n
+    | Option.none => "_" ++ Int.toText i) (range 0 count)
 
 def docComment (indent : Text) (lines : List Text) : Text :=
   match List.filter (fun l => not (Text.isEmpty l)) lines with
@@ -207,7 +205,7 @@ def docComment (indent : Text) (lines : List Text) : Text :=
   | [one] => indent ++ "/** " ++ one ++ " */\n"
   | many => indent ++ "/**\n" ++ Text.concat (List.map (fun l => indent ++ " * " ++ l ++ "\n") many) ++ indent ++ " */\n"
 
-def docOf (meta : Option Sexp) : Text := Option.getOr (Option.map Sexp.asText (Codebase.metaField meta "doc")) ""
+def docOf (meta : Option Sexp) : Text := getOr (Option.map asText (metaField meta "doc")) ""
 
 /-- A property name: reserved words are allowed there, so only other characters are replaced. -/
 def propKey (t : Text) : Text := if List.contains t reserved then t else ident t
@@ -244,81 +242,79 @@ def distinct (names : List Text) : List Text :=
   List.reverse (List.foldl (fun used n =>
     if List.length (List.filter (fun m => m == n) names) > 1 then fresh n 1 used :: used else n :: used) [] names)
 
-/--
-  One user type: its declaration, its codec, and, for a variant with fields, a constructor per
-  variant as a `.d.ts` member and a `.js` member.
--/
-def typeParts (cx : Cx) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (iri : Text) : {IO, Throw Text} (Text, Text, List (Text, Text)) :=
+/-- One user type: its declaration, its codec, and, for a variant with fields, a constructor per
+  variant as a `.d.ts` member and a `.js` member. -/
+def typeParts (cx : Bindings.Cx) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (iri : Text) : {IO, Throw Text} (Text, (Text, List (Text, Text))) :=
   match Map.lookup iri cx.cxTypes with
-  | none => throw ("type " ++ iri ++ " has no name in the codebase")
-  | some (h, name) =>
-    let obj := Option.getOr (fetch h) (Sexp.list [])
-    let m := meta h
-    let count := match Sexp.args obj with
-      | _ :: Sexp.int n :: _ => n
-      | _ => 0
-    let vars := typeParams (View.paramsFor m count obj)
-    let tsName := userName cx iri
-    let full := tsName ++ generics vars
-    let shapes := ctors obj
-    let names := ctorNames cx.cxEntries h
-    let ctorName := fun (tag : Int) => Option.getOr (List.lookup tag names) ("ctor" ++ Int.toText tag)
-    let label := quote name
-    let header := docComment "" [docOf m, "`" ++ name ++ "` (" ++ iri ++ ")"]
-    let codecHead := "function " ++ tsName ++ "$(" ++ Text.join ", " (List.map codecVar vars) ++ ") {\n  return {\n"
-    let decodeHead := "    decode: (json) => {\n      const value = $rt.con(json, " ++ label ++ ");\n"
-    let make := fun (tag : Int) (fields : List Text) => "$rt.make(" ++ quote h ++ ", " ++ Int.toText tag ++ ", [" ++ Text.join ", " fields ++ "])"
-    let encodeFields := fun (tag : Int) (types : List Sexp) =>
-      List.map (fun pair => codec cx vars (snd pair) ++ ".encode(value." ++ fst pair ++ ")") (List.zip (fieldNames cx name m tag (List.length types)) types)
-    let decodeFields := fun (tag : Int) (types : List Sexp) =>
-      List.mapIndexed (fun i pair => fst pair ++ ": " ++ codec cx vars (snd pair) ++ ".decode($rt.field(value, " ++ Int.toText i ++ "))") (List.zip (fieldNames cx name m tag (List.length types)) types)
-    let badTag := "        default:\n          throw $rt.badTag(" ++ label ++ ", value);\n"
-    if List.isEmpty shapes then throw ("type " ++ name ++ " has no constructors")
-    else if List.all List.isEmpty shapes then
-      let literals := List.mapIndexed (fun tag _ => quote (ctorName tag)) shapes
-      (header ++ "export type " ++ full ++ " = " ++ Text.join " | " literals ++ ";\n",
-        codecHead ++ "    encode: (value) => {\n      switch (value) {\n" ++
-          Text.concat (List.mapIndexed (fun tag lit => "        case " ++ lit ++ ":\n          return " ++ make tag [] ++ ";\n") literals) ++
-          "        default:\n          throw new $rt.DeusDecodeError(" ++ label ++ ", value);\n" ++
-          "      }\n    },\n" ++ decodeHead ++ "      switch (value.tag) {\n" ++
-          Text.concat (List.mapIndexed (fun tag lit => "        case " ++ Int.toText tag ++ ":\n          return " ++ lit ++ ";\n") literals) ++
-          badTag ++ "      }\n    },\n  };\n}\n",
-        [])
-    else if List.length shapes == 1 then
-      let types := Option.getOr (List.head? shapes) []
-      let fields := List.map (fun pair => "readonly " ++ fst pair ++ ": " ++ tsType cx vars (snd pair)) (List.zip (fieldNames cx name m 0 (List.length types)) types)
-      (header ++ "export type " ++ full ++ " = { " ++ Text.join "; " fields ++ " };\n",
-        codecHead ++ "    encode: (value) => " ++ make 0 (encodeFields 0 types) ++ ",\n" ++ decodeHead ++
-          "      return { " ++ Text.join ", " (decodeFields 0 types) ++ " };\n    },\n  };\n}\n",
-        [])
-    else
-      let variants := List.mapIndexed (fun tag types =>
-        let fields := List.map (fun pair => "; readonly " ++ fst pair ++ ": " ++ tsType cx vars (snd pair)) (List.zip (fieldNames cx name m tag (List.length types)) types)
-        "  | { readonly $tag: " ++ quote (ctorName tag) ++ Text.concat fields ++ " }") shapes
-      let builders := List.mapIndexed (fun tag types =>
-        let cname := ctorName tag
-        let key := propKey cname
-        let fields := fieldNames cx name m tag (List.length types)
-        let params := List.map ident fields
-        if List.isEmpty types then
-          ("  readonly " ++ key ++ ": " ++ tsName ++ generics (List.map (fun _ => "never") vars) ++ ";",
-            "  " ++ key ++ ": { $tag: " ++ quote cname ++ " },")
-        else
-          let typed := List.map (fun pair => fst pair ++ ": " ++ tsType cx vars (snd pair)) (List.zip params types)
-          let props := List.map (fun pair => if fst pair == snd pair then fst pair else fst pair ++ ": " ++ snd pair) (List.zip fields params)
-          ("  readonly " ++ key ++ ": " ++ generics vars ++ "(" ++ Text.join ", " typed ++ ") => " ++ full ++ ";",
-            "  " ++ key ++ ": (" ++ Text.join ", " params ++ ") => ({ $tag: " ++ quote cname ++ Text.concat (List.map (fun p => ", " ++ p) props) ++ " }),")) shapes
-      (header ++ "export type " ++ full ++ " =\n" ++ Text.join "\n" variants ++ ";\n",
-        codecHead ++ "    encode: (value) => {\n      switch (value.$tag) {\n" ++
-          Text.concat (List.mapIndexed (fun tag types =>
-            "        case " ++ quote (ctorName tag) ++ ":\n          return " ++ make tag (encodeFields tag types) ++ ";\n") shapes) ++
-          "        default:\n          throw new $rt.DeusDecodeError(" ++ label ++ ", value);\n" ++
-          "      }\n    },\n" ++ decodeHead ++ "      switch (value.tag) {\n" ++
-          Text.concat (List.mapIndexed (fun tag types =>
-            "        case " ++ Int.toText tag ++ ":\n          return { $tag: " ++ quote (ctorName tag) ++
-              Text.concat (List.map (fun f => ", " ++ f) (decodeFields tag types)) ++ " };\n") shapes) ++
-          badTag ++ "      }\n    },\n  };\n}\n",
-        builders)
+  | Option.none => Throw.throw ("type " ++ iri ++ " has no name in the codebase")
+  | Option.some (h, name) =>
+      let obj := getOr (fetch h) (Sexp.list [])
+      let m := meta h
+      let count :=
+        match Sexp.args obj with
+        | _ :: Sexp.int n :: _ => n
+        | _ => 0
+      let vars := Bindings.typeParams (paramsFor m count obj)
+      let tsName := userName cx iri
+      let full := tsName ++ Ts.generics vars
+      let shapes := ctors obj
+      let names := ctorNames cx.cxEntries h
+      let ctorName := fun tag => getOr (List.lookup tag names) ("ctor" ++ Int.toText tag)
+      let label := Bindings.quote name
+      let header := Bindings.docComment "" [Bindings.docOf m, "`" ++ name ++ "` (" ++ iri ++ ")"]
+      let codecHead := "function " ++ tsName ++ "$(" ++ join ", " (List.map codecVar vars) ++ ") {\n  return {\n"
+      let decodeHead := "    decode: (json) => {\n      const value = $rt.con(json, " ++ label ++ ");\n"
+      let make := fun tag fields => "$rt.make(" ++ Bindings.quote h ++ ", " ++ Int.toText tag ++ ", [" ++ join ", " fields ++ "])"
+      let encodeFields := fun tag types => List.map
+        (fun pair => Bindings.codec cx vars (snd pair) ++ ".encode(value." ++ fst pair ++ ")")
+        (zip (Bindings.fieldNames cx name m tag (List.length types)) types)
+      let decodeFields := fun tag types => mapIndexed
+        (fun i pair => fst pair ++ ": " ++ Bindings.codec cx vars (snd pair) ++ ".decode($rt.field(value, " ++
+          Int.toText i ++ "))")
+        (zip (Bindings.fieldNames cx name m tag (List.length types)) types)
+      let badTag := "        default:\n          throw $rt.badTag(" ++ label ++ ", value);\n"
+      if List.isEmpty shapes then Throw.throw ("type " ++ name ++ " has no constructors") else if List.all List.isEmpty shapes then
+        let literals := mapIndexed (fun tag _ => Bindings.quote (ctorName tag)) shapes
+        (header ++ "export type " ++ full ++ " = " ++ join " | " literals ++ ";\n", codecHead ++ "    encode: (value) => {\n      switch (value) {\n" ++ Text.concat (mapIndexed
+          (fun tag lit => "        case " ++ lit ++ ":\n          return " ++ make tag [] ++ ";\n")
+          literals) ++ "        default:\n          throw new $rt.DeusDecodeError(" ++ label ++ ", value);\n" ++ "      }\n    },\n" ++ decodeHead ++ "      switch (value.tag) {\n" ++ Text.concat (mapIndexed
+          (fun tag lit => "        case " ++ Int.toText tag ++ ":\n          return " ++ lit ++ ";\n")
+          literals) ++ badTag ++ "      }\n    },\n  };\n}\n", [])
+      else if List.length shapes == 1 then
+        let types := getOr (head? shapes) []
+        let fields := List.map
+          (fun pair => "readonly " ++ fst pair ++ ": " ++ tsType cx vars (snd pair))
+          (zip (Bindings.fieldNames cx name m 0 (List.length types)) types)
+        (header ++ "export type " ++ full ++ " = { " ++ join "; " fields ++ " };\n", codecHead ++ "    encode: (value) => " ++ make 0 (encodeFields 0 types) ++ ",\n" ++
+          decodeHead ++ "      return { " ++ join ", " (decodeFields 0 types) ++ " };\n    },\n  };\n}\n", [])
+      else
+        let variants := mapIndexed (fun tag types =>
+          let fields := List.map
+            (fun pair => "; readonly " ++ fst pair ++ ": " ++ tsType cx vars (snd pair))
+            (zip (Bindings.fieldNames cx name m tag (List.length types)) types)
+          "  | { readonly $tag: " ++ Bindings.quote (ctorName tag) ++ Text.concat fields ++ " }") shapes
+        let builders := mapIndexed (fun tag types =>
+          let cname := ctorName tag
+          let key := propKey cname
+          let fields := Bindings.fieldNames cx name m tag (List.length types)
+          let params := List.map Bindings.ident fields
+          if List.isEmpty types then ("  readonly " ++ key ++ ": " ++ tsName ++ Ts.generics (List.map (fun _ => "never") vars) ++
+            ";", "  " ++ key ++ ": { $tag: " ++ Bindings.quote cname ++ " },") else
+            let typed := List.map (fun pair => fst pair ++ ": " ++ tsType cx vars (snd pair)) (zip params types)
+            let props := List.map
+              (fun pair => if fst pair == snd pair then fst pair else fst pair ++ ": " ++ snd pair)
+              (zip fields params)
+            ("  readonly " ++ key ++ ": " ++ Ts.generics vars ++ "(" ++ join ", " typed ++ ") => " ++
+              full ++ ";", "  " ++ key ++ ": (" ++ join ", " params ++ ") => ({ $tag: " ++ Bindings.quote cname ++
+              Text.concat (List.map (fun p => ", " ++ p) props) ++ " }),")) shapes
+        (header ++ "export type " ++ full ++ " =\n" ++ join "\n" variants ++ ";\n", codecHead ++ "    encode: (value) => {\n      switch (value.$tag) {\n" ++
+          Text.concat (mapIndexed
+            (fun tag types => "        case " ++ Bindings.quote (ctorName tag) ++ ":\n          return " ++
+              make tag (encodeFields tag types) ++ ";\n")
+            shapes) ++ "        default:\n          throw new $rt.DeusDecodeError(" ++ label ++ ", value);\n" ++ "      }\n    },\n" ++ decodeHead ++ "      switch (value.tag) {\n" ++ Text.concat (mapIndexed
+          (fun tag types => "        case " ++ Int.toText tag ++ ":\n          return { $tag: " ++
+            Bindings.quote (ctorName tag) ++ Text.concat (List.map (fun f => ", " ++ f) (decodeFields tag types)) ++ " };\n")
+          shapes) ++ badTag ++ "      }\n    },\n  };\n}\n", builders)
 
 /-- An ability the exported functions perform, with the type arguments they perform it at. -/
 def effectOf (t : Sexp) : Option (Text, List Sexp) :=
@@ -347,123 +343,141 @@ def handlerKey (cx : Cx) (iri : Text) : {Throw Text} Text :=
   | (_, name) => ident (Names.lastSegment name)
 
 /-- A handler interface, and the function that answers the kernel's requests with a handler. -/
-def handlerParts (cx : Cx) (fetch : Text -> {IO} Option Sexp) (effect : (Text, List Sexp)) : {IO, Throw Text} (Text, Text) :=
-  match effect with
-  | (iri, args) =>
-    match abilityName cx iri with
-    | (h, name) =>
-      let short := handlerKey cx iri
-      let ops := List.filter (fun x => Sexp.head x == "op") (Sexp.args (Option.getOr (fetch h) (Sexp.list [])))
-      let names := opNames cx.cxEntries h
-      let rendered := List.mapIndexed (fun index op =>
-        let oname := propKey (Option.getOr (List.lookup index names) ("op" ++ Int.toText index))
-        let t := instantiate args (Option.getOr (List.last? (Sexp.args op)) (Sexp.list []))
-        match arrows t with
-        | (params, result, _) =>
-          let shown := List.filter (fun p => not (isTref "#Unit" p)) params
-          let paramText := Text.join ", " (List.map (fun pair => fst pair ++ ": " ++ tsType cx [] (snd pair)) (List.zip (distinct (List.map (opParamName cx) shown)) shown))
-          let never := match result with
-            | Sexp.list [Sexp.sym "tvar", Sexp.str _] => true
-            | _ => false
-          let resultText := if never then "never" else tsType cx [] result
-          let decoded := List.mapIndexed (fun i p => codec cx [] p ++ ".decode($rt.arg(args, " ++ Int.toText i ++ "))") params
-          let passed := List.filterMap (fun pair => if isTref "#Unit" (snd pair) then none else some (fst pair)) (List.zip decoded params)
-          let callText := "handler." ++ oname ++ "(" ++ Text.join ", " passed ++ ")"
-          let answer := if never then callText else codec cx [] result ++ ".encode(await " ++ callText ++ ")"
-          ("  " ++ oname ++ "(" ++ paramText ++ "): Awaitable<" ++ resultText ++ ">;",
-            "    case " ++ Int.toText index ++ ":\n      return " ++ answer ++ ";\n")) ops
-      let missing := "no handler for " ++ name ++ ": pass handlers." ++ short ++ " to configure() or load()"
-      (docComment "" ["Answers `" ++ name ++ "` (" ++ iri ++ ") for the DEUS code."] ++
-          "export interface " ++ short ++ "Handler {\n" ++ Text.join "\n" (List.map fst rendered) ++ "\n}\n",
-        "const $answer" ++ short ++ " = (handler) => async (op, args) => {\n" ++
-          "  if (handler === undefined) {\n    throw new Error(" ++ quote missing ++ ");\n  }\n  switch (op) {\n" ++
-          Text.concat (List.map snd rendered) ++
-          "    default:\n      throw new Error(`" ++ name ++ " has no operation ${op}`);\n  }\n};\n")
+def handlerParts (cx : Bindings.Cx) (fetch : Text -> {IO} Option Sexp) (effect : (Text, List Sexp)) : {IO, Throw Text} (Text, Text) :=
+  let (iri, args) := effect
+  let (h, name) := abilityName cx iri
+  let short := handlerKey cx iri
+  let ops := List.filter (fun x => head x == "op") (Sexp.args (getOr (fetch h) (Sexp.list [])))
+  let names := opNames cx.cxEntries h
+  let rendered := mapIndexed (fun index op =>
+    let oname := propKey (getOr (List.lookup index names) ("op" ++ Int.toText index))
+    let t := JsGen.substitute args (getOr (last? (Sexp.args op)) (Sexp.list []))
+    let (params, result, _) := Bindings.arrows t
+    let shown := List.filter (fun p => not (isTref "#Unit" p)) params
+    let paramText := join ", " (List.map
+      (fun pair => fst pair ++ ": " ++ tsType cx [] (snd pair))
+      (zip (distinct (List.map (opParamName cx) shown)) shown))
+    let never :=
+      match result with
+      | Sexp.list (Sexp.sym "tvar" :: Sexp.str _ :: []) => true
+      | _ => false
+    let resultText := if never then "never" else tsType cx [] result
+    let decoded := mapIndexed
+      (fun i p => Bindings.codec cx [] p ++ ".decode($rt.arg(args, " ++ Int.toText i ++ "))")
+      params
+    let passed := filterMap
+      (fun pair => if isTref "#Unit" (snd pair) then Option.none else Option.some (fst pair))
+      (zip decoded params)
+    let callText := "handler." ++ oname ++ "(" ++ join ", " passed ++ ")"
+    let answer := if never then callText else Bindings.codec cx [] result ++ ".encode(await " ++ callText ++ ")"
+    ("  " ++ oname ++ "(" ++ paramText ++ "): Awaitable<" ++ resultText ++ ">;", "    case " ++ Int.toText index ++ ":\n      return " ++ answer ++ ";\n")) ops
+  let missing := "no handler for " ++ name ++ ": pass handlers." ++ short ++ " to configure() or load()"
+  (Bindings.docComment "" ["Answers `" ++ name ++ "` (" ++ iri ++ ") for the DEUS code."] ++
+    "export interface " ++ short ++ "Handler {\n" ++ join "\n" (List.map fst rendered) ++ "\n}\n", "const $answer" ++ short ++ " = (handler) => async (op, args) => {\n" ++
+    "  if (handler === undefined) {\n    throw new Error(" ++ Bindings.quote missing ++ ");\n  }\n  switch (op) {\n" ++ Text.concat (List.map snd rendered) ++ "    default:\n      throw new Error(`" ++ name ++ " has no operation ${op}`);\n  }\n};\n")
 
 /-- Checks that everything an exported function exchanges has a TypeScript form, and records it. -/
-def analyze (cx : Cx) (meta : Text -> {IO} Option Sexp) (fetch : Text -> {IO} Option Sexp) (name : Text) (relative : Text) (h : Text) : {IO, Throw Text} Export :=
+def analyze (cx : Bindings.Cx) (meta : Text -> {IO} Option Sexp) (fetch : Text -> {IO} Option Sexp) (name : Text) (relative : Text) (h : Text) : {IO, Throw Text} Export :=
   let m := meta h
-  let scheme := match Codebase.metaField m "scheme" with
-    | some s => s
-    | none =>
-      match Codebase.metaField m "sig" with
-      | some s => s
-      | none => throw "has no type"
-  match arrows scheme with
-  | (types, result, effs) =>
-    let _ := List.map (tsType cx []) (result :: types)
-    let effects := List.filterMap effectOf effs
-    let _ := List.map (fun e => abilityName cx (fst e)) effects
-    let _ := List.map (tsType cx []) (List.concatMap snd effects)
-    let locals := List.map Sexp.asText (Codebase.metaList m "locals")
-    let lams := match fetch h with
-      | some (Sexp.list [Sexp.sym "term", core]) => leadingLams core
-      | _ => 0
-    let paramName := fun (i : Int) =>
-      match List.get? locals i with
-      | some n => if i < lams && not (Text.isEmpty n) && not (n == "_") then ident n else "arg" ++ Int.toText i
-      | none => "arg" ++ Int.toText i
-    let segments := Text.split relative "."
-    let group := ident (Text.join "_" (List.take (List.length segments - 1) segments))
-    Export.mk name (ident (Names.lastSegment relative)) (if List.length segments > 1 then group else "") h
-      (List.mapIndexed (fun i t => (paramName i, t)) types) result effects (docOf m) (Types.displayScheme scheme)
+  let scheme :=
+    match metaField m "scheme" with
+    | Option.some s => s
+    | Option.none =>
+        match metaField m "sig" with
+        | Option.some s => s
+        | Option.none => Throw.throw "has no type"
+  let (types, result, effs) := Bindings.arrows scheme
+  List.map (tsType cx []) (result :: types)
+  let effects := filterMap effectOf effs
+  List.map (fun e => abilityName cx (fst e)) effects
+  List.map (tsType cx []) (concatMap snd effects)
+  let locals := List.map asText (metaList m "locals")
+  let lams :=
+    match fetch h with
+    | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => arity core
+    | _ => 0
+  let paramName := fun i =>
+    match get? locals i with
+    | Option.some n => if i < lams && not (Text.isEmpty n) && not (n == "_") then Bindings.ident n else "arg" ++ Int.toText i
+    | Option.none => "arg" ++ Int.toText i
+  let segments := Text.split relative "."
+  let group := Bindings.ident (join "_" (List.take (List.length segments - 1) segments))
+  Export.mk
+    name
+    (Bindings.ident (lastSegment relative))
+    (if List.length segments > 1 then group else "")
+    h
+    (mapIndexed (fun i t => (paramName i, t)) types)
+    result
+    effects
+    (Bindings.docOf m)
+    (displayScheme scheme)
 
 def leadingLams (core : Sexp) : Int :=
   match core with
   | Sexp.list [Sexp.sym "lam", b] => 1 + leadingLams b
   | _ => 0
 
-/--
-  The entry an exported function is called through. A function of one parameter is its own
+/-- The entry an exported function is called through. A function of one parameter is its own
   entry; a constant, or a function of several, gets an adapter that takes the parameters as a
-  right-nested pair, because the kernel applies an entry to exactly one value.
--/
+  right-nested pair, because the kernel applies an entry to exactly one value. -/
 def adapter (e : Export) : Option (Text, Sexp) :=
   let n := List.length e.exParams
   let target := Sexp.node "ref" [Sexp.str e.exHash]
-  let core := if n == 0 then some (Sexp.node "lam" [target])
-    else if n == 1 then none
-    else
-      let rec pat k := if k == 1 then Sexp.node "pvar" [] else Sexp.node "pcon" [Sexp.str "#Pair", Sexp.int 0, Sexp.node "pvar" [], pat (k - 1)]
-      let vars := List.map (fun i => Sexp.node "var" [Sexp.int (n - 1 - i)]) (List.range 0 n)
-      some (Sexp.node "lam" [Sexp.node "match" [Sexp.node "var" [Sexp.int 0], Sexp.node "case" [pat n, Sexp.node "app" (target :: vars)]]])
+  let core := if n == 0 then Option.some (Sexp.node "lam" [target]) else if n == 1 then Option.none else
+    let rec pat k := if k == 1 then Sexp.node "pvar" [] else Sexp.node "pcon" [Sexp.str "#Pair", Sexp.int 0, Sexp.node "pvar" [], pat (k - 1)]
+    let vars := List.map (fun i => Sexp.node "var" [Sexp.int (n - 1 - i)]) (range 0 n)
+    Option.some (Sexp.node "lam" [Sexp.node
+      "match"
+      [Sexp.node "var" [Sexp.int 0], Sexp.node "case" [pat n, Sexp.node "app" (target :: vars)]]])
   Option.map (fun c => (Text.sha256 (Sexp.print (Sexp.node "term" [c])), c)) core
 
-def entryOf (e : Export) : Text := Option.getOr (Option.map fst (adapter e)) e.exHash
+def entryOf (e : Export) : Text := getOr (Option.map fst (adapter e)) e.exHash
 
 /-- The image: every exported definition with its closure, plus the adapters, sorted by hash. -/
 def image (fetch : Text -> {IO} Option Sexp) (exports : List Export) : {IO, Throw Text} Text :=
-  let defs := Image.closure (fun h => fetch h) (List.map (fun e => e.exHash) exports)
-  let adapters := List.filterMap adapter exports
-  let all := List.sortBy (fun a b => compare (fst a) (fst b)) (defs ++ adapters)
-  let main := Option.getOr (Option.map entryOf (List.head? exports)) ""
-  Text.join "\n" (List.map Image.defForm all ++ Image.nominalForms (fun h => fetch h) defs ++ [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
+  let defs := closure (fun h => fetch h) (List.map (fun e => e.exHash) exports)
+  let adapters := filterMap adapter exports
+  let all := sortBy (fun a b => compare (fst a) (fst b)) (defs ++ adapters)
+  let main := getOr (Option.map Bindings.entryOf (head? exports)) ""
+  join "\n" (List.map defForm all ++ nominalForms (fun h => fetch h) defs ++
+    [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
 
 def shownParams (e : Export) : List (Text, Sexp) := List.filter (fun p => not (isTref "#Unit" (snd p))) e.exParams
 
 def argNames (e : Export) : Text := Text.join ", " (List.map fst (shownParams e))
 
 /-- An export's declared type, as a function type in an object type. -/
-def propertyDts (cx : Cx) (indent : Text) (e : Export) : {Throw Text} Text :=
-  let params := Text.join ", " (List.map (fun p => fst p ++ ": " ++ tsType cx [] (snd p)) (shownParams e))
-  docComment indent (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
-    indent ++ "readonly " ++ e.exIdent ++ ": (" ++ params ++ ") => Promise<" ++ tsType cx [] e.exResult ++ ">;"
+def propertyDts (cx : Bindings.Cx) (indent : Text) (e : Export) : {Throw Text} Text :=
+  let params := join ", " (List.map (fun p => fst p ++ ": " ++ tsType cx [] (snd p)) (shownParams e))
+  Bindings.docComment indent (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
+    indent ++
+    "readonly " ++
+    e.exIdent ++
+    ": (" ++
+    params ++
+    ") => Promise<" ++
+    tsType cx [] e.exResult ++
+    ">;"
 
 /-- An export's top-level declaration. -/
-def functionDts (cx : Cx) (e : Export) : {Throw Text} Text :=
-  let params := Text.join ", " (List.map (fun p => fst p ++ ": " ++ tsType cx [] (snd p)) (shownParams e))
-  docComment "" (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
+def functionDts (cx : Bindings.Cx) (e : Export) : {Throw Text} Text :=
+  let params := join ", " (List.map (fun p => fst p ++ ": " ++ tsType cx [] (snd p)) (shownParams e))
+  Bindings.docComment "" (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
     "export declare function " ++ e.exIdent ++ "(" ++ params ++ "): Promise<" ++ tsType cx [] e.exResult ++ ">;\n"
 
 /-- How a loaded instance calls an export on the kernel. -/
-def boundJs (cx : Cx) (indent : Text) (e : Export) : {Throw Text} Text :=
-  let encoded := List.map (fun p => if isTref "#Unit" (snd p) then "null" else codec cx [] (snd p) ++ ".encode(" ++ fst p ++ ")") e.exParams
-  let argument := match encoded with
+def boundJs (cx : Bindings.Cx) (indent : Text) (e : Export) : {Throw Text} Text :=
+  let encoded := List.map
+    (fun p => if isTref "#Unit" (snd p) then "null" else Bindings.codec cx [] (snd p) ++ ".encode(" ++ fst p ++ ")")
+    e.exParams
+  let argument :=
+    match encoded with
     | [] => "null"
-    | [one] => one
-    | many => "$rt.args([" ++ Text.join ", " many ++ "])"
-  indent ++ e.exIdent ++ ": async (" ++ argNames e ++ ") => " ++ codec cx [] e.exResult ++
-    ".decode(await module.call(" ++ quote (entryOf e) ++ ", " ++ argument ++ ")),"
+    | one :: [] => one
+    | many => "$rt.args([" ++ join ", " many ++ "])"
+  indent ++ e.exIdent ++ ": async (" ++ argNames e ++ ") => " ++ Bindings.codec cx [] e.exResult ++
+    ".decode(await module.call(" ++ Bindings.quote (Bindings.entryOf e) ++ ", " ++ argument ++ ")),"
 
 /-- Whether `name` is selected by one of the requested prefixes, and its name relative to it. -/
 def relativeName (prefixes : List Text) (name : Text) : Option Text :=
@@ -509,33 +523,31 @@ def context (ns : Map Text Entry) : Cx :=
 def ownNames : List Text := ["load", "configure", "DeusDefect", "DeusThrow", "DeusDecodeError"]
 
 /-- Exports and skipped names with reasons; an ability performed at two different types skips the later function. -/
-def select (cx : Cx) (meta : Text -> {IO} Option Sexp) (fetch : Text -> {IO} Option Sexp) (prefixes : List Text) : {IO} (List Export, List (Text, Text)) :=
-  let candidates := List.filterMap (fun pair =>
+def select (cx : Bindings.Cx) (meta : Text -> {IO} Option Sexp) (fetch : Text -> {IO} Option Sexp) (prefixes : List Text) : {IO} (List Export, List (Text, Text)) :=
+  let candidates := filterMap (fun pair =>
     match pair with
-    | (n, Entry.term h) =>
-      if isField cx.cxEntries n then none else Option.map (fun rel => (n, rel, h)) (relativeName prefixes n)
-    | _ => none) (Map.toList cx.cxEntries)
-  let step := fun (acc : (List Export, List (Text, Text), Map Text (List Sexp))) (c : (Text, Text, Text)) =>
-    match (acc, c) with
-    | ((kept, skipped, used), (n, rel, h)) =>
-      match try (fun _ => analyze cx meta fetch n rel h) with
-      | Result.err reason => (kept, (n, reason) :: skipped, used)
-      | Result.ok e =>
-        let path := fun (x : Export) => if Text.isEmpty x.exGroup then x.exIdent else x.exGroup ++ "." ++ x.exIdent
-        let clash := List.find (fun x => path x == path e || (Text.isEmpty e.exGroup && x.exGroup == e.exIdent) || (Text.isEmpty x.exGroup && e.exGroup == x.exIdent)) kept
+    | (n, Entry.term h) => if isField cx.cxEntries n then Option.none else Option.map (fun rel => (n, rel, h)) (relativeName prefixes n)
+    | _ => Option.none) (Map.toList cx.cxEntries)
+  let step := fun acc c =>
+    let ((kept, skipped, used), n, rel, h) := (acc, c)
+    match try (fun _ => analyze cx meta fetch n rel h) with
+    | Result.err reason => (kept, (n, reason) :: skipped, used)
+    | Result.ok e =>
+        let path := fun x => if Text.isEmpty x.exGroup then x.exIdent else x.exGroup ++ "." ++ x.exIdent
+        let clash := List.find
+          (fun x => path x == path e || Text.isEmpty e.exGroup && x.exGroup == e.exIdent || Text.isEmpty x.exGroup && e.exGroup == x.exIdent)
+          kept
         let own := List.contains (if Text.isEmpty e.exGroup then e.exIdent else e.exGroup) ownNames
         let conflict := List.find (fun eff =>
           match Map.lookup (fst eff) used with
-          | some args => not (args == snd eff)
-          | none => false) e.exEffects
+          | Option.some args => not (args == snd eff)
+          | Option.none => false) e.exEffects
         match (clash, conflict) with
-        | (some other, _) => (kept, (n, "its TypeScript name " ++ path e ++ " clashes with " ++ other.exName) :: skipped, used)
-        | (_, some eff) => (kept, (n, "performs " ++ fst eff ++ " at a different type than an earlier function") :: skipped, used)
-        | (none, none) =>
-          if own then (kept, (n, "its TypeScript name " ++ path e ++ " is the module's own") :: skipped, used)
-          else (e :: kept, skipped, List.foldl (fun m eff => Map.insert (fst eff) (snd eff) m) used e.exEffects)
-  match List.foldl step ([], [], Map.empty) candidates with
-  | (kept, skipped, _) => (List.reverse kept, List.reverse skipped)
+        | (Option.some other, _) => (kept, (n, "its TypeScript name " ++ path e ++ " clashes with " ++ other.exName) :: skipped, used)
+        | (_, Option.some eff) => (kept, (n, "performs " ++ fst eff ++ " at a different type than an earlier function") :: skipped, used)
+        | (Option.none, Option.none) => if own then (kept, (n, "its TypeScript name " ++ path e ++ " is the module's own") :: skipped, used) else (e :: kept, skipped, foldl (fun m eff => Map.insert (fst eff) (snd eff) m) used e.exEffects)
+  let (kept, skipped, _) := foldl step ([], [], Map.empty) candidates
+  (reverse kept, reverse skipped)
 
 def declOf (p : (Text, (Text, Text, List (Text, Text)))) : Text :=
   match p with
@@ -545,157 +557,99 @@ def codecOf (p : (Text, (Text, Text, List (Text, Text)))) : Text :=
   match p with
   | (_, (_, made, _)) => made
 
-/--
-  The module (`.js`) and its declarations (`.d.ts`) for the selected exports, with the exports
-  that stay after a top-level name turned out to be a constructor object's, and the skipped ones.
--/
-def module (cx : Cx) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (command : Text) (base : Text) (selected : List Export) (skipped0 : List (Text, Text)) : {IO, Throw Text} (Text, Text, List Export, List (Text, Text)) :=
-  let effects := List.foldl (fun acc e => List.foldl (fun a eff => if List.any (fun x => fst x == fst eff) a then a else a ++ [eff]) acc e.exEffects) [] selected
-  let roots := List.foldl (fun acc t => iris t acc) [] (List.concatMap (fun e => e.exResult :: List.map snd e.exParams) selected ++
-    List.concatMap (fun eff =>
-      match abilityName cx (fst eff) with
-      | (h, _) => List.map (instantiate (snd eff)) (List.map (fun op => Option.getOr (List.last? (Sexp.args op)) (Sexp.list [])) (List.filter (fun x => Sexp.head x == "op") (Sexp.args (Option.getOr (fetch h) (Sexp.list []))))) ++ snd eff) effects)
-  let types := typeClosure cx fetch (List.reverse roots)
+/-- The module (`.js`) and its declarations (`.d.ts`) for the selected exports, with the exports
+  that stay after a top-level name turned out to be a constructor object's, and the skipped ones. -/
+def module (cx : Bindings.Cx) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (command : Text) (base : Text) (selected : List Export) (skipped0 : List (Text, Text)) : {IO, Throw Text} (Text, (Text, (List Export, List (Text, Text)))) :=
+  let effects := foldl
+    (fun acc e => foldl (fun a eff => if any (fun x => fst x == fst eff) a then a else a ++ [eff]) acc e.exEffects)
+    []
+    selected
+  let roots := foldl
+    (fun acc t => iris t acc)
+    []
+    (concatMap (fun e => e.exResult :: List.map snd e.exParams) selected ++ concatMap (fun eff =>
+      let (h, _) := abilityName cx (fst eff)
+      List.map (JsGen.substitute (snd eff)) (List.map
+        (fun op => getOr (last? (Sexp.args op)) (Sexp.list []))
+        (List.filter (fun x => head x == "op") (Sexp.args (getOr (fetch h) (Sexp.list []))))) ++ snd eff) effects)
+  let types := typeClosure cx fetch (reverse roots)
   let parts := List.map (fun iri => (userName cx iri, typeParts cx fetch meta iri)) types
-  let builders := List.filterMap (fun p =>
-    match p with
-    | (n, (_, _, made)) => if List.isEmpty made then none else some (n, made)) parts
+  let builders := filterMap (fun p =>
+    let (n, _, _, made) := p
+    if List.isEmpty made then Option.none else Option.some (n, made)) parts
   let builderNames := List.map fst builders
-  let exports := List.filter (fun e => not (Text.isEmpty e.exGroup && List.contains e.exIdent builderNames)) selected
-  let skipped := skipped0 ++ List.filterMap (fun e =>
-    if Text.isEmpty e.exGroup && List.contains e.exIdent builderNames then some (e.exName, "its TypeScript name " ++ e.exIdent ++ " is the constructors of type " ++ e.exIdent) else none) selected
+  let exports := List.filter
+    (fun e => not (Text.isEmpty e.exGroup && List.contains e.exIdent builderNames))
+    selected
+  let skipped := skipped0 ++ filterMap
+    (fun e => if Text.isEmpty e.exGroup && List.contains e.exIdent builderNames then Option.some (e.exName, "its TypeScript name " ++ e.exIdent ++ " is the constructors of type " ++ e.exIdent) else Option.none)
+    selected
   let top := List.filter (fun e => Text.isEmpty e.exGroup) exports
-  let inGroup := fun (g : Text) => List.filter (fun e => e.exGroup == g) exports
-  let groups := List.foldl (fun acc e => if Text.isEmpty e.exGroup || List.contains e.exGroup acc then acc else acc ++ [e.exGroup]) builderNames exports
+  let inGroup := fun g => List.filter (fun e => e.exGroup == g) exports
+  let groups := foldl
+    (fun acc e => if Text.isEmpty e.exGroup || List.contains e.exGroup acc then acc else acc ++ [e.exGroup])
+    builderNames
+    exports
   let fnGroups := List.filter (fun g => not (List.isEmpty (inGroup g))) groups
   let handlers := List.map (handlerParts cx fetch) effects
   let keys := List.map (fun eff => (handlerKey cx (fst eff), fst eff == throwIri)) effects
-  let required := List.any (fun k => not (snd k)) keys
+  let required := any (fun k => not (snd k)) keys
   let takenTypes := ["Options", "Handlers"] ++ List.map fst parts ++ List.map (fun k => fst k ++ "Handler") keys
   let api := if List.contains base takenTypes then base ++ "Api" else base
-  let skippedText := if List.isEmpty skipped then ""
-    else "//\n// Not exported:\n" ++ Text.concat (List.map (fun s => "//   " ++ fst s ++ ": " ++ snd s ++ "\n") skipped)
-  let banner := "// Generated by `" ++ command ++ "`; regenerate rather than edit. `deus view Bindings.Spec` in deus-lang has the mapping.\n" ++ skippedText
-  let groupDts := fun (g : Text) =>
-    let made := Option.getOr (List.lookup g builders) []
-    "export declare const " ++ g ++ ": {\n" ++ Text.join "\n" (List.map fst made ++ List.map (propertyDts cx "  ") (inGroup g)) ++ "\n};\n"
-  let groupJs := fun (g : Text) =>
-    let made := Option.getOr (List.lookup g builders) []
-    let calls := List.map (fun e => "  " ++ e.exIdent ++ ": async (" ++ argNames e ++ ") => (await $current())." ++ g ++ "." ++ e.exIdent ++ "(" ++ argNames e ++ "),") (inGroup g)
-    "export const " ++ g ++ " = {\n" ++ Text.join "\n" (List.map snd made ++ calls) ++ "\n};\n"
-  let dts := Text.join "\n" [
-    banner,
-    if List.isEmpty effects then "import type { IoHost } from './deus-runtime.js';" else "import type { Awaitable, IoHost } from './deus-runtime.js';",
-    "",
-    "export { DeusDecodeError, DeusDefect, DeusThrow, type Awaitable, type IoHost } from './deus-runtime.js';",
-    "",
-    Text.join "\n" (List.map declOf parts),
-    Text.join "\n" (List.map fst handlers),
-    "/** Answers for the abilities the functions perform and do not handle themselves. */",
-    if List.isEmpty effects then "export type Handlers = Record<string, never>;\n"
-    else "export interface Handlers {\n" ++ Text.join "\n" (List.map (fun k =>
-      if snd k then "  /** By default a `throw` rejects the call with `DeusThrow`. */\n  readonly " ++ fst k ++ "?: " ++ fst k ++ "Handler;"
-      else "  readonly " ++ fst k ++ ": " ++ fst k ++ "Handler;") keys) ++ "\n}\n",
-    "/** How to load the kernel, and the host side of the abilities the functions perform. */",
-    "export interface Options {",
-    "  /** `deus_kernel.wasm` as bytes or a compiled module; by default the file next to this module. */",
-    "  readonly wasm?: BufferSource | WebAssembly.Module;",
-    "  /** Answers for the built-in `IO` ability; by default it prints to the console. */",
-    "  readonly io?: IoHost;",
-    "  readonly handlers" ++ (if required then "" else "?") ++ ": Handlers;",
-    "}",
-    "",
-    "/** The functions of one loaded instance. */",
-    "export interface " ++ api ++ " {",
-    Text.join "\n" (List.map (propertyDts cx "  ") top ++ List.map (fun g =>
-      "  readonly " ++ g ++ ": {\n" ++ Text.join "\n" (List.map (propertyDts cx "    ") (inGroup g)) ++ "\n  };") fnGroups),
-    "}",
-    "",
-    "/** Sets the options the module-level functions run with; the next call loads the kernel with them. */",
-    "export declare function configure(options: Options): void;",
-    "",
-    "/** Loads an instance of its own, apart from the module-level functions. */",
-    "export declare function load(options" ++ (if required then "" else "?") ++ ": Options): Promise<" ++ api ++ ">;",
-    "",
-    Text.join "\n" (List.map (functionDts cx) top),
-    Text.join "\n" (List.map groupDts groups)]
-  let abilityEntries := List.concatMap (fun eff =>
-    match (abilityName cx (fst eff), handlerKey cx (fst eff)) with
-    | ((h, _), key) =>
-      let given := "handlers." ++ key
-      let handler := if fst eff == throwIri then given ++ " ?? $throwing" else given
-      let answer := "$answer" ++ key ++ "(" ++ handler ++ ")"
-      ["    [" ++ quote (fst eff) ++ ", " ++ answer ++ "],", "    [" ++ quote h ++ ", " ++ answer ++ "],"]) effects
-  let js := Text.join "\n" [
-    banner,
-    "import * as $rt from './deus-runtime.js';",
-    "",
-    "export { DeusDecodeError, DeusDefect, DeusThrow } from './deus-runtime.js';",
-    "",
-    "const $IMAGE = " ++ Json.escape (image fetch exports) ++ ";",
-    "",
-    Text.join "\n" (List.map codecOf parts),
-    Text.join "\n" (List.map snd handlers),
-    "const $throwing = {",
-    "  throw: (value) => {",
-    "    throw new $rt.DeusThrow(value);",
-    "  },",
-    "};",
-    "",
-    "const $abilities = (handlers) =>",
-    "  new Map([",
-    Text.join "\n" abilityEntries,
-    "  ]);",
-    "",
-    "const $bind = (module) => ({",
-    Text.join "\n" (List.map (boundJs cx "  ") top ++ List.map (fun g =>
-      "  " ++ g ++ ": {\n" ++ Text.join "\n" (List.map (boundJs cx "    ") (inGroup g)) ++ "\n  },") fnGroups),
-    "});",
-    "",
-    "export const load = async ({ wasm, io, handlers = {} } = {}) =>",
-    "  $bind(",
-    "    await $rt.loadModule({",
-    "      wasm: wasm ?? (await $rt.kernelNextTo(import.meta.url)),",
-    "      image: $IMAGE,",
-    "      io,",
-    "      abilities: $abilities(handlers),",
-    "    }),",
-    "  );",
-    "",
-    "let $options = {};",
-    "let $instance;",
-    "",
-    "const $current = () =>",
-    "  ($instance ??= load($options).catch((error) => {",
-    "    $instance = undefined;",
-    "    throw error;",
-    "  }));",
-    "",
-    "export const configure = (options) => {",
-    "  $options = options;",
-    "  $instance = undefined;",
-    "};",
-    "",
-    Text.join "" (List.map (fun e => "export const " ++ e.exIdent ++ " = async (" ++ argNames e ++ ") => (await $current())." ++ e.exIdent ++ "(" ++ argNames e ++ ");\n") top),
-    Text.join "\n" (List.map groupJs groups)]
+  let skippedText := if List.isEmpty skipped then "" else "//\n// Not exported:\n" ++
+    Text.concat (List.map (fun s => "//   " ++ fst s ++ ": " ++ snd s ++ "\n") skipped)
+  let banner := "// Generated by `" ++ command ++
+    "`; regenerate rather than edit. `deus view Bindings.Spec` in deus-lang has the mapping.\n" ++ skippedText
+  let groupDts := fun g =>
+    let made := getOr (List.lookup g builders) []
+    "export declare const " ++ g ++ ": {\n" ++
+      join "\n" (List.map fst made ++ List.map (propertyDts cx "  ") (inGroup g)) ++ "\n};\n"
+  let groupJs := fun g =>
+    let made := getOr (List.lookup g builders) []
+    let calls := List.map
+      (fun e => "  " ++ e.exIdent ++ ": async (" ++ argNames e ++ ") => (await $current())." ++ g ++ "." ++
+        e.exIdent ++ "(" ++ argNames e ++ "),")
+      (inGroup g)
+    "export const " ++ g ++ " = {\n" ++ join "\n" (List.map snd made ++ calls) ++ "\n};\n"
+  let dts := join
+    "\n"
+    [banner, if List.isEmpty effects then "import type { IoHost } from './deus-runtime.js';" else "import type { Awaitable, IoHost } from './deus-runtime.js';", "", "export { DeusDecodeError, DeusDefect, DeusThrow, type Awaitable, type IoHost } from './deus-runtime.js';", "", join "\n" (List.map declOf parts), join "\n" (List.map fst handlers), "/** Answers for the abilities the functions perform and do not handle themselves. */", if List.isEmpty effects then "export type Handlers = Record<string, never>;\n" else "export interface Handlers {\n" ++ join "\n" (List.map
+      (fun k => if snd k then "  /** By default a `throw` rejects the call with `DeusThrow`. */\n  readonly " ++ fst k ++
+        "?: " ++ fst k ++ "Handler;" else "  readonly " ++ fst k ++ ": " ++ fst k ++ "Handler;")
+      keys) ++ "\n}\n", "/** How to load the kernel, and the host side of the abilities the functions perform. */", "export interface Options {", "  /** `deus_kernel.wasm` as bytes or a compiled module; by default the file next to this module. */", "  readonly wasm?: BufferSource | WebAssembly.Module;", "  /** Answers for the built-in `IO` ability; by default it prints to the console. */", "  readonly io?: IoHost;", "  readonly handlers" ++ (if required then "" else "?") ++ ": Handlers;", "}", "", "/** The functions of one loaded instance. */", "export interface " ++ api ++ " {", join "\n" (List.map (propertyDts cx "  ") top ++ List.map
+      (fun g => "  readonly " ++ g ++ ": {\n" ++ join "\n" (List.map (propertyDts cx "    ") (inGroup g)) ++
+        "\n  };")
+      fnGroups), "}", "", "/** Sets the options the module-level functions run with; the next call loads the kernel with them. */", "export declare function configure(options: Options): void;", "", "/** Loads an instance of its own, apart from the module-level functions. */", "export declare function load(options" ++ (if required then "" else "?") ++
+      ": Options): Promise<" ++ api ++ ">;", "", join "\n" (List.map (functionDts cx) top), join "\n" (List.map groupDts groups)]
+  let abilityEntries := concatMap (fun eff =>
+    let ((h, _), key) := (abilityName cx (fst eff), handlerKey cx (fst eff))
+    let given := "handlers." ++ key
+    let handler := if fst eff == throwIri then given ++ " ?? $throwing" else given
+    let answer := "$answer" ++ key ++ "(" ++ handler ++ ")"
+    ["    [" ++ Bindings.quote (fst eff) ++ ", " ++ answer ++ "],", "    [" ++ Bindings.quote h ++ ", " ++ answer ++ "],"]) effects
+  let js := join
+    "\n"
+    [banner, "import * as $rt from './deus-runtime.js';", "", "export { DeusDecodeError, DeusDefect, DeusThrow } from './deus-runtime.js';", "", "const $IMAGE = " ++ Json.escape (Bindings.image fetch exports) ++ ";", "", join "\n" (List.map codecOf parts), join "\n" (List.map snd handlers), "const $throwing = {", "  throw: (value) => {", "    throw new $rt.DeusThrow(value);", "  },", "};", "", "const $abilities = (handlers) =>", "  new Map([", join "\n" abilityEntries, "  ]);", "", "const $bind = (module) => ({", join "\n" (List.map (boundJs cx "  ") top ++ List.map
+      (fun g => "  " ++ g ++ ": {\n" ++ join "\n" (List.map (boundJs cx "    ") (inGroup g)) ++ "\n  },")
+      fnGroups), "});", "", "export const load = async ({ wasm, io, handlers = {} } = {}) =>", "  $bind(", "    await $rt.loadModule({", "      wasm: wasm ?? (await $rt.kernelNextTo(import.meta.url)),", "      image: $IMAGE,", "      io,", "      abilities: $abilities(handlers),", "    }),", "  );", "", "let $options = {};", "let $instance;", "", "const $current = () =>", "  ($instance ??= load($options).catch((error) => {", "    $instance = undefined;", "    throw error;", "  }));", "", "export const configure = (options) => {", "  $options = options;", "  $instance = undefined;", "};", "", join "" (List.map
+      (fun e => "export const " ++ e.exIdent ++ " = async (" ++ argNames e ++ ") => (await $current())." ++
+        e.exIdent ++ "(" ++ argNames e ++ ");\n")
+      top), join "\n" (List.map groupJs groups)]
   (js, dts, exports, skipped)
 
-/--
-  Generates the module for `prefixes`: the `.js` text, the `.d.ts` text, the exported names and
-  the skipped ones with reasons.
--/
-def generate (dir : Text) (prefixes : List Text) (command : Text) : {IO, Throw Text} (Text, Text, List Text, List (Text, Text)) :=
+/-- Generates the module for `prefixes`: the `.js` text, the `.d.ts` text, the exported names and
+  the skipped ones with reasons. -/
+def generate (dir : Text) (prefixes : List Text) (command : Text) : {IO, Throw Text} (Text, (Text, (List Text, List (Text, Text)))) :=
   let ns := Codebase.current dir
-  let cx := context ns
-  let fetch := fun (h : Text) => Codebase.readObject dir h
-  let meta := fun (h : Text) => Codebase.readMeta dir h
-  let base := ident (capitalize (Names.lastSegment (Option.getOr (List.head? prefixes) "Module")))
-  match select cx meta fetch prefixes with
-  | (selected, skipped0) =>
-    if List.isEmpty selected then throw ("nothing to export under " ++ Text.join ", " prefixes ++ Text.concat (List.map (fun s => "\n  " ++ fst s ++ ": " ++ snd s) skipped0))
-    else
-      match module cx fetch meta command base selected skipped0 with
-      | (js, dts, exports, skipped) => (js, dts, List.map (fun e => e.exName) exports, skipped)
+  let cx := Bindings.context ns
+  let fetch := fun h => readObject dir h
+  let meta := fun h => readMeta dir h
+  let base := Bindings.ident (capitalize (lastSegment (getOr (head? prefixes) "Module")))
+  let (selected, skipped0) := select cx meta fetch prefixes
+  if List.isEmpty selected then Throw.throw ("nothing to export under " ++ join ", " prefixes ++
+    Text.concat (List.map (fun s => "\n  " ++ fst s ++ ": " ++ snd s) skipped0)) else
+    let (js, dts, exports, skipped) := Bindings.module cx fetch meta command base selected skipped0
+    (js, dts, List.map (fun e => e.exName) exports, skipped)
 
 test distinctSkipsTakenNumbers := distinct ["text", "text", "text1"] == ["text2", "text3", "text1"]
 
@@ -706,9 +660,19 @@ test arrowsSplitsCurriedTypes :=
   | (params, result, effs) => List.length params == 2 && isTref "#Bool" result && List.length effs == 2
 
 test adapterTakesNestedPairs :=
-  let e := Export.mk "f" "f" "" "h" [("a", Sexp.read "(tref \"#Int\")"), ("b", Sexp.read "(tref \"#Int\")"), ("c", Sexp.read "(tref \"#Int\")")] (Sexp.read "(tref \"#Int\")") [] "" ""
+  let e := Export.mk
+    "f"
+    "f"
+    ""
+    "h"
+    [("a", Sexp.read "(tref \"#Int\")"), ("b", Sexp.read "(tref \"#Int\")"), ("c", Sexp.read "(tref \"#Int\")")]
+    (Sexp.read "(tref \"#Int\")")
+    []
+    ""
+    ""
   match adapter e with
-  | some (_, core) => Sexp.print core == "(lam (match (var 0) (case (pcon \"#Pair\" 0 (pvar) (pcon \"#Pair\" 0 (pvar) (pvar))) (app (ref \"h\") (var 2) (var 1) (var 0)))))"
-  | none => false
+  | Option.some (_, core) => Sexp.print core ==
+      "(lam (match (var 0) (case (pcon \"#Pair\" 0 (pvar) (pcon \"#Pair\" 0 (pvar) (pvar))) (app (ref \"h\") (var 2) (var 1) (var 0)))))"
+  | Option.none => false
 
 end Bindings

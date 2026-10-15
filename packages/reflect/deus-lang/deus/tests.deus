@@ -5,13 +5,17 @@
 
 namespace Tests
 
+/-
+  Tests and theorems about the toolchain itself, run by `deus test` and `deus check` on a
+  codebase built from `deus/` (src/cli.test.ts does that in CI).
+-/
 def parses (source : Text) : Bool :=
   match try (fun _ => Parser.parse source) with
   | Result.ok _ => true
   | Result.err _ => false
 
 def tokenValues (source : Text) : List Text :=
-  match try (fun _ => Lexer.lex source) with
+  match try (fun _ => lex source) with
   | Result.ok tokens => List.map (fun t => t.value) tokens
   | Result.err e => [e]
 
@@ -19,27 +23,23 @@ test sexpRoundTrip :=
   let text := "(def \"a\\nb\" (lam (app (var 0) (int -12) (text \"q\\\"\\u0001\"))))"
   Sexp.print (Sexp.read text) == text
 
-test controlCharactersPrintAsHex :=
-  Print.quoteText (Text.fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" &&
-    tokenValues "\"\\u{1b}\"" == [Text.fromCode 27, ""]
+test controlCharactersPrintAsHex := quoteText (fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" && tokenValues "\"\\u{1b}\"" == [fromCode 27, ""]
 
-test astralEscapes :=
-  Text.fromCodes [128512] == "😀" && Text.length (Text.fromCodes [128512]) == 2 &&
-    tokenValues "\"\u{1F600}\"" == ["😀", ""]
+test astralEscapes := fromCodes [128512] == "😀" && Text.length (fromCodes [128512]) == 2 && tokenValues "\"😀\"" == ["😀", ""]
 
 test lexerSymbols := tokenValues "x :: xs ++ [1] |> f" == ["x", "::", "xs", "++", "[", "1", "]", "|>", "f", ""]
 
 test lexerUnicode := tokenValues "fun x → x" == ["fun", "x", "->", "x", ""]
 
 test lexerProjection :=
-  match try (fun _ => Lexer.lex "(f x).y") with
-  | Result.ok tokens => List.any (fun t => t.kind == Kind.proj && t.value == "y") tokens
+  match try (fun _ => lex "(f x).y") with
+  | Result.ok tokens => any (fun t => t.kind == Kind.proj && t.value == "y") tokens
   | Result.err _ => false
 
 test lexerCodePointEscape := tokenValues "\"\\u{41}x\"" == ["Ax", ""]
 
 test lexerRejectsUnclosedEscape :=
-  match try (fun _ => Lexer.lex "\"\\u{41\" }") with
+  match try (fun _ => lex "\"\\u{41\" }") with
   | Result.ok _ => false
   | Result.err _ => true
 
@@ -73,24 +73,29 @@ test parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 
 test parserRejectsIndentedDecl := not (parses "  def f := 1\n")
 
 test resolveStripsNames :=
-  match Resolve.strip (Sexp.node "lam" [Sexp.str "x", Sexp.node "var" [Sexp.int 0]]) with
-  | (core, names) => core == Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]] && names == ["x"]
+  let (core, names) := strip (Sexp.node "lam" [Sexp.str "x", Sexp.node "var" [Sexp.int 0]])
+  core == Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]] && names == ["x"]
 
 test hashIgnoresLocalNames :=
-  let compileOne := fun (source : Text) =>
-    match try (fun _ => Compile.batch Map.empty (fun _ => none) (fun _ => none) "strict" [Compile.parseFile "t.deus" source]) with
+  let compileOne := fun source =>
+    match try (fun _ => batch
+      Map.empty
+      (fun _ => Option.none)
+      (fun _ => Option.none)
+      "strict"
+      [parseFile "t.deus" source]) with
     | Result.ok b => List.lookup "f" b.entries
-    | Result.err _ => none
+    | Result.err _ => Option.none
   let original := compileOne "def f x := x + 1\n"
-  Option.isSome original && original == compileOne "def f renamed := renamed + 1\n" && original != compileOne "def f x := x + 2\n"
+  isSome original && original == compileOne "def f renamed := renamed + 1\n" && original != compileOne "def f x := x + 2\n"
 
 test mutualRecursionHashesAsCycle :=
   let source := "def even n := if n == 0 then true else odd (n - 1)\ndef odd n := if n == 0 then false else even (n - 1)\n"
-  match try (fun _ => Compile.batch Map.empty (fun _ => none) (fun _ => none) "strict" [Compile.parseFile "t.deus" source]) with
+  match try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "strict" [parseFile "t.deus" source]) with
   | Result.ok b =>
-    match (List.lookup "even" b.entries, List.lookup "odd" b.entries) with
-    | (some (Entry.term e), some (Entry.term o)) => Text.contains "." e && Text.take 64 e == Text.take 64 o
-    | _ => false
+      match (List.lookup "even" b.entries, List.lookup "odd" b.entries) with
+      | (Option.some (Entry.term e), Option.some (Entry.term o)) => Text.contains "." e && Text.take 64 e == Text.take 64 o
+      | _ => false
   | Result.err _ => false
 
 test mdlFencesKeepLines := Mdl.deusSource "# Doc\n```deus\ndef a := 1\n```\ntext" == "\n\ndef a := 1\n\n"
@@ -151,9 +156,10 @@ test layersFollowObjectKinds :=
     Codebase.mayDependOn "code" == ["code"]
 
 test specBlocksRoundTrip :=
-  match List.head? (Mdl.parse mdlSample).blocks with
-  | some b => Mdl.fromSexp (Mdl.toSexp "org.example.perf@1.0" b) == ("org.example.perf@1.0", { b with lineNo := 0 })
-  | none => false
+  match head? (Mdl.parse mdlSample).blocks with
+  | Option.some b => Mdl.fromSexp (Mdl.toSexp "org.example.perf@1.0" b) == ("org.example.perf@1.0", match b with
+    | Block.mk x0 x1 x2 x3 x4 => Block.mk x0 x1 x2 x3 0)
+  | Option.none => false
 
 test projectAuthorityAndOwnership :=
   Project.authority "https://dxos.org/deus/std" == "dxos.org" && Project.authority "urn:deus:x" == "urn:deus:x" &&
@@ -189,11 +195,11 @@ def sample : Text :=
   "namespace N\n@[req \"F-1\"]\n/-- doc -/\ninductive T @\"urn:t\" where\n  | a\n  | b (x : Int)\nstructure P where\n  x : Int\nability A where\n  op : Int -> {A | r} Int\ndef f (p : P) : {Throw Text | r} Int :=\n  let q := { p with x := 1 }\n  match q.x, [1, 2] with\n  | 0, x :: _ => handle op x with\n    | return y => y\n    | op v -> k => k (v + 1)\n  | _, _ => if true then (fun (z : Int) => z) 3 else -1\ntheorem t (n : Int) : n = n -> f (P.mk n) = n := by induction n; simp [t]\ntest u := \"s\\n\" ++ 'c' == \"x\"\nend N\n"
 
 test truncatedSourcesTerminate :=
-  let n := Text.length sample
+  let n := Text.length Tests.sample
   List.all (fun k =>
-    match try (fun _ => Parser.parse (Text.take k sample)) with
+    match try (fun _ => Parser.parse (Text.take k Tests.sample)) with
     | Result.ok _ => true
-    | Result.err _ => true) (List.range 0 (n + 1))
+    | Result.err _ => true) (range 0 (n + 1))
 
 theorem reverseInvolutive (xs : List Int) : List.reverse (List.reverse xs) = xs := by test 100
 
@@ -204,7 +210,7 @@ theorem mapInsertLookup (k : Int) (v : Int) (xs : List Int) :
 
 theorem textReplaceIdentity (t : Text) : Text.replace "a" "a" t = t := by test 100
 
-theorem quoteRoundTrip (t : Text) : Sexp.read (Sexp.print (Sexp.str t)) = Sexp.str t := by test 200
+theorem quoteRoundTrip (t : Text) : Sexp.read (Sexp.print (Sexp.str t)) == Sexp.str t := by test 200
 
 theorem notInvolutive (b : Bool) : not (not b) = b := by decide
 

@@ -52,9 +52,12 @@ and `deus merge` re-applies our edited definitions over theirs when both sides t
 group, so concurrent sessions rarely see a conflict.
 
 The toolchain itself is the exception while the kernel boots from `seed/deus.image` in git: after a
-change to a toolchain definition, `python3 scripts/sync-deus.py <names…>` writes those definitions from
-the codebase into `deus/`, rebuilds the seed and checks the fixpoint (about 30 s); commit `deus/` and
-the seed to #13952.
+change to the toolchain in the codebase, `python3 scripts/sync-deus.py` finds every definition whose
+hash in the codebase differs from what `deus/` compiles to, writes them and any definitions they newly
+use into `deus/`, rebuilds the seed, checks the fixpoint and checks that `deus/` now compiles to the
+codebase's hashes (D181; about 1 min for 30 definitions); commit `deus/` and the seed to #13952. Do it
+whenever the codebase's toolchain moves: a seed behind the codebase runs old code, such as an old
+`deus merge`.
 
 The steps, for a new spec or a change to one:
 
@@ -74,8 +77,9 @@ from the file stays in the codebase until `deus rm Compile.Spec.R-3`.
 `deus mdl` checks every block of every document: names exist with the stated types, every test and
 theorem named passes (checked now or from the cached verdict), and each law's theorem states what the
 spec says. A requirement with only a `gap:` is reported but does not fail. The specs are not in git (D177),
-so CI does not see them: run `deus mdl` on the pulled codebase before you push a change to a spec or to
-the code it covers (task d9242c83 tracks making the push run it). The
+so CI does not see them. Instead `deus push` runs `deus mdl` on every document with a block, law or
+test that changed since `origin.<branch>` (a code change reaches the laws and tests whose hashes it
+changes) and refuses the push when one fails; `--no-check` skips that (D180). The
 block types are in [MDL.md](spec/MDL.md#the-req-api-and-law-extensions);
 [Codebase.Spec](https://deus.dmytro-a80.workers.dev/#n:Codebase.Spec) is the reference example.
 

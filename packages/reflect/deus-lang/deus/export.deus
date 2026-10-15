@@ -77,53 +77,53 @@ def specDocuments (ns : Map Text Entry) : List Text :=
     | (name, Entry.spec _) => some (documentOf name)
     | _ => none) (Map.toList ns)))
 
-/--
-  A spec document as `.mdl` text (D99): its frontmatter, then each block after the prose that
+/-- A spec document as `.mdl` text (D99): its frontmatter, then each block after the prose that
   preceded it, in the stored order, then the closing prose. The Extensions table is written from
   the blocks' URIs under the document's own Extensions heading, or at the top when it has none.
-  Blocks with no stored order (added before D99) come last, by name.
--/
+  Blocks with no stored order (added before D99) come last, by name. -/
 def document (dir : Text) (ns : Map Text Entry) (d : Text) : {IO} Text :=
-  let blocks := List.filterMap (fun pair =>
+  let blocks := filterMap (fun pair =>
     match pair with
-    | (name, Entry.spec h) =>
-      if documentOf name == d then
-        Option.map (fun obj =>
-          let meta := Codebase.readMeta dir h
-          let order := match Codebase.metaField meta "order" with
-            | some (Sexp.int k) => k
-            | _ => 1000000
-          (order, name, Mdl.fromSexp obj, meta)) (Codebase.readObject dir h)
-      else none
-    | _ => none) (Map.toList ns)
-  let sorted := List.sortBy (fun a b =>
-    match (a, b) with
-    | ((oa, na, _, _), (ob, nb, _, _)) => if oa == ob then compare na nb else compare oa ob) blocks
-  let text := fun (meta : Option Sexp) (key : Text) => Option.getOr (Option.map Sexp.asText (Codebase.metaField meta key)) ""
-  let front := match sorted with
-    | (_, _, _, meta) :: _ => List.filterMap (fun kv =>
-      match kv with
-      | Sexp.list [k, v] => some (Sexp.asText k, Sexp.asText v)
-      | _ => none) (Codebase.metaList meta "front")
+    | (name, Entry.spec h) => if documentOf name == d then Option.map (fun obj =>
+        let meta := readMeta dir h
+        let order :=
+          match metaField meta "order" with
+          | Option.some (Sexp.int k) => k
+          | _ => 1000000
+        (order, name, Mdl.fromSexp obj, meta)) (readObject dir h) else Option.none
+    | _ => Option.none) (Map.toList ns)
+  let sorted := sortBy (fun a b =>
+    let ((oa, na, _, _), ob, nb, _, _) := (a, b)
+    if oa == ob then compare na nb else compare oa ob) blocks
+  let text := fun meta key => getOr (Option.map asText (metaField meta key)) ""
+  let front :=
+    match sorted with
+    | (_, _, _, meta) :: _ => filterMap (fun kv =>
+        match kv with
+        | Sexp.list (k :: v :: []) => Option.some (asText k, asText v)
+        | _ => Option.none) (metaList meta "front")
     | [] => []
-  let frontLines := if List.any (fun kv => fst kv == "name") front then front else ("name", d) :: List.filter (fun kv => fst kv != "name") front
-  let terms := List.dedup (List.sort (List.map (fun x =>
-    match x with
-    | (_, _, (uri, b), _) => "| `" ++ b.blockType ++ "` | `" ++ uri ++ "` |") sorted))
-  let table := Text.join "\n" (["| Term | URI |", "| --- | --- |"] ++ terms)
-  let pieces := List.concatMap (fun x =>
-    match x with
-    | (_, _, (_, b), meta) => List.filter (fun t => not (Text.isEmpty t)) [text meta "lead", Mdl.render b]) sorted
-  let tail := match List.last? sorted with
-    | some (_, _, _, meta) => text meta "tail"
-    | none => ""
-  let bodyLines := Text.lines (Text.join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
-  let isExtensions := fun (l : Text) => Text.startsWith "#" (Text.trim l) && Mdl.headingOf (Text.trim l) == "Extensions"
-  let body := if List.any isExtensions bodyLines then
-      let at := List.findIndex isExtensions bodyLines
-      Text.join "\n" (List.take (at + 1) bodyLines ++ ["", table] ++ List.drop (at + 1) bodyLines)
-    else Text.join "\n" (["## Extensions", "", table, ""] ++ bodyLines)
-  Text.join "\n" (["---"] ++ List.map (fun kv => fst kv ++ ": " ++ snd kv) frontLines ++ ["---", "", body]) ++ "\n"
+  let frontLines := if any (fun kv => fst kv == "name") front then front else ("name", d) :: List.filter (fun kv => fst kv != "name") front
+  let terms := dedup (sort (List.map (fun x =>
+    let (_, _, (uri, b), _) := x
+    "| `" ++ b.blockType ++ "` | `" ++ uri ++ "` |") sorted))
+  let table := join "\n" (["| Term | URI |", "| --- | --- |"] ++ terms)
+  let pieces := concatMap (fun x =>
+    let (_, _, (_, b), meta) := x
+    List.filter (fun t => not (Text.isEmpty t)) [text meta "lead", Mdl.render b]) sorted
+  let tail :=
+    match last? sorted with
+    | Option.some (_, _, _, meta) => text meta "tail"
+    | Option.none => ""
+  let bodyLines := Text.lines (join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
+  let isExtensions := fun l => startsWith "#" (trim l) && headingOf (trim l) == "Extensions"
+  let body := if any isExtensions bodyLines then
+    let at := findIndex isExtensions bodyLines
+    join "\n" (List.take (at + 1) bodyLines ++ ["", table] ++ List.drop (at + 1) bodyLines)
+  else join "\n" (["## Extensions", "", table, ""] ++ bodyLines)
+  join
+    "\n"
+    (["---"] ++ List.map (fun kv => fst kv ++ ": " ++ snd kv) frontLines ++ ["---", "", body]) ++ "\n"
 
 /-- The hashes `h`'s object refers to, kept per hash since an object never changes. -/
 def dependenciesOf (dir : Text) (h : Text) : {IO} List Text :=
@@ -139,124 +139,144 @@ def dependenciesOf (dir : Text) (h : Text) : {IO} List Text :=
       deps
     | none => []
 
-/--
-  A definition's exported text, reused while everything its printing reads is unchanged: its name,
+/-- A definition's exported text, reused while everything its printing reads is unchanged: its name,
   hash and metadata, the names its hash goes by, and how each hash it refers to prints (Export.Spec R-9).
-  `global` digests the type and declaration names every view may print.
--/
+  `global` digests the type and declaration names every view may print. -/
 def cachedView (printer : Printer) (global : Text) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO, Throw Text} Text :=
   let h := Entry.hash e
-  let owner := Text.join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
-  let ownerKey := match Map.lookup owner ns with
-    | some (Entry.type t _ fields) => t ++ ":" ++ Text.join "," fields
+  let owner := join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
+  let ownerKey :=
+    match Map.lookup owner ns with
+    | Option.some (Entry.type t _ fields) => t ++ ":" ++ join "," fields
     | _ => ""
-  let refs := List.map (fun d => d ++ "=" ++ Option.getOr (Map.lookup d printer.display) "" ++ "=" ++ Option.getOr (Map.lookup d printer.fieldNames) "") (dependenciesOf dir h)
-  let key := Text.sha256 (Text.join "\n" ([global, name, Entry.kind e, h, Option.getOr (IO.readFile (dir ++ "/meta/" ++ h)) "", Text.join "," (Option.getOr (Map.lookup h printer.namesByHash) []), ownerKey] ++ refs))
+  let refs := List.map (fun d => d ++ "=" ++ getOr (Map.lookup d printer.display) "" ++ "=" ++
+    getOr (Map.lookup d printer.fieldNames) "") (dependenciesOf dir h)
+  let key := Text.sha256 (join
+    "\n"
+    ([global, name, Entry.kind e, h, getOr (IO.readFile (dir ++ "/meta/" ++ h)) "", join "," (getOr (Map.lookup h printer.namesByHash) []), ownerKey] ++
+      refs))
   let path := dir ++ "/cache/views/" ++ key
   match IO.readFile path with
-  | some text => text
-  | none =>
-    let body := snd (Cli.viewParts printer dir ns name e "deus")
-    IO.mkdirp (dir ++ "/cache/views")
-    IO.writeFile path body
-    body
+  | Option.some text => text
+  | Option.none =>
+      let body := snd (viewParts printer dir ns name e "deus")
+      IO.mkdirp (dir ++ "/cache/views")
+      IO.writeFile path body
+      body
 
 /-- Writes the export of the current branch to `out`; returns (source files, definitions, tasks). -/
-def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
-  let _ := mergeExisting dir out
+def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
+  mergeExisting dir out
   let ns := withUnnamed dir (Codebase.current dir)
   let printer := Print.printer ns []
   let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
-  let global := Text.sha256 (Text.join "\n" (List.map (fun pair => fst pair ++ "=" ++ snd pair) (Map.toList printer.typeNames ++ Map.toList printer.declared)))
-  let sources := List.filterMap (fun pair =>
-    match pair with
-    | (name, e) =>
-      let body := cachedView printer global dir ns name e
-      if Text.isEmpty (Text.trim body) then none else some (topOf name, body)) entries
+  let global := Text.sha256 (join "\n" (List.map
+    (fun pair => fst pair ++ "=" ++ snd pair)
+    (Map.toList printer.typeNames ++ Map.toList printer.declared)))
+  let sources := filterMap (fun pair =>
+    let (name, e) := pair
+    let body := cachedView printer global dir ns name e
+    if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
   -- Spec documents go back into `.mdl` files, one per document, so `deus add` restores them.
   let documents := specDocuments ns
   if List.isEmpty documents then () else IO.mkdirp (out ++ "/specs")
-  List.forEach documents (fun d => IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (document dir ns d))
-  let files := List.dedup (List.sort (List.map fst sources))
+  forEach documents (fun d => IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (document dir ns d))
+  let files := dedup (sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")
-  List.forEach files (fun f =>
-    IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (Text.join "\n\n" (List.filterMap (fun pair => if fst pair == f then some (snd pair) else none) sources) ++ "\n"))
+  forEach files (fun f => IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (join
+    "\n\n"
+    (filterMap (fun pair => if fst pair == f then Option.some (snd pair) else Option.none) sources) ++ "\n"))
   -- A file left from a namespace the codebase no longer holds would bring its names back on restore (R-7).
   removeStale (out ++ "/code") ".deus" files
   removeStale (out ++ "/specs") ".mdl" documents
-  let tasks := List.sortBy Tasks.order (Map.values (Tasks.current dir))
-  IO.writeFile (out ++ "/tasks.sexp") (Text.concat (List.map (fun t => Sexp.print (Tasks.toSexp t) ++ "\n") (List.sortBy (fun a b => compare a.id b.id) tasks)))
+  let tasks := sortBy order (Map.values (Tasks.current dir))
+  IO.writeFile (out ++ "/tasks.sexp") (Text.concat (List.map
+    (fun t => Sexp.print (Tasks.toSexp t) ++ "\n")
+    (sortBy (fun a b => compare (Task.id a) (Task.id b)) tasks)))
   IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
   -- Comments (D82) are written only when there are some, so an export without them is unchanged.
   let threads := Map.toList (Comments.current dir)
-  if List.isEmpty threads then () else
-    IO.writeFile (out ++ "/comments.sexp") (Text.concat (List.map (fun pair => Sexp.print (Sexp.node "subject" [Sexp.str (fst pair), Comments.threadToSexp (snd pair)]) ++ "\n") threads))
-  let project := match Project.read dir with
-    | some p => p.projectIri
-    | none => "a DEUS codebase"
-  let projectStep := match Project.read dir with
-    | some p => ["deus project init " ++ p.projectIri]
-    | none => []
-  IO.writeFile (out ++ "/README.md") (Text.join "\n" (["# " ++ project, "",
-    "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is",
-    "generated: change the codebase, then export again.", "",
-    "- `code/` holds the source of every definition, one file per top-level namespace.",
-    "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.",
-    "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.",
-    "- `specs/` holds the `.mdl` spec blocks, one document per name."] ++
-    (if List.isEmpty threads then [] else ["- `comments.sexp` holds comments on definitions and changes; the files they attach stay in the codebase's asset store."]) ++ ["",
-    "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++ projectStep ++
-    ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp"] ++ (if List.isEmpty threads then [] else ["deus comments import comments.sexp"]) ++ ["deus history import history.sexp", "```", ""]))
-  let history := Cli.fullLog dir 100000
+  if List.isEmpty threads then () else IO.writeFile (out ++ "/comments.sexp") (Text.concat (List.map
+    (fun pair => Sexp.print (Sexp.node "subject" [Sexp.str (fst pair), threadToSexp (snd pair)]) ++ "\n")
+    threads))
+  let project :=
+    match Project.read dir with
+    | Option.some p => p.projectIri
+    | Option.none => "a DEUS codebase"
+  let projectStep :=
+    match Project.read dir with
+    | Option.some p => ["deus project init " ++ p.projectIri]
+    | Option.none => []
+  IO.writeFile (out ++ "/README.md") (join
+    "\n"
+    (["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.", "- `specs/` holds the `.mdl` spec blocks, one document per name."] ++
+      (if List.isEmpty threads then [] else ["- `comments.sexp` holds comments on definitions and changes; the files they attach stay in the codebase's asset store."]) ++
+      ["", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++
+      projectStep ++
+      ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp"] ++
+      (if List.isEmpty threads then [] else ["deus comments import comments.sexp"]) ++
+      ["deus history import history.sexp", "```", ""]))
+  let history := fullLog dir 100000
   IO.writeFile (out ++ "/history.sexp") (Text.concat (List.map (fun entry =>
-    match entry with
-    | (h, message, agent) => Sexp.print (Sexp.node "entry" [Sexp.s h, Sexp.s message, Sexp.s agent]) ++ "\n") history))
-  IO.writeFile (out ++ "/HISTORY.md") ("# History of " ++ Codebase.currentBranch dir ++ "\n\n" ++ Text.concat (List.map (fun entry =>
-    match entry with
-    | (h, message, agent) => "- `" ++ Text.take 10 h ++ "` " ++ message ++ (if Text.isEmpty agent then "" else " (by " ++ agent ++ ")") ++ "\n") history))
-  recordBase dir out (Tasks.snapshotOf dir (Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))))
+    let (h, message, agent) := entry
+    Sexp.print (Sexp.node "entry" [Sexp.s h, Sexp.s message, Sexp.s agent]) ++ "\n") history))
+  IO.writeFile
+    (out ++ "/HISTORY.md")
+    ("# History of " ++ currentBranch dir ++ "\n\n" ++ Text.concat (List.map (fun entry =>
+      let (h, message, agent) := entry
+      "- `" ++ Text.take 10 h ++ "` " ++ message ++
+        (if Text.isEmpty agent then "" else " (by " ++ agent ++ ")") ++ "\n") history))
+  recordBase dir out (Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir))))
   (List.length files, List.length sources, List.length tasks)
 
 /-- Where `writeTerms` puts a definition or spec document: its name's segments as directories. -/
 def termPath (name : Text) (suffix : Text) : Text := Text.join "/" (Text.split name ".") ++ suffix
 
-/--
-  The codebase as one file per definition (D168), for a mirror people browse: `<out>/A/B/c.deus`
+/-- The codebase as one file per definition (D168), for a mirror people browse: `<out>/A/B/c.deus`
   holds `A.B.c` as `deus view` prints it, and each spec document is `<out>/A/B.mdl`. `<out>/FILES`
   lists them, so adding those files to a fresh codebase gives back the same snapshot (Export.Spec
   R-10); a file the previous run listed and this one did not write is removed. Returns (definitions,
-  documents).
--/
+  documents). -/
 def writeTerms (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int) :=
   let ns := withUnnamed dir (Codebase.current dir)
   let printer := Print.printer ns []
-  let global := Text.sha256 (Text.join "\n" (List.map (fun pair => fst pair ++ "=" ++ snd pair) (Map.toList printer.typeNames ++ Map.toList printer.declared)))
-  let code := List.filterMap (fun pair =>
-    match pair with
-    | (name, e) =>
-      if exported e then
-        let body := cachedView printer global dir ns name e
-        if Text.isEmpty (Text.trim body) then none else some (termPath name ".deus", body ++ "\n")
-      else none) (Map.toList ns)
+  let global := Text.sha256 (join "\n" (List.map
+    (fun pair => fst pair ++ "=" ++ snd pair)
+    (Map.toList printer.typeNames ++ Map.toList printer.declared)))
+  let code := filterMap (fun pair =>
+    let (name, e) := pair
+    if exported e then
+      let body := cachedView printer global dir ns name e
+      if Text.isEmpty (trim body) then Option.none else Option.some (termPath name ".deus", body ++ "\n")
+    else Option.none) (Map.toList ns)
   let specs := List.map (fun d => (termPath d ".mdl", document dir ns d)) (specDocuments ns)
   let files := code ++ specs
   let written := Set.fromList (List.map fst files)
-  let previous := List.filter (fun line => not (Text.isEmpty line)) (Text.lines (Option.getOr (IO.readFile (out ++ "/FILES")) ""))
-  List.forEach previous (fun path => if Set.contains path written then () else IO.remove (out ++ "/" ++ path))
-  List.forEach files (fun pair =>
-    let _ := IO.mkdirp (out ++ "/" ++ directoryOf (fst pair))
+  let previous := List.filter
+    (fun line => not (Text.isEmpty line))
+    (Text.lines (getOr (IO.readFile (out ++ "/FILES")) ""))
+  forEach
+    previous
+    (fun path => if Set.contains path written then () else IO.remove (out ++ "/" ++ path))
+  forEach files (fun pair =>
+    IO.mkdirp (out ++ "/" ++ directoryOf (fst pair))
     IO.writeFile (out ++ "/" ++ fst pair) (snd pair))
-  IO.writeFile (out ++ "/FILES") (Text.concat (List.map (fun path => path ++ "\n") (List.sort (List.map fst files))))
+  IO.writeFile
+    (out ++ "/FILES")
+    (Text.concat (List.map (fun path => path ++ "\n") (sort (List.map fst files))))
   (List.length code, List.length specs)
 
 /-- Records an export's `history.sexp` on the current branch (D67); returns how many changes. -/
 def importHistory (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
-  | none => throw ("cannot read " ++ path)
-  | some text =>
-    let entries := List.filter (fun form => Sexp.head form == "entry") (Sexp.readAll text)
-    let _ := Codebase.commitPrior dir (Sexp.node "record" entries) ("history: import " ++ Int.toText (List.length entries) ++ " changes")
-    List.length entries
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let entries := List.filter (fun form => head form == "entry") (readAll text)
+      commitPrior
+        dir
+        (Sexp.node "record" entries)
+        ("history: import " ++ Int.toText (List.length entries) ++ " changes")
+      List.length entries
 
 --
 -- Merging an export that other codebases also write (D79).
@@ -289,44 +309,37 @@ def recordBase (dir : Text) (out : Text) (snapshot : Map Text Text) : {IO} Unit 
 
 def readBase (dir : Text) (out : Text) : {IO, Throw Text} Map Text Text :=
   match IO.readFile (basePath dir out) with
-  | some h => Tasks.snapshotAt dir (Text.trim h)
-  | none => Map.empty
+  | Option.some h => snapshotAt dir (trim h)
+  | Option.none => Map.empty
 
-/--
-  The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D89) can leave
-  two versions of a task; the one that is not a version `past` holds wins, else the later line.
--/
-def fileSnapshot (dir : Text) (text : Text) (past : Map Text Unit) : {IO} Map Text Text :=
-  List.foldl (fun m form =>
-    let t := Tasks.fromSexp form
-    let h := Codebase.put dir (Tasks.toSexp t)
-    match Map.lookup t.id m with
-    | some earlier => if Set.contains h past && not (Set.contains earlier past) then m else Map.insert t.id h m
-    | none => Map.insert t.id h m) Map.empty (Sexp.readAll text)
+/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D89) can leave
+  two versions of a task; the one that is not a version `past` holds wins, else the later line. -/
+def fileSnapshot (dir : Text) (text : Text) (past : Map Text Unit) : {IO} Map Text Text := foldl (fun m form =>
+  let t := Tasks.fromSexp form
+  let h := Codebase.put dir (Tasks.toSexp t)
+  match Map.lookup (Task.id t) m with
+  | Option.some earlier => if Set.contains h past && not (Set.contains earlier past) then m else Map.insert (Task.id t) h m
+  | Option.none => Map.insert (Task.id t) h m) Map.empty (readAll text)
 
-/--
-  Merges a `tasks.sexp` into the branch's tasks, three-way against what this codebase last
+/-- Merges a `tasks.sexp` into the branch's tasks, three-way against what this codebase last
   exchanged with that export, so a task another codebase changed is not reverted. A task the file
   lacks, or holds at a version this branch has had, counts as unchanged there. A field both sides
   changed keeps this codebase's value and is returned as a conflict. Returns (tasks in the file,
-  conflicts).
--/
+  conflicts). -/
 def mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Text) : {IO, Throw Text} (Int, List Text) :=
-  let past := Tasks.pastVersions dir
+  let past := pastVersions dir
   let file := fileSnapshot dir text past
-  let ours := Tasks.snapshotOf dir (Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir)))
+  let ours := Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
   -- A writer that never saw a task, or saw an older version of it, wrote no change to it: tasks are never deleted.
-  let theirs := List.foldl (fun m pair =>
-    match pair with
-    | (id, h) =>
-      match Map.lookup id file with
-      | none => Map.insert id h m
-      | some th => if th != h && Set.contains th past then Map.insert id h m else m) file (Map.toList ours)
-  match Tasks.merge dir (readBase dir out) ours theirs with
-  | (merged, conflicts) =>
-    let _ := if Map.toList merged == Map.toList ours then "" else Codebase.commitTasks dir (Tasks.putSnapshot dir merged) message
-    recordBase dir out file
-    (Map.size file, conflicts)
+  let theirs := foldl (fun m pair =>
+    let (id, h) := pair
+    match Map.lookup id file with
+    | Option.none => Map.insert id h m
+    | Option.some th => if th != h && Set.contains th past then Map.insert id h m else m) file (Map.toList ours)
+  let (merged, conflicts) := Tasks.merge dir (readBase dir out) ours theirs
+  if Map.toList merged == Map.toList ours then "" else commitTasks dir (Tasks.putSnapshot dir merged) message
+  recordBase dir out file
+  (Map.size file, conflicts)
 
 /-- Removes the files in `path` ending in `suffix` whose stem is not in `kept`. -/
 def removeStale (path : Text) (suffix : Text) (kept : List Text) : {IO} Unit :=
@@ -337,46 +350,51 @@ def removeStale (path : Text) (suffix : Text) (kept : List Text) : {IO} Unit :=
 
 /-- Before an export overwrites `out`, takes in the tasks and history another codebase wrote there. -/
 def mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=
-  let _ := match IO.readFile (out ++ "/tasks.sexp") with
-    | some text =>
-      match mergeTasksFile dir out text ("export: merge tasks from " ++ out) with
-      | (_, conflicts) => List.forEach conflicts (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
-    | none => ()
+  match IO.readFile (out ++ "/tasks.sexp") with
+  | Option.some text =>
+      let (_, conflicts) := mergeTasksFile dir out text ("export: merge tasks from " ++ out)
+      forEach
+        conflicts
+        (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
+  | Option.none => ()
   match IO.readFile (out ++ "/history.sexp") with
-  | some text =>
-    let known := Set.fromList (List.map (fun entry =>
-      match entry with
-      | (h, _, _) => h) (Cli.fullLog dir 1000000))
-    let fresh := List.filter (fun form =>
-      match form with
-      | Sexp.list [Sexp.sym "entry", Sexp.str h, _, _] => not (Set.contains h known)
-      | _ => false) (Sexp.readAll text)
-    if List.isEmpty fresh then ()
-    else
-      let _ := Codebase.commitPrior dir (Sexp.node "record" fresh) ("export: merge " ++ Int.toText (List.length fresh) ++ " changes from " ++ out)
-      ()
-  | none => ()
+  | Option.some text =>
+      let known := Set.fromList (List.map (fun entry =>
+        let (h, _, _) := entry
+        h) (fullLog dir 1000000))
+      let fresh := List.filter (fun form =>
+        match form with
+        | Sexp.list (Sexp.sym "entry" :: Sexp.str h :: _ :: _ :: []) => not (Set.contains h known)
+        | _ => false) (readAll text)
+      if List.isEmpty fresh then () else
+        commitPrior
+          dir
+          (Sexp.node "record" fresh)
+          ("export: merge " ++ Int.toText (List.length fresh) ++ " changes from " ++ out)
+        ()
+  | Option.none => ()
 
 /-- Merges tasks from an export's `tasks.sexp` as one change (D79); returns how many the file has. -/
 def importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
-  | none => throw ("cannot read " ++ path)
-  | some text =>
-    match mergeTasksFile dir (directoryOf path) text ("task: import from " ++ path) with
-    | (n, conflicts) =>
-      List.forEach conflicts (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let (n, conflicts) := mergeTasksFile dir (directoryOf path) text ("task: import from " ++ path)
+      forEach
+        conflicts
+        (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
       n
 
 /-- Restores comments from an export's `comments.sexp` as one change; returns how many. -/
 def importComments (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
-  | none => throw ("cannot read " ++ path)
-  | some text =>
-    let added := List.concatMap (fun form =>
-      match Sexp.args form with
-      | [subject, thread] => List.map (fun c => (Sexp.asText subject, Tasks.commentFromSexp c)) (Sexp.args thread)
-      | _ => defect ("bad comments entry " ++ Sexp.print form)) (Sexp.readAll text)
-    let _ := Comments.add dir added ("comments: import " ++ Int.toText (List.length added) ++ " comments")
-    List.length added
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let added := concatMap (fun form =>
+        match Sexp.args form with
+        | subject :: thread :: [] => List.map (fun c => (asText subject, commentFromSexp c)) (Sexp.args thread)
+        | _ => defect ("bad comments entry " ++ Sexp.print form)) (readAll text)
+      Comments.add dir added ("comments: import " ++ Int.toText (List.length added) ++ " comments")
+      List.length added
 
 end Export

@@ -7,13 +7,15 @@
 
 The codebase is the primary copy of the toolchain; deus/ is what the seed is compiled from in git.
 For each name, this replaces its declaration in the deus/ file that holds it with what `deus view`
-prints from the codebase (a new name goes at the end of its namespace's file), then compiles deus/
-into seed/deus.image and checks that the new seed compiles itself to itself.
+prints from the codebase (a new name goes at the end of its namespace's file, a new namespace gets a
+file), adds what those definitions use that deus/ lacks, then compiles deus/ into seed/deus.image and
+checks that the new seed compiles itself to itself and that deus/ compiles to the codebase's hashes (D181).
 
-    python3 scripts/sync-deus.py Cli.push Replicate.missingFrom   # codebase at $DEUS_CODEBASE
+    python3 scripts/sync-deus.py                # every definition whose hash differs (codebase at $DEUS_CODEBASE)
+    python3 scripts/sync-deus.py Cli.push       # only these
 
 Edit the toolchain in the codebase (`deus view`, edit, `deus update`, `deus push`), then run this
-with the names you changed before committing deus/ and the seed to git.
+(with no names, or the names you changed) before committing deus/ and the seed to git.
 """
 
 import argparse
@@ -91,13 +93,24 @@ def views(names, codebase, seed=None):
     return {entry['name']: entry['source'] for entry in shown}
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
-    parser.add_argument('names', nargs='+', help='the definitions to write into deus/')
-    args = parser.parse_args()
-    codebase = Path(args.codebase)
+def hashes(codebase):
+    return {entry['name']: (entry['hash'], entry['kind']) for entry in json.loads(deus('ls', '--json', codebase=codebase).stdout)}
 
+
+def changed(codebase):
+    """The names deus/ defines whose hash in the codebase differs from what deus/ compiles to."""
+    with tempfile.TemporaryDirectory(prefix='deus-sync-') as scratch:
+        store = Path(scratch) / 'codebase'
+        deus('init', '--empty', codebase=store)
+        deus('add', str(SOURCES), codebase=store)
+        ours = hashes(store)
+    theirs = hashes(codebase)
+    kept = ('op', 'ctor')
+    return sorted(name for name, (hash, kind) in ours.items() if kind not in kept and name in theirs and theirs[name][0] != hash)
+
+
+def write(names, codebase):
+    """Replaces each name's declaration in deus/ with the codebase's, or appends it to its namespace's file."""
     parsed = {path: blocks(path) for path in sorted(SOURCES.glob('*.deus'))}
     defined = {name: path for path, (_, found) in parsed.items() for name, *_ in found}
     namespaces = {}
@@ -105,28 +118,101 @@ def main():
         for _, _, _, namespace in found:
             namespaces.setdefault(namespace, path)
 
-    shown = views(args.names, codebase)
+    shown = views(names, codebase)
     edits = {}
-    for name in args.names:
+    for name in names:
         namespace = name.rsplit('.', 1)[0] if '.' in name else ''
         if name in defined:
             path = defined[name]
             first, end = next((first, end) for qualified, first, end, _ in parsed[path][1] if qualified == name)
             print(f'  ~ {name}  ({path.name})')
             edits.setdefault(path, []).append((first, end, source_of(shown[name], namespace)))
+        elif re.search(r'^-- an? (field|constructor) of ', shown[name], re.M):
+            continue  # written with its type
         elif namespace in namespaces:
             path = namespaces[namespace]
             lines = parsed[path][0]
             close = max(i for i, line in enumerate(lines) if line == f'end {namespace.split(".")[-1]}')
             print(f'  + {name}  ({path.name})')
             edits.setdefault(path, []).append((close, close, source_of(shown[name], namespace) + '\n'))
+        elif namespace:
+            # A namespace the codebase added gets a file of its own.
+            segments = namespace.split('.')
+            path = namespaces.get(namespace) or next(
+                candidate
+                for candidate in (SOURCES / f'{namespace.lower().replace(".", "-")}{suffix}.deus' for suffix in ('', '-namespace', '-2', '-3'))
+                if not candidate.exists()
+            )
+            if not path.exists():
+                path.write_text(''.join(f'namespace {seg}\n' for seg in segments) + ''.join(f'end {seg}\n' for seg in reversed(segments)))
+                parsed[path] = blocks(path)
+                namespaces[namespace] = path
+            lines = parsed[path][0]
+            close = max(i for i, line in enumerate(lines) if line == f'end {segments[-1]}')
+            print(f'  + {name}  ({path.name}, new)')
+            edits.setdefault(path, []).append((close, close, source_of(shown[name], namespace) + '\n'))
         else:
-            sys.exit(f'{name}: no deus/ file holds the namespace {namespace or "(root)"}')
+            sys.exit(f'{name}: no deus/ file holds the root namespace')
     for path, changes in edits.items():
         lines = parsed[path][0]
         for first, end, text in sorted(changes, key=lambda change: change[0], reverse=True):
             lines[first:end] = text.split('\n')
         path.write_text('\n'.join(lines))
+
+
+def defined_names():
+    return {name for path in SOURCES.glob('*.deus') for name, *_ in blocks(path)[1]}
+
+
+def unknown(codebase):
+    """The first name deus/ uses but does not define, or None when deus/ compiles."""
+    with tempfile.TemporaryDirectory(prefix='deus-sync-') as scratch:
+        result = deus('compile', str(SOURCES), '--main', 'Cli.main', '-o', str(Path(scratch) / 'seed.image'), codebase=codebase, check=False)
+    if result.returncode == 0:
+        return None
+    match = re.search(r'(?:(\S+\.deus): \S+:(\d+):(\d+): )?unknown (?:type|name|ability|constructor) (\S+)', result.stderr)
+    if not match:
+        sys.exit(f'deus/ does not compile:\n{result.stderr}')
+    where = (Path(match.group(1)), int(match.group(2)), int(match.group(3))) if match.group(1) else (None, 0, 0)
+    return (*where, match.group(4))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
+    parser.add_argument('names', nargs='*', help='the definitions to write into deus/; without names, every one whose hash differs')
+    args = parser.parse_args()
+    codebase = Path(args.codebase)
+    names = args.names or changed(codebase)
+    if not names:
+        print('deus/ already compiles to the codebase\'s definitions; nothing to write.')
+        return 0
+
+    write(names, codebase)
+    theirs = hashes(codebase)
+    for _ in range(2000):
+        failure = unknown(codebase)
+        if not failure:
+            break
+        path, line, column, missing = failure
+        found = [name for name in theirs if name == missing or name.endswith('.' + missing)]
+        if len(found) != 1:
+            sys.exit(f'{path or "deus/"}:{line}:{column}: {missing} names {len(found)} codebase definitions, not one')
+        if found[0] not in defined_names() or path is None:
+            # A changed definition can use one the codebase added since deus/ was last synced.
+            names.append(found[0])
+            write(found, codebase)
+        else:
+            # `deus view` shortens a name to the suffix unique in the whole codebase, which deus/ alone does not resolve.
+            path = path if path.is_absolute() else ROOT / path
+            lines = path.read_text().split('\n')
+            text = lines[line - 1]
+            start = next((at for at in (column - 1, column) if text[at:at + len(missing)] == missing), None)
+            if start is None:
+                sys.exit(f'{path.name}:{line}:{column}: expected {missing} there')
+            lines[line - 1] = text[:start] + found[0] + text[start + len(missing):]
+            path.write_text('\n'.join(lines))
+            print(f'  = {found[0]}  ({path.name}:{line})')
 
     with tempfile.TemporaryDirectory(prefix='deus-sync-') as scratch:
         image, again = Path(scratch) / 'seed.image', Path(scratch) / 'again.image'
@@ -135,7 +221,10 @@ def main():
         if image.read_bytes() != again.read_bytes():
             sys.exit('the new seed does not compile itself to itself; deus/ is written, the seed is not')
         shutil.copyfile(image, SEED)
-    print(f'Wrote {len(args.names)} definitions into deus/ and rebuilt the seed; it compiles itself to itself.')
+    left = changed(codebase)
+    if left:
+        sys.exit(f'deus/ still differs from the codebase in {len(left)} definitions, among them {", ".join(left[:5])}')
+    print(f'Wrote {len(names)} definitions into deus/ and rebuilt the seed; it compiles itself to itself and to the codebase\'s hashes.')
     return 0
 
 

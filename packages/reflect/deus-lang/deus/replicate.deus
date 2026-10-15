@@ -25,14 +25,66 @@
   bundle's claims and hashes, so a pull reads each bundle once.
 -/
 
-/--
-  An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
+/-
+  Replication through an object store (P3, D50).
+
+  A remote holds immutable bundles under `bundles/<level>-<sha256>`. A bundle is one canonical
+  S-expression: branch claims, then objects and metadata, each sorted by hash:
+
+    (bundle (branch "main" "<causal>")… (base "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+
+  A `base` names a head of the branch on the remote that the claim builds on (D167); readers that
+  do not know it skip it.
+
+  - `push` uploads one level-0 bundle with the objects the remote lacks and a claim for the
+    branch head. Names are content hashes, so writes never conflict and nothing is overwritten.
+  - `pull` imports bundles not seen before and sets the tracking branch `<remote>.<branch>` to the
+    claimed heads that no other claim descends from. Two concurrent pushes leave two heads,
+    `<remote>.<branch>` and `<remote>.<branch>.2`, to merge as local branches are.
+  - `compact` collects history into strata (sedimentree): a causal node whose hash starts with `k`
+    zeros closes a level-k stratum, which holds what that node reaches and no earlier boundary
+    does. Boundaries come from hashes and bundles are canonical, so clients compacting the same
+    history write byte-identical bundles. A smaller bundle is deleted once compacted bundles hold
+    all its objects; claims that are still heads move to a claims-only bundle first.
+  - Nothing else is ever deleted: the whole history stays on the remote, as git keeps it (D73).
+
+  Locally, `remotes/<name>/url` names the remote, and `remotes/<name>/seen/<bundle>` lists a seen
+  bundle's claims and hashes, so a pull reads each bundle once.
+-/
+/-
+  Replication through an object store (P3, D50).
+
+  A remote holds immutable bundles under `bundles/<level>-<sha256>`. A bundle is one canonical
+  S-expression: branch claims, then objects and metadata, each sorted by hash:
+
+    (bundle (branch "main" "<causal>")… (base "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+
+  A `base` names a head of the branch on the remote that the claim builds on (D167); readers that
+  do not know it skip it.
+
+  - `push` uploads one level-0 bundle with the objects the remote lacks and a claim for the
+    branch head. Names are content hashes, so writes never conflict and nothing is overwritten.
+  - `pull` imports bundles not seen before and sets the tracking branch `<remote>.<branch>` to the
+    claimed heads that no other claim descends from. Two concurrent pushes leave two heads,
+    `<remote>.<branch>` and `<remote>.<branch>.2`, to merge as local branches are.
+  - `compact` collects history into strata (sedimentree): a causal node whose hash starts with `k`
+    zeros closes a level-k stratum, which holds what that node reaches and no earlier boundary
+    does. Boundaries come from hashes and bundles are canonical, so clients compacting the same
+    history write byte-identical bundles. A smaller bundle is deleted once compacted bundles hold
+    all its objects; claims that are still heads move to a claims-only bundle first.
+  - Nothing else is ever deleted: the whole history stays on the remote, as git keeps it (D73).
+
+  Locally, `remotes/<name>/url` names the remote, and `remotes/<name>/seen/<bundle>` lists a seen
+  bundle's claims and hashes, so a pull reads each bundle once.
+-/
+/-- An object store holding bundles by name; `put` never overwrites, and `getAll` gets several, in
+  order, as a remote may fetch them at once. `writeAll` stores files beside
   the bundles (the explorer's site) as (path, content) pairs, replacing what was there. The file
   operations (D82) move files byte for byte under a folder beside the bundles: `keys folder` lists
   the names in it, `download key file` copies one to a local file and says whether it existed,
+  `downloadAll` copies several (key, file) pairs at once,
   `upload key file mediaType` stores one, and `drop key` deletes one. Assets and the explorer's
-  inbox use them.
--/
+  inbox use them. -/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
   get : Text -> Option Text
@@ -43,6 +95,8 @@ ability Remote @"urn:deus:replicate:Remote" where
   download : Text -> Text -> Bool
   upload : Text -> Text -> Text -> Unit
   drop : Text -> Unit
+  getAll : List Text -> List (Option Text)
+  downloadAll : List (Text, Text) -> List Bool
 
 /-- A seen bundle: its claims (branch, causal) and the hashes of its objects. -/
 structure Seen @"urn:deus:replicate:Seen" where
@@ -68,26 +122,31 @@ def bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO}
 
 /-- A bundle whose claims name the remote heads they build on (`bases`, as (branch, causal)). -/
 def basedBundle (dir : Text) (claims : List (Text, Text)) (bases : List (Text, Text)) (hashes : List Text) : {IO} Text :=
-  let sorted := List.dedup (List.sort hashes)
-  let pairs := fun (head : Text) (xs : List (Text, Text)) => List.map (fun c => Sexp.node head [Sexp.str (fst c), Sexp.str (snd c)]) (List.dedup (List.sort xs))
-  let objects := List.filterMap (fun h => Option.map (fun form => Sexp.node "obj" [Sexp.str h, form]) (Codebase.readObject dir h)) sorted
-  let metas := List.filterMap (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (Codebase.readMeta dir h)) sorted
-  Columnar.encode [Sexp.node "bundle" (pairs "branch" claims ++ pairs "base" bases ++ objects ++ metas)]
+  -- Seeds before D172 cannot read lines, so they stay opt-in until sessions have merged it.
+  if getOr (IO.getEnv "DEUS_BUNDLE_LINES") "" == "1" then lineBundle dir claims bases hashes else
+    let sorted := dedup (sort hashes)
+    let pairs := fun head xs => List.map (fun c => Sexp.node head [Sexp.str (fst c), Sexp.str (snd c)]) (dedup (sort xs))
+    let objects := filterMap
+      (fun h => Option.map (fun form => Sexp.node "obj" [Sexp.str h, form]) (readObject dir h))
+      sorted
+    let metas := filterMap
+      (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (readMeta dir h))
+      sorted
+    Columnar.encode [Sexp.node "bundle" (pairs "branch" claims ++ pairs "base" bases ++ objects ++ metas)]
 
 /-- The `x-deus-claim` header a bundle's claim sends a Worker: `<branch> <head> <base>,…`, or none without exactly one claim. -/
 def claimHeader (text : Text) : Option Text :=
-  let items := match Columnar.read text with
-    | [form] => Sexp.args form
-    | _ => []
-  let pairsOf := fun (head : Text) => List.filterMap (fun item =>
-    match item with
-    | Sexp.list [Sexp.sym h, Sexp.str branch, Sexp.str causal] => if h == head then some (branch, causal) else none
-    | _ => none) items
+  let all := claimsOf text
+  let pairsOf := fun head => filterMap (fun x =>
+    let (kind, branch, causal) := x
+    if kind == head then Option.some (branch, causal) else Option.none) all
   match pairsOf "branch" with
-  | [(branch, causal)] =>
-    let bases := List.filterMap (fun b => if fst b == branch then some (snd b) else none) (pairsOf "base")
-    some (branch ++ " " ++ causal ++ " " ++ (if List.isEmpty bases then "-" else Text.join "," bases))
-  | _ => none
+  | (branch, causal) :: [] =>
+      let bases := filterMap
+        (fun b => if fst b == branch then Option.some (snd b) else Option.none)
+        (pairsOf "base")
+      Option.some (branch ++ " " ++ causal ++ " " ++ (if List.isEmpty bases then "-" else join "," bases))
+  | _ => Option.none
 
 /-- A member reference of recursive group `g` back to `(self i)`, as the group was hashed (CORE.md). -/
 def unself (g : Text) (form : Sexp) : Sexp :=
@@ -102,22 +161,19 @@ def unself (g : Text) (form : Sexp) : Sexp :=
   | Sexp.list items => Sexp.list (List.map (fun x => unself g x) items)
   | _ => form
 
-/--
-  Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
-  recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group.
--/
-def verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool :=
-  if Text.sha256 (Sexp.print form) == h then true
-  else
-    let dot := Text.indexOf h "." 0
-    let g := if dot < 0 then h else Text.take dot h
-    let member := fun (name : Text) => if name == h then some form else lookup name
-    let rec gather i acc :=
-      match member (g ++ "." ++ Int.toText i) with
-      | some m => gather (i + 1) (m :: acc)
-      | none => List.reverse acc
-    let members := if dot < 0 then [form] else gather 0 []
-    not (List.isEmpty members) && Text.sha256 (Sexp.print (Sexp.node "cycle" (List.map (fun m => unself g m) members))) == g
+/-- Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
+  recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group. -/
+def verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool := if Text.sha256 (Sexp.print form) == h then true else
+  let dot := indexOf h "." 0
+  let g := if dot < 0 then h else Text.take dot h
+  let member := fun name => if name == h then Option.some form else lookup name
+  let rec gather i acc :=
+    match member (g ++ "." ++ Int.toText i) with
+    | Option.some m => gather (i + 1) (m :: acc)
+    | Option.none => reverse acc
+  let members := if dot < 0 then [form] else gather 0 []
+  not (List.isEmpty members) && Text.sha256 (Sexp.print (Sexp.node "cycle" (List.map (fun m => Replicate.unself g m) members))) ==
+    g
 
 /--
   Whether a builtin object (`#List`) may enter the store: builtins are named by identity, not by
@@ -133,103 +189,97 @@ def builtinsOf (dir : Text) : {IO} Map Text Unit :=
   Set.fromList (List.filter (fun h => Text.startsWith "#" h) (Codebase.allObjects dir))
 
 /-- Writes a bundle's objects and metadata into the store; returns what it holds. -/
-def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
-  let items := match Columnar.read text with
-    | [form] => Sexp.args form
-    | _ => defect ("bundle " ++ name ++ " is not one form")
-  let claims := List.filterMap (fun item =>
-    match item with
-    | Sexp.list [Sexp.sym "branch", Sexp.str branch, Sexp.str causal] => some (branch, causal)
-    | _ => none) items
-  let carried := Map.fromList (List.filterMap (fun item =>
-    match item with
-    | Sexp.list [Sexp.sym "obj", Sexp.str h, form] => some (h, form)
-    | _ => none) items)
-  let lookup := fun (h : Text) => match Map.lookup h carried with
-    | some form => some form
-    | none => Codebase.readObject dir h
-  let hashes := List.filterMap (fun item =>
-    match item with
-    | Sexp.list [Sexp.sym "obj", Sexp.str h, form] =>
-      -- An object that is not what its name says would corrupt the store (D91).
-      if Text.startsWith "#" h then
-        if acceptsBuiltin dir h form then
-          Codebase.writeObject dir h form
-          some h
-        else none
-      else if verified h form lookup then
-        Codebase.writeObject dir h form
-        some h
-      else
-        IO.eprint ("deus: skipped object #" ++ Text.take 10 h ++ " in bundle " ++ name ++ ": its text does not hash to its name\n")
-        none
-    | Sexp.list [Sexp.sym "meta", Sexp.str h, form] =>
-      if IO.exists (dir ++ "/meta/" ++ h) then () else Codebase.writeMeta dir h form
-      none
-    | _ => none) items
-  Seen.mk name claims hashes
+def import (dir : Text) (name : Text) (text : Text) : {IO} Seen := if startsWith lineHeader text then importLines dir name text else importForms dir name text
 
 def seenDir (dir : Text) (remote : Text) : Text := dir ++ "/remotes/" ++ remote ++ "/seen"
 
-def seenToText (s : Seen) : Text :=
-  Sexp.print (Sexp.node "seen" (List.map (fun c => Sexp.node "branch" [Sexp.str (fst c), Sexp.str (snd c)]) s.claims ++ [Sexp.node "hashes" (List.map Sexp.str s.hashes)]))
+def seenToText (s : Seen) : Text := Sexp.print (Sexp.node
+  "seen"
+  (List.map (fun c => Sexp.node "branch" [Sexp.str (fst c), Sexp.str (snd c)]) s.claims ++
+    [Sexp.node "hashes" (List.map Sexp.str s.hashes)]))
 
 def seenFromText (name : Text) (text : Text) : Seen :=
   let items := Sexp.args (Sexp.read text)
-  let claims := List.filterMap (fun item =>
+  let claims := filterMap (fun item =>
     match item with
-    | Sexp.list [Sexp.sym "branch", Sexp.str branch, Sexp.str causal] => some (branch, causal)
-    | _ => none) items
-  let hashes := Option.getOr (Option.map (fun x => List.map Sexp.asText (Sexp.args x)) (List.find (fun x => Sexp.head x == "hashes") items)) []
+    | Sexp.list (Sexp.sym "branch" :: Sexp.str branch :: Sexp.str causal :: []) => Option.some (branch, causal)
+    | _ => Option.none) items
+  let hashes := getOr (Option.map
+    (fun x => List.map asText (Sexp.args x))
+    (List.find (fun x => head x == "hashes") items)) []
   Seen.mk name claims hashes
 
-/-- Every bundle on the remote, importing the ones not seen before. -/
+/-- Every bundle on the remote, importing the ones not seen before: from its pack when it has one (D173), else the bundle. -/
 def sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
   let listed := List.filter (fun n => not (Text.isEmpty n)) (Remote.list ())
   let names := List.filter isBundleName listed
-  List.forEach (List.filter (fun n => not (isBundleName n)) listed) (fun n => IO.eprint ("deus: ignored bundles/" ++ n ++ " on " ++ remote ++ ": not a bundle name\n"))
-  List.filterMap (fun name =>
+  forEach
+    (List.filter (fun n => not (isBundleName n)) listed)
+    (fun n => IO.eprint ("deus: ignored bundles/" ++ n ++ " on " ++ remote ++ ": not a bundle name\n"))
+  let unseen := List.filter (fun name => not (IO.exists (seenDir dir remote ++ "/" ++ name))) names
+  let packed := if List.isEmpty unseen then Map.empty else packedNames ()
+  let inPacks := List.filter (fun name => Map.contains name packed) unseen
+  let fromPacks := filterMap
+    (fun pair => Option.map (fun text => (fst pair, text)) (snd pair))
+    (zip inPacks (if List.isEmpty inPacks then [] else readPacks dir inPacks))
+  let viaBundles := List.filter (fun name => not (any (fun pair => fst pair == name) fromPacks)) unseen
+  let fetched := Map.fromList (zip viaBundles (if List.isEmpty viaBundles then [] else Remote.getAll viaBundles))
+  filterMap (fun name =>
     let path := seenDir dir remote ++ "/" ++ name
     match IO.readFile path with
-    | some text => some (seenFromText name text)
-    | none =>
-      match Remote.get name with
-      | none => none
-      | some text =>
-        -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
-        if Text.sha256 text != Text.drop (Text.indexOf name "-" 0 + 1) name then
-          IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++ ": its text does not hash to its name\n")
-          none
-        else
-          let s := import dir name text
-          IO.writeFile path (seenToText s)
-          some s) names
+    | Option.some text => Option.some (seenFromText name text)
+    | Option.none =>
+        match List.lookup name fromPacks with
+        | Option.some text =>
+            -- A pack's objects are checked line by line as they are written, so it needs no bundle hash.
+            let s := Replicate.import dir name text
+            IO.writeFile path (seenToText s)
+            Option.some s
+        | Option.none =>
+            match getOr (Map.lookup name fetched) Option.none with
+            | Option.none => Option.none
+            | Option.some text =>
+                -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
+                if Text.sha256 text != Text.drop (indexOf name "-" 0 + 1) name then
+                  IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++
+                    ": its text does not hash to its name\n")
+                  Option.none
+                else
+                  let s := Replicate.import dir name text
+                  IO.writeFile path (seenToText s)
+                  Option.some s) names
 
 /-- Causal nodes, snapshots, and everything their entries reach, from the given heads. -/
 def closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=
-  let nodes := List.foldl (fun acc h => union acc (Codebase.ancestors dir h)) Map.empty heads
-  let causals := List.map (fun c => Codebase.readCausal dir c) (Map.keys nodes)
-  let entryRoots := List.concatMap (fun c => Project.rootsOf (Map.toList (Codebase.readNamespace dir c.snapshot))) causals
+  let nodes := foldl (fun acc h => union acc (ancestors dir h)) Map.empty heads
+  let causals := List.map (fun c => readCausal dir c) (Map.keys nodes)
+  let entryRoots := concatMap (fun c => rootsOf (Map.toList (readNamespace dir c.snapshot))) causals
   -- Builtins travel too: a store pulled without them types every constructor pattern as unknown.
-  union (union nodes (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))) (builtinsOf dir)
+  union (union nodes (reachable dir (concatMap snapshotsOf causals ++ entryRoots))) (builtinsOf dir)
 
 /-- The claimed causal nodes for `branch` that no other claim descends from, sorted. -/
 def headsOf (dir : Text) (seen : List Seen) (branch : Text) : {IO, Throw Text} List Text :=
-  let claimed := List.dedup (List.sort (List.filterMap (fun c => if fst c == branch then some (snd c) else none) (List.concatMap (fun s => s.claims) seen)))
-  List.filter (fun c => not (List.any (fun other => other != c && Map.contains c (Codebase.ancestors dir other)) claimed)) claimed
+  let claimed := dedup (sort (filterMap
+    (fun c => if fst c == branch then Option.some (snd c) else Option.none)
+    (concatMap (fun s => s.claims) seen)))
+  List.filter
+    (fun c => not (any (fun other => other != c && Map.contains c (ancestors dir other)) claimed))
+    claimed
 
 def branchesOf (seen : List Seen) : List Text := List.dedup (List.sort (List.map fst (List.concatMap (fun s => s.claims) seen)))
 
 /-- Imports the remote and points `<remote>.<branch>` (and `.2`, `.3`… for concurrent heads) at its heads. -/
 def pull (dir : Text) (remote : Text) : {Remote, IO, Throw Text} List (Text, List Text) :=
-  let seen := sync dir remote
+  let seen := Replicate.sync dir remote
   List.map (fun branch =>
     let heads := headsOf dir seen branch
-    List.forEach (List.mapIndexed (fun i h => (i, h)) heads) (fun pair =>
-      Codebase.setBranch dir (remote ++ "." ++ branch ++ (if fst pair == 0 then "" else "." ++ Int.toText (fst pair + 1))) (snd pair))
+    forEach (mapIndexed (fun i h => (i, h)) heads) (fun pair => setBranch
+      dir
+      (remote ++ "." ++ branch ++ (if fst pair == 0 then "" else "." ++ Int.toText (fst pair + 1)))
+      (snd pair))
     (branch, heads)) (branchesOf seen)
 
-/-- Uploads what `branch` reaches and the remote lacks, with a claim for its head; none if up to date. -/
+/-- Uploads what `branch` reaches and the remote lacks, with a claim for its head, and its pack; none if up to date. -/
 def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text} Option Text :=
   let seen := Replicate.sync dir remote
   let head := headOf dir branch
@@ -239,24 +289,31 @@ def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text}
   let bases := headsOf dir seen branch
   let ancestry := ancestors dir head
   let behind := List.filter (fun b => not (Map.contains b ancestry)) bases
-  -- A claimed head is on the remote with everything it reaches, so there is nothing to send.
-  if claimed then Option.none else if not (List.isEmpty behind) then Throw.throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++
+  -- A claimed head is on the remote with everything it reaches, so there is nothing to send but the
+  -- packs of bundles that sessions before D173 pushed.
+  if claimed then
+    packMissing dir seen
+    Option.none
+  else if not (List.isEmpty behind) then Throw.throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++
     Text.take 10 (getOr (head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again") else
     let known := Set.fromList (concatMap (fun s => s.hashes) seen)
     let missing := missingFrom dir [head] known
     let text := basedBundle dir [(branch, head)] (List.map (fun b => (branch, b)) bases) missing
     let name := Replicate.nameOf 0 text
     Remote.put name text
-    IO.writeFile
-      (seenDir dir remote ++ "/" ++ name)
-      (seenToText (Seen.mk name [(branch, head)] missing))
+    let s := Seen.mk name [(branch, head)] missing
+    IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText s)
+    -- The bundle first: the Worker takes a pack only for a bundle it holds.
+    packMissing dir (seen ++ [s])
     Option.some name
 
 /-- Uploads the store's assets the remote lacks; returns how many. -/
 def pushAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
   let there := Set.fromList (Remote.keys "assets")
   let missing := List.filter (fun h => not (Set.contains h there)) (Assets.all dir)
-  List.forEach missing (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
+  forEach
+    missing
+    (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
   List.length missing
 
 /-- Downloads the remote's assets the store lacks; returns how many. -/
@@ -265,7 +322,7 @@ def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
   IO.mkdirp (dir ++ "/assets")
   List.length (List.filter (fun h =>
     let staged := Assets.path dir h ++ ".tmp"
-    if Remote.download ("assets/" ++ h) staged && Assets.sha256File staged == h then
+    if Remote.download ("assets/" ++ h) staged && sha256File staged == h then
       IO.exec "mv" [staged, Assets.path dir h]
       true
     else
@@ -274,42 +331,41 @@ def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
 
 def isBoundary (level : Int) (h : Text) : Bool := Text.startsWith (Text.repeat level "0") h
 
-/--
-  Compacts the remote's history at `level`: writes one bundle per stratum, then deletes the
-  bundles of lower levels that compacted bundles cover. Returns (written, deleted).
--/
+/-- Compacts the remote's history at `level`: writes one bundle per stratum, then deletes the
+  bundles of lower levels that compacted bundles cover. Returns (written, deleted). -/
 def compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, Throw Text} (List Text, List Text) :=
-  let seen := sync dir remote
-  let heads := List.concatMap (fun b => headsOf dir seen b) (branchesOf seen)
-  let history := List.foldl (fun acc h => union acc (Codebase.ancestors dir h)) Map.empty heads
+  let seen := Replicate.sync dir remote
+  let heads := concatMap (fun b => headsOf dir seen b) (branchesOf seen)
+  let history := foldl (fun acc h => union acc (ancestors dir h)) Map.empty heads
   let boundaries := List.filter (fun c => isBoundary level c) (Map.keys history)
   let strata := List.map (fun b =>
-    let earlier := List.filter (fun other => other != b && Map.contains other (Codebase.ancestors dir b)) boundaries
-    let before := if List.isEmpty earlier then Map.empty else closureOf dir earlier
-    List.filter (fun h => not (Map.contains h before)) (Map.keys (closureOf dir [b]))) boundaries
+    let earlier := List.filter (fun other => other != b && Map.contains other (ancestors dir b)) boundaries
+    let before := if List.isEmpty earlier then Map.empty else Replicate.closureOf dir earlier
+    List.filter (fun h => not (Map.contains h before)) (Map.keys (Replicate.closureOf dir [b]))) boundaries
   let existing := Set.fromList (List.map (fun s => s.bundleName) seen)
-  let written := List.filterMap (fun hashes =>
+  let written := filterMap (fun hashes =>
     let text := bundle dir [] hashes
-    let name := nameOf level text
-    if Set.contains name existing then none
-    else
+    let name := Replicate.nameOf level text
+    if Set.contains name existing then Option.none else
       Remote.put name text
       IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name [] hashes))
-      some name) strata
+      Option.some name) strata
   let covered := Set.fromList (List.concat strata)
-  let headClaims := List.concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
-  let removable := List.filter (fun s => levelOf s.bundleName < level && not (List.isEmpty s.hashes) && List.all (fun h => Set.contains h covered) s.hashes) seen
+  let headClaims := concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
+  let removable := List.filter
+    (fun s => levelOf s.bundleName < level && not (List.isEmpty s.hashes) && List.all (fun h => Set.contains h covered) s.hashes)
+    seen
   -- Claims that are still heads survive their bundle in a claims-only bundle.
-  let kept := List.filter (fun c => List.any (fun hc => hc == c) headClaims) (List.concatMap (fun s => s.claims) removable)
-  if List.isEmpty kept then ()
-  else
+  let kept := List.filter
+    (fun c => any (fun hc => hc == c) headClaims)
+    (concatMap (fun s => s.claims) removable)
+  if List.isEmpty kept then () else
     let text := bundle dir kept []
-    let name := nameOf 0 text
-    if Set.contains name existing then ()
-    else
+    let name := Replicate.nameOf 0 text
+    if Set.contains name existing then () else
       Remote.put name text
       IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name kept []))
-  List.forEach removable (fun s =>
+  forEach removable (fun s =>
     Remote.delete s.bundleName
     IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
   (written, List.map (fun s => s.bundleName) removable)
@@ -338,40 +394,42 @@ def gunzip (path : Text) : {IO} Option Text :=
 
 /-- A remote in a local directory (another disk, a mounted share, or tests). Bundles are stored gzipped. -/
 def directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
-  handle body () with
-  | Remote.list _ -> k => k (if IO.isDir (root ++ "/bundles") then List.filter (fun n => not (Text.endsWith ".tmp" n)) (IO.listDir (root ++ "/bundles")) else [])
-  | Remote.get name -> k => k (gunzip (root ++ "/bundles/" ++ name))
-  | Remote.put name text -> k =>
-    let path := root ++ "/bundles/" ++ name
-    if IO.exists path then () else
-      IO.mkdirp (root ++ "/bundles")
-      gzipTo text path
-    k ()
-  | Remote.delete name -> k =>
-    IO.remove (root ++ "/bundles/" ++ name)
-    k ()
-  | Remote.writeAll files -> k =>
-    List.forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
-    k ()
-  | Remote.keys folder -> k => k (if IO.isDir (root ++ "/" ++ folder) then List.filter (fun n => not (Text.endsWith ".tmp" n)) (IO.listDir (root ++ "/" ++ folder)) else [])
-  | Remote.download key file -> k =>
+  let download := fun key file =>
     let source := root ++ "/" ++ key
-    if not (IO.exists source) then k false
-    else
+    if not (IO.exists source) then false else
       match IO.exec "cp" [source, file] with
-      | (0, _, _) => k true
-      | _ => k false
-  | Remote.upload key file _ -> k =>
-    let target := root ++ "/" ++ key
-    IO.mkdirp (Text.take (Text.length target - Text.length (Assets.baseName target) - 1) target)
-    match IO.exec "cp" [file, target ++ ".tmp"] with
-    | (0, _, _) =>
-      IO.exec "mv" [target ++ ".tmp", target]
+      | (0, _, _) => true
+      | _ => false
+  handle body () with
+  | Remote.list x0 -> k => k (if IO.isDir (root ++ "/bundles") then List.filter (fun n => not (endsWith ".tmp" n)) (IO.listDir (root ++ "/bundles")) else [])
+  | Remote.get name -> k => k (gunzip (root ++ "/bundles/" ++ name))
+  | Remote.getAll names -> k => k (List.map (fun name => gunzip (root ++ "/bundles/" ++ name)) names)
+  | Remote.put name text -> k =>
+      let path := root ++ "/bundles/" ++ name
+      if IO.exists path then () else
+        IO.mkdirp (root ++ "/bundles")
+        gzipTo text path
       k ()
-    | (_, _, err) => defect ("copying " ++ key ++ " failed: " ++ Text.trim err)
+  | Remote.delete name -> k =>
+      IO.remove (root ++ "/bundles/" ++ name)
+      k ()
+  | Remote.writeAll files -> k =>
+      forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
+      k ()
+  | Remote.keys folder -> k => k (if IO.isDir (root ++ "/" ++ folder) then List.filter (fun n => not (endsWith ".tmp" n)) (IO.listDir (root ++ "/" ++ folder)) else [])
+  | Remote.download key file -> k => k (download key file)
+  | Remote.downloadAll pairs -> k => k (List.map (fun pair => download (fst pair) (snd pair)) pairs)
+  | Remote.upload key file x1 -> k =>
+      let target := root ++ "/" ++ key
+      IO.mkdirp (Text.take (Text.length target - Text.length (Assets.baseName target) - 1) target)
+      match IO.exec "cp" [file, target ++ ".tmp"] with
+      | (0, _, _) =>
+          IO.exec "mv" [target ++ ".tmp", target]
+          k ()
+      | (_, _, err) => defect ("copying " ++ key ++ " failed: " ++ trim err)
   | Remote.drop key -> k =>
-    IO.remove (root ++ "/" ++ key)
-    k ()
+      IO.remove (root ++ "/" ++ key)
+      k ()
 
 /-- The `<Key>` values of an S3 ListObjectsV2 response. -/
 def xmlValues (tag : Text) (xml : Text) : List Text :=
@@ -379,158 +437,207 @@ def xmlValues (tag : Text) (xml : Text) : List Text :=
     let close := Text.indexOf part ("</" ++ tag ++ ">") 0
     if close < 0 then none else some (Text.take close part)) (List.drop 1 (Text.split xml ("<" ++ tag ++ ">")))
 
-/--
-  A remote in an S3-compatible bucket (Cloudflare R2): `endpoint` is the account's S3 endpoint,
+/-- A remote in an S3-compatible bucket (Cloudflare R2): `endpoint` is the account's S3 endpoint,
   `prefix` the project's folder. Requests are signed by curl (`--aws-sigv4`); the credentials go
-  in a private curl config file, never on a command line.
--/
+  in a private curl config file, never on a command line. -/
 def bucket (endpoint : Text) (name : Text) (prefix : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
   let base := endpoint ++ "/" ++ name
   let folder := prefix ++ "/bundles/"
-  let curl := fun (arguments : List Text) => IO.exec "curl" (["-sS", "--fail-with-body", "-K", config, "--aws-sigv4", "aws:amz:auto:s3"] ++ arguments)
+  let curl := fun arguments => IO.exec
+    "curl"
+    (["-sS", "--fail-with-body", "-K", config, "--aws-sigv4", "aws:amz:auto:s3"] ++ arguments)
   -- The names under a folder, one ListObjectsV2 page at a time.
-  let listUnder := fun (under : Text) =>
+  let listUnder := fun under =>
     let rec page token acc :=
-      let query := "?list-type=2&prefix=" ++ under ++ (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
+      let query := "?list-type=2&prefix=" ++ under ++
+        (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
       match curl [base ++ query] with
       | (0, xml, _) =>
-        let keys := List.map (fun key => Text.drop (Text.length under) key) (xmlValues "Key" xml)
-        match xmlValues "NextContinuationToken" xml with
-        | next :: _ => page next (acc ++ keys)
-        | [] => acc ++ keys
-      | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+          let keys := List.map (fun key => Text.drop (Text.length under) key) (xmlValues "Key" xml)
+          match xmlValues "NextContinuationToken" xml with
+          | next :: _ => page next (acc ++ keys)
+          | [] => acc ++ keys
+      | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ trim err ++ " " ++ trim out)
     page "" []
-  handle body () with
-  | Remote.list _ -> k => k (listUnder folder)
-  | Remote.keys under -> k => k (listUnder (prefix ++ "/" ++ under ++ "/"))
-  | Remote.download key file -> k =>
-    match curl ["-o", file, base ++ "/" ++ prefix ++ "/" ++ key] with
-    | (0, _, _) => k true
-    | _ =>
-      IO.exec "rm" ["-f", file]
-      k false
-  | Remote.upload key file mediaType -> k =>
-    match curl ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/" ++ prefix ++ "/" ++ key] with
-    | (0, _, _) => k ()
-    | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
-  | Remote.drop key -> k =>
-    curl ["-X", "DELETE", base ++ "/" ++ prefix ++ "/" ++ key]
-    k ()
-  | Remote.get key -> k =>
+  let fetch := fun key =>
     let staged := config ++ "." ++ key
-    let text := match curl ["-o", staged, base ++ "/" ++ folder ++ key] with
+    let text :=
+      match curl ["-o", staged, base ++ "/" ++ folder ++ key] with
       | (0, _, _) => gunzip staged
-      | _ => none
+      | _ => Option.none
     IO.exec "rm" ["-f", staged]
-    k text
+    text
+  let download := fun key file =>
+    match curl ["-o", file, base ++ "/" ++ prefix ++ "/" ++ key] with
+    | (0, _, _) => true
+    | _ =>
+        IO.exec "rm" ["-f", file]
+        false
+  handle body () with
+  | Remote.list x0 -> k => k (listUnder folder)
+  | Remote.keys under -> k => k (listUnder (prefix ++ "/" ++ under ++ "/"))
+  | Remote.download key file -> k => k (download key file)
+  | Remote.downloadAll pairs -> k => k (List.map (fun pair => download (fst pair) (snd pair)) pairs)
+  | Remote.upload key file mediaType -> k =>
+      match curl ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/" ++ prefix ++ "/" ++ key] with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
+  | Remote.drop key -> k =>
+      curl ["-X", "DELETE", base ++ "/" ++ prefix ++ "/" ++ key]
+      k ()
+  | Remote.get key -> k => k (fetch key)
+  | Remote.getAll keys -> k => k (List.map fetch keys)
   | Remote.put key text -> k =>
-    let staged := config ++ "." ++ key
-    gzipTo text staged
-    -- `If-None-Match: *` makes the write conditional: an existing bundle is never replaced.
-    let result := curl ["-X", "PUT", "-H", "If-None-Match: *", "--data-binary", "@" ++ staged, base ++ "/" ++ folder ++ key]
-    IO.remove staged
-    match result with
-    | (0, _, _) => k ()
-    | (_, out, err) => if Text.contains "PreconditionFailed" out then k () else defect ("uploading " ++ key ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+      let staged := config ++ "." ++ key
+      gzipTo text staged
+      -- `If-None-Match: *` makes the write conditional: an existing bundle is never replaced.
+      let result := curl ["-X", "PUT", "-H", "If-None-Match: *", "--data-binary", "@" ++ staged, base ++ "/" ++ folder ++ key]
+      IO.remove staged
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => if Text.contains "PreconditionFailed" out then k () else defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
   | Remote.delete key -> k =>
-    curl ["-X", "DELETE", base ++ "/" ++ folder ++ key]
-    k ()
+      curl ["-X", "DELETE", base ++ "/" ++ folder ++ key]
+      k ()
   | Remote.writeAll files -> k =>
-    -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
-    -- each repeats the credentials, and the batch config is as private as the remote's.
-    let staged := config ++ ".d"
-    let batch := config ++ ".batch"
-    IO.mkdirp staged
-    IO.exec "install" ["-m", "600", "/dev/null", batch]
-    let user := Option.getOr (IO.readFile config) ""
-    let groups := List.mapIndexed (fun i pair =>
-      let path := fst pair
-      let file := staged ++ "/" ++ Int.toText i
-      IO.writeFile file (snd pair)
-      let kind := siteType path
-      user ++ "aws-sigv4 = \"aws:amz:auto:s3\"\nfail-with-body\noutput = \"/dev/null\"\nheader = \"content-type: " ++ kind ++ "\"\nupload-file = \"" ++ file ++ "\"\nurl = \"" ++ base ++ "/" ++ prefix ++ "/" ++ path ++ "\"\n") files
-    IO.writeFile batch (Text.join "next\n" groups)
-    let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
-    IO.remove batch
-    IO.exec "rm" ["-rf", staged]
-    match result with
-    | (0, _, _) => k ()
-    | (_, out, err) => defect ("writing the site failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+      -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+      -- each repeats the credentials, and the batch config is as private as the remote's.
+      let staged := config ++ ".d"
+      let batch := config ++ ".batch"
+      IO.mkdirp staged
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      let groups := mapIndexed (fun i pair =>
+        let path := fst pair
+        let file := staged ++ "/" ++ Int.toText i
+        IO.writeFile file (snd pair)
+        let kind := contentType path
+        user ++
+          "aws-sigv4 = \"aws:amz:auto:s3\"\nfail-with-body\noutput = \"/dev/null\"\nheader = \"content-type: " ++ kind ++ "\"\nupload-file = \"" ++ file ++ "\"\nurl = \"" ++ base ++ "/" ++ prefix ++ "/" ++ path ++ "\"\n") files
+      IO.writeFile batch (join "next\n" groups)
+      let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+      IO.remove batch
+      IO.exec "rm" ["-rf", staged]
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("writing the site failed: " ++ trim err ++ " " ++ trim out)
 
 
-/--
-  A remote served by the DEUS Worker (D164): `base` is `https://<host>/v1/<project>`. Reads are
+/-- A remote served by the DEUS Worker (D164): `base` is `https://<host>/v1/<project>`. Reads are
   open; writes send the API key that `config`, a private curl config file, holds as a header. A
   listing is one name per line. Bundles travel gzipped, as in a bucket, and the Worker checks that
-  each one hashes to its name.
--/
+  each one hashes to its name. Packs (D180) are stored uncompressed for ranged reads, so curl asks
+  for them compressed in transit. -/
 def http (base : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
-  let curl := fun (arguments : List Text) => IO.exec "curl" (["-sS", "--fail-with-body", "-K", config] ++ arguments)
-  let listing := fun (url : Text) =>
+  let curl := fun arguments => IO.exec "curl" (["-sS", "--compressed", "--fail-with-body", "-K", config] ++ arguments)
+  let listing := fun url =>
     match curl [url] with
     | (0, out, _) => List.filter (fun n => not (Text.isEmpty n)) (Text.lines out)
-    | (_, out, err) => defect ("listing " ++ url ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
-  let send := fun (what : Text) (arguments : List Text) =>
+    | (_, out, err) => defect ("listing " ++ url ++ " failed: " ++ trim err ++ " " ++ trim out)
+  let send := fun what arguments =>
     match curl arguments with
     | (0, _, _) => ()
-    | (_, out, err) => defect (what ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+    | (_, out, err) => defect (what ++ " failed: " ++ trim err ++ " " ++ trim out)
   handle body () with
-  | Remote.list _ -> k => k (listing (base ++ "/bundles"))
+  | Remote.list x0 -> k => k (listing (base ++ "/bundles"))
   | Remote.keys under -> k => k (listing (base ++ "/files/" ++ under ++ "/"))
   | Remote.download key file -> k =>
-    match curl ["-o", file, base ++ "/files/" ++ key] with
-    | (0, _, _) => k true
-    | _ =>
-      IO.exec "rm" ["-f", file]
-      k false
+      match curl ["-o", file, base ++ "/files/" ++ key] with
+      | (0, _, _) => k true
+      | _ =>
+          IO.exec "rm" ["-f", file]
+          k false
   | Remote.upload key file mediaType -> k =>
-    send ("uploading " ++ key) ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/files/" ++ key]
-    k ()
+      send
+        ("uploading " ++ key)
+        ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/files/" ++ key]
+      k ()
   | Remote.drop key -> k =>
-    send ("deleting " ++ key) ["-X", "DELETE", base ++ "/files/" ++ key]
-    k ()
+      send ("deleting " ++ key) ["-X", "DELETE", base ++ "/files/" ++ key]
+      k ()
   | Remote.get key -> k =>
-    let staged := config ++ "." ++ key
-    let text := match curl ["-o", staged, base ++ "/bundles/" ++ key] with
-      | (0, _, _) => gunzip staged
-      | _ => none
-    IO.exec "rm" ["-f", staged]
-    k text
+      let staged := config ++ "." ++ key
+      let text :=
+        match curl ["-o", staged, base ++ "/bundles/" ++ key] with
+        | (0, _, _) => gunzip staged
+        | _ => Option.none
+      IO.exec "rm" ["-f", staged]
+      k text
+  | Remote.getAll keys -> k =>
+      -- One curl run fetches every bundle, 16 at a time: a fresh pull is one round trip, not one per bundle.
+      let staged := config ++ ".get"
+      let batch := config ++ ".getbatch"
+      IO.mkdirp staged
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      let groups := mapIndexed
+        (fun i key => user ++ "fail\noutput = \"" ++ staged ++ "/" ++ Int.toText i ++ "\"\nurl = \"" ++ base ++
+          "/bundles/" ++ key ++ "\"\n")
+        keys
+      IO.writeFile batch (join "next\n" groups)
+      if List.isEmpty keys then () else
+        IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+        ()
+      let texts := mapIndexed (fun i _ => gunzip (staged ++ "/" ++ Int.toText i)) keys
+      IO.remove batch
+      IO.exec "rm" ["-rf", staged]
+      k texts
+  | Remote.downloadAll pairs -> k =>
+      -- One curl run fetches every file, 16 at a time: a fresh pull reads ~50 packs in about a second, not 20.
+      let batch := config ++ ".dlbatch"
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      forEach pairs (fun pair => IO.remove (snd pair))
+      let groups := List.map
+        (fun pair => user ++ "fail\ncompressed\noutput = \"" ++ snd pair ++ "\"\nurl = \"" ++ base ++ "/files/" ++
+          fst pair ++
+          "\"\n")
+        pairs
+      IO.writeFile batch (join "next\n" groups)
+      if List.isEmpty pairs then () else
+        IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+        ()
+      IO.remove batch
+      -- With `fail`, curl writes no file for a missing key.
+      k (List.map (fun pair => IO.exists (snd pair)) pairs)
   | Remote.put key text -> k =>
-    let staged := config ++ "." ++ key
-    gzipTo text staged
-    -- The Worker answers 200 for a bundle it already has, so a repeated push is not an error.
-    let claim := match claimHeader text with
-      | some header => ["-H", "x-deus-claim: " ++ header]
-      | none => []
-    let result := curl (["-X", "PUT", "-H", "content-type: application/gzip"] ++ claim ++ ["--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key])
-    IO.remove staged
-    match result with
-    | (0, _, _) => k ()
-    | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+      let staged := config ++ "." ++ key
+      gzipTo text staged
+      -- The Worker answers 200 for a bundle it already has, so a repeated push is not an error.
+      let claim :=
+        match claimHeader text with
+        | Option.some header => ["-H", "x-deus-claim: " ++ header]
+        | Option.none => []
+      let result := curl (["-X", "PUT", "-H", "content-type: application/gzip"] ++ claim ++
+        ["--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key])
+      IO.remove staged
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
   | Remote.delete key -> k =>
-    send ("deleting " ++ key) ["-X", "DELETE", base ++ "/bundles/" ++ key]
-    k ()
+      send ("deleting " ++ key) ["-X", "DELETE", base ++ "/bundles/" ++ key]
+      k ()
   | Remote.writeAll files -> k =>
-    -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
-    -- each repeats the key, and the batch config is as private as the remote's.
-    let staged := config ++ ".d"
-    let batch := config ++ ".batch"
-    IO.mkdirp staged
-    IO.exec "install" ["-m", "600", "/dev/null", batch]
-    let user := Option.getOr (IO.readFile config) ""
-    let groups := List.mapIndexed (fun i pair =>
-      let path := fst pair
-      let file := staged ++ "/" ++ Int.toText i
-      IO.writeFile file (snd pair)
-      user ++ "fail-with-body\noutput = \"/dev/null\"\nrequest = \"PUT\"\nheader = \"content-type: " ++ siteType path ++ "\"\ndata-binary = \"@" ++ file ++ "\"\nurl = \"" ++ base ++ "/files/" ++ path ++ "\"\n") files
-    IO.writeFile batch (Text.join "next\n" groups)
-    let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
-    IO.remove batch
-    IO.exec "rm" ["-rf", staged]
-    match result with
-    | (0, _, _) => k ()
-    | (_, out, err) => defect ("writing the site failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+      -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+      -- each repeats the key, and the batch config is as private as the remote's.
+      let staged := config ++ ".d"
+      let batch := config ++ ".batch"
+      IO.mkdirp staged
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      let groups := mapIndexed (fun i pair =>
+        let path := fst pair
+        let file := staged ++ "/" ++ Int.toText i
+        IO.writeFile file (snd pair)
+        user ++
+          "fail-with-body\noutput = \"/dev/null\"\nrequest = \"PUT\"\nheader = \"content-type: " ++ contentType path ++ "\"\ndata-binary = \"@" ++ file ++ "\"\nurl = \"" ++ base ++ "/files/" ++ path ++ "\"\n") files
+      IO.writeFile batch (join "next\n" groups)
+      let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+      IO.remove batch
+      IO.exec "rm" ["-rf", staged]
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("writing the site failed: " ++ trim err ++ " " ++ trim out)
 
 /--
   The content type a site file is served with, by the bundled server (`Site.contentType`) and by a
@@ -570,5 +677,163 @@ def missingFrom (dir : Text) (heads : List Text) (known : Map Text Unit) : {IO, 
   Map.keys (union
     objects
     (Set.fromList (List.filter (fun h => not (Map.contains h known)) (Map.keys (builtinsOf dir)))))
+
+/-- The line encoding of `basedBundle` (D172). -/
+def lineBundle (dir : Text) (claims : List (Text, Text)) (bases : List (Text, Text)) (hashes : List Text) : {IO} Text :=
+  let sorted := dedup (sort hashes)
+  let pairs := fun kind xs => List.map (fun c => kind ++ " " ++ fst c ++ " " ++ snd c) (dedup (sort xs))
+  let lines := fun kind path => filterMap
+    (fun h => Option.map (fun text => kind ++ " " ++ h ++ " " ++ text) (storedLine (path h)))
+    sorted
+  join
+    "\n"
+    ([lineHeader] ++ pairs "branch" claims ++ pairs "base" bases ++ lines "obj" (objectPath dir) ++
+      lines "meta" (fun h => dir ++ "/meta/" ++ h)) ++ "\n"
+
+/-- A bundle's (kind, branch, causal) claims and bases, in either encoding. -/
+def claimsOf (text : Text) : List (Text, (Text, Text)) := if startsWith lineHeader text then List.filter (fun x =>
+  let (kind, _, _) := x
+  kind == "branch" || kind == "base") (bundleLines text) else
+  let items :=
+    match Columnar.read text with
+    | form :: [] => Sexp.args form
+    | _ => []
+  filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym kind :: Sexp.str branch :: Sexp.str causal :: []) => if kind == "branch" || kind == "base" then Option.some (kind, branch, causal) else Option.none
+    | _ => Option.none) items
+
+def lineHeader : Text := "DEUSLN1"
+
+/-- `import` of a line bundle: an object that hashes as its line is stored as that line, unparsed. -/
+def importLines (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
+  let lines := bundleLines text
+  let claims := filterMap (fun x =>
+    let (kind, branch, causal) := x
+    if kind == "branch" then Option.some (branch, causal) else Option.none) lines
+  let carried := Map.fromList (filterMap (fun x =>
+    let (kind, h, line) := x
+    if kind == "obj" then Option.some (h, line) else Option.none) lines)
+  let lookup := fun h =>
+    match Map.lookup h carried with
+    | Option.some line => Option.some (Sexp.read line)
+    | Option.none => readObject dir h
+  let hashes := filterMap (fun x =>
+    let (kind, h, line) := x
+    if kind == "obj" then
+      -- An object that is not what its name says would corrupt the store (D91).
+      if startsWith "#" h then if acceptsBuiltin dir h (Sexp.read line) then
+        writeObjectText dir h line
+        Option.some h
+      else Option.none else if Text.sha256 line == h then
+        writeObjectText dir h line
+        Option.some h
+      else if verified h (Sexp.read line) lookup then
+        writeObjectText dir h line
+        Option.some h
+      else
+        IO.eprint ("deus: skipped object #" ++ Text.take 10 h ++ " in bundle " ++ name ++
+          ": its text does not hash to its name\n")
+        Option.none
+    else if kind == "meta" then
+      if IO.exists (dir ++ "/meta/" ++ h) then () else writeMetaText dir h line
+      Option.none
+    else Option.none) lines
+  Seen.mk name claims hashes
+
+/-- `import` of a bundle written before D172, as one S-expression. -/
+def importForms (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
+  let items :=
+    match Columnar.read text with
+    | form :: [] => Sexp.args form
+    | _ => defect ("bundle " ++ name ++ " is not one form")
+  let claims := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "branch" :: Sexp.str branch :: Sexp.str causal :: []) => Option.some (branch, causal)
+    | _ => Option.none) items
+  let carried := Map.fromList (filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) => Option.some (h, form)
+    | _ => Option.none) items)
+  let lookup := fun h =>
+    match Map.lookup h carried with
+    | Option.some form => Option.some form
+    | Option.none => readObject dir h
+  let hashes := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) =>
+        -- An object that is not what its name says would corrupt the store (D91).
+        if startsWith "#" h then if acceptsBuiltin dir h form then
+          writeObject dir h form
+          Option.some h
+        else Option.none else
+          -- Printed once: the hash check and the object file share the text.
+          let printed := Sexp.print form
+          if Text.sha256 printed == h || verified h form lookup then
+            let path := objectPath dir h
+            if IO.exists path then () else IO.writeFile path (printed ++ "\n")
+            Option.some h
+          else
+            IO.eprint ("deus: skipped object #" ++ Text.take 10 h ++ " in bundle " ++ name ++
+              ": its text does not hash to its name\n")
+            Option.none
+    | Sexp.list (Sexp.sym "meta" :: Sexp.str h :: form :: []) =>
+        if IO.exists (dir ++ "/meta/" ++ h) then () else writeMeta dir h form
+        Option.none
+    | _ => Option.none) items
+  Seen.mk name claims hashes
+
+/-- The bundles on the remote whose pack is complete (its index is listed). -/
+def packedNames (u : Unit) : {Remote} Map Text Unit := Set.fromList (filterMap
+  (fun k => if endsWith ".idx" k then Option.some (Text.take (Text.length k - 4) k) else Option.none)
+  (Remote.keys "packs"))
+
+/-- A pack's line text, fetched whole: a pull wants every object in it. -/
+def readPack (dir : Text) (name : Text) : {Remote, IO} Option Text :=
+  let staged := dir ++ "/cache/pull-" ++ name
+  IO.mkdirp (dir ++ "/cache")
+  if Remote.download ("packs/" ++ name) staged then
+    let text := IO.readFile staged
+    IO.remove staged
+    text
+  else Option.none
+
+/-- Writes the packs (D173) of seen bundles the remote has none for; returns their names. A seen bundle's
+  objects are all in the store, and a hash it lists that the store lacks was never in the bundle either. -/
+def packMissing (dir : Text) (seen : List Seen) : {Remote, IO} List Text :=
+  let packed := packedNames ()
+  let todo := List.filter (fun s => not (Map.contains s.bundleName packed)) seen
+  forEach todo (fun s => writePack dir s.bundleName s.claims [] s.hashes)
+  List.map (fun s => s.bundleName) todo
+
+/-- A line bundle's lines after the header as (kind, key, rest). -/
+def bundleLines (text : Text) : List (Text, (Text, Text)) := filterMap (fun line =>
+  let a := indexOf line " " 0
+  let b := if a < 0 then 0 - 1 else indexOf line " " (a + 1)
+  if b < 0 then Option.none else Option.some (Text.take a line, Text.slice line (a + 1) b, Text.drop (b + 1) line)) (List.drop 1 (Text.split text "\n"))
+
+/-- Uploads the pack of bundle `name` (D173): its line text, then the index, so a listed index means a whole pack. -/
+def writePack (dir : Text) (name : Text) (claims : List (Text, Text)) (bases : List (Text, Text)) (hashes : List Text) : {Remote, IO} Unit :=
+  let text := lineBundle dir claims bases hashes
+  let staged := dir ++ "/cache/pack-" ++ name
+  IO.mkdirp (dir ++ "/cache")
+  IO.writeFile staged text
+  IO.writeBytes (staged ++ ".idx") (Pack.index text)
+  Remote.upload ("packs/" ++ name) staged "text/plain; charset=utf-8"
+  Remote.upload ("packs/" ++ name ++ ".idx") (staged ++ ".idx") "application/octet-stream"
+  IO.remove staged
+  IO.remove (staged ++ ".idx")
+
+-- Replicate.readPacks
+/-- The line text of each named pack, fetched whole and all at once: a pull wants every object in them. -/
+def readPacks (dir : Text) (names : List Text) : {Remote, IO} List (Option Text) :=
+  let staged := dir ++ "/cache/pull-"
+  IO.mkdirp (dir ++ "/cache")
+  let found := Remote.downloadAll (List.map (fun name => ("packs/" ++ name, staged ++ name)) names)
+  List.map (fun pair => if fst pair then
+    let text := IO.readFile (staged ++ snd pair)
+    IO.remove (staged ++ snd pair)
+    text
+  else Option.none) (zip found names)
 
 end Replicate

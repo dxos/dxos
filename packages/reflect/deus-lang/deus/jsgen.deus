@@ -228,7 +228,7 @@ def storedType (meta : Option Sexp) : Sexp :=
   | some t => t
   | none => Option.getOr (Codebase.metaField meta "scheme") (Sexp.list [])
 
-def locals (meta : Option Sexp) : List Text := List.map Sexp.asText (Codebase.metaList meta "locals")
+def locals (meta : Option Sexp) : List Text := List.map asText (metaList meta "locals")
 
 /-- The module and path of `Js.import "<module>" "<path>"`, when `core` is one. -/
 def importOf (jsImport : Text) (core : Sexp) : Option (Text, Text) :=
@@ -237,53 +237,50 @@ def importOf (jsImport : Text) (core : Sexp) : Option (Text, Text) :=
     if callee == jsImport && not (Text.isEmpty jsImport) then some (module, path) else none
   | _ => none
 
-/--
-  Every definition the roots reach, by hash. `jsImport` is the hash of `Js.import`, or "" when
-  the codebase has none.
--/
+/-- Every definition the roots reach, by hash. `jsImport` is the hash of `Js.import`, or "" when
+  the codebase has none. -/
 def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (ns : Map Text Entry) (jsImport : Text) (roots : List Text) : {Throw Text | r} List JsDef :=
-  let names := namesByHash ns
+  let names := JsGen.namesByHash ns
   let taken := MutMap.new ()
-  let jsName := fun (display : Text) =>
+  let jsName := fun display =>
     let base := mangle display
     let rec pick n :=
       let candidate := if n == 0 then base else base ++ "_" ++ Int.toText n
-      if MutMap.has taken candidate then pick (n + 1)
-      else
+      if MutMap.has taken candidate then pick (n + 1) else
         MutMap.set taken candidate ()
         candidate
     pick 0
   let seen := MutMap.new ()
   let rec go pending acc :=
     match pending with
-    | [] => List.reverse acc
-    | h :: rest =>
-      if MutMap.has seen h then go rest acc
-      else
+    | [] => reverse acc
+    | h :: rest => if MutMap.has seen h then go rest acc else
         MutMap.set seen h ()
-        let display := Option.getOr (Dict.lookup h names) ("#" ++ Text.take 10 h)
+        let display := getOr (Dict.lookup h names) ("#" ++ Text.take 10 h)
         let m := meta h
-        let t := storedType m
+        let t := JsGen.storedType m
         match fetch h with
-        | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", Sexp.str p]]) =>
-          go rest (JsDef.mk h display "" (JsKind.primitive p) (Sexp.list []) t :: acc)
-        | some (Sexp.list [Sexp.sym "term", core]) =>
-          match importOf jsImport core with
-          | some (module, path) =>
-            let kind := match arrows t with
-              | ([], _) => JsKind.importValue module path
-              | (ps, _) => JsKind.importFn module path (List.length ps)
-            go rest (JsDef.mk h display (jsName display) kind (Sexp.list []) t :: acc)
-          | none =>
-            if not (Text.isEmpty jsImport) && List.contains jsImport (refsOf core) then
-              throw (display ++ " uses Js.import inside an expression; a binding is a definition whose whole body is Js.import \"<module>\" \"<path>\"")
-            else ()
-            let body := dress (Ref.new (locals m)) core
-            let kind := match unlam core with
-              | (0, _) => JsKind.constant
-              | (n, _) => JsKind.fn n
-            go (rest ++ refsOf core) (JsDef.mk h display (jsName display) kind body t :: acc)
-        | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the js target can compile")
+        | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: [])) => go rest (JsDef.mk h display "" (JsKind.primitive p) (Sexp.list []) t :: acc)
+        | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
+            match importOf jsImport core with
+            | Option.some (module, path) =>
+                let kind :=
+                  match JsGen.arrows t with
+                  | ([], _) => JsKind.importValue module path
+                  | (ps, _) => JsKind.importFn module path (List.length ps)
+                go rest (JsDef.mk h display (jsName display) kind (Sexp.list []) t :: acc)
+            | Option.none =>
+                if not (Text.isEmpty jsImport) && List.contains jsImport (Wasm.refsOf core) then Throw.throw (display ++
+                  " uses Js.import inside an expression; a binding is a definition whose whole body is Js.import \"<module>\" \"<path>\"") else ()
+                let body := dress (Ref.new (locals m)) core
+                let kind :=
+                  match JsGen.unlam core with
+                  | (0, _) => JsKind.constant
+                  | (n, _) => JsKind.fn n
+                go
+                  (rest ++ Wasm.refsOf core)
+                  (JsDef.mk h display (jsName display) kind body t :: acc)
+        | _ => Throw.throw ("#" ++ Text.take 10 h ++ " is not a term the js target can compile")
   go roots []
 
 --
@@ -379,27 +376,27 @@ def int (n : Int) : Text := if n < 0 then "(" ++ Int.toText n ++ ")" else Int.to
 /-- A pattern against the JavaScript expression `path`: its tests and what it binds, left to right. -/
 def pattern (path : Text) (p : Sexp) : {Throw Text} (List Text, List (Text, Text)) :=
   match p with
-  | Sexp.list [Sexp.sym "pany"] => ([], [])
-  | Sexp.list [Sexp.sym "pvar", Sexp.str x] => ([], [(x, path)])
-  | Sexp.list [Sexp.sym "pas", Sexp.str x, q] =>
-    match pattern path q with
-    | (tests, binds) => (tests, (x, path) :: binds)
-  | Sexp.list [Sexp.sym "pint", Sexp.int n] => ([path ++ " === " ++ int n], [])
-  | Sexp.list [Sexp.sym "ptext", Sexp.str s] => ([path ++ " === " ++ quote s], [])
-  | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => ([path ++ (if tag == 1 then " === true" else " === false")], [])
-  | Sexp.list [Sexp.sym "pcon", Sexp.str "#Unit", _] => ([], [])
+  | Sexp.list (Sexp.sym "pany" :: []) => ([], [])
+  | Sexp.list (Sexp.sym "pvar" :: Sexp.str x :: []) => ([], [(x, path)])
+  | Sexp.list (Sexp.sym "pas" :: Sexp.str x :: q :: []) =>
+      let (tests, binds) := JsGen.pattern path q
+      (tests, (x, path) :: binds)
+  | Sexp.list (Sexp.sym "pint" :: Sexp.int n :: []) => ([path ++ " === " ++ JsGen.int n], [])
+  | Sexp.list (Sexp.sym "ptext" :: Sexp.str s :: []) => ([path ++ " === " ++ JsGen.quote s], [])
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Bool" :: Sexp.int tag :: []) => ([path ++ (if tag == 1 then " === true" else " === false")], [])
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Unit" :: _ :: []) => ([], [])
   | Sexp.list (Sexp.sym "pcon" :: Sexp.str _ :: Sexp.int tag :: subs) =>
-    match fields path 0 subs with
-    | (tests, binds) => ((path ++ ".tag === " ++ Int.toText tag) :: tests, binds)
-  | _ => throw ("the pattern " ++ Sexp.print p ++ " is outside the js target")
+      let (tests, binds) := JsGen.fields path 0 subs
+      ((path ++ ".tag === " ++ Int.toText tag) :: tests, binds)
+  | _ => Throw.throw ("the pattern " ++ Sexp.print p ++ " is outside the js target")
 
 /-- The patterns of fields `i`, `i + 1`, … of the value at `path`. -/
 def fields (path : Text) (i : Int) (subs : List Sexp) : {Throw Text} (List Text, List (Text, Text)) :=
   match subs with
   | [] => ([], [])
   | sub :: rest =>
-    match (pattern (path ++ ".fields[" ++ Int.toText i ++ "]") sub, fields path (i + 1) rest) with
-    | ((t1, b1), (t2, b2)) => (t1 ++ t2, b1 ++ b2)
+      let ((t1, b1), t2, b2) := (JsGen.pattern (path ++ ".fields[" ++ Int.toText i ++ "]") sub, JsGen.fields path (i + 1) rest)
+      (t1 ++ t2, b1 ++ b2)
 
 /-- Whether `code` is an `Int`, `Text` or `Bool` literal, so `===` and `<` compare as the kernel does. -/
 def scalar (code : Text) : Bool :=
@@ -478,222 +475,231 @@ def calleeName (ctx : JsCtx) (env : List Text) (f : Sexp) : {Throw Text} Option 
 /-- `e` as statements whose value goes to `target`. -/
 def stmt (ctx : JsCtx) (env : List Text) (e : Sexp) (target : JsTarget) : {Throw Text} Unit :=
   match e with
-  | Sexp.list [Sexp.sym "if", c, t, f] =>
-    let cond := expr ctx env c
-    emit ctx ("if (" ++ cond ++ ") {")
-    stmt (deeper ctx) env t target
-    emit ctx "} else {"
-    stmt (deeper ctx) env f target
-    emit ctx "}"
-  | Sexp.list [Sexp.sym "let", Sexp.str x, v, b] =>
-    let name := bind ctx env x v
-    stmt ctx (name :: env) b target
-  | Sexp.list [Sexp.sym "seq", a, b] =>
-    stmt ctx env a JsTarget.drop
-    stmt ctx env b target
+  | Sexp.list (Sexp.sym "if" :: c :: t :: f :: []) =>
+      let cond := JsGen.expr ctx env c
+      JsGen.emit ctx ("if (" ++ cond ++ ") {")
+      JsGen.stmt (deeper ctx) env t target
+      JsGen.emit ctx "} else {"
+      JsGen.stmt (deeper ctx) env f target
+      JsGen.emit ctx "}"
+  | Sexp.list (Sexp.sym "let" :: Sexp.str x :: v :: b :: []) =>
+      let name := JsGen.bind ctx env x v
+      JsGen.stmt ctx (name :: env) b target
+  | Sexp.list (Sexp.sym "seq" :: a :: b :: []) =>
+      JsGen.stmt ctx env a JsTarget.drop
+      JsGen.stmt ctx env b target
   | Sexp.list (Sexp.sym "match" :: s :: cases) => matchStmt ctx env s cases target
-  | Sexp.list [Sexp.sym "letrec", Sexp.list (_ :: names), Sexp.list fs, b] =>
-    let jsNames := List.map (fun x => local ctx (Sexp.asText x)) names
-    let env2 := List.reverse jsNames ++ env
-    List.forEach (List.zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair))
-    stmt ctx env2 b target
+  | Sexp.list (Sexp.sym "letrec" :: Sexp.list (_ :: names) :: Sexp.list fs :: b :: []) =>
+      let jsNames := List.map (fun x => JsGen.local ctx (asText x)) names
+      let env2 := reverse jsNames ++ env
+      forEach (zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair))
+      JsGen.stmt ctx env2 b target
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
-    match (target, calleeName ctx env f, ctx.jxSelf) with
-    | (JsTarget.ret, some callee, some (selfName, arity, slots)) =>
-      if callee == selfName && arity == List.length args then
-        let values := operands ctx env args
-        -- The parameters are `const` copies of the slots, so closures made this round keep their values.
-        List.forEach (List.zip slots values) (fun pair => if fst pair == snd pair then () else emit ctx (fst pair ++ " = " ++ snd pair ++ ";"))
-        emit ctx "continue;"
-        Ref.set ctx.jxLooped true
-      else deliver ctx target (expr ctx env e)
-    | _ => deliver ctx target (expr ctx env e)
-  | _ => deliver ctx target (expr ctx env e)
+      match (target, calleeName ctx env f, ctx.jxSelf) with
+      | (JsTarget.ret, Option.some callee, Option.some (selfName, arity, slots)) => if callee == selfName && arity == List.length args then
+          let values := operands ctx env args
+          -- The parameters are `const` copies of the slots, so closures made this round keep their values.
+          forEach
+            (zip slots values)
+            (fun pair => if fst pair == snd pair then () else JsGen.emit ctx (fst pair ++ " = " ++ snd pair ++ ";"))
+          JsGen.emit ctx "continue;"
+          Ref.set ctx.jxLooped true
+        else deliver ctx target (JsGen.expr ctx env e)
+      | _ => deliver ctx target (JsGen.expr ctx env e)
+  | _ => deliver ctx target (JsGen.expr ctx env e)
 
 /-- Binds `v` to a new local named after `x`; returns the local. -/
-def bind (ctx : JsCtx) (env : List Text) (x : Text) (v : Sexp) : {Throw Text} Text :=
-  if needsStatements v then
-    let name := local ctx x
-    emit ctx ("let " ++ name ++ ";")
-    stmt ctx env v (JsTarget.assign name)
-    name
-  else
-    let code := expr ctx env v
-    let name := local ctx x
-    emit ctx ("const " ++ name ++ " = " ++ code ++ ";")
-    name
+def bind (ctx : JsCtx) (env : List Text) (x : Text) (v : Sexp) : {Throw Text} Text := if needsStatements v then
+  let name := JsGen.local ctx x
+  JsGen.emit ctx ("let " ++ name ++ ";")
+  stmt ctx env v (JsTarget.assign name)
+  name
+else
+  let code := JsGen.expr ctx env v
+  let name := JsGen.local ctx x
+  JsGen.emit ctx ("const " ++ name ++ " = " ++ code ++ ";")
+  name
 
 def matchStmt (ctx : JsCtx) (env : List Text) (s : Sexp) (cases : List Sexp) (target : JsTarget) : {Throw Text} Unit :=
-  let scrutinee := hold ctx (expr ctx env s)
+  let scrutinee := hold ctx (JsGen.expr ctx env s)
   let label := temp ctx "m"
-  emit ctx (label ++ ": {")
+  JsGen.emit ctx (label ++ ": {")
   let inner := deeper ctx
-  List.forEach cases (fun c =>
-    let (p, guard, body) := match c with
-      | Sexp.list [Sexp.sym "case", p, body] => (p, none, body)
-      | Sexp.list [Sexp.sym "gcase", p, g, body] => (p, some g, body)
-      | _ => (Sexp.list [Sexp.sym "pany"], none, c)
-    match pattern scrutinee p with
-    | (tests, binds) =>
-      emit inner ("if (" ++ (if List.isEmpty tests then "true" else Text.join " && " tests) ++ ") {")
-      let body1 := deeper inner
-      let locals := List.map (fun pair =>
-        let name := local body1 (fst pair)
-        emit body1 ("const " ++ name ++ " = " ++ snd pair ++ ";")
-        name) binds
-      let env2 := List.reverse locals ++ env
-      match guard with
-      | none =>
+  forEach cases (fun c =>
+    let (p, guard, body) :=
+      match c with
+      | Sexp.list (Sexp.sym "case" :: p :: body :: []) => (p, Option.none, body)
+      | Sexp.list (Sexp.sym "gcase" :: p :: g :: body :: []) => (p, Option.some g, body)
+      | _ => (Sexp.list [Sexp.sym "pany"], Option.none, c)
+    let (tests, binds) := JsGen.pattern scrutinee p
+    JsGen.emit inner ("if (" ++ (if List.isEmpty tests then "true" else join " && " tests) ++ ") {")
+    let body1 := deeper inner
+    let locals := List.map (fun pair =>
+      let name := JsGen.local body1 (fst pair)
+      JsGen.emit body1 ("const " ++ name ++ " = " ++ snd pair ++ ";")
+      name) binds
+    let env2 := reverse locals ++ env
+    match guard with
+    | Option.none =>
         stmt body1 env2 body target
         match target with
         | JsTarget.ret => ()
-        | _ => emit body1 ("break " ++ label ++ ";")
-      | some g =>
-        emit body1 ("if (" ++ expr body1 env2 g ++ ") {")
+        | _ => JsGen.emit body1 ("break " ++ label ++ ";")
+    | Option.some g =>
+        JsGen.emit body1 ("if (" ++ JsGen.expr body1 env2 g ++ ") {")
         stmt (deeper body1) env2 body target
-        emit (deeper body1) ("break " ++ label ++ ";")
-        emit body1 "}"
-      emit inner "}")
-  emit inner ("rt.nomatch(" ++ scrutinee ++ ");")
-  emit ctx "}"
+        JsGen.emit (deeper body1) ("break " ++ label ++ ";")
+        JsGen.emit body1 "}"
+    JsGen.emit inner "}")
+  JsGen.emit inner ("rt.nomatch(" ++ scrutinee ++ ");")
+  JsGen.emit ctx "}"
 
 /-- Operands evaluated left to right: when one needs statements, the ones before it are held first. -/
-def operands (ctx : JsCtx) (env : List Text) (items : List Sexp) : {Throw Text} List Text :=
-  if List.any needsStatements items then List.map (fun x => hold ctx (expr ctx env x)) items
-  else List.map (fun x => expr ctx env x) items
+def operands (ctx : JsCtx) (env : List Text) (items : List Sexp) : {Throw Text} List Text := if any needsStatements items then List.map (fun x => hold ctx (JsGen.expr ctx env x)) items else List.map (fun x => JsGen.expr ctx env x) items
 
-/--
-  A function declaration for the dressed lambda chain `lam` (a `letrec` member, or a definition
-  when `env` is empty): `function name(…) { … }`, with a loop when it calls itself in tail position.
--/
+/-- A function declaration for the dressed lambda chain `lam` (a `letrec` member, or a definition
+  when `env` is empty): `function name(…) { … }`, with a loop when it calls itself in tail position. -/
 def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (lam : Sexp) : {Throw Text} Unit :=
-  match unlam lam with
-  | (n, _) =>
-    match params n lam with
-    | (xs, body) =>
-      let names := List.map (fun x => local ctx x) xs
-      let slots := List.map (fun x => local ctx (x ++ "$")) names
-      let inner := JsCtx.mk ctx.jxMod (Ref.new []) 0 ctx.jxUsed ctx.jxNext (some (jsName, n, slots)) (Ref.new false) ctx.jxOwner
-      stmt inner (List.reverse names ++ env) body JsTarget.ret
-      let lines := List.reverse (Ref.get inner.jxLines)
-      let pad := Text.repeat (ctx.jxDepth + 1) "  "
-      if Ref.get inner.jxLooped then
-        emit ctx ("function " ++ jsName ++ "(" ++ Text.join ", " slots ++ ") {")
-        emit ctx "  for (;;) {"
-        emit ctx ("    const " ++ Text.join ", " (List.map (fun pair => fst pair ++ " = " ++ snd pair) (List.zip names slots)) ++ ";")
-        List.forEach lines (fun line => emit ctx ("    " ++ line))
-        emit ctx "  }"
-        emit ctx "}"
-      else
-        emit ctx ("function " ++ jsName ++ "(" ++ Text.join ", " names ++ ") {")
-        List.forEach lines (fun line => emit ctx ("  " ++ line))
-        emit ctx "}"
-      if env == [] then () else emit ctx ("rt.named(" ++ jsName ++ ", " ++ quote display ++ ");")
+  let (n, _) := JsGen.unlam lam
+  let (xs, body) := JsGen.params n lam
+  let names := List.map (fun x => JsGen.local ctx x) xs
+  let slots := List.map (fun x => JsGen.local ctx (x ++ "$")) names
+  let inner := JsCtx.mk
+    ctx.jxMod
+    (Ref.new [])
+    0
+    ctx.jxUsed
+    ctx.jxNext
+    (Option.some (jsName, n, slots))
+    (Ref.new false)
+    ctx.jxOwner
+  stmt inner (reverse names ++ env) body JsTarget.ret
+  let lines := reverse (Ref.get inner.jxLines)
+  let pad := repeat (ctx.jxDepth + 1) "  "
+  if Ref.get inner.jxLooped then
+    JsGen.emit ctx ("function " ++ jsName ++ "(" ++ join ", " slots ++ ") {")
+    JsGen.emit ctx "  for (;;) {"
+    JsGen.emit ctx ("    const " ++
+      join ", " (List.map (fun pair => fst pair ++ " = " ++ snd pair) (zip names slots)) ++ ";")
+    forEach lines (fun line => JsGen.emit ctx ("    " ++ line))
+    JsGen.emit ctx "  }"
+    JsGen.emit ctx "}"
+  else
+    JsGen.emit ctx ("function " ++ jsName ++ "(" ++ join ", " names ++ ") {")
+    forEach lines (fun line => JsGen.emit ctx ("  " ++ line))
+    JsGen.emit ctx "}"
+  if env == [] then () else JsGen.emit ctx ("rt.named(" ++ jsName ++ ", " ++ JsGen.quote display ++ ");")
 
 /-- An arrow function of `names` whose body is `body`, compiled in its own scope (no self loop). -/
 def arrow (ctx : JsCtx) (env : List Text) (names : List Text) (body : Sexp) : {Throw Text} Text :=
-  let inner := JsCtx.mk ctx.jxMod (Ref.new []) (ctx.jxDepth + 1) ctx.jxUsed ctx.jxNext none (Ref.new false) ctx.jxOwner
-  let head := "(" ++ Text.join ", " names ++ ") =>"
+  let inner := JsCtx.mk
+    ctx.jxMod
+    (Ref.new [])
+    (ctx.jxDepth + 1)
+    ctx.jxUsed
+    ctx.jxNext
+    Option.none
+    (Ref.new false)
+    ctx.jxOwner
+  let head := "(" ++ join ", " names ++ ") =>"
   if needsStatements body then
-    stmt inner (List.reverse names ++ env) body JsTarget.ret
-    head ++ " {\n" ++ Text.join "\n" (List.reverse (Ref.get inner.jxLines)) ++ "\n" ++ Text.repeat ctx.jxDepth "  " ++ "}"
+    stmt inner (reverse names ++ env) body JsTarget.ret
+    head ++ " {\n" ++ join "\n" (reverse (Ref.get inner.jxLines)) ++ "\n" ++ repeat ctx.jxDepth "  " ++
+      "}"
   else
-    let code := expr inner (List.reverse names ++ env) body
+    let code := JsGen.expr inner (reverse names ++ env) body
     match Ref.get inner.jxLines with
-    | [] => head ++ " " ++ (if Text.startsWith "{" code then "(" ++ code ++ ")" else code)
-    | lines => head ++ " {\n" ++ Text.join "\n" (List.reverse lines) ++ "\n" ++ Text.repeat (ctx.jxDepth + 1) "  " ++ "return " ++ code ++ ";\n" ++ Text.repeat ctx.jxDepth "  " ++ "}"
+    | [] => head ++ " " ++ (if startsWith "{" code then "(" ++ code ++ ")" else code)
+    | lines => head ++ " {\n" ++ join "\n" (reverse lines) ++ "\n" ++ repeat (ctx.jxDepth + 1) "  " ++
+        "return " ++ code ++ ";\n" ++ repeat ctx.jxDepth "  " ++ "}"
 
 /-- `e` as a JavaScript expression; statements it needs are emitted first. -/
 def expr (ctx : JsCtx) (env : List Text) (e : Sexp) : {Throw Text} Text :=
   match e with
-  | Sexp.list [Sexp.sym "int", Sexp.int n] => int n
-  | Sexp.list [Sexp.sym "text", Sexp.str s] => quote s
-  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
-    match List.get? env i with
-    | some name => name
-    | none => throw ("unbound variable " ++ Int.toText i)
-  | Sexp.list [Sexp.sym "ref", Sexp.str h] => refValue ctx h
-  | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, _] => if tag == 1 then "true" else "false"
-  | Sexp.list [Sexp.sym "con", Sexp.str "#Unit", _, _] => "undefined"
-  | Sexp.list [Sexp.sym "con", Sexp.str "#List", Sexp.int 0, _] => "rt.NIL"
-  | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int 0] => "rt.con0(" ++ quote t ++ ", " ++ Int.toText tag ++ ")"
-  | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int k] => "rt.conFn(" ++ quote t ++ ", " ++ Int.toText tag ++ ", " ++ Int.toText k ++ ")"
-  | Sexp.list [Sexp.sym "op", Sexp.str a, Sexp.int i, Sexp.int k] => "rt.opFn(" ++ quote a ++ ", " ++ Int.toText i ++ ", " ++ Int.toText k ++ ")"
-  | Sexp.list [Sexp.sym "prim", Sexp.str p] => primValue p
-  | Sexp.list [Sexp.sym "lam", _, _] =>
-    match unlam e with
-    | (n, _) =>
-      match params n e with
-      | (xs, body) => "rt.named(" ++ arrow ctx env (List.map (fun x => local ctx x) xs) body ++ ", " ++ quote (ctx.jxOwner ++ "/λ") ++ ")"
-  | Sexp.list (Sexp.sym "handle" :: body :: clauses) => handleExpr ctx env body clauses
-  | Sexp.list (Sexp.sym "app" :: f :: args) => app ctx env f args
-  | _ =>
-    if needsStatements e then
+  | Sexp.list (Sexp.sym "int" :: Sexp.int n :: []) => JsGen.int n
+  | Sexp.list (Sexp.sym "text" :: Sexp.str s :: []) => JsGen.quote s
+  | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) =>
+      match get? env i with
+      | Option.some name => name
+      | Option.none => Throw.throw ("unbound variable " ++ Int.toText i)
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => refValue ctx h
+  | Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int tag :: _ :: []) => if tag == 1 then "true" else "false"
+  | Sexp.list (Sexp.sym "con" :: Sexp.str "#Unit" :: _ :: _ :: []) => "undefined"
+  | Sexp.list (Sexp.sym "con" :: Sexp.str "#List" :: Sexp.int 0 :: _ :: []) => "rt.NIL"
+  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int 0 :: []) => "rt.con0(" ++ JsGen.quote t ++ ", " ++ Int.toText tag ++ ")"
+  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int k :: []) => "rt.conFn(" ++ JsGen.quote t ++ ", " ++ Int.toText tag ++ ", " ++ Int.toText k ++ ")"
+  | Sexp.list (Sexp.sym "op" :: Sexp.str a :: Sexp.int i :: Sexp.int k :: []) => "rt.opFn(" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", " ++ Int.toText k ++ ")"
+  | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) => primValue p
+  | Sexp.list (Sexp.sym "lam" :: _ :: _ :: []) =>
+      let (n, _) := JsGen.unlam e
+      let (xs, body) := JsGen.params n e
+      "rt.named(" ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body ++ ", " ++
+        JsGen.quote (ctx.jxOwner ++ "/λ") ++ ")"
+  | Sexp.list (Sexp.sym "handle" :: body :: clauses) => JsGen.handleExpr ctx env body clauses
+  | Sexp.list (Sexp.sym "app" :: f :: args) => JsGen.app ctx env f args
+  | _ => if needsStatements e then
       let name := temp ctx "r"
-      emit ctx ("let " ++ name ++ ";")
+      JsGen.emit ctx ("let " ++ name ++ ";")
       stmt ctx env e (JsTarget.assign name)
       name
-    else throw ("outside the js target: " ++ Text.take 120 (Sexp.print e))
+    else Throw.throw ("outside the js target: " ++ Text.take 120 (Sexp.print e))
 
 def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw Text} Text :=
   let n := List.length args
   match f with
-  | Sexp.list [Sexp.sym "prim", Sexp.str p] =>
-    let values := operands ctx env args
-    match inlinePrim p values with
-    | some code => code
-    | none => "rt.ap(" ++ primValue p ++ ", " ++ Text.join ", " values ++ ")"
-  | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int k] =>
-    let values := operands ctx env args
-    if k == n then
-      if t == "#List" then "rt.cons(" ++ Text.join ", " values ++ ")"
-      else "new rt.Con(" ++ quote t ++ ", " ++ Int.toText tag ++ ", [" ++ Text.join ", " values ++ "])"
-    else "rt.ap(" ++ expr ctx env f ++ ", " ++ Text.join ", " values ++ ")"
-  | Sexp.list [Sexp.sym "op", Sexp.str a, Sexp.int i, Sexp.int k] =>
-    let values := operands ctx env args
-    if k == n then "rt.perform(" ++ quote a ++ ", " ++ Int.toText i ++ ", [" ++ Text.join ", " values ++ "])"
-    else "rt.ap(" ++ expr ctx env f ++ ", " ++ Text.join ", " values ++ ")"
-  | Sexp.list [Sexp.sym "ref", Sexp.str h] =>
-    let d := lookupDef ctx h
-    match d.jdKind with
-    | JsKind.primitive p => app ctx env (Sexp.list [Sexp.sym "prim", Sexp.str p]) args
-    | _ =>
-      let arity := refArity ctx h
+  | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) =>
       let values := operands ctx env args
-      if arity == n then call d.jdJs values
-      else if arity > 0 && n > arity then "rt.ap(" ++ call d.jdJs (List.take arity values) ++ ", " ++ Text.join ", " (List.drop arity values) ++ ")"
-      else "rt.ap(" ++ refValue ctx h ++ ", " ++ Text.join ", " values ++ ")"
+      match inlinePrim p values with
+      | Option.some code => code
+      | Option.none => "rt.ap(" ++ primValue p ++ ", " ++ join ", " values ++ ")"
+  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int k :: []) =>
+      let values := operands ctx env args
+      if k == n then if t == "#List" then "rt.cons(" ++ join ", " values ++ ")" else "new rt.Con(" ++ JsGen.quote t ++ ", " ++ Int.toText tag ++ ", [" ++ join ", " values ++ "])" else "rt.ap(" ++ JsGen.expr ctx env f ++ ", " ++ join ", " values ++ ")"
+  | Sexp.list (Sexp.sym "op" :: Sexp.str a :: Sexp.int i :: Sexp.int k :: []) =>
+      let values := operands ctx env args
+      if k == n then "rt.perform(" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", [" ++ join ", " values ++ "])" else "rt.ap(" ++ JsGen.expr ctx env f ++ ", " ++ join ", " values ++ ")"
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) =>
+      let d := lookupDef ctx h
+      match d.jdKind with
+      | JsKind.primitive p => JsGen.app ctx env (Sexp.list [Sexp.sym "prim", Sexp.str p]) args
+      | _ =>
+          let arity := refArity ctx h
+          let values := operands ctx env args
+          if arity == n then JsGen.call d.jdJs values else if arity > 0 && n > arity then "rt.ap(" ++ JsGen.call d.jdJs (List.take arity values) ++ ", " ++
+            join ", " (List.drop arity values) ++ ")" else "rt.ap(" ++ refValue ctx h ++ ", " ++ join ", " values ++ ")"
   | _ =>
-    match operands ctx env (f :: args) with
-    | callee :: values => "rt.ap(" ++ callee ++ ", " ++ Text.join ", " values ++ ")"
-    | [] => throw "empty application"
+      match operands ctx env (f :: args) with
+      | callee :: values => "rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")"
+      | [] => Throw.throw "empty application"
 
-/--
-  `(handle b r? o…)` as `rt.handle(clauses, ret, body)`. A clause that resumes at once is called
-  where the request is made; one that never resumes unwinds; any other is refused.
--/
+/-- `(handle b r? o…)` as `rt.handle(clauses, ret, body)`. A clause that resumes at once is called
+  where the request is made; one that never resumes unwinds; any other is refused. -/
 def handleExpr (ctx : JsCtx) (env : List Text) (body : Sexp) (clauses : List Sexp) : {Throw Text} Text :=
-  let ret := List.find (fun c => Sexp.head c == "ret") clauses
-  let ons := List.filter (fun c => Sexp.head c == "on") clauses
+  let ret := List.find (fun c => head c == "ret") clauses
+  let ons := List.filter (fun c => head c == "on") clauses
   let compiled := List.map (fun c =>
     match c with
-    | Sexp.list [Sexp.sym "on", Sexp.str a, Sexp.int i, Sexp.int k, Sexp.list names, b] =>
-      let locals := List.map (fun x => local ctx (Sexp.asText x)) names
-      let resumed := match b with
-        | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "var", Sexp.int 0], value] => if occurs 0 value then none else some value
-        | _ => none
-      match resumed with
-      | some value => "[" ++ quote a ++ ", " ++ Int.toText i ++ ", rt.RESUME, " ++ arrow (deeper ctx) env locals value ++ "]"
-      | none =>
-        if occurs 0 b then throw ("the handler for " ++ opName ctx a i ++ " uses its continuation in a way the js target does not support (only `k e` with nothing after it, or not at all)")
-        else "[" ++ quote a ++ ", " ++ Int.toText i ++ ", rt.ABORT, " ++ arrow (deeper ctx) env locals b ++ "]"
-    | _ => throw "malformed handler clause") ons
-  let retCode := match ret with
-    | some (Sexp.list [Sexp.sym "ret", Sexp.str x, b]) => arrow ctx env [local ctx x] b
+    | Sexp.list (Sexp.sym "on" :: Sexp.str a :: Sexp.int i :: Sexp.int k :: Sexp.list names :: b :: []) =>
+        let locals := List.map (fun x => JsGen.local ctx (asText x)) names
+        let resumed :=
+          match b with
+          | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "var" :: Sexp.int 0 :: []) :: value :: []) => if JsGen.occurs 0 value then Option.none else Option.some value
+          | _ => Option.none
+        match resumed with
+        | Option.some value => "[" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", rt.RESUME, " ++
+            JsGen.arrow (deeper ctx) env locals value ++ "]"
+        | Option.none => if JsGen.occurs 0 b then Throw.throw ("the handler for " ++ opName ctx a i ++
+            " uses its continuation in a way the js target does not support (only `k e` with nothing after it, or not at all)") else "[" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", rt.ABORT, " ++
+            JsGen.arrow (deeper ctx) env locals b ++ "]"
+    | _ => Throw.throw "malformed handler clause") ons
+  let retCode :=
+    match ret with
+    | Option.some (Sexp.list (Sexp.sym "ret" :: Sexp.str x :: b :: [])) => JsGen.arrow ctx env [JsGen.local ctx x] b
     | _ => "null"
-  let thunk := arrow ctx env [] body
-  let pad := Text.repeat (ctx.jxDepth + 1) "  "
-  "rt.handle([\n" ++ Text.join ",\n" (List.map (fun c => pad ++ c) compiled) ++ "\n" ++ Text.repeat ctx.jxDepth "  " ++ "], " ++ retCode ++ ", " ++ thunk ++ ")"
+  let thunk := JsGen.arrow ctx env [] body
+  let pad := repeat (ctx.jxDepth + 1) "  "
+  "rt.handle([\n" ++ join ",\n" (List.map (fun c => pad ++ c) compiled) ++ "\n" ++
+    repeat ctx.jxDepth "  " ++ "], " ++ retCode ++ ", " ++ thunk ++ ")"
 
 /-- An operation's name, for messages. -/
 def opName (ctx : JsCtx) (a : Text) (i : Int) : Text :=
@@ -774,22 +780,32 @@ def moduleName (mod : JsModule) (module : Text) : Text :=
 
 /-- One definition's code: its lines, outermost indentation. -/
 def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
-  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) none (Ref.new false) d.jdName
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName
   match d.jdKind with
   | JsKind.primitive _ => []
   | JsKind.importFn module path n =>
-    match arrows d.jdType with
-    | (ps, r) =>
-      ["const " ++ d.jdJs ++ " = rt.importFn(" ++ moduleName mod module ++ ", " ++ quote path ++ ", ["
-        ++ Text.join ", " (List.map (codec mod []) (List.take n ps)) ++ "], " ++ codec mod [] r ++ ", " ++ quote d.jdName ++ ");"]
-  | JsKind.importValue module path =>
-    ["const " ++ d.jdJs ++ " = rt.importValue(" ++ moduleName mod module ++ ", " ++ quote path ++ ", " ++ codec mod [] d.jdType ++ ", " ++ quote d.jdName ++ ");"]
+      let (ps, r) := JsGen.arrows d.jdType
+      ["const " ++ d.jdJs ++ " = rt.importFn(" ++ moduleName mod module ++ ", " ++ JsGen.quote path ++
+        ", [" ++
+        join ", " (List.map (JsGen.codec mod []) (List.take n ps)) ++
+        "], " ++
+        JsGen.codec mod [] r ++
+        ", " ++
+        JsGen.quote d.jdName ++
+        ");"]
+  | JsKind.importValue module path => ["const " ++ d.jdJs ++ " = rt.importValue(" ++ moduleName mod module ++ ", " ++ JsGen.quote path ++
+      ", " ++
+      JsGen.codec mod [] d.jdType ++
+      ", " ++
+      JsGen.quote d.jdName ++
+      ");"]
   | JsKind.constant =>
-    let body := arrow ctx [] [] d.jdBody
-    ["const " ++ d.jdJs ++ " = rt.lazy(" ++ quote d.jdName ++ ", " ++ body ++ ");"]
+      let body := JsGen.arrow ctx [] [] d.jdBody
+      ["const " ++ d.jdJs ++ " = rt.lazy(" ++ JsGen.quote d.jdName ++ ", " ++ body ++ ");"]
   | JsKind.fn _ =>
-    function ctx [] d.jdJs d.jdName d.jdBody
-    List.reverse (Ref.get ctx.jxLines) ++ ["rt.named(" ++ d.jdJs ++ ", " ++ quote d.jdName ++ ");"]
+      function ctx [] d.jdJs d.jdName d.jdBody
+      reverse (Ref.get ctx.jxLines) ++
+        ["rt.named(" ++ d.jdJs ++ ", " ++ JsGen.quote d.jdName ++ ");"]
 
 /-- The `rt.ability(…)` line for an ability: its IRI and operation names, for host handlers. -/
 def abilityLine (mod : JsModule) (a : Text) : Option Text :=
@@ -827,57 +843,53 @@ def mappings (sources : List (Option Int)) : Text :=
     | some s :: more => go more s (("A" ++ vlq (s - prev) ++ "AA") :: acc)
   go sources 0 []
 
-/--
-  Compiles `roots` (export name, hash) to a module that imports its runtime from `runtime` and
+/-- Compiles `roots` (export name, hash) to a module that imports its runtime from `runtime` and
   names its source map `mapName`. `view` gives a definition's source text (hash, name) for the map.
-  Returns the module text and the source map JSON.
--/
+  Returns the module text and the source map JSON. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (view : Text -> Text -> {Throw Text | r} Text) (ns : Map Text Entry) (jsImport : Text) (roots : List (Text, Text)) (runtime : Text) (mapName : Text) : {Throw Text | r} (Text, Text) :=
-  let defs := gather fetch meta ns jsImport (List.map snd roots)
-  let modules := List.dedup (List.filterMap (fun d =>
+  let defs := JsGen.gather fetch meta ns jsImport (List.map snd roots)
+  let modules := dedup (filterMap (fun d =>
     match d.jdKind with
-    | JsKind.importFn m _ _ => if m == "" || m == "deus:runtime" then none else some m
-    | JsKind.importValue m _ => if m == "" || m == "deus:runtime" then none else some m
-    | _ => none) defs)
-  let types := List.dedup (List.concatMap (fun d => abilitiesOf d.jdBody) defs)
-  let objects := Dict.fromList (List.map (fun h => (h, fetch h)) (types ++ List.filterMap (fun pair =>
+    | JsKind.importFn m _ _ => if m == "" || m == "deus:runtime" then Option.none else Option.some m
+    | JsKind.importValue m _ => if m == "" || m == "deus:runtime" then Option.none else Option.some m
+    | _ => Option.none) defs)
+  let types := dedup (concatMap (fun d => abilitiesOf d.jdBody) defs)
+  let objects := Dict.fromList (List.map (fun h => (h, fetch h)) (types ++ filterMap (fun pair =>
     match snd pair with
-    | Entry.type h _ _ => some h
-    | _ => none) (Map.toList ns)))
-  let mod := JsModule.mk (Dict.fromList (List.map (fun d => (d.jdHash, d)) defs)) ns (fun h => Option.bind (Dict.lookup h objects) id) modules
-  let header := [
-    "// Generated by `deus build --js` (D97). Edit the DEUS definitions, not this file.",
-    "import * as rt from " ++ quote runtime ++ ";"]
-    ++ List.mapIndexed (fun i m => "import * as m" ++ Int.toText i ++ " from " ++ quote m ++ ";") modules
-    ++ List.filterMap (abilityLine mod) types
-  let bodies := List.filter (fun d => not (List.isEmpty (snd d))) (List.mapIndexed (fun i d => (d, defCode mod d)) defs)
-  let footer := ["", "export const raw = {"]
-    ++ List.map (fun pair =>
-      let d := Option.getOr (Dict.lookup (snd pair) mod.jmDefs) (JsDef.mk "" "" "undefined" JsKind.constant (Sexp.list []) (Sexp.list []))
-      match d.jdKind with
-      | JsKind.fn _ => "  " ++ fst pair ++ ": " ++ d.jdJs ++ ","
-      | JsKind.importFn _ _ _ => "  " ++ fst pair ++ ": " ++ d.jdJs ++ ","
-      | _ => "  get " ++ fst pair ++ "() { return " ++ d.jdJs ++ "(); },") roots
-    ++ ["};"]
-    ++ List.filterMap (fun pair => Option.map (fun d => exportLine mod (fst pair) d) (Dict.lookup (snd pair) mod.jmDefs)) roots
-    ++ ["//# sourceMappingURL=" ++ mapName]
-  let numbered := List.mapIndexed (fun i pair => (i, pair)) bodies
-  let lines := List.map (fun l => (none, l)) header
-    ++ List.concatMap (fun item =>
-      match item with
-      | (i, (_, code)) => (none, "") :: List.map (fun l => (some i, l)) code) numbered
-    ++ List.map (fun l => (none, l)) footer
+    | Entry.type h _ _ => Option.some h
+    | _ => Option.none) (Map.toList ns)))
+  let mod := JsModule.mk
+    (Dict.fromList (List.map (fun d => (d.jdHash, d)) defs))
+    ns
+    (fun h => Option.bind (Dict.lookup h objects) id)
+    modules
+  let header := ["// Generated by `deus build --js` (D97). Edit the DEUS definitions, not this file.", "import * as rt from " ++ JsGen.quote runtime ++ ";"] ++
+    mapIndexed
+      (fun i m => "import * as m" ++ Int.toText i ++ " from " ++ JsGen.quote m ++ ";")
+      modules ++
+    filterMap (abilityLine mod) types
+  let bodies := List.filter
+    (fun d => not (List.isEmpty (snd d)))
+    (mapIndexed (fun i d => (d, defCode mod d)) defs)
+  let footer := ["", "export const raw = {"] ++ List.map (fun pair =>
+    let d := getOr
+      (Dict.lookup (snd pair) mod.jmDefs)
+      (JsDef.mk "" "" "undefined" JsKind.constant (Sexp.list []) (Sexp.list []))
+    match d.jdKind with
+    | JsKind.fn _ => "  " ++ fst pair ++ ": " ++ d.jdJs ++ ","
+    | JsKind.importFn _ _ _ => "  " ++ fst pair ++ ": " ++ d.jdJs ++ ","
+    | _ => "  get " ++ fst pair ++ "() { return " ++ d.jdJs ++ "(); },") roots ++ ["};"] ++ filterMap
+    (fun pair => Option.map (fun d => exportLine mod (fst pair) d) (Dict.lookup (snd pair) mod.jmDefs))
+    roots ++ ["//# sourceMappingURL=" ++ mapName]
+  let numbered := mapIndexed (fun i pair => (i, pair)) bodies
+  let lines := List.map (fun l => (Option.none, l)) header ++ concatMap (fun item =>
+    let (i, _, code) := item
+    (Option.none, "") :: List.map (fun l => (Option.some i, l)) code) numbered ++ List.map (fun l => (Option.none, l)) footer
   let sources := List.map (fun item =>
-    match item with
-    | (_, (d, _)) => (d.jdName, view d.jdHash d.jdName)) numbered
-  let map := Json.render (Json.obj [
-    ("version", Json.num 3),
-    ("file", Json.str (Text.replace ".map" "" mapName)),
-    ("sources", Json.arr (List.map (fun s => Json.str ("deus:" ++ fst s)) sources)),
-    ("sourcesContent", Json.arr (List.map (fun s => Json.str (snd s)) sources)),
-    ("names", Json.arr []),
-    ("mappings", Json.str (mappings (List.map fst lines)))])
-  (Text.join "\n" (List.map snd lines) ++ "\n", map)
+    let (_, d, _) := item
+    (d.jdName, view d.jdHash d.jdName)) numbered
+  let map := Json.render (Json.obj [("version", Json.num 3), ("file", Json.str (replace ".map" "" mapName)), ("sources", Json.arr (List.map (fun s => Json.str ("deus:" ++ fst s)) sources)), ("sourcesContent", Json.arr (List.map (fun s => Json.str (snd s)) sources)), ("names", Json.arr []), ("mappings", Json.str (mappings (List.map fst lines)))])
+  (join "\n" (List.map snd lines) ++ "\n", map)
 
 --
 -- The `js` MDL extension (the codebase's JsGen.Spec).
