@@ -2,7 +2,7 @@ ability Handled.Journal where
   record : Text -> Unit
 
 /-
-  Effect handlers in the C back end (D122). A clause that resumes in tail position becomes a call,
+  Effect handlers in the C back end (D123). A clause that resumes in tail position becomes a call,
   and one that does not aborts to its handler, passing the value up through checked returns. Both
   `try` and handlers written here compile; a clause that resumes anywhere else is refused.
 

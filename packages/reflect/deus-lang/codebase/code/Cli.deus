@@ -470,7 +470,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (nam
       let meta := readMeta dir h
       let typed :=
         match metaField meta "scheme" with
-        | Option.some scheme => [("type", displayScheme scheme)]
+        | Option.some scheme => [("type", displaySchemeNamed (declaredNames ns) scheme)]
         | Option.none => []
       let verdict :=
         match Check.verdictOf dir ns e with
@@ -1602,7 +1602,7 @@ def Cli.viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
   let comment := if ts then "// " else "-- "
   let typeLine :=
     match metaField meta "scheme" with
-    | Option.some scheme => comment ++ ": " ++ displayScheme scheme ++ "\n"
+    | Option.some scheme => comment ++ ": " ++ displaySchemeNamed (declaredNames ns) scheme ++ "\n"
     | Option.none => ""
   let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with

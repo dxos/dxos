@@ -42,7 +42,7 @@ api A-1: reading and checking features
   signatures:
   - Features.fromBlock : Block -> Result (List Text) Feature
   - Features.problems : Feature -> (Text -> {e} Result Text (List (Text, Text))) -> {e} List Text
-  - Features.check : Block -> {Host} List Text
+  - Features.check : Block -> {MdlHost} List Text
 ```
 
 ```mdl

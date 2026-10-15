@@ -135,15 +135,25 @@ def Types.ctorType (u : Unifier) (env : TypeEnv {r}) (typeHash : Text) (tag : In
       | _ => freshType u
   | _ => freshType u
 
+/-- Each type's and ability's IRI, mapped to the last segment of its name in `ns`. -/
+def Types.declaredNames (ns : Map Text Entry) : Map Text Text := Map.foldr (fun name e acc =>
+  match e with
+  | Entry.type _ iri _ => Map.insert iri (lastSegment name) acc
+  | Entry.ability _ iri => Map.insert iri (lastSegment name) acc
+  | _ => acc) Map.empty ns
+
 def Types.display (u : Unifier) (t : TType) : Text := showType (zonk u t) (Ref.new Map.empty) 0
 
 /-- A stored scheme as text, e.g. `(a -> b) -> List a -> List b`. -/
-def Types.displayScheme (scheme : Sexp) : Text :=
+def Types.displayScheme (scheme : Sexp) : Text := displaySchemeNamed Map.empty scheme
+
+/-- `displayScheme`, naming each type in `names` (from `declaredNames`) as it is named, not by its IRI. -/
+def Types.displaySchemeNamed (names : Map Text Text) (scheme : Sexp) : Text :=
   let u := newUnifier ()
   let t := zonk u (Types.fromSexp u scheme (Ref.new Map.empty) (Ref.new Map.empty) [] false)
   -- A row variable that occurs once constrains nothing and is not printed; a shared one is.
   let shared := List.filter (fun pair => snd pair > 1) (Map.toList (rowVarCounts t Map.empty))
-  showTypeWith t (Ref.new Map.empty) 0 (Set.fromList (List.map fst shared))
+  showTypeWith names t (Ref.new Map.empty) 0 (Set.fromList (List.map fst shared))
 
 def Types.fresh (u : Unifier) : Int :=
   let k := Ref.get u.next
@@ -333,6 +343,12 @@ def Types.labelIri (t : TType) : Text :=
 def Types.mismatch (u : Unifier) (a : TType) (b : TType) : {Throw Text} x :=
   let seen := Ref.new Map.empty
   Throw.throw ("type mismatch: " ++ showType (zonk u a) seen 0 ++ " vs " ++ showType (zonk u b) seen 0)
+
+/-- A type's name: as `names` declares it, else from its IRI. -/
+def Types.nameOf (names : Map Text Text) (iri : Text) : Text :=
+  match Map.lookup iri names with
+  | Option.some name => name
+  | Option.none => iriName iri
 
 def Types.newUnifier (u : Unit) : Unifier := Unifier.mk (MutMap.new ()) (MutMap.new ()) (Ref.new 0)
 
@@ -531,10 +547,10 @@ def Types.showRow (r : TRow) (seen : Ref (Map Text Text)) : Text :=
   | (ls, Option.none) => "{" ++ join ", " ls ++ "}"
   | (ls, Option.some tail) => "{" ++ join ", " ls ++ " | " ++ tail ++ "}"
 
-def Types.showRowWith (r : TRow) (seen : Ref (Map Text Text)) (shared : Map Int Unit) : Text :=
+def Types.showRowWith (names : Map Text Text) (r : TRow) (seen : Ref (Map Text Text)) (shared : Map Int Unit) : Text :=
   let rec labels row acc :=
     match row with
-    | TRow.extend l rest => labels rest (showTypeWith l seen 0 shared :: acc)
+    | TRow.extend l rest => labels rest (showTypeWith names l seen 0 shared :: acc)
     | TRow.var id => (reverse acc, if Set.contains id shared then Option.some (varName seen ("r" ++ toText id) true) else Option.none, true)
     | TRow.empty => (reverse acc, Option.none, false)
   match labels r [] with
@@ -562,17 +578,18 @@ def Types.showType (t : TType) (seen : Ref (Map Text Text)) (prec : Int) : Text 
           Types.showType b seen 10)
   | TType.row r => rowArgument (showRow r seen) (resolveTail r) seen
 
-def Types.showTypeWith (t : TType) (seen : Ref (Map Text Text)) (prec : Int) (shared : Map Int Unit) : Text :=
+def Types.showTypeWith (names : Map Text Text) (t : TType) (seen : Ref (Map Text Text)) (prec : Int) (shared : Map Int Unit) : Text :=
   match t with
   | TType.var id => varName seen ("t" ++ toText id) false
-  | TType.con "#Pair" (a :: b :: []) => "(" ++ Types.showTypeWith a seen 0 shared ++ ", " ++ Types.showTypeWith b seen 0 shared ++ ")"
-  | TType.con iri [] => iriName iri
-  | TType.con iri args => paren 90 prec (iriName iri ++
-      Text.concat (List.map (fun a => " " ++ Types.showTypeWith a seen 100 shared) args))
+  | TType.con "#Pair" (a :: b :: []) => "(" ++ Types.showTypeWith names a seen 0 shared ++ ", " ++
+      Types.showTypeWith names b seen 0 shared ++ ")"
+  | TType.con iri [] => Types.nameOf names iri
+  | TType.con iri args => paren 90 prec (Types.nameOf names iri ++
+      Text.concat (List.map (fun a => " " ++ Types.showTypeWith names a seen 100 shared) args))
   | TType.fn a r b =>
-      let rowText := showRowWith r seen shared
-      paren 10 prec (Types.showTypeWith a seen 11 shared ++ " -> " ++
-        (if rowText == "" then "" else rowText ++ " ") ++ Types.showTypeWith b seen 10 shared)
+      let rowText := showRowWith names r seen shared
+      paren 10 prec (Types.showTypeWith names a seen 11 shared ++ " -> " ++
+        (if rowText == "" then "" else rowText ++ " ") ++ Types.showTypeWith names b seen 10 shared)
   | TType.row r => rowArgument (showRow r seen) (resolveTail r) seen
 
 /-- A written row: closed, unless it ends in a named tail (`{IO | r}`), which the signature shares. -/

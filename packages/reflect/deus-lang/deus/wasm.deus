@@ -270,13 +270,12 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
     | none => unknown
   | _ => unknown
 
-/-- The result type of a primitive on `Text` (the C back end's runtime, D115), or unknown. -/
+/-- The result type of a primitive the C back end's runtime implements (D115), or unknown; a lookup's `Option` and a clause are named, since `typeOf` counts other two-argument results as `Int`. -/
 def textPrimType (p : Text) : Sexp :=
   if List.any (fun x => x == p) ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text"
   else if List.any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int"
   else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
   else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"]
-  -- Two-argument runtime calls that return blocks, which the arithmetic default below would count as `Int`.
   else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown]
   else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown]
   else unknown

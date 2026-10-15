@@ -372,7 +372,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
   let meta := Codebase.readMeta dir h
   let comment := if ts then "// " else "-- "
   let typeLine := match Codebase.metaField meta "scheme" with
-    | some scheme => comment ++ ": " ++ Types.displayScheme scheme ++ "\n"
+    | some scheme => comment ++ ": " ++ Types.displaySchemeNamed (Types.declaredNames ns) scheme ++ "\n"
     | none => ""
   let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
@@ -873,7 +873,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : 
     let h := Entry.hash e
     let meta := Codebase.readMeta dir h
     let typed := match Codebase.metaField meta "scheme" with
-      | some scheme => [("type", Types.displayScheme scheme)]
+      | some scheme => [("type", Types.displaySchemeNamed (Types.declaredNames ns) scheme)]
       | none => []
     let verdict := match Check.verdictOf dir ns e with
       | some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", Int.toText cases)]

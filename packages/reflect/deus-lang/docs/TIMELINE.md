@@ -140,6 +140,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 130 | 10-15 01:05 | 10m 00s | `8250c00f` | devex: the seed is rebuilt from the codebase with `deus image Cli.main` (3 s, same bytes as the fixpoint compile); merge-base.py handled a real merge; Toolchain.Features F-40 shipped, edited through `deus view`/`update` |
 | 131 | 10-15 01:30 | 25m 00s | `6ec07891` | C and wasm back ends compile `show` by one rendering function per type, and `Text.utf8`, `Text.fromCodes`, `Text.sha256`; output equal to the interpreter's, 0 live words (D120, closes task 72a1f2fb) |
 | 132 | 10-15 01:35 | 40m 00s | `952d73fc` | the explorer shows feature maps (D121, task 381a725d): `features.json` as `deus features --json` prints it, a Features card with each map's tree, status badges, open-task counts, problems as warnings and links to specs, definitions and tasks, an overview tile; `Explorer.Spec` R-16/R-17 |
-| 133 | 10-15 02:10 | 40m 00s | this commit | C and wasm back ends compile effect handlers whose clauses resume in tail position or abort: records per clause, aborts as checked returns, `try`/`catch` included; 25–130× faster than the JIT, 0 live words (D122, task e1cf2c6c) |
+| 133 | 10-15 01:45 | 20m 00s | `7d22eb42` | type headers and `MdlHost.describe` print a type or ability by its declared name, so `MdlHost` no longer prints as `Host` (D122, View.Spec R-3, task ab1ed867); written spec first through the codebase, two theorems red before the fix; `merge-base.py` now imports only the export files the other side changed, since importing all of them reverted our codebase-only spec edits |
+| 134 | 10-15 02:10 | 40m 00s | this commit | C and wasm back ends compile effect handlers whose clauses resume in tail position or abort: records per clause, aborts as checked returns, `try`/`catch` included; 25–130× faster than the JIT, 0 live words (D123, task e1cf2c6c) |
 
-Total from stage 1 to stage 133: 24h 32m.
+Total from stage 1 to stage 134: 24h 12m.

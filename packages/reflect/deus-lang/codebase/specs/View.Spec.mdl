@@ -32,6 +32,8 @@ api A-1: printing theorems and types
   - View.theoremDecl : Printer -> Text -> List Sexp -> Sexp -> Sexp -> Text
   - Types.iriName : Text -> Text
   - Types.displayScheme : Sexp -> Text
+  - Types.declaredNames : Map Text Entry -> Map Text Text
+  - Types.displaySchemeNamed : Map Text Text -> Sexp -> Text
 ```
 
 ## Theorems with hypotheses
@@ -59,6 +61,15 @@ any other IRI prints as its last segment after `/`, `:` and `.`.
 ```mdl
 req R-2: a type in a header prints as the last segment of its IRI
   by: View.Spec.pathIri | View.Spec.plainIri | View.Spec.webIri | View.Spec.builtinIri
+```
+
+Where the header knows the codebase (`deus view`, and `MdlHost.describe` behind an api block), a type or
+ability prints by the name it is declared under: `MdlHost` is declared with the IRI `urn:deus:mdl:Host`, and
+its last segment would print `Host`, a name nothing declares. An IRI no name declares falls back to R-2.
+
+```mdl
+req R-3: with the codebase at hand, a type or ability prints by its declared name, not its IRI's last segment
+  by: View.Spec.abilityByName | View.Spec.typeByName | View.Spec.undeclaredByIri
 ```
 
 ## Theorems

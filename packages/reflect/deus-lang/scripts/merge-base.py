@@ -8,8 +8,8 @@ Merges PR #13952's branch into the current branch the way every DEUS thread has 
 2. Resolves docs/DECISIONS.md and docs/TIMELINE.md, which conflict on almost every merge. It takes
    theirs and appends our new rows: decisions get the next free D-numbers, and stages the next
    stage numbers. Their "this commit" row gets their commit's hash.
-3. Takes theirs for the seed and the codebase export. Then it imports their export into the local
-   codebase (`$DEUS_CODEBASE` or ~/.deus), updates it from deus/ and rebuilds the seed with
+3. Takes theirs for the seed and the codebase export. Then it imports the export files they changed
+   (merged three ways with ours) into the local codebase (`$DEUS_CODEBASE` or ~/.deus), updates it from deus/ and rebuilds the seed with
    `deus image Cli.main` (the same bytes as the fixpoint, in 3 s instead of 17 s).
 4. Writes the export back with `deus export codebase`.
 
@@ -92,6 +92,39 @@ def merge_timeline(base: str, renames: dict[int, int]) -> None:
     (DOCS / 'TIMELINE.md').write_text(theirs[:cut].rstrip('\n') + '\n' + '\n'.join(added) + '\n' + tail)
 
 
+def blob(rev: str, path: str) -> str | None:
+    result = subprocess.run(['git', 'show', f'{rev}:{path}'], cwd=ROOT, text=True, capture_output=True)
+    return result.stdout if result.returncode == 0 else None
+
+
+def their_changes(base: str, theirs: Path, out: Path) -> list[Path]:
+    """
+    The export files their side changed, merged three ways with ours. Updating from a file sets every
+    name in it, so importing one they left alone would revert our edits to codebase-only specs.
+    """
+    out.mkdir()
+    files = []
+    for path in sorted([*(theirs / 'code').glob('*.deus'), *(theirs / 'specs').glob('*.mdl')]):
+        name = f'{REL}/codebase/{path.parent.name}/{path.name}'
+        before, ours, their = blob(base, name), blob('HEAD', name), path.read_text()
+        if their == before:
+            continue
+        if ours is None or ours == before or ours == their:
+            files.append(path)
+            continue
+        parts = [out / f'{path.name}.{side}' for side in ('ours', 'base', 'theirs')]
+        for part, text in zip(parts, [ours, before or '', their]):
+            part.write_text(text)
+        if subprocess.run(['git', 'merge-file', *map(str, parts)], capture_output=True).returncode != 0:
+            print(f'{name}: both sides changed the same lines; took theirs, so re-apply ours')
+            source = path
+        else:
+            source = out / path.name
+            parts[0].rename(source)
+        files.append(source)
+    return files
+
+
 def main() -> None:
     branch = sys.argv[1] if len(sys.argv) > 1 else 'dm/agent-13-oct-x8ehi8-0y35ai'
     git('fetch', '-q', 'origin', branch)
@@ -112,7 +145,9 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as scratch:
         subprocess.run(f'git archive MERGE_HEAD {REL}/codebase | tar -x -C {scratch}', shell=True, cwd=ROOT, check=True)
         theirs = Path(scratch) / REL / 'codebase'
-        deus('update', *map(str, sorted((theirs / 'code').glob('*.deus'))), *map(str, sorted((theirs / 'specs').glob('*.mdl'))), '--by', 'merge')
+        changed = their_changes(base, theirs, Path(scratch) / 'merged')
+        if changed:
+            deus('update', *map(str, changed), '--by', 'merge')
         deus('task', 'import', str(theirs / 'tasks.sexp'))
         deus('history', 'import', str(theirs / 'history.sexp'))
     deus('update', 'deus', '--by', 'merge')

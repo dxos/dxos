@@ -134,8 +134,8 @@ feature F-18: Viewing code as source and dialects
   status: building
   parent: F-10
   specs: View.Spec
-  defs: View.theoremDecl
-  tasks: be4c4645
+  defs: View.theoremDecl | Types.declaredNames
+  tasks: be4c4645 | ab1ed867
 ```
 
 ## Back ends

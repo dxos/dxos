@@ -238,14 +238,6 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 
 Found when D114 added a printer parameter to Cli.withHost: the spec failed at run time, not at update.
 
-## Type headers print an ability by its IRI's last segment, so MdlHost (urn:deus:mdl:Host) prints as Host; print the ability's own name (`ab1ed867`)
-
-- state: todo
-- priority: medium
-- labels: view, types
-
-Since D108. Features.Spec's api block has to say {Host}.
-
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
@@ -1235,6 +1227,16 @@ Found writing law statements (D91): deus view Sort.insertSorted.
 - links change #a40db3f119
 
 From docs/spec/README.md, Known divergences.
+
+## Type headers print an ability by its IRI's last segment, so MdlHost (urn:deus:mdl:Host) prints as Host; print the ability's own name (`ab1ed867`)
+
+- state: done
+- priority: medium
+- labels: view, types
+
+Since D108. Features.Spec's api block has to say {Host}.
+
+> claude: Done (View.Spec R-3): headers and MdlHost.describe print a type or ability by its declared name via Types.declaredNames; Features.Spec A-1 says {MdlHost} again.
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
 
