@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/plugin-animation/TASKS.md
     design: agents/superpowers/specs/2026-10-14-plugin-animation-design.md
     prs: []
-    resume: 'Spec written (agents/superpowers/specs/2026-10-14-plugin-animation-design.md). NEXT: user review, then writing-plans for P1 (@dxos/animation + deus flow grammar).'
+    resume: 'P1 done on claude/3d-isometric-phone-d64222 (@dxos/deus/parser, flow dialect, @dxos/animation with Centralized/Decentralized fixtures; preview artifact 7RCVJyh43wrxjdjdUv7CoB). NEXT: writing-plans for P2 (plugin scene).'
   - name: plugin-messenger
     status: active
     user: burdon
