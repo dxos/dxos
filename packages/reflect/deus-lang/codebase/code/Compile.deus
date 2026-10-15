@@ -673,7 +673,7 @@ def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf 
     forEach members (fun p =>
       let key := "@" ++ p.name
       match Map.lookup key vars with
-      | Option.some t => Ref.set schemes (Map.insert key (scheme u t) (Ref.get schemes))
+      | Option.some t => Ref.set schemes (Map.insert key (Types.scheme u t) (Ref.get schemes))
       | Option.none => ()))
   Ref.get schemes
 

@@ -669,12 +669,23 @@ def checkSignature (u : Unifier) (inferred : TType) (sig : Sexp) : {Throw Text} 
   else ()
 
 /-- A stored scheme as text, e.g. `(a -> b) -> List a -> List b`. -/
-def displayScheme (scheme : Sexp) : Text :=
+def displayScheme (scheme : Sexp) : Text := displaySchemeNamed Map.empty scheme
+
+/-- Each type's and ability's IRI, mapped to the last segment of its name in `ns`. -/
+def declaredNames (ns : Map Text Entry) : Map Text Text :=
+  Map.foldr (fun name e acc =>
+    match e with
+    | Entry.type _ iri _ => Map.insert iri (Names.lastSegment name) acc
+    | Entry.ability _ iri => Map.insert iri (Names.lastSegment name) acc
+    | _ => acc) Map.empty ns
+
+/-- `displayScheme`, naming each type in `names` (from `declaredNames`) as it is named, not by its IRI. -/
+def displaySchemeNamed (names : Map Text Text) (scheme : Sexp) : Text :=
   let u := newUnifier ()
   let t := zonk u (fromSexp u scheme (Ref.new Map.empty) (Ref.new Map.empty) [] false)
   -- A row variable that occurs once constrains nothing and is not printed; a shared one is.
   let shared := List.filter (fun pair => snd pair > 1) (Map.toList (rowVarCounts t Map.empty))
-  showTypeWith t (Ref.new Map.empty) 0 (Set.fromList (List.map fst shared))
+  showTypeWith names t (Ref.new Map.empty) 0 (Set.fromList (List.map fst shared))
 
 def rowVarCounts (t : TType) (acc : Map Int Int) : Map Int Int :=
   match t with
@@ -689,21 +700,27 @@ def rowCounts (r : TRow) (acc : Map Int Int) : Map Int Int :=
   | TRow.var id => Map.update id (fun old => Option.getOr old 0 + 1) acc
   | TRow.empty => acc
 
-def showTypeWith (t : TType) (seen : Ref (Map Text Text)) (prec : Int) (shared : Map Int Unit) : Text :=
+/-- A type's name: as `names` declares it, else from its IRI. -/
+def nameOf (names : Map Text Text) (iri : Text) : Text :=
+  match Map.lookup iri names with
+  | some name => name
+  | none => iriName iri
+
+def showTypeWith (names : Map Text Text) (t : TType) (seen : Ref (Map Text Text)) (prec : Int) (shared : Map Int Unit) : Text :=
   match t with
   | TType.var id => varName seen ("t" ++ Int.toText id) false
-  | TType.con "#Pair" [a, b] => "(" ++ showTypeWith a seen 0 shared ++ ", " ++ showTypeWith b seen 0 shared ++ ")"
-  | TType.con iri [] => iriName iri
-  | TType.con iri args => Print.paren 90 prec (iriName iri ++ Text.concat (List.map (fun a => " " ++ showTypeWith a seen 100 shared) args))
+  | TType.con "#Pair" [a, b] => "(" ++ showTypeWith names a seen 0 shared ++ ", " ++ showTypeWith names b seen 0 shared ++ ")"
+  | TType.con iri [] => nameOf names iri
+  | TType.con iri args => Print.paren 90 prec (nameOf names iri ++ Text.concat (List.map (fun a => " " ++ showTypeWith names a seen 100 shared) args))
   | TType.fn a r b =>
-    let rowText := showRowWith r seen shared
-    Print.paren 10 prec (showTypeWith a seen 11 shared ++ " -> " ++ (if rowText == "" then "" else rowText ++ " ") ++ showTypeWith b seen 10 shared)
+    let rowText := showRowWith names r seen shared
+    Print.paren 10 prec (showTypeWith names a seen 11 shared ++ " -> " ++ (if rowText == "" then "" else rowText ++ " ") ++ showTypeWith names b seen 10 shared)
   | TType.row r => rowArgument (showRow r seen) (resolveTail r) seen
 
-def showRowWith (r : TRow) (seen : Ref (Map Text Text)) (shared : Map Int Unit) : Text :=
+def showRowWith (names : Map Text Text) (r : TRow) (seen : Ref (Map Text Text)) (shared : Map Int Unit) : Text :=
   let rec labels row acc :=
     match row with
-    | TRow.extend l rest => labels rest (showTypeWith l seen 0 shared :: acc)
+    | TRow.extend l rest => labels rest (showTypeWith names l seen 0 shared :: acc)
     | TRow.var id => (List.reverse acc, if Set.contains id shared then some (varName seen ("r" ++ Int.toText id) true) else none, true)
     | TRow.empty => (List.reverse acc, none, false)
   match labels r [] with

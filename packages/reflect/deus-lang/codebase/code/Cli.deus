@@ -277,7 +277,7 @@ def Cli.checkBlock (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri
 def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
   let doc := Mdl.parse (readSource path)
   let core := validate doc
-  let declared := declared doc
+  let declared := Mdl.declared doc
   let outcomes := List.map (fun b => checkBlock
     dir
     ns
@@ -470,7 +470,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (nam
       let meta := readMeta dir h
       let typed :=
         match metaField meta "scheme" with
-        | Option.some scheme => [("type", displayScheme scheme)]
+        | Option.some scheme => [("type", displaySchemeNamed (declaredNames ns) scheme)]
         | Option.none => []
       let verdict :=
         match Check.verdictOf dir ns e with
@@ -1365,7 +1365,7 @@ def Cli.specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Te
   let text := readSource path
   let doc := Mdl.parse text
   let prefix := getOr (List.lookup "name" doc.front) (Cli.baseName path)
-  let declared := declared doc
+  let declared := Mdl.declared doc
   let blocks := List.filter stored doc.blocks
   let last := List.length blocks - 1
   match prose text with
@@ -1585,7 +1585,7 @@ def Cli.viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
   let comment := if ts then "// " else "-- "
   let typeLine :=
     match metaField meta "scheme" with
-    | Option.some scheme => comment ++ ": " ++ displayScheme scheme ++ "\n"
+    | Option.some scheme => comment ++ ": " ++ displaySchemeNamed (declaredNames ns) scheme ++ "\n"
     | Option.none => ""
   let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
