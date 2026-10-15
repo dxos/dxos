@@ -66,4 +66,30 @@ describe('CreateEmailChannel', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'returns the email channel the agent already has',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const first = yield* Operation.invoke(AgentOperation.CreateEmailChannel, {
+          agent: agentRef,
+          handle: 'kai',
+          allowedSenders: [],
+        });
+        const second = yield* Operation.invoke(AgentOperation.CreateEmailChannel, {
+          agent: agentRef,
+          handle: 'kai-2',
+          allowedSenders: [],
+        });
+        yield* Database.flush();
+
+        expect(second.channel.uri).toBe(first.channel.uri);
+        const agent = yield* Database.load(agentRef);
+        expect(yield* AgentChannels.loadChannels(agent)).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
