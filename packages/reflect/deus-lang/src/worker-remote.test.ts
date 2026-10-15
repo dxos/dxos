@@ -193,6 +193,27 @@ describe('replication API', () => {
     expect(page.headers.get('content-type')).toBe('text/plain');
   });
 
+  test('the explorer serves the version HEAD names, pinned for the whole page', async ({ expect }) => {
+    const put = (key: string, body: string) => bucket.put(`toolchain/site/${key}`, body);
+    await put('def/a.json', 'def a');
+    await put('v/0000000000000001/index.html', '<html><head></head>one</html>');
+    await put('v/0000000000000001/meta.json', 'meta one');
+    await put('v/0000000000000002/index.html', '<html><head></head>two</html>');
+    await put('v/0000000000000002/meta.json', 'meta two');
+    await put('HEAD', '0000000000000001\n');
+
+    const page = await call('/');
+    expect(await page.text()).toBe('<html><head><base href="/v/0000000000000001/" /></head>one</html>');
+    // A push that moves HEAD meanwhile changes nothing for a page that has already loaded.
+    await put('HEAD', '0000000000000002');
+    expect(await (await call('/v/0000000000000001/meta.json')).text()).toBe('meta one');
+    expect((await call('/v/0000000000000001/meta.json')).headers.get('cache-control')).toContain('immutable');
+    // Pages named by hash are shared by every version, and so is the write API.
+    expect(await (await call('/v/0000000000000001/def/a.json')).text()).toBe('def a');
+    expect(await (await call('/v/0000000000000001/api/me')).json()).toMatchObject({ signIn: false });
+    expect((await call('/v/0000000000000001/missing.json')).status).toBe(404);
+  });
+
   test('an admin key mints, lists and revokes keys', async ({ expect }) => {
     const admin = await insertKey(db, ['admin']);
     expect((await call('/v1/keys', { key: await insertKey(db, ['push']) })).status).toBe(403);

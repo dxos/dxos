@@ -1632,7 +1632,8 @@ def siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" ++ n
 /--
   Uploads the explorer in `out` beside a remote's bundles, under `site/`. Files are compared by
   content hash with the last upload, so a republish sends only what changed (`force` sends all).
-  Returns (files, uploaded).
+  The top-level files (the app and the indexes) go to `site/v/<version>/` and `site/HEAD` names
+  that version last, so a reader never mixes indexes from two pushes (D166). Returns (files, uploaded).
 -/
 def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Throw Text} (Int, Int) :=
   let manifest := siteManifest dir name
@@ -1644,12 +1645,17 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
   -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
   let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
   let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
-  let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
+  let top := List.filter (fun pair => not (Text.contains "/" (fst pair))) sums
+  let version := Text.take 16 (Text.sha256 (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") top)))
+  let moved := Map.lookup "HEAD" previous != some version
+  let changed := List.filter (fun pair => Text.contains "/" (fst pair) && Map.lookup (fst pair) previous != some (snd pair)) sums
+  let uploads := List.map (fun pair => ("site/" ++ fst pair, fst pair)) changed ++ (if moved then List.map (fun pair => ("site/v/" ++ version ++ "/" ++ fst pair, fst pair)) top else [])
   withRemote dir name (fun _ =>
     let _ := Replicate.pushAssets dir
-    Remote.writeAll (List.map (fun pair => ("site/" ++ fst pair, Option.getOr (IO.readFile (out ++ "/" ++ fst pair)) "")) changed))
-  IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums))
-  (List.length sums, List.length changed)
+    Remote.writeAll (List.map (fun pair => (fst pair, Option.getOr (IO.readFile (out ++ "/" ++ snd pair)) "")) uploads)
+    if moved then Remote.writeAll [("site/HEAD", version)] else ())
+  IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums) ++ version ++ " HEAD\n")
+  (List.length sums, List.length uploads)
 
 /--
   `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase

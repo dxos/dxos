@@ -25,6 +25,12 @@ const STATE_COOKIE = 'deus_oauth_state';
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // A page served at `/` loads everything relative to `/v/<version>/` (D166); only the site's
+    // top-level files are versioned, so every other path is the same with the prefix dropped.
+    const pinned = VERSIONED.exec(url.pathname);
+    if (pinned) {
+      url.pathname = pinned[2];
+    }
     try {
       if (url.pathname === '/v1' || url.pathname.startsWith('/v1/')) {
         return await remoteApi(request, env, ctx, url);
@@ -44,7 +50,7 @@ export default {
         error instanceof HttpError ? error.status : 500,
       );
     }
-    return site(request, env, ctx, url);
+    return site(env, ctx, url, pinned?.[1]);
   },
 };
 
@@ -52,28 +58,74 @@ export default {
 // The static site.
 //
 
-const site = async (request, env, ctx, url) => {
+const site = async (env, ctx, url, version) => {
   const path = url.pathname === '/' ? '/index.html' : url.pathname;
+  if (path.includes('..') || !env.BUCKET) {
+    return notFound();
+  }
+  const topLevel = path.lastIndexOf('/') === 0;
+  if (topLevel && !version) {
+    const head = await readHead(env);
+    if (head && path === '/index.html') {
+      return page(env, head);
+    }
+    version = head;
+  }
+  // A versioned file never changes once HEAD names it, so it is cached for good.
+  const key = version && topLevel ? `${prefix(env)}/site/v/${version}${path}` : `${prefix(env)}/site${path}`;
   const cache = typeof caches === 'undefined' ? undefined : caches.default;
-  const key = new Request(`${url.origin}${path}`);
-  const cached = await cache?.match(key);
+  const cacheKey = new Request(`${url.origin}/__r2/${key}`);
+  const cached = await cache?.match(cacheKey);
   if (cached) {
     return cached;
   }
-  const object = env.BUCKET && !path.includes('..') ? await env.BUCKET.get(`${prefix(env)}/site${path}`) : null;
+  const object = await env.BUCKET.get(key);
   if (!object) {
-    return new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
+    return notFound();
   }
   const response = new Response(object.body, {
     headers: {
       'content-type': object.httpMetadata?.contentType ?? 'application/octet-stream',
-      'cache-control': `public, max-age=${MAX_AGE}`,
+      'cache-control': version && topLevel ? 'public, max-age=31536000, immutable' : `public, max-age=${MAX_AGE}`,
     },
   });
   if (cache) {
-    ctx.waitUntil(cache.put(key, response.clone()));
+    ctx.waitUntil(cache.put(cacheKey, response.clone()));
   }
   return response;
+};
+
+const VERSIONED = /^\/v\/([0-9a-f]{16})(\/.*)$/;
+
+const notFound = () => new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
+
+/** The version `site/HEAD` names, read at most every few seconds per isolate; undefined before the first versioned publish. */
+const readHead = async (env) => {
+  const cached = heads.get(env.BUCKET);
+  if (cached && cached.at > Date.now() - HEAD_SECONDS * 1000) {
+    return cached.version;
+  }
+  const object = await env.BUCKET.get(`${prefix(env)}/site/HEAD`);
+  const version = object ? (await object.text()).trim() : undefined;
+  const head = { at: Date.now(), version: version && /^[0-9a-f]{16}$/.test(version) ? version : undefined };
+  heads.set(env.BUCKET, head);
+  return head.version;
+};
+
+const HEAD_SECONDS = 5;
+/** Per bucket binding, so one isolate serving two buckets keeps them apart. */
+const heads = new WeakMap();
+
+/** The app page of `version`, with every relative load pinned to that version by a `<base>`. */
+const page = async (env, version) => {
+  const object = await env.BUCKET.get(`${prefix(env)}/site/v/${version}/index.html`);
+  if (!object) {
+    return notFound();
+  }
+  const html = (await object.text()).replace('<head>', `<head><base href="/v/${version}/" />`);
+  return new Response(html, {
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' },
+  });
 };
 
 /** Assets are named by their SHA-256, so a stored one never changes. */

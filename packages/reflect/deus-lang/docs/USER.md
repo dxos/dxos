@@ -433,3 +433,47 @@ afterwards develop a strategy on how we can check pushes in the worker on push. 
 ---
 
 make codebase history view show timestamps
+
+---
+
+explain to me how the entire push/pull process works and how codebase ui renders itself
+
+---
+
+Comment on `HOW-IT-WORKS.md` (lines 112–113):
+
+```
+The Worker cannot run DEUS yet. So the site is computed by whoever pushes, and it is only as fresh as the last push of `main`. Task 86720562 is about having the Worker build it from the bundles
+```
+
+didn't we test embeding deus in worker and wasm? do that?
+
+---
+
+Comment on `HOW-IT-WORKS.md` (lines 114–115):
+
+```
+During an upload, a reader can briefly see a mix of old and new index files. Task b096c56e covers this with versioned site folders and a HEAD pointer
+```
+
+isn't codebase a crdt of sorts? reader will dedup, no?
+
+---
+
+what are those json files?
+
+---
+
+can you mint one api key for me, and ill add it to secrets. its okay if it leaks in transcript
+
+---
+
+save to env, new sessions will see it
+
+---
+
+also push to main pr
+
+---
+
+where's the worker source?

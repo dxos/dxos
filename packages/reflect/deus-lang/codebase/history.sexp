@@ -1,3 +1,8 @@
+(entry "61b49e1157670f463ef99a5b0f29f8a683bd61bdd792670f8efbeaaccc73da6d" "close b096c56e by #eb507d73ce" "claude")
+(entry "eb507d73ce27f7a7a0c0ab98c1e36c58388753650fec38491f4233c5a0070035" "Explorer: publish the top-level files as one version named by site/HEAD (D166)" "claude")
+(entry "cd9b7065289323f89b08a97a4e24f0d682ad79a71003fa251cd10d2564dc5110" "task: set 86720562 details" "claude")
+(entry "c9c811eb3448591903cd3b51fa7dd543693a28acfc225588d022abfb43ebb347" "task: open fd34a928 Build only the explorer pages a bundle changes" "claude")
+(entry "8bc1c3e8a8dd0e43f328969b4629ce5e3e30067e9ec3599209de508b24541d82" "task: open 7b7a26ad Wasm kernel reclaims memory during long runs" "claude")
 (entry "3cfde3d582afe5cb2e27e6c80613c437911396fb946e21632ddef91f5186481d" "Codebase.Spec R-23: history node times (D165)" "claude")
 (entry "499112d8370d9454e1d2ae947580850111e00aac2ebde5b662604acb657b0e88" "Codebase.Spec: tests for history node times (D165)" "claude")
 (entry "e812f6291c916bb721375f3de066dea0705c6b72d2aaf3701de5fd31724f236e" "close 36e1527d by #32f335f3bf" "claude")

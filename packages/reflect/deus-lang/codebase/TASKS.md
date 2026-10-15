@@ -188,13 +188,6 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - assignee: claude
 - labels: browser
 
-## Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push (`b096c56e`)
-
-- state: todo
-- priority: low
-- labels: cloudflare
-- parent: e774b1fd
-
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
 - state: todo
@@ -227,6 +220,8 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - labels: cloudflare
 - parent: e774b1fd
 
+Have the Worker build the explorer from the bundles on push with DEUS on the wasm kernel, so the site no longer depends on the pusher. Blocked (D166) by the wasm memory task and the incremental build task: a full build needs >4 GB wasm memory and ~450 s CPU vs a Worker's 128 MB and 300 s.
+
 ## deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now) (`87c565cf`)
 
 - state: todo
@@ -239,6 +234,14 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - state: todo
 - priority: low
 - labels: mdl, spec
+
+## Build only the explorer pages a bundle changes (`fd34a928`)
+
+- state: todo
+- priority: none
+- labels: explorer, worker
+
+For the Worker to build the site (86720562) it must not regenerate all 2,900 pages per push (20 s natively). Given the previous and new heads, write def/ pages for changed hashes and their direct users, change/ pages for new history nodes, and the indexes. Pairs with the wasm memory task (D166).
 
 ## Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase (`3e686896`)
 
@@ -255,6 +258,14 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - labels: mdl, spec, explorer, native
 
 > someone: 134 named in api blocks of Analytics, Checking, Codebase, Compile, Coverage, Export, Features, JsGen and View specs (each type checked by deus mdl). 39 remain, all in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm), which the explorer and native threads own; left for them. Kept the D125 rule: excluding spec-law users only removed 10.
+
+## Wasm kernel reclaims memory during long runs (`7b7a26ad`)
+
+- state: todo
+- priority: none
+- labels: kernel, perf
+
+Measured 2026-10-15 (D166): pulling the toolchain's 3 bundles on the wasm kernel with in-memory files grew wasm memory to 2.7 GB (358 s CPU), the merge to 2.9 GB, and deus explore hit the 4 GB wasm limit (RuntimeError: unreachable). The same store is 69 MB on disk. Find what is never freed (arena, interned values, image copies per run) so a Worker (128 MB) can run pull and explore. Also: kernel.mjs reads pointers as signed i32, so outputs past 2 GB fail with a negative offset; use >>> 0.
 
 ## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
 
@@ -1514,6 +1525,14 @@ D69 refuses == on data; generate per-type compare functions from the type object
 - links change #387eb2652a
 
 From docs/spec/README.md, Known divergences.
+
+## Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push (`b096c56e`)
+
+- state: done
+- priority: low
+- labels: cloudflare
+- parent: e774b1fd
+- links change #eb507d73ce
 
 ## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
 

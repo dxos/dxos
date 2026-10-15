@@ -407,6 +407,13 @@ The Worker in `platform/worker/` serves the published site of its `PREFIX` proje
 [writing](#writing)): it maps `/` to `/index.html`, reads `<PREFIX>/site/<path>` (ignoring the query), and
 caches what it finds for 60 seconds with `cache-control: public, max-age=60`.
 
+Top-level files (the app and the indexes) are versioned (D166). When `<PREFIX>/site/HEAD` names a
+version, `/` returns `site/v/<version>/index.html` with `<base href="/v/<version>/">` added, so every
+relative load of that page reads the same version. A request for `/v/<version>/<path>` reads
+`site/v/<version>/<path>` for a top-level `<path>` (cached as immutable) and is handled as `/<path>`
+otherwise, so pages named by hash and the write API are shared by every version. The Worker reads `HEAD`
+at most every 5 seconds per isolate. Without `HEAD`, it serves `site/<path>` as before.
+
 ## Publishing
 
 `deus explore --publish <remote>` generates the site in `<codebase>/cache/site`, then uploads the files
@@ -421,11 +428,15 @@ Uploads are incremental. The manifest `<codebase>/cache/site-<remote>.sums` reco
 line per file:
 
 ```text
-manifest = { sha256-hex " " path "\n" }
+manifest = { sha256-hex " " path "\n" } version " HEAD\n"
 ```
 
-A file is uploaded when its SHA-256 differs from the manifest's or it is missing there; `--force` ignores
-the manifest. After the upload, the manifest is rewritten with every file of the site. Files are never
+A file in a folder is uploaded to `site/<path>` when its SHA-256 differs from the manifest's or it is
+missing there; `--force` ignores the manifest. The top-level files are uploaded together to
+`site/v/<version>/`, where `version` is the first 16 hex digits of the SHA-256 of their manifest lines,
+whenever that version differs from the manifest's `HEAD` line; after they are all stored, `site/HEAD`
+is written with the version. A reader therefore sees either the old indexes or the new ones, never a
+mix (D166). After the upload, the manifest is rewritten with every file of the site. Files are never
 deleted from the remote. A bucket upload runs one `curl --parallel --parallel-max 16` with a signed `PUT`
 per file and the content type the bundled server uses (`Replicate.siteType`): a browser refuses a module
 script or a stylesheet sent as `text/plain`, and the Worker passes the type on.

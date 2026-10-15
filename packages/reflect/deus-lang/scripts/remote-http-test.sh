@@ -60,6 +60,8 @@ diff <(DEUS_CODEBASE="$work/a" deus ls) <(deus ls) || { echo "the pulled store d
 # The explorer of the project PREFIX is served at the Worker's root, from what the push wrote.
 page="$(curl -sf "http://127.0.0.1:$port/")"
 [[ "$page" == *"<html"* ]] || { echo "no explorer at /"; exit 1; }
-meta="$(curl -sf "http://127.0.0.1:$port/meta.json")"
+version="$(curl -sf "http://127.0.0.1:$port/v1/demo/files/site/HEAD")"
+[[ "$page" == *"<base href=\"/v/$version/\""* ]] || { echo "the page is not pinned to HEAD"; exit 1; }
+meta="$(curl -sf "http://127.0.0.1:$port/v/$version/meta.json")"
 node -e "JSON.parse(process.argv[1])" "$meta" || { echo "no meta.json"; exit 1; }
 echo "remote: push, pull and the explorer work through the Worker on workerd"

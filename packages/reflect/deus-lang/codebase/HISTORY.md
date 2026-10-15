@@ -1,5 +1,10 @@
 # History of main
 
+- `61b49e1157` close b096c56e by #eb507d73ce (by claude)
+- `eb507d73ce` Explorer: publish the top-level files as one version named by site/HEAD (D166) (by claude)
+- `cd9b706528` task: set 86720562 details (by claude)
+- `c9c811eb34` task: open fd34a928 Build only the explorer pages a bundle changes (by claude)
+- `8bc1c3e8a8` task: open 7b7a26ad Wasm kernel reclaims memory during long runs (by claude)
 - `3cfde3d582` Codebase.Spec R-23: history node times (D165) (by claude)
 - `499112d837` Codebase.Spec: tests for history node times (D165) (by claude)
 - `e812f6291c` close 36e1527d by #32f335f3bf (by claude)
