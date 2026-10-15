@@ -330,7 +330,8 @@ compiled handlers (`Workspace`, `Defect`, a test's boundary) take what interpret
 | `deus run Command.main quiet 100000`              |              1,680 |         54 |
 | `deus run Command.main freq` on 110 KB            |                604 |        158 |
 | `deus run Command.main count` on 110 KB           |                412 |         14 |
-| `deus mdl` on the toolchain codebase (241 blocks) |             19,700 |      7,200 |
+| `deus test` on the toolchain codebase (199 tests) |              9,424 |      1,961 |
+| `deus mdl` on the toolchain codebase (241 blocks) |             19,700 |      5,800 |
 
 The outputs match the JIT's byte for byte, except that a native defect lists no stack. What the
 interpreter does not do:
@@ -344,7 +345,8 @@ interpreter does not do:
   one never writes into it, and `Array.set` copies the array.
 - Values do not carry their types, so `show`, `trace` and `Code.quote` in interpreted code render
   a Bool as 0 or 1 and guess the nullary constructors. `deus eval` prints by the expression's type
-  instead (`Cli.quoteAt`, with the new `Code.tag`, `Code.field` and `Code.cast`), on every kernel.
+  instead (`Cli.quoteAt`, with the new `Code.tag`, `Code.field` and `Code.cast`), on every kernel. Of
+  the toolchain's 199 tests one differs for this reason: `Rendered.renderedSmall` digests a `show`.
 
 A long list literal in the CLI's source, such as the interpreter's 480 lines of C, nested deeply
 enough that the JIT overflowed its stack and replayed on every element: writing that one constant

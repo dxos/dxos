@@ -1,5 +1,24 @@
 # History of main
 
+- `fb5919dc2b` update deus (by merge)
+- `12932fa816` history: import 1076 changes
+- `40f0c9ea7e` history: import 1070 changes
+- `b80790fe5a` task: import from /tmp/tmp88g8yixk/tasks.sexp
+- `42966c55ed` add /tmp/tmp88g8yixk/merged/code /tmp/tmp88g8yixk/merged/specs
+- `0aaa2c092a` task: comment on 60e88be8 (by claude)
+- `ed88eaac93` update deus (by merge)
+- `22b0a54217` history: import 1062 changes
+- `3b49d85b3f` history: import 1045 changes
+- `5e236918b4` task: import from /tmp/tmppyt0kebd/tasks.sexp
+- `3a18ea6009` add /tmp/tmppyt0kebd/merged/code /tmp/tmppyt0kebd/merged/specs
+- `22b89e57a3` task: comment on 60e88be8
+- `52f28cab3b` task: set d0d2915a labels
+- `1dd4374e2d` task: set d0d2915a priority
+- `eb902e4747` task: open d0d2915a Native interpreter: show, trace and Code.quote by type, so Rendered.renderedSmall passes natively as on node (values carry no types; Bool shows as 0/1, D146)
+- `c5e9b3346c` update deus (by claude)
+- `60967372b3` history: import 1037 changes
+- `a905f790c5` task: import from codebase/tasks.sexp
+- `9759b5816a` add codebase/code codebase/specs
 - `091ebe5523` task: comment on 88004c30 (by claude)
 - `e961b5af89` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
 - `b2fd2223e9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
