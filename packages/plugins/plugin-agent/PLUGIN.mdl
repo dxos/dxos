@@ -245,8 +245,8 @@ op inviteAgent
   input:
     agent: Ref<Agent>               # in any space it is in
   output: { agent: Ref<Agent>, created: boolean }
-  effects: [echo:read, echo:write]
-  requires: [Database.Service, Hypergraph.Service]
+  effects: [echo:read, echo:write, net:edge]
+  requires: [Database.Service, Hypergraph.Service, Capability.Service]
   note: |
     Runs in the target space; the members panel's contact picker invokes it (F-8.1). There the agent's home
     returns the home agent, and any other space the presence keyed `AgentPresence.homeKey(<home agent URI>)`,
@@ -474,7 +474,7 @@ node AccountAgents
 component AgentInvitees
   desc: |
     Capability (capabilities/invitee-source.ts), an `AppCapabilities.InviteeSource`: the agents the member
-    administers (`AgentSpace.administeredDids`, matched by the agent's DID) in their other spaces, by name, for the
+    administers (`AgentSpace.administeredAgents`) in their other spaces, by name, for the
     contact picker of a space's Members panel ("Add from contacts"), listed after the contacts. Agents already here
     (home or presence) are left out. Adding one invokes op:inviteAgent in that space, which first registers the space
     with EDGE (`POST /compute/brain/:agent/spaces`), refused to anyone but the agent's admins; the role select does not

@@ -24,16 +24,15 @@ const HOME_TIMEOUT = '5 seconds';
 export const useSessionAgent = (agent: Agent.Agent): Agent.Agent | undefined => {
   const home = AgentPresence.homeOf(agent);
   const db = Obj.getDatabase(agent);
-  const [session, setSession] = useState<Agent.Agent | undefined>(home ? undefined : agent);
+  // Keyed by the agent it was looked up for, so a lookup never answers for an agent rendered after it.
+  const [found, setFound] = useState<{ agent: Agent.Agent; session: Agent.Agent }>();
 
   useEffect(() => {
     if (!home || !db) {
-      setSession(agent);
       return;
     }
 
     let cancelled = false;
-    setSession(undefined);
     void EffectEx.runPromise(
       Effect.tryPromise(() => db.makeRef(URI.make(home)).tryLoad()).pipe(
         Effect.timeoutOption(HOME_TIMEOUT),
@@ -42,7 +41,7 @@ export const useSessionAgent = (agent: Agent.Agent): Agent.Agent | undefined => 
       ),
     ).then((loaded) => {
       if (!cancelled) {
-        setSession(Obj.instanceOf(Agent.Agent, loaded) ? loaded : agent);
+        setFound({ agent, session: Obj.instanceOf(Agent.Agent, loaded) ? loaded : agent });
       }
     });
     return () => {
@@ -50,5 +49,8 @@ export const useSessionAgent = (agent: Agent.Agent): Agent.Agent | undefined => 
     };
   }, [agent, db, home]);
 
-  return session;
+  if (!home || !db) {
+    return agent;
+  }
+  return found?.agent === agent ? found.session : undefined;
 };
