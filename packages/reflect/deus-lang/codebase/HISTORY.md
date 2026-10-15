@@ -1,5 +1,19 @@
 # History of main
 
+- `9dcda60615` update deus (by merge)
+- `9fda888898` history: import 1208 changes
+- `b25522c80e` history: import 1209 changes
+- `205337c959` task: import from /tmp/tmpvl69at_z/tasks.sexp
+- `8013f98024` add /tmp/tmpvl69at_z/merged/code /tmp/tmpvl69at_z/merged/specs
+- `7060aecef1` history: import 1199 changes
+- `7038a97524` task: import from tasks.sexp
+- `b4ef4e7681` catch up with #13952 at 843ac72e before the pause (by claude)
+- `5f5ea350ff` history: import 1144 changes
+- `807059293d` task: import from codebase/tasks.sexp
+- `e1548117c5` update codebase/code codebase/specs
+- `8fb47165c0` history: import 1124 changes
+- `9a9b42061a` task: import from codebase/tasks.sexp
+- `cd98107465` update codebase/code codebase/specs
 - `d33274282d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
 - `8bb85527da` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw2.deus (by claude)
 - `2c8226fb50` delete Dbg.e
