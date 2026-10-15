@@ -74,7 +74,6 @@ export const DECENTRALIZED_TEMPLATE: NetworkTemplate = {
     {
       id: 'home',
       kind: 'devices',
-      layout: { near: 'cloud' },
       nodes: [
         { id: 'phone', type: 'phone' },
         { id: 'laptop', type: 'laptop' },

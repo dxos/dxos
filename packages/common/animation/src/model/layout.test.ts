@@ -187,6 +187,25 @@ describe('belt and uniform distribution', () => {
     expect(Math.max(...radials) - Math.min(...radials)).toBeLessThan(1);
   });
 
+  test('jitter 0 keeps mixed-size networks on one ring even when the belt is narrow', ({ expect }) => {
+    const mixed = sites.map((site, index) => ({
+      ...site,
+      nodes: Array.from({ length: 1 + (index % 3) }, (_, k) => ({ id: `p${k}`, type: 'laptop' as const })),
+    }));
+    const graph = buildGraph(
+      { ...template, networks: [cloud, ...mixed], layout: { gap: 300, spread: 500, jitter: 0 } },
+      4,
+    );
+    const radials = mixed.map((site) => distance(getNetwork(graph, site.id).center, [0, 0]));
+    expect(Math.max(...radials) - Math.min(...radials)).toBeLessThan(1);
+    const roots = mixed.map((site) => getNetwork(graph, site.id));
+    roots.forEach((a, i) =>
+      roots
+        .slice(i + 1)
+        .forEach((b) => expect(distance(a.center, b.center)).toBeGreaterThanOrEqual(a.radius + b.radius + 300 - 1e-6)),
+    );
+  });
+
   test('networks and servers inside the cloud spread across it', ({ expect }) => {
     const graph = buildGraph(template, 4);
     const network = getNetwork(graph, 'cloud');

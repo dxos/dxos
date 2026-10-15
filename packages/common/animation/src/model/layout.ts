@@ -60,17 +60,36 @@ export const pack = (
       ? items.filter((item) => !item.at && item.near === undefined).sort((a, b) => (a.key < b.key ? -1 : 1))
       : [];
   const beltPhase = random.next() * Math.PI * 2;
-  // The ring sits in the middle of the band, widened if the belt's circumference cannot hold every item.
+  // Each item's angular slot is proportional to its width, so mixed sizes sit on one ring without touching.
+  const spans = belt.map((item) => 2 * item.radius + gap);
+  const total = spans.reduce((sum, span) => sum + span, 0);
+  const starts = spans.map((_, index) => spans.slice(0, index).reduce((sum, span) => sum + span, 0));
+  const angleOf = (index: number): number =>
+    beltPhase + (((starts[index] ?? 0) + (spans[index] ?? 0) / 2) / Math.max(total, 1)) * Math.PI * 2;
   const largestBelt = belt.reduce((max, item) => Math.max(max, item.radius), 0);
-  const circumference = belt.reduce((sum, item) => sum + 2 * item.radius + gap, 0);
-  const ring = Math.max(inner + gap + largestBelt + (spread ?? 0) / 2, circumference / (2 * Math.PI));
+  // The ring sits in the middle of the band, widened until every neighbouring pair clears by `gap` along the chord.
+  let ring = Math.max(inner + gap + largestBelt + (spread ?? 0) / 2, total / (2 * Math.PI));
+  const clears = (radius: number): boolean =>
+    belt.every((item, index) => {
+      const next = (index + 1) % belt.length;
+      const other = belt[next];
+      if (!other || next === index) {
+        return true;
+      }
+      const delta = Math.abs(angleOf(next) - angleOf(index));
+      const chord = 2 * radius * Math.sin(Math.min(Math.PI, delta) / 2);
+      return chord >= item.radius + other.radius + gap;
+    });
+  while (!clears(ring)) {
+    ring *= 1.02;
+  }
   const slot = (item: PackItem): Vec2 | undefined => {
     const index = belt.indexOf(item);
     if (index < 0) {
       return undefined;
     }
-    const step = (Math.PI * 2) / belt.length;
-    const angle = beltPhase + index * step + (random.next() - 0.5) * step * 0.4 * jitter;
+    const angle =
+      angleOf(index) + (random.next() - 0.5) * ((spans[index] ?? 0) / Math.max(total, 1)) * Math.PI * 2 * 0.4 * jitter;
     const distance = Math.max(inner + gap + item.radius, ring + (random.next() - 0.5) * (spread ?? 0) * jitter);
     return [Math.cos(angle) * distance, Math.sin(angle) * distance];
   };
