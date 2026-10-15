@@ -129,6 +129,11 @@ req R-18: a cited vitest test the file does not declare fails the requirement, n
   by: Compile.Spec.vitestMissingNamed
 ```
 
+```mdl
+req R-19: a law's `statement:` is compiled as its theorem's claim and compared with it, so other binder names, short names, `=` for `==` and other spacing are accepted; a different claim is reported with both statements, and one that does not compile is reported
+  by: Compile.Spec.statementAnySpelling | Compile.Spec.statementDifferentClaim | Compile.Spec.statementMustCompile
+```
+
 ## Declarations without a body
 
 `def parse (t : Text) : Int` with no `:=` declares a definition before it has an implementation

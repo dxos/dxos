@@ -52,7 +52,7 @@ feature F-4: Theorems: checked by test, decide and proof
   parent: F-1
   specs: Prove.Spec | Testing.Spec
   defs: Check.checkTheorem | Prove.auto
-  tasks: 7ef8bf45 | 1cbfdd30
+  tasks: 7ef8bf45 | 1cbfdd30 | 79f72c44
 ```
 
 ```mdl

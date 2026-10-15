@@ -165,8 +165,8 @@ Each is a codebase task (ids in brackets):
 - An extension does not know its document's name, so a test cannot point back at the requirement it
   verifies (`@[req "Codebase.Spec.R-3"]`) and nothing can list tests no requirement names
   (`6a3b0ebe`, `908495a0`).
-- `statement:` is compared as printed text with full names. Comparing compiled propositions would
-  accept any spelling (`0d7b0142`).
+- `statement:` used to be compared as printed text with full names. It is now compiled as the
+  theorem's claim and compared as Core, so any spelling of the same claim is accepted (D160).
 - `by test n` draws from a fixed alphabet, so a law about collisions or dotted names needs a
   hand-written generator (`Codebase.Spec.dotted`, `Bindings.Spec.crowded`; `1cbfdd30`).
 - Store laws need boilerplate: `inStore (fun dir => …) = true`, since a theorem's proposition

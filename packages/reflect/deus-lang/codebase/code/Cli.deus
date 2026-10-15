@@ -1731,6 +1731,32 @@ def Cli.specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Te
           after))
       (prefix ++ "." ++ b.blockId, Entry.spec h)) blocks) (expandPaths paths)
 
+/-- `statement:<theorem>\n<claim>`: whether the claim, compiled as the theorem's statement, is the
+  one it states (Compile.Spec R-19); comparing Core accepts any spelling of the same claim. -/
+def Cli.statementFact (dir : Text) (ns : Map Text Entry) (query : Text) : {IO} Result Text (List (Text, Text)) :=
+  let i := indexOf query "\n" 0
+  let name := Text.take i query
+  let stated := trim (Text.drop (i + 1) query)
+  let header := if startsWith "(" stated || startsWith ":" stated then stated else ": " ++ stated
+  let claim := fun form =>
+    match form with
+    | Option.some (Sexp.list (Sexp.sym "theorem" :: binders :: prop :: _)) => Option.some (binders, prop)
+    | _ => Option.none
+  let compiled := guardDefect (fun _ => try (fun _ =>
+    let batch := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) [parseFile
+      "<statement>"
+      ("theorem " ++ name ++ " " ++ replace " = " " == " header ++ " := sorry\n")]
+    match List.lookup name batch.entries with
+    | Option.some (Entry.theorem h) => orElse (List.lookup h batch.objects) (fun _ => readObject dir h)
+    | _ => Option.none))
+  match (compiled, Map.lookup name ns) with
+  | (Result.ok (Result.ok form), Option.some (Entry.theorem h)) =>
+      let same := isSome (claim form) && claim form == claim (readObject dir h)
+      Result.ok [("kind", "statement"), ("same", if same then "true" else "false")]
+  | (Result.ok (Result.err message), _) => Result.err ("the spec's statement does not compile: " ++ message)
+  | (Result.err message, _) => Result.err ("the spec's statement does not compile: " ++ message)
+  | _ => Result.err (name ++ " is not a theorem")
+
 /-- A comment's subject from what a command was given: a definition's name, `change:<causal>`, or `def:<name>`. -/
 def Cli.subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text := if startsWith "change:" given then
   let h := Text.drop 7 given
@@ -2047,12 +2073,13 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (body : U
     | Result.ok h => guardDefect (fun _ => Code.run h)
     | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
-  | MdlHost.describe name -> k => k (match featureFact dir facts.documents tasks name with
-    | Option.some answer => answer
-    | Option.none =>
-        match guardDefect (fun _ => try (fun _ => describeName dir ns facts name)) with
-        | Result.ok r => r
-        | Result.err message => Result.err message)
+  | MdlHost.describe name -> k => k (if startsWith "statement:" name then statementFact dir ns (Text.drop 10 name) else
+      match featureFact dir facts.documents tasks name with
+      | Option.some answer => answer
+      | Option.none =>
+          match guardDefect (fun _ => try (fun _ => describeName dir ns facts name)) with
+          | Result.ok r => r
+          | Result.err message => Result.err message)
 
 /-- Runs `body` against the remote `name`: a directory, or `r2://<bucket>/<prefix>` (an
   S3-compatible bucket at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID`

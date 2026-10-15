@@ -19,7 +19,11 @@ def Spec.checkLaw (b : Block) : {MdlHost} List Text :=
         let kind := prop0 facts "kind"
         let stated := squash (replace " = " " == " (Spec.prop b "statement"))
         let actual := squash (prop0 facts "statement")
-        let statement := if kind != "theorem" || Text.isEmpty stated || stated == actual then [] else ["the theorem states " ++ actual ++ ", the spec says " ++ stated]
+        -- Equal text is the common case; otherwise the claim is compiled and compared (Compile.Spec R-19).
+        let statement := if kind != "theorem" || Text.isEmpty stated || stated == actual then [] else
+          match MdlHost.describe ("statement:" ++ name ++ "\n" ++ trim (Spec.prop b "statement")) with
+          | Result.ok answer => if prop0 answer "same" == "true" then [] else ["the theorem states " ++ actual ++ ", the spec says " ++ stated]
+          | Result.err message => [message]
         let verdict := prop0 facts "verdict"
         let evidence := prop0 facts "evidence"
         let held := if Text.isEmpty verdict then [name ++ " is a " ++ kind ++ ", not a theorem"] else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"] else if verdict != "pass" then [name ++ " fails: " ++ prop0 facts "reason"] else if wanted == "proof" && strength evidence < 2 then [name ++ " holds by " ++ evidence ++ "; the spec asks for a proof"] else []

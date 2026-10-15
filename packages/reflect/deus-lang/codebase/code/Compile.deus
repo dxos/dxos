@@ -168,6 +168,31 @@ test Compile.Spec.renamedDeclarationsRoundTrip := inStore (fun dir =>
 /-- Every program here prints back to the hashes it compiled to. -/
 def Compile.Spec.roundTrips : List Text := ["def f (a : Int) : Int := if a == 0 then 1 else a * 2\n", "inductive Shape @\"urn:spec:Shape\" where\n  | circle (r : Int)\n  | rect (w : Int) (h : Int)\ndef area (s : Shape) : Int :=\n  match s with\n  | Shape.circle r => 3 * r * r\n  | Shape.rect w h => w * h\n", "structure P @\"urn:spec:P\" where\n  x : Int\n  y : Int\ndef moved (p : P) : P := { p with x := p.x + 1 }\n", "ability Ask where\n  ask : Int -> Int\ndef twice (u : Unit) : {Ask} Int := Ask.ask 1 + Ask.ask 2\ndef answered (u : Unit) : Int :=\n  handle twice () with\n  | return v => v\n  | Ask.ask n -> k => k (n * 10)\n", "def even (n : Int) : Bool := if n == 0 then true else odd (n - 1)\ndef odd (n : Int) : Bool := if n == 0 then false else even (n - 1)\n", "def s : Text := \"tab\\tquote\\\"\\u{1F600}\"\ndef g (a : Int) : Int :=\n  let h := fun (b : Int) => b + a\n  h (h a)\n", "test t := 1 + 1 == 2\ntheorem th (b : Bool) : (if b then b else b) = b := by decide\n", "/-- Parses a number. -/\ndef parse (t : Text) : Int\ndef k : Int\ndef twice (t : Text) : Int := parse t * k\n"]
 
+/-- R-19: other binder names, `=` for `==` and other spacing state the same claim. -/
+test Compile.Spec.statementAnySpelling := statementProblems "(x : Int) (y : Int) : x+y = y+x" == ""
+
+/-- R-19: a different claim is reported with both statements. -/
+test Compile.Spec.statementDifferentClaim := statementProblems "(x : Int) (y : Int) : x + y == x + y" ==
+  "the theorem states (a : Int) (b : Int) : a + b == b + a, the spec says (x : Int) (y : Int) : x + y == x + y"
+
+/-- R-19: a statement that does not compile is reported. -/
+test Compile.Spec.statementMustCompile := startsWith
+  "the spec's statement does not compile"
+  (statementProblems "(x : Int) : x + missing == x")
+
+/-- R-19: the problems a law block stating `statement` for `T.comm` reports about its statement. -/
+def Compile.Spec.statementProblems (statement : Text) : Text := storeText (fun _ =>
+  addSource
+    (View.Spec.prelude ++ "theorem T.comm (a : Int) (b : Int) : a + b == b + a := by test 5\n")
+    true
+  let ns := Codebase.current "cb"
+  let problems := withHost
+    "cb"
+    ns
+    (mdlFacts ns)
+    (fun _ => checkLaw (Block.mk "law" "L-1" "t" [("theorem", "T.comm"), ("statement", statement)] 0))
+  join "\n" (List.filter (fun p => not (Text.contains "not a theorem" p)) problems))
+
 def Compile.Spec.verdictText (name : Text) : {IO, Throw Text} Text :=
   let ns := Codebase.current "cb"
   match Map.lookup name ns with

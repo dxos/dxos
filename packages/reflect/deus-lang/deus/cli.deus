@@ -1193,12 +1193,38 @@ def withHost (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (body : Unit 
       | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
   | MdlHost.describe name -> k =>
-    k (match featureFact dir facts.documents tasks name with
+    k (if Text.startsWith "statement:" name then statementFact dir ns (Text.drop 10 name) else match featureFact dir facts.documents tasks name with
       | some answer => answer
       | none =>
         match guardDefect (fun _ => try (fun _ => describeName dir ns facts name)) with
         | Result.ok r => r
         | Result.err message => Result.err message)
+
+/--
+  `statement:<theorem>\n<claim>`: whether the claim, compiled as the theorem's statement, is the
+  one it states (Compile.Spec R-19); comparing Core accepts any spelling of the same claim.
+-/
+def statementFact (dir : Text) (ns : Map Text Entry) (query : Text) : {IO} Result Text (List (Text, Text)) :=
+  let i := Text.indexOf query "\n" 0
+  let name := Text.take i query
+  let stated := Text.trim (Text.drop (i + 1) query)
+  let header := if Text.startsWith "(" stated || Text.startsWith ":" stated then stated else ": " ++ stated
+  let claim := fun (form : Option Sexp) =>
+    match form with
+    | some (Sexp.list (Sexp.sym "theorem" :: binders :: prop :: _)) => some (binders, prop)
+    | _ => none
+  let compiled := guardDefect (fun _ => try (fun _ =>
+    let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<statement>" ("theorem " ++ name ++ " " ++ Text.replace " = " " == " header ++ " := sorry\n")]
+    match List.lookup name batch.entries with
+    | some (Entry.theorem h) => Option.orElse (List.lookup h batch.objects) (fun _ => Codebase.readObject dir h)
+    | _ => none))
+  match (compiled, Map.lookup name ns) with
+  | (Result.ok (Result.ok form), some (Entry.theorem h)) =>
+    let same := Option.isSome (claim form) && claim form == claim (Codebase.readObject dir h)
+    Result.ok [("kind", "statement"), ("same", if same then "true" else "false")]
+  | (Result.ok (Result.err message), _) => Result.err ("the spec's statement does not compile: " ++ message)
+  | (Result.err message, _) => Result.err ("the spec's statement does not compile: " ++ message)
+  | _ => Result.err (name ++ " is not a theorem")
 
 /-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
 def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=

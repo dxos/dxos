@@ -202,13 +202,6 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - assignee: claude
 - labels: browser, perf, kernel
 
-## law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (`0d7b0142`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: mdl, spec
-
 ## Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase (`3e686896`)
 
 - state: todo
@@ -1510,6 +1503,15 @@ Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/
 - labels: codebase, cli
 
 > claude: Done (D131): update lists '* name (metadata)' when only a definition's doc comment, attributes or comments changed; --json has a metadata array. Codebase.Spec R-15.
+
+## law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (`0d7b0142`)
+
+- state: done
+- priority: low
+- assignee: claude
+- labels: mdl, spec
+
+> claude: Done (D160): statement: is compiled as the theorem's claim and compared as Core; Compile.Spec R-19.
 
 ## Break long lines in deus view output (`d7eba020`)
 
