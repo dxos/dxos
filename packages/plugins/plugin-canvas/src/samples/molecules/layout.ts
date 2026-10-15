@@ -146,12 +146,16 @@ const GRID_MARGIN = 10;
 const HUB_RADIUS = 288;
 const ORBIT_RADIUS = 576;
 
-const wellOf = (frame: Rect): Rect => ({
-  x: frame.x + WELL_INSET,
-  y: frame.y + TITLE_INSET,
-  width: frame.width - 2 * WELL_INSET,
-  height: frame.height - TITLE_INSET - WELL_INSET,
-});
+/** The well inside `frame`: below the title strip, or, for a block with no label, inset alike on every side. */
+const wellOf = (frame: Rect, titled = true): Rect => {
+  const top = titled ? TITLE_INSET : WELL_INSET;
+  return {
+    x: frame.x + WELL_INSET,
+    y: frame.y + top,
+    width: frame.width - 2 * WELL_INSET,
+    height: frame.height - top - WELL_INSET,
+  };
+};
 
 /** Gray frame left between a partitioned well's buckets. */
 const BUCKET_GAP = 12;
@@ -176,7 +180,7 @@ const bucketsOf = (region: Rect, count: number): Rect[] => {
 
 /** A hub in `frame` whose well holds a horizontal channel along its top and bottom with `count` buckets between them. */
 const partitionedBlock = (id: string, label: string, frame: Rect, count: number): Block => {
-  const well = wellOf(frame);
+  const well = wellOf(frame, label !== '');
   return {
     id,
     label,
@@ -362,7 +366,7 @@ const layoutStacked = (spec: DataFlowSpec): DataFlowLayout => {
   };
   const hub = partitions
     ? partitionedBlock('hub', spec.hub.label, hubFrame, partitions)
-    : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: wellOf(hubFrame) };
+    : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: wellOf(hubFrame, spec.hub.label !== '') };
 
   const channels: Channel[] = sources.map((source) => ({
     id: `channel-${source.id}`,

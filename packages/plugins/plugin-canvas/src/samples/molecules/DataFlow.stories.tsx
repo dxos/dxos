@@ -38,7 +38,8 @@ const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent'
 const APPS: DataFlowSpec = {
   ...SPEC,
   // One bucket, laid out partitioned so the next chapter can split it in place.
-  hub: { label: 'ECHO', partitions: 1 },
+  // Unlabelled: the container stands for ECHO without saying so, its well inset alike on every side.
+  hub: { label: '', partitions: 1 },
   sinks: [
     { label: 'Docs', app: 'document' },
     { label: 'Sheets', app: 'spreadsheet' },
@@ -113,7 +114,7 @@ const moreSinks = (side: -1 | 1): { label: string; app?: AppKind }[] =>
 /** ECHO extended past the view on both sides, while all that was there keeps its place; agents number left to right. */
 const EXTENDED: DataFlowSpec = {
   ...APPS,
-  hub: { label: 'ECHO', partitions: 3 },
+  hub: { label: '', partitions: 3 },
   extend: {
     left: {
       buckets: REACH.buckets,
@@ -202,6 +203,15 @@ export default meta;
 
 type Story = StoryObj<DataFlowViewProps>;
 
+type TransitionStory = StoryObj<{ autostart: boolean }>;
+
+/** Seconds the first scene of a transition plays before moving on, when the story starts the transition itself. */
+const LEAD_IN = 2;
+
+/** A transition's scenes: with `autostart`, the first gives way after a moment, so the change plays as the story loads. */
+const transition = (scenes: readonly Scene[], autostart: boolean): Scene[] =>
+  scenes.map((scene, index) => (index === 0 && autostart ? { ...scene, duration: LEAD_IN } : scene));
+
 const chapter = (index: number): Story => {
   const { title, spec, options, revealed, partitioned } = CHAPTERS[index];
   return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned } };
@@ -240,8 +250,9 @@ export const Chapter5Growth: Story = chapter(4);
  * 1. After 20 seconds (or the next control) the OAuth box, its grant lines, the container and the agent fade in.
  * 2. The silos' molecules keep flowing across the change; the agent then starts reading through OAuth.
  */
-export const TransitionOAuth: Story = {
-  render: () => <DataFlowSequence scenes={CHAPTERS.slice(0, 2)} />,
+export const TransitionOAuth: TransitionStory = {
+  render: ({ autostart }) => <DataFlowSequence scenes={transition(CHAPTERS.slice(0, 2), autostart)} />,
+  args: { autostart: true },
 };
 
 /**
@@ -251,6 +262,7 @@ export const TransitionOAuth: Story = {
  * 1. Next stretches ECHO off both edges; its three buckets, the four sources and the four apps stay exactly in place.
  * 2. New buckets fade in either side within ECHO, and new sources and agents fade in beyond the old ones.
  */
-export const TransitionExtension: Story = {
-  render: () => <DataFlowSequence scenes={CHAPTERS.slice(3, 5)} />,
+export const TransitionExtension: TransitionStory = {
+  render: ({ autostart }) => <DataFlowSequence scenes={transition(CHAPTERS.slice(3, 5), autostart)} />,
+  args: { autostart: true },
 };

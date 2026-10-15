@@ -245,7 +245,7 @@ export type Arrivals = {
 /** The hub stretches over this first share of a relayout; agents then arrive, and sources after them. */
 const GROWTH = 0.6;
 const FADE = 0.15;
-const PHASES = { buckets: 0.05, sinks: 0.2, sources: 0.45 } as const;
+const PHASES = { sinks: 0.2, sources: 0.45 } as const;
 const STAGGER = 0.4;
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -255,7 +255,7 @@ export const arrived = (window: { start: number; length: number } | undefined, p
   window ? ease(Math.min(1, Math.max(0, (progress - window.start) / window.length))) : 1;
 
 /**
- * The order a relayout brings in what it adds: the hub stretches first, its new buckets fading in as it reaches them;
+ * The order a relayout brings in what it adds: the hub stretches first, each new bucket fading in once it has room;
  * then the agents, and last the sources, each set inner first on both sides at once, so the diagram fills outward.
  */
 export const planArrivals = (from: DataFlowLayout, to: DataFlowLayout): Arrivals => {
@@ -271,11 +271,27 @@ export const planArrivals = (from: DataFlowLayout, to: DataFlowLayout): Arrivals
       windows.set(item.id, { start: phase + (ranks > 1 ? (STAGGER * rank) / (ranks - 1) : 0), length: FADE });
     });
   };
+  // A new bucket fades in only once the stretching hub has room for it: when the hub's edge has passed the bucket's
+  // outer side, found by stepping through the growth.
   const oldBuckets = from.hub.buckets?.length ?? 1;
-  stagger(
-    (to.hub.buckets ?? []).slice(oldBuckets).map((frame, index) => ({ id: `${oldBuckets + index}`, frame })),
-    PHASES.buckets,
-  );
+  const growth = (progress: number) => ease(Math.min(1, progress / GROWTH));
+  (to.hub.buckets ?? []).slice(oldBuckets).forEach((bucket, index) => {
+    const leftward = bucket.x + bucket.width / 2 < centre;
+    const fits = (progress: number) => {
+      const reach = growth(progress);
+      const left = from.hub.well.x + (to.hub.well.x - from.hub.well.x) * reach;
+      const right =
+        from.hub.well.x +
+        from.hub.well.width +
+        (to.hub.well.x + to.hub.well.width - from.hub.well.x - from.hub.well.width) * reach;
+      return leftward ? left <= bucket.x : right >= bucket.x + bucket.width;
+    };
+    let start = 0;
+    while (start < GROWTH && !fits(start)) {
+      start += 0.005;
+    }
+    windows.set(`${oldBuckets + index}`, { start, length: FADE });
+  });
   stagger(
     to.sinks.filter((sink) => !from.sinks.some(({ id }) => id === sink.id)),
     PHASES.sinks,
@@ -284,5 +300,5 @@ export const planArrivals = (from: DataFlowLayout, to: DataFlowLayout): Arrivals
     to.sources.filter((source) => !from.sources.some(({ id }) => id === source.id)),
     PHASES.sources,
   );
-  return { growth: (progress) => ease(Math.min(1, progress / GROWTH)), windows };
+  return { growth, windows };
 };
