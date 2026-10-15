@@ -13,8 +13,8 @@
 // `<PREFIX>/assets/<sha256>`; `deus inbox` applies the requests to the codebase. Without the OAuth
 // settings the explorer stays read-only.
 
-import { projectAt } from './address.mjs';
-import { HttpError, hex, json, remoteApi } from './remote.mjs';
+import { addressOfFolder, projectAt } from './address.mjs';
+import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
 const SESSION_DAYS = 7;
@@ -158,7 +158,11 @@ const page = async (env, version, base) => {
   if (!object) {
     return notFound();
   }
-  const html = (await object.text()).replace('<head>', `<head><base href="${base}/v/${version}/" />`);
+  // The app reads the codebase live through the API (D192), at the head this page is served for.
+  const head = await readBranchHead(env, prefix(env), 'main');
+  const api = `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${head?.causal}`;
+  const liveScript = head ? `<script>globalThis.DEUS_LIVE = ${JSON.stringify(api)};</script>` : '';
+  const html = (await object.text()).replace('<head>', `<head><base href="${base}/v/${version}/" />${liveScript}`);
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' },
   });

@@ -626,3 +626,12 @@ some threads still blocked, restart them as new threads
 ---
 
 priority: get explorer to be sourced live from hosted codebase, not rebuilt by cli
+
+---
+
+- we should have proper Time/Duration datatypes
+
+```
+ability Alarm @"urn:deus:web:Alarm" where
+  set : Int -> Unit
+```

@@ -283,7 +283,34 @@ const write = (stream, chunk) => {
   }
 };
 
+let files;
+
+/**
+ * Answers IO's file reads from `fs`: `read(path)` is the text or undefined, `list(path)` the names in a
+ * directory or undefined when it is none. Reads are synchronous; a host whose storage is not (the DEUS
+ * Worker, D192) fills a cache first, and `read` may throw to have its caller fetch and run again.
+ */
+export const provideFiles = (fs) => {
+  files = fs;
+};
+
+const listOf = (items) => items.reduceRight((tail, item) => cons(item, tail), NIL);
+
 const io = (index, args) => {
+  if (files) {
+    switch (index) {
+      case 2: {
+        const text = files.read(args[0]);
+        return text === undefined ? NONE : some(text);
+      }
+      case 4:
+        return files.read(args[0]) !== undefined || files.list(args[0]) !== undefined;
+      case 5:
+        return listOf(files.list(args[0]) ?? []);
+      case 14:
+        return files.list(args[0]) !== undefined;
+    }
+  }
   switch (index) {
     case 0:
       write('stdout', args[0]);

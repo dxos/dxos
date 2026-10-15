@@ -8,6 +8,7 @@
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
 import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
+import { live } from './live.mjs';
 import { nameAt, names, objects, packs } from './packs.mjs';
 
 /** `<level>-<sha256>`, the name of an immutable bundle (D50, D91). */
@@ -64,6 +65,9 @@ export const remoteApi = async (request, env, ctx, url) => {
   }
   if (area === 'names') {
     return names(request, env, project, rest);
+  }
+  if (area === 'live') {
+    return live(request, env, ctx, project, rest);
   }
   if (area === 'headlog') {
     return headLog(request, env, project, rest);

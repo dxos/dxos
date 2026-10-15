@@ -5,6 +5,10 @@ compatibility_date = "2026-07-01"
 account_id = "ba80533b56e4658ce26b198a040692a9"
 workers_dev = true
 
+# Drawing a head's explorer reads and prints every definition once (D192); Workers Paid allows up to 5 minutes.
+[limits]
+cpu_ms = 120000
+
 [vars]
 # The project whose explorer is served at `/`; requests and attachments go to <PREFIX>/inbox/ and <PREFIX>/assets/ (D82).
 PREFIX = "toolchain"

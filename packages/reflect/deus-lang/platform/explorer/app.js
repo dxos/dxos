@@ -39,15 +39,50 @@ const pagePath = (hash) => `def/${hash.startsWith('#') ? `_${hash.slice(1)}` : h
 
 const cache = new Map();
 
+const fetchJson = (path) =>
+  fetch(path)
+    .then((response) => (response.ok ? response.json() : undefined))
+    .catch(() => undefined);
+
+/**
+ * The live explorer API of the codebase at the head the page was served for (D192), which the DEUS
+ * Worker sets; without it, as from `deus explore`, the app reads the files written beside it.
+ */
+const live = globalThis.DEUS_LIVE;
+
+/** The files the live API serves as one document, and the part each one is. */
+const LIVE_INDEX = {
+  'meta.json': 'meta',
+  'names.json': 'names',
+  'tasks.json': 'tasks',
+  'comments.json': 'comments',
+  'events.json': 'events',
+  'features.json': 'features',
+};
+
+let liveIndex;
+
+/** A file from the live API, or from the published files when the live API cannot answer. */
+const fromLive = async (path) => {
+  if (path in LIVE_INDEX) {
+    liveIndex ??= fetchJson(`${live}/index.json`);
+    const index = await liveIndex;
+    if (index) {
+      return index[LIVE_INDEX[path]];
+    }
+  } else if (path.startsWith('def/') || path.startsWith('change/')) {
+    const page = await fetchJson(`${live}/${path}`);
+    if (page !== undefined) {
+      return page;
+    }
+  }
+  return fetchJson(path);
+};
+
 /** Each file is fetched once; a missing file resolves to `undefined`. */
 const load = (path) => {
   if (!cache.has(path)) {
-    cache.set(
-      path,
-      fetch(path)
-        .then((response) => (response.ok ? response.json() : undefined))
-        .catch(() => undefined),
-    );
+    cache.set(path, live ? fromLive(path) : fetchJson(path));
   }
   return cache.get(path);
 };

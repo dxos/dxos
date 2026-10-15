@@ -585,13 +585,18 @@ describe('replication API', () => {
     await bucket.put('toolchain/site/v/0000000000000002/index.html', '<html><head></head>toolchain</html>');
     await bucket.put('toolchain/site/HEAD', '0000000000000002');
     const demoPage = '<html><head><base href="/@acme/demo/v/0000000000000001/" /></head>demo</html>';
-    expect(await (await call('/@acme/demo/')).text()).toBe(demoPage);
-    expect(await (await call('/@acme/demo/Cli.dispatch')).text()).toBe(demoPage);
+    // A project with a head also gets the address of its live explorer API (D192), checked here and set aside below.
+    const LIVE = /<script>globalThis\.DEUS_LIVE = "([^"]*)";<\/script>/;
+    const served = await (await call('/@acme/demo/')).text();
+    expect(LIVE.exec(served)?.[1]).toMatch(/^\/v1\/@acme\/demo\/live\/[0-9a-f]{64}$/);
+    const page = async (path: string, init?: RequestInit) => (await (await call(path, init)).text()).replace(LIVE, '');
+    expect(await page('/@acme/demo/')).toBe(demoPage);
+    expect(await page('/@acme/demo/Cli.dispatch')).toBe(demoPage);
     expect(await (await call('/@acme/demo/v/0000000000000001/meta.json')).text()).toBe('demo meta');
     expect((await call('/@acme/demo/missing.json')).status).toBe(404);
     // A name that ends like a file (`List.map`) opens the page when a browser navigates to it.
     const navigate = { headers: { 'sec-fetch-dest': 'document' } };
-    expect(await (await call('/@acme/demo/List.map', navigate)).text()).toBe(demoPage);
+    expect(await page('/@acme/demo/List.map', navigate)).toBe(demoPage);
     expect((await call('/@acme/demo/List.map')).status).toBe(404);
     expect((await call('/@acme/nothing/')).status).toBe(404);
     expect((await call('/@Acme/demo/')).status).toBe(404);

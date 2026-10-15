@@ -44,3 +44,4 @@ packages/reflect/deus-lang/codebase/**          linguist-generated=true
 packages/reflect/deus-lang/codebase/history.sexp   merge=union
 packages/reflect/deus-lang/codebase/tasks.sexp     merge=union
 packages/reflect/deus-lang/codebase/HISTORY.md     merge=union
+packages/reflect/deus-lang/platform/worker/gen/**  linguist-generated=true

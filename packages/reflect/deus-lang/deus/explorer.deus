@@ -162,16 +162,27 @@ def hintsOf (name : Text) (e : Entry) (object : Option Sexp) (meta : Option Sexp
 /-- The app's files, from the toolchain's sources. -/
 def appFiles : List Text := ["index.html", "app.js", "app.css"]
 
-/-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
-def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
-  let home :=
-    match IO.getEnv "DEUS_HOME" with
-    | Option.some h => h
-    | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+/-- What every page of a branch's explorer is drawn from, read once (D192): `generate` writes all of
+  it, and the DEUS Worker serves pages from it on request, reading the hosted codebase. -/
+structure Site where
+  dir : Text
+  project : Text
+  branch : Text
+  ns : Map Text Entry
+  entries : List (Text, Entry)
+  index : Map Text Text
+  namesByHash : Map Text (List Text)
+  metaOf : Map Text (Option Sexp)
+  depsOf : Map Text (List Text)
+  dependents : Map Text (List Text)
+  printer : Printer
+  allTasks : List Task
+  taskMap : Map Text Task
+
+/-- Reads the current branch of `dir` into a `Site`. -/
+def site (dir : Text) : {IO, Throw Text} Site :=
   let ns := Codebase.current dir
   let entries := List.filter visible (Map.toList ns)
-  let index := nameIndex ns
-  let namesByHash := Codebase.namesByHash ns
   let project :=
     match Project.read dir with
     | Option.some p => p.projectIri
@@ -197,48 +208,107 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     Map.empty
     depsOf
   let tasks := sortBy order (Map.values (Tasks.current dir))
-  let taskMap := Map.fromList (List.map (fun t => (Task.id t, t)) tasks)
-  let histories := histories dir 200
-  let historyOf := fun t => getOr (Map.lookup (Task.id t) histories) []
+  Site.mk dir project (currentBranch dir) ns entries (nameIndex ns) (Codebase.namesByHash ns) metaOf depsOf dependents printer tasks (Map.fromList (List.map (fun t => (Task.id t, t)) tasks))
+
+/-- A name's metadata in the site, as `Codebase.metaFor` reads it. -/
+def siteMeta (s : Site) (name : Text) (h : Text) : Option Sexp := Option.map (Codebase.metaFor name) (getOr (Map.lookup h s.metaOf) Option.none)
+
+/-- `names.json`: every visible name with its kind, hash, signature, doc summary and test status, so the
+  app can list, search and preview names without opening their pages. -/
+def namesJson (s : Site) : {IO} Json := Json.arr (List.map (fun pair =>
+  let h := Entry.hash (snd pair)
+  let meta := siteMeta s (fst pair) h
+  Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature meta)), ("summary", Json.str (summaryOf (Explorer.docOf meta))), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf s.dir h) else ""))]) s.entries)
+
+/-- `tasks.json`: every task, with the changes that touched it. -/
+def tasksJson (s : Site) : {IO, Throw Text} Json :=
+  let histories := histories s.dir 200
+  Json.arr (List.map (fun t => Explorer.taskJson s.dir s.ns (getOr (Map.lookup (Task.id t) histories) []) t) s.allTasks)
+
+/-- `comments.json`: comments on definitions and changes (D82), by subject. -/
+def commentsJson (s : Site) : {IO, Throw Text} Json := Json.obj (List.map
+  (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair))))
+  (Map.toList (Comments.current s.dir)))
+
+/-- Events about the codebase (D104) and how many there are; a codebase whose event types cannot be
+  read gets no events rather than no site. -/
+def eventsOf (s : Site) : {IO} (Json, Int) :=
+  match try (fun _ =>
+    let ts := Analytics.types s.dir s.ns
+    (siteJson s.dir s.project s.ns 20, sum (List.map (fun c =>
+      let (_, pending, pushed) := c
+      pending + pushed) (counts s.dir ts)))) with
+  | Result.ok pair => pair
+  | Result.err _ => (Json.obj [("project", Json.str s.project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
+
+/-- Feature maps (D118) and how many features they hold; a map that cannot be read leaves the card empty. -/
+def featuresOfSite (s : Site) : {IO} (Json, Int) :=
+  match try (fun _ =>
+    let docs := featureDocuments s.dir s.ns
+    (featuresJson s.dir s.ns docs, sum (List.map (fun d => List.length (fst (featuresOf s.dir s.ns d))) docs))) with
+  | Result.ok pair => pair
+  | Result.err _ => (Json.arr [], 0)
+
+/-- `meta.json`: the project, branches, counts and the log. -/
+def metaJson (s : Site) (console : Bool) (events : Int) (features : Int) : {IO, Throw Text} Json :=
+  Json.obj [("project", Json.str s.project), ("branch", Json.str s.branch), ("branches", Json.arr (List.map Json.str (branches s.dir))), ("definitions", Json.num (List.length s.entries)), ("tasks", Json.num (List.length s.allTasks)), ("open", Json.num (List.length (List.filter isOpen s.allTasks))), ("console", Json.bool console), ("events", Json.num events), ("features", Json.num features), ("history", Json.arr (List.map (logJson s.dir) (fullLog s.dir historyLimit)))]
+
+/-- `def/<hash>.json`: a definition's names, signature, highlighted source in both dialects with its
+  references linked, dependencies, dependents, verdict and tasks. -/
+def defJson (s : Site) (name : Text) (e : Entry) : {IO} Json :=
+  let h := Entry.hash e
+  let source :=
+    match try (fun _ => viewEntryWith s.printer s.dir s.ns name e false) with
+    | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
+    | Result.err message => "-- " ++ message
+  -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
+  let tsSource :=
+    match try (fun _ => viewEntryIn s.printer s.dir s.ns name e "ts") with
+    | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (Text.lines text))
+    | Result.err message => "// " ++ message
+  let deps := List.filter (fun d => Map.contains d s.index && d != h) (getOr (Map.lookup h s.depsOf) [])
+  -- References in the source print under their display names; those names link to the definitions.
+  let links := Map.fromList (List.map (fun d => (nameFor s.printer d, d)) deps)
+  -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
+  let users := List.filter (fun u => u != h) (dedup (sort (getOr (Map.lookup h s.dependents) [])))
+  let named := fun hs => Json.arr (List.map (fun x => refJson (getOr (Map.lookup x s.index) (short x)) x) hs)
+  let meta := siteMeta s name h
+  let sig := Explorer.signature meta
+  Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
+    Json.str
+    (List.filter (fun other => other != name) (getOr (Map.lookup h s.namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (Explorer.verdictOf s.dir h)), ("tasks", Json.arr (List.map
+    (fun t => Json.obj [("id", Json.str (Task.id t)), ("title", Json.str (Task.title t)), ("state", Json.str (stateText t.state))])
+    (about s.taskMap name h)))]
+
+/-- The page of the definition a hash names, by its first visible name, or `null` when no visible name has it. -/
+def defByHash (s : Site) (h : Text) : {IO} Json :=
+  match List.find (fun pair => Entry.hash (snd pair) == h) s.entries with
+  | Option.some (name, e) => defJson s name e
+  | Option.none => Json.null
+
+/-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
+def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let home :=
+    match IO.getEnv "DEUS_HOME" with
+    | Option.some h => h
+    | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+  let s := site dir
   IO.mkdirp (out ++ "/def")
   forEach appFiles (fun f =>
     match IO.readFile (home ++ "/platform/explorer/" ++ f) with
     | Option.some text => IO.writeFile (out ++ "/" ++ f) text
     | Option.none => Throw.throw ("missing " ++ home ++ "/platform/explorer/" ++ f))
-  let branch := currentBranch dir
-  -- Events about the codebase (D104), for the Events card and per-definition counts; a codebase
-  -- whose event types cannot be read still gets a site, with no events.
-  let events :=
-    match try (fun _ =>
-      let ts := Analytics.types dir ns
-      (siteJson dir project ns 20, sum (List.map (fun c =>
-        let (_, pending, pushed) := c
-        pending + pushed) (counts dir ts)))) with
-    | Result.ok pair => pair
-    | Result.err _ => (Json.obj [("project", Json.str project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
+  let events := eventsOf s
   IO.writeFile (out ++ "/events.json") (Json.render (fst events))
-  -- Feature maps (D118) for the Features card; a map that cannot be read leaves the card empty rather than the site missing.
-  let featureMaps :=
-    match try (fun _ =>
-      let docs := featureDocuments dir ns
-      (featuresJson dir ns docs, sum (List.map (fun d => List.length (fst (featuresOf dir ns d))) docs))) with
-    | Result.ok pair => pair
-    | Result.err _ => (Json.arr [], 0)
+  let featureMaps := featuresOfSite s
   IO.writeFile (out ++ "/features.json") (Json.render (fst featureMaps))
-  IO.writeFile
-    (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("events", Json.num (snd events)), ("features", Json.num (snd featureMaps)), ("history", Json.arr (List.map (logJson dir) (fullLog dir historyLimit)))]))
-  -- The signature and doc summary let the app list, search and preview names without opening their pages.
-  IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
-    let h := Entry.hash (snd pair)
-    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (Option.map (Codebase.metaFor (fst pair)) (metaFor h)))), ("summary", Json.str (summaryOf (Explorer.docOf (Option.map (Codebase.metaFor (fst pair)) (metaFor h))))), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf dir h) else ""))]) entries)))
+  IO.writeFile (out ++ "/meta.json") (Json.render (metaJson s (IO.exists (out ++ "/console/info.json")) (snd events) (snd featureMaps)))
+  IO.writeFile (out ++ "/names.json") (Json.render (namesJson s))
+  let histories := histories dir 200
   IO.writeFile
     (out ++ "/tasks.json")
-    (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))
-  -- Comments on definitions and changes (D82), by subject, and the assets they and tasks attach.
-  IO.writeFile (out ++ "/comments.json") (Json.render (Json.obj (List.map
-    (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair))))
-    (Map.toList (Comments.current dir)))))
+    (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir s.ns (getOr (Map.lookup (Task.id t) histories) []) t) s.allTasks)))
+  IO.writeFile (out ++ "/comments.json") (Json.render (commentsJson s))
   IO.mkdirp (out ++ "/assets")
   forEach
     (Assets.named dir)
@@ -247,40 +317,28 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
       ())
   -- A page per change the app links to: recent history, and every change in a task's history.
   IO.mkdirp (out ++ "/change")
-  let linked := concatMap (fun t => List.map fst (historyOf t)) tasks
-  let shown := Set.toList (Set.fromList (List.map fst (Codebase.history dir branch 30) ++ linked))
+  let linked := concatMap (fun t => List.map fst (getOr (Map.lookup (Task.id t) histories) [])) s.allTasks
+  let shown := Set.toList (Set.fromList (List.map fst (Codebase.history dir s.branch 30) ++ linked))
   forEach shown (fun c =>
     let path := out ++ "/change/" ++ c ++ ".json"
     -- A change never changes, so a page written once stays right.
     if IO.exists path then () else IO.writeFile path (Json.render (changePage dir c)))
-  forEach entries (fun pair =>
+  forEach s.entries (fun pair =>
     let (name, e) := pair
-    let h := Entry.hash e
-    let source :=
-      match try (fun _ => viewEntryWith printer dir ns name e false) with
-      | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
-      | Result.err message => "-- " ++ message
-    -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
-    let tsSource :=
-      match try (fun _ => viewEntryIn printer dir ns name e "ts") with
-      | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (Text.lines text))
-      | Result.err message => "// " ++ message
-    let deps := List.filter (fun d => Map.contains d index && d != h) (getOr (Map.lookup h depsOf) [])
-    -- References in the source print under their display names; those names link to the definitions.
-    let links := Map.fromList (List.map (fun d => (nameFor printer d, d)) deps)
-    -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
-    let users := List.filter (fun u => u != h) (dedup (sort (getOr (Map.lookup h dependents) [])))
-    let named := fun hs => Json.arr (List.map (fun x => refJson (getOr (Map.lookup x index) (short x)) x) hs)
-    let meta := Option.map (Codebase.metaFor name) (metaFor h)
-    let sig := Explorer.signature meta
-    IO.writeFile
-      (out ++ "/def/" ++ Explorer.pageOf h ++ ".json")
-      (Json.render (Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
-        Json.str
-        (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (Explorer.verdictOf dir h)), ("tasks", Json.arr (List.map
-        (fun t => Json.obj [("id", Json.str (Task.id t)), ("title", Json.str (Task.title t)), ("state", Json.str (stateText t.state))])
-        (about taskMap name h)))])))
-  List.length entries
+    IO.writeFile (out ++ "/def/" ++ Explorer.pageOf (Entry.hash e) ++ ".json") (Json.render (defJson s name e)))
+  List.length s.entries
+
+/-- The DEUS Worker's explorer API (D192), compiled to JS: everything but definitions, as one document. -/
+def liveIndex (s : Site) : {IO, Throw Text} Text :=
+  let events := eventsOf s
+  let featureMaps := featuresOfSite s
+  Json.render (Json.obj [("meta", metaJson s false (snd events) (snd featureMaps)), ("names", namesJson s), ("tasks", tasksJson s), ("comments", commentsJson s), ("events", fst events), ("features", fst featureMaps)])
+
+/-- The DEUS Worker's page of the definition a hash names (D192). -/
+def liveDef (s : Site) (h : Text) : {IO} Text := Json.render (defByHash s h)
+
+/-- The DEUS Worker's page of a change (D192). -/
+def liveChange (dir : Text) (causal : Text) : {IO, Throw Text} Text := Json.render (changePage dir causal)
 
 /-- Directories a console snapshot leaves out: local state, binary files and remote bookkeeping. -/
 def consoleSkips : List Text := ["cache", "artifacts", "assets", "remotes", "exports"]
