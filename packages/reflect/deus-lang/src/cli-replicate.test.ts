@@ -117,6 +117,8 @@ describe('deus CLI replication', () => {
       expect(first.written.length).toBeGreaterThan(0);
       expect(first.deleted.length).toBeGreaterThan(0);
       expect(readdirSync(join(remote, 'bundles')).length).toBeLessThan(before);
+      // Deleted bundles move to trash/, so a compaction bug never loses history (DataSafety.Spec).
+      expect(readdirSync(join(remote, 'trash', 'bundles')).sort()).toEqual([...first.deleted].sort());
       // Strata come from hashes and bundles are canonical: another client's compaction writes nothing new.
       deus('pull', ...b);
       expect(JSON.parse(deus('compact', '--json', ...b).stdout)).toEqual({ written: [], deleted: [] });

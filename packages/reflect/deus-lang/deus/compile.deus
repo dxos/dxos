@@ -76,32 +76,34 @@ def bodyScope (item : Item) : Scope :=
 /-- The type form that is hashed: IRI, arity, and constructor shapes with field types by IRI. -/
 def typeForm (names : Names) (item : Item) (iri : Text) (params : List Text) (ctors : List (List Ty)) : {Throw Text} Sexp :=
   let scope := bodyScope item
-  node "type" ([s iri, n (List.length params)] ++ List.map (fun fields => node "ctor" (n (List.length fields) :: List.map (fun t => Resolve.tyCore names scope params t) fields)) ctors)
+  Compile.node "type" ([Sexp.s iri, i (List.length params)] ++ List.map (fun fields => Compile.node
+    "ctor"
+    (i (List.length fields) :: List.map (fun t => tyCore names scope params t) fields)) ctors)
 
 def accessorCore (hash : Text) (count : Int) (index : Int) : Sexp :=
   node "lam" [node "match" [node "var" [n 0], node "case" [node "pcon" ([s hash, n 0] ++ List.replicate count (node "pvar" [])), node "var" [n (count - 1 - index)]]]]
 
 /-- Signature of a definition: binder types then the result type. -/
 def signature (names : Names) (scope : Scope) (binders : List Binder) (result : Option Ty) : {Throw Text} Sexp :=
-  let unknown := node "tvar" [s "?"]
-  let resultCore := match result with
-    | some t => Resolve.tyCore names scope [] t
-    | none => unknown
+  let unknown := Compile.node "tvar" [Sexp.s "?"]
+  let resultCore :=
+    match result with
+    | Option.some t => tyCore names scope [] t
+    | Option.none => unknown
   -- `(x : A) : {E} B` puts the row on the last arrow.
-  let attach := fun (inner : Sexp) =>
+  let attach := fun inner =>
     match inner with
-    | Sexp.list [Sexp.sym "teff", effs, t] => (t, [effs])
+    | Sexp.list (Sexp.sym "teff" :: effs :: t :: []) => (t, [effs])
     | _ => (inner, [])
-  match attach resultCore with
-  | (resultPlain, row) =>
-    let count := List.length binders
-    List.foldr (fun pair acc =>
-      match pair with
-      | (i, b) =>
-        let a := match b.annot with
-          | some t => Resolve.tyCore names scope [] t
-          | none => unknown
-        node "tfun" ([a, acc] ++ (if i == count - 1 then row else []))) (if count == 0 then resultCore else resultPlain) (List.mapIndexed (fun i b => (i, b)) binders)
+  let (resultPlain, row) := attach resultCore
+  let count := List.length binders
+  List.foldr (fun pair acc =>
+    let (i, b) := pair
+    let a :=
+      match b.annot with
+      | Option.some t => tyCore names scope [] t
+      | Option.none => unknown
+    Compile.node "tfun" ([a, acc] ++ (if i == count - 1 then row else []))) (if count == 0 then resultCore else resultPlain) (mapIndexed (fun i b => (i, b)) binders)
 
 def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) (attrs : List Attr) (extra : List Sexp) : Sexp :=
   let docPart := match doc with
@@ -125,31 +127,27 @@ def commentMeta (lead : Text) (notes : List (Int, Text)) (spellings : List (Int,
 
 /-- Proof tokens; lemma names inside `[…]` become references, so a proof's hash covers its lemmas. -/
 def proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Text} List Sexp :=
-  let isLemma := fun (e : Entry) =>
+  let isLemma := fun e =>
     match e with
     | Entry.theorem _ => true
     | _ => false
-  let isTerm := fun (e : Entry) =>
+  let isTerm := fun e =>
     match e with
     | Entry.term _ => true
     | _ => false
   -- Names in `[…]` are lemmas; names after `using` are generators (D135).
   let rec go rest inside generators acc :=
     match rest with
-    | [] => List.reverse acc
-    | t :: more =>
-      if t == "[" then go more true generators (s t :: acc)
-      else if t == "]" then go more false generators (s t :: acc)
-      else if t == "using" then go more inside true (s t :: acc)
-      else if generators then
+    | [] => reverse acc
+    | t :: more => if t == "[" then go more true generators (Sexp.s t :: acc) else if t == "]" then go more false generators (Sexp.s t :: acc) else if t == "using" then go more inside true (Sexp.s t :: acc) else if generators then
         match Names.lookup names t scope isTerm true with
-        | some (_, e) => go more inside generators (node "ref" [s (Entry.hash e)] :: acc)
-        | none => throw ("unknown generator " ++ t)
+        | Option.some (_, e) => go more inside generators (Compile.node "ref" [Sexp.s (Entry.hash e)] :: acc)
+        | Option.none => Throw.throw ("unknown generator " ++ t)
       else if inside && t != "," then
         match Names.lookup names t scope isLemma true with
-        | some (_, e) => go more inside generators (node "ref" [s (Entry.hash e)] :: acc)
-        | none => throw ("unknown lemma " ++ t)
-      else go more inside generators (s t :: acc)
+        | Option.some (_, e) => go more inside generators (Compile.node "ref" [Sexp.s (Entry.hash e)] :: acc)
+        | Option.none => Throw.throw ("unknown lemma " ++ t)
+      else go more inside generators (Sexp.s t :: acc)
   go tokens false false []
 
 /-- Placeholder references `(ref "@Name")` in a form. -/
@@ -422,7 +420,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
           match b.annot with
           | Option.some t => tyCore names (bodyScope item) [] t
           | Option.none => Compile.node "tvar" [Sexp.s "?"]) binders
-        let (core, locals) := Resolve.strip (lambda ctx params (fun locals => Resolve.expr ctx prop locals) [])
+        let (core, locals) := strip (lambda ctx params (fun locals => Resolve.expr ctx prop locals) [])
         let form := Compile.node
           "theorem"
           [Sexp.list (Sexp.sym "binders" :: types), core, Compile.node "proof" (proofTokens names (bodyScope item) proof)]
@@ -575,7 +573,7 @@ def templateOf (names : Names) (item : Item) : {Throw Text} List (Text, Sexp) :=
             | Expr.lam ps _ => ps
             | _ => []
           let ctx := Ctx.mk names (bodyScope item) (Item.path item ++ ": " ++ item.fqn) Map.empty
-          let template := fst (Resolve.strip (Resolve.expr ctx expansion []))
+          let template := fst (strip (Resolve.expr ctx expansion []))
           match unusedHoles template (List.length params) with
           | [] => [("@" ++ item.fqn, template)]
           | unused => Throw.throw (Item.path item ++ ": notation " ++ item.fqn ++ " never uses " ++

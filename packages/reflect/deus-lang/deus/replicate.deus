@@ -348,13 +348,17 @@ def compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, Throw Text
     let before := if List.isEmpty earlier then Map.empty else Replicate.closureOf dir earlier
     List.filter (fun h => not (Map.contains h before)) (Map.keys (Replicate.closureOf dir [b]))) boundaries
   let existing := Set.fromList (List.map (fun s => s.bundleName) seen)
-  let written := filterMap (fun hashes =>
+  let named := List.map (fun hashes =>
     let text := bundle dir [] hashes
-    let name := Replicate.nameOf level text
+    (Replicate.nameOf level text, text, hashes)) strata
+  let written := filterMap (fun stratum =>
+    let name := fst stratum
     if Set.contains name existing then Option.none else
-      Remote.put name text
-      IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name [] hashes))
-      Option.some name) strata
+      Remote.put name (fst (snd stratum))
+      IO.writeFile
+        (seenDir dir remote ++ "/" ++ name)
+        (seenToText (Seen.mk name [] (snd (snd stratum))))
+      Option.some name) named
   let covered := Set.fromList (List.concat strata)
   let headClaims := concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
   let removable := List.filter
@@ -370,6 +374,11 @@ def compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, Throw Text
     if Set.contains name existing then () else
       Remote.put name text
       IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name kept []))
+  -- Deleting is safe only once the remote holds every stratum that covers what it deletes (DataSafety.Spec).
+  let listed := Set.fromList (Remote.list ())
+  let absent := List.filter (fun name => not (Set.contains name listed)) (List.map fst named)
+  if List.isEmpty absent then () else Throw.throw ("compaction wrote strata the remote does not list (" ++ join ", " absent ++
+    "), so it deleted nothing; run `deus compact` again")
   forEach removable (fun s =>
     Remote.delete s.bundleName
     IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
@@ -416,7 +425,9 @@ def directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
         gzipTo text path
       k ()
   | Remote.delete name -> k =>
-      IO.remove (root ++ "/bundles/" ++ name)
+      -- A deleted bundle moves to trash/, so a compaction bug costs disk, never history (DataSafety.Spec).
+      IO.mkdirp (root ++ "/trash/bundles")
+      IO.exec "mv" [root ++ "/bundles/" ++ name, root ++ "/trash/bundles/" ++ name]
       k ()
   | Remote.writeAll files -> k =>
       forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
