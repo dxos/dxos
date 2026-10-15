@@ -60,6 +60,18 @@ deus pull origin
 deus merge origin.main >/dev/null
 diff <(DEUS_CODEBASE="$work/a" deus ls) <(deus ls) || { echo "the pulled store differs"; exit 1; }
 
+# Packs (D180): each bundle has one, and the Worker finds a name and an object with ranged reads.
+packs="$(curl -sf "$remote/packs/")"
+for bundle in $(curl -sf "$remote/bundles"); do
+  grep -qx "$bundle.idx" <<<"$packs" || { echo "bundle $bundle has no pack"; exit 1; }
+done
+name="$(deus ls | awk '$2 == "term" { print $1 }' | grep -v '^lib\.' | grep '\.' | tail -1)"
+found="$(curl -sf "$remote/names/main/$name")" || { echo "the Worker did not find $name"; exit 1; }
+object="$(node -pe "JSON.parse(process.argv[1]).hash" "$found")"
+stored="$(cat "$work/b/objects/${object:0:2}/$object")"
+[[ "$(curl -sf "$remote/objects/$object")" == "$stored" ]] || { echo "the Worker's $name differs from the store's"; exit 1; }
+[[ "$(node -pe "JSON.parse(process.argv[1]).text" "$found")" == "$stored" ]] || { echo "the name lookup's text differs"; exit 1; }
+
 # Two sessions working off the same head: the second push is refused until it merges the first.
 export DEUS_API_KEY="$(node -pe "JSON.parse(process.argv[1]).key" "$key")"
 printf 'namespace Two\ndef two : Int := 2\n' >"$work/two.deus"
@@ -67,7 +79,8 @@ printf 'namespace Three\ndef three : Int := 3\n' >"$work/three.deus"
 DEUS_CODEBASE="$work/a" deus add "$work/two.deus" >/dev/null
 DEUS_CODEBASE="$work/a" deus push origin >/dev/null
 deus add "$work/three.deus" >/dev/null
-if deus push origin >"$work/stale.log" 2>&1; then echo "a push that would fork main went through"; exit 1; fi
+# `--no-merge`: a push otherwise pulls, merges and retries by itself.
+if deus push origin --no-merge >"$work/stale.log" 2>&1; then echo "a push that would fork main went through"; exit 1; fi
 grep -q 'then push again' "$work/stale.log" || { cat "$work/stale.log"; exit 1; }
 deus pull origin >/dev/null
 deus merge origin.main >/dev/null
