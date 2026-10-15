@@ -214,4 +214,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 204 | 10-15 12:30 | 30m 00s | this commit | `deus push` runs `deus mdl` on the spec documents a change touches and refuses on a failure; a push moves `<remote>.<branch>` to what it pushed (D182, task d9242c83) |
 | 205 | 10-15 12:35 | 5m 00s | this commit | The seed is rebuilt from the codebase head: `sync-deus.py` finds every changed definition by hash and writes 603 into `deus/`, so `deus merge` runs the current merge (D183) |
 
-Total from stage 1 to stage 205: 55h 43m.
+| 206 | 10-15 13:05 | 20m 00s | this commit | A merge refuses definitions that call a hash no name has, after a stale-seed merge left three such names in the codebase (D184, task 30884468); a fresh session's pull is 8 s, push 11-14 s, `update deus/` 2.3 s (tasks 87d792ad, eb2c8018) |
+
+Total from stage 1 to stage 206: 56h 03m.

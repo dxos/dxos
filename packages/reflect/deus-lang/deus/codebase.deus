@@ -790,7 +790,12 @@ def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw 
           | Option.none => Map.remove name ns
         (ns2, name :: changed, conflicts)
       else (ns, changed, name :: conflicts)
-    match (foldl step (oursNs, [], []) names, tasks) with
+    let (folded, changedNames, conflicted) := foldl step (oursNs, [], []) names
+    -- A taken name that uses a hash no name has would run code nobody can see or update (task 30884468).
+    let dangling := List.filter
+      (fun n => not (List.contains n conflicted))
+      (dedup (List.map fst (danglingIn dir folded changedNames)))
+    match ((folded, changedNames, conflicted ++ dangling), tasks) with
     | ((ns, changed, []), merged, []) =>
         let snapshot := putNamespace dir ns
         let baseMetas :=
@@ -829,5 +834,19 @@ def writeObjectText (dir : Text) (h : Text) (text : Text) : {IO} Unit :=
 def writeMetaText (dir : Text) (h : Text) (text : Text) : {IO} Unit :=
   IO.writeFile (dir ++ "/meta/" ++ h) (text ++ "\n")
   IO.appendFile (dir ++ "/metas.dirty") (h ++ "\n")
+
+/-- The (name, hash) pairs where a definition among `names` uses a hash no name in `ns` has: what a
+  stale merge left when it kept a dependent of a definition it replaced (task 30884468). -/
+def danglingIn (dir : Text) (ns : Map Text Entry) (names : List Text) : {IO} List (Text, Text) :=
+  let named := Set.fromList (List.map (fun pair => Entry.hash (snd pair)) (Map.toList ns))
+  concatMap (fun name =>
+    match Map.lookup name ns with
+    | Option.some e =>
+        match readObject dir (Entry.hash e) with
+        | Option.some obj => filterMap
+            (fun h => if Set.contains h named then Option.none else Option.some (name, h))
+            (Codebase.dependencies obj)
+        | Option.none => []
+    | Option.none => []) names
 
 end Codebase
