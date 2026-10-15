@@ -18,6 +18,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
+import { DataService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
@@ -206,12 +207,16 @@ export default Capability.makeModule(
 );
 
 /**
- * Waits for `promise`, failing after `timeout` ms in which the client reports no index status: a
- * worker migrating or rebuilding a large index on its first boot after an upgrade is slow, not hung.
+ * Waits for `promise`, failing after `timeout` ms in which the client reports no index migration or
+ * rebuild: a worker doing either on its first boot after an upgrade is slow, not hung.
  */
 const untilStalled = async <T>(client: Client, promise: Promise<T>, timeout: number): Promise<T> => {
   const progress = new Event();
-  const subscription = client.indexStatus.subscribe(() => progress.emit());
+  const subscription = client.indexStatus.subscribe((status) => {
+    if (status && DataService.blocksQueries(status)) {
+      progress.emit();
+    }
+  });
   try {
     return await timeoutUnlessProgress(promise, timeout, progress);
   } finally {

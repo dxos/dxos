@@ -41,3 +41,12 @@ describe('DataService wire schema', () => {
     expect(Schema.decodeSync(schema)(Schema.encodeSync(schema)(batch))).toEqual(batch);
   });
 });
+
+describe('DataService.blocksQueries', () => {
+  test('a migration or rebuild blocks queries, and lanes alone do not', () => {
+    const lanes = { catchUp: { done: 0, total: 10 }, fullText: { done: 0, total: 10 } };
+    expect(DataService.blocksQueries({ phase: 'migrating', done: 0, total: 1 })).toBe(true);
+    expect(DataService.blocksQueries({ phase: 'indexing', done: 0, total: 1, ...lanes })).toBe(true);
+    expect(DataService.blocksQueries({ phase: 'idle', done: 0, total: 0, ...lanes })).toBe(false);
+  });
+});

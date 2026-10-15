@@ -49,7 +49,7 @@ export class IndexStatusTracker {
     this.#set(rebuild ? { ...lanes, phase: 'indexing', ...rebuild } : { ...lanes, ...IDLE });
   }
 
-  /** Records `remaining` indexed documents whose heads moved on since the index read them. */
+  /** Records `remaining` items past a cursor the index already holds: documents whose heads moved on, and feed blocks. */
   setCatchUp(remaining: number): void {
     this.#setLane('catchUp', remaining);
   }
@@ -85,15 +85,23 @@ const SOURCE_AUTOMERGE = 'automerge';
 const SOURCE_FEED = 'queue';
 const FEED_NAMESPACES = [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace];
 
+/** What {@link countIndexBacklog} found the primary indexes have not reached. */
+export type IndexBacklog = {
+  /** Documents and feed blocks with no cursor to resume from, as after a cursor-resetting migration. */
+  rebuild: number;
+  /** Feed blocks past their feed's cursor, as after time offline. */
+  catchUp: number;
+};
+
 /**
- * How much stored data the primary indexes have not reached: documents with no cursor, plus feed
- * blocks past their feed's cursor, under whichever primary index is furthest behind.
+ * How much stored data the primary indexes have not reached, under whichever primary index is
+ * furthest behind: documents with no cursor and feeds with no cursor are a rebuild, and blocks past an
+ * existing feed cursor are catch-up.
  *
- * A document with a cursor but newer heads is not counted (heads are stored as a blob that SQL
- * cannot compare with a cursor), so this measures a rebuild, such as the one a cursor-resetting
- * migration starts, rather than ordinary catch-up.
+ * A document with a cursor but newer heads is not counted (heads are stored as a blob that SQL cannot
+ * compare with a cursor); the indexing pass counts that catch-up as it reads.
  */
-export const countIndexBacklog = (): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+export const countIndexBacklog = (): Effect.Effect<IndexBacklog, SqlError.SqlError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
 
@@ -109,23 +117,30 @@ export const countIndexBacklog = (): Effect.Effect<number, SqlError.SqlError, Sq
     }
 
     // A feed cursor is `<token>|<insertionId>` and covers every feed of one namespace in a space.
-    let blocks = 0;
+    let rebuild = documents;
+    let catchUp = 0;
     const feeds = yield* sql<{ spaceId: string; feedNamespace: string }>`
       SELECT DISTINCT spaceId, feedNamespace FROM feeds WHERE ${sql.in('feedNamespace', FEED_NAMESPACES)}`;
     for (const { spaceId, feedNamespace } of feeds) {
       let behind = 0;
+      let resumable = true;
       for (const indexName of IndexEngine.primaryIndexNames) {
         const [cursor] = yield* sql<{ cursor: string | null }>`
           SELECT cursor FROM indexCursor
           WHERE indexName = ${indexName} AND sourceName = ${SOURCE_FEED} AND spaceId = ${spaceId} AND resourceId = ${feedNamespace}`;
-        const after = Number(cursor?.cursor?.split('|')[1] ?? -1);
+        const after = Number(cursor?.cursor?.split('|')[1] ?? Number.NaN);
+        resumable &&= Number.isFinite(after);
         const [row] = yield* sql<{ count: number }>`
           SELECT COUNT(*) AS count FROM blocks b JOIN feeds f ON f.feedPrivateId = b.feedPrivateId
           WHERE f.spaceId = ${spaceId} AND f.feedNamespace = ${feedNamespace} AND b.insertionId > ${Number.isFinite(after) ? after : -1}`;
         behind = Math.max(behind, row?.count ?? 0);
       }
-      blocks += behind;
+      if (resumable) {
+        catchUp += behind;
+      } else {
+        rebuild += behind;
+      }
     }
 
-    return documents + blocks;
+    return { rebuild, catchUp };
   });

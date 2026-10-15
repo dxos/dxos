@@ -13,10 +13,10 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type DataService, type QueryService } from '@dxos/protocols/rpc';
@@ -147,8 +147,8 @@ describe('EchoHost index status', () => {
 
   test('reports catch-up on indexed documents whose heads moved on, without leaving idle', async () => {
     const { host, saveObject } = await setup();
-    // More than one pass reads, so a pass leaves some for the next.
-    const objectIds = Array.from({ length: 60 }, () => EntityId.random());
+    // Enough for three passes of 50.
+    const objectIds = Array.from({ length: 110 }, () => EntityId.random());
     const handles = [];
     for (const objectId of objectIds) {
       handles.push(await saveObject(objectId));
@@ -167,9 +167,75 @@ describe('EchoHost index status', () => {
     await host.flush(Context.default());
     await host.updateIndexes();
 
-    expect(statuses.find((status) => status.catchUp)?.catchUp).toMatchObject({ done: 0 });
+    expect(statuses.map((status) => status.catchUp)).toEqual([
+      { done: 0, total: 60 },
+      { done: 50, total: 60 },
+      undefined,
+    ]);
     expect(statuses.every((status) => status.phase === 'idle')).toBe(true);
+  });
+
+  test('reports feed blocks past their cursor as catch-up when it opens', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const first = new EchoHost({ runtime });
+    await first.open(Context.default());
+    // A space root, so the indexer reads the space's feeds, holding an object, so the index keeps a cursor for it.
+    const root = await first.createSpaceRoot(Context.default(), PublicKey.random());
+    root.change((doc) => {
+      doc.objects![EntityId.random()] = EntityStructure.makeObject({ type: TEST_TYPE, data: {} });
+    });
+    const spaceId = root.doc()!.access!.spaceId!;
+    const appendTrace = (count: number) =>
+      RuntimeProvider.runPromise(runtime)(
+        first.feedStore.appendLocal(
+          Array.from({ length: count }, () => ({
+            spaceId,
+            feedId: EntityId.random(),
+            feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          })),
+        ),
+      );
+    await appendTrace(1);
+    await first.flush(Context.default());
+    await first.updateIndexes();
+    await first.close();
+    // As blocks that synced after the last pass leave the feed on the next boot.
+    await appendTrace(3);
+
+    const host = new EchoHost({ runtime });
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+    expect(statuses[0]).toEqual({ phase: 'idle', done: 0, total: 0, catchUp: { done: 0, total: 3 } });
+    expect(statuses.every((status) => status.phase === 'idle')).toBe(true);
+  });
+
+  test('a drained pass ends catch-up it counted', async () => {
+    const { host, saveDocs } = await setup();
+    // As a batch of documents that never load leaves the catch-up behind it counted.
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
+      update(ctx, source, opts).pipe(Effect.map((result) => ({ ...result, catchUp: 5 }))),
+    );
+    await saveDocs();
+    await host.updateIndexes();
     expect(host.indexStatus.current.catchUp).toBeUndefined();
+  });
+
+  test('a failed full-text flush leaves no full-text lane', async () => {
+    const { host, saveObjects } = await setup();
+    await saveObjects(3);
+    await host.updateIndexes();
+    vi.spyOn(host.indexEngine, 'updateSecondaryIndexes').mockReturnValue(Effect.die(new Error('flush failed')));
+    await expect(host.updateSecondaryIndexes()).rejects.toThrow('flush failed');
+    expect(host.indexStatus.current.fullText).toBeUndefined();
   });
 
   test('reports a full-text rebuild as it advances, without leaving idle', async () => {

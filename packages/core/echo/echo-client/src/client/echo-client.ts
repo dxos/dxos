@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
-import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { type BranchStore, type DocumentRetention } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
@@ -87,6 +87,9 @@ export class EchoClient extends Resource {
 
   /** Each index status the host reports (see `DataService.IndexStatus`); also restarts one-shot query budgets. */
   readonly indexStatusUpdated = new Event<DataService.IndexStatus>();
+
+  /** Statuses reporting work queries wait on; see {@link DataService.blocksQueries}. */
+  readonly #indexProgress = new Event<DataService.IndexStatus>();
   #indexStatusCleanup: (() => void) | undefined;
 
   constructor(_: EchoClientProps = {}) {
@@ -134,7 +137,12 @@ export class EchoClient extends Resource {
     invariant(this._dataService);
     this.#indexStatusCleanup?.();
     this.#indexStatusCleanup = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexStatus'](), {
-      onData: (status) => this.indexStatusUpdated.emit(status),
+      onData: (status) => {
+        this.indexStatusUpdated.emit(status);
+        if (DataService.blocksQueries(status)) {
+          this.#indexProgress.emit(status);
+        }
+      },
       onError: (err) => {
         if (!(err instanceof RpcClosedError)) {
           log.warn('index status stream failed', { err });
@@ -153,7 +161,7 @@ export class EchoClient extends Resource {
         subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
-      indexProgress: this.indexStatusUpdated,
+      indexProgress: this.#indexProgress,
     });
   }
 

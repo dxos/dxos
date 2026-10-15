@@ -314,8 +314,9 @@ export interface IndexProgress extends Schema.Schema.Type<typeof IndexProgress> 
  * and documents plus feed blocks while indexing; `total` can grow while indexing as new data arrives.
  *
  * The optional lanes are work queries can answer through, from an index that is behind: `catchUp`
- * counts indexed documents whose heads moved on, as after time offline, and `fullText` counts objects
- * the full-text index has not reached, as after it is rebuilt.
+ * counts indexed documents whose heads moved on and feed blocks past their feed's cursor, as after
+ * time offline, and `fullText` counts objects the full-text index has not reached, as after it is
+ * rebuilt.
  */
 export const IndexStatus = Schema.Struct({
   phase: Schema.Literals(['migrating', 'indexing', 'idle']),
@@ -325,6 +326,12 @@ export const IndexStatus = Schema.Struct({
   fullText: Schema.optional(IndexProgress),
 });
 export interface IndexStatus extends Schema.Schema.Type<typeof IndexStatus> {}
+
+/**
+ * Whether a status reports work queries wait on, its `phase`, which is what a deadline waiting on
+ * the index should treat as progress. A status that only moves a lane does not count.
+ */
+export const blocksQueries = (status: IndexStatus): boolean => status.phase !== 'idle';
 
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.

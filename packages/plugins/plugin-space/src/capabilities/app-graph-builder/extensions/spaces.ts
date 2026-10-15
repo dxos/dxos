@@ -23,7 +23,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { SpacesService } from '@dxos/protocols/rpc';
+import { DataService, SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 import * as Position from '@dxos/util/Position';
@@ -56,14 +56,17 @@ const SPACE_OPEN_TIMEOUT = 60_000;
 
 /**
  * Flips to true once a pending space has waited {@link SPACE_OPEN_TIMEOUT} without the index
- * moving: a space waiting on a rebuild that is still making progress (e.g. after an upgrade) is
- * not stuck, so each index status the client reports restarts the wait.
+ * moving: a space waiting on a migration or rebuild that is still making progress (e.g. after an
+ * upgrade) is not stuck, so each status reporting one restarts the wait.
  */
 const makeDeadlineAtom = (clientAtom: Atom.Atom<readonly Client[]>) =>
   Atom.make((get) => {
     const client = get(clientAtom).at(0);
     let timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
-    const subscription = client?.indexStatus.subscribe(() => {
+    const subscription = client?.indexStatus.subscribe((status) => {
+      if (!status || !DataService.blocksQueries(status)) {
+        return;
+      }
       clearTimeout(timeout);
       timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
     });

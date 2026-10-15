@@ -191,6 +191,9 @@ export class EchoHost extends Resource {
   /** When the backlog was last counted; it is recounted at most this often while indexing. */
   #backlogCountedAt = 0;
 
+  /** Feed blocks past their feed's cursor at the last count; a pass counts only document catch-up. */
+  #feedCatchUp = 0;
+
   private _feedService: FeedService.Handlers;
 
   readonly #indexTransactionLimits: Partial<IndexTransactionLimits> | undefined;
@@ -417,8 +420,10 @@ export class EchoHost extends Resource {
     // Counted once every store is migrated: a cursor-resetting migration shows up here as the rebuild it starts.
     const backlog = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
     this.#backlogCountedAt = performance.now();
-    log('echo-host: index backlog', { backlog });
-    this.indexStatus.setBacklog(backlog);
+    this.#feedCatchUp = backlog.catchUp;
+    log('echo-host: index backlog', backlog);
+    this.indexStatus.setBacklog(backlog.rebuild);
+    this.indexStatus.setCatchUp(backlog.catchUp);
 
     log('echo-host: opening query service...');
     await this._queryService.open(ctx);
@@ -523,26 +528,32 @@ export class EchoHost extends Resource {
     let records = 0;
     let batches = 0;
     let hint: InvalidationHint | undefined;
-    while (!ctx.disposed && this.isOpen) {
-      if (batches > 0) {
-        await yieldBehindQueuedTasks();
-        if (ctx.disposed) {
+    try {
+      while (!ctx.disposed && this.isOpen) {
+        if (batches > 0) {
+          await yieldBehindQueuedTasks();
+          if (ctx.disposed) {
+            break;
+          }
+        }
+        const result = await this.indexEngine
+          .updateSecondaryIndexes(ctx)
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        records += result.updated;
+        batches++;
+        const batch = hintFromIndexingResult(result);
+        if (batch) {
+          hint = hint ? mergeHints(hint, batch) : batch;
+        }
+        if (result.done) {
           break;
         }
+        this.indexStatus.setFullText(backlog - records);
       }
-      const result = await this.indexEngine.updateSecondaryIndexes(ctx).pipe(RuntimeProvider.runPromise(this._runtime));
-      records += result.updated;
-      batches++;
-      const batch = hintFromIndexingResult(result);
-      if (batch) {
-        hint = hint ? mergeHints(hint, batch) : batch;
-      }
-      if (result.done) {
-        break;
-      }
-      this.indexStatus.setFullText(backlog - records);
+    } finally {
+      // A failed batch leaves the rest to the next flush, which reports it again.
+      this.indexStatus.setFullText(0);
     }
-    this.indexStatus.setFullText(0);
 
     // A text query issued before this catch-up matched nothing and would never re-run on its own:
     // the indexer is the sole invalidation source, and this pass is the only writer of the rows.
@@ -1234,26 +1245,28 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Moves {@link indexStatus} on after a pass. The pass counted its catch-up as it read; the rebuild
-   * backlog is recounted at most every {@link INDEX_STATUS_INTERVAL_MS}. A drained pass ends any
-   * rebuild; documents that never load keep no cursor and would otherwise hold the status at
-   * indexing for good.
+   * Moves {@link indexStatus} on after a pass. The pass counted its document catch-up as it read;
+   * the backlog, with feed catch-up, is recounted at most every {@link INDEX_STATUS_INTERVAL_MS}. A
+   * drained pass ends both: a batch of documents that never load drains with work counted behind it,
+   * and no pass follows.
    */
   async #refreshIndexStatus({ drained, catchUp }: { drained: boolean; catchUp: number }): Promise<void> {
-    this.indexStatus.setCatchUp(catchUp);
     if (drained) {
+      this.#feedCatchUp = 0;
+      this.indexStatus.setCatchUp(0);
       this.indexStatus.setBacklog(0);
       return;
     }
-    if (performance.now() - this.#backlogCountedAt < INDEX_STATUS_INTERVAL_MS) {
-      return;
+    if (performance.now() - this.#backlogCountedAt >= INDEX_STATUS_INTERVAL_MS) {
+      this.#backlogCountedAt = performance.now();
+      const backlog = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
+      this.#feedCatchUp = backlog.catchUp;
+      // With nothing left to rebuild, a pass still short of drained keeps a rebuild in progress until it drains.
+      if (backlog.rebuild > 0 || this.indexStatus.current.phase !== 'indexing') {
+        this.indexStatus.setBacklog(backlog.rebuild);
+      }
     }
-    this.#backlogCountedAt = performance.now();
-    const remaining = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
-    // With nothing left to rebuild, a pass still short of drained keeps a rebuild in progress until it drains.
-    if (remaining > 0 || this.indexStatus.current.phase !== 'indexing') {
-      this.indexStatus.setBacklog(remaining);
-    }
+    this.indexStatus.setCatchUp(catchUp + this.#feedCatchUp);
   }
 
   /**
