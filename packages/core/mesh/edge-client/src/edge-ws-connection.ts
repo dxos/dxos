@@ -17,9 +17,9 @@ import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import {
   CLOUDFLARE_MESSAGE_MAX_BYTES,
+  EDGE_FLOW_CONTROL,
   WebSocketClosedError,
   WebSocketMuxer,
-  createFlowControlConfig,
 } from './edge-ws-muxer.ts';
 import { toUint8Array } from './protocol.ts';
 import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
@@ -256,11 +256,11 @@ export class EdgeWsConnection extends Resource {
     let muxer: WebSocketMuxer | undefined;
 
     ws.onopen = () => {
-      // EDGE is the trusted end, so its overdraft is only logged: closing on its account costs more than the overrun.
-      const flowControl = ws.protocol?.includes(EdgeWebsocketProtocol.V2)
-        ? createFlowControlConfig((overdraft) => log.warn('edge exceeded its flow-control window', overdraft))
-        : undefined;
-      muxer = new WebSocketMuxer(ws, { flowControl });
+      muxer = new WebSocketMuxer(ws, {
+        flowControl: ws.protocol?.includes(EdgeWebsocketProtocol.V2) ? EDGE_FLOW_CONTROL : undefined,
+        // EDGE is the trusted end, so its overdraft is only logged: closing on its account costs more than the overrun.
+        onOverdraft: (overdraft) => log.warn('edge exceeded its flow-control window', overdraft),
+      });
       this._wsMuxer = muxer;
       if (this.isOpen) {
         log('connected');

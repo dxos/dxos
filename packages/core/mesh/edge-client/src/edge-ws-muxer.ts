@@ -15,7 +15,7 @@ import {
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { concatUint8Arrays } from '@dxos/util';
+import { concatUint8Arrays, defaultMap } from '@dxos/util';
 
 import { protocol } from './defs.ts';
 
@@ -122,37 +122,39 @@ export type FlowControlConfig = {
   /** Messages consumed across all inbound channels worth announcing, since spread thinly none reaches its own. */
   connectionGrantThreshold: number;
 
-  /** Received-but-unconsumed amount on an inbound channel past which {@link onOverdraft} fires: credit is advisory. */
+  /** Received-but-unconsumed amount on an inbound channel past which `onOverdraft` fires: credit is advisory. */
   overdraftLimit: FlowControlAmount;
 
-  /** Received-but-unconsumed messages across every inbound channel past which {@link onOverdraft} fires. */
+  /** Received-but-unconsumed messages across every inbound channel past which the muxer's `onOverdraft` fires. */
   connectionOverdraftLimit: number;
-
-  /** Peer overran its window. The owner decides what to do (the router closes the socket). */
-  onOverdraft?: (info: { channelId: number; outstanding: FlowControlAmount; limit: FlowControlAmount }) => void;
 };
 
+/** A peer overran its window; the muxer's owner decides what to do (the router closes the socket). */
+export type OverdraftHandler = (info: {
+  channelId: number;
+  outstanding: FlowControlAmount;
+  limit: FlowControlAmount;
+}) => void;
+
+const EDGE_WINDOWS = Object.values(EDGE_FLOW_CONTROL_WINDOWS);
+
 /** Flow control as `edge-ws-v2` specifies it; both ends of an EDGE socket use it so their bounds agree. */
-export const createFlowControlConfig = (onOverdraft?: FlowControlConfig['onOverdraft']): FlowControlConfig => {
-  const windows = Object.values(EDGE_FLOW_CONTROL_WINDOWS);
-  return {
-    windowFor: edgeFlowControlWindow,
-    maxMessages: EDGE_FLOW_CONTROL_MAX_MESSAGES,
-    maxConnectionMessages: EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES,
-    // A quarter of the smallest budget, so even a swarm channel is announced well before its sender stalls.
-    grantThreshold: {
-      bytes: Math.floor(Math.min(...windows) / 4),
-      messages: Math.max(1, Math.floor(EDGE_FLOW_CONTROL_MAX_MESSAGES / 4)),
-    },
-    connectionGrantThreshold: Math.max(1, Math.floor(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES / 4)),
-    // The receiver cannot tell an inbound channel's service, so it bounds every channel by the largest window.
-    overdraftLimit: {
-      bytes: Math.ceil(Math.max(...windows) * OVERDRAFT_TOLERANCE),
-      messages: Math.ceil(EDGE_FLOW_CONTROL_MAX_MESSAGES * OVERDRAFT_TOLERANCE),
-    },
-    connectionOverdraftLimit: Math.ceil(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES * OVERDRAFT_TOLERANCE),
-    onOverdraft,
-  };
+export const EDGE_FLOW_CONTROL: FlowControlConfig = {
+  windowFor: edgeFlowControlWindow,
+  maxMessages: EDGE_FLOW_CONTROL_MAX_MESSAGES,
+  maxConnectionMessages: EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES,
+  // A quarter of the smallest budget, so even a swarm channel is announced well before its sender stalls.
+  grantThreshold: {
+    bytes: Math.floor(Math.min(...EDGE_WINDOWS) / 4),
+    messages: Math.max(1, Math.floor(EDGE_FLOW_CONTROL_MAX_MESSAGES / 4)),
+  },
+  connectionGrantThreshold: Math.max(1, Math.floor(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES / 4)),
+  // The receiver cannot tell an inbound channel's service, so it bounds every channel by the largest window.
+  overdraftLimit: {
+    bytes: Math.ceil(Math.max(...EDGE_WINDOWS) * OVERDRAFT_TOLERANCE),
+    messages: Math.ceil(EDGE_FLOW_CONTROL_MAX_MESSAGES * OVERDRAFT_TOLERANCE),
+  },
+  connectionOverdraftLimit: Math.ceil(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES * OVERDRAFT_TOLERANCE),
 };
 
 /** One inbound frame's contribution, as {@link WebSocketMuxer.receiveFrame} reports it. */
@@ -186,35 +188,24 @@ export class WebSocketMuxer {
 
   private readonly _maxChunkLength: number;
   private readonly _flowControl: FlowControlConfig | undefined;
+  private readonly _onOverdraft: OverdraftHandler | undefined;
 
   // Flow control: outbound and inbound channel ids are allocated by each sender independently, and every total is
   // cumulative mod 2^32 so grants stay idempotent and resync-safe.
 
-  /** Per outbound channel: what has been handed to the socket. */
-  private readonly _outSent = new Map<number, FlowControlAmount>();
-  /** Per outbound channel: the peer's last reported cumulative consumption. */
-  private readonly _outAcknowledged = new Map<number, FlowControlAmount>();
-  /** Per outbound channel: window in bytes, resolved once from the first service on the channel. */
-  private readonly _outWindow = new Map<number, number>();
-
-  /** Per inbound channel: what arrived off the wire. */
-  private readonly _inReceived = new Map<number, FlowControlAmount>();
-  /** Per inbound channel: what the application reported consuming. */
-  private readonly _inConsumed = new Map<number, FlowControlAmount>();
-  /** Per inbound channel: consumption last announced, so a grant is not emitted per message. */
-  private readonly _inGranted = new Map<number, FlowControlAmount>();
+  private readonly _outChannels = new Map<number, OutboundChannel>();
+  private readonly _inChannels = new Map<number, InboundChannel>();
   /** Whether the peer's sync has arrived; grants wait for it, since until then this end's totals may be stale. */
   private _inSynced = false;
-  /** Per outbound channel: when the peer's pause ends, in `Date.now()` time. */
-  private readonly _outPausedUntil = new Map<number, number>();
   private _stallProbeArmed = false;
 
   constructor(
     private readonly _ws: WebSocketCompat,
-    config?: { maxChunkLength?: number; flowControl?: FlowControlConfig },
+    config?: { maxChunkLength?: number; flowControl?: FlowControlConfig; onOverdraft?: OverdraftHandler },
   ) {
     this._maxChunkLength = config?.maxChunkLength ?? MAX_CHUNK_LENGTH;
     this._flowControl = config?.flowControl;
+    this._onOverdraft = config?.onOverdraft;
     // A peer sending with this config stalls for good at a message bound the grant threshold never reaches.
     invariant(
       !this._flowControl ||
@@ -445,12 +436,8 @@ export class WebSocketMuxer {
     this._inMessageAccumulatorBytes.clear();
     this._inMessageAccumulatedBytes = 0;
     this._outMessageChannelByService.clear();
-    this._outSent.clear();
-    this._outAcknowledged.clear();
-    this._outWindow.clear();
-    this._inReceived.clear();
-    this._inConsumed.clear();
-    this._inGranted.clear();
+    this._outChannels.clear();
+    this._inChannels.clear();
   }
 
   /** Payload bytes queued but not yet handed to the socket; under flow control, what credit is holding back. */
@@ -467,7 +454,7 @@ export class WebSocketMuxer {
   /** Payload bytes written that the peer has not reported consuming; without flow control it only grows. */
   public get unacknowledgedBytes(): number {
     let outstanding = 0;
-    for (const channelId of this._outSent.keys()) {
+    for (const channelId of this._outChannels.keys()) {
       outstanding += this.inFlight(channelId).bytes;
     }
     return outstanding;
@@ -476,7 +463,7 @@ export class WebSocketMuxer {
   /** Messages sent on every channel that the peer has not yet reported consuming. */
   public get unacknowledgedMessages(): number {
     let outstanding = 0;
-    for (const channelId of this._outSent.keys()) {
+    for (const channelId of this._outChannels.keys()) {
       outstanding += this.inFlight(channelId).messages;
     }
     return outstanding;
@@ -484,13 +471,14 @@ export class WebSocketMuxer {
 
   /** What an outbound channel has sent that the peer has not yet reported consuming. */
   public inFlight(channelId: number): FlowControlAmount {
-    return difference(this._outSent.get(channelId), this._outAcknowledged.get(channelId));
+    const channel = this._outChannels.get(channelId);
+    return difference(channel?.sent, channel?.acknowledged);
   }
 
   /** When the peer's pause of an outbound channel ends, in `Date.now()` time, if it is paused. */
   public pausedUntil(channelId: number): number | undefined {
-    const until = this._outPausedUntil.get(channelId);
-    return until !== undefined && until > Date.now() ? until : undefined;
+    const until = this._outChannels.get(channelId)?.pausedUntil ?? 0;
+    return until > Date.now() ? until : undefined;
   }
 
   /**
@@ -525,11 +513,12 @@ export class WebSocketMuxer {
     }
     const binary = buf.toBinary(MessageSchema, message);
     const channelId = this._resolveChannel(message) ?? (this._flowControl ? UNCHANNELLED_ID : undefined);
-    if (channelId != null && this._flowControl && !this._outWindow.has(channelId)) {
-      // Two chunks is the floor: below it the sender stalls on a chunk the window can never hold.
-      this._outWindow.set(
-        channelId,
-        Math.max(this._flowControl.windowFor(message.serviceId), this._maxChunkLength * 2),
+    if (channelId != null && this._flowControl) {
+      // Resolved from the channel's first service; two chunks is the floor, or the sender stalls on a chunk the window
+      // can never hold.
+      this._outChannel(channelId).window ||= Math.max(
+        this._flowControl.windowFor(message.serviceId),
+        this._maxChunkLength * 2,
       );
     }
     // A message with no service id is relayed whole to peers that may not segment, so it keeps the single-frame limit.
@@ -650,10 +639,8 @@ export class WebSocketMuxer {
     }
     // Counted without flow control too, where nothing is ever acknowledged: the total then shows how far this end has
     // run ahead of its peer.
-    this._outSent.set(
-      channelId,
-      sum(this._outSent.get(channelId), { bytes: chunk.payloadBytes, messages: completesMessage ? 1 : 0 }),
-    );
+    const channel = this._outChannel(channelId);
+    channel.sent = sum(channel.sent, { bytes: chunk.payloadBytes, messages: completesMessage ? 1 : 0 });
   }
 
   /** Rejects every queued send and drops the frames they had yet to write. */
@@ -685,7 +672,20 @@ export class WebSocketMuxer {
     ) {
       return false;
     }
-    return inFlight.bytes + chunk.payloadBytes <= (this._outWindow.get(channelId) ?? 0);
+    return inFlight.bytes + chunk.payloadBytes <= (this._outChannels.get(channelId)?.window ?? 0);
+  }
+
+  private _outChannel(channelId: number): OutboundChannel {
+    return defaultMap(this._outChannels, channelId, () => ({
+      sent: NONE,
+      acknowledged: NONE,
+      window: 0,
+      pausedUntil: 0,
+    }));
+  }
+
+  private _inChannel(channelId: number): InboundChannel {
+    return defaultMap(this._inChannels, channelId, () => ({ received: NONE, consumed: NONE, granted: NONE }));
   }
 
   private _resolveChannel(message: Message): number | undefined {
@@ -707,21 +707,19 @@ export class WebSocketMuxer {
     if (!this._flowControl) {
       return;
     }
-    const received = sum(this._inReceived.get(channelId), { bytes: byteLength, messages: terminated ? 1 : 0 });
-    this._inReceived.set(channelId, received);
-    const outstanding = difference(received, this._inConsumed.get(channelId));
+    const channel = this._inChannel(channelId);
+    channel.received = sum(channel.received, { bytes: byteLength, messages: terminated ? 1 : 0 });
+    const outstanding = difference(channel.received, channel.consumed);
     const limit = this._flowControl.overdraftLimit;
     if (outstanding.bytes > limit.bytes || outstanding.messages > limit.messages) {
-      this._flowControl.onOverdraft?.({ channelId, outstanding, limit });
+      this._onOverdraft?.({ channelId, outstanding, limit });
       return;
     }
     if (terminated) {
-      const connectionOutstanding = this._sumInbound((channel) =>
-        difference(this._inReceived.get(channel), this._inConsumed.get(channel)),
-      );
+      const connectionOutstanding = this._sumInbound(({ received, consumed }) => difference(received, consumed));
       const connectionLimit = this._flowControl.connectionOverdraftLimit;
       if (connectionOutstanding > connectionLimit) {
-        this._flowControl.onOverdraft?.({
+        this._onOverdraft?.({
           channelId,
           outstanding: { bytes: outstanding.bytes, messages: connectionOutstanding },
           limit: { bytes: limit.bytes, messages: connectionLimit },
@@ -734,37 +732,39 @@ export class WebSocketMuxer {
     if (!this._flowControl) {
       return;
     }
-    const consumed = sum(this._inConsumed.get(channelId), { bytes: byteLength, messages });
-    this._inConsumed.set(channelId, consumed);
+    const channel = this._inChannel(channelId);
+    channel.consumed = sum(channel.consumed, { bytes: byteLength, messages });
     if (!this._inSynced) {
       return;
     }
 
     // Silly-window-syndrome avoidance: announcing every message would roughly double the frame count on a busy
     // channel. Skipping a grant is free because they are cumulative: the next one restates the total.
-    const freed = difference(consumed, this._inGranted.get(channelId));
+    const freed = difference(channel.consumed, channel.granted);
     const threshold = this._flowControl.grantThreshold;
     if (freed.bytes >= threshold.bytes || freed.messages >= threshold.messages) {
       this._grant([channelId]);
       return;
     }
     // A peer spread over many channels can reach its connection bound with no channel at its own threshold.
-    const ungranted = (channel: number) => difference(this._inConsumed.get(channel), this._inGranted.get(channel));
+    const ungranted = ({ consumed, granted }: InboundChannel) => difference(consumed, granted);
     if (messages > 0 && this._sumInbound(ungranted) >= this._flowControl.connectionGrantThreshold) {
       this._grant(
-        [...this._inConsumed.keys()].filter((channel) => {
-          const pending = ungranted(channel);
-          return pending.bytes > 0 || pending.messages > 0;
-        }),
+        [...this._inChannels]
+          .filter(([, inbound]) => {
+            const pending = ungranted(inbound);
+            return pending.bytes > 0 || pending.messages > 0;
+          })
+          .map(([id]) => id),
       );
     }
   }
 
   /** Sums the messages of `amountOf` over every inbound channel. */
-  private _sumInbound(amountOf: (channelId: number) => FlowControlAmount): number {
+  private _sumInbound(amountOf: (channel: InboundChannel) => FlowControlAmount): number {
     let total = 0;
-    for (const channelId of this._inReceived.keys()) {
-      total += amountOf(channelId).messages;
+    for (const channel of this._inChannels.values()) {
+      total += amountOf(channel).messages;
     }
     return total;
   }
@@ -772,16 +772,20 @@ export class WebSocketMuxer {
   /** Announces the channels' consumption. Sent directly, never queued or credit-gated, either of which deadlocks. */
   private _grant(channelIds: number[]): void {
     const entries = channelIds.map((channelId): [number, FlowControlAmount] => {
-      const consumed = this._inConsumed.get(channelId) ?? { bytes: 0, messages: 0 };
-      this._inGranted.set(channelId, consumed);
-      return [channelId, consumed];
+      const channel = this._inChannel(channelId);
+      channel.granted = channel.consumed;
+      return [channelId, channel.consumed];
     });
     this._sendControl(encodeFlowControl(FrameFlag.FLOW_CONTROL, entries));
   }
 
   /** States this end's cumulative totals for every channel it has sent on, ahead of anything it sends later. */
   private _sendSync(): void {
-    this._sendControl(encodeFlowControl(FrameFlag.FLOW_CONTROL | FrameFlag.SYNC, [...this._outSent.entries()]));
+    const totals = [...this._outChannels].map(([channelId, { sent }]): [number, FlowControlAmount] => [
+      channelId,
+      sent,
+    ]);
+    this._sendControl(encodeFlowControl(FrameFlag.FLOW_CONTROL | FrameFlag.SYNC, totals));
   }
 
   private _sendControl(frame: Uint8Array): void {
@@ -798,7 +802,11 @@ export class WebSocketMuxer {
 
   private _applyGrants(data: Uint8Array): void {
     for (const [channelId, consumed] of decodeFlowControl(data)) {
-      this._outAcknowledged.set(channelId, consumed);
+      // Only a channel this end sent on: a stray grant would otherwise read as everything outstanding.
+      const channel = this._outChannels.get(channelId);
+      if (channel) {
+        channel.acknowledged = consumed;
+      }
     }
     // A grant is the only thing that can unblock a stalled channel, so resume now rather than at the next send.
     if (this._outMessageChunks.size > 0) {
@@ -819,10 +827,10 @@ export class WebSocketMuxer {
     this._inSynced = true;
     const channelIds: number[] = [];
     for (const [channelId, sent] of decodeFlowControl(data)) {
-      const offset = difference(sent, this._inReceived.get(channelId));
-      for (const totals of [this._inReceived, this._inConsumed]) {
-        totals.set(channelId, sum(totals.get(channelId), offset));
-      }
+      const channel = this._inChannel(channelId);
+      const offset = difference(sent, channel.received);
+      channel.received = sum(channel.received, offset);
+      channel.consumed = sum(channel.consumed, offset);
       channelIds.push(channelId);
     }
     // Granted at once whatever the threshold: the peer may be stalled on any of these channels.
@@ -836,7 +844,7 @@ export class WebSocketMuxer {
     for (let offset = 1; offset + PAUSE_ENTRY_BYTES <= data.byteLength; offset += PAUSE_ENTRY_BYTES) {
       const channelId = data[offset];
       const retryAfterMs = view.getUint32(offset + 1);
-      this._outPausedUntil.set(channelId, Date.now() + retryAfterMs);
+      this._outChannel(channelId).pausedUntil = Date.now() + retryAfterMs;
       log('muxer channel paused by peer', { channelId, retryAfterMs });
       this._resumeAfterPause(channelId, retryAfterMs);
     }
@@ -904,6 +912,19 @@ const decodeFlowControl = (frame: Uint8Array): [number, FlowControlAmount][] => 
 
 /** Payload bytes of a frame, excluding its framing header: what both ends account credit in. */
 const payloadBytesOf = (frame: Uint8Array): number => frame.byteLength - (isSegment(frame) ? 2 : 1);
+
+const NONE: FlowControlAmount = { bytes: 0, messages: 0 };
+
+/** One outbound channel: what it handed the socket, the peer's last reported consumption, its window and any pause. */
+type OutboundChannel = {
+  sent: FlowControlAmount;
+  acknowledged: FlowControlAmount;
+  window: number;
+  pausedUntil: number;
+};
+
+/** One inbound channel: what arrived, what the application consumed, and the consumption last announced. */
+type InboundChannel = { received: FlowControlAmount; consumed: FlowControlAmount; granted: FlowControlAmount };
 
 const sum = (total: FlowControlAmount | undefined, delta: FlowControlAmount): FlowControlAmount => ({
   bytes: ((total?.bytes ?? 0) + delta.bytes) >>> 0,

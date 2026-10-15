@@ -17,15 +17,16 @@ import { concatUint8Arrays, isNonNullable } from '@dxos/util';
 import { protocol } from './defs.ts';
 import {
   CLOUDFLARE_MESSAGE_MAX_BYTES,
+  EDGE_FLOW_CONTROL,
   type FlowControlConfig,
   MAX_INBOUND_CHUNK_COUNT,
   MAX_INBOUND_MESSAGE_BYTES,
   MessageTooLargeError,
+  type OverdraftHandler,
   type ReceivedFrame,
   SegmentedMessageLimitError,
   WebSocketClosedError,
   WebSocketMuxer,
-  createFlowControlConfig,
 } from './edge-ws-muxer.ts';
 
 const MAX_CHUNK_LENGTH = 16;
@@ -675,7 +676,8 @@ describe('WebSocketMuxerTest', () => {
       const overdrafts: number[] = [];
       const muxer = new WebSocketMuxer(new TestSocket(), {
         maxChunkLength: MAX_CHUNK_LENGTH,
-        flowControl: flowControl({ onOverdraft: ({ channelId }) => overdrafts.push(channelId) }),
+        flowControl: flowControl(),
+        onOverdraft: ({ channelId }) => overdrafts.push(channelId),
       });
       const chunk = segmentChunk(new Uint8Array(MAX_CHUNK_LENGTH));
 
@@ -979,8 +981,15 @@ const flowControl = (overrides?: Partial<FlowControlConfig>): FlowControlConfig 
 const settle = () => vi.advanceTimersByTimeAsync(100);
 
 /** A flow-controlled muxer whose peer has synced, so it grants. */
-const syncedMuxer = (socket: TestSocket, overrides?: Partial<FlowControlConfig>) => {
-  const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH, flowControl: flowControl(overrides) });
+const syncedMuxer = (
+  socket: TestSocket,
+  { onOverdraft, ...overrides }: Partial<FlowControlConfig> & { onOverdraft?: OverdraftHandler } = {},
+) => {
+  const muxer = new WebSocketMuxer(socket, {
+    maxChunkLength: MAX_CHUNK_LENGTH,
+    flowControl: flowControl(overrides),
+    onOverdraft,
+  });
   muxer.receiveFrame(sync([]));
   return muxer;
 };
@@ -1043,14 +1052,11 @@ const sendAll = async (muxer: WebSocketMuxer, message: Message, count: number) =
  * receiver consumes every message as it arrives unless `consume` is false; `attachReceiver` swaps in a fresh one, as
  * the router rebuilds its muxer after hibernation or a reset.
  */
-const connectedPair = ({
-  consume = true,
-  onOverdraft,
-}: { consume?: boolean; onOverdraft?: FlowControlConfig['onOverdraft'] } = {}) => {
+const connectedPair = ({ consume = true, onOverdraft }: { consume?: boolean; onOverdraft?: OverdraftHandler } = {}) => {
   const delivered: Message[] = [];
   const socket = new TestSocket();
   const reverse = new TestSocket();
-  const sender = new WebSocketMuxer(socket, { flowControl: createFlowControlConfig() });
+  const sender = new WebSocketMuxer(socket, { flowControl: EDGE_FLOW_CONTROL });
   let receiver: WebSocketMuxer | undefined;
   let consuming = consume;
   socket.onFrame = (data) => {
@@ -1069,7 +1075,7 @@ const connectedPair = ({
     consuming = options.consume ?? consuming;
     reverse.onFrame = undefined;
     const sent = reverse.frames.length;
-    const attached = new WebSocketMuxer(reverse, { flowControl: createFlowControlConfig(onOverdraft) });
+    const attached = new WebSocketMuxer(reverse, { flowControl: EDGE_FLOW_CONTROL, onOverdraft });
     receiver = attached;
     reverse.onFrame = (data) => sender.receiveFrame(data);
     if (options.requestSync ?? true) {
