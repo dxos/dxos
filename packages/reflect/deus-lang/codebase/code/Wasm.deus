@@ -15,6 +15,7 @@ structure Wasm.Scope @"urn:deus:wasm:Scope" where
   fns : List Fn
   byHash : Dict Text (Int, Fn)
   datatypes : List (Text, Sexp)
+  typeTable : Dict Text Sexp
   typed : Ref (List (Int, Sexp))
   eqs : Ref (List Sexp)
 
@@ -227,6 +228,8 @@ def Wasm.fieldType (scope : Wasm.Scope) (typeHash : Text) (tag : Int) (i : Int) 
 def Wasm.findFn (scope : Wasm.Scope) (h : Text) : Option Fn := Option.map snd (Dict.lookup h scope.byHash)
 
 -- Each definition by its hash, with its index: lookups at every call stay constant time on large programs.
+
+-- Each data type's object by its hash and by its IRI, for `typeObject`.
 /-- Each definition of `fns` by its hash, with its index, for `Scope.byHash`. -/
 def Wasm.fnTable (fns : List Fn) : Dict Text (Int, Fn) := Dict.fromList (mapIndexed (fun i f => (f.fnHash, i, f)) fns)
 
@@ -328,6 +331,7 @@ def Wasm.matchType (pattern : Sexp) (actual : Sexp) : List (Sexp, Sexp) :=
 def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
   let eqs := Ref.new []
   let table := fnTable fns
+  let types := Wasm.typeTable datatypes
   let codes := List.map (fun f =>
     let next := Ref.new f.fnArity
     let env := reverse (range 0 f.fnArity)
@@ -335,6 +339,7 @@ def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) 
       fns
       table
       datatypes
+      types
       (Ref.new (mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType))))
       eqs
     let code := Wasm.expr scope env next true f.fnBody ++ [11]
@@ -345,7 +350,7 @@ def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) 
   let alloc := List.length fns
   let allocEntry := vec [[2, Wasm.i32]] ++ allocBody
   -- Generating one equality function can register another (a field's type), so this runs to a fixpoint.
-  let eqScope := Wasm.Scope.mk fns table datatypes (Ref.new []) eqs
+  let eqScope := Wasm.Scope.mk fns table datatypes types (Ref.new []) eqs
   let rec equalities j acc :=
     match get? (Ref.get eqs) j with
     | Option.some t =>
@@ -354,9 +359,9 @@ def Wasm.module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) 
     | Option.none => acc
   let eqCodes := equalities 0 []
   let eqTypes := if List.isEmpty eqCodes then [] else [[96] ++ vec [[Wasm.i32], [Wasm.i32]] ++ vec [[Wasm.i32]]]
-  let types := List.map (fun f => [96] ++ vec (replicate f.fnArity [Wasm.i32]) ++ vec [[Wasm.i32]]) fns ++
+  let types1 := List.map (fun f => [96] ++ vec (replicate f.fnArity [Wasm.i32]) ++ vec [[Wasm.i32]]) fns ++
     [[96] ++ vec [[Wasm.i32]] ++ vec [[Wasm.i32]]] ++ eqTypes
-  List.concat [[0, 97, 115, 109, 1, 0, 0, 0], section 1 (vec types), section 3 (vec (mapIndexed (fun i _ => uleb i) (fns ++ [Fn.mk "" 1 unknown unknown]) ++
+  List.concat [[0, 97, 115, 109, 1, 0, 0, 0], section 1 (vec types1), section 3 (vec (mapIndexed (fun i _ => uleb i) (fns ++ [Fn.mk "" 1 unknown unknown]) ++
     List.map (fun _ => uleb (alloc + 1)) eqCodes)), section 5 (vec [[0, 1]]), section 6 (vec [[Wasm.i32, 1, 65, 8, 11]]), section
     7
     (vec [Wasm.name export ++ [0, 0], Wasm.name "memory" ++ [2, 0], Wasm.name "alloc" ++ 0 :: uleb alloc]), section 10 (uleb (List.length codes + 1 + List.length eqCodes) ++ List.concat codes ++
@@ -473,13 +478,7 @@ def Wasm.typeNames (form : Sexp) : List Text :=
   | _ => []
 
 /-- The `(type …)` object a constructor names by hash, or a signature names by IRI. -/
-def Wasm.typeObject (scope : Wasm.Scope) (t : Text) : Option Sexp :=
-  match List.lookup t scope.datatypes with
-  | Option.some form => Option.some form
-  | Option.none => List.find (fun form =>
-      match form with
-      | Sexp.list (Sexp.sym "type" :: Sexp.str iri :: _) => iri == t
-      | _ => false) (List.map snd scope.datatypes)
+def Wasm.typeObject (scope : Wasm.Scope) (t : Text) : Option Sexp := Dict.lookup t scope.typeTable
 
 /-- The type of `e` as far as the compiler can see it: `()` when it cannot. -/
 def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
@@ -528,6 +527,15 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
   | _ => unknown
 
 def Wasm.typeOfLocal (scope : Wasm.Scope) (local : Int) : Sexp := getOr (List.lookup local (Ref.get scope.typed)) unknown
+
+/-- `datatypes` by hash, then by IRI where no hash is that IRI, as `typeObject` finds them. -/
+def Wasm.typeTable (datatypes : List (Text, Sexp)) : Dict Text Sexp :=
+  let byIri := filterMap (fun pair =>
+    match snd pair with
+    | Sexp.list (Sexp.sym "type" :: Sexp.str iri :: _) => Option.some (iri, snd pair)
+    | _ => Option.none) datatypes
+  -- Dict.fromList keeps the last of a repeated key, so hashes go last and the first IRI match goes after the rest.
+  Dict.fromList (reverse byIri ++ reverse datatypes)
 
 /-
   A WebAssembly back end (D51): compiles a definition and the definitions it calls to a binary

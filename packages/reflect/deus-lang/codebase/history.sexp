@@ -1,3 +1,8 @@
+(entry "ada6a4b8ce6fdf32cbe9a67ba75725b2f2031827666c33692cb174d87652ce3e" "Rehash after wasm.deus (D140)" "claude")
+(entry "faad5a9a364ba53be603a330abd29c1e245ddd083bd04f188ba211e02502d483" "Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140)" "claude")
+(entry "18f95dee7dc190dc8f3fd0b305c28154a1a969e049eb19e2a4cfdafa4ee74d82" "history: import 935 changes" "")
+(entry "83a11b24ed6d463029cfb1b04d1a0821d7d05d3b42d7f7274a4b8947689934b0" "task: import from codebase/tasks.sexp" "")
+(entry "54dde7108521ba52d4770e640001d3e4cb72a713c34a4b9b2666710aa03588f9" "add codebase/code codebase/specs" "")
 (entry "df5727a9a3a9e0fa06b9ef1092f8c06cbae7012802597f7b56839fa8e67bdf7d" "Renumber D136 to D137" "claude")
 (entry "9bd05183e729df6ed6210d884be38ca73bf3410caa7f0b0eea72c817441c068c" "update deus" "merge")
 (entry "0004ee2d41e5b82bd45ab81c400eb27463648a5e83f3e04dff21343730253063" "history: import 923 changes" "")

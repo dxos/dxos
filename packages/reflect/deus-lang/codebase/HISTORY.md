@@ -1,5 +1,10 @@
 # History of main
 
+- `ada6a4b8ce` Rehash after wasm.deus (D140) (by claude)
+- `faad5a9a36` Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140) (by claude)
+- `18f95dee7d` history: import 935 changes
+- `83a11b24ed` task: import from codebase/tasks.sexp
+- `54dde71085` add codebase/code codebase/specs
 - `df5727a9a3` Renumber D136 to D137 (by claude)
 - `9bd05183e7` update deus (by merge)
 - `0004ee2d41` history: import 923 changes

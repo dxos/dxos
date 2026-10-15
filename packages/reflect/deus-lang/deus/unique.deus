@@ -354,10 +354,11 @@ def rewriteAll (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) : List Wasm.
     | (params, result) => Info.mk f.fnHash params result (List.map isArray params) (isStruct result)) fns
   let infos := infer fns start
   let table := Wasm.fnTable fns
+  let types := Wasm.typeTable datatypes
   List.map (fun pair =>
     match pair with
     | (f, i) =>
-      let scope := Wasm.Scope.mk fns table datatypes (Ref.new []) (Ref.new [])
+      let scope := Wasm.Scope.mk fns table datatypes types (Ref.new []) (Ref.new [])
       let cx := Cx.mk infos scope i.resultType (Ref.new f.fnArity)
       let owned := List.filterMap (fun k => if isArray (Option.getOr (List.get? i.params k) Wasm.unknown) && not (Option.getOr (List.get? i.borrowed k) false) then some k else none) (List.range 0 f.fnArity)
       let need := if isArray i.resultType then kindRequire else if i.freshStruct then kindFields else kindProtect

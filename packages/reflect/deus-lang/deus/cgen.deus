@@ -660,7 +660,7 @@ def lambdaClosure (ctx : FnCtx) (env : List Int) (owned : List Int) (b : Sexp) :
     let k := List.length (Ref.get ctx.cLifted)
     let captures := List.mapIndexed (fun i l => (l, i + 2)) free
     let typed := List.map (fun pair => (snd pair, Wasm.typeOfLocal ctx.cScope (fst pair))) captures
-    let scope := Wasm.Scope.mk ctx.cScope.fns ctx.cScope.byHash ctx.cScope.datatypes (Ref.new typed) ctx.cScope.eqs
+    let scope := Wasm.Scope.mk ctx.cScope.fns ctx.cScope.byHash ctx.cScope.datatypes ctx.cScope.typeTable (Ref.new typed) ctx.cScope.eqs
     let inner := FnCtx.mk scope (-1) 2 (Ref.new (2 + List.length free)) ctx.cBorrow ctx.cLifted
     -- Reserve the slot first, so closures nested in `b` take the next numbers.
     let _ := Ref.set ctx.cLifted (Ref.get ctx.cLifted ++ [""])
@@ -880,7 +880,8 @@ def showable (t : Sexp) : Bool :=
 def shownName (scope : Wasm.Scope) (n : Text) (tag : Int) : Text :=
   let key := if Option.isSome (List.lookup n scope.datatypes) then n
     else
-      match List.find (fun entry => Wasm.typeObject scope n == some (snd entry)) scope.datatypes with
+      let form := Wasm.typeObject scope n
+      match List.find (fun entry => form == some (snd entry)) scope.datatypes with
       | some entry => fst entry
       | none => n
   Text.take 8 key ++ "#" ++ Int.toText tag
@@ -1124,12 +1125,13 @@ def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.r
 /-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
 def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
   let table := Wasm.fnTable fns
+  let types := Wasm.typeTable datatypes
   let borrow := inferBorrow fns table
   let lifted := Ref.new []
   let structs := Ref.new []
   let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
   let bodies := List.mapIndexed (fun i f =>
-    let scope := Wasm.Scope.mk fns table datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) structs
+    let scope := Wasm.Scope.mk fns table datatypes types (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) structs
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
     let env := List.reverse (List.range 0 f.fnArity)
     let header := "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\n"
@@ -1172,7 +1174,7 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let nullary := List.foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
   let codes := Ref.get lifted
   let codeDecls := List.mapIndexed (fun k _ => "static V c" ++ Int.toText k ++ "(V, V);") codes
-  let comparisons := structFunctions (Wasm.Scope.mk fns table datatypes (Ref.new []) structs) 0 []
+  let comparisons := structFunctions (Wasm.Scope.mk fns table datatypes types (Ref.new []) structs) 0 []
   let comparisonDecls := List.mapIndexed (fun k t =>
     if Sexp.head t == "show" then "static V deus_show" ++ Int.toText k ++ "(V, V);"
     else "static V deus_eq" ++ Int.toText k ++ "(V, V); static V deus_cmp" ++ Int.toText k ++ "(V, V);") (Ref.get structs)
@@ -1343,7 +1345,7 @@ def effAborting (e : Sexp) : {Throw Text} Bool :=
 /-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` has it. -/
 def effCallAborts (aborts : Map Text Bool) (h : Sexp) : Bool :=
   match h with
-  | Sexp.list [Sexp.sym "prim", Sexp.str p] => p == "defect"
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => raisesDefect p
   | Sexp.list (Sexp.sym "con" :: _) => false
   | Sexp.list [Sexp.sym "ref", Sexp.str r] => Map.contains r aborts
   | _ => true
@@ -1361,7 +1363,7 @@ def effCalls (e : Sexp) : (Bool, List Text) :=
     match all (h :: xs) with
     | (d, cs) =>
       match h with
-      | Sexp.list [Sexp.sym "prim", Sexp.str p] => (d || p == "defect", cs)
+      | Sexp.list [Sexp.sym "prim", Sexp.str p] => (d || raisesDefect p, cs)
       | Sexp.list (Sexp.sym "con" :: _) => (d, cs)
       | Sexp.list [Sexp.sym "ref", Sexp.str r] => (d, r :: cs)
       | _ => (true, cs)
@@ -1510,6 +1512,10 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
   -- `defect` raises `Defect.raise`, which a handler may take, as the kernels do (D137).
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], x] =>
     effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [effLower abilities x]
+  -- A native program has no kernel to load or run Core, so `Code.*` raises a defect a handler may report (D140).
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
+    if Text.startsWith "Code." p then effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [Sexp.list [Sexp.sym "text", Sexp.str (p ++ " needs a kernel, which a native build does not have")]]
+    else Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: List.map (effLower abilities) rest)
   | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
   | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
@@ -1527,10 +1533,13 @@ def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
       else fns
     List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
 
+/-- Whether primitive `p` raises a defect in native code: `defect`, and `Code.*`, which needs a kernel (D140). -/
+def raisesDefect (p : Text) : Bool := p == "defect" || Text.startsWith "Code." p
+
 /-- Whether `e` raises a defect with the `defect` primitive. -/
 def usesDefect (e : Sexp) : Bool :=
   match e with
-  | Sexp.list [Sexp.sym "prim", Sexp.str "defect"] => true
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => raisesDefect p
   | Sexp.list items => List.any usesDefect items
   | _ => false
 
