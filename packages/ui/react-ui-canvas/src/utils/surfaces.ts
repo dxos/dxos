@@ -759,14 +759,15 @@ export const CAPTION_TEXT: ByTone<string> = {
 };
 
 /** A background's grid: its dots, its minor lines and its major lines. */
+// Lines are fainter than dots: a continuous line reads far stronger than a dot of the same opacity.
 export const GRID_CLASSES: ByTone<{ dots: string; minor: string; major: string }> = {
   theme: {
     dots: 'fill-black/15 dark:fill-white/12',
-    minor: 'stroke-black/6 dark:stroke-white/10',
-    major: 'stroke-black/12 dark:stroke-white/20',
+    minor: 'stroke-black/4 dark:stroke-white/5',
+    major: 'stroke-black/7 dark:stroke-white/10',
   },
-  light: { dots: 'fill-black/15', minor: 'stroke-black/6', major: 'stroke-black/12' },
-  dark: { dots: 'fill-white/12', minor: 'stroke-white/10', major: 'stroke-white/20' },
+  light: { dots: 'fill-black/15', minor: 'stroke-black/4', major: 'stroke-black/7' },
+  dark: { dots: 'fill-white/12', minor: 'stroke-white/5', major: 'stroke-white/10' },
 };
 
 /** A wash's hue as a text colour, so its gradient stops can take it as `currentColor`. */
