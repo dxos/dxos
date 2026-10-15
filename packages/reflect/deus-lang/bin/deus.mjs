@@ -24,6 +24,11 @@ if (native.binary) {
   const result = spawnSync(native.binary, process.argv.slice(2), { stdio: 'inherit' });
   process.exitCode = result.status ?? 1;
 } else {
+  if (native.failed) {
+    console.warn(
+      `deus: the native build failed, so this runs on node (slower); see ${native.failed}, delete it to retry.`,
+    );
+  }
   if (native.build) {
     startNativeBuild(native.build);
   }

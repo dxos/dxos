@@ -205,6 +205,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 195 | 10-15 11:45 | 15m 00s | `6bf0668b` | The browser page keeps its changed files in IndexedDB, so a playground codebase survives a reload; Reset drops them (D175). |
 | 196 | 10-15 11:36 | 0m 00s | `d21b7bc3` | Nested one-arm matches on tuples (React hook state) print as `let (a, b) := …` lines, `const #[a, b] = …;` in the TS view (View.Spec R-6, D176, task c43ac3db) |
 | 197 | 10-15 11:50 | 65m 00s | `060df49d` | Git stops holding the codebase: `codebase/` leaves #13952 (D177); push skips held objects, pulls and merges by itself when the remote moved, and merge re-applies our edits inside shared recursive groups; `sync-deus.py` writes changed toolchain definitions into `deus/` and the seed; unused files move to `legacy/` (D178) |
-| 198 | 10-15 12:00 | 10m 00s | this commit | The native CLI builds from `deus/` again after the export left git: `deus explore` 34 s to 3.1 s, the same files (D177, task e8051c5b) |
+| 198 | 10-15 12:00 | 10m 00s | `85404ae7` | The native CLI builds from `deus/` again after the export left git: `deus explore` 34 s to 3.1 s, the same files (D177, task e8051c5b) |
+| 199 | 10-15 12:05 | 10m 00s | this commit | A native CLI build that fails leaves `failed.log` in its cache directory, and every command then warns on stderr that it runs on the JIT, instead of retrying silently. |
 
-Total from stage 1 to stage 198: 53h 13m.
+Total from stage 1 to stage 199: 53h 23m.
