@@ -25,12 +25,18 @@ Usage: node .depot/actions/affected/resolve-affected.mjs [options]
   --shell         Print \`export KEY=value\` lines, for eval.
   --help          Print this.
 
-Writes KEY=value to stdout and appends it to $GITHUB_ENV when set; a full run writes nothing at all.
+Writes KEY=value to stdout and appends it to $GITHUB_ENV when set; a full run writes nothing, except
+MOON_FORCE=true on a scheduled run.
 Everything else goes to stderr, so --shell output stays evaluable.`;
 
 const DEFAULT_BRANCH_PATTERN = /^\s*defaultBranch:\s*['"]?([^'"\s#]+)/m;
 
 const FULL_RUN = Symbol('full run');
+
+// No task lists these, yet they change what a task depends on: moon hashes each project's dependencies by
+// their lockfile integrity, which touched-file detection cannot see. A change to either runs everything
+// and lets the cache pick what executes.
+const DEPENDENCY_FILES = ['pnpm-lock.yaml', 'pnpm-workspace.yaml'];
 
 const main = () => {
   const args = parseArgs(process.argv.slice(2));
@@ -38,9 +44,14 @@ const main = () => {
   const event = args.event ?? process.env.GITHUB_EVENT_NAME ?? 'local';
   const branch = readBranch();
 
-  const { base, reason } = resolve({ args, event, branch, defaultBranch });
+  const { base, reason, force } = resolve({ args, event, branch, defaultBranch });
   if (base === FULL_RUN) {
     note(`Full run — ${reason}. Leaving MOON_AFFECTED unset.`);
+    if (force) {
+      // Transitive dependencies are in no task's hash, so only a run that bypasses the cache tests them.
+      note('Forced — bypassing the cache.');
+      emit(args, { MOON_FORCE: 'true' });
+    }
     return;
   }
 
@@ -55,6 +66,11 @@ const main = () => {
     tryGit('diff', '--name-only', fork, ...(args.head ? [head] : []))
       ?.split('\n')
       .filter(Boolean) ?? [];
+  const dependencies = changed.filter((file) => DEPENDENCY_FILES.includes(file));
+  if (dependencies.length > 0) {
+    note(`Full run — ${dependencies.join(', ')} changed (${reason}). Leaving MOON_AFFECTED unset.`);
+    return;
+  }
   note(
     `Affected run — ${reason} (${fork.slice(0, 8)}..${args.head ? head.slice(0, 8) : 'HEAD'}, ${changed.length} changed files).`,
   );
@@ -80,7 +96,7 @@ const resolve = ({ args, event, branch, defaultBranch }) => {
       return fromRevision(payload.merge_group?.base_sha, 'merge queue base', defaultBranch);
 
     case 'schedule':
-      return { base: FULL_RUN, reason: 'scheduled run' };
+      return { base: FULL_RUN, reason: 'scheduled run', force: true };
 
     default:
       if (branch === defaultBranch) {

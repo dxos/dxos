@@ -12,7 +12,7 @@ Call it after `setup`, which is what puts node on PATH:
   uses: ./.depot/actions/affected
 ```
 
-It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing at all for a full run. `moon run` and `moon exec` both read those two (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
+It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing for a full run, except `MOON_FORCE=true` on the scheduled run. `moon run` and `moon exec` both read those two (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
 
 ## Base per trigger
 
@@ -24,13 +24,20 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 | `merge_group` | affected | `merge_group.base_sha` |
 | `push` to `main` | all | none |
 | `push` to any other branch, `workflow_dispatch` | affected | merge-base with `origin/main` |
-| `schedule` | all | none |
+| `schedule` | all, bypassing the cache | none |
 | no event payload | affected | merge-base with `origin/main` |
 | `all: true` on the action | all | none |
+| any of the above, when the change touches `pnpm-lock.yaml` or `pnpm-workspace.yaml` | all | none |
 
 `e2e` passes `all: true` on a `workflow_dispatch`, because a dispatch exists to run the whole suite.
 
 **A base that will not resolve means a full run, never an empty one.** `moon` exits 0 having run nothing when the affected set comes back empty, so a base that quietly fails to resolve would turn every gate in the workflow green. Same silent-degradation class as a dropped remote cache, which the CI project's [`DESIGN.md`](../../../.agents/projects/ci/DESIGN.md) covers.
+
+## Dependency changes
+
+No task lists `pnpm-lock.yaml`. moon already hashes each project's direct dependencies by their lockfile integrity, so a dependency change reruns only the projects it reaches, where the whole file as an input reran every task. Touched-file detection cannot see those hashes, though: scoped to the files a PR touched, a lockfile-only change would select nothing. A change to `pnpm-lock.yaml` or `pnpm-workspace.yaml` therefore runs everything, and the cache decides what executes.
+
+Transitive dependencies are in no task's hash. The nightly scheduled run sets `MOON_FORCE`, which bypasses the cache, so a transitive-only change is tested within a day.
 
 ## Opting a step out
 
