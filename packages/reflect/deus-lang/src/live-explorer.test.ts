@@ -6,6 +6,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
+import { appFiles } from '../platform/worker/gen/explorer-app.mjs';
 import worker, { type Bucket, type Env } from '../platform/worker/worker.mjs';
 import { cliHarness } from './cli-harness.ts';
 
@@ -120,4 +121,11 @@ describe('live explorer (D192)', () => {
       expect(change.message).toBe(site(`change/${head}.json`).message);
     },
   );
+
+  test('the Worker ships the explorer app as platform/explorer has it', ({ expect }) => {
+    // `node scripts/build-worker.mjs` rewrites the module after the app changes.
+    for (const name of ['index.html', 'app.js', 'app.css'] as const) {
+      expect(appFiles[name], name).toBe(readFileSync(join(root, 'platform/explorer', name), 'utf8'));
+    }
+  });
 });

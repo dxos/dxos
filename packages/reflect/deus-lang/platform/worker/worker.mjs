@@ -14,6 +14,7 @@
 // settings the explorer stays read-only.
 
 import { addressOfFolder, projectAt } from './address.mjs';
+import { appFiles } from './gen/explorer-app.mjs';
 import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
@@ -85,6 +86,14 @@ const site = async (env, ctx, url, version, base, request) => {
   }
   const topLevel = path.lastIndexOf('/') === 0;
   if (topLevel && !version) {
+    // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish.
+    const api = await liveApi(env);
+    if (api && APP_ASSETS[path.slice(1)]) {
+      return appAsset(path.slice(1));
+    }
+    if (api && path === '/index.html') {
+      return livePage(api, base);
+    }
     const head = await readHead(env);
     if (head && path === '/index.html') {
       return page(env, head, base);
@@ -104,7 +113,14 @@ const site = async (env, ctx, url, version, base, request) => {
     // `/@owner/project/Name` is the page, opened at that definition by the explorer (Address.Spec R-8).
     // A name can end like a file (`List.map`, `Json.render.js`), so a browser navigation always gets the page.
     const navigation = request?.headers.get('sec-fetch-dest') === 'document';
-    const head = topLevel && (navigation || !FILE.test(path)) && (await readHead(env));
+    if (!topLevel || !(navigation || !FILE.test(path))) {
+      return notFound();
+    }
+    const api = await liveApi(env);
+    if (api) {
+      return livePage(api, base);
+    }
+    const head = await readHead(env);
     return head ? page(env, head, base) : notFound();
   }
   const response = new Response(object.body, {
@@ -158,15 +174,35 @@ const page = async (env, version, base) => {
   if (!object) {
     return notFound();
   }
-  // The app reads the codebase live through the API (D192), at the head this page is served for.
-  const head = await readBranchHead(env, prefix(env), 'main');
-  const api = `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${head?.causal}`;
-  const liveScript = head ? `<script>globalThis.DEUS_LIVE = ${JSON.stringify(api)};</script>` : '';
-  const html = (await object.text()).replace('<head>', `<head><base href="${base}/v/${version}/" />${liveScript}`);
+  const html = (await object.text()).replace('<head>', `<head><base href="${base}/v/${version}/" />`);
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' },
   });
 };
+
+/** The live explorer API of the project's main branch at its head (D192), or undefined before its first push. */
+const liveApi = async (env) => {
+  const head = await readBranchHead(env, prefix(env), 'main');
+  return head && `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${head.causal}`;
+};
+
+/** The app's page, reading the codebase through `api`; its files are the Worker's own. */
+const livePage = (api, base) =>
+  new Response(
+    appFiles['index.html'].replace(
+      '<head>',
+      `<head><base href="${base}/" /><script>globalThis.DEUS_LIVE = ${JSON.stringify(api)};</script>`,
+    ),
+    { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } },
+  );
+
+const APP_ASSETS = { 'app.js': 'text/javascript; charset=utf-8', 'app.css': 'text/css; charset=utf-8' };
+
+/** One of the app's files; it changes with a deploy, so it is cached only briefly. */
+const appAsset = (name) =>
+  new Response(appFiles[name], {
+    headers: { 'content-type': APP_ASSETS[name], 'cache-control': 'public, max-age=60' },
+  });
 
 /** Assets are named by their SHA-256, so a stored one never changes. */
 const asset = async (env, url) => {

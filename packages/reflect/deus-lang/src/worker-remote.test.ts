@@ -7,6 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { beforeEach, describe, test } from 'vitest';
 
+import { appFiles } from '../platform/worker/gen/explorer-app.mjs';
 import { mintKey, sha256 } from '../platform/worker/remote.mjs';
 import worker, { type Bucket, type Database, type Env, type Statement } from '../platform/worker/worker.mjs';
 
@@ -584,26 +585,33 @@ describe('replication API', () => {
     await bucket.put('acme/demo/site/HEAD', '0000000000000001');
     await bucket.put('toolchain/site/v/0000000000000002/index.html', '<html><head></head>toolchain</html>');
     await bucket.put('toolchain/site/HEAD', '0000000000000002');
-    const demoPage = '<html><head><base href="/@acme/demo/v/0000000000000001/" /></head>demo</html>';
-    // A project with a head also gets the address of its live explorer API (D192), checked here and set aside below.
+    // A project with a codebase head gets the Worker's own app, reading the codebase live (D192).
     const LIVE = /<script>globalThis\.DEUS_LIVE = "([^"]*)";<\/script>/;
-    const served = await (await call('/@acme/demo/')).text();
-    expect(LIVE.exec(served)?.[1]).toMatch(/^\/v1\/@acme\/demo\/live\/[0-9a-f]{64}$/);
-    const page = async (path: string, init?: RequestInit) => (await (await call(path, init)).text()).replace(LIVE, '');
-    expect(await page('/@acme/demo/')).toBe(demoPage);
-    expect(await page('/@acme/demo/Cli.dispatch')).toBe(demoPage);
+    const livePage = async (path: string, base: string, init?: RequestInit) => {
+      const text = await (await call(path, init)).text();
+      expect(text, path).toContain(`<head><base href="${base}/" />`);
+      expect(text, path).toContain('<script type="module" src="app.js"></script>');
+      return LIVE.exec(text)?.[1];
+    };
+    expect(await livePage('/@acme/demo/', '/@acme/demo')).toMatch(/^\/v1\/@acme\/demo\/live\/[0-9a-f]{64}$/);
+    expect(await livePage('/@acme/demo/Cli.dispatch', '/@acme/demo')).toMatch(/^\/v1\/@acme\/demo\/live\//);
+    expect(await (await call('/@acme/demo/app.js')).text()).toBe(appFiles['app.js']);
+    // Files published by `deus push` are still served, for pages the live API cannot draw.
     expect(await (await call('/@acme/demo/v/0000000000000001/meta.json')).text()).toBe('demo meta');
     expect((await call('/@acme/demo/missing.json')).status).toBe(404);
     // A name that ends like a file (`List.map`) opens the page when a browser navigates to it.
     const navigate = { headers: { 'sec-fetch-dest': 'document' } };
-    expect(await page('/@acme/demo/List.map', navigate)).toBe(demoPage);
+    expect(await livePage('/@acme/demo/List.map', '/@acme/demo', navigate)).toMatch(/^\/v1\/@acme\/demo\/live\//);
     expect((await call('/@acme/demo/List.map')).status).toBe(404);
     expect((await call('/@acme/nothing/')).status).toBe(404);
     expect((await call('/@Acme/demo/')).status).toBe(404);
-    expect(await (await call('/@dxos/toolchain/')).text()).toContain(
-      '<base href="/@dxos/toolchain/v/0000000000000002/" />',
+    expect(await livePage('/@dxos/toolchain/', '/@dxos/toolchain')).toMatch(/^\/v1\/@dxos\/toolchain\/live\//);
+    expect(await livePage('/', '')).toMatch(/^\/v1\/@dxos\/toolchain\/live\//);
+    // A project with a published site but no codebase head keeps the published page.
+    await bucket.put('acme/static/site/v/0000000000000003/index.html', '<html><head></head>static</html>');
+    await bucket.put('acme/static/site/HEAD', '0000000000000003');
+    expect(await (await call('/@acme/static/')).text()).toBe(
+      '<html><head><base href="/@acme/static/v/0000000000000003/" /></head>static</html>',
     );
-    expect(await (await call('/')).text()).toContain('<base href="/v/0000000000000002/" />');
-    expect(await (await call('/Cli.dispatch')).text()).toContain('toolchain');
   });
 });
