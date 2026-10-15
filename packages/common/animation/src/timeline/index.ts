@@ -8,3 +8,4 @@ export * from './select.ts';
 export * from './types.ts';
 export * from './packets.ts';
 export * from './route.ts';
+export * from './evaluate.ts';
