@@ -735,7 +735,8 @@ export const MoleculeOverlay = ({
   // A group container sits under everything inside it, so it is drawn whole before any other container.
   const groups = layout.monolith && !layout.focus ? [layout.monolith.group] : [];
   const channels = layout.focus ? [] : layout.channels.filter((channel) => visible(channel.id) > 0);
-  // A molecule inside an application passes behind it, so the app hides it as it slides in or out under the frame.
+  // A molecule inside an application has slipped behind it (on its way in or out), so it is not drawn: a translucent
+  // frame would otherwise show it through the app.
   const appRects = layout.sinks.filter((sink) => sink.app).map((sink) => baseOf(sink));
   const behind = (body: Body) =>
     appRects.some(
@@ -768,7 +769,6 @@ export const MoleculeOverlay = ({
               <ChannelShape channel={channel} />
             </g>
           ))}
-          {molecules && ordered.filter(behind).map((body) => <MoleculeShape key={body.id} body={body} />)}
           {blocks.map((block) => (
             <g key={block.id} opacity={visible(block.id)}>
               <Container block={block} />

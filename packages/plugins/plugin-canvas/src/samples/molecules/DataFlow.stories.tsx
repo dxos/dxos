@@ -7,6 +7,7 @@ import React from 'react';
 
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
+import { DataFlowSequence, type Scene } from './DataFlowSequence.tsx';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { type DataFlowSpec } from './layout.ts';
 
@@ -117,3 +118,64 @@ export const Monolith: StoryObj<DataFlowViewProps> = { args: { spec: MONOLITH } 
 
 /** Nine sources around a round hub, which grows as a cluster from its centre; there is no agent below. */
 export const Radial: StoryObj<DataFlowViewProps> = { args: { spec: RADIAL } };
+
+const MIXED: DataFlowSpec = {
+  ...SPEC,
+  sinks: [
+    { label: 'Docs', app: 'document' },
+    { label: 'Agent 1' },
+    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Agent 2' },
+  ],
+};
+
+/** A few seconds of flow before a scene appears, so it opens with its lattices already growing. */
+const WARM = { warmup: 8 };
+
+/** Longer, for a scene whose sinks only start syncing once the hub holds a few molecules. */
+const WARMER = { warmup: 16 };
+
+/** Longest, for agents, which fill only from the share of the hub synced down to them. */
+const WARMEST = { warmup: 30 };
+
+const SCENES: Scene[] = [
+  {
+    title: 'Silos',
+    caption: 'Each application keeps its own data, fed only by its own source.',
+    spec: SILOS,
+    duration: 20,
+  },
+  {
+    title: 'A monolithic agent',
+    caption: 'One agent reaches into every source at once, beside the apps.',
+    spec: MONOLITH,
+    options: WARM,
+    duration: 20,
+  },
+  {
+    title: 'A shared hypergraph',
+    caption: 'The sources feed one partitioned hypergraph, and the apps sync from it.',
+    spec: APPS,
+    options: WARMER,
+    duration: 24,
+  },
+  {
+    title: 'Apps and agents together',
+    caption: 'Applications and agents share the same hypergraph, side by side.',
+    spec: MIXED,
+    options: WARMEST,
+    duration: 24,
+  },
+];
+
+/**
+ * The whole story in one: silos, then a monolithic agent beside them, then a shared hypergraph between the sources and
+ * the apps, then apps and agents together on it. Each scene plays under its caption and fades into the next.
+ *
+ * Test:
+ * 1. Scenes advance by themselves about every 20 seconds and loop; the counter shows which is playing.
+ * 2. The controls at the top right step back, pause or resume, and step forward.
+ */
+export const Story: StoryObj<DataFlowViewProps> = {
+  render: () => <DataFlowSequence scenes={SCENES} />,
+};
