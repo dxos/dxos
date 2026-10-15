@@ -613,6 +613,10 @@ I upgraded to workers paid
 
 ---
 
+try to do an automation where if $10 budget alert is triggered all work is cut
+
+---
+
 update project core instructions to say that threads dont need my permission to deploy
 
 ---
