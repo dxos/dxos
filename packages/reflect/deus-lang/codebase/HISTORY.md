@@ -1,5 +1,24 @@
 # History of main
 
+- `97d3b3fbfc` update deus (by merge)
+- `6044c260f8` history: import 1037 changes
+- `8498114d5c` history: import 1043 changes
+- `d8d4009fe4` task: import from /tmp/tmpb0j197lz/tasks.sexp
+- `2feb9e074c` add /tmp/tmpb0j197lz/merged/code /tmp/tmpb0j197lz/merged/specs
+- `084dbd29ac` history: import 1023 changes
+- `4db18d07c6` history: import 1023 changes (by claude)
+- `7f44835cdb` task: import from codebase/tasks.sexp
+- `6ffa88350a` update codebase/code codebase/specs
+- `102a1f7fd6` history: import 1018 changes
+- `f65e70f4bc` task: import from codebase/tasks.sexp
+- `04d81118f5` update codebase/code codebase/specs
+- `56c420ca75` delete Unnamed.h2fee9e6b7d Unnamed.h3f84493ccc
+- `79fbb8aff4` history: import 965 changes
+- `ea56c07145` task: import from codebase/tasks.sexp
+- `ef4f48386a` Catch the remote up with the git export at de5f61f2 (D140)
+- `a62699329a` history: import 935 changes
+- `b828976716` task: import from codebase/tasks.sexp
+- `65502a99a5` Catch the remote up with the git export at 687dc9f7 (D137)
 - `f6943ca15f` update deus (by merge)
 - `a32d485ec2` history: import 1023 changes
 - `b4c300f712` history: import 1033 changes
