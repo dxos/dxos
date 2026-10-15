@@ -31,6 +31,10 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 - assignee: claude
 - labels: native, perf
 
+> someone: Step 1 (D153): environment cells are counted and reused unless captured; peak memory 900 to 473 MB for 199 tests, 2.2 to 1.4 GB for deus mdl, same speed. Values are still immortal.
+
+> someone: Correction: step 1 is D154, not D153 (renumbered on merge).
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo

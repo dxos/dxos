@@ -341,8 +341,9 @@ interpreter does not do:
 - `Code.steps` and `Code.cost` count the terms it evaluates, as the machine does, but its counts
   are not the kernels': a perf requirement's order holds natively, its exact step counts need not.
   `Code.defectTrace` is empty.
-- It never frees. Every block it makes or receives is made immortal, so compiled code that shares
-  one never writes into it, and `Array.set` copies the array.
+- It frees only its own environment cells, once no scope or closure holds them (D154). Every block
+  it makes or receives is made immortal, so compiled code that shares one never writes into it,
+  and `Array.set` copies the array.
 - Values do not carry their types, so `show`, `trace` and `Code.quote` in interpreted code render
   a Bool as 0 or 1 and guess the nullary constructors. `deus eval` prints by the expression's type
   instead (`Cli.quoteAt`, with the new `Code.tag`, `Code.field` and `Code.cast`), on every kernel. Of

@@ -1,5 +1,20 @@
 # History of main
 
+- `db77e1395f` update deus (by merge)
+- `c3399b82c4` history: import 1144 changes
+- `409c3e0e40` history: import 1139 changes
+- `05012e11a6` task: import from /tmp/tmpk1m7cf8a/tasks.sexp
+- `e9ef0641f3` add /tmp/tmpk1m7cf8a/merged/code /tmp/tmpk1m7cf8a/merged/specs
+- `895274d041` task: comment on b73b475d (by claude)
+- `39b2e8db06` update deus (by merge)
+- `1d0b6b7e4f` history: import 1134 changes
+- `e94dfdc564` history: import 1128 changes
+- `dd2232271e` task: import from /tmp/tmp7tiihuqg/tasks.sexp
+- `41290569bc` add /tmp/tmp7tiihuqg/merged/code /tmp/tmp7tiihuqg/merged/specs
+- `8f77cc083d` task: comment on b73b475d
+- `1e32955d5c` update deus (by claude)
+- `fb1345316d` history: import 1124 changes
+- `e6b5de91e6` task: import from codebase/tasks.sexp
 - `6449078bac` task: set f308d451 state (by claude)
 - `f82625cacf` task: comment on f308d451 (by claude)
 - `e13a50a478` update deus (by claude)
