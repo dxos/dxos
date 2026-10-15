@@ -591,6 +591,17 @@ pre.source {
   font-style: italic;
 }
 
+/* A parameter name the generator put before an argument (D174): not source, so copying skips it. */
+.hint {
+  color: var(--cm);
+  font-size: 0.85em;
+  padding: 0 0.25em 0 0.2em;
+  margin-right: 0.15em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--cm) 14%, transparent);
+  user-select: none;
+}
+
 a.ref {
   color: inherit;
   text-decoration: none;

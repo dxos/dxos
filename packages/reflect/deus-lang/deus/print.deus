@@ -13,6 +13,7 @@ structure Printer where
   namesByHash : Map Text (List Text)
   supply : Ref (List Text)
   fresh : Ref Int
+  hints : Map Text (List Text)
 
 namespace Print
 
@@ -54,15 +55,56 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
         | _ => m2) m fields
     | _ => m) Map.empty (Map.toList ns)
   -- Headers name types by their last segment and list a constructor's names; built here once, not per view.
-  Printer.mk display index typeNames fieldNames (Types.declaredNames ns) (Codebase.namesByHash ns) (Ref.new locals) (Ref.new 0)
+  Printer.mk display index typeNames fieldNames (Types.declaredNames ns) (Codebase.namesByHash ns) (Ref.new locals) (Ref.new 0) Map.empty
 
 /-- A printer in which `h` prints as `name`: a definition's references to itself keep the name it is viewed under, not an alias with the same hash. -/
 def withSelf (base : Printer) (h : Text) (name : Text) : Printer :=
-  Printer.mk (Map.insert h name base.display) base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash base.supply base.fresh
+  Printer.mk (Map.insert h name base.display) base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash base.supply base.fresh base.hints
 
 /-- A printer sharing `base`'s name tables (built once per namespace) with its own locals. -/
 def withLocals (base : Printer) (locals : List Text) : Printer :=
-  Printer.mk base.display base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash (Ref.new locals) (Ref.new 0)
+  Printer.mk base.display base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash (Ref.new locals) (Ref.new 0) base.hints
+
+/-- A printer that shows parameter names before call arguments (D174); `hints` maps a callee (a hash, or `type#tag` for a constructor) to its parameter names. -/
+def withHints (base : Printer) (hints : Map Text (List Text)) : Printer :=
+  Printer.mk base.display base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash base.supply base.fresh hints
+
+/-- Brackets an inlay hint in printed text; only `Highlight` reads it, so text meant to parse never carries one. -/
+def hintOpen : Text := Text.fromCode 1
+
+def hintClose : Text := Text.fromCode 2
+
+/-- Whether an argument is a literal, whose meaning the call site does not show. -/
+def isLiteral (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [Sexp.sym "int", _] => true
+  | Sexp.list [Sexp.sym "text", _] => true
+  | Sexp.list [Sexp.sym "con", _, _, Sexp.int 0] => true
+  | _ => false
+
+/-- The parameter names a call shows: for a callee with known names, taking three or more arguments or a literal. -/
+def hintNames (p : Printer) (f : Sexp) (args : List Sexp) : List Text :=
+  let key := match f with
+    | Sexp.list [Sexp.sym "ref", Sexp.str h] => h
+    | Sexp.list [Sexp.sym "con", Sexp.str ty, Sexp.int tag, _] => ty ++ "#" ++ Int.toText tag
+    | _ => ""
+  match Map.lookup key p.hints with
+  | some names => if List.length args >= 3 || List.any isLiteral args then names else []
+  | none => []
+
+/-- An argument's text behind parameter `i`'s hint, unless it already reads as that name. -/
+def hinted (names : List Text) (i : Int) (text : Text) : Text :=
+  match List.get? names i with
+  | some name => if Text.length name < 2 || isGenerated name || name == text then text else hintOpen ++ name ++ hintClose ++ text
+  | none => text
+
+/-- Text without its inlay hints: what a reader counts when a line is measured. -/
+def unhinted (text : Text) : Text :=
+  let start := Text.indexOf text hintOpen 0
+  if start < 0 then text
+  else
+    let stop := Text.indexOf text hintClose start
+    if stop < 0 then text else unhinted (Text.slice text 0 start ++ Text.drop (stop + 1) text)
 
 def nameFor (p : Printer) (key : Text) : Text :=
   match Map.lookup key p.display with
@@ -345,7 +387,7 @@ def width : Int := 100
 /-- Whether text starting at indentation `ind` keeps its first line within `width`; later lines made their own choice. -/
 def fits (ind : Int) (text : Text) : Bool :=
   let first := Option.getOr (List.head? (Text.lines text)) text
-  ind + Text.length first <= width
+  ind + Text.length (unhinted first) <= width
 
 /--
   `f a b` on one line when it fits, else `f` then one argument per line, indented. Binder names
@@ -358,13 +400,14 @@ def ifThenElse (p : Printer) (c : Sexp) (yes : Sexp) (no : Sexp) (env : List Tex
 def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
   let supply := Ref.get p.supply
   let fresh := Ref.get p.fresh
-  let flat := expr p f env ind 90 ++ Text.concat (List.map (fun a => " " ++ expr p a env ind 100) args)
+  let names := hintNames p f args
+  let flat := expr p f env ind 90 ++ Text.concat (List.mapIndexed (fun i a => " " ++ hinted names i (expr p a env ind 100)) args)
   if fits ind flat || List.length args < 2 then paren 90 prec flat
   else
     Ref.set p.supply supply
     Ref.set p.fresh fresh
     let head := expr p f env ind 90
-    paren 90 prec (head ++ Text.concat (List.map (fun a => "\n" ++ spaces (ind + 2) ++ expr p a env (ind + 2) 100) args))
+    paren 90 prec (head ++ Text.concat (List.mapIndexed (fun i a => "\n" ++ spaces (ind + 2) ++ hinted names i (expr p a env (ind + 2) 100)) args))
 
 /-- A pattern and the environment it extends (binders in order). -/
 def pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) :=

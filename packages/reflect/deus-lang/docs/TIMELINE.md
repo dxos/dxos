@@ -200,6 +200,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 190 | 10-15 11:05 | 20m 00s | `01d407e3` | The codebase explainer (docs/spec/CODEBASE-BINARY.md) now covers where a codebase lives (store, Worker, R2 bucket, D1, mirror), how names work, and branches end to end, including the Worker's head check (409, 428). |
 | 191 | 10-15 11:10 | 35m 00s | `afc975ab` | `bin/deus.mjs` runs a cached native build of the seed and builds one in the background when there is none (D171); `Remote.getAll` fetches bundles in parallel. A fresh session's pull 34 s to 5.2 s, merge 3.2 s to 92 ms |
 | 192 | 10-15 11:20 | 10m 00s | `8d647cd5` | Bundles can be lines: a pull hashes and stores each object's line with no parse or print, 44.8 s to 11.9 s for a fresh pull from a line remote; pushes stay columnar until sessions read lines (D172, task ed106f59) |
-| 193 | 10-15 11:30 | 10m 00s | this commit | The browser page runs the TypeScript kernel by default, 6-16x faster than the wasm kernel on today's codebase in Chromium; the TS kernel imports nothing from node and `deus build --browser` bundles it (D173). The playground's codebase snapshot leaves out local layers (58 to 36 MB). |
+| 193 | 10-15 11:30 | 10m 00s | `2c51b124` | The browser page runs the TypeScript kernel by default, 6-16x faster than the wasm kernel on today's codebase in Chromium; the TS kernel imports nothing from node and `deus build --browser` bundles it (D173). The playground's codebase snapshot leaves out local layers (58 to 36 MB). |
+| 194 | 10-15 11:15 | 0m 00s | this commit | The explorer names a long call's arguments by their parameters, inlay-hint style (`key:` `name:` before `Composer.meta`'s strings); `deus view` prints none (View.Spec R-5, D174, task 31f514e2) |
 
-Total from stage 1 to stage 193: 51h 43m.
+Total from stage 1 to stage 194: 51h 43m.

@@ -551,3 +551,7 @@ tell me full instruction. git checkout cd, cloudflare_account_id env
 ---
 
 https://github.com/dxos/dxos/pull/13952 is no longer main backup since https://github.com/dxos/deus-mirror exists. codebase backup goes to mirror. and the PR is for things not yet inside the codebase
+
+---
+
+would be nice if those long functions showed named parameters in render

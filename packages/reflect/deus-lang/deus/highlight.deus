@@ -1,7 +1,8 @@
 /-
   Syntax highlighting of printed source, shared by the explorer (HTML) and the CLI (ANSI colours
   on a terminal). Source splits into runs of one kind: kw(keyword), str(ing), cm (comment),
-  ty(pe or other capitalized name) and plain text.
+  ty(pe or other capitalized name), hint (a parameter name the explorer's printer put before an
+  argument, D174) and plain text.
 -/
 
 namespace Highlight
@@ -25,7 +26,11 @@ def runsWith (kws : Map Text Unit) (source : Text) : List (Text, Text) :=
     if i >= n then List.reverse acc
     else
       let c := Text.code source i
-      if c == '"' then
+      if c == 1 then
+        let stop := Text.indexOf source (Text.fromCode 2) i
+        let j := if stop < 0 then n else stop
+        scan (j + 1) (("hint", Text.slice source (i + 1) j) :: acc)
+      else if c == '"' then
         let rec close j := if j >= n then n else if Text.code source j == '\\' then close (j + 2) else if Text.code source j == '"' then j + 1 else close (j + 1)
         let j := close (i + 1)
         scan j (("str", Text.slice source i j) :: acc)
@@ -57,7 +62,11 @@ def html (source : Text) : Text :=
   Text.concat (List.map (fun run =>
     match run with
     | ("plain", t) => escape t
-    | (kind, t) => "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>") (runs source))
+    | (kind, t) => span kind t) (runs source))
+
+/-- One run as a `span`; a hint reads `name:` and is left out when the source is copied. -/
+def span (kind : Text) (t : Text) : Text :=
+  if kind == "hint" then "<span class=hint>" ++ escape t ++ ":</span>" else "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>"
 
 /-- HTML in which names found in `links` (display name -> hash) open that definition. -/
 def htmlLinked (links : Map Text Text) (source : Text) : Text := htmlLinkedIn "deus" links source
@@ -66,7 +75,7 @@ def htmlLinkedIn (dialect : Text) (links : Map Text Text) (source : Text) : Text
   Text.concat (List.map (fun run =>
     match run with
     | (kind, t) =>
-      let inner := if kind == "plain" then escape t else "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>"
+      let inner := if kind == "plain" then escape t else span kind t
       if kind == "plain" || kind == "ty" then
         match Map.lookup t links with
         | some h => "<a class=ref data-open=\"d:" ++ h ++ "\">" ++ inner ++ "</a>"
@@ -86,6 +95,7 @@ def ansiIn (dialect : Text) (source : Text) : Text :=
     | ("str", t) => paint "32" t
     | ("cm", t) => paint "2" t
     | ("ty", t) => paint "36" t
+    | ("hint", t) => paint "2" (t ++ ": ")
     | (_, t) => t) (runsWith (keywordsFor dialect) source))
 
 /-- Whether output goes to a terminal that wants colour: the kernel sets `DEUS_TTY`, and `NO_COLOR` turns it off. -/
@@ -101,6 +111,8 @@ def forTerminalIn (dialect : Text) (source : Text) : {IO} Text := if enabled () 
 def dim (t : Text) : {IO} Text := if enabled () then esc ++ "[2m" ++ t ++ esc ++ "[0m" else t
 
 test spansKinds := html "def x : Int := \"a<b\" -- note" == "<span class=kw>def</span> x : <span class=ty>Int</span> := <span class=str>\"a&lt;b\"</span> <span class=cm>-- note</span>"
+
+test hintSpan := html ("f " ++ Text.fromCode 1 ++ "key" ++ Text.fromCode 2 ++ "\"a\"") == "f <span class=hint>key:</span><span class=str>\"a\"</span>"
 
 test tsKeywordsAndComments := htmlLinkedIn "ts" Map.empty "const x = 1; // note" == "<span class=kw>const</span> x = 1; <span class=cm>// note</span>"
 
