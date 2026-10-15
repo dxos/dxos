@@ -34,6 +34,10 @@ const PARTITION_MS = 3000;
 /** Milliseconds a relayout takes: slow, so the hub's growth and then each new agent and source can be watched arriving. */
 const RELAYOUT_MS = 8000;
 
+/** How far into a growing relayout the hub has passed the edges of the view, and the pan that then sets off along it. */
+const DRIFT_START = 0.3;
+const DRIFT = { x: 40, y: 0 };
+
 /** Runs linearly from 0 to 1 over `duration` ms each time `key` changes (each phase of it eases itself); 1 while none. */
 const useRun = (key: number | undefined, duration: number): number => {
   const [value, setValue] = useState(1);
@@ -204,6 +208,9 @@ export const DataFlowView = ({
     setRelayout({ key: Date.now(), from: last.layout, plan, arrivals });
   }, [continuous, running, simulation, spec, layout]);
   const moved = useRun(relayout?.key, RELAYOUT_MS);
+  // Once a growing hub has passed the edges of the view, the view sets off rightward along it, and keeps going.
+  const drifting =
+    relayout !== undefined && relayout.from.hub.frame.width < layout.hub.frame.width && moved >= DRIFT_START;
   useLayoutEffect(() => {
     const scene = createDataFlowScene(layout, revealed);
     registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
@@ -231,6 +238,7 @@ export const DataFlowView = ({
       // The camera widens over the same second the monolithic agent fades in, so the two settle together; a relayout
       // leaves it where it is, so a diagram that extends runs on past the edges of the view.
       refitDuration={REVEAL_MS}
+      drift={drifting ? DRIFT : undefined}
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >

@@ -232,6 +232,11 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   refitKey?: string | number;
   /** Milliseconds a refit asked for by `refitKey` takes, so it can keep time with the host's own reveal. */
   refitDuration?: number;
+  /**
+   * While set, the view travels across the scene at this velocity (scene units per second, positive rightward and
+   * downward), taking the camera out of fit mode: a slow pan a host can start and stop, as in a presentation.
+   */
+  drift?: Point;
   /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
   theme?: string;
   /** The theme drawn when `theme` is unset; flat when this is unset too or unknown. */
@@ -276,6 +281,7 @@ const SceneViewRoot = ({
   backgroundGrid,
   refitKey,
   refitDuration,
+  drift,
   onThemeChange,
   onBackgroundGridChange,
   children,
@@ -482,6 +488,24 @@ const SceneViewRoot = ({
     timeout = setTimeout(fit, asked ? 0 : FIT_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [fitting, measured, sceneId, fitKey, refitDuration]);
+  // Keyed on the velocity's values, so a host passing a fresh object each render does not restart the pan.
+  const driftX = drift?.x ?? 0;
+  const driftY = drift?.y ?? 0;
+  useEffect(() => {
+    if (driftX === 0 && driftY === 0) {
+      return;
+    }
+    exitFit();
+    let last = performance.now();
+    let frame = requestAnimationFrame(function step(now) {
+      const seconds = (now - last) / 1000;
+      last = now;
+      // The camera offsets the content, so the view moves right as it moves left.
+      setCamera((camera) => panBy(camera, { x: -driftX * seconds, y: -driftY * seconds }));
+      frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [driftX, driftY, exitFit, setCamera]);
   // Dragging the canvas takes the camera over.
   useEffect(() => {
     if (drag?.kind === 'pan') {

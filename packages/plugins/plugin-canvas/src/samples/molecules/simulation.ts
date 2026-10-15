@@ -290,6 +290,10 @@ const SLOW_DECAY = 16;
 const TINT_DELAY = 1;
 const TINT_TIME = 1.5;
 
+/** How much faster than the first sources a source a relayout adds supplies, and the seconds it takes to get there. */
+const SOURCE_BOOST = 2;
+const SOURCE_RAMP = 2;
+
 /** Molecules tried when seeding a bucket a relayout adds, so it arrives part full. */
 const SEED_MOLECULES = 14;
 
@@ -761,6 +765,8 @@ export class DataFlowSimulation {
   #bodies: Body[] = [];
   #time = 0;
   #serial = 0;
+  /** When each source a relayout added came into play, by source; the first sources have none. */
+  readonly #sourceSince: (number | undefined)[] = [];
 
   #agentReads = true;
 
@@ -892,10 +898,13 @@ export class DataFlowSimulation {
     next.sources.forEach((source, index) => {
       if (index >= before.sources.length) {
         this.#homes[index] = new Map();
-        this.#nextSpawn[index] = this.#time + (arrivals.get(source.id) ?? 0) + this.#random() * this.#options.interval;
+        const since = this.#time + (arrivals.get(source.id) ?? 0);
+        this.#sourceSince[index] = since;
+        this.#nextSpawn[index] = since;
       }
     });
     this.#homes.length = next.sources.length;
+    this.#sourceSince.length = next.sources.length;
     this.#nextSpawn.length = next.sources.length;
     this.#layout = next;
     (next.hub.buckets ?? []).slice(before.hub.buckets?.length ?? 1).forEach((bucket) => this.#seed(bucket));
@@ -1203,9 +1212,13 @@ export class DataFlowSimulation {
       if (this.#time < this.#nextSpawn[index]) {
         return;
       }
-      const interval = this.#options.interval;
+      // A source a relayout added comes up to speed fast, then supplies faster than the first ones did.
+      const since = this.#sourceSince[index];
+      const boost =
+        since === undefined ? 0 : SOURCE_BOOST * Math.min(1, Math.max(0, (this.#time - since) / SOURCE_RAMP));
+      const interval = this.#options.interval / (1 + boost);
       this.#nextSpawn[index] = this.#time + between(this.#random, 0.7 * interval, 1.3 * interval);
-      if (this.#waiting(index) >= this.#options.perSource) {
+      if (this.#waiting(index) >= this.#options.perSource * (1 + Math.round(boost))) {
         return;
       }
       const molecule = generateMolecule(this.#random);
