@@ -21,7 +21,10 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/deus": "workspace:*",
     "effect": "catalog:"
