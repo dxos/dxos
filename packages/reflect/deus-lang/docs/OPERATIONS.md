@@ -54,6 +54,12 @@ with it.
 `deus merge origin.main` (30 s). A push takes about a minute, most of it refreshing the explorer.
 `~/.deus-2026-10-14` is this container's older local codebase, kept, not deleted.
 
+## Container setup
+
+- Run `scripts/setup.sh` after pulling kernel changes: `explore --console` (in `src/cli.test.ts`) runs the wasm kernel
+  built under `deus-kernel/target/`, and a stale build fails with `no handler for #IO op 8` because the host only
+  answers `urn:deus:builtin:IO` (D68).
+
 ## Keys and D1
 
 - Keys live in D1 `deus-auth`, table `api_keys`; `scripts/deus-keys.mjs list|new|grant|revoke` edits them with the
