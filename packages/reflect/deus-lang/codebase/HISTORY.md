@@ -1,5 +1,14 @@
 # History of main
 
+- `7c437fa2f3` history: import 854 changes (by merge)
+- `38b5a5a4bd` history: import 854 changes
+- `bc05359a9b` task: import from /tmp/tmp355x44qi/tasks.sexp
+- `5c215aa568` add /tmp/tmp355x44qi/merged/code /tmp/tmp355x44qi/merged/specs
+- `51139cae5f` task: comment on 60e88be8 (by claude)
+- `577b95ae84` Native C: IO host operations; a program of Unit builds to a command (D129) (by claude)
+- `2f3a69291e` history: import 849 changes
+- `7c4b0ea752` task: import from codebase/tasks.sexp
+- `c9b261c701` add codebase/code codebase/specs
 - `9b6101917c` task: set 8d6df186 title labels
 - `42e26b44dd` task: comment on 8d6df186
 - `f5d7314079` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Analytics.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Checking.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Compile.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Coverage.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Export.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Features.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/JsGen.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/View.Spec.mdl (by claude)

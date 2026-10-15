@@ -27,7 +27,8 @@ anywhere else is refused. A definition with no parameters is computed once, on f
 kept for the rest of the run, so a constant `Ref` is one cell however often it is named; its value
 is marked immortal, so reference counting never frees it and it is not counted as live. A
 constructor or an operation used as a value becomes a lambda over its arguments
-([D127](../DECISIONS.md)). Error messages for refused forms
+([D127](../DECISIONS.md)). A program of `Unit` builds to a command whose `IO` the C runtime
+performs ([D129](#commands)). Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
@@ -263,6 +264,31 @@ interpreter and ends with 0 live words, natively and in wasm built through C.
 | `Handled.unwound 200000`  |             430 ms |        17 ms |
 
 JIT times are a `deus eval` minus a `deus eval` of a tiny input.
+
+## Commands
+
+A definition of type `Unit -> {IO} …` builds to a command ([D129](../DECISIONS.md)): it takes no
+integer arguments, `IO.args` gives it its command line, and a Text or Int result prints as before.
+Every `IO` operation compiles to a check for a handler in the program, which wins as it does on the
+kernels, and otherwise to the C runtime's version of it. That runtime follows the TS kernel's host:
+`print` and `eprint` write UTF-8 without a newline, `readFile` decodes UTF-8 as node does,
+`writeFile` and `appendFile` create the parent directories, `listDir` sorts by UTF-16 units,
+`remove` is recursive, `time` counts milliseconds since start, `wallClock` gives nanoseconds as
+text, `exec` runs a program with empty input and returns its exit code, stdout and stderr, and
+`exit` flushes and ends the process. In wasm every `IO` operation traps.
+
+[`examples/command.deus`](../../examples/command.deus) counts lines and words, ranks words by
+frequency in a `MutMap`, round-trips files and directories, counts what a handler of `IO.print`
+takes, runs `sh` through `exec`, and exits with a status. Each agrees with `deus run` on stdout,
+stderr and exit status, and ends with 0 live words.
+
+| Program, on a 6.3 MB text (best of three) | TS kernel with JIT | C, cc -O2 |
+| ----------------------------------------- | -----------------: | --------: |
+| `Command.main freq <file> 3`              |           9,700 ms |    555 ms |
+| `Command.main count <file>`               |           2,000 ms |    268 ms |
+
+JIT times are a `deus run` minus a `deus run` on a tiny file. The toolchain itself (`Cli.main`)
+still stops at `Code.run`, which needs an evaluator in the runtime.
 
 ## Benchmarks
 

@@ -764,6 +764,42 @@ describe('deus CLI', () => {
     },
   );
 
+  test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
+    'builds a command whose IO the C runtime performs, as the interpreter does',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'command')];
+      deus('init', '--empty', ...c);
+      deus(
+        'add',
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        join(root, 'examples/command.deus'),
+        ...c,
+      );
+      const out = join(scratch, 'command-native');
+      expect(deus('build', 'Command.main', '-o', out, '--c', ...c).code).toBe(0);
+      const text = file('words.txt', 'the cat\nthe dog and the bird\n\tA cat é\n');
+      for (const args of [
+        ['count', text],
+        ['freq', text, '3'],
+        ['roundtrip', join(scratch, 'roundtrip')],
+        ['quiet', '12'],
+        ['exec'],
+        ['count', join(scratch, 'missing.txt')],
+        [],
+      ]) {
+        const native = spawnSync(out, args, { encoding: 'utf8', env: { ...process.env, DEUS_HEAP_STATS: '1' } });
+        const interpreted = deus('run', ...c, 'Command.main', ...args);
+        expect([native.status, native.stdout]).toEqual([interpreted.code, interpreted.stdout]);
+        expect(native.stderr.replace(/heap: .*\n/, '')).toBe(interpreted.stderr);
+        if (native.status === 0) {
+          expect(native.stderr).toContain(', 0 live,');
+        }
+      }
+    },
+  );
+
   test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'cloudflare')];
     deus('init', '--empty', ...c);

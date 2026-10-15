@@ -197,6 +197,8 @@ def prelude (nullary : Int) : Text :=
     "static V deus_handle_exit(V f) { deus_hctx = HREC(f, 0); for (V r = f; r < deus_hn; r++) deus_drop(HREC(r, 4)); deus_hn = f; return STATIC(&deus_nullary[0]); }",
     "/* The clause for operation `i` of ability `a`, run with its handler hidden until `deus_clause_done`; none is a defect. */",
     "static V deus_clause(V a, V i) { for (V r = deus_hctx; r >= 0; r = HREC(r, 0)) if (HREC(r, 2) == a && HREC(r, 3) == i) { V f = HREC(r, 1); deus_cst = deus_grow(deus_cst, 2 * deus_cn, &deus_ccap, 2); deus_cst[2 * deus_cn] = deus_hctx; deus_cst[2 * deus_cn + 1] = f; deus_cn++; deus_hctx = HREC(f, 0); return deus_dup(HREC(r, 4)); } __builtin_trap(); }",
+    "/* Whether a visible handler has a clause for operation `i` of ability `a`; `IO` falls back to the host (D129). */",
+    "static V deus_handled(V a, V i) { for (V r = deus_hctx; r >= 0; r = HREC(r, 0)) if (HREC(r, 2) == a && HREC(r, 3) == i) return 1; return 0; }",
     "static V deus_clause_done(V v) { deus_cn--; deus_hctx = deus_cst[2 * deus_cn]; return deus_dup(v); }",
     "static V deus_abort_to(V v) { if (v == DEUS_ABORT) return v; deus_abort_frame = deus_cst[2 * deus_cn - 1]; deus_abort_value = deus_dup(v); return DEUS_ABORT; }",
     "static V deus_caught(V f, V r) { return r == DEUS_ABORT && deus_abort_frame == f; }",
@@ -220,6 +222,116 @@ def prelude (nullary : Int) : Text :=
     "static V deus_show_int(V s, V x) { V t = deus_int_text(x); V r = deus_text_extend(s, t); deus_drop(t); return r; }",
     "static V deus_show_text(V s, V t) { static const char hex[] = \"0123456789abcdef\"; V n = TLEN(t), k = 0; V j = deus_text(6 * n + 2); uint16_t *x = TU(t), *o = TU(j); o[k++] = 34; for (V i = 0; i < n; i++) { uint32_t u = x[i], e = u == 34 || u == 92 ? u : u == 10 ? 110 : u == 13 ? 114 : u == 9 ? 116 : u == 8 ? 98 : u == 12 ? 102 : 0; int pair = u >= 0xd800 && u < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000; if (e) { o[k++] = 92; o[k++] = (uint16_t)e; } else if (pair) { o[k++] = (uint16_t)u; o[k++] = x[++i]; } else if (u < 32 || (u >= 0xd800 && u < 0xe000)) { o[k++] = 92; o[k++] = 117; o[k++] = hex[u >> 12]; o[k++] = hex[u >> 8 & 15]; o[k++] = hex[u >> 4 & 15]; o[k++] = hex[u & 15]; } else o[k++] = (uint16_t)u; } o[k++] = 34; TLEN(j) = k; V r = deus_text_extend(s, j); deus_drop(j); return r; }",
     ""]
+
+/--
+  The host side of `IO` (D129), as the TS kernel's host implements it on node: files, the
+  process's arguments, environment, clocks and `exec`. In wasm every operation traps.
+-/
+def ioRuntime : Text :=
+  Text.join "\n" ([
+    "#ifndef __wasm__",
+    "#include <dirent.h>",
+    "#include <errno.h>",
+    "#include <fcntl.h>",
+    "#include <poll.h>",
+    "#include <stdio.h>",
+    "#include <string.h>",
+    "#include <sys/stat.h>",
+    "#include <sys/wait.h>",
+    "#include <time.h>",
+    "#include <unistd.h>",
+    "/* The host side of `IO` (D129), as the TS kernel's host implements it on node. */",
+    "static int deus_argc;",
+    "static char **deus_argv;",
+    "static struct timespec deus_start;",
+    "#define UNIT STATIC(&deus_nullary[0])",
+    "static V deus_some(V x) { V *p = deus_block(1, 2); p[0] = 1; p[1] = x; return BOX(p); }",
+    "static V deus_pair(V a, V b) { V *p = deus_block(2, 3); p[0] = 0; p[1] = a; p[2] = b; return BOX(p); }",
+    "/* A text as NUL-terminated UTF-8 in memory the caller frees. */",
+    "static char *deus_cstr(V t) { char *s = malloc(3 * TLEN(t) + 1); if (!s) __builtin_trap(); s[deus_utf8(TU(t), TLEN(t), (uint8_t *)s)] = 0; return s; }",
+    "/* UTF-8 as a text, as node decodes it: each byte of a malformed sequence becomes U+FFFD. */",
+    "static V deus_text_utf8_of(const uint8_t *s, size_t n) {",
+    "  V r = deus_text((V)n); uint16_t *o = TU(r); V k = 0; size_t i = 0;",
+    "  while (i < n) {",
+    "    uint32_t c = s[i], m = c < 0x80 ? 0 : c >= 0xc2 && c < 0xe0 ? 1 : c >= 0xe0 && c < 0xf0 ? 2 : c >= 0xf0 && c < 0xf5 ? 3 : 4;",
+    "    if (m == 0) { o[k++] = (uint16_t)c; i++; continue; }",
+    "    if (m == 4) { o[k++] = 0xfffd; i++; continue; }",
+    "    uint32_t v = c & (0x3f >> m); size_t j = 1;",
+    "    for (; j <= m; j++) { if (i + j >= n) break; uint32_t b = s[i + j]; if ((b & 0xc0) != 0x80) break; if (j == 1 && ((m == 2 && c == 0xe0 && b < 0xa0) || (m == 2 && c == 0xed && b >= 0xa0) || (m == 3 && c == 0xf0 && b < 0x90) || (m == 3 && c == 0xf4 && b >= 0x90))) break; v = v << 6 | (b & 0x3f); }",
+    "    if (j <= m) { o[k++] = 0xfffd; i += j; continue; }",
+    "    if (v > 0xffff) { o[k++] = (uint16_t)(0xd800 + ((v - 0x10000) >> 10)); o[k++] = (uint16_t)(0xdc00 + ((v - 0x10000) & 0x3ff)); } else o[k++] = (uint16_t)v;",
+    "    i += m + 1;",
+    "  }",
+    "  TLEN(r) = k; return r;",
+    "}",
+    "static V deus_text_cs(const char *s) { return deus_text_utf8_of((const uint8_t *)s, strlen(s)); }",
+    "/* All of a file's bytes, or 0 when it cannot be read; `*n` is the length. */",
+    "static uint8_t *deus_slurp(int fd, size_t *n) {",
+    "  size_t cap = 4096, len = 0; uint8_t *b = malloc(cap); if (!b) __builtin_trap();",
+    "  for (;;) { if (len == cap) { cap *= 2; b = realloc(b, cap); if (!b) __builtin_trap(); } ssize_t got = read(fd, b + len, cap - len); if (got < 0) { if (errno == EINTR) continue; free(b); return 0; } if (got == 0) break; len += (size_t)got; }",
+    "  *n = len; return b;",
+    "}",
+    "static void deus_mkdirs(char *path) { for (char *p = path + 1; *p; p++) if (*p == '/') { *p = 0; mkdir(path, 0777); *p = '/'; } mkdir(path, 0777); }",
+    "static void deus_mkparent(const char *path) { const char *slash = strrchr(path, '/'); if (!slash || slash == path) return; size_t n = (size_t)(slash - path); char *d = malloc(n + 1); memcpy(d, path, n); d[n] = 0; deus_mkdirs(d); free(d); }",
+    "static void deus_rm(const char *path) {",
+    "  struct stat st; if (lstat(path, &st) != 0) return;",
+    "  if (S_ISDIR(st.st_mode)) { DIR *d = opendir(path); if (d) { struct dirent *e; while ((e = readdir(d))) { if (!strcmp(e->d_name, \".\") || !strcmp(e->d_name, \"..\")) continue; size_t n = strlen(path) + strlen(e->d_name) + 2; char *c = malloc(n); snprintf(c, n, \"%s/%s\", path, e->d_name); deus_rm(c); free(c); } closedir(d); } rmdir(path); }",
+    "  else unlink(path);",
+    "}",
+    "static V deus_io_put(FILE *f, V t) { V b = deus_scratch(3 * TLEN(t)); V k = deus_utf8(TU(t), TLEN(t), (uint8_t *)TU(b)); fwrite(TU(b), 1, (size_t)k, f); deus_drop(b); return UNIT; }",
+    "static V deus_io_print(V t) { return deus_io_put(stdout, t); }",
+    "static V deus_io_eprint(V t) { fflush(stdout); return deus_io_put(stderr, t); }",
+    "static V deus_io_readFile(V path) { char *p = deus_cstr(path); int fd = open(p, O_RDONLY); free(p); if (fd < 0) return UNIT; size_t n; uint8_t *b = deus_slurp(fd, &n); close(fd); if (!b) return UNIT; V r = deus_text_utf8_of(b, n); free(b); return deus_some(r); }",
+    "static V deus_io_save(V path, V t, const char *mode) { char *p = deus_cstr(path); deus_mkparent(p); FILE *f = fopen(p, mode); free(p); if (!f) __builtin_trap(); deus_io_put(f, t); fclose(f); return UNIT; }",
+    "static V deus_io_writeFile(V path, V t) { return deus_io_save(path, t, \"wb\"); }",
+    "static V deus_io_appendFile(V path, V t) { return deus_io_save(path, t, \"ab\"); }",
+    "static V deus_io_exists(V path) { char *p = deus_cstr(path); struct stat st; V r = stat(p, &st) == 0; free(p); return r; }",
+    "static V deus_io_isDir(V path) { char *p = deus_cstr(path); struct stat st; V r = stat(p, &st) == 0 && S_ISDIR(st.st_mode); free(p); return r; }",
+    "static int deus_name_order(const void *a, const void *b) { return (int)deus_text_cmp(*(const V *)a, *(const V *)b); }",
+    "/* A list of `n` values, consuming them. */",
+    "static V deus_list_of(V *xs, V n) { V r = UNIT; for (V i = n; i-- > 0;) r = deus_cons(xs[i], r); return r; }",
+    "static V deus_io_listDir(V path) {",
+    "  char *p = deus_cstr(path); DIR *d = opendir(p); free(p); if (!d) return UNIT;",
+    "  V n = 0, cap = 16, *xs = malloc(cap * sizeof(V)); struct dirent *e;",
+    "  while ((e = readdir(d))) { if (!strcmp(e->d_name, \".\") || !strcmp(e->d_name, \"..\")) continue; if (n == cap) { cap *= 2; xs = realloc(xs, cap * sizeof(V)); } xs[n++] = deus_text_cs(e->d_name); }",
+    "  closedir(d); qsort(xs, (size_t)n, sizeof(V), deus_name_order); V r = deus_list_of(xs, n); free(xs); return r;",
+    "}",
+    "static V deus_io_mkdirp(V path) { char *p = deus_cstr(path); deus_mkdirs(p); free(p); return UNIT; }",
+    "static V deus_io_remove(V path) { char *p = deus_cstr(path); deus_rm(p); free(p); return UNIT; }",
+    "static V deus_io_args(V unused) { (void)unused; V r = UNIT; for (int i = deus_argc; i-- > 1;) r = deus_cons(deus_text_cs(deus_argv[i]), r); return r; }",
+    "static V deus_io_exit(V code) { fflush(stdout); exit((int)code); }",
+    "static V deus_io_time(V unused) { (void)unused; struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); int64_t ms = (int64_t)(t.tv_sec - deus_start.tv_sec) * 1000 + (t.tv_nsec - deus_start.tv_nsec) / 1000000; return W((uint32_t)ms); }",
+    "static V deus_io_readStdin(V unused) { (void)unused; size_t n; uint8_t *b = deus_slurp(0, &n); if (!b) return deus_text(0); V r = deus_text_utf8_of(b, n); free(b); return r; }",
+    "static V deus_io_writeBytes(V path, V bytes) { char *p = deus_cstr(path); deus_mkparent(p); FILE *f = fopen(p, \"wb\"); free(p); if (!f) __builtin_trap(); for (V c = bytes; UNBOX(c)[0]; c = UNBOX(c)[2]) { V b = UNBOX(c)[1]; fputc(IS_PTR(b) ? 0 : (int)(b & 255), f); } fclose(f); return UNIT; }",
+    "static V deus_io_getEnv(V name) { char *p = deus_cstr(name); const char *v = getenv(p); free(p); return v ? deus_some(deus_text_cs(v)) : UNIT; }",
+    "static V deus_io_wallClock(V unused) { (void)unused; struct timespec t; clock_gettime(CLOCK_REALTIME, &t); char s[32]; snprintf(s, sizeof s, \"%lld%09ld\", (long long)t.tv_sec, (long)t.tv_nsec); return deus_text_cs(s); }",
+    "/* Runs `prog` with `args`, its stdin empty: (exit code, stdout, stderr), 127 when it cannot start. */",
+    "static V deus_io_exec(V prog, V args) {",
+    "  V n = 0; for (V c = args; UNBOX(c)[0]; c = UNBOX(c)[2]) n++;",
+    "  char **argv = malloc((size_t)(n + 2) * sizeof(char *)); argv[0] = deus_cstr(prog); V i = 1;",
+    "  for (V c = args; UNBOX(c)[0]; c = UNBOX(c)[2]) argv[i++] = deus_cstr(UNBOX(c)[1]);",
+    "  argv[i] = 0;",
+    "  int out[2], err[2]; if (pipe(out) || pipe(err)) __builtin_trap();",
+    "  fflush(stdout); fflush(stderr);",
+    "  pid_t pid = fork();",
+    "  if (pid == 0) {",
+    "    int null = open(\"/dev/null\", O_RDONLY); dup2(null, 0); dup2(out[1], 1); dup2(err[1], 2); close(out[0]); close(err[0]);",
+    "    execvp(argv[0], argv); fprintf(stderr, \"spawnSync %s %s\", argv[0], errno == ENOENT ? \"ENOENT\" : strerror(errno)); _exit(127);",
+    "  }",
+    "  close(out[1]); close(err[1]);",
+    "  size_t len[2] = {0, 0}, cap[2] = {4096, 4096}; uint8_t *buf[2] = { malloc(4096), malloc(4096) }; struct pollfd fds[2] = { { out[0], POLLIN, 0 }, { err[0], POLLIN, 0 } }; int open_ = 2;",
+    "  while (open_ > 0) {",
+    "    if (poll(fds, 2, -1) < 0) { if (errno == EINTR) continue; break; }",
+    "    for (int k = 0; k < 2; k++) if (fds[k].fd >= 0 && fds[k].revents) { if (len[k] == cap[k]) { cap[k] *= 2; buf[k] = realloc(buf[k], cap[k]); } ssize_t got = read(fds[k].fd, buf[k] + len[k], cap[k] - len[k]); if (got > 0) len[k] += (size_t)got; else if (got == 0 || errno != EINTR) { close(fds[k].fd); fds[k].fd = -1; open_--; } }",
+    "  }",
+    "  int status = 0; while (waitpid(pid, &status, 0) < 0 && errno == EINTR) {}",
+    "  for (V j = 0; j < i; j++) free(argv[j]); free(argv);",
+    "  V code = WIFEXITED(status) ? WEXITSTATUS(status) : 1;",
+    "  V so = deus_text_utf8_of(buf[0], len[0]), se = deus_text_utf8_of(buf[1], len[1]); free(buf[0]); free(buf[1]);",
+    "  return deus_pair(code, deus_pair(so, se));",
+    "}",
+    "#else",
+    "static V deus_io_trap(void) { __builtin_trap(); }"] ++ List.map (fun name => "#define deus_io_" ++ name ++ "(...) deus_io_trap()") ioOperations ++ ["#endif"])
 
 /-- A C integer literal; the most negative `Int` has no literal of its own. -/
 def lit (n : Int) : Text := if n == -2147483648 then "(-2147483647 - 1)" else "(V)" ++ Int.toText n
@@ -668,7 +780,8 @@ def lending (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
 
 /-- The runtime function of a primitive on `Text` (D115). -/
 def textFunction (p : Text) : Option Text :=
-  List.lookup p [
+  if Text.startsWith "deus.io." p then some ("deus_io_" ++ Text.drop 8 p)
+  else List.lookup p [
     ("Text.length", "TLEN"), ("Text.code", "deus_text_code"), ("Text.slice", "deus_text_slice"),
     ("Text.fromCode", "deus_text_from_code"), ("Text.concat", "deus_text_concat"), ("Text.join", "deus_text_join"),
     ("Text.split", "deus_text_split"), ("Text.indexOf", "deus_text_index"), ("Text.trim", "deus_text_trim"),
@@ -681,7 +794,7 @@ def textFunction (p : Text) : Option Text :=
     ("deus.abortValue", "deus_abort_marker"), ("deus.aborted", "deus_aborted"), ("deus.abortTo", "deus_abort_to"),
     ("deus.caught", "deus_caught"), ("deus.caughtValue", "deus_caught_value"), ("deus.handleEnter", "deus_handle_enter"),
     ("deus.handleAdd", "deus_handle_add"), ("deus.handleExit", "deus_handle_exit"), ("deus.clause", "deus_clause"),
-    ("deus.clauseDone", "deus_clause_done")]
+    ("deus.clauseDone", "deus_clause_done"), ("deus.handled", "deus_handled")]
 
 /-- The index of the equality and order functions of data type `t`, registering them on first use. -/
 def structIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
@@ -999,16 +1112,23 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
       header ++ "  static V cached; static int state;\n  if (state == 2) return deus_dup(cached);\n  if (state == 1) __builtin_trap();\n  state = 1; V before = deus_live;\n  V r = " ++ expr ctx env false [] none f.fnBody ++ ";\n  if (r == DEUS_ABORT) { state = 0; return r; }\n  deus_immortal(r); deus_live = before; cached = r; state = 2; return deus_dup(r);\n}"
     else header ++ "top:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
   let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
-  let inputs := List.range 0 arity
-  let entry := "EXPORT(\"" ++ export ++ "\") int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
-  let result := match List.head? fns with
-    | some f => snd (Wasm.peel f.fnArity f.fnType)
-    | none => Wasm.unknown
+  let peeled := match List.head? fns with
+    | some f => Wasm.peel f.fnArity f.fnType
+    | none => ([], Wasm.unknown)
+  let result := snd peeled
+  -- A program of `Unit` is a command (D129): it reads its arguments through `IO.args`, not as integers.
+  let command := fst peeled == [Wasm.tref "#Unit"]
+  let hosted := List.any (fun f => usesHost f.fnBody) fns
+  let inputs := if command then [] else List.range 0 arity
+  let call := fun (vs : List Text) => if command then "f0(STATIC(&deus_nullary[0]))" else "f0" ++ args (List.map (fun v => "(V)" ++ v) vs)
+  let entry := "EXPORT(\"" ++ export ++ "\") int32_t deus_entry" ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)" ++ call (List.map (fun i => "a" ++ Int.toText i) inputs) ++ "; }"
   let argv := List.map (fun i => "(int32_t)atol(argv[" ++ Int.toText (i + 1) ++ "])") inputs
-  -- A Text result prints as the interpreter shows it: JSON, in UTF-8.
+  let setup := if hosted then "  deus_argc = argc; deus_argv = argv; clock_gettime(CLOCK_MONOTONIC, &deus_start);\n" else ""
+  -- A Text result prints as the interpreter shows it: JSON, in UTF-8; a command's other results print nothing.
   let run := if result == Wasm.tref "#Text" then
-      "  deus_init(); V r = f0" ++ args (List.map (fun a => "(V)" ++ a) argv) ++ "; deus_print_text(r); deus_drop(r);"
-    else "  printf(\"%d\\n\", " ++ export ++ args argv ++ ");"
+      setup ++ "  deus_init(); V r = " ++ call argv ++ "; deus_print_text(r); deus_drop(r);"
+    else if command && result != Wasm.tref "#Int" then setup ++ "  deus_init(); V r = " ++ call argv ++ "; deus_drop(r);"
+    else setup ++ "  printf(\"%d\\n\", deus_entry" ++ args argv ++ ");"
   let main := Text.join "\n" [
     "#ifdef __wasm__",
     "EXPORT(\"deus_live\") int32_t deus_live_words(void) { return (int32_t)deus_live; }",
@@ -1016,7 +1136,8 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
     "#include <stdio.h>",
     "static void deus_print_text(V t) { V n = TLEN(t); uint16_t *x = TU(t); putchar('\"'); for (V i = 0; i < n; i++) { uint32_t u = x[i]; if (u == '\"' || u == '\\\\') { putchar('\\\\'); putchar(u); } else if (u == '\\n') fputs(\"\\\\n\", stdout); else if (u == '\\r') fputs(\"\\\\r\", stdout); else if (u == '\\t') fputs(\"\\\\t\", stdout); else if (u == 8) fputs(\"\\\\b\", stdout); else if (u == 12) fputs(\"\\\\f\", stdout); else if (u < 32) printf(\"\\\\u%04x\", u); else if (u >= 0xd800 && u < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000) { uint32_t c = 0x10000 + ((u - 0xd800) << 10) + (x[++i] - 0xdc00); putchar(0xf0 | c >> 18); putchar(0x80 | (c >> 12 & 63)); putchar(0x80 | (c >> 6 & 63)); putchar(0x80 | (c & 63)); } else if (u >= 0xd800 && u < 0xe000) printf(\"\\\\u%04x\", u); else if (u < 0x80) putchar(u); else if (u < 0x800) { putchar(0xc0 | u >> 6); putchar(0x80 | (u & 63)); } else { putchar(0xe0 | u >> 12); putchar(0x80 | (u >> 6 & 63)); putchar(0x80 | (u & 63)); } } puts(\"\\\"\"); }",
     "int main(int argc, char **argv) {",
-    "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++ Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }",
+    if command then "  (void)argc; (void)argv;"
+    else "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++ Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }",
     run,
     "  if (getenv(\"DEUS_HEAP_STATS\")) fprintf(stderr, \"heap: %ld words bumped, %ld live, %ld peak\\n\", (long)(deus_hp - deus_base), (long)deus_live, (long)deus_peak);",
     "  return 0;",
@@ -1029,7 +1150,7 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let comparisonDecls := List.mapIndexed (fun k t =>
     if Sexp.head t == "show" then "static V deus_show" ++ Int.toText k ++ "(V, V);"
     else "static V deus_eq" ++ Int.toText k ++ "(V, V); static V deus_cmp" ++ Int.toText k ++ "(V, V);") (Ref.get structs)
-  Text.join "\n" ([prelude nullary] ++ decls ++ codeDecls ++ comparisonDecls ++ [""] ++ bodies ++ codes ++ comparisons ++ ["", entry, main, ""])
+  Text.join "\n" ([prelude nullary] ++ (if hosted then [ioRuntime] else []) ++ decls ++ codeDecls ++ comparisonDecls ++ [""] ++ bodies ++ codes ++ comparisons ++ ["", entry, main, ""])
 
 --
 -- Lambda lifting. A `letrec` function becomes a top-level function that takes the locals it
@@ -1313,11 +1434,24 @@ def effBind (xs : List Sexp) (body : Sexp) : Sexp :=
   | [] => body
   | x :: rest => eLet x (effBind (List.map (shift 1 0) rest) body)
 
-/-- Performing operation `i` of ability `a` with `k` arguments: the arguments, then the clause, called with the handler hidden. -/
-def effPerform (a : Int) (i : Int) (args : List Sexp) : Sexp :=
+/--
+  Performing operation `i` of ability `a` with `k` arguments: the arguments, then the clause,
+  called with the handler hidden. With no handler for it, a `host` primitive performs it instead.
+-/
+def effPerform (a : Int) (i : Int) (host : Option Text) (args : List Sexp) : Sexp :=
   let k := List.length args
   let call := Sexp.list (Sexp.sym "app" :: eVar 0 :: List.map (fun j => eVar (k - j)) (List.range 0 k))
-  effBind args (eLet (Unique.applyPrim "deus.clause" [eInt a, eInt i]) (eLet call (Unique.applyPrim "deus.clauseDone" [eVar 0])))
+  let handled := eLet (Unique.applyPrim "deus.clause" [eInt a, eInt i]) (eLet call (Unique.applyPrim "deus.clauseDone" [eVar 0]))
+  effBind args (match host with
+    | some p => eIf (Unique.applyPrim "deus.handled" [eInt a, eInt i]) handled (Unique.applyPrim p (List.map (fun j => eVar (k - 1 - j)) (List.range 0 k)))
+    | none => handled)
+
+/-- The operations of `IO`, in order, which the C runtime performs when no handler does (D129). -/
+def ioOperations : List Text := ["print", "eprint", "readFile", "writeFile", "exists", "listDir", "mkdirp", "remove", "args", "exit", "time", "readStdin", "writeBytes", "getEnv", "isDir", "wallClock", "appendFile", "exec"]
+
+/-- The host primitive for operation `i` of ability `a`, if the C runtime has one. -/
+def effHost (a : Text) (i : Int) : Option Text :=
+  if a == "#IO" then Option.map (fun name => "deus.io." ++ name) (List.get? ioOperations i) else none
 
 /--
   A handler: its clauses installed as closures, the body run, the handler removed, then the value
@@ -1343,7 +1477,7 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
     let n := List.length xs
     if n < k then throw "an operation applied to fewer arguments than it takes is outside the C subset"
     else
-      let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (List.map (effLower abilities) (List.take k xs))
+      let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (effHost a i) (List.map (effLower abilities) (List.take k xs))
       if n == k then performed else Sexp.list (Sexp.sym "app" :: performed :: List.map (effLower abilities) (List.drop k xs))
   | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
@@ -1361,6 +1495,13 @@ def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
         List.map (fun f => rebuild f (fst (effNorm aborts f.fnBody))) fns
       else fns
     List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
+
+/-- Whether `e` calls a host primitive of `IO` (D129). -/
+def usesHost (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => Text.startsWith "deus.io." p
+  | Sexp.list items => List.any usesHost items
+  | _ => false
 
 /-- The data types whose constructors `form` applies. -/
 def builtTypes (form : Sexp) : List Text :=

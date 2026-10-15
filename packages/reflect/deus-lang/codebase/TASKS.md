@@ -180,6 +180,8 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - labels: native, perf
 - links `CGen.effPerform` (#4dce416f4f)
 
+> claude: IO host operations done (D129): every IO operation checks for a program handler, else the C runtime performs it; examples/command.deus agrees with deus run. Cli.main now stops at Code.run, which needs an evaluator in the C runtime.
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
