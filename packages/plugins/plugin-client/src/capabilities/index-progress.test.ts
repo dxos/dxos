@@ -23,16 +23,26 @@ describe('followIndexProgress', () => {
     const indexStatus = new MulticastObservable<DataService.IndexStatus | null>((observer) => {
       next = (status) => observer.next(status);
     }, null);
+    let nextActivity: ((activity: DataService.IndexActivity) => void) | undefined;
+    const indexActivity = new MulticastObservable<DataService.IndexActivity>((observer) => {
+      nextActivity = (activity) => observer.next(activity);
+    }, {});
     const monitors = new Map<string, { set: Mock; total: Mock; remove: Mock }>();
     const register = vi.fn((key: string, _options?: { label?: string }) => {
       const monitor = { set: vi.fn(), total: vi.fn(), remove: vi.fn() };
       monitors.set(key, monitor);
       return monitor as unknown as AppCapabilities.ProgressMonitor;
     });
-    const cleanup = followIndexProgress(indexStatus, { register });
+    const cleanup = followIndexProgress({ indexStatus, indexActivity }, { register });
     // The observable replays its current value as the subscription initializes, which zen-observable buffers until a microtask.
     await Promise.resolve();
-    return { emit: (status: DataService.IndexStatus) => next?.(status), register, monitors, cleanup };
+    return {
+      emit: (status: DataService.IndexStatus) => next?.(status),
+      emitActivity: (activity: DataService.IndexActivity) => nextActivity?.(activity),
+      register,
+      monitors,
+      cleanup,
+    };
   };
 
   test('index work that ends within the debounce never shows', async () => {
@@ -60,18 +70,18 @@ describe('followIndexProgress', () => {
   });
 
   test('catch-up and full-text work each show and end on their own', async () => {
-    const { emit, register, monitors, cleanup } = await setup();
-    emit({ phase: 'idle', done: 0, total: 0, catchUp: { done: 0, total: 200 }, fullText: { done: 0, total: 900 } });
+    const { emitActivity, register, monitors, cleanup } = await setup();
+    emitActivity({ catchUp: { done: 0, total: 200 }, fullText: { done: 0, total: 900 } });
     vi.advanceTimersByTime(INDEX_PROGRESS_DEBOUNCE);
     expect(register.mock.calls.map(([key, options]) => [key, options?.label])).toEqual([
-      ['org.dxos.plugin.client.index.catch-up', 'Catching up database index'],
-      ['org.dxos.plugin.client.index.full-text', 'Updating search index'],
+      ['org.dxos.plugin.client.index.catchUp', 'Catching up database index'],
+      ['org.dxos.plugin.client.index.fullText', 'Updating search index'],
     ]);
 
-    emit({ phase: 'idle', done: 0, total: 0, fullText: { done: 300, total: 900 } });
-    expect(monitors.get('org.dxos.plugin.client.index.catch-up')!.remove).toHaveBeenCalled();
-    expect(monitors.get('org.dxos.plugin.client.index.full-text')!.set).toHaveBeenLastCalledWith(300);
-    expect(monitors.get('org.dxos.plugin.client.index.full-text')!.remove).not.toHaveBeenCalled();
+    emitActivity({ fullText: { done: 300, total: 900 } });
+    expect(monitors.get('org.dxos.plugin.client.index.catchUp')!.remove).toHaveBeenCalled();
+    expect(monitors.get('org.dxos.plugin.client.index.fullText')!.set).toHaveBeenLastCalledWith(300);
+    expect(monitors.get('org.dxos.plugin.client.index.fullText')!.remove).not.toHaveBeenCalled();
     cleanup();
   });
 });

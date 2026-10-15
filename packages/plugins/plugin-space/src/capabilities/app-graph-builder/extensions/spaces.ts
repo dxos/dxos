@@ -56,20 +56,20 @@ const SPACE_OPEN_TIMEOUT = 60_000;
 
 /**
  * Flips to true once a pending space has waited {@link SPACE_OPEN_TIMEOUT} without the index
- * moving: a space waiting on a migration or rebuild that is still making progress (e.g. after an
- * upgrade) is not stuck, so each step of one restarts the wait.
+ * moving: a space waiting on a rebuild that is still making progress (e.g. after an upgrade) is
+ * not stuck, so each index status the client reports restarts the wait.
  */
 const makeDeadlineAtom = (clientAtom: Atom.Atom<readonly Client[]>) =>
   Atom.make((get) => {
     const client = get(clientAtom).at(0);
     let timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
-    const unsubscribe = client?.indexProgress.on(() => {
+    const subscription = client?.indexStatus.subscribe(() => {
       clearTimeout(timeout);
       timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
     });
     get.addFinalizer(() => {
       clearTimeout(timeout);
-      unsubscribe?.();
+      subscription?.unsubscribe();
     });
     return false;
   });

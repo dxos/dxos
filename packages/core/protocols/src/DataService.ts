@@ -308,33 +308,30 @@ export const IndexProgress = Schema.Struct({
 export interface IndexProgress extends Schema.Schema.Type<typeof IndexProgress> {}
 
 /**
- * What the host's index is doing, for a boot screen or progress indicator. `phase` is the work that
- * leaves queries with nothing to read: running index migrations, or rebuilding the index over stored
- * documents and feed blocks it has no cursor for. `done` of `total` counts migrations while migrating
- * and documents plus feed blocks while indexing; `total` can grow while indexing as new data arrives.
- *
- * The optional lanes are work queries can answer through, from an index that is behind: `catchUp`
- * counts indexed documents whose heads moved on and feed blocks past their feed's cursor, as after
- * time offline, and `fullText` counts objects the full-text index has not reached, as after it is
- * rebuilt.
+ * The index work a boot screen or a deadline waits on: running index migrations, or rebuilding the
+ * index over documents it has no cursor for and the feed blocks of its spaces stored before the host
+ * opened. `done` of `total` counts migrations while migrating and documents plus feed blocks while
+ * indexing; `total` can grow while indexing. The host reports it only when it changes, so each status
+ * is progress.
  */
 export const IndexStatus = Schema.Struct({
   phase: Schema.Literals(['migrating', 'indexing', 'idle']),
   done: Schema.Number,
   total: Schema.Number,
-  catchUp: Schema.optional(IndexProgress),
-  fullText: Schema.optional(IndexProgress),
 });
 export interface IndexStatus extends Schema.Schema.Type<typeof IndexStatus> {}
 
 /**
- * Whether `next` moves a migration or rebuild on from `previous` (idle when absent): what a deadline
- * waiting on the index counts as progress. A status that only moves a lane does not.
+ * Index work queries answer through, from an index that is behind, for a progress indicator:
+ * `catchUp` counts indexed documents whose heads moved on and feed blocks stored after the host opened,
+ * as after time offline, and `fullText` counts objects the full-text index has not reached, as after it
+ * is rebuilt. A lane is absent while it has no work.
  */
-export const movesPhase = (previous: IndexStatus | null | undefined, next: IndexStatus): boolean =>
-  next.phase !== (previous?.phase ?? 'idle') ||
-  next.done !== (previous?.done ?? 0) ||
-  next.total !== (previous?.total ?? 0);
+export const IndexActivity = Schema.Struct({
+  catchUp: Schema.optional(IndexProgress),
+  fullText: Schema.optional(IndexProgress),
+});
+export interface IndexActivity extends Schema.Schema.Type<typeof IndexActivity> {}
 
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.
@@ -418,6 +415,14 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('subscribeIndexStatus', {
     success: IndexStatus,
+    error: serviceError,
+    stream: true,
+  }),
+  /**
+   * The host's index activity: the current value at once, then each change.
+   */
+  Rpc.make('subscribeIndexActivity', {
+    success: IndexActivity,
     error: serviceError,
     stream: true,
   }),

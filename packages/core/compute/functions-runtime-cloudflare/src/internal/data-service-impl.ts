@@ -199,6 +199,10 @@ export class DataServiceImpl implements DataService.Handlers {
     return EffectStream.make({ phase: 'idle' as const, done: 0, total: 0 });
   }
 
+  ['DataService.subscribeIndexActivity'](): EffectStream.Stream<DataService.IndexActivity, Error> {
+    return EffectStream.make({});
+  }
+
   ['DataService.getDocumentHeads'](
     _request: DataService.GetDocumentHeadsRequest,
   ): Effect.Effect<DataService.GetDocumentHeadsResponse, BaseError> {

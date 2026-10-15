@@ -58,7 +58,7 @@ export type IndexingResult = {
    * leaves.
    */
   drained: boolean;
-  /** Indexed entries whose source moved on, left for a later pass; see {@link IndexDataSource.getChangedObjects}. */
+  /** Indexed entries whose source moved on, left for a later pass, when the pass counted them; see {@link IndexDataSource.getChangedObjects}. */
   catchUp?: number;
   spaces: ReadonlySet<SpaceId>;
   queues: ReadonlySet<EntityId>;
@@ -71,7 +71,7 @@ type MutableIndexingResult = {
   updated: number;
   done: boolean;
   drained: boolean;
-  catchUp: number;
+  catchUp?: number;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -83,7 +83,6 @@ const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   updated: 0,
   done: true,
   drained: true,
-  catchUp: 0,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -209,18 +208,21 @@ const compareVersions = (version: string, minimum: readonly number[]): number =>
   return 0;
 };
 
-/** A source may hand back every cursor it holds, so progress is a cursor whose position changed. */
-const anyCursorMoved = (
+/** The cursors in `updated` whose position changed: a source may hand back every cursor it holds. */
+const movedCursors = (
   sourceName: string,
   previous: readonly IndexCursor[],
   updated: readonly DataSourceCursor[],
-): boolean => {
+): DataSourceCursor[] => {
+  if (updated.length === 0) {
+    return [];
+  }
   const positions = new Map(
     previous
       .filter((cursor) => cursor.sourceName === sourceName)
       .map((cursor) => [`${cursor.spaceId}/${cursor.resourceId}`, cursor.cursor]),
   );
-  return updated.some((cursor) => positions.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor);
+  return updated.filter((cursor) => positions.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor);
 };
 
 /** Whether two indexes stand at the same position on every resource, and so would read the same batch. */
@@ -567,7 +569,7 @@ export class IndexEngine {
   update(
     ctx: Context,
     dataSource: IndexDataSource,
-    opts: { spaceId: SpaceId | null; limit?: number },
+    opts: { spaceId: SpaceId | null; limit?: number; countCatchUp?: boolean },
   ): Effect.Effect<IndexingResult, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
@@ -602,13 +604,16 @@ export class IndexEngine {
         const { updated, done, drained, catchUp, objects } = yield* this.#update(ctx, legs, dataSource, {
           spaceId: opts.spaceId,
           limit: opts.limit,
+          countCatchUp: opts.countCatchUp,
           cursors,
         });
         result.updated += updated;
         result.done = result.done && done;
         result.drained = result.drained && drained;
         // The furthest-behind index, as the backlog is counted.
-        result.catchUp = Math.max(result.catchUp, catchUp);
+        if (catchUp !== undefined) {
+          result.catchUp = Math.max(result.catchUp ?? 0, catchUp);
+        }
         accumulateIndexingResult(result, objects);
       }
 
@@ -661,9 +666,15 @@ export class IndexEngine {
     ctx: Context,
     legs: readonly IndexLeg[],
     source: IndexDataSource,
-    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
+    opts: { spaceId: SpaceId | null; limit?: number; countCatchUp?: boolean; cursors: IndexCursor[] },
   ): Effect.Effect<
-    { updated: number; done: boolean; drained: boolean; catchUp: number; objects: readonly IndexerObject[] },
+    {
+      updated: number;
+      done: boolean;
+      drained: boolean;
+      catchUp?: number;
+      objects: readonly IndexerObject[];
+    },
     SqlError.SqlError
   > {
     return Effect.gen({ self: this }, function* () {
@@ -677,14 +688,40 @@ export class IndexEngine {
         objects,
         cursors: updatedCursors,
         more,
-        catchUp = 0,
+        catchUp,
       } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
+        countCatchUp: opts.countCatchUp,
       });
 
-      // An empty batch counts as drained even when the source says it stopped at the limit: the
-      // entries it skipped (a document that will not load) do not advance, so waiting would spin.
       if (objects.length === 0) {
+        // Entries read with nothing to index still move their cursors, so the next batch goes past them.
+        const moved = movedCursors(source.sourceName, opts.cursors, updatedCursors);
+        if (moved.length > 0) {
+          yield* sql.withTransaction(
+            this.#tracker.updateCursors(
+              legs.flatMap(({ indexName }) =>
+                moved.map((cursor): IndexCursor => ({
+                  indexName,
+                  spaceId: cursor.spaceId,
+                  sourceName: source.sourceName,
+                  resourceId: cursor.resourceId,
+                  cursor: cursor.cursor,
+                })),
+              ),
+            ),
+          );
+          return {
+            updated: 0,
+            done: false,
+            drained: more === false,
+            catchUp,
+            objects: [] as readonly IndexerObject[],
+          };
+        }
+        // An empty batch that moves nothing counts as drained even when the source says it stopped at
+        // the limit: the entries it skipped (a document that will not load) do not advance, so waiting
+        // would spin.
         return { updated: 0, done: true, drained: true, catchUp, objects: [] as readonly IndexerObject[] };
       }
 
@@ -698,12 +735,24 @@ export class IndexEngine {
           }
           if (ctx.disposed) {
             const indexed = objects.slice(0, written);
-            return { updated: indexed.length * legs.length, done: false, drained: false, catchUp, objects: indexed };
+            return {
+              updated: indexed.length * legs.length,
+              done: false,
+              drained: false,
+              catchUp,
+              objects: indexed,
+            };
           }
         }
         written = yield* sql.withTransaction(this.#writeTransaction(legs, source, objects, written, cursors));
       }
-      return { updated: objects.length * legs.length, done: false, drained: more === false, catchUp, objects };
+      return {
+        updated: objects.length * legs.length,
+        done: false,
+        drained: more === false,
+        catchUp,
+        objects,
+      };
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
@@ -803,7 +852,7 @@ export class IndexEngine {
             })),
           );
           const updated = activity.reduce((sum, entry) => sum + entry.changes.length, 0);
-          const done = !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors);
+          const done = movedCursors(source.sourceName, opts.cursors, updatedCursors).length === 0;
           return { updated, done, drained: done || more === false, documents: activity };
         }),
       );

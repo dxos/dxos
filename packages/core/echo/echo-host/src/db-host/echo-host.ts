@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
+import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -58,7 +58,7 @@ import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
-import { IndexStatusTracker, countIndexBacklog } from './index-status.ts';
+import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
@@ -110,6 +110,9 @@ export type EchoHostProps = {
 
   /** Overrides the bounds on one index write transaction; see {@link IndexTransactionLimits}. */
   indexTransactionLimits?: Partial<IndexTransactionLimits>;
+
+  /** Overrides how often index progress is counted, once a second by default; tests count every pass. */
+  indexRecountInterval?: number;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -183,7 +186,7 @@ export class EchoHost extends Resource {
   private readonly _indexScheduler: IndexScheduler;
 
   /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
-  readonly indexStatus = new IndexStatusTracker();
+  readonly indexStatus: IndexStatusTracker;
 
   private _feedService: FeedService.Handlers;
 
@@ -192,8 +195,8 @@ export class EchoHost extends Resource {
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
-  /** The running {@link updateSecondaryIndexes}, which owns the full-text lane while it runs. */
-  #secondaryIndexing: Promise<number> | undefined;
+  /** Serializes {@link updateSecondaryIndexes}, so one run owns the full-text lane at a time. */
+  readonly #secondaryIndexLock = new Mutex();
 
   /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
   #ftsFlushDeadline: number | undefined;
@@ -212,11 +215,13 @@ export class EchoHost extends Resource {
     queryExecutor,
     queryDebounce,
     indexTransactionLimits,
+    indexRecountInterval,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
     super();
     this.#indexTransactionLimits = indexTransactionLimits;
+    this.indexStatus = new IndexStatusTracker({ recountInterval: indexRecountInterval });
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
@@ -411,11 +416,6 @@ export class EchoHost extends Resource {
     await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
 
-    // Counted once every store is migrated: a cursor-resetting migration shows up here as the rebuild it starts.
-    const backlog = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
-    log('echo-host: index backlog', backlog);
-    this.indexStatus.opened(backlog);
-
     log('echo-host: opening query service...');
     await this._queryService.open(ctx);
     log('echo-host: query service opened');
@@ -423,6 +423,17 @@ export class EchoHost extends Resource {
     log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
+
+    // Counted once every store is migrated and the persisted spaces are loaded, whose feeds the indexer
+    // reads from its first pass: a cursor-resetting migration shows up here as the rebuild it starts.
+    // Without the pin every block counts as catch-up, which only shows in the meter.
+    const pin = await RuntimeProvider.runPromise(this._runtime)(readFeedPin()).catch((err) => {
+      log.warn('index feed pin read failed', { err });
+      return -1;
+    });
+    await this.indexStatus.opened(() =>
+      RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
+    );
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const previous = this._spaceDocumentIds.get(e.spaceId);
       this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
@@ -513,25 +524,12 @@ export class EchoHost extends Resource {
    * @returns Number of records indexed.
    */
   async updateSecondaryIndexes(): Promise<number> {
-    while (this.#secondaryIndexing) {
-      await this.#secondaryIndexing.catch(() => {});
-    }
-    const run = this.#indexSecondary();
-    this.#secondaryIndexing = run;
-    try {
-      return await run;
-    } finally {
-      if (this.#secondaryIndexing === run) {
-        this.#secondaryIndexing = undefined;
-      }
-    }
+    return this.#secondaryIndexLock.executeSynchronized(() => this.#indexSecondary());
   }
 
   async #indexSecondary(): Promise<number> {
     const ctx = this._ctx;
     const startedAt = performance.now();
-    const backlog = await this.indexEngine.countSecondaryBacklog().pipe(RuntimeProvider.runPromise(this._runtime));
-    this.indexStatus.setFullText(backlog);
     let records = 0;
     let batches = 0;
     let hint: InvalidationHint | undefined;
@@ -552,14 +550,16 @@ export class EchoHost extends Resource {
         if (batch) {
           hint = hint ? mergeHints(hint, batch) : batch;
         }
-        if (result.done) {
+        if (result.done || ctx.disposed || !this.isOpen) {
           break;
         }
-        this.indexStatus.setFullText(backlog - records);
+        await this.indexStatus.afterFullTextBatch(() =>
+          this.indexEngine.countSecondaryBacklog().pipe(RuntimeProvider.runPromise(this._runtime)),
+        );
       }
     } finally {
       // A failed batch leaves the rest to the next flush, which reports it again.
-      this.indexStatus.setFullText(0);
+      this.indexStatus.fullTextEnded();
     }
 
     // A text query issued before this catch-up matched nothing and would never re-run on its own:
@@ -1290,11 +1290,12 @@ export class EchoHost extends Resource {
 
     try {
       const combinedResult = _makeEmptyMergedResult();
+      const countCatchUp = this.indexStatus.beginPass();
 
       {
         performance.mark('indexEngine.update.automerge:start');
         const result = await this.indexEngine
-          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
 
@@ -1397,9 +1398,10 @@ export class EchoHost extends Resource {
         this._queryService.invalidateQueries(hint);
       }
 
-      await this.indexStatus.afterPass(combinedResult, () =>
-        RuntimeProvider.runPromise(this._runtime)(countIndexBacklog()),
-      );
+      // A count against a closing host would only report a failure.
+      if (!this._ctx.disposed && this.isOpen) {
+        await this.indexStatus.afterPass(combinedResult);
+      }
 
       return {
         updated: combinedResult.updated,
@@ -1437,7 +1439,7 @@ type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
   drained: boolean;
-  catchUp: number;
+  catchUp?: number;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -1449,7 +1451,6 @@ const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
   updated: 0,
   done: true,
   drained: true,
-  catchUp: 0,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -1461,7 +1462,9 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
   acc.updated += r.updated;
   acc.done = acc.done && r.done;
   acc.drained = acc.drained && r.drained;
-  acc.catchUp += r.catchUp ?? 0;
+  if (r.catchUp !== undefined) {
+    acc.catchUp = (acc.catchUp ?? 0) + r.catchUp;
+  }
   for (const s of r.spaces) {
     acc.spaces.add(s);
   }

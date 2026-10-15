@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
-import { DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { type BranchStore, type DocumentRetention } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
@@ -85,13 +85,12 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
-  /** Each index status the host reports; see `DataService.IndexStatus`. */
+  /** Each index status the host reports (see `DataService.IndexStatus`); also restarts one-shot query budgets. */
   readonly indexStatusUpdated = new Event<DataService.IndexStatus>();
 
-  /** Each status that moves a migration or rebuild on (see {@link DataService.movesPhase}); restarts one-shot query budgets. */
-  readonly #indexProgress = new Event<DataService.IndexStatus>();
+  /** Each index activity the host reports; see `DataService.IndexActivity`. */
+  readonly indexActivityUpdated = new Event<DataService.IndexActivity>();
 
-  #indexStatus: DataService.IndexStatus | undefined;
   #indexStatusCleanup: (() => void) | undefined;
 
   constructor(_: EchoClientProps = {}) {
@@ -134,25 +133,27 @@ export class EchoClient extends Resource {
     this.#subscribeIndexStatus();
   }
 
-  /** Follows the host's index status; re-run after a reconnect, which closes the previous stream. */
+  /** Follows the host's index status and activity; re-run after a reconnect, which closes the previous streams. */
   #subscribeIndexStatus(): void {
     invariant(this._dataService);
     this.#indexStatusCleanup?.();
-    this.#indexStatusCleanup = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexStatus'](), {
-      onData: (status) => {
-        const previous = this.#indexStatus;
-        this.#indexStatus = status;
-        this.indexStatusUpdated.emit(status);
-        if (DataService.movesPhase(previous, status)) {
-          this.#indexProgress.emit(status);
-        }
-      },
-      onError: (err) => {
-        if (!(err instanceof RpcClosedError)) {
-          log.warn('index status stream failed', { err });
-        }
-      },
+    const onError = (err: Error) => {
+      if (!(err instanceof RpcClosedError)) {
+        log.warn('index status stream failed', { err });
+      }
+    };
+    const status = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexStatus'](), {
+      onData: (status) => this.indexStatusUpdated.emit(status),
+      onError,
     });
+    const activity = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexActivity'](), {
+      onData: (activity) => this.indexActivityUpdated.emit(activity),
+      onError,
+    });
+    this.#indexStatusCleanup = () => {
+      status();
+      activity();
+    };
   }
 
   #createIndexQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
@@ -165,7 +166,7 @@ export class EchoClient extends Resource {
         subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
-      indexProgress: this.#indexProgress,
+      indexProgress: this.indexStatusUpdated,
     });
   }
 

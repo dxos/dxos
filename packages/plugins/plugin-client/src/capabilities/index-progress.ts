@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { type MulticastObservable } from '@dxos/async';
+import { type Client } from '@dxos/client';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities } from '#types';
@@ -17,27 +17,10 @@ export const INDEX_PROGRESS_DEBOUNCE = 1_000;
 
 const INDEX_PROGRESS_KEY = 'org.dxos.plugin.client.index';
 
-/** Each kind of index work the meter shows, read from a status. */
-const LANES: readonly {
-  key: string;
-  label: (status: DataService.IndexStatus) => string;
-  progress: (status: DataService.IndexStatus) => DataService.IndexProgress | undefined;
-}[] = [
-  {
-    key: INDEX_PROGRESS_KEY,
-    label: (status) => (status.phase === 'migrating' ? 'Migrating database' : 'Updating database index'),
-    progress: (status) => (status.phase === 'idle' ? undefined : status),
-  },
-  {
-    key: `${INDEX_PROGRESS_KEY}.catch-up`,
-    label: () => 'Catching up database index',
-    progress: (status) => status.catchUp,
-  },
-  {
-    key: `${INDEX_PROGRESS_KEY}.full-text`,
-    label: () => 'Updating search index',
-    progress: (status) => status.fullText,
-  },
+/** The lanes of index activity the meter shows, each as its own entry. */
+const ACTIVITY_LANES: readonly { lane: keyof DataService.IndexActivity; label: string }[] = [
+  { lane: 'catchUp', label: 'Catching up database index' },
+  { lane: 'fullText', label: 'Updating search index' },
 ];
 
 /**
@@ -82,26 +65,35 @@ const followLane = (registry: Pick<AppCapabilities.ProgressRegistry, 'register'>
 };
 
 /**
- * Mirrors the client's index status into the progress registry, one monitor per kind of index work
- * that lasts longer than {@link INDEX_PROGRESS_DEBOUNCE}. Returns a cleanup.
+ * Mirrors the client's index status and activity into the progress registry, one monitor per kind of
+ * index work that lasts longer than {@link INDEX_PROGRESS_DEBOUNCE}. Returns a cleanup.
  */
 export const followIndexProgress = (
-  indexStatus: MulticastObservable<DataService.IndexStatus | null>,
+  { indexStatus, indexActivity }: Pick<Client, 'indexStatus' | 'indexActivity'>,
   registry: Pick<AppCapabilities.ProgressRegistry, 'register'>,
 ): (() => void) => {
-  const lanes = LANES.map((lane) => ({ ...lane, ...followLane(registry, lane.key) }));
-  const subscription = indexStatus.subscribe((status) => {
-    for (const lane of lanes) {
-      if (status) {
-        lane.update(lane.label(status), lane.progress(status));
-      } else {
-        lane.hide();
-      }
+  const rebuild = followLane(registry, INDEX_PROGRESS_KEY);
+  const lanes = ACTIVITY_LANES.map(({ lane, label }) => ({
+    lane,
+    label,
+    ...followLane(registry, `${INDEX_PROGRESS_KEY}.${lane}`),
+  }));
+  const statusSubscription = indexStatus.subscribe((status) =>
+    rebuild.update(
+      status?.phase === 'migrating' ? 'Migrating database' : 'Updating database index',
+      status && status.phase !== 'idle' ? { done: status.done, total: status.total } : undefined,
+    ),
+  );
+  const activitySubscription = indexActivity.subscribe((activity) => {
+    for (const { lane, label, update } of lanes) {
+      update(label, activity[lane]);
     }
   });
 
   return () => {
-    subscription.unsubscribe();
+    statusSubscription.unsubscribe();
+    activitySubscription.unsubscribe();
+    rebuild.hide();
     for (const lane of lanes) {
       lane.hide();
     }
@@ -121,7 +113,7 @@ export default Capability.makeModule(
       return [];
     }
 
-    const cleanup = followIndexProgress(client.indexStatus, registry.value);
+    const cleanup = followIndexProgress(client, registry.value);
     yield* Effect.addFinalizer(() => Effect.sync(cleanup));
     return [];
   }),

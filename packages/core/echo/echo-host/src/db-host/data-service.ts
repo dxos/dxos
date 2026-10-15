@@ -266,6 +266,15 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
+  ['DataService.subscribeIndexActivity'](): EffectStream.Stream<DataService.IndexActivity, Error> {
+    return EffectEx.streamFromEmitter<DataService.IndexActivity, Error>((emit) => {
+      const ctx = Context.default();
+      this._indexStatus.activityUpdated.on(ctx, (activity) => void emit.single(activity));
+      void emit.single(this._indexStatus.activity);
+      return Effect.promise(() => ctx.dispose());
+    });
+  }
+
   ['DataService.subscribeSpaceSyncState'](
     request: DataService.GetSpaceSyncStateRequest,
   ): EffectStream.Stream<DataService.SpaceSyncState, Error> {

@@ -193,6 +193,37 @@ describe('IndexEngine', () => {
     }, Effect.provide(TestLayer)),
   );
 
+  // A document with nothing to index, such as one of another kind, still counts as read, so a batch of
+  // them neither ends the work behind it nor is read again.
+  it.effect(
+    'an empty batch still moves the cursors of what it read, and the next goes past them',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      // The cursors each primary read starts from; the activity leg keeps its own.
+      const reads: DataSourceCursor[][] = [];
+      const dataSource: IndexDataSource = {
+        sourceName: 'skipping-source',
+        getChangedObjects: (_ctx, cursors, opts) =>
+          Effect.sync(() => {
+            if (opts?.objects !== false) {
+              reads.push(cursors);
+            }
+            const read = cursors.some(({ resourceId, cursor }) => resourceId === 'root' && cursor === 'root@1');
+            return {
+              objects: [],
+              cursors: read ? [] : [{ spaceId: null, resourceId: 'root', cursor: 'root@1' }],
+              more: false,
+            };
+          }),
+      };
+      const first = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(first).toMatchObject({ done: false, drained: true });
+      const second = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(second).toMatchObject({ done: true, drained: true });
+      expect(reads.at(-1)).toMatchObject([{ resourceId: 'root', cursor: 'root@1' }]);
+    }, Effect.provide(TestLayer)),
+  );
+
   // Each transaction rewrites every page it dirties, so a second stamp per pass doubled the writes.
   it.effect(
     'stamps each object once per pass while the snapshot and reverse-ref legs share a position',

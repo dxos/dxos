@@ -216,6 +216,7 @@ export interface DataServicePromise {
     options?: RequestOptions,
   ) => Stream<RpcDataService.SpaceSyncState>;
   subscribeIndexStatus: (request: void, options?: RequestOptions) => Stream<RpcDataService.IndexStatus>;
+  subscribeIndexActivity: (request: void, options?: RequestOptions) => Stream<RpcDataService.IndexActivity>;
   stats: (
     request: RpcDataService.DatabaseStatsRequest,
     options?: RequestOptions,

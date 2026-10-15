@@ -15,6 +15,7 @@ import {
   type IndexDataSource,
   type IndexerObject,
 } from '@dxos/index-core';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
@@ -115,13 +116,13 @@ export class AutomergeDataSource implements IndexDataSource {
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number; activity?: boolean; objects?: boolean },
+    opts?: { limit?: number; activity?: boolean; objects?: boolean; countCatchUp?: boolean },
   ): Effect.Effect<{
     objects: IndexerObject[];
     cursors: DataSourceCursor[];
     activity?: DocumentActivity[];
     more: boolean;
-    catchUp: number;
+    catchUp?: number;
   }> {
     return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
@@ -138,13 +139,16 @@ export class AutomergeDataSource implements IndexDataSource {
       const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
       const limit = opts?.limit ?? Infinity;
       let more = false;
-      let catchUp = 0;
+      // Counting reads on past the limit, comparing heads for every document, so only when asked.
+      let catchUp = opts?.countCatchUp ? 0 : undefined;
       for (const { documentId, heads } of allDocumentHeads) {
         const cursor = cursorMap.get(documentId);
         if (hasChanged(cursor, heads)) {
           if (changedDocuments.length >= limit) {
             more = true;
-            // Counted rather than stopping here: the rest of the scan is a heads comparison per document.
+            if (catchUp === undefined) {
+              break;
+            }
             if (cursor) {
               catchUp++;
             }
@@ -162,6 +166,8 @@ export class AutomergeDataSource implements IndexDataSource {
       const extractObjects = opts?.objects !== false;
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
+        const firstObject = objects.length;
+        let docSpaceId: SpaceId | null = null;
         try {
           using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
           if (!lease) {
@@ -169,15 +175,25 @@ export class AutomergeDataSource implements IndexDataSource {
           }
           const doc: DatabaseDirectory = lease.doc();
 
-          // Skip outdated docs.
-          if (doc.version !== SpaceDocVersion.CURRENT) {
-            continue;
-          }
+          // Extract spaceId from document, coalescing legacy space key fields. Read before the version
+          // check, so it also runs on documents of other kinds, where a failure only means no space.
+          const spaceId = yield* Effect.promise(() =>
+            DatabaseDirectory.getSpaceId(doc).catch((err) => {
+              log.warn('document space id could not be derived', { documentId, err });
+              return null;
+            }),
+          );
+          docSpaceId = spaceId;
 
-          // Extract spaceId from document, coalescing legacy space key fields.
-          const spaceId = yield* Effect.promise(() => DatabaseDirectory.getSpaceId(doc));
-          if (!spaceId) {
-            // Skip documents without a space identifier.
+          // A document with nothing to index (another kind, such as a space root or credentials; an
+          // outdated directory; or one with no space) still moves its cursor to the heads read, so it
+          // is read again only once it changes. The cursor carries the document's space, if any.
+          if (doc.version !== SpaceDocVersion.CURRENT || !spaceId) {
+            updatedCursors.push({
+              spaceId: spaceId ?? null,
+              resourceId: documentId,
+              cursor: headsCodec.encode(docHeads),
+            });
             continue;
           }
 
@@ -238,7 +254,11 @@ export class AutomergeDataSource implements IndexDataSource {
             });
           }
         } catch (error) {
+          // A read that throws throws again on the same heads, so the document counts as read, with
+          // none of its objects, until it changes.
           log.error('Error loading document for indexing', { documentId, error });
+          objects.length = firstObject;
+          updatedCursors.push({ spaceId: docSpaceId, resourceId: documentId, cursor: headsCodec.encode(docHeads) });
         }
       }
 

@@ -27,14 +27,6 @@ describe('gateStateFor', () => {
     expect(gateStateFor({ phase: 'indexing', done: 0, total: MAJOR_REINDEX_THRESHOLD - 1 }).pending).toBe(false);
     expect(gateStateFor({ phase: 'idle', done: 0, total: 0 }).pending).toBe(false);
   });
-
-  test('never holds for catch-up or a full-text rebuild', () => {
-    const lanes = { catchUp: { done: 0, total: 10_000 }, fullText: { done: 0, total: 10_000 } };
-    expect(gateStateFor({ phase: 'idle', done: 0, total: 0, ...lanes }).pending).toBe(false);
-    expect(gateStateFor({ phase: 'indexing', done: 0, total: MAJOR_REINDEX_THRESHOLD - 1, ...lanes }).pending).toBe(
-      false,
-    );
-  });
 });
 
 describe('followIndexStatus', () => {
@@ -80,17 +72,6 @@ describe('followIndexStatus', () => {
     emit({ phase: 'migrating', done: 0, total: 3 });
     vi.advanceTimersByTime(BOOT_GATE_STALL_BUDGET - 1);
     expect(states.at(-1)?.pending).toBe(true);
-    vi.advanceTimersByTime(1);
-    expect(states.at(-1)).toEqual({ pending: false });
-    cleanup();
-  });
-
-  test('a status that only moves a lane does not restart the stall budget', async () => {
-    const { emit, states, cleanup } = await setup();
-    const rebuild: DataService.IndexStatus = { phase: 'indexing', done: 0, total: 1_000 };
-    emit(rebuild);
-    vi.advanceTimersByTime(BOOT_GATE_STALL_BUDGET - 1);
-    emit({ ...rebuild, catchUp: { done: 0, total: 50 } });
     vi.advanceTimersByTime(1);
     expect(states.at(-1)).toEqual({ pending: false });
     cleanup();

@@ -9,6 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { EchoHostService } from '@dxos/echo-host';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { WorkerRuntimeStartError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
@@ -76,5 +77,33 @@ describe('WorkerRuntime', () => {
       ),
     );
     expect(statuses.at(-1)?.phase).toBe('idle');
+  });
+
+  test('stops reporting index status once ready', async () => {
+    // A total no real migration count reaches.
+    const MIGRATED_AFTER_READY = 999;
+    const statuses: DataService.IndexStatus[] = [];
+    await EffectEx.runPromise(
+      makeWorkerRuntime({
+        configProvider: Effect.succeed(new Config({})),
+        sqliteLayer: layerMemory,
+        onIndexStatus: (status) => statuses.push(status),
+      }).pipe(
+        // A migration moving after `ready`.
+        Effect.tap((runtime) =>
+          runtime
+            .stack()
+            .getServiceResolver()
+            .resolve(EchoHostService, {})
+            .pipe(
+              Effect.orDie,
+              Effect.map((echoHost) => echoHost.indexStatus.setMigrating(1, MIGRATED_AFTER_READY)),
+            ),
+        ),
+        Effect.scoped,
+      ),
+    );
+    expect(statuses.length).toBeGreaterThan(0);
+    expect(statuses.some((status) => status.total === MIGRATED_AFTER_READY)).toBe(false);
   });
 });

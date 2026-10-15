@@ -41,15 +41,3 @@ describe('DataService wire schema', () => {
     expect(Schema.decodeSync(schema)(Schema.encodeSync(schema)(batch))).toEqual(batch);
   });
 });
-
-describe('DataService.movesPhase', () => {
-  test('a migration or rebuild moving is progress, and a lane moving alone is not', () => {
-    const rebuild: DataService.IndexStatus = { phase: 'indexing', done: 10, total: 100 };
-    const catchUp = { done: 0, total: 10 };
-    expect(DataService.movesPhase(null, { phase: 'migrating', done: 0, total: 1 })).toBe(true);
-    expect(DataService.movesPhase(null, { phase: 'idle', done: 0, total: 0, catchUp })).toBe(false);
-    expect(DataService.movesPhase(rebuild, { ...rebuild, done: 20 })).toBe(true);
-    expect(DataService.movesPhase(rebuild, { ...rebuild, catchUp })).toBe(false);
-    expect(DataService.movesPhase(rebuild, { phase: 'idle', done: 0, total: 0, catchUp })).toBe(true);
-  });
-});

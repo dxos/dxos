@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { WorkerRuntimeStartError, makeInProcessClient } from '@dxos/protocols';
-import { DataService, DevicesService, IdentityService, type RTCService } from '@dxos/protocols/rpc';
+import { type DataService, DevicesService, IdentityService, type RTCService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -81,9 +81,8 @@ export type WorkerRuntimeOptions = {
   memorySignalManagerContext?: MemorySignalManagerContext;
 
   /**
-   * Receives each ECHO index status that moves a migration or rebuild on (see
-   * {@link DataService.movesPhase}), from before the stack opens until the runtime is ready, when the
-   * host's own status stream takes over.
+   * Receives each ECHO index status (see {@link Events.IndexStatus}) from before the stack opens until
+   * the runtime is ready, when the host's own status stream takes over.
    */
   onIndexStatus?: (status: DataService.IndexStatus) => void;
 };
@@ -176,12 +175,10 @@ export const makeWorkerRuntime = ({
     yield* Hook.on(Events.WipingStorage, () =>
       SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie),
     );
-    let reported: DataService.IndexStatus | undefined;
     if (onIndexStatus) {
       yield* Hook.on(Events.IndexStatus, (status) =>
         Effect.sync(() => {
-          if (!started && DataService.movesPhase(reported, status)) {
-            reported = status;
+          if (!started) {
             onIndexStatus(status);
           }
         }),
