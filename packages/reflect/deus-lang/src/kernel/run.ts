@@ -6,7 +6,7 @@ import { ExitSignal, type HostOptions, createHost } from './host.ts';
 import { createCompiler } from './jit.ts';
 import { DeusDefect, DeusPanic, Machine, type MachineOptions, UNIT } from './machine.ts';
 import { createPrims } from './prims.ts';
-import { Str, readAll } from './sexp.ts';
+import { type Sexp, Str, readAll } from './sexp.ts';
 
 /** The exit code, the machine's steps, and how many compiled calls deoptimized and were replayed. */
 export type RunResult = { code: number; steps: number; replays: number };
@@ -18,11 +18,22 @@ export type RunResult = { code: number; steps: number; replays: number };
 /** How to run an image: host IO, machine diagnostics, and whether to compile lambdas to JS. */
 export type RunOptions = HostOptions & { machine?: MachineOptions; jit?: boolean };
 
+// Tests run the seed hundreds of times in one process, and parsing it is most of a small call's cost;
+// machines never mutate forms (each builds its own terms), so they can share them.
+let parsed: { image: string; forms: Sexp[] } | undefined;
+
+const parse = (image: string): Sexp[] => {
+  if (parsed?.image !== image) {
+    parsed = { image, forms: readAll(image) };
+  }
+  return parsed.forms;
+};
+
 export const runImage = (image: string, options: RunOptions): RunResult => {
   const stderrOf = options.stderr ?? ((chunk: string) => process.stderr.write(chunk));
   let forms;
   try {
-    forms = readAll(image);
+    forms = parse(image);
   } catch (err) {
     // A malformed image is a broken toolchain artifact, reported without a JS stack trace.
     stderrOf(`panic: malformed image: ${err instanceof Error ? err.message : String(err)}\n`);

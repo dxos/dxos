@@ -151,6 +151,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 141 | 10-15 03:40 | 15m 00s | `20c090c7` | Native C: `IO` operations no handler takes are performed by the C runtime, and a program of `Unit` builds to a command (D129); `examples/command.deus` (wc, word frequency, files, `exec`, `exit`) agrees with `deus run`, 17x faster on word frequency; task 60e88be8 left open for `Code.run` |
 | 142 | 10-15 03:55 | 20m 00s | `a041d369` | specs name 134 more public definitions in api blocks, each type checked by `deus mdl`; `deus mdl --coverage` reports 39 (was 173), all in Explorer.Spec and WasmEquality.Spec (task 8d6df186) |
 | 143 | 10-15 04:10 | 15m 00s | `7819f9ac` | laws for comment-thread merges (Codebase.Spec R-14) and history imports (Export.Spec R-6), which describe what merges already do (task dc22728a) |
-| 144 | 10-15 04:30 | 20m 00s | this commit | devex: the CLI tests are three files (native back ends, replication, the rest), so the suite takes 119 s (was 154 s); splitting the restore test too made it 137 s, since four cores are already busy |
+| 144 | 10-15 04:30 | 20m 00s | `f7b9b6c0` | devex: the CLI tests are three files (native back ends, replication, the rest), so the suite takes 119 s (was 154 s); splitting the restore test too made it 137 s, since four cores are already busy |
+| 145 | 10-15 04:40 | 10m 00s | this commit | devex: `runImage` parses an image once per process, so an in-process CLI call costs half (a one-line `add` 90 ms, was 180 ms) and the suite takes 107 s (was 119 s) |
 
-Total from stage 1 to stage 144: 27h 57m.
+Total from stage 1 to stage 145: 28h 07m.
