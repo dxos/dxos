@@ -128,6 +128,8 @@ const CHAPTERS: readonly Scene[] = [
     caption: 'Each application keeps its own data, fed only by its own source.',
     spec: MONOLITH,
     revealed: false,
+    // Grid lines for the silos, dots once the agent arrives, and a plain field from ECHO on.
+    grid: 'lines',
     stage: 'silos',
     duration: 20,
   },
@@ -136,6 +138,7 @@ const CHAPTERS: readonly Scene[] = [
     caption: 'One agent reaches into every source at once, beside the apps.',
     spec: MONOLITH,
     options: { warmup: 8 },
+    grid: 'dots',
     stage: 'silos',
     duration: 20,
   },
