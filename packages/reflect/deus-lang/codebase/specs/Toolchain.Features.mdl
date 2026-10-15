@@ -126,8 +126,10 @@ feature F-16: Replication and the shared R2 remote
 
 ```mdl
 feature F-17: Work without git: files and artifacts in the codebase
-  status: planned
+  status: building
   parent: F-10
+  specs: Artifact.Spec
+  defs: Cli.artifact | Cli.ensureArtifacts
   tasks: 88004c30
 ```
 

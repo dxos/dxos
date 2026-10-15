@@ -73,7 +73,7 @@ test Export.Spec.restoresTasks := inStore (fun _ =>
   Map.toList (Tasks.current "cb") == Map.toList (Tasks.current "cb2"))
 
 theorem Export.Spec.restoresTheSnapshot (t : Text) (k : Int) : inStore (fun _ =>
-    roundTrip (program t k) specSample
+    roundTrip (Export.Spec.program t k) specSample
     Spec.snapshotOf "cb" == Spec.snapshotOf "cb2") == true := by test 20
 
 /-- Adds `src/` to `cb`, exports it to `out`, and restores `out` into `cb2`. -/

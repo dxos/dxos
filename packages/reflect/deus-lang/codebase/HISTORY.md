@@ -1,5 +1,15 @@
 # History of main
 
+- `8fff0a3cc8` update deus (by claude)
+- `51b516c2ef` task: comment on 88004c30 (by claude)
+- `40660e52e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `bce604859a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artlaws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact2.mdl (by claude)
+- `59b60d6b1a` delete Debug.r2 (by claude)
+- `cc68163362` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `905c03b10a` delete Artifact.Spec.runEvaluatesOnce
+- `a648dcf6b1` update deus (by claude)
+- `9bcc7bd80e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
+- `f6b4401a3a` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
 - `69add6faeb` task: comment on 1ab6c044 (by claude)
 - `34925ba12f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
 - `eab8f32cd2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
