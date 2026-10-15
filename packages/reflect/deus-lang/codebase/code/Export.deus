@@ -3,7 +3,7 @@ def Export.Spec.deus (dir : Text) (words : List Text) (command : Args -> {IO, Th
 
 /-- R-7: a file the export did not write this time is gone afterwards; other files stay. -/
 test Export.Spec.dropsStaleFiles := inStore (fun _ =>
-  roundTrip Spec.sample specSample
+  roundTrip Export.Spec.sample specSample
   IO.writeFile "out/code/Gone.deus" "def Gone.x : Int := 1\n"
   IO.writeFile "out/specs/Gone.mdl" "---\nname: Gone\n---\n"
   IO.writeFile "out/code/notes.txt" "kept"
@@ -14,7 +14,7 @@ test Export.Spec.dropsStaleFiles := inStore (fun _ =>
 def Export.Spec.entries (path : Text) : {IO} List Text := List.filter (fun l => startsWith "(entry" l) (Text.split (getOr (IO.readFile path) "") "\n")
 
 test Export.Spec.exportIsStable := inStore (fun _ =>
-  roundTrip Spec.sample specSample
+  roundTrip Export.Spec.sample specSample
   let files := fun u => List.map (fun f => (f, IO.readFile ("out/code/" ++ f))) (IO.listDir "out/code")
   let first := files ()
   Export.write "cb" "out"
@@ -22,7 +22,7 @@ test Export.Spec.exportIsStable := inStore (fun _ =>
 
 /-- R-6: importing a history twice, as a merge imports both sides', exports each change once. -/
 test Export.Spec.historiesMergeAsSets := inStore (fun _ =>
-  roundTrip Spec.sample specSample
+  roundTrip Export.Spec.sample specSample
   importHistory "cb2" "out/history.sexp"
   importHistory "cb2" "out/history.sexp"
   Export.write "cb2" "out2"
@@ -42,11 +42,13 @@ test Export.Spec.namesUnnamedCallees := inStore (fun _ =>
   Map.lookup "user" (Codebase.current "cb") == Map.lookup "user" (Codebase.current "cb2"))
 
 /-- Generated programs: definitions whose bodies hold generated text and numbers. -/
-def Export.Spec.program (t : Text) (k : Int) : Text := Spec.sample ++ "def word : Text := " ++ quoteText t ++ "\ndef number : Int := " ++ toText k ++
-  "\ndef both (n : Int) : Text := if n == number then word else " ++ quoteText (t ++ t) ++ "\n"
+def Export.Spec.program (t : Text) (k : Int) : Text := Export.Spec.sample ++ "def word : Text := " ++ quoteText t ++ "\ndef number : Int := " ++ toText k ++
+  "\ndef both (n : Int) : Text := if n == number then word else " ++
+  quoteText (t ++ t) ++
+  "\n"
 
 test Export.Spec.restoresMetadata := inStore (fun _ =>
-  roundTrip Spec.sample specSample
+  roundTrip Export.Spec.sample specSample
   let ns := Codebase.current "cb2"
   let metaOf := fun name => Option.map (fun e => readMeta "cb2" (Entry.hash e)) (Map.lookup name ns)
   let field := fun name key =>
@@ -56,12 +58,12 @@ test Export.Spec.restoresMetadata := inStore (fun _ =>
   field "areaOfSquare" "attrs" == Option.some (Sexp.list [Sexp.str "integration"]) && field "areaOfSquare" "doc" == Option.some (Sexp.str "A test.") && field "notNot" "doc" == Option.some (Sexp.str "A theorem.") && field "Shape" "doc" == Option.some (Sexp.str "A shape.") && field "area" "doc" == Option.some (Sexp.str "Area, roughly.") && isSome (field "area" "notes") && isSome (field "Shape" "lead"))
 
 test Export.Spec.restoresSpecs := inStore (fun _ =>
-  roundTrip Spec.sample specSample
+  roundTrip Export.Spec.sample specSample
   let before := Map.lookup "S.N-1" (Codebase.current "cb")
   isSome before && before == Map.lookup "S.N-1" (Codebase.current "cb2"))
 
 test Export.Spec.restoresTasks := inStore (fun _ =>
-  roundTrip Spec.sample specSample
+  roundTrip Export.Spec.sample specSample
   deus
     "cb"
     ["new", "Write", "laws", "--labels", "spec,dogfood", "--details", "line one\nline two"]
@@ -359,7 +361,7 @@ def Export.withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry 
 def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
   mergeExisting dir out
   let ns := withUnnamed dir (Codebase.current dir)
-  let printer := printer ns []
+  let printer := Print.printer ns []
   let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
   let sources := filterMap (fun pair =>
     match pair with

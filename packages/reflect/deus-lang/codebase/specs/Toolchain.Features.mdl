@@ -33,8 +33,8 @@ feature F-1: The language and its kernel
 feature F-2: Self-hosting toolchain: the seed compiles itself to the same bytes
   status: shipped
   parent: F-1
-  specs: Compile.Spec
-  defs: Compile.batch | Cli.main | Image.build
+  specs: Compile.Spec | Parser.Spec
+  defs: Compile.batch | Cli.main | Image.build | Lexer.lex | Parser.parse
 ```
 
 ```mdl
@@ -83,6 +83,7 @@ feature F-11: Content-addressed store, history, branches and merges
 ```mdl
 feature F-12: Tasks: issues kept with the code
   status: building
+  specs: Tasks.Spec
   parent: F-10
   defs: Tasks.save | Tasks.merge
   tasks: 823f7b83 | cb6c9a43 | dc22728a

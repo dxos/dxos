@@ -156,7 +156,7 @@ def Ts.final (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (ret : Bool)
 def Ts.functionBody (p : Printer) (b : Sexp) (env : List Text) (ind : Int) : Text := "{\n" ++ spaces (ind + 2) ++ Ts.stmts p b env (ind + 2) true ++ "\n" ++ spaces ind ++ "}"
 
 test Ts.functionWithReturn :=
-  let p := printer Map.empty ["n"]
+  let p := Print.printer Map.empty ["n"]
   Ts.definition
     p
     "f"
@@ -205,7 +205,7 @@ def Ts.isStatement (t : Sexp) : Bool := isBlock t || isPlainIf t && any Ts.isSta
 def Ts.isUnknown (t : Sexp) : Bool := head t == "tvar" && Sexp.args t == [Sexp.str "?"]
 
 test Ts.letBecomesConst :=
-  let p := printer Map.empty ["x", "y"]
+  let p := Print.printer Map.empty ["x", "y"]
   Ts.stmts p (Sexp.read "(let (int 1) (let (var 0) (var 1)))") [] 0 true ==
     "const x = 1;\nconst y = x;\nreturn x;"
 
@@ -349,7 +349,7 @@ def Ts.theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sexp)
         proofText ++ ";"
 
 test Ts.tuplePattern :=
-  let p := printer Map.empty ["a", "b"]
+  let p := Print.printer Map.empty ["a", "b"]
   fst (Ts.pattern p (Sexp.read "(pcon \"#Pair\" 0 (pvar) (pvar))") []) == "#[a, b]"
 
 /-- A type; `prec` 3 is a comma-separated position, where an effectful function type is parenthesized. -/

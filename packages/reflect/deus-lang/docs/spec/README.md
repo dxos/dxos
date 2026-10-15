@@ -29,6 +29,8 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [Replicate.Spec](../../codebase/specs/Replicate.Spec.mdl) | How metadata replicates: per-commit metadata snapshots, applied on fast-forward and merged hash by hash |
 | [Testing.Spec](../../codebase/specs/Testing.Spec.mdl) | Tested theorems with custom generators: `by test N using g` |
 | [Workspace.Spec](../../codebase/specs/Workspace.Spec.mdl) | The codebase as an ability under `deus eval`: names, view, update, run |
+| [Tasks.Spec](../../codebase/specs/Tasks.Spec.mdl) | Checked spec of the task model: stored text, fields, ids, order, parents |
+| [Parser.Spec](../../codebase/specs/Parser.Spec.mdl) | Checked spec of the lexer and parser: precedence, spellings, literals, comments, layout, error positions |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |

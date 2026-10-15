@@ -72,9 +72,8 @@ def merge_decisions(base: str) -> dict[int, int]:
 
 
 def renumber(line: str, renames: dict[int, int]) -> str:
-    for old, new in renames.items():
-        line = re.sub(rf'\bD{old}\b', f'D{new}', line)
-    return line
+    # One pass over all numbers: renaming D140 -> D141 and then D141 -> D142 would make both D142.
+    return re.sub(r'\bD(\d+)\b', lambda m: f'D{renames.get(int(m.group(1)), int(m.group(1)))}', line)
 
 
 def duration(text: str) -> int:

@@ -32,6 +32,12 @@ def Codebase.Spec.chain : Text := "def A.f := \"one\"\ndef B.g := A.f\ndef C.h :
 /-- R-15: a new body is an update, listed as one, not as metadata. -/
 test Codebase.Spec.changedHashUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f := 1\n") "/-- Two. -/\ndef A.f := 2\n" == [])
 
+/-- `source`, after the compile prelude, run through `deus update` against `dir`: the namespace afterwards. -/
+def Codebase.Spec.cliUpdate (dir : Text) (source : Text) : {IO, Throw Text} Map Text Entry :=
+  IO.writeFile "t.deus" (Compile.Spec.prelude ++ source)
+  addOrUpdate (parseArgs ["t.deus", "--codebase", dir, "--quiet"]) true
+  Codebase.current dir
+
 /-- R-12: source cannot cross layers, since code cannot name a test. -/
 test Codebase.Spec.codeCannotNameATest :=
   match Codebase.Spec.compiles "test T.t := \"x\"\ndef A.f := T.t\n" with
@@ -101,6 +107,24 @@ def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => 
 /-- A generator of names with dots in every position the tree splits at. -/
 def Codebase.Spec.dottedNames (seed : Int) : List Text := dotted (wordsOf seed)
 
+/-- R-18: removing constructor `b` from `A.T` removes `A.T.b`. -/
+test Codebase.Spec.droppedConstructorIsRemoved := inStore (fun dir =>
+  cliUpdate dir "inductive A.T where\n  | a\n  | b\n"
+  let ns := cliUpdate dir "inductive A.T where\n  | a\n"
+  Map.contains "A.T.a" ns && not (Map.contains "A.T.b" ns))
+
+/-- R-18: removing field `y` from `A.P` removes the accessor `A.P.y`. -/
+test Codebase.Spec.droppedFieldLeavesNoAccessor := inStore (fun dir =>
+  cliUpdate dir "structure A.P where\n  x : Int\n  y : Int\n"
+  let ns := cliUpdate dir "structure A.P where\n  x : Int\n"
+  Map.contains "A.P.x" ns && not (Map.contains "A.P.y" ns))
+
+/-- R-18: removing operation `stop` from `A.E` removes `A.E.stop`. -/
+test Codebase.Spec.droppedOperationIsRemoved := inStore (fun dir =>
+  cliUpdate dir "ability A.E where\n  go : Int -> Unit\n  stop : Unit -> Unit\n"
+  let ns := cliUpdate dir "ability A.E where\n  go : Int -> Unit\n"
+  Map.contains "A.E.go" ns && not (Map.contains "A.E.stop" ns))
+
 test Codebase.Spec.emptyNamespaceHash := inStore (fun dir => putNamespace dir Map.empty == "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595")
 
 /-- R-17: `A.g` takes over `A.f`'s old body, and so its hash; the new `A.f` still calls `A.g`, not itself. -/
@@ -120,6 +144,13 @@ def Codebase.Spec.forked (sideChanges : Map Text Entry -> Map Text Entry) (mainC
   let result := Codebase.merge dir "side"
   (result, Codebase.current dir)
 
+/-- R-19: `A.g` calls `A.f` at Int; changing `A.f` to take and return Text refuses the update and keeps the old `A.f`. -/
+test Codebase.Spec.illTypedDependentFails := inStore (fun dir =>
+  let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"
+  match try (fun _ => cliUpdate dir "def A.f (t : Text) : Text := \"x\"\n") with
+  | Result.err message => Text.contains "A.g: type mismatch" message && Text.contains "(calling A.f)" message && Map.lookup "A.f" (Codebase.current dir) == Map.lookup "A.f" before
+  | Result.ok _ => false)
+
 /-- Runs a store action in a fresh simulated codebase; a thrown error is `false`. -/
 def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
   match Sim.run 7 (fun _ =>
@@ -132,6 +163,12 @@ def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
 
 test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (headOf dir "main") ==
   Causal.mk "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595" [] "init" "" "" "" "")
+
+/-- R-18: a structure that gains a field keeps its other members, and an unrelated name under it stays. -/
+test Codebase.Spec.keptMembersStay := inStore (fun dir =>
+  cliUpdate dir "structure A.P where\n  x : Int\ndef A.P.origin : Int := 0\n"
+  let ns := cliUpdate dir "structure A.P where\n  x : Int\n  z : Int\n"
+  Map.contains "A.P.x" ns && Map.contains "A.P.z" ns && Map.contains "A.P.origin" ns)
 
 /-- R-16: the second name, added later, leaves the first name's doc. -/
 test Codebase.Spec.laterAddKeepsOtherDoc := inStore (fun dir =>
@@ -302,7 +339,18 @@ def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {
     match Map.lookup (fst pair) ns with
     | Option.some old => if Entry.hash old != Entry.hash (snd pair) then Option.some (Entry.hash old, Entry.hash (snd pair)) else Option.none
     | Option.none => Option.none) b.entries)
-  fst (propagate dir next subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) b.entries)))
+  fst (propagate
+    dir
+    next
+    subst
+    (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) b.entries))
+    "off")
+
+/-- R-19: a new body at the same type rehashes `A.g` as before. -/
+test Codebase.Spec.welltypedDependentFollows := inStore (fun dir =>
+  let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"
+  let after := cliUpdate dir "def A.f (n : Int) : Int := 2\n"
+  Map.lookup "A.g" before != Map.lookup "A.g" after)
 
 /-- Three hundred names at the root and three hundred under `N`: both nodes split into parts. -/
 def Codebase.Spec.wide : List Text := concatMap (fun i => ["name" ++ toText i, "N.name" ++ toText i]) (range 0 300)
@@ -878,10 +926,12 @@ def Codebase.ownFields (meta : Sexp) : List Sexp := List.filter
   shallow: its oldest nodes have parents nobody keeps, and they act as roots. -/
 def Codebase.parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text := List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents
 
-/-- Stores a form under the hash of its text and returns the hash. -/
+/-- Stores a form under the hash of its text and returns the hash; the text is printed once, for both. -/
 def Codebase.put (dir : Text) (form : Sexp) : {IO} Text :=
-  let h := Text.sha256 (Sexp.print form)
-  writeObject dir h form
+  let text := Sexp.print form
+  let h := Text.sha256 text
+  let path := objectPath dir h
+  if IO.exists path then () else IO.writeFile path (text ++ "\n")
   h
 
 def Codebase.putMetaNode (dir : Text) (subs : Map Text Text) : {IO} Text := Codebase.put dir (Sexp.node

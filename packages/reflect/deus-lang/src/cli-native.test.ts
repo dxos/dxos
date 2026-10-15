@@ -389,7 +389,7 @@ describe('deus CLI native back ends', () => {
       expect(deus('view', 'Structural.structural', ...target).stdout).toBe(
         run('view', 'Structural.structural', ...target).stdout,
       );
-      // The interpreter in the C runtime (D143) runs what the kernels run: tests, and expressions printed by their types.
+      // The interpreter in the C runtime (D146) runs what the kernels run: tests, and expressions printed by their types.
       expect(run('test', ...target).stdout).toBe('  ✓ Structural.structuralSmall\n1 passed, 0 failed\n');
       for (const source of ['1 + 1', '[1 == 1, false]', 'Option.some ((), "a")', 'Structural.structural']) {
         expect(run('eval', source, ...target).stdout).toBe(deus('eval', source, ...target).stdout);

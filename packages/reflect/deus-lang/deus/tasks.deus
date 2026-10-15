@@ -200,6 +200,19 @@ def find (tasks : Map Text Task) (id : Text) : {Throw Text} Task :=
     | [] => throw ("no task " ++ id)
     | _ => throw ("task id " ++ id ++ " is ambiguous")
 
+/-- `t` with its parent resolved to a full id: another task, found by id or prefix, that is not `t` or below it. -/
+def resolveParent (tasks : Map Text Task) (t : Task) : {Throw Text} Task :=
+  if Text.isEmpty t.parent then t
+  else
+    let parent := (find tasks t.parent).id
+    -- Walking up from the new parent must not reach `t`; the bound stops a cycle already stored.
+    let rec above id steps :=
+      if id == t.id then throw ("task " ++ parent ++ " is " ++ t.id ++ " or below it, so it cannot be its parent")
+      else if Text.isEmpty id || steps > Map.size tasks then ()
+      else above (Option.getOr (Option.map (fun p => p.parent) (Map.lookup id tasks)) "") (steps + 1)
+    above parent 0
+    Task.mk t.id t.title t.state t.priority t.assignee t.labels parent t.details t.links t.comments
+
 /-- Writes tasks on the current branch as one change. Returns the new causal hash. -/
 def save (dir : Text) (changed : List Task) (message : Text) : {IO, Throw Text} Text :=
   let head := Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))

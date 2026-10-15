@@ -38,7 +38,7 @@ def View.Spec.printed (source : Text) (name : Text) : Option (Text, Text) :=
       match List.lookup name b.entries with
       | Option.some (Entry.theorem h) =>
           match List.lookup h b.objects with
-          | Option.some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) => Option.some (h, View.theoremDecl (printer (Map.fromList b.entries) []) name types prop proof)
+          | Option.some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) => Option.some (h, View.theoremDecl (Print.printer (Map.fromList b.entries) []) name types prop proof)
           | _ => Option.none
       | _ => Option.none
   | Result.err _ => Option.none

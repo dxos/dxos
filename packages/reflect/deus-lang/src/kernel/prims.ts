@@ -295,7 +295,7 @@ export const createPrims = (): Map<string, Prim> => {
   });
   def('Code.quote', 1, ([v]) => print(quoteValue(v)));
   def('Code.has', 1, ([hash], machine) => machine.globals.has(text(hash)));
-  // Reflection for code that walks a value by its type (D143), so it renders a Bool or a nullary constructor exactly.
+  // Reflection for code that walks a value by its type (D146), so it renders a Bool or a nullary constructor exactly.
   def('Code.tag', 1, ([v]) => {
     if (typeof v === 'boolean') {
       return v ? 1 : 0;

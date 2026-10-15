@@ -120,6 +120,10 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 - assignee: claude
 - labels: dogfood, spec
 
+> claude: Lexer and parser done: Parser.Spec (6 reqs, 10 laws, D144); its R-6 found the unterminated-string column bug. Update is covered by Codebase.Spec R-13..R-19 and replicate by Replicate.Spec. Left: types, prover and check, tasks, image, wasm and C back ends.
+
+> claude: Tasks done: Tasks.Spec (8 reqs, D145); its R-8 found that --parent took any text, kept prefixes as typed and allowed cycles. Left: types, prover and check, image, wasm and C back ends.
+
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo
@@ -809,6 +813,15 @@ From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled 
 - labels: bug, dogfood, spec
 
 From docs/spec/README.md, Known divergences.
+
+## deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (`53e409cd`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: update, types
+
+> claude: Propagation now type-checks the rewritten dependents and fails the update naming them (D143, Codebase.Spec R-19); DEUS_TYPECHECK=warn prints them instead. A dependent whose old Core also fails (ascriptions are not stored) is not counted. Cost: about 1 s on a 17 s update that rehashed 161 dependents.
 
 ## deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (`a8150b0c`)
 

@@ -469,6 +469,11 @@ as cycles, exactly as `add` hashes them), written as a new object, and its name 
 copied to the new hash. Old objects stay. All of this lands in one new history node
 ([`deus/update.deus`](../../deus/update.deus)).
 
+Before anything is committed, the rewritten dependents are type-checked; one the change leaves
+ill-typed fails the update, which names it ([D143](../DECISIONS.md)). A type or ability in the update
+also takes with it the accessors, constructors and operations its new declaration drops
+([D142](../DECISIONS.md)).
+
 ## Remotes, artifacts and cache
 
 | Path                                                            | Content                                                                     |

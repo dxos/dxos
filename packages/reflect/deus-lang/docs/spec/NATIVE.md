@@ -319,7 +319,7 @@ takes about 100 s: 17 s to write 6.6 MB of C (129 s before data types were found
 ## Running Core natively
 
 A native program that calls `Code.load`, `Code.has` or `Code.run` gets a Core interpreter in its C
-runtime ([D143](../DECISIONS.md)), so the native CLI runs `eval`, `run` and `test` as the kernels
+runtime ([D146](../DECISIONS.md)), so the native CLI runs `eval`, `run` and `test` as the kernels
 do. It is the kernels' machine over the compiled code's values: a closure it returns is called like
 any compiled closure, and its operations go through the same handler records (D124), so the CLI's
 compiled handlers (`Workspace`, `Defect`, a test's boundary) take what interpreted code performs.

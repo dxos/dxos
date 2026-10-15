@@ -279,7 +279,7 @@ binds each to a DEUS name and gives its type. A wrong argument type is a defect.
 | `Code.steps`                                | 1       | machine steps so far                                                                                                                                  |
 | `Code.cost`                                 | 1       | steps a `Unit -> a` function takes; it must handle its own requests                                                                                   |
 | `Code.defectTrace`                          | 1       | hashes on the stack when the last defect was raised, innermost first                                                                                  |
-| `Code.tag`                                  | 1       | the tag of a data value, a Bool's being 0 or 1 (D143)                                                                                                 |
+| `Code.tag`                                  | 1       | the tag of a data value, a Bool's being 0 or 1 (D146)                                                                                                 |
 | `Code.field`                                | 2       | field `i` of a data value                                                                                                                             |
 | `Code.cast`                                 | 1       | the same value: for code that walks a value by its type                                                                                               |
 

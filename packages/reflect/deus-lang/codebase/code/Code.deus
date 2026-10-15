@@ -24,5 +24,5 @@ def Code.run : Text -> a := prim "Code.run"
 /-- Machine steps so far: the deterministic cost model for performance requirements. -/
 def Code.steps : Unit -> Int := prim "Code.steps"
 
-/-- The tag of a data value, a Bool's being 0 or 1: with `field` and `cast`, for code that walks a value by its type (D143). -/
+/-- The tag of a data value, a Bool's being 0 or 1: with `field` and `cast`, for code that walks a value by its type (D146). -/
 def Code.tag : a -> Int := prim "Code.tag"

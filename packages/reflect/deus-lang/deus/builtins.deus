@@ -177,7 +177,7 @@ def steps : Unit -> Int := prim "Code.steps"
 def defectTrace : Unit -> List Text := prim "Code.defectTrace"
 /-- Machine steps a pure computation takes; its operations must be handled inside it. -/
 def cost : (Unit -> a) -> Int := prim "Code.cost"
-/-- The tag of a data value, a Bool's being 0 or 1: with `field` and `cast`, for code that walks a value by its type (D143). -/
+/-- The tag of a data value, a Bool's being 0 or 1: with `field` and `cast`, for code that walks a value by its type (D146). -/
 def tag : a -> Int := prim "Code.tag"
 /-- Field `i` of a data value. -/
 def field : a -> Int -> b := prim "Code.field"

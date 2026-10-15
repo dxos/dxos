@@ -265,7 +265,7 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "append"], a, b] =>
     let left := typeOf scope env a
     if left == unknown then typeOf scope env b else left
-  -- A field taken out by the interpreter's reflection (D143) is of any type.
+  -- A field taken out by the interpreter's reflection (D146) is of any type.
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Code.field"], _, _] => unknown
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
     let known := textPrimType p

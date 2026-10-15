@@ -509,7 +509,7 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
       let left := Wasm.typeOf scope env a
       if left == unknown then Wasm.typeOf scope env b else left
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Code.field" :: []) :: _ :: _ :: []) =>
-      -- A field taken out by the interpreter's reflection (D143) is of any type.
+      -- A field taken out by the interpreter's reflection (D146) is of any type.
       unknown
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: rest) =>
       let known := textPrimType p

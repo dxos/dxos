@@ -289,11 +289,14 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let retagged := Update.metadataChanged ns batch.entries (fun h => Codebase.readMeta dir h) (Map.fromList batch.metas)
     Codebase.store dir batch
     let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
-    let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries
+    -- A dropped field, constructor or operation would keep a name that no source declares (R-18).
+    let orphaned := Update.orphans ns entries
+    let ns2 := List.foldl (fun m name => Map.remove name m) (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries) orphaned
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
+    let propagated := catch (fun _ => Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries)) (checkTypes ()))
+      (fun e => throw (Text.join "\n" (List.map (nameCallee ns2) (Text.split e "\n"))))
     let ns3 := fst propagated
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
@@ -311,7 +314,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     if flag args "quiet" then () else output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         match c with
-        | (name, _, new) => entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
+        | (name, _, new) => entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("removed", Json.arr (List.map Json.str orphaned)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
       (fun _ =>
         let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
         let updatedLines := List.map (fun c =>
@@ -319,7 +322,8 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
           | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
         let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
         let metadataLines := List.map (fun name => "  * " ++ name ++ " (metadata)") retagged
-        let lines := addedLines ++ updatedLines ++ metadataLines ++ propagatedLines
+        let removedLines := List.map (fun name => "  - " ++ name ++ " (no longer declared)") orphaned
+        let lines := addedLines ++ updatedLines ++ removedLines ++ metadataLines ++ propagatedLines
         if List.isEmpty lines then "Nothing changed." else Text.join "\n" lines)
 
 --
@@ -374,12 +378,12 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
   let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
   let comment := if ts then "// " else "-- "
   let typeLine := match Codebase.metaField meta "scheme" with
-    | some scheme => comment ++ ": " ++ Types.displaySchemeNamed (Types.declaredNames ns) scheme ++ "\n"
+    | some scheme => comment ++ ": " ++ Types.displaySchemeNamed base.declared scheme ++ "\n"
     | none => ""
   let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
-  | Entry.ctor _ _ _ => (header ++ comment ++ "a constructor of " ++ Text.join ", " (Codebase.namesOf ns h), "")
-  | Entry.op _ _ _ => (header ++ comment ++ "an operation of " ++ Text.join ", " (Codebase.namesOf ns h), "")
+  | Entry.ctor _ _ _ => (header ++ comment ++ "a constructor of " ++ Text.join ", " (Option.getOr (Map.lookup h base.namesByHash) []), "")
+  | Entry.op _ _ _ => (header ++ comment ++ "an operation of " ++ Text.join ", " (Option.getOr (Map.lookup h base.namesByHash) []), "")
   | _ =>
     -- A field accessor comes with its structure, so it prints as a note, as constructors do.
     let owner := Text.join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
@@ -875,7 +879,7 @@ def ctorsOf (types : Map Text (Text, Sexp)) (t : Sexp) : Option (Text, List (Lis
   | none => none
 
 /--
-  `value`, of type `t`, as Core text (D143). It is walked by its type, since a native build's values
+  `value`, of type `t`, as Core text (D146). It is walked by its type, since a native build's values
   do not carry their constructors' types: a Bool and an Int are the same words there, and so are the
   nullary constructors of different types. A value whose type it does not know is quoted as it is.
 -/
@@ -945,14 +949,15 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
   What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
   source, and for a test or a theorem its verdict (checked now unless a result is cached).
 -/
-def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+  let printer := facts.printer
   match Map.lookup name ns with
   | none => throw (name ++ " is not in the codebase")
   | some e =>
     let h := Entry.hash e
     let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
     let typed := match Codebase.metaField meta "scheme" with
-      | some scheme => [("type", Types.displaySchemeNamed (Types.declaredNames ns) scheme)]
+      | some scheme => [("type", Types.displaySchemeNamed printer.declared scheme)]
       | none => []
     let verdict := match Check.verdictOf dir ns e with
       | some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", Int.toText cases)]
@@ -963,11 +968,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : 
     let statement := match Codebase.readObject dir h with
       | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
         let base := Print.withLocals printer (List.map Sexp.asText (Codebase.metaList meta "locals"))
-        let full := Printer.mk base.fullNames base.fullNames (Map.fromList (List.filterMap (fun pair =>
-          match pair with
-          | (n, Entry.type _ iri _) => some (iri, n)
-          | (n, Entry.ability _ iri) => some (iri, n)
-          | _ => none) (Map.toList ns))) Map.empty base.supply base.fresh
+        let full := Printer.mk base.fullNames base.fullNames facts.fullTypes Map.empty base.declared base.namesByHash base.supply base.fresh
         let decl := View.theoremDecl full name types prop proof
         let stop := Text.indexOf decl " := " 0
         [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
@@ -976,10 +977,27 @@ def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : 
     [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.withLocals printer []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
 
 /--
-  Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
-  `printer` is `ns`'s, built once per run: its name tables cost more than describing a name.
+  What every block of a `deus mdl` run reads from the namespace, built once: each lookup walked the
+  whole namespace, once per name an api block named.
 -/
-def withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+structure MdlFacts where
+  printer : Printer
+  fullTypes : Map Text Text
+  documents : List Text
+
+def mdlFacts (ns : Map Text Entry) : MdlFacts :=
+  let fullTypes := Map.fromList (List.filterMap (fun pair =>
+    match pair with
+    | (n, Entry.type _ iri _) => some (iri, n)
+    | (n, Entry.ability _ iri) => some (iri, n)
+    | _ => none) (Map.toList ns))
+  MdlFacts.mk (Print.printer ns []) fullTypes (Export.specDocuments ns)
+
+/--
+  Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
+  `facts` are `ns`'s, built once per run: its name tables cost more than describing a name.
+-/
+def withHost (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
   let tasks := Ref.new none
   let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
   handle body () with
@@ -997,10 +1015,10 @@ def withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit
       | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
   | MdlHost.describe name -> k =>
-    k (match featureFact dir ns tasks name with
+    k (match featureFact dir facts.documents tasks name with
       | some answer => answer
       | none =>
-        match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
+        match guardDefect (fun _ => try (fun _ => describeName dir ns facts name)) with
         | Result.ok r => r
         | Result.err message => Result.err message)
 
@@ -1022,46 +1040,49 @@ structure Outcome where
   problems : List Text
 
 /-- Runs one block through the extension `uri` names in the codebase; unchecked when there is none. -/
-def checkBlock (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
+def checkBlock (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
   match Option.bind uri (fun u => Map.lookup u byUri) with
   | none => Outcome.mk place "unchecked" []
   | some h =>
     Image.load (fetcher dir) [h]
     let check := Code.run h
-    match withHost dir ns printer (fun _ => guardDefect (fun _ => check b)) with
+    match withHost dir ns facts (fun _ => guardDefect (fun _ => check b)) with
     | Result.ok [] => Outcome.mk place "ok" []
     -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
     | Result.ok problems => Outcome.mk place (if List.all (fun p => Text.startsWith "gap: " p) problems then "gap" else "fail") problems
     | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
-def checkDoc (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
+def checkDoc (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
   let doc := Mdl.parse (readSource path)
   let core := Mdl.validate doc
   let declared := Mdl.declared doc
   let outcomes := List.map (fun b =>
-    checkBlock dir ns printer byUri (path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b) (List.lookup b.blockType declared) b)
+    checkBlock dir ns facts byUri (path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b) (List.lookup b.blockType declared) b)
     (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
 /-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
-def checkSpecs (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
-  let wanted := if List.isEmpty documents then Export.specDocuments ns else documents
+def checkSpecs (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+  let wanted := if List.isEmpty documents then facts.documents else documents
   let orderOf := fun (h : Text) =>
     match Codebase.metaField (Codebase.readMeta dir h) "order" with
     | some (Sexp.int k) => k
     | _ => 1000000
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => some (Export.documentOf name, name, h)
+    | _ => none) (Map.toList ns)
   List.concatMap (fun d =>
-    let mine := List.filterMap (fun pair =>
-      match pair with
-      | (name, Entry.spec h) => if Export.documentOf name == d then some (orderOf h, name, h) else none
-      | _ => none) (Map.toList ns)
+    let mine := List.filterMap (fun x =>
+      match x with
+      | (doc, name, h) => if doc == d then some (orderOf h, name, h) else none) blocks
     List.filterMap (fun x =>
       match x with
       | (_, name, h) =>
         Option.map (fun form =>
           match Mdl.fromSexp form with
-          | (uri, b) => checkBlock dir ns printer byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h))
+          | (uri, b) => checkBlock dir ns facts byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h))
       (List.sortBy (fun a b =>
         match (a, b) with
         | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
@@ -1071,7 +1092,7 @@ def checkSpecs (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : M
   feature blocks link (D118); `none` for any other name. `tasks` caches the branch's tasks, read on
   first use.
 -/
-def featureFact (dir : Text) (ns : Map Text Entry) (tasks : Ref (Option (Map Text Task))) (name : Text) : {IO} Option (Result Text (List (Text, Text))) :=
+def featureFact (dir : Text) (documents : List Text) (tasks : Ref (Option (Map Text Task))) (name : Text) : {IO} Option (Result Text (List (Text, Text))) :=
   if Text.startsWith "task:" name then
     let all := match Ref.get tasks with
       | some known => known
@@ -1085,7 +1106,7 @@ def featureFact (dir : Text) (ns : Map Text Entry) (tasks : Ref (Option (Map Tex
       | some t => Result.ok [("kind", "task"), ("state", Tasks.stateText t.state), ("title", t.title)]
       | none => Result.err (name ++ " is not in the codebase"))
   else if Text.startsWith "spec:" name then
-    some (if List.contains (Text.drop 5 name) (Export.specDocuments ns) then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase"))
+    some (if List.contains (Text.drop 5 name) documents then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase"))
   else none
 
 /-- A document's `feature` blocks as features, in document order, with the blocks that do not parse. -/
@@ -1111,8 +1132,9 @@ def featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} 
 /-- What `deus features` knows about a name: a definition's kind and whether it is only declared, a task, or a spec document. -/
 def featureFacts (dir : Text) (ns : Map Text Entry) : {IO} Text -> {IO, Throw Text} Result Text (List (Text, Text)) :=
   let tasks := Ref.new none
+  let documents := Export.specDocuments ns
   fun (name : Text) =>
-    match featureFact dir ns tasks name with
+    match featureFact dir documents tasks name with
     | some answer => answer
     | none =>
       match Map.lookup name ns with
@@ -1184,13 +1206,12 @@ def checkMdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
-  let printer := Print.printer ns []
-  let stored := Export.specDocuments ns
-  let documents := List.filter (fun a => List.contains a stored && not (IO.exists a)) args.positional
+  let facts := mdlFacts ns
+  let documents := List.filter (fun a => List.contains a facts.documents && not (IO.exists a)) args.positional
   let files := List.filter (fun a => not (List.contains a documents)) args.positional
   let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths files)
-  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns printer byUri documents else []
-  let outcomes := fromCodebase ++ List.concatMap (fun path => checkDoc dir ns printer byUri path) paths
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns facts byUri documents else []
+  let outcomes := fromCodebase ++ List.concatMap (fun path => checkDoc dir ns facts byUri path) paths
   let count := fun (v : Text) => List.length (List.filter (fun o => o.verdict == v) outcomes)
   output args
     (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
@@ -1566,12 +1587,13 @@ def linkReport (dir : Text) (ns : Map Text Entry) (a : Attachment) : {IO, Throw 
     (Json.obj [("definition", Json.str name), ("hash", Json.str h), ("current", Option.getOr (Option.map Json.str now) Json.null), ("changes", Json.arr (List.map (changeJson dir) changes))],
       ("  " ++ name ++ "  " ++ short h ++ state) :: List.map (fun c => "  " ++ changeLine dir c) changes)
 
-/-- The options of `task new` / `task set` that name task fields, applied in order. -/
-def applyFields (args : Args) (t : Task) : {Throw Text} Task :=
-  List.foldl (fun acc field =>
+/-- The options of `task new` / `task set` that name task fields, applied in order; a `--parent` must name another task (Tasks.Spec R-8). -/
+def applyFields (args : Args) (tasks : Map Text Task) (t : Task) : {Throw Text} Task :=
+  let set := List.foldl (fun acc field =>
     match option args field with
     | some value => Tasks.setField acc field value
     | none => acc) t Tasks.fields
+  if Option.isSome (option args "parent") then Tasks.resolveParent tasks set else set
 
 /--
   `deus task …` (D59): issues kept in the codebase, attached to definitions and changes.
@@ -1592,7 +1614,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     let title := Text.join " " words
     if Text.isEmpty title then throw "usage: deus task new <title…>"
     else
-      let t := applyFields args (Tasks.blank (Tasks.freshId dir title author) title)
+      let t := applyFields args tasks (Tasks.blank (Tasks.freshId dir title author) title)
       let linked := match option args "link" with
         | some name =>
           match lookupName (Codebase.current dir) name with
@@ -1644,7 +1666,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     let unknown := List.filter (fun key => not (List.contains key (Tasks.fields ++ ["codebase", "by", "json", "quiet"]))) (Map.keys args.options)
     if not (List.isEmpty unknown) then throw ("unknown task field " ++ Text.join ", " unknown ++ "; the fields are " ++ Text.join ", " Tasks.fields)
     else
-      let t := applyFields args (Tasks.find tasks id)
+      let t := applyFields args tasks (Tasks.find tasks id)
       saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
   | "comment" :: id :: words =>
     let t := Tasks.find tasks id

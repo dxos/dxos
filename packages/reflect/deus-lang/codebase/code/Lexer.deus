@@ -29,12 +29,12 @@ def Lexer.lex (source : Text) : {Throw Text} List Token :=
   -- String body after the opening quote; returns (value, end index, line, lineStart).
   let rec stringEnd i acc line lineStart :=
     let c := at i
-    if i >= n then Lexer.fail line 0 "unterminated string" else if c == '"' then (fromCodes (reverse acc), i + 1, line, lineStart) else if c == '\\' then
+    if i >= n then ("", -1, line, lineStart) else if c == '"' then (fromCodes (reverse acc), i + 1, line, lineStart) else if c == '\\' then
       let e := at (i + 1)
       if e == 'u' && at (i + 2) == '{' then
         let rec digitsEnd1 j := if Lexer.isHex (at j) then digitsEnd1 (j + 1) else j
         let close := digitsEnd1 (i + 3)
-        if close == i + 3 || at close != '}' then Lexer.fail line 0 "malformed \\u{} escape" else
+        if close == i + 3 || at close != '}' then Lexer.fail line (i - lineStart) "malformed \\u{} escape" else
           let code := foldl (fun v d => v * 16 + Lexer.hexValue d) 0 (List.map at (range (i + 3) close))
           stringEnd (close + 1) (code :: acc) line lineStart
       else stringEnd (i + 2) (Lexer.escape e :: acc) line lineStart
@@ -67,6 +67,9 @@ def Lexer.lex (source : Text) : {Throw Text} List Token :=
             (Token.mk Kind.comment (Text.slice source i j) line col bol "" :: acc)
       else if c == '"' then
         match stringEnd (i + 1) [] line lineStart with
+        | (_, -1, _, _) =>
+            -- A string that never closes is reported where it opens, not where the file ends (R-6).
+            Lexer.fail line col "unterminated string"
         | (value, j, line2, lineStart2) => go j line2 lineStart2 false (tok Kind.text value i)
       else if c == '\'' then
         let isEscape := at (i + 1) == '\\'
