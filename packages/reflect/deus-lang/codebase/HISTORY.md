@@ -1,5 +1,14 @@
 # History of main
 
+- `7060aecef1` history: import 1199 changes
+- `7038a97524` task: import from tasks.sexp
+- `b4ef4e7681` catch up with #13952 at 843ac72e before the pause (by claude)
+- `5f5ea350ff` history: import 1144 changes
+- `807059293d` task: import from codebase/tasks.sexp
+- `e1548117c5` update codebase/code codebase/specs
+- `8fb47165c0` history: import 1124 changes
+- `9a9b42061a` task: import from codebase/tasks.sexp
+- `cd98107465` update codebase/code codebase/specs
 - `3152ef5711` update deus (by claude)
 - `4247869c4a` update deus (by claude)
 - `11804bae8f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
@@ -50,26 +59,31 @@
 - `409c3e0e40` history: import 1139 changes
 - `05012e11a6` task: import from /tmp/tmpk1m7cf8a/tasks.sexp
 - `e9ef0641f3` add /tmp/tmpk1m7cf8a/merged/code /tmp/tmpk1m7cf8a/merged/specs
+- `6449078bac` task: set f308d451 state (by claude)
+- `f82625cacf` task: comment on f308d451 (by claude)
+- `e13a50a478` update deus (by claude)
+- `3f7fbc02f8` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/grouplaw.deus (by claude)
+- `80c96e9826` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
 - `895274d041` task: comment on b73b475d (by claude)
 - `39b2e8db06` update deus (by merge)
 - `1d0b6b7e4f` history: import 1134 changes
 - `e94dfdc564` history: import 1128 changes
 - `dd2232271e` task: import from /tmp/tmp7tiihuqg/tasks.sexp
 - `41290569bc` add /tmp/tmp7tiihuqg/merged/code /tmp/tmp7tiihuqg/merged/specs
-- `8f77cc083d` task: comment on b73b475d
-- `1e32955d5c` update deus (by claude)
-- `fb1345316d` history: import 1124 changes
-- `e6b5de91e6` task: import from codebase/tasks.sexp
-- `6449078bac` task: set f308d451 state (by claude)
-- `f82625cacf` task: comment on f308d451 (by claude)
-- `e13a50a478` update deus (by claude)
-- `3f7fbc02f8` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/grouplaw.deus (by claude)
-- `80c96e9826` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
 - `112cea84f2` update deus (by merge)
 - `c4f24f4f18` history: import 1124 changes
 - `dfc806fcb0` history: import 1122 changes
 - `43684e1b9b` task: import from /tmp/tmpf0e81phl/tasks.sexp
 - `61735bc5ac` add /tmp/tmpf0e81phl/merged/code /tmp/tmpf0e81phl/merged/specs
+- `8bfc2b8e38` task: set dda00bb4 state (by claude)
+- `4b7661b50c` task: comment on dda00bb4 (by claude)
+- `514a3f2725` update deus (by claude)
+- `ff1d632a44` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw.deus (by claude)
+- `61f82b7a1e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/view.mdl (by claude)
+- `8f77cc083d` task: comment on b73b475d
+- `1e32955d5c` update deus (by claude)
+- `fb1345316d` history: import 1124 changes
+- `e6b5de91e6` task: import from codebase/tasks.sexp
 - `a31cfa6051` task: set b73b475d assignee
 - `57875655ef` task: set b73b475d labels
 - `fac83c4866` task: set b73b475d priority
@@ -77,11 +91,6 @@
 - `469a967d83` history: import 1117 changes
 - `f436c2ee2d` task: import from codebase/tasks.sexp
 - `988d670bf0` add codebase/code codebase/specs
-- `8bfc2b8e38` task: set dda00bb4 state (by claude)
-- `4b7661b50c` task: comment on dda00bb4 (by claude)
-- `514a3f2725` update deus (by claude)
-- `ff1d632a44` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw.deus (by claude)
-- `61f82b7a1e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/view.mdl (by claude)
 - `eeff472331` task: set 88004c30 state (by claude)
 - `51370cfff7` task: comment on 88004c30 (by claude)
 - `129d6769ac` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r10.deus (by claude)
@@ -103,6 +112,19 @@
 - `81e37b7ddb` history: import 1076 changes
 - `3864fd494c` task: import from codebase/tasks.sexp
 - `73e67efac2` update codebase/code codebase/specs
+- `fb5919dc2b` update deus (by merge)
+- `12932fa816` history: import 1076 changes
+- `40f0c9ea7e` history: import 1070 changes
+- `b80790fe5a` task: import from /tmp/tmp88g8yixk/tasks.sexp
+- `42966c55ed` add /tmp/tmp88g8yixk/merged/code /tmp/tmp88g8yixk/merged/specs
+- `091ebe5523` task: comment on 88004c30 (by claude)
+- `e961b5af89` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
+- `b2fd2223e9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `6a1daee40d` update deus (by claude)
+- `0a3c77d931` task: comment on e76e36b0 (by claude)
+- `86e06c376d` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/embedlaws.deus (by claude)
+- `b957a6a461` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `8d18b0284b` update deus (by claude)
 - `339f7670dc` task: open f308d451 Updating one member of a recursive group leaves dependents pointing at the old group (by claude)
 - `fda461f03d` re-resolve Artifact and Workspace specs to the current Cli group (by claude)
 - `6824aaf040` close 696086fe by #40884fb595 (by claude)
@@ -110,11 +132,6 @@
 - `b3eccf8399` history: import 1062 changes
 - `c76e0bd86d` task: import from tasks.sexp
 - `2d7a9fee76` merge #13952's branch: artifact constants (D146-D148) (by claude)
-- `fb5919dc2b` update deus (by merge)
-- `12932fa816` history: import 1076 changes
-- `40f0c9ea7e` history: import 1070 changes
-- `b80790fe5a` task: import from /tmp/tmp88g8yixk/tasks.sexp
-- `42966c55ed` add /tmp/tmp88g8yixk/merged/code /tmp/tmp88g8yixk/merged/specs
 - `0aaa2c092a` task: comment on 60e88be8 (by claude)
 - `ed88eaac93` update deus (by merge)
 - `22b0a54217` history: import 1062 changes
@@ -129,14 +146,6 @@
 - `60967372b3` history: import 1037 changes
 - `a905f790c5` task: import from codebase/tasks.sexp
 - `9759b5816a` add codebase/code codebase/specs
-- `091ebe5523` task: comment on 88004c30 (by claude)
-- `e961b5af89` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
-- `b2fd2223e9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
-- `6a1daee40d` update deus (by claude)
-- `0a3c77d931` task: comment on e76e36b0 (by claude)
-- `86e06c376d` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/embedlaws.deus (by claude)
-- `b957a6a461` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
-- `8d18b0284b` update deus (by claude)
 - `97d3b3fbfc` update deus (by merge)
 - `6044c260f8` history: import 1037 changes
 - `8498114d5c` history: import 1043 changes
@@ -161,34 +170,11 @@
 - `b4c300f712` history: import 1033 changes
 - `38cdddd0e3` task: import from /tmp/tmpqt177wfu/tasks.sexp
 - `ce4f088fce` add /tmp/tmpqt177wfu/merged/code /tmp/tmpqt177wfu/merged/specs
-- `7750353b5d` task: comment on 60e88be8
-- `2e8d17b108` update deus (by claude)
-- `dd574bcb24` history: import 1018 changes
-- `86e15f924a` task: import from codebase/tasks.sexp
-- `e9798bf694` add codebase/code codebase/specs
 - `f0333cb41c` update deus (by claude)
 - `924f1988c5` history: import 1018 changes
 - `41f913e8af` history: import 1010 changes
 - `afb382de6b` task: import from /tmp/tmpm9ol3os0/tasks.sexp
 - `5f20adb985` add /tmp/tmpm9ol3os0/merged/code /tmp/tmpm9ol3os0/merged/specs
-- `42f987d1f0` update deus (by merge)
-- `48837a0605` history: import 1000 changes
-- `579a9acc27` history: import 1009 changes
-- `594270c9d2` task: import from /tmp/tmp_q7zebks/tasks.sexp
-- `35ee3f9c65` add /tmp/tmp_q7zebks/merged/code /tmp/tmp_q7zebks/merged/specs
-- `8a33fd7308` update deus (by claude)
-- `3ed8cd0ba3` update deus (by merge)
-- `ddc1aecd8a` history: import 996 changes
-- `f743293630` history: import 972 changes
-- `9ab8e1004e` task: import from /tmp/tmpuxmjym96/tasks.sexp
-- `322df425ff` add /tmp/tmpuxmjym96/merged/code /tmp/tmpuxmjym96/merged/specs
-- `e69797f657` task: link 60e88be8 to CGen.codeRuntime
-- `3d3f26560e` task: set 60e88be8 state
-- `fee8274c35` task: comment on 60e88be8 (by claude)
-- `315f4fea21` native Core interpreter (D143) (by claude)
-- `db80f8c8c0` history: import 965 changes
-- `506986bb97` task: import from codebase/tasks.sexp
-- `e9a7188d56` add codebase/code codebase/specs
 - `8fff0a3cc8` update deus (by claude)
 - `51b516c2ef` task: comment on 88004c30 (by claude)
 - `40660e52e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
@@ -199,10 +185,26 @@
 - `a648dcf6b1` update deus (by claude)
 - `9bcc7bd80e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
 - `f6b4401a3a` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
+- `7750353b5d` task: comment on 60e88be8
+- `2e8d17b108` update deus (by claude)
+- `dd574bcb24` history: import 1018 changes
+- `86e15f924a` task: import from codebase/tasks.sexp
+- `e9798bf694` add codebase/code codebase/specs
+- `42f987d1f0` update deus (by merge)
+- `48837a0605` history: import 1000 changes
+- `579a9acc27` history: import 1009 changes
+- `594270c9d2` task: import from /tmp/tmp_q7zebks/tasks.sexp
+- `35ee3f9c65` add /tmp/tmp_q7zebks/merged/code /tmp/tmp_q7zebks/merged/specs
 - `69add6faeb` task: comment on 1ab6c044 (by claude)
 - `34925ba12f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
 - `eab8f32cd2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
 - `b7f1509790` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
+- `8a33fd7308` update deus (by claude)
+- `3ed8cd0ba3` update deus (by merge)
+- `ddc1aecd8a` history: import 996 changes
+- `f743293630` history: import 972 changes
+- `9ab8e1004e` task: import from /tmp/tmpuxmjym96/tasks.sexp
+- `322df425ff` add /tmp/tmpuxmjym96/merged/code /tmp/tmpuxmjym96/merged/specs
 - `404463cfd4` task: comment on 1ab6c044 (by claude)
 - `1a9214b4e4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
 - `1b38d19430` update deus (by claude)
@@ -227,16 +229,6 @@
 - `b0b3676338` history: import 962 changes
 - `06f545459b` task: import from /tmp/tmp60xajc8g/tasks.sexp
 - `adef1a6c15` add /tmp/tmp60xajc8g/merged/code /tmp/tmp60xajc8g/merged/specs
-- `bf1d51f864` update deus (by merge)
-- `c562dd221e` history: import 955 changes
-- `f9a2c9e537` history: import 940 changes
-- `06284d784b` task: import from /tmp/tmpsro5r533/tasks.sexp
-- `34d0771186` add /tmp/tmpsro5r533/merged/code /tmp/tmpsro5r533/merged/specs
-- `ada6a4b8ce` Rehash after wasm.deus (D140) (by claude)
-- `faad5a9a36` Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140) (by claude)
-- `18f95dee7d` history: import 935 changes
-- `83a11b24ed` task: import from codebase/tasks.sexp
-- `54dde71085` add codebase/code codebase/specs
 - `c9036732bc` task: open 53e409cd deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (by claude)
 - `7ef98a03c9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law.deus (by claude)
 - `5cdd38255e` delete Cli.MdlFacts.declared (by claude)
@@ -244,6 +236,18 @@
 - `8d4f94d1c8` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cb.mdl (by claude)
 - `b2118ecb1f` update deus (by claude)
 - `9e84cd4cb6` update deus (by claude)
+- `e69797f657` task: link 60e88be8 to CGen.codeRuntime
+- `3d3f26560e` task: set 60e88be8 state
+- `fee8274c35` task: comment on 60e88be8 (by claude)
+- `315f4fea21` native Core interpreter (D143) (by claude)
+- `db80f8c8c0` history: import 965 changes
+- `506986bb97` task: import from codebase/tasks.sexp
+- `e9a7188d56` add codebase/code codebase/specs
+- `bf1d51f864` update deus (by merge)
+- `c562dd221e` history: import 955 changes
+- `f9a2c9e537` history: import 940 changes
+- `06284d784b` task: import from /tmp/tmpsro5r533/tasks.sexp
+- `34d0771186` add /tmp/tmpsro5r533/merged/code /tmp/tmpsro5r533/merged/specs
 - `0cbf27c419` task: comment on cda44092 (by claude)
 - `119e671691` task: set cda44092 state (by claude)
 - `72f35cce64` update deus (by claude)
@@ -256,18 +260,6 @@
 - `462f79b35e` history: import 931 changes
 - `68f57dfa92` task: import from /tmp/tmppqybtjes/tasks.sexp
 - `95f0dfe88e` add /tmp/tmppqybtjes/merged/code /tmp/tmppqybtjes/merged/specs
-- `df5727a9a3` Renumber D136 to D137 (by claude)
-- `9bd05183e7` update deus (by merge)
-- `0004ee2d41` history: import 923 changes
-- `be0b310f6c` history: import 920 changes
-- `38bb9d4f65` task: import from /tmp/tmpf4vx0azz/tasks.sexp
-- `76784d8bc0` add /tmp/tmpf4vx0azz/merged/code /tmp/tmpf4vx0azz/merged/specs
-- `167b1b0553` task: comment on 60e88be8 (by claude)
-- `c4de611752` Rehash after wasm.deus (D136) (by claude)
-- `8148f1d5b4` Native C: the compiler builds natively; definitions by hash, defects as Defect requests, partly typed comparisons, no over-application loop (D136) (by claude)
-- `9120895940` history: import 914 changes
-- `ef1387a893` task: import from codebase/tasks.sexp
-- `0b2eaf7131` add codebase/code codebase/specs
 - `e227cdbd69` task: comment on 10b95384 (by claude)
 - `8d474ded61` task: set 10b95384 state (by claude)
 - `7cea805ca8` update deus (by claude)
@@ -276,6 +268,17 @@
 - `9be4411da3` update deus (by claude)
 - `25cac1d555` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Workspace.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/wslaws.deus (by claude)
 - `34bb23ab7b` update deus (by claude)
+- `ada6a4b8ce` Rehash after wasm.deus (D140) (by claude)
+- `faad5a9a36` Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140) (by claude)
+- `18f95dee7d` history: import 935 changes
+- `83a11b24ed` task: import from codebase/tasks.sexp
+- `54dde71085` add codebase/code codebase/specs
+- `df5727a9a3` Renumber D136 to D137 (by claude)
+- `9bd05183e7` update deus (by merge)
+- `0004ee2d41` history: import 923 changes
+- `be0b310f6c` history: import 920 changes
+- `38bb9d4f65` task: import from /tmp/tmpf4vx0azz/tasks.sexp
+- `76784d8bc0` add /tmp/tmpf4vx0azz/merged/code /tmp/tmpf4vx0azz/merged/specs
 - `ea0d21d5e6` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ex.deus (by claude)
 - `383fa9c836` task: comment on 7ef8bf45 (by claude)
 - `5555eef319` task: set 7ef8bf45 state (by claude)
@@ -285,6 +288,12 @@
 - `732fd1ad9c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ts.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/hyp.deus (by claude)
 - `04a1f5bd95` task: comment on 2a2b87a2 (by claude)
 - `e2aba1a255` task: set 2a2b87a2 state (by claude)
+- `167b1b0553` task: comment on 60e88be8 (by claude)
+- `c4de611752` Rehash after wasm.deus (D136) (by claude)
+- `8148f1d5b4` Native C: the compiler builds natively; definitions by hash, defects as Defect requests, partly typed comparisons, no over-application loop (D136) (by claude)
+- `9120895940` history: import 914 changes
+- `ef1387a893` task: import from codebase/tasks.sexp
+- `0b2eaf7131` add codebase/code codebase/specs
 - `9a00388d01` task: comment on 1cbfdd30 (by claude)
 - `ff9390afe5` task: set 1cbfdd30 state (by claude)
 - `369b918ac7` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
@@ -531,6 +540,11 @@
 - `638043f48f` task: set 44892ca0 state
 - `95fa9e2cc1` close 7f677d04 by #93f3e01096 (by claude)
 - `93f3e01096` update deus (by claude)
+- `f84f1e8092` history: import 702 changes
+- `2b352668f1` task: import from tasks.sexp
+- `753edf4687` history: import 646 changes
+- `c892328cc0` task: import from tasks.sexp
+- `fc7658bcb6` merge #13952's branch: JsGen.Spec refusals (22d58083) (by claude)
 - `e7cadb3cf0` export: merge 7 changes from codebase
 - `f5bf3f0de8` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
 - `adbe79e87a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl
@@ -548,6 +562,41 @@
 - `2b21b1d6f7` task: open f264430b devex: the dogfood test takes 124 s
 - `5f7d5f1997` task: open 7f677d04 devex: deus mdl over all specs takes 34 s
 - `dded1cf89e` task: open 44892ca0 devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x
+- `7e4e80fa01` task: set 05658284 state
+- `c12e0556c6` task: comment on 05658284 (by claude)
+- `518cddbd4f` task: set 508d9443 state
+- `a69a1ed715` task: comment on 508d9443 (by claude)
+- `ae7acb3d31` JsGen.Spec: R-2 has its test; R-3 refuses inline Js.import (by claude)
+- `c138b36135` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
+- `44908d81fd` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
+- `00911c2f8b` task: comment on c62198a1
+- `ef3d1009b4` task: set c62198a1 state
+- `c2c2882e4b` task: link c62198a1 to #1883dc98b6
+- `1883dc98b6` builtin objects travel in bundles; unknown constructors still bind every pattern variable (D112)
+- `08d609da41` history: import 632 changes
+- `4f330f0e82` task: import from tasks.sexp
+- `64516ee1c5` merge #13952's branch: explorer events (D110), C closures (D111)
+- `e5816f8806` task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (by claude)
+- `d4da286202` close 610b2785 by #0ab73f8ca1 (by claude)
+- `0ab73f8ca1` C back end: closures, partial application and lambda-lifted letrec (D111) (by claude)
+- `d2791171c6` history: import 627 changes
+- `671c6d2637` task: import from tasks.sexp
+- `9d20d6564f` task: set 381f55f3 state details (by claude)
+- `b28f47c0ce` history: import 623 changes
+- `d77982c141` task: import from tasks.sexp
+- `fa2371ce09` add code specs
+- `072f91e168` task: set ca75d545 state (by claude)
+- `086d4e6828` task: comment on ca75d545 (by claude)
+- `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)
+- `5af5f624f5` the explorer writes events.json and meta.events (R-14, R-15) (by claude)
+- `c77c21729f` Explorer.Spec R-14, R-15: events.json and the meta count, spec first (by claude)
+- `102beac5d7` merge #13952's branch: View.Spec and the specs as exported (by claude)
+- `400cb8ebc9` history: import 698 changes
+- `5dab22c540` task: import from codebase/tasks.sexp
+- `3885974323` merge #13952's branch: View fix (D108) (by claude)
+- `dfc08c5d11` history: import 590 changes
+- `9aa61666e1` task: import from codebase/tasks.sexp
+- `c37c95c07d` merge #13952's branch: Parquet column statistics (by claude)
 - `892406fc07` export: merge 9 changes from codebase
 - `a6a09e7efc` export: merge tasks from codebase
 - `d3ac71beee` merge #13952's branch (by claude)
@@ -569,6 +618,95 @@
 - `f8d7887d0d` task: set f6a2c2ff state (by claude)
 - `7e1fcbca9a` close 4f7f9e40 by #8cb84289e1 (by claude)
 - `8cb84289e1` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/specs/VIEW.mdl (by claude)
+- `1e5d40d2d6` cli: bring Cli.dispatch and Cli.main up to date with deus/ (by claude)
+- `87e96d9f73` close 4b1eb1a9 by #7886bef5ce (by claude)
+- `7886bef5ce` cli: origin and the R2 endpoint default for the toolchain codebase (D108) (by claude)
+- `a00feaab57` task: set 4b1eb1a9 state priority assignee labels details (by claude)
+- `6a48195085` task: open 4b1eb1a9 The CLI defaults origin and the R2 endpoint for the toolchain codebase (by claude)
+- `97932915fc` task: set 72207dc1 state details (by claude)
+- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
+- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
+- `5f3ee9bd61` history: import 580 changes
+- `bdbadcd847` task: import from tasks.sexp
+- `6e64e08bbb` task: comment on e76e36b0 (by claude)
+- `f06a7a09f3` history: import 577 changes
+- `8637e168f4` task: import from tasks.sexp
+- `8fb40df7ae` add code specs
+- `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
+- `c1094317db` users exclude the definition itself (D101) (by claude)
+- `6ca942925a` history: import 586 changes
+- `b2dd88f2c9` task: import from tasks.sexp
+- `9d9673a128` merge: the explorer's graph view (D99) (by claude)
+- `219688316c` history: import 448 changes
+- `dcd5501500` task: import from tasks.sexp
+- `e95740510c` add code specs
+- `2efffdfa02` close 55a3e9d5 by #3899aa8081 (by claude)
+- `3899aa8081` the explorer's graph view; users exclude the definition itself (D96) (by claude)
+- `bd968a8e7b` task: open 55a3e9d5 Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (by claude)
+- `68fd7c720d` history: import 408 changes
+- `817e132bb0` task: import from tasks.sexp
+- `09cc7dae97` add code specs
+- `4e23b5e485` task: comment on 771e6f9e (by claude)
+- `3815cceaee` history: import 558 changes (by claude)
+- `845a8ce02c` task: import from tasks.sexp
+- `059bcafd6c` add code specs
+- `cf058fac29` export: merge tasks from codebase
+- `1a7a8cb1c2` task: comment on 771e6f9e (by claude)
+- `0798d17c17` history: import 532 changes (by claude)
+- `f7be59b176` task: import from tasks.sexp
+- `7cfe0a41ea` add code specs
+- `44545eb04d` task: comment on e76e36b0 (by claude)
+- `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
+- `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
+- `5682baf33c` task: open 1e8dee8b A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec
+- `92327e0846` task: set 5d6c67b4 state
+- `51a90a44c7` task: comment on 5d6c67b4 (by claude)
+- `f4563342df` task: set 771e6f9e state
+- `e9b5cdc855` task: comment on 771e6f9e (by claude)
+- `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
+- `e55740c728` analytics decisions renumbered D104, D105 (by claude)
+- `43a62f2c19` history: import 540 changes
+- `c769c10b59` task: import from tasks.sexp
+- `8be1d54ed3` add code specs
+- `f8f410ac05` export: merge tasks from codebase
+- `4b59911ace` analytics decisions renumbered D103, D104 (by claude)
+- `44f4b80a35` history: import 526 changes
+- `0b582fa2ae` task: import from tasks.sexp
+- `027cb63f7b` add code specs
+- `90521a638a` task: comment on 72207dc1 (by claude)
+- `77856573c6` history: import 515 changes
+- `397db919a9` task: import from tasks.sexp
+- `661910e409` add code specs
+- `6ad8d8e787` analytics decisions renumbered D102, D103 (by claude)
+- `731819a207` task: set 87707577 state (by claude)
+- `5e0af148e7` task: set 87707577 details (by claude)
+- `ae13da09a7` task: open 72207dc1 The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (by claude)
+- `182ea2fa92` close 3c8a311c by #d3d028011c (by claude)
+- `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
+- `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
+- `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
+- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
+- `e468baa69b` task: comment on 12663f55 (by claude)
+- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
+- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
+- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
+- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
+- `616c10e45e` history: import 511 changes
+- `a5ec773714` task: import from tasks.sexp
+- `3796ba0f06` task: set 38603468 state details (by claude)
+- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
+- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
+- `26b25952c4` history: import 507 changes
+- `ce1b500e79` task: import from tasks.sexp
+- `880640eb13` task: set e76e36b0 state (by claude)
+- `ea44281ed7` task: set e76e36b0 details (by claude)
+- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
+- `77337bc6cf` history: import 501 changes
+- `1e220da057` task: import from tasks.sexp
+- `3c07f87183` add code specs
 - `dbfeb70ff7` export: merge 21 changes from codebase
 - `1ec8ae9075` export: merge tasks from codebase
 - `d2758d5ca1` specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in (by claude)
@@ -703,135 +841,6 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
-- `f84f1e8092` history: import 702 changes
-- `2b352668f1` task: import from tasks.sexp
-- `753edf4687` history: import 646 changes
-- `c892328cc0` task: import from tasks.sexp
-- `fc7658bcb6` merge #13952's branch: JsGen.Spec refusals (22d58083) (by claude)
-- `7e4e80fa01` task: set 05658284 state
-- `c12e0556c6` task: comment on 05658284 (by claude)
-- `518cddbd4f` task: set 508d9443 state
-- `a69a1ed715` task: comment on 508d9443 (by claude)
-- `ae7acb3d31` JsGen.Spec: R-2 has its test; R-3 refuses inline Js.import (by claude)
-- `c138b36135` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
-- `44908d81fd` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
-- `00911c2f8b` task: comment on c62198a1 (by claude)
-- `ef3d1009b4` task: set c62198a1 state (by claude)
-- `c2c2882e4b` task: link c62198a1 to #1883dc98b6
-- `1883dc98b6` builtin objects travel in bundles; unknown constructors still bind every pattern variable (D112) (by claude)
-- `08d609da41` history: import 632 changes
-- `4f330f0e82` task: import from tasks.sexp
-- `64516ee1c5` merge #13952's branch: explorer events (D110), C closures (D111) (by claude)
-- `e5816f8806` task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (by claude)
-- `d4da286202` close 610b2785 by #0ab73f8ca1 (by claude)
-- `0ab73f8ca1` C back end: closures, partial application and lambda-lifted letrec (D111) (by claude)
-- `d2791171c6` history: import 627 changes
-- `671c6d2637` task: import from tasks.sexp
-- `9d20d6564f` task: set 381f55f3 state details (by claude)
-- `b28f47c0ce` history: import 623 changes
-- `d77982c141` task: import from tasks.sexp
-- `fa2371ce09` add code specs
-- `072f91e168` task: set ca75d545 state (by claude)
-- `086d4e6828` task: comment on ca75d545 (by claude)
-- `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)
-- `5af5f624f5` the explorer writes events.json and meta.events (R-14, R-15) (by claude)
-- `c77c21729f` Explorer.Spec R-14, R-15: events.json and the meta count, spec first (by claude)
-- `102beac5d7` merge #13952's branch: View.Spec and the specs as exported (by claude)
-- `400cb8ebc9` history: import 698 changes
-- `5dab22c540` task: import from codebase/tasks.sexp
-- `3885974323` merge #13952's branch: View fix (D108) (by claude)
-- `dfc08c5d11` history: import 590 changes
-- `9aa61666e1` task: import from codebase/tasks.sexp
-- `c37c95c07d` merge #13952's branch: Parquet column statistics (by claude)
-- `1e5d40d2d6` cli: bring Cli.dispatch and Cli.main up to date with deus/ (by claude)
-- `87e96d9f73` close 4b1eb1a9 by #7886bef5ce (by claude)
-- `7886bef5ce` cli: origin and the R2 endpoint default for the toolchain codebase (D108) (by claude)
-- `a00feaab57` task: set 4b1eb1a9 state priority assignee labels details (by claude)
-- `6a48195085` task: open 4b1eb1a9 The CLI defaults origin and the R2 endpoint for the toolchain codebase (by claude)
-- `97932915fc` task: set 72207dc1 state details (by claude)
-- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
-- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
-- `5f3ee9bd61` history: import 580 changes
-- `bdbadcd847` task: import from tasks.sexp
-- `6e64e08bbb` task: comment on e76e36b0 (by claude)
-- `f06a7a09f3` history: import 577 changes
-- `8637e168f4` task: import from tasks.sexp
-- `8fb40df7ae` add code specs
-- `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
-- `c1094317db` users exclude the definition itself (D101) (by claude)
-- `6ca942925a` history: import 586 changes
-- `b2dd88f2c9` task: import from tasks.sexp
-- `9d9673a128` merge: the explorer's graph view (D99) (by claude)
-- `219688316c` history: import 448 changes
-- `dcd5501500` task: import from tasks.sexp
-- `e95740510c` add code specs
-- `2efffdfa02` close 55a3e9d5 by #3899aa8081 (by claude)
-- `3899aa8081` the explorer's graph view; users exclude the definition itself (D96) (by claude)
-- `bd968a8e7b` task: open 55a3e9d5 Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (by claude)
-- `68fd7c720d` history: import 408 changes
-- `817e132bb0` task: import from tasks.sexp
-- `09cc7dae97` add code specs
-- `4e23b5e485` task: comment on 771e6f9e (by claude)
-- `3815cceaee` history: import 558 changes (by claude)
-- `845a8ce02c` task: import from tasks.sexp
-- `059bcafd6c` add code specs
-- `cf058fac29` export: merge tasks from codebase
-- `1a7a8cb1c2` task: comment on 771e6f9e (by claude)
-- `0798d17c17` history: import 532 changes (by claude)
-- `f7be59b176` task: import from tasks.sexp
-- `7cfe0a41ea` add code specs
-- `44545eb04d` task: comment on e76e36b0 (by claude)
-- `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
-- `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
-- `5682baf33c` task: open 1e8dee8b A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec
-- `92327e0846` task: set 5d6c67b4 state
-- `51a90a44c7` task: comment on 5d6c67b4 (by claude)
-- `f4563342df` task: set 771e6f9e state
-- `e9b5cdc855` task: comment on 771e6f9e (by claude)
-- `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
-- `e55740c728` analytics decisions renumbered D104, D105 (by claude)
-- `43a62f2c19` history: import 540 changes
-- `c769c10b59` task: import from tasks.sexp
-- `8be1d54ed3` add code specs
-- `f8f410ac05` export: merge tasks from codebase
-- `4b59911ace` analytics decisions renumbered D103, D104 (by claude)
-- `44f4b80a35` history: import 526 changes
-- `0b582fa2ae` task: import from tasks.sexp
-- `027cb63f7b` add code specs
-- `90521a638a` task: comment on 72207dc1 (by claude)
-- `77856573c6` history: import 515 changes
-- `397db919a9` task: import from tasks.sexp
-- `661910e409` add code specs
-- `6ad8d8e787` analytics decisions renumbered D102, D103 (by claude)
-- `731819a207` task: set 87707577 state (by claude)
-- `5e0af148e7` task: set 87707577 details (by claude)
-- `ae13da09a7` task: open 72207dc1 The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (by claude)
-- `182ea2fa92` close 3c8a311c by #d3d028011c (by claude)
-- `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
-- `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
-- `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
-- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
-- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
-- `e468baa69b` task: comment on 12663f55 (by claude)
-- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
-- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
-- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
-- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
-- `616c10e45e` history: import 511 changes
-- `a5ec773714` task: import from tasks.sexp
-- `3796ba0f06` task: set 38603468 state details (by claude)
-- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
-- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
-- `3d4d7adba4` task: set e76e36b0 state (by claude)
-- `fa3a704b26` task: set e76e36b0 details (by claude)
-- `26b25952c4` history: import 507 changes
-- `ce1b500e79` task: import from tasks.sexp
-- `880640eb13` task: set e76e36b0 state (by claude)
-- `ea44281ed7` task: set e76e36b0 details (by claude)
-- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
-- `77337bc6cf` history: import 501 changes
-- `1e220da057` task: import from tasks.sexp
-- `3c07f87183` add code specs
 - `0833dc37cb` task: set 50e58574 details
 - `8755200a57` history: import 459 changes (by claude)
 - `d435c5cfa7` task: import from tasks.sexp
