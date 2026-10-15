@@ -489,11 +489,24 @@ def application (u : Unifier) (env : TypeEnv {r}) (f : Sexp) (args : List Sexp) 
     List.forEach (List.filter (fun pair => not (isLambda pair)) pairs) (fun pair => checkAgainst u env (snd pair) (fst (fst pair)) locals row)
     List.forEach params (fun pair => subRow u (snd pair) row)
     List.forEach (List.filter isLambda pairs) (fun pair => checkAgainst u env (snd pair) (fst (fst pair)) locals row)
+    List.forEach params (fun pair => refuseFunction u f (fst pair))
     result
   | none =>
     List.foldl (fun acc arg =>
       let ta := infer u env arg locals row
+      refuseFunction u f ta
       call u acc ta row) tf args
+
+/-- `==` and `!=` compare closures by identity, so on a function they are always false: a type error (R-7). -/
+def refuseFunction (u : Unifier) (f : Sexp) (t : TType) : {Throw Text} Unit :=
+  match f with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] =>
+    if p == "eq" || p == "neq" then
+      match resolve u t with
+      | TType.fn _ _ _ => throw ((if p == "eq" then "==" else "!=") ++ " on " ++ display u t ++ ", a function, which is never equal to anything (is an argument missing?)")
+      | _ => ()
+    else ()
+  | _ => ()
 
 /-- Checks a term against an expected type; a lambda takes its parameter and row from it. -/
 def checkAgainst (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (expected : TType) (locals : List TType) (row : TRow) : {Throw Text | r} Unit :=

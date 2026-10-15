@@ -178,7 +178,7 @@ def prelude (nullary : Int) : Text :=
     "static V deus_dict_from_list(V xs) { V d = deus_table_new(0); for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { V *pair = UNBOX(UNBOX(c)[1]); deus_table_set(d, pair[1], pair[2]); } return d; }",
     "static V deus_dict_lookup(V k, V d) { return deus_table_get(d, k); }",
     "static V deus_dict_contains(V k, V d) { return deus_table_has(d, k); }",
-    "/* Handlers (D123). The abort marker is no value a program makes: not an Int, not a block. */",
+    "/* Handlers (D124). The abort marker is no value a program makes: not an Int, not a block. */",
     "#ifdef __wasm__",
     "#define DEUS_ABORT ((V)1 << 40)",
     "#else",
@@ -1111,7 +1111,7 @@ def liftAll (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
   done ++ Ref.get out
 
 --
--- Effects (D123). A clause that resumes only in tail position needs no captured continuation:
+-- Effects (D124). A clause that resumes only in tail position needs no captured continuation:
 -- performing calls it, and its tail `k x` returns `x` to the performer. A clause tail that does
 -- not resume aborts: it stores its value and returns the abort marker, which every caller that
 -- may see it checks and passes on, dropping what it owns, up to the handler. Both are rewritten
@@ -1312,7 +1312,7 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
   | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
   | _ => e
 
-/-- `fns` with handlers and operations rewritten into Core over the runtime (D123); unchanged when none performs or handles. -/
+/-- `fns` with handlers and operations rewritten into Core over the runtime (D124); unchanged when none performs or handles. -/
 def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
   let abilities := List.dedup (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody) fns)
   if List.isEmpty abilities then fns

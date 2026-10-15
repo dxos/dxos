@@ -635,7 +635,7 @@ describe('deus CLI', () => {
         ['Tables.all', [1000]],
         // show, Text.utf8, Text.fromCodes and Text.sha256 (D120).
         ['Rendered.digestLine', [40]],
-        // Handlers whose clauses resume in tail position or abort (D123).
+        // Handlers whose clauses resume in tail position or abort (D124).
         ['Handled.handledAll', [20]],
       ] as const) {
         const out = join(scratch, name);
@@ -696,7 +696,7 @@ describe('deus CLI', () => {
       expect(refused.code).toBe(1);
       expect(refused.stderr).toContain('length is a primitive, not a definition the C back end compiles');
 
-      // A clause that resumes other than in tail position needs a captured continuation (D123).
+      // A clause that resumes other than in tail position needs a captured continuation (D124).
       deus(
         'add',
         file(

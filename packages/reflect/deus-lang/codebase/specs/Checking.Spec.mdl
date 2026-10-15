@@ -87,6 +87,17 @@ req R-6: a definition with no binders and no written row stays unconstrained
   by: Checking.Spec.bareWithoutRow
 ```
 
+## Equality on functions
+
+Functions have no equality: two closures compare by identity at run time, so `f x == f 2` on a
+partial application is always false. `==` and `!=` reject an operand whose type is a function, which
+is what an extra parameter on a callee turns a full application into.
+
+```mdl
+req R-7: == and != on a function type are type errors; on a full application they compare its result
+  by: Checking.Spec.equalFunctionsRejected | Checking.Spec.unequalFunctionsRejected | Checking.Spec.equalResultsChecked
+```
+
 ## Theorems
 
 Each theorem compiles a small source with `Compile.batch` and states whether it type-checks. The sources

@@ -22,7 +22,7 @@ such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](.
 `show` is type-directed, one rendering function per type, and `Text.utf8`, `Text.fromCodes` and
 `Text.sha256` are in the runtime ([D120](../DECISIONS.md)). Comparing arrays or functions, and `show`
 on a value whose type the compiler does not know, are still refused. Effect handlers compile when
-every clause resumes in tail position or not at all ([D123](../DECISIONS.md)); a clause that resumes
+every clause resumes in tail position or not at all ([D124](../DECISIONS.md)); a clause that resumes
 anywhere else is refused. Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
@@ -236,7 +236,7 @@ boundary.
 
 Most clauses resume once, as their last step (`k (x * 2)`), or never (`throw e -> _ => …`). Neither
 needs a captured continuation, so the C back end rewrites handlers into Core over a small runtime
-before lambda lifting ([D123](../DECISIONS.md)):
+before lambda lifting ([D124](../DECISIONS.md)):
 
 - A handler pushes one record per clause, `[parent, frame, ability, op, clause]`, where the clause is
   a closure of its arguments. Performing finds the innermost record for the operation, hides that
@@ -323,7 +323,7 @@ it now. The rest of the language needs these, in order of how much code they unl
    ported from the Rust kernel's `text.rs`; structural equality and order of data (D117).
    Insertion-ordered maps (`Dict`, `MutMap`) and `Map` (D119); `show`, `Text.utf8`, `Text.fromCodes`
    and `Text.sha256` (D120).
-4. **Effects.** Clauses that resume in tail position or abort: done (D123), without evidence
+4. **Effects.** Clauses that resume in tail position or abort: done (D124), without evidence
    passing. The rest of this item is the plan for the general case. Types carry effect rows, so the compiler knows which functions can perform an
    operation. Functions with an empty row compile as they do now. Handlers compile by evidence
    passing (Koka): a handler is a record passed to the code under it. An operation whose handler

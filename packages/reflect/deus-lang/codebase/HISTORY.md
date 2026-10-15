@@ -1,5 +1,9 @@
 # History of main
 
+- `3fb555eb44` renumber the handler decision to D124 (by claude)
+- `6b970366b4` history: import 792 changes (by merge)
+- `c94a75a6b3` task: import from /tmp/tmp7jaqmofk/packages/reflect/deus-lang/codebase/tasks.sexp
+- `9e9c3db306` update /tmp/tmp7jaqmofk/packages/reflect/deus-lang/codebase/code/Checking.deus /tmp/tmp7jaqmofk/packages/reflect/deus-lang/codebase/code/Types.deus /tmp/tmp7jaqmofk/packages/reflect/deus-lang/codebase/specs/Checking.Spec.mdl (by merge)
 - `ff5e74a1c6` renumber the handler decision to D123 (by claude)
 - `379173c02d` update deus (by merge)
 - `eedfbaba83` history: import 787 changes
@@ -9,6 +13,11 @@
 - `fbbadac4d2` history: import 767 changes
 - `9f01cc3113` task: import from codebase/tasks.sexp
 - `b338ac8eae` add codebase/code codebase/specs
+- `e86da1f72b` task: comment on 84ec6ef7
+- `61fa96e18f` task: set 84ec6ef7 state
+- `1a34186c1e` update deus (by claude)
+- `bbdb65838f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/eq/Checking.Spec.mdl (by claude)
+- `73876a5f17` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/eq/laws.deus (by claude)
 - `4979d8c660` history: import 767 changes (by merge)
 - `529810a14a` task: import from /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/tasks.sexp
 - `9fb0f089b8` update /tmp/tmpfy_mjmgx/merged/Cli.deus /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl (by merge)
