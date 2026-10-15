@@ -17,7 +17,6 @@ import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import {
   CLOUDFLARE_MESSAGE_MAX_BYTES,
-  type FlowControlConfig,
   WebSocketClosedError,
   WebSocketMuxer,
   createFlowControlConfig,
@@ -49,21 +48,6 @@ const WS_CONNECTING = 0;
  * finishes connecting from growing the queue without limit.
  */
 const MAX_PENDING_MESSAGES = 256;
-
-/**
- * Flow-control config for a socket, or undefined when the server did not select `edge-ws-v2`.
- *
- * An overdraft is only logged here: EDGE is the trusted end, and closing the connection on its account
- * would cost more than the overrun.
- */
-const flowControlConfig = (ws: WebSocket): FlowControlConfig | undefined => {
-  if (!ws.protocol?.includes(EdgeWebsocketProtocol.V2)) {
-    return undefined;
-  }
-  return createFlowControlConfig(({ channelId, outstanding, limit }) =>
-    log.warn('edge exceeded its flow-control window', { channelId, outstanding, limit }),
-  );
-};
 
 /** A message submitted before the handshake completed, and the trigger its sender awaits. */
 type PendingMessage = { message: Message; sent: Trigger };
@@ -272,7 +256,11 @@ export class EdgeWsConnection extends Resource {
     let muxer: WebSocketMuxer | undefined;
 
     ws.onopen = () => {
-      muxer = new WebSocketMuxer(ws, { flowControl: flowControlConfig(ws) });
+      // EDGE is the trusted end, so its overdraft is only logged: closing on its account costs more than the overrun.
+      const flowControl = ws.protocol?.includes(EdgeWebsocketProtocol.V2)
+        ? createFlowControlConfig((overdraft) => log.warn('edge exceeded its flow-control window', overdraft))
+        : undefined;
+      muxer = new WebSocketMuxer(ws, { flowControl });
       this._wsMuxer = muxer;
       if (this.isOpen) {
         log('connected');
