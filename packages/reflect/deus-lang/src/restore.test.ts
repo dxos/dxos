@@ -42,7 +42,7 @@ describe('deus CLI export restore', () => {
     expect(toolchain?.features.length).toBeGreaterThan(10);
     expect(toolchain?.features.filter((f) => f.status === 'shipped' && f.problems.length > 0)).toEqual([]);
 
-    // Every law a spec document holds is cited by one of its blocks (D124).
+    // Every law a spec document holds is cited by one of its blocks (D125).
     const coverage = JSON.parse(deus('mdl', '--coverage', '--json', '--codebase', restored).stdout) as {
       document: string;
       uncitedLaws: string[];

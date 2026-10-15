@@ -1,5 +1,15 @@
 # History of main
 
+- `cc4e504a88` update deus (by claude)
+- `1b9e2d9cb1` history: import 796 changes (by claude)
+- `9cec7dd037` task: import from /tmp/tmpszia9cai/tasks.sexp
+- `3000e1dc81` history: import 802 changes
+- `3a92cd33c6` task: import from /tmp/tmpszia9cai/tasks.sexp
+- `dd4dbd1482` add /tmp/tmpszia9cai/merged/code /tmp/tmpszia9cai/merged/specs
+- `844bfe4aee` C and wasm back ends compile handlers whose clauses resume in tail position or abort (D124, task e1cf2c6c) (by claude)
+- `000e042441` history: import 792 changes
+- `ae5fc9cc24` task: import from codebase/tasks.sexp
+- `4bd47ec39b` add codebase/code codebase/specs
 - `10edc4793f` update deus (by claude)
 - `ea550bd267` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
 - `0ccd9cb210` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)

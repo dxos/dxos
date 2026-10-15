@@ -7,7 +7,7 @@ version: 1.0
 # Spec coverage: what a spec leaves unstated
 
 `deus mdl` checks that what a spec says holds; `deus mdl --coverage` reports what it does not say
-([D124](../../docs/DECISIONS.md), task 908495a0). Two omissions matter. A law of the document (a test or a
+([D125](../../docs/DECISIONS.md), task 908495a0). Two omissions matter. A law of the document (a test or a
 theorem named under it, such as `View.Spec.pathIri`) that no block cites backs no requirement. A public
 definition, one used outside its own namespace, in a namespace the document's api blocks cover, that no
 api block of any document names, is an API no spec states.

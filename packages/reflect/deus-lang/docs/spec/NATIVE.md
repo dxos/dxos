@@ -21,7 +21,9 @@ patterns, and `==`, `<`, `compare` on texts. `==`, `<` and `compare` on data com
 such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](../DECISIONS.md)).
 `show` is type-directed, one rendering function per type, and `Text.utf8`, `Text.fromCodes` and
 `Text.sha256` are in the runtime ([D120](../DECISIONS.md)). Comparing arrays or functions, and `show`
-on a value whose type the compiler does not know, are still refused. Error messages for refused forms
+on a value whose type the compiler does not know, are still refused. Effect handlers compile when
+every clause resumes in tail position or not at all ([D124](../DECISIONS.md)); a clause that resumes
+anywhere else is refused. Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
@@ -230,6 +232,34 @@ texts that need escaping and a surrogate pair, and digests the result; it agrees
 interpreter and ends with 0 live words. `Text.sha256` agrees with `sha256sum` at every padding
 boundary.
 
+## Effect handlers
+
+Most clauses resume once, as their last step (`k (x * 2)`), or never (`throw e -> _ => …`). Neither
+needs a captured continuation, so the C back end rewrites handlers into Core over a small runtime
+before lambda lifting ([D124](../DECISIONS.md)):
+
+- A handler pushes one record per clause, `[parent, frame, ability, op, clause]`, where the clause is
+  a closure of its arguments. Performing finds the innermost record for the operation, hides that
+  handler and the ones inside it, and calls the clause; its tail `k x` returns `x` to the performer.
+- Any other tail aborts: it stores its value for the handler and returns the abort marker, a word no
+  program makes. Every call that may return it is bound and checked, and the check returns the
+  marker on, so reference counting drops what each frame owns on the way up. The handler takes the
+  stored value as its result. A function that cannot reach a perform, a handler or an unknown call
+  is not checked, and neither is any code when no clause aborts.
+- A clause that resumes anywhere else, or stores its continuation, is refused.
+
+[`examples/handled.deus`](../../examples/handled.deus) counts through a tail-resuming handler, throws
+from deep recursion to `try`, keeps state in a `Ref` under a handler that a `throw` passes through,
+and throws from inside a clause to a handler that throws again. Every program agrees with the
+interpreter and ends with 0 live words, natively and in wasm built through C.
+
+| Program (best of three)   | TS kernel with JIT | C, clang -O2 |
+| ------------------------- | -----------------: | -----------: |
+| `Handled.countTo 1000000` |           1,040 ms |         8 ms |
+| `Handled.unwound 200000`  |             430 ms |        17 ms |
+
+JIT times are a `deus eval` minus a `deus eval` of a tiny input.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
@@ -293,7 +323,8 @@ it now. The rest of the language needs these, in order of how much code they unl
    ported from the Rust kernel's `text.rs`; structural equality and order of data (D117).
    Insertion-ordered maps (`Dict`, `MutMap`) and `Map` (D119); `show`, `Text.utf8`, `Text.fromCodes`
    and `Text.sha256` (D120).
-4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an
+4. **Effects.** Clauses that resume in tail position or abort: done (D124), without evidence
+   passing. The rest of this item is the plan for the general case. Types carry effect rows, so the compiler knows which functions can perform an
    operation. Functions with an empty row compile as they do now. Handlers compile by evidence
    passing (Koka): a handler is a record passed to the code under it. An operation whose handler
    resumes once in tail position (most of them: state, readers, logging, metrics, `Throw` aborts)

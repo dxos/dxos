@@ -433,10 +433,10 @@ def Wasm.substitute (binding : Sexp -> Option Sexp) (t : Sexp) : Sexp :=
   | Sexp.list items => Sexp.list (List.map (Wasm.substitute binding) items)
   | _ => t
 
-/-- The result type of a primitive on `Text` (the C back end's runtime, D115), or unknown. -/
+/-- The result type of a primitive the C back end's runtime implements (D115), or unknown; a lookup's `Option` and a clause are named, since `typeOf` counts other two-argument results as `Int`. -/
 def Wasm.textPrimType (p : Text) : Sexp := if any
   (fun x => x == p)
-  ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text" else if any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int" else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"] else unknown
+  ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text" else if any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int" else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"] else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"] else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown] else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown] else unknown
 
 def Wasm.tref (t : Text) : Sexp := Sexp.list [Sexp.sym "tref", Sexp.str t]
 

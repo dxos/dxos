@@ -1123,7 +1123,7 @@ def checkMdl (args : Args) : {IO, Throw Text} Unit :=
 
 /--
   `deus mdl --coverage [documents…]`: each spec document's laws no block cites, and the public
-  definitions in its api namespaces that no api block names (D124). Omissions are reported, not failed.
+  definitions in its api namespaces that no api block names (D125). Omissions are reported, not failed.
 -/
 def coverage (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1721,7 +1721,7 @@ def usage : Text :=
     "  eval <expr>                          evaluate an expression",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
-    "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D124)",
+    "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D125)",
     "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D118)",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",

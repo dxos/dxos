@@ -619,7 +619,7 @@ inductive Sexp where
   | list (items : List Sexp)
 
 /-
-  Spec coverage (D124): what a spec document leaves unstated. A law of the document (a test or a
+  Spec coverage (D125): what a spec document leaves unstated. A law of the document (a test or a
   theorem under its name) that no block cites backs no promise, and a public definition in a namespace
   the document's api blocks cover that no api block names is an API no spec states.
 -/

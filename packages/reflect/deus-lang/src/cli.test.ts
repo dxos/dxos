@@ -584,6 +584,7 @@ describe('deus CLI', () => {
         join(root, 'examples/structural.deus'),
         join(root, 'examples/tables.deus'),
         join(root, 'examples/rendered.deus'),
+        join(root, 'examples/handled.deus'),
         ...c,
       );
       // Definitions that differ only in their annotations share a hash: its stored scheme fits both
@@ -634,6 +635,8 @@ describe('deus CLI', () => {
         ['Tables.all', [1000]],
         // show, Text.utf8, Text.fromCodes and Text.sha256 (D120).
         ['Rendered.digestLine', [40]],
+        // Handlers whose clauses resume in tail position or abort (D124).
+        ['Handled.handledAll', [20]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -692,6 +695,19 @@ describe('deus CLI', () => {
       const refused = deus('build', 'Text.length', '-o', join(scratch, 'length'), '--c', ...c);
       expect(refused.code).toBe(1);
       expect(refused.stderr).toContain('length is a primitive, not a definition the C back end compiles');
+
+      // A clause that resumes other than in tail position needs a captured continuation (D124).
+      deus(
+        'add',
+        file(
+          'resumes.deus',
+          'def resumes (n : Int) : Int :=\n  handle Handled.metered n 0 with\n  | Handled.Meter.advance x -> k => k x + 1\n',
+        ),
+        ...c,
+      );
+      const resumes = deus('build', 'resumes', '-o', join(scratch, 'resumes'), '--c', ...c);
+      expect(resumes.code).toBe(1);
+      expect(resumes.stderr).toContain('a handler that resumes other than in tail position is outside the C subset');
     },
   );
 
@@ -710,6 +726,7 @@ describe('deus CLI', () => {
         join(root, 'examples/structural.deus'),
         join(root, 'examples/tables.deus'),
         join(root, 'examples/rendered.deus'),
+        join(root, 'examples/handled.deus'),
         ...c,
       );
       for (const [name, args] of [
@@ -718,6 +735,7 @@ describe('deus CLI', () => {
         ['Structural.structural', [200]],
         ['Tables.all', [1000]],
         ['Rendered.digestBytes', [40]],
+        ['Handled.handledAll', [20]],
         ['Bench.trees', [2]],
         ['Bench.queens', [6]],
         ['Sorting.benchMerge', [300, 7]],
