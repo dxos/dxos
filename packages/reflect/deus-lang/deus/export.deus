@@ -233,7 +233,7 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
 def termPath (name : Text) (suffix : Text) : Text := Text.join "/" (Text.split name ".") ++ suffix
 
 /-- The codebase as one file per definition (D168), for a mirror people browse: `<out>/A/B/c.deus`
-  holds `A.B.c` as `deus view` prints it, and each spec document is `<out>/A/B.mdl`. `<out>/FILES`
+  holds `A.B.c` as `deus view` prints it after its context header (D184), and each spec document is `<out>/A/B.mdl`. `<out>/FILES`
   lists them, so adding those files to a fresh codebase gives back the same snapshot (Export.Spec
   R-10); a file the previous run listed and this one did not write is removed. Returns (definitions,
   documents). -/
@@ -243,13 +243,19 @@ def writeTerms (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int) :=
   let global := Text.sha256 (join "\n" (List.map
     (fun pair => fst pair ++ "=" ++ snd pair)
     (Map.toList printer.typeNames ++ Map.toList printer.declared)))
+  -- Each file starts with its context header when the project has an address (Address.Spec R-4).
+  let home := Option.bind (Project.read dir) (fun p => home p.projectIri)
+  let headed := fun mdl name =>
+    match home with
+    | Option.some a => headerLine mdl (child a name) ++ "\n"
+    | Option.none => ""
   let code := filterMap (fun pair =>
     let (name, e) := pair
     if exported e then
       let body := cachedView printer global dir ns name e
-      if Text.isEmpty (trim body) then Option.none else Option.some (termPath name ".deus", body ++ "\n")
+      if Text.isEmpty (trim body) then Option.none else Option.some (termPath name ".deus", headed false name ++ body ++ "\n")
     else Option.none) (Map.toList ns)
-  let specs := List.map (fun d => (termPath d ".mdl", document dir ns d)) (specDocuments ns)
+  let specs := List.map (fun d => (termPath d ".mdl", headed true d ++ document dir ns d)) (specDocuments ns)
   let files := code ++ specs
   let written := Set.fromList (List.map fst files)
   let previous := List.filter

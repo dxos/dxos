@@ -64,8 +64,8 @@ def die (message : Text) : {IO} a :=
 
 def readSource (path : Text) : {IO, Throw Text} Text :=
   match IO.readFile path with
-  | some text => text
-  | none => throw ("cannot read " ++ path)
+  | Option.some text => withoutHeader (endsWith ".mdl" path) text
+  | Option.none => Throw.throw ("cannot read " ++ path)
 
 /-- Expands directories to the `.deus` and `.mdl` files they contain, sorted. -/
 def expandPaths (paths : List Text) : {IO} List Text :=
@@ -372,15 +372,12 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let sources := List.map (fun path => (path, Text.sha256 (readSource path))) (expandPaths args.positional)
   let known := if isUpdate && not (Cli.flag args "fresh") then recordedSources dir else Option.none
   let skipped := unchangedSources known sources
-  let batch := catch (fun _ => batch
-    ns
-    (fun h => readObject dir h)
-    (fun h => readMeta dir h)
-    (checkTypes ())
-    (parseIn
-      dir
-      ns
-      (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources)))) (fun e => Throw.throw (nameCallee ns e))
+  let parsed := parseIn dir ns (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources))
+  let misplaced := contextProblems dir parsed
+  if not (List.isEmpty misplaced) then Throw.throw ("these files do not match their context header (Address.Spec R-5):\n  " ++ join "\n  " misplaced) else ()
+  let batch := catch
+    (fun _ => batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) parsed)
+    (fun e => Throw.throw (nameCallee ns e))
   Cli.warn batch
   let entries := batch.entries ++ specEntries dir args.positional
   let replaced := changes ns entries
@@ -866,8 +863,8 @@ def layers (args : Args) : {IO, Throw Text} Unit :=
       match row with
       | (name, place, replicated, count) => Text.padRight 12 name ++ Text.padRight 14 place ++ Text.padRight 12 (if replicated then "replicated" else "local") ++ Int.toText count) rows))
 
-/-- `deus project`: the project's IRI, its libraries, and the size of its subgraph.
-  `deus project init <iri>`: names the codebase's project. -/
+/-- `deus project`: the project's IRI and address, its libraries, and the size of its subgraph.
+  `deus project init <iri|@owner/project>`: names the codebase's project (D49, D184). -/
 def project (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -875,6 +872,7 @@ def project (args : Args) : {IO, Throw Text} Unit :=
       match Project.read dir with
       | Option.some p => Throw.throw ("this codebase is already the project " ++ p.projectIri)
       | Option.none =>
+          if startsWith "@" iri && Address.parse iri == Option.none then Throw.throw (iri ++ " is not an address: @owner/project, both lowercase letters, digits and dashes") else ()
           Project.write dir (Project.mk iri [])
           Cli.output
             args
@@ -887,17 +885,19 @@ def project (args : Args) : {IO, Throw Text} Unit :=
           let parts := subgraph dir (Codebase.current dir)
           Cli.output
             args
-            (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (authority p.projectIri)), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))), ("libs", Json.arr (List.map
+            (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (authority p.projectIri)), ("address", Json.str (getOr (Option.map Address.print (home p.projectIri)) "")), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))), ("libs", Json.arr (List.map
               (fun l => Json.obj [("name", Json.str l.libName), ("iri", Json.str l.libIri), ("release", Json.str l.release)])
               p.libs))])
             (fun _ => join
               "\n"
-              ([p.projectIri ++ "  (authority " ++ authority p.projectIri ++ ")", "  owns " ++ Int.toText (List.length (fst parts)) ++ " definitions; " ++
+              ([p.projectIri ++ "  (authority " ++ authority p.projectIri ++ ")", "  address " ++ getOr
+                (Option.map Address.print (home p.projectIri))
+                "none (the IRI does not name an owner)", "  owns " ++ Int.toText (List.length (fst parts)) ++ " definitions; " ++
                 Int.toText (List.length (snd parts)) ++ " come from libraries"] ++
                 List.map
                   (fun l => "  lib." ++ l.libName ++ "  " ++ l.libIri ++ " @ " ++ short l.release)
                   p.libs))
-  | _ => Throw.throw "usage: deus project [init <iri>]"
+  | _ => Throw.throw "usage: deus project [init <iri|@owner/project>]"
 
 /-- `deus lib install <name> <codebase> [--branch b]`: mounts that project's branch head under `lib.<name>`. -/
 def lib (args : Args) : {IO, Throw Text} Unit :=
@@ -2542,5 +2542,23 @@ def notationTypes (ns : Map Text Entry) : Option (Text, Text) :=
   match (Map.lookup "Syntax.Notation" ns, Map.lookup "Syntax.Part" ns) with
   | (Option.some (Entry.type n _ _), Option.some (Entry.type t _ _)) => Option.some (n, t)
   | _ => Option.none
+
+/-- Problems with the context headers of `parsed` files (Address.Spec R-5): a header naming another
+  project than the codebase's, or a declaration outside the header's path. Files without one pass. -/
+def contextProblems (dir : Text) (parsed : List (Text, List Decl)) : {IO, Throw Text} List Text :=
+  let items := Compile.collect parsed
+  concatMap (fun file =>
+    let path := fst file
+    match Address.header (getOr (IO.readFile path) "") with
+    | Option.none => []
+    | Option.some here =>
+        let home :=
+          match Project.read dir with
+          | Option.some p => getOr (home p.projectIri) here
+          | Option.none => here
+        let names := List.map
+          fqn
+          (List.filter (fun item => Item.path item == path && not (Text.isEmpty item.fqn)) items)
+        List.map (fun problem => path ++ ": " ++ problem) (violations home here names)) parsed
 
 end Cli
