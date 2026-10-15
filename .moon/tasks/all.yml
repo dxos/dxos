@@ -25,10 +25,10 @@ fileGroups:
     - src/playwright/**/*
     - src/**/*.spec.ts
 
-# Not `/pnpm-lock.yaml`: moon already hashes each project's resolved dependency versions, and the whole
-# file would rerun every task whenever any project's dependencies change. Bundles, which embed the
-# whole dependency tree and which nothing builds on, list it themselves.
+# Not `/pnpm-lock.yaml`, which would rerun every task on any dependency change: `.dependency-closure`
+# hashes only the installed packages the project can load (`scripts/dependency-closure.mjs`).
 implicitInputs:
+  - node_modules/.dependency-closure
   - package.json
   - /.pnpmfile.cjs
   - /patches/*

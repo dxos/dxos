@@ -33,10 +33,9 @@ const DEFAULT_BRANCH_PATTERN = /^\s*defaultBranch:\s*['"]?([^'"\s#]+)/m;
 
 const FULL_RUN = Symbol('full run');
 
-// No task lists these, yet they change what a task depends on: moon hashes each project's dependencies by
-// their lockfile integrity, which touched-file detection cannot see. A change to either runs everything
-// and lets the cache pick what executes.
-const DEPENDENCY_FILES = ['pnpm-lock.yaml', 'pnpm-workspace.yaml'];
+// Every task keys on its project's `.dependency-closure`, which the install derives from these and
+// touched-file detection cannot see. A change to either runs everything and lets the cache pick what executes.
+const CLOSURE_SOURCES = ['pnpm-lock.yaml', 'scripts/dependency-closure.mjs'];
 
 const main = () => {
   const args = parseArgs(process.argv.slice(2));
@@ -48,7 +47,7 @@ const main = () => {
   if (base === FULL_RUN) {
     note(`Full run — ${reason}. Leaving MOON_AFFECTED unset.`);
     if (force) {
-      // Transitive dependencies are in no task's hash, so only a run that bypasses the cache tests them.
+      // Catches an input that some task's key misses, which a cached run would keep passing.
       note('Forced — bypassing the cache.');
       emit(args, { MOON_FORCE: 'true' });
     }
@@ -62,13 +61,22 @@ const main = () => {
   // itself (2.5.2), so this is behaviour-neutral, and the logged range is the range moon diffs even
   // when the base branch has advanced past the fork.
   const fork = tryGit('merge-base', base, head) ?? base;
-  const changed =
-    tryGit('diff', '--name-only', fork, ...(args.head ? [head] : []))
-      ?.split('\n')
-      .filter(Boolean) ?? [];
-  const dependencies = changed.filter((file) => DEPENDENCY_FILES.includes(file));
-  if (dependencies.length > 0) {
-    note(`Full run — ${dependencies.join(', ')} changed (${reason}). Leaving MOON_AFFECTED unset.`);
+  let changed;
+  try {
+    changed = execFileSync('git', ['diff', '--name-only', fork, ...(args.head ? [head] : [])], {
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split('\n')
+      .filter(Boolean);
+  } catch {
+    note(`Full run — could not list the files changed since ${fork.slice(0, 8)}. Leaving MOON_AFFECTED unset.`);
+    return;
+  }
+  const source = CLOSURE_SOURCES.find((file) => changed.includes(file));
+  if (source) {
+    note(`Full run — ${source} changed (${reason}). Leaving MOON_AFFECTED unset.`);
     return;
   }
   note(

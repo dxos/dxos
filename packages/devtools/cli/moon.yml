@@ -49,7 +49,6 @@ tasks:
       # The pinned bun version is part of the artifact — 1.3.4 produced binaries that leaked `--smol`
       # into `process.argv`, so a bump has to invalidate the cache.
       - /.prototools
-      - /pnpm-lock.yaml
     outputs:
       - dist/cli/
       - dist/cli-darwin-arm64/

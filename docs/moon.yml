@@ -18,7 +18,6 @@ tasks:
     inputs:
       - astro.config.ts
       - '@group(sources)'
-      - /pnpm-lock.yaml
     outputs:
       - .astro
       - dist

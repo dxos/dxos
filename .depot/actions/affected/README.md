@@ -12,7 +12,7 @@ Call it after `setup`, which is what puts node on PATH:
   uses: ./.depot/actions/affected
 ```
 
-It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing for a full run, except `MOON_FORCE=true` on the scheduled run. `moon run` and `moon exec` both read those two (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
+It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing for a full run, except `MOON_FORCE=true` on the scheduled run. `moon run` and `moon exec` both read all three (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
 
 ## Base per trigger
 
@@ -27,7 +27,7 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 | `schedule` | all, bypassing the cache | none |
 | no event payload | affected | merge-base with `origin/main` |
 | `all: true` on the action | all | none |
-| any of the above, when the change touches `pnpm-lock.yaml` or `pnpm-workspace.yaml` | all | none |
+| a scoped trigger above, when the change touches `pnpm-lock.yaml` or `scripts/dependency-closure.mjs`, or the diff cannot be read | all | none |
 
 `e2e` passes `all: true` on a `workflow_dispatch`, because a dispatch exists to run the whole suite.
 
@@ -35,9 +35,11 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 
 ## Dependency changes
 
-No task lists `pnpm-lock.yaml`. moon already hashes each project's direct dependencies by their lockfile integrity, so a dependency change reruns only the projects it reaches, where the whole file as an input reran every task. Touched-file detection cannot see those hashes, though: scoped to the files a PR touched, a lockfile-only change would select nothing. A change to `pnpm-lock.yaml` or `pnpm-workspace.yaml` therefore runs everything, and the cache decides what executes.
+Only tasks that load other projects' code outside the dependency graph list `pnpm-lock.yaml`: the `check-module-structure` import checks and `storybook-react:bundle`, which finds every package's stories by glob. Every other task lists its project's `node_modules/.dependency-closure` (`.moon/tasks/all.yml`), which [`scripts/dependency-closure.mjs`](../../../scripts/dependency-closure.mjs) writes after every install: a hash of each installed third-party package the project can load, through its own dependencies, its workspace links, and the toolchain projects (the workspace root and the Storybook configs). A dependency change reruns the projects whose closure it changes. Of the 173 lockfile changes on `main` from 2026-09-15 to 2026-10-15, the average one changed 29% of closures, and 92 changed none.
 
-Transitive dependencies are in no task's hash. The nightly scheduled run sets `MOON_FORCE`, which bypasses the cache, so a transitive-only change is tested within a day.
+Touched-file detection cannot see a closure: scoped to the files a PR touched, a lockfile-only change would select no build or test. A change to `pnpm-lock.yaml` or to the generator therefore runs everything, and the cache decides what executes. `node scripts/dependency-closure.mjs --print <project>` prints what a project's closure hashes.
+
+On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache.
 
 ## Opting a step out
 
