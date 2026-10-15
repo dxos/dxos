@@ -172,6 +172,14 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: mdl, spec
 
+## Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively (`60e88be8`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: native, perf
+- links `CGen.effPerform` (#4dce416f4f)
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
@@ -231,13 +239,6 @@ Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is
 - labels: interop, typescript
 
 Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
-
-## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec
 
 ## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
 
@@ -1059,7 +1060,7 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - assignee: claude
 - labels: types, devex
 
-> someone: Done (Checking.Spec R-8): x.f with f in several structures resolves to the field of x's inferred structure; the resolver emits (pick f key owners accessors…), Types.pickField chooses by the receiver's type, Resolve.unpick writes the accessor into the Core before hashing. Unknown receiver: ambiguous, with 'annotate the receiver's type'. Record literals {f := …} still pick by field set.
+> someone: Done (Checking.Spec R-8, D128): x.f with f in several structures resolves by the receiver's inferred type; unknown receivers stay ambiguous. (Re-closed: the merge had reverted it.)
 
 ## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
 
@@ -1312,6 +1313,15 @@ Follow-up of 207cac21: a parameter or result of function type is skipped. A TS c
 - links change #87b9ac35c4
 
 Profile: Map.foldr 2.0M and Entry.hash 1.7M entries of 8 s, from Codebase.namesOf per definition. Invert the namespace once.
+
+## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
+> someone: Done (Coverage.Spec, D125): deus mdl --coverage lists laws no block cites and public definitions no api names; the 170 it found are task 8d6df186. (Re-closed: a merge had reverted this task.)
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 

@@ -148,6 +148,8 @@ def prelude (nullary : Int) : Text :=
     "static V deus_text_int(V t) { V n = TLEN(t), i = 0; uint16_t *x = TU(t); int neg = n > 0 && x[0] == '-'; if (neg) i = 1; if (i == n) return STATIC(&deus_nullary[0]); uint32_t m = 0; for (; i < n; i++) { if (x[i] < '0' || x[i] > '9') return STATIC(&deus_nullary[0]); m = m * 10 + (x[i] - '0'); } V *p = deus_block(1, 2); p[0] = 1; p[1] = W(neg ? 0u - m : m); return BOX(p); }",
     "/* A literal is made once, on first use, with a count no program brings to one, and is not counted as live. */",
     "static V deus_literal(const uint16_t *u, V n) { V r = deus_text_of(u, n); HDR(r) = ((V)1 << 48) | K_TEXT; deus_live -= deus_body(UNBOX(r)) + 1; return r; }",
+    "/* A constant's value (D125) keeps a count no program brings to one, like a literal's. */",
+    "static void deus_immortal(V v) { if (IS_PTR(v)) HDR(v) = ((V)1 << 48) | (HDR(v) & 255); }",
     "/* Values whose type the compiler does not know: a text is a heap block of kind K_TEXT, an Int is not a block. */",
     "#define IS_TEXT(v) (IS_PTR(v) && (HDR(v) & 255) == K_TEXT)",
     "static V deus_cmp_any(V a, V b) { if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_cmp(a, b); if (IS_PTR(a) || IS_PTR(b)) __builtin_trap(); return (a > b) - (a < b); }",
@@ -567,6 +569,8 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
     else form ctx env tail owned token (List.foldl (fun body _ => Sexp.node "lam" [body]) (Sexp.node "app" (Sexp.node "prim" [Sexp.str p] :: List.map (fun i => Sexp.node "var" [Sexp.int i]) (List.reverse (List.range 0 arity)))) (List.range 0 arity))
   | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => ret ("(V)" ++ Int.toText tag)
   | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int tag, Sexp.int 0] => ret ("STATIC(&deus_nullary[" ++ Int.toText tag ++ "])")
+  -- A constructor used as a value is a closure of its fields.
+  | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int _, Sexp.int n] => form ctx env tail owned token (eLams n (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (n - 1 - j)) (List.range 0 n))))
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int n] :: xs) =>
     if n != List.length xs || t == "#Bool" then throw ("partial application of a constructor of " ++ t ++ " is outside the C subset")
     else
@@ -989,7 +993,11 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
     let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) structs
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
     let env := List.reverse (List.range 0 f.fnArity)
-    "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
+    let header := "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\n"
+    -- A constant is evaluated once, on first use, as Core says; what it keeps is immortal and not counted live.
+    if f.fnArity == 0 && i > 0 then
+      header ++ "  static V cached; static int state;\n  if (state == 2) return deus_dup(cached);\n  if (state == 1) __builtin_trap();\n  state = 1; V before = deus_live;\n  V r = " ++ expr ctx env false [] none f.fnBody ++ ";\n  if (r == DEUS_ABORT) { state = 0; return r; }\n  deus_immortal(r); deus_live = before; cached = r; state = 2; return deus_dup(r);\n}"
+    else header ++ "top:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
   let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
   let inputs := List.range 0 arity
   let entry := "EXPORT(\"" ++ export ++ "\") int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
@@ -1185,28 +1193,43 @@ def effAborting (e : Sexp) : {Throw Text} Bool :=
   | Sexp.list items => List.any effAborting items
   | _ => false
 
-/-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` names it. -/
-def effCallAborts (aborts : List Text) (h : Sexp) : Bool :=
+/-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` has it. -/
+def effCallAborts (aborts : Map Text Bool) (h : Sexp) : Bool :=
   match h with
   | Sexp.list [Sexp.sym "prim", _] => false
   | Sexp.list (Sexp.sym "con" :: _) => false
-  | Sexp.list [Sexp.sym "ref", Sexp.str r] => List.contains r aborts
+  | Sexp.list [Sexp.sym "ref", Sexp.str r] => Map.contains r aborts
   | _ => true
 
-/-- Whether evaluating `e` may return the abort marker; making a closure never does. -/
-def effMayAbort (aborts : List Text) (e : Sexp) : Bool :=
+/-- The definitions `e` calls outside closures, and whether it performs, handles or calls an unknown function there. -/
+def effCalls (e : Sexp) : (Bool, List Text) :=
+  let all := fun (xs : List Sexp) => List.foldl (fun acc x =>
+    match (acc, effCalls x) with
+    | ((d, cs), (d2, cs2)) => (d || d2, cs2 ++ cs)) (false, []) xs
   match e with
-  | Sexp.list [Sexp.sym "lam", _] => false
-  | Sexp.list (Sexp.sym "handle" :: _) => true
-  | Sexp.list (Sexp.sym "app" :: h :: xs) => effCallAborts aborts h || List.any (effMayAbort aborts) (h :: xs)
-  | Sexp.list [Sexp.sym "letrec", _, b] => effMayAbort aborts b
-  | Sexp.list items => List.any (effMayAbort aborts) items
-  | _ => false
+  | Sexp.list [Sexp.sym "lam", _] => (false, [])
+  | Sexp.list (Sexp.sym "handle" :: rest) => (true, snd (all rest))
+  | Sexp.list [Sexp.sym "letrec", _, b] => effCalls b
+  | Sexp.list (Sexp.sym "app" :: h :: xs) =>
+    match all (h :: xs) with
+    | (d, cs) =>
+      match h with
+      | Sexp.list [Sexp.sym "prim", _] => (d, cs)
+      | Sexp.list (Sexp.sym "con" :: _) => (d, cs)
+      | Sexp.list [Sexp.sym "ref", Sexp.str r] => (d, r :: cs)
+      | _ => (true, cs)
+  | Sexp.list items => all items
+  | _ => (false, [])
 
 /-- The definitions that may return the abort marker: those that perform, handle or call an unknown function, and their callers. -/
-def effAbortingFns (fns : List Wasm.Fn) (known : List Text) : List Text :=
-  let more := List.filter (fun f => not (List.contains f.fnHash known) && effMayAbort known f.fnBody) fns
-  if List.isEmpty more then known else effAbortingFns fns (known ++ List.map (fun f => f.fnHash) more)
+def effAbortingFns (fns : List Wasm.Fn) : Map Text Bool :=
+  let calls := List.map (fun f => (f.fnHash, effCalls f.fnBody)) fns
+  let rec grow known :=
+    let more := List.filter (fun entry =>
+      match entry with
+      | (h, (direct, callees)) => not (Map.contains h known) && (direct || List.any (fun c => Map.contains c known) callees)) calls
+    if List.isEmpty more then known else grow (List.foldl (fun m entry => Map.insert (fst entry) true m) known more)
+  grow Map.empty
 
 /-- Whether evaluating `e` can neither abort nor observe the order it runs in. -/
 def effAtomic (e : Sexp) : Bool :=
@@ -1225,49 +1248,64 @@ def effAtomic (e : Sexp) : Bool :=
 def effChecked (v : Sexp) (b : Sexp) : Sexp := eLet v (eIf (Unique.applyPrim "deus.aborted" [eVar 0]) effAbort b)
 
 /--
-  `build` of `xs`, evaluated in order. An operand that may abort is bound and checked first, and
-  so is every operand before it that is not atomic, so the order of evaluation stays.
+  `build` of the normalized operands `xs`, evaluated in order, each with whether it may abort. An
+  operand that may abort is bound and checked first, and so is every operand before it that is not
+  atomic, so the order of evaluation stays.
 -/
-def effHoist (aborts : List Text) (xs : List Sexp) (done : List Sexp) (build : List Sexp -> Sexp) : Sexp :=
+def effHoist (xs : List (Sexp, Bool)) (done : List Sexp) (build : List Sexp -> Sexp) : Sexp :=
   match xs with
   | [] => build done
-  | x :: rest =>
-    let next := fun (u : Unit) => effHoist aborts (List.map (shift 1 0) rest) (List.map (shift 1 0) done ++ [eVar 0]) build
-    if effMayAbort aborts x then effChecked (effNorm aborts x) (next ())
-    else if not (effAtomic x) && List.any (effMayAbort aborts) rest then eLet (effNorm aborts x) (next ())
-    else effHoist aborts rest (done ++ [effNorm aborts x]) build
+  | (x, aborts) :: rest =>
+    let next := fun (u : Unit) => effHoist (List.map (fun p => (shift 1 0 (fst p), snd p)) rest) (List.map (shift 1 0) done ++ [eVar 0]) build
+    if aborts then effChecked x (next ())
+    else if not (effAtomic x) && List.any snd rest then eLet x (next ())
+    else effHoist rest (done ++ [x]) build
 
-/-- `e` with every value that may be the abort marker checked before it is used; in tail position it is returned as it is. -/
-def effNorm (aborts : List Text) (e : Sexp) : Sexp :=
-  let may := effMayAbort aborts
-  -- `e`'s first part bound and checked, the rest (a form whose first part is a placeholder) shifted under it.
+/--
+  `e` with every value that may be the abort marker checked before it is used, and whether `e`
+  itself may return it; in tail position the marker is returned as it is.
+-/
+def effNorm (aborts : Map Text Bool) (e : Sexp) : (Sexp, Bool) :=
+  -- A form's first part bound and checked, the rest (the form, with a placeholder first part) shifted under it.
   let first := fun (x : Sexp) (form : Sexp) =>
     match shift 1 0 form with
-    | Sexp.list (h :: _ :: rest) => effChecked (effNorm aborts x) (Sexp.list (h :: eVar 0 :: rest))
+    | Sexp.list (h :: _ :: rest) => effChecked x (Sexp.list (h :: eVar 0 :: rest))
     | other => other
   match e with
-  | Sexp.list [Sexp.sym "lam", b] => Sexp.list [Sexp.sym "lam", effNorm aborts b]
-  | Sexp.list (Sexp.sym "app" :: parts) => effHoist aborts parts [] (fun ps => Sexp.list (Sexp.sym "app" :: ps))
-  | Sexp.list [Sexp.sym "let", v, b] => if may v then effChecked (effNorm aborts v) (effNorm aborts b) else eLet (effNorm aborts v) (effNorm aborts b)
-  | Sexp.list [Sexp.sym "seq", a, b] => if may a then effChecked (effNorm aborts a) (shift 1 0 (effNorm aborts b)) else eSeq (effNorm aborts a) (effNorm aborts b)
+  | Sexp.list [Sexp.sym "lam", b] => (Sexp.list [Sexp.sym "lam", fst (effNorm aborts b)], false)
+  | Sexp.list (Sexp.sym "app" :: h :: xs) =>
+    let parts := List.map (effNorm aborts) (h :: xs)
+    (effHoist parts [] (fun ps => Sexp.list (Sexp.sym "app" :: ps)), effCallAborts aborts h || List.any snd parts)
+  | Sexp.list [Sexp.sym "let", v, b] =>
+    match (effNorm aborts v, effNorm aborts b) with
+    | ((nv, av), (nb, ab)) => (if av then effChecked nv nb else eLet nv nb, av || ab)
+  | Sexp.list [Sexp.sym "seq", a, b] =>
+    match (effNorm aborts a, effNorm aborts b) with
+    | ((na, aa), (nb, ab)) => (if aa then effChecked na (shift 1 0 nb) else eSeq na nb, aa || ab)
   | Sexp.list [Sexp.sym "if", c, t, f] =>
-    let branches := eIf (eInt 0) (effNorm aborts t) (effNorm aborts f)
-    if may c then first c branches else eIf (effNorm aborts c) (effNorm aborts t) (effNorm aborts f)
+    match (effNorm aborts c, effNorm aborts t, effNorm aborts f) with
+    | ((nc, ac), (nt, at), (nf, af)) => (if ac then first nc (eIf (eInt 0) nt nf) else eIf nc nt nf, ac || at || af)
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
     let normed := List.map (fun c =>
       match c with
-      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, effNorm aborts b]
-      | other => other) cases
-    if may scrutinee then first scrutinee (Sexp.list (Sexp.sym "match" :: eInt 0 :: normed))
-    else Sexp.list (Sexp.sym "match" :: effNorm aborts scrutinee :: normed)
-  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] => Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (effNorm aborts) fs), effNorm aborts b]
+      | Sexp.list [Sexp.sym "case", pat, b] =>
+        match effNorm aborts b with
+        | (nb, ab) => (Sexp.list [Sexp.sym "case", pat, nb], ab)
+      | other => (other, false)) cases
+    let rest := List.map fst normed
+    match effNorm aborts scrutinee with
+    | (ns, as) => (if as then first ns (Sexp.list (Sexp.sym "match" :: eInt 0 :: rest)) else Sexp.list (Sexp.sym "match" :: ns :: rest), as || List.any snd normed)
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    match effNorm aborts b with
+    | (nb, ab) => (Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (fun f => fst (effNorm aborts f)) fs), nb], ab)
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
-    Sexp.list (Sexp.sym "handle" :: effNorm aborts b :: List.map (fun c =>
+    let body := fun (x : Sexp) => fst (effNorm aborts x)
+    (Sexp.list (Sexp.sym "handle" :: body b :: List.map (fun c =>
       match c with
-      | Sexp.list [Sexp.sym "ret", rb] => Sexp.list [Sexp.sym "ret", effNorm aborts rb]
-      | Sexp.list [Sexp.sym "on", a, i, k, body] => Sexp.list [Sexp.sym "on", a, i, k, effNorm aborts body]
-      | other => other) clauses)
-  | _ => e
+      | Sexp.list [Sexp.sym "ret", rb] => Sexp.list [Sexp.sym "ret", body rb]
+      | Sexp.list [Sexp.sym "on", a, i, k, cb] => Sexp.list [Sexp.sym "on", a, i, k, body cb]
+      | other => other) clauses), true)
+  | _ => (e, false)
 
 /-- `xs` bound in order around `body`, which sees the last of them as variable 0. -/
 def effBind (xs : List Sexp) (body : Sexp) : Sexp :=
@@ -1307,7 +1345,7 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
     else
       let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (List.map (effLower abilities) (List.take k xs))
       if n == k then performed else Sexp.list (Sexp.sym "app" :: performed :: List.map (effLower abilities) (List.drop k xs))
-  | Sexp.list [Sexp.sym "op", _, _, _] => throw "an operation used as a value is outside the C subset"
+  | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
   | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
   | _ => e
@@ -1319,8 +1357,8 @@ def effects (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
   else
     let rebuild := fun (f : Wasm.Fn) (body : Sexp) => Wasm.Fn.mk f.fnHash f.fnArity body f.fnType
     let normed := if List.any (fun f => effAborting f.fnBody) fns then
-        let aborts := effAbortingFns fns []
-        List.map (fun f => rebuild f (effNorm aborts f.fnBody)) fns
+        let aborts := effAbortingFns fns
+        List.map (fun f => rebuild f (fst (effNorm aborts f.fnBody))) fns
       else fns
     List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
 
@@ -1333,7 +1371,7 @@ def builtTypes (form : Sexp) : List Text :=
 
 /-- Compiles `main` and what it calls to C exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
-  let fns := liftAll (effects (Wasm.gather fetch meta main))
+  let fns := liftAll (effects (Wasm.gatherWith true fetch meta main))
   -- The types the code builds as well as the ones it matches, so comparisons know their constructors.
   let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody ++ builtTypes f.fnBody) fns)
   -- A definition that is only a primitive is inlined at its calls and gathers to nothing.

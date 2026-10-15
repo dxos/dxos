@@ -77,6 +77,13 @@ def renumber(line: str, renames: dict[int, int]) -> str:
     return line
 
 
+def duration(text: str) -> int:
+    """Minutes in a stage's duration such as `1h 05m` or `25m 00s`."""
+    hours = re.search(r'(\d+)h', text)
+    minutes = re.search(r'(\d+)m', text)
+    return (int(hours.group(1)) * 60 if hours else 0) + (int(minutes.group(1)) if minutes else 0)
+
+
 def merge_timeline(base: str, renames: dict[int, int]) -> None:
     """Theirs with their "this commit" resolved, then each stage only we added, renumbered."""
     sha = git('rev-parse', '--short=8', 'MERGE_HEAD').strip()
@@ -94,6 +101,11 @@ def merge_timeline(base: str, renames: dict[int, int]) -> None:
             added.append(renumber(re.sub(stage, f'| {last} |', line, count=1), renames))
     cut = theirs.index('\nTotal from stage 1')
     tail = re.sub(r'stage \d+:', f'stage {last}:', theirs[cut:])
+    # The total adds our stages' durations to theirs.
+    found = re.search(r'(\d+)h (\d+)m\.', tail)
+    if found:
+        minutes = int(found.group(1)) * 60 + int(found.group(2)) + sum(duration(line.split('|')[3]) for line in added)
+        tail = tail[:found.start()] + f'{minutes // 60}h {minutes % 60:02d}m.' + tail[found.end():]
     (DOCS / 'TIMELINE.md').write_text(theirs[:cut].rstrip('\n') + '\n' + '\n'.join(added) + '\n' + tail)
 
 
@@ -130,6 +142,31 @@ def merged_export(base: str, out: Path) -> None:
                 (out / kind / name).write_text(text)
     if conflicts:
         sys.exit('both sides changed the same lines; merge these by hand:\n  ' + '\n  '.join(conflicts))
+
+
+def merged_tasks(base: str) -> str:
+    """
+    tasks.sexp merged task by task: a task one side changed takes that side. Importing both files
+    in turn would let the second undo the first's changes.
+    """
+    def tasks(rev: str) -> dict[str, str]:
+        text = blob(rev, f'{REL}/codebase/tasks.sexp') or ''
+        return {m.group(1): line for line in text.splitlines() if (m := re.match(r'\(task \(id "([^"]+)"\)', line))}
+
+    before, ours, theirs = tasks(base), tasks('HEAD'), tasks('MERGE_HEAD')
+    lines = []
+    for id in sorted(set(ours) | set(theirs)):
+        b, o, t = before.get(id), ours.get(id), theirs.get(id)
+        if t == b:
+            chosen = o
+        elif o == b or o == t:
+            chosen = t
+        else:
+            print(f'task {id} changed on both sides; kept ours, so re-apply theirs')
+            chosen = o if o is not None else t
+        if chosen is not None:
+            lines.append(chosen)
+    return '\n'.join(lines) + '\n'
 
 
 def exported_matches_head(scratch: Path) -> bool:
@@ -169,10 +206,11 @@ def main() -> None:
         os.environ['DEUS_CODEBASE'] = str(fresh)
         deus('init', '--empty')
         deus('add', str(scratch / 'merged' / 'code'), str(scratch / 'merged' / 'specs'))
+        (scratch / 'tasks.sexp').write_text(merged_tasks(base))
+        deus('task', 'import', str(scratch / 'tasks.sexp'))
         for rev in ('HEAD', 'MERGE_HEAD'):
-            for kind in ('tasks', 'history'):
-                (scratch / f'{kind}.sexp').write_text(blob(rev, f'{REL}/codebase/{kind}.sexp') or '')
-                deus('task' if kind == 'tasks' else 'history', 'import', str(scratch / f'{kind}.sexp'))
+            (scratch / 'history.sexp').write_text(blob(rev, f'{REL}/codebase/history.sexp') or '')
+            deus('history', 'import', str(scratch / 'history.sexp'))
         deus('update', 'deus', '--by', 'merge')
         deus('image', 'Cli.main', '-o', str(PKG / 'seed/deus.image'))
         deus('export', 'codebase')

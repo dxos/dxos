@@ -230,7 +230,10 @@ def Wasm.fresh (next : Ref Int) : Int :=
 /-- The functions `main` reaches, `main` first; a definition that is not a function is refused.
   A definition that is only a primitive (`def Int.ushr := prim "Int.ushr"`) is inlined at its
   calls, so `Int.and x y` compiles as `x &&& y` would, and so is a static constant (`Map.empty`). -/
-def Wasm.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
+def Wasm.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn := gatherWith false fetch meta main
+
+/-- `gather`; with `constants`, a definition that is not a function gathers as one of arity 0, which the C back end evaluates once (D125). -/
+def Wasm.gatherWith (constants : Bool) (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
   let rec go pending seen acc prims :=
     match pending with
     | [] => List.map
@@ -241,7 +244,11 @@ def Wasm.gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {
         | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: p :: []) :: [])) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
             match Wasm.unlam core with
-            | (0, _) => if isStaticValue core then go rest (h :: seen) acc ((h, core) :: prims) else Throw.throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
+            | (0, _) => if isStaticValue core then go rest (h :: seen) acc ((h, core) :: prims) else if constants then go
+                (rest ++ Wasm.refsOf core)
+                (h :: seen)
+                (Fn.mk h 0 core (Wasm.storedType (meta h)) :: acc)
+                prims else Throw.throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
             | (n, b) => go
                 (rest ++ Wasm.refsOf b)
                 (h :: seen)

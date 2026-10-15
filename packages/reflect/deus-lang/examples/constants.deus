@@ -1,0 +1,43 @@
+/-
+  Constants and values made from constructors and operations in the C back end (D125). A
+  definition with no parameters is computed once, on first use, and kept for the rest of the run;
+  a constructor or an operation used as a value becomes a function.
+
+    deus add examples/constants.deus && deus build Constants.constantsAll -o constants --c
+-/
+
+namespace Constants
+
+/-- A constant list, built once however often it is read. -/
+def primes : List Int := [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+/-- A constant cell: every read of `visits` names the same `Ref`. -/
+def visits : Ref Int := Ref.new 0
+
+def tallied (n : Int) (acc : Int) : Int :=
+  if n == 0 then acc
+  else
+    let _ := Ref.set visits (Ref.get visits + 1)
+    tallied (n - 1) (acc + List.foldl (fun s p => s + p * n) 0 primes)
+
+/-- A constructor passed as a function. -/
+def someAll (n : Int) : Int :=
+  let wrapped := List.map Option.some (List.range 0 n)
+  List.foldl (fun s o => match o with
+    | some v => s + v
+    | none => s) 0 wrapped
+
+ability Scale where
+  scale : Int -> Int
+
+/-- An operation passed as a function, under a handler that resumes in tail position. -/
+def scaledSum (n : Int) : Int :=
+  handle List.foldl (fun s x => s + x) 0 (List.map Scale.scale (List.range 0 n)) with
+  | Scale.scale x -> resume => resume (x * 3)
+
+/-- Every program here, as one number the tests compare across back ends. -/
+def constantsAll (n : Int) : Int :=
+  let t := tallied n 0
+  t + 1000000 * Ref.get visits + someAll n + scaledSum n
+
+test constantsSmall := constantsAll 20 == 20027850

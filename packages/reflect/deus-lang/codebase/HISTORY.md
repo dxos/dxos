@@ -1,5 +1,21 @@
 # History of main
 
+- `f05d65e1ff` task: comment on 31d3c1cd
+- `1d3dff7d9a` task: comment on 908495a0
+- `16bed1ea32` task: set 31d3c1cd state
+- `3420a2904c` task: set 908495a0 state
+- `4cf441fa2c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `1a01227a33` history: import 835 changes (by merge)
+- `f53e7b1774` task: import from /tmp/tmpgk00l3cr/tasks.sexp
+- `62b25c4afc` history: import 833 changes
+- `efe583e598` task: import from /tmp/tmpgk00l3cr/tasks.sexp
+- `b4b7ab9b08` add /tmp/tmpgk00l3cr/merged/code /tmp/tmpgk00l3cr/merged/specs
+- `cdc0b95c8d` delete CGen.effMayAbort
+- `7750711ed8` task: open 60e88be8 Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively
+- `bcca0c821b` Native C: constants computed once, constructors and operations as values, linear abort analysis (D127) (by claude)
+- `a991ad9a5e` history: import 829 changes
+- `a42b7c6a72` task: import from codebase/tasks.sexp
+- `2d6e8a1808` add codebase/code codebase/specs
 - `8eecb18772` task: comment on 31d3c1cd
 - `ac7e65f717` task: set 31d3c1cd state
 - `4e56d55f5f` update deus (by claude)

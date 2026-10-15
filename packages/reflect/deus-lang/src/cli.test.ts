@@ -589,6 +589,7 @@ describe('deus CLI', () => {
         join(root, 'examples/tables.deus'),
         join(root, 'examples/rendered.deus'),
         join(root, 'examples/handled.deus'),
+        join(root, 'examples/constants.deus'),
         ...c,
       );
       // Definitions that differ only in their annotations share a hash: its stored scheme fits both
@@ -641,6 +642,8 @@ describe('deus CLI', () => {
         ['Rendered.digestLine', [40]],
         // Handlers whose clauses resume in tail position or abort (D124).
         ['Handled.handledAll', [20]],
+        // Constants computed once, and constructors and operations as values (D125).
+        ['Constants.constantsAll', [20]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -731,6 +734,7 @@ describe('deus CLI', () => {
         join(root, 'examples/tables.deus'),
         join(root, 'examples/rendered.deus'),
         join(root, 'examples/handled.deus'),
+        join(root, 'examples/constants.deus'),
         ...c,
       );
       for (const [name, args] of [
@@ -740,6 +744,7 @@ describe('deus CLI', () => {
         ['Tables.all', [1000]],
         ['Rendered.digestBytes', [40]],
         ['Handled.handledAll', [20]],
+        ['Constants.constantsAll', [20]],
         ['Bench.trees', [2]],
         ['Bench.queens', [6]],
         ['Sorting.benchMerge', [300, 7]],
