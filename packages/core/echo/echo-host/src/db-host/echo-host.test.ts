@@ -189,6 +189,39 @@ describe('EchoHost query service', () => {
 
     expect(executed).toEqual(['answered']);
   });
+
+  // After an upgrade resets the snapshot cursors, the reindex can run for minutes; a query over a
+  // space's objects answers from the snapshot rows already stored instead of waiting it out, even
+  // when a feed row elsewhere has no snapshot.
+  test('a one-shot query answers from stored snapshots while a cursor reset reindexes', async () => {
+    const { host, runtime, spaceId, saveObject, saveObjects } = await setup({ queryExecutor: 'sql' });
+    await saveObjects(3);
+    await host.updateIndexes();
+
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE indexName = 'objectSnapshot' AND sourceName = 'automerge'`;
+        yield* sql`
+          INSERT INTO objectMeta (objectId, queueId, queueNamespace, spaceId, entityKind, typeDXN, deleted, version)
+          VALUES (${EntityId.random()}, ${EntityId.random()}, 'trace', ${spaceId}, 'object', ${TEST_TYPE.toString()}, 0, 0)
+        `;
+      }),
+    );
+
+    // The reindex never finishes: every pass from here on blocks.
+    const releasePasses = new Trigger();
+    onTestFinished(() => {
+      releasePasses.wake();
+    });
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
+      Effect.promise(() => releasePasses.wait()).pipe(Effect.andThen(update(ctx, source, opts))),
+    );
+    await saveObject(EntityId.random());
+
+    expect(await asyncTimeout(countQueryResults(host, spaceId), 2_000)).toBe(3);
+  });
 });
 
 // The worker runs every statement over one SQLite connection, so a query waited out the whole of an

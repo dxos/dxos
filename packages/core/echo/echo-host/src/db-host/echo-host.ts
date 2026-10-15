@@ -269,7 +269,8 @@ export class EchoHost extends Resource {
         invariant(this._sql, 'EchoHost is not open.');
         return this._sql;
       },
-      hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      hasCompleteSnapshots: (scope) =>
+        RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots(scope)),
       holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
     });
 

@@ -204,7 +204,7 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * contribution (plus the plugin set) into the settings space so they follow the identity across
  * devices, with per-key device overrides.
  *
- * Contributed once the settings space is open, so consumers must tolerate its absence.
+ * Absent without an identity. Until the settings space opens, `unsynced` is empty and the actions do nothing.
  */
 export type SettingsSync = {
   /** Settings prefixes this device writes locally rather than sharing. */

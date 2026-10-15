@@ -77,6 +77,10 @@ import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
+/** Backoff for retrying a failed initialization while the space stays ready: doubles from the base up to the cap. */
+const INITIALIZATION_RETRY_BASE_MS = 1_000;
+const INITIALIZATION_RETRY_MAX_MS = 30_000;
+
 /**
  * Returns the {@link Space} that owns the given object, or `undefined`.
  *
@@ -144,6 +148,9 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   /** Set by a failed initialization, whose rejected triggers the next attempt re-arms. */
   private _initializationFailed = false;
+
+  /** Consecutive failed initializations; sets the retry backoff. */
+  private _initializationRetries = 0;
 
   /**
    * @internal
@@ -447,18 +454,33 @@ export class SpaceProxy implements Space, CustomInspectable {
       const error = err instanceof Error ? err : new Error(String(err));
       this._databaseInitialized.throw(error);
       this._initializationComplete.throw(error);
-      // Starts over when the space next returns to ready (see `_processSpaceUpdate`).
+      // Starts over after a backoff while the space stays ready, or when it next returns to ready (see `_processSpaceUpdate`).
       this._initializationFailed = true;
       this._initializing = false;
+      const delay = Math.min(
+        INITIALIZATION_RETRY_BASE_MS * 2 ** this._initializationRetries++,
+        INITIALIZATION_RETRY_MAX_MS,
+      );
+      scheduleTask(this._ctx, () => this._retryInitialization(ctx), delay);
       throw err;
     }
 
+    this._initializationRetries = 0;
     this._initialized = true;
     this._initializing = false;
     this._initializationComplete.wake();
     this._stateUpdate.emit(this._currentState);
     this._data.members && this._membersUpdate.emit(this._data.members);
     log('initialized', { space: this.key });
+  }
+
+  @synchronized
+  private async _retryInitialization(ctx: Context): Promise<void> {
+    if (this._initialized || this._initializing || this._data.state !== SpaceState.SPACE_READY) {
+      return;
+    }
+    log('retrying initialization', { space: this.key, attempt: this._initializationRetries });
+    await this._initialize(ctx).catch((err) => log.warn('space initialization failed', { space: this.key, err }));
   }
 
   @trace.span({ showInBrowserTimeline: true })

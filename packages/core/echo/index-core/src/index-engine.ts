@@ -318,17 +318,21 @@ export class IndexEngine {
   }
 
   /**
-   * True once every `objectMeta` row has a snapshot.
+   * True once every `objectMeta` row in scope has a snapshot: rows of `spaceIds` (every space when
+   * omitted), and feed rows only when `feeds` is not false.
    *
    * `objectSnapshot` is filled by the indexing pass, so a database that predates it holds rows
    * without one, and the store fills over several passes after upgrade. The compiled query path
    * reads that store directly instead of loading documents, so until it is complete a query there
    * would silently return fewer objects than exist — not stale data, missing data. The query
-   * service gates a compiled query's first execution on this and caches `true` once seen, since it
-   * never goes back to false. The in-memory path loads documents itself and is not gated.
+   * service gates a compiled query's first execution on this for the rows the query can read, and
+   * caches `true` once seen, since it never goes back to false. The in-memory path loads documents
+   * itself and is not gated.
    */
-  hasCompleteSnapshots(): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#objectSnapshotIndex.countMissingSnapshots().pipe(Effect.map((missing) => missing === 0));
+  hasCompleteSnapshots(
+    opts: { spaceIds?: readonly SpaceId[]; feeds?: boolean } = {},
+  ): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectSnapshotIndex.countMissingSnapshots(opts).pipe(Effect.map((missing) => missing === 0));
   }
 
   /**
