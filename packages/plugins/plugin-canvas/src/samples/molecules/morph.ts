@@ -7,6 +7,8 @@ import { type Body, type LatticeBond } from './simulation.ts';
 
 /** A one-bucket hub part way to its partitioned `target`: `progress` runs from 0 (as laid out) to 1 (the target). */
 export type HubMorph = {
+  /** The one-bucket hub the morph starts from: the layout drawn alongside may already be the split one. */
+  from: Block;
   target: Block;
   progress: number;
   /**

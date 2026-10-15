@@ -121,7 +121,7 @@ export const DataFlowView = ({
   // Only a one-bucket hub splits; a spec already partitioned is drawn as it is.
   const splittable = partitioned !== undefined && (laidOut.hub.buckets?.length ?? 1) === 1;
   const morph = useMemo(
-    () => (splittable ? { target: partitionHub(laidOut.hub, PARTITIONS) } : undefined),
+    () => (splittable ? { from: laidOut.hub, target: partitionHub(laidOut.hub, PARTITIONS) } : undefined),
     [laidOut, splittable],
   );
   // Linear: each phase of the split eases itself.

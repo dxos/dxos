@@ -881,10 +881,10 @@ export const MoleculeOverlay = ({
   // The well stays whole while the clusters slide, so no seam shows where the buckets will part.
   const opening = hubMorph ? splitPhases(hubMorph.progress).open : 0;
   const settled = relayout ? mixLayout(relayout.from, laidOut, growth) : laidOut;
-  const layout =
-    hubMorph && opening > 0
-      ? { ...settled, hub: morphBlock(settled.hub, { ...hubMorph, progress: opening }) }
-      : settled;
+  // Until the buckets start to open, the hub is drawn whole, however far the layout beside it has already split.
+  const layout = hubMorph
+    ? { ...settled, hub: opening > 0 ? morphBlock(hubMorph.from, { ...hubMorph, progress: opening }) : hubMorph.from }
+    : settled;
   // A relayout's new buckets fade in where they stand, as the hub stretches to take them.
   const bucketFade = relayout ? (laidOut.hub.buckets ?? []).map((_, index) => arrival(`${index}`)) : undefined;
   // Planned once per frame and target, not per step of the morph, so every cluster keeps one destination throughout.
@@ -892,7 +892,7 @@ export const MoleculeOverlay = ({
   const planned = useMemo(
     () =>
       hubMorph && !applied
-        ? planSplit(laidOut.hub, hubMorph.target, frame.bodies, frame.bonds, laidOut.hubGrid.spacing)
+        ? planSplit(hubMorph.from, hubMorph.target, frame.bodies, frame.bonds, laidOut.hubGrid.spacing)
         : undefined,
     [laidOut, hubMorph?.target, applied, frame],
   );
