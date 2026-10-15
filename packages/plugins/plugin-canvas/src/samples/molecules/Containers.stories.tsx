@@ -51,3 +51,22 @@ const WARM = { warmup: 60 };
 export const Hypergraph: StoryObj<DataFlowViewProps> = {
   args: { spec: HYPERGRAPH, options: WARM, molecules: true, running: false },
 };
+
+const RADIAL: DataFlowSpec = {
+  variant: 'radial',
+  sources: [
+    { id: 'email', label: 'Email', hue: 'green' },
+    { id: 'calendar', label: 'Calendar', hue: 'teal' },
+    { id: 'docs', label: 'Documents', hue: 'sky' },
+    { id: 'crm', label: 'CRM', hue: 'blue' },
+    { id: 'chat', label: 'Chat', hue: 'violet' },
+    { id: 'tickets', label: 'Tickets', hue: 'red' },
+    { id: 'code', label: 'Code', hue: 'orange' },
+    { id: 'files', label: 'Files', hue: 'amber' },
+    { id: 'sensors', label: 'Sensors', hue: 'neutral' },
+  ],
+  hub: { label: 'Hypergraph' },
+};
+
+/** Nine sources around a round hub, which grows as a cluster from its centre. */
+export const Radial: StoryObj<DataFlowViewProps> = { args: { spec: RADIAL, molecules: true } };

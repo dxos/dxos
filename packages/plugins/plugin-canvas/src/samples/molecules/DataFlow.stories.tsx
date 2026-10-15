@@ -60,22 +60,6 @@ const AGENTS: DataFlowSpec = {
   sinks: [{ label: 'Agent 1' }, { label: 'Agent 2' }, { label: 'Agent 3' }],
 };
 
-const RADIAL: DataFlowSpec = {
-  variant: 'radial',
-  sources: [
-    { id: 'email', label: 'Email', hue: 'green' },
-    { id: 'calendar', label: 'Calendar', hue: 'teal' },
-    { id: 'docs', label: 'Documents', hue: 'sky' },
-    { id: 'crm', label: 'CRM', hue: 'blue' },
-    { id: 'chat', label: 'Chat', hue: 'violet' },
-    { id: 'tickets', label: 'Tickets', hue: 'red' },
-    { id: 'code', label: 'Code', hue: 'orange' },
-    { id: 'files', label: 'Files', hue: 'amber' },
-    { id: 'sensors', label: 'Sensors', hue: 'neutral' },
-  ],
-  hub: { label: 'Hypergraph' },
-};
-
 /**
  * The chapters of the story, in order: the one source for each chapter's own story and for the sequence that plays them
  * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
@@ -169,6 +153,3 @@ export const Chapter4Mixed: Story = chapter(3);
 
 /** Up to three agents, none at first, appearing one by one once the hub is syncing. */
 export const Chapter5Agents: Story = chapter(4);
-
-/** Nine sources around a round hub, which grows as a cluster from its centre; not a chapter of the story. */
-export const Radial: Story = { name: 'Radial', args: { spec: RADIAL } };
