@@ -223,5 +223,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 213 | 10-15 13:24 | 8m 00s | `4cd11b01` | Plan for splitting the toolchain codebase into `@dxos/base`, `@dxos/toolchain`, `@dxos/web` and `@dxos/examples`, computed from the store's object graph and written into Address.Spec; unprefixed names through library mounts filed as the first step (D189) |
 | 214 | 10-15 13:31 | 7m 00s | this commit | Library names already resolve unprefixed (suffix lookup), so the split needs no resolver change; D189 corrected (task e93b5bd0) |
 | 215 | 10-15 13:40 | 9m 00s | this commit | `scripts/sync-deus.py` also deletes from deus/ the definitions the codebase deleted, so a later whole-file `deus update` cannot bring them back (DataSafety.Spec, task 43cb6ea0) |
+| 216 | 10-15 18:20 | 4h 40m | this commit | Budget guard (D190): the $10 budget alert calls `deus-guard`, which cuts every other Worker's route and crons (drilled on a canary); explorer path links for names that end like a file (`List.map`); env key granted `@dxos/*` |
 
-Total from stage 1 to stage 215: 57h 56m.
+Total from stage 1 to stage 216: 62h 36m.

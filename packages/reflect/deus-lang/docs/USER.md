@@ -610,3 +610,7 @@ get oriented what changed in the codebase and continue working autonomously
 ---
 
 I upgraded to workers paid
+
+---
+
+try to do an automation where if $10 budget alert is triggered all work is cut

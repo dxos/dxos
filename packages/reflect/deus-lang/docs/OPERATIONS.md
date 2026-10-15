@@ -74,6 +74,20 @@ CLOUDFLARE_API_TOKEN="$(op read 'op://CI/DEUS token/credential')" CI=1 /home/use
 Run `src/worker-remote.test.ts` first. Deploy only committed code, so git says what is live. Last deploy:
 2026-10-15 18:16 UTC, version 8a76fec2 (path links for names ending like a file).
 
+## Budget guard (D190)
+
+- The account's $10 budget alert (policy `f9d757935eb1427bb38f503d1a1df1b4`) emails Dmytro and calls the webhook
+  destination `deus-guard` (`41eda9b9798f475289dc604b1534c7b6`) → https://deus-guard.dmytro-a80.workers.dev/alert.
+- The guard (`platform/guard/`) then turns off the workers.dev route and cron triggers of every other Worker. Its
+  `CF_TOKEN` secret is the account token "deus-guard (budget cut)" (`d321bf6e…`, Workers Scripts Read and Write).
+- Recover a cut Worker by deploying it again (`wrangler deploy` in its folder).
+- The webhook secret is only in the guard's secrets, the destination, and this container's
+  `/home/user/dxos/.secrets/deus-guard.env` (1Password `CI` is read-only for the service account). To rotate it:
+  generate a value, `wrangler secret put WEBHOOK_SECRET` in `platform/guard/`, then update the destination's secret
+  (`PUT /accounts/<id>/alerting/v3/destinations/webhooks/41eda9b9…`).
+- Drill: `curl -X POST -H "cf-webhook-auth: $WEBHOOK_SECRET" "https://deus-guard.dmytro-a80.workers.dev/drill?script=<a canary>"`;
+  `GET /status` with the same header lists every Worker and whether its route is on. Never drill `deus`.
+
 ## Open state (2026-10-15)
 
 - The meta-structure thread stopped at 18:00. Its handoff says the next step is publishing `@dxos/base` and
