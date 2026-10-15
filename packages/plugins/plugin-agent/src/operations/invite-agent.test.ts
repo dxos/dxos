@@ -137,6 +137,18 @@ describe('Inviting an agent into another space', () => {
     expect(await inSpace(other)(Database.query(Filter.type(Agent.Agent)).run)).toHaveLength(1);
   });
 
+  test('an agent with an identity names its brain by its DID, in every space it is in', async ({ expect }) => {
+    const home = await peer.createDatabase();
+    const other = await peer.createDatabase();
+    const did = IdentityDid.random();
+    const agent = await inSpace(home)(makeAgent({ name: 'Kai', did }));
+    const { agent: presence } = await invite(other, agent);
+
+    expect(presence.did).toBe(did);
+    expect(AgentPresence.brainId(agent)).toBe(did);
+    expect(AgentPresence.brainId(presence)).toBe(did);
+  });
+
   test('the members panel offers the agents the member administers, only where they are not yet', async ({
     expect,
   }) => {
@@ -176,7 +188,7 @@ describe('Inviting an agent into another space', () => {
     expect(first.created).toBe(true);
     expect(first.agent).toMatchObject({ name: 'Kai', did });
     expect(AgentPresence.homeOf(first.agent)).toBe(home);
-    expect(AgentPresence.brainId(first.agent)).toBe(homeId);
+    expect(AgentPresence.brainId(first.agent)).toBe(did);
     // The home's instructions are out of reach, so the presence starts from the base instructions for its name.
     expect((await inSpace(other)(Agent.loadInstructions(first.agent))).text).toBe(baseInstructions('Kai'));
 

@@ -79,7 +79,7 @@ export const deliver: (
   const fired: string[] = [];
   const undelivered: string[] = [];
 
-  for (const subscription of yield* brain.subscriptions(agent.id)) {
+  for (const subscription of yield* brain.subscriptions(AgentPresence.brainId(agent))) {
     const allEvents = yield* brain.take(subscription.id);
     if (allEvents.length === 0) {
       continue;
@@ -132,7 +132,10 @@ export const deliver: (
       ),
     });
     // Composing is a model call, long enough for the watch to be cancelled meanwhile (e.g. set up for the wrong person).
-    if (!closes && !(yield* brain.subscriptions(agent.id)).some(({ id }) => id === subscription.id)) {
+    if (
+      !closes &&
+      !(yield* brain.subscriptions(AgentPresence.brainId(agent))).some(({ id }) => id === subscription.id)
+    ) {
       continue;
     }
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {

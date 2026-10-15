@@ -35,8 +35,14 @@ export const locate = (uri: string): Location | undefined => {
   return spaceId && agentId ? { spaceId, agentId } : undefined;
 };
 
-/** The id `BrainService` keys the agent's facts by: its home agent's, so every space it is in shares them. */
+/**
+ * The name `BrainService` keys the agent's brain by: its identity's DID, which every presence of it carries, so every
+ * space it is in shares one brain. An agent without an identity keeps the brain named by its home agent's id.
+ */
 export const brainId = (agent: Agent.Agent): string => {
+  if (agent.did) {
+    return agent.did;
+  }
   const home = homeOf(agent);
   return (home && locate(home)?.agentId) ?? agent.id;
 };

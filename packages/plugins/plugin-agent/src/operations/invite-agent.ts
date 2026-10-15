@@ -86,18 +86,17 @@ const BrainInfo = Schema.Struct({
 });
 
 /**
- * The identity of the agent whose home is `home`, from EDGE, which minted it: never from a space that claims to be the
- * agent's, since a client chooses its own space's tags and owner. `undefined` for an agent without one, which EDGE
- * answers with 404.
+ * The identity EDGE minted for the agent with this DID, which EDGE answers only to the agent's admins and contacts:
+ * never taken from a space that claims to be the agent's, since a client chooses its own space's tags and owner.
+ * `undefined` for an agent without one, which EDGE answers with 404.
  */
-const identityOf = Effect.fnUntraced(function* (home: string) {
-  const location = AgentPresence.locate(home);
+const identityOf = Effect.fnUntraced(function* (did: IdentityDid | undefined) {
   const edge = yield* Capability.getOption(ClientCapabilities.EdgeHttpClient);
-  if (!location || Option.isNone(edge)) {
+  if (!did || Option.isNone(edge)) {
     return undefined;
   }
   return yield* Effect.tryPromise({
-    try: () => edge.value.request(Context.default(), `/compute/brain/${location.agentId}`, { method: 'GET' }),
+    try: () => edge.value.request(Context.default(), `/compute/brain/${encodeURIComponent(did)}`, { method: 'GET' }),
     catch: (cause) => new InviteRefusedError({ cause }),
   }).pipe(
     Effect.flatMap((answer) =>
@@ -117,6 +116,8 @@ const identityOf = Effect.fnUntraced(function* (home: string) {
       (error) => error.cause instanceof EdgeCallFailedError && error.cause.status === 404,
       () => Effect.succeed(undefined),
     ),
+    // EDGE's answer must name the identity asked for, so a forged DID resolves to nothing.
+    Effect.map((identity) => (identity?.identityDid === did ? identity : undefined)),
   );
 });
 
@@ -132,20 +133,18 @@ const resolveInvitee = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agen
   const spaceId = AgentPresence.locate(agentRef.uri)?.spaceId;
   if (!client || spaces.some((space) => space.id === spaceId)) {
     const invitee = yield* inviteeOf(yield* Database.load(agentRef));
-    const identity = yield* identityOf(invitee.home);
+    const identity = yield* identityOf(invitee.did);
     return { invitee: { ...invitee, did: identity?.identityDid ?? invitee.did }, identity };
   }
 
-  const identity = yield* identityOf(agentRef.uri);
+  const self = toPublicKey(client.halo.identity.get()?.identityKey);
+  const recorded = self
+    ? AgentSpace.administeredAgents(spaces, self).find(({ home }) => home === agentRef.uri)
+    : undefined;
+  const identity = yield* identityOf(recorded?.did);
   if (!identity) {
     return yield* Effect.fail(new InviteRefusedError());
   }
-  const self = toPublicKey(client.halo.identity.get()?.identityKey);
-  const recorded = self
-    ? AgentSpace.administeredAgents(spaces, self).find(
-        ({ home, identityKey }) => home === agentRef.uri && (identityKey?.equals(identity.identityKey) ?? false),
-      )
-    : undefined;
   const invitee: Invitee = { home: agentRef.uri, name: recorded?.name ?? identity.label, did: identity.identityDid };
   return { invitee, identity };
 });
@@ -154,15 +153,14 @@ const resolveInvitee = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agen
  * Puts the agent's brain in the space on EDGE, which answers only the agent's admins: a presence in a space its brain
  * does not serve reads and writes nothing of it, so an invitation EDGE refuses is not made at all.
  */
-const registerSpace = Effect.fnUntraced(function* (home: string, spaceId: SpaceId) {
-  const location = AgentPresence.locate(home);
+const registerSpace = Effect.fnUntraced(function* (did: IdentityDid | undefined, spaceId: SpaceId) {
   const edge = yield* Capability.getOption(ClientCapabilities.EdgeHttpClient);
-  if (!location || Option.isNone(edge)) {
+  if (!did || Option.isNone(edge)) {
     return yield* Effect.fail(new InviteRefusedError());
   }
   yield* Effect.tryPromise({
     try: () =>
-      edge.value.request(Context.default(), `/compute/brain/${location.agentId}/spaces`, {
+      edge.value.request(Context.default(), `/compute/brain/${encodeURIComponent(did)}/spaces`, {
         method: 'POST',
         body: { spaceId },
       }),
@@ -192,7 +190,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.InviteAgent> = AgentO
         return yield* Effect.fail(new AdmitAgentError());
       }
       if (AgentPresence.locate(invitee.home)?.spaceId !== db.spaceId) {
-        yield* registerSpace(invitee.home, db.spaceId);
+        yield* registerSpace(invitee.did, db.spaceId);
       }
       if (admits) {
         yield* admitAgent(here.space, identity.identityKey, invitee.name);

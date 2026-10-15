@@ -10,7 +10,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
+import { AgentPresence, BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
 
 import { compileGoal } from './compile-goal.ts';
 import { AgentOperationError } from './errors.ts';
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
     }) {
       const brain = yield* BrainService.BrainService;
       const agent = yield* Database.load(agentRef);
-      if ((yield* brain.subscriptions(agent.id)).length >= BrainService.MAX_TRIGGERS) {
+      if ((yield* brain.subscriptions(AgentPresence.brainId(agent))).length >= BrainService.MAX_TRIGGERS) {
         return yield* Effect.fail(registryFull());
       }
       const requester = yield* Database.load(requesterRef);
@@ -90,8 +90,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       });
       const rules = compiled?.rules ?? Trigger.toRules(resolved, { createdAt });
       const trigger: Trigger.Trigger = {
-        id: Trigger.makeId(agent.id),
-        agent: agent.id,
+        id: Trigger.makeId(AgentPresence.brainId(agent)),
+        agent: AgentPresence.brainId(agent),
         goal: Ref.make(goal),
         ...(request ? { request } : {}),
         when: resolved,

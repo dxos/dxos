@@ -15,11 +15,11 @@ const handler: Operation.WithHandler<typeof TriggerOperation.InspectBrain> = Tri
       const agent = yield* Database.load(agentRef);
       const brain = yield* BrainService.BrainService;
       const facts = yield* brain.query(AgentPresence.brainId(agent), {});
-      const triggers = yield* brain.subscriptions(agent.id);
+      const triggers = yield* brain.subscriptions(AgentPresence.brainId(agent));
       const subscriptions = yield* Effect.forEach(triggers, (trigger) =>
         brain.take(trigger.id).pipe(Effect.map((pending) => ({ trigger, pending }))),
       );
-      const nextDueAt = yield* brain.nextDueAt(agent.id);
+      const nextDueAt = yield* brain.nextDueAt(AgentPresence.brainId(agent));
       return { facts, subscriptions, ...(nextDueAt ? { nextDueAt } : {}) };
     }),
   ),

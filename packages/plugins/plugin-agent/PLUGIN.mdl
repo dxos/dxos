@@ -676,7 +676,7 @@ feat F-6: An agent in several spaces
   req F-6.4:
     when: a member opens an agent invited from another space
     then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
-  req F-6.5: A presence keys its facts to its home's brain (`AgentPresence.brainId`): the end-of-turn read adds to it and op:retrieveMemories reads it. Triggers stay per agent object. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
+  req F-6.5: An agent's brain is named by its identity's DID (`AgentPresence.brainId`), which every presence of it carries, so every space it is in shares one brain: its facts, its triggers and its wakes. An agent without an identity keeps a brain named by its home agent's id. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
   req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
   req F-6.7: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE first, which refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
 ```
@@ -690,7 +690,7 @@ feat F-7: An agent's own space
   req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
   req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
   req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent and marked as an agent (`SpaceMember.agent`). A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no other members after its genesis, but its owner admits an agent and manages its role, short of admin. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails before EDGE registers the space. The client refuses an admission the space would drop (`AuthorizationError`) rather than writing it.
-  req F-7.7: Creating an agent opens it at once. op:ensureIdentity runs in the background (its identity, its own space, its membership), and the agent's chat takes messages meanwhile: it runs on EDGE without an identity, and a message sent before EDGE has the new chat is delivered once it does.
+  req F-7.7: Creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity.
 ```
 
 ## Acceptance

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { BrainService, Knowledge, MemoryOperation } from '#types';
+import { AgentPresence, BrainService, Knowledge, MemoryOperation } from '#types';
 
 import { recordingAgent } from './knowledge.ts';
 import { agentId } from './members.ts';
@@ -17,13 +17,13 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Forget> = MemoryOper
       const agent = yield* recordingAgent(agentRef);
       const brain = yield* BrainService.BrainService;
       const wanted = ids ? new Set(ids) : undefined;
-      const memories = Knowledge.fromFacts(yield* brain.query(agent.id, {})).filter(
+      const memories = Knowledge.fromFacts(yield* brain.query(AgentPresence.brainId(agent), {})).filter(
         (memory) => memory.status === 'active' && (!wanted || wanted.has(memory.id)),
       );
       const id = agentId(agent);
       // Retracted, not deleted: the brain is append-only, so what the agent once believed stays as history.
       yield* brain.push(
-        agent.id,
+        AgentPresence.brainId(agent),
         memories.flatMap((memory) => Knowledge.retract(memory, id)),
         { quiet: [id] },
       );
