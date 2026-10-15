@@ -80,11 +80,12 @@ DECISIONS.md and TIMELINE.md (two threads take the same next number), the seed a
 export. `python3 scripts/merge-base.py` does the whole merge without committing:
 
 - it gives our new decisions and stages the next free numbers and prints each `D<old> -> D<new>`;
-- it takes theirs for the seed and export, imports the export files they changed (merged three ways
-  with ours) into the local codebase and rebuilds the seed with `deus image Cli.main`. Importing a
-  file they left alone would revert our codebase-only edits, since updating from a file sets every
-  name in it;
-- it exports again.
+- it merges each export file three ways, restores the result with both sides' tasks and history
+  into a fresh codebase, updates that from deus/ and rebuilds the seed with `deus image Cli.main`.
+  Importing into the local codebase instead reverted our codebase-only edits and left stale hashes
+  that exported as `Unnamed.deus`;
+- it exports again and makes the fresh codebase the local one, keeping the old one as
+  `<dir>.before-merge`. It refuses to start while the local codebase holds changes HEAD's export lacks.
 - A new name can make a short name in their export ambiguous (`deus: ambiguous name declared`):
   rename ours with `deus mv` and rerun the script.
   Rewrite our references to renamed decisions, run the tests, then commit and push at once.
@@ -97,6 +98,13 @@ maps the toolchain: each `feature` block has a status and links its spec documen
 tasks. Edit it like a spec (`deus view Toolchain.Features > f.mdl`, `deus update f.mdl`), and when a task
 starts or ends, keep the feature that owns it current. `deus features` prints the tree with open tasks,
 and `deus mdl` fails a shipped feature with open work.
+
+## Coverage
+
+`deus mdl` checks what a spec says; `deus mdl --coverage [documents…]` reports what it leaves out
+(D125): laws of the document that no `req` or `law` block cites, and public definitions (used
+outside their own namespace) in the namespaces its api blocks cover that no api block names. It
+reports, and never fails; the restore test keeps uncited laws at zero.
 
 ## Before and after
 

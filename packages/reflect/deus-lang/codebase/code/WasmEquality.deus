@@ -18,7 +18,7 @@ def WasmEquality.Spec.built (source : Text) (main : Text) : Option (List Int) :=
 def WasmEquality.Spec.compiles (source : Text) (main : Text) : Bool := isSome (built source main)
 
 /-- R-1: a nullary constructor's arguments are unknown; the other side's type is enough. -/
-theorem WasmEquality.Spec.constructorAgainstNullary : compiles "def isNone (x : Int) : Bool := some x == none\n" "isNone" == true := by rfl
+theorem WasmEquality.Spec.constructorAgainstNullary : WasmEquality.Spec.compiles "def isNone (x : Int) : Bool := some x == none\n" "isNone" == true := by rfl
 
 /-- The number of functions a module declares: the count that opens its function section (3). -/
 def WasmEquality.Spec.functionCount (bytes : List Int) : Int :=
@@ -29,7 +29,7 @@ def WasmEquality.Spec.functionCount (bytes : List Int) : Int :=
   go (List.drop 8 bytes)
 
 /-- R-4: functions are never equal in the interpreter; the subset has no function values to compare. -/
-theorem WasmEquality.Spec.functionFieldRefused : compiles
+theorem WasmEquality.Spec.functionFieldRefused : WasmEquality.Spec.compiles
     "inductive Box where\n  | box (f : Int -> Int)\ndef same (b : Box) : Bool := b == b\n"
     "same" == false := by rfl
 
@@ -56,13 +56,13 @@ theorem WasmEquality.Spec.oneFunctionPerType : functions
     "both" == 3 := by rfl
 
 /-- R-1: `some x == some x` compiles. -/
-theorem WasmEquality.Spec.optionEquality : compiles "def same (x : Int) : Bool := some x == some x\n" "same" == true := by rfl
+theorem WasmEquality.Spec.optionEquality : WasmEquality.Spec.compiles "def same (x : Int) : Bool := some x == some x\n" "same" == true := by rfl
 
 /-- R-2: `!=` compiles. -/
-theorem WasmEquality.Spec.optionInequality : compiles "def differ (x : Int) : Bool := some x != some 1\n" "differ" == true := by rfl
+theorem WasmEquality.Spec.optionInequality : WasmEquality.Spec.compiles "def differ (x : Int) : Bool := some x != some 1\n" "differ" == true := by rfl
 
 /-- R-4: order on data has no structural compare in the subset. -/
-theorem WasmEquality.Spec.orderRefused : compiles "def less (x : Int) : Bool := some x < some x\n" "less" == false := by rfl
+theorem WasmEquality.Spec.orderRefused : WasmEquality.Spec.compiles "def less (x : Int) : Bool := some x < some x\n" "less" == false := by rfl
 
 def WasmEquality.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\ninductive Option (a : Type) @\"#Option\" where\n  | none\n  | some (value : a)\ndef eq : a -> a -> Bool := prim \"eq\"\ndef neq : a -> a -> Bool := prim \"neq\"\ndef lt : a -> a -> Bool := prim \"lt\"\n"
 
@@ -75,7 +75,8 @@ theorem WasmEquality.Spec.scalarAddsNothing : functions "def same (x : Int) : Bo
 def WasmEquality.Spec.tree : Text := "inductive Tree (a : Type) where\n  | leaf\n  | node (l : Tree a) (v : a) (r : Tree a)\n"
 
 /-- R-1: a user type seen only through a parameter's signature, which names it by IRI. -/
-theorem WasmEquality.Spec.userTypeParameter : compiles (Spec.tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" == true := by rfl
+theorem WasmEquality.Spec.userTypeParameter : WasmEquality.Spec.compiles (Spec.tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" ==
+    true := by rfl
 
 /-- R-4: `Option a` names no layout for its field. -/
-theorem WasmEquality.Spec.variableRefused : compiles "def same (x : Option a) : Bool := x == x\n" "same" == false := by rfl
+theorem WasmEquality.Spec.variableRefused : WasmEquality.Spec.compiles "def same (x : Option a) : Bool := x == x\n" "same" == false := by rfl

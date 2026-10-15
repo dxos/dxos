@@ -21,6 +21,35 @@ test Codebase.Spec.builtinsAreNotDependencies := Codebase.dependencies (Sexp.nod
 
 theorem Codebase.Spec.causalRoundTrip (c : Causal) : causalFromSexp (causalToSexp c) == c := by test 200
 
+/-- `A.f`, `B.g` calling it, and `C.h` calling `B.g`. -/
+def Codebase.Spec.chain : Text := "def A.f := \"one\"\ndef B.g := A.f\ndef C.h := B.g\n"
+
+/-- R-12: source cannot cross layers, since code cannot name a test. -/
+test Codebase.Spec.codeCannotNameATest :=
+  match Codebase.Spec.compiles "test T.t := \"x\"\ndef A.f := T.t\n" with
+  | Result.err message => Text.contains "unknown name T.t" message
+  | Result.ok _ => false
+
+/-- R-12: a stored code object that refers to a test, which no source compiles to, is still refused. -/
+test Codebase.Spec.codeMayNotDependOnTests := crossingsOf (Batch.mk
+  [("c", Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "ref", Sexp.str "t"]]), ("t", Sexp.list [Sexp.sym "test", Sexp.list [Sexp.sym "text", Sexp.str "x"]])]
+  [("A.f", Entry.term "c"), ("T.t", Entry.test "t")]
+  []
+  []) == ["A.f (code) -> T.t (tests)"]
+
+/-- `source` as a batch, or the error compiling it. -/
+def Codebase.Spec.compiles (source : Text) : Result Text Batch := try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "off" [parseFile "t.deus" source])
+
+/-- The layer crossings `deus add` would refuse in `b`, or why it could not check. -/
+def Codebase.Spec.crossingsOf (b : Batch) : List Text :=
+  match Sim.run 7 (fun _ => layerCrossings "cb" b) with
+  | (found, _) => found
+
+/-- R-13: a dependent outside the update follows the changed definition. -/
+test Codebase.Spec.dependentsFollowAnUpdate := inStore (fun dir =>
+  let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\n"
+  refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
+
 /-- Names with dots in every position the tree splits at, from generated words. -/
 def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => [w, "A." ++ w, "A.B." ++ w, w ++ ".x", "." ++ w, w ++ "."]) words
 
@@ -84,6 +113,12 @@ test Codebase.Spec.mergeTakesTheirRemoval := inStore (fun dir =>
   | (MergeResult.merged _ _, ns) => Map.lookup "c" ns == Option.none
   | _ => false)
 
+/-- The fields a merged task's laws compare, or the conflicting fields. -/
+def Codebase.Spec.merged (b : Task) (o : Task) (t : Task) : Result (List Text) (Text, (TaskState, List Text)) :=
+  match mergeTask b o t with
+  | Result.ok m => Result.ok (m.title, m.state, m.labels)
+  | Result.err fields => Result.err fields
+
 /-- A namespace whose entries are terms named by the hash of their name. -/
 def Codebase.Spec.namespaceOf (names : List Text) : Map Text Entry := Map.fromList (List.map (fun n => (n, Entry.term (Text.sha256 n))) names)
 
@@ -101,12 +136,63 @@ def Codebase.Spec.readsBack (ns : Map Text Entry) : Bool := inStore (fun dir =>
     (fun pair => Codebase.lookupName dir h (fst pair) == Option.some (snd pair))
     (Map.toList ns))
 
+/-- Whether `name`'s object in `ns` refers to the hash `ns` gives `dependency`. -/
+def Codebase.Spec.refersTo (dir : Text) (ns : Map Text Entry) (name : Text) (dependency : Text) : {IO} Bool :=
+  match (Map.lookup name ns, Map.lookup dependency ns) with
+  | (Option.some e, Option.some d) => List.contains
+      (Entry.hash d)
+      (Codebase.dependencies (getOr (readObject dir (Entry.hash e)) (Sexp.list [])))
+  | _ => false
+
 theorem Codebase.Spec.snapshotIgnoresOrder (words : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf (dotted words)) ==
     putNamespace dir (Spec.namespaceOf (reverse (dotted words)))) == true := by test 30
+
+/-- A task with a title, a state and labels; every other field empty. -/
+def Codebase.Spec.task (title : Text) (state : TaskState) (labels : List Text) : Task := Task.mk "t1" title state 0 "" labels "" "" [] []
+
+/-- R-10: a field changed differently on both sides is a conflict that names the field. -/
+theorem Codebase.Spec.tasksMergeConflict : Spec.merged
+    (Spec.task "a" TaskState.todo [])
+    (Spec.task "b" TaskState.todo [])
+    (Spec.task "c" TaskState.todo []) == Result.err ["title"] := by rfl
+
+/-- R-10: a field changed on one side takes that side, so both sides' changes to different fields stay. -/
+theorem Codebase.Spec.tasksMergeFieldByField : Spec.merged
+    (Spec.task "a" TaskState.todo [])
+    (Spec.task "b" TaskState.todo [])
+    (Spec.task "a" TaskState.done []) == Result.ok ("b", TaskState.done, []) := by rfl
+
+/-- R-10: labels merge as sets: what either side added stays, and what either side removed goes. -/
+theorem Codebase.Spec.tasksMergeLabelsAsSets : Spec.merged
+    (Spec.task "a" TaskState.todo ["x"])
+    (Spec.task "a" TaskState.todo ["x", "y"])
+    (Spec.task "a" TaskState.todo []) == Result.ok ("a", TaskState.todo, ["y"]) := by rfl
+
+/-- R-12: a test may depend on code. -/
+test Codebase.Spec.testsMayDependOnCode :=
+  match Codebase.Spec.compiles "def A.f := \"x\"\ntest T.t := A.f\n" with
+  | Result.ok b => crossingsOf b == []
+  | Result.err _ => false
 
 test Codebase.Spec.unchangedCommitWritesNothing := inStore (fun dir =>
   let first := commit dir (Spec.namespaceOf ["a", "B.c"]) "one"
   commit dir (Spec.namespaceOf ["B.c", "a"]) "again" == first)
+
+/-- R-13: a definition in the update whose text did not change follows the dependent the update rehashed. -/
+test Codebase.Spec.unchangedTextFollowsRehashedDependent := inStore (fun dir =>
+  let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\ndef C.h := B.g\n"
+  refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
+
+/-- `source` compiled over `ns` and stored at `dir`, then propagated as `deus update` does: the new namespace. -/
+def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Map Text Entry :=
+  let b := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) "off" [parseFile "t.deus" source]
+  Codebase.store dir b
+  let next := foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns b.entries
+  let subst := Map.fromList (filterMap (fun pair =>
+    match Map.lookup (fst pair) ns with
+    | Option.some old => if Entry.hash old != Entry.hash (snd pair) then Option.some (Entry.hash old, Entry.hash (snd pair)) else Option.none
+    | Option.none => Option.none) b.entries)
+  fst (propagate dir next subst)
 
 /-- Three hundred names at the root and three hundred under `N`: both nodes split into parts. -/
 def Codebase.Spec.wide : List Text := concatMap (fun i => ["name" ++ toText i, "N.name" ++ toText i]) (range 0 300)

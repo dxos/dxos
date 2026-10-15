@@ -1,9 +1,48 @@
 # History of main
 
+- `cdc0b95c8d` delete CGen.effMayAbort
+- `7750711ed8` task: open 60e88be8 Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively
+- `bcca0c821b` Native C: constants computed once, constructors and operations as values, linear abort analysis (D127) (by claude)
+- `a991ad9a5e` history: import 829 changes
+- `a42b7c6a72` task: import from codebase/tasks.sexp
+- `2d6e8a1808` add codebase/code codebase/specs
+- `824371ab26` task: set dc22728a labels
+- `7c717d0d8c` task: open dc22728a Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (by claude)
+- `45201fcb2f` task: comment on cb6c9a43
+- `092f407f83` task: comment on 823f7b83
+- `09a900785c` task: set 823f7b83 state
+- `7a7d114a4e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws2.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `c25b4457b4` delete Codebase.Spec.crossings
+- `20a09010e5` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws2.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `89e951ba00` update deus (by claude)
+- `1af1cb4fff` task: set cb6c9a43 state
+- `f59d46337a` task: comment on a8150b0c
+- `2c33a39c84` task: set a8150b0c state
+- `a8086e5ba9` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus (by claude)
+- `32c236ec49` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `23c8aff615` task: set a8150b0c priority labels
+- `db5b5e73e9` task: open a8150b0c deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (by claude)
+- `c485df95ac` task: comment on 602f4557
+- `cc4e504a88` update deus (by claude)
+- `1b9e2d9cb1` history: import 796 changes (by claude)
+- `9cec7dd037` task: import from /tmp/tmpszia9cai/tasks.sexp
+- `3000e1dc81` history: import 802 changes
+- `3a92cd33c6` task: import from /tmp/tmpszia9cai/tasks.sexp
+- `dd4dbd1482` add /tmp/tmpszia9cai/merged/code /tmp/tmpszia9cai/merged/specs
 - `844bfe4aee` C and wasm back ends compile handlers whose clauses resume in tail position or abort (D124, task e1cf2c6c) (by claude)
 - `000e042441` history: import 792 changes
 - `ae5fc9cc24` task: import from codebase/tasks.sexp
 - `4bd47ec39b` add codebase/code codebase/specs
+- `10edc4793f` update deus (by claude)
+- `ea550bd267` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `0ccd9cb210` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `e91385a41c` task: set 908495a0 state
+- `80f16f5b41` task: set 8d6df186 labels
+- `af276e6be6` task: open 8d6df186 Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (by claude)
+- `d57cfc2055` update deus (by claude)
+- `3a268bb7f5` update deus (by claude)
+- `0a507af5f0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov/Coverage.Spec.mdl (by claude)
+- `8900eae06b` update deus (by claude)
 - `e86da1f72b` task: comment on 84ec6ef7
 - `61fa96e18f` task: set 84ec6ef7 state
 - `1a34186c1e` update deus (by claude)

@@ -121,7 +121,7 @@ def Build.postject : Text := "postject@1.0.0-alpha.6"
 def Build.require (name : Text) : {IO, Throw Failure} Text :=
   match IO.getEnv name with
   | Option.some value => value
-  | Option.none => Throw.throw (of ("$" ++ name ++ " is not set; run deus through bin/deus.mjs") [])
+  | Option.none => Throw.throw (Failure.of ("$" ++ name ++ " is not set; run deus through bin/deus.mjs") [])
 
 /-- Writes `out`: a standalone web server for a handler (D57). It serves HTTP on `$PORT` (8080)
   with each object's storage under `$DEUS_DATA` (`./deus-data`). -/
@@ -131,7 +131,7 @@ def Build.server (image : Text) (out : Text) : {IO, Throw Failure} Unit := appen
 def Build.tool (program : Text) (arguments : List Text) : {IO, Throw Failure} Text :=
   match IO.exec program arguments with
   | (0, out, _) => out
-  | (code, out, err) => Throw.throw (of
+  | (code, out, err) => Throw.throw (Failure.of
       (program ++ " exited with " ++ toText code)
       [("args", join " " arguments), ("stderr", trim err), ("stdout", trim out)])
 

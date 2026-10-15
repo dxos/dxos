@@ -8,17 +8,22 @@ Merges PR #13952's branch into the current branch the way every DEUS thread has 
 2. Resolves docs/DECISIONS.md and docs/TIMELINE.md, which conflict on almost every merge. It takes
    theirs and appends our new rows: decisions get the next free D-numbers, and stages the next
    stage numbers. Their "this commit" row gets their commit's hash.
-3. Takes theirs for the seed and the codebase export. Then it imports the export files they changed
-   (merged three ways with ours) into the local codebase (`$DEUS_CODEBASE` or ~/.deus), updates it from deus/ and rebuilds the seed with
-   `deus image Cli.main` (the same bytes as the fixpoint, in 3 s instead of 17 s).
-4. Writes the export back with `deus export codebase`.
+3. Merges the export's files three ways and restores them into a fresh codebase, with both sides'
+   tasks and history, updates it from deus/ and rebuilds the seed with `deus image Cli.main` (the
+   same bytes as the fixpoint, in 3 s instead of 17 s). Importing into the local codebase instead
+   left stale hashes that exported as Unnamed.deus.
+4. Writes the export back with `deus export codebase`, and makes the fresh codebase the local one
+   (`$DEUS_CODEBASE` or ~/.deus), keeping the old one beside it as `<dir>.before-merge`. It refuses to
+   start when the local codebase holds changes HEAD's export lacks.
 
 It prints each decision it renumbered as `D<old> -> D<new>`. Rewrite our own references to those
 numbers, run the tests, then commit and push at once: the branch moves every few minutes.
 It does not commit, so a failed step leaves the merge for you to inspect.
 """
 
+import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -97,32 +102,41 @@ def blob(rev: str, path: str) -> str | None:
     return result.stdout if result.returncode == 0 else None
 
 
-def their_changes(base: str, theirs: Path, out: Path) -> list[Path]:
-    """
-    The export files their side changed, merged three ways with ours. Updating from a file sets every
-    name in it, so importing one they left alone would revert our edits to codebase-only specs.
-    """
-    out.mkdir()
-    files = []
-    for path in sorted([*(theirs / 'code').glob('*.deus'), *(theirs / 'specs').glob('*.mdl')]):
-        name = f'{REL}/codebase/{path.parent.name}/{path.name}'
-        before, ours, their = blob(base, name), blob('HEAD', name), path.read_text()
-        if their == before:
-            continue
-        if ours is None or ours == before or ours == their:
-            files.append(path)
-            continue
-        parts = [out / f'{path.name}.{side}' for side in ('ours', 'base', 'theirs')]
-        for part, text in zip(parts, [ours, before or '', their]):
-            part.write_text(text)
-        if subprocess.run(['git', 'merge-file', *map(str, parts)], capture_output=True).returncode != 0:
-            print(f'{name}: both sides changed the same lines; took theirs, so re-apply ours')
-            source = path
-        else:
-            source = out / path.name
-            parts[0].rename(source)
-        files.append(source)
-    return files
+def merged_export(base: str, out: Path) -> None:
+    """The export's code and specs as both sides changed them, each file merged three ways."""
+    conflicts = []
+    for kind, suffix in (('code', '.deus'), ('specs', '.mdl')):
+        (out / kind).mkdir(parents=True)
+        listed = git('ls-tree', '--name-only', 'HEAD', f'{REL}/codebase/{kind}/') + git('ls-tree', '--name-only', 'MERGE_HEAD', f'{REL}/codebase/{kind}/')
+        for name in sorted({Path(line).name for line in listed.splitlines() if line.endswith(suffix)}):
+            path = f'{REL}/codebase/{kind}/{name}'
+            before, ours, theirs = blob(base, path), blob('HEAD', path), blob('MERGE_HEAD', path)
+            if theirs == before:
+                text = ours
+            elif ours == before or ours == theirs:
+                text = theirs
+            elif ours is None or theirs is None:
+                text = ours if theirs is None else theirs
+            else:
+                parts = [out / f'{name}.{side}' for side in ('ours', 'base', 'theirs')]
+                for part, version in zip(parts, [ours, before or '', theirs]):
+                    part.write_text(version)
+                if subprocess.run(['git', 'merge-file', *map(str, parts)], capture_output=True).returncode != 0:
+                    conflicts.append(path)
+                text = parts[0].read_text()
+                for part in parts:
+                    part.unlink()
+            if text is not None:
+                (out / kind / name).write_text(text)
+    if conflicts:
+        sys.exit('both sides changed the same lines; merge these by hand:\n  ' + '\n  '.join(conflicts))
+
+
+def exported_matches_head(scratch: Path) -> bool:
+    """Whether the local codebase holds nothing HEAD's export lacks, so replacing it loses nothing."""
+    deus('export', str(scratch / 'local'))
+    subprocess.run(f'git archive HEAD {REL}/codebase | tar -x -C {scratch}', shell=True, cwd=ROOT, check=True)
+    return subprocess.run(['diff', '-rq', str(scratch / 'local'), str(scratch / REL / 'codebase')], capture_output=True).returncode == 0
 
 
 def main() -> None:
@@ -131,6 +145,10 @@ def main() -> None:
     if subprocess.run(['git', 'merge-base', '--is-ancestor', 'FETCH_HEAD', 'HEAD'], cwd=ROOT).returncode == 0:
         print('already up to date')
         return
+    local = Path(os.environ.get('DEUS_CODEBASE') or Path.home() / '.deus')
+    with tempfile.TemporaryDirectory() as tmp:
+        if local.exists() and not exported_matches_head(Path(tmp)):
+            sys.exit(f'{local} holds changes the export at HEAD lacks: run `deus export codebase` and commit first')
     git('merge', '--no-commit', 'FETCH_HEAD', check=False)
     base = git('merge-base', 'HEAD', 'MERGE_HEAD').strip()
     renames = merge_decisions(base)
@@ -142,17 +160,28 @@ def main() -> None:
     if conflicted:
         sys.exit('resolve these by hand, then rerun from step 3:\n  ' + '\n  '.join(conflicted))
 
-    with tempfile.TemporaryDirectory() as scratch:
-        subprocess.run(f'git archive MERGE_HEAD {REL}/codebase | tar -x -C {scratch}', shell=True, cwd=ROOT, check=True)
-        theirs = Path(scratch) / REL / 'codebase'
-        changed = their_changes(base, theirs, Path(scratch) / 'merged')
-        if changed:
-            deus('update', *map(str, changed), '--by', 'merge')
-        deus('task', 'import', str(theirs / 'tasks.sexp'))
-        deus('history', 'import', str(theirs / 'history.sexp'))
-    deus('update', 'deus', '--by', 'merge')
-    deus('image', 'Cli.main', '-o', str(PKG / 'seed/deus.image'))
-    deus('export', 'codebase')
+    with tempfile.TemporaryDirectory() as tmp:
+        scratch = Path(tmp)
+        # Importing into a codebase that holds older definitions leaves their dependents on stale
+        # hashes, which export as Unnamed.deus; a fresh codebase built from the merged export has none.
+        merged_export(base, scratch / 'merged')
+        fresh = scratch / 'fresh'
+        os.environ['DEUS_CODEBASE'] = str(fresh)
+        deus('init', '--empty')
+        deus('add', str(scratch / 'merged' / 'code'), str(scratch / 'merged' / 'specs'))
+        for rev in ('HEAD', 'MERGE_HEAD'):
+            for kind in ('tasks', 'history'):
+                (scratch / f'{kind}.sexp').write_text(blob(rev, f'{REL}/codebase/{kind}.sexp') or '')
+                deus('task' if kind == 'tasks' else 'history', 'import', str(scratch / f'{kind}.sexp'))
+        deus('update', 'deus', '--by', 'merge')
+        deus('image', 'Cli.main', '-o', str(PKG / 'seed/deus.image'))
+        deus('export', 'codebase')
+        backup = local.with_name(local.name + '.before-merge')
+        shutil.rmtree(backup, ignore_errors=True)
+        if local.exists():
+            local.rename(backup)
+        shutil.copytree(fresh, local)
+        print(f'the local codebase is now the merged one; the old one is at {backup}')
     for old, new in renames.items():
         print(f'D{old} -> D{new}')
     print('merged; rewrite our references to renamed decisions, test, commit and push')

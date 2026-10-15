@@ -1,0 +1,72 @@
+/-- A block of `blockType` with one property. -/
+def Coverage.Spec.block (blockType : Text) (key : Text) (value : Text) : Block := Block.mk blockType "X-1" "t" [(key, value)] 1
+
+/-- An api naming `Lib.a` and `Lib.b`, a req citing `Doc.one`, and a law citing `Doc.two`. -/
+def Coverage.Spec.blocks : List Block := [Coverage.Spec.block "api" "signatures" "- Lib.a : Int\n- Lib.b : Int -> Int", Coverage.Spec.block "req" "by" "Doc.one", Coverage.Spec.block "law" "theorem" "Doc.two"]
+
+/-- R-1: laws a req or a law cites are covered. -/
+theorem Coverage.Spec.citedLawsCovered : (Spec.of ["Doc.one", "Doc.two"] [] []).uncitedLaws == [] := by rfl
+
+/-- R-2: a name another document's api states is covered. -/
+theorem Coverage.Spec.namedElsewhereCovered : (Spec.of [] ["Lib.c"] ["Lib.c"]).unnamedApi == [] := by rfl
+
+/-- The coverage of `Doc` with laws `laws`, public definitions `public`, and api names stated elsewhere `elsewhere`. -/
+def Coverage.Spec.of (laws : List Text) (public : List Text) (elsewhere : List Text) : SpecCoverage := covers "Doc" Spec.blocks laws (Set.fromList (concatMap cited Spec.blocks ++ elsewhere)) public
+
+/-- R-2: a namespace no api block of the document covers is another document's business. -/
+theorem Coverage.Spec.otherNamespaceIgnored : (Spec.of [] ["Other.x"] []).unnamedApi == [] := by rfl
+
+/-- R-4: nothing omitted reads as covered. -/
+theorem Coverage.Spec.rendersCovered : Coverage.render (Spec.of ["Doc.one"] ["Lib.a"] []) == ["Doc: covered"] := by rfl
+
+/-- R-4: omissions print by kind, definitions grouped by namespace. -/
+theorem Coverage.Spec.rendersOmissions : Coverage.render (Spec.of ["Doc.three"] ["Lib.d", "Lib.c"] []) ==
+    ["Doc", "  laws no block cites: Doc.three", "  Lib: 2 public definition(s) no api block names: c, d"] := by rfl
+
+/-- R-3: the signature's row keeps it whole. -/
+theorem Coverage.Spec.rowInSignature : cited (Coverage.Spec.block "api" "signatures" "- Lib.f : (Unit -> {IO | e} a) -> {e} a\n- Lib.g : Int") ==
+    ["Lib.f", "Lib.g"] := by rfl
+
+/-- R-1: `Doc.three` is cited by nothing. -/
+theorem Coverage.Spec.uncitedLawReported : (Spec.of ["Doc.one", "Doc.two", "Doc.three"] [] []).uncitedLaws == ["Doc.three"] := by rfl
+
+/-- R-2: `Lib.c` is public, in a namespace the api covers, and named by no api. -/
+theorem Coverage.Spec.unnamedPublicReported : (Spec.of [] ["Lib.a", "Lib.c"] []).unnamedApi == ["Lib.c"] := by rfl
+
+/-- The names an api block states; its signatures are one per line, since a type may contain `|`. -/
+def Coverage.apiNames (b : Block) : List Text := if b.blockType != "api" then [] else List.filter
+  (fun n => not (Text.isEmpty n))
+  (List.map (fun l => signatureName (trim l)) (Text.split (Features.prop b "signatures") "\n"))
+
+/-- The names a block cites: an api's signatures, a req's `by:` and a law's `theorem:`. -/
+def Coverage.cited (b : Block) : List Text := if b.blockType == "api" then apiNames b else if b.blockType == "req" then Features.items (Features.prop b "by") else if b.blockType == "law" then Features.items (Features.prop b "theorem") else []
+
+/-- The coverage of `doc`, whose blocks are `blocks` and whose tests and theorems are `laws`.
+  `named` holds every name an api block of any document states, and `public` the definitions used
+  outside their own namespace. -/
+def Coverage.covers (doc : Text) (blocks : List Block) (laws : List Text) (named : Map Text Unit) (public : List Text) : SpecCoverage :=
+  let citedHere := Set.fromList (concatMap cited blocks)
+  let spaces := Set.fromList (List.map Coverage.namespaceOf (concatMap apiNames blocks))
+  SpecCoverage.mk doc (List.filter (fun n => not (Set.contains n citedHere)) laws) (List.filter
+    (fun n => Set.contains (Coverage.namespaceOf n) spaces && not (Set.contains n named))
+    public)
+
+/-- Everything before a name's last `.`, or `""`. -/
+def Coverage.namespaceOf (name : Text) : Text :=
+  let rec go i := if i < 0 then "" else if code name i == '.' then Text.take i name else go (i - 1)
+  go (Text.length name - 1)
+
+/-- The text report: the document, then each kind of omission on its own line. -/
+def Coverage.render (c : SpecCoverage) : List Text := if List.isEmpty c.uncitedLaws && List.isEmpty c.unnamedApi then [c.coverageDoc ++ ": covered"] else
+  let groups := groups (List.map (fun n => (Coverage.namespaceOf n, n)) c.unnamedApi)
+  [c.coverageDoc] ++
+    (if List.isEmpty c.uncitedLaws then [] else ["  laws no block cites: " ++ join ", " c.uncitedLaws]) ++ List.map (fun g =>
+    match g with
+    | (space, names) => "  " ++ space ++ ": " ++ toText (List.length names) ++
+        " public definition(s) no api block names: " ++ join ", " (sort (List.map lastSegment names))) (sortBy (fun a b => compare (fst a) (fst b)) groups)
+
+/-- The name in an api signature line, `- Name : Type`. -/
+def Coverage.signatureName (line : Text) : Text :=
+  let bare := if startsWith "- " line then Text.drop 2 line else line
+  let i := indexOf bare " : " 0
+  trim (if i < 0 then bare else Text.take i bare)
