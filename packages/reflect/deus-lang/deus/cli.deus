@@ -761,16 +761,27 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
           | Option.some (edited, text) =>
               match mergeWith dir other (Set.fromList names) with
               | MergeResult.merged h changed =>
+                  -- Names taken from theirs that call a definition of theirs our edit replaced are
+                  -- compiled again from their source, so they call ours (task 30884468).
+                  let theirsNs := readNamespace dir (readCausal dir theirs).snapshot
+                  let printer := Print.printer theirsNs []
+                  let stale := List.filter
+                    (fun n => not (List.contains n edited))
+                    (dedup (List.map fst (danglingIn dir (Codebase.current dir) changed)))
+                  let staleText := join "\n\n" (filterMap (fun name => Option.map
+                    (fun e => snd (viewParts printer dir theirsNs name e "deus"))
+                    (Map.lookup name theirsNs)) stale)
+                  let replay := edited ++ stale
                   let file := dir ++ "/cache/merge-edits.deus"
-                  IO.writeFile file text
-                  let replayed := try (fun _ => if List.isEmpty edited then () else addOrUpdate (Args.mk
+                  IO.writeFile file (text ++ "\n" ++ staleText ++ "\n")
+                  let replayed := try (fun _ => if List.isEmpty replay then () else addOrUpdate (Args.mk
                     [file]
-                    (Map.fromList [("codebase", dir), ("message", "merge " ++ other ++ ": re-apply " ++ join ", " edited), ("fresh", "true"), ("quiet", "true")])) true)
+                    (Map.fromList [("codebase", dir), ("message", "merge " ++ other ++ ": re-apply " ++ join ", " replay), ("fresh", "true"), ("quiet", "true")])) true)
                   IO.remove file
                   match replayed with
                   | Result.ok _ => merged
                       (headOf dir branch)
-                      (changed ++ List.map (fun n => n ++ " (re-applied)") edited)
+                      (changed ++ List.map (fun n => n ++ " (re-applied)") replay)
                   | Result.err message =>
                       -- Leave the branch as it was, so nothing of ours is lost.
                       setBranch dir branch ours
@@ -2454,7 +2465,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print Cli.usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
+      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)

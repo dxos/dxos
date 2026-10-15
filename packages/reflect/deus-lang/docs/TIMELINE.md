@@ -217,6 +217,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 207 | 10-15 13:05 | 20m 00s | `dd4d3702` | The Worker answers `/v1/@owner/project/` and serves each project's explorer at `/@owner/project/`, where a definition's name opens the page; new projects live at `<owner>/<project>/` in the bucket, `/v1/toolchain` and `/` stay the toolchain's, and keys are granted per address (D185, Address.Spec R-6 and R-7, task 0cc4a9ed) |
 | 208 | 10-15 12:48 | 4m 00s | `2969a48e` | Codebases get owner, project and namespace (D184): `@owner/project/Namespace.term` addresses with GitHub owners ([Address.Spec](https://deus.dmytro-a80.workers.dev/#n:Address.Spec)); a file's first line `-- context: @dxos/toolchain/Cli` is checked by `deus add`/`update` and written by `deus export --terms`; `deus project init @owner/project`; the explorer opens `/@owner/project/Name` path links and shows the address; seed rebuilt |
 | 209 | 10-15 12:53 | 5m 00s | `62906bd7` | A path link `/@owner/project/Name` opens the definition's card (`#d:<hash>`), not the namespace card; checked in Chromium on the live Worker (Address.Spec R-8, task 754e824d) |
-| 210 | 10-15 13:05 | 20m 00s | this commit | A merge refuses definitions that call a hash no name has, after a stale-seed merge left three such names in the codebase (D186, task 30884468); a fresh session's pull is 8 s, push 11-14 s, `update deus/` 2.3 s (tasks 87d792ad, eb2c8018) |
+| 210 | 10-15 13:05 | 20m 00s | `4968adb1` | A merge refuses definitions that call a hash no name has, after a stale-seed merge left three such names in the codebase (D186, task 30884468); a fresh session's pull is 8 s, push 11-14 s, `update deus/` 2.3 s (tasks 87d792ad, eb2c8018) |
 
-Total from stage 1 to stage 210: 56h 42m.
+| 211 | 10-15 13:30 | 25m 00s | this commit | A merge where both sides only rehashed a shared dependent keeps both edits: the retry recompiles the dependent from their source (D187, task 2a6740c2) |
+
+Total from stage 1 to stage 211: 57h 07m.
