@@ -450,6 +450,26 @@ describe('composerMcpCredentials', () => {
     }),
   );
 
+  it.effect('keeps sharing the mint when one waiting turn is interrupted', () =>
+    Effect.gen(function* () {
+      const minter = new FakeMinter();
+      const gate = yield* Deferred.make<void>();
+      minter.during = Deferred.await(gate);
+      const credentials = EdgeAgent.composerMcpCredentials(() => minter);
+      const interrupted = yield* Effect.forkChild(credentials);
+      const waiting = yield* Effect.forkChild(credentials);
+      yield* Effect.yieldNow;
+      yield* Fiber.interrupt(interrupted);
+      const later = yield* Effect.forkChild(credentials);
+      yield* Effect.yieldNow;
+      yield* Deferred.succeed(gate, undefined);
+      const env = { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' };
+      expect(yield* Fiber.join(waiting)).toEqual(env);
+      expect(yield* Fiber.join(later)).toEqual(env);
+      expect(minter.minted).toHaveLength(1);
+    }),
+  );
+
   it.effect('drops a token whose identity signed out while it was minted', () =>
     Effect.gen(function* () {
       const minter = new FakeMinter();

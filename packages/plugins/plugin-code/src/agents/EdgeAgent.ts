@@ -7,6 +7,8 @@
 import type * as acp from '@agentclientprotocol/sdk';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
@@ -469,7 +471,7 @@ export const composerMcpCredentials = (
   now: () => number = Date.now,
 ): Effect.Effect<Record<string, string>> => {
   const tokens = new Map<string, MintedToken>();
-  const pending = new Map<string, Effect.Effect<MintedToken, unknown>>();
+  const pending = new Map<string, Fiber.Fiber<MintedToken, unknown>>();
   const currentDid = (service: ApiTokenMinter) => Option.getOrUndefined(service.getEdgeIdentity())?.identityDid;
   return Effect.gen(function* () {
     const service = identity();
@@ -484,18 +486,19 @@ export const composerMcpCredentials = (
     let mint = pending.get(did);
     if (!mint) {
       const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
-      mint = yield* Effect.cached(
-        service
-          .createApiToken({ label: 'Claude Code (cloud)', expiresAt })
-          .pipe(Effect.map(({ token }): MintedToken => ({ did, token, expiresAt }))),
+      // Detached, so a turn interrupted while waiting cancels neither the mint nor the other turns sharing it.
+      mint = yield* service.createApiToken({ label: 'Claude Code (cloud)', expiresAt }).pipe(
+        Effect.map(({ token }): MintedToken => ({ did, token, expiresAt })),
+        Effect.forkDetach,
       );
       pending.set(did, mint);
     }
     const shared = mint;
-    const minted = yield* shared.pipe(
-      Effect.ensuring(
+    const minted = yield* Fiber.join(shared).pipe(
+      Effect.onExit((exit) =>
         Effect.sync(() => {
-          if (pending.get(did) === shared) {
+          // Only a turn that saw the mint finish retires it; an interrupted waiter leaves it to the others.
+          if (!Exit.hasInterrupts(exit) && pending.get(did) === shared) {
             pending.delete(did);
           }
         }),
