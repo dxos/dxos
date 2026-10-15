@@ -31,17 +31,6 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Metadata changes on known hashes never replicate: push sends meta only with missing objects, import keeps the first (`f4afc2c0`)
-
-- state: todo
-- priority: high
-- labels: replication, spec, codebase, bug
-- links `Replicate.import` (#cbbdb9bbaa)
-
-Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
-
-> claude: Seen 2026-10-14 by the native thread: a fresh clone of r2://agent-artifacts/deus/toolchain (origin.main #9db52bfe04) exports specs/JsGen.Spec.mdl with R-3's prose under the wrong blocks; the long-lived store and the git export are right. Cause: Replicate.push bundles meta only for objects the remote lacks, and Replicate.import writes meta only where none exists, so a meta-only change (spec prose, docs, D116 schemes) never reaches the remote, and a clone keeps whichever bundle it imports first. A local deus update cannot repair R2. Proposed fix: make a metadata change a content-addressed object (metaset hash form) that the causal node of the change references, so it replicates and compacts like any object, and apply metasets in causal order on merge (descendant wins; concurrent ones merge as Codebase.mergeMeta does). Subsumes 4c9147ce. Until then, export only from a long-lived store and diff codebase/specs against git before committing an export.
-
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -171,14 +160,6 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - state: todo
 - priority: medium
 - labels: native, perf
-
-## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
-
-- state: todo
-- priority: medium
-- labels: codebase, bug
-
-Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D116. Merge the scheme with Codebase.mergeMeta on import.
 
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
@@ -596,6 +577,19 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 > claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
 
 > claude: Built as comments on Core, the user's choice (D66): lead and notes metadata, restored by the printer. Character literals still print as numbers; filed separately.
+
+## Metadata changes on known hashes never replicate: push sends meta only with missing objects, import keeps the first (`f4afc2c0`)
+
+- state: done
+- priority: high
+- labels: replication, spec, codebase, bug
+- links `Replicate.import` (#cbbdb9bbaa)
+
+Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
+
+> claude: Seen 2026-10-14 by the native thread: a fresh clone of r2://agent-artifacts/deus/toolchain (origin.main #9db52bfe04) exports specs/JsGen.Spec.mdl with R-3's prose under the wrong blocks; the long-lived store and the git export are right. Cause: Replicate.push bundles meta only for objects the remote lacks, and Replicate.import writes meta only where none exists, so a meta-only change (spec prose, docs, D116 schemes) never reaches the remote, and a clone keeps whichever bundle it imports first. A local deus update cannot repair R2. Proposed fix: make a metadata change a content-addressed object (metaset hash form) that the causal node of the change references, so it replicates and compacts like any object, and apply metasets in causal order on merge (descendant wins; concurrent ones merge as Codebase.mergeMeta does). Subsumes 4c9147ce. Until then, export only from a long-lived store and diff codebase/specs against git before committing an export.
+
+> claude: Done (D134): commits record a metadata snapshot (two-level tree of objects, keyed by hash prefix) that the causal node names; pushes carry it, fast-forwards write it, merges merge it hash by hash. Replicate.Spec R-1..R-4. The R2 remote picks this up on the next push from a store on the new seed.
 
 ## Names that share a hash keep only the last name's doc, comments and parameter names (`62f3f4d0`)
 
@@ -1188,6 +1182,16 @@ From docs/spec/README.md, Known divergences.
 - links change #02ade21de7
 
 > claude: Dmytro: render the shared codebase format in other dialects, DEUS stays primary. First dialect: TypeScript-like, view and explorer only; parsing back is a follow-up.
+
+## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
+
+- state: done
+- priority: medium
+- labels: codebase, bug
+
+Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D116. Merge the scheme with Codebase.mergeMeta on import.
+
+> claude: Done with f4afc2c0 (D134): a pulled store takes the pusher's metadata snapshot, scheme included, and a merge merges schemes with mergeMeta.
 
 ## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
 

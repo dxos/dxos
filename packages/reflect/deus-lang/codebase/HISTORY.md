@@ -1,5 +1,16 @@
 # History of main
 
+- `3c1e9887c9` task: comment on 4c9147ce (by claude)
+- `267f6a3ed2` task: comment on f4afc2c0 (by claude)
+- `0f37d9cae8` task: set 4c9147ce state (by claude)
+- `8258e3ffa5` task: set f4afc2c0 state (by claude)
+- `65f4d17190` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `88063d835c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/wd.deus (by claude)
+- `bf9fc7bbce` update deus (by claude)
+- `df0bddebfb` update deus/codebase.deus (by claude)
+- `6e76b24ac2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Replicate.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/replaws.deus (by claude)
+- `8d7b7bc294` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/causalfix.deus (by claude)
+- `dccf008e03` task: set f4afc2c0 state (by claude)
 - `e0570babd4` update deus/codebase.deus (by claude)
 - `775fe75cbc` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r16b.deus (by claude)
 - `10e4683a29` task: comment on 62f3f4d0 (by claude)

@@ -1,0 +1,63 @@
+---
+id: org.dxos.deus.spec.replicate
+name: Replicate.Spec
+version: 1.0
+---
+
+# Replication of metadata: checked spec
+
+A codebase replicates as bundles of content-addressed objects (D60, D91). Metadata (doc comments,
+comments, attributes, spec prose, inferred schemes) is not hashed, so a change to it alone made no
+object: a push sent metadata only with objects the remote lacked, and an import kept the first
+metadata it saw (task f4afc2c0). A clone of the R2 remote printed spec prose under the wrong blocks.
+
+Now each commit records a metadata snapshot, a tree of objects keyed by hash prefix that the history
+node names, so a metadata change is an object that replicates and compacts like any other
+([D134](../../docs/DECISIONS.md)). A fast-forward writes the snapshot of the new head; a merge merges
+the snapshots hash by hash. Written in the order of the process (D92): requirements, then APIs and
+laws, then the implementation; the laws ran red against stubs.
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: metadata snapshots
+  signatures:
+  - Codebase.recordMetas : Text -> Map Text Entry -> Text -> {IO, Throw Text} Text
+  - Codebase.putMetas : Text -> Text -> List (Text, Sexp) -> {IO, Throw Text} Text
+  - Codebase.readMetas : Text -> Text -> {IO, Throw Text} Map Text Sexp
+  - Codebase.mergeMetas : Map Text Sexp -> Map Text Sexp -> Map Text Sexp -> Map Text Sexp
+  - Codebase.applyMetas : Text -> Map Text Sexp -> {IO} List Text
+```
+
+## Requirements
+
+```mdl
+req R-1: a commit that changes only metadata is a new history node, and its snapshot holds the new metadata
+  by: Replicate.Spec.commitRecordsMetas
+```
+
+```mdl
+req R-2: a store that pulls a metadata-only change and fast-forwards to it holds the new metadata
+  by: Replicate.Spec.cloneGetsMetadataChange
+```
+
+```mdl
+req R-3: a merge of concurrent work takes the side that changed a hash's metadata, and merges two changes as the store does
+  by: Replicate.Spec.concurrentMetadataMerges | Replicate.Spec.theirsWhereOursUnchanged | Replicate.Spec.oursWhereTheirsUnchanged | Replicate.Spec.bothChangedMerge
+```
+
+```mdl
+req R-4: a metadata snapshot travels in the bundles a push writes, as the objects it is made of
+  by: Replicate.Spec.closureHoldsMetas
+```
+
+## Theorems
+
+The laws are the definitions under `Replicate.Spec`: `deus ls Replicate.Spec.` lists them and `deus view` prints them.

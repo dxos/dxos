@@ -36,7 +36,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   if not (List.isEmpty crossings) then Throw.throw ("a layer may not depend on these:\n  " ++ join "\n  " crossings) else if not (List.isEmpty trespasses) then Throw.throw ("only a library may mint types under its IRI:\n  " ++ join "\n  " trespasses) else if not isUpdate && not (List.isEmpty replaced) then Throw.throw ("these names already exist; use `deus update`:\n  " ++ join "\n  " (List.map (fun c =>
     match c with
     | (name, _, _) => name) replaced)) else
-    let retagged := metadataChanged ns batch.entries (fun h => readMeta dir h) (Map.fromList batch.metas)
+    let retagged := metadataChanged ns batch.entries (fun h => readMeta dir h) (Map.fromList (Batch.metas batch))
     Codebase.store dir batch
     let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
     let ns2 := foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries
@@ -878,7 +878,7 @@ def Cli.jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Resu
     match List.lookup "it" batch.entries with
     | Option.some (Entry.term h) =>
         let objects := Map.fromList batch.objects
-        let metas := Map.fromList batch.metas
+        let metas := Map.fromList (Batch.metas batch)
         Image.load (fun x => orElse (Map.lookup x objects) (fun _ => readObject dir x)) [h]
         let printer := printer ns []
         let render := fun quoted => Print.expr printer (Sexp.read quoted) [] 0 0

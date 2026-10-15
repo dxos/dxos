@@ -33,7 +33,7 @@ test Compile.Spec.batchShadowsBase :=
     let second := batch
       base
       (fun h => List.lookup h first.objects)
-      (fun h => List.lookup h first.metas)
+      (fun h => List.lookup h (Batch.metas first))
       "strict"
       [parseFile "b.deus" "def k : Int := 2\ndef user : Int := k\n"]
     (List.lookup "user" first.entries, List.lookup "user" second.entries, Compile.Spec.hashOf "def k : Int := 2\ndef user : Int := k\n" "user")) with

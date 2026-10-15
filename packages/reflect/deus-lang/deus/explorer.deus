@@ -113,7 +113,7 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let node := Codebase.readCausal dir causal
   let before := match Codebase.parentsOf dir causal with
     | p :: _ => Codebase.readCausal dir p
-    | [] => Causal.mk "" [] "" "" "" ""
+    | [] => Causal.mk "" [] "" "" "" "" ""
   let diff := Codebase.diffNamespaces dir before.snapshot node.snapshot
   let added := List.filterMap (fun change =>
     match change with

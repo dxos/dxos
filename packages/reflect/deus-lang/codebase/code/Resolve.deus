@@ -313,6 +313,7 @@ def Resolve.record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr))
   | [] => failAt ctx pos ("no structure has fields " ++ join ", " given)
   | _ => failAt ctx pos ("ambiguous record " ++ join ", " given)
 
+-- The comments written before the declaration (D66).
 def Resolve.s (t : Text) : Sexp := Sexp.str t
 
 /-- A pattern that only binds a name (or nothing): returns the bound name. -/

@@ -83,7 +83,7 @@ def JsGen.Spec.refusal (source : Text) (root : Text) : Text :=
       "strict"
       [parseFile "prelude.deus" Compile.Spec.prelude, parseFile "spec.deus" source]
     let objects := Map.fromList built.objects
-    let metas := Map.fromList built.metas
+    let metas := Map.fromList (Batch.metas built)
     let ns := Map.fromList built.entries
     let jsImport :=
       match Map.lookup "Js.import" ns with

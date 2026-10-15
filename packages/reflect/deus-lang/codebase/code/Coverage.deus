@@ -8,8 +8,8 @@ def Coverage.Spec.attrsOf (source : Text) (name : Text) : List Sexp :=
     [parseFile "t.deus" (View.Spec.prelude ++ source)]) with
   | Result.ok b =>
       match List.lookup name b.entries with
-      | Option.some (Entry.theorem h) => metaList (List.lookup h b.metas) "attrs"
-      | Option.some (Entry.test h) => metaList (List.lookup h b.metas) "attrs"
+      | Option.some (Entry.theorem h) => metaList (List.lookup h (Batch.metas b)) "attrs"
+      | Option.some (Entry.test h) => metaList (List.lookup h (Batch.metas b)) "attrs"
       | _ => []
   | Result.err _ => []
 

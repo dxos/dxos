@@ -218,7 +218,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let before :=
     match parentsOf dir causal with
     | p :: _ => readCausal dir p
-    | [] => Causal.mk "" [] "" "" "" ""
+    | [] => Causal.mk "" [] "" "" "" "" ""
   let diff := diffNamespaces dir before.snapshot node.snapshot
   let added := filterMap (fun change =>
     match change with
