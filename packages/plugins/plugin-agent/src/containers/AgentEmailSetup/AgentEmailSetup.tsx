@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
@@ -42,8 +42,13 @@ export const AgentEmailSetup = ({ role, agent, attendableId }: AgentEmailSetupPr
   );
 
   // A ref, not state: a second submit can land before a re-render would show the first one in flight. A create that
-  // succeeds keeps it held, since the form stays up until the query returns the new channel; only a failure releases it.
+  // succeeds keeps it held until the query returns the new channel, since the form stays up until then.
   const creating = useRef(false);
+  useEffect(() => {
+    if (channel) {
+      creating.current = false;
+    }
+  }, [channel]);
   const handleCreate = useCallback(
     async (properties: AgentEmail.Properties) => {
       if (!db || creating.current) {
