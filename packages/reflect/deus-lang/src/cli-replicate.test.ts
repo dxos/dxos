@@ -56,14 +56,18 @@ describe('deus CLI replication', () => {
       rmSync(join(remote, 'bundles', 'README'));
       rmSync(join(remote, 'bundles', fake));
 
-      // Concurrent pushes to one branch leave two heads, merged like local branches.
+      // A push that leaves out the remote's head is refused, so concurrent work is merged before it lands (D167).
       deus('add', file('x.deus', 'def x : Int := 1\n'), '--message', 'x', ...a);
       deus('push', ...a);
       deus('add', file('y.deus', 'def y : Int := 2\n'), '--message', 'y', ...b);
-      deus('push', ...b);
-      expect(deus('pull', ...a).stdout).toContain('2 heads (concurrent pushes)');
-      deus('merge', 'origin.main', ...a);
-      deus('merge', 'origin.main.2', ...a);
+      const stale = deus('push', ...b);
+      expect(stale.code).not.toBe(0);
+      expect(stale.stderr).toContain('run `deus pull origin` and `deus merge origin.main`, then push again');
+      deus('pull', ...b);
+      deus('merge', 'origin.main', ...b);
+      expect(deus('push', ...b).code).toBe(0);
+      expect(deus('pull', ...a).stdout).not.toContain('heads (concurrent pushes)');
+      expect(deus('merge', 'origin.main', ...a).stdout).toMatch(/^Fast-forwarded/);
 
       // Enough history for level-1 boundaries (causal hashes starting with 0).
       for (let i = 1; i <= 70; i++) {

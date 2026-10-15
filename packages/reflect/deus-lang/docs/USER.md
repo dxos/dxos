@@ -477,3 +477,28 @@ also push to main pr
 ---
 
 where's the worker source?
+
+---
+
+deploy, and you can deploy without permission
+
+---
+
+couple things:
+
+1. indexing for site could be async
+2. it would be good to offload as much as possible to site as long as site stays fast. we might need to precompute some indexes on worker as long as its possible, but I dont know how
+
+---
+
+wait, just chat with me. why do we need by-hash index? isn't it pretty fast to look it up from r2?
+
+---
+
+but worker has 10ms limit. lets stick to this for now, and I'll upgrade to paid later. parsing taking 7s is wild. format should be binary, easy to skip through. if it takes 7s -- something is wrong.
+
+but a different thing: how's integrity of codebase eforced by worker? im gonna have a bunch of sessions start pushing at the same time now
+
+---
+
+sounds good -- do that

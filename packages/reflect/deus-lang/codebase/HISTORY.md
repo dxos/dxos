@@ -1,5 +1,13 @@
 # History of main
 
+- `aff4165a4a` close b642762b by #199edd07ef (by claude)
+- `199edd07ef` Pushes cannot fork a branch: bases in bundles, x-deus-claim, Worker head CAS (D167) (by claude)
+- `ccfaafcaf2` task: open ed106f59 Binary bundle format with an offset table (by claude)
+- `758623d8aa` task: open b642762b A push cannot fork a branch: CLI base check and Worker head CAS (by claude)
+- `3dd269d458` task: set 86720562 title details (by claude)
+- `a2aef23e10` task: open 112d3cd9 Explorer reads the Worker indexes and renders in the page (by claude)
+- `e910ae7977` task: open f0ade986 Worker indexes each pushed bundle from a queue (by claude)
+- `0917c52524` task: open d9fb935f Index namespace: read bundles into data indexes, compiled to JS for the Worker (by claude)
 - `61b49e1157` close b096c56e by #eb507d73ce (by claude)
 - `eb507d73ce` Explorer: publish the top-level files as one version named by site/HEAD (D166) (by claude)
 - `cd9b706528` task: set 86720562 details (by claude)

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { gzipSync } from 'node:zlib';
 import { beforeEach, describe, test } from 'vitest';
@@ -48,7 +48,10 @@ export const memoryBucket = (): Bucket & { keys(): string[] } => {
 /** A D1 binding over node:sqlite, with the Worker's migrations applied. */
 export const sqliteDatabase = (): Database & { sqlite: DatabaseSync } => {
   const sqlite = new DatabaseSync(':memory:');
-  sqlite.exec(readFileSync(new URL('../platform/worker/migrations/0001_keys.sql', import.meta.url), 'utf8'));
+  const migrations = new URL('../platform/worker/migrations/', import.meta.url);
+  for (const name of readdirSync(migrations).sort()) {
+    sqlite.exec(readFileSync(new URL(name, migrations), 'utf8'));
+  }
   const statement = (sql: string, values: (string | number | null)[] = []): Statement => ({
     bind: (...next) => statement(sql, next),
     first: async <T>() => (sqlite.prepare(sql).get(...values) ?? null) as T | null,
@@ -84,6 +87,13 @@ export const insertKey = async (db: Database, scopes: string[], projects: string
   return minted.key;
 };
 
+const hash = (digit: string) => digit.repeat(64);
+
+/** The header a push sends: the head it claims and the heads it builds on. */
+const claim = (head: string, ...bases: string[]) => ({
+  'x-deus-claim': `main ${head} ${bases.length === 0 ? '-' : bases.join(',')}`,
+});
+
 const bundleOf = async (text: string) => {
   const bytes = new TextEncoder().encode(text);
   return { name: `0-${await sha256(bytes)}`, body: new Uint8Array(gzipSync(bytes)) };
@@ -118,7 +128,12 @@ describe('replication API', () => {
   test('reads are open and writes need a key with the right scope', async ({ expect }) => {
     const bundle = await bundleOf('(bundle a)');
     const put = (key?: string) =>
-      call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: bundle.body, key });
+      call(`/v1/toolchain/bundles/${bundle.name}`, {
+        method: 'PUT',
+        body: bundle.body,
+        key,
+        headers: claim(hash('1')),
+      });
     expect((await put()).status).toBe(401);
     expect((await put('deus_0000000000000000_' + '0'.repeat(64))).status).toBe(401);
     expect((await put(await insertKey(db, ['site']))).status).toBe(403);
@@ -157,12 +172,50 @@ describe('replication API', () => {
     expect(bucket.keys()).toEqual([]);
   });
 
+  test('a push moves the head only from the head it builds on', async ({ expect }) => {
+    const key = await insertKey(db, ['push']);
+    const push = async (text: string, headers: Record<string, string>) => {
+      const bundle = await bundleOf(text);
+      return call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: bundle.body, key, headers });
+    };
+    const head = () => db.sqlite.prepare('select causal from heads').get();
+    expect((await push('(bundle 0)', {})).status).toBe(428);
+    expect((await push('(bundle 0)', { 'x-deus-claim': 'main nonsense -' })).status).toBe(400);
+    expect((await push('(bundle 1)', claim(hash('1')))).status).toBe(201);
+    expect((await push('(bundle 2)', claim(hash('2'), hash('1')))).status).toBe(201);
+    expect(head()).toEqual({ causal: hash('2') });
+
+    // Another session that pulled before the last push is refused and told what to do; nothing is stored.
+    const stale = await push('(bundle 3)', claim(hash('3'), hash('1')));
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toMatchObject({ head: hash('2') });
+    expect(bucket.keys()).toHaveLength(2);
+    // The first push of a branch that already has a head is stale too.
+    expect((await push('(bundle 4)', claim(hash('4')))).status).toBe(409);
+    // A retried push whose head already moved (its store failed) goes through.
+    expect((await push('(bundle 2 again)', claim(hash('2'), hash('1')))).status).toBe(201);
+    // A merge of concurrent heads names every head it joins.
+    expect((await push('(bundle 5)', claim(hash('5'), hash('9'), hash('2')))).status).toBe(201);
+    expect(head()).toEqual({ causal: hash('5') });
+    // Compaction re-claims existing heads, so a compact key may omit the claim.
+    expect(
+      (
+        await call(`/v1/toolchain/bundles/${(await bundleOf('(bundle c)')).name}`, {
+          method: 'PUT',
+          body: (await bundleOf('(bundle c)')).body,
+          key: await insertKey(db, ['push', 'compact']),
+        })
+      ).status,
+    ).toBe(201);
+  });
+
   test('only a compact key deletes bundles', async ({ expect }) => {
     const bundle = await bundleOf('(bundle a)');
     await call(`/v1/toolchain/bundles/${bundle.name}`, {
       method: 'PUT',
       body: bundle.body,
       key: await insertKey(db, ['push']),
+      headers: claim(hash('1')),
     });
     const remove = (key: string) => call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'DELETE', key });
     expect((await remove(await insertKey(db, ['push']))).status).toBe(403);

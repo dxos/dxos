@@ -213,14 +213,14 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - assignee: claude
 - labels: browser, perf, kernel
 
-## Worker builds the explorer JSON from bundles itself (wasm kernel or a Container), so a push sends only bundles (`86720562`)
+## Worker indexes bundles asynchronously and the site renders from the indexes (`86720562`)
 
 - state: todo
 - priority: low
 - labels: cloudflare
 - parent: e774b1fd
 
-Have the Worker build the explorer from the bundles on push with DEUS on the wasm kernel, so the site no longer depends on the pusher. Blocked (D166) by the wasm memory task and the incremental build task: a full build needs >4 GB wasm memory and ~450 s CPU vs a Worker's 128 MB and 300 s.
+Dmytro (2026-10-15 09:49): indexing should be async, and offload as much as possible to the site while it stays fast. Design: the Worker builds data indexes from each new bundle in JS (Index namespace compiled from DEUS); the browser renders on the wasm kernel. A full DEUS build in the Worker does not fit (D166). Subtasks hold the steps.
 
 ## deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now) (`87c565cf`)
 
@@ -235,6 +235,14 @@ Have the Worker build the explorer from the bundles on push with DEUS on the was
 - priority: low
 - labels: mdl, spec
 
+## Binary bundle format with an offset table (`ed106f59`)
+
+- state: todo
+- priority: none
+- labels: perf, replicate
+
+Dmytro (2026-10-15): parsing taking 7s is wild; format should be binary, easy to skip through. The text columnar format parses at ~1.4 MB/s through the JS back end (10 MB bundle: 7.2 s parse, 1.9 GB heap). A binary layout with an offset table lets a reader (Worker, browser) jump to one object without parsing the rest.
+
 ## Build only the explorer pages a bundle changes (`fd34a928`)
 
 - state: todo
@@ -243,6 +251,15 @@ Have the Worker build the explorer from the bundles on push with DEUS on the was
 
 For the Worker to build the site (86720562) it must not regenerate all 2,900 pages per push (20 s natively). Given the previous and new heads, write def/ pages for changed hashes and their direct users, change/ pages for new history nodes, and the indexes. Pairs with the wasm memory task (D166).
 
+## Explorer reads the Worker indexes and renders in the page (`112d3cd9`)
+
+- state: todo
+- priority: none
+- labels: explorer
+- parent: 86720562
+
+Load obj/<hash> lazily, print and highlight with the DEUS printer on the wasm kernel or compiled to JS, and fall back to the generated JSON until every view is migrated; then deus push stops building the site.
+
 ## Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase (`3e686896`)
 
 - state: todo
@@ -250,6 +267,15 @@ For the Worker to build the site (86720562) it must not regenerate all 2,900 pag
 - labels: explorer, spec
 
 Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metadata; the explorer lists blocks only.
+
+## Index namespace: read bundles into data indexes, compiled to JS for the Worker (`d9fb935f`)
+
+- state: todo
+- priority: none
+- labels: worker, explorer
+- parent: 86720562
+
+Spec first. Split a bundle into objects, metas and claims; flatten a name snapshot; list the hashes an object mentions; diff two name maps. Compile with deus build --js to platform/worker/index.js. Spike 2026-10-15: a 0.3-0.5 MB push bundle parses in 120-210 ms and splits+hashes in 200-370 ms with 26-74 MB heap; the 10 MB initial bundle takes 13 s and 1.9 GB. Design: cloudflare-plan/ASYNC-INDEXING.md in project files.
 
 ## Name the 39 public definitions deus mdl --coverage still reports, in Explorer.Spec (Assets, Comments, Explorer) and WasmEquality.Spec (Wasm) (`8d6df186`)
 
@@ -266,6 +292,15 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - labels: kernel, perf
 
 Measured 2026-10-15 (D166): pulling the toolchain's 3 bundles on the wasm kernel with in-memory files grew wasm memory to 2.7 GB (358 s CPU), the merge to 2.9 GB, and deus explore hit the 4 GB wasm limit (RuntimeError: unreachable). The same store is 69 MB on disk. Find what is never freed (arena, interned values, image copies per run) so a Worker (128 MB) can run pull and explore. Also: kernel.mjs reads pointers as signed i32, so outputs past 2 GB fail with a negative offset; use >>> 0.
+
+## Worker indexes each pushed bundle from a queue (`f0ade986`)
+
+- state: todo
+- priority: none
+- labels: worker, cloudflare
+- parent: 86720562
+
+Bundle PUT enqueues the bundle name; the consumer writes obj/, meta/, heads/, then names, users, change and tasks indexes from the new bundle and the previous version, then HEAD. Needs Workers Paid for CPU (Free allows 10 ms per run). Test under Miniflare and wrangler dev with the real bundles.
 
 ## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
 
@@ -1588,6 +1623,15 @@ Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/
 - labels: mdl, spec
 
 > claude: Done (D160): statement: is compiled as the theorem's claim and compared as Core; Compile.Spec R-19.
+
+## A push cannot fork a branch: CLI base check and Worker head CAS (`b642762b`)
+
+- state: done
+- priority: none
+- labels: cloudflare, worker
+- links change #199edd07ef
+
+Dmytro (2026-10-15 09:55): how is the codebase's integrity enforced with many sessions pushing? D167: bundles carry base items, put sends x-deus-claim, the Worker CAS's the head in D1 (heads table).
 
 ## Break long lines in deus view output (`d7eba020`)
 

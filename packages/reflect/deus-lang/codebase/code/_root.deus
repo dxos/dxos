@@ -513,7 +513,10 @@ structure Registry @"urn:deus:external:Registry" where
   A remote holds immutable bundles under `bundles/<level>-<sha256>`. A bundle is one canonical
   S-expression: branch claims, then objects and metadata, each sorted by hash:
 
-    (bundle (branch "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+    (bundle (branch "main" "<causal>")… (base "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+
+  A `base` names a head of the branch on the remote that the claim builds on (D167); readers that
+  do not know it skip it.
 
   - `push` uploads one level-0 bundle with the objects the remote lacks and a claim for the
     branch head. Names are content hashes, so writes never conflict and nothing is overwritten.

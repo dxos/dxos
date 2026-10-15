@@ -27,6 +27,16 @@ the Worker's D1 database as the SHA-256 of their secret, with scopes and project
 every scope and also manages keys at `/v1/keys`. `scripts/deus-keys.mjs` makes, lists and revokes
 keys through the account's Cloudflare token.
 
+**Heads (D167).** A push must not fork a branch. The CLI refuses to push a head that does not
+descend from every head of the branch on the remote ("pull and merge, then push again"), and the
+bundle names the heads it builds on as `(base "<branch>" "<causal>")` items. Over HTTPS, `put`
+sends them as `x-deus-claim: <branch> <head> <base>,…` (`-` for none). The Worker keeps each
+branch's head in D1 and moves it only from a head the claim names, in one statement, so of two
+sessions that pushed off the same head the second gets 409 and stores nothing. A retry whose head
+already moved goes through. Only a key with `compact` may push without a claim, because compaction
+re-claims existing heads. The check reads a header, not the bundle, so it fits the Free plan's
+10 ms; it trusts the client's ancestry until the Worker can parse bundles.
+
 The Worker half is checked in vitest (`src/worker-remote.test.ts`: scopes, revoked and expired keys,
 the bundle hash, folder scopes, key management), and the whole path by `moon run deus-lang:remote-test`,
 which pushes, pulls and publishes an explorer through the Worker on local workerd.
@@ -47,4 +57,11 @@ api A-1: remotes and their handlers
   - Replicate.directory : Text -> (Unit -> {Remote, IO | e} a) -> {IO | e} a
   - Cli.withRemote : Text -> Text -> (Unit -> {Remote, IO, Throw Text} a) -> {IO, Throw Text} a
   - Cli.defaultRemote : Text -> Text -> {IO} Option Text
+```
+
+```mdl
+api A-2: claims a push sends
+  signatures:
+  - Replicate.basedBundle : Text -> List (Text, Text) -> List (Text, Text) -> List Text -> {IO} Text
+  - Replicate.claimHeader : Text -> Option Text
 ```

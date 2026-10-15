@@ -671,7 +671,9 @@ describe('deus CLI', () => {
     deus('add', file('extra.deus', 'def Shapes.unit : Int := 1\n'), ...c);
     const pushed = JSON.parse(deus('push', 'origin', '--json', ...c).stdout);
     expect(pushed.site).toBeGreaterThanOrEqual(3);
-    expect(readFileSync(join(remote, 'site', 'names.json'), 'utf8')).toContain('Shapes.unit');
+    // The indexes land under the version that site/HEAD names, which is written last (D166).
+    const version = readFileSync(join(remote, 'site', 'HEAD'), 'utf8');
+    expect(readFileSync(join(remote, 'site', 'v', version, 'names.json'), 'utf8')).toContain('Shapes.unit');
 
     // A change that rebinds a name carries both sources, which the app shows as a diff.
     deus('update', file('square.deus', 'def Shapes.square (side : Int) : Int := side * side + 0\n'), ...c);

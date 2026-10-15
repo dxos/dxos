@@ -4,7 +4,10 @@
   A remote holds immutable bundles under `bundles/<level>-<sha256>`. A bundle is one canonical
   S-expression: branch claims, then objects and metadata, each sorted by hash:
 
-    (bundle (branch "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+    (bundle (branch "main" "<causal>")… (base "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+
+  A `base` names a head of the branch on the remote that the claim builds on (D167); readers that
+  do not know it skip it.
 
   - `push` uploads one level-0 bundle with the objects the remote lacks and a claim for the
     branch head. Names are content hashes, so writes never conflict and nothing is overwritten.
@@ -61,12 +64,30 @@ def isBundleName (name : Text) : Bool :=
   dash > 0 && Option.isSome (Int.fromText (Text.take dash name)) && External.isSha256 (Text.drop (dash + 1) name)
 
 /-- The canonical bundle text for branch claims and objects (with their metadata), in columns (D60). -/
-def bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO} Text :=
+def bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO} Text := basedBundle dir claims [] hashes
+
+/-- A bundle whose claims name the remote heads they build on (`bases`, as (branch, causal)). -/
+def basedBundle (dir : Text) (claims : List (Text, Text)) (bases : List (Text, Text)) (hashes : List Text) : {IO} Text :=
   let sorted := List.dedup (List.sort hashes)
-  let claimForms := List.map (fun c => Sexp.node "branch" [Sexp.str (fst c), Sexp.str (snd c)]) (List.dedup (List.sort claims))
+  let pairs := fun (head : Text) (xs : List (Text, Text)) => List.map (fun c => Sexp.node head [Sexp.str (fst c), Sexp.str (snd c)]) (List.dedup (List.sort xs))
   let objects := List.filterMap (fun h => Option.map (fun form => Sexp.node "obj" [Sexp.str h, form]) (Codebase.readObject dir h)) sorted
   let metas := List.filterMap (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (Codebase.readMeta dir h)) sorted
-  Columnar.encode [Sexp.node "bundle" (claimForms ++ objects ++ metas)]
+  Columnar.encode [Sexp.node "bundle" (pairs "branch" claims ++ pairs "base" bases ++ objects ++ metas)]
+
+/-- The `x-deus-claim` header a bundle's claim sends a Worker: `<branch> <head> <base>,…`, or none without exactly one claim. -/
+def claimHeader (text : Text) : Option Text :=
+  let items := match Columnar.read text with
+    | [form] => Sexp.args form
+    | _ => []
+  let pairsOf := fun (head : Text) => List.filterMap (fun item =>
+    match item with
+    | Sexp.list [Sexp.sym h, Sexp.str branch, Sexp.str causal] => if h == head then some (branch, causal) else none
+    | _ => none) items
+  match pairsOf "branch" with
+  | [(branch, causal)] =>
+    let bases := List.filterMap (fun b => if fst b == branch then some (snd b) else none) (pairsOf "base")
+    some (branch ++ " " ++ causal ++ " " ++ (if List.isEmpty bases then "-" else Text.join "," bases))
+  | _ => none
 
 /-- A member reference of recursive group `g` back to `(self i)`, as the group was hashed (CORE.md). -/
 def unself (g : Text) (form : Sexp) : Sexp :=
@@ -215,9 +236,15 @@ def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text}
   let known := Set.fromList (List.concatMap (fun s => s.hashes) seen)
   let missing := List.filter (fun h => not (Set.contains h known)) (Map.keys (closureOf dir [head]))
   let claimed := List.any (fun s => List.any (fun c => c == (branch, head)) s.claims) seen
+  -- Pushing a head that leaves out a remote head would fork the branch (D167).
+  let bases := headsOf dir seen branch
+  let ancestry := Codebase.ancestors dir head
+  let behind := List.filter (fun b => not (Map.contains b ancestry)) bases
   if List.isEmpty missing && claimed then none
+  else if not (List.isEmpty behind) then
+    throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++ Text.take 10 (Option.getOr (List.head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again")
   else
-    let text := bundle dir [(branch, head)] missing
+    let text := basedBundle dir [(branch, head)] (List.map (fun b => (branch, b)) bases) missing
     let name := nameOf 0 text
     Remote.put name text
     IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name [(branch, head)] missing))
@@ -471,7 +498,10 @@ def http (base : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO
     let staged := config ++ "." ++ key
     gzipTo text staged
     -- The Worker answers 200 for a bundle it already has, so a repeated push is not an error.
-    let result := curl ["-X", "PUT", "-H", "content-type: application/gzip", "--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key]
+    let claim := match claimHeader text with
+      | some header => ["-H", "x-deus-claim: " ++ header]
+      | none => []
+    let result := curl (["-X", "PUT", "-H", "content-type: application/gzip"] ++ claim ++ ["--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key])
     IO.remove staged
     match result with
     | (0, _, _) => k ()

@@ -24,6 +24,9 @@ export const SCOPES = ['push', 'compact', ...FOLDERS, 'admin'];
 
 const KEY = /^Bearer deus_([0-9a-f]{16})_([0-9a-f]{64})$/;
 
+/** `x-deus-claim: <branch> <new head> <base>[,<base>…]`, `-` for no base; branch names as `deus branch` allows. */
+const CLAIM = /^([A-Za-z0-9][A-Za-z0-9._/-]{0,99}) ([0-9a-f]{64}) (-|[0-9a-f]{64}(?:,[0-9a-f]{64})*)$/;
+
 export class HttpError extends Error {
   constructor(status, message) {
     super(message);
@@ -97,6 +100,10 @@ const bundles = async (request, env, ctx, project, rest) => {
         throw new HttpError(400, 'the bundle does not hash to its name');
       }
     }
+    const refused = await moveHead(request, env, project, logged);
+    if (refused) {
+      return logged(refused);
+    }
     await env.BUCKET.put(key, bytes, { httpMetadata: { contentType: 'application/gzip' } });
     return logged(json({ bundle: name, stored: true }, 201));
   }
@@ -107,6 +114,59 @@ const bundles = async (request, env, ctx, project, rest) => {
     return logged(json({ bundle: name, deleted: true }));
   }
   throw new HttpError(405, 'method not allowed');
+};
+
+/**
+ * Moves the branch head a push claims, or answers why not (D167). The bundle is stored only after
+ * the head moves, and a retry of the same push finds the head already there, so a failed store
+ * never blocks the branch. Only compaction, which re-claims existing heads, may omit the claim.
+ */
+const moveHead = async (request, env, project, logged) => {
+  const header = request.headers.get('x-deus-claim');
+  if (!header) {
+    return logged.scopes.includes('compact') || logged.scopes.includes('admin')
+      ? undefined
+      : json({ error: 'a push must name the head it builds on (x-deus-claim); update deus by merging #13952' }, 428);
+  }
+  const match = CLAIM.exec(header);
+  if (!match) {
+    throw new HttpError(400, 'x-deus-claim is `<branch> <head> <base>[,<base>…]`');
+  }
+  const [, branch, head, baseList] = match;
+  const bases = baseList === '-' ? [] : baseList.split(',');
+  const now = Date.now();
+  const current = await env.DB.prepare('select causal from heads where project = ? and branch = ?')
+    .bind(project, branch)
+    .first();
+  if (current?.causal === head) {
+    return undefined;
+  }
+  const moved = current
+    ? bases.includes(current.causal)
+      ? await env.DB.prepare(
+          'update heads set causal = ?, updated_at = ?, key_id = ? where project = ? and branch = ? and causal = ?',
+        )
+          .bind(head, now, logged.keyId, project, branch, current.causal)
+          .run()
+      : undefined
+    : await env.DB.prepare(
+        'insert into heads (project, branch, causal, updated_at, key_id) values (?, ?, ?, ?, ?) on conflict do nothing',
+      )
+        .bind(project, branch, head, now, logged.keyId)
+        .run();
+  if (moved?.meta.changes === 1) {
+    return undefined;
+  }
+  const latest = await env.DB.prepare('select causal from heads where project = ? and branch = ?')
+    .bind(project, branch)
+    .first();
+  return json(
+    {
+      error: `${branch} moved to #${(latest?.causal ?? '').slice(0, 10)} since you pulled; run \`deus pull\` and \`deus merge\`, then push again`,
+      head: latest?.causal ?? null,
+    },
+    409,
+  );
 };
 
 //
@@ -202,7 +262,7 @@ export const authorize = async (request, env, ctx, scope, project) => {
   }
   const url = new URL(request.url);
   // The row is written after the response, so logging never slows or fails a write.
-  return (response) => {
+  const logged = (response) => {
     ctx.waitUntil(
       env.DB.batch([
         env.DB.prepare('insert into audit (at, key_id, method, path, status) values (?, ?, ?, ?, ?)').bind(
@@ -217,6 +277,7 @@ export const authorize = async (request, env, ctx, scope, project) => {
     );
     return response;
   };
+  return Object.assign(logged, { keyId: id, scopes: scopes.includes('admin') ? SCOPES : scopes });
 };
 
 /** `/v1/keys`: list, mint and revoke keys; only an `admin` key may. */
