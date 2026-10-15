@@ -31,7 +31,7 @@ export type DataFlowSequenceProps = {
 };
 
 /** Milliseconds a scene takes to fade out, and the next to fade in. */
-const FADE = 600;
+const FADE = 1000;
 
 /** The bar the canvas's own toolbars sit in, so the controls match them. */
 const BAR = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';

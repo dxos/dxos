@@ -697,8 +697,33 @@ export class DataFlowSimulation {
   #time = 0;
   #serial = 0;
 
+  #agentReads = true;
+
   /** Whether the monolithic agent reads the sources; off, it is not yet in the picture and takes nothing. */
-  agentReads = true;
+  get agentReads(): boolean {
+    return this.#agentReads;
+  }
+
+  /** Turned off, the agent leaves the picture: what it holds, and what is on its way to it, fades out. */
+  set agentReads(on: boolean) {
+    if (on === this.#agentReads) {
+      return;
+    }
+    this.#agentReads = on;
+    if (on || !this.#layout.monolith) {
+      return;
+    }
+    for (const body of this.#bodies) {
+      if (body.zone === 'hub' && body.phase === 'docked') {
+        this.#evict(body);
+      } else if (body.zone === 'hub' && body.phase === 'travelling') {
+        this.#releaseAll(body);
+        body.phase = 'leaving';
+        body.age = 0;
+        body.route = [];
+      }
+    }
+  }
 
   constructor(
     layout: DataFlowLayout,
@@ -1092,7 +1117,7 @@ export class DataFlowSimulation {
   /** Sends a formed molecule down its source's channel to its place on the hub lattice. */
   #depart(body: Body): void {
     // The monolithic agent reads every source: about half of what forms also rises, as a copy, into it.
-    if (this.#layout.monolith && this.agentReads && !body.read && this.#random() < AGENT_READS) {
+    if (this.#layout.monolith && this.#agentReads && !body.read && this.#random() < AGENT_READS) {
       body.read = true;
       this.#readUp(body);
     }

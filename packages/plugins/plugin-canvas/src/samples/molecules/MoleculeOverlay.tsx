@@ -15,6 +15,7 @@ import {
   COMPOSE_HEIGHT,
   type DataFlowLayout,
   LABEL_FONT_SIZE,
+  type SourceBlock,
   appSlots,
   baseOf,
 } from './layout.ts';
@@ -107,8 +108,6 @@ export const LOOKS: readonly Look[] = STYLE_SET_IDS;
 export type LookTone = 'light' | 'dark';
 
 type Palette = {
-  /** The stroke of the monolithic agent's grant lines. */
-  grant: string;
   /** The base a frame sits on; none for a look without one. */
   base?: string;
   frame: string;
@@ -140,7 +139,6 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-neutral-900',
     label: 'fill-neutral-200',
-    grant: 'stroke-white/20',
     well: 'fill-neutral-900',
     inset: false,
     channel: 'solid',
@@ -158,7 +156,6 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-none',
     label: 'fill-neutral-300',
-    grant: 'stroke-white/20',
     well: 'fill-none',
     wellStroke: 'stroke-neutral-700',
     inset: false,
@@ -177,7 +174,6 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-white/5',
     label: 'fill-neutral-100',
-    grant: 'stroke-white/20',
     well: 'fill-black/30',
     wellStroke: 'stroke-white/10',
     inset: false,
@@ -200,7 +196,6 @@ const LIGHT_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-neutral-50',
     label: 'fill-neutral-700',
-    grant: 'stroke-neutral-900/15',
     well: 'fill-white',
     wellStroke: 'stroke-neutral-200',
     inset: false,
@@ -219,7 +214,6 @@ const LIGHT_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-none',
     label: 'fill-neutral-700',
-    grant: 'stroke-neutral-900/15',
     well: 'fill-none',
     wellStroke: 'stroke-neutral-300',
     inset: false,
@@ -238,7 +232,6 @@ const LIGHT_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-white/30',
     label: 'fill-neutral-800',
-    grant: 'stroke-neutral-900/15',
     well: 'fill-black/5',
     wellStroke: 'stroke-black/10',
     inset: false,
@@ -310,6 +303,7 @@ const REVEAL_MS = 1200;
 const GRANT_RISE = 40;
 /** As wide as the canvas's own smart lines in these looks, which read as conduits rather than hairlines. */
 const GRANT_WIDTH = 8;
+const GRANT_OPACITY = 0.5;
 const GRANT_PITCH = 20;
 const GRANT_SPREAD = 28;
 const GRANT_CORNER = 16;
@@ -318,15 +312,15 @@ const GRANT_CORNER = 16;
  * The monolithic agent's grants: a line from the top of its OAuth box to the top of each source, each on a level of its
  * own (the nearest source lowest) and leaving the box at its own point, so no two lines share a run or cross.
  */
-const GrantLines = ({ feed, sources }: { feed: Block; sources: readonly Block[] }) => {
-  const palette = useContext(LookContext);
+const GrantLines = ({ feed, sources }: { feed: Block; sources: readonly SourceBlock[] }) => {
   const top = baseOf(feed).y;
   const nearestFirst = [...sources].sort(
     (a, b) => Math.abs(feed.frame.x - a.frame.x) - Math.abs(feed.frame.x - b.frame.x),
   );
   const centre = feed.frame.x + feed.frame.width / 2;
   return (
-    <g className={mx('fill-none', palette.grant)} strokeWidth={GRANT_WIDTH}>
+    // Each in its source's colour, as translucent as the glass channels, so a grant reads as that source's.
+    <g className='fill-none' strokeWidth={GRANT_WIDTH} opacity={GRANT_OPACITY}>
       {nearestFirst.map((source, index) => {
         const start = centre + (index - (nearestFirst.length - 1) / 2) * GRANT_SPREAD;
         const end = source.frame.x + source.frame.width / 2;
@@ -336,6 +330,7 @@ const GrantLines = ({ feed, sources }: { feed: Block; sources: readonly Block[] 
         return (
           <path
             key={source.id}
+            className={hueLine(source.hue).stroke}
             d={[
               `M ${start} ${top}`,
               `L ${start} ${level + GRANT_CORNER}`,

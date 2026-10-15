@@ -151,7 +151,6 @@ export const Chapter4Mixed: Story = chapter(3);
  * 1. After 20 seconds (or the next control) the OAuth box, its grant lines, the container and the agent fade in.
  * 2. The silos' molecules keep flowing across the change; the agent then starts reading through OAuth.
  */
-export const SilosToMonolith: Story = {
-  name: 'Silos to monolith',
+export const Transition: Story = {
   render: () => <DataFlowSequence scenes={CHAPTERS.slice(0, 2)} />,
 };
