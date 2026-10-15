@@ -267,7 +267,7 @@ export const PAPER_BACKGROUND: Background = {
 
 export const GLASS_NIGHT_THEME: Theme = {
   id: 'glass-night',
-  name: 'Glass night',
+  name: 'Glass',
   styleSet: 'glass',
   background: 'glow',
   mode: 'dark',

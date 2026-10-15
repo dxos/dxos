@@ -63,7 +63,7 @@ export const Playground: Story = {
 export const Paper: Story = { args: { theme: 'paper' } };
 
 /** The original dark look: translucent frosted cards over two colour washes and dots. */
-export const GlassNight: Story = { name: 'Glass night', args: { theme: 'glass-night' } };
+export const Glass: Story = { args: { theme: 'glass-night' } };
 
 /** Glass on the bare dark canvas, as the glass look first looked. */
 export const Night: Story = { args: { theme: 'night' } };

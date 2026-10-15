@@ -114,7 +114,7 @@ type Story = StoryObj<StoryArgs>;
 
 export const Classic: Story = {};
 
-export const GlassNight: Story = { name: 'Glass night', args: { theme: 'glass-night' } };
+export const Glass: Story = { args: { theme: 'glass-night' } };
 
 export const Night: Story = { args: { theme: 'night' } };
 
