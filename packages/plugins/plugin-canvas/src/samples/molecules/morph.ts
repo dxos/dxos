@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Block, type Rect } from './layout.ts';
+import { type Block, type DataFlowLayout, type Rect } from './layout.ts';
 import { type Body, type LatticeBond } from './simulation.ts';
 
 /** A one-bucket hub part way to its partitioned `target`: `progress` runs from 0 (as laid out) to 1 (the target). */
@@ -59,20 +59,8 @@ type Cluster = { ids: string[]; left: number; right: number; centre: number };
 const CLUSTER_GAP = 2;
 const WALL_ROOM = 1;
 
-/**
- * Plans the split along the lattice's natural break points: its docked molecules fall into clusters (each a connected
- * piece of the lattice), every cluster moves whole, and none is ever cut. Taken in order across the lattice, the clusters
- * are split into three runs, one per bucket, at the breaks that keep the most molecules, the middle run preferably
- * drawing from both sides of the centre; each run packs side by side, centred in its bucket. Moves are whole lattice
- * steps, so every cluster stays on the hex grid; one no bucket has room for fades where it is.
- */
-export const planSplit = (
-  hub: Block,
-  target: Block,
-  bodies: readonly Body[],
-  bonds: readonly LatticeBond[],
-  spacing: number,
-): Map<string, SplitMove> => {
+/** The hub's docked molecules in clusters: each a connected piece of its lattice, with its extent across the hub. */
+const clustersOf = (bodies: readonly Body[], bonds: readonly LatticeBond[]): Cluster[] => {
   const docked = bodies.filter((body) => body.zone === 'hub' && body.phase === 'docked');
   const parent = new Map(docked.map((body) => [body.id, body.id]));
   const root = (id: string): string => {
@@ -95,6 +83,24 @@ export const planSplit = (
     const right = Math.max(...xs);
     return { ids: members.map((body) => body.id), left, right, centre: (left + right) / 2 };
   });
+  return clusters;
+};
+
+/**
+ * Plans the split along the lattice's natural break points: its docked molecules fall into clusters (each a connected
+ * piece of the lattice), every cluster moves whole, and none is ever cut. Taken in order across the lattice, the clusters
+ * are split into three runs, one per bucket, at the breaks that keep the most molecules, the middle run preferably
+ * drawing from both sides of the centre; each run packs side by side, centred in its bucket. Moves are whole lattice
+ * steps, so every cluster stays on the hex grid; one no bucket has room for fades where it is.
+ */
+export const planSplit = (
+  hub: Block,
+  target: Block,
+  bodies: readonly Body[],
+  bonds: readonly LatticeBond[],
+  spacing: number,
+): Map<string, SplitMove> => {
+  const clusters = clustersOf(bodies, bonds);
 
   const region = regionOf(hub);
   const middle = region.x + region.width / 2;
@@ -155,4 +161,128 @@ export const planSplit = (
     }
   });
   return moves;
+};
+
+/**
+ * Plans a hub's move to `target`, a layout of the same hub with its buckets moved or resized: a one-bucket hub becoming
+ * a partitioned one splits at its natural breaks (`planSplit`); otherwise each bucket's clusters keep their arrangement
+ * and move with it, centred in its new place, packing closer (and, failing that, letting the outermost fade) only where
+ * the new bucket is too narrow for them.
+ */
+export const planMove = (
+  hub: Block,
+  target: Block,
+  bodies: readonly Body[],
+  bonds: readonly LatticeBond[],
+  spacing: number,
+): Map<string, SplitMove> => {
+  const from = hub.buckets ?? [hub.well];
+  const to = target.buckets ?? [target.well];
+  if (from.length === 1 && to.length > 1) {
+    return planSplit(hub, target, bodies, bonds, spacing);
+  }
+  const clusters = clustersOf(bodies, bonds);
+  const rise = spacing * Math.sqrt(3);
+  const moves = new Map<string, SplitMove>();
+  const width = (cluster: Cluster) => cluster.right - cluster.left;
+  from.forEach((bucket, index) => {
+    const members = clusters
+      .filter((cluster) => {
+        const nearest = from.reduce(
+          (best, candidate, at) =>
+            Math.abs(candidate.x + candidate.width / 2 - cluster.centre) <
+            Math.abs(from[best].x + from[best].width / 2 - cluster.centre)
+              ? at
+              : best,
+          0,
+        );
+        return nearest === index;
+      })
+      .sort((a, b) => a.centre - b.centre);
+    const next = to[index];
+    if (!next) {
+      members.forEach((cluster) => cluster.ids.forEach((id) => moves.set(id, { shift: { x: 0, y: 0 }, kept: false })));
+      return;
+    }
+    const lift = Math.round((next.y + next.height / 2 - (bucket.y + bucket.height / 2)) / rise) * rise;
+    const room = next.width - 2 * WALL_ROOM * spacing;
+    const left = Math.min(...members.map((cluster) => cluster.left));
+    const right = Math.max(...members.map((cluster) => cluster.right));
+    if (members.length === 0) {
+      return;
+    }
+    if (right - left <= room) {
+      // Room for them as they are: they move together, centred in the new bucket.
+      const shift = { x: Math.round((next.x + next.width / 2 - (left + right) / 2) / spacing) * spacing, y: lift };
+      members.forEach((cluster) => cluster.ids.forEach((id) => moves.set(id, { shift, kept: true })));
+      return;
+    }
+    const packed = [...members];
+    const span = () =>
+      packed.reduce((sum, cluster) => sum + width(cluster), 0) + Math.max(0, packed.length - 1) * CLUSTER_GAP * spacing;
+    while (packed.length > 0 && span() > room) {
+      const dropped = width(packed[0]) >= width(packed[packed.length - 1]) ? packed.shift() : packed.pop();
+      dropped?.ids.forEach((id) => moves.set(id, { shift: { x: 0, y: 0 }, kept: false }));
+    }
+    let x = next.x + (next.width - span()) / 2;
+    for (const cluster of packed) {
+      const shift = { x: Math.round((x - cluster.left) / spacing) * spacing, y: lift };
+      cluster.ids.forEach((id) => moves.set(id, { shift, kept: true }));
+      x += width(cluster) + CLUSTER_GAP * spacing;
+    }
+  });
+  return moves;
+};
+
+/** When each thing a relayout adds arrives, as fractions of the relayout: when it starts to fade in, and for how long. */
+export type Arrivals = {
+  /** How far the hub has stretched toward its new size, by the relayout's progress. */
+  growth: (progress: number) => number;
+  /** Each new bucket, source and sink by its id (a bucket's id is its index), and the window it fades in over. */
+  windows: ReadonlyMap<string, { start: number; length: number }>;
+};
+
+/** The hub stretches over this first share of a relayout; agents then arrive, and sources after them. */
+const GROWTH = 0.6;
+const FADE = 0.15;
+const PHASES = { buckets: 0.05, sinks: 0.2, sources: 0.45 } as const;
+const STAGGER = 0.4;
+
+const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+
+/** How far a window has faded in at `progress`, eased. */
+export const arrived = (window: { start: number; length: number } | undefined, progress: number) =>
+  window ? ease(Math.min(1, Math.max(0, (progress - window.start) / window.length))) : 1;
+
+/**
+ * The order a relayout brings in what it adds: the hub stretches first, its new buckets fading in as it reaches them;
+ * then the agents, and last the sources, each set inner first on both sides at once, so the diagram fills outward.
+ */
+export const planArrivals = (from: DataFlowLayout, to: DataFlowLayout): Arrivals => {
+  const centre = to.hub.frame.x + to.hub.frame.width / 2;
+  const windows = new Map<string, { start: number; length: number }>();
+  const stagger = (items: { id: string; frame: Rect }[], phase: number) => {
+    const distance = (item: { frame: Rect }) => Math.abs(item.frame.x + item.frame.width / 2 - centre);
+    const sorted = [...items].sort((a, b) => distance(a) - distance(b));
+    // Both sides arrive together, so a rank is shared by the pair at the same distance.
+    const ranks = Math.max(1, Math.ceil(sorted.length / 2));
+    sorted.forEach((item, index) => {
+      const rank = Math.floor(index / 2);
+      windows.set(item.id, { start: phase + (ranks > 1 ? (STAGGER * rank) / (ranks - 1) : 0), length: FADE });
+    });
+  };
+  const oldBuckets = from.hub.buckets?.length ?? 1;
+  stagger(
+    (to.hub.buckets ?? []).slice(oldBuckets).map((frame, index) => ({ id: `${oldBuckets + index}`, frame })),
+    PHASES.buckets,
+  );
+  stagger(
+    to.sinks.filter((sink) => !from.sinks.some(({ id }) => id === sink.id)),
+    PHASES.sinks,
+  );
+  stagger(
+    to.sources.filter((source) => !from.sources.some(({ id }) => id === source.id)),
+    PHASES.sources,
+  );
+  return { growth: (progress) => ease(Math.min(1, progress / GROWTH)), windows };
 };

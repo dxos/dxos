@@ -15,11 +15,12 @@ import {
   COMPOSE_HEIGHT,
   type DataFlowLayout,
   LABEL_FONT_SIZE,
+  type Rect,
   type SourceBlock,
   appSlots,
   baseOf,
 } from './layout.ts';
-import { type HubMorph, type SplitMove, morphBlock, planSplit } from './morph.ts';
+import { type Arrivals, type HubMorph, type SplitMove, arrived, morphBlock, planSplit } from './morph.ts';
 import {
   AGENT_FADE,
   type AppItem,
@@ -297,6 +298,119 @@ const BlockOutline = ({ rect, round, radius }: { rect: Block['frame']; round?: b
     <rect {...rect} rx={radius} fill='black' />
   );
 
+const mixPoint = (from: { x: number; y: number }, to: { x: number; y: number }, progress: number) => ({
+  x: from.x + (to.x - from.x) * progress,
+  y: from.y + (to.y - from.y) * progress,
+});
+
+const mixRect = (from: Rect, to: Rect, progress: number): Rect => ({
+  ...mixPoint(from, to, progress),
+  width: from.width + (to.width - from.width) * progress,
+  height: from.height + (to.height - from.height) * progress,
+});
+
+/** A block part way from its old place to its new one; a block new to the layout is drawn where it ends up. */
+const mixBlock = <T extends Block>(from: Block | undefined, to: T, progress: number): T =>
+  from
+    ? {
+        ...to,
+        frame: mixRect(from.frame, to.frame, progress),
+        well: mixRect(from.well, to.well, progress),
+        buckets:
+          to.buckets && from.buckets?.length === to.buckets.length
+            ? to.buckets.map((bucket, index) => mixRect(from.buckets?.[index] ?? bucket, bucket, progress))
+            : to.buckets,
+      }
+    : to;
+
+/** The layout part way from `from` to `to`: every block and channel the two share eased between its two places. */
+const mixLayout = (from: DataFlowLayout, to: DataFlowLayout, progress: number): DataFlowLayout => ({
+  ...to,
+  sources: to.sources.map((block) =>
+    mixBlock(
+      from.sources.find(({ id }) => id === block.id),
+      block,
+      progress,
+    ),
+  ),
+  hub: mixBlock(from.hub, to.hub, progress),
+  sinks: to.sinks.map((block) =>
+    mixBlock(
+      from.sinks.find(({ id }) => id === block.id),
+      block,
+      progress,
+    ),
+  ),
+  channels: to.channels.map((channel) => {
+    const old = from.channels.find(({ id }) => id === channel.id);
+    return old
+      ? { ...channel, from: mixPoint(old.from, channel.from, progress), to: mixPoint(old.to, channel.to, progress) }
+      : channel;
+  }),
+});
+
+/** The hub's molecules in each bucket faded in with that bucket, so a new bucket arrives already holding its lattice. */
+const fadeNewBuckets = (hub: Block, arrival: (id: string) => number, frame: Frame): Frame => {
+  const buckets = hub.buckets ?? [];
+  const fadeAt = (point: { x: number; y: number }) => {
+    const index = buckets.findIndex((bucket) => point.x >= bucket.x && point.x <= bucket.x + bucket.width);
+    return index < 0 ? 1 : arrival(`${index}`);
+  };
+  return {
+    ...frame,
+    bodies: frame.bodies.map((body) =>
+      body.zone === 'hub' ? { ...body, opacity: body.opacity * fadeAt(body.position) } : body,
+    ),
+    bonds: frame.bonds.map((bond) =>
+      bond.zone === 'hub' ? { ...bond, opacity: bond.opacity * fadeAt(bond.from) } : bond,
+    ),
+  };
+};
+
+/**
+ * The frame with every molecule drawn part way back from where a relayout put it toward where it was: those in the hub
+ * by the plan, those in a source or a sink by how far that block moved.
+ */
+const relayoutFrame = (
+  { from, plan, progress }: { from: DataFlowLayout; plan: ReadonlyMap<string, SplitMove>; progress: number },
+  to: DataFlowLayout,
+  frame: Frame,
+): Frame => {
+  const blockShift = (old: Block | undefined, next: Block | undefined) =>
+    old && next ? { x: next.frame.x - old.frame.x, y: next.frame.y - old.frame.y } : { x: 0, y: 0 };
+  const shiftOf = (body: Body) => {
+    if (body.phase === 'leaving' || body.phase === 'travelling') {
+      return { x: 0, y: 0 };
+    }
+    if (body.zone === 'hub') {
+      const move = plan.get(body.id);
+      return move?.kept ? move.shift : { x: 0, y: 0 };
+    }
+    if (body.zone === 'source') {
+      return blockShift(from.sources[body.source], to.sources[body.source]);
+    }
+    return blockShift(from.sinks[body.agent ?? 0], to.sinks[body.agent ?? 0]);
+  };
+  const back = 1 - progress;
+  const offsets = new Map(frame.bodies.map((body) => [body.id, shiftOf(body)]));
+  return {
+    ...frame,
+    bodies: frame.bodies.map((body) => {
+      const shift = offsets.get(body.id) ?? { x: 0, y: 0 };
+      return { ...body, position: { x: body.position.x - shift.x * back, y: body.position.y - shift.y * back } };
+    }),
+    bonds: frame.bonds.map((bond) => {
+      const [owner, partner] = bond.id.split(':');
+      const shift = offsets.get(owner) ?? offsets.get(partner) ?? { x: 0, y: 0 };
+      return {
+        ...bond,
+        from: { x: bond.from.x - shift.x * back, y: bond.from.y - shift.y * back },
+        to: { x: bond.to.x - shift.x * back, y: bond.to.y - shift.y * back },
+      };
+    }),
+  };
+};
+
 /** The two phases of a split: the clusters slide sideways into their columns, then the buckets open around them. */
 export const splitPhases = (progress: number) => {
   const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -349,9 +463,6 @@ const morphFrame = (
 
 /** Milliseconds the monolithic agent's parts take to fade in or out as it is revealed or hidden. */
 export const REVEAL_MS = 1000;
-
-/** Milliseconds an outgoing sink takes to fade, the time its replacement waits before coming into view. */
-const SWAP_FADE_MS = 1000;
 
 /** Rise above the bases to the lowest grant line, the gap between stacked lines, and the spread of their starts. */
 const GRANT_RISE = 40;
@@ -482,7 +593,8 @@ const ContainerBase = ({ block }: { block: Block }) => {
  * well (or, round, at the well's foot); and its well (white and inset, dark, outlined or tinted). A group container is
  * a frame and label around others, with no well of its own.
  */
-const Container = ({ block }: { block: Block }) => {
+/** `fading` lists how far each bucket has faded in, by index; a bucket it leaves out is drawn in full. */
+const Container = ({ block, fading }: { block: Block; fading?: readonly number[] }) => {
   const palette = useContext(LookContext);
   const { raised, inset } = useContext(DepthContext);
   const { frame, well } = block;
@@ -546,6 +658,7 @@ const Container = ({ block }: { block: Block }) => {
           height={bucket.height}
           rx={WELL_RADIUS}
           {...wellProps}
+          opacity={fading?.[index]}
         />
       ))}
     </g>
@@ -717,9 +830,6 @@ const drawingExtent = (layout: DataFlowLayout) => {
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
-/** Sinks on their way out after changing kind, drawn fading from what they last held; `key` restarts the fade. */
-export type Outgoing = { key: number; sinks: readonly Block[]; apps: readonly (readonly (AppItem | undefined)[])[] };
-
 export type MoleculeOverlayProps = {
   layout: DataFlowLayout;
   simulation: DataFlowSimulation;
@@ -733,8 +843,11 @@ export type MoleculeOverlayProps = {
   revealed?: boolean;
   /** The hub part way to a partitioned one: drawn eased toward it, its docked molecules carried with their buckets. */
   hubMorph?: HubMorph;
-  /** Sinks fading out after changing kind; their replacements fade in once they are gone. */
-  outgoing?: Outgoing;
+  /**
+   * The diagram part way from `from` to the layout it has just moved to: blocks and channels glide between the two, what
+   * is new fades in, and the molecules (already in their new places) are drawn sliding in from their old ones.
+   */
+  relayout?: { from: DataFlowLayout; plan: ReadonlyMap<string, SplitMove>; arrivals: Arrivals; progress: number };
 };
 
 /**
@@ -750,16 +863,26 @@ export const MoleculeOverlay = ({
   tone = 'dark',
   revealed = true,
   hubMorph,
-  outgoing,
+  relayout,
 }: MoleculeOverlayProps) => {
-  const frame = useSimulationFrame(simulation, running && molecules);
+  const simulated = useSimulationFrame(simulation, running && molecules);
+  // The hub stretches, and what sits in it slides, on the relayout's growth; what is new arrives on its own schedule.
+  const growth = relayout ? relayout.arrivals.growth(relayout.progress) : 1;
+  const arrival = (id: string) =>
+    relayout ? arrived(relayout.arrivals.windows.get(id.replace(/^channel-/, '')), relayout.progress) : 1;
+  const frame = relayout
+    ? fadeNewBuckets(laidOut.hub, arrival, relayoutFrame({ ...relayout, progress: growth }, laidOut, simulated))
+    : simulated;
   const { agents, apps, time } = frame;
   // The well stays whole while the clusters slide, so no seam shows where the buckets will part.
   const opening = hubMorph ? splitPhases(hubMorph.progress).open : 0;
+  const settled = relayout ? mixLayout(relayout.from, laidOut, growth) : laidOut;
   const layout =
     hubMorph && opening > 0
-      ? { ...laidOut, hub: morphBlock(laidOut.hub, { ...hubMorph, progress: opening }) }
-      : laidOut;
+      ? { ...settled, hub: morphBlock(settled.hub, { ...hubMorph, progress: opening }) }
+      : settled;
+  // A relayout's new buckets fade in where they stand, as the hub stretches to take them.
+  const bucketFade = relayout ? (laidOut.hub.buckets ?? []).map((_, index) => arrival(`${index}`)) : undefined;
   // Planned once per frame and target, not per step of the morph, so every cluster keeps one destination throughout.
   const applied = hubMorph?.applied;
   const planned = useMemo(
@@ -783,15 +906,14 @@ export const MoleculeOverlay = ({
   const shown = new Map<string, number>(
     layout.sinks.flatMap((sink, index) => {
       const opacity = index < agents.length ? Math.max(0, Math.min(1, agents[index] / AGENT_FADE)) : 0;
-      // A sink changing kind keeps its channel: only the box at its end is swapped.
-      const swapping = outgoing?.sinks.some((leaving) => leaving.id === sink.id) ?? false;
       return [
         [sink.id, opacity],
-        [`channel-${sink.id}`, swapping ? 1 : opacity],
+        [`channel-${sink.id}`, opacity],
       ];
     }),
   );
-  const visible = (id: string) => shown.get(id) ?? 1;
+  const visible = (id: string) =>
+    relayout?.arrivals.windows.has(id.replace(/^channel-/, '')) ? arrival(id) : (shown.get(id) ?? 1);
   // The monolithic agent's parts fade in together when it is revealed, and out when it is hidden again.
   const monolithIds = new Set(
     layout.monolith
@@ -868,16 +990,8 @@ export const MoleculeOverlay = ({
           </g>
           {blocks.map((block) => (
             <g key={block.id} style={fade(block.id)}>
-              <Container block={block} />
+              <Container block={block} fading={block === layout.hub ? bucketFade : undefined} />
               {block.app && <AppView block={block} items={apps[layout.sinks.indexOf(block)] ?? []} time={time} />}
-            </g>
-          ))}
-          {outgoing?.sinks.map((sink, index) => (
-            <g key={`${outgoing.key}-${sink.id}`}>
-              <animate attributeName='opacity' from='1' to='0' dur={`${SWAP_FADE_MS}ms`} fill='freeze' />
-              <ContainerBase block={sink} />
-              <Container block={sink} />
-              {sink.app && <AppView block={sink} items={outgoing.apps[index] ?? []} time={time} />}
             </g>
           ))}
           {molecules && extent && (

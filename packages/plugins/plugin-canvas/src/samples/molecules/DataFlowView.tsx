@@ -16,7 +16,6 @@ import {
 import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import {
-  type Block,
   DATA_FLOW_SCENE_ID,
   type DataFlowLayout,
   type DataFlowSpec,
@@ -24,16 +23,37 @@ import {
   layoutDataFlow,
   partitionHub,
 } from './layout.ts';
-import { LOOKS, MoleculeOverlay, type Outgoing, REVEAL_MS } from './MoleculeOverlay.tsx';
-import { type SplitMove, planSplit } from './morph.ts';
+import { LOOKS, MoleculeOverlay, REVEAL_MS } from './MoleculeOverlay.tsx';
+import { type Arrivals, type SplitMove, planArrivals, planMove, planSplit } from './morph.ts';
 import { DataFlowSimulation, type SimulationOptions } from './simulation.ts';
-
-/** Milliseconds a sink changing kind takes to fade out before its replacement starts to fade in. */
-const SWAP_MS = 1000;
 
 /** How many buckets a partitioned hub gets, and how long the morph to it takes. */
 const PARTITIONS = 3;
 const PARTITION_MS = 3000;
+
+/** Milliseconds a relayout takes: slow, so the hub's growth and then each new agent and source can be watched arriving. */
+const RELAYOUT_MS = 8000;
+
+/** Runs linearly from 0 to 1 over `duration` ms each time `key` changes (each phase of it eases itself); 1 while none. */
+const useRun = (key: number | undefined, duration: number): number => {
+  const [value, setValue] = useState(1);
+  useEffect(() => {
+    if (key === undefined) {
+      return;
+    }
+    const start = performance.now();
+    setValue(0);
+    let frame = requestAnimationFrame(function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      setValue(t);
+      if (t < 1) {
+        frame = requestAnimationFrame(step);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [key, duration]);
+  return value;
+};
 
 /** Runs linearly from where it is to `target` over `duration` ms whenever `target` changes, rendering each step. */
 const useTween = (target: number, duration: number): number => {
@@ -93,11 +113,8 @@ export type DataFlowViewProps = {
    * over three seconds. Running, the simulation is split too; held (`running` off), the morph only redraws the frame.
    */
   partitioned?: boolean;
-  /**
-   * The sinks as they are now, by position, over the spec's: one whose kind changes (an application becoming an agent)
-   * fades out, then its replacement fades in, while the rest of the diagram runs on.
-   */
-  sinks?: DataFlowSpec['sinks'];
+  /** Keeps one simulation running as `spec` changes, moving it to each new layout in place rather than starting over. */
+  continuous?: boolean;
 };
 
 /**
@@ -113,60 +130,30 @@ export const DataFlowView = ({
   grid: initialGrid,
   revealed = true,
   partitioned,
-  sinks,
+  continuous = false,
 }: DataFlowViewProps) => {
   // With no theme chosen, the diagram follows the app's light or dark mode: paper by day, the glow by night.
   const { themeMode } = useThemeContext();
   const initialTheme = chosenTheme ?? (themeMode === 'light' ? 'paper' : 'glass-night');
   const laidOut = useMemo(() => layoutDataFlow(spec), [spec]);
-  // The sinks keep their places; only what each is (its label, and whether it is an application) follows `sinks`.
-  const layout = useMemo(
-    () =>
-      sinks
-        ? {
-            ...laidOut,
-            sinks: laidOut.sinks.map((sink, index) =>
-              sinks[index] ? { ...sink, label: sinks[index].label, app: sinks[index].app } : sink,
-            ),
-          }
-        : laidOut,
-    [laidOut, sinks],
-  );
   const registry = useContext(RegistryContext);
-  // Created per layout, not per reveal: a new store would reset the view; the reveal rewrites its one scene instead.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const store = useMemo(() => createMemoryStore([createDataFlowScene(layout, revealed)]), [layout]);
-  const simulation = useMemo(() => new DataFlowSimulation(laidOut, options), [laidOut, options]);
-  // A sink that changes kind is converted in the running simulation: the outgoing one fades over `SWAP_MS` (drawn from
-  // what it held), and only then does its replacement come into view. Converted at once when the view opens.
-  const [outgoing, setOutgoing] = useState<Outgoing>();
-  const sinksRef = useRef<{ simulation: DataFlowSimulation; sinks: readonly Block[] }>(undefined);
-  useLayoutEffect(() => {
-    const last = sinksRef.current;
-    const before = last?.simulation === simulation ? last.sinks : laidOut.sinks;
-    if (before === layout.sinks) {
-      return;
-    }
-    sinksRef.current = { simulation, sinks: layout.sinks };
-    const changed = layout.sinks.filter((sink, index) => Boolean(sink.app) !== Boolean(before[index]?.app));
-    if (changed.length === 0) {
-      return;
-    }
-    const opening = last?.simulation !== simulation;
-    if (!opening) {
-      const { apps } = simulation.frame();
-      const leaving = before.filter((sink, index) => Boolean(sink.app) !== Boolean(layout.sinks[index]?.app));
-      setOutgoing({ key: Date.now(), sinks: leaving, apps: leaving.map((sink) => apps[before.indexOf(sink)] ?? []) });
-    }
-    simulation.convertSinks(layout.sinks, opening ? 0 : SWAP_MS / 1000);
-  }, [simulation, laidOut, layout]);
-  const morphing = partitioned !== undefined;
+  // Continuous, one simulation runs on as the spec changes, moved to each new layout in place; else a new spec starts over.
+  const [origin] = useState(laidOut);
+  const seed = continuous ? origin : laidOut;
+  const simulation = useMemo(() => new DataFlowSimulation(seed, options), [seed, options]);
+  // Only a one-bucket hub splits; a spec already partitioned is drawn as it is.
+  const splittable = partitioned !== undefined && (laidOut.hub.buckets?.length ?? 1) === 1;
   const morph = useMemo(
-    () => (morphing ? { target: partitionHub(layout.hub, PARTITIONS) } : undefined),
-    [layout, morphing],
+    () => (splittable ? { target: partitionHub(laidOut.hub, PARTITIONS) } : undefined),
+    [laidOut, splittable],
   );
   // Linear: each phase of the split eases itself.
   const progress = useTween(partitioned ? 1 : 0, PARTITION_MS);
+  // The layout as it now stands: split, once the split is asked for.
+  const layout = morph && partitioned ? { ...laidOut, hub: morph.target } : laidOut;
+  // Created once per simulation: a new store would reset the view, so later layouts rewrite its one scene instead.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const store = useMemo(() => createMemoryStore([createDataFlowScene(layout, revealed)]), [simulation]);
   // Running, the split is made in the simulation, so what arrives afterwards lands in the new buckets; held, the morph
   // only redraws the frame. The ref keeps one toggle to one split, however often the effect runs.
   const [applied, setApplied] = useState<ReadonlyMap<string, SplitMove>>();
@@ -183,21 +170,44 @@ export const DataFlowView = ({
     splitRef.current = { simulation, on };
     if (on) {
       const { bodies, bonds } = simulation.frame();
-      const plan = planSplit(layout.hub, morph.target, bodies, bonds, layout.hubGrid.spacing);
+      const plan = planSplit(laidOut.hub, morph.target, bodies, bonds, laidOut.hubGrid.spacing);
       simulation.split(morph.target, plan);
       setApplied(plan);
     } else {
       // Merging moves nothing: the molecules stay put while the buckets close around them.
-      simulation.merge(layout.hub);
+      simulation.merge(laidOut.hub);
       setApplied(new Map());
     }
-  }, [morph, running, partitioned, simulation, layout]);
-  // The scene takes the hub's end state at once, so the camera frames where the morph is heading.
-  const sceneLayout = morph && partitioned ? { ...layout, hub: morph.target } : layout;
+  }, [morph, running, partitioned, simulation, laidOut]);
+  // A new spec, continuous and running, moves the simulation to its layout: blocks glide to their new places, what is
+  // new fades in, and the hub's clusters move with their buckets.
+  const [relayout, setRelayout] = useState<{
+    key: number;
+    from: DataFlowLayout;
+    plan: ReadonlyMap<string, SplitMove>;
+    arrivals: Arrivals;
+  }>();
+  const appliedRef = useRef<{ simulation: DataFlowSimulation; spec: DataFlowSpec; layout: DataFlowLayout }>(undefined);
   useLayoutEffect(() => {
-    const scene = createDataFlowScene(sceneLayout, revealed);
+    const last = appliedRef.current;
+    if (!continuous || !running || last?.simulation !== simulation || last.spec === spec) {
+      appliedRef.current = { simulation, spec, layout };
+      return;
+    }
+    const { bodies, bonds } = simulation.frame();
+    const plan = planMove(last.layout.hub, layout.hub, bodies, bonds, layout.hubGrid.spacing);
+    const arrivals = planArrivals(last.layout, layout);
+    // Each new block takes part from when it comes into view, so nothing is fed to a box not yet there.
+    const seconds = new Map([...arrivals.windows].map(([id, { start }]) => [id, (start * RELAYOUT_MS) / 1000]));
+    simulation.relayout(layout, plan, seconds);
+    appliedRef.current = { simulation, spec, layout };
+    setRelayout({ key: Date.now(), from: last.layout, plan, arrivals });
+  }, [continuous, running, simulation, spec, layout]);
+  const moved = useRun(relayout?.key, RELAYOUT_MS);
+  useLayoutEffect(() => {
+    const scene = createDataFlowScene(layout, revealed);
     registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
-  }, [registry, store, sceneLayout, revealed]);
+  }, [registry, store, layout, revealed]);
   useLayoutEffect(() => {
     simulation.agentReads = revealed;
   }, [simulation, revealed]);
@@ -218,7 +228,8 @@ export const DataFlowView = ({
       theme={theme}
       backgroundGrid={grid}
       refitKey={`${revealed ? 'revealed' : 'hidden'}:${partitioned ? 'partitioned' : 'whole'}`}
-      // The camera widens over the same second the monolithic agent fades in, so the two settle together.
+      // The camera widens over the same second the monolithic agent fades in, so the two settle together; a relayout
+      // leaves it where it is, so a diagram that extends runs on past the edges of the view.
       refitDuration={REVEAL_MS}
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
@@ -228,13 +239,13 @@ export const DataFlowView = ({
         overlay={
           <MoleculeOverlay
             layout={layout}
-            outgoing={outgoing}
             simulation={simulation}
             running={running}
             molecules={molecules}
             look={overlayLook}
             tone={look.theme.mode ?? 'dark'}
             revealed={revealed}
+            relayout={relayout && moved < 1 ? { ...relayout, progress: moved } : undefined}
             hubMorph={
               morph && progress > 0 ? { ...morph, progress, applied: running ? applied : undefined } : undefined
             }

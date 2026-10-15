@@ -60,6 +60,13 @@ export type Channel = {
 
 export type SourceSpec = { id: string; label: string; hue: string };
 
+/** What one side of an extended diagram adds, inner first. */
+export type Extension = {
+  sources?: readonly SourceSpec[];
+  sinks?: readonly { label: string; app?: AppKind }[];
+  buckets?: number;
+};
+
 /**
  * `stacked`: the sources in a row above a wide hub, and the sinks (agents) below it; `radial`: the sources spread around
  * a round hub, with no sinks; `silos`: each source joined straight to its own application below it, with no hub.
@@ -77,6 +84,11 @@ export type DataFlowSpec = {
   spacing?: number;
   /** The label of the monolithic variant's box above the agent, where the molecules it reads appear. */
   feed?: { label: string };
+  /**
+   * More of a stacked diagram beyond its edges: sources, sinks (agents) and buckets added outward on either side, at the
+   * same pitch, with the hub stretched to hold them; everything already laid out stays exactly where it was.
+   */
+  extend?: { left?: Extension; right?: Extension };
   /** Draws only the hub and what has landed in it, for looking at the hub's container on its own. */
   focus?: 'hub';
   /**
@@ -227,7 +239,13 @@ const sourceBlock = (source: SourceSpec, frame: Rect, spacing: number): SourceBl
 /** Lays out the diagram for its variant. */
 export const layoutDataFlow = (spec: DataFlowSpec): DataFlowLayout => {
   const layout =
-    spec.variant === 'radial' ? layoutRadial(spec) : spec.variant === 'silos' ? layoutSilos(spec) : layoutStacked(spec);
+    spec.variant === 'radial'
+      ? layoutRadial(spec)
+      : spec.variant === 'silos'
+        ? layoutSilos(spec)
+        : spec.extend
+          ? extendStacked(layoutStacked(spec), spec.extend, spec.spacing ?? DEFAULT_SPACING)
+          : layoutStacked(spec);
   return spec.focus ? { ...layout, focus: spec.focus } : layout;
 };
 
@@ -321,16 +339,23 @@ const layoutSilos = (spec: DataFlowSpec): DataFlowLayout => {
 /** The sources in a row, the hub spanning them below, and the sinks centred side by side under the hub. */
 const layoutStacked = (spec: DataFlowSpec): DataFlowLayout => {
   const count = spec.sources.length;
-  const width = count * SOURCE_SIZE.width + (count - 1) * GAP;
+  const sourceRow = count * SOURCE_SIZE.width + (count - 1) * GAP;
   const spacing = spec.spacing ?? DEFAULT_SPACING;
+  // A lone sink is wide; several share the width under the hub.
+  const sinkSpecs = spec.sinks ?? [];
+  const size = sinkSpecs.length > 3 ? NARROW_SINK_SIZE : sinkSpecs.length > 1 ? SMALL_SINK_SIZE : SINK_SIZE;
+  const row = sinkSpecs.length * size.width + Math.max(0, sinkSpecs.length - 1) * GAP;
+  // Every row is centred on x = 0, and the hub spans the wider of the two, so a diagram that gains sources or sinks
+  // grows outward evenly from where it was.
+  const width = Math.max(sourceRow, row);
   const sources = spec.sources.map((source, index) =>
-    sourceBlock(source, { x: index * (SOURCE_SIZE.width + GAP), y: 0, ...SOURCE_SIZE }, spacing),
+    sourceBlock(source, { x: -sourceRow / 2 + index * (SOURCE_SIZE.width + GAP), y: 0, ...SOURCE_SIZE }, spacing),
   );
 
   // Set at all (even to one), the hub is laid out partitioned: as tall, with its lanes, so it can split in place later.
   const partitions = spec.hub.partitions;
   const hubFrame = {
-    x: 0,
+    x: -width / 2,
     y: SOURCE_SIZE.height + CHANNEL_HEIGHT,
     width,
     height: partitions ? PARTITIONED_HUB_HEIGHT : HUB_HEIGHT,
@@ -347,13 +372,9 @@ const layoutStacked = (spec: DataFlowSpec): DataFlowLayout => {
     width: CHANNEL_WIDTH,
   }));
 
-  // A lone sink is wide; several share the width under the hub.
-  const sinkSpecs = spec.sinks ?? [];
-  const size = sinkSpecs.length > 3 ? NARROW_SINK_SIZE : sinkSpecs.length > 1 ? SMALL_SINK_SIZE : SINK_SIZE;
-  const row = sinkSpecs.length * size.width + Math.max(0, sinkSpecs.length - 1) * GAP;
   const sinks = sinkSpecs.map((sink, index) => {
     const frame = {
-      x: (width - row) / 2 + index * (size.width + GAP),
+      x: -row / 2 + index * (size.width + GAP),
       y: hubFrame.y + hubFrame.height + CHANNEL_HEIGHT,
       ...size,
     };
@@ -554,4 +575,109 @@ export const createDataFlowScene = (layout: DataFlowLayout, revealed = true): Sc
     nodes[block.id] = node;
   });
   return { id: DATA_FLOW_SCENE_ID, name: 'Data flow', nodes, links: {} };
+};
+
+/** A source's channel down to the hub's top. */
+const sourceChannel = (source: SourceBlock, hubTop: number): Channel => ({
+  id: `channel-${source.id}`,
+  hue: source.hue,
+  from: { x: source.frame.x + source.frame.width / 2, y: source.frame.y + source.frame.height },
+  to: { x: source.frame.x + source.frame.width / 2, y: hubTop },
+  width: CHANNEL_WIDTH,
+});
+
+/** A sink's channel down from the hub's bottom. */
+const sinkChannel = (sink: Block, hubBottom: number): Channel => ({
+  id: `channel-${sink.id}`,
+  hue: 'neutral',
+  from: { x: sink.frame.x + sink.frame.width / 2, y: hubBottom },
+  to: { x: sink.frame.x + sink.frame.width / 2, y: sink.frame.y },
+  width: CHANNEL_WIDTH,
+});
+
+/**
+ * `base` with more added outward on either side, at the pitch of what is already there: sources at the top, agents at
+ * the bottom, buckets in the hub, which stretches to hold them. What `base` had keeps its place and its index (the new
+ * come after it in every list), and the hub's lattice keeps its origin, so a running simulation can move to it in place.
+ */
+const extendStacked = (
+  base: DataFlowLayout,
+  { left = {}, right = {} }: { left?: Extension; right?: Extension },
+  spacing: number,
+): DataFlowLayout => {
+  const outward = <T extends { frame: Rect }>(blocks: readonly T[], side: -1 | 1, count: number, gap: number) => {
+    const edge = side < 0 ? blocks[0].frame : blocks[blocks.length - 1].frame;
+    const pitch = edge.width + gap;
+    return Array.from({ length: count }, (_, index) => ({ ...edge, x: edge.x + side * (index + 1) * pitch }));
+  };
+  const sources = [
+    ...base.sources,
+    ...[
+      ...(left.sources ?? []).map((source, index) => ({ source, side: -1 as const, index })),
+      ...(right.sources ?? []).map((source, index) => ({ source, side: 1 as const, index })),
+    ].map(({ source, side, index }) =>
+      sourceBlock(source, outward(base.sources, side, index + 1, GAP)[index], spacing),
+    ),
+  ];
+  const baseBuckets = base.hub.buckets ?? [base.hub.well];
+  const buckets = [
+    ...baseBuckets,
+    ...outward(
+      baseBuckets.map((frame) => ({ frame })),
+      -1,
+      left.buckets ?? 0,
+      BUCKET_GAP,
+    ),
+    ...outward(
+      baseBuckets.map((frame) => ({ frame })),
+      1,
+      right.buckets ?? 0,
+      BUCKET_GAP,
+    ),
+  ];
+  const wellLeft = Math.min(base.hub.well.x, ...buckets.map((bucket) => bucket.x));
+  const wellRight = Math.max(
+    base.hub.well.x + base.hub.well.width,
+    ...buckets.map((bucket) => bucket.x + bucket.width),
+  );
+  const frame = {
+    ...base.hub.frame,
+    x: wellLeft - (base.hub.well.x - base.hub.frame.x),
+    width: wellRight - wellLeft + 2 * (base.hub.well.x - base.hub.frame.x),
+  };
+  const well = { ...base.hub.well, x: wellLeft, width: wellRight - wellLeft };
+  const hub: Block = {
+    ...base.hub,
+    frame,
+    well,
+    buckets,
+    lanes: base.hub.lanes && { ...base.hub.lanes, left: well.x, right: well.x + well.width },
+  };
+  const newSinks = [
+    ...(left.sinks ?? []).map((sink, index) => ({ sink, side: -1 as const, index })),
+    ...(right.sinks ?? []).map((sink, index) => ({ sink, side: 1 as const, index })),
+  ].map(({ sink, side, index }, at) => {
+    const sinkFrame = outward(base.sinks, side, index + 1, GAP)[index];
+    return {
+      id: `sink-${base.sinks.length + at}`,
+      label: sink.label,
+      frame: sinkFrame,
+      well: wellOf(sinkFrame),
+      app: sink.app,
+    };
+  });
+  const sinks = [...base.sinks, ...newSinks];
+  return {
+    ...base,
+    sources,
+    hub,
+    sinks,
+    channels: [
+      ...sources.map((source) => sourceChannel(source, frame.y)),
+      ...sinks.map((sink) => sinkChannel(sink, frame.y + frame.height)),
+    ],
+    // The same origin, so the lattice already there keeps its sites; only its reach grows.
+    hubGrid: { ...base.hubGrid, bounds: gridOf(well, spacing).bounds },
+    sinkGrids: [...base.sinkGrids, ...newSinks.map((sink) => gridOf(sink.well, spacing))],
+  };
 };

@@ -9,7 +9,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { DataFlowSequence, type Scene } from './DataFlowSequence.tsx';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
-import { type DataFlowSpec } from './layout.ts';
+import { type AppKind, type DataFlowSpec, type SourceSpec } from './layout.ts';
 
 const SPEC: DataFlowSpec = {
   sources: [
@@ -47,6 +47,87 @@ const APPS: DataFlowSpec = {
   ],
 };
 
+/** Names and hues the extended diagram's sources take, in turn, outward from the four it had, alternating sides. */
+const MORE_NAMES = [
+  'Calendar',
+  'Code',
+  'CRM',
+  'Files',
+  'Chat',
+  'Tickets',
+  'Sensors',
+  'Billing',
+  'Wiki',
+  'Design',
+  'Logs',
+  'HR',
+  'Maps',
+  'Photos',
+  'Notes',
+  'Tasks',
+  'Forms',
+  'Email',
+  'Analytics',
+  'Search',
+];
+const MORE_HUES = [
+  'teal',
+  'amber',
+  'violet',
+  'sky',
+  'pink',
+  'red',
+  'lime',
+  'emerald',
+  'indigo',
+  'rose',
+  'cyan',
+  'yellow',
+];
+
+/** How far each side extends: far enough past the view (about three times its width) to read as going on without end. */
+const REACH = { buckets: 9, blocks: 10 };
+
+const moreSources = (side: 0 | 1): SourceSpec[] =>
+  Array.from({ length: REACH.blocks }, (_, index) => {
+    const at = 2 * index + side;
+    return { id: `more-${at}`, label: MORE_NAMES[at % MORE_NAMES.length], hue: MORE_HUES[at % MORE_HUES.length] };
+  });
+
+/** Applications the bottom row's newcomers take, in turn, between the agents. */
+const MORE_APPS: readonly { label: string; app: AppKind }[] = [
+  { label: 'Notes', app: 'document' },
+  { label: 'Budget', app: 'spreadsheet' },
+  { label: 'Roadmap', app: 'kanban' },
+  { label: 'Inbox', app: 'list' },
+  { label: 'Team', app: 'messaging' },
+];
+
+/** The bottom row's newcomers, outward on one side: agents and applications in turn, agents numbered left to right. */
+const moreSinks = (side: -1 | 1): { label: string; app?: AppKind }[] =>
+  Array.from({ length: REACH.blocks }, (_, index) => {
+    const number = side < 0 ? REACH.blocks - index : REACH.blocks + index + 1;
+    return index % 2 === 0 ? { label: `Agent ${number}` } : MORE_APPS[(index + (side < 0 ? 0 : 2)) % MORE_APPS.length];
+  });
+
+/** ECHO extended past the view on both sides, while all that was there keeps its place; agents number left to right. */
+const EXTENDED: DataFlowSpec = {
+  ...APPS,
+  hub: { label: 'ECHO', partitions: 3 },
+  extend: {
+    left: {
+      buckets: REACH.buckets,
+      sources: moreSources(0),
+      sinks: moreSinks(-1),
+    },
+    right: {
+      buckets: REACH.buckets,
+      sources: moreSources(1),
+      sinks: moreSinks(1),
+    },
+  },
+};
+
 /**
  * The chapters of the story, in order: the one source for each chapter's own story and for the sequence that plays them
  * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
@@ -69,8 +150,8 @@ const CHAPTERS: readonly Scene[] = [
     stage: 'silos',
     duration: 20,
   },
-  // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then the two apps
-  // on the right give way to agents.
+  // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then extends past
+  // the view on both sides.
   {
     title: 'A shared ECHO',
     caption: 'The sources feed one ECHO space, and the apps sync from it.',
@@ -90,18 +171,12 @@ const CHAPTERS: readonly Scene[] = [
     duration: 20,
   },
   {
-    title: 'Apps and agents together',
-    caption: 'Applications and agents share the same partitioned ECHO space, side by side.',
-    spec: APPS,
+    title: 'Room to grow',
+    caption:
+      'ECHO extends past every edge: new spaces, apps, agents and sources join while all that was there runs on.',
+    spec: EXTENDED,
     options: { warmup: 16 },
     partitioned: true,
-    // The two apps on the right give way to agents, which fill from what ECHO syncs down to them.
-    sinks: [
-      { label: 'Docs', app: 'document' },
-      { label: 'Sheets', app: 'spreadsheet' },
-      { label: 'Agent 1' },
-      { label: 'Agent 2' },
-    ],
     stage: 'echo',
     duration: 24,
   },
@@ -128,8 +203,8 @@ export default meta;
 type Story = StoryObj<DataFlowViewProps>;
 
 const chapter = (index: number): Story => {
-  const { title, spec, options, revealed, partitioned, sinks } = CHAPTERS[index];
-  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned, sinks } };
+  const { title, spec, options, revealed, partitioned } = CHAPTERS[index];
+  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned } };
 };
 
 /**
@@ -155,8 +230,8 @@ export const Chapter3Echo: Story = chapter(2);
 /** The one ECHO space splits into three along the natural breaks in its lattice; molecules then land in the new spaces. */
 export const Chapter4Spaces: Story = chapter(3);
 
-/** Applications and agents side by side on the same partitioned ECHO space. */
-export const Chapter5Mixed: Story = chapter(4);
+/** ECHO extends past the view on both sides as new spaces, agents and sources fade in; nothing already there moves. */
+export const Chapter5Growth: Story = chapter(4);
 
 /**
  * Chapters 1 and 2 on one stage: the silos run, then the monolithic agent fades in over them and the camera widens.
@@ -165,6 +240,17 @@ export const Chapter5Mixed: Story = chapter(4);
  * 1. After 20 seconds (or the next control) the OAuth box, its grant lines, the container and the agent fade in.
  * 2. The silos' molecules keep flowing across the change; the agent then starts reading through OAuth.
  */
-export const Transition: Story = {
+export const TransitionOAuth: Story = {
   render: () => <DataFlowSequence scenes={CHAPTERS.slice(0, 2)} />,
+};
+
+/**
+ * Chapters 4 and 5 on one stage: ECHO, already split, extends past the view on both sides.
+ *
+ * Test:
+ * 1. Next stretches ECHO off both edges; its three buckets, the four sources and the four apps stay exactly in place.
+ * 2. New buckets fade in either side within ECHO, and new sources and agents fade in beyond the old ones.
+ */
+export const TransitionExtension: Story = {
+  render: () => <DataFlowSequence scenes={CHAPTERS.slice(3, 5)} />,
 };

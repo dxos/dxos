@@ -290,6 +290,9 @@ const SLOW_DECAY = 16;
 const TINT_DELAY = 1;
 const TINT_TIME = 1.5;
 
+/** Molecules tried when seeding a bucket a relayout adds, so it arrives part full. */
+const SEED_MOLECULES = 14;
+
 /** How much of a band (or bucket) the hub's aims reach across, centre-weighted: they thin out toward its walls. */
 const AIM_SPREAD = 0.8;
 
@@ -390,8 +393,10 @@ class Crystal {
     regions: readonly Rect[] | undefined,
     moves: ReadonlyMap<string, Hex>,
     checked: ReadonlySet<string> = new Set(),
+    grid: HexGrid = this.grid,
   ): { crystal: Crystal; displaced: string[] } {
-    const crystal = new Crystal(this.grid, this.#shape, regions);
+    // A new grid keeps every site's place relative to its origin, so a lattice on a moved grid moves with it.
+    const crystal = new Crystal(grid, this.#shape, regions);
     const byBody = new Map<string, { site: Hex; occupant: Occupant }[]>();
     for (const [key, occupant] of this.#sites) {
       const [q, r] = key.split(',').map(Number);
@@ -800,34 +805,157 @@ export class DataFlowSimulation {
   }
 
   /**
-   * Turns each sink whose kind differs in `sinks` (an application into an agent, or back) into its new kind, in place:
-   * what it held, and what is on its way to it, fades; it comes into view `delay` seconds from now and takes molecules
-   * only from then.
+   * Moves to `next`, a layout of the same diagram with sources or sinks added (at the end of their rows) or taken away,
+   * and its blocks moved: what sits in a block moves with it, the hub's docked clusters move by `hubPlan`, molecules on
+   * their way somewhere fade (their routes no longer hold), and each new sink or source starts taking part the number of
+   * seconds from now that `arrivals` gives for its id (at once if it gives none), as it comes into view. Each new bucket
+   * is seeded with a settled lattice of its own, so it arrives already holding data.
    */
-  convertSinks(sinks: readonly Block[], delay = 0): void {
-    sinks.forEach((sink, index) => {
-      const before = this.#layout.sinks[index];
-      if (!before || Boolean(before.app) === Boolean(sink.app)) {
-        return;
-      }
-      for (const body of this.#bodies) {
-        if (body.agent === index && (body.zone === 'sink' || body.zone === 'app')) {
-          if (body.phase === 'docked') {
-            this.#crystal(body.zone, index)?.release(body.id, body.sites ?? []);
+  relayout(
+    next: DataFlowLayout,
+    hubPlan: ReadonlyMap<string, { shift: Point; kept: boolean }>,
+    arrivals: ReadonlyMap<string, number> = new Map(),
+  ): void {
+    const before = this.#layout;
+    const sourceShift = (index: number) =>
+      next.sources[index] && before.sources[index]
+        ? { x: next.sources[index].frame.x - before.sources[index].frame.x, y: 0 }
+        : undefined;
+    const sinkShift = (index: number) =>
+      next.sinks[index] && before.sinks[index]
+        ? {
+            x: next.sinks[index].frame.x - before.sinks[index].frame.x,
+            y: next.sinks[index].frame.y - before.sinks[index].frame.y,
           }
-          this.#releaseAll(body);
-          body.sites = undefined;
-          body.phase = 'leaving';
-          body.age = 0;
-          body.route = [];
-        }
+        : undefined;
+    const { spacing } = before.hubGrid;
+    const row = (spacing * Math.sqrt(3)) / 2;
+    const moves = new Map<string, Hex>();
+    for (const body of this.#bodies) {
+      if (body.phase === 'leaving') {
+        continue;
       }
-      this.#sinks[index] = sink.app ? undefined : new Crystal(this.#layout.sinkGrids[index], 'blob');
-      const slots = appSlots(sink);
-      this.#apps[index] = { slots, items: slots.map(() => undefined), reserved: new Set<number>() };
-      this.#agentSince[index] = this.#time + delay;
+      const gone =
+        body.phase === 'travelling' ||
+        next.sources[body.source] === undefined ||
+        ((body.zone === 'sink' || body.zone === 'app') && next.sinks[body.agent ?? 0] === undefined);
+      if (gone) {
+        this.#abandon(body);
+        continue;
+      }
+      const shift =
+        body.zone === 'hub'
+          ? hubPlan.get(body.id)
+          : { shift: body.zone === 'source' ? sourceShift(body.source) : sinkShift(body.agent ?? 0), kept: true };
+      if (!shift?.shift) {
+        continue;
+      }
+      if (!shift.kept) {
+        this.#evict(body);
+        continue;
+      }
+      body.position = { x: body.position.x + shift.shift.x, y: body.position.y + shift.shift.y };
+      if (body.zone === 'hub') {
+        const r = Math.round(shift.shift.y / row);
+        const step = { q: Math.round(shift.shift.x / spacing - r / 2), r };
+        moves.set(body.id, step);
+        body.sites = body.sites?.map((site) => ({ q: site.q + step.q, r: site.r + step.r }));
+      }
+    }
+    this.#hub = this.#hub.rebuilt(
+      next.hub.buckets && regionsOf(next.hub.buckets),
+      moves,
+      new Set(),
+      next.hubGrid,
+    ).crystal;
+    this.#sinks = next.sinks.map((sink, index) => {
+      const crystal = index < before.sinks.length ? this.#sinks[index] : undefined;
+      if (sink.app) {
+        return undefined;
+      }
+      return crystal
+        ? crystal.rebuilt(undefined, new Map(), new Set(), next.sinkGrids[index]).crystal
+        : new Crystal(next.sinkGrids[index], 'blob');
     });
-    this.#layout = { ...this.#layout, sinks: [...sinks] };
+    this.#apps = next.sinks.map((sink, index) => {
+      const slots = appSlots(sink);
+      const items = index < before.sinks.length ? this.#apps[index].items : slots.map(() => undefined);
+      return { slots, items: slots.map((_, slot) => items[slot]), reserved: new Set<number>() };
+    });
+    next.sinks.forEach((sink, index) => {
+      if (index >= before.sinks.length) {
+        this.#agentSince[index] = this.#time + (arrivals.get(sink.id) ?? 0);
+      }
+    });
+    this.#agentSince.length = next.sinks.length;
+    this.#agents = Math.max(Math.min(this.#agents, next.sinks.length), next.sinks.length);
+    next.sources.forEach((source, index) => {
+      if (index >= before.sources.length) {
+        this.#homes[index] = new Map();
+        this.#nextSpawn[index] = this.#time + (arrivals.get(source.id) ?? 0) + this.#random() * this.#options.interval;
+      }
+    });
+    this.#homes.length = next.sources.length;
+    this.#nextSpawn.length = next.sources.length;
+    this.#layout = next;
+    (next.hub.buckets ?? []).slice(before.hub.buckets?.length ?? 1).forEach((bucket) => this.#seed(bucket));
+  }
+
+  /** Fills `bucket` part way with settled molecules, as if it had been taking them in for a while. */
+  #seed(bucket: Rect): void {
+    const { spacing } = this.#layout.hubGrid;
+    for (let attempt = 0; attempt < SEED_MOLECULES; attempt++) {
+      const molecule = generateMolecule(this.#random);
+      const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
+      const aim = {
+        x: bucket.x + bucket.width * (0.5 + spread / 2),
+        y: bucket.y + bucket.height / 2 + (this.#random() - 0.5) * spacing * 4,
+      };
+      const placement = this.#hub.place(molecule, aim, this.#random);
+      if (!placement) {
+        continue;
+      }
+      const serial = this.#serial++;
+      const id = `m${serial}`;
+      this.#hub.occupy(id, placement);
+      const [root] = placement.sites;
+      const atoms = placement.sites.map((site) => hexSubtract(site, root));
+      const offsets = atoms.map((atom) => hexToPoint(atom, spacing));
+      const source = Math.floor(this.#random() * this.#layout.sources.length);
+      const body = this.#body({
+        id,
+        serial,
+        molecule: { ...molecule, atoms },
+        hue: this.#layout.sources[source].hue,
+        source,
+        zone: 'hub',
+        phase: 'docked',
+        position: this.#hub.position(root),
+      });
+      body.sites = placement.sites;
+      body.offsets = offsets;
+      body.from = offsets;
+      body.to = offsets;
+      body.tint = 1;
+      body.age = between(this.#random, 0, this.#options.hubLifetime / 2);
+      this.#bodies.push(body);
+    }
+  }
+
+  /** Lets go of a molecule on its way, or one whose block is gone: it frees what it held and fades where it is. */
+  #abandon(body: Body): void {
+    if (body.sites && (body.zone === 'hub' || body.zone === 'sink')) {
+      this.#crystal(body.zone, body.agent)?.release(body.id, body.sites);
+    }
+    if (body.zone === 'app' && body.slot !== undefined) {
+      this.#apps[body.agent ?? 0]?.reserved.delete(body.slot);
+    }
+    this.#leaveHome(body);
+    this.#releaseAll(body);
+    body.sites = undefined;
+    body.phase = 'leaving';
+    body.age = 0;
+    body.route = [];
   }
 
   /** Merges a split hub back into `hub`'s one region; every molecule stays where it is, which that region holds. */
