@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AccountCache,
   AppGraphBuilder,
+  BootGate,
   Client,
   ClientServices,
   Commands,
@@ -32,6 +33,7 @@ export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(met
   .pipe(
     Plugin.addModule(AccountCache),
     Plugin.addModule(AppGraphBuilder),
+    Plugin.addModule(BootGate),
     Plugin.addModule(Client),
     Plugin.addModule(ClientServices),
     Plugin.addModule(Commands),

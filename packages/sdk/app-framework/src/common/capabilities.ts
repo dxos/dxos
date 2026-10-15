@@ -65,6 +65,28 @@ export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
  */
 export const ReactRoot = Capability$.make<ReactRoot>()('org.dxos.app-framework.capability.reactRoot');
 
+/** What a {@link BootGate} asks of the boot loader. */
+export type BootGateState = Readonly<{
+  /** Keeps the boot loader up, past startup, until it turns false. */
+  pending: boolean;
+  /** The line the loader shows while this gate holds it. */
+  status?: string;
+  /** Fraction (0 to 1) for the loader's ring while this gate holds it; absent while unknown. */
+  progress?: number;
+}>;
+
+/**
+ * Holds the boot loader up past startup while the host does work that leaves the app with nothing
+ * to show, such as a database rebuild after an upgrade. The loader dismisses once no gate is pending;
+ * a gate decides before then, since a dismissed loader does not come back.
+ */
+export type BootGate = Readonly<{ id: string; state: Atom.Atom<BootGateState> }>;
+
+/**
+ * @category Capability
+ */
+export const BootGate = Capability$.make<BootGate>()('org.dxos.app-framework.capability.bootGate');
+
 /**
  * Surface definitions that can be either React components or Web Components.
  */

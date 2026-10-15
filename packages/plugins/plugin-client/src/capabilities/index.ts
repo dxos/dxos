@@ -44,6 +44,18 @@ export const HubHttpClient = Capability.lazyModule(
   },
   () => import('./hub-http-client.ts'),
 );
+export const BootGate = Capability.lazyModule(
+  'BootGate',
+  {
+    // Must be contributed before startup completes: the boot loader dismisses once it does.
+    activatesOn: ActivationEvents.Startup,
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [Capabilities.BootGate],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./boot-gate.ts'),
+);
+
 export const Client = Capability.lazyModule(
   'Client',
   {

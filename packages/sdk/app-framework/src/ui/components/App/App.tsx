@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Capabilities } from '../../../common/index.ts';
@@ -26,7 +28,14 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
   const sortedContexts = useMemo(() => topologicalSort(reactContexts), [reactContexts]);
-  const stage = useLoading(ready, debounce);
+  const gates = useCapabilities(Capabilities.BootGate);
+  const heldAtom = useMemo(
+    () => Atom.make((get) => gates.map((gate) => get(gate.state)).find((state) => state.pending)),
+    [gates],
+  );
+  // A pending gate keeps the loader up past startup, showing the gate's own status and progress.
+  const held = useAtomValue(heldAtom);
+  const stage = useLoading(ready && !held, debounce);
   const placeholderDismissed = stage >= LoadingState.Done;
   // The shell mounts a tick EARLIER than the dismissal, at the same stage that starts the loader's
   // outro: the loader is still on screen (z-index 10) and fading, so the real UI paints beneath it
@@ -51,7 +60,9 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     }
 
     const fraction = progress?.progress ?? 0;
-    bootLoader?.progress(0.5 + fraction * 0.5);
+    if (!held) {
+      bootLoader?.progress(0.5 + fraction * 0.5);
+    }
     if (progress?.pluginSlug) {
       // Optional call — see the note on `plugins?.(...)` in `useApp`.
       bootLoader?.activated?.(progress.pluginSlug);
@@ -76,6 +87,7 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     });
   }, [
     stage,
+    held,
     progress?.progress,
     progress?.event,
     progress?.module,
@@ -84,6 +96,18 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     progress?.pluginSlug,
     verboseStatus,
   ]);
+
+  useEffect(() => {
+    if (!held || stage >= LoadingState.FadeOut) {
+      return;
+    }
+    if (held.status) {
+      bootLoader?.status({ humanized: held.status });
+    }
+    if (held.progress !== undefined) {
+      bootLoader?.progress(held.progress);
+    }
+  }, [held, stage]);
 
   // Hand off at fade-out: play the loader's graceful shrink-and-fade outro.
   // `useLayoutEffect` runs before the next paint so the outro begins in the
