@@ -765,6 +765,8 @@ export class DataFlowSimulation {
   #bodies: Body[] = [];
   #time = 0;
   #serial = 0;
+  /** Most molecules the hub holds: the option's figure, scaled up as a relayout adds buckets, so new ones crowd none out. */
+  #hubCapacity = 0;
   /** When each source a relayout added came into play, by source; the first sources have none. */
   readonly #sourceSince: (number | undefined)[] = [];
 
@@ -907,6 +909,12 @@ export class DataFlowSimulation {
     this.#sourceSince.length = next.sources.length;
     this.#nextSpawn.length = next.sources.length;
     this.#layout = next;
+    const added = (next.hub.buckets?.length ?? 1) - (before.hub.buckets?.length ?? 1);
+    if (added > 0) {
+      this.#hubCapacity = Math.round(
+        (this.#hubCapacity * (next.hub.buckets?.length ?? 1)) / (before.hub.buckets?.length ?? 1),
+      );
+    }
     (next.hub.buckets ?? []).slice(before.hub.buckets?.length ?? 1).forEach((bucket) => this.#seed(bucket));
   }
 
@@ -1005,6 +1013,7 @@ export class DataFlowSimulation {
   ) {
     this.#layout = layout;
     this.#options = { ...DEFAULTS, ...options };
+    this.#hubCapacity = this.#options.hubCapacity;
     this.#spawnAgents = spawnAgents;
     this.#subset = subset ?? ((body) => body.serial % 3 === 0);
     this.#random = createRandom(seed);
@@ -1501,7 +1510,7 @@ export class DataFlowSimulation {
     }
     if (zone === 'hub') {
       const held = this.#bodies.filter((other) => other.zone === 'hub' && other.phase !== 'leaving');
-      if (held.length >= this.#options.hubCapacity) {
+      if (held.length >= this.#hubCapacity) {
         this.#evictEdge('hub');
       }
     }

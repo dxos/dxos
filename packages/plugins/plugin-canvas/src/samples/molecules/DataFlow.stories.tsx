@@ -71,20 +71,8 @@ const MORE_NAMES = [
   'Analytics',
   'Search',
 ];
-const MORE_HUES = [
-  'teal',
-  'amber',
-  'violet',
-  'sky',
-  'pink',
-  'red',
-  'lime',
-  'emerald',
-  'indigo',
-  'rose',
-  'cyan',
-  'yellow',
-];
+// Only hues the diagram has a colour for: any other would draw its source gray.
+const MORE_HUES = ['teal', 'amber', 'violet', 'sky', 'red', 'orange', 'green', 'blue', 'fuchsia'];
 
 /** How far each side extends: far enough past the view (about three times its width) to read as going on without end. */
 const REACH = { buckets: 9, blocks: 10 };
