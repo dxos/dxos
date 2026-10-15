@@ -365,6 +365,40 @@ describe('deus CLI native back ends', () => {
     },
   );
 
+  test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
+    'builds the deus CLI natively, which writes the same codebase',
+    { timeout: 400_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'cli-source')];
+      deus('init', '--empty', ...c);
+      expect(deus('add', join(root, 'deus'), ...c).code).toBe(0);
+      const native = join(scratch, 'deus-native');
+      expect(deus('build', 'Cli.main', '-o', native, '--c', ...c).code).toBe(0);
+      const target = ['--codebase', join(scratch, 'cli-target')];
+      const run = (...args: string[]) =>
+        spawnSync(native, args, { encoding: 'utf8', env: { ...process.env, DEUS_HOME: root } });
+      expect(run('init', '--empty', ...target).status).toBe(0);
+      const added = run(
+        'add',
+        join(root, 'examples/structural.deus'),
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        ...target,
+      );
+      expect(added.status).toBe(0);
+      expect(deus('view', 'Structural.structural', ...target).stdout).toBe(
+        run('view', 'Structural.structural', ...target).stdout,
+      );
+      expect(deus('test', ...target).stdout).toContain('1 passed');
+      // Evaluating needs a kernel, so it is a defect the CLI reports.
+      const evaluated = run('eval', '1 + 1', ...target);
+      expect([evaluated.status, evaluated.stderr]).toEqual([
+        70,
+        'defect: Code.has needs a kernel, which a native build does not have\n',
+      ]);
+    },
+  );
+
   test(
     'serves web handlers from a standalone native server',
     { timeout: 240_000 },

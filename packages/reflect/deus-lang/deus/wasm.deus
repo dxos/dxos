@@ -69,6 +69,8 @@ structure Scope @"urn:deus:wasm:Scope" where
   -- Each definition by its hash, with its index: lookups at every call stay constant time on large programs.
   byHash : Dict Text (Int, Fn)
   datatypes : List (Text, Sexp)
+  -- Each data type's object by its hash and by its IRI, for `typeObject`.
+  typeTable : Dict Text Sexp
   typed : Ref (List (Int, Sexp))
   eqs : Ref (List Sexp)
 
@@ -147,13 +149,16 @@ def typeArgs (t : Sexp) : List Sexp :=
   | _ => []
 
 /-- The `(type …)` object a constructor names by hash, or a signature names by IRI. -/
-def typeObject (scope : Scope) (t : Text) : Option Sexp :=
-  match List.lookup t scope.datatypes with
-  | some form => some form
-  | none => List.find (fun form =>
-      match form with
-      | Sexp.list (Sexp.sym "type" :: Sexp.str iri :: _) => iri == t
-      | _ => false) (List.map snd scope.datatypes)
+def typeObject (scope : Scope) (t : Text) : Option Sexp := Dict.lookup t scope.typeTable
+
+/-- `datatypes` by hash, then by IRI where no hash is that IRI, as `typeObject` finds them. -/
+def typeTable (datatypes : List (Text, Sexp)) : Dict Text Sexp :=
+  let byIri := List.filterMap (fun pair =>
+    match snd pair with
+    | Sexp.list (Sexp.sym "type" :: Sexp.str iri :: _) => some (iri, snd pair)
+    | _ => none) datatypes
+  -- Dict.fromList keeps the last of a repeated key, so hashes go last and the first IRI match goes after the rest.
+  Dict.fromList (List.reverse byIri ++ List.reverse datatypes)
 
 /-- A type object's constructors, each as its field types. -/
 def ctorFields (form : Sexp) : List (List Sexp) :=
@@ -582,10 +587,11 @@ def allocBody : List Int :=
 def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
   let eqs := Ref.new []
   let table := fnTable fns
+  let types := typeTable datatypes
   let codes := List.map (fun f =>
     let next := Ref.new f.fnArity
     let env := List.reverse (List.range 0 f.fnArity)
-    let scope := Scope.mk fns table datatypes (Ref.new (List.mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType)))) eqs
+    let scope := Scope.mk fns table datatypes types (Ref.new (List.mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType)))) eqs
     let code := expr scope env next true f.fnBody ++ [11]
     let extra := Ref.get next - f.fnArity
     let locals := if extra == 0 then vec [] else vec [uleb extra ++ [i32]]
@@ -594,7 +600,7 @@ def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Th
   let alloc := List.length fns
   let allocEntry := vec [[2, i32]] ++ allocBody
   -- Generating one equality function can register another (a field's type), so this runs to a fixpoint.
-  let eqScope := Scope.mk fns table datatypes (Ref.new []) eqs
+  let eqScope := Scope.mk fns table datatypes types (Ref.new []) eqs
   let rec equalities j acc :=
     match List.get? (Ref.get eqs) j with
     | some t =>

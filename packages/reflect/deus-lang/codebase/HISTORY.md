@@ -1,5 +1,20 @@
 # History of main
 
+- `43960758c9` update deus (by merge)
+- `f5c027e993` history: import 965 changes
+- `b0b3676338` history: import 962 changes
+- `06f545459b` task: import from /tmp/tmp60xajc8g/tasks.sexp
+- `adef1a6c15` add /tmp/tmp60xajc8g/merged/code /tmp/tmp60xajc8g/merged/specs
+- `bf1d51f864` update deus (by merge)
+- `c562dd221e` history: import 955 changes
+- `f9a2c9e537` history: import 940 changes
+- `06284d784b` task: import from /tmp/tmpsro5r533/tasks.sexp
+- `34d0771186` add /tmp/tmpsro5r533/merged/code /tmp/tmpsro5r533/merged/specs
+- `ada6a4b8ce` Rehash after wasm.deus (D140) (by claude)
+- `faad5a9a36` Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140) (by claude)
+- `18f95dee7d` history: import 935 changes
+- `83a11b24ed` task: import from codebase/tasks.sexp
+- `54dde71085` add codebase/code codebase/specs
 - `c9036732bc` task: open 53e409cd deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (by claude)
 - `7ef98a03c9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law.deus (by claude)
 - `5cdd38255e` delete Cli.MdlFacts.declared (by claude)

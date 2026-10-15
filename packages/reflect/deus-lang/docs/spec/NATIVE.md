@@ -309,8 +309,15 @@ writes `seed/deus.image` byte for byte from `deus/`, ending with 0 live words.
 The JIT's first two rows include about 450 ms of start-up. Two fixes made the toolchain buildable:
 the C back end now finds definitions by hash in a table instead of a list, which took the
 parser's build from 7 s to 2 s, and a call that returns a function and is applied again no longer
-loops between two rewrites. The rest of `Cli.main` still stops at `Code.run`, which needs an
-evaluator in the runtime.
+loops between two rewrites.
+
+The whole CLI, `Cli.main`, builds too ([D140](../DECISIONS.md)). A native build has no kernel to
+load or run Core, so `Code.load`, `Code.run` and the other `Code.*` primitives raise a defect that
+names the primitive, and the CLI's boundaries report it: `eval`, `run` and `test` exit with status
+70, while the commands that read and write the codebase work. The native `deus add` of the whole
+export takes 1.2 s against 10.8 s on the JIT and writes the same store, byte for byte. Building it
+takes about 95 s: 17 s to write 6.3 MB of C (129 s before data types were found in a table too) and
+70 s for `cc -O2`.
 
 ## Benchmarks
 

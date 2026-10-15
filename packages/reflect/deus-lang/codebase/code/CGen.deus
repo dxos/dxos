@@ -174,7 +174,7 @@ def CGen.effBind (xs : List Sexp) (body : Sexp) : Sexp :=
 /-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` has it. -/
 def CGen.effCallAborts (aborts : Map Text Bool) (h : Sexp) : Bool :=
   match h with
-  | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) => p == "defect"
+  | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) => raisesDefect p
   | Sexp.list (Sexp.sym "con" :: _) => false
   | Sexp.list (Sexp.sym "ref" :: Sexp.str r :: []) => Map.contains r aborts
   | _ => true
@@ -192,7 +192,7 @@ def CGen.effCalls (e : Sexp) : (Bool, List Text) :=
       match all (h :: xs) with
       | (d, cs) =>
           match h with
-          | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) => (d || p == "defect", cs)
+          | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) => (d || raisesDefect p, cs)
           | Sexp.list (Sexp.sym "con" :: _) => (d, cs)
           | Sexp.list (Sexp.sym "ref" :: Sexp.str r :: []) => (d, r :: cs)
           | _ => (true, cs)
@@ -278,6 +278,13 @@ def CGen.effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
         0
         (effHost "#Defect" 0)
         [CGen.effLower abilities x]
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: rest) =>
+      -- A native program has no kernel to load or run Core, so `Code.*` raises a defect a handler may report (D140).
+      if startsWith "Code." p then effPerform
+        (findIndex (fun a => a == "#Defect") abilities)
+        0
+        (effHost "#Defect" 0)
+        [Sexp.list [Sexp.sym "text", Sexp.str (p ++ " needs a kernel, which a native build does not have")]] else Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: List.map (CGen.effLower abilities) rest)
   | Sexp.list (Sexp.sym "op" :: _ :: _ :: Sexp.int k :: []) => CGen.effLower abilities (eLams
       k
       (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => CGen.var (k - 1 - j)) (range 0 k))))
@@ -605,6 +612,7 @@ def CGen.lambdaClosure (ctx : FnCtx) (env : List Int) (owned : List Int) (b : Se
       (ctx.cScope).fns
       (ctx.cScope).byHash
       (ctx.cScope).datatypes
+      (ctx.cScope).typeTable
       (Ref.new typed)
       (ctx.cScope).eqs
     let inner := FnCtx.mk scope (-1) 2 (Ref.new (2 + List.length free)) ctx.cBorrow ctx.cLifted
@@ -916,6 +924,9 @@ def CGen.primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Op
             | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
       | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
 
+/-- Whether primitive `p` raises a defect in native code: `defect`, and `Code.*`, which needs a kernel (D140). -/
+def CGen.raisesDefect (p : Text) : Bool := p == "defect" || startsWith "Code." p
+
 def CGen.registerStruct (scope : Wasm.Scope) (t : Sexp) : Int :=
   let known := Ref.get scope.eqs
   Ref.set scope.eqs (known ++ [t])
@@ -1073,7 +1084,8 @@ def CGen.showable (t : Sexp) : Bool :=
 /-- The name the kernels show for constructor `tag` of the data type `n`: its type's first 8 characters and the tag. -/
 def CGen.shownName (scope : Wasm.Scope) (n : Text) (tag : Int) : Text :=
   let key := if isSome (List.lookup n scope.datatypes) then n else
-    match List.find (fun entry => typeObject scope n == Option.some (snd entry)) scope.datatypes with
+    let form := typeObject scope n
+    match List.find (fun entry => form == Option.some (snd entry)) scope.datatypes with
     | Option.some entry => fst entry
     | Option.none => n
   Text.take 8 key ++ "#" ++ toText tag
@@ -1156,6 +1168,7 @@ def CGen.uncounted (t : Sexp) : Bool := isScalar t || t == tref "#Unit"
 /-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
 def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
   let table := fnTable fns
+  let types := Wasm.typeTable datatypes
   let borrow := inferBorrow fns table
   let lifted := Ref.new []
   let structs := Ref.new []
@@ -1165,6 +1178,7 @@ def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
       fns
       table
       datatypes
+      types
       (Ref.new (mapIndexed (fun j t => (j, t)) (fst (peel f.fnArity f.fnType))))
       structs
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
@@ -1204,7 +1218,7 @@ def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let nullary := foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
   let codes := Ref.get lifted
   let codeDecls := mapIndexed (fun k _ => "static V c" ++ toText k ++ "(V, V);") codes
-  let comparisons := structFunctions (Wasm.Scope.mk fns table datatypes (Ref.new []) structs) 0 []
+  let comparisons := structFunctions (Wasm.Scope.mk fns table datatypes types (Ref.new []) structs) 0 []
   let comparisonDecls := mapIndexed
     (fun k t => if head t == "show" then "static V deus_show" ++ toText k ++ "(V, V);" else "static V deus_eq" ++ toText k ++ "(V, V); static V deus_cmp" ++ toText k ++ "(V, V);")
     (Ref.get structs)
@@ -1214,7 +1228,7 @@ def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
 /-- Whether `e` raises a defect with the `defect` primitive. -/
 def CGen.usesDefect (e : Sexp) : Bool :=
   match e with
-  | Sexp.list (Sexp.sym "prim" :: Sexp.str "defect" :: []) => true
+  | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) => raisesDefect p
   | Sexp.list items => any CGen.usesDefect items
   | _ => false
 
