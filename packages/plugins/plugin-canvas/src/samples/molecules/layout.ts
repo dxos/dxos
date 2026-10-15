@@ -523,14 +523,14 @@ export const baseOf = (block: Block): Rect => ({
  * fits, selects and pans by. The overlay draws every container itself (base, frame, label and well), since the canvas's
  * shapes offer only one corner radius and the base, frame and well need concentric ones.
  */
-export const createDataFlowScene = (layout: DataFlowLayout): Scene => {
-  const blocks = [
-    ...(layout.monolith ? [layout.monolith.group] : []),
-    ...layout.sources,
-    ...(layout.monolith ? [layout.monolith.feed] : []),
-    layout.hub,
-    ...layout.sinks,
-  ].filter((block) => !block.hidden && (!layout.focus || block === layout.hub));
+export const createDataFlowScene = (layout: DataFlowLayout, revealed = true): Scene => {
+  // Before the monolithic agent is revealed, its blocks are left out, so the camera frames only the silos.
+  const monolith = layout.monolith && revealed ? [layout.monolith.group] : [];
+  const feed = layout.monolith && revealed ? [layout.monolith.feed] : [];
+  const hub = layout.monolith && !revealed ? [] : [layout.hub];
+  const blocks = [...monolith, ...layout.sources, ...feed, ...hub, ...layout.sinks].filter(
+    (block) => !block.hidden && (!layout.focus || block === layout.hub),
+  );
   const keys = initialKeys(blocks.length);
   const nodes: Record<string, Node> = {};
   blocks.forEach((block, index) => {

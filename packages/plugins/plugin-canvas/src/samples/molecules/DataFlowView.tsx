@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import {
   type BackgroundGrid,
@@ -49,6 +50,11 @@ export type DataFlowViewProps = {
   theme?: string;
   /** The grid over the theme's background, in place of its own; the theme bar changes it from there. */
   grid?: BackgroundGrid;
+  /**
+   * For a monolithic layout, whether its agent is in the picture: off, only the silos show and the agent reads nothing;
+   * turned on, its parts fade in, it starts reading, and the camera widens to take it in.
+   */
+  revealed?: boolean;
 };
 
 /**
@@ -62,13 +68,24 @@ export const DataFlowView = ({
   molecules = true,
   theme: chosenTheme,
   grid: initialGrid,
+  revealed = true,
 }: DataFlowViewProps) => {
   // With no theme chosen, the diagram follows the app's light or dark mode: paper by day, the glow by night.
   const { themeMode } = useThemeContext();
   const initialTheme = chosenTheme ?? (themeMode === 'light' ? 'paper' : 'glass-night');
   const layout = useMemo(() => layoutDataFlow(spec), [spec]);
-  const store = useMemo(() => createMemoryStore([createDataFlowScene(layout)]), [layout]);
+  const registry = useContext(RegistryContext);
+  // Created per layout, not per reveal: a new store would reset the view; the reveal rewrites its one scene instead.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const store = useMemo(() => createMemoryStore([createDataFlowScene(layout, revealed)]), [layout]);
+  useLayoutEffect(() => {
+    const scene = createDataFlowScene(layout, revealed);
+    registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
+  }, [registry, store, layout, revealed]);
   const simulation = useMemo(() => new DataFlowSimulation(layout, options), [layout, options]);
+  useLayoutEffect(() => {
+    simulation.agentReads = revealed;
+  }, [simulation, revealed]);
   const [theme, setTheme] = useState<string | undefined>(initialTheme);
   useEffect(() => setTheme(initialTheme), [initialTheme]);
   const [grid, setGrid] = useState(initialGrid);
@@ -85,6 +102,7 @@ export const DataFlowView = ({
       readonly
       theme={theme}
       backgroundGrid={grid}
+      refitKey={revealed ? 'revealed' : 'hidden'}
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
@@ -98,6 +116,7 @@ export const DataFlowView = ({
             molecules={molecules}
             look={overlayLook}
             tone={look.theme.mode ?? 'dark'}
+            revealed={revealed}
           />
         }
       />

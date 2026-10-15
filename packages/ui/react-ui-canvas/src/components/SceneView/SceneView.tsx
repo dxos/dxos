@@ -225,9 +225,14 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   onInspectorsChange?: (mode: InspectorMode) => void;
   /** The themes offered, and the style sets and backgrounds they name; the built-ins by default. */
   themes?: ThemeRegistry;
+  /**
+   * Changing it asks fit mode to animate to the scene's frame as it now stands: an edit never refits by itself, so a
+   * host that grows or reveals content on purpose says so with a new value.
+   */
+  refitKey?: string | number;
   /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
   theme?: string;
-  /** The theme drawn when `theme` is unset; classic when this is unset too or unknown. */
+  /** The theme drawn when `theme` is unset; flat when this is unset too or unknown. */
   defaultTheme?: string;
   /** Overrides the theme's style set. */
   styleSet?: string;
@@ -267,6 +272,7 @@ const SceneViewRoot = ({
   styleSet,
   background,
   backgroundGrid,
+  refitKey,
   onThemeChange,
   onBackgroundGridChange,
   children,
@@ -423,7 +429,7 @@ const SceneViewRoot = ({
   // animates to the new fit once the view has stopped changing size for `FIT_DEBOUNCE_MS`.
   // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
   // camera holds still under someone editing.
-  const fitKey = `${viewport.width}x${viewport.height}`;
+  const fitKey = `${viewport.width}x${viewport.height}:${refitKey ?? ''}`;
   const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
   useLayoutEffect(() => {
     if (fitting && measured && !fittedRef.current) {
@@ -431,10 +437,10 @@ const SceneViewRoot = ({
       // before the observer reports it, and fitting the stale size would animate a refit straight after load.
       const element = rootRef.current;
       const size = element ? { width: element.clientWidth, height: element.clientHeight } : viewport;
-      fittedRef.current = { scene: sceneId, key: `${size.width}x${size.height}` };
+      fittedRef.current = { scene: sceneId, key: `${size.width}x${size.height}:${refitKey ?? ''}` };
       setCamera(fitBounds(fitTarget, size, inset, NOMINAL_ZOOM));
     }
-  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId]);
+  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, refitKey]);
   // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
   // would restart the debounce before it fires. The latest helpers and frame are read when it does.
   const fitLatestRef = useRef({

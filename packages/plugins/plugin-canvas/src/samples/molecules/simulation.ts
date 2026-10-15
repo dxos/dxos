@@ -697,6 +697,9 @@ export class DataFlowSimulation {
   #time = 0;
   #serial = 0;
 
+  /** Whether the monolithic agent reads the sources; off, it is not yet in the picture and takes nothing. */
+  agentReads = true;
+
   constructor(
     layout: DataFlowLayout,
     { seed, subset, spawnAgents, prefill, warmup = 0, ...options }: SimulationOptions = {},
@@ -1089,7 +1092,7 @@ export class DataFlowSimulation {
   /** Sends a formed molecule down its source's channel to its place on the hub lattice. */
   #depart(body: Body): void {
     // The monolithic agent reads every source: about half of what forms also rises, as a copy, into it.
-    if (this.#layout.monolith && !body.read && this.#random() < AGENT_READS) {
+    if (this.#layout.monolith && this.agentReads && !body.read && this.#random() < AGENT_READS) {
       body.read = true;
       this.#readUp(body);
     }

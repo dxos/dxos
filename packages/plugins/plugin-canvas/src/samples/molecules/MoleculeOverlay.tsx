@@ -96,8 +96,7 @@ const DepthDefs = ({ raised, inset }: { raised: string; inset: string }) => (
 
 /**
  * How containers, channels and app content are drawn: one of the canvas's built-in style sets, so the sample and the
- * canvas name their looks alike. `classic`, raised gray frames on darker bases with white, inset wells and shaded tubes;
- * `flat`, cards with hairline borders and solid channels; `outline`, line art with no fills and channels as rails;
+ * canvas name their looks alike. `flat`, cards with hairline borders and solid channels; `outline`, line art with no fills and channels as rails;
  * `glass`, translucent frosted cards and channels.
  */
 export type Look = (typeof STYLE_SET_IDS)[number];
@@ -122,7 +121,7 @@ type Palette = {
   wellStroke?: string;
   /** Whether the well takes the inner shadow. */
   inset: boolean;
-  channel: 'tube' | 'solid' | 'rails' | 'glass';
+  channel: 'solid' | 'rails' | 'glass';
   /** The colour a settled hub molecule (and its bonds) fades to: neutral, yet still clear of the background. */
   molecule: string;
   /** App content: settled content, title and header bars, faint bars, empty soft slots, empty outlined slots, outlines. */
@@ -135,24 +134,6 @@ type Palette = {
 };
 
 const DARK_PALETTES: Record<Look, Palette> = {
-  classic: {
-    base: 'fill-neutral-500',
-    frame: 'fill-neutral-300',
-    raised: true,
-    group: 'fill-neutral-400',
-    label: 'fill-neutral-fg',
-    grant: 'stroke-white/20',
-    well: 'fill-white',
-    inset: true,
-    channel: 'tube',
-    molecule: 'fill-neutral-300 stroke-neutral-300',
-    settled: 'fill-neutral-400',
-    decor: 'fill-neutral-400',
-    faint: 'fill-neutral-200',
-    empty: 'fill-neutral-100',
-    emptyStroke: 'fill-none stroke-neutral-200',
-    outline: 'fill-none stroke-neutral-300',
-  },
   flat: {
     frame: 'fill-neutral-800',
     frameStroke: 'stroke-neutral-700',
@@ -213,7 +194,6 @@ const DARK_PALETTES: Record<Look, Palette> = {
 
 /** The looks retuned for a light background such as paper: dark labels, mid-gray content, dark hairlines. */
 const LIGHT_PALETTES: Record<Look, Palette> = {
-  classic: DARK_PALETTES.classic,
   flat: {
     frame: 'fill-neutral-100',
     frameStroke: 'stroke-neutral-300',
@@ -285,7 +265,7 @@ export type Grid = BackgroundGrid;
 export const GRIDS: readonly Grid[] = ['dots', 'lines', 'none'];
 
 /** The palette the overlay draws with. */
-const LookContext = createContext<Palette>(DARK_PALETTES.classic);
+const LookContext = createContext<Palette>(DARK_PALETTES.glass);
 
 /** Whether `point` lies on or within `rect`, give or take a pixel. */
 const touches = (point: { x: number; y: number }, rect: Block['frame']) =>
@@ -322,6 +302,9 @@ const BlockOutline = ({ rect, round, radius }: { rect: Block['frame']; round?: b
   ) : (
     <rect {...rect} rx={radius} fill='black' />
   );
+
+/** Milliseconds the monolithic agent's parts take to fade in or out as it is revealed or hidden. */
+const REVEAL_MS = 1200;
 
 /** Rise above the bases to the lowest grant line, the gap between stacked lines, and the spread of their starts. */
 const GRANT_RISE = 40;
@@ -383,12 +366,11 @@ const channelPoints = ({ from, to, width }: Channel): string => {
 };
 
 /**
- * The channel in its hue, per the look: a shaded tube (washed with white so it reads lighter than the molecules on it),
- * a solid muted strip, a pair of rails, or a translucent glass strip with fine edges.
+ * The channel in its hue, per the look: a solid muted strip, a pair of rails, or a translucent glass strip with fine
+ * edges.
  */
 const ChannelShape = ({ channel }: { channel: Channel }) => {
   const palette = useContext(LookContext);
-  const id = `${useContext(DepthContext).raised}-${channel.id}`;
   const { from, to, width } = channel;
   const hue = hueLine(channel.hue);
   const length = Math.hypot(to.x - from.x, to.y - from.y);
@@ -415,30 +397,6 @@ const ChannelShape = ({ channel }: { channel: Channel }) => {
         <g strokeWidth={1}>
           <polygon points={points} className={hue.fill} opacity={0.3} />
           <g opacity={0.7}>{edges}</g>
-        </g>
-      );
-    case 'tube':
-      return (
-        <g>
-          <defs>
-            {/* Across the channel, from one side to the other: darker at the edges, so it reads as a tube. */}
-            <linearGradient
-              id={id}
-              gradientUnits='userSpaceOnUse'
-              x1={from.x + normal.x}
-              y1={from.y + normal.y}
-              x2={from.x - normal.x}
-              y2={from.y - normal.y}
-            >
-              <stop offset='0' stopColor='black' stopOpacity={0.25} />
-              <stop offset='0.35' stopColor='white' stopOpacity={0.15} />
-              <stop offset='0.65' stopColor='white' stopOpacity={0.15} />
-              <stop offset='1' stopColor='black' stopOpacity={0.25} />
-            </linearGradient>
-          </defs>
-          <polygon points={points} className={hue.fill} />
-          <polygon points={points} className='fill-white opacity-40' />
-          <polygon points={points} fill={`url(#${id})`} />
         </g>
       );
   }
@@ -719,6 +677,8 @@ export type MoleculeOverlayProps = {
   look?: Look;
   /** The background's tone, which picks the look's palette. */
   tone?: LookTone;
+  /** Off, the monolithic agent and its feed are hidden; turned on, they fade in. */
+  revealed?: boolean;
 };
 
 /**
@@ -732,6 +692,7 @@ export const MoleculeOverlay = ({
   molecules = true,
   look = 'glass',
   tone = 'dark',
+  revealed = true,
 }: MoleculeOverlayProps) => {
   const { bodies, bonds, agents, apps, time } = useSimulationFrame(simulation, running && molecules);
   // Molecules in flight draw last, so they pass over the docked lattice rather than under it.
@@ -752,6 +713,16 @@ export const MoleculeOverlay = ({
     }),
   );
   const visible = (id: string) => shown.get(id) ?? 1;
+  // The monolithic agent's parts fade in together when it is revealed, and out when it is hidden again.
+  const monolithIds = new Set(
+    layout.monolith
+      ? [layout.monolith.group.id, layout.monolith.feed.id, layout.hub.id, layout.channels[layout.monolith.down].id]
+      : [],
+  );
+  const fade = (id: string): React.CSSProperties =>
+    monolithIds.has(id)
+      ? { opacity: revealed ? visible(id) : 0, transition: `opacity ${REVEAL_MS}ms ease-in-out` }
+      : { opacity: visible(id) };
   const feeds = layout.monolith ? [layout.monolith.feed] : [];
   const blocks = [...layout.sources, ...feeds, layout.hub, ...layout.sinks].filter(
     (block) => !block.hidden && visible(block.id) > 0 && (!layout.focus || block === layout.hub),
@@ -779,17 +750,21 @@ export const MoleculeOverlay = ({
           <DepthDefs {...depth} />
           {/* Bases first, then the channels over their rims, then the containers, so a channel runs into its frame. */}
           {groups.map((group) => (
-            <g key={group.id}>
+            <g key={group.id} style={fade(group.id)}>
               <ContainerBase block={group} />
               <Container block={group} />
             </g>
           ))}
           {blocks.map((block) => (
-            <g key={block.id} opacity={visible(block.id)}>
+            <g key={block.id} style={fade(block.id)}>
               <ContainerBase block={block} />
             </g>
           ))}
-          {layout.monolith && !layout.focus && <GrantLines feed={layout.monolith.feed} sources={layout.sources} />}
+          {layout.monolith && !layout.focus && (
+            <g style={fade(layout.monolith.feed.id)}>
+              <GrantLines feed={layout.monolith.feed} sources={layout.sources} />
+            </g>
+          )}
           {extent && (
             <defs>
               <mask id={`${base}-channels`} maskUnits='userSpaceOnUse' {...extent}>
@@ -802,7 +777,7 @@ export const MoleculeOverlay = ({
           )}
           <g mask={extent ? `url(#${base}-channels)` : undefined}>
             {channels.map((channel) => (
-              <g key={channel.id} opacity={visible(channel.id)}>
+              <g key={channel.id} style={fade(channel.id)}>
                 <ChannelShape
                   channel={overreach(
                     channel,
@@ -813,7 +788,7 @@ export const MoleculeOverlay = ({
             ))}
           </g>
           {blocks.map((block) => (
-            <g key={block.id} opacity={visible(block.id)}>
+            <g key={block.id} style={fade(block.id)}>
               <Container block={block} />
               {block.app && <AppView block={block} items={apps[layout.sinks.indexOf(block)] ?? []} time={time} />}
             </g>

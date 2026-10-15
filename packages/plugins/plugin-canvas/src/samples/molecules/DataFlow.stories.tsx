@@ -15,8 +15,8 @@ const SPEC: DataFlowSpec = {
   sources: [
     { id: 'mail', label: 'Mail', hue: 'blue' },
     { id: 'docs', label: 'Docs', hue: 'orange' },
-    { id: 'sheets', label: 'Sheets', hue: 'green' },
-    { id: 'realtime', label: 'Realtime', hue: 'fuchsia' },
+    { id: 'finance', label: 'Finance', hue: 'green' },
+    { id: 'ops', label: 'Ops', hue: 'fuchsia' },
   ],
   hub: { label: 'Hypergraph', partitions: 3 },
   sinks: [{ label: 'Agent' }],
@@ -37,6 +37,7 @@ const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent'
 
 const APPS: DataFlowSpec = {
   ...SPEC,
+  hub: { label: 'Hypergraph' },
   sinks: [
     { label: 'Docs', app: 'document' },
     { label: 'Sheets', app: 'spreadsheet' },
@@ -47,17 +48,13 @@ const APPS: DataFlowSpec = {
 
 const MIXED: DataFlowSpec = {
   ...SPEC,
+  hub: { label: 'Hypergraph', partitions: 2 },
   sinks: [
     { label: 'Docs', app: 'document' },
-    { label: 'Agent 1' },
     { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Agent 1' },
     { label: 'Agent 2' },
   ],
-};
-
-const AGENTS: DataFlowSpec = {
-  ...SPEC,
-  sinks: [{ label: 'Agent 1' }, { label: 'Agent 2' }, { label: 'Agent 3' }],
 };
 
 /**
@@ -65,10 +62,13 @@ const AGENTS: DataFlowSpec = {
  * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
  */
 const CHAPTERS: readonly Scene[] = [
+  // The first two chapters share one stage: the monolithic agent's parts fade in over the running silos.
   {
     title: 'Silos',
     caption: 'Each application keeps its own data, fed only by its own source.',
-    spec: SILOS,
+    spec: MONOLITH,
+    revealed: false,
+    stage: 'silos',
     duration: 20,
   },
   {
@@ -76,29 +76,23 @@ const CHAPTERS: readonly Scene[] = [
     caption: 'One agent reaches into every source at once, beside the apps.',
     spec: MONOLITH,
     options: { warmup: 8 },
+    stage: 'silos',
     duration: 20,
   },
   {
     title: 'A shared hypergraph',
-    caption: 'The sources feed one partitioned hypergraph, and the apps sync from it.',
+    caption: 'The sources feed one hypergraph, and the apps sync from it.',
     spec: APPS,
     options: { warmup: 16 },
     duration: 24,
   },
   {
     title: 'Apps and agents together',
-    caption: 'Applications and agents share the same hypergraph, side by side.',
+    caption: 'Applications and agents share the same partitioned hypergraph, side by side.',
     spec: MIXED,
     // Agents fill only from the share of the hub synced down to them, so they need the longest start.
     options: { warmup: 30 },
     duration: 24,
-  },
-  {
-    title: 'Agents arrive',
-    caption: 'Agents join one by one, each catching up on the hypergraph before sharing in its sync.',
-    spec: AGENTS,
-    options: { spawnAgents: { first: 2, every: 10 }, warmup: 8 },
-    duration: 30,
   },
 ];
 
@@ -123,8 +117,8 @@ export default meta;
 type Story = StoryObj<DataFlowViewProps>;
 
 const chapter = (index: number): Story => {
-  const { title, spec, options } = CHAPTERS[index];
-  return { name: `${index + 1}. ${title}`, args: { spec, options } };
+  const { title, spec, options, revealed } = CHAPTERS[index];
+  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed } };
 };
 
 /**
@@ -150,5 +144,14 @@ export const Chapter3Hypergraph: Story = chapter(2);
 /** Applications and agents side by side on the same hypergraph. */
 export const Chapter4Mixed: Story = chapter(3);
 
-/** Up to three agents, none at first, appearing one by one once the hub is syncing. */
-export const Chapter5Agents: Story = chapter(4);
+/**
+ * Chapters 1 and 2 on one stage: the silos run, then the monolithic agent fades in over them and the camera widens.
+ *
+ * Test:
+ * 1. After 20 seconds (or the next control) the OAuth box, its grant lines, the container and the agent fade in.
+ * 2. The silos' molecules keep flowing across the change; the agent then starts reading through OAuth.
+ */
+export const SilosToMonolith: Story = {
+  name: 'Silos to monolith',
+  render: () => <DataFlowSequence scenes={CHAPTERS.slice(0, 2)} />,
+};

@@ -10,9 +10,14 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 
 /** One scene of a sequence: a diagram, how long it plays, and the caption that says what it shows. */
-export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme'> & {
+export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'revealed'> & {
   title: string;
   caption: string;
+  /**
+   * Consecutive scenes on one stage share a single diagram, which runs on between them rather than fading: the first
+   * scene's spec and options set it up, and each scene changes only what it reveals.
+   */
+  stage?: string;
   /** Seconds the scene plays before the next. */
   duration: number;
 };
@@ -39,13 +44,18 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
   const [index, setIndex] = useState(start);
   const [shown, setShown] = useState(true);
   const [playing, setPlaying] = useState(autoplay);
+  // Whether the diagram fades with the caption: not between two scenes on one stage, where it runs on and morphs.
+  const [morphing, setMorphing] = useState(false);
   const scene = scenes[index];
+  const lead = (scene.stage && scenes.find((candidate) => candidate.stage === scene.stage)) || scene;
 
   // Fades the current scene out, then swaps in the one at `next`, which fades in as it mounts.
   const go = (next: number) => {
+    const target = (next + scenes.length) % scenes.length;
+    setMorphing(scene.stage !== undefined && scenes[target].stage === scene.stage);
     setShown(false);
     setTimeout(() => {
-      setIndex((next + scenes.length) % scenes.length);
+      setIndex(target);
       setShown(true);
     }, FADE);
   };
@@ -73,9 +83,15 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
       </div>
       <div
         className='dx-grow relative transition-opacity'
-        style={{ opacity: shown ? 1 : 0, transitionDuration: `${FADE}ms` }}
+        style={{ opacity: shown || morphing ? 1 : 0, transitionDuration: `${FADE}ms` }}
       >
-        <DataFlowView key={index} spec={scene.spec} options={scene.options} theme={scene.theme} />
+        <DataFlowView
+          key={scene.stage ?? index}
+          spec={lead.spec}
+          options={lead.options}
+          theme={scene.theme}
+          revealed={scene.revealed}
+        />
       </div>
       <div className='absolute top-2 right-2 w-max'>
         <Toolbar.Root classNames={BAR}>

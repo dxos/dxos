@@ -16,8 +16,8 @@ const APPS: DataFlowSpec = {
   sources: [
     { id: 'mail', label: 'Mail', hue: 'blue' },
     { id: 'docs', label: 'Docs', hue: 'orange' },
-    { id: 'sheets', label: 'Sheets', hue: 'green' },
-    { id: 'realtime', label: 'Realtime', hue: 'fuchsia' },
+    { id: 'finance', label: 'Finance', hue: 'green' },
+    { id: 'ops', label: 'Ops', hue: 'fuchsia' },
     { id: 'chat', label: 'Chat', hue: 'teal' },
   ],
   hub: { label: 'Hypergraph' },
