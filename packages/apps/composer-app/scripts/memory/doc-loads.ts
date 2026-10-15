@@ -3,23 +3,19 @@
 //
 
 /**
- * Which code loads documents in the ECHO worker, from the first line it runs: the worker is held at
- * start, a non-pausing breakpoint on the host's `automerge.docLoads` counter tallies the stack that
- * reached it, and the stacks are source-mapped through the bundle. Counts and call sites only, so it
- * runs on a real profile behind the partition. `--retained` also samples the worker's allocations from
- * its first line and reports, at the end of each boot, what is still live by allocating code: sizes
- * and call sites, never values. `--sizes` buckets the bytes of each storage range load (one per
- * document), for whether a few large documents set Automerge's wasm high-water. `--syncs` counts the
- * worker's Subduction `syncWithPeer` calls per sample, beside its wasm. `--saves` counts the storage
- * adapter's saves by key kind (the second key segment: commits, blobs, remote heads), never ids.
- * `--reasons` tallies why each index pass ran (the scheduler's reason names). `--churn` samples what
- * each realm allocates from `--churn-from` ms after ready (60 s; 0 is each realm's first line), collected
- * objects included, and reports it by code at the end: which code keeps an idle app allocating. `--no-gc` reads each realm's heap without collecting
- * first, used and committed, as an idle app is never collected on demand. `--sync-state` totals each
- * space's document counts against EDGE (local, remote, unsynced), counts only. `--count a,b` counts calls
- * of the worker's methods by those names. `--rpc` counts the protobuf messages the worker encodes for the
- * page, by message type. `--profiles <dir>` also writes each sampled profile there (call sites and sizes),
- * for `alloc-report.mjs` to slice further.
+ * Which code loads documents in the ECHO worker, from the first line it runs. Counts and call sites only.
+ * `--retained` also samples the worker's allocations from its first line and reports, at the end of each
+ * boot, what is still live by allocating code: sizes and call sites, never values. `--sizes` buckets the
+ * bytes of each storage range load (one per document). `--syncs` counts the worker's Subduction
+ * `syncWithPeer` calls per sample, beside its wasm. `--saves` counts the storage adapter's saves by key
+ * kind (the second key segment: commits, blobs, remote heads), never ids. `--reasons` tallies why each
+ * index pass ran (the scheduler's reason names). `--churn` samples what each realm allocates from
+ * `--churn-from` ms after ready (60 s; 0 is each realm's first line), collected objects included, and
+ * reports it by code at the end. `--no-gc` reads each realm's heap without collecting first, used and
+ * committed. `--sync-state` totals each space's document counts against EDGE (local, remote, unsynced),
+ * counts only. `--count a,b` counts calls of the worker's methods by those names. `--rpc` counts the
+ * protobuf messages the worker encodes for the page, by message type. `--profiles <dir>` also writes each
+ * sampled profile there (call sites and sizes), for `alloc-report.mjs` to slice further.
  *
  * Usage: node scripts/memory/doc-loads.ts --archive <file.dxprofile> --dist <bundle> (--offline | --edge <url>)
  *        [--port 4530] [--debug-port 9350] [--idle-ms 180000] [--top 12] [--frames 8] [--boots 1]
@@ -33,13 +29,17 @@ import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
-import { isProductionEdgeHost, listTargets, partitionArgs, startPartitionProxy } from '@dxos/perf-harness';
+import {
+  OFFLINE_EDGE_URL,
+  isProductionEdgeHost,
+  listTargets,
+  partitionArgs,
+  startPartitionProxy,
+} from '@dxos/perf-harness';
 
 import { waitForReady } from '../../src/playwright/perf/page.ts';
 import { importProfileArchive } from '../../src/playwright/scenarios/memory-soak.ts';
-// @ts-expect-error untyped sibling module.
 import { report as allocationReport } from './alloc-report.mjs';
-// @ts-expect-error untyped sibling module.
 import { createFrameResolver } from './heap-attribution.mjs';
 import { servePreview } from './preview.ts';
 
@@ -72,10 +72,20 @@ const { values } = parseArgs({
 if (!values.archive || !values.dist || values.offline === Boolean(values.edge)) {
   throw new Error('usage: doc-loads.ts --archive <file> --dist <bundle> (--offline | --edge <url>)');
 }
-const edgeUrl = values.offline ? 'http://127.0.0.1:9/' : values.edge!;
+const edgeUrl = values.offline ? OFFLINE_EDGE_URL : values.edge!;
 const edgeHost = values.offline ? undefined : new URL(edgeUrl).hostname;
 if (edgeHost && isProductionEdgeHost(edgeHost)) {
   throw new Error('--edge must name a non-production EDGE');
+}
+const SAMPLE_MS = 30_000;
+const idleMs = Number(values['idle-ms']);
+const churnFrom = Number(values['churn-from']);
+const churnFromStart = values.churn && churnFrom === 0;
+if (values.churn && values.retained) {
+  throw new Error('--churn and --retained share one sampler per realm; run them separately');
+}
+if (values.churn && !(churnFrom >= 0 && churnFrom % SAMPLE_MS === 0 && churnFrom <= idleMs)) {
+  throw new Error(`--churn-from must be 0 or a multiple of ${SAMPLE_MS} no greater than --idle-ms`);
 }
 const archive = path.resolve(values.archive);
 const dist = path.resolve(values.dist);
@@ -96,7 +106,6 @@ if (!workerFile) {
 }
 const source = readFileSync(path.join(dist, 'assets', workerFile), 'utf8');
 const match = COUNTER.exec(source)!;
-// The registry's `open: (documentId) => { countWork(...) ... }`: its parameter, minified.
 const documentIdName = /open:([\w$]+)=>\{$/.exec(source.slice(0, match.index))?.[1];
 if (!documentIdName) {
   throw new Error(`${workerFile}: the docLoads counter is not at the start of the registry's open callback`);
@@ -105,7 +114,6 @@ const before = source.slice(0, match.index);
 const lineNumber = before.split('\n').length - 1;
 const columnNumber = match.index - (before.lastIndexOf('\n') + 1);
 
-// Each frame as `file:line:column`, so the tally holds no names or values from the page.
 const CONDITION = `(() => {
   (globalThis.__dxDocIds ??= new Set()).add(${documentIdName});
   const tally = (globalThis.__dxDocLoads ??= new Map());
@@ -120,8 +128,6 @@ const CONDITION = `(() => {
   tally.set(key, (tally.get(key) ?? 0) + 1);
   return false;
 })()`;
-// Only the size of the id set leaves the worker.
-// `countWork('automerge.loadBytes', bytesLoaded)` at the end of the storage adapter's range load.
 const LOAD_BYTES = /[\w$]+\(["`']automerge\.loadBytes["`'],([\w$]+)\)/;
 const sizesMatch = LOAD_BYTES.exec(source);
 if (values.sizes && !sizesMatch) {
@@ -133,7 +139,6 @@ const sizesLocation =
     const head = source.slice(0, sizesMatch.index);
     return { lineNumber: head.split('\n').length - 1, columnNumber: sizesMatch.index - (head.lastIndexOf('\n') + 1) };
   })();
-// Power-of-two buckets from 1 KiB, and the largest single load.
 const SIZES_CONDITION =
   sizesMatch &&
   `(() => {
@@ -145,7 +150,6 @@ const SIZES_CONDITION =
   return false;
 })()`;
 
-// Every `<subduction>.syncWithPeer(` call site in the worker chunk, counted by one shared tally.
 const SYNC_CALLS = [...source.matchAll(/[\w$]+\.syncWithPeer\(/g)].map(({ index }) => {
   const head = source.slice(0, index);
   return { lineNumber: head.split('\n').length - 1, columnNumber: index - (head.lastIndexOf('\n') + 1) };
@@ -155,7 +159,6 @@ if (values.syncs && SYNC_CALLS.length === 0) {
 }
 const SYNCS_CONDITION = `(globalThis.__dxSyncCalls = (globalThis.__dxSyncCalls ?? 0) + 1), false`;
 
-// The storage adapter's `countWork(SAVE_COUNTERS[key[1] ?? ''] ?? 'automerge.otherSaves')`.
 const SAVE_COUNTER = /[\w$]+\([\w$]+\[([\w$]+)\[1\]\?\?[`'"]{2}\]\?\?[`'"]automerge\.otherSaves[`'"]\)/;
 const saveMatch = SAVE_COUNTER.exec(source);
 if (values.saves && !saveMatch) {
@@ -171,7 +174,6 @@ const SAVES_CONDITION =
   saveMatch &&
   `((kinds, kind) => { kinds[kind] = (kinds[kind] ?? 0) + 1; })(globalThis.__dxSaveKinds ??= {}, String(${saveMatch[1]}[1])), false`;
 
-// The first statement of `async _runIndexPass(ctx, reasons) {`, whose second parameter counts reasons.
 const REASONS_AT = /async _runIndexPass\([\w$]+,([\w$]+)\)\{/.exec(source);
 if (values.reasons && !REASONS_AT) {
   throw new Error(`${workerFile}: no _runIndexPass`);
@@ -187,19 +189,20 @@ const REASONS_CONDITION =
   REASONS_AT &&
   `((tally, reasons) => { for (const [reason, count] of Object.entries(reasons ?? {})) tally[reason] = (tally[reason] ?? 0) + count; tally.passes = (tally.passes ?? 0) + 1; })(globalThis.__dxIndexReasons ??= {}, ${REASONS_AT[1]}), false`;
 
-// Each `--count` method's first statement, every definition of that name in the worker chunk.
 const COUNTED = values.count
   .split(',')
   .filter(Boolean)
   .flatMap((name) =>
-    [...source.matchAll(new RegExp(`[^\\w$.]${name.replace(/[$]/g, '\\$')}\\([^)]*\\)\\{`, 'g'))].map(({ index, 0: text }) => {
-      const at = index + text.length;
-      const head = source.slice(0, at);
-      return {
-        name,
-        location: { lineNumber: head.split('\n').length - 1, columnNumber: at - (head.lastIndexOf('\n') + 1) },
-      };
-    }),
+    [...source.matchAll(new RegExp(`[^\\w$.]${name.replace(/[$]/g, '\\$')}\\([^)]*\\)\\{`, 'g'))].map(
+      ({ index, 0: text }) => {
+        const at = index + text.length;
+        const head = source.slice(0, at);
+        return {
+          name,
+          location: { lineNumber: head.split('\n').length - 1, columnNumber: at - (head.lastIndexOf('\n') + 1) },
+        };
+      },
+    ),
   );
 for (const name of values.count.split(',').filter(Boolean)) {
   if (!COUNTED.some((counted) => counted.name === name)) {
@@ -207,7 +210,6 @@ for (const name of values.count.split(',').filter(Boolean)) {
   }
 }
 
-// `bufMessage`'s `encode: (value) => toBinary(messageSchema, value)`, minified.
 const RPC_ENCODE = /decode:([\w$]+)=>[\w$]+\(([\w$]+),\1\),encode:([\w$]+)=>/.exec(source);
 if (values.rpc && !RPC_ENCODE) {
   throw new Error(`${workerFile}: no bufMessage encode`);
@@ -265,14 +267,9 @@ const connect = async (wsUrl: string) => {
   return { send, on: (listener: (message: any) => void) => listeners.add(listener), close: () => ws.close() };
 };
 
-const resolveFrame = createFrameResolver(dist) as (
-  script: string,
-  line: number,
-  column: number,
-) => { source: string; line: number; name?: string } | null;
+const resolveFrame = createFrameResolver(dist);
 
-/** A stack's frames by source, dropping the counter's own frames inside the lease registry. */
-const describe = (key: string, frames: number): string => {
+const callerStack = (key: string, frames: number): string => {
   const resolved = key.split('|').map((frame) => {
     const async = frame.startsWith('async ');
     const [script, line, column] = (async ? frame.slice(6) : frame).split(':');
@@ -302,7 +299,6 @@ const main = async () => {
       await importing.close();
     }
 
-    // Later boots measure a returning user: whatever the first one indexed is on disk.
     for (let boot = 1; boot <= Number(values.boots); boot++) {
       process.stdout.write(`\n== boot ${boot}\n`);
       const context = await chromium.launchPersistentContext(profileDir, {
@@ -318,6 +314,8 @@ const main = async () => {
         const cdp = await connect(target.webSocketDebuggerUrl);
         let workerSession: string | undefined;
         const breakpointSet = Promise.withResolvers<void>();
+        // Node ends the process on an unhandled rejection; this one is rethrown where it is awaited.
+        breakpointSet.promise.catch(() => {});
         cdp.on(async (message) => {
           // A worker held at start has not parsed its script, so the breakpoint binds when it does.
           if (message.method === 'Debugger.breakpointResolved' && message.sessionId === workerSession) {
@@ -329,7 +327,6 @@ const main = async () => {
           }
           const { sessionId, targetInfo } = message.params;
           try {
-            // Workers the ECHO worker starts are held too, so the auto-attach follows them.
             await cdp.send(
               'Target.setAutoAttach',
               { autoAttach: true, waitForDebuggerOnStart: true, flatten: true },
@@ -338,16 +335,14 @@ const main = async () => {
             if (targetInfo.url.includes(workerFile)) {
               workerSession = sessionId;
               await cdp.send('Debugger.enable', {}, sessionId);
-              const fromStart = values.churn && Number(values['churn-from']) === 0;
-              if (values.retained || fromStart) {
-                // Collected objects excluded for `--retained`, so the profile is what the worker still holds when read.
+              if (values.retained || churnFromStart) {
                 await cdp.send('HeapProfiler.enable', {}, sessionId);
                 await cdp.send(
                   'HeapProfiler.startSampling',
                   {
                     samplingInterval: 16_384,
-                    includeObjectsCollectedByMajorGC: fromStart,
-                    includeObjectsCollectedByMinorGC: fromStart,
+                    includeObjectsCollectedByMajorGC: churnFromStart,
+                    includeObjectsCollectedByMinorGC: churnFromStart,
                   },
                   sessionId,
                 );
@@ -442,8 +437,7 @@ const main = async () => {
               .map(([name, value]) => [name, value - (previousCounters[name] ?? 0)]),
           );
           previousCounters = read.counters;
-          // Each realm's live heap after a collection, and its wasm linear memory per module.
-          const realm = async (sessionId?: string) => {
+          const realmMemory = async (sessionId?: string) => {
             if (!values['no-gc']) {
               await cdp.send('HeapProfiler.collectGarbage', {}, sessionId).catch(() => {});
             }
@@ -459,7 +453,7 @@ const main = async () => {
             const committed = values['no-gc'] ? ` of ${Math.round(totalSize / 1048576)} committed` : '';
             return `heap ${Math.round(usedSize / 1048576)}${committed} MiB, wasm ${byModule || 'none'}`;
           };
-          const memory = `  page: ${await realm()}\n  worker: ${await realm(workerSession)}`;
+          const memory = `  page: ${await realmMemory()}\n  worker: ${await realmMemory(workerSession)}`;
           const syncState = values['sync-state']
             ? (
                 await cdp.send('Runtime.evaluate', {
@@ -489,10 +483,9 @@ const main = async () => {
             .filter(([, count]) => count > 0);
           previous = now;
           const total = delta.reduce((sum, [, count]) => sum + count, 0);
-          // Grouped by the described stack, since two minified call sites can map to one source line.
           const grouped = new Map<string, number>();
           for (const [key, count] of delta) {
-            const described = describe(key, Number(values.frames));
+            const described = callerStack(key, Number(values.frames));
             grouped.set(described, (grouped.get(described) ?? 0) + count);
           }
           process.stdout.write(
@@ -502,7 +495,9 @@ const main = async () => {
             process.stdout.write(`  saves by kind so far: ${JSON.stringify(read.saves)}\n`);
           }
           if (values.rpc) {
-            const top = Object.entries(read.rpc).sort(([, left], [, right]) => right - left).slice(0, 12);
+            const top = Object.entries(read.rpc)
+              .sort(([, left], [, right]) => right - left)
+              .slice(0, 12);
             process.stdout.write(`  rpc messages encoded so far: ${JSON.stringify(Object.fromEntries(top))}\n`);
           }
           if (COUNTED.length > 0) {
@@ -534,9 +529,7 @@ const main = async () => {
           }
         };
 
-        const churnFromStart = values.churn && Number(values['churn-from']) === 0;
         if (values.retained || churnFromStart) {
-          // The page realm from its first line too, so what it holds (or allocated) is attributed whole.
           await cdp.send('HeapProfiler.enable');
           await cdp.send('HeapProfiler.startSampling', {
             samplingInterval: 16_384,
@@ -550,15 +543,19 @@ const main = async () => {
         await waitForReady(page);
         await sample('ready');
         const realms = [undefined, workerSession];
-        for (let elapsed = 30_000; elapsed <= Number(values['idle-ms']); elapsed += 30_000) {
-          await sleep(30_000);
+        for (let elapsed = SAMPLE_MS; elapsed <= idleMs; elapsed += SAMPLE_MS) {
+          await sleep(SAMPLE_MS);
           await sample(`ready+${elapsed / 1000}s`);
-          if (values.churn && elapsed === Number(values['churn-from'])) {
+          if (values.churn && elapsed === churnFrom) {
             for (const sessionId of realms) {
               await cdp.send('HeapProfiler.enable', {}, sessionId);
               await cdp.send(
                 'HeapProfiler.startSampling',
-                { samplingInterval: 16_384, includeObjectsCollectedByMajorGC: true, includeObjectsCollectedByMinorGC: true },
+                {
+                  samplingInterval: 16_384,
+                  includeObjectsCollectedByMajorGC: true,
+                  includeObjectsCollectedByMinorGC: true,
+                },
                 sessionId,
               );
             }
@@ -573,10 +570,13 @@ const main = async () => {
               JSON.stringify(profile),
             );
           }
-          const { totalBytes, byCaller, byFunction } = allocationReport(profile, { distDir: dist, top: Number(values.top) });
-          const span = (Number(values['idle-ms']) - Number(values['churn-from'])) / 1000;
+          const { totalBytes, byCaller, byFunction } = allocationReport(profile, {
+            distDir: dist,
+            top: Number(values.top),
+          });
+          const span = (idleMs - churnFrom) / 1000;
           process.stdout.write(
-            `\nallocated in the ${index === 0 ? 'page' : 'worker'} ${Number(values['churn-from']) === 0 ? `from its first line to ready+${span} s` : `over ${span} s idle`}: ${Math.round(totalBytes / 1048576)} MiB sampled\n  by first-party caller\n`,
+            `\nallocated in the ${index === 0 ? 'page' : 'worker'} ${churnFromStart ? `from its first line to ready+${span} s` : `over ${span} s idle`}: ${Math.round(totalBytes / 1048576)} MiB sampled\n  by first-party caller\n`,
           );
           for (const { name, bytes } of byCaller) {
             process.stdout.write(`  ${(bytes / 1048576).toFixed(1).padStart(7)}  ${name}\n`);
@@ -586,12 +586,20 @@ const main = async () => {
             process.stdout.write(`  ${(bytes / 1048576).toFixed(1).padStart(7)}  ${name}\n`);
           }
         }
-        for (const [realmName, sessionId] of values.retained ? ([['page', undefined], ['worker', workerSession]] as const) : []) {
+        for (const [realmName, sessionId] of values.retained
+          ? ([
+              ['page', undefined],
+              ['worker', workerSession],
+            ] as const)
+          : []) {
           await cdp.send('HeapProfiler.collectGarbage', {}, sessionId);
           const { profile } = await cdp.send('HeapProfiler.getSamplingProfile', {}, sessionId);
           if (values.profiles) {
             mkdirSync(values.profiles, { recursive: true });
-            writeFileSync(path.join(values.profiles, `boot${boot}-${realmName}-retained.heapprofile`), JSON.stringify(profile));
+            writeFileSync(
+              path.join(values.profiles, `boot${boot}-${realmName}-retained.heapprofile`),
+              JSON.stringify(profile),
+            );
           }
           const { totalBytes, byCaller, byFunction, byPackage } = allocationReport(profile, {
             distDir: dist,

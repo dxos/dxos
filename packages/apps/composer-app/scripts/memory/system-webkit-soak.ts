@@ -19,9 +19,9 @@
  * comma-separated to cycle in one process: `client` (the app's EDGE HTTP client), `fetch`, `fetch-init`
  * (`_call`'s request options), `fetch-url`, `fetch-tag`, `fetch-clone`; `probe` counts body and stream
  * calls per path instead. `--idle-readings` reads the idle footprint that many times, `--idle-ms` apart, with no
- * forced collection, as a user's idle app is only ever collected on WebKit's own schedule. `--gc-canary` drops
- * one promoted object in the page realm a minute and reports which have been finalized at each reading: only a
- * full collection reclaims an old object, so it dates the page's full collections.
+ * forced collection. `--gc-canary` drops one promoted object in the page realm a minute and reports which have
+ * been finalized at each reading: only a full collection reclaims an old object, so it dates the page's full
+ * collections.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -36,7 +36,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
-import { isProductionEdgeHost, startPartitionProxy, startTelemetrySink } from '@dxos/perf-harness';
+import { OFFLINE_EDGE_URL, isProductionEdgeHost, startPartitionProxy, startTelemetrySink } from '@dxos/perf-harness';
 
 import { servePreview } from './preview.ts';
 
@@ -71,8 +71,7 @@ if (!values.host || !values.archive || !values.dist || values.offline === Boolea
     'usage: system-webkit-soak.ts --host <wkapp> --archive <file> --dist <bundle> (--edge <url> | --offline)',
   );
 }
-// An `--offline` bundle points EDGE at a closed loopback port (`OFFLINE_EDGE_URL` in the perf CLI).
-const edgeUrl = values.offline ? 'http://127.0.0.1:9/' : values.edge!;
+const edgeUrl = values.offline ? OFFLINE_EDGE_URL : values.edge!;
 const edgeHost = values.offline ? undefined : URL.canParse(edgeUrl) ? new URL(edgeUrl).hostname : undefined;
 if (!values.offline && (!edgeHost || isProductionEdgeHost(edgeHost))) {
   throw new Error(`--edge must name a non-production EDGE URL, not "${values.edge}"`);
@@ -188,7 +187,15 @@ const wasmMemoriesOf = (pid: number): number[] => {
   const regions = output.split('\n').flatMap((line) => {
     const match = /^.+?\s+([0-9a-f]+)-([0-9a-f]+)\s+\[\s*(\S+)\s+\S+\s+(\S+)\s+(\S+)\]\s+(\S+)\//.exec(line);
     return match
-      ? [{ start: match[1], end: match[2], size: vmMib(match[3]), used: vmMib(match[4]) + vmMib(match[5]), prot: match[6] }]
+      ? [
+          {
+            start: match[1],
+            end: match[2],
+            size: vmMib(match[3]),
+            used: vmMib(match[4]) + vmMib(match[5]),
+            prot: match[6],
+          },
+        ]
       : [];
   });
   const endingAt = new Map(regions.map((region) => [region.end, region]));
@@ -250,11 +257,7 @@ const collect = async () => {
 
 const mib = (bytes: number) => Math.round(bytes / 1048576);
 
-/**
- * Totals over every space of `db.stats()`, counts only. Read once, after every stage: counting objects
- * loads every document of every space, which would perturb whatever is measured after it.
- */
-const STATS_PROBE = `
+const STATS_PROBE_LOADING_EVERY_DOCUMENT = `
   const total = { spaces: 0, ready: 0, objects: 0, documents: 0, maxSpaceDocuments: 0, feedBlocks: 0, pageDocuments: 0, pageObjects: 0, workerDocuments: 0, workerLeases: 0, workerQueries: 0 };
   for (const space of globalThis.__DXOS__?.client?.spaces?.get?.() ?? []) {
     total.spaces++;
@@ -354,7 +357,6 @@ const main = async (): Promise<number> => {
       const pids = ours();
       const processes = pids.map((pid) => footprintOf(pid, scratch)).filter((reading) => reading !== undefined);
       const dom = await host.evaluate<number>(`return document.getElementsByTagName('*').length;`).catch(() => -1);
-      // The page realm's wasm linear memory per module, from `@dxos/util`'s probe; the worker's is out of reach here.
       const pageWasm = await host
         .evaluate<{ bytes: number; byModule: Record<string, number> } | null>(
           `return globalThis.__dxosWasmMemory?.() ?? null;`,
@@ -420,8 +422,6 @@ const main = async (): Promise<number> => {
     host = startHost(proxy.port, store);
     await host.ready;
 
-    // A returning user's boot: the first boot after an import (or an upgrade whose migration resets
-    // index cursors) reindexes every document, which a warm-up boot pays here instead.
     if (Number(values['warmup-ms']) > 0) {
       await host.load(`${origin}/`);
       await waitForReady();
@@ -437,21 +437,6 @@ const main = async (): Promise<number> => {
       await host.load(`${origin}/`);
       await waitForReady();
     });
-    if (values['gc-canary']) {
-      // Each canary is held 30 s, long enough to survive an eden collection, then dropped.
-      await host.evaluate(`
-        const state = { made: 0, finalized: [] };
-        const started = performance.now();
-        const registry = new FinalizationRegistry((id) => state.finalized.push([id, Math.round((performance.now() - started) / 1000)]));
-        setInterval(() => {
-          let held = { id: state.made++, pad: new Array(64).fill(0) };
-          registry.register(held, held.id);
-          setTimeout(() => { held = undefined; }, 30_000);
-        }, 60_000);
-        globalThis.__gcCanary = state;
-        return true;
-      `);
-    }
     await sleep(SETTLE_MS);
     if (values.devtools) {
       // As a developer's native app keeps it: the devtools plugin on, its overview expanded in the
@@ -473,6 +458,20 @@ const main = async (): Promise<number> => {
         await sleep(500);
       }
       process.stdout.write(`devtools overview mounted: ${mounted}\n`);
+    }
+    if (values['gc-canary']) {
+      await host.evaluate(`
+        const state = { made: 0, finalized: [] };
+        const started = performance.now();
+        const registry = new FinalizationRegistry((id) => state.finalized.push([id, Math.round((performance.now() - started) / 1000)]));
+        setInterval(() => {
+          let held = { id: state.made++, pad: new Array(64).fill(0) };
+          registry.register(held, held.id);
+          setTimeout(() => { held = undefined; }, 30_000);
+        }, 60_000);
+        globalThis.__gcCanary = state;
+        return true;
+      `);
     }
     for (let reading = 1; reading <= Number(values['idle-readings']); reading++) {
       await stage(reading === 1 ? 'idle' : `idle-${reading}`, () => sleep(idleMs));
@@ -506,9 +505,6 @@ const main = async (): Promise<number> => {
       });
       await stage(`idle-${pass}`, () => sleep(idleMs));
     }
-
-    shape = await host.evaluate<Record<string, number>>(STATS_PROBE).catch(() => undefined);
-    process.stdout.write(`shape ${JSON.stringify(shape)}\n`);
 
     if (driveVia === 'probe' && envelope) {
       // Which body and stream methods each path calls, counted per path; no values are recorded.
@@ -598,6 +594,9 @@ const main = async (): Promise<number> => {
       await collect();
       await stage(`after-${round}`, async () => undefined);
     }
+
+    shape = await host.evaluate<Record<string, number>>(STATS_PROBE_LOADING_EVERY_DOCUMENT).catch(() => undefined);
+    process.stdout.write(`shape ${JSON.stringify(shape)}\n`);
   } finally {
     writeFileSync(
       path.join(outDir, 'report.json'),
