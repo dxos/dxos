@@ -77,12 +77,10 @@ jobs:
       contents: read
       packages: read
     # 4 vCPU: the compile gate is mostly remote-cache hits and peaks at 12 GB of the 16.
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    # The `ci-image.yml` snapshot: toolchains, browsers and a pnpm store already in place.
+    runs-on:
+      size: 4x16
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 30
     steps:
       - name: Setup tmate session
@@ -217,12 +215,9 @@ jobs:
       contents: read
       packages: read
     # 4 vCPU: averages 14% of 8 vCPU and peaks at 12 GB.
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 4x16
+      image: *ci-image
     timeout-minutes: 30
     env:
       COMPARE: >-
@@ -425,12 +420,9 @@ jobs:
       contents: read
       packages: read
       statuses: write
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ github.token }}
+    runs-on:
+      size: 4x16
+      image: *ci-image
     timeout-minutes: 30
     env:
       NODE_VERSION: '24.11.1'
@@ -499,12 +491,9 @@ jobs:
       fail-fast: false
       matrix:
         shard: [0, 1]
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ github.token }}
+    runs-on:
+      size: 8x32
+      image: *ci-image
     timeout-minutes: 30
     env:
       NODE_VERSION: '24.11.1'
@@ -561,12 +550,9 @@ jobs:
       fail-fast: false
       matrix:
         browser: ${{ fromJSON(needs.plan.outputs.composer-browsers) }}
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 8x32
+      image: *ci-image
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
     timeout-minutes: 30
@@ -655,12 +641,9 @@ jobs:
       matrix:
         browser: ${{ fromJSON(needs.plan.outputs.rest-browsers) }}
     # 4 vCPU: averages 11% of 8 vCPU and peaks at 12 GB.
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 4x16
+      image: *ci-image
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
     timeout-minutes: 30
@@ -753,12 +736,9 @@ jobs:
       inputs.only == 'all') && (
       github.event_name != 'pull_request' || !github.event.pull_request.draft)
     # 4 vCPU: averages 17% of 8 vCPU and peaks at 9 GB.
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 4x16
+      image: *ci-image
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -830,12 +810,9 @@ jobs:
   report:
     needs: [test-node, test-browser, e2e, e2e-rest]
     if: always() && github.event_name == 'schedule'
-    runs-on: depot-ubuntu-latest
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 2x8
+      image: *ci-image
     timeout-minutes: 5
     steps:
       # This job only runs a repository-local action, so it never needs git auth; leaving the token in
