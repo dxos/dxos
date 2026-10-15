@@ -7974,9 +7974,15 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../plugin-explorer
@@ -7989,6 +7995,9 @@ importers:
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../plugin-thread
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
@@ -8029,9 +8038,6 @@ importers:
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../../core/compute/edge-compute
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
