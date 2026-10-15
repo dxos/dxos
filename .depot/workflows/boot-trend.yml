@@ -1,8 +1,9 @@
 name: Boot trend
 
-# Charts main's boot graph in PostHog (`ci.boot-budget`), one point per commit that lands. `Check` does
-# not run on pushes to main, since the merge queue already tested the commit, so the measurement it
-# trended from there runs here, under its own workflow name so it never replaces the queue's checks.
+# Charts main's boot graph in PostHog (`ci.boot-budget`). A push that lands mid-run cancels it, so
+# overlapping pushes chart only the newest commit. `Check` does not run on pushes to main, since the
+# merge queue already tested the commit, so the measurement it trended from there runs here, under its
+# own workflow name so it never replaces the queue's checks.
 on:
   push:
     branches:
@@ -11,6 +12,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: boot-trend
+  cancel-in-progress: true
 
 env:
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
