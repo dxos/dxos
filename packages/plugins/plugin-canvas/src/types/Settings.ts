@@ -9,7 +9,6 @@ import * as Struct from 'effect/Struct';
 
 /** The built-in themes, by id: a style set on a background, some held light or dark. */
 export const ThemeChoice = Schema.Union([
-  Schema.Literal('classic').annotate({ title: 'Classic' }),
   Schema.Literal('glass-night').annotate({ title: 'Glass night' }),
   Schema.Literal('night').annotate({ title: 'Night' }),
   Schema.Literal('paper').annotate({ title: 'Paper' }),

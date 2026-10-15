@@ -75,7 +75,6 @@ export const Flat: Story = { args: { theme: 'flat' } };
 export const Outline: Story = { args: { theme: 'outline' } };
 
 /** The original look: raised gray frames on darker bases, white inset wells and shaded tubes. */
-export const Classic: Story = { args: { theme: 'classic' } };
 
 /** The original dark look over lines along the minor and major grid, in place of dots. */
 export const Lines: Story = { args: { theme: 'glass-night', grid: 'lines' } };

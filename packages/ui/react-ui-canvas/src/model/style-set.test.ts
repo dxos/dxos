@@ -91,6 +91,8 @@ describe('themes', () => {
       backgrounds: { plain: { ...PLAIN_BACKGROUND, name: 'Bare' } },
     });
     expect(resolveTheme(registry, 'mine')).toBe(mine);
+    // Classic is the fallback, not a theme on offer.
+    expect(registry.themes.classic).toBeUndefined();
     expect(resolveTheme(registry, 'classic')).toBe(CLASSIC_THEME);
     expect(resolveBackground(registry, 'plain').name).toBe('Bare');
     // A name inherited from `Object.prototype` is no theme.

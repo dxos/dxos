@@ -30,6 +30,7 @@ import { mx } from '@dxos/ui-theme';
 import {
   SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
+  useChanging,
   useRegistry,
   useSceneProjection,
   useViewport,
@@ -137,6 +138,9 @@ import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
+
+/** Milliseconds the camera's zoom must hold still before the background grid fades back in. */
+const ZOOM_SETTLE = 250;
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 2;
@@ -1235,6 +1239,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
     () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
     [look.background, backgroundBounds, bounds, latticeBounds],
   );
+  const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
 
   return (
     <>
@@ -1245,7 +1250,13 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
           className='absolute pointer-events-none'
           style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
         >
-          <BackgroundField background={look.background} tone={look.tone} field={field} grid={grid} />
+          <BackgroundField
+            background={look.background}
+            tone={look.tone}
+            field={field}
+            grid={grid}
+            gridHidden={zooming}
+          />
         </div>
       )}
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps

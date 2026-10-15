@@ -117,13 +117,15 @@ export type BackgroundFieldProps = {
   field: Bounds;
   /** Minor grid spacing in scene px. */
   grid: number;
+  /** Fades the grid out, while the camera zooms: its pattern shimmers as it is resampled at each step. */
+  gridHidden?: boolean;
 };
 
 /**
  * The scene-space part of a background: the washes, then the grid over them, all faded out towards the field's edges
  * when the background asks for it. Draws nothing for a background with neither grid nor washes.
  */
-export const BackgroundField = ({ background, tone, field, grid }: BackgroundFieldProps) => {
+export const BackgroundField = ({ background, tone, field, grid, gridHidden = false }: BackgroundFieldProps) => {
   // `useId` answers colons, which a `url(#…)` reference cannot hold.
   const id = useId().replace(/:/g, '');
   if (!drawsField(background)) {
@@ -159,7 +161,14 @@ export const BackgroundField = ({ background, tone, field, grid }: BackgroundFie
             <rect {...field} fill={`url(#${id}-wash-${index})`} />
           </g>
         ))}
-        {background.grid !== 'none' && <rect {...field} fill={`url(#${id}-grid)`} />}
+        {background.grid !== 'none' && (
+          <rect
+            {...field}
+            fill={`url(#${id}-grid)`}
+            className='transition-opacity duration-300'
+            style={{ opacity: gridHidden ? 0 : 1 }}
+          />
+        )}
       </g>
     </svg>
   );

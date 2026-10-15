@@ -265,6 +265,7 @@ export const PAPER_BACKGROUND: Background = {
   grainHue: 'warm',
 };
 
+/** What a view naming no theme draws: the classic shapes on the plain canvas; not offered as a theme to pick. */
 export const CLASSIC_THEME: Theme = { id: 'classic', name: 'Classic', styleSet: 'classic', background: 'plain' };
 
 export const GLASS_NIGHT_THEME: Theme = {
@@ -300,7 +301,6 @@ export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
 };
 
 export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
-  'classic': CLASSIC_THEME,
   'glass-night': GLASS_NIGHT_THEME,
   'night': NIGHT_THEME,
   'paper': PAPER_THEME,
@@ -309,7 +309,7 @@ export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
 };
 
 /** The ids of the built-ins, for pickers. */
-export const THEME_IDS = ['classic', 'glass-night', 'night', 'paper', 'flat', 'outline'] as const;
+export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline'] as const;
 export const STYLE_SET_IDS = ['classic', 'flat', 'outline', 'glass'] as const;
 export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper'] as const;
 
