@@ -16,6 +16,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/common/animation/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
