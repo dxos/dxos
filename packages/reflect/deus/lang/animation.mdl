@@ -33,7 +33,8 @@ ext flow-step
   uri: org.dxos.mdl.flow-step@1.0
   desc: |
     One step of a flow. Selectors are path ids (`home/phone`), `*` for one segment, `**` for any
-    depth, and commas for alternatives (`home, local-*`). Quote colours: `color: '#5f8fae'`.
+    depth, and commas for alternatives (`home, local-*`). A `#` starts a comment only at the start
+    of a line or after two spaces, so `color: #5f8fae` and `caption: We are #1` keep their text.
   fields:
     name:       Prose
     with?:      previous               # start together with the previous step

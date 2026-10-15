@@ -20,7 +20,7 @@ const toScalar = (raw: string): MdlValue => {
   return text;
 };
 
-/** Removes a trailing `# comment`; `#` starts a comment only at the start or after whitespace, outside quotes. */
+/** Removes a trailing `# comment`: a `#` at the start, or after two or more spaces, outside quotes. */
 export const stripComment = (text: string): string => {
   let quote: string | undefined;
   for (let index = 0; index < text.length; index++) {
@@ -32,7 +32,7 @@ export const stripComment = (text: string): string => {
       }
     } else if ((char === '"' || char === "'") && /[\s{[,:]/.test(previous)) {
       quote = char;
-    } else if (char === '#' && /\s/.test(previous)) {
+    } else if (char === '#' && (index === 0 || /\s\s$/.test(text.slice(0, index)))) {
       return text.slice(0, index).trimEnd();
     }
   }

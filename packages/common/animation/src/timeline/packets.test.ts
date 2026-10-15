@@ -93,7 +93,7 @@ describe('compilePackets', () => {
 
   test('unreachable targets warn once', ({ expect }) => {
     const { timeline, diagnostics } = compile(
-      flow('    - name: s', '      send: { from: a/p1, to: island/p, count: 4 }', '      hold: 1s'),
+      flow('    - name: s', '      send: { from: a/p1, to: island/p, count: 4 }', '      hold: 4s'),
       TEMPLATE,
     );
     expect(timeline.packets).toEqual([]);

@@ -8,7 +8,8 @@ import { type Graph, NODE_RADIUS, type Vec2, getNetwork, getNode } from './graph
 
 const GAP = 60;
 const PADDING = 80;
-const STEP = 16;
+const MIN_STEP = 16;
+const MAX_STEPS = 20_000;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 export type PackItem = { key: string; radius: number; at?: Vec2; near?: string };
@@ -39,6 +40,7 @@ export const pack = (
     }
   }
 
+  const cursors = new Map<string, number>();
   const queue = items.filter((item) => !item.at).sort((a, b) => b.radius - a.radius || a.key.localeCompare(b.key));
   while (queue.length > 0) {
     const index = Math.max(
@@ -55,14 +57,29 @@ export const pack = (
       break;
     }
     const origin = (item.near !== undefined ? positions[item.near] : undefined) ?? [0, 0];
+    const originKey = `${origin[0]},${origin[1]}`;
     const phase = random.next() * Math.PI * 2;
+    // The step scales with the circles involved so the spiral reaches large neighbours in few steps.
+    const largest = placed.reduce((max, p) => Math.max(max, p.r), 0);
+    const spacing = Math.max(MIN_STEP, item.radius / 2, largest / 200);
+    // Items arrive largest first, so the spiral resumes near where the previous one from this origin landed.
+    const first = Math.floor((cursors.get(originKey) ?? 0) * 0.5);
     let x = origin[0];
     let y = origin[1];
-    for (let step = 1; !fits(x, y, item.radius); step++) {
-      const distance = Math.sqrt(step) * STEP;
+    let step = first;
+    let found = first === 0 && fits(x, y, item.radius);
+    for (; !found && step < first + MAX_STEPS; step++) {
+      const distance = Math.sqrt(step + 1) * spacing;
       x = origin[0] + Math.cos(step * GOLDEN_ANGLE + phase) * distance;
       y = origin[1] + Math.sin(step * GOLDEN_ANGLE + phase) * distance;
+      found = fits(x, y, item.radius);
     }
+    if (!found) {
+      const outer = placed.reduce((max, p) => Math.max(max, Math.hypot(p.x - origin[0], p.y - origin[1]) + p.r), 0);
+      x = origin[0] + Math.cos(phase) * (outer + item.radius + gap);
+      y = origin[1] + Math.sin(phase) * (outer + item.radius + gap);
+    }
+    cursors.set(originKey, step);
     put(item.key, x, y, item.radius);
   }
 

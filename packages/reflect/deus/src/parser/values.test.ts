@@ -45,9 +45,10 @@ describe('parseInline', () => {
 describe('stripComment', () => {
   test('removes trailing comments only outside quotes', ({ expect }) => {
     expect(stripComment('zoom: 2   # close up')).toBe('zoom: 2');
-    expect(stripComment("caption: it's fine # note")).toBe("caption: it's fine");
+    expect(stripComment("caption: it's fine  # note")).toBe("caption: it's fine");
     expect(stripComment("color: '#5f8fae'")).toBe("color: '#5f8fae'");
-    expect(stripComment('color: #5f8fae')).toBe('color:');
+    expect(stripComment('color: #5f8fae')).toBe('color: #5f8fae');
+    expect(stripComment('caption: We are #1 today')).toBe('caption: We are #1 today');
     expect(stripComment('# whole line')).toBe('');
   });
 });

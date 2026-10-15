@@ -7,14 +7,28 @@ import { createRandom } from '../random.ts';
 import { type Graph, type GraphNetwork, TemplateError, emptyGraph } from './graph.ts';
 import { type NetworkSpec, type NetworkTemplate, type NodeType, type Props } from './template.ts';
 
+/** Generous limits that stop runaway generation before it exhausts memory or the stack. */
+export const MAX_DEPTH = 12;
+export const MAX_NETWORKS = 5_000;
+export const MAX_NODES = 20_000;
+
 /** Expands a template into a graph; the same template and seed always yield the same graph. */
 export const expand = (template: NetworkTemplate, seed: number): Graph => {
   const graph = emptyGraph();
   const random = createRandom(seed).fork('expand');
   const templates = template.templates ?? {};
+  let networkCount = 0;
+  let nodeCount = 0;
 
   const addNetwork = (spec: NetworkSpec, parent: GraphNetwork | undefined, id: string): void => {
     const path = joinPath(parent?.path ?? '', id);
+    const depth = parent ? parent.depth + 1 : 0;
+    if (depth > MAX_DEPTH) {
+      throw new TemplateError(`"${path}" nests deeper than ${MAX_DEPTH} levels; does a template generate itself?`);
+    }
+    if (++networkCount > MAX_NETWORKS) {
+      throw new TemplateError(`The template generates more than ${MAX_NETWORKS} networks`);
+    }
     if (graph.networks[path]) {
       throw new TemplateError(`Duplicate network "${path}"`);
     }
@@ -23,7 +37,7 @@ export const expand = (template: NetworkTemplate, seed: number): Graph => {
       id,
       kind: spec.kind,
       parent: parent?.path,
-      depth: parent ? parent.depth + 1 : 0,
+      depth,
       props: { ...spec.props },
       nodes: [],
       networks: [],
@@ -44,6 +58,9 @@ export const expand = (template: NetworkTemplate, seed: number): Graph => {
       const nodePath = joinPath(path, nodeId);
       if (graph.nodes[nodePath]) {
         throw new TemplateError(`Duplicate node "${nodePath}"`);
+      }
+      if (++nodeCount > MAX_NODES) {
+        throw new TemplateError(`The template generates more than ${MAX_NODES} nodes`);
       }
       graph.nodes[nodePath] = {
         path: nodePath,

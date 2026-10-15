@@ -102,6 +102,22 @@ const wander = (
   return { node: getNode(graph, random.pick(choices)), route };
 };
 
+/** Warns when an emitter's packets start at or after the end of the flow, where nobody sees them. */
+const checkTiming = (
+  times: readonly number[],
+  duration: number,
+  verb: string,
+  report: (message: string) => void,
+): number[] => {
+  const visible = times.filter((time) => time < duration);
+  if (visible.length === 0) {
+    report(`This ${verb} emits no packets before the flow ends`);
+  } else if (visible.length < times.length) {
+    report(`${times.length - visible.length} of ${times.length} packets start after the flow ends`);
+  }
+  return visible;
+};
+
 /** Every packet the flow emits, sorted by spawn time; each packet draws from its own random fork. */
 export const compilePackets = (
   graph: Graph,
@@ -130,7 +146,8 @@ export const compilePackets = (
       }
       const end = send.until !== undefined ? start + send.until : duration;
       let warned = false;
-      spawnTimes(start, end, send.rate, send.count).forEach((spawn, k) => {
+      const warn = (message: string): number => diagnostics.push({ severity: 'warning', message, step: step.name });
+      checkTiming(spawnTimes(start, end, send.rate, send.count), duration, 'send', warn).forEach((spawn, k) => {
         const local = random.fork(`send:${index}:${sendIndex}:${k}`);
         const source = getNode(graph, local.pick(sources));
         const others = targets.filter((path) => path !== source.path);
@@ -158,7 +175,8 @@ export const compilePackets = (
         return;
       }
       const end = traffic.until !== undefined ? start + traffic.until : duration;
-      spawnTimes(start, end, traffic.rate, undefined).forEach((spawn, k) => {
+      const warn = (message: string): number => diagnostics.push({ severity: 'warning', message, step: step.name });
+      checkTiming(spawnTimes(start, end, traffic.rate, undefined), duration, 'traffic', warn).forEach((spawn, k) => {
         const local = random.fork(`traffic:${index}:${trafficIndex}:${k}`);
         const source = getNode(graph, local.pick(scope));
         const destination = wander(graph, adjacency, source, local);

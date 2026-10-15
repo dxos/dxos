@@ -97,7 +97,7 @@ describe('parseMdl', () => {
       /Duplicate field "seed" \(line 3\)/,
     );
     expect(() => parseMdl('  orphan: 1')).toThrow(/column 0/);
-    expect(() => parseMdl(['flow F-1', '  send: { from: a, color: #5f8fae }'].join('\n'))).toThrow(
+    expect(() => parseMdl(['flow F-1', '  send: { from: a, color:  #5f8fae }'].join('\n'))).toThrow(
       /"#" starts a comment, so quote values that contain it \(line 2\)/,
     );
   });
