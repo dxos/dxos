@@ -35,7 +35,13 @@ describe('deus CLI dogfooding', () => {
     expect(printed.length).toBeGreaterThan(1000);
     const source = deus('view', ...printed, '--codebase', codebase)
       .stdout.split('\n')
-      .filter((line) => !line.startsWith('-- '))
+      // Only the header view writes above each definition goes; a `--` comment of the source stays.
+      .filter(
+        (line) =>
+          !/^-- (\S+ #[0-9a-f]{10}|: .*|a field of structure \S+|a constructor of .*|an operation of .*|builtin)$/.test(
+            line,
+          ),
+      )
       .join('\n');
     expect(deus('update', file('printed.deus', source), '--codebase', codebase).stdout).toBe('Nothing changed.\n');
   });

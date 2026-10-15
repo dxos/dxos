@@ -171,6 +171,11 @@ req R-13: an update rehashes every definition that depends on a changed one, inc
 ```
 
 ```mdl
+req R-15: an update that changes only a definition's metadata (its doc comment or attributes) names the definition, and one that changes nothing, changes the hash, or renames only locals does not name it as metadata
+  by: Codebase.Spec.docChangeListed | Codebase.Spec.attributeChangeListed | Codebase.Spec.sameMetadataUnlisted | Codebase.Spec.changedHashUnlisted | Codebase.Spec.localRenameUnlisted
+```
+
+```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```

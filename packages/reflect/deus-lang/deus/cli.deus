@@ -286,6 +286,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       match c with
       | (name, _, _) => name) replaced))
   else
+    let retagged := Update.metadataChanged ns batch.entries (fun h => Codebase.readMeta dir h) (Map.fromList batch.metas)
     Codebase.store dir batch
     let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
     let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries
@@ -310,14 +311,15 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     if flag args "quiet" then () else output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         match c with
-        | (name, _, new) => entryJson name new) replaced)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
+        | (name, _, new) => entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
       (fun _ =>
         let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
         let updatedLines := List.map (fun c =>
           match c with
           | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
         let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
-        let lines := addedLines ++ updatedLines ++ propagatedLines
+        let metadataLines := List.map (fun name => "  * " ++ name ++ " (metadata)") retagged
+        let lines := addedLines ++ updatedLines ++ metadataLines ++ propagatedLines
         if List.isEmpty lines then "Nothing changed." else Text.join "\n" lines)
 
 --

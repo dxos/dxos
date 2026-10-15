@@ -1,3 +1,6 @@
+/-- Metadata without what the compiler derives or the printer renames. -/
+def Update.authored (meta : Sexp) : List Sexp := List.filter (fun item => head item != "scheme" && head item != "locals") (Sexp.args meta)
+
 /-- Term-like entries whose objects reference `h`. -/
 def Update.dependentsOf (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} List Text := dedup (sort (filterMap (fun pair =>
   let eh := Entry.hash (snd pair)
@@ -19,6 +22,17 @@ def Update.isTermLike (e : Entry) : Bool :=
   | Entry.test _ => true
   | Entry.theorem _ => true
   | _ => false
+
+/-- The names in `entries` that keep their hash in `ns` but whose metadata in `metas` (a doc comment,
+  attributes, comments, annotations) differs from what `stored` holds, so an update that changed only
+  those is not silent. The inferred scheme and local names are left out: printing renames locals. -/
+def Update.metadataChanged (ns : Map Text Entry) (entries : List (Text, Entry)) (stored : Text -> {r} Option Sexp) (metas : Map Text Sexp) : {r} List Text := filterMap (fun pair =>
+  let h := Entry.hash (snd pair)
+  match (Map.lookup (fst pair) ns, Map.lookup h metas) with
+  | (Option.some old, Option.some meta) => if Entry.hash old != h then Option.none else
+      let before := stored h
+      if Option.map authored before == Option.some (authored (mergeMeta before meta)) then Option.none else Option.some (fst pair)
+  | _ => Option.none) entries
 
 /-- Rebuilds a pending definition from a stored object. -/
 def Update.pendingOf (name : Text) (obj : Sexp) : Pending :=

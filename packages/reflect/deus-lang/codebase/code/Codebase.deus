@@ -15,6 +15,10 @@ inductive Codebase.MergeResult where
   | merged (head : Text) (changed : List Text)
   | conflicts (names : List Text)
 
+/-- R-15: so is a new attribute. -/
+test Codebase.Spec.attributeChangeListed := inStore (fun dir => metaChanges dir (updated dir Map.empty "test A.t := true\n") "@[req \"A.R-1\"]\ntest A.t := true\n" ==
+  ["A.t"])
+
 test Codebase.Spec.builtinsAreNotDependencies := Codebase.dependencies (Sexp.node
   "term"
   [Sexp.node "con" [Sexp.str "#Bool", Sexp.int 0], Sexp.node "con" [Sexp.str "abc", Sexp.int 1], Sexp.node "ref" [Sexp.str "def"], Sexp.node "op" [Sexp.str "#IO", Sexp.int 0]]) == ["abc", "def"]
@@ -23,6 +27,9 @@ theorem Codebase.Spec.causalRoundTrip (c : Causal) : causalFromSexp (causalToSex
 
 /-- `A.f`, `B.g` calling it, and `C.h` calling `B.g`. -/
 def Codebase.Spec.chain : Text := "def A.f := \"one\"\ndef B.g := A.f\ndef C.h := B.g\n"
+
+/-- R-15: a new body is an update, listed as one, not as metadata. -/
+test Codebase.Spec.changedHashUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f := 1\n") "/-- Two. -/\ndef A.f := 2\n" == [])
 
 /-- R-12: source cannot cross layers, since code cannot name a test. -/
 test Codebase.Spec.codeCannotNameATest :=
@@ -67,6 +74,9 @@ test Codebase.Spec.dependentsFollowAnUpdate := inStore (fun dir =>
   let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\n"
   refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
 
+/-- R-15: a new doc comment on an unchanged body is a metadata change. -/
+test Codebase.Spec.docChangeListed := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f := 1\n") "/-- One. -/\ndef A.f := 1\n" == ["A.f"])
+
 /-- Names with dots in every position the tree splits at, from generated words. -/
 def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => [w, "A." ++ w, "A.B." ++ w, w ++ ".x", "." ++ w, w ++ "."]) words
 
@@ -100,6 +110,9 @@ test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (he
 test Codebase.Spec.layersFollowTheTable := List.map
   (fun kind => (kind, mayDependOn (layerOf (Sexp.node kind []))))
   ["term", "cycle", "type", "ability", "spec", "test", "theorem", "ns", "causal", "tasks", "task"] == [("term", ["code"]), ("cycle", ["code"]), ("type", ["code"]), ("ability", ["code"]), ("spec", ["spec"]), ("test", ["code", "tests"]), ("theorem", ["code", "proofs"]), ("ns", ["code", "tests", "proofs", "history"]), ("causal", ["code", "tests", "proofs", "history"]), ("tasks", ["code", "tests", "proofs", "history"]), ("task", ["code", "tests", "proofs", "history"])]
+
+/-- R-15: printing renames locals, so a local's new name is not reported. -/
+test Codebase.Spec.localRenameUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "def A.f x := x\n") "def A.f y := y\n" == [])
 
 test Codebase.Spec.mergeFastForwards := inStore (fun dir =>
   let root := commit dir (Spec.namespaceOf ["a"]) "base"
@@ -144,6 +157,11 @@ def Codebase.Spec.mergedThreads (dir : Text) (base : List (Text, List Comment)) 
     (fun pair => (fst pair, List.map (fun c => c.note) (Comments.read dir (snd pair))))
     (Map.toList (Comments.snapshotOf dir (Causal.mk "" [] "" "" "" merged)))
 
+/-- The names an update of `ns` from `source` changes only the metadata of. -/
+def Codebase.Spec.metaChanges (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} List Text :=
+  let b := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) "off" [parseFile "t.deus" source]
+  metadataChanged ns b.entries (fun h => readMeta dir h) (Map.fromList b.metas)
+
 /-- A namespace whose entries are terms named by the hash of their name. -/
 def Codebase.Spec.namespaceOf (names : List Text) : Map Text Entry := Map.fromList (List.map (fun n => (n, Entry.term (Text.sha256 n))) names)
 
@@ -168,6 +186,10 @@ def Codebase.Spec.refersTo (dir : Text) (ns : Map Text Entry) (name : Text) (dep
       (Entry.hash d)
       (Codebase.dependencies (getOr (readObject dir (Entry.hash e)) (Sexp.list [])))
   | _ => false
+
+/-- R-15: the same source again changes nothing. -/
+test Codebase.Spec.sameMetadataUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "/-- One. -/\ndef A.f := 1\n") "/-- One. -/\ndef A.f := 1\n" ==
+  [])
 
 theorem Codebase.Spec.snapshotIgnoresOrder (words : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf (dotted words)) ==
     putNamespace dir (Spec.namespaceOf (reverse (dotted words)))) == true := by test 30

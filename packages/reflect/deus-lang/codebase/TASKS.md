@@ -267,12 +267,6 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - assignee: claude
 - labels: browser, perf, kernel
 
-## deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (`a08c4408`)
-
-- state: todo
-- priority: low
-- labels: codebase, cli
-
 ## law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (`0d7b0142`)
 
 - state: todo
@@ -1393,6 +1387,14 @@ Follow-up of 207cac21: bindings run on the wasm kernel only. The TS kernel (src/
 Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 > claude: Duplicate of 353444f7: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (`a08c4408`)
+
+- state: done
+- priority: low
+- labels: codebase, cli
+
+> claude: Done (D131): update lists '* name (metadata)' when only a definition's doc comment, attributes or comments changed; --json has a metadata array. Codebase.Spec R-15.
 
 ## Break long lines in deus view output (`d7eba020`)
 
