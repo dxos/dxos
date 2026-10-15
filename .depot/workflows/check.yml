@@ -478,7 +478,7 @@ jobs:
     name: test (browser, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' &&
+      ${{ !cancelled() && inputs.only != 'e2e' && github.event_name != 'pull_request' &&
       (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.browser == 'true')) }}
     strategy:
       fail-fast: false
