@@ -15,7 +15,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [CODEBASE-TEXT.md](./CODEBASE-TEXT.md) | The text export written by `deus export` and kept in git                               |
 | [Export.Spec](../../codebase/specs/Export.Spec.mdl) | Checked spec of the export: restoring gives back the same codebase                |
 | [Compile.Spec](../../codebase/specs/Compile.Spec.mdl)           | Checked spec of the compiler: hashes follow meaning, printing compiles back          |
-| [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Replication bundles: naming, contents, the `DEUSCOL1` columnar encoding, gzip      |
+| [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Where a codebase lives (store, Worker, R2, D1, mirror), names, branches and heads, and the replication bundles: naming, contents, `DEUSCOL1`, gzip |
 | [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
 | [Bindings.Spec](../../codebase/specs/Bindings.Spec.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |

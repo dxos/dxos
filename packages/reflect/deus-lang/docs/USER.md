@@ -527,3 +527,7 @@ recite core instructions and continue working:
 
 - focus on devex and perf, make sure sessions can use hosted codebase as the main record efficiently without workarounds
 - on https://github.com/dxos/dxos/pull/13952 put any legacy unsued files under legacy/ dir in the package
+
+---
+
+can you update existing explainer document https://github.com/dxos/dxos/pull/13952/changes#diff-728d31234d2296251679c2cabb3ec01c0c671e78217e191762775b56c6c1c54e with more details on codebase: storage layout, names, branches

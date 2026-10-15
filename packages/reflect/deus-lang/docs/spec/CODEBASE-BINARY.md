@@ -1,6 +1,7 @@
-# Codebase replication format
+# Codebase storage, names and replication
 
-A remote holds a codebase as a set of immutable bundles. A bundle is one S-expression that carries
+This document explains where a codebase lives, how its names and branches work, and the format a
+remote stores it in. A remote holds a codebase as a set of immutable bundles. A bundle is one S-expression that carries
 objects, their metadata and branch claims. It is encoded as columnar text (DEUSCOL1) and stored gzip
 compressed. `deus push`, `deus pull` and `deus compact` write and read bundles. Any client that
 reads this format can replicate a codebase without a server. The implementation is in
@@ -13,6 +14,104 @@ text, gzip).
 
 Objects and their hashes are defined in [CODEBASE-STORE.md](CODEBASE-STORE.md). The canonical
 S-expression text that both hashes and dictionaries use is defined in [CORE.md](CORE.md).
+
+## Where a codebase lives
+
+A codebase lives in a local store per session, on a shared remote (the DEUS Worker), and in two
+git copies. Each holds the same content-addressed objects, so a hash means the same thing everywhere:
+
+```text
+ your session                       the DEUS Worker (deus.dmytro-a80.workers.dev)          backup
+ ───────────────                    ─────────────────────────────────────────────          ──────────────────
+ local store ($DEUS_CODEBASE)       R2 bucket deus-codebases              D1 deus-auth       github.com/
+  objects/ meta/ branches/ HEAD ──►  <project>/bundles/<level>-<sha256>    api_keys          dxos/deus-mirror
+  remotes/origin/seen/<bundle>       <project>/site/  (explorer)           audit             store/ remote/
+  cache/ artifacts/ (local only) ◄── <project>/assets/ inbox/ events/      heads (D167)       terms/
+              deus push / deus pull over https://…/v1/<project>
+```
+
+| Place                    | What it holds                                                                                                                                         | Who writes it                                     | Spec                                                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Local store              | one file per object (`objects/<hh>/<hash>`), metadata, branch pointers, `HEAD`, verdicts, provenance, caches                                          | the `deus` CLI only                               | [CODEBASE-STORE.md](CODEBASE-STORE.md)                                                                 |
+| Remote bundles           | immutable bundles: each one a batch of objects plus branch claims; the bundle names are the remote's whole state                                      | `deus push`, `deus compact`                       | this document                                                                                          |
+| Files beside the bundles | `site/` (the explorer), `assets/<sha256>` (attachments), `inbox/` (explorer requests), `events/` (analytics)                                          | `deus push` of `main`, the explorer, `deus event` | [EXPLORER.md](EXPLORER.md), [Remote layout](#remote-layout)                                            |
+| D1 database `deus-auth`  | API keys (the SHA-256 of each secret, scopes, projects), an audit row per write, and the head of each branch as the Worker last accepted it           | the Worker; keys by `scripts/deus-keys.mjs`       | [The DEUS Worker](#the-deus-worker), [Remote.Spec](https://deus.dmytro-a80.workers.dev/#n:Remote.Spec) |
+| Text export (git)        | `codebase/`: one `.deus` file per namespace, `specs/*.mdl`, `tasks.sexp`, `history.sexp`                                                              | `deus export`                                     | [CODEBASE-TEXT.md](CODEBASE-TEXT.md)                                                                   |
+| Mirror (backup)          | `store/` (a pulled store's files), `remote/bundles/` (a byte copy of the Worker's bundles), `terms/` (one file per definition, `deus export --terms`) | an hourly routine ([D168](../DECISIONS.md))       | [D168](../DECISIONS.md)                                                                                |
+
+The shared toolchain codebase is the project `toolchain`, at `https://deus.dmytro-a80.workers.dev/v1/toolchain`.
+It is the default URL of the remote `origin` in any store whose `project` file names
+`https://dxos.org/deus/toolchain` (`Cli.defaultRemote`,
+[`#n:Cli.defaultRemote`](https://deus.dmytro-a80.workers.dev/#n:Cli.defaultRemote)), so a fresh store needs
+no `deus remote add`. On 2026-10-15 the remote held 27 level-0 bundles, 3,769 definition pages and
+154 change pages under `site/`, 198 versioned site files and 10 event files; `assets/` and `inbox/` were
+empty.
+
+The flow of one change: `deus pull` lists the bundles, fetches only those that `remotes/origin/seen/`
+does not know, writes their objects into the store and moves the tracking branch `origin.main`; the
+session merges that into its own branch, edits through the CLI, and `deus push` uploads one new
+bundle holding the objects no seen bundle has, with a claim that names the new head. A bundle is never
+rewritten; only compaction deletes bundles, once strata hold their objects. The mutable state is the D1
+`heads` row, the explorer's `site/`, and `inbox/`, which `deus inbox` empties as it applies requests.
+
+Note: the binary bundle format is being redesigned for faster fresh pulls (the "Cloudflare codebase
+hosting plan" thread; `/mnt/project-files/cloudflare-plan/`). This document describes the format the
+CLI writes today.
+
+## Names
+
+A codebase has two kinds of identifiers. Hashes name content and never change meaning. Names are
+labels that point at hashes, and moving a label is the only kind of edit.
+
+### Definition names
+
+A definition's name is not part of its object. The object `(term …)` is hashed from its Core alone, so
+two definitions with the same body share one object and one hash. The name lives in the namespace
+snapshot ([CODEBASE-STORE.md](CODEBASE-STORE.md#namespace-snapshots)), a tree of `ns` objects that maps
+full names to entries:
+
+| Name                              | Entry in the snapshot                                                 | Notes                                            |
+| --------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------ |
+| `Replicate.push`                  | `(term "<hash>")`                                                     | a value or function                              |
+| `Remote.Spec`                     | `(spec "<hash>")`                                                     | an `.mdl` spec document                          |
+| `Replicate.Spec.bothChangedMerge` | `(theorem "<hash>")`                                                  | tests are `(test …)`                             |
+| `Sexp`, `Sexp.node`               | `(type "<hash>" "<iri>" (…))`, `(ctor "<type hash>" <tag> <arity>)`   | a constructor names its type's hash and position |
+| `Remote`, `Remote.put`            | `(ability "<hash>" "<iri>")`, `(op "<ability hash>" <index> <arity>)` | an operation names its ability's hash and index  |
+| `lib.<library>.<name>`            | any of the above                                                      | a pinned library mounted under `lib.` (D49)      |
+
+Consequences:
+
+- **Renaming is cheap.** `deus mv <from> <to>` (a whole namespace when `<from>` is a prefix) rewrites only the `ns` nodes on the name's path
+  and writes a history node; the definition's object and every object that refers to it keep their
+  hashes, because references inside Core are by hash, never by name.
+- **Aliases are free.** `deus alias <from> <to>` binds a second name to the same hash. The explorer
+  lists the other names of a hash as `aliases`.
+- **Changing a body changes its hash** and so the hash of every dependent. `deus update` rebinds the
+  dependents' names to their new hashes ([CODEBASE-STORE.md](CODEBASE-STORE.md#update-propagation)).
+  The old objects stay in the store; names just stop pointing at them.
+- **Names replicate inside history.** A bundle has no name table: the namespace snapshot is an object
+  like any other, reached from a causal node's `(ns …)` field, so a pull brings names with the history
+  that made them.
+- **Explorer links** use either form: `#n:<Name>` opens a namespace or the definition with that name in
+  the published `main`, and `#d:<hash>` opens that exact definition, whatever it is called now. For example
+  [`#n:Replicate.push`](https://deus.dmytro-a80.workers.dev/#n:Replicate.push).
+
+### Other names
+
+| What            | Form                                                                                | Defined by                                                     |
+| --------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Object          | 64 lowercase hex digits, SHA-256 of its canonical text                              | [CODEBASE-STORE.md](CODEBASE-STORE.md#hashes-and-object-files) |
+| Short hash      | a unique prefix, printed as `#<10 hex>` in CLI messages                             | the CLI                                                        |
+| Local branch    | ASCII letters, digits, `-`, `_`, `.`; `main` by default                             | [CODEBASE-STORE.md](CODEBASE-STORE.md#branches-and-head)       |
+| Tracking branch | `<remote>.<branch>`, then `<remote>.<branch>.2`, `.3`, … for concurrent heads       | [Heads](#heads)                                                |
+| Remote          | the same characters as a branch; `origin` is the shared one                         | `remotes/<name>/url`                                           |
+| Worker project  | `[a-z0-9][a-z0-9-]{0,62}`, one folder of the bucket (`toolchain`)                   | `PROJECT` in `platform/worker/remote.mjs`                      |
+| Bundle          | `<level>-<sha256 of the uncompressed text>`                                         | [Bundle names](#bundle-names)                                  |
+| Asset           | `<sha256 of its bytes>`                                                             | [CODEBASE-STORE.md](CODEBASE-STORE.md#assets)                  |
+| Inbox request   | `<RFC 3339 time with - for :>-<8 hex>.sexp`, so name order is filing order          | [Remote layout](#remote-layout)                                |
+| Site version    | 16 hex digits; `site/HEAD` names the live one ([D166](../DECISIONS.md))             | [EXPLORER.md](EXPLORER.md)                                     |
+| API key         | `deus_<16 hex id>_<64 hex secret>`; only the id and the secret's SHA-256 are stored | [The DEUS Worker](#the-deus-worker)                            |
+| Task            | 8 hex digits, used by unique prefix (`deus task show 99b7`)                         | [CODEBASE-STORE.md](CODEBASE-STORE.md#tasks)                   |
 
 ## Bundle names
 
@@ -220,11 +319,12 @@ The `Remote` ability is the whole interface: `list`, `get`, `put` (never overwri
 them ([D82](../DECISIONS.md)): `keys folder`, `download key file`, `upload key file mediaType` and
 `drop key`. A remote URL is stored locally in `remotes/<name>/url`.
 
-| Remote URL                | Bundles at                                  | Other files                                                     |
-| ------------------------- | ------------------------------------------- | --------------------------------------------------------------- |
-| a directory path `<root>` | `<root>/bundles/<name>`                     | `<root>/site/…` (explorer), `assets/<sha256>`, `inbox/<name>`   |
-| `r2://<bucket>/<prefix>`  | key `<prefix>/bundles/<name>` in `<bucket>` | keys `<prefix>/site/…`, `<prefix>/assets/…`, `<prefix>/inbox/…` |
-| `r2://<bucket>`           | prefix defaults to `deus`                   |                                                                 |
+| Remote URL                    | Bundles at                                            | Other files                                                                                      |
+| ----------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| a directory path `<root>`     | `<root>/bundles/<name>`                               | `<root>/site/…` (explorer), `assets/<sha256>`, `inbox/<name>`                                    |
+| `r2://<bucket>/<prefix>`      | key `<prefix>/bundles/<name>` in `<bucket>`           | keys `<prefix>/site/…`, `<prefix>/assets/…`, `<prefix>/inbox/…`                                  |
+| `r2://<bucket>`               | prefix defaults to `deus`                             |                                                                                                  |
+| `https://<host>/v1/<project>` | key `<project>/bundles/<name>` in the Worker's bucket | keys `<project>/site/…`, `assets/…`, `inbox/…`, `events/…` ([The DEUS Worker](#the-deus-worker)) |
 
 `assets/<sha256>` holds the files comments and tasks attach, named by the SHA-256 of their bytes
 ([CODEBASE-STORE.md](./CODEBASE-STORE.md#assets)). `deus push` uploads the store's assets the remote
@@ -283,6 +383,41 @@ Note: the continuation token is not URL-encoded, and the `PUT` body carries curl
 A reader SHOULD ignore listed names that do not match the bundle name grammar. The implementation
 fetches every listed name and fails if one does not decode to one form.
 
+### The DEUS Worker
+
+`https://<host>/v1/<project>` remotes are served by the DEUS Worker ([D164](../DECISIONS.md),
+[`platform/worker/`](../../platform/worker), [Remote.Spec](https://deus.dmytro-a80.workers.dev/#n:Remote.Spec)).
+The Worker is the only thing that touches the private bucket `deus-codebases`, so a session needs one
+allowed domain and, to write, `$DEUS_API_KEY`, instead of R2 credentials. Each `Remote` operation is one
+request (`Replicate.http`, which runs `curl` with a mode-600 config file that holds the key):
+
+| `Remote` op      | Request                                                       | R2 key                     | Write scope                                     |
+| ---------------- | ------------------------------------------------------------- | -------------------------- | ----------------------------------------------- |
+| `list`           | `GET /v1/<project>/bundles`, one name per line                | `<project>/bundles/`       | none                                            |
+| `get`            | `GET /v1/<project>/bundles/<name>`, gzip, cached as immutable | `<project>/bundles/<name>` | none                                            |
+| `put`            | `PUT /v1/<project>/bundles/<name>` with `x-deus-claim`        | same                       | `push`                                          |
+| `delete`         | `DELETE /v1/<project>/bundles/<name>`                         | same                       | `compact`                                       |
+| `keys`           | `GET /v1/<project>/files/<folder>/`                           | `<project>/<folder>/`      | none                                            |
+| `download`       | `GET /v1/<project>/files/<key>`                               | `<project>/<key>`          | none                                            |
+| `upload`, `drop` | `PUT`, `DELETE /v1/<project>/files/<key>`                     | same                       | the folder: `assets`, `inbox`, `site`, `events` |
+| `writeAll`       | one `PUT /v1/<project>/files/site/…` per file, 16 at a time   | `<project>/site/…`         | `site`                                          |
+
+Only the four folders `assets`, `inbox`, `site` and `events` exist beside `bundles/`, and every key
+segment must match `[A-Za-z0-9_][A-Za-z0-9._-]*`, so a key cannot leave its folder. `/v1/` alone answers
+`{"service":"deus","api":1,"scopes":[…]}`, and `/v1/keys` lists, mints and revokes keys for an `admin` key.
+
+Authorization: a write carries `Authorization: Bearer deus_<id>_<secret>`. The Worker looks up the id in
+the D1 table `api_keys`, compares the SHA-256 of the secret, and checks `revoked_at`, `expires_at`, the
+scope and the `projects` list (`"*"` or names). Failures are 401 (no key, unknown, revoked, expired) or
+403 (missing scope, other project). Each authorized write appends `(at, key_id, method, path, status)` to
+`audit` after the response is sent. `scripts/deus-keys.mjs` writes keys straight into D1 with the
+account's Cloudflare token. The project threads' key has `push`, `site`, `assets`, `inbox` and `events`
+on `toolchain` ([D164](../DECISIONS.md), [D169](../DECISIONS.md)).
+
+The explorer is the same Worker: `/` serves `<PREFIX>/site/` of the project in `PREFIX` (`toolchain`),
+pinned to the version `site/HEAD` names ([D166](../DECISIONS.md)), and `/api/…` turns signed-in
+comments and tasks into `inbox/` requests ([EXPLORER.md](EXPLORER.md#writing)).
+
 ## Local tracking state
 
 A client records what it has read so it reads each bundle once:
@@ -318,6 +453,64 @@ Two heads mean concurrent pushes; the user merges `<remote>.<branch>.2` as any b
 tasks snapshots, and everything the named entries reach. It uploads one level-0 bundle with the
 claim `(b, head)` and the closure hashes that no seen bundle lists. If nothing is missing and the
 claim already exists, it uploads nothing.
+
+## Branches end to end
+
+A branch is a pointer to a causal node, and it exists at three levels. Only the local one is a file
+you can move; the other two are derived or guarded.
+
+| Level           | Where                                                          | What moves it                                                                                      |
+| --------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Local branch    | `branches/<branch>` in the store, `HEAD` names the current one | every commit, `merge`, `undo`, `switch` ([CODEBASE-STORE.md](CODEBASE-STORE.md#branches-and-head)) |
+| Tracking branch | `branches/origin.main` (and `origin.main.2`, …) in the store   | `deus pull`, from the remote's heads                                                               |
+| Remote head     | computed from the `(branch …)` claims in the listed bundles    | a pushed bundle's claim                                                                            |
+| Worker head     | the D1 row `heads(project, branch)`                            | a push whose `x-deus-claim` names the current row ([D167](../DECISIONS.md))                        |
+
+A remote has no branch file. Its heads are whatever the claims say ([Heads](#heads)), so a directory or
+R2 remote can fork: two sessions that pushed off the same head both succeed and leave two heads, which
+the next pull shows as `origin.main` and `origin.main.2`. The Worker adds the D1 row so that the
+shared remote cannot fork. Every session works the same way:
+
+```text
+deus pull                  # list bundles, fetch unseen ones, set origin.main to the head
+deus merge origin.main     # fast-forward or a two-parent merge node on your branch
+...edit with deus add / update / task...
+deus push                  # one level-0 bundle: (branch "main" <new head>) (base "main" <head you merged>)
+```
+
+What `deus push` checks, in order:
+
+1. **Client side** (`Replicate.push`,
+   [`#n:Replicate.push`](https://deus.dmytro-a80.workers.dev/#n:Replicate.push)). It syncs the
+   remote's bundles, computes the remote's heads of the branch, and refuses unless each one is an
+   ancestor of the local head: "origin has main changes this store lacks (#…); run `deus pull origin`
+   and `deus merge origin.main`, then push again". If nothing is missing and the claim exists, it
+   uploads nothing.
+2. **The bundle** carries the claim `(branch "main" "<head>")` and one `(base "main" "<h>")` per remote
+   head it built on. Older readers skip `base` items.
+3. **Over HTTPS**, `put` sends the claim as the header `x-deus-claim: main <head> <base>,…` (`-` for no
+   base), built by `Replicate.claimHeader`.
+4. **The Worker** (`moveHead` in `platform/worker/remote.mjs`) answers:
+
+| Situation                                             | Answer                                                                                 |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| the bundle name is already stored                     | 200 `stored: false`, nothing else happens                                              |
+| the gzip body does not hash to the name               | 400                                                                                    |
+| no `x-deus-claim` and the key lacks `compact`/`admin` | 428: the CLI is older than D167; merge #13952's head and rebuild                       |
+| the D1 head already equals the claimed head           | accepted (a retry of a push whose head moved but whose bundle store failed)            |
+| no D1 row for the branch yet                          | the row is inserted, accepted                                                          |
+| the D1 head is one of the claim's bases               | one conditional `update … where causal = <current>` moves it, accepted                 |
+| anything else, or the update lost a race              | 409 with the current head: someone pushed since you pulled; pull, merge and push again |
+
+The head moves before the bundle is stored, so a failed store never blocks the branch: the retry finds
+the head already there. A compaction key may push without a claim, because compaction only re-claims
+existing heads. The Worker trusts the client's ancestry claim; checking it would mean parsing the
+bundle, which does not fit the Free plan's 10 ms of CPU (planned with the push checks,
+`/mnt/project-files/cloudflare-plan/PUSH-CHECKS.md`).
+
+Note: readers still compute heads from claims, not from D1, and no endpoint returns the D1 row. A
+bundle stored before D167, or by a compaction key, can carry a claim the row never saw; `pull` treats it
+like any other claim.
 
 ## Sedimentree compaction
 
