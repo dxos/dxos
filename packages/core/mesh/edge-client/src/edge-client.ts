@@ -276,7 +276,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       {
         write: async (message) => {
           signal?.throwIfAborted();
-          message.serviceId ??= serviceId;
+          message.serviceId ||= serviceId;
           const sent = this.sendAndWait(Context.default(), message);
           if (!signal) {
             return sent;

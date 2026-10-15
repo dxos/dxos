@@ -7,7 +7,12 @@ import { Context } from '@dxos/context';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EDGE_FLOW_CONTROL_MAX_MESSAGES, EDGE_FLOW_CONTROL_WINDOWS, edgeFlowControlWindow } from '@dxos/protocols';
+import {
+  EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES,
+  EDGE_FLOW_CONTROL_MAX_MESSAGES,
+  EDGE_FLOW_CONTROL_WINDOWS,
+  edgeFlowControlWindow,
+} from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { concatUint8Arrays } from '@dxos/util';
@@ -107,6 +112,9 @@ export type FlowControlConfig = {
   /** Messages an outbound channel may have sent but not yet seen acknowledged. */
   maxMessages: number;
 
+  /** Messages the whole connection may have sent but not yet seen acknowledged, across every channel. */
+  maxConnectionMessages: number;
+
   /**
    * Consumption on an inbound channel worth announcing. Must stay below the smallest window and message bound the peer
    * sends with: grants are rate-limited, so a threshold the peer can never reach stalls it for good.
@@ -114,10 +122,19 @@ export type FlowControlConfig = {
   grantThreshold: FlowControlAmount;
 
   /**
+   * Unannounced consumption across every inbound channel worth announcing, in messages. Must stay below the peer's
+   * {@link maxConnectionMessages}: spread over many channels, no single channel may ever reach {@link grantThreshold}.
+   */
+  connectionGrantThreshold: number;
+
+  /**
    * Received-but-unconsumed amount on an inbound channel past which {@link onOverdraft} fires. Credits are advisory,
    * so a receiver that must not fall over needs a bound that does not depend on the peer cooperating.
    */
   overdraftLimit: FlowControlAmount;
+
+  /** Received-but-unconsumed messages across every inbound channel past which {@link onOverdraft} fires. */
+  connectionOverdraftLimit: number;
 
   /** Peer overran its window. The owner decides what to do (the router closes the socket). */
   onOverdraft?: (info: { channelId: number; outstanding: FlowControlAmount; limit: FlowControlAmount }) => void;
@@ -132,16 +149,19 @@ export const createFlowControlConfig = (onOverdraft?: FlowControlConfig['onOverd
   return {
     windowFor: edgeFlowControlWindow,
     maxMessages: EDGE_FLOW_CONTROL_MAX_MESSAGES,
+    maxConnectionMessages: EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES,
     // A quarter of the smallest budget, so even a swarm channel is announced well before its sender stalls.
     grantThreshold: {
       bytes: Math.floor(Math.min(...windows) / 4),
       messages: Math.max(1, Math.floor(EDGE_FLOW_CONTROL_MAX_MESSAGES / 4)),
     },
+    connectionGrantThreshold: Math.max(1, Math.floor(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES / 4)),
     // The receiver cannot tell an inbound channel's service, so it bounds every channel by the largest window.
     overdraftLimit: {
       bytes: Math.ceil(Math.max(...windows) * OVERDRAFT_TOLERANCE),
       messages: Math.ceil(EDGE_FLOW_CONTROL_MAX_MESSAGES * OVERDRAFT_TOLERANCE),
     },
+    connectionOverdraftLimit: Math.ceil(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES * OVERDRAFT_TOLERANCE),
     onOverdraft,
   };
 };
@@ -214,7 +234,9 @@ export class WebSocketMuxer {
     invariant(
       !this._flowControl ||
         (this._flowControl.maxMessages >= 1 &&
-          this._flowControl.grantThreshold.messages <= this._flowControl.maxMessages),
+          this._flowControl.grantThreshold.messages <= this._flowControl.maxMessages &&
+          this._flowControl.connectionGrantThreshold >= 1 &&
+          this._flowControl.connectionGrantThreshold <= this._flowControl.maxConnectionMessages),
       'Flow control needs a message bound the grant threshold can reach.',
     );
     if (this._flowControl) {
@@ -251,7 +273,9 @@ export class WebSocketMuxer {
       channelId === undefined ||
       (messageChunks.length === 1 &&
         (!segmented || this.flowControlEnabled) &&
-        !this._outMessageChunks.has(channelId) &&
+        // Under flow control nothing may overtake a queued message on any channel, or new sends could take every slot
+        // the connection bound frees and starve the queue.
+        (this.flowControlEnabled ? this._outMessageChunks.size === 0 : !this._outMessageChunks.has(channelId)) &&
         this._canSend(channelId, messageChunks[0]))
     ) {
       this._write(channelId, messageChunks[0]);
@@ -475,6 +499,15 @@ export class WebSocketMuxer {
     return outstanding;
   }
 
+  /** Messages sent on every channel that the peer has not yet reported consuming. */
+  public get unacknowledgedMessages(): number {
+    let outstanding = 0;
+    for (const channelId of this._outSent.keys()) {
+      outstanding += this.inFlight(channelId).messages;
+    }
+    return outstanding;
+  }
+
   /** What an outbound channel has sent that the peer has not yet reported consuming. */
   public inFlight(channelId: number): FlowControlAmount {
     return difference(this._outSent.get(channelId), this._outAcknowledged.get(channelId));
@@ -643,7 +676,11 @@ export class WebSocketMuxer {
       return true;
     }
     const inFlight = this.inFlight(channelId);
-    if (isTerminator(chunk.payload) && inFlight.messages >= this._flowControl.maxMessages) {
+    if (
+      isTerminator(chunk.payload) &&
+      (inFlight.messages >= this._flowControl.maxMessages ||
+        this.unacknowledgedMessages >= this._flowControl.maxConnectionMessages)
+    ) {
       return false;
     }
     return inFlight.bytes + chunk.payloadBytes <= (this._outWindow.get(channelId) ?? 0);
@@ -674,6 +711,20 @@ export class WebSocketMuxer {
     const limit = this._flowControl.overdraftLimit;
     if (outstanding.bytes > limit.bytes || outstanding.messages > limit.messages) {
       this._flowControl.onOverdraft?.({ channelId, outstanding, limit });
+      return;
+    }
+    if (terminated) {
+      const connectionOutstanding = this._sumInbound((channel) =>
+        difference(this._inReceived.get(channel), this._inConsumed.get(channel)),
+      );
+      const connectionLimit = this._flowControl.connectionOverdraftLimit;
+      if (connectionOutstanding > connectionLimit) {
+        this._flowControl.onOverdraft?.({
+          channelId,
+          outstanding: { bytes: outstanding.bytes, messages: connectionOutstanding },
+          limit: { bytes: limit.bytes, messages: connectionLimit },
+        });
+      }
     }
   }
 
@@ -691,10 +742,29 @@ export class WebSocketMuxer {
     // channel. Skipping a grant is free because they are cumulative: the next one restates the total.
     const freed = difference(consumed, this._inGranted.get(channelId));
     const threshold = this._flowControl.grantThreshold;
-    if (freed.bytes < threshold.bytes && freed.messages < threshold.messages) {
+    if (freed.bytes >= threshold.bytes || freed.messages >= threshold.messages) {
+      this._grant([channelId]);
       return;
     }
-    this._grant([channelId]);
+    // A peer spread over many channels can reach its connection bound with no channel at its own threshold.
+    const ungranted = (channel: number) => difference(this._inConsumed.get(channel), this._inGranted.get(channel));
+    if (messages > 0 && this._sumInbound(ungranted) >= this._flowControl.connectionGrantThreshold) {
+      this._grant(
+        [...this._inConsumed.keys()].filter((channel) => {
+          const pending = ungranted(channel);
+          return pending.bytes > 0 || pending.messages > 0;
+        }),
+      );
+    }
+  }
+
+  /** Sums the messages of `amountOf` over every inbound channel. */
+  private _sumInbound(amountOf: (channelId: number) => FlowControlAmount): number {
+    let total = 0;
+    for (const channelId of this._inReceived.keys()) {
+      total += amountOf(channelId).messages;
+    }
+    return total;
   }
 
   /** Announces the channels' consumption. Sent directly, never queued or credit-gated, either of which deadlocks. */

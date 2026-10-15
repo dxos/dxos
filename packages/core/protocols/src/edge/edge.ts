@@ -457,6 +457,16 @@ export const EDGE_FLOW_CONTROL_WINDOWS = {
  */
 export const EDGE_FLOW_CONTROL_MAX_MESSAGES = 64;
 
+/**
+ * Messages one connection may have sent but not yet seen consumed, across all its channels.
+ *
+ * Every message on a device's socket lands in that device's one router Durable Object, and a channel is a service, so
+ * one per space: the per-channel bound alone lets a device with 60 spaces hold 3,840 messages in flight there, while a
+ * reconnect's burst of ~1,200 feed `get-metadata` frames already overloads it. Feed replies are relayed back through
+ * the same object before the request settles, so this also bounds them.
+ */
+export const EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES = 128;
+
 /** Credit window for the channel carrying `serviceId`, per {@link EDGE_FLOW_CONTROL_WINDOWS}. */
 export const edgeFlowControlWindow = (serviceId?: string): number => {
   if (!serviceId) {

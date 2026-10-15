@@ -5,7 +5,11 @@
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { InvariantViolation } from '@dxos/invariant';
-import { EDGE_FLOW_CONTROL_MAX_MESSAGES, EDGE_FLOW_CONTROL_WINDOWS } from '@dxos/protocols';
+import {
+  EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES,
+  EDGE_FLOW_CONTROL_MAX_MESSAGES,
+  EDGE_FLOW_CONTROL_WINDOWS,
+} from '@dxos/protocols';
 import { buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { concatUint8Arrays, isNonNullable } from '@dxos/util';
@@ -694,6 +698,75 @@ describe('WebSocketMuxerTest', () => {
       expect(overdrafts).toHaveLength(0);
     });
 
+    test('the sender holds the connection to its bound across channels', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, {
+        maxChunkLength: SHORT_MESSAGE_CHUNK,
+        flowControl: flowControl({ maxConnectionMessages: 8, connectionGrantThreshold: 2 }),
+      });
+      // One message on each of 20 channels: no channel is near its own bound, the connection is.
+      const sends = Array.from({ length: 20 }, (_, index) => muxer.send(textMessage(`m${index}`, `service-${index}`)));
+      await settle();
+
+      expect(dataFrames(socket.frames)).toHaveLength(8);
+      expect(muxer.unacknowledgedMessages).toBe(8);
+
+      // Acknowledging two channels frees exactly two slots, taken in the order the messages were sent.
+      const [first, second] = dataFrames(socket.frames);
+      muxer.receiveFrame(grant(first[1], first.byteLength - 2, 1));
+      muxer.receiveFrame(grant(second[1], second.byteLength - 2, 1));
+      await settle();
+
+      const written = dataFrames(socket.frames);
+      expect(written).toHaveLength(10);
+      expect(written.slice(8).map((frame) => frame[1])).toEqual([written[7][1] + 1, written[7][1] + 2]);
+
+      muxer.destroy();
+      await Promise.allSettled(sends);
+    });
+
+    test('consumption spread across channels is announced at the connection threshold', ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = syncedMuxer(socket, {
+        grantThreshold: { bytes: WINDOW * 1_000, messages: MAX_MESSAGES },
+        connectionGrantThreshold: 3,
+      });
+      const onChannel = (channelId: number) => {
+        const data = terminatorChunk(buf.toBinary(MessageSchema, textMessage('x')));
+        data[1] = channelId;
+        return data;
+      };
+
+      muxer.consumed(muxer.receiveFrame(onChannel(1)));
+      muxer.consumed(muxer.receiveFrame(onChannel(2)));
+      expect(grants(socket.frames)).toHaveLength(0);
+
+      // No channel is near its own threshold, but three messages across the connection are.
+      muxer.consumed(muxer.receiveFrame(onChannel(3)));
+      expect(grants(socket.frames)).toHaveLength(1);
+      expect(grants(socket.frames)[0].map(({ channelId, messages }) => [channelId, messages])).toEqual([
+        [1, 1],
+        [2, 1],
+        [3, 1],
+      ]);
+    });
+
+    test('a peer that ignores the connection bound trips the overdraft', ({ expect }) => {
+      const overdrafts: number[] = [];
+      const muxer = syncedMuxer(new TestSocket(), {
+        overdraftLimit: { bytes: WINDOW * 1_000, messages: MAX_MESSAGES * 1.5 },
+        connectionOverdraftLimit: 4,
+        onOverdraft: ({ outstanding }) => overdrafts.push(outstanding.messages),
+      });
+      for (let channelId = 1; channelId <= 5; channelId++) {
+        const data = terminatorChunk(buf.toBinary(MessageSchema, textMessage('x')));
+        data[1] = channelId;
+        muxer.receiveFrame(data);
+      }
+
+      expect(overdrafts).toEqual([5]);
+    });
+
     // The cases below run the protocol's own windows end to end, since each is a property of how they relate.
     test('a swarm channel keeps flowing past its window', async ({ expect }) => {
       const pair = connectedPair();
@@ -721,6 +794,24 @@ describe('WebSocketMuxerTest', () => {
       const rejected = (await Promise.allSettled(sends)).filter((result) => result.status === 'rejected');
       expect(rejected.length).toBeGreaterThan(0);
       expect(rejected.every((result) => result.reason instanceof WebSocketClosedError)).toBe(true);
+    });
+
+    test('a burst across many spaces drains at the connection bound without stalling', async ({ expect }) => {
+      const pair = connectedPair();
+      let peak = 0;
+      pair.socket.onFrame = ((deliver) => (data: Uint8Array) => {
+        peak = Math.max(peak, pair.sender.unacknowledgedMessages);
+        deliver?.(data);
+      })(pair.socket.onFrame);
+      // One `get-metadata`-sized message per feed for 60 spaces of 40 feeds, as a reconnect sends them.
+      const sends = Array.from({ length: 60 * 40 }, (_, index) =>
+        pair.sender.send(textMessage(`feed-${index}`, `feed-replicator:space-${index % 60}`)),
+      );
+      await settle();
+      await Promise.all(sends);
+
+      expect(pair.delivered).toHaveLength(60 * 40);
+      expect(peak).toBeLessThanOrEqual(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES);
     });
 
     test('a receiver rebuilt mid-connection rebases onto the sync it asks for', async ({ expect }) => {
@@ -793,8 +884,12 @@ const segmentChunk = (payload: Uint8Array) => {
 const flowControl = (overrides?: Partial<FlowControlConfig>): FlowControlConfig => ({
   windowFor: () => WINDOW,
   maxMessages: MAX_MESSAGES,
+  // Far above the per-channel bound, so only the cases that test the connection bound reach it.
+  maxConnectionMessages: MAX_MESSAGES * 100,
   grantThreshold: { bytes: WINDOW / 2, messages: MAX_MESSAGES / 2 },
+  connectionGrantThreshold: MAX_MESSAGES * 25,
   overdraftLimit: { bytes: WINDOW * 1.5, messages: MAX_MESSAGES * 1.5 },
+  connectionOverdraftLimit: MAX_MESSAGES * 150,
   ...overrides,
 });
 

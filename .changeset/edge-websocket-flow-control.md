@@ -16,7 +16,9 @@ still returns without waiting.
 
 Credit is counted in bytes and in messages: `EDGE_FLOW_CONTROL_MAX_MESSAGES` bounds how many messages
 one channel may have unacknowledged, since a byte window alone admits thousands of small replication
-frames and each is its own request downstream. A receiver rebuilt mid-connection (the router after
+frames and each is its own request downstream. `EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES` bounds the
+whole connection the same way, since a channel is one space and a device with many spaces would
+otherwise hold thousands of messages in flight to its router at once, as a reconnect's feed burst does. A receiver rebuilt mid-connection (the router after
 hibernation or a reset) asks for the sender's totals and rebases onto them, so a channel never stalls
 on grants counted from zero.
 
