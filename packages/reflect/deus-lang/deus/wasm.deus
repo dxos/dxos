@@ -324,6 +324,10 @@ def isStaticValue (core : Sexp) : Bool :=
   calls, so `Int.and x y` compiles as `x &&& y` would, and so is a static constant (`Map.empty`).
 -/
 def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
+  gatherWith false fetch meta main
+
+/-- `gather`; with `constants`, a definition that is not a function gathers as one of arity 0, which the C back end evaluates once (D125). -/
+def gatherWith (constants : Bool) (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
   let rec go pending seen acc prims :=
     match pending with
     | [] => List.map (fun f => Fn.mk f.fnHash f.fnArity (inlinePrims prims f.fnBody) f.fnType) (List.reverse acc)
@@ -334,7 +338,10 @@ def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw
         | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", p]]) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | some (Sexp.list [Sexp.sym "term", core]) =>
           match unlam core with
-          | (0, _) => if isStaticValue core then go rest (h :: seen) acc ((h, core) :: prims) else throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
+          | (0, _) =>
+            if isStaticValue core then go rest (h :: seen) acc ((h, core) :: prims)
+            else if constants then go (rest ++ refsOf core) (h :: seen) (Fn.mk h 0 core (storedType (meta h)) :: acc) prims
+            else throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
           | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b (storedType (meta h)) :: acc) prims
         | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
   go [main] [] [] []

@@ -23,7 +23,11 @@ such as `Map.empty` is inlined where it is used, so `Map` compiles too ([D119](.
 `Text.sha256` are in the runtime ([D120](../DECISIONS.md)). Comparing arrays or functions, and `show`
 on a value whose type the compiler does not know, are still refused. Effect handlers compile when
 every clause resumes in tail position or not at all ([D124](../DECISIONS.md)); a clause that resumes
-anywhere else is refused. Error messages for refused forms
+anywhere else is refused. A definition with no parameters is computed once, on first use, and
+kept for the rest of the run, so a constant `Ref` is one cell however often it is named; its value
+is marked immortal, so reference counting never frees it and it is not counted as live. A
+constructor or an operation used as a value becomes a lambda over its arguments
+([D127](../DECISIONS.md)). Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
