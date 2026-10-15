@@ -14,7 +14,7 @@ projects:
     summary: 'Composer plugin for scripted, long-running (~3 min) camera animations over parametric hierarchical networks of device nodes (phone/laptop/server): 2.5D three.js scene, iso/top views, LOD (device close-up to schematic), animated packets, node properties, MDL flow scripts, interactive takeover, autocue export. Spike: Data Path / Device Bench artifacts.'
     tasks: .agents/projects/plugin-animation/TASKS.md
     design: agents/superpowers/specs/2026-10-14-plugin-animation-design.md
-    prs: []
+    prs: [13981]
     resume: 'P1 done on claude/3d-isometric-phone-d64222 (@dxos/deus/parser, flow dialect, @dxos/animation with Centralized/Decentralized fixtures; preview artifact 7RCVJyh43wrxjdjdUv7CoB). NEXT: writing-plans for P2 (plugin scene).'
   - name: plugin-messenger
     status: active
