@@ -32,13 +32,14 @@ def pendingOf (name : Text) (obj : Sexp) : Pending :=
   | _ => Pending.mk name "theorem" obj obj
 
 /--
-  Propagates `subst` (old hash to new hash) through the namespace. `fresh` names were just
-  compiled and are left alone. Returns the new namespace and the names that were rehashed.
+  Propagates `subst` (old hash to new hash) through the namespace. Returns the new namespace and the
+  names that were rehashed. A name just compiled refers to the batch's new hashes, but still to the
+  old hash of a name outside the batch that depends on a changed one, so it is a candidate too.
 -/
-def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh : Map Text Unit) : {IO} (Map Text Entry, List Text) :=
+def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) : {IO} (Map Text Entry, List Text) :=
   if Map.size subst == 0 then (ns, [])
   else
-    let candidates := List.filter (fun pair => isTermLike (snd pair) && not (Set.contains (fst pair) fresh)) (Map.toList ns)
+    let candidates := List.filter (fun pair => isTermLike (snd pair)) (Map.toList ns)
     let objectOf := fun (h : Text) => Option.getOr (Codebase.readObject dir h) (Sexp.list [])
     -- Grow the set of changed hashes until no candidate depends on one.
     let rec grow changed affected :=

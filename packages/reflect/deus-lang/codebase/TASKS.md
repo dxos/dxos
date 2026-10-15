@@ -116,12 +116,6 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
-## deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (`a8150b0c`)
-
-- state: todo
-- priority: high
-- labels: codebase, devex
-
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -875,6 +869,14 @@ Reported by the explorer thread on #13952's branch (code/Cli.deus line 45). The 
 - labels: bug, dogfood, spec
 
 From docs/spec/README.md, Known divergences.
+
+## deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (`a8150b0c`)
+
+- state: done
+- priority: high
+- labels: codebase, devex
+
+> someone: Done (Codebase.Spec R-13): Update.propagate now treats names in the update as candidates, so one whose text did not change follows a dependent the update rehashed. Repro: update A.f and C.h := B.g with B.g outside the batch; C.h kept B.g's old hash.
 
 ## deus view output is cut off when piped (`4a833ce9`)
 

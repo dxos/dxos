@@ -21,6 +21,14 @@ test Codebase.Spec.builtinsAreNotDependencies := Codebase.dependencies (Sexp.nod
 
 theorem Codebase.Spec.causalRoundTrip (c : Causal) : causalFromSexp (causalToSexp c) == c := by test 200
 
+/-- `A.f`, `B.g` calling it, and `C.h` calling `B.g`. -/
+def Codebase.Spec.chain : Text := "def A.f := \"one\"\ndef B.g := A.f\ndef C.h := B.g\n"
+
+/-- R-13: a dependent outside the update follows the changed definition. -/
+test Codebase.Spec.dependentsFollowAnUpdate := inStore (fun dir =>
+  let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\n"
+  refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
+
 /-- Names with dots in every position the tree splits at, from generated words. -/
 def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => [w, "A." ++ w, "A.B." ++ w, w ++ ".x", "." ++ w, w ++ "."]) words
 
@@ -101,12 +109,36 @@ def Codebase.Spec.readsBack (ns : Map Text Entry) : Bool := inStore (fun dir =>
     (fun pair => Codebase.lookupName dir h (fst pair) == Option.some (snd pair))
     (Map.toList ns))
 
+/-- Whether `name`'s object in `ns` refers to the hash `ns` gives `dependency`. -/
+def Codebase.Spec.refersTo (dir : Text) (ns : Map Text Entry) (name : Text) (dependency : Text) : {IO} Bool :=
+  match (Map.lookup name ns, Map.lookup dependency ns) with
+  | (Option.some e, Option.some d) => List.contains
+      (Entry.hash d)
+      (Codebase.dependencies (getOr (readObject dir (Entry.hash e)) (Sexp.list [])))
+  | _ => false
+
 theorem Codebase.Spec.snapshotIgnoresOrder (words : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf (dotted words)) ==
     putNamespace dir (Spec.namespaceOf (reverse (dotted words)))) == true := by test 30
 
 test Codebase.Spec.unchangedCommitWritesNothing := inStore (fun dir =>
   let first := commit dir (Spec.namespaceOf ["a", "B.c"]) "one"
   commit dir (Spec.namespaceOf ["B.c", "a"]) "again" == first)
+
+/-- R-13: a definition in the update whose text did not change follows the dependent the update rehashed. -/
+test Codebase.Spec.unchangedTextFollowsRehashedDependent := inStore (fun dir =>
+  let v2 := updated dir (updated dir Map.empty Spec.chain) "def A.f := \"two\"\ndef C.h := B.g\n"
+  refersTo dir v2 "B.g" "A.f" && refersTo dir v2 "C.h" "B.g")
+
+/-- `source` compiled over `ns` and stored at `dir`, then propagated as `deus update` does: the new namespace. -/
+def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Map Text Entry :=
+  let b := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) "off" [parseFile "t.deus" source]
+  Codebase.store dir b
+  let next := foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns b.entries
+  let subst := Map.fromList (filterMap (fun pair =>
+    match Map.lookup (fst pair) ns with
+    | Option.some old => if Entry.hash old != Entry.hash (snd pair) then Option.some (Entry.hash old, Entry.hash (snd pair)) else Option.none
+    | Option.none => Option.none) b.entries)
+  fst (propagate dir next subst)
 
 /-- Three hundred names at the root and three hundred under `N`: both nodes split into parts. -/
 def Codebase.Spec.wide : List Text := concatMap (fun i => ["name" ++ toText i, "N.name" ++ toText i]) (range 0 300)

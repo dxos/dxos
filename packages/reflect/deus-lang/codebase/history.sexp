@@ -1,3 +1,7 @@
+(entry "f59d46337aaaa2ed904f69b084a2d11cbcddf43eac44bc6a222b113bc39b641a" "task: comment on a8150b0c" "")
+(entry "2c33a39c84b06b15bb0a06d9ed4fb0f1d73163a46385eb238e91cae7861c4ddf" "task: set a8150b0c state" "")
+(entry "a8086e5ba987f394f084b11d05e4a49652b96ada004c5293d279f21bff995501" "update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus" "claude")
+(entry "32c236ec49be1e79d75e4d80b73eb6fa12f15e18bde6ff69df97fca2dae358d6" "update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl" "claude")
 (entry "23c8aff6156e6001a46507d64a5fc85a0abd8ec365f96cfc94db4a88b7b63a7b" "task: set a8150b0c priority labels" "")
 (entry "db5b5e73e9da99ce276ce39901031410625dc10f5a7b4a7f51a3b20847d02d5e" "task: open a8150b0c deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore)" "claude")
 (entry "c485df95ac0d539077d6f7ada711b5fdba3387f4979729c16d1a48e896c1b0cd" "task: comment on 602f4557" "")

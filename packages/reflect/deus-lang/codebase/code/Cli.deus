@@ -42,7 +42,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := propagate dir ns2 subst (Set.fromList (List.map fst entries))
+    let propagated := propagate dir ns2 subst
     let ns3 := fst propagated
     let message := getOr
       (option args "message")

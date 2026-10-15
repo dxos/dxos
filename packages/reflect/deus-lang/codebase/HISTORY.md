@@ -1,5 +1,9 @@
 # History of main
 
+- `f59d46337a` task: comment on a8150b0c
+- `2c33a39c84` task: set a8150b0c state
+- `a8086e5ba9` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus (by claude)
+- `32c236ec49` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
 - `23c8aff615` task: set a8150b0c priority labels
 - `db5b5e73e9` task: open a8150b0c deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (by claude)
 - `c485df95ac` task: comment on 602f4557
