@@ -1,5 +1,15 @@
 # History of main
 
+- `d33274282d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
+- `8bb85527da` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw2.deus (by claude)
+- `2c8226fb50` delete Dbg.e
+- `bf63e6469f` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `7439c26d80` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw2.deus (by claude)
+- `15b92ffe34` update deus (by claude)
+- `0479fe129d` delete Dbg.prof
+- `9813973fd4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `0f48b7ab7f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `e2b319d4c2` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
 - `3152ef5711` update deus (by claude)
 - `4247869c4a` update deus (by claude)
 - `11804bae8f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)

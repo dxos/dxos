@@ -86,6 +86,11 @@ req R-8: the export's code files alone compile `Cli.main` to the checked-in seed
   by: vitest:src/seed.test.ts > compiles the codebase export to the seed
 ```
 
+```mdl
+req R-9: an export reuses a definition's printed text while its name, hash, metadata, the names its hash goes by and the names of what it refers to are unchanged, and writes the same files an export without the cache writes
+  by: Export.Spec.cachedViewFollowsRename
+```
+
 ## Laws
 
 Each law builds a codebase in the deterministic simulation, exports it, restores the export into a

@@ -1,3 +1,12 @@
+/-- R-9: after `A.f` is renamed, a second export prints `B.g`, whose hash did not change, with the new name. -/
+test Export.Spec.cachedViewFollowsRename := inStore (fun dir =>
+  cliUpdate dir "def A.f : Int := 1\ndef B.g : Int := A.f\n"
+  Export.write dir "e1"
+  deus dir ["A.f", "A.k"] (fun a => mv a false)
+  Export.write dir "e2"
+  let text := getOr (IO.readFile "e2/code/B.deus") ""
+  Text.contains ":= k" text && not (Text.contains ":= f" text))
+
 /-- Runs a CLI command against a simulated codebase; its output is discarded. -/
 def Export.Spec.deus (dir : Text) (words : List Text) (command : Args -> {IO, Throw Text} Unit) : {IO, Throw Text} Unit := command (parseArgs (words ++ ["--codebase", dir, "--quiet"]))
 
@@ -105,6 +114,45 @@ def Export.Spec.specSample : Text := "---\nname: S\n---\n## Extensions\n\n| Term
 def Export.basePath (dir : Text) (out : Text) : {IO} Text :=
   let absolute := if startsWith "/" out then out else getOr (IO.getEnv "PWD") "" ++ "/" ++ out
   dir ++ "/exports/" ++ Text.take 16 (Text.sha256 (normalize absolute))
+
+/-- A definition's exported text, reused while everything its printing reads is unchanged: its name,
+  hash and metadata, the names its hash goes by, and how each hash it refers to prints (Export.Spec R-9).
+  `global` digests the type and declaration names every view may print. -/
+def Export.cachedView (printer : Printer) (global : Text) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO, Throw Text} Text :=
+  let h := Entry.hash e
+  let owner := join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
+  let ownerKey :=
+    match Map.lookup owner ns with
+    | Option.some (Entry.type t _ fields) => t ++ ":" ++ join "," fields
+    | _ => ""
+  let refs := List.map (fun d => d ++ "=" ++ getOr (Map.lookup d printer.display) "" ++ "=" ++
+    getOr (Map.lookup d printer.fieldNames) "") (dependenciesOf dir h)
+  let key := Text.sha256 (join
+    "\n"
+    ([global, name, Entry.kind e, h, getOr (IO.readFile (dir ++ "/meta/" ++ h)) "", join "," (getOr (Map.lookup h printer.namesByHash) []), ownerKey] ++
+      refs))
+  let path := dir ++ "/cache/views/" ++ key
+  match IO.readFile path with
+  | Option.some text => text
+  | Option.none =>
+      let body := snd (viewParts printer dir ns name e "deus")
+      IO.mkdirp (dir ++ "/cache/views")
+      IO.writeFile path body
+      body
+
+/-- The hashes `h`'s object refers to, kept per hash since an object never changes. -/
+def Export.dependenciesOf (dir : Text) (h : Text) : {IO} List Text :=
+  let path := dir ++ "/cache/deps/" ++ h
+  match IO.readFile path with
+  | Option.some text => List.filter (fun line => not (Text.isEmpty line)) (Text.lines text)
+  | Option.none =>
+      match readObject dir h with
+      | Option.some form =>
+          let deps := dedup (sort (Codebase.dependencies form))
+          IO.mkdirp (dir ++ "/cache/deps")
+          IO.writeFile path (Text.concat (List.map (fun d => d ++ "\n") deps))
+          deps
+      | Option.none => []
 
 /-- The directory part of a path: `.` for a bare file name. -/
 def Export.directoryOf (path : Text) : Text :=
@@ -363,10 +411,13 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
   let ns := withUnnamed dir (Codebase.current dir)
   let printer := Print.printer ns []
   let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
+  let global := Text.sha256 (join "\n" (List.map
+    (fun pair => fst pair ++ "=" ++ snd pair)
+    (Map.toList printer.typeNames ++ Map.toList printer.declared)))
   let sources := filterMap (fun pair =>
     match pair with
     | (name, e) =>
-        let body := snd (viewParts printer dir ns name e "deus")
+        let body := cachedView printer global dir ns name e
         if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
   -- Spec documents go back into `.mdl` files, one per document, so `deus add` restores them.
   let documents := specDocuments ns
