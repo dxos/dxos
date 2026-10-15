@@ -67,7 +67,7 @@ export default {
         error instanceof HttpError ? error.status : 500,
       );
     }
-    return site(env, ctx, url, pinned?.[1], base);
+    return site(env, ctx, url, pinned?.[1], base, request);
   },
 };
 
@@ -78,7 +78,7 @@ const PROJECT_PATH = /^\/(@[^/]+)\/([^/]+)(\/.*)?$/;
 // The static site.
 //
 
-const site = async (env, ctx, url, version, base) => {
+const site = async (env, ctx, url, version, base, request) => {
   const path = url.pathname === '/' ? '/index.html' : url.pathname;
   if (path.includes('..') || !env.BUCKET) {
     return notFound();
@@ -102,7 +102,9 @@ const site = async (env, ctx, url, version, base) => {
   const object = await env.BUCKET.get(key);
   if (!object) {
     // `/@owner/project/Name` is the page, opened at that definition by the explorer (Address.Spec R-8).
-    const head = topLevel && !FILE.test(path) && (await readHead(env));
+    // A name can end like a file (`List.map`, `Json.render.js`), so a browser navigation always gets the page.
+    const navigation = request?.headers.get('sec-fetch-dest') === 'document';
+    const head = topLevel && (navigation || !FILE.test(path)) && (await readHead(env));
     return head ? page(env, head, base) : notFound();
   }
   const response = new Response(object.body, {

@@ -59,10 +59,20 @@ with it.
 - Keys live in D1 `deus-auth`, table `api_keys`; `scripts/deus-keys.mjs list|new|grant|revoke` edits them with the
   DEUS account token (run it with `CLOUDFLARE_API_TOKEN="$(op read 'op://CI/DEUS token/credential')"`).
 - The env key `DEUS_API_KEY` is id `fac9c0ca01b40e2e`, labelled "dmytro (env secret)": scopes push, assets, site,
-  inbox, events; projects `toolchain` only. Granting it `@dxos/*` is task b6503c12.
-- D1 is on the Free plan: 100,000 row writes a day, reset at 00:00 UTC. On 2026-10-15 site-file audit rows
-  (52k between 08:00 and 12:00, before D181 stopped them) used the day up, so key changes fail until midnight with
-  code 7500. Pushes keep working: audit writes are fire-and-forget. Moving the audit log off D1 is task e9d9a541.
+  inbox, events; projects `toolchain` and `@dxos/*` (granted 2026-10-15, task b6503c12).
+- The account is on Workers Paid since 2026-10-15 18:15 UTC. Before that, D1's free 100,000 row writes a day ran out
+  (52k site-file audit rows between 08:00 and 12:00, before D181 stopped them) and key changes failed with code 7500.
+  Moving the audit log off the key database is task e9d9a541 (low).
+
+## Deploying the Worker
+
+```bash
+cd packages/reflect/deus-lang/platform/worker
+CLOUDFLARE_API_TOKEN="$(op read 'op://CI/DEUS token/credential')" CI=1 /home/user/dxos/node_modules/.bin/wrangler deploy
+```
+
+Run `src/worker-remote.test.ts` first. Deploy only committed code, so git says what is live. Last deploy:
+2026-10-15 18:16 UTC, version 8a76fec2 (path links for names ending like a file).
 
 ## Open state (2026-10-15)
 

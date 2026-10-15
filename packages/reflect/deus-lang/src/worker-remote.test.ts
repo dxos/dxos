@@ -576,6 +576,10 @@ describe('replication API', () => {
     expect(await (await call('/@acme/demo/Cli.dispatch')).text()).toBe(demoPage);
     expect(await (await call('/@acme/demo/v/0000000000000001/meta.json')).text()).toBe('demo meta');
     expect((await call('/@acme/demo/missing.json')).status).toBe(404);
+    // A name that ends like a file (`List.map`) opens the page when a browser navigates to it.
+    const navigate = { headers: { 'sec-fetch-dest': 'document' } };
+    expect(await (await call('/@acme/demo/List.map', navigate)).text()).toBe(demoPage);
+    expect((await call('/@acme/demo/List.map')).status).toBe(404);
     expect((await call('/@acme/nothing/')).status).toBe(404);
     expect((await call('/@Acme/demo/')).status).toBe(404);
     expect(await (await call('/@dxos/toolchain/')).text()).toContain(
