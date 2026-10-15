@@ -3,7 +3,7 @@
 //
 
 import { readFileSync } from 'node:fs';
-import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
+import { DatabaseSync } from 'node:sqlite';
 import { gzipSync } from 'node:zlib';
 import { beforeEach, describe, test } from 'vitest';
 
@@ -49,8 +49,8 @@ export const memoryBucket = (): Bucket & { keys(): string[] } => {
 export const sqliteDatabase = (): Database & { sqlite: DatabaseSync } => {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec(readFileSync(new URL('../platform/worker/migrations/0001_keys.sql', import.meta.url), 'utf8'));
-  const statement = (sql: string, values: SQLInputValue[] = []): Statement => ({
-    bind: (...next) => statement(sql, next as SQLInputValue[]),
+  const statement = (sql: string, values: (string | number | null)[] = []): Statement => ({
+    bind: (...next) => statement(sql, next),
     first: async <T>() => (sqlite.prepare(sql).get(...values) ?? null) as T | null,
     all: async <T>() => ({ results: sqlite.prepare(sql).all(...values) as T[] }),
     run: async () => ({ meta: { changes: Number(sqlite.prepare(sql).run(...values).changes) } }),
@@ -86,7 +86,7 @@ export const insertKey = async (db: Database, scopes: string[], projects: string
 
 const bundleOf = async (text: string) => {
   const bytes = new TextEncoder().encode(text);
-  return { name: `0-${await sha256(bytes)}`, body: gzipSync(bytes) };
+  return { name: `0-${await sha256(bytes)}`, body: new Uint8Array(gzipSync(bytes)) };
 };
 
 describe('replication API', () => {

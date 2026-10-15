@@ -43,6 +43,9 @@ const directoryBucket = (root: string): Bucket => {
       writeFileSync(path(key), value);
       types.set(key, options?.httpMetadata?.contentType ?? '');
     },
+    delete: async (key) => {
+      rmSync(path(key), { force: true });
+    },
     list: async ({ prefix }) => {
       const folder = path(prefix);
       let names: string[] = [];

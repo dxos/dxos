@@ -23,7 +23,7 @@ export type Bucket = {
 
 /** The part of the D1 binding the worker uses. */
 export type Statement = {
-  bind(...values: unknown[]): Statement;
+  bind(...values: (string | number | null)[]): Statement;
   first<T = Record<string, unknown>>(): Promise<T | null>;
   all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
   run(): Promise<{ meta?: { changes?: number } }>;
