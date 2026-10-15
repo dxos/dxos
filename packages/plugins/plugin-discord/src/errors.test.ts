@@ -34,6 +34,12 @@ describe('toBotRequestError', () => {
     expect(error.message).toBe('The bot token is not in this space.');
   });
 
+  test('a 502 with no reason from EDGE says what failed, keeping the raw code as detail', ({ expect }) => {
+    const error = toBotRequestError(new EdgeCallFailedError({ message: 'HTTP code 502: .', status: 502 }));
+    expect(error.message).toBe('EDGE could not reach Discord.');
+    expect(errorDetail(error)).toContain('HTTP code 502');
+  });
+
   test('a failure with no response is a reachability error', ({ expect }) => {
     const error = toBotRequestError(new TypeError('Failed to fetch'));
     expect(DiscordChannelError.is(error)).toBe(true);

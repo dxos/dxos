@@ -271,6 +271,9 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             })}
           </DiscordSetup.List>
         )}
+        {guilds.length > 0 && !signedIn && (
+          <DiscordSetup.SignIn busy={busy || !coordinator} onConnect={handleConnect} />
+        )}
         {guilds.length > 0 && denied && <DiscordSetup.Empty message={denied.message} detail={errorDetail(denied)} />}
       </Fieldset.Root>
 

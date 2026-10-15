@@ -141,9 +141,9 @@ export const toBotRequestError = (cause: unknown): DiscordChannelError | Discord
     return new DiscordChannelError({ message: 'Could not reach the Discord bot on EDGE.', cause });
   }
   // An unhandled EDGE failure's message is only the code; the body EDGE sent with it is decoded onto its `cause`.
-  const reason = EDGE_REASON_STATUSES.has(status)
-    ? messageOf(failure.cause) || failure.message || undefined
-    : undefined;
+  // A message that only restates the code (`HTTP code 502: .`) is transport noise, not EDGE's reason.
+  const ownMessage = /^HTTP code \d+/.test(failure.message) ? undefined : failure.message;
+  const reason = EDGE_REASON_STATUSES.has(status) ? messageOf(failure.cause) || ownMessage || undefined : undefined;
   return new DiscordChannelError({
     message: reason ?? BOT_FAILURE_MESSAGES[status] ?? `The Discord bot request failed (HTTP ${status}).`,
     cause,
