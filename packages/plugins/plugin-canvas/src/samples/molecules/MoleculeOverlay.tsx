@@ -297,7 +297,7 @@ const BlockOutline = ({ rect, round, radius }: { rect: Block['frame']; round?: b
   );
 
 /** Milliseconds the monolithic agent's parts take to fade in or out as it is revealed or hidden. */
-const REVEAL_MS = 1200;
+const REVEAL_MS = 2000;
 
 /** Rise above the bases to the lowest grant line, the gap between stacked lines, and the spread of their starts. */
 const GRANT_RISE = 40;
