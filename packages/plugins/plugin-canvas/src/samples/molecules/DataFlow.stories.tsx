@@ -145,7 +145,8 @@ const CHAPTERS: readonly Scene[] = [
     title: 'A shared ECHO',
     caption: 'The sources feed one ECHO space, and the apps sync from it.',
     spec: APPS,
-    options: { warmup: 16 },
+    // The apps open already holding content, so they are writing and syncing from the first frame.
+    options: { warmup: 16, prefill: true },
     partitioned: false,
     // From here on the background is plain, so the eye stays on ECHO.
     grid: 'none',
