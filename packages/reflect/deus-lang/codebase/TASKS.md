@@ -31,6 +31,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+> claude: Slice 1 (D146, Artifact.Spec): @[artifact] constants. deus artifact <name> [--out f] evaluates once and keeps the value at artifacts/value-<hash>; run, image, build and serve fill missing ones first and use kept values, so images carry the value, not its inputs. Left: embedding files (an asset reference as a constant), and a Bytes value so a binary need not be Text.
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo

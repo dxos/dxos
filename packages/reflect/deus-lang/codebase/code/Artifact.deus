@@ -1,0 +1,56 @@
+/-- R-1: after `deus artifact A.big`, its value is kept under its hash. -/
+test Artifact.Spec.artifactKeepsItsValue := inStore (fun dir =>
+  let ns := cliUpdate dir (Artifact.Spec.program "v1")
+  cli dir ["artifact", "A.big"]
+  match Map.lookup "A.big" ns with
+  | Option.some e => cachedValue dir (Entry.hash e) == Option.some (Sexp.node "text" [Sexp.str "v1"]) && evaluations () == 1
+  | Option.none => false)
+
+/-- R-3: after `A.base` changes, the next run evaluates `A.big` again and writes the new value. -/
+test Artifact.Spec.changeEvaluatesAgain := inStore (fun dir =>
+  cliUpdate dir (Artifact.Spec.program "x1")
+  dispatch ["run", "--codebase", dir, "A.main"]
+  cliUpdate dir (Artifact.Spec.program "x2")
+  dispatch ["run", "--codebase", dir, "A.main"]
+  evaluations () == 2 && IO.readFile "out" == Option.some "x2")
+
+/-- `deus <words> --codebase dir`, quietly. -/
+def Artifact.Spec.cli (dir : Text) (words : List Text) : {IO, Throw Text} Unit := dispatch (words ++ ["--codebase", dir, "--quiet"])
+
+/-- How many times `A.big` has been evaluated. -/
+def Artifact.Spec.evaluations (u : Unit) : {IO} Int := Text.length (getOr (IO.readFile "evaluations") "")
+
+/-- R-5: an artifact that is a function, or takes a parameter, is refused with its name. -/
+test Artifact.Spec.functionsAreRefused := inStore (fun dir =>
+  cliUpdate dir (Artifact.Spec.lib ++
+    "@[artifact]\ndef A.f : Int -> Int := fun n => n\n@[artifact]\ndef A.g (n : Int) : Int := n\n")
+  let refused := fun name =>
+    match try (fun _ => cli dir ["artifact", name]) with
+    | Result.err message => Text.contains name message
+    | Result.ok _ => false
+  refused "A.f" && refused "A.g")
+
+/-- R-4: once cached, the image of `A.main` names neither `A.base` nor the evaluation's file. -/
+test Artifact.Spec.imageHoldsTheValue := inStore (fun dir =>
+  let ns := cliUpdate dir (Artifact.Spec.program "y1")
+  cli dir ["artifact", "A.big"]
+  dispatch ["image", "A.main", "--codebase", dir, "--out", "main.image"]
+  let image := getOr (IO.readFile "main.image") ""
+  match Map.lookup "A.base" ns with
+  | Option.some e => Text.contains "\"y1\"" image && not (Text.contains (Entry.hash e) image) && not (Text.contains "evaluations" image)
+  | Option.none => false)
+
+/-- The builtins the program uses: `IO` up to `appendFile`, in the kernel's order. -/
+def Artifact.Spec.lib : Text := "inductive Option a @\"#Option\" where\n  | none\n  | some (value : a)\nability IO @\"#IO\" where\n  print : Text -> Unit\n  eprint : Text -> Unit\n  readFile : Text -> Option Text\n  writeFile : Text -> Text -> Unit\n  exists : Text -> Bool\n  listDir : Text -> List Text\n  mkdirp : Text -> Unit\n  remove : Text -> Unit\n  args : Unit -> List Text\n  exit : Int -> a\n  time : Unit -> Int\n  readStdin : Unit -> Text\n  writeBytes : Text -> List Int -> Unit\n  getEnv : Text -> Option Text\n  isDir : Text -> Bool\n  wallClock : Unit -> Text\n  appendFile : Text -> Text -> Unit\ninductive List a @\"#List\" where\n  | nil\n  | cons (head : a) (tail : List a)\n"
+
+/-- `A.big` notes each evaluation in the file `evaluations`; `A.main` writes it to `out`. -/
+def Artifact.Spec.program (base : Text) : Text := Artifact.Spec.lib ++ "def A.base : Text := \"" ++ base ++
+  "\"\n@[artifact]\ndef A.big : Text :=\n  let _ := IO.appendFile \"evaluations\" \"x\"\n  A.base\ndef A.main (u : Unit) : Unit := IO.writeFile \"out\" A.big\n"
+
+/-- R-2: a run of `A.main` evaluates `A.big` once, keeps its value and writes it. -/
+test Artifact.Spec.runFillsTheCache := inStore (fun dir =>
+  let ns := cliUpdate dir (Artifact.Spec.program "w1")
+  dispatch ["run", "--codebase", dir, "A.main"]
+  match Map.lookup "A.big" ns with
+  | Option.some e => cachedValue dir (Entry.hash e) == Option.some (Sexp.node "text" [Sexp.str "w1"]) && evaluations () == 1 && IO.readFile "out" == Option.some "w1"
+  | Option.none => false)
