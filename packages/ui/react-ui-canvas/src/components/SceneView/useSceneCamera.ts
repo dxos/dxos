@@ -25,6 +25,8 @@ export type SceneCamera = {
   isNavigating: () => boolean;
   /** Whether an animation is in flight, read at call time for the same reason. */
   isAnimating: () => boolean;
+  /** Where the camera is headed: an animation's target while one is in flight, else the camera itself. */
+  cameraTarget: () => Camera;
   setNavigation: (active: boolean) => void;
   /** Navigation that ends on its own: active until no further step arrives for a beat. */
   touchNavigation: () => void;
@@ -52,6 +54,7 @@ export const useSceneCamera = (
 
   // Cleared as well as called: a cancelled frame never runs the completion callback that would.
   const cancelRef = useRef<() => void>(undefined);
+  const targetRef = useRef<Camera>(undefined);
   const [opening, setOpening] = useState<ElementId>();
   const [navigating, setNavigating] = useState(false);
   const navigatingRef = useRef(false);
@@ -82,6 +85,7 @@ export const useSceneCamera = (
     if (cancelRef.current) {
       cancelRef.current();
       cancelRef.current = undefined;
+      targetRef.current = undefined;
       setNavigation(false);
     }
     setOpening(undefined);
@@ -91,6 +95,7 @@ export const useSceneCamera = (
     (target: Camera, done?: () => void, duration?: number) => {
       cancelAnimation();
       setNavigation(true);
+      targetRef.current = target;
       cancelRef.current = animateCamera(
         registry.get(atoms.camera),
         target,
@@ -98,6 +103,7 @@ export const useSceneCamera = (
         setCamera,
         () => {
           cancelRef.current = undefined;
+          targetRef.current = undefined;
           setNavigation(false);
           done?.();
         },
@@ -109,6 +115,7 @@ export const useSceneCamera = (
 
   const isNavigating = useCallback(() => navigatingRef.current, []);
   const isAnimating = useCallback(() => cancelRef.current !== undefined, []);
+  const cameraTarget = useCallback(() => targetRef.current ?? registry.get(atoms.camera), [registry, atoms.camera]);
 
   return {
     setCamera,
@@ -117,6 +124,7 @@ export const useSceneCamera = (
     navigating,
     isNavigating,
     isAnimating,
+    cameraTarget,
     setNavigation,
     touchNavigation,
     opening,

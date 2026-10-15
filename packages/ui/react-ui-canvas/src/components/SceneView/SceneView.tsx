@@ -364,6 +364,7 @@ const SceneViewRoot = ({
     navigating,
     isNavigating,
     isAnimating,
+    cameraTarget,
     setNavigation,
     touchNavigation,
     opening,
@@ -922,14 +923,13 @@ const SceneViewRoot = ({
       interactedRef.current = true;
       exitFit();
       const centre = { x: viewport.width / 2, y: viewport.height / 2 };
-      animateTo(zoomAt(registry.get(atoms.camera), centre, zoom));
+      // From where the camera is headed, so a click during an animation retargets it rather than stepping from midway.
+      animateTo(zoomAt(cameraTarget(), centre, zoom));
     },
-    [viewport, animateTo, registry, atoms.camera, exitFit],
+    [viewport, animateTo, cameraTarget, exitFit],
   );
-  const zoomBy = useCallback(
-    (factor: number) => zoomTo(registry.get(atoms.camera).zoom * factor),
-    [zoomTo, registry, atoms.camera],
-  );
+  // Steps from the in-flight target: clicks in quick succession compound into one move instead of several jumps.
+  const zoomBy = useCallback((factor: number) => zoomTo(cameraTarget().zoom * factor), [zoomTo, cameraTarget]);
 
   const deleteSelection = useCallback(() => {
     const ids = [...registry.get(atoms.selection)];
