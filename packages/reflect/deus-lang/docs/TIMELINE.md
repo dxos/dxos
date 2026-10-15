@@ -197,6 +197,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 187 | 10-15 10:30 | 21m 00s | `b7bf9712` | `deus export --terms` writes one file per definition at its namespace path, and an hourly routine mirrors the codebase (store files, Worker bundles and the per-term tree) to dxos/deus-mirror (Export.Spec R-10, R-11, D168). |
 | 188 | 10-15 10:40 | 15m 00s | `a2aa2900` | The seeded analytics events are pushed through the Worker to `toolchain/events/` on the new account, and the publisher lists them through the Worker for Basin (D169); Basin Catalog setup is with the Cloudflare thread |
 | 189 | 10-15 10:45 | 5m 00s | `2bb8eec2` | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D170, task d780de91) |
-| 190 | 10-15 11:05 | 20m 00s | this commit | The codebase explainer (docs/spec/CODEBASE-BINARY.md) now covers where a codebase lives (store, Worker, R2 bucket, D1, mirror), how names work, and branches end to end, including the Worker's head check (409, 428). |
+| 190 | 10-15 11:05 | 20m 00s | `01d407e3` | The codebase explainer (docs/spec/CODEBASE-BINARY.md) now covers where a codebase lives (store, Worker, R2 bucket, D1, mirror), how names work, and branches end to end, including the Worker's head check (409, 428). |
+| 191 | 10-15 11:10 | 35m 00s | this commit | `bin/deus.mjs` runs a cached native build of the seed and builds one in the background when there is none (D171); `Remote.getAll` fetches bundles in parallel. A fresh session's pull 34 s to 5.2 s, merge 3.2 s to 92 ms |
 
-Total from stage 1 to stage 190: 50h 48m.
+Total from stage 1 to stage 191: 51h 23m.
