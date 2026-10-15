@@ -17,6 +17,20 @@ export const Account = 'account';
 export const Invitations = 'invitations';
 export const Usage = 'usage';
 
+/**
+ * Where each panel sorts among the account's panels: its graph node's `position`. Spaced so a panel another plugin
+ * contributes can sit between two of them.
+ */
+export const position = {
+  [Profile]: 100,
+  [Account]: 200,
+  [Security]: 300,
+  [Devices]: 400,
+  [Contacts]: 500,
+  [Invitations]: 600,
+  [Usage]: 700,
+} as const;
+
 /** The account's own workspace path. */
 export const workspacePath = GraphPath.getSpacePath(id);
 

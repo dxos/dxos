@@ -26,6 +26,7 @@ export default defineConfig({
     AgentPresence: 'src/types/AgentPresence.ts',
     AgentSettings: 'src/types/AgentSettings.ts',
     AgentCompanion: 'src/types/AgentCompanion.ts',
+    AgentSpace: 'src/types/AgentSpace.ts',
     BrainService: 'src/types/BrainService.ts',
     BrainSkill: 'src/skills/BrainSkill.ts',
     ChatParticipant: 'src/types/ChatParticipant.ts',
