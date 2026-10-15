@@ -602,3 +602,7 @@ its this one "op://CI/DEUS token/credential"
 ---
 
 since your context can go off track make sure to write down all key facts in files
+
+---
+
+get oriented what changed in the codebase and continue working autonomously

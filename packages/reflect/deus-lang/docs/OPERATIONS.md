@@ -47,6 +47,23 @@ with it.
 - **Explorer**: `/@owner/project/` serves it; `/@dxos/toolchain/Cli.dispatch` opens that definition (D184).
 - **Toolchain codebase remote**: `deus remote add origin https://deus.dmytro-a80.workers.dev/v1/toolchain`.
 
+## Working copy
+
+`~/.deus` is the toolchain codebase pulled from `origin` (the Worker): `deus init --empty`,
+`deus project init https://dxos.org/deus/toolchain`, `deus remote add origin …/v1/toolchain`, `deus pull origin`,
+`deus merge origin.main` (30 s). A push takes about a minute, most of it refreshing the explorer.
+`~/.deus-2026-10-14` is this container's older local codebase, kept, not deleted.
+
+## Keys and D1
+
+- Keys live in D1 `deus-auth`, table `api_keys`; `scripts/deus-keys.mjs list|new|grant|revoke` edits them with the
+  DEUS account token (run it with `CLOUDFLARE_API_TOKEN="$(op read 'op://CI/DEUS token/credential')"`).
+- The env key `DEUS_API_KEY` is id `fac9c0ca01b40e2e`, labelled "dmytro (env secret)": scopes push, assets, site,
+  inbox, events; projects `toolchain` only. Granting it `@dxos/*` is task b6503c12.
+- D1 is on the Free plan: 100,000 row writes a day, reset at 00:00 UTC. On 2026-10-15 site-file audit rows
+  (52k between 08:00 and 12:00, before D181 stopped them) used the day up, so key changes fail until midnight with
+  code 7500. Pushes keep working: audit writes are fire-and-forget. Moving the audit log off D1 is task e9d9a541.
+
 ## Open state (2026-10-15)
 
 - The meta-structure thread stopped at 18:00. Its handoff says the next step is publishing `@dxos/base` and
