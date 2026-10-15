@@ -394,11 +394,10 @@ describe('deus CLI native back ends', () => {
       for (const source of ['1 + 1', '[1 == 1, false]', 'Option.some ((), "a")', 'Structural.structural']) {
         expect(run('eval', source, ...target).stdout).toBe(deus('eval', source, ...target).stdout);
       }
-      const cost = run('eval', 'Code.cost (fun _ => 1)', ...target);
-      expect([cost.status, cost.stderr]).toEqual([
-        70,
-        "defect: Code.steps and Code.cost count the kernels' machine steps, which the native interpreter does not count\n",
-      ]);
+      // The interpreter counts its own steps, so a perf block can run natively; only the order is comparable.
+      const cost = run('eval', 'Code.cost (fun _ => List.length [1, 2, 3])', ...target);
+      expect(cost.status).toBe(0);
+      expect(Number(cost.stdout)).toBeGreaterThan(0);
     },
   );
 

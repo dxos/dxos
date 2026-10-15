@@ -1,3 +1,8 @@
+(entry "7750353b5da5520a4d576e3a5ffc9aa3b9ebede8cbb0b9cea99a1128380767e5" "task: comment on 60e88be8" "")
+(entry "2e8d17b108379f02f97248254dee04cc6705b548a6752c26e48e9ec9118599e9" "update deus" "claude")
+(entry "dd574bcb249eecbe15f749a9eaa1db6bb203ec0df7185c11600324ab05107075" "history: import 1018 changes" "")
+(entry "86e15f924a83e98e8a4c9cb1121fd82c9f1e8d111944b16e305790a98197e235" "task: import from codebase/tasks.sexp" "")
+(entry "e9798bf6944d8d89e14db52ef45c1a5e0edeb288748b77383c302da9a70f589f" "add codebase/code codebase/specs" "")
 (entry "42f987d1f0a71bb7031941767b6885738fc7f58086969542fd4b40995b7beae2" "update deus" "merge")
 (entry "48837a0605b5b5801fe0b5173d88a580ae3db4fb5b69c591f3fd5b5d50f5782e" "history: import 1000 changes" "")
 (entry "579a9acc274dcedd9b4a0affba35a01d183fdad61cbd3b9223db99fd4078051d" "history: import 1009 changes" "")

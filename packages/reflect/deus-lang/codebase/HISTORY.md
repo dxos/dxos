@@ -1,5 +1,10 @@
 # History of main
 
+- `7750353b5d` task: comment on 60e88be8
+- `2e8d17b108` update deus (by claude)
+- `dd574bcb24` history: import 1018 changes
+- `86e15f924a` task: import from codebase/tasks.sexp
+- `e9798bf694` add codebase/code codebase/specs
 - `42f987d1f0` update deus (by merge)
 - `48837a0605` history: import 1000 changes
 - `579a9acc27` history: import 1009 changes
