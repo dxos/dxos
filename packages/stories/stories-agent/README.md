@@ -26,8 +26,8 @@ Two kinds of Discord app take part, and each EDGE environment has its own Kai:
 | staging | Kai Staging | `1559968567775072356` |
 | production | Kai | `1555777706459660288` |
 
-The story picks the Kai of the EDGE its toolbar targets (`KAI_APPLICATION_IDS` in `src/testing/discord.ts`). Each
-Kai's bot token is the `DISCORD_KAI_BOT_TOKEN` field of `op://CI/hub.dxos.network/discord-service-<env>` (the
+Composer picks the Kai of the EDGE it talks to (`KAI_APPLICATION_IDS` in plugin-discord's `src/constants.ts`), so a
+space records no bot; staging has no entry there, since `EDGE_URLS` names no staging EDGE. Each Kai's bot token is the `DISCORD_KAI_BOT_TOKEN` field of `op://CI/hub.dxos.network/discord-service-<env>` (the
 unprefixed `discord-service` section for local).
 
 In each Kai app's portal, once:

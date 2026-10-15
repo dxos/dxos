@@ -61,6 +61,12 @@ export const Output = Schema.Union([
 export type Output = Schema.Schema.Type<typeof Output>;
 
 /**
+ * The lent variable holding the API token EDGE presents to its Composer MCP server for the agent; while
+ * it is lent, every session is connected to that server (compute-service's `COMPOSER_MCP_TOKEN_ENV`).
+ */
+export const COMPOSER_MCP_TOKEN_ENV = 'COMPOSER_MCP_TOKEN';
+
+/**
  * The environment the agent runs with, as variable name to value: its Claude credential
  * (`CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`) and any service tokens (`GITHUB_TOKEN`). Each call
  * replaces what the process holds.

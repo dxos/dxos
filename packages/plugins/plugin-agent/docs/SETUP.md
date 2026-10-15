@@ -61,11 +61,9 @@ holds `op://` references, and `pnpm dev:env` resolves them with `op inject` and 
 files. It needs the 1Password desktop app with CLI integration on (Settings → Developer); it prompts
 for approval, so no `op signin` is needed.
 
-1. The bot token is `op://eng/com.discord.bot.kai/credential` (Kai), which discord-service's
-   `secrets.jsonc` already names as `DISCORD_BOT_TOKEN_DEV`. In a dev environment it overrides the
-   token stored in the space, so you can test without managing tokens in Composer. To use another
-   bot, point that entry at its item (vault `eng`, reverse-DNS item name, field `credential`; item
-   names must not contain `/`, which `op://` references reject).
+1. Local Kai's token is the `DISCORD_KAI_BOT_TOKEN` field of discord-service's `secrets.jsonc`,
+   which EDGE uses for the app named by `DISCORD_KAI_APPLICATION_ID`. Composer knows each EDGE's
+   Kai id (plugin-discord's `KAI_APPLICATION_IDS`), so a space never holds a bot token.
 
 2. From the root of `<edge>` (the script is defined in the root `package.json`), write the `.env`
    files:
@@ -104,16 +102,16 @@ DX_EDGE_BASE_URL=http://localhost:8787 moon run composer-app:serve -- --port 528
 Then, in Composer at `http://localhost:5282`:
 
 1. **Settings → Plugins**: enable **Agent**, **Threads** and **Discord**.
-2. Connect Discord in the space's integrations by pasting the bot token. This creates the
-   `AccessToken` object the Discord channel refers to (EDGE uses `DISCORD_BOT_TOKEN_DEV` when set).
-3. Create a **channel** with the **Discord** backend: pick the bot token, enter the **Application ID**
-   and the Discord **channel ID**. This is plugin-discord's `DiscordChannel` config on a `Channel`.
-4. **Assistant → Agents → +** to create an agent.
-5. Open the agent → **Activity** companion → **Channels**: pick the Discord channel. Its bot settings
-   appear below the picker.
-6. **Start bot** in the channel's toolbar: the status (polled every 5 s) should read **Connected**.
-   Otherwise the banner says why (the watchdog retries every 30 s). The same controls are on the
-   channel's own properties panel.
+2. **Space settings → Agents → Add** to create an agent; it opens with your private chat.
+3. Open the agent's **Discord** companion and sign in to Discord. The bot is the Kai app of the EDGE
+   Composer talks to (plugin-discord's `KAI_APPLICATION_IDS`); EDGE holds its token, so the space
+   records no bot.
+4. Pick your server (install the bot with **+** if it is not yet **Installed**), then connect a
+   channel with its plug button. This creates a Discord-backed `Channel` in the agent's
+   `AgentChannels`.
+5. **Start** in the agent's **Activity** companion: the channel's status (polled every 5 s) should read
+   **Connected**. Otherwise the banner says why (the watchdog retries every 30 s). The same controls
+   are on the channel's own properties panel.
 
 ## 5. Test
 
@@ -138,10 +136,10 @@ Then, in Composer at `http://localhost:5282`:
 
 ## Email
 
-1. Open the agent → **Activity**, add a channel, and pick **Email**. Set the address (`kai`), a
-   display name, and the allowed senders (empty means `braneframe.com` and `dxos.org`).
-2. Open the channel's properties and press **Connect**. Against dev EDGE the panel shows
-   `kai@dev.dxos.ai` with its thread and message counts; "taken" means another space holds the handle.
+1. Open the agent's **Email** companion. Set the address (`kai`), a display name, and the allowed
+   senders (empty means `braneframe.com` and `dxos.org`), then **Save**.
+2. Press **Connect** in the same companion. Against dev EDGE it shows `kai@dev.dxos.ai` with its
+   thread and message counts; "taken" means another space holds the handle.
 3. Mail `kai@dev.dxos.ai` from an allowed address. The reply arrives in the same thread, and each new
    email thread is its own chat under the agent.
 
