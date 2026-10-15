@@ -54,14 +54,6 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 > claude: Simulation is done (D65, qa blocks run by deus mdl). Left: run the same flows against deus serve and in a browser.
 
-## Republish the hosted explorer on every push to the PR branch (`696086fe`)
-
-- state: todo
-- priority: high
-- labels: explorer, ci
-
-The hosted explorer stays at its last manual publish (the 19:18 one) because nothing republishes it. Once threads push to r2://agent-artifacts/deus/toolchain (D101), a CI job, or deus push itself, should run deus explore --publish for the explorer URL. A CI job needs Dmytro's go-ahead and an R2 token that can write agent-artifacts; the existing CI R2 token covers only the Composer asset buckets.
-
 ## The codebase explorer app needs to be much better (`861438d2`)
 
 - state: doing
@@ -72,6 +64,14 @@ The hosted explorer stays at its last manual publish (the 19:18 one) because not
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
+
+## Updating one member of a recursive group leaves dependents pointing at the old group (`f308d451`)
+
+- state: todo
+- priority: high
+- labels: codebase, bug
+
+Seen 2026-10-15: deus update deus/cli.deus (adding Cli.explorerDemo, Cli.isToolchainRemote) reported Workspace.Spec dependents as rehashed, yet Artifact.Spec and Workspace.Spec still referenced the old Cli group (export printed Cli.dispatch, Cli.withWorkspace and Cli.evaluate as #60ee93715e). Update propagation seems to map members of a changed cycle group by index, not by name, so a group whose membership changes leaves stale refs. Workaround: re-update the dependent files from the export (deus update code/Artifact.deus code/Workspace.deus). Check: diff codebase/code against git after every update of a file in a large group.
 
 ## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
 
@@ -652,6 +652,15 @@ platform/js/react.deus: a Hooks ability handled by React's hooks; examples/react
 - assignee: claude
 - labels: analytics, codebase
 - links change #d3d028011c
+
+## Republish the hosted explorer on every push to the PR branch (`696086fe`)
+
+- state: done
+- priority: high
+- labels: explorer, ci
+- links change #40884fb595
+
+The hosted explorer stays at its last manual publish (the 19:18 one) because nothing republishes it. Once threads push to r2://agent-artifacts/deus/toolchain (D101), a CI job, or deus push itself, should run deus explore --publish for the explorer URL. A CI job needs Dmytro's go-ahead and an R2 token that can write agent-artifacts; the existing CI R2 token covers only the Composer asset buckets.
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 

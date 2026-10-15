@@ -381,3 +381,11 @@ about mdl-first approach --- I want agents to record specs in codebase, not in g
 ---
 
 we need feature-maps in codebase in addition to tasks
+
+---
+
+https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html#v:history hasn't been updated
+
+---
+
+(decision card) Republish on every push

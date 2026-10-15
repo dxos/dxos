@@ -1,4 +1,4 @@
-# a DEUS codebase
+# https://dxos.org/deus/toolchain
 
 A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is
 generated: change the codebase, then export again.
@@ -12,6 +12,7 @@ To restore it into a fresh codebase:
 
 ```bash
 deus init --empty
+deus project init https://dxos.org/deus/toolchain
 deus add code specs
 deus task import tasks.sexp
 deus history import history.sexp

@@ -583,10 +583,11 @@ def Cli.dataTypes (fetch : Text -> {IO, Throw Text} Option Sexp) (h : Text) : {I
 /-- The DXOS account's R2 endpoint, so a thread needs only the access keys. -/
 def Cli.defaultEndpoint : Text := "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com"
 
-/-- `origin` of the toolchain's own codebase when none is configured: the shared remote every thread pulls and pushes. -/
+/-- Remotes the toolchain's own codebase has when none is configured: `origin`, the shared remote
+  every thread pulls and pushes, and `explorer-demo`, where its public explorer is hosted. -/
 def Cli.defaultRemote (dir : Text) (name : Text) : {IO} Option Text :=
   match Project.read dir with
-  | Option.some p => if name == "origin" && p.projectIri == "https://dxos.org/deus/toolchain" then Option.some "r2://agent-artifacts/deus/toolchain" else Option.none
+  | Option.some p => if p.projectIri != toolchainIri then Option.none else if name == "origin" then Option.some toolchainRemote else if name == explorerDemo then Option.some "r2://agent-artifacts/deus/explorer-demo" else Option.none
   | Option.none => Option.none
 
 /-- The last defect's stack as `    at <hash>` lines, stable enough to cache with a verdict. -/
@@ -746,6 +747,9 @@ def Cli.explore (args : Args) : {IO, Throw Text} Unit :=
           | (code, _, err) =>
               IO.eprint err
               if code == 0 then () else IO.exit code
+
+/-- The public explorer of the toolchain's codebase, refreshed by every push to the shared remote. -/
+def Cli.explorerDemo : Text := "explorer-demo"
 
 /-- `deus export <dir>` (D64): the codebase as text for a git repository: source per namespace,
   tasks, and history. `deus add <dir>/code` and `deus task import <dir>/tasks.sexp` restore it. -/
@@ -984,6 +988,11 @@ def Cli.isArtifact (dir : Text) (h : Text) : {IO} Bool :=
   match IO.readFile (dir ++ "/meta/" ++ h) with
   | Option.some text => Text.contains "artifact" text && hasAttr dir h "artifact"
   | Option.none => false
+
+/-- Whether `name` reaches the shared toolchain remote, configured or by default. -/
+def Cli.isToolchainRemote (dir : Text) (name : Text) : {IO} Bool :=
+  let configured := Option.map trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))
+  getOr (orElse configured (fun _ => defaultRemote dir name)) "" == toolchainRemote
 
 /-- The value of `def it := <source>` on this kernel and on the js target, each printed as `deus eval`
   prints it (D97). The module runs under `$DEUS_NODE`. -/
@@ -1412,14 +1421,18 @@ def Cli.push (args : Args) : {IO, Throw Text} Unit :=
     let bundle := Replicate.push dir name branch
     pushAssets dir
     bundle)
-  -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
-  let site := if IO.exists (siteManifest dir name) && branch == currentBranch dir then
-    let out := dir ++ "/cache/site-" ++ name
+  -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch;
+  -- so does the public explorer of the toolchain, from whichever store pushes to the shared remote.
+  let siteOf := fun target =>
+    let out := dir ++ "/cache/site-" ++ target
     -- A site published with its console keeps it, on the codebase as pushed (D84).
-    if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir name)) "") then console dir out else 0
+    if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir target)) "") then console dir out else 0
     Explorer.generate dir out
-    Option.some (snd (publishSite dir name out false))
-  else Option.none
+    snd (publishSite dir target out false)
+  let onMain := branch == currentBranch dir && branch == "main"
+  let targets := (if IO.exists (siteManifest dir name) then [name] else []) ++
+    (if onMain && name != explorerDemo && isToolchainRemote dir name then [explorerDemo] else [])
+  let site := if branch == currentBranch dir && not (List.isEmpty targets) then Option.some (sum (List.map siteOf targets)) else Option.none
   let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []
   let siteText := getOr
     (Option.map (fun n => " Refreshed the explorer (" ++ toText n ++ " files changed).") site)
@@ -1750,6 +1763,10 @@ def Cli.taskLine (t : Task) : Text :=
   let pad := fun n x => x ++ repeat (n - Text.length x) " "
   t.id ++ "  " ++ pad 8 (stateText t.state) ++ " " ++ pad 6 (priorityText t.priority) ++ " " ++
     t.title ++ labels ++ assignee
+
+def Cli.toolchainIri : Text := "https://dxos.org/deus/toolchain"
+
+def Cli.toolchainRemote : Text := "r2://agent-artifacts/deus/toolchain"
 
 /-- Moves the branch back to its first parent; the undone node stays in the store. -/
 def Cli.undo (args : Args) : {IO, Throw Text} Unit :=

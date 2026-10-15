@@ -35,7 +35,10 @@ describe('deus CLI replication', () => {
       deus('project', 'init', 'https://dxos.org/deus/toolchain', ...toolchain);
       deus('remote', 'add', 'origin', join(scratch, 'remote-toolchain'), ...toolchain);
       deus('add', file('t.deus', 'def t : Int := 1\n'), ...toolchain);
-      expect(deus('push', ...toolchain)).toMatchObject({ stdout: expect.stringMatching(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/), code: 0 });
+      expect(deus('push', ...toolchain)).toMatchObject({
+        stdout: expect.stringMatching(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/),
+        code: 0,
+      });
       deus('pull', ...b);
       expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
       // Builtin objects travel with the bundle, so the clone types constructor patterns.
