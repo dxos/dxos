@@ -15,7 +15,7 @@ const APPS: DataFlowSpec = {
   variant: 'silos',
   sources: [
     { id: 'mail', label: 'Mail', hue: 'blue' },
-    { id: 'docs', label: 'Docs', hue: 'orange' },
+    { id: 'docs', label: 'Documents', hue: 'orange' },
     { id: 'finance', label: 'Finance', hue: 'green' },
     { id: 'ops', label: 'Ops', hue: 'fuchsia' },
     { id: 'chat', label: 'Chat', hue: 'teal' },
@@ -24,7 +24,7 @@ const APPS: DataFlowSpec = {
   sinks: [
     { label: 'Inbox', app: 'list' },
     { label: 'Document', app: 'document' },
-    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Sheet', app: 'spreadsheet' },
     { label: 'Board', app: 'kanban' },
     { label: 'Messaging', app: 'messaging' },
   ],

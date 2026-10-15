@@ -14,7 +14,7 @@ import { type AppKind, type DataFlowSpec, type SourceSpec } from './layout.ts';
 const SPEC: DataFlowSpec = {
   sources: [
     { id: 'mail', label: 'Mail', hue: 'blue' },
-    { id: 'docs', label: 'Docs', hue: 'orange' },
+    { id: 'docs', label: 'Documents', hue: 'orange' },
     { id: 'finance', label: 'Finance', hue: 'green' },
     { id: 'ops', label: 'Ops', hue: 'fuchsia' },
   ],
@@ -28,7 +28,7 @@ const SILOS: DataFlowSpec = {
   sinks: [
     { label: 'Inbox', app: 'list' },
     { label: 'Document', app: 'document' },
-    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Sheet', app: 'spreadsheet' },
     { label: 'Board', app: 'kanban' },
   ],
 };
@@ -42,7 +42,7 @@ const APPS: DataFlowSpec = {
   hub: { label: '', partitions: 1 },
   sinks: [
     { label: 'Docs', app: 'document' },
-    { label: 'Sheets', app: 'spreadsheet' },
+    { label: 'Sheet', app: 'spreadsheet' },
     { label: 'Board', app: 'kanban' },
     { label: 'Chat', app: 'messaging' },
   ],

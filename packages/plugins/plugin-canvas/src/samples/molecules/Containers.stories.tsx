@@ -37,7 +37,7 @@ export const Default: StoryObj<DataFlowViewProps> = {};
 const HYPERGRAPH: DataFlowSpec = {
   sources: [
     { id: 'mail', label: 'Mail', hue: 'blue' },
-    { id: 'docs', label: 'Docs', hue: 'orange' },
+    { id: 'docs', label: 'Documents', hue: 'orange' },
     { id: 'finance', label: 'Finance', hue: 'green' },
     { id: 'ops', label: 'Ops', hue: 'fuchsia' },
   ],

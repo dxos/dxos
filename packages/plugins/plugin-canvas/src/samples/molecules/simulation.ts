@@ -1792,8 +1792,12 @@ export class DataFlowSimulation {
 
   /** Fills about two thirds of every application's slots: most settled long ago, one in seven fresh in its colour. */
   #prefill(): void {
-    const { sources } = this.#layout;
-    for (const app of this.#apps) {
+    const { sources, sinks } = this.#layout;
+    this.#apps.forEach((app, index) => {
+      // A conversation keeps its two opening messages and grows as molecules come and go, rather than starting full.
+      if (sinks[index]?.app === 'messaging') {
+        return;
+      }
       app.slots.forEach((_, slot) => {
         if (this.#random() < 0.65) {
           const source = Math.floor(this.#random() * sources.length);
@@ -1801,7 +1805,7 @@ export class DataFlowSimulation {
           app.items[slot] = { hue: sources[source].hue, source, since: fresh ? 0 : -60 };
         }
       });
-    }
+    });
   }
 
   /** An application's empty content; a conversation opens with its first two messages already there. */
