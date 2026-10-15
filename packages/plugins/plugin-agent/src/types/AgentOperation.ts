@@ -39,12 +39,16 @@ export const CreateAgent = Operation.make({
   }),
 });
 
-/** Gives an agent an email address: an email channel in its channel list, claimed on EDGE once connected. */
+/**
+ * Gives an agent an email address: an email channel in its channel list, claimed on EDGE once connected. An agent has
+ * one address, so an agent that already has an email channel gets that channel back unchanged.
+ */
 export const CreateEmailChannel = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.createEmailChannel'),
     name: 'Create email channel',
-    description: 'Gives the agent an email address; connecting the channel claims the address on EDGE.',
+    description:
+      'Gives the agent an email address, or returns the one it already has; connecting the channel claims the address on EDGE.',
     icon: 'ph--envelope--regular',
   },
   services: [Database.Service],

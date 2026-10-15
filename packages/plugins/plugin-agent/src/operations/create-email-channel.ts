@@ -14,6 +14,13 @@ const handler: Operation.WithHandler<typeof AgentOperation.CreateEmailChannel> =
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, ...properties }) {
       const agent = yield* Database.load(agentRef);
+      // An agent has one address: a repeated create (a double submit, another tab) returns the channel it already has.
+      const existing = (yield* AgentChannels.loadChannels(agent)).find(
+        (channel) => channel.backend.kind === AgentEmail.BACKEND_KIND,
+      );
+      if (existing) {
+        return { channel: Ref.make(existing) };
+      }
       const config = AgentEmail.make(properties);
       const channel = yield* Database.add(
         Channel.make({ name: config.handle, backend: { kind: AgentEmail.BACKEND_KIND, config } }),
