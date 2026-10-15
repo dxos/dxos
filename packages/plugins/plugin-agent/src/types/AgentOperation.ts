@@ -16,6 +16,7 @@ import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { Channel } from '@dxos/types';
 
+import * as AgentEmail from './AgentEmail.ts';
 import * as BrainService from './BrainService.ts';
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
@@ -36,6 +37,28 @@ export const CreateAgent = Operation.make({
   }),
   output: Schema.Struct({
     agent: Ref.Ref(Agent.Agent),
+  }),
+});
+
+/**
+ * Gives an agent an email address: an email channel in its channel list, claimed on EDGE once connected. An agent has
+ * one address, so an agent that already has an email channel gets that channel back unchanged.
+ */
+export const CreateEmailChannel = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.createEmailChannel'),
+    name: 'Create email channel',
+    description:
+      'Gives the agent an email address, or returns the one it already has; connecting the channel claims the address on EDGE.',
+    icon: 'ph--envelope--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that answers mail to the address.' }),
+    ...AgentEmail.Properties.fields,
+  }),
+  output: Schema.Struct({
+    channel: Ref.Ref(Channel.Channel),
   }),
 });
 

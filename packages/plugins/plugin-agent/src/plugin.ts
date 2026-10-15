@@ -8,12 +8,12 @@ import {
   AgentMailbox,
   AppGraphBuilder,
   Brain,
-  CreateObject,
   EmailChannelBackend,
   InviteeSource,
   OperationHandler,
   ReactSurface,
   Schema,
+  Settings,
   SkillDefinition,
   Translations,
 } from '#capabilities';
@@ -22,7 +22,7 @@ import { meta } from '#meta';
 export const AgentPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(Brain),
-  Plugin.addModule(CreateObject),
+  Plugin.addModule(Settings),
   Plugin.addModule(InviteeSource),
   Plugin.addModule(AgentMailbox),
   Plugin.addModule(EmailChannelBackend),

@@ -6,11 +6,11 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
 import { translations } from '#translations';
+import { AgentCapabilities } from '#types';
 
 export const Brain = AppCapability.layerSpec(() => import('./brain.ts'), {
   name: 'Brain',
@@ -32,9 +32,6 @@ export const AgentMailbox = AppCapability.layerSpec(() => import('./agent-mailbo
   environments: ['browser', 'node', 'tauri'],
 });
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['browser', 'node', 'tauri'],
-});
 // The members panel that lists invitees is UI; a headless host has none.
 export const InviteeSource = Capability.lazyModule(
   'InviteeSource',
@@ -48,5 +45,9 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [AgentCapabilities.Settings],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const Translations = AppCapability.translations(translations);

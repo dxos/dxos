@@ -7938,6 +7938,9 @@ importers:
       '@dxos/brain':
         specifier: workspace:*
         version: link:../../core/compute/brain
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -8026,9 +8029,6 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
@@ -10953,6 +10953,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
@@ -20987,9 +20990,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/link':
-        specifier: workspace:*
-        version: link:../../core/compute/link
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client

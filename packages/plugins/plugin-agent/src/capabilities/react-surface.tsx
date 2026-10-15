@@ -14,15 +14,18 @@ import { Position } from '@dxos/util';
 
 import {
   AgentActivity,
+  AgentEmailSetup,
   AgentKnowledge,
   AgentPrivateChat,
   AgentsPanel,
+  AgentsSettings,
   BrainStore,
   EmailChannelProperties,
   ProfileProperties,
 } from '#containers';
 import { AgentCompanion, AgentEmail } from '#types';
 
+import { AGENTS_SECTION_TYPE } from '../constants.ts';
 import { AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(() =>
@@ -56,6 +59,22 @@ export default Capability.makeModule(() =>
         ),
         component: AgentActivity,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // The agent's address: create it, then edit it and connect its mailbox.
+      Surface.create({
+        id: 'agentEmail',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, AgentCompanion.EMAIL),
+          AppSurface.companion(AppSurface.Article, Agent.Agent),
+        ),
+        component: AgentEmailSetup,
+        props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // The space's agents, under space settings.
+      Surface.create({
+        id: 'agentsSettings',
+        filter: AppSurface.literal(AppSurface.Article, AGENTS_SECTION_TYPE),
+        component: AgentsSettings,
       }),
       // A debug view of the brain store as held: raw facts, rules, their matching format and outboxes.
       Surface.create({

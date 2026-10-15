@@ -366,7 +366,7 @@ const ObjectFormDialogBody = ({
         Effect.ensuring(Effect.sync(() => handle?.settle())),
         Effect.provideService(Capability.Service, manager.capabilities),
         Effect.provideService(Operation.Service, operationInvoker),
-        EffectEx.runAndForwardErrors,
+        EffectEx.runDetached,
       ),
     [target, parent, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
   );

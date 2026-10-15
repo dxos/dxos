@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Obj } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
+import { type AccessToken } from '@dxos/link';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
 import { type Channel, Message } from '@dxos/types';
@@ -83,12 +84,13 @@ export const makeDiscordChannelBackend = ({
         // Through EDGE, which holds the bot's real token (a space may only record a placeholder) and reaches Discord
         // without the browser's CORS limits.
         const { config, spaceId } = yield* loadConfig(channel);
-        const accessToken = yield* Effect.tryPromise({
-          try: () => config.accessToken.load(),
-          catch: (cause) => new DiscordChannelError({ message: 'Could not load the bot token.', cause }),
-        });
         const edge = yield* edgeClient;
-        const query = new URLSearchParams({ spaceId, accessToken: accessToken.id });
+        const query = new URLSearchParams({ spaceId });
+        // Kai's config names no token object: EDGE uses its own.
+        const accessToken = config.accessToken;
+        if (accessToken) {
+          query.set('accessToken', (yield* loadAccessToken(accessToken)).id);
+        }
         yield* callBotRoute(
           edge,
           config.applicationId,
@@ -165,14 +167,24 @@ const loadConfig = (channel: Channel.Channel) =>
     return { config, spaceId };
   });
 
-/** The config and a pasted bot token; an EDGE-managed token cannot be read here. */
+const loadAccessToken = (ref: Ref.Ref<AccessToken.AccessToken>) =>
+  Effect.tryPromise({
+    try: () => ref.load(),
+    catch: (cause) => new DiscordChannelError({ message: 'Could not load the bot token.', cause }),
+  });
+
+/** The config and a pasted bot token; Kai's token and an EDGE-managed one stay on EDGE, so they cannot post here. */
 const loadBot = (channel: Channel.Channel) =>
   Effect.gen(function* () {
     const { config } = yield* loadConfig(channel);
-    const accessToken = yield* Effect.tryPromise({
-      try: () => config.accessToken.load(),
-      catch: (cause) => new DiscordChannelError({ message: 'Could not load the bot token.', cause }),
-    });
+    if (!config.accessToken) {
+      return yield* Effect.fail(
+        new DiscordChannelError({
+          message: "Kai's token stays on EDGE, which sending messages does not support yet; use your own bot's token.",
+        }),
+      );
+    }
+    const accessToken = yield* loadAccessToken(config.accessToken);
     if (isManagedAccessToken(accessToken.token)) {
       return yield* Effect.fail(
         new DiscordChannelError({

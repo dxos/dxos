@@ -10,6 +10,7 @@ import { AgentOperation, MemoryOperation, ModeOperation, RelayOperation, Trigger
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
+  AgentOperation.CreateEmailChannel.pipe(Operation.lazyHandler(() => import('./create-email-channel.ts'))),
   AgentOperation.EnsureIdentity.pipe(Operation.lazyHandler(() => import('./ensure-identity.ts'))),
   AgentOperation.EnsureChannelChat.pipe(Operation.lazyHandler(() => import('./ensure-channel-chat.ts'))),
   AgentOperation.ListAgents.pipe(Operation.lazyHandler(() => import('./list-agents.ts'))),

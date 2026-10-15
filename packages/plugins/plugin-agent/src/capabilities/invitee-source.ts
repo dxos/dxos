@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Agent from '@dxos/assistant/Agent';
@@ -15,7 +16,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { meta } from '#meta';
-import { AgentOperation, AgentPresence, AgentSpace } from '#types';
+import { AgentCapabilities, AgentOperation, AgentPresence, AgentSpace } from '#types';
 
 /** Every agent in the client's spaces; none while the graph cannot answer. */
 const allAgents = (db: Database.Database): Effect.Effect<Agent.Agent[]> =>
@@ -65,6 +66,11 @@ export default Capability.makeModule(() =>
     Capability.contribute(AppCapabilities.InviteeSource, {
       list: (space) =>
         Effect.gen(function* () {
+          // Only agents with identities can be added elsewhere, and only the plugin's setting creates them.
+          const settings = Option.getOrUndefined(yield* Capabilities.getAtomValueOption(AgentCapabilities.Settings));
+          if (!settings?.identities) {
+            return [];
+          }
           const translator = yield* Capability.getOption(AppCapabilities.Translator);
           const unnamed = Option.match(translator, {
             onNone: () => 'New agent',

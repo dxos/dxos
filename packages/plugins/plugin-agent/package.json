@@ -73,6 +73,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AgentCapabilities": {
+      "source": "./src/types/AgentCapabilities.ts",
+      "types": "./dist/types/src/types/AgentCapabilities.d.ts",
+      "import": "./dist/lib/AgentCapabilities.mjs"
+    },
     "./AgentChannels": {
       "source": "./src/types/AgentChannels.ts",
       "types": "./dist/types/src/types/AgentChannels.d.ts",
@@ -102,6 +107,11 @@
       "source": "./src/types/AgentPresence.ts",
       "types": "./dist/types/src/types/AgentPresence.d.ts",
       "import": "./dist/lib/AgentPresence.mjs"
+    },
+    "./AgentSettings": {
+      "source": "./src/types/AgentSettings.ts",
+      "types": "./dist/types/src/types/AgentSettings.d.ts",
+      "import": "./dist/lib/AgentSettings.mjs"
     },
     "./AgentPlugin": {
       "source": "./src/AgentPlugin.ts",
@@ -313,6 +323,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/brain": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
