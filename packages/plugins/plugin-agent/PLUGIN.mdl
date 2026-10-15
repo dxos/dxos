@@ -168,13 +168,13 @@ op ensureIdentity
     default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
     caller to that space as ADMIN. The members who may write to the default space are the agent's admins (a reader
     is not one) and the caller, its creator, is the owner; admins come and go through the space's Members panel like
-    any space's members. The caller must be able to write to `homeSpaceId`. The
-    caller's `SpaceMember` credential is written to their HALO, which is what makes the client join the space, and
-    only then does the agent take the brain's DID. An agent with a DID already is left alone, and without an EDGE
-    client (a headless host) nothing changes. A refusal, or a membership the HALO did not take, fails the operation
-    and changes nothing; Composer retries it in the background for about two minutes, since EDGE answers its
-    creator's repeated request with the same identity and membership. Until then the agent works as one without an
-    identity.
+    any space's members. The caller must be able to write to `homeSpaceId`. The agent takes the DID as soon as EDGE
+    answers, since the DID names its brain and must exist before its first turn. Then, in the background and retried
+    for about two minutes, the caller's `SpaceMember` credential is written to their HALO (which is what makes the
+    client join the space) and the agent's identity is admitted to `homeSpaceId`; if every retry fails this is only
+    logged, and the agent keeps its DID. An agent with a DID already is left alone, and without an EDGE client (a
+    headless host) nothing changes. A refusal from EDGE fails the operation and changes nothing; EDGE answers its
+    creator's repeated request with the same identity and membership.
 ```
 
 ```mdl
