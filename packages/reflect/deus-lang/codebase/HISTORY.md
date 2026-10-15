@@ -7,11 +7,45 @@
 - `b3eccf8399` history: import 1062 changes
 - `c76e0bd86d` task: import from tasks.sexp
 - `2d7a9fee76` merge #13952's branch: artifact constants (D146-D148) (by claude)
+- `0aaa2c092a` task: comment on 60e88be8 (by claude)
+- `ed88eaac93` update deus (by merge)
+- `22b0a54217` history: import 1062 changes
+- `3b49d85b3f` history: import 1045 changes
+- `5e236918b4` task: import from /tmp/tmppyt0kebd/tasks.sexp
+- `3a18ea6009` add /tmp/tmppyt0kebd/merged/code /tmp/tmppyt0kebd/merged/specs
 - `97d3b3fbfc` update deus (by merge)
 - `6044c260f8` history: import 1037 changes
 - `8498114d5c` history: import 1043 changes
 - `d8d4009fe4` task: import from /tmp/tmpb0j197lz/tasks.sexp
 - `2feb9e074c` add /tmp/tmpb0j197lz/merged/code /tmp/tmpb0j197lz/merged/specs
+- `f6943ca15f` update deus (by merge)
+- `a32d485ec2` history: import 1023 changes
+- `b4c300f712` history: import 1033 changes
+- `38cdddd0e3` task: import from /tmp/tmpqt177wfu/tasks.sexp
+- `ce4f088fce` add /tmp/tmpqt177wfu/merged/code /tmp/tmpqt177wfu/merged/specs
+- `f0333cb41c` update deus (by claude)
+- `924f1988c5` history: import 1018 changes
+- `41f913e8af` history: import 1010 changes
+- `afb382de6b` task: import from /tmp/tmpm9ol3os0/tasks.sexp
+- `5f20adb985` add /tmp/tmpm9ol3os0/merged/code /tmp/tmpm9ol3os0/merged/specs
+- `8fff0a3cc8` update deus (by claude)
+- `51b516c2ef` task: comment on 88004c30 (by claude)
+- `40660e52e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `bce604859a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artlaws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact2.mdl (by claude)
+- `59b60d6b1a` delete Debug.r2 (by claude)
+- `cc68163362` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `905c03b10a` delete Artifact.Spec.runEvaluatesOnce
+- `a648dcf6b1` update deus (by claude)
+- `9bcc7bd80e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
+- `f6b4401a3a` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
+- `22b89e57a3` task: comment on 60e88be8
+- `52f28cab3b` task: set d0d2915a labels
+- `1dd4374e2d` task: set d0d2915a priority
+- `eb902e4747` task: open d0d2915a Native interpreter: show, trace and Code.quote by type, so Rendered.renderedSmall passes natively as on node (values carry no types; Bool shows as 0/1, D146)
+- `c5e9b3346c` update deus (by claude)
+- `60967372b3` history: import 1037 changes
+- `a905f790c5` task: import from codebase/tasks.sexp
+- `9759b5816a` add codebase/code codebase/specs
 - `084dbd29ac` history: import 1023 changes
 - `4db18d07c6` history: import 1023 changes (by claude)
 - `7f44835cdb` task: import from codebase/tasks.sexp

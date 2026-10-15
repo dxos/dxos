@@ -174,6 +174,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 164 | 10-15 12:50 | 30m 00s | `95758124` | The native interpreter counts steps, so `Code.cost` works natively (D147): native `deus mdl` passes all 241 blocks, as node does, in 7.2 s vs 19.7 s |
 | 165 | 10-15 13:00 | 10m 00s | `17aa6510` | The Rust kernel gains `Code.tag`, `Code.field` and `Code.cast` (D146), which `deus eval` now calls: without them the wasm `eval` printed nothing and deus-kernel's embed test failed on CI. |
 | 166 | 10-15 12:50 | 45m 00s | `35374e3c` | `@[artifact]` constants (task 88004c30, Artifact.Spec R-1..R-5): `deus artifact <name>` evaluates one once and keeps its value under its hash; `run`, `image`, `build` and `serve` fill missing values first and use kept ones, so an image carries the value instead of what it was computed from (D148) |
-| 167 | 10-15 05:45 | 15m 00s | this commit | The explorer demo is republished from the current codebase and every push of the toolchain refreshes it (D149, task 696086fe) |
+| 167 | 10-15 13:30 | 30m 00s | `5da4c7f7` | The native interpreter applies curried lambdas without a closure per argument (D149): the toolchain's 199 tests take 2.0 s natively vs 4.9 s before and 9.4 s on node |
+| 168 | 10-15 05:45 | 15m 00s | this commit | The explorer demo is republished from the current codebase and every push of the toolchain refreshes it (D150, task 696086fe) |
 
-Total from stage 1 to stage 167: 41h 07m.
+Total from stage 1 to stage 168: 41h 37m.
