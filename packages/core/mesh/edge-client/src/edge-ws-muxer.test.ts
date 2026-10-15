@@ -521,6 +521,7 @@ describe('WebSocketMuxerTest', () => {
 
     afterEach(() => {
       vi.useRealTimers();
+      vi.restoreAllMocks();
     });
 
     test('a muxer asks its peer for a sync as it opens', ({ expect }) => {
@@ -792,6 +793,25 @@ describe('WebSocketMuxerTest', () => {
       await held;
       expect(dataFrames(socket.frames).map((frame) => frame[1])).toEqual([CHANNEL_ID, CHANNEL_ID + 1, CHANNEL_ID]);
       expect(muxer.pausedUntil(CHANNEL_ID)).toBeUndefined();
+    });
+
+    test('a resume timer firing before the clock reaches the end of the pause waits out the rest', async ({
+      expect,
+    }) => {
+      const clock = vi.spyOn(Date, 'now').mockReturnValue(0);
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: SHORT_MESSAGE_CHUNK, flowControl: flowControl() });
+      muxer.receiveFrame(pause(CHANNEL_ID, 1_000));
+      const held = muxer.send(textMessage('a0', 'service-a'));
+
+      clock.mockReturnValue(999);
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(dataFrames(socket.frames)).toHaveLength(0);
+
+      clock.mockReturnValue(1_000);
+      await settle();
+      await held;
+      expect(dataFrames(socket.frames)).toHaveLength(1);
     });
 
     test('a message already under way finishes on a paused channel', async ({ expect }) => {

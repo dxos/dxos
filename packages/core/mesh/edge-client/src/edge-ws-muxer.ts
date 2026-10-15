@@ -831,17 +831,25 @@ export class WebSocketMuxer {
       const retryAfterMs = view.getUint32(offset + 1);
       this._outPausedUntil.set(channelId, Date.now() + retryAfterMs);
       log('muxer channel paused by peer', { channelId, retryAfterMs });
-      // Nothing else wakes the send task when the pause ends: no grant is owed for a channel that sent nothing.
-      scheduleTask(
-        this._ctx,
-        () => {
-          if (this._outMessageChunks.size > 0) {
-            this._sendTask.schedule();
-          }
-        },
-        retryAfterMs,
-      );
+      this._resumeAfterPause(channelId, retryAfterMs);
     }
+  }
+
+  /** Wakes the send task once a pause ends, since no grant is owed for a channel that sent nothing meanwhile. */
+  private _resumeAfterPause(channelId: number, delay: number): void {
+    scheduleTask(
+      this._ctx,
+      () => {
+        // A timer can fire just before `Date.now()` reaches the deadline, which would leave the channel parked.
+        const remaining = (this.pausedUntil(channelId) ?? 0) - Date.now();
+        if (remaining > 0) {
+          this._resumeAfterPause(channelId, remaining);
+        } else if (this._outMessageChunks.size > 0) {
+          this._sendTask.schedule();
+        }
+      },
+      delay,
+    );
   }
 
   private _armStallProbe(): void {
