@@ -134,7 +134,7 @@ The printer keeps lines within 100 columns where it has a place to break ([D63](
 
 Nothing else breaks: declaration headers, list literals, one-argument applications, `if` conditions,
 string literals and doc comments keep their length. Lines past 100 columns are normal in an export (the
-checked-in `codebase/code/` has several hundred), and readers MUST accept lines of any length.
+toolchain's export has several hundred), and readers MUST accept lines of any length.
 
 A definition may call a term that no name binds any more (its name was removed or moved). The export
 names each such term `Unnamed.h<first 10 hex of its hash>` and exports it under that name, so every
@@ -309,7 +309,7 @@ any order. The result:
 ## What does not round-trip
 
 Attributes, doc comments, ordinary comments (D66), spec blocks and string literals with control
-characters all come back: the laws in [Export.Spec](../../codebase/specs/Export.Spec.mdl) restore an export in the
+characters all come back: the laws in [Export.Spec](https://deus.dmytro-a80.workers.dev/#n:Export.Spec) restore an export in the
 simulation and compare (D92). Hashes do not depend on the rest, so it does not break the guarantee
 above, but a restored codebase lacks it:
 

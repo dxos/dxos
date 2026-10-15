@@ -1,9 +1,0 @@
-def Dict.contains : k -> Dict k v -> Bool := prim "Dict.contains"
-
-def Dict.fromList : List (k, v) -> Dict k v := prim "Dict.fromList"
-
-def Dict.keys : Dict k v -> List k := prim "Dict.keys"
-
-def Dict.lookup : k -> Dict k v -> Option v := prim "Dict.lookup"
-
-def Dict.size : Dict k v -> Int := prim "Dict.size"

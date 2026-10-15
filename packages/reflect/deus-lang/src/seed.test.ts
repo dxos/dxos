@@ -43,12 +43,4 @@ describe('seed', () => {
     expect(code).toBe(0);
     expect(out === seed).toBe(true);
   });
-
-  // The codebase is the primary copy (D100), so its export alone must build the toolchain (Export.Spec R-8).
-  test('compiles the codebase export to the seed', { timeout: 180_000 }, ({ expect }) => {
-    const { seed, out, err, code } = compileWithSeed('codebase/code');
-    expect(err).toBe('');
-    expect(code).toBe(0);
-    expect(out === seed).toBe(true);
-  });
 });

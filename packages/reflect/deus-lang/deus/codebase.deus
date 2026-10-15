@@ -510,17 +510,27 @@ def ancestors (dir : Text) (h : Text) : {IO, Throw Text} Map Text Unit :=
       else go (parentsOf dir x ++ rest) (Set.insert x seen)
   go [h] Set.empty
 
-/-- A common ancestor of two causal nodes: the first of `b`'s ancestors (breadth first) that `a` also has. -/
+/-- A best common ancestor of two causal nodes: one both have that is not an ancestor of another
+  node both have. After criss-cross merges, the first common node a breadth-first walk meets can be
+  far older than the last one both sides saw, and a three-way merge against it reports every change
+  since then as a conflict. Among several best ancestors, the first that walk from `b` meets wins. -/
 def mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Option Text :=
   let mine := ancestors dir a
-  let rec go work seen :=
+  let rec walk work seen order :=
     match work with
-    | [] => none
-    | x :: rest =>
-      if Set.contains x mine then some x
-      else if Set.contains x seen then go rest seen
-      else go (rest ++ parentsOf dir x) (Set.insert x seen)
-  go [b] Set.empty
+    | [] => reverse order
+    | x :: rest => if Set.contains x seen then walk rest seen order else walk
+        (rest ++ parentsOf dir x)
+        (Set.insert x seen)
+        (if Set.contains x mine then x :: order else order)
+  let common := walk [b] Map.empty []
+  -- Every strict ancestor of a common node is common too, and never the best one.
+  let rec dominated work seen :=
+    match work with
+    | [] => seen
+    | x :: rest => if Set.contains x seen then dominated rest seen else dominated (parentsOf dir x ++ rest) (Set.insert x seen)
+  let below := dominated (concatMap (fun c => parentsOf dir c) common) Map.empty
+  head? (List.filter (fun c => not (Set.contains c below)) common)
 
 inductive MergeResult where
   | upToDate
@@ -528,66 +538,11 @@ inductive MergeResult where
   | merged (head : Text) (changed : List Text)
   | conflicts (names : List Text)
 
-/--
-  Merges `other` into the current branch. Names changed on one side only take that side;
+/-- Merges `other` into the current branch. Names changed on one side only take that side;
   names changed differently on both sides are conflicts, and nothing is written. Tasks merge
   field by field (`Tasks.merge`); a field both sides changed differently is a conflict named
-  `task:<id>.<field>`.
--/
-def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
-  let branch := currentBranch dir
-  let ours := headOf dir branch
-  let theirs := headOf dir other
-  if ours == theirs || Set.contains theirs (ancestors dir ours) then MergeResult.upToDate
-  else if Set.contains ours (ancestors dir theirs) then
-    let _ := applyMetas dir (mergeMetas (readMetas dir (readCausal dir ours).metas) (readMetas dir (readCausal dir ours).metas) (readMetas dir (readCausal dir theirs).metas))
-    setBranch dir branch theirs
-    MergeResult.fastForward theirs
-  else
-    let base := Option.map (fun b => readCausal dir b) (mergeBase dir ours theirs)
-    let baseNs := match base with
-      | some b => readNamespace dir b.snapshot
-      | none => Map.empty
-    let oursNode := readCausal dir ours
-    let theirsNode := readCausal dir theirs
-    let oursNs := readNamespace dir oursNode.snapshot
-    let theirsNs := readNamespace dir theirsNode.snapshot
-    let baseTasks := match base with
-      | some b => Tasks.snapshotOf dir b
-      | none => Map.empty
-    let tasks := Tasks.merge dir baseTasks (Tasks.snapshotOf dir oursNode) (Tasks.snapshotOf dir theirsNode)
-    let baseComments := match base with
-      | some b => Comments.snapshotOf dir b
-      | none => Map.empty
-    let comments := Comments.merge dir baseComments (Comments.snapshotOf dir oursNode) (Comments.snapshotOf dir theirsNode)
-    let names := Set.toList (Set.fromList (Map.keys baseNs ++ Map.keys oursNs ++ Map.keys theirsNs))
-    let step := fun (state : (Map Text Entry, List Text, List Text)) (name : Text) =>
-      match state with
-      | (ns, changed, conflicts) =>
-        let b := Map.lookup name baseNs
-        let o := Map.lookup name oursNs
-        let t := Map.lookup name theirsNs
-        if o == t then state
-        else if b == o then
-          -- Only theirs changed this name.
-          let ns2 := match t with
-            | some e => Map.insert name e ns
-            | none => Map.remove name ns
-          (ns2, name :: changed, conflicts)
-        else if b == t then state
-        else (ns, changed, name :: conflicts)
-    match (List.foldl step (oursNs, [], []) names, tasks) with
-    | ((ns, changed, []), (merged, [])) =>
-      let snapshot := putNamespace dir ns
-      let baseMetas := match base with
-        | some b => readMetas dir b.metas
-        | none => Map.empty
-      let metas := mergeMetas baseMetas (readMetas dir oursNode.metas) (readMetas dir theirsNode.metas)
-      let _ := applyMetas dir metas
-      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged) "" comments (putMetas dir "" (Map.toList metas)) (now ())))
-      setBranch dir branch c
-      MergeResult.merged c (List.reverse changed)
-    | ((_, _, conflicts), (_, taskConflicts)) => MergeResult.conflicts (List.reverse conflicts ++ taskConflicts)
+  `task:<id>.<field>`. -/
+def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult := mergeWith dir other Map.empty
 
 /-- The causal hashes a task links as changes. -/
 def changeLinks (form : Sexp) : List Text :=
@@ -759,5 +714,88 @@ def rewrite (form : Sexp) (subst : Map Text Text) : Sexp :=
     | none => form
   | Sexp.list items => Sexp.list (List.map (fun x => rewrite x subst) items)
   | _ => form
+
+/-- `Codebase.merge`, except that a name in `prefer` that both sides changed takes theirs instead
+  of conflicting: `deus merge` re-applies our source edits over it afterwards. -/
+def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw Text} MergeResult :=
+  let branch := currentBranch dir
+  let ours := headOf dir branch
+  let theirs := headOf dir other
+  if ours == theirs || Set.contains theirs (ancestors dir ours) then MergeResult.upToDate else if Set.contains ours (ancestors dir theirs) then
+    applyMetas dir (mergeMetas
+      (readMetas dir (Causal.metas (readCausal dir ours)))
+      (readMetas dir (Causal.metas (readCausal dir ours)))
+      (readMetas dir (Causal.metas (readCausal dir theirs))))
+    setBranch dir branch theirs
+    MergeResult.fastForward theirs
+  else
+    let base := Option.map (fun b => readCausal dir b) (mergeBase dir ours theirs)
+    let baseNs :=
+      match base with
+      | Option.some b => readNamespace dir b.snapshot
+      | Option.none => Map.empty
+    let oursNode := readCausal dir ours
+    let theirsNode := readCausal dir theirs
+    let oursNs := readNamespace dir oursNode.snapshot
+    let theirsNs := readNamespace dir theirsNode.snapshot
+    let baseTasks :=
+      match base with
+      | Option.some b => Tasks.snapshotOf dir b
+      | Option.none => Map.empty
+    let tasks := Tasks.merge dir baseTasks (Tasks.snapshotOf dir oursNode) (Tasks.snapshotOf dir theirsNode)
+    let baseComments :=
+      match base with
+      | Option.some b => Comments.snapshotOf dir b
+      | Option.none => Map.empty
+    let comments := Comments.merge
+      dir
+      baseComments
+      (Comments.snapshotOf dir oursNode)
+      (Comments.snapshotOf dir theirsNode)
+    let names := Set.toList (Set.fromList (Map.keys baseNs ++ Map.keys oursNs ++ Map.keys theirsNs))
+    let step := fun state name =>
+      match state with
+      | (ns, changed, conflicts) =>
+          let b := Map.lookup name baseNs
+          let o := Map.lookup name oursNs
+          let t := Map.lookup name theirsNs
+          if o == t then state else if b == o then
+            -- Only theirs changed this name.
+            let ns2 :=
+              match t with
+              | Option.some e => Map.insert name e ns
+              | Option.none => Map.remove name ns
+            (ns2, name :: changed, conflicts)
+          else if b == t then state else if Set.contains name prefer then
+            let ns2 :=
+              match t with
+              | Option.some e => Map.insert name e ns
+              | Option.none => Map.remove name ns
+            (ns2, name :: changed, conflicts)
+          else (ns, changed, name :: conflicts)
+    match (foldl step (oursNs, [], []) names, tasks) with
+    | ((ns, changed, []), merged, []) =>
+        let snapshot := putNamespace dir ns
+        let baseMetas :=
+          match base with
+          | Option.some b => readMetas dir (Causal.metas b)
+          | Option.none => Map.empty
+        let metas := mergeMetas
+          baseMetas
+          (readMetas dir (Causal.metas oursNode))
+          (readMetas dir (Causal.metas theirsNode))
+        applyMetas dir metas
+        let c := Codebase.put dir (causalToSexp (Causal.mk
+          snapshot
+          [ours, theirs]
+          ("merge " ++ other ++ " into " ++ branch)
+          (Tasks.putSnapshot dir merged)
+          ""
+          comments
+          (putMetas dir "" (Map.toList metas))
+          (Codebase.now ())))
+        setBranch dir branch c
+        MergeResult.merged c (reverse changed)
+    | ((_, _, conflicts), _, taskConflicts) => MergeResult.conflicts (reverse conflicts ++ taskConflicts)
 
 end Codebase

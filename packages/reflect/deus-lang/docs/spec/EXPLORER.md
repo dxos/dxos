@@ -116,7 +116,7 @@ same file in name order, so the file carries the alphabetically last of them in 
 
 In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and its first 10 characters when
 it has none. The two agree: `B` is among `A`'s `users` exactly when `A` is among `B`'s `deps`, so the graph
-view draws an edge from either page ([Explorer.Spec](../../codebase/specs/Explorer.Spec.mdl) R-13). A recursive definition refers to
+view draws an edge from either page ([Explorer.Spec](https://deus.dmytro-a80.workers.dev/#n:Explorer.Spec) R-13). A recursive definition refers to
 itself, but is not its own user (D107).
 
 `html` uses `<span class=K>` around each run of kind `K`: `kw` (keyword), `ty` (a capitalized name), `str`
@@ -293,7 +293,7 @@ focuses it), and a New task form (`n`) that links the focused definition. Withou
 explore`, a bare bucket), the app is read-only as before.
 
 The Worker in [`platform/worker/`](../../platform/worker) answers these routes (and the replication
-API under `/v1/`, [Remote.Spec](../../codebase/specs/Remote.Spec.mdl)):
+API under `/v1/`, [Remote.Spec](https://deus.dmytro-a80.workers.dev/#n:Remote.Spec)):
 
 | Route                           | Who     | Does                                                                                    |
 | ------------------------------- | ------- | --------------------------------------------------------------------------------------- |

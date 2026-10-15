@@ -60,14 +60,38 @@ describe('deus CLI replication', () => {
       deus('add', file('x.deus', 'def x : Int := 1\n'), '--message', 'x', ...a);
       deus('push', ...a);
       deus('add', file('y.deus', 'def y : Int := 2\n'), '--message', 'y', ...b);
-      const stale = deus('push', ...b);
+      const stale = deus('push', ...b, '--no-merge');
       expect(stale.code).not.toBe(0);
       expect(stale.stderr).toContain('run `deus pull origin` and `deus merge origin.main`, then push again');
-      deus('pull', ...b);
-      deus('merge', 'origin.main', ...b);
-      expect(deus('push', ...b).code).toBe(0);
+      // Without --no-merge, the push pulls and merges the remote itself and pushes again (D171).
+      const merged = deus('push', ...b);
+      expect(merged.code).toBe(0);
+      expect(merged.stderr).toContain('origin moved since the last pull; merging it and pushing again');
       expect(deus('pull', ...a).stdout).not.toContain('heads (concurrent pushes)');
       expect(deus('merge', 'origin.main', ...a).stdout).toMatch(/^Fast-forwarded/);
+      expect(deus('view', 'y', ...a).stdout).toContain('def y');
+
+      // Both sides changing one recursive group merge when they edited different members (D171).
+      deus(
+        'add',
+        file(
+          'g.deus',
+          'def even (n : Int) : Bool := if n == 0 then true else odd (n - 1)\ndef odd (n : Int) : Bool := if n == 0 then false else even (n - 1)\n',
+        ),
+        ...a,
+      );
+      deus('push', ...a);
+      deus('pull', ...b);
+      deus('merge', 'origin.main', ...b);
+      deus('update', file('even.deus', 'def even (n : Int) : Bool := if n <= 0 then true else odd (n - 1)\n'), ...a);
+      deus('push', ...a);
+      deus('update', file('odd.deus', 'def odd (n : Int) : Bool := if n <= 0 then false else even (n - 1)\n'), ...b);
+      const both = deus('push', ...b);
+      expect(both.stderr).toContain('merging it and pushing again');
+      expect(both.code).toBe(0);
+      deus('pull', ...a);
+      deus('merge', 'origin.main', ...a);
+      expect(deus('view', 'even', 'odd', ...a).stdout).toMatch(/def even[^\n]*n <= 0[\s\S]*def odd[^\n]*n <= 0/);
 
       // Enough history for level-1 boundaries (causal hashes starting with 0).
       for (let i = 1; i <= 70; i++) {

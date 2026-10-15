@@ -43,7 +43,7 @@ deus embed page.html --as Site.page                          # a file kept in th
 deus embed logo.png --as Site.logo --bytes                   # …or a binary one, as its bytes (D152)
 deus explore                                                 # browse the codebase on :8080
 deus explore --publish origin                                # …or host it beside the bundles
-deus export codebase                                         # the codebase as text, for git (D64)
+deus export out/                                             # the codebase as text (D64)
 ```
 
 New here? [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md) installs the toolchain and walks through
@@ -90,19 +90,19 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
   (store, text export, binary bundles), MDL and the rest.
 - [`docs/PRIOR-ART.md`](./docs/PRIOR-ART.md) — what was taken from Unison, Lean, Koka, Effect-TS and others.
 - [`docs/PROPOSALS.md`](./docs/PROPOSALS.md) — the user's proposals, evaluated against alternatives.
-- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study (D83), and the pure `Array` that compiled code updates in place (spec in the codebase as [`Array.Spec`](./codebase/specs/Array.Spec.mdl), D96).
+- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study (D83), and the pure `Array` that compiled code updates in place (spec in the codebase as [`Array.Spec`](https://deus.dmytro-a80.workers.dev/#n:Array.Spec), D96).
 - [`docs/LLM.md`](./docs/LLM.md) — how an agent drives the CLI.
 
 ## Changing the compiler
 
-1. Edit `deus/`, then `node bin/deus.mjs update deus` to bring the change into the codebase.
-2. `node bin/deus.mjs image Cli.main -o seed/deus.image` writes the new seed from the codebase in about
-   3 s, the same bytes as compiling `deus/` with it.
-3. Check the fixpoint once before you commit: `moon run deus-lang:self-build` (or
-   `node bin/deus.mjs compile deus --main Cli.main -o seed/deus.image`) must not change `seed/deus.image`.
-   `src/seed.test.ts` checks it in CI too.
-4. `node bin/deus.mjs export codebase`, so the export in git matches `deus/`.
-5. To use new syntax inside `deus/`, first land the compiler change and a rebuilt seed.
+1. Change the definition in the codebase (`deus view`, edit, `deus update`), test it, and `deus push`.
+   Editing `deus/` and running `node bin/deus.mjs update deus` works too.
+2. `python3 scripts/sync-deus.py <names…>` writes those definitions into `deus/`, rebuilds
+   `seed/deus.image` and checks that it compiles itself to itself (`src/seed.test.ts` checks it in CI
+   too). Commit `deus/` and the seed.
+3. To try a new CLI before that, `node bin/deus.mjs image Cli.main -o /tmp/deus.image` and run with
+   `DEUS_SEED=/tmp/deus.image`.
+4. To use new syntax inside `deus/`, first land the compiler change and a rebuilt seed.
 
 ## Running the tests in a fresh container
 
@@ -116,5 +116,5 @@ CPU-bound, and vitest's default leaves one idle):
 
 ```sh
 npx vitest run --config scripts/vitest.config.mjs                         # 82 s on 4 cores
-npx vitest run --config scripts/vitest.config.mjs src/restore.test.ts     # one file
+npx vitest run --config scripts/vitest.config.mjs src/seed.test.ts        # one file
 ```

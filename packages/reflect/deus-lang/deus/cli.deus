@@ -633,21 +633,65 @@ def switch (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => Json.obj [("branch", Json.str name)]) (fun _ => "Switched to branch " ++ name ++ ".")
   | _ => throw "usage: deus switch <branch>"
 
+/-- `deus merge <branch>`. When names conflict, the merge is retried by source: conflicting names
+  take theirs and our edited definitions are compiled again over the result, as `deus update`
+  would, so they pick up their changes and nothing of ours is lost. -/
 def merge (args : Args) : {IO, Throw Text} Unit :=
   match args.positional with
-  | [other] =>
-    let dir := openCodebase args
-    match Codebase.merge dir other with
-    | MergeResult.upToDate => output args (fun _ => Json.obj [("result", Json.str "up-to-date")]) (fun _ => "Already up to date.")
-    | MergeResult.fastForward h => output args (fun _ => Json.obj [("result", Json.str "fast-forward"), ("causal", Json.str h)]) (fun _ => "Fast-forwarded to " ++ short h ++ ".")
-    | MergeResult.merged h changed =>
-      output args (fun _ => Json.obj [("result", Json.str "merged"), ("causal", Json.str h), ("changed", Json.arr (List.map Json.str changed))])
-        (fun _ => "Merged " ++ other ++ " (" ++ short h ++ "):\n" ++ Text.join "\n" (List.map (fun x => "  " ++ x) changed))
-    | MergeResult.conflicts names =>
-      output args (fun _ => Json.obj [("result", Json.str "conflicts"), ("names", Json.arr (List.map Json.str names))])
-        (fun _ => "Conflicts; nothing was merged:\n" ++ Text.join "\n" (List.map (fun x => "  " ++ x) names))
-      IO.exit 1
-  | _ => throw "usage: deus merge <branch>"
+  | other :: [] =>
+      let dir := openCodebase args
+      let branch := currentBranch dir
+      let ours := headOf dir branch
+      let theirs := headOf dir other
+      let merged := fun h changed => Cli.output
+        args
+        (fun _ => Json.obj [("result", Json.str "merged"), ("causal", Json.str h), ("changed", Json.arr (List.map Json.str changed))])
+        (fun _ => "Merged " ++ other ++ " (" ++ short h ++ "):\n" ++
+          join "\n" (List.map (fun x => "  " ++ x) changed))
+      let conflicted := fun names =>
+        Cli.output
+          args
+          (fun _ => Json.obj [("result", Json.str "conflicts"), ("names", Json.arr (List.map Json.str names))])
+          (fun _ => "Conflicts; nothing was merged:\n" ++ join "\n" (List.map (fun x => "  " ++ x) names))
+        IO.exit 1
+      match Codebase.merge dir other with
+      | MergeResult.upToDate => Cli.output
+          args
+          (fun _ => Json.obj [("result", Json.str "up-to-date")])
+          (fun _ => "Already up to date.")
+      | MergeResult.fastForward h => Cli.output
+          args
+          (fun _ => Json.obj [("result", Json.str "fast-forward"), ("causal", Json.str h)])
+          (fun _ => "Fast-forwarded to " ++ short h ++ ".")
+      | MergeResult.merged h changed => merged h changed
+      | MergeResult.conflicts names =>
+          let edits := if any (fun n => startsWith "task:" n) names then Option.none else
+            match mergeBase dir ours theirs with
+            | Option.some base => sourceEdits dir base ours theirs
+            | Option.none => Option.none
+          match edits with
+          | Option.none => conflicted names
+          | Option.some (edited, text) =>
+              match mergeWith dir other (Set.fromList names) with
+              | MergeResult.merged h changed =>
+                  let file := dir ++ "/cache/merge-edits.deus"
+                  IO.writeFile file text
+                  let replayed := try (fun _ => if List.isEmpty edited then () else addOrUpdate (Args.mk
+                    [file]
+                    (Map.fromList [("codebase", dir), ("message", "merge " ++ other ++ ": re-apply " ++ join ", " edited), ("fresh", "true"), ("quiet", "true")])) true)
+                  IO.remove file
+                  match replayed with
+                  | Result.ok _ => merged
+                      (headOf dir branch)
+                      (changed ++ List.map (fun n => n ++ " (re-applied)") edited)
+                  | Result.err message =>
+                      -- Leave the branch as it was, so nothing of ours is lost.
+                      setBranch dir branch ours
+                      IO.eprint ("deus: re-applying our edits over " ++ other ++ " failed: " ++ message ++ "\n")
+                      conflicted names
+              | MergeResult.conflicts again => conflicted again
+              | _ => conflicted names
+  | _ => Throw.throw "usage: deus merge <branch>"
 
 /--
   The branch's first-parent history, newest first, as (causal, message, by), followed by the
@@ -864,31 +908,54 @@ def remote (args : Args) : {IO, Throw Text} Unit :=
 
 def remoteName (args : Args) : Text := Option.getOr (List.head? args.positional) "origin"
 
-/-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. -/
+/-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. When the
+  remote moved since the last pull, the current branch pulls it, merges it (`deus merge`, by source)
+  and pushes again, up to three times; `--no-merge` fails instead. -/
 def push (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
-  let branch := Option.getOr (option args "branch") (Codebase.currentBranch dir)
-  let pushed := withRemote dir name (fun _ =>
+  let branch := getOr (option args "branch") (currentBranch dir)
+  let attempt := fun _ => withRemote dir name (fun _ =>
     let bundle := Replicate.push dir name branch
-    let _ := Replicate.pushAssets dir
+    pushAssets dir
     bundle)
+  let rec pushing tries :=
+    match try attempt with
+    | Result.ok bundle => bundle
+    | Result.err message => if tries > 0 && branch == currentBranch dir && not (Cli.flag args "no-merge") && Text.contains "changes this store lacks" message then
+        IO.eprint ("deus: " ++ name ++ " moved since the last pull; merging it and pushing again\n")
+        withRemote dir name (fun _ =>
+          let pulled := Replicate.pull dir name
+          pullAssets dir
+          pulled)
+        Cli.merge (Args.mk [name ++ "." ++ branch] (Map.remove "json" args.options))
+        pushing (tries - 1)
+      else Throw.throw message
+  let pushed := pushing 3
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch;
   -- so does the shared toolchain remote on main, from whichever store pushes to it (D150, D164).
-  let siteOf := fun (target : Text) =>
+  let siteOf := fun target =>
     let out := dir ++ "/cache/site-" ++ target
     -- A site published with its console keeps it, on the codebase as pushed (D84).
-    let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir target)) "") then Explorer.console dir out else 0
-    let _ := Explorer.generate dir out
+    if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir target)) "") then console dir out else 0
+    Explorer.generate dir out
     snd (publishSite dir target out false)
-  let onMain := branch == Codebase.currentBranch dir && branch == "main"
-  let targets := if IO.exists (siteManifest dir name) || (onMain && isToolchainRemote dir name) then [name] else []
-  let site := if branch == Codebase.currentBranch dir && not (List.isEmpty targets) then some (List.sum (List.map siteOf targets)) else none
-  let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
-  let siteText := Option.getOr (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site) ""
+  let onMain := branch == currentBranch dir && branch == "main"
+  let targets := if IO.exists (siteManifest dir name) || onMain && isToolchainRemote dir name then [name] else []
+  let site := if branch == currentBranch dir && not (List.isEmpty targets) then Option.some (sum (List.map siteOf targets)) else Option.none
+  let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []
+  let siteText := getOr
+    (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site)
+    ""
   match pushed with
-  | some bundle => output args (fun _ => Json.obj ([("bundle", Json.str bundle)] ++ siteJson)) (fun _ => "Pushed " ++ branch ++ " to " ++ name ++ " as " ++ bundle ++ "." ++ siteText)
-  | none => output args (fun _ => Json.obj ([("bundle", Json.null)] ++ siteJson)) (fun _ => name ++ " already has " ++ branch ++ "." ++ siteText)
+  | Option.some bundle => Cli.output
+      args
+      (fun _ => Json.obj ([("bundle", Json.str bundle)] ++ siteJson))
+      (fun _ => "Pushed " ++ branch ++ " to " ++ name ++ " as " ++ bundle ++ "." ++ siteText)
+  | Option.none => Cli.output
+      args
+      (fun _ => Json.obj ([("bundle", Json.null)] ++ siteJson))
+      (fun _ => name ++ " already has " ++ branch ++ "." ++ siteText)
 
 /-- `deus pull [remote]`: imports new bundles and moves `<remote>.<branch>` to the remote's heads. -/
 def pull (args : Args) : {IO, Throw Text} Unit :=
@@ -1629,32 +1696,45 @@ def filesUnder (dir : Text) (prefix : Text) : {IO} List Text :=
 /-- Where `--publish` records what it uploaded to a remote; its presence means the remote hosts a site. -/
 def siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" ++ name ++ ".sums"
 
-/--
-  Uploads the explorer in `out` beside a remote's bundles, under `site/`. Files are compared by
+/-- Uploads the explorer in `out` beside a remote's bundles, under `site/`. Files are compared by
   content hash with the last upload, so a republish sends only what changed (`force` sends all).
   The top-level files (the app and the indexes) go to `site/v/<version>/` and `site/HEAD` names
-  that version last, so a reader never mixes indexes from two pushes (D166). Returns (files, uploaded).
--/
+  that version last, so a reader never mixes indexes from two pushes (D166). The hashes of what the
+  remote holds are kept beside it in `site/SUMS`, so a freshly pulled store, or one that another
+  store's pushes left behind, sends only what changed too. Returns (files, uploaded). -/
 def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Throw Text} (Int, Int) :=
   let manifest := siteManifest dir name
-  let previous := if force then Map.empty else
-    Map.fromList (List.filterMap (fun line =>
-      match Text.split line " " with
-      | [sum, path] => some (path, sum)
-      | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
+  let fetched := manifest ++ ".remote"
+  let published := if force then Option.none else withRemote
+    dir
+    name
+    (fun _ => if Remote.download "site/SUMS" fetched then IO.readFile fetched else Option.none)
+  IO.exec "rm" ["-f", fetched]
+  let previous := if force then Map.empty else Map.fromList (filterMap (fun line =>
+    match Text.split line " " with
+    | sum :: path :: [] => Option.some (path, sum)
+    | _ => Option.none) (Text.lines (getOr published (getOr (IO.readFile manifest) ""))))
   -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
-  let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
-  let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
+  let files := List.filter (fun f => not (startsWith "assets/" f)) (filesUnder out "")
+  let sums := List.map (fun f => (f, Text.sha256 (getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let top := List.filter (fun pair => not (Text.contains "/" (fst pair))) sums
-  let version := Text.take 16 (Text.sha256 (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") top)))
-  let moved := Map.lookup "HEAD" previous != some version
-  let changed := List.filter (fun pair => Text.contains "/" (fst pair) && Map.lookup (fst pair) previous != some (snd pair)) sums
-  let uploads := List.map (fun pair => ("site/" ++ fst pair, fst pair)) changed ++ (if moved then List.map (fun pair => ("site/v/" ++ version ++ "/" ++ fst pair, fst pair)) top else [])
+  let version := Text.take
+    16
+    (Text.sha256 (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") top)))
+  let moved := Map.lookup "HEAD" previous != Option.some version
+  let changed := List.filter
+    (fun pair => Text.contains "/" (fst pair) && Map.lookup (fst pair) previous != Option.some (snd pair))
+    sums
+  let uploads := List.map (fun pair => ("site/" ++ fst pair, fst pair)) changed ++
+    (if moved then List.map (fun pair => ("site/v/" ++ version ++ "/" ++ fst pair, fst pair)) top else [])
+  let listing := Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums) ++ version ++
+    " HEAD\n"
   withRemote dir name (fun _ =>
-    let _ := Replicate.pushAssets dir
-    Remote.writeAll (List.map (fun pair => (fst pair, Option.getOr (IO.readFile (out ++ "/" ++ snd pair)) "")) uploads)
-    if moved then Remote.writeAll [("site/HEAD", version)] else ())
-  IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums) ++ version ++ " HEAD\n")
+    pushAssets dir
+    Remote.writeAll (List.map (fun pair => (fst pair, getOr (IO.readFile (out ++ "/" ++ snd pair)) "")) uploads)
+    if moved then Remote.writeAll [("site/HEAD", version)] else ()
+    if List.isEmpty uploads && isSome published then () else Remote.writeAll [("site/SUMS", listing)])
+  IO.writeFile manifest listing
   (List.length sums, List.length uploads)
 
 /--
@@ -2243,5 +2323,39 @@ def main (u : Unit) : {IO} Unit :=
   match try (fun _ => dispatch (IO.args ())) with
   | Result.ok _ => ()
   | Result.err message => die message
+
+/-- The definitions whose source our branch edited since `base`, as one file's text, or none when
+  an edit cannot be replayed over theirs: theirs edited the same definition differently, or the
+  edit is to a spec block. A hash that moved only because a dependency did is not an edit, which is
+  what makes most both-sides changes in a recursive group mergeable. -/
+def sourceEdits (dir : Text) (base : Text) (ours : Text) (theirs : Text) : {IO, Throw Text} Option (List Text, Text) :=
+  let nsOf := fun h => readNamespace dir (readCausal dir h).snapshot
+  let baseNs := nsOf base
+  let oursNs := nsOf ours
+  let theirsNs := nsOf theirs
+  let pb := Print.printer baseNs []
+  let po := Print.printer oursNs []
+  let pt := Print.printer theirsNs []
+  let source := fun printer ns name =>
+    match Map.lookup name ns with
+    | Option.some e => Option.some (snd (viewParts printer dir ns name e "deus"))
+    | Option.none => Option.none
+  -- Constructors and operations print with their type or ability, so those carry their edits.
+  let replayable := fun e =>
+    match e with
+    | Entry.ctor _ _ _ => false
+    | Entry.op _ _ _ => false
+    | _ => true
+  let moved := List.filter
+    (fun pair => Map.lookup (fst pair) baseNs != Option.some (snd pair) && replayable (snd pair))
+    (Map.toList oursNs)
+  let edits := List.filter (fun name => source po oursNs name != source pb baseNs name) (List.map fst moved)
+  let clash := fun name =>
+    match Map.lookup name oursNs with
+    | Option.some (Entry.spec _) => true
+    | _ =>
+        let t := source pt theirsNs name
+        t != source pb baseNs name && t != source po oursNs name
+  if any clash edits then Option.none else Option.some (edits, join "\n\n" (List.map (fun name => getOr (source po oursNs name) "") edits) ++ "\n")
 
 end Cli

@@ -231,24 +231,26 @@ def pull (dir : Text) (remote : Text) : {Remote, IO, Throw Text} List (Text, Lis
 
 /-- Uploads what `branch` reaches and the remote lacks, with a claim for its head; none if up to date. -/
 def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text} Option Text :=
-  let seen := sync dir remote
-  let head := Codebase.headOf dir branch
-  let known := Set.fromList (List.concatMap (fun s => s.hashes) seen)
-  let missing := List.filter (fun h => not (Set.contains h known)) (Map.keys (closureOf dir [head]))
-  let claimed := List.any (fun s => List.any (fun c => c == (branch, head)) s.claims) seen
-  -- Pushing a head that leaves out a remote head would fork the branch (D167).
+  let seen := Replicate.sync dir remote
+  let head := headOf dir branch
+  let claimed := any (fun s => any (fun c => c == (branch, head)) s.claims) seen
+  -- Pushing a head that leaves out a remote head would fork the branch (D167); checked before the
+  -- walk, so a push that lost a race says so at once.
   let bases := headsOf dir seen branch
-  let ancestry := Codebase.ancestors dir head
+  let ancestry := ancestors dir head
   let behind := List.filter (fun b => not (Map.contains b ancestry)) bases
-  if List.isEmpty missing && claimed then none
-  else if not (List.isEmpty behind) then
-    throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++ Text.take 10 (Option.getOr (List.head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again")
-  else
+  -- A claimed head is on the remote with everything it reaches, so there is nothing to send.
+  if claimed then Option.none else if not (List.isEmpty behind) then Throw.throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++
+    Text.take 10 (getOr (head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again") else
+    let known := Set.fromList (concatMap (fun s => s.hashes) seen)
+    let missing := missingFrom dir [head] known
     let text := basedBundle dir [(branch, head)] (List.map (fun b => (branch, b)) bases) missing
-    let name := nameOf 0 text
+    let name := Replicate.nameOf 0 text
     Remote.put name text
-    IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name [(branch, head)] missing))
-    some name
+    IO.writeFile
+      (seenDir dir remote ++ "/" ++ name)
+      (seenToText (Seen.mk name [(branch, head)] missing))
+    Option.some name
 
 /-- Uploads the store's assets the remote lacks; returns how many. -/
 def pushAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
@@ -542,5 +544,31 @@ def siteType (path : Text) : Text :=
   else if Text.endsWith ".js" path || Text.endsWith ".mjs" path then "text/javascript"
   else if Text.endsWith ".svg" path then "image/svg+xml"
   else "text/plain; charset=utf-8"
+
+/-- What `heads` reach that `known` lacks. A remote holds the closure of every hash it holds (each
+  push sends a closed set), so the walk stops at known hashes and costs what changed rather than the
+  whole history. -/
+def missingFrom (dir : Text) (heads : List Text) (known : Map Text Unit) : {IO, Throw Text} List Text :=
+  let rec nodesOf work seen :=
+    match work with
+    | [] => seen
+    | x :: rest => if Map.contains x seen || Map.contains x known then nodesOf rest seen else nodesOf (parentsOf dir x ++ rest) (Map.insert x () seen)
+  let nodes := nodesOf heads Map.empty
+  let causals := List.map (fun c => readCausal dir c) (Map.keys nodes)
+  let entryRoots := concatMap (fun c => rootsOf (Map.toList (readNamespace dir c.snapshot))) causals
+  let rec go pending seen :=
+    match pending with
+    | [] => seen
+    | h :: rest => if Map.contains h seen || Map.contains h known then go rest seen else
+        let deps :=
+          match readObject dir h with
+          | Option.some form => Codebase.dependencies form
+          | Option.none => []
+        go (deps ++ rest) (Map.insert h () seen)
+  let objects := go (concatMap snapshotsOf causals ++ entryRoots) nodes
+  -- Builtins travel too: a store pulled without them types every constructor pattern as unknown.
+  Map.keys (union
+    objects
+    (Set.fromList (List.filter (fun h => not (Map.contains h known)) (Map.keys (builtinsOf dir)))))
 
 end Replicate

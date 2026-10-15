@@ -197,5 +197,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 187 | 10-15 10:30 | 21m 00s | `b7bf9712` | `deus export --terms` writes one file per definition at its namespace path, and an hourly routine mirrors the codebase (store files, Worker bundles and the per-term tree) to dxos/deus-mirror (Export.Spec R-10, R-11, D168). |
 | 188 | 10-15 10:40 | 15m 00s | `a2aa2900` | The seeded analytics events are pushed through the Worker to `toolchain/events/` on the new account, and the publisher lists them through the Worker for Basin (D169); Basin Catalog setup is with the Cloudflare thread |
 | 189 | 10-15 10:45 | 5m 00s | this commit | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D170, task d780de91) |
+| 190 | 10-15 11:50 | 65m 00s | this commit | Git stops holding the codebase: `codebase/` leaves #13952 (D171); push skips held objects, pulls and merges by itself when the remote moved, and merge re-applies our edits inside shared recursive groups; `sync-deus.py` writes changed toolchain definitions into `deus/` and the seed; unused files move to `legacy/` (D172) |
 
-Total from stage 1 to stage 189: 50h 28m.
+Total from stage 1 to stage 190: 51h 33m.
