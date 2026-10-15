@@ -919,6 +919,9 @@
       "path": "packages/stories/stories-agent/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-animation/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {

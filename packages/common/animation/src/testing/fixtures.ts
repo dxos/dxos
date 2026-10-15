@@ -83,7 +83,6 @@ export const DECENTRALIZED_TEMPLATE: NetworkTemplate = {
     ...Array.from({ length: 4 }, (_, index): NetworkSpec => ({
       id: `local-${index + 1}`,
       kind: 'devices',
-      layout: { near: 'home' },
       generate: { nodes: { type: index % 2 === 0 ? 'phone' : 'laptop', count: [1, 3] } },
     })),
     ...sites(20),

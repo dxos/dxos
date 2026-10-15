@@ -3,7 +3,7 @@
 //
 
 import { type Path } from '../path.ts';
-import { type Random, createRandom } from '../random.ts';
+import { type Random, createRandom, hash } from '../random.ts';
 import { type Graph, NODE_RADIUS, type Vec2, getNetwork, getNode } from './graph.ts';
 
 /** Device networks breathe; server networks pack tight. */
@@ -52,6 +52,26 @@ export const pack = (
   }
 
   const inner = placed.reduce((max, p) => Math.max(max, Math.hypot(p.x, p.y) + p.r), 0);
+  // With a spread, free items get evenly spaced angles in a belt outside the pinned items.
+  const belt =
+    spread !== undefined && spread > 0
+      ? items.filter((item) => !item.at && item.near === undefined).sort((a, b) => (a.key < b.key ? -1 : 1))
+      : [];
+  const beltPhase = random.next() * Math.PI * 2;
+  // The ring sits in the middle of the band, widened if the belt's circumference cannot hold every item.
+  const largestBelt = belt.reduce((max, item) => Math.max(max, item.radius), 0);
+  const circumference = belt.reduce((sum, item) => sum + 2 * item.radius + gap, 0);
+  const ring = Math.max(inner + gap + largestBelt + (spread ?? 0) / 2, circumference / (2 * Math.PI));
+  const slot = (item: PackItem): Vec2 | undefined => {
+    const index = belt.indexOf(item);
+    if (index < 0) {
+      return undefined;
+    }
+    const step = (Math.PI * 2) / belt.length;
+    const angle = beltPhase + index * step + (random.next() - 0.5) * step * 0.2;
+    const distance = Math.max(inner + gap + item.radius, ring + (random.next() - 0.5) * (spread ?? 0) * 0.5);
+    return [Math.cos(angle) * distance, Math.sin(angle) * distance];
+  };
   const cursors = new Map<string, number>();
   const queue = items.filter((item) => !item.at).sort((a, b) => b.radius - a.radius || a.key.localeCompare(b.key));
   while (queue.length > 0) {
@@ -68,14 +88,7 @@ export const pack = (
     if (!item) {
       break;
     }
-    const scatter = (): Vec2 => {
-      const angle = random.next() * Math.PI * 2;
-      const distance = inner + gap + item.radius + random.next() * (spread ?? 0);
-      return [Math.cos(angle) * distance, Math.sin(angle) * distance];
-    };
-    const origin =
-      (item.near !== undefined ? positions[item.near] : undefined) ??
-      (spread !== undefined && spread > 0 ? scatter() : [0, 0]);
+    const origin = (item.near !== undefined ? positions[item.near] : undefined) ?? slot(item) ?? [0, 0];
     const originKey = `${origin[0]},${origin[1]}`;
     const phase = random.next() * Math.PI * 2;
     // The step scales with the circles involved so the spiral reaches large neighbours in few steps.
@@ -121,6 +134,76 @@ export const hexPack = (count: number, radius: number, gap: number): Vec2[] => {
     .slice(0, count);
 };
 
+/**
+ * Spreads circles evenly over a disc: seeds a sunflower spiral (sizes interleaved), then pushes
+ * overlapping pairs apart while holding everything inside the disc, growing the disc only if needed.
+ */
+export const sunflower = (
+  items: PackItem[],
+  gap: number,
+): { positions: Record<string, Vec2>; radius: number } | undefined => {
+  const sorted = [...items].sort((a, b) => hash(a.key) - hash(b.key) || (a.key < b.key ? -1 : 1));
+  const radii = sorted.map((item) => item.radius);
+  const count = sorted.length;
+  // Start at a disc these circles fill to about half its area.
+  let disc = Math.sqrt(radii.reduce((sum, radius) => sum + (radius + gap / 2) ** 2, 0) / 0.5);
+  for (let attempt = 0; attempt < 40; attempt++, disc *= 1.05) {
+    const points = radii.map((radius, index): [number, number] => {
+      const distance = Math.sqrt((index + 0.5) / count) * Math.max(0, disc - radius);
+      return [Math.cos(index * GOLDEN_ANGLE) * distance, Math.sin(index * GOLDEN_ANGLE) * distance];
+    });
+    let clear = false;
+    for (let iteration = 0; iteration < 300 && !clear; iteration++) {
+      clear = true;
+      for (let i = 0; i < count; i++) {
+        for (let j = i + 1; j < count; j++) {
+          const a = points[i];
+          const b = points[j];
+          if (!a || !b) {
+            continue;
+          }
+          const need = (radii[i] ?? 0) + (radii[j] ?? 0) + gap;
+          const dx = b[0] - a[0];
+          const dy = b[1] - a[1];
+          const distance = Math.hypot(dx, dy);
+          if (distance < need) {
+            clear = false;
+            const angle = distance > 0 ? Math.atan2(dy, dx) : (i + j) * GOLDEN_ANGLE;
+            const push = (need - distance) / 2 + 0.5;
+            a[0] -= Math.cos(angle) * push;
+            a[1] -= Math.sin(angle) * push;
+            b[0] += Math.cos(angle) * push;
+            b[1] += Math.sin(angle) * push;
+          }
+        }
+      }
+      points.forEach((point, index) => {
+        const limit = Math.max(0, disc - (radii[index] ?? 0));
+        const distance = Math.hypot(point[0], point[1]);
+        if (distance > limit) {
+          point[0] *= limit / distance;
+          point[1] *= limit / distance;
+          clear = false;
+        }
+      });
+    }
+    const overlapping = points.some((a, i) =>
+      points
+        .slice(i + 1)
+        .some((b, k) => Math.hypot(a[0] - b[0], a[1] - b[1]) < (radii[i] ?? 0) + (radii[i + 1 + k] ?? 0) + gap - 1e-6),
+    );
+    if (!overlapping) {
+      const positions: Record<string, Vec2> = {};
+      sorted.forEach((item, index) => {
+        positions[item.key] = points[index] ?? [0, 0];
+      });
+      const radius = points.reduce((max, [x, y], index) => Math.max(max, Math.hypot(x, y) + (radii[index] ?? 0)), 0);
+      return { positions, radius };
+    }
+  }
+  return undefined;
+};
+
 /** Places every network and node: children are packed inside their parent, roots around the origin. */
 export const layout = (graph: Graph, seed: number, options: PackOptions = {}): Graph => {
   const random = createRandom(seed).fork('layout');
@@ -155,7 +238,14 @@ export const layout = (graph: Graph, seed: number, options: PackOptions = {}): G
     const radii = new Set(items.map((item) => item.radius));
     const uniform =
       network.networks.length === 0 && items.length > 1 && radii.size === 1 && items.every((item) => !item.at);
-    const { positions, radius } = uniform ? hex(items, gap) : pack(items, random.fork(path), { gap });
+    const spreadOut =
+      network.kind !== 'devices' &&
+      network.networks.length > 0 &&
+      items.every((item) => !item.at && item.near === undefined);
+    const { positions, radius } =
+      (uniform ? hex(items, gap) : undefined) ??
+      (spreadOut ? sunflower(items, gap) : undefined) ??
+      pack(items, random.fork(path), { gap });
     local[path] = positions;
     network.radius = Math.max(network.radius, radius + (network.padding ?? spacing.padding));
     return network.radius;

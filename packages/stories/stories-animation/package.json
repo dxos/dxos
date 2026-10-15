@@ -1,0 +1,29 @@
+{
+  "name": "@dxos/stories-animation",
+  "version": "0.14.0",
+  "private": true,
+  "description": "Storybook previews of scripted network animations compiled by @dxos/animation.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {},
+  "dependencies": {
+    "@dxos/animation": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
+  }
+}

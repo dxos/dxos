@@ -141,3 +141,58 @@ describe('density and spread', () => {
     );
   });
 });
+
+describe('belt and uniform distribution', () => {
+  const sites = Array.from({ length: 16 }, (_, index) => ({
+    id: `site-${index + 1}`,
+    kind: 'devices' as const,
+    nodes: [{ id: 'p', type: 'phone' as const }],
+  }));
+  const cloud = {
+    id: 'cloud',
+    kind: 'cloud' as const,
+    layout: { at: [0, 0] as const },
+    generate: {
+      nodes: { type: 'server' as const, count: [7, 7] as const },
+      networks: { template: 'region', count: [3, 3] as const, depth: 2 },
+    },
+  };
+  const template: NetworkTemplate = {
+    networks: [cloud, ...sites],
+    templates: { region: { id: 'region', kind: 'servers', generate: { nodes: { type: 'server', count: [3, 3] } } } },
+    layout: { gap: 600, spread: 2000 },
+  };
+
+  test('outer networks sit in a belt, evenly around the cloud', ({ expect }) => {
+    const graph = buildGraph(template, 4);
+    const cloudRadius = getNetwork(graph, 'cloud').radius;
+    const angles = sites
+      .map((site) => {
+        const network = getNetwork(graph, site.id);
+        const radial = distance(network.center, [0, 0]);
+        expect(radial - network.radius).toBeGreaterThanOrEqual(cloudRadius + 600 - 1e-6);
+        return Math.atan2(network.center[1], network.center[0]);
+      })
+      .sort((a, b) => a - b);
+    const gaps = angles.map((angle, index) =>
+      index === 0 ? angle + 2 * Math.PI - (angles[angles.length - 1] ?? 0) : angle - (angles[index - 1] ?? 0),
+    );
+    expect(Math.max(...gaps)).toBeLessThan(1.6 * ((2 * Math.PI) / sites.length));
+    expect(Math.min(...gaps)).toBeGreaterThan(0.4 * ((2 * Math.PI) / sites.length));
+  });
+
+  test('networks and servers inside the cloud spread across it', ({ expect }) => {
+    const graph = buildGraph(template, 4);
+    const network = getNetwork(graph, 'cloud');
+    const children = [
+      ...network.networks.map((path) => getNetwork(graph, path).center),
+      ...network.nodes.map((path) => getNode(graph, path).position),
+    ];
+    const mean = children.reduce((sum, center) => sum + distance(center, network.center), 0) / children.length;
+    expect(mean).toBeGreaterThan(network.radius * 0.45);
+    const outer = children.filter((center) => distance(center, network.center) > network.radius * 0.6).length;
+    expect(outer / children.length).toBeGreaterThanOrEqual(0.4);
+    const regions = network.networks.map((path) => distance(getNetwork(graph, path).center, network.center));
+    expect(Math.max(...regions)).toBeGreaterThan(network.radius * 0.45);
+  });
+});
