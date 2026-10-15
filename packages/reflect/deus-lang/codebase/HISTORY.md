@@ -1,5 +1,10 @@
 # History of main
 
+- `a7e23733d0` close 72a1f2fb by #c886759cc6 (by claude)
+- `c886759cc6` C and wasm back ends compile show, Text.utf8, Text.fromCodes and Text.sha256 (D120) (by claude)
+- `79be6887e1` history: import 749 changes
+- `91b9b832cc` task: import from codebase/tasks.sexp
+- `93bf75e61d` add codebase/code codebase/specs
 - `13466f798a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
 - `5d7e149aae` task: set 602f4557 state
 - `e110e45247` task: comment on 602f4557 (by claude)

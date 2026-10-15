@@ -196,16 +196,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - assignee: claude
 - labels: mdl, spec
 
-## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-> claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
-
-> claude: The Text work above landed as D115 (renumbered from D113 after a concurrent decision).
-
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
@@ -1101,6 +1091,17 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 - labels: native, perf
 
 > claude: Duplicate of 72a1f2fb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
+
+- state: done
+- priority: medium
+- labels: native, perf
+- links change #c886759cc6
+
+> claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
+
+> claude: The Text work above landed as D115 (renumbered from D113 after a concurrent decision).
 
 ## Native: closure conversion and partial application in the C back end (`610b2785`)
 

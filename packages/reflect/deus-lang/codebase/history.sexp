@@ -1,3 +1,8 @@
+(entry "a7e23733d0d1e53bdb8f371f395a3786d1c6b0e6a0b213ca8c8f9b0845c251a5" "close 72a1f2fb by #c886759cc6" "claude")
+(entry "c886759cc65907f45b24b44612ad0a8943957800578291c44b036c709b95339e" "C and wasm back ends compile show, Text.utf8, Text.fromCodes and Text.sha256 (D120)" "claude")
+(entry "79be6887e1ad9bde3533e66b6d4216f9252da0360106c68d921cfd6a2381723b" "history: import 749 changes" "")
+(entry "91b9b832cc461a79831180d28d48959b51edcd20ca1e1eebd188e6f8a5775070" "task: import from codebase/tasks.sexp" "")
+(entry "93bf75e61d8d150e51a06597e709f2b5a6d4cf556c92eeed906203d155615f3c" "add codebase/code codebase/specs" "")
 (entry "13466f798a777e0b32e687535b464a885b5cbf6b6ccaa8a5b81023ab338bafe4" "update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl" "claude")
 (entry "5d7e149aae9ed4d8a9999bf007e8b00139be6c4a370f12b42936e7c767855fdf" "task: set 602f4557 state" "")
 (entry "e110e45247d3dca3aca30dab062dc92bbb7918d12b8678bf081913e6e04e3b8b" "task: comment on 602f4557" "claude")
