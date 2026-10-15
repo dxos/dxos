@@ -414,6 +414,10 @@ describe('composerMcpCredentials', () => {
       // Another identity signed in on the same service never inherits the previous one's token.
       minter.did = 'did:halo:bob';
       expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-3' });
+      // Switching back reuses the first identity's token rather than minting another.
+      minter.did = 'did:halo:alice';
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-2' });
+      expect(minter.minted).toHaveLength(3);
     }),
   );
 
@@ -429,6 +433,20 @@ describe('composerMcpCredentials', () => {
       const env = { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' };
       expect(yield* Fiber.join(turns)).toEqual([env, env]);
       expect(minter.minted).toHaveLength(1);
+    }),
+  );
+
+  it.effect('does not lend a token to an identity service that replaced the minting one', () =>
+    Effect.gen(function* () {
+      const first = new FakeMinter('first');
+      const second = new FakeMinter('second', 'did:halo:bob');
+      let current: EdgeAgent.ApiTokenMinter = first;
+      first.during = Effect.sync(() => {
+        current = second;
+      });
+      const credentials = EdgeAgent.composerMcpCredentials(() => current);
+      expect(yield* credentials).toEqual({});
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'second-1' });
     }),
   );
 

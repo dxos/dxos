@@ -468,8 +468,8 @@ export const composerMcpCredentials = (
   identity: () => ApiTokenMinter | undefined,
   now: () => number = Date.now,
 ): Effect.Effect<Record<string, string>> => {
-  let cached: MintedToken | undefined;
-  let pending: { did: string; mint: Effect.Effect<MintedToken, unknown> } | undefined;
+  const tokens = new Map<string, MintedToken>();
+  const pending = new Map<string, Effect.Effect<MintedToken, unknown>>();
   const currentDid = (service: ApiTokenMinter) => Option.getOrUndefined(service.getEdgeIdentity())?.identityDid;
   return Effect.gen(function* () {
     const service = identity();
@@ -477,31 +477,36 @@ export const composerMcpCredentials = (
     if (!service || !did) {
       return NO_CREDENTIALS;
     }
-    if (cached?.did !== did || cached.expiresAt - now() < Duration.toMillis(COMPOSER_MCP_TOKEN_MARGIN)) {
-      if (pending?.did !== did) {
-        const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
-        const mint = service
-          .createApiToken({ label: 'Claude Code (cloud)', expiresAt })
-          .pipe(Effect.map(({ token }): MintedToken => ({ did, token, expiresAt })));
-        pending = { did, mint: yield* Effect.cached(mint) };
-      }
-      const entry = pending;
-      const minted = yield* entry.mint.pipe(
-        Effect.ensuring(
-          Effect.sync(() => {
-            if (pending === entry) {
-              pending = undefined;
-            }
-          }),
-        ),
-      );
-      // A token minted for an identity that was signed out meanwhile must never be lent as the new one's.
-      if (currentDid(service) !== did) {
-        return NO_CREDENTIALS;
-      }
-      cached = minted;
+    const cached = tokens.get(did);
+    if (cached && cached.expiresAt - now() >= Duration.toMillis(COMPOSER_MCP_TOKEN_MARGIN)) {
+      return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: cached.token };
     }
-    return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: cached.token };
+    let mint = pending.get(did);
+    if (!mint) {
+      const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
+      mint = yield* Effect.cached(
+        service
+          .createApiToken({ label: 'Claude Code (cloud)', expiresAt })
+          .pipe(Effect.map(({ token }): MintedToken => ({ did, token, expiresAt }))),
+      );
+      pending.set(did, mint);
+    }
+    const shared = mint;
+    const minted = yield* shared.pipe(
+      Effect.ensuring(
+        Effect.sync(() => {
+          if (pending.get(did) === shared) {
+            pending.delete(did);
+          }
+        }),
+      ),
+    );
+    tokens.set(did, minted);
+    // A token minted while the signed-in identity or its service changed must never be lent as the new one's.
+    if (identity() !== service || currentDid(service) !== did) {
+      return NO_CREDENTIALS;
+    }
+    return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: minted.token };
   }).pipe(
     Effect.catchCause((cause) =>
       Effect.sync(() => {
