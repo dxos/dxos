@@ -12,9 +12,10 @@ Already registered files are skipped, so a rerun is safe.
 
   --local <warehouse>   a SQLite catalog in <warehouse>, over a directory remote (tests, and the default)
   --basin               Cloudflare Basin Catalog (formerly R2 Data Catalog) over the R2 bucket; needs
-                        BASIN_CATALOG_URI, BASIN_WAREHOUSE and BASIN_TOKEN, and changes shared state
+                        BASIN_CATALOG_URI, BASIN_WAREHOUSE and BASIN_TOKEN, and changes shared state;
+                        BASIN_S3_ENDPOINT, BASIN_S3_KEY_ID and BASIN_S3_SECRET name the bucket's S3 keys
 
-Usage: analytics-publish.py <remote dir or s3://bucket/prefix> (--local <warehouse> | --basin) [--query SQL]
+Usage: analytics-publish.py <remote dir, s3://bucket/prefix or https://host/v1/project> (--local <warehouse> | --basin) [--query SQL]
 
 Only --local has been run end to end; --basin follows Cloudflare's documented Iceberg REST catalog.
 
@@ -48,10 +49,17 @@ def event_files(remote):
                     yield event_type, os.path.abspath(os.path.join(folder, name))
 
 
+def s3_settings():
+    """Endpoint and key pair for the bucket: the Basin bucket's own (`BASIN_S3_*`) or the R2 keys a thread has."""
+    return (os.environ.get('BASIN_S3_ENDPOINT') or os.environ['DEUS_R2_ENDPOINT'],
+            os.environ.get('BASIN_S3_KEY_ID') or os.environ['R2_ACCESS_KEY_ID'],
+            os.environ.get('BASIN_S3_SECRET') or os.environ['R2_SECRET_ACCESS_KEY'])
+
+
 def r2_filesystem():
     from pyarrow import fs
-    return fs.S3FileSystem(endpoint_override=os.environ['DEUS_R2_ENDPOINT'], access_key=os.environ['R2_ACCESS_KEY_ID'],
-                           secret_key=os.environ['R2_SECRET_ACCESS_KEY'], region='auto')
+    endpoint, key_id, secret = s3_settings()
+    return fs.S3FileSystem(endpoint_override=endpoint, access_key=key_id, secret_key=secret, region='auto')
 
 
 def r2_event_files(remote):
@@ -69,13 +77,27 @@ def catalog_for(args):
         for key in ('BASIN_CATALOG_URI', 'BASIN_WAREHOUSE', 'BASIN_TOKEN'):
             if not os.environ.get(key):
                 sys.exit(f'${key} is not set')
+        endpoint, key_id, secret = s3_settings()
         return load_catalog('basin', type='rest', uri=os.environ['BASIN_CATALOG_URI'],
                             warehouse=os.environ['BASIN_WAREHOUSE'], token=os.environ['BASIN_TOKEN'],
-                            **{'s3.endpoint': os.environ.get('DEUS_R2_ENDPOINT', ''), 's3.access-key-id': os.environ.get('R2_ACCESS_KEY_ID', ''),
-                               's3.secret-access-key': os.environ.get('R2_SECRET_ACCESS_KEY', ''), 's3.region': 'auto'})
+                            **{'s3.endpoint': endpoint, 's3.access-key-id': key_id, 's3.secret-access-key': secret, 's3.region': 'auto'})
     warehouse = os.path.abspath(args.local)
     os.makedirs(warehouse, exist_ok=True)
     return load_catalog('local', type='sql', uri=f'sqlite:///{warehouse}/catalog.db', warehouse=f'file://{warehouse}')
+
+
+def worker_event_files(remote, bucket):
+    """The same over the DEUS Worker (`https://host/v1/<project>`, D164), which stores `<project>/events/` in `bucket`;
+    the Worker lists, and the files are named by their S3 URI so the catalog reads them in place."""
+    import urllib.request
+    project = remote.rstrip('/').split('/')[-1]
+    # Cloudflare refuses urllib's default User-Agent with a 403.
+    request = urllib.request.Request(remote.rstrip('/') + '/files/events/', headers={'User-Agent': 'deus-analytics-publish'})
+    with urllib.request.urlopen(request) as response:
+        keys = response.read().decode('utf8').split()
+    for key in sorted(keys):
+        if key.endswith('.parquet'):
+            yield key.split('/')[0], f's3://{bucket}/{project}/events/{key}'
 
 
 def publish(catalog, files):
@@ -108,11 +130,17 @@ def main():
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument('--local', metavar='WAREHOUSE')
     target.add_argument('--basin', action='store_true')
+    parser.add_argument('--bucket', default='deus-codebases', help='the bucket behind an https:// Worker remote')
     parser.add_argument('--query', help='SQL over the tables after publishing (local only), e.g. "select count(*) from test_run"')
     args = parser.parse_args()
 
     catalog = catalog_for(args)
-    files = list(r2_event_files(args.remote)) if args.remote.startswith('s3://') else list(event_files(args.remote))
+    if args.remote.startswith('https://'):
+        files = list(worker_event_files(args.remote, args.bucket))
+    elif args.remote.startswith('s3://'):
+        files = list(r2_event_files(args.remote))
+    else:
+        files = list(event_files(args.remote))
     added = publish(catalog, files)
     for table, n in sorted(added.items()):
         print(f'deus.{table}: {n} new files')

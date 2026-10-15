@@ -1189,7 +1189,7 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: wasm, perf, embedding
 
-deus_start keeps the machine when the image bytes match the last call and resets its run state (Machine::reset): parsing the 1.4 MB seed (about 90 ms) and compiling definitions happen once per instance. help drops from 102 ms to 11 ms; heavier commands save the same 90 ms. Only closures over no environment stay cached across calls, so a global Ref or effect result never leaks into the next run (D169).
+deus_start keeps the machine when the image bytes match the last call and resets its run state (Machine::reset): parsing the 1.4 MB seed (about 90 ms) and compiling definitions happen once per instance. help drops from 102 ms to 11 ms; heavier commands save the same 90 ms. Only closures over no environment stay cached across calls, so a global Ref or effect result never leaks into the next run (D170).
 
 ## Explorer History view shows each change's timestamp (`36e1527d`)
 

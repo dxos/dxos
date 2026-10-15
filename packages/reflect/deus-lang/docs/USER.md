@@ -515,6 +515,14 @@ it should have codebase files commited in its native format, as well as have a d
 
 ---
 
+hold off for now, I need to setup proper cf org
+
+---
+
+cloudflare account setup, you can continue
+
+---
+
 recite core instructions and continue working:
 
 - focus on devex and perf, make sure sessions can use hosted codebase as the main record efficiently without workarounds
