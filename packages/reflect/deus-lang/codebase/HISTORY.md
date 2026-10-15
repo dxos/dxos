@@ -1,5 +1,12 @@
 # History of main
 
+- `c9036732bc` task: open 53e409cd deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (by claude)
+- `7ef98a03c9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law.deus (by claude)
+- `5cdd38255e` delete Cli.MdlFacts.declared (by claude)
+- `803c545420` update deus (by claude)
+- `8d4f94d1c8` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cb.mdl (by claude)
+- `b2118ecb1f` update deus (by claude)
+- `9e84cd4cb6` update deus (by claude)
 - `0cbf27c419` task: comment on cda44092 (by claude)
 - `119e671691` task: set cda44092 state (by claude)
 - `72f35cce64` update deus (by claude)

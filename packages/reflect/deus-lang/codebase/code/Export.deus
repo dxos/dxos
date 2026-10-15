@@ -359,7 +359,7 @@ def Export.withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry 
 def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
   mergeExisting dir out
   let ns := withUnnamed dir (Codebase.current dir)
-  let printer := printer ns []
+  let printer := Print.printer ns []
   let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
   let sources := filterMap (fun pair =>
     match pair with

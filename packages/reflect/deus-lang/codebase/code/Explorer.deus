@@ -241,7 +241,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   -- indexes a whole namespace, so both are read only for changes that rebind something.
   let nsBefore := if List.isEmpty changed || Text.isEmpty before.snapshot then Map.empty else readNamespace dir before.snapshot
   let nsAfter := if List.isEmpty changed then Map.empty else readNamespace dir node.snapshot
-  let printers := if List.isEmpty changed then Option.none else Option.some (printer nsBefore [], printer nsAfter [])
+  let printers := if List.isEmpty changed then Option.none else Option.some (Print.printer nsBefore [], Print.printer nsAfter [])
   let tasksAfter := Tasks.snapshotOf dir node
   let tasksBefore := Tasks.snapshotOf dir before
   let touched := List.filter
@@ -299,7 +299,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let entries := List.filter visible (Map.toList ns)
   let index := nameIndex ns
   let namesByHash := Codebase.namesByHash ns
-  let printer := printer ns []
+  let printer := Print.printer ns []
   let project :=
     match Project.read dir with
     | Option.some p => p.projectIri

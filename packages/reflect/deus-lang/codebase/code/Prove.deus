@@ -278,7 +278,7 @@ def Prove.global (pr : Prover) (h : Text) : {Stuck, IO} Sym :=
 
 /-- A goal as Lean prints one: hypotheses, then `⊢` and the proposition. -/
 def Prove.goalText (pr : Prover) (g : Goal) : Text :=
-  let p := printer pr.nsMap []
+  let p := Print.printer pr.nsMap []
   let hyps := mapIndexed (fun i h => "      h" ++ toText i ++ " : " ++ symText p h 0) g.hyps
   join "\n" (hyps ++ ["      ⊢ " ++ symText p g.prop 0])
 

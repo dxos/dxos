@@ -12,6 +12,19 @@ def Update.dependentsOf (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Lis
     | Option.none => Option.none
   else Option.none) (Map.toList ns)))
 
+/-- The members of the old type `owner` (its hash and fields) that `declared` does not redeclare. -/
+def Update.dropped (ns : Map Text Entry) (declared : Map Text Unit) (owner : Text) (old : (Text, List Text)) (changed : Bool) : List Text := if not changed then [] else
+  let fieldNames := Set.fromList (List.map (fun f => owner ++ "." ++ f) (snd old))
+  filterMap (fun pair =>
+    let name := fst pair
+    let member :=
+      match snd pair with
+      | Entry.ctor t _ _ => t == fst old
+      | Entry.op a _ _ => a == fst old
+      | Entry.term _ => Set.contains name fieldNames
+      | _ => false
+    if member && not (Set.contains name declared) && startsWith (owner ++ ".") name then Option.some name else Option.none) (Map.toList ns)
+
 /-
   Update propagation (Unison's `update`): when a definition gets a new hash, every definition
   that depends on it, directly or not, is rewritten to the new hash and rehashed. Rehashing
@@ -36,6 +49,21 @@ def Update.metadataChanged (ns : Map Text Entry) (entries : List (Text, Entry)) 
       let mine := fun m => authored (metaFor (fst pair) m)
       if Option.map mine before == Option.some (mine (mergeMeta before meta)) then Option.none else Option.some (fst pair)
   | _ => Option.none) entries
+
+/-- The names an update leaves without a declaration: the constructors, operations and field accessors
+  of a type or ability in `entries` that its new declaration no longer has. Other names under it stay. -/
+def Update.orphans (ns : Map Text Entry) (entries : List (Text, Entry)) : List Text :=
+  let declared := Set.fromList (List.map fst entries)
+  let members := fun old =>
+    match old with
+    | Entry.type h _ fields => (h, fields)
+    | Entry.ability h _ => (h, [])
+    | _ => ("", [])
+  concatMap (fun pair =>
+    match (Map.lookup (fst pair) ns, snd pair) with
+    | (Option.some old, Entry.type _ _ _) => dropped ns declared (fst pair) (members old) (Entry.hash old != Entry.hash (snd pair))
+    | (Option.some old, Entry.ability _ _) => dropped ns declared (fst pair) (members old) (Entry.hash old != Entry.hash (snd pair))
+    | _ => []) entries
 
 /-- Rebuilds a pending definition from a stored object. -/
 def Update.pendingOf (name : Text) (obj : Sexp) : Pending :=

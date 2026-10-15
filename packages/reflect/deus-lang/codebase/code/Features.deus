@@ -17,7 +17,7 @@ theorem Features.Spec.missingLinksReported : Spec.problemsOf [("status", "buildi
 theorem Features.Spec.orphansPrintAsRoots : List.map (fun pair => (fst pair, (snd pair).featureId)) (Features.tree lost) ==
     [(0, "F-1"), (0, "F-5")] := by rfl
 
-theorem Features.Spec.orphansReported : orphans lost == ["F-5: no parent F-9"] := by rfl
+theorem Features.Spec.orphansReported : Features.orphans lost == ["F-5: no parent F-9"] := by rfl
 
 def Features.Spec.problemsOf (props : List (Text, Text)) : List Text :=
   match fromBlock (Features.Spec.block "F-1" props) with

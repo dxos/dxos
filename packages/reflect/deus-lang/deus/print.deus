@@ -9,6 +9,8 @@ structure Printer where
   fullNames : Map Text Text
   typeNames : Map Text Text
   fieldNames : Map Text Text
+  declared : Map Text Text
+  namesByHash : Map Text (List Text)
   supply : Ref (List Text)
   fresh : Ref Int
 
@@ -51,15 +53,16 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
         | (some (Entry.term h), some [_]) => Map.insert h f m2
         | _ => m2) m fields
     | _ => m) Map.empty (Map.toList ns)
-  Printer.mk display index typeNames fieldNames (Ref.new locals) (Ref.new 0)
+  -- Headers name types by their last segment and list a constructor's names; built here once, not per view.
+  Printer.mk display index typeNames fieldNames (Types.declaredNames ns) (Codebase.namesByHash ns) (Ref.new locals) (Ref.new 0)
 
 /-- A printer in which `h` prints as `name`: a definition's references to itself keep the name it is viewed under, not an alias with the same hash. -/
 def withSelf (base : Printer) (h : Text) (name : Text) : Printer :=
-  Printer.mk (Map.insert h name base.display) base.fullNames base.typeNames base.fieldNames base.supply base.fresh
+  Printer.mk (Map.insert h name base.display) base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash base.supply base.fresh
 
 /-- A printer sharing `base`'s name tables (built once per namespace) with its own locals. -/
 def withLocals (base : Printer) (locals : List Text) : Printer :=
-  Printer.mk base.display base.fullNames base.typeNames base.fieldNames (Ref.new locals) (Ref.new 0)
+  Printer.mk base.display base.fullNames base.typeNames base.fieldNames base.declared base.namesByHash (Ref.new locals) (Ref.new 0)
 
 def nameFor (p : Printer) (key : Text) : Text :=
   match Map.lookup key p.display with

@@ -41,6 +41,37 @@ def metadataChanged (ns : Map Text Entry) (entries : List (Text, Entry)) (stored
         if Option.map mine before == some (mine (Codebase.mergeMeta before meta)) then none else some (fst pair)
     | _ => none) entries
 
+/--
+  The names an update leaves without a declaration: the constructors, operations and field accessors
+  of a type or ability in `entries` that its new declaration no longer has. Other names under it stay.
+-/
+def orphans (ns : Map Text Entry) (entries : List (Text, Entry)) : List Text :=
+  let declared := Set.fromList (List.map fst entries)
+  let members := fun (old : Entry) =>
+    match old with
+    | Entry.type h _ fields => (h, fields)
+    | Entry.ability h _ => (h, [])
+    | _ => ("", [])
+  List.concatMap (fun pair =>
+    match (Map.lookup (fst pair) ns, snd pair) with
+    | (some old, Entry.type _ _ _) => dropped ns declared (fst pair) (members old) (Entry.hash old != Entry.hash (snd pair))
+    | (some old, Entry.ability _ _) => dropped ns declared (fst pair) (members old) (Entry.hash old != Entry.hash (snd pair))
+    | _ => []) entries
+
+/-- The members of the old type `owner` (its hash and fields) that `declared` does not redeclare. -/
+def dropped (ns : Map Text Entry) (declared : Map Text Unit) (owner : Text) (old : (Text, List Text)) (changed : Bool) : List Text :=
+  if not changed then []
+  else
+    let fieldNames := Set.fromList (List.map (fun f => owner ++ "." ++ f) (snd old))
+    List.filterMap (fun pair =>
+      let name := fst pair
+      let member := match snd pair with
+        | Entry.ctor t _ _ => t == fst old
+        | Entry.op a _ _ => a == fst old
+        | Entry.term _ => Set.contains name fieldNames
+        | _ => false
+      if member && not (Set.contains name declared) && Text.startsWith (owner ++ ".") name then some name else none) (Map.toList ns)
+
 /-- Metadata without what the compiler derives or the printer renames. -/
 def authored (meta : Sexp) : List Sexp :=
   List.filter (fun item => Sexp.head item != "scheme" && Sexp.head item != "locals" && Sexp.head item != "owner") (Sexp.args meta)

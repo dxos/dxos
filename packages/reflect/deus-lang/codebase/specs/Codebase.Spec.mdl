@@ -198,6 +198,11 @@ req R-17: when a definition in an update takes over another's old body, and so i
 ```
 
 ```mdl
+req R-18: an update that drops a structure's field, a type's constructor or an ability's operation removes that name too, and keeps every name the update still declares
+  by: Codebase.Spec.droppedFieldLeavesNoAccessor | Codebase.Spec.droppedConstructorIsRemoved | Codebase.Spec.droppedOperationIsRemoved | Codebase.Spec.keptMembersStay
+```
+
+```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```

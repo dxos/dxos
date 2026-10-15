@@ -162,6 +162,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 152 | 10-15 08:25 | 20m 00s | `f87c9a2b` | `by test` skips cases that fail a hypothesis, so `P -> Q` no longer evaluates `Q` where `P` is false (D136, task 7ef8bf45, Testing.Spec R-5) |
 | 153 | 10-15 08:40 | 1h 35m | `687dc9f7` | The DEUS compiler builds natively: `examples/compiler.deus` writes the seed image byte for byte in 642 ms vs 7.4 s on the JIT (D137). Definitions found by hash in a table, defects as `Defect.raise`, partly typed comparisons at run time, and an over-application loop fixed |
 | 154 | 10-15 09:05 | 40m 00s | `1e5b59c9` | `deus eval` with a `Workspace` ability: a snippet reads and changes the codebase (D138, task 10b95384, new Workspace.Spec R-1..R-4); `--quiet` is a boolean flag |
-| 155 | 10-15 09:25 | 20m 00s | this commit | `deus export` removes the code and spec files it no longer writes, so `Unnamed.deus` (two pre-D108 versions of `Cli.withRemote` and `Analytics.command`) is gone and cannot come back on restore (D139, task cda44092, Export.Spec R-7) |
+| 155 | 10-15 09:25 | 20m 00s | `81451f12` | `deus export` removes the code and spec files it no longer writes, so `Unnamed.deus` (two pre-D108 versions of `Cli.withRemote` and `Analytics.command`) is gone and cannot come back on restore (D139, task cda44092, Export.Spec R-7) |
+| 156 | 10-15 10:05 | 40m 00s | this commit | Devex perf: `deus export` 12.2 s to 7.9 s and a cached `deus mdl` 11.4 s to 9.8 s, since each view header and each described name walked the whole namespace (D140). `deus update` now removes a dropped field's accessor, constructor or operation, which had left `Cli.MdlFacts.declared` behind and broke the restore (D141, Codebase.Spec R-18) |
 
-Total from stage 1 to stage 155: 34h 27m.
+Total from stage 1 to stage 156: 35h 07m.

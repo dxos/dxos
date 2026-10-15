@@ -87,6 +87,13 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
 
+## deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (`53e409cd`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: update, types
+
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo

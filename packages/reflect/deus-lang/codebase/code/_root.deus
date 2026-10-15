@@ -451,6 +451,8 @@ structure Printer where
   fullNames : Map Text Text
   typeNames : Map Text Text
   fieldNames : Map Text Text
+  declared : Map Text Text
+  namesByHash : Map Text (List Text)
   supply : Ref (List Text)
   fresh : Ref Int
 

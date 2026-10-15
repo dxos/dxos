@@ -39,7 +39,7 @@ def Check.checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp
         | _ => asText x) (Sexp.args proof)
       -- Only a failure is described, so the printer's name tables are not built for a theorem that passes.
       let describe := fun args =>
-        let printer := printer ns []
+        let printer := Print.printer ns []
         join ", " (List.map (fun a => Print.expr printer a [] 0 100) args)
       let typeDecls := typesByIri dir ns
       match tactic with
