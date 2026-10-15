@@ -18,6 +18,7 @@ import { type EdgeIdentity } from './edge-identity.ts';
 import {
   CLOUDFLARE_MESSAGE_MAX_BYTES,
   EDGE_FLOW_CONTROL,
+  MessageTooLargeError,
   WebSocketClosedError,
   WebSocketMuxer,
 } from './edge-ws-muxer.ts';
@@ -192,7 +193,8 @@ export class EdgeWsConnection extends Resource {
    *
    * Under flow control that cannot happen until the peer has extended credit for it, so awaiting this is what turns
    * backpressure into something a caller can feel. A message submitted while the socket is still connecting waits for
-   * the handshake, and rejects with {@link WebSocketClosedError} if the socket never opens.
+   * the handshake, and rejects with {@link WebSocketClosedError} if the socket never opens. Rejects with
+   * {@link MessageTooLargeError} past the Cloudflare limit, on every protocol.
    */
   public async sendAndWait(message: Message): Promise<void> {
     invariant(this._ws);
@@ -219,12 +221,12 @@ export class EdgeWsConnection extends Resource {
     if (this._ws.protocol?.includes(EdgeWebsocketProtocol.V0)) {
       const binary = buf.toBinary(MessageSchema, message);
       if (binary.length > CLOUDFLARE_MESSAGE_MAX_BYTES) {
-        log.error('Message dropped because it was too large (>1MB).', {
+        throw new MessageTooLargeError({
           byteLength: binary.byteLength,
+          maxByteLength: CLOUDFLARE_MESSAGE_MAX_BYTES,
           serviceId: message.serviceId,
           payload: protocol.getPayloadType(message),
         });
-        return;
       }
       this._recordBytes(binary.byteLength, 0);
       this._ws.send(binary);
