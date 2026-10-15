@@ -36,12 +36,10 @@ jobs:
     # dispatches of `main` itself may publish it — a dispatch from any other ref must not.
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     # 4 vCPU: averages 14% of 8 vCPU and peaks at 5 GB.
-    runs-on: depot-ubuntu-24.04-4
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
+    runs-on:
+      size: 4x16
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 30
     steps:
       - name: Checkout

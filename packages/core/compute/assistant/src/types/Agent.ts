@@ -72,10 +72,10 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
       Annotation.FormInlineAnnotation.set(true),
       Schema.annotate({ title: 'Instructions' }),
     ),
+    // No `UserType`: agents are managed in space settings, not listed with the space's content.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'amber' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
