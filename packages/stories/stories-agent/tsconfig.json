@@ -25,9 +25,6 @@
       "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
