@@ -304,7 +304,11 @@ Deeper conventions:
   `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
-- **Every push to a ready PR runs the full Check suite.** Batch commits into one push. Merge `main`
+- **Browser, storybook and e2e tests run in the merge queue, not on PRs.** A browser or storybook failure
+  there drops the PR from the queue; reproduce it with `moon run <project>:test-storybook` (or
+  `:test-browser`), fix, and re-queue. `depot ci dispatch --workflow check.yml --ref <branch>` runs every
+  suite on a branch once, when a change needs them before queueing.
+- **Every push to a ready PR runs Check.** Batch commits into one push. Merge `main`
   in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
   iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`

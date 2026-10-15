@@ -25,11 +25,11 @@ export const translations = [
         'sync-toast.error.label': 'Sync failed',
         'discord-setup-error.label': 'Discord setup failed',
         'discord-setup.title': 'Discord',
+        'discord-companion.label': 'Discord',
         'discord-setup-actions.label': 'Discord setup actions',
         'discord-setup-sign-out.label': 'Sign out of Discord',
         'discord-setup-connect.label': 'Connect Discord',
-        'discord-setup-bot.label': 'Bot',
-        'discord-setup-bot.description': 'The Discord app (bot) this space runs its agents through, and its token.',
+        'discord-setup-no-bot.message': 'This EDGE has no Kai app, so agents cannot join Discord here.',
         'discord-setup-servers.label': 'Servers',
         'discord-setup-servers-empty.label':
           'Sign in to Discord to list the servers you administer, then install the bot in one to connect its channels.',

@@ -9,23 +9,25 @@
 // MOON_BASE unset it is a full run and every cell starts. `--downstream deep` counts a task as affected
 // when anything it depends on changed. A change to CI, toolchain or root config is an input of no task
 // yet changes how every test runs, so it starts every cell too, as does any failure: skipping a suite
-// that should have run is the one outcome this must never produce.
+// that should have run is the one outcome this must never produce. A PR never starts the browser,
+// storybook or e2e cells: the merge queue runs them on the commit that lands.
 
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 
-const NODE_TASKS = new Set(['test', 'test-workerd']);
+const NODE_TASKS = new Set(['test', 'test-memory', 'test-workerd']);
 const BROWSER_TASKS = new Set(['test-browser', 'test-storybook']);
 // CI workflows and actions, moon and toolchain config, patches, and root files other than docs.
 const CONFIG_PATH = /^(?:\.depot|\.github|\.moon|patches)\/|^[^/]+$/;
 
 const main = () => {
-  const browsers = pickBrowsers(process.env.GITHUB_EVENT_NAME ?? '', process.env.GITHUB_REF ?? '');
+  const pullRequest = process.env.GITHUB_EVENT_NAME === 'pull_request';
+  const browsers = pullRequest ? [] : ['chromium', 'firefox', 'webkit'];
   const affected = readAffected();
   const plan = {
     browsers,
     node: affected?.some(([, task]) => NODE_TASKS.has(task)) ?? true,
-    browser: affected?.some(([, task]) => BROWSER_TASKS.has(task)) ?? true,
+    browser: !pullRequest && (affected?.some(([, task]) => BROWSER_TASKS.has(task)) ?? true),
     composer: affected?.some(([project, task]) => project === 'composer-e2e' && task === 'e2e') ?? true,
     rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
   };
@@ -46,17 +48,6 @@ const main = () => {
         .join(''),
     );
   }
-};
-
-/** Chromium gates PRs and the merge queue; a push to main runs the other two, since the queue already ran Chromium on that tree. */
-const pickBrowsers = (event, ref) => {
-  if (event === 'pull_request' || event === 'merge_group') {
-    return ['chromium'];
-  }
-  if (event === 'push' && ref === 'refs/heads/main') {
-    return ['firefox', 'webkit'];
-  }
-  return ['chromium', 'firefox', 'webkit'];
 };
 
 /** Affected `[project, task]` pairs, or undefined for a full run. */
