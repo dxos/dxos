@@ -1,5 +1,13 @@
 # History of main
 
+- `22b89e57a3` task: comment on 60e88be8
+- `52f28cab3b` task: set d0d2915a labels
+- `1dd4374e2d` task: set d0d2915a priority
+- `eb902e4747` task: open d0d2915a Native interpreter: show, trace and Code.quote by type, so Rendered.renderedSmall passes natively as on node (values carry no types; Bool shows as 0/1, D146)
+- `c5e9b3346c` update deus (by claude)
+- `60967372b3` history: import 1037 changes
+- `a905f790c5` task: import from codebase/tasks.sexp
+- `9759b5816a` add codebase/code codebase/specs
 - `084dbd29ac` history: import 1023 changes
 - `4db18d07c6` history: import 1023 changes (by claude)
 - `7f44835cdb` task: import from codebase/tasks.sexp
