@@ -10,7 +10,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 
 /** One scene of a sequence: a diagram, how long it plays, and the caption that says what it shows. */
-export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'look' | 'background'> & {
+export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme'> & {
   title: string;
   caption: string;
   /** Seconds the scene plays before the next. */
@@ -75,13 +75,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
         className='dx-grow relative transition-opacity'
         style={{ opacity: shown ? 1 : 0, transitionDuration: `${FADE}ms` }}
       >
-        <DataFlowView
-          key={index}
-          spec={scene.spec}
-          options={scene.options}
-          look={scene.look}
-          background={scene.background}
-        />
+        <DataFlowView key={index} spec={scene.spec} options={scene.options} theme={scene.theme} />
       </div>
       <div className='absolute top-2 right-2 w-max'>
         <Toolbar.Root classNames={BAR}>

@@ -124,14 +124,14 @@ export const CHAPTERS: readonly Scene[] = [
  * 2. In the hub each drops onto the lattice in a random section, bonds to its edge and blinks in step with the others;
  *    every third docked molecule (dashed ring) syncs a copy down to the agents and apps below.
  * 3. Both lattices are caches: past its lifetime a molecule fades from the exposed edge.
- * 4. The panel at the bottom right picks the background (paper, glow, plain) and its grid.
+ * 4. The bar at the bottom right picks the theme (paper by default) and the grid over its background.
  * 5. Untick `running` to freeze the frame; wheel and drag still pan and zoom the canvas.
  */
 const meta: Meta<DataFlowViewProps> = {
   title: 'plugins/plugin-canvas/samples/DataFlow',
   render: (args) => <DataFlowView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { spec: SPEC, running: true, background: 'paper' },
+  args: { spec: SPEC, running: true, theme: 'paper' },
 };
 
 export default meta;

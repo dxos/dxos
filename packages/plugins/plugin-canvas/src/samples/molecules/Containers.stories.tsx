@@ -27,7 +27,7 @@ const meta: Meta<DataFlowViewProps> = {
   title: 'plugins/plugin-canvas/samples/Containers',
   render: (args) => <DataFlowView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { spec: SPEC, running: true, molecules: false, background: 'paper' },
+  args: { spec: SPEC, running: true, molecules: false, theme: 'paper' },
 };
 
 export default meta;

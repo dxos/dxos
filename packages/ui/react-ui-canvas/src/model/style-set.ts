@@ -15,10 +15,25 @@ import * as Schema from 'effect/Schema';
 import { LINE_STYLES, StyleHue } from './types.ts';
 
 /**
- * How a hue fills a node: `tone`, the canvas's own hue and tone fills; `muted`, a soft solid fill; `outline`, no fill
- * and a hue border; `tint`, a translucent hue tint with a light edge.
+ * How a hue fills a node. `hue-clear`, `hue-strong`, `hue-role` and `hue-light` are the canvas's own tones (outline,
+ * strong, medium, light); `muted-subtle`, `muted` and `muted-solid` are soft to firm solid fills; `outline` draws no
+ * fill and a hue border; `glass-clear`, `glass-frost`, `glass-tint` and `glass-solid` run from an edge alone to an
+ * opaque glass colour.
  */
-export const NodeSurface = Schema.Literals(['tone', 'muted', 'outline', 'tint']);
+export const NodeSurface = Schema.Literals([
+  'hue-clear',
+  'hue-strong',
+  'hue-role',
+  'hue-light',
+  'muted-subtle',
+  'muted',
+  'muted-solid',
+  'outline',
+  'glass-clear',
+  'glass-frost',
+  'glass-tint',
+  'glass-solid',
+]);
 export type NodeSurface = Schema.Schema.Type<typeof NodeSurface>;
 
 /** A corner radius step. */
@@ -36,21 +51,33 @@ export type LinkKind = Schema.Schema.Type<typeof LinkKind>;
 export const Opacity = Schema.Literals(['opaque', 'translucent']);
 export type Opacity = Schema.Schema.Type<typeof Opacity>;
 
+/**
+ * One way a style set draws a node: a node's `style.tone` (0 to 3) picks the set's variant at that index (the last one
+ * past the end), so a drawing keeps its choices whichever set draws it.
+ */
+export const StyleVariant = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  surface: NodeSurface,
+  /** Border width in scene px. */
+  borderWidth: Schema.Literals([1, 2]),
+  /** The border of a node that sets no line style of its own. */
+  borderStyle: Schema.Literals(LINE_STYLES),
+  /** Corners of a node, and of one whose style asks to be rounded. */
+  radius: Radius,
+  roundedRadius: Radius,
+  /** Label colour: the surface's own text colour for its hue, or the default text colour. */
+  label: Schema.Literals(['surface', 'default']),
+});
+export interface StyleVariant extends Schema.Schema.Type<typeof StyleVariant> {}
+
 export const StyleSet = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  node: Schema.Struct({
-    surface: NodeSurface,
-    /** Border width in scene px. */
-    borderWidth: Schema.Literals([1, 2]),
-    /** The border of a node that sets no line style of its own. */
-    borderStyle: Schema.Literals(LINE_STYLES),
-    /** Corners of a node, and of one whose style asks to be rounded. */
-    radius: Radius,
-    roundedRadius: Radius,
-    /** Label colour: the surface's own text colour for its hue, or the default text colour. */
-    label: Schema.Literals(['surface', 'default']),
-  }),
+  /** Two to four ways to draw a node, picked by its tone. */
+  variants: Schema.Array(StyleVariant).check(Schema.isMinLength(2), Schema.isMaxLength(4)),
+  /** The variant a node with no tone draws as. */
+  defaultVariant: Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 0, maximum: 3 })),
   link: Schema.Struct({
     kind: LinkKind,
     /** Stroke width in scene px (the whole strip for a tube, rails or glass). */
@@ -62,8 +89,6 @@ export const StyleSet = Schema.Struct({
     /** The fill of a frame showing its child scene, which must hide the grid behind it. */
     contents: Opacity,
   }),
-  /** The background drawn under the scene unless the user or drawing picks another. */
-  background: Schema.String,
 });
 export interface StyleSet extends Schema.Schema.Type<typeof StyleSet> {}
 
@@ -82,17 +107,9 @@ export interface Wash extends Schema.Schema.Type<typeof Wash> {}
 export const BackgroundGrid = Schema.Literals(['none', 'dots', 'lines']);
 export type BackgroundGrid = Schema.Schema.Type<typeof BackgroundGrid>;
 
-/**
- * Whether a background reads as light or dark, which picks the style set's light or dark tokens; unset, both follow the
- * app's theme.
- */
-export const BackgroundTone = Schema.Literals(['light', 'dark']);
-export type BackgroundTone = Schema.Schema.Type<typeof BackgroundTone>;
-
 export const Background = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  tone: Schema.optional(BackgroundTone),
   /** The canvas fill: the theme's base surface, or warm paper. */
   surface: Schema.Literals(['base', 'paper']),
   grid: BackgroundGrid,
@@ -106,52 +123,106 @@ export const Background = Schema.Struct({
 });
 export interface Background extends Schema.Schema.Type<typeof Background> {}
 
+/** Light or dark: which of a style set's tokens draw, and the colour scheme the canvas takes. */
+export const ThemeMode = Schema.Literals(['light', 'dark']);
+export type ThemeMode = Schema.Schema.Type<typeof ThemeMode>;
+
+/**
+ * A canvas theme: a style set on a background, by id. With a `mode` the canvas takes that mode whatever the app's;
+ * without, it follows the app.
+ */
+export const Theme = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  styleSet: Schema.String,
+  background: Schema.String,
+  mode: Schema.optional(ThemeMode),
+});
+export interface Theme extends Schema.Schema.Type<typeof Theme> {}
+
 //
 // Built-ins.
 //
 
-/** Today's look; existing drawings render with it unchanged. */
+const CLASSIC_SHAPE = {
+  borderWidth: 2,
+  borderStyle: 'solid',
+  radius: 'sm',
+  roundedRadius: '2xl',
+  label: 'surface',
+} as const;
+
+/** Today's look, its variants the canvas's four tones; existing drawings render with it unchanged. */
 export const CLASSIC_STYLE_SET: StyleSet = {
   id: 'classic',
   name: 'Classic',
-  node: { surface: 'tone', borderWidth: 2, borderStyle: 'solid', radius: 'sm', roundedRadius: '2xl', label: 'surface' },
+  variants: [
+    { id: 'outline', name: 'Outline', surface: 'hue-clear', ...CLASSIC_SHAPE },
+    { id: 'strong', name: 'Strong', surface: 'hue-strong', ...CLASSIC_SHAPE },
+    { id: 'medium', name: 'Medium', surface: 'hue-role', ...CLASSIC_SHAPE },
+    { id: 'light', name: 'Light', surface: 'hue-light', ...CLASSIC_SHAPE },
+  ],
+  defaultVariant: 2,
   link: { kind: 'line', width: 2, caption: 'opaque' },
   frame: { contents: 'opaque' },
-  background: 'plain',
 };
+
+const FLAT_SHAPE = {
+  borderWidth: 1,
+  borderStyle: 'solid',
+  radius: 'md',
+  roundedRadius: 'xl',
+  label: 'surface',
+} as const;
 
 export const FLAT_STYLE_SET: StyleSet = {
   id: 'flat',
   name: 'Flat',
-  node: { surface: 'muted', borderWidth: 1, borderStyle: 'solid', radius: 'md', roundedRadius: 'xl', label: 'surface' },
+  variants: [
+    { id: 'subtle', name: 'Subtle', surface: 'muted-subtle', ...FLAT_SHAPE },
+    { id: 'muted', name: 'Muted', surface: 'muted', ...FLAT_SHAPE },
+    { id: 'solid', name: 'Solid', surface: 'muted-solid', ...FLAT_SHAPE },
+  ],
+  defaultVariant: 1,
   link: { kind: 'line', width: 3, caption: 'opaque' },
   frame: { contents: 'opaque' },
-  background: 'plain',
 };
+
+const OUTLINE_SHAPE = { surface: 'outline', radius: 'md', roundedRadius: '2xl', label: 'default' } as const;
 
 export const OUTLINE_STYLE_SET: StyleSet = {
   id: 'outline',
   name: 'Outline',
-  node: {
-    surface: 'outline',
-    borderWidth: 2,
-    borderStyle: 'solid',
-    radius: 'md',
-    roundedRadius: '2xl',
-    label: 'default',
-  },
+  variants: [
+    { id: 'hairline', name: 'Hairline', borderWidth: 1, borderStyle: 'solid', ...OUTLINE_SHAPE },
+    { id: 'bold', name: 'Bold', borderWidth: 2, borderStyle: 'solid', ...OUTLINE_SHAPE },
+    { id: 'dashed', name: 'Dashed', borderWidth: 2, borderStyle: 'dashed', ...OUTLINE_SHAPE },
+  ],
+  defaultVariant: 0,
   link: { kind: 'rails', width: 8, caption: 'translucent' },
   frame: { contents: 'translucent' },
-  background: 'dots',
 };
+
+const GLASS_SHAPE = {
+  borderWidth: 1,
+  borderStyle: 'solid',
+  radius: 'lg',
+  roundedRadius: '2xl',
+  label: 'surface',
+} as const;
 
 export const GLASS_STYLE_SET: StyleSet = {
   id: 'glass',
   name: 'Glass',
-  node: { surface: 'tint', borderWidth: 1, borderStyle: 'solid', radius: 'lg', roundedRadius: '2xl', label: 'surface' },
+  variants: [
+    { id: 'clear', name: 'Clear', surface: 'glass-clear', ...GLASS_SHAPE },
+    { id: 'frost', name: 'Frost', surface: 'glass-frost', ...GLASS_SHAPE },
+    { id: 'tint', name: 'Tint', surface: 'glass-tint', ...GLASS_SHAPE },
+    { id: 'solid', name: 'Solid', surface: 'glass-solid', ...GLASS_SHAPE },
+  ],
+  defaultVariant: 1,
   link: { kind: 'glass', width: 8, caption: 'translucent' },
   frame: { contents: 'translucent' },
-  background: 'glow',
 };
 
 export const PLAIN_BACKGROUND: Background = {
@@ -186,7 +257,6 @@ export const GLOW_BACKGROUND: Background = {
 export const PAPER_BACKGROUND: Background = {
   id: 'paper',
   name: 'Paper',
-  tone: 'light',
   surface: 'paper',
   grid: 'dots',
   washes: [],
@@ -194,6 +264,25 @@ export const PAPER_BACKGROUND: Background = {
   grain: 18 / 255,
   grainHue: 'warm',
 };
+
+export const CLASSIC_THEME: Theme = { id: 'classic', name: 'Classic', styleSet: 'classic', background: 'plain' };
+
+export const GLASS_NIGHT_THEME: Theme = {
+  id: 'glass-night',
+  name: 'Glass night',
+  styleSet: 'glass',
+  background: 'glow',
+  mode: 'dark',
+};
+
+export const PAPER_THEME: Theme = { id: 'paper', name: 'Paper', styleSet: 'glass', background: 'paper', mode: 'light' };
+
+export const FLAT_THEME: Theme = { id: 'flat', name: 'Flat', styleSet: 'flat', background: 'dots', mode: 'dark' };
+
+/** Glass shapes on the bare dark canvas, with no washes or grid. */
+export const NIGHT_THEME: Theme = { id: 'night', name: 'Night', styleSet: 'glass', background: 'plain', mode: 'dark' };
+
+export const OUTLINE_THEME: Theme = { id: 'outline', name: 'Outline', styleSet: 'outline', background: 'lines' };
 
 export const DEFAULT_STYLE_SETS: Readonly<Record<string, StyleSet>> = {
   classic: CLASSIC_STYLE_SET,
@@ -210,7 +299,17 @@ export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
   paper: PAPER_BACKGROUND,
 };
 
-/** The ids of the built-in style sets and backgrounds, for pickers. */
+export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
+  'classic': CLASSIC_THEME,
+  'glass-night': GLASS_NIGHT_THEME,
+  'night': NIGHT_THEME,
+  'paper': PAPER_THEME,
+  'flat': FLAT_THEME,
+  'outline': OUTLINE_THEME,
+};
+
+/** The ids of the built-ins, for pickers. */
+export const THEME_IDS = ['classic', 'glass-night', 'night', 'paper', 'flat', 'outline'] as const;
 export const STYLE_SET_IDS = ['classic', 'flat', 'outline', 'glass'] as const;
 export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper'] as const;
 
@@ -218,54 +317,77 @@ export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper'] as con
 // Registry.
 //
 
-/** The style sets and backgrounds a view resolves ids against. */
-export type StyleSetRegistry = {
+/** The themes a view offers, and the style sets and backgrounds they (and overrides) name. */
+export type ThemeRegistry = {
+  readonly themes: Readonly<Record<string, Theme>>;
   readonly styleSets: Readonly<Record<string, StyleSet>>;
   readonly backgrounds: Readonly<Record<string, Background>>;
 };
 
 /** A registry of the built-ins plus `extra`, whose entries win over a built-in of the same id. */
-export const createStyleSetRegistry = (extra: Partial<StyleSetRegistry> = {}): StyleSetRegistry => ({
+export const createThemeRegistry = (extra: Partial<ThemeRegistry> = {}): ThemeRegistry => ({
+  themes: { ...DEFAULT_THEMES, ...extra.themes },
   styleSets: { ...DEFAULT_STYLE_SETS, ...extra.styleSets },
   backgrounds: { ...DEFAULT_BACKGROUNDS, ...extra.backgrounds },
 });
 
-export const defaultStyleSetRegistry: StyleSetRegistry = createStyleSetRegistry();
+export const defaultThemeRegistry: ThemeRegistry = createThemeRegistry();
 
 /** Which tokens a look draws with: the light or dark variant, or (`theme`) whichever the app's theme is. */
-export type LookTone = 'theme' | 'light' | 'dark';
+export type LookTone = 'theme' | ThemeMode;
 
-/** A style set and background resolved for drawing. */
+/** A theme resolved for drawing, with any overrides of its parts applied. */
 export type SceneLook = {
+  readonly theme: Theme;
   readonly styleSet: StyleSet;
   readonly background: Background;
   readonly tone: LookTone;
 };
 
-/** The look of a view that names neither: the classic set on the plain background. */
-export const DEFAULT_LOOK: SceneLook = { styleSet: CLASSIC_STYLE_SET, background: PLAIN_BACKGROUND, tone: 'theme' };
-
-/** The style set `id` names, else classic: an unknown id (from a newer host, or a deleted set) still draws. */
-export const resolveStyleSet = (registry: StyleSetRegistry, id: string | undefined): StyleSet =>
-  (id !== undefined ? registry.styleSets[id] : undefined) ?? CLASSIC_STYLE_SET;
-
-/** The background `id` names, else the style set's own, else plain. */
-export const resolveBackground = (
-  registry: StyleSetRegistry,
-  id: string | undefined,
-  styleSet: StyleSet = CLASSIC_STYLE_SET,
-): Background =>
-  (id !== undefined ? registry.backgrounds[id] : undefined) ??
-  registry.backgrounds[styleSet.background] ??
-  PLAIN_BACKGROUND;
-
-/** The look a view draws with for a style set id and a background id, either of which may be unset. */
-export const resolveLook = (
-  registry: StyleSetRegistry,
-  styleSetId: string | undefined,
-  backgroundId: string | undefined,
-): SceneLook => {
-  const styleSet = resolveStyleSet(registry, styleSetId);
-  const background = resolveBackground(registry, backgroundId, styleSet);
-  return { styleSet, background, tone: background.tone ?? 'theme' };
+/** The look of a view that names nothing: the classic theme. */
+export const DEFAULT_LOOK: SceneLook = {
+  theme: CLASSIC_THEME,
+  styleSet: CLASSIC_STYLE_SET,
+  background: PLAIN_BACKGROUND,
+  tone: 'theme',
 };
+
+const lookup = <T>(record: Readonly<Record<string, T>>, id: string | undefined): T | undefined =>
+  id !== undefined && Object.hasOwn(record, id) ? record[id] : undefined;
+
+/** The theme `id` names, else classic: an unknown id (from a newer host, or a deleted theme) still draws. */
+export const resolveTheme = (registry: ThemeRegistry, id: string | undefined): Theme =>
+  lookup(registry.themes, id) ?? CLASSIC_THEME;
+
+/** The style set `id` names, else classic. */
+export const resolveStyleSet = (registry: ThemeRegistry, id: string | undefined): StyleSet =>
+  lookup(registry.styleSets, id) ?? CLASSIC_STYLE_SET;
+
+/** The background `id` names, else plain. */
+export const resolveBackground = (registry: ThemeRegistry, id: string | undefined): Background =>
+  lookup(registry.backgrounds, id) ?? PLAIN_BACKGROUND;
+
+export type LookIds = {
+  /** The theme; classic when unset or unknown. */
+  theme?: string;
+  /** Overrides the theme's style set, when it names one the registry knows. */
+  styleSet?: string;
+  /** Overrides the theme's background, when it names one the registry knows. */
+  background?: string;
+};
+
+/** The look a view draws with: the theme, with an override of its style set or background where one resolves. */
+export const resolveLook = (registry: ThemeRegistry, { theme: themeId, styleSet, background }: LookIds): SceneLook => {
+  const theme = resolveTheme(registry, themeId);
+  return {
+    theme,
+    styleSet: lookup(registry.styleSets, styleSet) ?? resolveStyleSet(registry, theme.styleSet),
+    background: lookup(registry.backgrounds, background) ?? resolveBackground(registry, theme.background),
+    tone: theme.mode ?? 'theme',
+  };
+};
+
+/** The variant a node of `tone` draws as in `styleSet`: its tone's index, the last past the end, the default unset. */
+export const styleVariant = (styleSet: StyleSet, tone: number | undefined): StyleVariant =>
+  styleSet.variants[Math.min(tone ?? styleSet.defaultVariant, styleSet.variants.length - 1)] ??
+  CLASSIC_STYLE_SET.variants[2];

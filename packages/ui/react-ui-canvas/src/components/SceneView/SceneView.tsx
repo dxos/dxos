@@ -11,7 +11,16 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
 import type * as Util from '@dxos/react-ui/Util';
@@ -48,7 +57,13 @@ import {
   defaultNodeRegistry,
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
-import { type StyleSetRegistry, defaultStyleSetRegistry, resolveLook } from '../../model/style-set.ts';
+import {
+  type BackgroundGrid,
+  type ThemeRegistry,
+  defaultThemeRegistry,
+  resolveBackground,
+  resolveLook,
+} from '../../model/style-set.ts';
 import {
   type Bounds,
   type Camera,
@@ -111,6 +126,7 @@ import { LayersPanel } from '../Layers/Layers.tsx';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
+import { ThemeBar } from '../ThemeBar/ThemeBar.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { Dock, DockProvider } from './Dock.tsx';
 import { INSPECTOR_CLASSES, type InspectorDef, useInspector } from './Inspector.tsx';
@@ -136,6 +152,23 @@ const LINK_HOVER_GRACE_MS = 150;
 
 /** How long a move's pointer rests before the shapes snap to where they will land. */
 const SETTLE_MS = 200;
+
+/**
+ * The light scheme scoped on the canvas under a dark app: the theme's tokens resolve with `light-dark()` against the
+ * element's colour scheme, and the variables the `.dark` class sets go back to the root's light values.
+ */
+const LIGHT_MODE: CSSProperties & Record<`--${string}`, string> = {
+  'colorScheme': 'light',
+  'color': 'var(--color-fg)',
+  '--surface-bg': 'var(--color-base-surface)',
+  '--foreground': 'var(--color-fg)',
+  '--description-text': 'var(--color-fg-muted)',
+  '--dx-lift': '-1',
+  '--dx-attenuate-state': '0.5',
+  '--dx-attenuate-well': '0.5',
+  '--dx-attenuate-separator': '0.75',
+  '--dx-attenuate-separator-line': '0.45',
+};
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -186,12 +219,22 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * item show only when given, as the host owns `inspectors`.
    */
   onInspectorsChange?: (mode: InspectorMode) => void;
-  /** The style sets and backgrounds `styleSet` and `background` name; the built-ins by default. */
-  styleSets?: StyleSetRegistry;
-  /** The style set every element draws with; classic when unset or unknown. */
+  /** The themes offered, and the style sets and backgrounds they name; the built-ins by default. */
+  themes?: ThemeRegistry;
+  /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
+  theme?: string;
+  /** The theme drawn when `theme` is unset; classic when this is unset too or unknown. */
+  defaultTheme?: string;
+  /** Overrides the theme's style set. */
   styleSet?: string;
-  /** The background under the scene; the style set's own when unset or unknown. */
+  /** Overrides the theme's background. */
   background?: string;
+  /** Overrides the background's grid; the theme bar picks it. */
+  backgroundGrid?: BackgroundGrid;
+  /** Called when the theme bar picks a theme, or `undefined` to take the default; the picker shows only when given. */
+  onThemeChange?: (theme: string | undefined) => void;
+  /** Called when the theme bar picks a grid, or `undefined` to take the background's own. */
+  onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
   children?: ReactNode;
 }>;
 
@@ -214,12 +257,27 @@ const SceneViewRoot = ({
   onReadonlyChange,
   inspectors = 'docked',
   onInspectorsChange,
-  styleSets = defaultStyleSetRegistry,
+  themes = defaultThemeRegistry,
+  theme,
+  defaultTheme,
   styleSet,
   background,
+  backgroundGrid,
+  onThemeChange,
+  onBackgroundGridChange,
   children,
 }: SceneViewRootProps) => {
-  const look = useMemo(() => resolveLook(styleSets, styleSet, background), [styleSets, styleSet, background]);
+  const look = useMemo(() => {
+    const resolved = resolveLook(themes, { theme: theme ?? defaultTheme, styleSet, background });
+    return backgroundGrid && backgroundGrid !== resolved.background.grid
+      ? { ...resolved, background: { ...resolved.background, grid: backgroundGrid } }
+      : resolved;
+  }, [themes, theme, defaultTheme, styleSet, background, backgroundGrid]);
+  // The grid the theme's own background draws, so the bar can tell an override from it.
+  const themeGrid = useMemo(
+    () => resolveBackground(themes, background ?? look.theme.background).grid,
+    [themes, background, look.theme.background],
+  );
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -1057,6 +1115,11 @@ const SceneViewRoot = ({
       onKeyDown={onKeyDown}
       rootRef={rootRef}
       look={look}
+      themes={themes}
+      themeOverride={theme}
+      themeGrid={themeGrid}
+      onThemeChange={onThemeChange}
+      onBackgroundGridChange={onBackgroundGridChange}
     >
       <SceneLookContext.Provider value={look}>
         <DockProvider>
@@ -1068,12 +1131,15 @@ const SceneViewRoot = ({
               ref={rootRef}
               tabIndex={0}
               className={mx(
-                'relative grow h-full overflow-clip outline-none touch-none select-none',
+                'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                // A theme with a mode takes it over the app's, for everything over the canvas.
+                look.tone === 'dark' && 'dark',
                 tool.kind === 'hand' && 'cursor-grab',
                 tool.kind === 'node' && 'cursor-crosshair',
               )}
-              style={{ contain: 'strict' }}
+              style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
               data-testid='scene-view'
+              data-mode={look.tone === 'theme' ? undefined : look.tone}
               onPointerDown={onBackgroundPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -1105,10 +1171,12 @@ export type SceneViewCanvasProps = {
   liveDepth?: number;
   /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
   overlay?: ReactNode;
+  /** What the background's field covers before its padding, in scene coordinates; the scene's bounds by default. */
+  backgroundBounds?: Bounds;
 };
 
 /** The scene itself under the camera: the grid, the layer, the control frame and the menu a gesture opens. */
-const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanvasProps) => {
+const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds }: SceneViewCanvasProps) => {
   const {
     registry,
     atoms,
@@ -1164,8 +1232,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
   const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
 
   const field = useMemo(
-    () => backgroundField(look.background, bounds, latticeBounds),
-    [look.background, bounds, latticeBounds],
+    () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
+    [look.background, backgroundBounds, bounds, latticeBounds],
   );
 
   return (
@@ -1372,6 +1440,31 @@ const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) =
 };
 
 SceneViewDebug.displayName = 'SceneView.Debug';
+
+//
+// Theme
+//
+
+/** The theme picker and the grid over its background, at the bottom right. */
+const SceneViewTheme = ({ classNames = 'bottom-2 right-2' }: SceneViewBarProps) => {
+  const { look, themes, themeOverride, themeGrid, onThemeChange, onBackgroundGridChange } =
+    useSceneViewContext('SceneView.Theme');
+  return (
+    <div className={mx(barFrame, classNames)}>
+      <ThemeBar
+        registry={themes}
+        theme={look.theme}
+        override={themeOverride}
+        grid={look.background.grid}
+        themeGrid={themeGrid}
+        onThemeChange={onThemeChange}
+        onGridChange={onBackgroundGridChange}
+      />
+    </div>
+  );
+};
+
+SceneViewTheme.displayName = 'SceneView.Theme';
 
 //
 // Palette
@@ -1622,6 +1715,7 @@ export const SceneView = {
   Navigation: SceneViewNavigation,
   Actions: SceneViewActions,
   Debug: SceneViewDebug,
+  Theme: SceneViewTheme,
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
   Layers: SceneViewLayers,

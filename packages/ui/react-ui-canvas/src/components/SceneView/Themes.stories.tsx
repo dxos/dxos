@@ -3,14 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { createMemoryStore } from '../../model/store.ts';
-import { BACKGROUND_IDS, STYLE_SET_IDS } from '../../model/style-set.ts';
+import { type BackgroundGrid, THEME_IDS } from '../../model/style-set.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { SceneView } from './SceneView.tsx';
 
@@ -57,39 +57,54 @@ const createSample = () =>
       .properties({ style: { hue: 'red', lineStyle: 'dashed' } }),
   ]).build();
 
-type StoryArgs = { styleSet: string; background?: string };
+type StoryArgs = { theme?: string; defaultTheme?: string };
 
-const StyleSetView = ({ styleSet, background }: StoryArgs) => {
+const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     const tree = createSample();
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, []);
+  // The args are where the view starts; the theme bar changes it from there.
+  const [theme, setTheme] = useState(initialTheme);
+  useEffect(() => setTheme(initialTheme), [initialTheme]);
+  const [grid, setGrid] = useState<BackgroundGrid>();
   return (
-    <SceneView.Root store={store} root={root} styleSet={styleSet} background={background} inspectors='floating'>
+    <SceneView.Root
+      store={store}
+      root={root}
+      theme={theme}
+      defaultTheme={defaultTheme}
+      backgroundGrid={grid}
+      onThemeChange={setTheme}
+      onBackgroundGridChange={setGrid}
+      inspectors='floating'
+    >
       <SceneView.Canvas />
       <SceneView.Navigation />
       <SceneView.Actions />
+      <SceneView.Debug />
+      <SceneView.Theme />
     </SceneView.Root>
   );
 };
 
 /**
- * Style sets restyle every element; a background is chosen apart from the set, which names its own default.
+ * A theme pairs a style set with a background, and may hold the canvas in light or dark whatever the app's mode.
  *
  * Test:
  * 1. Each story draws the same scene: rectangles at several tones, an ellipse, a note, a frame and links.
- * 2. Pick another `styleSet`: every node, link and caption changes; classic is the canvas as it always looked.
- * 3. Pick a `background`: the grid, washes, fill and grain change and the elements keep their set.
+ * 2. The bar at the bottom right opens the theme list: each theme with a swatch, and a sun or moon when it has a mode;
+ *    picking one restyles every element and the background; Default takes `defaultTheme`.
+ * 3. The grid buttons draw dots, lines or no grid over the theme's background.
  */
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/StyleSets',
-  render: (args) => <StyleSetView {...args} />,
+  title: 'ui/react-ui-canvas/Themes',
+  render: (args) => <ThemeView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { translations: [...uiTranslations, ...formTranslations] },
-  args: { styleSet: 'classic' },
   argTypes: {
-    styleSet: { control: 'inline-radio', options: STYLE_SET_IDS },
-    background: { control: 'inline-radio', options: [undefined, ...BACKGROUND_IDS] },
+    theme: { control: 'inline-radio', options: [undefined, ...THEME_IDS] },
+    defaultTheme: { control: 'inline-radio', options: [undefined, ...THEME_IDS] },
   },
 };
 
@@ -99,11 +114,12 @@ type Story = StoryObj<StoryArgs>;
 
 export const Classic: Story = {};
 
-export const Flat: Story = { args: { styleSet: 'flat' } };
+export const GlassNight: Story = { name: 'Glass night', args: { theme: 'glass-night' } };
 
-export const Outline: Story = { args: { styleSet: 'outline' } };
+export const Night: Story = { args: { theme: 'night' } };
 
-export const Glass: Story = { args: { styleSet: 'glass' } };
+export const Paper: Story = { args: { theme: 'paper' } };
 
-/** Glass on warm paper: the light background picks the set's light tokens. */
-export const GlassOnPaper: Story = { args: { styleSet: 'glass', background: 'paper' } };
+export const Flat: Story = { args: { theme: 'flat' } };
+
+export const Outline: Story = { args: { theme: 'outline' } };

@@ -7,7 +7,18 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-/** The built-in style sets, by id; a drawing may name one of its own, which wins over this default. */
+/** The built-in themes, by id: a style set on a background, some held light or dark. */
+export const ThemeChoice = Schema.Union([
+  Schema.Literal('classic').annotate({ title: 'Classic' }),
+  Schema.Literal('glass-night').annotate({ title: 'Glass night' }),
+  Schema.Literal('night').annotate({ title: 'Night' }),
+  Schema.Literal('paper').annotate({ title: 'Paper' }),
+  Schema.Literal('flat').annotate({ title: 'Flat' }),
+  Schema.Literal('outline').annotate({ title: 'Outline' }),
+]);
+export type ThemeChoice = Schema.Schema.Type<typeof ThemeChoice>;
+
+/** The built-in style sets, by id, for a drawing that overrides its theme's. */
 export const StyleSetChoice = Schema.Union([
   Schema.Literal('classic').annotate({ title: 'Classic' }),
   Schema.Literal('flat').annotate({ title: 'Flat' }),
@@ -50,16 +61,10 @@ export const Settings = Schema.Struct({
       description: 'How many nested scenes render live; deeper portals draw as previews.',
     }),
   ),
-  styleSet: Schema.optional(
-    StyleSetChoice.annotate({
-      title: 'Style set',
-      description: 'How shapes and links are drawn, unless a drawing picks its own.',
-    }),
-  ),
-  background: Schema.optional(
-    BackgroundChoice.annotate({
-      title: 'Background',
-      description: "What is drawn under the scene; unset, the style set's own.",
+  theme: Schema.optional(
+    ThemeChoice.annotate({
+      title: 'Theme',
+      description: 'How shapes, links and the canvas are drawn, unless a drawing picks its own.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

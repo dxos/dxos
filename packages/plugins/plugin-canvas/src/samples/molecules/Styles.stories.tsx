@@ -5,12 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { BACKGROUND_IDS } from '@dxos/react-ui-canvas/scene';
+import { THEME_IDS } from '@dxos/react-ui-canvas/scene';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { type DataFlowSpec } from './layout.ts';
-import { GRIDS, LOOKS } from './MoleculeOverlay.tsx';
 
 const APPS: DataFlowSpec = {
   variant: 'silos',
@@ -34,47 +33,49 @@ const APPS: DataFlowSpec = {
 const PREFILL = { prefill: true };
 
 /**
- * A gallery of the looks, each on the same five silos with every application view already holding content: mostly
- * settled, a little fresh.
+ * A gallery of the canvas themes, each on the same five silos with every application view already holding content:
+ * mostly settled, a little fresh.
  *
  * Test:
- * 1. Each story draws the five sources, channels and apps in its look.
- * 2. In the playground, pick a `look`, `background` and `grid`; a light background (paper) retunes the look for it.
+ * 1. Each story draws the five sources, channels and apps in its theme.
+ * 2. The bar at the bottom right opens the theme list and picks the grid; in the playground the controls do too.
  */
 const meta: Meta<DataFlowViewProps> = {
   title: 'plugins/plugin-canvas/samples/Styles',
   render: (args) => <DataFlowView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { spec: APPS, options: PREFILL, running: true, look: 'glass', background: 'paper' },
+  args: { spec: APPS, options: PREFILL, running: true, theme: 'paper' },
 };
 
 export default meta;
 
 type Story = StoryObj<DataFlowViewProps>;
 
-/** Every look, background and grid to pick from. */
+/** Every theme and grid to pick from. */
 export const Playground: Story = {
   argTypes: {
-    look: { control: 'inline-radio', options: LOOKS },
-    background: { control: 'inline-radio', options: BACKGROUND_IDS },
-    grid: { control: 'inline-radio', options: [undefined, ...GRIDS] },
+    theme: { control: 'inline-radio', options: THEME_IDS },
+    grid: { control: 'inline-radio', options: [undefined, 'dots', 'lines', 'none'] },
   },
 };
 
-/** Translucent frosted cards and channels over two colour washes and dots, on a dark canvas. */
-export const Glass: Story = { args: { background: 'glow' } };
+/** Glass on warm paper: white cards with dark hairlines and mid-gray content, held light. */
+export const Paper: Story = {};
 
-/** The glass look retuned for warm paper: white cards with dark hairlines, mid-gray content. */
-export const GlassOnPaper: Story = { name: 'Glass on paper' };
+/** The original dark look: translucent frosted cards over two colour washes and dots. */
+export const GlassNight: Story = { name: 'Glass night', args: { theme: 'glass-night' } };
 
-/** Cards with hairline borders, panels for wells and solid muted channels; no gradients or shadows. */
-export const Flat: Story = { args: { look: 'flat' } };
+/** Glass on the bare dark canvas, as the glass look first looked. */
+export const Night: Story = { args: { theme: 'night' } };
 
-/** Line art: outlined cards, wells and content with no fills, and channels drawn as rails. */
-export const Outline: Story = { args: { look: 'outline' } };
+/** Cards with hairline borders and solid muted channels over dots, held dark. */
+export const Flat: Story = { args: { theme: 'flat' } };
 
-/** The original look: raised gray frames on darker bases, white inset wells, and shaded tubes. */
-export const Classic: Story = { args: { look: 'classic' } };
+/** Line art over grid lines, following the app's mode. */
+export const Outline: Story = { args: { theme: 'outline' } };
 
-/** The glass look over lines along the minor and major grid, in place of dots. */
-export const Lines: Story = { args: { background: 'glow', grid: 'lines' } };
+/** The original look: raised gray frames on darker bases, white inset wells and shaded tubes. */
+export const Classic: Story = { args: { theme: 'classic' } };
+
+/** The original dark look over lines along the minor and major grid, in place of dots. */
+export const Lines: Story = { args: { theme: 'glass-night', grid: 'lines' } };

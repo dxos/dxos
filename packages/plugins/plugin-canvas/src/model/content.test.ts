@@ -110,18 +110,20 @@ describe('content', () => {
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
   });
 
-  test("a drawing's look wins over the user's default, field by field", ({ expect }) => {
+  test("a drawing's theme wins over the user's default, and its overrides over the theme's parts", ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
-    updateCanvasRecord(content, { styleSet: 'glass' });
+    updateCanvasRecord(content, { theme: 'paper', styleSet: 'flat' });
     const record = canvasRecordOf(content);
-    expect(record?.styleSet).toBe('glass');
-    expect(resolveDrawingLook(record, { styleSet: 'flat', background: 'paper' })).toEqual({
-      styleSet: 'glass',
-      background: 'paper',
+    expect(resolveDrawingLook(record, { theme: 'glass-night' })).toEqual({
+      theme: 'paper',
+      defaultTheme: 'glass-night',
+      styleSet: 'flat',
+      background: undefined,
+      backgroundGrid: undefined,
     });
-    expect(resolveDrawingLook(undefined, {})).toEqual({ styleSet: undefined, background: undefined });
-    updateCanvasRecord(content, { styleSet: undefined });
+    expect(resolveDrawingLook(undefined, {}).theme).toBeUndefined();
+    updateCanvasRecord(content, { theme: undefined, styleSet: undefined });
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID });
   });
 

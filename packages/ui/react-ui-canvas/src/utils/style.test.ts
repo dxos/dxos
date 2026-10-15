@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_LOOK, defaultStyleSetRegistry, resolveLook } from '../model/style-set.ts';
+import { DEFAULT_LOOK, defaultThemeRegistry, resolveLook } from '../model/style-set.ts';
 import { type Node, type StyleMap } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
@@ -80,29 +80,43 @@ describe('style sets', () => {
   };
 
   test('classic draws every node exactly as before', ({ expect }) => {
-    const classic = resolveLook(defaultStyleSetRegistry, 'classic', undefined);
+    const classic = resolveLook(defaultThemeRegistry, { theme: 'classic' });
     for (const [id, classes] of Object.entries(before)) {
       const node: Node = nodes[id];
       expect(frameClasses(node, false)).toEqual(classes);
       expect(frameClasses(node, false, false, false, classic)).toEqual(classes);
       expect(frameClasses(node, false, false, false, DEFAULT_LOOK)).toEqual(classes);
     }
-    expect(surfaceClasses('blue', 1, classic)).toEqual(hueClasses('blue', 1));
+    // Classic's variants are the canvas's four tones, class for class.
+    for (const tone of [0, 1, 2, 3] as const) {
+      expect(surfaceClasses('blue', tone, classic)).toEqual(hueClasses('blue', tone));
+      expect(surfaceClasses(undefined, tone, classic)).toEqual(hueClasses(undefined, tone));
+    }
+    expect(surfaceClasses('blue', undefined, classic)).toEqual(hueClasses('blue'));
   });
 
   test('another set restyles the same nodes', ({ expect }) => {
-    const glass = resolveLook(defaultStyleSetRegistry, 'glass', 'paper');
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    // Glass's default variant is frost, its light tokens on paper.
     expect(frameClasses(nodes.blue, false, false, false, glass)).toEqual([
-      'bg-blue-100/60',
-      'text-blue-900',
+      'bg-white/55',
+      'text-blue-800',
       'border-blue-900/15',
       '',
       'rounded-lg',
     ]);
-    const outline = resolveLook(defaultStyleSetRegistry, 'outline', 'plain');
+    const outline = resolveLook(defaultThemeRegistry, { theme: 'outline' });
     // Outline has no fill and labels in the default text colour; a theme hue outside the pickers draws as the nearest.
     expect(frameClasses(nodes.blue, false, false, false, outline).slice(0, 2)).toEqual(['bg-transparent', '']);
     expect(surfaceClasses('pink', 2, outline).border).toBe(surfaceClasses('red', 2, outline).border);
+    // Each tone picks a variant: glass's tint at 2, and outline's dashed border at 2.
+    expect(surfaceClasses('blue', 2, glass)).toEqual({
+      surface: 'bg-blue-100/60',
+      text: 'text-blue-900',
+      border: 'border-blue-900/15',
+    });
+    expect(frameClasses(nodes.outline, false, false, false, outline)[3]).toBe('border-dotted');
+    expect(frameClasses(nodes.blue, false, false, false, outline)[3]).toBe('');
     // Selection still draws in the focus colour.
     expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
   });

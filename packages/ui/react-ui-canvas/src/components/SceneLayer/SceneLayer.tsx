@@ -28,7 +28,7 @@ import { useSceneLook } from '../../hooks/useSceneLook.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
 import { NO_STYLES, type SceneStore } from '../../model/store.ts';
-import { type LinkKind } from '../../model/style-set.ts';
+import { type LinkKind, styleVariant } from '../../model/style-set.ts';
 import {
   type ElementId,
   type LineStyle,
@@ -650,7 +650,7 @@ const NodeFrame = memo(
     // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
     // The frame's border is 2px, thickened with the layer's lines (`lineWeight`); fading, it is padding instead.
     const look = useSceneLook();
-    const nominal = look.styleSet.node.borderWidth;
+    const nominal = styleVariant(look.styleSet, drawn.style?.tone).borderWidth;
     const border = nominal * lineWeight(props.depth, props.zoom);
     const thick = border !== nominal;
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {

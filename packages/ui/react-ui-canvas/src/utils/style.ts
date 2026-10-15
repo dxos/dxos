@@ -7,7 +7,14 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { DEFAULT_LOOK, type SceneLook } from '../model/style-set.ts';
+import {
+  DEFAULT_LOOK,
+  type LookTone,
+  type NodeSurface,
+  type SceneLook,
+  type StyleVariant,
+  styleVariant,
+} from '../model/style-set.ts';
 import {
   type HorizontalAlign,
   type Link,
@@ -22,7 +29,7 @@ import {
   isFrameNode,
   showsContents,
 } from '../model/types.ts';
-import { DEFAULT_TEXT, FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, SURFACES } from './surfaces.ts';
+import { DEFAULT_TEXT, FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES } from './surfaces.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -160,28 +167,42 @@ export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
   border: style.border ?? true,
 });
 
+type HueSurface = Exclude<NodeSurface, SetSurface>;
+
+/** The canvas's own tone each of its surfaces draws with. */
+const HUE_SURFACE_TONES: Record<HueSurface, NodeTone> = {
+  'hue-clear': 0,
+  'hue-strong': 1,
+  'hue-role': 2,
+  'hue-light': 3,
+};
+
+const isHueSurface = (surface: NodeSurface): surface is HueSurface => Object.hasOwn(HUE_SURFACE_TONES, surface);
+
 /**
- * The classes a hue at a tone draws with in `look`'s style set: the canvas's own fills (`hueClasses`) for the `tone`
- * surface; otherwise the set's surface for the hue (a theme hue outside the pickers draws as the nearest picker hue).
- * Every surface drops its fill at tone 0.
+ * The classes a hue draws with in `variant`: the canvas's own tone fills (`hueClasses`) for its `hue-*` surfaces,
+ * otherwise the variant's surface for the hue (a theme hue outside the pickers draws as the nearest picker hue).
  */
-export const surfaceClasses = (
+export const variantClasses = (
   hue: string | undefined,
-  tone: NodeTone = DEFAULT_TONE,
-  look: SceneLook = DEFAULT_LOOK,
+  variant: StyleVariant,
+  tone: LookTone = 'theme',
 ): HueClasses => {
-  const { surface, label } = look.styleSet.node;
-  if (surface === 'tone') {
-    return hueClasses(hue, tone);
+  const { surface, label } = variant;
+  if (isHueSurface(surface)) {
+    return hueClasses(hue, HUE_SURFACE_TONES[surface]);
   }
   const key = hue === undefined ? 'default' : isStyleHue(hue) ? hue : NEAREST_HUE[hue];
-  const classes = SURFACES[surface][key ?? 'default'][look.tone];
-  return {
-    surface: tone === 0 && hue !== undefined ? 'bg-transparent' : classes.surface,
-    text: label === 'default' ? DEFAULT_TEXT[look.tone] : classes.text,
-    border: classes.border,
-  };
+  const classes = SURFACES[surface][key ?? 'default'][tone];
+  return { ...classes, text: label === 'default' ? DEFAULT_TEXT[tone] : classes.text };
 };
+
+/** The classes a hue at a tone draws with in `look`'s style set: the set's variant for the tone. */
+export const surfaceClasses = (
+  hue: string | undefined,
+  tone: NodeTone | undefined,
+  look: SceneLook = DEFAULT_LOOK,
+): HueClasses => variantClasses(hue, styleVariant(look.styleSet, tone), look.tone);
 
 /**
  * Frame classes for a node in `look` (the classic set when unset): fill and text colour, border and corner radius from
@@ -196,8 +217,9 @@ export const frameClasses = (
   look: SceneLook = DEFAULT_LOOK,
 ): string[] => {
   const style = resolveStyle(node.style);
-  const hue = surfaceClasses(style.hue, style.tone, look);
-  const { node: tokens, frame } = look.styleSet;
+  const tokens = styleVariant(look.styleSet, style.tone);
+  const hue = variantClasses(style.hue, tokens, look.tone);
+  const { frame } = look.styleSet;
   const filled = style.fill && !style.guide;
   // A scene shape drawing its contents is a window onto another canvas, so it is opaque even in outline: the
   // grid behind it would read as part of the child scene.
