@@ -33,7 +33,7 @@ const SILOS: DataFlowSpec = {
   ],
 };
 
-const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent' }, group: { label: 'OAuth' } };
+const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent' } };
 
 const APPS: DataFlowSpec = {
   ...SPEC,

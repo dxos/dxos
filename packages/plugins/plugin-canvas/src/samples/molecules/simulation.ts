@@ -1496,8 +1496,8 @@ export class DataFlowSimulation {
   }
 
   /**
-   * A copy of a source's molecule for the monolithic agent: it appears in the empty space above the agent's channel,
-   * inside the container around the sources, and drops down the channel onto the agent's lattice. Skipped while the
+   * A copy of a source's molecule for the monolithic agent: it appears in the feed box above the agent's channel and
+   * drops down the channel onto the agent's lattice. Skipped while the
    * last copy is still there, so copies never pile up on the spot.
    */
   #readUp(body: Body): void {
@@ -1506,9 +1506,8 @@ export class DataFlowSimulation {
       return;
     }
     const down = this.#layout.channels[feed.down];
-    const sources = this.#layout.sources;
-    const row = sources[0]?.frame;
-    const spot = { x: down.from.x, y: row ? row.y + row.height / 2 : down.from.y - QUEUE_GAP };
+    const { well } = feed.feed;
+    const spot = { x: down.from.x, y: well.y + well.height / 2 };
     const crowded = this.#bodies.some(
       (other) =>
         other.phase === 'travelling' && Math.hypot(other.cursor.x - spot.x, other.cursor.y - spot.y) < QUEUE_GAP,

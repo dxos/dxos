@@ -75,8 +75,8 @@ export type DataFlowSpec = {
   sinks?: readonly { label: string; app?: AppKind }[];
   /** Scene units between neighbouring lattice sites. */
   spacing?: number;
-  /** The label of the monolithic variant's container around the sources. */
-  group?: { label: string };
+  /** The label of the monolithic variant's box above the agent, where the molecules it reads appear. */
+  feed?: { label: string };
   /** Draws only the hub and what has landed in it, for looking at the hub's container on its own. */
   focus?: 'hub';
   /**
@@ -103,9 +103,10 @@ export type DataFlowLayout = {
   silos?: boolean;
   /**
    * In the silos, the monolithic agent's feed: `group` spans every source and the agent's column; molecules for the
-   * agent appear in it above channel `down` and drop into the agent. `lane` is the height of the strip along its top.
+   * agent appear in `feed`, the box in the agent's column of the sources' row, and drop down channel `down` into the
+   * agent.
    */
-  monolith?: { group: Block; lane: number; down: number };
+  monolith?: { group: Block; feed: Block; down: number };
 };
 
 /** Multiples of the canvas's 64px major grid, so the blocks sit on it. */
@@ -116,9 +117,8 @@ const NARROW_SINK_SIZE = { width: 192, height: 256 };
 /** The silos' applications, as wide as their sources, and the longer channels joining each pair. */
 const SILO_APP_SIZE = { width: 192, height: 256 };
 const SILO_CHANNEL_HEIGHT = 192;
-/** The padding of the container around the sources, and the height of the lane along its top. */
+/** The padding of the container around the sources. */
 const GROUP_INSET = 24;
-const GROUP_LANE = 48;
 const HUB_HEIGHT = 320;
 const GAP = 64;
 const CHANNEL_HEIGHT = 128;
@@ -238,25 +238,27 @@ const layoutSilos = (spec: DataFlowSpec): DataFlowLayout => {
     const row = (sources.length + 1) * SOURCE_SIZE.width + sources.length * GAP;
     const groupFrame = {
       x: -GROUP_INSET,
-      y: -(TITLE_INSET + GROUP_LANE),
+      y: -GROUP_INSET,
       width: row + 2 * GROUP_INSET,
-      height: SOURCE_SIZE.height + TITLE_INSET + GROUP_LANE + GROUP_INSET,
+      height: SOURCE_SIZE.height + 2 * GROUP_INSET,
     };
     const group = {
       id: 'databases',
-      label: spec.group?.label ?? 'Databases',
+      // Unlabelled: the feed box above the agent names what the container stands for.
+      label: '',
       frame: groupFrame,
       well: groupFrame,
       group: true,
     };
-    // Molecules for the agent run along the lane between the group's label and the sources' tops.
-    const lane = -GROUP_LANE / 2;
+    // A box like the sources', above the agent: what the agent reads appears in it before dropping down its channel.
+    const feedFrame = { x: frame.x, y: 0, ...SOURCE_SIZE };
+    const feed = { id: 'feed', label: spec.feed?.label ?? 'OAuth', frame: feedFrame, well: wellOf(feedFrame) };
     const x = frame.x + frame.width / 2;
     const down = channels.length;
     channels.push({
       id: 'channel-agent',
       hue: 'neutral',
-      from: { x, y: groupFrame.y + groupFrame.height },
+      from: { x, y: feedFrame.y + feedFrame.height },
       to: { x, y: frame.y },
       width: CHANNEL_WIDTH,
     });
@@ -268,7 +270,7 @@ const layoutSilos = (spec: DataFlowSpec): DataFlowLayout => {
       hubGrid: gridOf(hub.well, spacing),
       sinkGrids: sinks.map((sink) => gridOf(sink.well, spacing)),
       silos: true,
-      monolith: { group, lane, down },
+      monolith: { group, feed, down },
     };
   }
 
@@ -525,6 +527,7 @@ export const createDataFlowScene = (layout: DataFlowLayout): Scene => {
   const blocks = [
     ...(layout.monolith ? [layout.monolith.group] : []),
     ...layout.sources,
+    ...(layout.monolith ? [layout.monolith.feed] : []),
     layout.hub,
     ...layout.sinks,
   ].filter((block) => !block.hidden && (!layout.focus || block === layout.hub));

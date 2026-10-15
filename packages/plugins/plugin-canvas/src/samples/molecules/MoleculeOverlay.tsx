@@ -66,9 +66,6 @@ export const useSimulationFrame = (simulation: DataFlowSimulation, running = tru
 /** Corner radius of a square frame; its base's is this plus the base's inset, so the two are concentric. */
 const FRAME_RADIUS = 10;
 
-/** Height of a group container's title strip, the same as a container's. */
-const GROUP_TITLE = 48;
-
 /** Corner radius of a square well: softer than its frame's, which it sits well inside. */
 const WELL_RADIUS = 6;
 
@@ -456,7 +453,6 @@ const Container = ({ block }: { block: Block }) => {
       <g>
         <rect {...groupRect} {...frameProps} className={mx(palette.group, palette.frameStroke)} />
         {wash(<rect {...groupRect} fill={`url(#${raised})`} />)}
-        {label(frame.x + frame.width / 2, frame.y + GROUP_TITLE / 2)}
       </g>
     );
   }
@@ -702,7 +698,8 @@ export const MoleculeOverlay = ({
     }),
   );
   const visible = (id: string) => shown.get(id) ?? 1;
-  const blocks = [...layout.sources, layout.hub, ...layout.sinks].filter(
+  const feeds = layout.monolith ? [layout.monolith.feed] : [];
+  const blocks = [...layout.sources, ...feeds, layout.hub, ...layout.sinks].filter(
     (block) => !block.hidden && visible(block.id) > 0 && (!layout.focus || block === layout.hub),
   );
   // A group container sits under everything inside it, so it is drawn whole before any other container.
@@ -718,7 +715,7 @@ export const MoleculeOverlay = ({
   const extent = drawingExtent(layout);
   // Channels overreach into the blocks they join and are cut at each block's outer edge, so they meet every rim
   // exactly and never show through a translucent container.
-  const outlines = [...layout.sources, layout.hub, ...layout.sinks]
+  const outlines = [...layout.sources, ...feeds, layout.hub, ...layout.sinks]
     .filter((block) => !block.hidden)
     .map((block) => ({ block, rect: palette.base ? baseOf(block) : block.frame }));
   return (
