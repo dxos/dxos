@@ -239,6 +239,12 @@ describe('CollectionSynchronizer', () => {
     peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
     peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
     expect(updates).to.deep.equal([peerId]);
+
+    // A local change leaves the same remote state behind, so its next repeat is diffed again.
+    peer.setLocalCollectionState(collectionId, STATE_2);
+    updates.length = 0;
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    expect(updates).to.deep.equal([peerId]);
   });
 
   test('diff collection state', ({ expect }) => {
