@@ -74,7 +74,5 @@ export const Flat: Story = { args: { theme: 'flat' } };
 /** Line art over grid lines, following the app's mode. */
 export const Outline: Story = { args: { theme: 'outline' } };
 
-/** The original look: raised gray frames on darker bases, white inset wells and shaded tubes. */
-
 /** The original dark look over lines along the minor and major grid, in place of dots. */
 export const Lines: Story = { args: { theme: 'glass-night', grid: 'lines' } };
