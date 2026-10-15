@@ -211,9 +211,10 @@ stage. The table is regenerated from `git log` with every commit.
 | 201 | 10-15 11:55 | 0m 00s | `f1778aed` | Syntax extensions: `notation` declarations add syntax as content-addressed definitions, scoped to a namespace; `deus view` prints code through them and they never change a hash. `React.Jsx` writes React elements as JSX (Syntax.Spec, D179, tasks 407ba227 and 44336375) |
 | 202 | 10-15 12:15 | 1h 25m | `4dbf2e88` | Packs: each bundle gets a binary index, and the Worker merges them into one, so a name or object is found with ranged R2 reads, not whole files. A name lookup takes 64–400 ms warm (was 15–40 s), an object 0.5 s, at 1–7 ms CPU; heads move in R2 so pushes no longer hit D1's daily write limit (D180, D181, Pack.Spec, task dbfa42ad) |
 | 203 | 10-15 12:20 | 20m 00s | `3d0da9ff` | A pull fetches every unseen pack in one parallel curl (`Remote.downloadAll`, in the codebase): a fresh native pull goes from 30.3 s to 7.3 s. |
-| 204 | 10-15 12:30 | 30m 00s | this commit | `deus push` runs `deus mdl` on the spec documents a change touches and refuses on a failure; a push moves `<remote>.<branch>` to what it pushed (D182, task d9242c83) |
-| 205 | 10-15 12:35 | 5m 00s | this commit | The seed is rebuilt from the codebase head: `sync-deus.py` finds every changed definition by hash and writes 603 into `deus/`, so `deus merge` runs the current merge (D183) |
+| 204 | 10-15 12:30 | 30m 00s | `0d0b50a9` | `deus push` runs `deus mdl` on the spec documents a change touches and refuses on a failure; a push moves `<remote>.<branch>` to what it pushed (D182, task d9242c83) |
+| 205 | 10-15 12:35 | 5m 00s | `0d0b50a9` | The seed is rebuilt from the codebase head: `sync-deus.py` finds every changed definition by hash and writes 603 into `deus/`, so `deus merge` runs the current merge (D183) |
+| 206 | 10-15 12:45 | 10m 00s | `9b56c07a` | Pack.Spec passes `deus mdl` again: A-1 states `Pack.entries`'s nested tuple type, and R-1's test (a pull through packs with the bundles unreadable) is in git now that the seed writes packs; `remote-http-test.sh` checks packs and the Worker's name and object lookups (D180) |
+| 207 | 10-15 13:05 | 20m 00s | `dd4d3702` | The Worker answers `/v1/@owner/project/` and serves each project's explorer at `/@owner/project/`, where a definition's name opens the page; new projects live at `<owner>/<project>/` in the bucket, `/v1/toolchain` and `/` stay the toolchain's, and keys are granted per address (D185, Address.Spec R-6 and R-7, task 0cc4a9ed) |
+| 208 | 10-15 13:05 | 20m 00s | this commit | A merge refuses definitions that call a hash no name has, after a stale-seed merge left three such names in the codebase (D186, task 30884468); a fresh session's pull is 8 s, push 11-14 s, `update deus/` 2.3 s (tasks 87d792ad, eb2c8018) |
 
-| 206 | 10-15 13:05 | 20m 00s | this commit | A merge refuses definitions that call a hash no name has, after a stale-seed merge left three such names in the codebase (D184, task 30884468); a fresh session's pull is 8 s, push 11-14 s, `update deus/` 2.3 s (tasks 87d792ad, eb2c8018) |
-
-Total from stage 1 to stage 206: 56h 03m.
+Total from stage 1 to stage 208: 56h 33m.

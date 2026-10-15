@@ -73,7 +73,7 @@ test parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 
 test parserRejectsIndentedDecl := not (parses "  def f := 1\n")
 
 test resolveStripsNames :=
-  let (core, names) := strip (Sexp.node "lam" [Sexp.str "x", Sexp.node "var" [Sexp.int 0]])
+  let (core, names) := Resolve.strip (Sexp.node "lam" [Sexp.str "x", Sexp.node "var" [Sexp.int 0]])
   core == Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]] && names == ["x"]
 
 test hashIgnoresLocalNames :=

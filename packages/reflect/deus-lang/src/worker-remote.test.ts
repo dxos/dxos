@@ -446,4 +446,72 @@ describe('replication API', () => {
     expect(ranged.headers.get('content-range')).toBe(`bytes 0-6/${pack.text.length}`);
     expect(await ranged.text()).toBe('DEUSLN1');
   });
+
+  test('projects are addressed as @owner/project, with the toolchain at its old URLs too (D184)', async ({
+    expect,
+  }) => {
+    const put = (path: string, bundle: { name: string; body: Uint8Array }, key: string, ...bases: string[]) =>
+      call(`/v1/${path}/bundles/${bundle.name}`, {
+        method: 'PUT',
+        body: bundle.body,
+        key,
+        headers: claim(hash(bases.length === 0 ? '1' : '2'), ...bases),
+      });
+    const a = await bundleOf('(bundle a)');
+    const b = await bundleOf('(bundle b)');
+
+    // A new project lives at <owner>/<project>/, and its key writes nowhere else.
+    const demo = await insertKey(db, ['push'], ['@acme/demo']);
+    expect((await put('@acme/demo', a, demo)).status).toBe(201);
+    expect(await bucket.head(`acme/demo/bundles/${a.name}`)).toBeTruthy();
+    expect(await (await call('/v1/@acme/demo/bundles')).text()).toBe(`${a.name}\n`);
+    expect((await put('@acme/other', a, demo)).status).toBe(403);
+    expect((await put('@dxos/toolchain', a, demo)).status).toBe(403);
+    expect((await put('toolchain', a, demo)).status).toBe(403);
+
+    // The toolchain keeps its folder: /v1/toolchain and /v1/@dxos/toolchain are one project, and a
+    // key granted either name writes to it.
+    expect((await put('@dxos/toolchain', a, await insertKey(db, ['push'], ['toolchain']))).status).toBe(201);
+    expect((await put('toolchain', b, await insertKey(db, ['push'], ['@dxos/toolchain']), hash('1'))).status).toBe(201);
+    expect(await (await call('/v1/toolchain/bundles')).text()).toBe(
+      await (await call('/v1/@dxos/toolchain/bundles')).text(),
+    );
+    expect(await bucket.head(`toolchain/bundles/${b.name}`)).toBeTruthy();
+
+    // Owners are GitHub logins and projects slugs, lowercase.
+    for (const path of ['@Acme/demo', '@acme/-demo', '@acme', '@ac_me/demo', '@acme/demo-']) {
+      expect((await call(`/v1/${path}/bundles`)).status, path).toBe(404);
+    }
+
+    // Keys are minted for addresses.
+    const admin = await insertKey(db, ['admin']);
+    const mint = (projects: string[]) =>
+      call('/v1/keys', {
+        method: 'POST',
+        key: admin,
+        body: JSON.stringify({ label: 'x', scopes: ['push'], projects }),
+      });
+    expect((await mint(['@acme/demo', 'toolchain'])).status).toBe(201);
+    expect((await mint(['@acme'])).status).toBe(400);
+    expect((await mint(['@acme/demo/Cli'])).status).toBe(400);
+
+    // Each project's explorer is served at /@owner/project/, and a definition's name opens the page.
+    await bucket.put('acme/demo/site/v/0000000000000001/index.html', '<html><head></head>demo</html>');
+    await bucket.put('acme/demo/site/v/0000000000000001/meta.json', 'demo meta');
+    await bucket.put('acme/demo/site/HEAD', '0000000000000001');
+    await bucket.put('toolchain/site/v/0000000000000002/index.html', '<html><head></head>toolchain</html>');
+    await bucket.put('toolchain/site/HEAD', '0000000000000002');
+    const demoPage = '<html><head><base href="/@acme/demo/v/0000000000000001/" /></head>demo</html>';
+    expect(await (await call('/@acme/demo/')).text()).toBe(demoPage);
+    expect(await (await call('/@acme/demo/Cli.dispatch')).text()).toBe(demoPage);
+    expect(await (await call('/@acme/demo/v/0000000000000001/meta.json')).text()).toBe('demo meta');
+    expect((await call('/@acme/demo/missing.json')).status).toBe(404);
+    expect((await call('/@acme/nothing/')).status).toBe(404);
+    expect((await call('/@Acme/demo/')).status).toBe(404);
+    expect(await (await call('/@dxos/toolchain/')).text()).toContain(
+      '<base href="/@dxos/toolchain/v/0000000000000002/" />',
+    );
+    expect(await (await call('/')).text()).toContain('<base href="/v/0000000000000002/" />');
+    expect(await (await call('/Cli.dispatch')).text()).toContain('toolchain');
+  });
 });
