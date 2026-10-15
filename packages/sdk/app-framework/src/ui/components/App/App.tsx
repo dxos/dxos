@@ -97,12 +97,18 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     verboseStatus,
   ]);
 
+  // The status opens a line once; its count then ticks on that line in place (a range tick replaces the current line).
+  const heldStatusRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!held || stage >= LoadingState.FadeOut) {
       return;
     }
-    if (held.status) {
+    if (held.status && held.status !== heldStatusRef.current) {
+      heldStatusRef.current = held.status;
       bootLoader?.status({ humanized: held.status });
+    }
+    if (held.status && held.count) {
+      bootLoader?.status({ humanized: held.status, range: { index: held.count.done, total: held.count.total } });
     }
     if (held.progress !== undefined) {
       bootLoader?.progress(held.progress);

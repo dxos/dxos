@@ -71,6 +71,8 @@ export type BootGateState = Readonly<{
   pending: boolean;
   /** The line the loader shows while this gate holds it. */
   status?: string;
+  /** Items done of total, shown after the status as `(done/total)` and updated in place. */
+  count?: Readonly<{ done: number; total: number }>;
   /** Fraction (0 to 1) for the loader's ring while this gate holds it; absent while unknown. */
   progress?: number;
 }>;

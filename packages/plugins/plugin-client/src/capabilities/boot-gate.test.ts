@@ -21,6 +21,7 @@ describe('gateStateFor', () => {
     expect(gateStateFor({ phase: 'migrating', done: 1, total: 4 })).toMatchObject({ pending: true, progress: 0.25 });
     expect(gateStateFor({ phase: 'indexing', done: 0, total: MAJOR_REINDEX_THRESHOLD })).toMatchObject({
       pending: true,
+      count: { done: 0, total: MAJOR_REINDEX_THRESHOLD },
       progress: 0,
     });
     expect(gateStateFor({ phase: 'indexing', done: 0, total: MAJOR_REINDEX_THRESHOLD - 1 }).pending).toBe(false);

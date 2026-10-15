@@ -23,6 +23,8 @@ export const BOOT_GATE_STALL_BUDGET = 60_000;
 
 const RELEASED: Capabilities.BootGateState = { pending: false };
 
+const UPDATING = 'Updating database';
+
 /**
  * The gate's next state for an index status, while it still holds the loader: hold through
  * migrations and a major rebuild, and release for anything else. The gate stops consulting this once
@@ -32,14 +34,10 @@ export const gateStateFor = (status: DataService.IndexStatus): Capabilities.Boot
   const progress = status.total > 0 ? status.done / status.total : undefined;
   switch (status.phase) {
     case 'migrating':
-      return { pending: true, status: 'Updating database…', progress };
+      return { pending: true, status: UPDATING, progress };
     case 'indexing':
       return status.total >= MAJOR_REINDEX_THRESHOLD
-        ? {
-            pending: true,
-            status: `Updating database (${status.done.toLocaleString()} of ${status.total.toLocaleString()})`,
-            progress,
-          }
+        ? { pending: true, status: UPDATING, count: { done: status.done, total: status.total }, progress }
         : RELEASED;
     case 'idle':
       return RELEASED;
