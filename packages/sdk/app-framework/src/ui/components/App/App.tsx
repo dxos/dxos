@@ -18,6 +18,12 @@ import {
 } from '../../hooks/index.ts';
 import { bootLoader } from './loader.ts';
 
+/**
+ * The gate status line last opened on the boot loader. Module-level because the loader is a page
+ * singleton and `App` remounts when `useApp` flips `ready`, which a ref would not survive.
+ */
+let relayedGateStatus: string | undefined;
+
 export type AppProps = Pick<UseAppOptions, 'debounce' | 'verboseStatus'> & {
   ready: boolean;
   error: unknown;
@@ -98,13 +104,12 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
   ]);
 
   // The status opens a line once; its count then ticks on that line in place (a range tick replaces the current line).
-  const heldStatusRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!held || stage >= LoadingState.FadeOut) {
       return;
     }
-    if (held.status && held.status !== heldStatusRef.current) {
-      heldStatusRef.current = held.status;
+    if (held.status && held.status !== relayedGateStatus) {
+      relayedGateStatus = held.status;
       bootLoader?.status({ humanized: held.status });
     }
     if (held.status && held.count) {
