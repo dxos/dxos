@@ -4,9 +4,10 @@ def Build.appended (image : Text) (out : Text) (trailer : Text) : {IO, Throw Fai
   let digits := toText (List.length (utf8 image))
   IO.appendFile out (image ++ repeat (20 - Text.length digits) "0" ++ digits ++ trailer)
 
-/-- Writes a static web page to the directory `out` that runs the image in the browser on the wasm
-  kernel: a terminal whose command lines run main with those arguments, with `IO` answered from an
-  in-memory file system the page edits (`deus-kernel/embed/host.mjs`, `platform/browser/`).
+/-- Writes a static web page to the directory `out` that runs the image in the browser on the
+  TypeScript kernel (D173), or the wasm one with `?kernel=wasm`: a terminal whose command lines
+  run main with those arguments, with `IO` answered from an in-memory file system the page edits
+  (`src/kernel/browser.ts`, `deus-kernel/embed/host.mjs`, `platform/browser/`).
   `deus.json` configures the page. -/
 def Build.browser (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
   let page := require "DEUS_HOME" ++ "/platform/browser"
@@ -14,6 +15,9 @@ def Build.browser (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
   Build.tool
     "cp"
     [crate ++ "/embed/host.mjs", page ++ "/index.html", page ++ "/app.js", page ++ "/app.css", out]
+  Failure.context "bundling the TypeScript kernel" [] (fun _ => Build.tool
+    "npx"
+    ["--yes", esbuild, require "DEUS_HOME" ++ "/src/kernel/browser.ts", "--bundle", "--platform=browser", "--format=esm", "--minify", "--log-level=warning", "--outfile=" ++ out ++ "/kernel-ts.mjs"])
   IO.writeFile
     (out ++ "/deus.json")
     (Json.render (Json.obj [("cwd", Json.str "/work"), ("env", Json.obj [("HOME", Json.str "/home")]), ("files", Json.obj [])]))

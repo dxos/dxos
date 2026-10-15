@@ -136,15 +136,18 @@ def embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
   crate
 
 /--
-  Writes a static web page to the directory `out` that runs the image in the browser on the wasm
-  kernel: a terminal whose command lines run main with those arguments, with `IO` answered from an
-  in-memory file system the page edits (`deus-kernel/embed/host.mjs`, `platform/browser/`).
+  Writes a static web page to the directory `out` that runs the image in the browser on the
+  TypeScript kernel (D173), or the wasm one with `?kernel=wasm`: a terminal whose command lines
+  run main with those arguments, with `IO` answered from an in-memory file system the page edits
+  (`src/kernel/browser.ts`, `deus-kernel/embed/host.mjs`, `platform/browser/`).
   `deus.json` configures the page.
 -/
 def browser (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
   let page := require "DEUS_HOME" ++ "/platform/browser"
   let crate := embedded image out
   let _ := tool "cp" [crate ++ "/embed/host.mjs", page ++ "/index.html", page ++ "/app.js", page ++ "/app.css", out]
+  let _ := Failure.context "bundling the TypeScript kernel" [] (fun _ =>
+    tool "npx" ["--yes", esbuild, require "DEUS_HOME" ++ "/src/kernel/browser.ts", "--bundle", "--platform=browser", "--format=esm", "--minify", "--log-level=warning", "--outfile=" ++ out ++ "/kernel-ts.mjs"])
   IO.writeFile (out ++ "/deus.json") (Json.render (Json.obj [("cwd", Json.str "/work"), ("env", Json.obj [("HOME", Json.str "/home")]), ("files", Json.obj [])]))
 
 /--

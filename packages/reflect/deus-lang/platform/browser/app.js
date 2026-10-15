@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// A terminal for a DEUS image running in the page on the wasm kernel: each command line runs the
-// image's main with those arguments, against an in-memory file system the editor shows.
+// A terminal for a DEUS image running in the page: each command line runs the image's main with those
+// arguments, against an in-memory file system the editor shows. The TypeScript kernel (kernel-ts.mjs)
+// runs by default; `?kernel=wasm` or `"kernel": "wasm"` in deus.json picks the wasm one.
 
 import { createDeus, createFiles } from './host.mjs';
 
@@ -58,18 +59,29 @@ const fetchOptional = async (path, as) => {
 };
 
 const started = performance.now();
-const [wasm, image, config = {}] = await Promise.all([
-  fetch('deus_kernel.wasm').then((response) => response.arrayBuffer()),
+const [image, config = {}] = await Promise.all([
   fetch('app.image').then((response) => response.text()),
   fetchOptional('deus.json', 'json'),
 ]);
-const fetched = performance.now();
 const fs = createFiles(config.files ?? {});
-const deus = await createDeus({ wasm, fs, env: config.env ?? {} });
+const env = config.env ?? {};
 const cwd = config.cwd ?? '/';
+const kernel = new URLSearchParams(location.search).get('kernel') ?? config.kernel ?? 'ts';
+
+/** Both kernels behind one `run(args)`, which resolves to `{ stdout, stderr, code }`. */
+const load = async () => {
+  if (kernel === 'wasm') {
+    const wasm = await fetch('deus_kernel.wasm').then((response) => response.arrayBuffer());
+    const deus = await createDeus({ wasm, fs, env });
+    return { size: wasm.byteLength, run: (args) => deus.run(image, { args, cwd }) };
+  }
+  const { runInBrowser } = await import('./kernel-ts.mjs');
+  return { size: 0, run: async (args) => runInBrowser(image, { fs, args, env, cwd }) };
+};
+const deus = await load();
 $('status').textContent =
-  `kernel ${Math.round(wasm.byteLength / 1024)} KB, image ${Math.round(image.length / 1024)} KB, ` +
-  `${fs.files.size} files; loaded in ${Math.round(fetched - started)} ms, instantiated in ${Math.round(performance.now() - fetched)} ms`;
+  `${kernel} kernel${deus.size ? ` ${Math.round(deus.size / 1024)} KB` : ''}, image ${Math.round(image.length / 1024)} KB, ` +
+  `${fs.files.size} files; ready in ${Math.round(performance.now() - started)} ms`;
 
 let current;
 const showFiles = () => {
@@ -109,7 +121,7 @@ let position = 0;
 const execute = async (line) => {
   print(`$ deus ${line}\n`, 'cmd');
   const begin = performance.now();
-  const result = await deus.run(image, { args: split(line), cwd });
+  const result = await deus.run(split(line));
   print(result.stdout);
   print(result.stderr, 'err');
   print(`exit ${result.code} · ${Math.round(performance.now() - begin)} ms\n`, 'meta');
@@ -151,4 +163,4 @@ for (const line of config.run ?? []) {
 }
 command.disabled = false;
 command.focus();
-window.deus = { deus, image, fs, execute };
+window.deus = { deus, kernel, image, fs, execute };

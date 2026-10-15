@@ -14,10 +14,16 @@ import { join, relative } from 'node:path';
 const [site, flag, codebase] = process.argv.slice(2);
 const home = new URL('../..', import.meta.url).pathname;
 
+// Layers that stay on the machine that made them (CODEBASE-STORE.md); the page rebuilds what it needs.
+const LOCAL = new Set(['artifacts', 'cache', 'exports', 'remotes']);
+
 const walk = (dir, into, prefix) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
+      if (dir === codebase && LOCAL.has(entry.name)) {
+        continue;
+      }
       walk(path, into, prefix);
     }
     // Codebase files are ASCII text; latin1 keeps any other byte as one code unit.

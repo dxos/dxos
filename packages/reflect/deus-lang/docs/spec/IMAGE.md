@@ -196,26 +196,34 @@ request as a `urn:deus:web:Request` value, and answers the requests the actor le
 `deus build <term> -o <dir> --browser` writes a directory any static file server can host
 ([D78](../DECISIONS.md)):
 
-| File                              | Content                                                                       |
-| --------------------------------- | ----------------------------------------------------------------------------- |
-| `app.image`                       | the term's image                                                              |
-| `deus_kernel.wasm`, `kernel.mjs`  | the embeddable kernel and its driver, as for the Worker                       |
-| `host.mjs`                        | the browser host ([EMBEDDING.md](./EMBEDDING.md#the-browser-host))            |
-| `index.html`, `app.js`, `app.css` | the page, copied from [`platform/browser/`](../../platform/browser)           |
-| `deus.json`                       | the page's configuration: `{"cwd":"/work","env":{"HOME":"/home"},"files":{}}` |
+| File                              | Content                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `app.image`                       | the term's image                                                                |
+| `kernel-ts.mjs`                   | the TypeScript kernel bundled for browsers by esbuild ([D173](../DECISIONS.md)) |
+| `deus_kernel.wasm`, `kernel.mjs`  | the embeddable kernel and its driver, as for the Worker                         |
+| `host.mjs`                        | the browser host ([EMBEDDING.md](./EMBEDDING.md#the-browser-host))              |
+| `index.html`, `app.js`, `app.css` | the page, copied from [`platform/browser/`](../../platform/browser)             |
+| `deus.json`                       | the page's configuration: `{"cwd":"/work","env":{"HOME":"/home"},"files":{}}`   |
 
-The page is a terminal: each command line is split into words as a POSIX shell splits them and runs the
+The page runs the TypeScript kernel unless `?kernel=wasm` in its URL or `"kernel": "wasm"` in `deus.json`
+picks the wasm one. The page is a terminal: each command line is split into words as a POSIX shell splits them and runs the
 image's `main` with them as `IO.args`. Beside it, an editor shows and changes the in-memory files.
 `deus.json` may also give `hide` (path prefixes left out of the file list), `open` (a file to show)
 and `run` (command lines to run on load). [`platform/browser/playground.mjs`](../../platform/browser/playground.mjs)
 turns a page built from `Cli.main` into the playground: it adds the builtins and prelude for `deus init`,
 a sample program, and with `--codebase <dir>` every file of that codebase under `/codebase`.
 
-| Part                                    | Bytes     | Gzipped |
-| --------------------------------------- | --------- | ------- |
-| `deus_kernel.wasm`                      | 274,251   | 99 KB   |
-| the seed as `app.image`                 | 1,426,122 | 264 KB  |
-| the toolchain's codebase in `deus.json` | 2,450,835 | 549 KB  |
+Sizes on 2026-10-15:
+
+| Part                                    | Bytes      | Gzipped |
+| --------------------------------------- | ---------- | ------- |
+| `kernel-ts.mjs`                         | 31,612     | 12 KB   |
+| `deus_kernel.wasm`                      | 286,338    | 103 KB  |
+| the seed as `app.image`                 | 2,664,786  | 506 KB  |
+| the toolchain's codebase in `deus.json` | 35,836,277 | 10.2 MB |
+
+The codebase holds every object of its history, 15,000 files; `playground.mjs` leaves out the local-only
+layers (`cache`, `artifacts`, `exports`, `remotes`).
 
 ### Artifacts cache
 
