@@ -76,6 +76,30 @@ def dropped (ns : Map Text Entry) (declared : Map Text Unit) (owner : Text) (old
 def authored (meta : Sexp) : List Sexp :=
   List.filter (fun item => Sexp.head item != "scheme" && Sexp.head item != "locals" && Sexp.head item != "owner") (Sexp.args meta)
 
+/--
+  The rewritten dependents in `pending` that no longer type-check, each as "name: error". Stored Core has
+  lost the source's ascriptions (D95), so a dependent whose old Core fails the checker too is not counted.
+-/
+def illTyped (dir : Text) (canonical : Map Text Text) (pending : List Pending) : {IO, Throw Text} List Text :=
+  let oldHash := Map.fromList (List.map (fun pair => ("@" ++ snd pair, fst pair)) (Map.toList canonical))
+  let objectOf := fun (h : Text) => Codebase.readObject dir h
+  let metaOf := fun (h : Text) => if Text.startsWith "@" h then Option.bind (Map.lookup h oldHash) (fun old => Codebase.readMeta dir old) else Codebase.readMeta dir h
+  let prims := fun (_ : Text) => none
+  let failures := fun (ps : List Pending) =>
+    let warnings := Ref.new []
+    let _ := Compile.typecheck objectOf metaOf prims ps true warnings (Ref.new Map.empty)
+    Ref.get warnings
+  let found := failures pending
+  if List.isEmpty found then []
+  else
+    List.filter (fun line =>
+      match List.find (fun p => Text.startsWith (p.name ++ ": ") line) pending with
+      | some p =>
+        match Map.lookup ("@" ++ p.name) oldHash with
+        | some old => List.isEmpty (failures [pendingOf p.name (Option.getOr (objectOf old) (Sexp.list []))])
+        | none => true
+      | none => true) found
+
 /-- Rebuilds a pending definition from a stored object. -/
 def pendingOf (name : Text) (obj : Sexp) : Pending :=
   match obj with
@@ -88,9 +112,10 @@ def pendingOf (name : Text) (obj : Sexp) : Pending :=
   names that were rehashed. A name just compiled refers to the batch's new hashes, but still to the
   old hash of a name outside the batch that depends on a changed one, so it is a candidate too.
   `fresh` holds the hashes the batch compiled: those follow only the rehashed dependents, since an
-  old hash they name is still current (another name took over the old body, R-17).
+  old hash they name is still current (another name took over the old body, R-17). Unless `typeMode`
+  is "off", a dependent the change leaves ill-typed fails the update ("warn" only prints it, R-19).
 -/
-def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh : Map Text Unit) : {IO} (Map Text Entry, List Text) :=
+def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh : Map Text Unit) (typeMode : Text) : {IO, Throw Text} (Map Text Entry, List Text) :=
   if Map.size subst == 0 then (ns, [])
   else
     let candidates := List.filter (fun pair => isTermLike (snd pair)) (Map.toList ns)
@@ -117,6 +142,10 @@ def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh 
       let pending := List.map (fun pair =>
         match pair with
         | (h, name) => pendingOf name (Codebase.rewrite (objectOf h) (if Set.contains h fresh then grownMap else rewriteMap))) (Map.toList canonical)
+      let broken := if typeMode == "off" then [] else illTyped dir canonical pending
+      if List.isEmpty broken then ()
+      else if typeMode == "warn" then List.forEach broken (fun line => IO.eprint ("warning: " ++ line ++ "\n"))
+      else throw ("the update leaves these dependents ill-typed:\n  " ++ Text.join "\n  " broken)
       match Compile.hashTerms pending Map.empty with
       | (hashes, objects) =>
         List.forEach objects (fun pair => Codebase.writeObject dir (fst pair) (snd pair))

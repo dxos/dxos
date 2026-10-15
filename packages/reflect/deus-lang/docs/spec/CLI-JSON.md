@@ -60,20 +60,21 @@ A `task` has the fields of the explorer's task object without `history`
 
 ### Codebase
 
-| Command                    | Document                                                                                                     |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `init`                     | `{"codebase": dir, "branch": "main", "library": bool}`; `library` is whether builtins and prelude were added |
-| `add`, `update`            | `{"added": entry[], "updated": entry[], "propagated": name[], "causal": hash}`                               |
-| `ls [prefix]`, `find text` | `entry[]`, sorted by name                                                                                    |
-| `names <name>`             | `{"hash": hash, "names": name[]}`                                                                            |
-| `view <name…>`             | `[{"name", "kind", "hash", "source"}]`, one per argument, in order                                           |
-| `deps <name>`              | `{"name": name, "dependencies": [{"hash", "name"}]}`                                                         |
-| `dependents <name>`        | `{"name": name, "dependents": [{"hash", "name"}]}`                                                           |
-| `mv`, `alias`              | `entry[]`: the new names                                                                                     |
-| `rm <name…>`               | `name[]`: the names removed                                                                                  |
+| Command                    | Document                                                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `init`                     | `{"codebase": dir, "branch": "main", "library": bool}`; `library` is whether builtins and prelude were added          |
+| `add`, `update`            | `{"added": entry[], "updated": entry[], "metadata": name[], "removed": name[], "propagated": name[], "causal": hash}` |
+| `ls [prefix]`, `find text` | `entry[]`, sorted by name                                                                                             |
+| `names <name>`             | `{"hash": hash, "names": name[]}`                                                                                     |
+| `view <name…>`             | `[{"name", "kind", "hash", "source"}]`, one per argument, in order                                                    |
+| `deps <name>`              | `{"name": name, "dependencies": [{"hash", "name"}]}`                                                                  |
+| `dependents <name>`        | `{"name": name, "dependents": [{"hash", "name"}]}`                                                                    |
+| `mv`, `alias`              | `entry[]`: the new names                                                                                              |
+| `rm <name…>`               | `name[]`: the names removed                                                                                           |
 
 In `add` and `update`, `updated` lists names that now point at a new hash (with that hash) and
-`propagated` the dependents that were rehashed because of them. `view`'s `source` is the text `deus view`
+`propagated` the dependents that were rehashed because of them. `metadata` lists names whose doc
+comment or attributes alone changed, and `removed` the members a type's new declaration dropped. `view`'s `source` is the text `deus view`
 prints, header comments included (`-- <name> #<hash prefix>`, `-- : <type>`); with `--core` it is the
 stored Core instead, and with `--dialect ts` the TypeScript-like dialect, whose header lines start with
 `// ` ([DIALECT-TS.md](./DIALECT-TS.md)). In `deps` and `dependents`, `name` is the hash's name, or `#` and its first 10

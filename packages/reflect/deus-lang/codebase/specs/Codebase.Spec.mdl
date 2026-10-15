@@ -203,6 +203,11 @@ req R-18: an update that drops a structure's field, a type's constructor or an a
 ```
 
 ```mdl
+req R-19: an update whose change leaves a dependent outside it ill-typed fails, names that dependent, and commits nothing; a change its dependents still type-check against goes through
+  by: Codebase.Spec.illTypedDependentFails | Codebase.Spec.welltypedDependentFollows
+```
+
+```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```

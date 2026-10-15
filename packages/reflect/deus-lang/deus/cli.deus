@@ -295,7 +295,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
+    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries)) (checkTypes ())
     let ns3 := fst propagated
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message

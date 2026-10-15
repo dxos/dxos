@@ -144,6 +144,13 @@ def Codebase.Spec.forked (sideChanges : Map Text Entry -> Map Text Entry) (mainC
   let result := Codebase.merge dir "side"
   (result, Codebase.current dir)
 
+/-- R-19: `A.g` calls `A.f` at Int; changing `A.f` to take and return Text refuses the update and keeps the old `A.f`. -/
+test Codebase.Spec.illTypedDependentFails := inStore (fun dir =>
+  let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"
+  match try (fun _ => cliUpdate dir "def A.f (t : Text) : Text := \"x\"\n") with
+  | Result.err message => Text.contains "A.g" message && Map.lookup "A.f" (Codebase.current dir) == Map.lookup "A.f" before
+  | Result.ok _ => false)
+
 /-- Runs a store action in a fresh simulated codebase; a thrown error is `false`. -/
 def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
   match Sim.run 7 (fun _ =>
@@ -332,7 +339,18 @@ def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {
     match Map.lookup (fst pair) ns with
     | Option.some old => if Entry.hash old != Entry.hash (snd pair) then Option.some (Entry.hash old, Entry.hash (snd pair)) else Option.none
     | Option.none => Option.none) b.entries)
-  fst (propagate dir next subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) b.entries)))
+  fst (propagate
+    dir
+    next
+    subst
+    (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) b.entries))
+    "off")
+
+/-- R-19: a new body at the same type rehashes `A.g` as before. -/
+test Codebase.Spec.welltypedDependentFollows := inStore (fun dir =>
+  let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"
+  let after := cliUpdate dir "def A.f (n : Int) : Int := 2\n"
+  Map.lookup "A.g" before != Map.lookup "A.g" after)
 
 /-- Three hundred names at the root and three hundred under `N`: both nodes split into parts. -/
 def Codebase.Spec.wide : List Text := concatMap (fun i => ["name" ++ toText i, "N.name" ++ toText i]) (range 0 300)

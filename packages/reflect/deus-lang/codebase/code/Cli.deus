@@ -60,6 +60,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       ns2
       subst
       (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
+      (checkTypes ())
     let ns3 := fst propagated
     let message := getOr
       (option args "message")

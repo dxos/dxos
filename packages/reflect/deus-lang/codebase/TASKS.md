@@ -87,13 +87,6 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
 
-## deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (`53e409cd`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: update, types
-
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -828,6 +821,15 @@ From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled 
 - labels: bug, dogfood, spec
 
 From docs/spec/README.md, Known divergences.
+
+## deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (`53e409cd`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: update, types
+
+> claude: Propagation now type-checks the rewritten dependents and fails the update naming them (D143, Codebase.Spec R-19); DEUS_TYPECHECK=warn prints them instead. A dependent whose old Core also fails (ascriptions are not stored) is not counted. Cost: about 1 s on a 17 s update that rehashed 161 dependents.
 
 ## deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (`a8150b0c`)
 
