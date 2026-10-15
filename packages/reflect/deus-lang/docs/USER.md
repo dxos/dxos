@@ -617,4 +617,12 @@ try to do an automation where if $10 budget alert is triggered all work is cut
 
 ---
 
+update project core instructions to say that threads dont need my permission to deploy
+
+---
+
+some threads still blocked, restart them as new threads
+
+---
+
 priority: get explorer to be sourced live from hosted codebase, not rebuilt by cli

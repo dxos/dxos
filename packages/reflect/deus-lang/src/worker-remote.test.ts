@@ -4,7 +4,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { gzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { beforeEach, describe, test } from 'vitest';
 
 import { mintKey, sha256 } from '../platform/worker/remote.mjs';
@@ -366,7 +366,12 @@ describe('replication API', () => {
     const unlogged = () => bucket.keys().filter((key) => !key.includes('/headlog/'));
     expect(unlogged()).toEqual([`toolchain/bundles/${bundle.name}`, 'toolchain/heads/main']);
     expect((await remove(await insertKey(db, ['compact']))).status).toBe(200);
-    expect(unlogged()).toEqual(['toolchain/heads/main']);
+    // A deleted bundle moves to the trash, out of every listing, so a compaction bug never loses history.
+    expect(unlogged()).toEqual(['toolchain/heads/main', `toolchain/trash/bundles/${bundle.name}`]);
+    expect(await (await call('/v1/toolchain/bundles/')).text()).toBe('');
+    expect(
+      gunzipSync((await bucket.get(`toolchain/trash/bundles/${bundle.name}`))?.body ?? new Uint8Array()).toString(),
+    ).toBe('(bundle a)');
     // Compaction leaves the head log, so every head the branch had stays named.
     expect(bucket.keys().filter((key) => key.includes('/headlog/main/'))).toHaveLength(1);
   });
@@ -387,6 +392,14 @@ describe('replication API', () => {
     expect((await call('/v1/toolchain/files/other/x', { method: 'PUT', body: 'x', key: site })).status).toBe(404);
     expect(await (await call('/v1/toolchain/files/site/')).text()).toBe('def/a.json\nindex.html\nmeta.json\n');
     expect(await (await call('/v1/toolchain/files/site/meta.json')).text()).toBe('meta.json');
+    expect((await call('/v1/toolchain/files/site/meta.json', { method: 'DELETE', key: site })).status).toBe(200);
+    expect(bucket.keys().some((key) => key.includes('/trash/'))).toBe(false);
+    // An asset is what a comment or task attaches, so deleting one keeps a copy in the trash.
+    const assets = await insertKey(db, ['assets']);
+    await call('/v1/toolchain/files/assets/shot', { method: 'PUT', body: 'png', key: assets });
+    expect((await call('/v1/toolchain/files/assets/shot', { method: 'DELETE', key: assets })).status).toBe(200);
+    expect((await call('/v1/toolchain/files/assets/shot')).status).toBe(404);
+    expect(await (await bucket.get('toolchain/trash/assets/shot'))?.text()).toBe('png');
     // The explorer of PREFIX reads the same files.
     const page = await call('/');
     expect(await page.text()).toBe('index.html');

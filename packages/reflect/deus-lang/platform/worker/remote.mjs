@@ -127,9 +127,10 @@ const bundles = async (request, env, ctx, project, rest) => {
     return logged(json({ bundle: name, stored: true }, 201));
   }
   if (request.method === 'DELETE') {
-    // Only compaction deletes a bundle, once strata hold everything it lists (D73).
+    // Only compaction deletes a bundle, once strata hold everything it lists (D73). The bundle moves to
+    // the trash rather than vanishing, so a compaction bug costs storage, never history (DataSafety.Spec).
     const logged = await authorize(request, env, ctx, 'compact', project);
-    await env.BUCKET.delete(key);
+    await toTrash(env.BUCKET, project, 'bundles', name);
     return logged(json({ bundle: name, deleted: true }));
   }
   throw new HttpError(405, 'method not allowed');
@@ -314,10 +315,36 @@ const files = async (request, env, ctx, project, folder, rest) => {
   }
   if (request.method === 'DELETE') {
     const logged = await authorize(request, env, ctx, folder, project);
-    await env.BUCKET.delete(key);
+    // Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.
+    if (folder === 'site') {
+      await env.BUCKET.delete(key);
+    } else {
+      await toTrash(env.BUCKET, project, folder, rest.join('/'));
+    }
     return logged(json({ key: rest.join('/'), deleted: true }));
   }
   throw new HttpError(405, 'method not allowed');
+};
+
+/**
+ * Deletes `<project>/<folder>/<name>` by moving it to `<project>/trash/<folder>/<name>`, which no client
+ * can write or delete; R2 has no rename, so it is a copy, then the delete.
+ */
+export const toTrash = async (bucket, project, folder, name) => {
+  const key = `${project}/${folder}/${name}`;
+  const object = await bucket.get(key);
+  if (!object) {
+    return;
+  }
+  await bucket.put(
+    `${project}/trash/${folder}/${name}`,
+    new Uint8Array(await new Response(object.body).arrayBuffer()),
+    {
+      httpMetadata: object.httpMetadata,
+      customMetadata: { deletedAt: String(Date.now()) },
+    },
+  );
+  await bucket.delete(key);
 };
 
 /** Every key under `prefix`, without it, following R2's pages. */
