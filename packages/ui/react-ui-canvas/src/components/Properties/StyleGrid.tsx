@@ -9,7 +9,7 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { useSceneLook } from '../../hooks/useSceneLook.ts';
-import { CLASSIC_LOOK, DEFAULT_LOOK, type SceneLook, styleVariant } from '../../model/style-set.ts';
+import { CLASSIC_LOOK, type SceneLook, styleVariant } from '../../model/style-set.ts';
 import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '../../model/types.ts';
 import { TONES, variantClasses } from '../../utils/style.ts';
 import { BORDER_CLASSES } from '../../utils/surfaces.ts';

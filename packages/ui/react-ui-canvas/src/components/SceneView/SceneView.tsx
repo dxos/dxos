@@ -426,10 +426,14 @@ const SceneViewRoot = ({
   const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
   useLayoutEffect(() => {
     if (fitting && measured && !fittedRef.current) {
-      fittedRef.current = { scene: sceneId, key: fitKey };
-      setCamera(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM));
+      // Measured now, not from the observed size: a docked inspector mounting in the same frame narrows the canvas
+      // before the observer reports it, and fitting the stale size would animate a refit straight after load.
+      const element = rootRef.current;
+      const size = element ? { width: element.clientWidth, height: element.clientHeight } : viewport;
+      fittedRef.current = { scene: sceneId, key: `${size.width}x${size.height}` };
+      setCamera(fitBounds(fitTarget, size, inset, NOMINAL_ZOOM));
     }
-  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, fitKey]);
+  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId]);
   // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
   // would restart the debounce before it fires. The latest helpers and frame are read when it does.
   const fitLatestRef = useRef({
