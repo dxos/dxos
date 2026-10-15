@@ -167,6 +167,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
+              isLocalScene={isLocalScene}
               initialDisplay={{ snap, guides, fit }}
               onDisplayChange={handleDisplayChange}
               inspectors={floating ? 'floating' : 'docked'}

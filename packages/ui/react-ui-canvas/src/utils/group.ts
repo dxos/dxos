@@ -104,12 +104,15 @@ export type UngroupOptions = {
   shared?: boolean;
   /** Mints an id for an element whose own is taken (`prefix` is its type). */
   createId: (prefix: string) => string;
+  /** Ids taken elsewhere besides the scene itself, e.g. in other scenes of a host that keys records by id. */
+  taken?: ReadonlySet<string>;
 };
 
 /**
  * The inverse of `groupIntoScene`: the intents that replace the frame `frameId` with the contents of its `child`
- * scene. The child's nodes are mapped onto the frame as it is now, so they land where it shows them after it was
- * moved or resized: the child's own bounds are centred on the frame and shrunk to fit it, never magnified. They go on
+ * scene. The child's nodes are mapped onto the frame as it is now: the bounds of the nodes themselves (not the padded
+ * region a portal draws them in, so grouping then ungrouping restores them exactly) are centred on the frame and
+ * shrunk to fit it, never magnified, so a moved or resized frame takes its contents with it. They go on
  * the frame's layer, above everything else, in their own order. A link on the frame re-attaches to the child node
  * nearest its other end. An element keeps its id unless the scene already has it or the child is `shared`. None when
  * the frame is missing, locked, not a frame, or opens another scene.
@@ -118,7 +121,7 @@ export const ungroupScene = (
   scene: Scene,
   frameId: NodeId,
   child: Scene,
-  { shared = false, createId }: UngroupOptions,
+  { shared = false, createId, taken: elsewhere }: UngroupOptions,
 ): Intent[] | undefined => {
   const frame = scene.nodes[frameId];
   if (!frame || !isFrameNode(frame) || frame.locked || frame.scene !== child.id) {
@@ -132,7 +135,7 @@ export const ungroupScene = (
   const to = boundsCenter(target);
   const map = (point: Point): Point => ({ x: to.x + (point.x - from.x) * scale, y: to.y + (point.y - from.y) * scale });
 
-  const taken = new Set([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+  const taken = new Set([...Object.keys(scene.nodes), ...Object.keys(scene.links), ...(elsewhere ?? [])]);
   const ids = new Map<ElementId, ElementId>();
   const rename = (element: Element & { type: string }): ElementId => {
     const id = shared || taken.has(element.id) ? createId(element.type) : element.id;

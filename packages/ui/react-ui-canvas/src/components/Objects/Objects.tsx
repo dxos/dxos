@@ -45,6 +45,8 @@ export type ObjectsPanelProps = Util.ThemedClassName<{
   onEnter?: (entry: CompoundEntry) => void;
   onToggle?: (entry: CompoundEntry) => void;
   onRename?: (entry: CompoundEntry, name: string) => void;
+  /** Whether a row may be renamed; a compound object of another drawing may not. */
+  isEditable?: (entry: CompoundEntry) => boolean;
   docked?: boolean;
   onDockedChange?: (docked: boolean) => void;
 }>;
@@ -65,6 +67,7 @@ export const ObjectsPanel = ({
   onEnter,
   onToggle,
   onRename,
+  isEditable,
   docked = false,
   onDockedChange,
 }: ObjectsPanelProps) => {
@@ -148,7 +151,7 @@ export const ObjectsPanel = ({
             onEditingChange={(editing) =>
               setEditingId((current) => (editing ? id : current === id ? undefined : current))
             }
-            disabled={readonly || !onRename}
+            disabled={readonly || !onRename || isEditable?.(entry) === false}
             onValueChange={(next) => {
               const name = next.trim();
               if (name && name !== entry.name) {
@@ -185,7 +188,7 @@ export const ObjectsPanel = ({
         </Tree.Item>
       );
     },
-    [editingId, readonly, onRename, onEnter, onToggle],
+    [editingId, readonly, onRename, isEditable, onEnter, onToggle],
   );
 
   return (

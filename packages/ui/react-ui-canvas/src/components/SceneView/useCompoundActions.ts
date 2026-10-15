@@ -37,6 +37,8 @@ export type CompoundActions = {
   group: () => NodeId | undefined;
   /** Replaces the selected frame (or `id`) with its contents, which become the selection. */
   ungroup: (id?: NodeId) => void;
+  /** Whether a compound object belongs to this drawing, so it may be renamed. */
+  isLocal: (entry: CompoundEntry) => boolean;
   /** Names the compound object (its child scene). */
   rename: (entry: CompoundEntry, name: string) => void;
   /** Shows or hides the compound object's frame. */
@@ -61,6 +63,8 @@ export type UseCompoundActionsOptions = {
   inset: number;
   interactedRef: MutableRefObject<boolean>;
   createId: (prefix: string) => string;
+  /** Whether a scene belongs to this drawing; a frame onto another may be entered, not ungrouped or renamed. */
+  isLocalScene?: (id: SceneId) => boolean;
   select: (ids: Iterable<ElementId>) => void;
   setCamera: (camera: Camera) => void;
   animateTo: (camera: Camera) => void;
@@ -86,6 +90,7 @@ export const useCompoundActions = ({
   inset,
   interactedRef,
   createId,
+  isLocalScene = () => true,
   select,
   setCamera,
   animateTo,
@@ -96,12 +101,14 @@ export const useCompoundActions = ({
   const sceneId = path[path.length - 1];
   const editable = capabilities.create === true && capabilities.delete === true;
 
-  /** The selected frame onto a scene of this drawing, when the selection is exactly one. */
+  /** The selected unlocked frame onto a scene of this drawing, when the selection is exactly one. */
   const selectedFrame = useCallback((): NodeId | undefined => {
     const [id] = selection.size === 1 ? [...selection] : [];
     const node = id !== undefined ? registry.get(projection.scene).nodes[id] : undefined;
-    return node && isFrameNode(node) && registry.get(store.scenes)[node.scene] ? node.id : undefined;
-  }, [selection, registry, projection, store.scenes]);
+    const ungroupable =
+      node && isFrameNode(node) && !node.locked && isLocalScene(node.scene) && registry.get(store.scenes)[node.scene];
+    return ungroupable ? node.id : undefined;
+  }, [selection, registry, projection, store.scenes, isLocalScene]);
 
   const canGroup =
     editable && [...selection].some((id) => scene.nodes[id] !== undefined && scene.nodes[id].locked !== true);
@@ -114,8 +121,7 @@ export const useCompoundActions = ({
     if (!grouped) {
       return undefined;
     }
-    const before = registry.get(store.scenes);
-    registry.set(store.scenes, { ...before, [id]: { ...grouped.child, name: 'Untitled' } });
+    registry.set(store.scenes, { ...registry.get(store.scenes), [id]: { ...grouped.child, name: 'Untitled' } });
     projection.apply({ kind: 'batch', intents: grouped.intents });
     // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
     // it the new scene would be an orphan, so it goes and the selection stays.
@@ -125,7 +131,7 @@ export const useCompoundActions = ({
       return undefined;
     }
     // One undo step takes the new scene away with the shape that opens it.
-    recordScenes(registry, atoms.undo, sceneId, before);
+    recordScenes(registry, atoms.undo, sceneId, { [id]: undefined });
     select([id]);
     return id;
   }, [createId, registry, projection, selection, atoms.layer, atoms.undo, store.scenes, sceneId, select]);
@@ -134,13 +140,19 @@ export const useCompoundActions = ({
     (id?: NodeId) => {
       const frameId = id ?? selectedFrame();
       const frame = frameId !== undefined ? registry.get(projection.scene).nodes[frameId] : undefined;
-      const before = registry.get(store.scenes);
-      const child = frame && isFrameNode(frame) ? before[frame.scene] : undefined;
+      const scenes = registry.get(store.scenes);
+      const child = frame && isFrameNode(frame) && isLocalScene(frame.scene) ? scenes[frame.scene] : undefined;
       if (!frame || !isFrameNode(frame) || !child) {
         return;
       }
-      const shared = frameCount(before, child.id) > 1;
-      const intents = ungroupScene(registry.get(projection.scene), frame.id, child, { shared, createId });
+      const shared = frameCount(scenes, child.id) > 1;
+      // A host may key records by id across the drawing, so an id any other scene has is taken too.
+      const taken = new Set(
+        Object.values(scenes)
+          .filter((scene) => scene.id !== child.id && scene.id !== sceneId)
+          .flatMap((scene) => [...Object.keys(scene.nodes), ...Object.keys(scene.links)]),
+      );
+      const intents = ungroupScene(registry.get(projection.scene), frame.id, child, { shared, createId, taken });
       if (!intents) {
         return;
       }
@@ -150,21 +162,23 @@ export const useCompoundActions = ({
         return;
       }
       if (!shared) {
-        const { [child.id]: _, ...scenes } = registry.get(store.scenes);
-        registry.set(store.scenes, scenes);
+        const { [child.id]: _, ...rest } = registry.get(store.scenes);
+        registry.set(store.scenes, rest);
+        // One undo step brings the child scene back with the frame.
+        recordScenes(registry, atoms.undo, sceneId, { [child.id]: child });
       }
-      // One undo step brings the child scene back with the frame.
-      recordScenes(registry, atoms.undo, sceneId, before);
       select(intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : [])));
     },
-    [selectedFrame, registry, projection, store.scenes, createId, atoms.undo, sceneId, select],
+    [selectedFrame, registry, projection, store.scenes, isLocalScene, createId, atoms.undo, sceneId, select],
   );
 
   const rename = useCallback(
     (entry: CompoundEntry, name: string) => {
-      updateScene(registry, store, entry.child, (scene) => (scene.name === name ? scene : { ...scene, name }));
+      if (isLocalScene(entry.child)) {
+        updateScene(registry, store, entry.child, (scene) => (scene.name === name ? scene : { ...scene, name }));
+      }
     },
-    [registry, store],
+    [registry, store, isLocalScene],
   );
 
   const toggleHidden = useCallback(
@@ -224,8 +238,10 @@ export const useCompoundActions = ({
     [sceneId, drillIn, registry, store.scenes, jump, viewport, inset],
   );
 
+  const isLocal = useCallback((entry: CompoundEntry) => isLocalScene(entry.child), [isLocalScene]);
+
   return useMemo(
-    () => ({ canGroup, canUngroup, group, ungroup, rename, toggleHidden, reveal, enter }),
-    [canGroup, canUngroup, group, ungroup, rename, toggleHidden, reveal, enter],
+    () => ({ canGroup, canUngroup, group, ungroup, isLocal, rename, toggleHidden, reveal, enter }),
+    [canGroup, canUngroup, group, ungroup, isLocal, rename, toggleHidden, reveal, enter],
   );
 };

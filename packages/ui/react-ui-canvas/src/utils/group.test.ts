@@ -156,6 +156,15 @@ describe('ungroupScene', () => {
     expect(Object.keys(result.nodes)).toHaveLength(4);
   });
 
+  test('an id another scene has is replaced too, when the host says it is taken', ({ expect }) => {
+    const { parent, child } = grouped();
+    const intents = ungroupScene(parent, 'g', child, { createId, taken: new Set(['b']) });
+    const result = reduceIntent(parent, { kind: 'batch', intents: intents ?? [] });
+    expect(result.nodes.a).toBeDefined();
+    expect(result.nodes.b).toBeUndefined();
+    expect(Object.keys(result.nodes)).toHaveLength(3);
+  });
+
   test('a locked frame, or one opening another scene, is not ungrouped', ({ expect }) => {
     const { parent, child } = grouped();
     const locked = reduceIntent(parent, { kind: 'update', id: 'g', values: { locked: true } });

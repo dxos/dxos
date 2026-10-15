@@ -147,8 +147,13 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   atoms?: SceneViewAtoms;
   /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
   initialCamera?: Camera;
-  /** Called once the camera settles on the root scene, so a host can persist it. */
+  /**
+   * Called once the camera settles on the root scene, so a host can persist it. Without its pose: a restored tilted
+   * camera would open the view read-only, so a presentation pose lasts only as long as the view.
+   */
   onCameraChange?: (camera: Camera) => void;
+  /** Whether a scene belongs to this drawing; a frame onto another may be entered, not ungrouped or renamed. */
+  isLocalScene?: (id: SceneId) => boolean;
   /**
    * The display toggles as last left; each is on when unset. With fit on, `initialCamera` is not restored: the view
    * opens fitted.
@@ -188,6 +193,7 @@ const SceneViewRoot = ({
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
+  isLocalScene,
   initialDisplay,
   onDisplayChange,
   grid = DEFAULT_GRID,
@@ -404,7 +410,8 @@ const SceneViewRoot = ({
     if (!onCameraChange || !atRoot || !interactedRef.current) {
       return;
     }
-    const timeout = setTimeout(() => onCameraChange(camera), CAMERA_SETTLE_MS);
+    const { tilt: _tilt, spin: _spin, ...flat } = camera;
+    const timeout = setTimeout(() => onCameraChange(flat), CAMERA_SETTLE_MS);
     return () => clearTimeout(timeout);
   }, [onCameraChange, atRoot, camera]);
 
@@ -553,6 +560,7 @@ const SceneViewRoot = ({
     inset,
     interactedRef,
     createId,
+    isLocalScene,
     select,
     setCamera,
     animateTo,
@@ -774,6 +782,10 @@ const SceneViewRoot = ({
   // scene never matches the root node over it.
   const onDoubleClick = useCallback(
     (event: React.MouseEvent) => {
+      // Posed, the pointer maps to no scene point, so a double-click opens nothing.
+      if (isPresentation(registry.get(atoms.camera))) {
+        return;
+      }
       const node = hitTest(scene, toScene(event));
       if (!node) {
         return;
@@ -800,7 +812,7 @@ const SceneViewRoot = ({
         drillIn(node);
       }
     },
-    [scene, toScene, nodeRegistry, drillIn, capabilities.update, select, registry, atoms.editing],
+    [scene, toScene, nodeRegistry, drillIn, capabilities.update, select, registry, atoms.editing, atoms.camera],
   );
 
   // A node type dragged in (from the palette or a host's draggable) previews as a create drag would and
@@ -1385,7 +1397,7 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 
 /** The tool rail: what the next gesture will draw. */
 const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
-  const { tool, nodeRegistry, linkRegistry, capabilities, readonly, onReadonlyChange, setTool } =
+  const { tool, nodeRegistry, linkRegistry, capabilities, readonly, onReadonlyChange, camera, setTool } =
     useSceneViewContext('SceneView.Palette');
   return (
     // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
@@ -1396,7 +1408,8 @@ const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: S
         links={linkRegistry}
         capabilities={capabilities}
         readonly={readonly}
-        onReadonlyChange={onReadonlyChange}
+        // Posed, the view is read-only whatever the host says, so the toggle would do nothing.
+        onReadonlyChange={isPresentation(camera) ? undefined : onReadonlyChange}
         onToolChange={setTool}
       />
     </div>
@@ -1615,6 +1628,7 @@ const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsPr
         onUngroup={compound.canUngroup ? () => compound.ungroup() : undefined}
         onSelect={compound.reveal}
         onEnter={compound.enter}
+        isEditable={compound.isLocal}
         onToggle={compound.toggleHidden}
         onRename={compound.rename}
       />

@@ -13,6 +13,7 @@ import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type ElementId, type Scene, type Size } from '../../model/types.ts';
 import { NOMINAL_ZOOM, fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
+import { visibleScene } from '../../utils/layers.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { toolForKey } from '../Palette/Palette.tsx';
 import { type CompoundActions } from './useCompoundActions.ts';
@@ -185,10 +186,13 @@ export const useSceneKeys = ({
           onRedo();
           event.preventDefault();
           break;
-        case 'selectAll':
-          select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+        case 'selectAll': {
+          // What is drawn: a hidden element selected unseen would go with a Delete.
+          const shown = visibleScene(scene);
+          select([...Object.keys(shown.nodes), ...Object.keys(shown.links)]);
           event.preventDefault();
           break;
+        }
         case 'group':
           // The browser's own ⌘G finds the next match, so the chord is taken even when there is nothing to group.
           event.preventDefault();
