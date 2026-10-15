@@ -477,7 +477,8 @@ export class WebSocketMuxer {
 
   /** When the peer's pause of an outbound channel ends, in `Date.now()` time, if it is paused. */
   public pausedUntil(channelId: number): number | undefined {
-    const until = this._outChannels.get(channelId)?.pausedUntil ?? 0;
+    const pause = this._outChannels.get(channelId)?.pause;
+    const until = pause ? pause.receivedAt + pause.retryAfterMs : 0;
     return until > Date.now() ? until : undefined;
   }
 
@@ -680,7 +681,6 @@ export class WebSocketMuxer {
       sent: NONE,
       acknowledged: NONE,
       window: 0,
-      pausedUntil: 0,
     }));
   }
 
@@ -844,7 +844,7 @@ export class WebSocketMuxer {
     for (let offset = 1; offset + PAUSE_ENTRY_BYTES <= data.byteLength; offset += PAUSE_ENTRY_BYTES) {
       const channelId = data[offset];
       const retryAfterMs = view.getUint32(offset + 1);
-      this._outChannel(channelId).pausedUntil = Date.now() + retryAfterMs;
+      this._outChannel(channelId).pause = { receivedAt: Date.now(), retryAfterMs };
       log('muxer channel paused by peer', { channelId, retryAfterMs });
       this._resumeAfterPause(channelId, retryAfterMs);
     }
@@ -920,7 +920,8 @@ type OutboundChannel = {
   sent: FlowControlAmount;
   acknowledged: FlowControlAmount;
   window: number;
-  pausedUntil: number;
+  /** The peer's last pause of this channel, as received. */
+  pause?: { receivedAt: number; retryAfterMs: number };
 };
 
 /** One inbound channel: what arrived, what the application consumed, and the consumption last announced. */
