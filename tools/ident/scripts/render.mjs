@@ -7,7 +7,7 @@ import { getCompositions, renderMedia } from '@remotion/renderer';
 import fs from 'node:fs';
 // Render spots to out/ using the naming convention DXOS_SI_[ID]_[length]_[ratio]_v[NN].mp4
 //
-//   moon run ident:render                          # everything (14 provocations x 2 lengths x 4 formats)
+//   moon run ident:render                          # everything (14 provocations x 2 lengths x 5 formats)
 //   moon run ident:render -- --id P03              # one provocation, all lengths and formats
 //   moon run ident:render -- --id OPEN,COMPOSER,END # several ids, comma-separated
 //   moon run ident:render -- --id P03 --length 10s --format 16x9
