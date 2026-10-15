@@ -253,8 +253,18 @@ const prefetchNamespace = async (files) => {
     }
     level = next;
   }
-  const tasks = field('tasks');
-  await fetchAll(files, [...[...hashes].flatMap((hash) => [`o${hash}`, `m${hash}`]), ...(tasks ? [`o${tasks}`] : [])]);
+  const snapshots = ['tasks', 'comments'].map(field).filter(Boolean);
+  await fetchAll(files, [
+    ...[...hashes].flatMap((hash) => [`o${hash}`, `m${hash}`]),
+    ...snapshots.map((hash) => `o${hash}`),
+  ]);
+  // `Tasks.current` and `Comments.current` stop at the first item they lack, so every item is read now.
+  await fetchAll(
+    files,
+    snapshots.flatMap((hash) =>
+      [...(files.texts.get(`o${hash}`) ?? '').matchAll(/"([0-9a-f]{64})"/g)].map((match) => `o${match[1]}`),
+    ),
+  );
 };
 
 /** How many changes back the explorer's log reads (`Explorer.historyLimit`). */
