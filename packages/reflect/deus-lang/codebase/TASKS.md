@@ -1,13 +1,5 @@
 # Tasks
 
-## A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec (`1e8dee8b`)
-
-- state: todo
-- priority: high
-- labels: js, codebase
-
-Js.text and Js.list with body Js.import "js" "id" collapsed into one definition, and Js.list encoded with the text codec. platform/js/js.deus works around it with distinct paths js.as.<name>. Fix: hash a binding together with its declared type, or refuse two bindings with the same body.
-
 ## Catch the R2 remote up with the git export and push it, so threads can start from deus pull (`e76e36b0`)
 
 - state: doing
@@ -243,6 +235,16 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 Wrong premise: explorer-demo is the explorer site's remote, not the codebase's. The shared codebase remote is r2://agent-artifacts/deus/toolchain (D101), seeded by the explorer-publish thread.
 
 > claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
+
+## A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec (`1e8dee8b`)
+
+- state: done
+- priority: high
+- labels: js, codebase
+
+Js.text and Js.list with body Js.import "js" "id" collapsed into one definition, and Js.list encoded with the text codec. platform/js/js.deus works around it with distinct paths js.as.<name>. Fix: hash a binding together with its declared type, or refuse two bindings with the same body.
+
+> claude: Done (D159): add/update refuse two Js.import bindings of one object at different declared types; same-typed aliases are kept. Codebase.Spec R-21.
 
 ## Analytics store: event types defined in the codebase, flat event rows (scalars and pinned refs), push-only sync as Parquet beside the codebase, queryable with Basin SQL (`87707577`)
 

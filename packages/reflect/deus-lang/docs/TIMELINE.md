@@ -185,5 +185,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 175 | 10-15 07:30 | 35m 00s | `c3278e7e` | Prove.Spec (task 1ab6c044): seven requirements on `decide`, `sorry`, simp's arithmetic, failures and unknown tactics. Two ran red: a false `decide` printed "counterexample: " with nothing after it, and `n + 1 != n` was left as a goal; both fixed, while `n < n + 1` stays unproved because Int wraps (D156). Filed 79f72c44: verdicts are cached by theorem hash only, so this change had to be rechecked on an empty cache by hand (129 passed, the 6 intended failures failed). |
 | 176 | 10-15 08:10 | 40m 00s | this commit | Vitest tests as requirement evidence (task a2da28e2, Compile.Spec R-17, R-18): `by: vitest:<file> > <test>` is checked for the test's declaration and run by the suite; eight known gaps now cite their tests, and `deus mdl` reports 272 ok and 6 known gaps (D157). |
 | 177 | 10-15 07:25 | 15m 00s | this commit | `deus check --fresh` re-checks theorems whose verdict is kept, so a checker upgrade can be applied to theorems it already judged (task 79f72c44 in part, Prove.Spec R-8, D158). |
+| 178 | 10-15 07:50 | 20m 00s | this commit | Two `Js.import` bindings of one body at different types are refused instead of sharing one codec (task 1e8dee8b, Codebase.Spec R-21, D159). |
 
-Total from stage 1 to stage 177: 46h 12m.
+Total from stage 1 to stage 178: 46h 32m.

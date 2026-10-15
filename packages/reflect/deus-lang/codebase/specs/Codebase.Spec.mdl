@@ -218,6 +218,11 @@ req R-20: after an update adds a member to a recursive group, every dependent ou
 ```
 
 ```mdl
+req R-21: two `Js.import` bindings with one body but different declared types are refused, naming both, since they share one object and the js target would give both one codec; two at the same type are aliases and are kept
+  by: Codebase.Spec.sharedBindingRefused | Codebase.Spec.sameTypedBindingsKept | Codebase.Spec.sharedBindingInOneBatchRefused
+```
+
+```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```

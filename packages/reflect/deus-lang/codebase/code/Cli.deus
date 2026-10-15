@@ -46,7 +46,12 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     match Project.read dir with
     | Option.some p => trespasses p entries
     | Option.none => []
-  if not (List.isEmpty crossings) then Throw.throw ("a layer may not depend on these:\n  " ++ join "\n  " crossings) else if not (List.isEmpty trespasses) then Throw.throw ("only a library may mint types under its IRI:\n  " ++ join "\n  " trespasses) else if not isUpdate && not (List.isEmpty replaced) then Throw.throw ("these names already exist; use `deus update`:\n  " ++ join "\n  " (List.map (fun c =>
+  let shared := sharedBindings
+    dir
+    (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns batch.entries)
+    batch
+  if not (List.isEmpty crossings) then Throw.throw ("a layer may not depend on these:\n  " ++ join "\n  " crossings) else if not (List.isEmpty shared) then Throw.throw ("these bindings share one object, so they would share one codec; give each its own path or one type:\n  " ++
+    join "\n  " shared) else if not (List.isEmpty trespasses) then Throw.throw ("only a library may mint types under its IRI:\n  " ++ join "\n  " trespasses) else if not isUpdate && not (List.isEmpty replaced) then Throw.throw ("these names already exist; use `deus update`:\n  " ++ join "\n  " (List.map (fun c =>
     match c with
     | (name, _, _) => name) replaced)) else
     let retagged := metadataChanged ns batch.entries (fun h => readMeta dir h) (Map.fromList (Batch.metas batch))
@@ -1641,6 +1646,42 @@ def Cli.serve (args : Args) : {IO, Throw Text} Unit :=
               IO.eprint err
               if code == 0 then () else IO.exit code
   | _ => Throw.throw "usage: deus serve <handler> [--port n]"
+
+/-- Pairs of names in `ns` that bind one `Js.import` object of `batch` at different declared types
+  (Codebase.Spec R-21): Core has no types, so they share the object and the js target its codec. -/
+def Cli.sharedBindings (dir : Text) (ns : Map Text Entry) (batch : Batch) : {IO} List Text :=
+  match Map.lookup "Js.import" ns with
+  | Option.some (Entry.term jsImport) =>
+      let declared := fun name h =>
+        match List.find
+          (fun pair => fst pair == h && Option.map asText (metaField (Option.some (snd pair)) "owner") == Option.some name)
+          (Batch.metas batch) with
+        | Option.some pair => metaField (Option.some (snd pair)) "sig"
+        | Option.none => Option.bind
+            (readMeta dir h)
+            (fun meta => metaField (Option.some (metaFor name meta)) "sig")
+      let objectOf := fun h =>
+        match List.find (fun pair => fst pair == h) batch.objects with
+        | Option.some pair => Option.some (snd pair)
+        | Option.none => readObject dir h
+      dedup (sort (concatMap (fun pair =>
+        match pair with
+        | (name, Entry.term h) =>
+            match objectOf h with
+            | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
+                match importOf jsImport core with
+                | Option.some _ =>
+                    let mine := declared name h
+                    let others := List.filter
+                      (fun other => fst other != name && Entry.hash (snd other) == h && declared (fst other) h != mine)
+                      (Map.toList ns)
+                    List.map
+                      (fun other => if name < fst other then name ++ " and " ++ fst other else fst other ++ " and " ++ name)
+                      others
+                | Option.none => []
+            | _ => []
+        | _ => []) batch.entries))
+  | _ => []
 
 def Cli.short (h : Text) : Text := if startsWith "#" h then h else "#" ++ Text.take 10 h
 

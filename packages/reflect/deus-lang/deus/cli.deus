@@ -266,6 +266,36 @@ def nameCallee (ns : Map Text Entry) (message : Text) : Text :=
     | some (name, _) => Text.take (start - 1) message ++ name ++ Text.drop (start + 10) message
     | none => message
 
+/--
+  Pairs of names in `ns` that bind one `Js.import` object of `batch` at different declared types
+  (Codebase.Spec R-21): Core has no types, so they share the object and the js target its codec.
+-/
+def sharedBindings (dir : Text) (ns : Map Text Entry) (batch : Batch) : {IO} List Text :=
+  match Map.lookup "Js.import" ns with
+  | some (Entry.term jsImport) =>
+    let declared := fun (name : Text) (h : Text) =>
+      match List.find (fun pair => fst pair == h && Option.map Sexp.asText (Codebase.metaField (some (snd pair)) "owner") == some name) batch.metas with
+      | some pair => Codebase.metaField (some (snd pair)) "sig"
+      | none => Option.bind (Codebase.readMeta dir h) (fun meta => Codebase.metaField (some (Codebase.metaFor name meta)) "sig")
+    let objectOf := fun (h : Text) =>
+      match List.find (fun pair => fst pair == h) batch.objects with
+      | some pair => some (snd pair)
+      | none => Codebase.readObject dir h
+    List.dedup (List.sort (List.concatMap (fun pair =>
+      match pair with
+      | (name, Entry.term h) =>
+        match objectOf h with
+        | some (Sexp.list [Sexp.sym "term", core]) =>
+          match JsGen.importOf jsImport core with
+          | some _ =>
+            let mine := declared name h
+            let others := List.filter (fun other => fst other != name && Entry.hash (snd other) == h && declared (fst other) h != mine) (Map.toList ns)
+            List.map (fun other => if name < fst other then name ++ " and " ++ fst other else fst other ++ " and " ++ name) others
+          | none => []
+        | _ => []
+      | _ => []) batch.entries))
+  | _ => []
+
 /-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
 def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -279,7 +309,9 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let trespasses := match Project.read dir with
     | some p => Project.trespasses p entries
     | none => []
+  let shared := sharedBindings dir (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns batch.entries) batch
   if not (List.isEmpty crossings) then throw ("a layer may not depend on these:\n  " ++ Text.join "\n  " crossings)
+  else if not (List.isEmpty shared) then throw ("these bindings share one object, so they would share one codec; give each its own path or one type:\n  " ++ Text.join "\n  " shared)
   else if not (List.isEmpty trespasses) then throw ("only a library may mint types under its IRI:\n  " ++ Text.join "\n  " trespasses)
   else if not isUpdate && not (List.isEmpty replaced) then
     throw ("these names already exist; use `deus update`:\n  " ++ Text.join "\n  " (List.map (fun c =>

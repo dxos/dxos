@@ -179,6 +179,9 @@ def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
 test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (headOf dir "main") ==
   Causal.mk "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595" [] "init" "" "" "" "")
 
+/-- A stand-in for `Js.import`, which the js target recognizes by name. -/
+def Codebase.Spec.jsLib : Text := "def Js.import (module : Text) (path : Text) : a := Js.import module path\n"
+
 /-- R-18: a structure that gains a field keeps its other members, and an unrelated name under it stays. -/
 test Codebase.Spec.keptMembersStay := inStore (fun dir =>
   cliUpdate dir "structure A.P where\n  x : Int\ndef A.P.origin : Int := 0\n"
@@ -291,6 +294,27 @@ test Codebase.Spec.sameFieldsKeepTheOwner := inStore (fun dir =>
 /-- R-15: the same source again changes nothing. -/
 test Codebase.Spec.sameMetadataUnlisted := inStore (fun dir => metaChanges dir (updated dir Map.empty "/-- One. -/\ndef A.f := 1\n") "/-- One. -/\ndef A.f := 1\n" ==
   [])
+
+/-- R-21: two names for one import at one type are aliases and are kept. -/
+test Codebase.Spec.sameTypedBindingsKept := inStore (fun dir =>
+  let ns := cliUpdate dir (jsLib ++
+    "def A.one : Text -> Text := Js.import \"m\" \"id\"\ndef A.two : Text -> Text := Js.import \"m\" \"id\"\n")
+  Map.contains "A.one" ns && Map.contains "A.two" ns)
+
+/-- R-21: in one batch, two bindings of the same import at different types are refused. -/
+test Codebase.Spec.sharedBindingInOneBatchRefused := inStore (fun dir =>
+  match try (fun _ => cliUpdate
+    dir
+    (jsLib ++ "def A.t : Text := Js.import \"m\" \"v\"\ndef A.n : Int := Js.import \"m\" \"v\"\n")) with
+  | Result.err message => Text.contains "A.t" message && Text.contains "A.n" message
+  | Result.ok _ => false)
+
+/-- R-21: `A.text` and `A.list` bind the same import at different types; the second is refused, naming both. -/
+test Codebase.Spec.sharedBindingRefused := inStore (fun dir =>
+  cliUpdate dir (jsLib ++ "def A.text : Text -> Text := Js.import \"m\" \"id\"\n")
+  match try (fun _ => cliUpdate dir (jsLib ++ "def A.list : Int -> Int := Js.import \"m\" \"id\"\n")) with
+  | Result.err message => Text.contains "A.list" message && Text.contains "A.text" message && Map.lookup "A.list" (Codebase.current dir) == Option.none
+  | Result.ok _ => false)
 
 /-- R-16: two docs for one body, added together. -/
 test Codebase.Spec.sharedHashKeepsEachDoc := inStore (fun dir =>

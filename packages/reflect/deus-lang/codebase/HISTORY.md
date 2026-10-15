@@ -1,5 +1,16 @@
 # History of main
 
+- `60828a4bb9` task: comment on 1e8dee8b (by claude)
+- `8c1694713e` task: set 1e8dee8b state (by claude)
+- `42361c1c86` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bindlaws.deus (by claude)
+- `ce89785fda` delete Dbg.c
+- `a6c74a0d15` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `365257a236` update deus (by claude)
+- `fe9084726c` delete Dbg.b
+- `37596426cb` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bindlaws.deus (by claude)
+- `d6f18e5355` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `30e1fec0f3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
+- `703210fae4` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bindlaws.deus (by claude)
 - `5d6c5f8da5` task: comment on 79f72c44 (by claude)
 - `a94d082273` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/freshlaw.deus (by claude)
 - `13eee916cd` delete Dbg.fresh

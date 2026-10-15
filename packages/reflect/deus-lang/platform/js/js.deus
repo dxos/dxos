@@ -3,8 +3,9 @@
 
   A binding is a definition whose body is `Js.import "<module>" "<path>"` and whose signature
   gives its type; values cross through codecs chosen from that type. The hash of a definition is
-  its body's, so two bindings of one module and path are one definition with one type: the
-  conversions below each name their own path (`js.as.<name>`) for that reason.
+  its body's, so two bindings of one module and path are one definition with one type, and
+  `deus update` refuses them at different types (D159): the conversions below each name their own
+  path (`js.as.<name>`) for that reason.
 
     def React.useState : a -> (a, a -> Unit) := Js.import "react" "useState"
 
