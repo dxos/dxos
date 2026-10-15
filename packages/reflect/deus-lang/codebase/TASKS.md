@@ -63,14 +63,6 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
-## Updating one member of a recursive group leaves dependents pointing at the old group (`f308d451`)
-
-- state: todo
-- priority: high
-- labels: codebase, bug
-
-Seen 2026-10-15: deus update deus/cli.deus (adding Cli.explorerDemo, Cli.isToolchainRemote) reported Workspace.Spec dependents as rehashed, yet Artifact.Spec and Workspace.Spec still referenced the old Cli group (export printed Cli.dispatch, Cli.withWorkspace and Cli.evaluate as #60ee93715e). Update propagation seems to map members of a changed cycle group by index, not by name, so a group whose membership changes leaves stale refs. Workaround: re-update the dependent files from the export (deus update code/Artifact.deus code/Workspace.deus). Check: diff codebase/code against git after every update of a file in a large group.
-
 ## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
 
 - state: todo
@@ -807,6 +799,16 @@ From Dmytro: explore interop with ts and generating typescript binding types.
 From Dmytro: explore interop with ts and generating typescript binding types.
 
 > claude: Done (D79): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
+
+## Updating one member of a recursive group leaves dependents pointing at the old group (`f308d451`)
+
+- state: done
+- priority: high
+- labels: codebase, bug
+
+Seen 2026-10-15: deus update deus/cli.deus (adding Cli.explorerDemo, Cli.isToolchainRemote) reported Workspace.Spec dependents as rehashed, yet Artifact.Spec and Workspace.Spec still referenced the old Cli group (export printed Cli.dispatch, Cli.withWorkspace and Cli.evaluate as #60ee93715e). Update propagation seems to map members of a changed cycle group by index, not by name, so a group whose membership changes leaves stale refs. Workaround: re-update the dependent files from the export (deus update code/Artifact.deus code/Workspace.deus). Check: diff codebase/code against git after every update of a file in a large group.
+
+> claude: Fixed (D154, Codebase.Spec R-20): propagate rewrote a dependent from old hash to the batch's hash, which the same propagation then rehashed again; it now maps old to the final hash.
 
 ## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
 

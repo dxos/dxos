@@ -180,5 +180,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 170 | 10-15 06:10 | 30m 00s | `4d837718` | Binary embeds (task 88004c30 done, Artifact.Spec R-10, an @[integration] law that runs `sha256sum`, `cp` and `od` for real): `deus embed --bytes` keeps the file as it is and its kept value is one text decoded by `Embed.fromLatin1`, after a 3 KB nested list overflowed the kernel (D152). Filed dda00bb4: a definition's type is per hash, so `def T.id (n : Int) : Int := n` views as `a -> a`. |
 | 171 | 10-15 06:40 | 30m 00s | `91418d7a` | Profiled the native interpreter on the toolchain's 199 tests (task b73b475d): fresh memory for environments and blocks is the cost, not dispatch, environment walks or page faults; bulk prefaulting and huge pages did not help |
 | 172 | 10-15 06:35 | 25m 00s | this commit | A shared hash shows each name its declared type (task dda00bb4, View.Spec R-4): `Embed.text` and `Embed.bytes` printed `Text -> a`, the generalized scheme callers check against (D116), and now print `Text -> Text` and `Text -> List Int` (D153). All 253 spec blocks pass; the native test that printed the shared scheme now expects the declared one. |
+| 173 | 10-15 06:55 | 20m 00s | this commit | Stale references after a recursive group gains a member (task f308d451, Codebase.Spec R-20): a dependent kept the batch's intermediate hash of the member it called, so the export grew `Unnamed.deus`; propagation now follows that hash to its final one (D154). |
 
-Total from stage 1 to stage 172: 43h 42m.
+Total from stage 1 to stage 173: 44h 02m.

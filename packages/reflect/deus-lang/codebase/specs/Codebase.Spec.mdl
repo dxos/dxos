@@ -207,6 +207,16 @@ req R-19: an update whose change leaves a dependent outside it ill-typed fails, 
   by: Codebase.Spec.illTypedDependentFails | Codebase.Spec.welltypedDependentFollows
 ```
 
+A recursive group is hashed as one cycle, so changing one member gives every member a new hash. When the
+change brings a new member into the group, the batch's hashes are not final: the old members it calls
+are rehashed, and the batch's members are rehashed again after them. A dependent outside the group must
+follow the final hashes, not the batch's (task f308d451).
+
+```mdl
+req R-20: after an update adds a member to a recursive group, every dependent outside the group references only current hashes
+  by: Codebase.Spec.groupGainsAMember
+```
+
 ```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict

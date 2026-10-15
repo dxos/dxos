@@ -1,5 +1,10 @@
 # History of main
 
+- `6449078bac` task: set f308d451 state (by claude)
+- `f82625cacf` task: comment on f308d451 (by claude)
+- `e13a50a478` update deus (by claude)
+- `3f7fbc02f8` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/grouplaw.deus (by claude)
+- `80c96e9826` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
 - `112cea84f2` update deus (by merge)
 - `c4f24f4f18` history: import 1124 changes
 - `dfc806fcb0` history: import 1122 changes

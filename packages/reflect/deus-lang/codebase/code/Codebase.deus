@@ -144,6 +144,21 @@ def Codebase.Spec.forked (sideChanges : Map Text Entry -> Map Text Entry) (mainC
   let result := Codebase.merge dir "side"
   (result, Codebase.current dir)
 
+/-- R-20: `A.a` joins the cycle of `A.f` and `A.g`; `B.h`, which calls `A.f`, then references current hashes only. -/
+test Codebase.Spec.groupGainsAMember := inStore (fun dir =>
+  cliUpdate
+    dir
+    "def A.f (n : Int) : Int := if n <= 0 then 0 else A.g (n - 1)\ndef A.g (n : Int) : Int := if n <= 0 then 1 else A.f (n - 1)\ndef B.h (n : Int) : Int := A.f n + 100\n"
+  let ns := cliUpdate
+    dir
+    "def A.f (n : Int) : Int := if n <= 0 then 0 else A.a (n - 1)\ndef A.a (n : Int) : Int := if n <= 0 then 3 else A.g (n - 1)\n"
+  let current := Set.fromList (List.map (fun pair => Entry.hash (snd pair)) (Map.toList ns))
+  match Map.lookup "B.h" ns with
+  | Option.some e => List.all
+      (fun d => Set.contains d current)
+      (Codebase.dependencies (getOr (readObject dir (Entry.hash e)) (Sexp.list [])))
+  | Option.none => false)
+
 /-- R-19: `A.g` calls `A.f` at Int; changing `A.f` to take and return Text refuses the update and keeps the old `A.f`. -/
 test Codebase.Spec.illTypedDependentFails := inStore (fun dir =>
   let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"

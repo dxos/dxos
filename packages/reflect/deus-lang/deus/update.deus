@@ -138,7 +138,12 @@ def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh 
         let h := Entry.hash (snd pair)
         if Set.contains h affected && not (Map.contains h m) then Map.insert h (fst pair) m else m) Map.empty candidates
       let grownMap := List.foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) Map.empty (Map.toList canonical)
-      let rewriteMap := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) subst (Map.toList grownMap)
+      -- A batch hash that is itself rehashed (a group that gained a member, R-20) is not final: follow it on.
+      let settled := Map.fromList (List.map (fun pair =>
+        match Map.lookup (snd pair) canonical with
+        | some name => (fst pair, "@" ++ name)
+        | none => pair) (Map.toList subst))
+      let rewriteMap := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) settled (Map.toList grownMap)
       let pending := List.map (fun pair =>
         match pair with
         | (h, name) => pendingOf name (Codebase.rewrite (objectOf h) (if Set.contains h fresh then grownMap else rewriteMap))) (Map.toList canonical)
