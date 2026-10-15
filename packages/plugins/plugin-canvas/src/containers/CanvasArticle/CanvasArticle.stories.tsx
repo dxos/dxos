@@ -14,7 +14,7 @@ import { random } from '@dxos/random';
 import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { createCanvas, nodeKey, rootOf } from '#model';
+import { createCanvas, linkKey, nodeKey, rootOf } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
@@ -48,8 +48,53 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// A -> B -> C: three boxes in a row joined by smart lines, enough of a drawing to see the shapes, links and theme.
+const seedBasic = (_db: Database.Database, canvas: Drawing.Canvas) => {
+  const scene = rootOf(canvas.content);
+  const box = (id: string, x: number, z: string) => ({
+    kind: 'node',
+    scene,
+    node: {
+      id,
+      type: 'rect',
+      z,
+      label: id.toUpperCase(),
+      center: { x, y: 0 },
+      size: { width: 4 * DEFAULT_CELL, height: 2 * DEFAULT_CELL },
+    },
+  });
+  const link = (source: string, target: string, z: string) => ({
+    kind: 'link',
+    scene,
+    link: {
+      id: `${source}-${target}`,
+      type: 'smart',
+      z,
+      source: { node: source },
+      target: { node: target },
+      ends: { end: 'arrow' },
+    },
+  });
+  Obj.update(canvas, (canvas) => {
+    canvas.content[nodeKey('a')] = box('a', -384, 'a1');
+    canvas.content[nodeKey('b')] = box('b', 0, 'a2');
+    canvas.content[nodeKey('c')] = box('c', 384, 'a3');
+    canvas.content[linkKey('a-b')] = link('a', 'b', 'a4');
+    canvas.content[linkKey('b-c')] = link('b', 'c', 'a5');
+  });
+};
+
 export const Default: Story = {
-  decorators: withDrawing(),
+  decorators: withDrawing(seedBasic),
+};
+
+/**
+ * Test:
+ * 1. The scene view mounts through the illustrator's article surface.
+ * 2. The navigation, action and debug toolbars and the palette all show.
+ */
+export const Test: Story = {
+  decorators: withDrawing(seedBasic),
   play: async ({ canvasElement }) => {
     // The scene view mounts only once the illustrator has resolved the canvas variant's article.
     await expect(

@@ -115,7 +115,7 @@ export const ThemeBar = ({
   onGridChange,
 }: ThemeBarProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
-  <Toolbar.Root size='sm' classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
+  <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
       <Menu.Trigger asChild disabled={!onThemeChange}>
         <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
