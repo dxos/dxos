@@ -85,7 +85,14 @@ const encoder = () => {
   return { ffmpeg: bundled, format: 'webm' };
 };
 
-const { ffmpeg, format } = encoder();
+const { ffmpeg, format: available } = encoder();
+// An `--out` file's extension picks the container; otherwise the best the encoder can do.
+const asked = options.out && path.extname(options.out).slice(1);
+const format = asked === 'webm' || asked === 'mp4' ? asked : available;
+if (format === 'mp4' && available !== 'mp4') {
+  console.error('MP4 needs an ffmpeg that can encode H.264; write a .webm instead.');
+  process.exit(1);
+}
 const out = path.resolve(options.out ?? path.join('temp', `${options.story}.${format}`));
 mkdirSync(path.dirname(out), { recursive: true });
 
@@ -93,7 +100,26 @@ mkdirSync(path.dirname(out), { recursive: true });
 const codec =
   format === 'mp4'
     ? ['-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']
-    : ['-c:v', 'libvpx', '-b:v', '0', '-crf', '8', '-qmin', '0', '-qmax', '20', '-deadline', 'good', '-cpu-used', '1'];
+    : available === 'mp4'
+      ? // A full ffmpeg: VP9 at constant quality, as Autocue encodes.
+        ['-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '24', '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2']
+      : // Playwright's ffmpeg, which has only VP8.
+        [
+          '-c:v',
+          'libvpx',
+          '-b:v',
+          '0',
+          '-crf',
+          '8',
+          '-qmin',
+          '0',
+          '-qmax',
+          '20',
+          '-deadline',
+          'good',
+          '-cpu-used',
+          '1',
+        ];
 const encoding = spawn(
   ffmpeg,
   [

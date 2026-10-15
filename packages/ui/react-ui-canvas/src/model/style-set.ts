@@ -279,7 +279,13 @@ export const PAPER_THEME: Theme = { id: 'paper', name: 'Paper', styleSet: 'glass
 export const FLAT_THEME: Theme = { id: 'flat', name: 'Flat', styleSet: 'flat', background: 'dots' };
 
 /** Glass shapes on the bare dark canvas, with no washes or grid. */
-export const NIGHT_THEME: Theme = { id: 'night', name: 'Neon', styleSet: 'glass', background: 'plain', mode: 'dark' };
+export const NIGHT_THEME: Theme = {
+  id: 'night',
+  name: 'Plastic',
+  styleSet: 'glass',
+  background: 'plain',
+  mode: 'dark',
+};
 
 export const OUTLINE_THEME: Theme = { id: 'outline', name: 'Outline', styleSet: 'outline', background: 'lines' };
 

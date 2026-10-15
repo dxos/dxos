@@ -51,7 +51,9 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
   const scene = scenes[index];
   // While it plays, every panel stays out of the picture unless the pointer is over the diagram.
   const [hovered, setHovered] = useState(false);
-  const chrome = !playing || hovered;
+  // Reaching the last scene stops the timer but is not a pause: the panels stay away until someone pauses or hovers.
+  const [ended, setEnded] = useState(false);
+  const chrome = hovered || (!playing && !ended);
   // Faded on animation frames rather than by CSS, so a frame-by-frame render steps them with everything else.
   const captionOpacity = useTween(shown ? 1 : 0, FADE);
   const diagramOpacity = useTween(shown || morphing ? 1 : 0, FADE);
@@ -78,6 +80,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
     }
     if (index === scenes.length - 1) {
       setPlaying(false);
+      setEnded(true);
       return;
     }
     const timer = setTimeout(() => go(index + 1), scene.duration * 1000);

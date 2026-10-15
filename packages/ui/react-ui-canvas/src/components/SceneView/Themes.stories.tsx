@@ -116,7 +116,7 @@ export const Classic: Story = {};
 
 export const Glass: Story = { args: { theme: 'glass-night' } };
 
-export const Neon: Story = { args: { theme: 'night' } };
+export const Plastic: Story = { args: { theme: 'night' } };
 
 export const Paper: Story = { args: { theme: 'paper' } };
 

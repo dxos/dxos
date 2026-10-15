@@ -1338,11 +1338,12 @@ export class DataFlowSimulation {
       const sites = molecule.atoms.map((atom) => hexAdd(anchor, atom));
       const fits = sites.every((site) => {
         const point = add(grid.origin, hexToPoint(site, grid.spacing));
+        // One lattice step in from the lattice's edge on every side, so no molecule touches the outer row or column.
         const inside =
-          point.x >= grid.bounds.x &&
-          point.x <= grid.bounds.x + grid.bounds.width &&
-          point.y >= grid.bounds.y &&
-          point.y <= grid.bounds.y + grid.bounds.height;
+          point.x >= grid.bounds.x + grid.spacing &&
+          point.x <= grid.bounds.x + grid.bounds.width - grid.spacing &&
+          point.y >= grid.bounds.y + row &&
+          point.y <= grid.bounds.y + grid.bounds.height - row;
         return inside && [site, ...hexNeighbours(site)].every((near) => !homes.has(hexKey(near)));
       });
       if (fits) {
@@ -1608,9 +1609,14 @@ export class DataFlowSimulation {
     body.cleared = false;
     body.distance = pathLength(body.cursor, body.route);
     body.travelled = 0;
-    const last = body.route.length > 1 ? body.route[body.route.length - 2] : body.cursor;
-    const target = body.route[body.route.length - 1];
-    body.settle = body.distance - Math.hypot(target.x - last.x, target.y - last.y);
+    // The final drop, which the molecule takes its landing shape over, is the last leg that has any length: a closing leg
+    // of none would leave no drop at all, and the molecule would change shape the moment it set off.
+    const points = [body.cursor, ...body.route];
+    let drop = 0;
+    for (let index = points.length - 1; index > 0 && drop < 0.01; index--) {
+      drop = Math.hypot(points[index].x - points[index - 1].x, points[index].y - points[index - 1].y);
+    }
+    body.settle = body.distance - drop;
   }
 
   /**

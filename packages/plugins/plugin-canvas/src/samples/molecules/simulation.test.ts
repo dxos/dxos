@@ -163,11 +163,17 @@ describe('simulation', () => {
 
   test('leaves no docked molecule without a bond once the lattice has more than one', ({ expect }) => {
     const simulation = new DataFlowSimulation(layoutDataFlow(SPEC), { seed: 4, sinkLifetime: 5 });
-    run(simulation, 40);
-    const sink = simulation.bodies.filter((body) => body.zone === 'sink' && body.phase === 'docked');
-    expect(sink.length).toBeGreaterThan(1);
-    // The sink grows from one seed, which alone may stand without a bond (a bond to a molecule still on its way counts).
-    expect(sink.filter((body) => !simulation.bonded(body.id)).length).toBeLessThanOrEqual(1);
+    run(simulation, 20);
+    // Checked every second for a while, since decay can empty a short-lived sink at any one moment.
+    let most = 0;
+    for (let second = 0; second < 20; second++) {
+      run(simulation, 1);
+      const sink = simulation.bodies.filter((body) => body.zone === 'sink' && body.phase === 'docked');
+      most = Math.max(most, sink.length);
+      // The sink grows from one seed, which alone may stand without a bond (a bond to a molecule still on its way counts).
+      expect(sink.filter((body) => !simulation.bonded(body.id)).length).toBeLessThanOrEqual(1);
+    }
+    expect(most).toBeGreaterThan(1);
   });
 
   test('runs every molecule down the middle of its channel', ({ expect }) => {
