@@ -243,7 +243,7 @@ export type Arrivals = {
 };
 
 /** The hub stretches over this first share of a relayout; agents then arrive, and sources after them. */
-const GROWTH = 0.6;
+const GROWTH = 0.3;
 const FADE = 0.15;
 const PHASES = { sinks: 0.2, sources: 0.45 } as const;
 const STAGGER = 0.4;

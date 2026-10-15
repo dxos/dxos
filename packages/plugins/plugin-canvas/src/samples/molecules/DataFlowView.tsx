@@ -35,8 +35,12 @@ const PARTITION_MS = 3000;
 const RELAYOUT_MS = 8000;
 
 /** How far into a growing relayout the hub has passed the edges of the view, and the pan that then sets off along it. */
-const DRIFT_START = 0.3;
+const DRIFT_START = 0.2;
 const DRIFT = { x: 40, y: 0 };
+
+/** How far past the hub's old edges the focus reaches (roughly the camera's margin), and how often it is moved. */
+const FOCUS_MARGIN = 160;
+const FOCUS_TICK = 250;
 
 /** Runs linearly from 0 to 1 over `duration` ms each time `key` changes (each phase of it eases itself); 1 while none. */
 const useRun = (key: number | undefined, duration: number): number => {
@@ -211,6 +215,24 @@ export const DataFlowView = ({
   // Once a growing hub has passed the edges of the view, the view sets off rightward along it, and keeps going.
   const drifting =
     relayout !== undefined && relayout.from.hub.frame.width < layout.hub.frame.width && moved >= DRIFT_START;
+  // While the view pans, the stretch on screen is the simulation's focus: it starts as the hub as it was (what the camera
+  // framed) and slides along at the pan's speed, so what is in view is where molecules are made and used.
+  useEffect(() => {
+    if (!drifting || !relayout) {
+      simulation.focus(undefined);
+      return;
+    }
+    const { frame } = relayout.from.hub;
+    const started = performance.now();
+    const timer = setInterval(() => {
+      const travelled = (DRIFT.x * (performance.now() - started)) / 1000;
+      simulation.focus({
+        left: frame.x - FOCUS_MARGIN + travelled,
+        right: frame.x + frame.width + FOCUS_MARGIN + travelled,
+      });
+    }, FOCUS_TICK);
+    return () => clearInterval(timer);
+  }, [drifting, relayout, simulation]);
   useLayoutEffect(() => {
     const scene = createDataFlowScene(layout, revealed);
     registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });

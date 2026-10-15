@@ -294,6 +294,13 @@ const TINT_TIME = 1.5;
 const SOURCE_BOOST = 2;
 const SOURCE_RAMP = 2;
 
+/** The sinks a diagram's write-up pace is set for; with more, writes come that much more often. */
+const BASE_SINKS = 4;
+
+/** How much faster sources in the focus supply (and apps in it write), and the share of traffic its sinks draw. */
+const FOCUS_BOOST = 2;
+const FOCUS_SHARE = 0.8;
+
 /** Molecules tried when seeding a bucket a relayout adds, so it arrives part full. */
 const SEED_MOLECULES = 14;
 
@@ -765,6 +772,8 @@ export class DataFlowSimulation {
   #bodies: Body[] = [];
   #time = 0;
   #serial = 0;
+  /** The stretch of the diagram on screen, where activity is stepped up; unset, none is singled out. */
+  #focus?: { left: number; right: number };
   /** Most molecules the hub holds: the option's figure, scaled up as a relayout adds buckets, so new ones crowd none out. */
   #hubCapacity = 0;
   /** When each source a relayout added came into play, by source; the first sources have none. */
@@ -1158,7 +1167,35 @@ export class DataFlowSimulation {
     const present = Array.from({ length: this.#agents }, (_, agent) => agent).filter(
       (agent) => this.#agentSince[agent] <= this.#time,
     );
-    return present.length > 0 ? present[Math.floor(this.#random() * present.length)] : undefined;
+    // Mostly one in the focus, when any is, so what is on screen is where the activity is.
+    const focused = present.filter((agent) => this.#focused(this.#layout.sinks[agent]));
+    const pool = focused.length > 0 && this.#random() < FOCUS_SHARE ? focused : present;
+    return pool.length > 0 ? pool[Math.floor(this.#random() * pool.length)] : undefined;
+  }
+
+  /**
+   * Seconds between writes up from the sinks: one timer serves them all, so it runs faster as there are more of them
+   * (each keeps the pace the first four had), and faster again while the view is panning along a focus.
+   */
+  #upInterval(): number {
+    const sinks = Math.max(1, this.#layout.sinks.length / BASE_SINKS);
+    return this.#options.upInterval / sinks / (this.#focus ? 1 + FOCUS_BOOST : 1);
+  }
+
+  /**
+   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Sources in it supply faster
+   * and its apps and agents get more of the traffic; unset, every block is treated alike.
+   */
+  focus(range: { left: number; right: number } | undefined): void {
+    this.#focus = range;
+  }
+
+  #focused(block: Block | undefined): boolean {
+    if (!this.#focus || !block) {
+      return false;
+    }
+    const centre = block.frame.x + block.frame.width / 2;
+    return centre >= this.#focus.left && centre <= this.#focus.right;
   }
 
   /**
@@ -1223,8 +1260,10 @@ export class DataFlowSimulation {
       }
       // A source a relayout added comes up to speed fast, then supplies faster than the first ones did.
       const since = this.#sourceSince[index];
-      const boost =
+      const ramp =
         since === undefined ? 0 : SOURCE_BOOST * Math.min(1, Math.max(0, (this.#time - since) / SOURCE_RAMP));
+      // A source in the focus (the part of the diagram on screen) supplies faster still.
+      const boost = ramp + (this.#focused(this.#layout.sources[index]) ? FOCUS_BOOST : 0);
       const interval = this.#options.interval / (1 + boost);
       this.#nextSpawn[index] = this.#time + between(this.#random, 0.7 * interval, 1.3 * interval);
       if (this.#waiting(index) >= this.#options.perSource * (1 + Math.round(boost))) {
@@ -1359,7 +1398,7 @@ export class DataFlowSimulation {
     if (agent !== undefined && this.#layout.sinks[agent]?.app) {
       // An app in a silo writes back to its own source; behind a hub, it waits until the hub is syncing.
       if ((this.#layout.silos || this.#syncing) && this.#time >= this.#nextUp) {
-        const interval = this.#options.upInterval;
+        const interval = this.#upInterval();
         this.#nextUp = this.#time + between(this.#random, 0.7 * interval, 1.3 * interval);
         if (this.#layout.silos) {
           this.#appWriteBack(agent);
@@ -1374,7 +1413,7 @@ export class DataFlowSimulation {
     if (agent === undefined || !sink || !sinkGrid || !this.#syncing || this.#time < this.#nextUp) {
       return;
     }
-    const interval = this.#options.upInterval;
+    const interval = this.#upInterval();
     this.#nextUp = this.#time + between(this.#random, 0.7 * interval, 1.3 * interval);
     const source = Math.floor(this.#random() * this.#layout.sources.length);
     const serial = this.#serial++;
