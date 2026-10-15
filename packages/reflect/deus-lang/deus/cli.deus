@@ -1538,12 +1538,13 @@ def linkReport (dir : Text) (ns : Map Text Entry) (a : Attachment) : {IO, Throw 
     (Json.obj [("definition", Json.str name), ("hash", Json.str h), ("current", Option.getOr (Option.map Json.str now) Json.null), ("changes", Json.arr (List.map (changeJson dir) changes))],
       ("  " ++ name ++ "  " ++ short h ++ state) :: List.map (fun c => "  " ++ changeLine dir c) changes)
 
-/-- The options of `task new` / `task set` that name task fields, applied in order. -/
-def applyFields (args : Args) (t : Task) : {Throw Text} Task :=
-  List.foldl (fun acc field =>
+/-- The options of `task new` / `task set` that name task fields, applied in order; a `--parent` must name another task (Tasks.Spec R-8). -/
+def applyFields (args : Args) (tasks : Map Text Task) (t : Task) : {Throw Text} Task :=
+  let set := List.foldl (fun acc field =>
     match option args field with
     | some value => Tasks.setField acc field value
     | none => acc) t Tasks.fields
+  if Option.isSome (option args "parent") then Tasks.resolveParent tasks set else set
 
 /--
   `deus task …` (D59): issues kept in the codebase, attached to definitions and changes.
@@ -1564,7 +1565,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     let title := Text.join " " words
     if Text.isEmpty title then throw "usage: deus task new <title…>"
     else
-      let t := applyFields args (Tasks.blank (Tasks.freshId dir title author) title)
+      let t := applyFields args tasks (Tasks.blank (Tasks.freshId dir title author) title)
       let linked := match option args "link" with
         | some name =>
           match lookupName (Codebase.current dir) name with
@@ -1616,7 +1617,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     let unknown := List.filter (fun key => not (List.contains key (Tasks.fields ++ ["codebase", "by", "json", "quiet"]))) (Map.keys args.options)
     if not (List.isEmpty unknown) then throw ("unknown task field " ++ Text.join ", " unknown ++ "; the fields are " ++ Text.join ", " Tasks.fields)
     else
-      let t := applyFields args (Tasks.find tasks id)
+      let t := applyFields args tasks (Tasks.find tasks id)
       saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
   | "comment" :: id :: words =>
     let t := Tasks.find tasks id

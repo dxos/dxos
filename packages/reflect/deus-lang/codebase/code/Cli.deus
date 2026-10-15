@@ -103,11 +103,13 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
         let lines := addedLines ++ updatedLines ++ removedLines ++ metadataLines ++ propagatedLines
         if List.isEmpty lines then "Nothing changed." else join "\n" lines)
 
-/-- The options of `task new` / `task set` that name task fields, applied in order. -/
-def Cli.applyFields (args : Args) (t : Task) : {Throw Text} Task := foldl (fun acc field =>
-  match option args field with
-  | Option.some value => setField acc field value
-  | Option.none => acc) t Tasks.fields
+/-- The options of `task new` / `task set` that name task fields, applied in order; a `--parent` must name another task (Tasks.Spec R-8). -/
+def Cli.applyFields (args : Args) (tasks : Map Text Task) (t : Task) : {Throw Text} Task :=
+  let set := foldl (fun acc field =>
+    match option args field with
+    | Option.some value => setField acc field value
+    | Option.none => acc) t Tasks.fields
+  if isSome (option args "parent") then resolveParent tasks set else set
 
 /-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
 def Cli.asset (args : Args) : {IO, Throw Text} Unit :=
@@ -1539,7 +1541,7 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
   | "new" :: words =>
       let title := join " " words
       if Text.isEmpty title then Throw.throw "usage: deus task new <title…>" else
-        let t := applyFields args (blank (freshId dir title author) title)
+        let t := applyFields args tasks (blank (freshId dir title author) title)
         let linked :=
           match option args "link" with
           | Option.some name =>
@@ -1596,7 +1598,7 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
         (fun key => not (List.contains key (Tasks.fields ++ ["codebase", "by", "json", "quiet"])))
         (Map.keys args.options)
       if not (List.isEmpty unknown) then Throw.throw ("unknown task field " ++ join ", " unknown ++ "; the fields are " ++ join ", " Tasks.fields) else
-        let t := applyFields args (Tasks.find tasks id)
+        let t := applyFields args tasks (Tasks.find tasks id)
         saved t ("task: set " ++ t.id ++ " " ++
           join " " (List.filter (fun f => Cli.flag args f) Tasks.fields))
   | "comment" :: id :: words =>

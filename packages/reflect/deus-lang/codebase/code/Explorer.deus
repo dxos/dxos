@@ -24,7 +24,8 @@ test Explorer.Spec.commentsAreListed := inSite (fun _ =>
   | _ => false)
 
 test Explorer.Spec.edgesAgree := inStore (fun _ =>
-  site (Spec.sample ++ "\ndef countdown (n : Int) : Int := if n == 0 then 0 else countdown (n - 1)\n")
+  site (Export.Spec.sample ++
+    "\ndef countdown (n : Int) : Int := if n == 0 then 0 else countdown (n - 1)\n")
   let hashes := List.map
     (fun pair => Entry.hash (snd pair))
     (List.filter visible (Map.toList (Codebase.current "cb")))
@@ -70,7 +71,7 @@ test Explorer.Spec.htmlIsEscaped :=
   Text.contains "&lt;" html && Text.contains "&gt;" html && Text.contains "&amp;&amp;" html && Text.contains "&amp; r" html && not (Text.contains " < " html) && not (Text.contains " > " html)
 
 def Explorer.Spec.inSite (body : Unit -> {IO, Throw Text} Bool) : Bool := inStore (fun _ =>
-  site Spec.sample
+  site Export.Spec.sample
   body ())
 
 test Explorer.Spec.inboxOpensTasks := inSite (fun _ =>
@@ -91,7 +92,7 @@ test Explorer.Spec.metaCountsEvents := inStore (fun _ =>
   before && Text.contains "\"events\":1," (Spec.file "meta.json"))
 
 test Explorer.Spec.metaCountsFeatures := inStore (fun _ =>
-  site Spec.sample
+  site Export.Spec.sample
   let before := Text.contains "\"features\":0," (Spec.file "meta.json")
   siteWithFeatures ()
   before && Text.contains "\"features\":2," (Spec.file "meta.json"))
@@ -167,7 +168,7 @@ def Explorer.Spec.siteWithFeatures (u : Unit) : {IO, Throw Text} Int :=
       "mdl\nfeature F-2: Volumes\n  status: planned\n  parent: F-1\n" ++
       fence ++
       "\n")
-  site Spec.sample
+  site Export.Spec.sample
 
 test Explorer.Spec.snapshotSkipsLocalState := inSite (fun _ =>
   forEach ["cache/site/x", "artifacts/a", "assets/0", "remotes/origin/url", "exports/k"] (fun f =>
@@ -202,7 +203,7 @@ test Explorer.Spec.verdictsAreShown := inSite (fun _ =>
 def Explorer.Spec.visibleNames (u : Unit) : {IO, Throw Text} List Text := List.map fst (List.filter visible (Map.toList (Codebase.current "cb")))
 
 /-- The sample codebase with an event type whose `subject` column refers to a definition. -/
-def Explorer.Spec.withEvents : Text := Spec.sample ++
+def Explorer.Spec.withEvents : Text := Export.Spec.sample ++
   "\nstructure CodeRef @\"urn:deus:analytics:CodeRef\" where\n  target : Text\n\n@[event]\nstructure Seen @\"urn:test:Seen\" where\n  subject : CodeRef\n  note : Text\n"
 
 /-- Answers `$DEUS_HOME` with a simulated directory; the rest of `IO` passes through. -/

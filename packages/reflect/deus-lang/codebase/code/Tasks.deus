@@ -1,3 +1,86 @@
+/-- Three tasks: c's parent is b, b's parent is a. -/
+def Tasks.Spec.family : Map Text Task :=
+  let child := fun id parent => Task.mk id id TaskState.todo 0 "" [] parent "" [] []
+  Map.fromList [("aaaa1111", child "aaaa1111" ""), ("bbbb2222", child "bbbb2222" "aaaa1111"), ("cccc3333", child "cccc3333" "bbbb2222")]
+
+/-- R-5: "ab" finds abc12345 while it is the only id starting so; "a" is ambiguous and "z" unknown. -/
+test Tasks.Spec.findsByPrefix :=
+  let tasks := Map.fromList [("abc12345", blank "abc12345" "one"), ("acd00000", blank "acd00000" "two")]
+  let found := fun id =>
+    match try (fun _ => Tasks.find tasks id) with
+    | Result.ok t => Option.some t.title
+    | Result.err _ => Option.none
+  found "ab" == Option.some "one" && found "acd00000" == Option.some "two" && found "a" == Option.none && found "z" == Option.none
+
+/-- R-3: ` a, b ,,c ` sets the labels a, b and c. -/
+test Tasks.Spec.labelsFromAList :=
+  match try (fun _ => setField (blank "a" "A") "labels" " a, b ,,c ") with
+  | Result.ok t => t.labels == ["a", "b", "c"]
+  | Result.err _ => false
+
+/-- R-4: two links to one definition are one link. -/
+test Tasks.Spec.linkIsIdempotent :=
+  let a := Attachment.definition "List.map" "abc"
+  (link (link (blank "a" "A") a) a).links == [a]
+
+/-- R-6: open before closed, urgent before low before none, and titles break ties. -/
+test Tasks.Spec.orderOpenPriorityTitle :=
+  let make := fun title state priority => Task.mk title title state priority "" [] "" "" [] []
+  let sorted := List.map (fun t => t.title) (sortBy
+    order
+    [make "e" TaskState.done 1, make "d" TaskState.todo 0, make "c" TaskState.todo 4, make "b" TaskState.doing 1, make "a" TaskState.todo 1])
+  sorted == ["a", "b", "c", "d", "e"]
+
+/-- The parent `resolveParent` stores when `id`'s parent is set to `parent`; empty when refused. -/
+def Tasks.Spec.parentAfter (id : Text) (parent : Text) : Text :=
+  let t := getOr (Map.lookup id Tasks.Spec.family) (blank id id)
+  match try (fun _ => resolveParent
+    Tasks.Spec.family
+    (Task.mk t.id t.title t.state t.priority t.assignee t.labels parent t.details t.links t.comments)) with
+  | Result.ok resolved => resolved.parent
+  | Result.err _ => ""
+
+/-- R-8: a prefix is stored as the full id, no parent stays none, and an unknown one is refused. -/
+test Tasks.Spec.parentIsResolved := parentAfter "cccc3333" "aaaa" == "aaaa1111" && parentAfter "new00000" "bbbb2222" == "bbbb2222" && parentAfter "cccc3333" "zzzz" == "" && parentAfter "bbbb2222" "" == ""
+
+/-- R-8: a task cannot be its own parent or a child of its descendant. -/
+test Tasks.Spec.parentRefusesCycles := parentAfter "aaaa1111" "aaaa1111" == "" && parentAfter "aaaa1111" "cccc3333" == "" && parentAfter "bbbb2222" "cccc" == ""
+
+/-- Whether `body` throws. -/
+def Tasks.Spec.refused (body : Unit -> {Throw Text} a) : Bool :=
+  match try body with
+  | Result.err _ => true
+  | Result.ok _ => false
+
+/-- A task whose text fields hold `t` and whose priority and state come from `k`. -/
+def Tasks.Spec.sample (t : Text) (k : Int) : Task := Task.mk ("id" ++ toText (k % 97)) t (getOr
+  (get? [TaskState.todo, TaskState.doing, TaskState.done, TaskState.canceled] (k % 4))
+  TaskState.todo) (k % 5) t [t, "x"] "" (t ++ "\n" ++ t) [Attachment.definition t "abc", Attachment.change "def"] [Comment.mk t t "" [Asset.mk "h" "image/png" t]]
+
+/-- R-7: after save, the task is current with its new title. -/
+test Tasks.Spec.savedTaskIsCurrent := inStore (fun dir =>
+  save dir [blank "t1" "first"] "add"
+  save dir [blank "t1" "renamed"] "rename"
+  Option.map (fun t => t.title) (Map.lookup "t1" (Tasks.current dir)) == Option.some "renamed")
+
+/-- R-2: the four states and the priority names and numbers are taken; others are refused. -/
+test Tasks.Spec.statesAndPriorities :=
+  let t := blank "a" "A"
+  let get := fun field value => try (fun _ => setField t field value)
+  List.all
+    (fun s => not (Tasks.Spec.refused (fun _ => setField t "state" s)))
+    ["todo", "doing", "done", "canceled"] && Tasks.Spec.refused (fun _ => setField t "state" "open") && get "priority" "high" == get "priority" "2" && get "priority" "none" == get "priority" "0" && Tasks.Spec.refused (fun _ => setField t "priority" "5") && Tasks.Spec.refused (fun _ => setField t "priority" "-1") && Tasks.Spec.refused (fun _ => setField t "priority" "soon")
+
+/-- R-1: printed and read back, the task is the same. -/
+theorem Tasks.Spec.storedTextReadsBack (t : Text) (k : Int) : Tasks.fromSexp (Sexp.read (Sexp.print (Tasks.toSexp (Tasks.Spec.sample t k)))) ==
+    Tasks.Spec.sample t k := by test 40
+
+/-- R-7: saving the same task again leaves the branch head where it was. -/
+test Tasks.Spec.unchangedSaveWritesNothing := inStore (fun dir =>
+  let first := save dir [blank "t1" "first"] "add"
+  let again := save dir [blank "t1" "first"] "again"
+  first == again)
+
 /-- Tasks linking a definition, by name or by any hash it was linked at. -/
 def Tasks.about (tasks : Map Text Task) (name : Text) (h : Text) : List Task := List.filter (fun t => any (fun a =>
   match a with
@@ -247,6 +330,14 @@ def Tasks.read (dir : Text) (h : Text) : {IO, Throw Text} Task :=
   match readObject dir h with
   | Option.some form => Tasks.fromSexp form
   | Option.none => Throw.throw ("missing task #" ++ h)
+
+/-- `t` with its parent resolved to a full id: another task, found by id or prefix, that is not `t` or below it. -/
+def Tasks.resolveParent (tasks : Map Text Task) (t : Task) : {Throw Text} Task := if Text.isEmpty t.parent then t else
+  let parent := (Tasks.find tasks t.parent).id
+  -- Walking up from the new parent must not reach `t`; the bound stops a cycle already stored.
+  let rec above id steps := if id == t.id then Throw.throw ("task " ++ parent ++ " is " ++ t.id ++ " or below it, so it cannot be its parent") else if Text.isEmpty id || steps > Map.size tasks then () else above (getOr (Option.map (fun p => p.parent) (Map.lookup id tasks)) "") (steps + 1)
+  above parent 0
+  Task.mk t.id t.title t.state t.priority t.assignee t.labels parent t.details t.links t.comments
 
 /-- Writes tasks on the current branch as one change. Returns the new causal hash. -/
 def Tasks.save (dir : Text) (changed : List Task) (message : Text) : {IO, Throw Text} Text :=

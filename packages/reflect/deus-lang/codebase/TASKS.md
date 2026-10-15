@@ -122,6 +122,8 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 
 > claude: Lexer and parser done: Parser.Spec (6 reqs, 10 laws, D144); its R-6 found the unterminated-string column bug. Update is covered by Codebase.Spec R-13..R-19 and replicate by Replicate.Spec. Left: types, prover and check, tasks, image, wasm and C back ends.
 
+> claude: Tasks done: Tasks.Spec (8 reqs, D145); its R-8 found that --parent took any text, kept prefixes as typed and allowed cycles. Left: types, prover and check, image, wasm and C back ends.
+
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo

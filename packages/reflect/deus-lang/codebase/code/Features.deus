@@ -24,7 +24,7 @@ def Features.Spec.problemsOf (props : List (Text, Text)) : List Text :=
   | Result.ok f => Features.problems f Spec.facts
   | Result.err found => found
 
-theorem Features.Spec.renderShowsStatusAndOpenTasks : Features.render family Spec.facts ==
+theorem Features.Spec.renderShowsStatusAndOpenTasks : Features.render Features.Spec.family Spec.facts ==
     "building  F-1  feature F-1\nshipped     F-2  feature F-2\nbuilding      F-3  feature F-3  (1 of 2 tasks open)\nplanned   F-4  feature F-4" := by rfl
 
 theorem Features.Spec.shippedNeedsClosedTasks : Spec.problemsOf [("status", "shipped"), ("tasks", "done1 | open1")] ==
@@ -39,7 +39,7 @@ theorem Features.Spec.statusIsChecked : Spec.problemsOf [("status", "done"), ("t
 theorem Features.Spec.statusIsRequired : Spec.problemsOf [("tasks", "done1")] ==
     ["status: missing (planned, building, shipped or dropped)"] := by rfl
 
-theorem Features.Spec.treeNestsChildren : List.map (fun pair => (fst pair, (snd pair).featureId)) (Features.tree family) ==
+theorem Features.Spec.treeNestsChildren : List.map (fun pair => (fst pair, (snd pair).featureId)) (Features.tree Features.Spec.family) ==
     [(0, "F-1"), (1, "F-2"), (2, "F-3"), (0, "F-4")] := by rfl
 
 theorem Features.Spec.unfinishedWithTaskIsFine : Spec.problemsOf [("status", "planned"), ("tasks", "open1")] == [] := by rfl
