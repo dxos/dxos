@@ -8,10 +8,12 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 
@@ -19,10 +21,17 @@ import { meta } from '#meta';
 // Root
 //
 
-type DiscordSetupRootProps = PropsWithChildren<{ role?: string; error?: string; toolbar?: ReactNode }>;
+type DiscordSetupRootProps = PropsWithChildren<{
+  role?: string;
+  /** An unexpected failure, as a sentence a person can read; shown as an error banner. */
+  error?: string;
+  /** The raw failure behind `error`, shown beneath it for diagnosis. */
+  errorDetail?: string;
+  toolbar?: ReactNode;
+}>;
 
 /** Setting up an agent on Discord: the servers, and the channels routed to the agent. */
-const DiscordSetupRoot = ({ role, error, toolbar, children }: DiscordSetupRootProps) => {
+const DiscordSetupRoot = ({ role, error, errorDetail, toolbar, children }: DiscordSetupRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Panel.Root role={role} data-testid='discord-setup'>
@@ -35,6 +44,11 @@ const DiscordSetupRoot = ({ role, error, toolbar, children }: DiscordSetupRootPr
               <Banner.Root valence='error'>
                 <Banner.Title>{t('discord-setup-error.label')}</Banner.Title>
                 <Banner.Body>{error}</Banner.Body>
+                {errorDetail && (
+                  <Typography.Text tone='muted' mono data-testid='discord-setup-error-detail'>
+                    {errorDetail}
+                  </Typography.Text>
+                )}
               </Banner.Root>
             )}
             {children}
@@ -180,9 +194,64 @@ const DiscordSetupItem = ({ id, icon, label, detail, children }: DiscordSetupIte
 
 DiscordSetupItem.displayName = 'DiscordSetup.Item';
 
+//
+// Empty
+//
+
+type DiscordSetupEmptyProps = PropsWithChildren<{
+  message: string;
+  /** Secondary detail beneath the message, e.g. the raw reason EDGE gave. */
+  detail?: string;
+}>;
+
+/** A section with nothing to list yet: why, and (as children) the action that fills it. */
+const DiscordSetupEmpty = ({ message, detail, children }: DiscordSetupEmptyProps) => (
+  <Layout.Flex column gap='sm' align='start' role='status' data-testid='discord-setup-empty'>
+    <Typography.Text tone='muted'>{message}</Typography.Text>
+    {detail && (
+      <Typography.Text tone='subtle' mono>
+        {detail}
+      </Typography.Text>
+    )}
+    {children}
+  </Layout.Flex>
+);
+
+DiscordSetupEmpty.displayName = 'DiscordSetup.Empty';
+
+//
+// SignIn
+//
+
+type DiscordSetupSignInProps = {
+  busy?: boolean;
+  onConnect?: () => void;
+};
+
+/** The servers section before the user signs in to Discord: what signing in gives, and the button that does it. */
+const DiscordSetupSignIn = ({ busy = false, onConnect }: DiscordSetupSignInProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <DiscordSetupEmpty message={t('discord-setup-servers-empty.label')}>
+      <Button.Root
+        variant='primary'
+        icon='ph--discord-logo--regular'
+        label={t('discord-setup-sign-in.label')}
+        disabled={busy || !onConnect}
+        onClick={() => onConnect?.()}
+        data-testid='discord-setup-sign-in'
+      />
+    </DiscordSetupEmpty>
+  );
+};
+
+DiscordSetupSignIn.displayName = 'DiscordSetup.SignIn';
+
 export const DiscordSetup = {
   Root: DiscordSetupRoot,
   Toolbar: DiscordSetupToolbar,
   List: DiscordSetupList,
   Item: DiscordSetupItem,
+  Empty: DiscordSetupEmpty,
+  SignIn: DiscordSetupSignIn,
 };

@@ -5,7 +5,8 @@
 import * as Predicate from 'effect/Predicate';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
-import { BaseError } from '@dxos/errors';
+import { BaseError, messageOf } from '@dxos/errors';
+import { EdgeCallFailedError } from '@dxos/protocols';
 
 /**
  * Discord returned a non-2xx response. dfx surfaces these as
@@ -101,3 +102,66 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
  * token is unusable, or Discord refused. The message is a reason a person can act on.
  */
 export class DiscordChannelError extends BaseError.extend('DiscordChannelError', 'Discord channel request failed.') {}
+
+/**
+ * EDGE refused a bot request for this caller (HTTP 401 or 403): access the caller lacks rather than an outage, so a
+ * UI shows it as a state, not a failure. The EDGE failure is the `cause`.
+ */
+export class DiscordBotAccessError extends BaseError.extend(
+  'DiscordBotAccessError',
+  'You are not authorised to manage this Discord bot from this space.',
+) {}
+
+/** What a failed EDGE bot request means, by HTTP status, since an unhandled EDGE failure carries only the code. */
+const BOT_FAILURE_MESSAGES: Record<number, string> = {
+  401: 'EDGE could not verify your identity.',
+  403: 'You are not authorised to manage this Discord bot from this space.',
+  404: 'EDGE does not know this Discord bot.',
+  429: 'Too many requests to the Discord bot; try again shortly.',
+  500: 'The Discord bot host on EDGE failed.',
+  502: 'EDGE could not reach Discord.',
+  503: 'The Discord bot host on EDGE is unavailable; try again shortly.',
+  504: 'EDGE timed out reaching Discord.',
+};
+
+/** Statuses EDGE answers deliberately with a reason of its own (a bad request, a conflict, Discord's refusal). */
+const EDGE_REASON_STATUSES = new Set([400, 409, 502]);
+
+/**
+ * Maps a failed EDGE bot request to a typed error a person can read: 401/403 as {@link DiscordBotAccessError}, any
+ * other as {@link DiscordChannelError}. The raw failure stays on `cause`.
+ */
+export const toBotRequestError = (cause: unknown): DiscordChannelError | DiscordBotAccessError => {
+  const failure = cause instanceof EdgeCallFailedError ? cause : undefined;
+  const status = failure?.status;
+  if (status === 401 || status === 403) {
+    return new DiscordBotAccessError({ message: BOT_FAILURE_MESSAGES[status], cause });
+  }
+  if (failure === undefined || status === undefined) {
+    return new DiscordChannelError({ message: 'Could not reach the Discord bot on EDGE.', cause });
+  }
+  // An unhandled EDGE failure's message is only the code; the body EDGE sent with it is decoded onto its `cause`.
+  const reason = EDGE_REASON_STATUSES.has(status)
+    ? messageOf(failure.cause) || failure.message || undefined
+    : undefined;
+  return new DiscordChannelError({
+    message: reason ?? BOT_FAILURE_MESSAGES[status] ?? `The Discord bot request failed (HTTP ${status}).`,
+    cause,
+  });
+};
+
+/** The messages along an error's cause chain below its own, for a secondary detail line under a readable message. */
+export const errorDetail = (error: unknown): string | undefined => {
+  const top = messageOf(error);
+  const messages: string[] = [];
+  let current = error instanceof Error ? error.cause : undefined;
+  // Bounded, since a cause chain rebuilt from the wire is not guaranteed acyclic.
+  for (let depth = 0; current !== undefined && current !== null && depth < 5; depth++) {
+    const message = messageOf(current);
+    if (message && message !== top && !messages.includes(message)) {
+      messages.push(message);
+    }
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return messages.length > 0 ? messages.join(' — ') : undefined;
+};

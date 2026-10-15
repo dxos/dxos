@@ -24,6 +24,7 @@ import { meta } from '#meta';
 import { DiscordAdminOperation, DiscordChannel } from '#types';
 
 import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl } from '../../constants.ts';
+import { DiscordBotAccessError, errorDetail } from '../../errors.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -63,7 +64,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
   const connection = connections.find(({ connectorId }) => connectorId === DISCORD_USER_PROVIDER_ID);
   const bot = useBot(db);
 
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<Error>();
   const [busy, setBusy] = useState(false);
   const [managed, setManaged] = useState<DiscordAdminOperation.Guild[]>([]);
   const [installed, setInstalled] = useState<DiscordAdminOperation.Guild[]>([]);
@@ -81,7 +82,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
         { connection: Ref.make(connection) },
         { spaceId },
       );
-      setError(error?.message);
+      setError(error);
       setManaged([...(data?.guilds ?? [])]);
     }
     if (bot) {
@@ -90,7 +91,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
         { applicationId: bot.applicationId, accessToken: bot.accessToken },
         { spaceId },
       );
-      setError((previous) => error?.message ?? previous);
+      setError((previous) => error ?? previous);
       setInstalled([...(data?.guilds ?? [])]);
     }
   }, [invokePromise, spaceId, connection, bot]);
@@ -112,7 +113,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
       ),
       invokePromise(DiscordAdminOperation.ListBindings, { applicationId: bot.applicationId }, { spaceId }),
     ]);
-    setError(listed.error?.message ?? bound.error?.message);
+    setError(listed.error ?? bound.error);
     setChannels([...(listed.data?.channels ?? [])]);
     setBindings([...(bound.data?.bindings ?? [])]);
   }, [invokePromise, spaceId, bot, guildId]);
@@ -129,7 +130,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
     void EffectEx.runPromise(
       coordinator
         .createConnection({ db, spaceId, connectorId: DISCORD_USER_PROVIDER_ID })
-        .pipe(Effect.catch((cause) => Effect.sync(() => setError(cause.message)))),
+        .pipe(Effect.catch((cause) => Effect.sync(() => setError(cause)))),
     ).finally(() => setBusy(false));
   }, [coordinator, db, spaceId]);
 
@@ -170,7 +171,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             },
             { spaceId },
           );
-      setError(error?.message);
+      setError(error);
       await refreshChannels();
       setBusy(false);
     },
@@ -201,14 +202,20 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
   const config = useConfig();
   const consoleUrl = edgeConsoleUrl(config.values.runtime?.services?.edge?.url);
 
+  const signedIn = connection !== undefined;
+  // EDGE refusing this caller is a state to explain beside the servers, not a failure to raise.
+  const denied = error !== undefined && DiscordBotAccessError.is(error) ? error : undefined;
+  const failure = denied ? undefined : error;
+
   return (
     <DiscordSetup.Root
       role={role}
-      error={error}
+      error={failure?.message}
+      errorDetail={failure && errorDetail(failure)}
       toolbar={
         <DiscordSetup.Toolbar
           attendableId={attendableId}
-          signedIn={connection !== undefined}
+          signedIn={signedIn}
           busy={busy || !coordinator}
           onConnect={handleConnect}
           onSignOut={handleSignOut}
@@ -222,7 +229,13 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
       <Fieldset.Root>
         <Fieldset.Legend>{t('discord-setup-servers.label')}</Fieldset.Legend>
         {guilds.length === 0 ? (
-          <Typography.Text tone='muted'>{t('discord-setup-servers-empty.label')}</Typography.Text>
+          !signedIn ? (
+            <DiscordSetup.SignIn busy={busy || !coordinator} onConnect={handleConnect} />
+          ) : denied ? (
+            <DiscordSetup.Empty message={denied.message} detail={errorDetail(denied)} />
+          ) : (
+            <Typography.Text tone='muted'>{t('discord-setup-servers-none.label')}</Typography.Text>
+          )
         ) : (
           <DiscordSetup.List
             ids={guilds.map(({ id }) => id)}
@@ -258,6 +271,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             })}
           </DiscordSetup.List>
         )}
+        {guilds.length > 0 && denied && <DiscordSetup.Empty message={denied.message} detail={errorDetail(denied)} />}
       </Fieldset.Root>
 
       {guildId && (

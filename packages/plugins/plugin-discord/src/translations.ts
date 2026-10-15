@@ -31,7 +31,10 @@ export const translations = [
         'discord-setup-bot.label': 'Bot',
         'discord-setup-bot.description': 'The Discord app (bot) this space runs its agents through, and its token.',
         'discord-setup-servers.label': 'Servers',
-        'discord-setup-servers-empty.label': 'Sign in to Discord to see the servers you administer.',
+        'discord-setup-servers-empty.label':
+          'Sign in to Discord to list the servers you administer, then install the bot in one to connect its channels.',
+        'discord-setup-sign-in.label': 'Sign in to Discord',
+        'discord-setup-servers-none.label': 'You do not administer any Discord servers, and the bot is in none yet.',
         'discord-setup-installed.label': 'Installed',
         'discord-setup-install.label': 'Install',
         'discord-setup-reinstall.label': 'Reinstall (update permissions)',
