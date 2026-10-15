@@ -2,8 +2,12 @@ name: Check
 
 # Draft PRs run nothing; marking one ready starts the run. Converting a PR to a draft, by hand or by
 # `draft-on-open.yml`, starts a run that skips every job, and the concurrency group cancels the run in
-# flight. Every PR-triggered job repeats
-# the same gate in its `if:` or inherits it from `plan`. No `labeled` trigger: its run would post
+# flight. Every PR-triggered job repeats the same gate in its `if:` or inherits it from `plan`.
+#
+# Where suites run: a PR runs `check`, `boot-budget` and the node tests. The merge queue adds the
+# browser and storybook tests, which gate the merge, and e2e on Chromium, Firefox and WebKit, which
+# reports without gating. Pushes to main run nothing: main moves to the exact commit the queue tested,
+# so the queue's results are the ones GitHub shows on it. No `labeled` trigger: its run would post
 # skipped check runs over the PR's real results, and branch protection reads skipped as passing.
 on:
   pull_request:
@@ -12,7 +16,6 @@ on:
 
   push:
     branches:
-      - main
       - ci/*
 
   schedule:
@@ -51,8 +54,8 @@ env:
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
-# The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
-# nightly shares a group with pushes to main and the next push cancels it mid-e2e.
+# The event is part of the key so the nightly, whose `github.ref` is `refs/heads/main`, never shares a group
+# with another event on that ref and gets cancelled mid-e2e.
 #
 # A manual dispatch also keys on its run id, so repeated dispatches of one ref run in parallel:
 # measuring flakiness needs N independent samples of the same commit. Every other event keeps
@@ -202,14 +205,15 @@ jobs:
   # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
   # three separate fixes were undone that way. Not affected-scoped, because the offending edit lands in
   # some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
-  # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated one.
+  # regression: `e2e` runs in the merge queue, after the PR, so there it never gated one.
   # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead. A PR or merge group confined to `docs/` skips it: the docs site is a separate Astro project
   # that nothing in Composer imports.
+  # Not in the merge queue: the PR already measured the same change.
   boot-budget:
     if: >-
-      ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' && (
       github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     permissions:
       contents: read
@@ -238,9 +242,9 @@ jobs:
       # A diff that will not resolve counts as touching code, so the budget runs.
       - name: Scope
         id: scope
-        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           if changed=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$changed" | grep -qv '^docs/'; then
             echo 'docs-only=true' >> "$GITHUB_OUTPUT"
@@ -258,17 +262,6 @@ jobs:
         if: steps.scope.outputs.docs-only != 'true'
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
-
-      - name: Trend the boot graph
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        env:
-          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
-        run: |
-          node scripts/ci-event.mjs \
-            --event ci.boot-budget \
-            --properties packages/apps/composer-app/out/boot-budget.json \
-            --property app=composer
 
       - name: Record this PR's measurement
         id: head
@@ -409,7 +402,7 @@ jobs:
     name: test (node, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') &&
+      ${{ !cancelled() && inputs.only != 'e2e' &&
       (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.node == 'true')) }}
     strategy:
       fail-fast: false
@@ -476,16 +469,16 @@ jobs:
 
       # Shard 1 also runs the advisory suites, memory retention and the model-fixture replay, which once
       # had a runner each for under 30 s of work. Each reports as its own commit status; neither fails
-      # this cell.
+      # this cell. Not in the merge queue, where nobody reads those statuses and the PR already ran them.
       - name: Advisory suites
-        if: ${{ !cancelled() && matrix.shard == 1 }}
+        if: ${{ !cancelled() && matrix.shard == 1 && github.event_name != 'merge_group' }}
         uses: ./.depot/actions/advisory
 
   test-browser:
     name: test (browser, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') &&
+      ${{ !cancelled() && inputs.only != 'e2e' &&
       (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.browser == 'true')) }}
     strategy:
       fail-fast: false
@@ -619,7 +612,7 @@ jobs:
       # having.
       - name: Publish results
         if: >-
-          ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+          ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: node packages/e2e/composer-e2e/scripts/publish-results.mjs
@@ -730,7 +723,7 @@ jobs:
   cli:
     # The Changesets PR's `github.ref` is refs/pull/N/merge, so only `github.head_ref` matches it.
     if: >-
-      (startsWith(github.ref, 'refs/heads/main') ||
+      (github.event_name == 'merge_group' || github.event_name == 'schedule' ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
       inputs.only == 'all') && (
