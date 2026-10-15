@@ -217,7 +217,10 @@ On each wakeup (task-completion notification for the sleep):
 2. **If merged**: print success, unsubscribe, stop.
 3. **If closed**: ask the user what happened.
 4. **If open and auto_merge is null** (was dequeued):
-   a. Sync with `main`:
+   a. Find out why. A failed merge-queue run is the usual cause: the browser and storybook tests
+   run only there. Read the failed `Check / …` run's logs (`depot-ci` skill), fix the
+   failure at its root, and push the fix before re-queueing; re-queueing an unfixed failure
+   just fails again. Then sync with `main`:
    ```bash
    git fetch origin main
    git merge origin/main --no-edit
