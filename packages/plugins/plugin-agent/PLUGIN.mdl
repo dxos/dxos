@@ -150,8 +150,9 @@ op createAgent
   requires: [Database.Service]
   note: |
     `Agent.makeInitialized` with the Interview skill in the agent's Instructions skill set and the
-    Agent conversation skill bound to the first chat. Settings › Agents › Add agent invokes it with name '' and,
-    while the plugin's "Create identities for agents" setting is on, follows it with op:ensureIdentity (F-7.4).
+    Agent conversation skill bound to the first chat. Settings › Agents › Add agent invokes it with the name typed
+    beside it ('' shows the placeholder "New agent") and, while the plugin's "Create identities for agents" setting is
+    on, follows it with op:ensureIdentity (F-7.4).
 ```
 
 ```mdl
@@ -439,15 +440,16 @@ Instructions. The Support skill is bound by the built-in Support mode.
 node AgentsSection
   desc: |
     Settings › Agents, under the space's settings beside Members and Connections: the space's agents, each opening
-    its article, and Add agent, which creates one named '' (the placeholder "New agent") through
-    `capabilities/create-agent.ts` and opens it. `Agent` is not a user type, so agents are not listed with the
+    its article, and Add agent, which creates one with the name typed beside it ('' shows the placeholder "New agent")
+    through `capabilities/create-agent.ts` and opens it. `Agent` is not a user type, so agents are not listed with the
     space's content and "Add to space" does not offer them.
   source: node:SpaceRoot
   subject: type:Agent
   actions: [op:createAgent]
   note: |
     Add agent gives the new agent its identity (op:ensureIdentity) only while the plugin's "Create identities for
-    agents" setting is on (F-7.4).
+    agents" setting is on (F-7.4). The name is asked for before the agent exists because EDGE names the agent's
+    identity and its own space when it mints them.
 ```
 
 ```mdl
@@ -681,7 +683,7 @@ feat F-7: An agent's own space
 
   req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member who may write to it (an admin or an editor, not a reader) is one of the agent's admins, as EDGE decides it.
   req F-7.2: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent. Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership, and inviting one into such a space fails before EDGE registers it.
-  req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
+  req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. EDGE names the identity and the agent's space after the agent's name at that moment, and renaming the agent later renames neither. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
   req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
   req F-7.5: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is an admin of. It asks nothing of EDGE.
   req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead (op:inviteAgent).
@@ -1076,12 +1078,12 @@ test QA-3: Two people, one agent — a watch fires across private chats
 ```mdl
 test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own space, where it recalls what Alice told it
   desc: |
-    An agent's admins are the members who can edit its own space. Alice creates an agent, which mints its identity and
-    its own space on EDGE and joins hers as a member; she adds Bob to the agent's space the way she would add him to any
-    space, and both find the agent in Profile ›
-    Agents. Alice then tells the agent about the team offsite, and Bob, who cannot reach Alice's space, adds the agent
-    to his own space from its Members panel and asks it what is planned: it answers from its brain. The autocue flow
-    `autocue/agent-identities.mjs` walks it side by side, one browser per person, turning the setting on first.
+    An agent's admins are the members who can edit its own space. Alice turns on the plugin's "Create identities for
+    agents" setting and adds an agent in her space's Settings › Agents, which mints its identity and its own space on
+    EDGE and joins her space as a member; she adds Bob to the agent's space the way she would add him to any space, and
+    both find the agent in Profile › Agents. Alice then tells the agent about the team offsite, and Bob, who cannot
+    reach Alice's space, adds the agent to his own space from its Members panel and asks it what is planned: it answers
+    from its brain. The autocue flow `autocue/agent-identities.mjs` walks it side by side, one browser per person.
   actors: human
   covers: [F-1.4, F-6.1, F-7.1, F-7.2, F-7.3, F-7.4, F-7.5, F-7.7, F-7.8, F-8.1, F-8.4, F-8.6]
   status: unverified          # 2026-10-14 passed through "Add to space", before agents moved to Settings › Agents
@@ -1090,13 +1092,16 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     - bob: an identity with the display name "Bob", on another device
     - home: Alice's own space "Studio"
     - other: Bob's own space "Offsite team"
-    - plugin-agent is enabled for both, with its "Create identities for agents" setting on (Settings › Plugins › Agent)
+    - plugin-agent is enabled for both; Bob has its "Create identities for agents" setting on (Settings › Plugins › Agent), and Alice turns hers on in step 1
     - EDGE with brain identities (`POST /compute/brain`) is reachable — ABORT without it
     - a live model is available to the assistant (EDGE's AI service) — ABORT without one
   steps:
+    - name: Alice turns on agent identities
+      do: In Alice's window open Settings › Plugins › Agent and turn on "Create identities for agents".
+      expect: the switch is on; agents created from now on get identities (F-7.4)
     - name: Alice creates an agent named Kai
-      do: In Alice's space open Settings › Agents and click Add agent; in the agent that opens, name it "Kai" in its properties.
-      invoke: [op:createAgent] { name: "" }
+      do: In Alice's space open Settings › Agents, type "Kai" beside Add agent and click it.
+      invoke: [op:createAgent] { name: "Kai" }, then [op:ensureIdentity] { agent: Ref($agent.agent) }
       capture: agent
       expect: Kai's chat opens at once, and a space named Kai appears in Alice's space list once EDGE has minted it
     - name: Alice sees Kai among her space's members
@@ -1129,10 +1134,10 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     - name: Bob adds Kai to his own space from its Members panel
       do: In Bob's window open Offsite team, then Settings › Members; under "Add from contacts" pick Kai and click Add.
       invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other, as Bob
-      expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Agents and among its members
+      expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Settings › Agents and among its members
       note: Bob is not a member of Alice's space, where Kai lives; the picker finds Kai through Kai's own space, which records its home (F-7.8), and EDGE accepts the space because Bob is Kai's admin (F-8.6).
     - name: Bob opens Kai in Offsite team
-      do: Click Kai under Offsite team's Agents.
+      do: Open Kai from Offsite team's Settings › Agents.
       expect: Bob's own chat with Kai opens, empty; Alice's conversation stays in her space
     - name: Bob asks Kai about the offsite
       do: Send "Check your memory: what do we have so far for the offsite?"
@@ -1142,7 +1147,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       note: NO `invoke` — model-driven; these words were never said in Offsite team. On 2026-10-13 Kai answered "So far for the offsite: Lisbon, November 14, for 12 people, with a budget of €8,000 — all per Alice."
   after:
     - name: Remove Kai from Offsite team and Bob from Kai's space
-      do: In Offsite team delete Kai; in Kai's space open Settings › Members and remove Bob.
+      do: In Offsite team's Settings › Agents delete Kai; in Kai's space open Settings › Members and remove Bob.
       expect: Offsite team no longer lists Kai, and Bob's Agents panel no longer lists Kai
 ```
 

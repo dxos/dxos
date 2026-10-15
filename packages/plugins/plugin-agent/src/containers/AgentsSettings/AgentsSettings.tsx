@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -18,6 +18,8 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -49,19 +51,21 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
     [space, invokePromise],
   );
 
-  // Gives the agent its own identity only when the plugin's setting says so.
-  const create = Hooks.useSpaceCallback(space?.db.spaceId, [], (db: Database.Database) =>
-    createAgent(db, { name: '' }),
+  // Named before it is created: with the plugin's setting on, EDGE names the agent's identity and space at creation.
+  const [name, setName] = useState('');
+  const create = Hooks.useSpaceCallback(space?.db.spaceId, [], (db: Database.Database, agentName: string) =>
+    createAgent(db, { name: agentName }),
   );
   const handleAdd = useCallback(async () => {
     if (!space) {
       return;
     }
-    const agent = await create(space.db).catch((error) => log.error('agent not created', { error }));
+    const agent = await create(space.db, name.trim()).catch((error) => log.error('agent not created', { error }));
     if (agent) {
+      setName('');
       open(agent.id);
     }
-  }, [space, create, open]);
+  }, [space, create, name, open]);
 
   const handleDelete = useCallback(
     (agent: Agent.Agent) => {
@@ -78,9 +82,18 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
         <Form.Content>
           <Form.FieldSet label={t('agents-section.label')} description={t('agents-section.description')}>
             <Form.Field standalone label={t('add-agent.label')} description={t('add-agent.description')}>
-              <Button.Root onClick={() => void handleAdd()} data-testid='agentPlugin.addAgent'>
-                {t('add-agent.button')}
-              </Button.Root>
+              <Layout.Flex align='center' gap='sm'>
+                <Input.Root
+                  placeholder={t('new-agent.name')}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => event.key === 'Enter' && void handleAdd()}
+                  data-testid='agentPlugin.addAgentName'
+                />
+                <Button.Root onClick={() => void handleAdd()} data-testid='agentPlugin.addAgent'>
+                  {t('add-agent.button')}
+                </Button.Root>
+              </Layout.Flex>
             </Form.Field>
           </Form.FieldSet>
 
