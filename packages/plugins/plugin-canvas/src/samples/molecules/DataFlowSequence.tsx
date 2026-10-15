@@ -4,10 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { mx } from '@dxos/ui-theme';
-
+import { SequenceHeader } from '../../components/index.ts';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { useTween } from './tween.ts';
 
@@ -34,9 +31,6 @@ export type DataFlowSequenceProps = {
 
 /** Milliseconds a scene takes to fade out, and the next to fade in. */
 const FADE = 1000;
-
-/** The bar the canvas's own toolbars sit in, so the controls match them. */
-const BAR = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
 
 /**
  * Plays a sequence of data-flow diagrams as one story: each scene runs for its duration under its caption, then fades
@@ -94,17 +88,19 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
-      {/* The caption has a strip of its own above the diagram, so the camera's fit never puts a block under it. */}
-      <div
-        className='relative shrink-0 flex flex-col items-center gap-1 py-4 bg-base-surface'
-        style={{ opacity: captionOpacity }}
-      >
-        <div className='absolute top-3 left-4 text-sm text-fg-muted'>
-          {index + 1} / {scenes.length}
-        </div>
-        <div className='text-3xl'>{scene.title}</div>
-        <div className='text-lg text-fg-muted'>{scene.caption}</div>
-      </div>
+      {/* The header has a strip of its own above the diagram, so the camera's fit never puts a block under it. */}
+      <SequenceHeader
+        title={scene.title}
+        caption={scene.caption}
+        index={index}
+        count={scenes.length}
+        playing={playing}
+        opacity={captionOpacity}
+        controls={chrome}
+        onPrevious={() => go(index - 1)}
+        onNext={() => go(index + 1)}
+        onPlayingChange={setPlaying}
+      />
       <div className='dx-grow relative' style={{ opacity: diagramOpacity }}>
         <DataFlowView
           key={scene.stage ?? index}
@@ -117,34 +113,6 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
           partitioned={scene.partitioned}
           chrome={chrome}
         />
-      </div>
-      {/* Hidden rather than removed, so the controls keep their place and still answer a script's clicks. */}
-      <div className={mx('absolute top-2 right-2 w-max', !chrome && 'invisible')}>
-        <Toolbar.Root classNames={BAR}>
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--caret-left--regular'
-            label='Previous scene'
-            disabled={index === 0}
-            onClick={() => go(index - 1)}
-          />
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={playing ? 'Pause' : 'Play'}
-            onClick={() => setPlaying((value) => !value)}
-          />
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--caret-right--regular'
-            label='Next scene'
-            disabled={index === scenes.length - 1}
-            onClick={() => go(index + 1)}
-          />
-        </Toolbar.Root>
       </div>
     </div>
   );
