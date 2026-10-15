@@ -15,6 +15,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { meta } from '#meta';
 
 import { useBrainClock } from '../useBrainClock.ts';
+import { useIdentityRepair } from '../useIdentityRepair.ts';
 import { usePrivateChat } from '../usePrivateChat.ts';
 import { useSessionAgent } from '../useSessionAgent.ts';
 
@@ -35,6 +36,7 @@ export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChat
   const session = useSessionAgent(agent);
   const { chat, failed, retry } = usePrivateChat(session);
   useBrainClock(session);
+  useIdentityRepair(session);
 
   const data = useMemo(() => (chat ? { subject: chat, attendableId } : undefined), [chat, attendableId]);
   if (data) {

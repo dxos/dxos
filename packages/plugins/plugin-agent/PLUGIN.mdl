@@ -167,14 +167,19 @@ op ensureIdentity
     `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and its
     default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
     caller to that space as ADMIN. The members who may write to the default space are the agent's admins (a reader
-    is not one) and the caller, its creator, is an ADMIN, while the agent's identity owns the space; admins come and go through the space's Members panel like
-    any space's members. The caller must be able to write to `homeSpaceId`. The agent takes the DID as soon as EDGE
-    answers, since the DID names its brain and must exist before its first turn. Then, in the background and retried
-    for about two minutes, the caller's `SpaceMember` credential is written to their HALO (which is what makes the
-    client join the space) and the agent's identity is admitted to `homeSpaceId`; if every retry fails this is only
-    logged, and the agent keeps its DID. An agent with a DID already is left alone, and without an EDGE client (a
-    headless host) nothing changes. A refusal from EDGE fails the operation and changes nothing; EDGE answers its
-    creator's repeated request with the same identity and membership.
+    is not one); the caller, its creator, is an ADMIN, while the agent's identity owns the space. Admins come and go
+    through the space's Members panel like any space's members. The caller must be able to write to `homeSpaceId`.
+    The agent takes the DID as soon as EDGE answers, since the DID names its brain and must exist before its first
+    turn, and records its creator's DID and its own space (`Obj.Meta` keys `org.dxos.agent/creator` and
+    `org.dxos.agent/space`). Then, in the background and retried for about two minutes, the caller's `SpaceMember`
+    credential is written to their HALO (which is what makes the client join the space) and the agent's identity is
+    admitted to `homeSpaceId`; if every retry fails this is only logged, and the agent keeps its DID. Invoked again
+    for an agent with a DID, as opening the agent does, it finishes for the agent's creator whichever of those two
+    steps did not happen (`missingJoin`): it asks EDGE again, which answers its creator with the same identity and
+    membership, and runs only the missing steps. When nothing is missing, or the caller is not the creator, it asks
+    EDGE nothing and changes nothing; an agent without a DID is never provisioned this way, since that would rename
+    its brain. Without an EDGE client (a headless host) nothing changes. A refusal from EDGE fails the operation and
+    changes nothing.
 ```
 
 ```mdl
@@ -689,8 +694,8 @@ feat F-7: An agent's own space
   req F-7.3: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead (op:inviteAgent).
   req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
   req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
-  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent; in a locked space the membership is also marked as an agent (`SpaceMember.agent`). A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no other members after its genesis, but its owner admits an agent and manages its role, short of admin. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails before EDGE registers the space. The client refuses an admission the space would drop (`AuthorizationError`) rather than writing it.
-  req F-7.7: Creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity.
+  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent; in a locked space the membership is also marked as an agent (`SpaceMember.agent`). A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no other members after its genesis, but its owner admits an agent and manages its role, short of admin. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails before EDGE registers the space. The client refuses an admission the space would drop (`AuthorizationError`) rather than writing it. The agent marker is not checked: a locked space's owner can admit any identity marked as an agent, short of admin; it opens only the owner's own space. A client older than the marker rejects an agent's membership of a locked space, so the agent is not a member there on that client until it updates.
+  req F-7.7: Creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
 ```
 
 ## Acceptance
@@ -796,12 +801,14 @@ scenario T-10: Agent spaces list their admins   # AgentSpace.test.ts
 
 ```mdl
 scenario T-11: An agent is admitted to a space as a member   # admit-agent.test.ts
-  # covers [F-7.6]
+  # covers [F-7.6, F-7.7]
   given: a space owned by someone else
   then:
     - the agent's identity is admitted as an editor, named after the agent and marked as one
     - a current member is left as it is, and one that was removed is admitted again
     - a space that refuses the admission fails it with AdmitAgentError
+    - for the agent's creator, missingJoin names the step a failed join left undone: the membership, the admission, or both; nothing when both happened
+    - missingJoin names nothing for anyone but the creator, for an agent without a DID or its records, for an agent an admin removed, or where the creator may not admit it
 ```
 
 ## Not built
