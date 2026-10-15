@@ -213,6 +213,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 203 | 10-15 12:20 | 20m 00s | `3d0da9ff` | A pull fetches every unseen pack in one parallel curl (`Remote.downloadAll`, in the codebase): a fresh native pull goes from 30.3 s to 7.3 s. |
 | 204 | 10-15 12:30 | 30m 00s | `0d0b50a9` | `deus push` runs `deus mdl` on the spec documents a change touches and refuses on a failure; a push moves `<remote>.<branch>` to what it pushed (D182, task d9242c83) |
 | 205 | 10-15 12:35 | 5m 00s | `0d0b50a9` | The seed is rebuilt from the codebase head: `sync-deus.py` finds every changed definition by hash and writes 603 into `deus/`, so `deus merge` runs the current merge (D183) |
-| 206 | 10-15 12:45 | 10m 00s | this commit | Pack.Spec passes `deus mdl` again: A-1 states `Pack.entries`'s nested tuple type, and R-1's test (a pull through packs with the bundles unreadable) is in git now that the seed writes packs; `remote-http-test.sh` checks packs and the Worker's name and object lookups (D180) |
+| 206 | 10-15 12:45 | 10m 00s | `9b56c07a` | Pack.Spec passes `deus mdl` again: A-1 states `Pack.entries`'s nested tuple type, and R-1's test (a pull through packs with the bundles unreadable) is in git now that the seed writes packs; `remote-http-test.sh` checks packs and the Worker's name and object lookups (D180) |
+| 207 | 10-15 13:05 | 20m 00s | this commit | The Worker answers `/v1/@owner/project/` and serves each project's explorer at `/@owner/project/`, where a definition's name opens the page; new projects live at `<owner>/<project>/` in the bucket, `/v1/toolchain` and `/` stay the toolchain's, and keys are granted per address (D185, Address.Spec R-6 and R-7, task 0cc4a9ed) |
 
-Total from stage 1 to stage 206: 55h 53m.
+Total from stage 1 to stage 207: 56h 13m.

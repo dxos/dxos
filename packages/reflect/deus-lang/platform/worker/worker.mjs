@@ -3,9 +3,9 @@
 //
 
 // The DEUS Worker (D164): the only thing that touches the codebases bucket. `/v1/` is the
-// replication API that `deus push` and `deus pull` use (remote.mjs); everything else is the
-// codebase explorer of the project `PREFIX`, read from that project's `site/` folder, where every
-// push of `main` writes it.
+// replication API that `deus push` and `deus pull` use (remote.mjs); everything else is a
+// codebase explorer, read from its project's `site/` folder, where every push of `main` writes it:
+// `/@owner/project/…` is that project's (D184), and any other path is the project `PREFIX`'s.
 //
 // Writes from the explorer (D82): anyone may read; a GitHub user who belongs to `GITHUB_ORG` may
 // also comment, file tasks and attach images. The worker cannot run DEUS, so a write is stored in
@@ -13,6 +13,7 @@
 // `<PREFIX>/assets/<sha256>`; `deus inbox` applies the requests to the codebase. Without the OAuth
 // settings the explorer stays read-only.
 
+import { projectAt } from './address.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
@@ -25,6 +26,18 @@ const STATE_COOKIE = 'deus_oauth_state';
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    let base = '';
+    const scoped = url.pathname.startsWith('/v1') ? undefined : PROJECT_PATH.exec(url.pathname);
+    if (scoped) {
+      const target = projectAt([scoped[1], scoped[2]]);
+      if (!target) {
+        return notFound();
+      }
+      // The rest of the request is the PREFIX project's handling, on this project's folder.
+      env = { ...env, PREFIX: target.folder };
+      base = `/${scoped[1]}/${scoped[2]}`;
+      url.pathname = scoped[3] || '/';
+    }
     // A page served at `/` loads everything relative to `/v/<version>/` (D166); only the site's
     // top-level files are versioned, so every other path is the same with the prefix dropped.
     const pinned = VERSIONED.exec(url.pathname);
@@ -54,15 +67,18 @@ export default {
         error instanceof HttpError ? error.status : 500,
       );
     }
-    return site(env, ctx, url, pinned?.[1]);
+    return site(env, ctx, url, pinned?.[1], base);
   },
 };
+
+/** `/@owner/project` and what follows it. */
+const PROJECT_PATH = /^\/(@[^/]+)\/([^/]+)(\/.*)?$/;
 
 //
 // The static site.
 //
 
-const site = async (env, ctx, url, version) => {
+const site = async (env, ctx, url, version, base) => {
   const path = url.pathname === '/' ? '/index.html' : url.pathname;
   if (path.includes('..') || !env.BUCKET) {
     return notFound();
@@ -71,7 +87,7 @@ const site = async (env, ctx, url, version) => {
   if (topLevel && !version) {
     const head = await readHead(env);
     if (head && path === '/index.html') {
-      return page(env, head);
+      return page(env, head, base);
     }
     version = head;
   }
@@ -85,7 +101,9 @@ const site = async (env, ctx, url, version) => {
   }
   const object = await env.BUCKET.get(key);
   if (!object) {
-    return notFound();
+    // `/@owner/project/Name` is the page, opened at that definition by the explorer (Address.Spec R-8).
+    const head = topLevel && !FILE.test(path) && (await readHead(env));
+    return head ? page(env, head, base) : notFound();
   }
   const response = new Response(object.body, {
     headers: {
@@ -101,32 +119,44 @@ const site = async (env, ctx, url, version) => {
 
 const VERSIONED = /^\/v\/([0-9a-f]{16})(\/.*)$/;
 
+/** A site file rather than a definition's name, which never ends in one of these. */
+const FILE = /\.(html|js|mjs|css|json|wasm|png|svg|ico|txt|map|image|deus|mdl)$/;
+
 const notFound = () => new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
 
 /** The version `site/HEAD` names, read at most every few seconds per isolate; undefined before the first versioned publish. */
 const readHead = async (env) => {
-  const cached = heads.get(env.BUCKET);
+  const cached = headsOf(env.BUCKET).get(prefix(env));
   if (cached && cached.at > Date.now() - HEAD_SECONDS * 1000) {
     return cached.version;
   }
   const object = await env.BUCKET.get(`${prefix(env)}/site/HEAD`);
   const version = object ? (await object.text()).trim() : undefined;
   const head = { at: Date.now(), version: version && /^[0-9a-f]{16}$/.test(version) ? version : undefined };
-  heads.set(env.BUCKET, head);
+  headsOf(env.BUCKET).set(prefix(env), head);
   return head.version;
 };
 
 const HEAD_SECONDS = 5;
-/** Per bucket binding, so one isolate serving two buckets keeps them apart. */
+/** Per bucket binding and project folder, so one isolate serving several keeps them apart. */
 const heads = new WeakMap();
 
+const headsOf = (bucket) => {
+  let byFolder = heads.get(bucket);
+  if (!byFolder) {
+    byFolder = new Map();
+    heads.set(bucket, byFolder);
+  }
+  return byFolder;
+};
+
 /** The app page of `version`, with every relative load pinned to that version by a `<base>`. */
-const page = async (env, version) => {
+const page = async (env, version, base) => {
   const object = await env.BUCKET.get(`${prefix(env)}/site/v/${version}/index.html`);
   if (!object) {
     return notFound();
   }
-  const html = (await object.text()).replace('<head>', `<head><base href="/v/${version}/" />`);
+  const html = (await object.text()).replace('<head>', `<head><base href="${base}/v/${version}/" />`);
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' },
   });
