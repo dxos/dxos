@@ -23,7 +23,7 @@
 import { chromium } from '@playwright/test';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, renameSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
@@ -97,6 +97,9 @@ if (format === 'mp4' && available !== 'mp4') {
 }
 const out = path.resolve(options.out ?? path.join('temp', `${options.story}.${format}`));
 mkdirSync(path.dirname(out), { recursive: true });
+// Written under a partial name and renamed once complete, so a file with the final name is always a finished one: an
+// MP4 is unplayable until its index is written at the very end.
+const partial = out.replace(/(\.[^.]+)$/, '.partial$1');
 
 // Each frame is piped to the encoder as it is captured (as Playwright's own recorder does), so nothing waits on disk.
 const codec =
@@ -151,7 +154,7 @@ const encoding = spawn(
     '-i',
     'pipe:0',
     ...codec,
-    out,
+    partial,
   ],
   { stdio: ['pipe', 'ignore', 'inherit'] },
 );
@@ -227,4 +230,5 @@ if (code !== 0) {
   console.error(`ffmpeg exited with ${code}`);
   process.exit(1);
 }
+renameSync(partial, out);
 console.log(`wrote ${out} (${frames} frames, ${width}x${height} at ${fps} fps)`);
