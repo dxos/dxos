@@ -43,7 +43,7 @@ const DefaultStory = () => {
             target={{} as Database.Database}
             resolve={() => mockMetadata}
             onTypenameChange={setTypename}
-            onCreateObject={async () => {}}
+            onCreateObject={() => {}}
           />
         </Dialog.Body>
       </Dialog.Content>

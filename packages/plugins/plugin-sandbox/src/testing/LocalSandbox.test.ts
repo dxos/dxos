@@ -12,7 +12,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
@@ -21,9 +20,9 @@ import { Blob, Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
 import { File } from '@dxos/types';
 
-import { RepositoryService, Sandbox, SandboxOperation } from '#types';
+import { Sandbox, SandboxOperation } from '#types';
 
-import { layerLocal } from '../services/layer.ts';
+import { layerLocal, layerRepository } from '../services/layer.ts';
 import { SandboxHandlers } from '../skills/functions/index.ts';
 import * as SandboxSkill from '../skills/SandboxSkill.ts';
 import { canRunLocalSandboxes } from './probe.ts';
@@ -38,35 +37,13 @@ process.env.DX_SANDBOX_ROOT = root;
 const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP4z8DwHwAFAAH/VscvDQAAAABJRU5ErkJggg==';
 const PNG_BYTES = Uint8Array.from(atob(PNG_BASE64), (char) => char.charCodeAt(0));
 
-/** Local sandboxes attach no repositories, so every repository call fails. */
-const noRepositories = (): Effect.Effect<never, RepositoryService.RepositoryError> =>
-  Effect.fail(new RepositoryService.RepositoryError({ message: 'Local sandboxes have no repositories.' }));
-
-const makeCapabilityManager = () => {
-  const registry = AtomRegistry.make();
-  const manager = CapabilityManager.make({ registry });
-  manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: registry });
-  return manager;
-};
-
-// The invoker resolves every service an operation declares, used or not: `CreateSandbox` declares the repository
-// service and `UploadFile` / `PublishFiles` the capability manager.
 const TestLayer = AssistantTestLayer({
   operationHandlers: SandboxHandlers,
   types: [Sandbox.Sandbox, File.File, Blob.Blob, Collection.Collection, Skill.Skill, Feed.Feed],
   skills: [SandboxSkill.make()],
-  extraServices: Layer.mergeAll(
-    layerLocal,
-    Layer.sync(Capability.Service, makeCapabilityManager),
-    Layer.succeed(RepositoryService.Service, {
-      create: noRepositories,
-      get: noRepositories,
-      delete: noRepositories,
-      branches: noRepositories,
-      log: noRepositories,
-      tree: noRepositories,
-      readFile: noRepositories,
-    }),
+  // Repositories stay on EDGE; that backend reads the client only when called, so an empty manager suffices.
+  extraServices: Layer.mergeAll(layerLocal, layerRepository).pipe(
+    Layer.provideMerge(Layer.sync(Capability.Service, () => CapabilityManager.make({ registry: AtomRegistry.make() }))),
   ),
 });
 

@@ -2,16 +2,21 @@ name: Draft on open
 
 # Converts a PR opened ready into a draft when its branch starts with one of DRAFT_PREFIXES, so CI runs
 # only once someone marks it ready. The conversion triggers each PR workflow's `converted_to_draft`
-# run, which skips every job and cancels the `opened` run in flight. Runs on open only, so marking a PR
-# ready afterwards is never undone.
+# run, which skips every job and cancels the run in flight. A PR that conflicts with main when it opens
+# gets no `opened` run at all (there is no merge commit to read workflows from), so its first push that
+# runs converts it instead. Marking a PR ready is never undone: a push converts only a PR opened in the
+# last day that has never been marked ready or converted.
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
 
 env:
   # Agents' branches and the Changesets Version PR's.
   DRAFT_PREFIXES: claude/ dm/ changeset-release/
+
+concurrency:
+  group: draft-on-open-${{ github.event.pull_request.number }}
 
 permissions:
   contents: read
@@ -34,6 +39,19 @@ jobs:
             const pr = context.payload.pull_request;
             if (!process.env.DRAFT_PREFIXES.split(' ').some((prefix) => pr.head.ref.startsWith(prefix))) {
               return;
+            }
+            if (context.payload.action === 'synchronize') {
+              if (Date.now() - Date.parse(pr.created_at) > 24 * 60 * 60 * 1000) {
+                return;
+              }
+              const events = await github.paginate(github.rest.issues.listEventsForTimeline, {
+                ...context.repo,
+                issue_number: pr.number,
+                per_page: 100,
+              });
+              if (events.some((event) => event.event === 'ready_for_review' || event.event === 'convert_to_draft')) {
+                return;
+              }
             }
             await github.graphql(
               'mutation($id: ID!) { convertPullRequestToDraft(input: { pullRequestId: $id }) { pullRequest { isDraft } } }',
