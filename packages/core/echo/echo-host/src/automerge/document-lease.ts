@@ -250,10 +250,18 @@ export type DocumentLeaseRegistryParams = {
    * delay, and bounds nothing else: leased documents are never counted against it.
    */
   minResidentDocuments?: number;
+
+  /**
+   * How many released documents may wait out the delay. Past it the oldest are evicted at once: a
+   * workload that releases documents faster than the delay expires (a reindex) would otherwise hold
+   * them all loaded together, and Automerge's wasm memory never returns that peak.
+   */
+  maxIdleDocuments?: number;
 };
 
 const DEFAULT_EVICTION_DELAY = 0;
 const DEFAULT_MIN_RESIDENT_DOCUMENTS = 0;
+const DEFAULT_MAX_IDLE_DOCUMENTS = Infinity;
 
 /**
  * Reference counts the documents the host holds loaded, and evicts each one once its last lease has
@@ -279,8 +287,11 @@ export class DocumentLeaseRegistry {
   readonly #params: DocumentLeaseRegistryParams;
   readonly #evictionDelay: number;
   readonly #minResidentDocuments: number;
+  readonly #maxIdleDocuments: number;
 
   #timer: ReturnType<typeof setTimeout> | undefined = undefined;
+  /** When the pending timer fires, so crossing the ceiling can bring it forward. */
+  #timerDue = 0;
   #draining: Promise<void> | undefined = undefined;
   #closed = false;
 
@@ -288,6 +299,7 @@ export class DocumentLeaseRegistry {
     this.#params = params;
     this.#evictionDelay = params.evictionDelay ?? DEFAULT_EVICTION_DELAY;
     this.#minResidentDocuments = params.minResidentDocuments ?? DEFAULT_MIN_RESIDENT_DOCUMENTS;
+    this.#maxIdleDocuments = params.maxIdleDocuments ?? DEFAULT_MAX_IDLE_DOCUMENTS;
   }
 
   /** Documents currently leased — the host's document residency. */
@@ -399,6 +411,7 @@ export class DocumentLeaseRegistry {
     }
 
     const now = Date.now();
+    let overCeiling = this.#idle.size - this.#maxIdleDocuments;
     const evictable: DocumentId[] = [];
     for (const [documentId, releasedAt] of this.#idle) {
       if (evictable.length >= excess) {
@@ -407,17 +420,18 @@ export class DocumentLeaseRegistry {
       if (attempted.has(documentId)) {
         continue;
       }
-      if (!force && now - releasedAt < this.#evictionDelay) {
+      if (!force && overCeiling <= 0 && now - releasedAt < this.#evictionDelay) {
         // Release order, so nothing after this one has waited longer.
         break;
       }
+      overCeiling--;
       evictable.push(documentId);
     }
     return evictable;
   }
 
   #scheduleDrain(): void {
-    if (this.#timer !== undefined || this.#closed) {
+    if (this.#closed) {
       return;
     }
 
@@ -425,8 +439,19 @@ export class DocumentLeaseRegistry {
     if (excess <= 0) {
       return;
     }
+    const now = Date.now();
     const oldest = this.#idle.values().next();
-    const wait = oldest.done ? 0 : Math.max(0, this.#evictionDelay - (Date.now() - oldest.value));
+    const wait =
+      oldest.done || this.#idle.size > this.#maxIdleDocuments
+        ? 0
+        : Math.max(0, this.#evictionDelay - (now - oldest.value));
+    if (this.#timer !== undefined) {
+      if (this.#timerDue <= now + wait) {
+        return;
+      }
+      this.#clearTimer();
+    }
+    this.#timerDue = now + wait;
     this.#timer = setTimeout(() => {
       this.#timer = undefined;
       void this.#run(false);

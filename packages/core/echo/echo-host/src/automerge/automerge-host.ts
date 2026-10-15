@@ -99,6 +99,8 @@ export type AutomergeHostProps = {
     evictionDelay?: number;
     /** How many released documents stay resident regardless of age. */
     minResidentDocuments?: number;
+    /** How many released documents may wait out the delay before the oldest are evicted at once. */
+    maxIdleDocuments?: number;
   };
 };
 
@@ -215,6 +217,13 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
  * the next one loaded.
  */
 const EVICT_IDLE_DELAY = 30_000;
+
+/**
+ * How many released documents wait out {@link EVICT_IDLE_DELAY}, as many as a client keeps of its own
+ * (`DOCUMENT_RETENTION` in echo-client). A reindex releases thousands within the delay, and holding
+ * them all loaded sizes the worker's Automerge wasm memory, which never shrinks, by the whole profile.
+ */
+const MAX_IDLE_DOCUMENTS = 50;
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -359,6 +368,7 @@ export class AutomergeHost extends Resource {
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
       evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
       minResidentDocuments: residency?.minResidentDocuments,
+      maxIdleDocuments: residency?.maxIdleDocuments ?? MAX_IDLE_DOCUMENTS,
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;

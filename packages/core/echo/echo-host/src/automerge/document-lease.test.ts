@@ -114,12 +114,12 @@ describe('document leases', () => {
 });
 
 /**
- * Residency policy in isolation: a released document waits out an idle delay, and the most recently
- * released ones are held by a floor regardless of age.
+ * Residency policy in isolation: a released document waits out an idle delay, the most recently
+ * released ones are held by a floor regardless of age, and past a ceiling the oldest go at once.
  */
 describe('document lease eviction policy', () => {
   const createRegistry = (
-    params: { evictionDelay?: number; minResidentDocuments?: number },
+    params: { evictionDelay?: number; minResidentDocuments?: number; maxIdleDocuments?: number },
     /** Resolves `false` to leave the document resident, as a real deferred eviction does. */
     outcome: (documentId: DocumentId, attempt: number) => boolean = () => true,
   ) => {
@@ -175,6 +175,17 @@ describe('document lease eviction policy', () => {
     expect(evicted).toEqual([documentId(0), documentId(1)]);
     await sleep(20);
     expect(evicted).toEqual([documentId(0), documentId(1)]);
+    expect(registry.idleCount).toBe(2);
+  });
+
+  test('past the ceiling the oldest released documents are evicted without waiting', async ({ expect }) => {
+    const { registry, evicted } = createRegistry({ evictionDelay: 60_000, maxIdleDocuments: 2 });
+    for (let index = 0; index < 5; ++index) {
+      registry.acquire(documentId(index))[Symbol.dispose]();
+    }
+
+    await waitFor(() => evicted.length >= 3);
+    expect(evicted).toEqual([documentId(0), documentId(1), documentId(2)]);
     expect(registry.idleCount).toBe(2);
   });
 
