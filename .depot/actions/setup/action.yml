@@ -20,6 +20,11 @@ inputs:
       to. Certificates come from the MOON_CACHE_* environment variables, which every workflow that
       wants the cache sets once at workflow level — a composite action cannot read `secrets`.
     default: 'true'
+  rust:
+    description: >
+      Set "true" to install the Rust toolchain and restore the cargo registry. Only `code-index:test`, in the
+      node test cells, compiles Rust; every other job skips the ~12 s install.
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -151,6 +156,7 @@ runs:
     # Only a job whose crate inputs changed compiles, since moon's remote cache restores the addon and
     # skips `cargo-test` otherwise; the registry is cached because that compile would refetch every crate.
     - name: Cache cargo registry
+      if: ${{ inputs.rust == 'true' }}
       uses: actions/cache@v4
       with:
         path: |
@@ -165,6 +171,7 @@ runs:
     # toolchain is the one the crate's `rust-toolchain.toml` pins, from rustup's minimal profile; RocksDB is
     # compiled from source and its bindgen step loads libclang, which the CI image does not ship.
     - name: Install Rust
+      if: ${{ inputs.rust == 'true' }}
       run: |
         toolchain=$(sed -n 's/^channel = "\(.*\)"$/\1/p' tools/code-index-native/rust-toolchain.toml)
         if [ -z "$toolchain" ]; then
