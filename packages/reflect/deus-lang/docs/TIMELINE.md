@@ -196,6 +196,12 @@ stage. The table is regenerated from `git log` with every commit.
 | 186 | 10-15 10:09 | 19m 00s | `8b0847fc` | A push cannot fork a branch: the CLI refuses a head that leaves out a remote head, and the Worker moves each branch head in D1 only from the head a push names (Remote.Spec, D167). |
 | 187 | 10-15 10:30 | 21m 00s | `b7bf9712` | `deus export --terms` writes one file per definition at its namespace path, and an hourly routine mirrors the codebase (store files, Worker bundles and the per-term tree) to dxos/deus-mirror (Export.Spec R-10, R-11, D168). |
 | 188 | 10-15 10:40 | 15m 00s | `a2aa2900` | The seeded analytics events are pushed through the Worker to `toolchain/events/` on the new account, and the publisher lists them through the Worker for Basin (D169); Basin Catalog setup is with the Cloudflare thread |
-| 189 | 10-15 10:45 | 5m 00s | this commit | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D170, task d780de91) |
+| 189 | 10-15 10:45 | 5m 00s | `2bb8eec2` | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D170, task d780de91) |
+| 190 | 10-15 11:05 | 20m 00s | `01d407e3` | The codebase explainer (docs/spec/CODEBASE-BINARY.md) now covers where a codebase lives (store, Worker, R2 bucket, D1, mirror), how names work, and branches end to end, including the Worker's head check (409, 428). |
+| 191 | 10-15 11:10 | 35m 00s | `afc975ab` | `bin/deus.mjs` runs a cached native build of the seed and builds one in the background when there is none (D171); `Remote.getAll` fetches bundles in parallel. A fresh session's pull 34 s to 5.2 s, merge 3.2 s to 92 ms |
+| 192 | 10-15 11:20 | 10m 00s | `8d647cd5` | Bundles can be lines: a pull hashes and stores each object's line with no parse or print, 44.8 s to 11.9 s for a fresh pull from a line remote; pushes stay columnar until sessions read lines (D172, task ed106f59) |
+| 193 | 10-15 11:30 | 10m 00s | `2c51b124` | The browser page runs the TypeScript kernel by default, 6-16x faster than the wasm kernel on today's codebase in Chromium; the TS kernel imports nothing from node and `deus build --browser` bundles it (D173). The playground's codebase snapshot leaves out local layers (58 to 36 MB). |
+| 194 | 10-15 11:15 | 0m 00s | `20e239c2` | The explorer names a long call's arguments by their parameters, inlay-hint style (`key:` `name:` before `Composer.meta`'s strings); `deus view` prints none (View.Spec R-5, D174, task 31f514e2) |
+| 195 | 10-15 11:45 | 15m 00s | this commit | The browser page keeps its changed files in IndexedDB, so a playground codebase survives a reload; Reset drops them (D175). |
 
-Total from stage 1 to stage 189: 50h 28m.
+Total from stage 1 to stage 195: 51h 58m.

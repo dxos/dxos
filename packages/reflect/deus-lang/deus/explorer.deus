@@ -159,6 +159,25 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
     Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir causal)) [] ++
     atJson dir causal)
 
+/-- How many parameters a definition's term takes: its leading lambdas. -/
+def arity (core : Sexp) : Int :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] => 1 + arity b
+  | _ => 0
+
+/--
+  Parameter names for calls to an entry (D174): a function's binder names, which the printer draws
+  first, or a structure's fields for its constructor, keyed as `Print.hintNames` looks them up.
+-/
+def hintsOf (name : Text) (e : Entry) (object : Option Sexp) (meta : Option Sexp) : List (Text, List Text) :=
+  match (e, object) with
+  | (Entry.term h, some (Sexp.list [Sexp.sym "term", core])) =>
+    let count := arity core
+    let locals := List.map Sexp.asText (Codebase.metaList (Option.map (Codebase.metaFor name) meta) "locals")
+    if count == 0 || List.length locals < count then [] else [(h, List.take count locals)]
+  | (Entry.type _ iri fields, _) => if List.isEmpty fields then [] else [(iri ++ "#0", fields)]
+  | _ => []
+
 /-- The app's files, from the toolchain's sources. -/
 def appFiles : List Text := ["index.html", "app.js", "app.css"]
 
@@ -171,18 +190,21 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let entries := List.filter visible (Map.toList ns)
   let index := Codebase.nameIndex ns
   let namesByHash := Codebase.namesByHash ns
-  let printer := Print.printer ns []
   let project := match Project.read dir with
     | some p => p.projectIri
     | none => "codebase"
   -- Each definition's object and metadata are read once: its dependencies, and dependents inverted from them.
   let metaOf := Map.fromList (List.map (fun pair => (Entry.hash (snd pair), Codebase.readMeta dir (Entry.hash (snd pair)))) entries)
   let metaFor := fun (h : Text) => Option.getOr (Map.lookup h metaOf) none
-  let depsOf := Map.fromList (List.map (fun pair =>
+  let facts := List.map (fun pair =>
     let h := Entry.hash (snd pair)
-    let fromObject := Option.getOr (Option.map namedHashes (Codebase.readObject dir h)) []
+    let object := Codebase.readObject dir h
+    let fromObject := Option.getOr (Option.map namedHashes object) []
     let fromScheme := Option.getOr (Option.map namedHashes (Codebase.metaField (metaFor h) "scheme")) []
-    (h, List.dedup (List.sort (fromObject ++ fromScheme)))) entries)
+    (h, List.dedup (List.sort (fromObject ++ fromScheme)), hintsOf (fst pair) (snd pair) object (metaFor h))) entries
+  let depsOf := Map.fromList (List.map (fun f => match f with | (h, deps, _) => (h, deps)) facts)
+  -- Calls show their callee's parameter names (D174); `deus view` prints without them, as source that parses.
+  let printer := Print.withHints (Print.printer ns []) (Map.fromList (List.concatMap (fun f => match f with | (_, _, hs) => hs) facts))
   let dependents := Map.foldr (fun h ds m => List.foldl (fun m2 d => Map.insert d (h :: Option.getOr (Map.lookup d m2) []) m2) m ds) Map.empty depsOf
   let tasks := List.sortBy Tasks.order (Map.values (Tasks.current dir))
   let taskMap := Map.fromList (List.map (fun t => (t.id, t)) tasks)

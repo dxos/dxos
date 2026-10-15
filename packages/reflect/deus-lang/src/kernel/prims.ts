@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createHash } from 'node:crypto';
-
 import {
   Cell,
   Closure,
@@ -82,7 +80,15 @@ const parseInt32 = (value: string): Value => (/^-?[0-9]+$/.test(value) ? some(Nu
  * The primitive table. Names are part of Core (`(prim "Int.add")`) and are mirrored by the
  * DEUS front-end's builtin namespace (deus/builtins.deus); keep both in sync.
  */
-export const createPrims = (): Map<string, Prim> => {
+/** What the primitives need from the platform, so the kernel runs in node and in a browser alike. */
+export type Platform = {
+  /** SHA-256 of the text's UTF-8 bytes, as lowercase hex. */
+  sha256: (text: string) => string;
+  /** Where `trace` writes. */
+  stderr: (chunk: string) => void;
+};
+
+export const createPrims = ({ sha256, stderr }: Platform): Map<string, Prim> => {
   const prims = new Map<string, Prim>();
   const def = (name: string, arity: number, fn: (args: Value[], machine: Machine) => Value) =>
     prims.set(name, new Prim(name, arity, fn));
@@ -135,7 +141,7 @@ export const createPrims = (): Map<string, Prim> => {
   def('Text.split', 2, ([s, sep]) => listFrom(text(s).split(text(sep))));
   def('Text.indexOf', 3, ([s, sub, from]) => text(s).indexOf(text(sub), int(from)));
   def('Text.trim', 1, ([s]) => text(s).trim());
-  def('Text.sha256', 1, ([s]) => createHash('sha256').update(text(s), 'utf8').digest('hex'));
+  def('Text.sha256', 1, ([s]) => sha256(text(s)));
   def('Text.fromCodes', 1, ([codes]) => {
     // Code units, except that a code above U+FFFF becomes its surrogate pair (D76).
     const units: number[] = [];
@@ -274,7 +280,7 @@ export const createPrims = (): Map<string, Prim> => {
 
   def('show', 1, ([v]) => show(v));
   def('trace', 2, ([label, v]) => {
-    process.stderr.write(`trace ${text(label)}: ${show(v)}\n`);
+    stderr(`trace ${text(label)}: ${show(v)}\n`);
     return v;
   });
   def('defect', 1, ([message]) => {

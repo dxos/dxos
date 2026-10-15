@@ -1211,7 +1211,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : T
     let statement := match Codebase.readObject dir h with
       | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
         let base := Print.withLocals printer (List.map Sexp.asText (Codebase.metaList meta "locals"))
-        let full := Printer.mk base.fullNames base.fullNames facts.fullTypes Map.empty base.declared base.namesByHash base.supply base.fresh
+        let full := Printer.mk base.fullNames base.fullNames facts.fullTypes Map.empty base.declared base.namesByHash base.supply base.fresh Map.empty
         let decl := View.theoremDecl full name types prop proof
         let stop := Text.indexOf decl " := " 0
         [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
