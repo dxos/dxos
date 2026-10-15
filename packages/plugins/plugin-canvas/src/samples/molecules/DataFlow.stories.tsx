@@ -47,17 +47,6 @@ const APPS: DataFlowSpec = {
   ],
 };
 
-const MIXED: DataFlowSpec = {
-  ...SPEC,
-  hub: { label: 'ECHO', partitions: 3 },
-  sinks: [
-    { label: 'Docs', app: 'document' },
-    { label: 'Sheets', app: 'spreadsheet' },
-    { label: 'Agent 1' },
-    { label: 'Agent 2' },
-  ],
-};
-
 /**
  * The chapters of the story, in order: the one source for each chapter's own story and for the sequence that plays them
  * all. Each keeps its warmup (seconds of flow before it appears), so a chapter opens populated wherever it is shown.
@@ -73,14 +62,15 @@ const CHAPTERS: readonly Scene[] = [
     duration: 20,
   },
   {
-    title: 'A monolithic agent',
+    title: 'Monolithic Agents',
     caption: 'One agent reaches into every source at once, beside the apps.',
     spec: MONOLITH,
     options: { warmup: 8 },
     stage: 'silos',
     duration: 20,
   },
-  // Chapters 3 and 4 share a stage too: the one ECHO space splits into three along its natural breaks.
+  // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then the two apps
+  // on the right give way to agents.
   {
     title: 'A shared ECHO',
     caption: 'The sources feed one ECHO space, and the apps sync from it.',
@@ -102,9 +92,17 @@ const CHAPTERS: readonly Scene[] = [
   {
     title: 'Apps and agents together',
     caption: 'Applications and agents share the same partitioned ECHO space, side by side.',
-    spec: MIXED,
-    // Agents fill only from the share of the hub synced down to them, so they need the longest start.
-    options: { warmup: 30 },
+    spec: APPS,
+    options: { warmup: 16 },
+    partitioned: true,
+    // The two apps on the right give way to agents, which fill from what ECHO syncs down to them.
+    sinks: [
+      { label: 'Docs', app: 'document' },
+      { label: 'Sheets', app: 'spreadsheet' },
+      { label: 'Agent 1' },
+      { label: 'Agent 2' },
+    ],
+    stage: 'echo',
     duration: 24,
   },
 ];
@@ -130,8 +128,8 @@ export default meta;
 type Story = StoryObj<DataFlowViewProps>;
 
 const chapter = (index: number): Story => {
-  const { title, spec, options, revealed, partitioned } = CHAPTERS[index];
-  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned } };
+  const { title, spec, options, revealed, partitioned, sinks } = CHAPTERS[index];
+  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned, sinks } };
 };
 
 /**

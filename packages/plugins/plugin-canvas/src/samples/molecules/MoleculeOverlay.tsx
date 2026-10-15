@@ -348,7 +348,10 @@ const morphFrame = (
 };
 
 /** Milliseconds the monolithic agent's parts take to fade in or out as it is revealed or hidden. */
-const REVEAL_MS = 2000;
+export const REVEAL_MS = 1000;
+
+/** Milliseconds an outgoing sink takes to fade, the time its replacement waits before coming into view. */
+const SWAP_FADE_MS = 1000;
 
 /** Rise above the bases to the lowest grant line, the gap between stacked lines, and the spread of their starts. */
 const GRANT_RISE = 40;
@@ -714,6 +717,9 @@ const drawingExtent = (layout: DataFlowLayout) => {
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
+/** Sinks on their way out after changing kind, drawn fading from what they last held; `key` restarts the fade. */
+export type Outgoing = { key: number; sinks: readonly Block[]; apps: readonly (readonly (AppItem | undefined)[])[] };
+
 export type MoleculeOverlayProps = {
   layout: DataFlowLayout;
   simulation: DataFlowSimulation;
@@ -727,6 +733,8 @@ export type MoleculeOverlayProps = {
   revealed?: boolean;
   /** The hub part way to a partitioned one: drawn eased toward it, its docked molecules carried with their buckets. */
   hubMorph?: HubMorph;
+  /** Sinks fading out after changing kind; their replacements fade in once they are gone. */
+  outgoing?: Outgoing;
 };
 
 /**
@@ -742,6 +750,7 @@ export const MoleculeOverlay = ({
   tone = 'dark',
   revealed = true,
   hubMorph,
+  outgoing,
 }: MoleculeOverlayProps) => {
   const frame = useSimulationFrame(simulation, running && molecules);
   const { agents, apps, time } = frame;
@@ -773,10 +782,12 @@ export const MoleculeOverlay = ({
   // A sink shows once its agent has appeared, fading in with its channel; the sources and hub are always there.
   const shown = new Map<string, number>(
     layout.sinks.flatMap((sink, index) => {
-      const opacity = index < agents.length ? Math.min(1, agents[index] / AGENT_FADE) : 0;
+      const opacity = index < agents.length ? Math.max(0, Math.min(1, agents[index] / AGENT_FADE)) : 0;
+      // A sink changing kind keeps its channel: only the box at its end is swapped.
+      const swapping = outgoing?.sinks.some((leaving) => leaving.id === sink.id) ?? false;
       return [
         [sink.id, opacity],
-        [`channel-${sink.id}`, opacity],
+        [`channel-${sink.id}`, swapping ? 1 : opacity],
       ];
     }),
   );
@@ -859,6 +870,14 @@ export const MoleculeOverlay = ({
             <g key={block.id} style={fade(block.id)}>
               <Container block={block} />
               {block.app && <AppView block={block} items={apps[layout.sinks.indexOf(block)] ?? []} time={time} />}
+            </g>
+          ))}
+          {outgoing?.sinks.map((sink, index) => (
+            <g key={`${outgoing.key}-${sink.id}`}>
+              <animate attributeName='opacity' from='1' to='0' dur={`${SWAP_FADE_MS}ms`} fill='freeze' />
+              <ContainerBase block={sink} />
+              <Container block={sink} />
+              {sink.app && <AppView block={sink} items={outgoing.apps[index] ?? []} time={time} />}
             </g>
           ))}
           {molecules && extent && (

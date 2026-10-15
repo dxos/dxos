@@ -230,6 +230,8 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * host that grows or reveals content on purpose says so with a new value.
    */
   refitKey?: string | number;
+  /** Milliseconds a refit asked for by `refitKey` takes, so it can keep time with the host's own reveal. */
+  refitDuration?: number;
   /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
   theme?: string;
   /** The theme drawn when `theme` is unset; flat when this is unset too or unknown. */
@@ -273,6 +275,7 @@ const SceneViewRoot = ({
   background,
   backgroundGrid,
   refitKey,
+  refitDuration,
   onThemeChange,
   onBackgroundGridChange,
   children,
@@ -466,17 +469,19 @@ const SceneViewRoot = ({
     // A resize refits once it settles; an animation in flight (a drill) finishes first, since `animateTo` would cancel
     // it before it lands.
     let timeout: ReturnType<typeof setTimeout>;
+    // A refit the host asked for starts at once and takes its time; a resize waits for the size to settle.
+    const asked = fitted.key.slice(fitted.key.indexOf(':') + 1) !== String(refitKey ?? '');
     const fit = () => {
       if (fitLatestRef.current.isAnimating()) {
         timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
         return;
       }
       fittedRef.current = { scene: sceneId, key: fitKey };
-      fitLatestRef.current.animateTo(fitLatestRef.current.frame());
+      fitLatestRef.current.animateTo(fitLatestRef.current.frame(), undefined, asked ? refitDuration : undefined);
     };
-    timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
+    timeout = setTimeout(fit, asked ? 0 : FIT_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
-  }, [fitting, measured, sceneId, fitKey]);
+  }, [fitting, measured, sceneId, fitKey, refitDuration]);
   // Dragging the canvas takes the camera over.
   useEffect(() => {
     if (drag?.kind === 'pan') {

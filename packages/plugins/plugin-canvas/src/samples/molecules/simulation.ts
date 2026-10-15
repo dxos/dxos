@@ -290,6 +290,9 @@ const SLOW_DECAY = 16;
 const TINT_DELAY = 1;
 const TINT_TIME = 1.5;
 
+/** How much of a band (or bucket) the hub's aims reach across, centre-weighted: they thin out toward its walls. */
+const AIM_SPREAD = 0.8;
+
 /** The share of source molecules the monolithic agent takes a copy of. */
 const AGENT_READS = 0.5;
 
@@ -732,9 +735,9 @@ export class DataFlowSimulation {
   readonly #random: Random;
   #hub: Crystal;
   /** One lattice per sink, by agent; an application has none. */
-  readonly #sinks: (Crystal | undefined)[];
+  #sinks: (Crystal | undefined)[];
   /** Each application's content slots and what fills them, by sink. */
-  readonly #apps: { slots: readonly AppSlot[]; items: (AppItem | undefined)[]; reserved: Set<number> }[];
+  #apps: { slots: readonly AppSlot[]; items: (AppItem | undefined)[]; reserved: Set<number> }[];
   /** When each agent appeared, by agent; only the first `#agents` have. */
   readonly #agentSince: number[];
   #agents: number;
@@ -794,6 +797,37 @@ export class DataFlowSimulation {
       body.route = [];
     }
     this.#layout = { ...this.#layout, hub: target };
+  }
+
+  /**
+   * Turns each sink whose kind differs in `sinks` (an application into an agent, or back) into its new kind, in place:
+   * what it held, and what is on its way to it, fades; it comes into view `delay` seconds from now and takes molecules
+   * only from then.
+   */
+  convertSinks(sinks: readonly Block[], delay = 0): void {
+    sinks.forEach((sink, index) => {
+      const before = this.#layout.sinks[index];
+      if (!before || Boolean(before.app) === Boolean(sink.app)) {
+        return;
+      }
+      for (const body of this.#bodies) {
+        if (body.agent === index && (body.zone === 'sink' || body.zone === 'app')) {
+          if (body.phase === 'docked') {
+            this.#crystal(body.zone, index)?.release(body.id, body.sites ?? []);
+          }
+          this.#releaseAll(body);
+          body.sites = undefined;
+          body.phase = 'leaving';
+          body.age = 0;
+          body.route = [];
+        }
+      }
+      this.#sinks[index] = sink.app ? undefined : new Crystal(this.#layout.sinkGrids[index], 'blob');
+      const slots = appSlots(sink);
+      this.#apps[index] = { slots, items: slots.map(() => undefined), reserved: new Set<number>() };
+      this.#agentSince[index] = this.#time + delay;
+    });
+    this.#layout = { ...this.#layout, sinks: [...sinks] };
   }
 
   /** Merges a split hub back into `hub`'s one region; every molecule stays where it is, which that region holds. */
@@ -974,7 +1008,11 @@ export class DataFlowSimulation {
 
   /** An active agent at random, if any has appeared. */
   #anyAgent(): number | undefined {
-    return this.#agents > 0 ? Math.floor(this.#random() * this.#agents) : undefined;
+    // One still waiting to come into view (a sink just turned into an agent) takes nothing yet.
+    const present = Array.from({ length: this.#agents }, (_, agent) => agent).filter(
+      (agent) => this.#agentSince[agent] <= this.#time,
+    );
+    return present.length > 0 ? present[Math.floor(this.#random() * present.length)] : undefined;
   }
 
   /**
@@ -1258,9 +1296,13 @@ export class DataFlowSimulation {
     const gate = channelGate(body.source, 1);
     const lane = this.#lane('top');
     const start = add(body.position, centre(body.offsets));
-    // Each molecule aims at a random section of the band, so no channel feeds only the part beneath it.
+    // Each molecule aims at a random section of the band (in a bucket, once split), so no channel feeds only the part
+    // beneath it; the aims crowd toward the middle, so the lattice keeps clear of the walls.
     const { bounds, origin } = this.#layout.hubGrid;
-    const aim = { x: between(this.#random, bounds.x, bounds.x + bounds.width), y: origin.y };
+    const { buckets } = this.#layout.hub;
+    const region = buckets ? buckets[Math.floor(this.#random() * buckets.length)] : bounds;
+    const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
+    const aim = { x: region.x + region.width * (0.5 + spread / 2), y: origin.y };
     const well = this.#wellGate(`well-source-${body.source}`);
     return this.#send(body, 'hub', aim, (target) => {
       // The drop from the lane onto the band is part of the lane's stretch, so it never crosses traffic rising to it.

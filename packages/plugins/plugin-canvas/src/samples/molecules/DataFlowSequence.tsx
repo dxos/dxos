@@ -10,12 +10,12 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 
 /** One scene of a sequence: a diagram, how long it plays, and the caption that says what it shows. */
-export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'revealed' | 'partitioned'> & {
+export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'revealed' | 'partitioned' | 'sinks'> & {
   title: string;
   caption: string;
   /**
    * Consecutive scenes on one stage share a single diagram, which runs on between them rather than fading: the first
-   * scene's spec and options set it up, and each scene changes only what it reveals or how its hub is split.
+   * scene's spec and options set it up, and each scene changes only what it reveals, how its hub is split, or what its sinks are.
    */
   stage?: string;
   /** Seconds the scene plays before the next. */
@@ -80,14 +80,14 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
     <div className='dx-fill relative flex flex-col'>
       {/* The caption has a strip of its own above the diagram, so the camera's fit never puts a block under it. */}
       <div
-        className='shrink-0 flex flex-col items-center gap-1 py-3 bg-base-surface transition-opacity'
+        className='relative shrink-0 flex flex-col items-center gap-1 py-4 bg-base-surface transition-opacity'
         style={{ opacity: shown ? 1 : 0, transitionDuration: `${FADE}ms` }}
       >
-        <div className='text-sm text-fg-muted'>
+        <div className='absolute top-3 left-4 text-sm text-fg-muted'>
           {index + 1} / {scenes.length}
         </div>
-        <div className='text-2xl'>{scene.title}</div>
-        <div className='text-base text-fg-muted'>{scene.caption}</div>
+        <div className='text-3xl'>{scene.title}</div>
+        <div className='text-lg text-fg-muted'>{scene.caption}</div>
       </div>
       <div
         className='dx-grow relative transition-opacity'
@@ -100,6 +100,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
           theme={scene.theme}
           revealed={scene.revealed}
           partitioned={scene.partitioned}
+          sinks={scene.sinks}
         />
       </div>
       <div className='absolute top-2 right-2 w-max'>
