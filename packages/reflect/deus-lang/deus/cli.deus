@@ -67,12 +67,13 @@ def readSource (path : Text) : {IO, Throw Text} Text :=
   | Option.some text => withoutHeader (endsWith ".mdl" path) text
   | Option.none => Throw.throw ("cannot read " ++ path)
 
-/-- Expands directories to the `.deus` and `.mdl` files they contain, sorted. -/
-def expandPaths (paths : List Text) : {IO} List Text :=
-  List.concatMap (fun path =>
-    if IO.isDir path then
-      List.map (fun f => path ++ "/" ++ f) (List.filter (fun f => Text.endsWith ".deus" f || Text.endsWith ".mdl" f) (IO.listDir path))
-    else [path]) paths
+/-- Expands directories, with their subdirectories, to the `.deus` and `.mdl` files they contain, sorted. -/
+def expandPaths (paths : List Text) : {IO} List Text := concatMap (fun path => if IO.isDir path then
+  -- `deus export --terms` writes a file per definition at its namespace path (`List/map.deus`).
+  List.map
+    (fun f => path ++ "/" ++ f)
+    (sort (List.filter (fun f => endsWith ".deus" f || endsWith ".mdl" f) (filesUnder path "")))
+else [path]) paths
 
 /--
   `DEUS_TYPECHECK=0` skips type checking (only to bootstrap a change to the checker itself);
@@ -113,38 +114,45 @@ def output (args : Args) (json : Unit -> Json) (text : Unit -> Text) : {IO} Unit
 def entryJson (name : Text) (e : Entry) : Json :=
   Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
 
-/--
-  Resolves a reference in a namespace to its full name and entry (D105): a name, a `#hashprefix`,
+/-- Resolves a reference in a namespace to its full name and entry (D105): a name, a `#hashprefix`,
   a name IRI `<project>/<name>`, or a pinned `<project>/<name>#<hash>`. A prefix that matches
-  more than one hash is an error; a pinned hash whose name moved resolves to another name of it.
--/
-def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) :=
-  if Text.startsWith "#" name then
-    let prefix := Text.drop 1 name
-    match List.filter (fun pair => Text.startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
-    | [] => throw ("no definition with hash " ++ name)
-    | pair :: rest =>
+  more than one hash is an error; a pinned hash whose name moved resolves to another name of it. -/
+def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) := if startsWith "#" name then
+  let prefix := Text.drop 1 name
+  match List.filter (fun pair => startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
+  | [] => Throw.throw ("no definition with hash " ++ name)
+  | pair :: rest =>
       match List.filter (fun other => Entry.hash (snd other) != Entry.hash (snd pair)) rest with
       | [] => pair
-      | others => throw ("ambiguous hash " ++ name ++ ": " ++ Text.join ", " (List.map (fun p => fst p ++ " " ++ short (Entry.hash (snd p))) (List.take 5 (pair :: others))))
-  else if Text.contains "://" name then
-    match Analytics.parts name with
-    | (iri, fragment) =>
-      let bare := List.foldl (fun acc piece => piece) "" (Text.split iri "/")
-      if not (Analytics.isHex fragment) then lookupName ns bare
-      else
-        let h := Analytics.hashOf name
-        match Map.lookup bare ns with
-        | some e => if Entry.hash e == h then (bare, e) else lookupName ns ("#" ++ fragment)
-        | none => lookupName ns ("#" ++ fragment)
-  else
-    match Map.lookup name ns with
-    | some e => (name, e)
-    | none =>
+      | others => Throw.throw ("ambiguous hash " ++ name ++ ": " ++ join ", " (List.map
+          (fun p => fst p ++ " " ++ short (Entry.hash (snd p)))
+          (List.take 5 (pair :: others))))
+else if Text.contains "://" name then
+  let (iri, fragment) := Analytics.parts name
+  let bare := foldl (fun acc piece => piece) "" (Text.split iri "/")
+  if not (Analytics.isHex fragment) then Cli.lookupName ns bare else
+    let h := Analytics.hashOf name
+    match Map.lookup bare ns with
+    | Option.some e => if Entry.hash e == h then (bare, e) else Cli.lookupName ns ("#" ++ fragment)
+    | Option.none => Cli.lookupName ns ("#" ++ fragment)
+else
+  match Map.lookup name ns with
+  | Option.some e => (name, e)
+  | Option.none =>
       match Names.lookup (Names.build ns) name (Scope.mk [] []) (fun _ => true) true with
-      | some hit => hit
-      | none => throw ("unknown name " ++ name)
+      | Option.some hit => hit
+      | Option.none => Throw.throw ("unknown name " ++ name)
 
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
 --
 -- Commands: compiling.
 --
@@ -734,8 +742,8 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
       let ours := headOf dir branch
       let theirs := headOf dir other
       -- A CLI older than either side's data-safety epoch runs a merge that side no longer trusts (DataSafety.Spec).
-      Safety.requireEpoch dir ours "merge into"
-      Safety.requireEpoch dir theirs "merge"
+      requireEpoch dir ours "merge into"
+      requireEpoch dir theirs "merge"
       let merged := fun h changed => Cli.output
         args
         (fun _ => Json.obj [("result", Json.str "merged"), ("causal", Json.str h), ("changed", Json.arr (List.map Json.str changed))])
@@ -1146,9 +1154,9 @@ def push (args : Args) : {IO, Throw Text} Unit :=
         pushing (tries - 1)
       else Throw.throw message
   -- A CLI older than the codebase's data-safety epoch may push what its merge got wrong (DataSafety.Spec).
-  Safety.requireEpoch dir (headOf dir branch) "push"
-  match Codebase.branchHead dir (name ++ "." ++ branch) with
-  | Option.some h => Safety.requireEpoch dir h "push to"
+  requireEpoch dir (headOf dir branch) "push"
+  match branchHead dir (name ++ "." ++ branch) with
+  | Option.some h => requireEpoch dir h "push to"
   | Option.none => ()
   let checked := if branch == currentBranch dir && not (Cli.flag args "no-check") then touchedSpecs dir name branch else []
   let failed := if List.isEmpty checked then [] else
@@ -2575,7 +2583,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print Cli.usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then Cli.heads args else if command == "run" then
+      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)

@@ -946,7 +946,7 @@ def usage : Text := "usage: deus event types | record <Type> field=value… | im
 def command (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let project := projectOf dir
+  let project := Analytics.projectOf dir
   let ts := Analytics.types dir ns
   match args.positional with
   | "types" :: [] =>
