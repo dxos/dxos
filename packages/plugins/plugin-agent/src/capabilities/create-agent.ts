@@ -34,7 +34,11 @@ export const createAgent = Effect.fnUntraced(function* (db: Database.Database, i
   if (!settings?.identities) {
     return object;
   }
-  yield* Operation.invoke(AgentOperation.EnsureIdentity, { agent: Ref.make(object) }, { spaceId: db.spaceId }).pipe(
+  yield* Operation.invoke(
+    AgentOperation.EnsureIdentity,
+    { agent: Ref.make(object), mint: true },
+    { spaceId: db.spaceId },
+  ).pipe(
     // EDGE answers its creator's repeated request with the same identity, so a retry mints nothing twice.
     Effect.retry(PROVISIONING_RETRIES),
     Effect.timeout(PROVISIONING_TIMEOUT),

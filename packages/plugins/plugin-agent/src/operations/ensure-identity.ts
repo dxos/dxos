@@ -126,7 +126,7 @@ const admitHere = Effect.fnUntraced(function* (
 
 const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = AgentOperation.EnsureIdentity.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ agent: agentRef }) {
+    Effect.fnUntraced(function* ({ agent: agentRef, mint }) {
       const agent = yield* Database.load(agentRef);
       const { db } = yield* Database.Service;
       // Only a client has an authenticated EDGE client; elsewhere the agent keeps working without an identity.
@@ -213,6 +213,10 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
           yield* join(agent.did, yield* provision, missing);
         }
         return { provisioned: false, identityDid: agent.did };
+      }
+      // The DID names the brain, so an agent that has already talked would lose what it learned.
+      if (!mint) {
+        return { provisioned: false };
       }
 
       const provisioned = yield* provision;

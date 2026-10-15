@@ -152,7 +152,7 @@ op createAgent
     `Agent.makeInitialized` with the Interview skill in the agent's Instructions skill set and the
     Agent conversation skill bound to the first chat. Settings › Agents › Add agent invokes it with the name typed
     beside it ('' shows the placeholder "New agent") and, while the plugin's "Create identities for agents" setting is
-    on, follows it with op:ensureIdentity (F-7.4).
+    on, follows it with op:ensureIdentity and `mint: true` (F-7.4).
 ```
 
 ```mdl
@@ -161,6 +161,7 @@ op ensureIdentity
   desc: Gives the agent its own identity and default space on EDGE and puts the caller in that space.
   input:
     agent: Ref<Agent>
+    mint?: boolean                  # provisions an agent without a DID; default false
   output: { provisioned: boolean, identityDid?: string }
   effects: [echo:write, net:edge, halo:write]
   requires: [Database.Service, Capability.Service]
@@ -178,9 +179,11 @@ op ensureIdentity
     for an agent with a DID, as opening the agent does, it finishes for the agent's creator whichever of those two
     steps did not happen (`missingJoin`): it asks EDGE again, which answers its creator with the same identity and
     membership, and runs only the missing steps. When nothing is missing, or the caller is not the creator, it asks
-    EDGE nothing and changes nothing; an agent without a DID is never provisioned this way, since that would rename
-    its brain. Without an EDGE client (a headless host) nothing changes. A refusal from EDGE fails the operation and
-    changes nothing.
+    EDGE nothing and changes nothing. An agent without a DID is provisioned only with `mint`, for an agent created a
+    moment before: the DID names the agent's brain, so provisioning an agent that has talked would lose what it
+    learned. For the same reason the operation stays out of the registry (`skipRegistry`), where models and MCP
+    clients find operations. Without an EDGE client (a headless host) nothing changes. A refusal from EDGE fails the
+    operation and changes nothing.
 ```
 
 ```mdl
@@ -1101,7 +1104,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       expect: the switch is on; agents created from now on get identities (F-7.4)
     - name: Alice creates an agent named Kai
       do: In Alice's space open Settings › Agents, type "Kai" beside Add agent and click it.
-      invoke: [op:createAgent] { name: "Kai" }, then [op:ensureIdentity] { agent: Ref($agent.agent) }
+      invoke: [op:createAgent] { name: "Kai" }, then [op:ensureIdentity] { agent: Ref($agent.agent), mint: true }
       capture: agent
       expect: Kai's chat opens at once, and a space named Kai appears in Alice's space list once EDGE has minted it
     - name: Alice sees Kai among her space's members
