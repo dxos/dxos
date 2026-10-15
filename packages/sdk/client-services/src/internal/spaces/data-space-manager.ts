@@ -52,7 +52,7 @@ import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/i
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AlreadyJoinedError } from '@dxos/protocols';
+import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
 import {
   buf,
   fromDate,
@@ -75,6 +75,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
+  MembershipPolicy,
   type ProfileDocument,
   SpaceDeletedSchema,
   SpaceMember_Role as SpaceMemberRole,
@@ -755,6 +756,18 @@ export class DataSpaceManager extends Resource {
       throw new AlreadyJoinedError();
     }
 
+    // Marked only where it is needed: a peer on protocols that predate the field cannot verify it.
+    const agent = options.agent && space.spaceState.membershipPolicy === MembershipPolicy.LOCKED;
+    // Refused here, not written: the space drops a membership its issuer may not write, so the caller would see an
+    // admission succeed that never takes effect.
+    const issuer = this.signingContext.identityKey;
+    if (!space.spaceState.canWriteMember(issuer, { key: options.identityKey, role: options.role, agent })) {
+      throw new AuthorizationError({
+        message: 'No member management permission.',
+        context: { spaceKey: space.key, role: space.spaceState.getMemberRole(issuer) },
+      });
+    }
+
     // Resolved here rather than at each call site: a caller that forgets it emits a credential the
     // admitted member cannot find the root from.
     const spaceRootUrl = options.spaceRootUrl ?? this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
@@ -771,6 +784,7 @@ export class DataSpaceManager extends Resource {
       invitationCredentialId: options.delegationCredentialId,
       tags: space.spaceState.tags,
       spaceRootUrl,
+      agent,
     });
 
     // TODO(dmaretskyi): Refactor.
