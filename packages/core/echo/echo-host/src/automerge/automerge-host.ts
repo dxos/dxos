@@ -1562,6 +1562,41 @@ export class AutomergeHost extends Resource {
     if (!changeIsPresentInDoc(doc, changeHash)) {
       return false;
     }
+    this._confirmChange(documentId, changeHash);
+    return true;
+  }
+
+  /**
+   * The advertised documents storage cannot vouch for: a document whose every head beyond ours is a stored change
+   * is confirmed and dropped, so it is neither loaded nor synced.
+   */
+  private async _unconfirmedInStorage(
+    documentIds: DocumentId[],
+    localState: CollectionState,
+    remoteState: CollectionState,
+  ): Promise<DocumentId[]> {
+    const changes = documentIds.flatMap((documentId) => {
+      const local = new Set(localState.documents[documentId] ?? []);
+      const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+      return (remoteState.documents[documentId] ?? [])
+        .filter((head) => !local.has(head) && !this._hasLocalChange(documentId, head))
+        .map((hash) => ({ documentId, sedimentreeId, hash }));
+    });
+    const unconfirmed = new Set<DocumentId>();
+    for (const { documentId, sedimentreeId, hash } of changes) {
+      const held =
+        (await this._storage.load([SUBDUCTION_PREFIX, 'commits', sedimentreeId, hash])) !== undefined ||
+        (await this._storage.load([SUBDUCTION_PREFIX, 'fragments', sedimentreeId, hash])) !== undefined;
+      if (held) {
+        this._confirmChange(documentId, hash);
+      } else {
+        unconfirmed.add(documentId);
+      }
+    }
+    return documentIds.filter((documentId) => unconfirmed.has(documentId));
+  }
+
+  private _confirmChange(documentId: DocumentId, changeHash: string): void {
     const confirmed = this._confirmedChanges.get(documentId) ?? new Set<string>();
     if (!confirmed.has(changeHash) && confirmed.size >= MAX_CONFIRMED_PER_DOCUMENT) {
       confirmed.clear();
@@ -1574,7 +1609,6 @@ export class AutomergeHost extends Resource {
       const [leastRecent] = this._confirmedChanges.keys();
       this._confirmedChanges.delete(leastRecent);
     }
-    return true;
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1627,14 +1661,19 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different, missingOnLocal, missingOnRemote, advertised } = diffCollectionStateForPeer(
-      localState,
-      remoteState,
-      {
-        isEdgePeer: isEdgePeerId(peerId),
-        hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
-      },
-    );
+    const diff = diffCollectionStateForPeer(localState, remoteState, {
+      isEdgePeer: isEdgePeerId(peerId),
+      hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
+    });
+    const { different, missingOnLocal, missingOnRemote } = diff;
+    // Nothing is confirmed in memory after a restart, and EDGE lists fragment heads beside commit tips, so an
+    // in-sync document would otherwise be loaded and synced on every boot to learn what storage already holds.
+    const advertised = this._useSubduction
+      ? await this._unconfirmedInStorage(diff.advertised, localState, remoteState)
+      : diff.advertised;
+    if (ctx.disposed) {
+      return;
+    }
 
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {

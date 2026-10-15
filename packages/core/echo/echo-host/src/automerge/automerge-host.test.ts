@@ -464,6 +464,60 @@ describe('AutomergeHost', () => {
     expect(await differentDocuments()).toEqual(0);
   });
 
+  // Confirmations live in memory, so after a restart only storage can vouch for a head a remote lists beside
+  // ours, as EDGE lists fragment heads beside commit tips.
+  test("after a restart a remote head stored as one of the document's changes is confirmed without a load", async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const openHost = async () => {
+      const host = new AutomergeHost({
+        runtime,
+        useSubduction: true,
+        residency: { evictionDelay: 0, minResidentDocuments: 0 },
+      });
+      await host.open();
+      onTestFinished(async () => {
+        if (host.isOpen) {
+          await host.close();
+        }
+      });
+      return host;
+    };
+
+    const writer = await openHost();
+    const handle = await writer.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    const [ancestorHead] = A.getHeads(handle.doc());
+    handle.change((doc: any) => {
+      doc.value = 2;
+    });
+    await writer.flush(Context.default());
+    await writer.close();
+
+    const host = await openHost();
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+    const synchronizer = host['_collectionSynchronizer'];
+    const peerId = 'test-peer' as PeerId;
+    let loads = 0;
+    const leaseUntilSettled = host['_leaseUntilSettled'];
+    host['_leaseUntilSettled'] = (id: DocumentId) => {
+      loads += id === documentId ? 1 : 0;
+      leaseUntilSettled.call(host, id);
+    };
+    const loadsAfter = async (heads: string[]) => {
+      const before = loads;
+      synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: heads } });
+      await host['_handleCollectionSync'](Context.default(), collectionId, peerId);
+      return loads - before;
+    };
+
+    expect(await loadsAfter([localHead, ancestorHead])).toEqual(0);
+    expect(await loadsAfter([localHead, missingHead])).toEqual(1);
+  });
+
   test('an evicted document lacking a change stays synced and is loaded once per head pair and connection', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
