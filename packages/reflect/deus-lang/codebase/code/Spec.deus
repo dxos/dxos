@@ -1,7 +1,9 @@
 /-- The `api` block type. -/
 @[ext "org.dxos.deus.api@1.0"]
 def Spec.checkApi (b : Block) : {MdlHost} List Text :=
-  match List.filter (fun l => not (Text.isEmpty l)) (List.map trim (lines (Spec.prop b "signatures"))) with
+  match List.filter
+    (fun l => not (Text.isEmpty l))
+    (List.map trim (Text.lines (Spec.prop b "signatures"))) with
   | [] => ["api needs signatures:"]
   | lines => concatMap signatureProblems lines
 

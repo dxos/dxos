@@ -4,7 +4,7 @@ test Notes.indexIsHtml :=
   | _ => false
 
 /-- The keys of the notebook, kept as one newline-separated entry. -/
-def Notes.keys (u : Unit) : {Storage} List Text := List.filter (fun k => not (Text.isEmpty k)) (lines (getOr (Storage.get "keys") ""))
+def Notes.keys (u : Unit) : {Storage} List Text := List.filter (fun k => not (Text.isEmpty k)) (Text.lines (getOr (Storage.get "keys") ""))
 
 test Notes.notebooksAreSeparate :=
   let put := fun key body => Request.mk "PUT" (prefix ++ key) body

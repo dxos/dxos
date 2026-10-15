@@ -380,12 +380,12 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
         let h := Entry.hash e
         let source :=
           match try (fun _ => viewEntryWith printer dir ns name e false) with
-          | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
+          | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
           | Result.err message => "-- " ++ message
         -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
         let tsSource :=
           match try (fun _ => viewEntryIn printer dir ns name e "ts") with
-          | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (lines text))
+          | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (Text.lines text))
           | Result.err message => "// " ++ message
         let deps := List.filter (fun d => Map.contains d index && d != h) (getOr (Map.lookup h depsOf) [])
         -- References in the source print under their display names; those names link to the definitions.
@@ -463,14 +463,14 @@ def Explorer.snapshotFiles (dir : Text) : {IO} List Text := List.filter
 /-- A definition's source as `deus view` prints it, without its `-- ` header lines. -/
 def Explorer.sourceOf (printer : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO} Text :=
   match try (fun _ => viewEntryWith printer dir ns name e false) with
-  | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
+  | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
   | Result.err message => "-- " ++ message
 
 /-- `pass` or `fail` from a cached verdict, or `""` when there is none. -/
 def Explorer.statusOf (verdict : Text) : Text := if startsWith "(pass" verdict then "pass" else if startsWith "(fail" verdict then "fail" else ""
 
 /-- The first line of a doc comment, for listings. -/
-def Explorer.summaryOf (doc : Option Text) : Text := trim (getOr (Option.bind doc (fun d => head? (lines (trim d)))) "")
+def Explorer.summaryOf (doc : Option Text) : Text := trim (getOr (Option.bind doc (fun d => head? (Text.lines (trim d)))) "")
 
 def Explorer.taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, Causal)) (t : Task) : {IO, Throw Text} Json :=
   let link := fun a =>

@@ -13,7 +13,7 @@ test Replicate.Spec.cloneGetsMetadataChange := twoStores (fun a b =>
 test Replicate.Spec.closureHoldsMetas := inStore (fun dir =>
   let head := commitSource dir "/-- One. -/\ndef A.f := 1\n"
   let root := Causal.metas (readCausal dir head)
-  not (Text.isEmpty root) && Map.contains root (closureOf dir [head]))
+  not (Text.isEmpty root) && Map.contains root (Replicate.closureOf dir [head]))
 
 /-- R-1: a new doc alone makes a new node whose snapshot holds it. -/
 test Replicate.Spec.commitRecordsMetas := inStore (fun dir =>
@@ -45,7 +45,7 @@ theorem Replicate.Spec.oursWhereTheirsUnchanged : mergeMetas (withDoc "base") (w
 /-- Sends what `from`'s main reaches to `to` as one bundle, points `origin.main` at it, and merges it. -/
 def Replicate.Spec.pullInto (from : Text) (to : Text) : {IO, Throw Text} MergeResult :=
   let head := headOf from "main"
-  import to "0-spec" (bundle from [("main", head)] (Map.keys (closureOf from [head])))
+  import to "0-spec" (bundle from [("main", head)] (Map.keys (Replicate.closureOf from [head])))
   setBranch to "origin.main" head
   Codebase.merge to "origin.main"
 
@@ -216,8 +216,8 @@ def Replicate.compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, 
   let boundaries := List.filter (fun c => isBoundary level c) (Map.keys history)
   let strata := List.map (fun b =>
     let earlier := List.filter (fun other => other != b && Map.contains other (ancestors dir b)) boundaries
-    let before := if List.isEmpty earlier then Map.empty else closureOf dir earlier
-    List.filter (fun h => not (Map.contains h before)) (Map.keys (closureOf dir [b]))) boundaries
+    let before := if List.isEmpty earlier then Map.empty else Replicate.closureOf dir earlier
+    List.filter (fun h => not (Map.contains h before)) (Map.keys (Replicate.closureOf dir [b]))) boundaries
   let existing := Set.fromList (List.map (fun s => s.bundleName) seen)
   let written := filterMap (fun hashes =>
     let text := bundle dir [] hashes
@@ -388,7 +388,7 @@ def Replicate.push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, T
   let seen := sync dir remote
   let head := headOf dir branch
   let known := Set.fromList (concatMap (fun s => s.hashes) seen)
-  let missing := List.filter (fun h => not (Set.contains h known)) (Map.keys (closureOf dir [head]))
+  let missing := List.filter (fun h => not (Set.contains h known)) (Map.keys (Replicate.closureOf dir [head]))
   let claimed := any (fun s => any (fun c => c == (branch, head)) s.claims) seen
   if List.isEmpty missing && claimed then Option.none else
     let text := bundle dir [(branch, head)] missing

@@ -30,7 +30,7 @@ def Print.bind (p : Printer) (env : List Text) : Text :=
 def Print.body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text := if isBlock t then "\n" ++ spaces (ind + 2) ++ Print.stmts p t env (ind + 2) else " " ++ Print.expr p t env ind 0
 
 /-- A comment's lines at indentation `ind`, each followed by a new line at `ind`. -/
-def Print.commentLines (text : Text) (ind : Int) : Text := Text.concat (List.map (fun l => (if Text.isEmpty l then "" else l) ++ "\n" ++ spaces ind) (lines text))
+def Print.commentLines (text : Text) (ind : Int) : Text := Text.concat (List.map (fun l => (if Text.isEmpty l then "" else l) ++ "\n" ++ spaces ind) (Text.lines text))
 
 def Print.conName (p : Printer) (t : Text) (tag : Int) : Text := if t == "#Bool" then if tag == 1 then "true" else "false" else if t == "#Unit" then "()" else if t == "#List" then if tag == 0 then "[]" else "List.cons" else nameFor p (t ++ "#" ++ toText tag)
 
@@ -179,7 +179,7 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
 
 /-- Whether text starting at indentation `ind` keeps its first line within `width`; later lines made their own choice. -/
 def Print.fits (ind : Int) (text : Text) : Bool :=
-  let first := getOr (head? (lines text)) text
+  let first := getOr (head? (Text.lines text)) text
   ind + Text.length first <= width
 
 /-- `f a b` on one line when it fits, else `f` then one argument per line, indented. Binder names

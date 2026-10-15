@@ -146,7 +146,7 @@ def Analytics.backfillTimeline (dir : Text) (t : EventType) (path : Text) : {IO,
         match fromText stage with
         | Option.some n => Option.some (n, replace "`" "" commit, Analytics.seconds wall, summary)
         | Option.none => Option.none
-    | _ => Option.none) (lines text)
+    | _ => Option.none) (Text.lines text)
   forEach stages (fun s =>
     match s with
     | (n, commit, secs, summary) =>

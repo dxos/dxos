@@ -58,7 +58,7 @@ def Qa.items (value : Text) : List (List (Text, Text)) :=
     match lines with
     | [] => reverse (if List.isEmpty current then acc else reverse current :: acc)
     | line :: rest => if startsWith "  " line then go rest (line :: current) acc else go rest [line] (if List.isEmpty current then acc else reverse current :: acc)
-  List.map fieldsOf (go (lines value) [] [])
+  List.map fieldsOf (go (Text.lines value) [] [])
 
 /-- DEUS source for a text literal. -/
 def Qa.literal (t : Text) : Text := "\"" ++ replace "\n" "\\n" (replace "\"" "\\\"" (replace "\\" "\\\\" t)) ++ "\""

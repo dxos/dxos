@@ -168,6 +168,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 158 | 10-15 10:35 | 30m 00s | `58d3f800` | `deus update` type-checks the dependents it rehashes and refuses a change that leaves one ill-typed, naming it (D143, task 53e409cd, Codebase.Spec R-19); about 1 s on an update that rehashed 161 |
 | 159 | 10-15 10:45 | 10m 00s | `f7b3f1b9` | An ill-typed dependent's error names the definition it calls, not its hash (D143, Codebase.Spec R-19) |
 | 160 | 10-15 11:20 | 35m 00s | `478e0e62` | Parser.Spec, the checked spec of the lexer and parser (task 1ab6c044): six requirements on precedence, Unicode spellings, literals, comments, layout and error positions. Its R-6 caught an unterminated string reported at column 0 of the last line; it now points at the opening quote (D144). `Codebase.put` prints an object once, not twice |
-| 161 | 10-15 11:50 | 30m 00s | this commit | Tasks.Spec, the checked spec of the task model (task 1ab6c044): eight requirements on stored text, states and priorities, labels, links, ids, order, saving and parents. Its R-8 ran red: `--parent` took any text, kept a prefix as typed and allowed a cycle; it now resolves to another task's full id and refuses cycles (D145) |
+| 161 | 10-15 11:50 | 30m 00s | `9d0f8058` | Tasks.Spec, the checked spec of the task model (task 1ab6c044): eight requirements on stored text, states and priorities, labels, links, ids, order, saving and parents. Its R-8 ran red: `--parent` took any text, kept a prefix as typed and allowed a cycle; it now resolves to another task's full id and refuses cycles (D145) |
+| 162 | 10-15 12:05 | 15m 00s | this commit | Image.Spec, the checked spec of images (task 1ab6c044): closure, missing definitions, type lines and the main line, from a map of objects. No bug found; an api block must spell a row variable as `deus view` does (`e`), the known `0d7b0142` |
 
-Total from stage 1 to stage 161: 37h 42m.
+Total from stage 1 to stage 162: 37h 57m.

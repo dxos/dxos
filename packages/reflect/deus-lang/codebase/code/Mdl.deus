@@ -39,7 +39,7 @@ def Mdl.deusSource (doc : Text) : Text :=
     | line :: rest =>
         let trimmed := trim line
         if not inFence && trimmed == "```deus" then go rest true ("" :: acc) else if inFence && trimmed == "```" then go rest false ("" :: acc) else if inFence then go rest true (line :: acc) else go rest false ("" :: acc)
-  go (lines doc) false []
+  go (Text.lines doc) false []
 
 /-- A spec object as its extension's URI and the block. -/
 def Mdl.fromSexp (form : Sexp) : (Text, Block) :=
@@ -87,7 +87,7 @@ def Mdl.keyValue (line : Text) : Option (Text, Text) :=
 
 /-- Parses a document; fences other than ```mdl (```deus among them) are skipped. -/
 def Mdl.parse (doc : Text) : Doc :=
-  match frontmatter (mapIndexed (fun i l => (i + 1, l)) (lines doc)) with
+  match frontmatter (mapIndexed (fun i l => (i + 1, l)) (Text.lines doc)) with
   | (front, lines) =>
       -- fence: none outside; some (start, isMdl, lines reversed) inside.
       let rec go rest section fence terms blocks :=
@@ -117,7 +117,7 @@ def Mdl.parse (doc : Text) : Doc :=
   else is kept as written, `ext` blocks and other fences included, except that runs of blank lines
   outside fences become one, so the text survives a round trip unchanged. -/
 def Mdl.prose (doc : Text) : (List Text, Text) :=
-  match frontmatter (mapIndexed (fun i l => (i + 1, l)) (lines doc)) with
+  match frontmatter (mapIndexed (fun i l => (i + 1, l)) (Text.lines doc)) with
   | (_, lines) =>
       -- fence: none outside; some (kind, its lines reversed, the opening line last).
       let rec go rest section fence acc leads :=
@@ -162,7 +162,7 @@ def Mdl.render (b : Block) : Text :=
   "```mdl\n" ++ head ++ Text.concat (List.map
     (fun kv => "\n  " ++ fst kv ++ ":" ++ (if Text.contains "\n" (snd kv) then Text.concat (List.map
       (fun l => if startsWith "  " l then "\n    " ++ trim l else "\n  - " ++ l)
-      (lines (snd kv))) else " " ++ snd kv))
+      (Text.lines (snd kv))) else " " ++ snd kv))
     b.props) ++ "\n```"
 
 /-- Whether a block is stored as a spec object: it has an id and is not an `ext` declaration. -/

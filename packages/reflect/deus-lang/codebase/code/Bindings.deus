@@ -289,7 +289,7 @@ def Bindings.fieldNames (cx : Bindings.Cx) (name : Text) (meta : Option Sexp) (t
 /-- An export's top-level declaration. -/
 def Bindings.functionDts (cx : Bindings.Cx) (e : Export) : {Throw Text} Text :=
   let params := join ", " (List.map (fun p => fst p ++ ": " ++ tsType cx [] (snd p)) (shownParams e))
-  Bindings.docComment "" (lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
+  Bindings.docComment "" (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
     "export declare function " ++ e.exIdent ++ "(" ++ params ++ "): Promise<" ++ tsType cx [] e.exResult ++ ">;\n"
 
 /-- Generates the module for `prefixes`: the `.js` text, the `.d.ts` text, the exported names and
@@ -452,8 +452,9 @@ def Bindings.member (cx : Bindings.Cx) (e : Export) : {Throw Text} (Text, Text) 
     | one :: [] => one
     | many => "rt.args([" ++ join ", " many ++ "])"
   let call := "await module.call(" ++ Bindings.quote (entryOf e) ++ ", " ++ argument ++ ")"
-  (Bindings.docComment "  " (lines e.exDoc ++ ["", "`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
-    "  readonly " ++ e.exIdent ++ ": " ++ signature ++ ";", "    " ++ e.exIdent ++ ": async (" ++ join ", " (List.map fst shown) ++ ") => " ++
+  (Bindings.docComment
+    "  "
+    (Text.lines e.exDoc ++ ["", "`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++ "  readonly " ++ e.exIdent ++ ": " ++ signature ++ ";", "    " ++ e.exIdent ++ ": async (" ++ join ", " (List.map fst shown) ++ ") => " ++
     Bindings.codec cx [] e.exResult ++ ".decode(" ++ call ++ "),")
 
 /-- The module (`.js`) and its declarations (`.d.ts`) for the selected exports, with the exports
@@ -567,8 +568,15 @@ def Bindings.propKey (t : Text) : Text := if List.contains t Bindings.reserved t
 /-- An export's declared type, as a function type in an object type. -/
 def Bindings.propertyDts (cx : Bindings.Cx) (indent : Text) (e : Export) : {Throw Text} Text :=
   let params := join ", " (List.map (fun p => fst p ++ ": " ++ tsType cx [] (snd p)) (shownParams e))
-  Bindings.docComment indent (lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
-    indent ++ "readonly " ++ e.exIdent ++ ": (" ++ params ++ ") => Promise<" ++ tsType cx [] e.exResult ++ ">;"
+  Bindings.docComment indent (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
+    indent ++
+    "readonly " ++
+    e.exIdent ++
+    ": (" ++
+    params ++
+    ") => Promise<" ++
+    tsType cx [] e.exResult ++
+    ">;"
 
 def Bindings.quote (t : Text) : Text := "'" ++ replace "'" "\\'" (replace "\\" "\\\\" t) ++ "'"
 
