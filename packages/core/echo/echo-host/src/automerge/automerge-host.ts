@@ -218,11 +218,6 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
  */
 const EVICT_IDLE_DELAY = 30_000;
 
-/**
- * How many released documents wait out {@link EVICT_IDLE_DELAY}, as many as a client keeps of its own
- * (`DOCUMENT_RETENTION` in echo-client). A reindex releases thousands within the delay, and holding
- * them all loaded sizes the worker's Automerge wasm memory, which never shrinks, by the whole profile.
- */
 const MAX_IDLE_DOCUMENTS = 50;
 
 /**
