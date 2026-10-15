@@ -568,6 +568,22 @@ def generalize (a : Sexp) (b : Sexp) (pairs : Ref (List ((Sexp, Sexp), Sexp))) :
   since Core has no types, so the stored scheme becomes one that fits every name (D116).
 -/
 def mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
+  let merged := mergeScheme old new
+  -- Another name owned the file: its fields move to a `(for …)` entry, and the new owner's leaves.
+  match (old, Option.map Sexp.asText (metaField (some new) "owner")) with
+  | (some o, some name) =>
+    let previous := Option.getOr (Option.map Sexp.asText (metaField old "owner")) name
+    if previous != name && ownFields o == ownFields new then
+      -- The owner's fields are this name's too: keep the file, so the order names arrive in does not matter.
+      Sexp.list (Sexp.sym "meta" :: List.filter (fun item => not (Sexp.head item == "for" && forName item == name)) (Sexp.args (mergeScheme (some new) o)))
+    else
+      let others := List.filter (fun item => Sexp.head item == "for" && forName item != name && forName item != previous) (Sexp.args o)
+      let moved := if previous == name then [] else [Sexp.node "for" (Sexp.str previous :: ownFields o)]
+      Sexp.list (Sexp.asList merged ++ others ++ moved)
+  | _ => merged
+
+/-- `new`, with its scheme generalized over `old`'s when they differ (D116). -/
+def mergeScheme (old : Option Sexp) (new : Sexp) : Sexp :=
   match (metaField old "scheme", metaField (some new) "scheme") with
   | (some a, some b) =>
     if a == b then new
@@ -575,6 +591,20 @@ def mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
       let general := generalize a b (Ref.new [])
       Sexp.list (Sexp.sym "meta" :: List.map (fun item => if Sexp.head item == "scheme" then Sexp.node "scheme" [general] else item) (Sexp.args new))
   | _ => new
+
+/-- `meta` as `name` wrote it: the shared scheme with `name`'s own fields, from its `(for name …)` entry when another name owns the file. -/
+def metaFor (name : Text) (meta : Sexp) : Sexp :=
+  let shared := List.filter (fun item => Sexp.head item != "for") (Sexp.args meta)
+  match List.find (fun item => Sexp.head item == "for" && forName item == name) (Sexp.args meta) with
+  | some entry => Sexp.list (Sexp.sym "meta" :: List.filter (fun item => Sexp.head item == "scheme") shared ++ List.drop 1 (Sexp.args entry))
+  | none => Sexp.list (Sexp.sym "meta" :: shared)
+
+/-- The name a `(for name …)` entry is for. -/
+def forName (entry : Sexp) : Text := Option.getOr (Option.map Sexp.asText (List.head? (Sexp.args entry))) ""
+
+/-- The fields of a metadata file that belong to its owner: all but the scheme, the owner and other names' entries. -/
+def ownFields (meta : Sexp) : List Sexp :=
+  List.filter (fun item => Sexp.head item != "scheme" && Sexp.head item != "owner" && Sexp.head item != "for") (Sexp.args meta)
 
 /-- Writes a compiled batch's objects and metadata. -/
 def store (dir : Text) (b : Batch) : {IO} Unit :=

@@ -37,12 +37,13 @@ def metadataChanged (ns : Map Text Entry) (entries : List (Text, Entry)) (stored
       if Entry.hash old != h then none
       else
         let before := stored h
-        if Option.map authored before == some (authored (Codebase.mergeMeta before meta)) then none else some (fst pair)
+        let mine := fun m => authored (Codebase.metaFor (fst pair) m)
+        if Option.map mine before == some (mine (Codebase.mergeMeta before meta)) then none else some (fst pair)
     | _ => none) entries
 
 /-- Metadata without what the compiler derives or the printer renames. -/
 def authored (meta : Sexp) : List Sexp :=
-  List.filter (fun item => Sexp.head item != "scheme" && Sexp.head item != "locals") (Sexp.args meta)
+  List.filter (fun item => Sexp.head item != "scheme" && Sexp.head item != "locals" && Sexp.head item != "owner") (Sexp.args meta)
 
 /-- Rebuilds a pending definition from a stored object. -/
 def pendingOf (name : Text) (obj : Sexp) : Pending :=
@@ -55,32 +56,36 @@ def pendingOf (name : Text) (obj : Sexp) : Pending :=
   Propagates `subst` (old hash to new hash) through the namespace. Returns the new namespace and the
   names that were rehashed. A name just compiled refers to the batch's new hashes, but still to the
   old hash of a name outside the batch that depends on a changed one, so it is a candidate too.
+  `fresh` holds the hashes the batch compiled: those follow only the rehashed dependents, since an
+  old hash they name is still current (another name took over the old body, R-17).
 -/
-def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) : {IO} (Map Text Entry, List Text) :=
+def propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh : Map Text Unit) : {IO} (Map Text Entry, List Text) :=
   if Map.size subst == 0 then (ns, [])
   else
     let candidates := List.filter (fun pair => isTermLike (snd pair)) (Map.toList ns)
     let objectOf := fun (h : Text) => Option.getOr (Codebase.readObject dir h) (Sexp.list [])
-    -- Grow the set of changed hashes until no candidate depends on one.
-    let rec grow changed affected :=
+    -- Grow the set of changed hashes until no candidate depends on one; `grown` leaves out `subst`'s.
+    let rec grow changed grown affected :=
       let next := List.filter (fun pair =>
         let h := Entry.hash (snd pair)
-        not (Set.contains h affected) && List.any (fun d => Set.contains d changed) (Codebase.dependencies (objectOf h))) candidates
+        let seen := if Set.contains h fresh then grown else changed
+        not (Set.contains h affected) && List.any (fun d => Set.contains d seen) (Codebase.dependencies (objectOf h))) candidates
       if List.isEmpty next then affected
       else
         let hs := List.map (fun pair => Entry.hash (snd pair)) next
-        grow (List.foldl (fun s h => Set.insert h s) changed hs) (List.foldl (fun s h => Set.insert h s) affected hs)
-    let affected := grow (Set.fromList (Map.keys subst)) Set.empty
+        grow (List.foldl (fun s h => Set.insert h s) changed hs) (List.foldl (fun s h => Set.insert h s) grown hs) (List.foldl (fun s h => Set.insert h s) affected hs)
+    let affected := grow (Set.fromList (Map.keys subst)) Set.empty Set.empty
     if Map.size affected == 0 then (ns, [])
     else
       -- One canonical name per affected hash; aliases follow it.
       let canonical := List.foldl (fun m pair =>
         let h := Entry.hash (snd pair)
         if Set.contains h affected && not (Map.contains h m) then Map.insert h (fst pair) m else m) Map.empty candidates
-      let rewriteMap := List.foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) subst (Map.toList canonical)
+      let grownMap := List.foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) Map.empty (Map.toList canonical)
+      let rewriteMap := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) subst (Map.toList grownMap)
       let pending := List.map (fun pair =>
         match pair with
-        | (h, name) => pendingOf name (Codebase.rewrite (objectOf h) rewriteMap)) (Map.toList canonical)
+        | (h, name) => pendingOf name (Codebase.rewrite (objectOf h) (if Set.contains h fresh then grownMap else rewriteMap))) (Map.toList canonical)
       match Compile.hashTerms pending Map.empty with
       | (hashes, objects) =>
         List.forEach objects (fun pair => Codebase.writeObject dir (fst pair) (snd pair))

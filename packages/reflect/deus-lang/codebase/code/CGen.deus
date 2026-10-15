@@ -106,6 +106,14 @@ def CGen.eLet (v : Sexp) (b : Sexp) : Sexp := Sexp.list [Sexp.sym "let", v, b]
 
 def CGen.eSeq (a : Sexp) (b : Sexp) : Sexp := Sexp.list [Sexp.sym "seq", a, b]
 
+--
+-- Effects (D124). A clause that resumes only in tail position needs no captured continuation:
+-- performing calls it, and its tail `k x` returns `x` to the performer. A clause tail that does
+-- not resume aborts: it stores its value and returns the abort marker, which every caller that
+-- may see it checks and passes on, dropping what it owns, up to the handler. Both are rewritten
+-- into Core over the `deus.*` runtime functions before lambda lifting, so reference counting
+-- covers the new paths as it covers any other code.
+--
 def CGen.eVar (i : Int) : Sexp := Sexp.list [Sexp.sym "var", Sexp.int i]
 
 /-- The abort marker, as a value. -/

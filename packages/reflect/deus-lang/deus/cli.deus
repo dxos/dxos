@@ -293,7 +293,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := Update.propagate dir ns2 subst
+    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
     let ns3 := fst propagated
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
@@ -371,7 +371,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
   let core := dialect == "core"
   let ts := dialect == "ts"
   let h := Entry.hash e
-  let meta := Codebase.readMeta dir h
+  let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
   let comment := if ts then "// " else "-- "
   let typeLine := match Codebase.metaField meta "scheme" with
     | some scheme => comment ++ ": " ++ Types.displaySchemeNamed (Types.declaredNames ns) scheme ++ "\n"
@@ -873,7 +873,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : 
   | none => throw (name ++ " is not in the codebase")
   | some e =>
     let h := Entry.hash e
-    let meta := Codebase.readMeta dir h
+    let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
     let typed := match Codebase.metaField meta "scheme" with
       | some scheme => [("type", Types.displaySchemeNamed (Types.declaredNames ns) scheme)]
       | none => []

@@ -42,15 +42,6 @@ Follow-up to D96: spec prose is block metadata; Replicate writes meta only when 
 
 > claude: Seen 2026-10-14 by the native thread: a fresh clone of r2://agent-artifacts/deus/toolchain (origin.main #9db52bfe04) exports specs/JsGen.Spec.mdl with R-3's prose under the wrong blocks; the long-lived store and the git export are right. Cause: Replicate.push bundles meta only for objects the remote lacks, and Replicate.import writes meta only where none exists, so a meta-only change (spec prose, docs, D116 schemes) never reaches the remote, and a clone keeps whichever bundle it imports first. A local deus update cannot repair R2. Proposed fix: make a metadata change a content-addressed object (metaset hash form) that the causal node of the change references, so it replicates and compacts like any object, and apply metasets in causal order on merge (descendant wins; concurrent ones merge as Codebase.mergeMeta does). Subsumes 4c9147ce. Until then, export only from a long-lived store and diff codebase/specs against git before committing an export.
 
-## Names that share a hash keep only the last name's doc, comments and parameter names (`62f3f4d0`)
-
-- state: todo
-- priority: high
-- labels: codebase, bug
-- links `Codebase.mergeMeta` (#20fb7353e5)
-
-Core has no types or names, so two definitions with the same body share a hash and one metadata file. Codebase.store keeps the newest doc, lead comments and locals (D116 merges only the scheme), so updating deus/wasm.deus gives Prove.lambdas the doc of Wasm.unlam, and view, export and the explorer print it under both names. Workaround: deus update deus/prove.deus afterwards. Proposed fix: keep name-specific fields per name when they differ, as (for "<fqn>" doc lead locals…) entries in the shared meta, written by mergeMeta from the batch's fqn, and read through one Codebase.metaFor meta name used by view, export, the explorer and bindings. Found by the native thread, 2026-10-14.
-
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -605,6 +596,17 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 > claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
 
 > claude: Built as comments on Core, the user's choice (D66): lead and notes metadata, restored by the printer. Character literals still print as numbers; filed separately.
+
+## Names that share a hash keep only the last name's doc, comments and parameter names (`62f3f4d0`)
+
+- state: done
+- priority: high
+- labels: codebase, bug
+- links `Codebase.mergeMeta` (#20fb7353e5)
+
+Core has no types or names, so two definitions with the same body share a hash and one metadata file. Codebase.store keeps the newest doc, lead comments and locals (D116 merges only the scheme), so updating deus/wasm.deus gives Prove.lambdas the doc of Wasm.unlam, and view, export and the explorer print it under both names. Workaround: deus update deus/prove.deus afterwards. Proposed fix: keep name-specific fields per name when they differ, as (for "<fqn>" doc lead locals…) entries in the shared meta, written by mergeMeta from the batch's fqn, and read through one Codebase.metaFor meta name used by view, export, the explorer and bindings. Found by the native thread, 2026-10-14.
+
+> claude: Done (D132): a term's metadata names its owner; another name sharing the hash keeps its doc, comments, locals and attributes in a (for "<name>" …) entry, and view, describe and the explorer read Codebase.metaFor name. Codebase.Spec R-16. Fixing it exposed a propagation bug (D133, R-17): a batch definition calling another that took over its old body was rewired to call itself.
 
 ## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
 

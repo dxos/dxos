@@ -1,5 +1,7 @@
 /-- Metadata without what the compiler derives or the printer renames. -/
-def Update.authored (meta : Sexp) : List Sexp := List.filter (fun item => head item != "scheme" && head item != "locals") (Sexp.args meta)
+def Update.authored (meta : Sexp) : List Sexp := List.filter
+  (fun item => head item != "scheme" && head item != "locals" && head item != "owner")
+  (Sexp.args meta)
 
 /-- Term-like entries whose objects reference `h`. -/
 def Update.dependentsOf (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} List Text := dedup (sort (filterMap (fun pair =>
@@ -31,7 +33,8 @@ def Update.metadataChanged (ns : Map Text Entry) (entries : List (Text, Entry)) 
   match (Map.lookup (fst pair) ns, Map.lookup h metas) with
   | (Option.some old, Option.some meta) => if Entry.hash old != h then Option.none else
       let before := stored h
-      if Option.map authored before == Option.some (authored (mergeMeta before meta)) then Option.none else Option.some (fst pair)
+      let mine := fun m => authored (metaFor (fst pair) m)
+      if Option.map mine before == Option.some (mine (mergeMeta before meta)) then Option.none else Option.some (fst pair)
   | _ => Option.none) entries
 
 /-- Rebuilds a pending definition from a stored object. -/
@@ -43,30 +46,37 @@ def Update.pendingOf (name : Text) (obj : Sexp) : Pending :=
 
 /-- Propagates `subst` (old hash to new hash) through the namespace. Returns the new namespace and the
   names that were rehashed. A name just compiled refers to the batch's new hashes, but still to the
-  old hash of a name outside the batch that depends on a changed one, so it is a candidate too. -/
-def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) : {IO} (Map Text Entry, List Text) := if Map.size subst == 0 then (ns, []) else
+  old hash of a name outside the batch that depends on a changed one, so it is a candidate too.
+  `fresh` holds the hashes the batch compiled: those follow only the rehashed dependents, since an
+  old hash they name is still current (another name took over the old body, R-17). -/
+def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) (fresh : Map Text Unit) : {IO} (Map Text Entry, List Text) := if Map.size subst == 0 then (ns, []) else
   let candidates := List.filter (fun pair => isTermLike (snd pair)) (Map.toList ns)
   let objectOf := fun h => getOr (readObject dir h) (Sexp.list [])
-  -- Grow the set of changed hashes until no candidate depends on one.
-  let rec grow changed affected :=
+  -- Grow the set of changed hashes until no candidate depends on one; `grown` leaves out `subst`'s.
+  let rec grow changed grown affected :=
     let next := List.filter (fun pair =>
       let h := Entry.hash (snd pair)
-      not (Set.contains h affected) && any (fun d => Set.contains d changed) (Codebase.dependencies (objectOf h))) candidates
+      let seen := if Set.contains h fresh then grown else changed
+      not (Set.contains h affected) && any (fun d => Set.contains d seen) (Codebase.dependencies (objectOf h))) candidates
     if List.isEmpty next then affected else
       let hs := List.map (fun pair => Entry.hash (snd pair)) next
       grow
         (foldl (fun s h => Set.insert h s) changed hs)
+        (foldl (fun s h => Set.insert h s) grown hs)
         (foldl (fun s h => Set.insert h s) affected hs)
-  let affected := grow (Set.fromList (Map.keys subst)) Map.empty
+  let affected := grow (Set.fromList (Map.keys subst)) Map.empty Map.empty
   if Map.size affected == 0 then (ns, []) else
     -- One canonical name per affected hash; aliases follow it.
     let canonical := foldl (fun m pair =>
       let h := Entry.hash (snd pair)
       if Set.contains h affected && not (Map.contains h m) then Map.insert h (fst pair) m else m) Map.empty candidates
-    let rewriteMap := foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) subst (Map.toList canonical)
+    let grownMap := foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) Map.empty (Map.toList canonical)
+    let rewriteMap := foldl (fun m pair => Map.insert (fst pair) (snd pair) m) subst (Map.toList grownMap)
     let pending := List.map (fun pair =>
       match pair with
-      | (h, name) => pendingOf name (Codebase.rewrite (objectOf h) rewriteMap)) (Map.toList canonical)
+      | (h, name) => pendingOf
+          name
+          (Codebase.rewrite (objectOf h) (if Set.contains h fresh then grownMap else rewriteMap))) (Map.toList canonical)
     match hashTerms pending Map.empty with
     | (hashes, objects) =>
         forEach objects (fun pair => writeObject dir (fst pair) (snd pair))

@@ -43,7 +43,11 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := propagate dir ns2 subst
+    let propagated := propagate
+      dir
+      ns2
+      subst
+      (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
     let ns3 := fst propagated
     let message := getOr
       (option args "message")
@@ -540,7 +544,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (nam
   | Option.none => Throw.throw (name ++ " is not in the codebase")
   | Option.some e =>
       let h := Entry.hash e
-      let meta := readMeta dir h
+      let meta := Option.map (metaFor name) (readMeta dir h)
       let typed :=
         match metaField meta "scheme" with
         | Option.some scheme => [("type", displaySchemeNamed (declaredNames ns) scheme)]
@@ -1667,7 +1671,7 @@ def Cli.viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
   let core := dialect == "core"
   let ts := dialect == "ts"
   let h := Entry.hash e
-  let meta := readMeta dir h
+  let meta := Option.map (metaFor name) (readMeta dir h)
   let comment := if ts then "// " else "-- "
   let typeLine :=
     match metaField meta "scheme" with

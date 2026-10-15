@@ -155,6 +155,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 145 | 10-15 04:40 | 10m 00s | `eef0e37e` | devex: `runImage` parses an image once per process, so an in-process CLI call costs half (a one-line `add` 90 ms, was 180 ms) and the suite takes 107 s (was 119 s) |
 | 146 | 10-15 04:50 | 10m 00s | `6417387e` | devex: `scripts/vitest.config.mjs` runs the package suite alone with a worker per core, from any directory: 84 s on 4 cores (107 s with vitest's default), and the README names it |
 | 147 | 10-15 05:15 | 25m 00s | `9a25231f` | `@[req "Doc.R-1"]` links from laws to requirements (D130, task 6a3b0ebe): `deus mdl --coverage` counts them as citations and lists the ones that name no requirement; theorems keep their attributes (Coverage.Spec R-5..R-7) |
-| 148 | 10-15 05:55 | 40m 00s | this commit | `deus update` lists metadata-only changes, `* name (metadata)`, instead of "Nothing changed." (D131, task a08c4408, Codebase.Spec R-15); inferred schemes and local names do not count, and the dogfood round trip keeps source `--` comments |
+| 148 | 10-15 05:55 | 40m 00s | `880edf73` | `deus update` lists metadata-only changes, `* name (metadata)`, instead of "Nothing changed." (D131, task a08c4408, Codebase.Spec R-15); inferred schemes and local names do not count, and the dogfood round trip keeps source `--` comments |
+| 149 | 10-15 06:40 | 45m 00s | this commit | names that share a hash keep their own doc and comments (D132, task 62f3f4d0, Codebase.Spec R-16); propagation no longer rewires a call to a body moved into a new name back onto its caller (D133, R-17) |
 
-Total from stage 1 to stage 148: 29h 22m.
+Total from stage 1 to stage 149: 30h 07m.

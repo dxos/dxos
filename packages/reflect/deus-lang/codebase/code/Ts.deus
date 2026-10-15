@@ -164,7 +164,7 @@ test Ts.functionWithReturn :=
     (Option.some (Sexp.read "(tfun (tref \"#Int\") (tref \"#Int\"))"))
     Option.none == "function f(n: Int): Int {\n  return n + 1;\n}"
 
-def Ts.generics (args : List Text) : Text := if List.isEmpty args then "" else "<" ++ join ", " args ++ ">"
+def Ts.generics (names : List Text) : Text := if List.isEmpty names then "" else "<" ++ join ", " names ++ ">"
 
 /-- Whether a function type's result carries effects: `uses` lists them with commas, so in a list the type needs parentheses. -/
 def Ts.hasUses (result : Sexp) : Bool :=

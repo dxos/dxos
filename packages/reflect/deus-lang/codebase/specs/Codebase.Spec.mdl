@@ -35,6 +35,13 @@ api A-1: the object store
 ```
 
 ```mdl
+api A-5: metadata shared by names with one hash
+  signatures:
+  - Codebase.metaFor : Text -> Sexp -> Sexp
+  - Codebase.mergeMeta : Option Sexp -> Sexp -> Sexp
+```
+
+```mdl
 api A-2: namespace snapshots
   signatures:
   - Codebase.putNamespace : Text -> Map Text Entry -> {IO} Text
@@ -173,6 +180,21 @@ req R-13: an update rehashes every definition that depends on a changed one, inc
 ```mdl
 req R-15: an update that changes only a definition's metadata (its doc comment or attributes) names the definition, and one that changes nothing, changes the hash, or renames only locals does not name it as metadata
   by: Codebase.Spec.docChangeListed | Codebase.Spec.attributeChangeListed | Codebase.Spec.sameMetadataUnlisted | Codebase.Spec.changedHashUnlisted | Codebase.Spec.localRenameUnlisted
+```
+
+Core has no names, so two definitions with one body share a hash and one metadata file (task 62f3f4d0). The file
+names its owner, the name that last wrote it; every other name keeps its own fields (doc, comments, locals,
+attributes, annotation) in a `(for "<name>" …)` entry, and readers take a name's view of the file with
+`Codebase.metaFor`. Only the inferred scheme is shared.
+
+```mdl
+req R-16: names that share a hash keep their own doc comments, whether added together or apart, and a name's update replaces only its own; a name whose fields match the owner's changes nothing
+  by: Codebase.Spec.sharedHashKeepsEachDoc | Codebase.Spec.laterAddKeepsOtherDoc | Codebase.Spec.ownUpdateReplacesOwnDoc | Codebase.Spec.unsharedHasNoEntries | Codebase.Spec.sameFieldsKeepTheOwner
+```
+
+```mdl
+req R-17: when a definition in an update takes over another's old body, and so its old hash, what the update compiled keeps calling it, while dependents outside the update follow the name they called
+  by: Codebase.Spec.extractedBodyKeepsItsName | Codebase.Spec.dependentFollowsTheName
 ```
 
 ```mdl

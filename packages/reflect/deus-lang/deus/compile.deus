@@ -405,7 +405,10 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | (name, Entry.test h) => (name, Entry.test (resolveHash h))
       | (name, Entry.theorem h) => (name, Entry.theorem (resolveHash h))
       | other => other) entries
-    let finalMetas := List.map (fun pair => (resolveHash (fst pair), snd pair)) (Ref.get metas)
+    -- A term's metadata names its owner, since names that share a body share the file (Codebase.metaFor).
+    let finalMetas := List.map (fun pair =>
+      if Text.startsWith "@" (fst pair) then (resolveHash (fst pair), Sexp.list (Sexp.asList (snd pair) ++ [node "owner" [s (Text.drop 1 (fst pair))]]))
+      else pair) (Ref.get metas)
     Batch.mk (List.reverse (Ref.get typeObjects) ++ termObjects) finalEntries finalMetas (List.reverse (Ref.get warnings))
 
 /--
