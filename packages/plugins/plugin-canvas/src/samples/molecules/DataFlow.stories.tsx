@@ -18,7 +18,7 @@ const SPEC: DataFlowSpec = {
     { id: 'finance', label: 'Finance', hue: 'green' },
     { id: 'ops', label: 'Ops', hue: 'fuchsia' },
   ],
-  hub: { label: 'Hypergraph', partitions: 3 },
+  hub: { label: 'ECHO', partitions: 3 },
   sinks: [{ label: 'Agent' }],
 };
 
@@ -37,7 +37,7 @@ const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent'
 
 const APPS: DataFlowSpec = {
   ...SPEC,
-  hub: { label: 'Hypergraph' },
+  hub: { label: 'ECHO' },
   sinks: [
     { label: 'Docs', app: 'document' },
     { label: 'Sheets', app: 'spreadsheet' },
@@ -48,7 +48,7 @@ const APPS: DataFlowSpec = {
 
 const MIXED: DataFlowSpec = {
   ...SPEC,
-  hub: { label: 'Hypergraph', partitions: 3 },
+  hub: { label: 'ECHO', partitions: 3 },
   sinks: [
     { label: 'Docs', app: 'document' },
     { label: 'Sheets', app: 'spreadsheet' },
@@ -80,15 +80,15 @@ const CHAPTERS: readonly Scene[] = [
     duration: 20,
   },
   {
-    title: 'A shared hypergraph',
-    caption: 'The sources feed one hypergraph, and the apps sync from it.',
+    title: 'A shared ECHO',
+    caption: 'The sources feed one ECHO space, and the apps sync from it.',
     spec: APPS,
     options: { warmup: 16 },
     duration: 24,
   },
   {
     title: 'Apps and agents together',
-    caption: 'Applications and agents share the same partitioned hypergraph, side by side.',
+    caption: 'Applications and agents share the same partitioned ECHO space, side by side.',
     spec: MIXED,
     // Agents fill only from the share of the hub synced down to them, so they need the longest start.
     options: { warmup: 30 },
@@ -138,10 +138,10 @@ export const Chapter1Silos: Story = chapter(0);
 /** One monolithic agent beside the apps reads every source at once through its OAuth container. */
 export const Chapter2Monolith: Story = chapter(1);
 
-/** The sources feed one partitioned hypergraph, and the apps sync their content from it. */
-export const Chapter3Hypergraph: Story = chapter(2);
+/** The sources feed one ECHO space, and the apps sync their content from it. */
+export const Chapter3Echo: Story = chapter(2);
 
-/** Applications and agents side by side on the same hypergraph. */
+/** Applications and agents side by side on the same partitioned ECHO space. */
 export const Chapter4Mixed: Story = chapter(3);
 
 /**

@@ -20,7 +20,7 @@ const APPS: DataFlowSpec = {
     { id: 'ops', label: 'Ops', hue: 'fuchsia' },
     { id: 'chat', label: 'Chat', hue: 'teal' },
   ],
-  hub: { label: 'Hypergraph' },
+  hub: { label: 'ECHO' },
   sinks: [
     { label: 'Inbox', app: 'list' },
     { label: 'Document', app: 'document' },

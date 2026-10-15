@@ -12,7 +12,7 @@ import { type DataFlowSpec } from './layout.ts';
 
 const SPEC: DataFlowSpec = {
   sources: [{ id: 'mail', label: 'Mail', hue: 'blue' }],
-  hub: { label: 'Hypergraph' },
+  hub: { label: 'ECHO' },
 };
 
 /**
@@ -41,14 +41,14 @@ const HYPERGRAPH: DataFlowSpec = {
     { id: 'finance', label: 'Finance', hue: 'green' },
     { id: 'ops', label: 'Ops', hue: 'fuchsia' },
   ],
-  hub: { label: 'Hypergraph', partitions: 3 },
+  hub: { label: 'ECHO', partitions: 3 },
   focus: 'hub',
 };
 
 const WARM = { warmup: 60 };
 
-/** The hypergraph's container on its own, holding the lattice a minute of data flow grows in it. */
-export const Hypergraph: StoryObj<DataFlowViewProps> = {
+/** The ECHO container on its own, holding the lattice a minute of data flow grows in it. */
+export const Echo: StoryObj<DataFlowViewProps> = {
   args: { spec: HYPERGRAPH, options: WARM, molecules: true, running: false },
 };
 
@@ -65,7 +65,7 @@ const RADIAL: DataFlowSpec = {
     { id: 'files', label: 'Files', hue: 'amber' },
     { id: 'sensors', label: 'Sensors', hue: 'neutral' },
   ],
-  hub: { label: 'Hypergraph' },
+  hub: { label: 'ECHO' },
 };
 
 /** Nine sources around a round hub, which grows as a cluster from its centre. */
