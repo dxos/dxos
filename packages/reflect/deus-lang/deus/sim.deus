@@ -82,6 +82,10 @@ def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
     | IO.time _ -> k =>
       Ref.set w.clock (Ref.get w.clock + 1)
       k (Ref.get w.clock)
+    | IO.wallClock _ -> k =>
+      -- The same simulated clock, in nanoseconds: a history node's time is then deterministic too.
+      Ref.set w.clock (Ref.get w.clock + 1)
+      k (Int.toText (Ref.get w.clock) ++ "000000000")
     | IO.readStdin _ -> k => k ""
     | IO.writeBytes p bytes -> k =>
       Ref.set w.files (Map.insert p (Text.fromCodes bytes) (Ref.get w.files))

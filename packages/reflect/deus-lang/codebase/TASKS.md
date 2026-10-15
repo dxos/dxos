@@ -1094,6 +1094,16 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 
 > claude: Done (D135): by test N using g draws each binder from g applied to a random Int; the generator is a dependency of the theorem and a counterexample prints as (g seed). Testing.Spec R-1..R-4. Codebase.Spec L-2 and L-3 use Codebase.Spec.dottedNames. Bindings.Spec.crowded is the bindings thread's to convert.
 
+## Explorer History view shows each change's timestamp (`36e1527d`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer
+- links change #32f335f3bf
+
+Dmytro 2026-10-15 09:07: make codebase history view show timestamps
+
 ## Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (`55a3e9d5`)
 
 - state: done

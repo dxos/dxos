@@ -470,7 +470,7 @@ def Analytics.record (dir : Text) (t : EventType) (who : Text) (values : List (T
   forEach
     values
     (fun pair => if any (fun c => c.columnName == fst pair) t.columns then () else Throw.throw ("event " ++ t.typeName ++ " has no field " ++ fst pair))
-  let when := now ()
+  let when := Analytics.now ()
   let id := Text.take
     16
     (Text.sha256 (Sexp.print (Sexp.list (Sexp.str t.typeHash :: Sexp.str when :: Sexp.str who :: List.map cellSexp cells))))

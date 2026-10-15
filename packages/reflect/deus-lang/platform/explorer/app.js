@@ -182,6 +182,23 @@ const whenHtml = (written) => {
     : `<time datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))}</time>`;
 };
 
+/** A change's time (seconds since the epoch, D165): date and time in the reader's zone, the full time on hover. */
+const atHtml = (seconds) => {
+  if (typeof seconds !== 'number') {
+    return '';
+  }
+  const date = new Date(seconds * 1000);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  const text = date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `<time class="at" datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(text)}</time>`;
+};
+
 const assetHtml = (asset) => {
   const href = `assets/${escape(asset.hash)}`;
   return asset.type.startsWith('image/')
@@ -972,8 +989,8 @@ const changeRows = (changes) =>
     : `<ul class="rows">${changes
         .map((change) =>
           change.imported
-            ? `<li class="entry-row"><span class="hash">${escape(short(change.causal))}</span><span class="change-message">${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`
-            : `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
+            ? `<li class="entry-row"><span class="hash">${escape(short(change.causal))}</span><span class="change-message">${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`
+            : `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`,
         )
         .join('')}</ul>`;
 
@@ -1073,7 +1090,7 @@ const changeCard = (key, change, events) => {
     title: escape(change.message || '(no message)'),
     prose: true,
     tag: diffStat(change),
-    meta: `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${hashChip(change.causal)}`,
+    meta: `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}${hashChip(change.causal)}`,
     body:
       (added.length > 0 ? section('Added', added.length, rowList(added)) : '') +
       (changed.length > 0 ? section('Changed', changed.length, rowList(changed)) : '') +
@@ -1379,9 +1396,9 @@ const renderHistory = async () => {
       .map((change) =>
         change.imported
           ? `<li><span class="timeline-row imported" title="Imported from an export; this store has no record of its contents"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
-            `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}<span class="chip">imported</span><span class="hash">${escape(short(change.causal))}</span></span></li>`
+            `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="chip">imported</span><span class="hash">${escape(short(change.causal))}</span></span></li>`
           : `<li><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
-            `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
+            `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
       )
       .join('') +
     '</ol>' +

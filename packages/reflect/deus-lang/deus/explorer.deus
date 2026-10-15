@@ -66,7 +66,17 @@ def verdictOf (dir : Text) (h : Text) : {IO} Text := Text.trim (Option.getOr (IO
 
 def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json :=
   Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
-    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir (fst pair))) [])
+    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir (fst pair))) [] ++
+    atJson dir (fst pair))
+
+/--
+  `[("at", seconds)]` when the change's time is known: from its history node (D165), else from
+  this store's provenance, which recorded it for changes made here before nodes carried a time.
+-/
+def atJson (dir : Text) (causal : Text) : {IO} List (Text, Json) :=
+  match Cli.madeAt dir causal with
+  | some seconds => [("at", Json.num seconds)]
+  | none => []
 
 /-- How many changes the History view lists, imported ones (D67) included. -/
 def historyLimit : Int := 1000
@@ -80,6 +90,7 @@ def logJson (dir : Text) (entry : (Text, Text, Text)) : {IO} Json :=
   | (h, message, agent) =>
     Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++
       (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++
+      atJson dir h ++
       (if Option.isSome (Codebase.readObject dir h) then [] else [("imported", Json.bool true)]))
 
 def refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.str name), ("hash", Json.str h)]
@@ -113,7 +124,7 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let node := Codebase.readCausal dir causal
   let before := match Codebase.parentsOf dir causal with
     | p :: _ => Codebase.readCausal dir p
-    | [] => Causal.mk "" [] "" "" "" "" ""
+    | [] => Causal.mk "" [] "" "" "" "" "" ""
   let diff := Codebase.diffNamespaces dir before.snapshot node.snapshot
   let added := List.filterMap (fun change =>
     match change with
@@ -145,7 +156,8 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
       | _ => Json.null) changed)),
     ("removed", Json.arr (List.map (fun pair => Json.str (fst pair)) removed)),
     ("tasks", Json.arr (List.map Json.str touched))] ++
-    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir causal)) [])
+    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir causal)) [] ++
+    atJson dir causal)
 
 /-- The app's files, from the toolchain's sources. -/
 def appFiles : List Text := ["index.html", "app.js", "app.css"]

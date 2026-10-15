@@ -221,6 +221,20 @@ def producedBy (dir : Text) (causal : Text) : {IO} Option Text :=
   Option.bind (IO.readFile (dir ++ "/provenance/" ++ causal)) (fun text =>
     Option.map Sexp.asText (Codebase.metaField (some (Sexp.read text)) "by"))
 
+/--
+  When a change was made, in seconds since the Unix epoch: its history node's `at` (D165), or
+  else the time this store's provenance recorded (nanoseconds) for a change made here.
+-/
+def madeAt (dir : Text) (causal : Text) : {IO} Option Int :=
+  let fromNode := match Codebase.readObject dir causal with
+    | some form => Int.fromText (Codebase.causalFromSexp form).at
+    | none => none
+  Option.orElse fromNode (fun _ =>
+    Option.bind (IO.readFile (dir ++ "/provenance/" ++ causal)) (fun text =>
+      Option.bind (Codebase.metaField (some (Sexp.read text)) "at") (fun at =>
+        let ns := Sexp.asText at
+        if Text.length ns > 9 then Int.fromText (Text.take (Text.length ns - 9) ns) else none)))
+
 /-- The last path segment without its extension. -/
 def baseName (path : Text) : Text :=
   let file := Option.getOr (List.last? (Text.split path "/")) path
@@ -660,10 +674,14 @@ def log (args : Args) : {IO, Throw Text} Unit :=
   let entries := fullLog dir limit
   output args (fun _ => Json.arr (List.map (fun entry =>
       match entry with
-      | (h, message, agent) => Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++ (if Text.isEmpty agent then [] else [("by", Json.str agent)]))) entries))
+      | (h, message, agent) =>
+        Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++ (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++
+          Option.getOr (Option.map (fun seconds => [("at", Json.num seconds)]) (madeAt dir h)) [])) entries))
     (fun _ => Text.join "\n" (List.map (fun entry =>
       match entry with
-      | (h, message, agent) => short h ++ "  " ++ message ++ (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
+      | (h, message, agent) =>
+        short h ++ Option.getOr (Option.map (fun seconds => "  " ++ Codebase.utcTime seconds) (madeAt dir h)) "" ++ "  " ++ message ++
+          (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
 
 /-- Moves the branch back to its first parent; the undone node stays in the store. -/
 def undo (args : Args) : {IO, Throw Text} Unit :=

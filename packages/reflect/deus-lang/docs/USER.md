@@ -429,3 +429,7 @@ afterwards develop a strategy on how we can check pushes in the worker on push. 
 1. no destructive history ops
 2. policy on checks (what tests need to pass, etc..)
 3. .... -- extensible
+
+---
+
+make codebase history view show timestamps

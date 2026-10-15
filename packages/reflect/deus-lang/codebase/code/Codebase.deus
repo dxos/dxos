@@ -1,6 +1,7 @@
 /-- A history node: a namespace snapshot, its parents, why it was made, its tasks snapshot, and the
-  record of history imported from an export (D67), and its comments snapshot (D82). `""` means
-  none for the last three. -/
+  record of history imported from an export (D67), its comments snapshot (D82), its metadata
+  snapshot (D134), and when it was made, in seconds since the Unix epoch (D165). `""` means none
+  for the last five. -/
 structure Codebase.Causal where
   snapshot : Text
   parents : List Text
@@ -9,6 +10,7 @@ structure Codebase.Causal where
   prior : Text
   threads : Text
   metas : Text
+  at : Text
 
 inductive Codebase.MergeResult where
   | upToDate
@@ -67,6 +69,12 @@ test Codebase.Spec.commentThreadsTakeTheChangedSide := inStore (fun dir => merge
   [("def:x", [Spec.comment "a" "one"])]
   [("def:x", [Spec.comment "a" "one"])]
   [("def:x", [Spec.comment "a" "one", Spec.comment "c" "three"]), ("def:y", [Spec.comment "c" "four"])] == [("def:x", ["one", "three"]), ("def:y", ["four"])])
+
+/-- R-23: a commit records when it was made, and the root `init` node records no time. -/
+test Codebase.Spec.commitRecordsItsTime := inStore (fun dir =>
+  let root := headOf dir "main"
+  let c := commit dir (Spec.namespaceOf ["a"]) "timed"
+  Text.isEmpty (Causal.at (readCausal dir root)) && isSome (fromText (Causal.at (readCausal dir c))))
 
 /-- `source` as a batch, or the error compiling it. -/
 def Codebase.Spec.compiles (source : Text) : Result Text Batch := try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "off" [parseFile "t.deus" source])
@@ -176,8 +184,17 @@ def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
     | Result.err _ => false) with
   | (held, _) => held
 
-test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (headOf dir "main") ==
-  Causal.mk "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595" [] "init" "" "" "" "")
+-- Codebase.Spec.initIsAlwaysTheSame #53c6d916da
+-- : Bool
+test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (headOf dir "main") == Causal.mk
+  "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595"
+  []
+  "init"
+  ""
+  ""
+  ""
+  ""
+  "")
 
 /-- A stand-in for `Js.import`, which the js target recognizes by name. -/
 def Codebase.Spec.jsLib : Text := "def Js.import (module : Text) (path : Text) : a := Js.import module path\n"
@@ -235,13 +252,15 @@ def Codebase.Spec.merged (b : Task) (o : Task) (t : Task) : Result (List Text) (
   | Result.ok m => Result.ok (m.title, m.state, m.labels)
   | Result.err fields => Result.err fields
 
+-- Codebase.Spec.mergedThreads #c3fb24439e
+-- : Text -> List (Text, List Comment) -> List (Text, List Comment) -> List (Text, List Comment) -> {IO, Throw Text} List (Text, List Text)
 /-- The threads `Comments.merge` gives for `base`, `ours` and `theirs`, each a map from subject to its comments. -/
 def Codebase.Spec.mergedThreads (dir : Text) (base : List (Text, List Comment)) (ours : List (Text, List Comment)) (theirs : List (Text, List Comment)) : {IO, Throw Text} List (Text, List Text) :=
   let stored := fun threads => Map.fromList (List.map (fun pair => (fst pair, Codebase.put dir (threadToSexp (snd pair)))) threads)
   let merged := Comments.merge dir (stored base) (stored ours) (stored theirs)
   List.map
     (fun pair => (fst pair, List.map (fun c => c.note) (Comments.read dir (snd pair))))
-    (Map.toList (Comments.snapshotOf dir (Causal.mk "" [] "" "" "" merged "")))
+    (Map.toList (Comments.snapshotOf dir (Causal.mk "" [] "" "" "" merged "" "")))
 
 /-- The names an update of `ns` from `source` changes only the metadata of. -/
 def Codebase.Spec.metaChanges (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} List Text :=
@@ -410,6 +429,9 @@ def Codebase.Spec.updated (dir : Text) (ns : Map Text Entry) (source : Text) : {
     (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) b.entries))
     "off")
 
+/-- R-23: a time prints as its UTC date and minute. -/
+test Codebase.Spec.utcTimePrintsTheDate := utcTime 0 == "1970-01-01 00:00" && utcTime 1792055591 == "2026-10-15 09:13" && utcTime 951825600 == "2000-02-29 12:00"
+
 /-- R-19: a new body at the same type rehashes `A.g` as before. -/
 test Codebase.Spec.welltypedDependentFollows := inStore (fun dir =>
   let before := cliUpdate dir "def A.f (n : Int) : Int := n\ndef A.g : Int := A.f 1\n"
@@ -462,20 +484,23 @@ def Codebase.causalFromSexp (form : Sexp) : Causal :=
     (first "prior")
     (first "comments")
     (first "metas")
+    (first "at")
 
-/-- A node without tasks, a prior record, comments or metadata prints as it did before those existed, so its hash is unchanged. -/
+/-- A node without tasks, a prior record, comments, metadata or a time prints as it did before those existed, so its hash is unchanged. -/
 def Codebase.causalToSexp (c : Causal) : Sexp :=
   let tasks := if Text.isEmpty c.tasks then [] else [Sexp.node "tasks" [Sexp.str c.tasks]]
   let prior := if Text.isEmpty c.prior then [] else [Sexp.node "prior" [Sexp.str c.prior]]
   let comments := if Text.isEmpty c.threads then [] else [Sexp.node "comments" [Sexp.str c.threads]]
   let metas := if Text.isEmpty (Causal.metas c) then [] else [Sexp.node "metas" [Sexp.str (Causal.metas c)]]
+  let at := if Text.isEmpty (Causal.at c) then [] else [Sexp.node "at" [Sexp.str (Causal.at c)]]
   Sexp.node
     "causal"
     ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++
       tasks ++
       prior ++
       comments ++
-      metas)
+      metas ++
+      at)
 
 /-- The causal hashes a task links as changes. -/
 def Codebase.changeLinks (form : Sexp) : List Text :=
@@ -494,7 +519,7 @@ def Codebase.commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, T
   if snapshot == previous.snapshot && metas == Causal.metas previous then parent else
     let c := Codebase.put
       dir
-      (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads metas))
+      (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads metas (Codebase.now ())))
     setBranch dir branch c
     c
 
@@ -504,16 +529,15 @@ def Codebase.commitComments (dir : Text) (comments : Text) (message : Text) : {I
   let parent := headOf dir branch
   let previous := readCausal dir parent
   if comments == previous.threads then parent else
-    let c := Codebase.put
-      dir
-      (causalToSexp (Causal.mk
-        previous.snapshot
-        [parent]
-        message
-        previous.tasks
-        ""
-        comments
-        (Causal.metas previous)))
+    let c := Codebase.put dir (causalToSexp (Causal.mk
+      previous.snapshot
+      [parent]
+      message
+      previous.tasks
+      ""
+      comments
+      (Causal.metas previous)
+      (Codebase.now ())))
     setBranch dir branch c
     c
 
@@ -530,7 +554,8 @@ def Codebase.commitPrior (dir : Text) (record : Sexp) (message : Text) : {IO, Th
     previous.tasks
     (Codebase.put dir record)
     previous.threads
-    (Causal.metas previous)))
+    (Causal.metas previous)
+    (Codebase.now ())))
   setBranch dir branch c
   c
 
@@ -540,9 +565,15 @@ def Codebase.commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Thr
   let parent := headOf dir branch
   let previous := readCausal dir parent
   if tasks == previous.tasks then parent else
-    let c := Codebase.put
-      dir
-      (causalToSexp (Causal.mk previous.snapshot [parent] message tasks "" previous.threads (Causal.metas previous)))
+    let c := Codebase.put dir (causalToSexp (Causal.mk
+      previous.snapshot
+      [parent]
+      message
+      tasks
+      ""
+      previous.threads
+      (Causal.metas previous)
+      (Codebase.now ())))
     setBranch dir branch c
     c
 
@@ -647,7 +678,7 @@ def Codebase.init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then
   IO.mkdirp (dir ++ "/provenance")
   IO.mkdirp (dir ++ "/cache")
   let snapshot := putNamespace dir Map.empty
-  let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" "" "" "" ""))
+  let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" "" "" "" "" ""))
   setBranch dir "main" c
   IO.writeFile (dir ++ "/HEAD") "main\n"
 
@@ -764,7 +795,8 @@ def Codebase.merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
           (Tasks.putSnapshot dir merged)
           ""
           comments
-          (putMetas dir "" (Map.toList metas))))
+          (putMetas dir "" (Map.toList metas))
+          (Codebase.now ())))
         setBranch dir branch c
         MergeResult.merged c (reverse changed)
     | ((_, _, conflicts), _, taskConflicts) => MergeResult.conflicts (reverse conflicts ++ taskConflicts)
@@ -881,7 +913,8 @@ def Codebase.migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
           tasks
           c.prior
           c.threads
-          (Causal.metas c)))
+          (Causal.metas c)
+          (Causal.at c)))
         MutMap.set memo h moved
         moved
   let moves := filterMap (fun branch =>
@@ -936,6 +969,12 @@ def Codebase.nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp :=
 
 /-- Items a namespace node holds before it splits into parts. -/
 def Codebase.nodeLimit : Int := 64
+
+/-- Now, in whole seconds since the Unix epoch, for a history node's `at`. The root `init` node has
+  none, so codebases made apart still share it. -/
+def Codebase.now (u : Unit) : {IO} Text :=
+  let ns := IO.wallClock ()
+  if Text.length ns > 9 then Text.take (Text.length ns - 9) ns else "0"
 
 def Codebase.nsFromSexp (form : Sexp) : Map Text Entry := Map.fromList (List.map (fun item =>
   match Sexp.args item with
@@ -1144,6 +1183,23 @@ def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
   forEach
     (Batch.metas b)
     (fun pair => writeMeta dir (fst pair) (mergeMeta (readMeta dir (fst pair)) (snd pair)))
+
+/-- `seconds` (since the Unix epoch) as `YYYY-MM-DD HH:MM` UTC, by the civil-from-days algorithm. -/
+def Codebase.utcTime (seconds : Int) : Text :=
+  let days := seconds / 86400
+  let rest := seconds - days * 86400
+  let z := days + 719468
+  let era := z / 146097
+  let doe := z - era * 146097
+  let yoe := (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+  let doy := doe - (365 * yoe + yoe / 4 - yoe / 100)
+  let mp := (5 * doy + 2) / 153
+  let day := doy - (153 * mp + 2) / 5 + 1
+  let month := if mp < 10 then mp + 3 else mp - 9
+  let year := yoe + era * 400 + (if month <= 2 then 1 else 0)
+  let two := fun n => if n < 10 then "0" ++ toText n else toText n
+  toText year ++ "-" ++ two month ++ "-" ++ two day ++ " " ++ two (rest / 3600) ++ ":" ++
+    two ((rest - rest / 3600 * 3600) / 60)
 
 --
 -- Branches.

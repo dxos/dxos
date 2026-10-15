@@ -1,5 +1,11 @@
 # History of main
 
+- `3cfde3d582` Codebase.Spec R-23: history node times (D165) (by claude)
+- `499112d837` Codebase.Spec: tests for history node times (D165) (by claude)
+- `e812f6291c` close 36e1527d by #32f335f3bf (by claude)
+- `32f335f3bf` History nodes carry the time they were made (at, seconds since the epoch); deus log and the explorer's History view show it (D165) (by claude)
+- `0bb1c84f50` task: set 36e1527d state (by claude)
+- `a92c226233` task: open 36e1527d Explorer History view shows each change's timestamp (by claude)
 - `0568041d74` task: set e774b1fd state details (by claude)
 - `03dc2465ba` task: open 48eee846 deus mdl compares effect-row variables by name: an api signature written with {IO | r} fails against an inferred {IO | e}; compare up to renaming (by claude)
 - `362ac00a58` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164) (by claude)

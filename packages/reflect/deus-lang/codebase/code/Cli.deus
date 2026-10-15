@@ -1207,9 +1207,10 @@ def Cli.log (args : Args) : {IO, Throw Text} Unit :=
   Cli.output args (fun _ => Json.arr (List.map (fun entry =>
     match entry with
     | (h, message, agent) => Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++
-        (if Text.isEmpty agent then [] else [("by", Json.str agent)]))) entries)) (fun _ => join "\n" (List.map (fun entry =>
+        (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++ getOr (Option.map (fun seconds => [("at", Json.num seconds)]) (madeAt dir h)) [])) entries)) (fun _ => join "\n" (List.map (fun entry =>
     match entry with
-    | (h, message, agent) => short h ++ "  " ++ message ++ (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
+    | (h, message, agent) => short h ++ getOr (Option.map (fun seconds => "  " ++ utcTime seconds) (madeAt dir h)) "" ++
+        "  " ++ message ++ (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
 
 /-- Resolves a reference in a namespace to its full name and entry (D105): a name, a `#hashprefix`,
   a name IRI `<project>/<name>`, or a pinned `<project>/<name>#<hash>`. A prefix that matches
@@ -1260,6 +1261,19 @@ def Cli.ls (args : Args) : {IO, Throw Text} Unit :=
     args
     (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows))
     (fun _ => join "\n" lines)
+
+/-- When a change was made, in seconds since the Unix epoch: its history node's `at` (D165), or
+  else the time this store's provenance recorded (nanoseconds) for a change made here. -/
+def Cli.madeAt (dir : Text) (causal : Text) : {IO} Option Int :=
+  let fromNode :=
+    match readObject dir causal with
+    | Option.some form => fromText (Causal.at (causalFromSexp form))
+    | Option.none => Option.none
+  orElse fromNode (fun _ => Option.bind
+    (IO.readFile (dir ++ "/provenance/" ++ causal))
+    (fun text => Option.bind (metaField (Option.some (Sexp.read text)) "at") (fun at =>
+      let ns := asText at
+      if Text.length ns > 9 then fromText (Text.take (Text.length ns - 9) ns) else Option.none)))
 
 def Cli.main (u : Unit) : {IO} Unit :=
   match try (fun _ => dispatch (IO.args ())) with

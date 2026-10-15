@@ -896,6 +896,13 @@ ul.rows {
   color: var(--faint);
 }
 
+.at {
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
 .link-button {
   margin: 4px 6px;
   color: var(--accent);

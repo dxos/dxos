@@ -210,7 +210,7 @@ def Resolve.node (head : Text) (items : List Sexp) : Sexp := Sexp.node head item
 /-- A handler clause: arguments in order, then the continuation, as Core's `on` expects. -/
 def Resolve.opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text} Sexp :=
   match Names.lookup ctx.names o.op ctx.scope isOp true with
-  | Option.some (_, Entry.op a index arity) => if arity != List.length o.args then failAt ctx o.at (o.op ++ " takes " ++ toText arity ++ " arguments") else
+  | Option.some (_, Entry.op a index arity) => if arity != List.length o.args then failAt ctx (OpArm.at o) (o.op ++ " takes " ++ toText arity ++ " arguments") else
       -- Simple arguments bind names; others bind nothing and are matched inside the clause.
       let argNames := List.map (fun p => getOr (simpleBinder ctx p) Option.none) o.args
       let inner := o.resume :: reverse argNames ++ locals
@@ -230,7 +230,7 @@ def Resolve.opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Th
                   [Compile.node "var" [i depth], Compile.node "case" [core, build more (binds ++ l)]]
       let binderNames := List.map (fun o2 => Sexp.s (getOr o2 "")) (argNames ++ [o.resume])
       Compile.node "on" [Sexp.s a, i index, i arity, Sexp.list binderNames, build complex inner]
-  | _ => failAt ctx o.at ("unknown ability operation " ++ o.op)
+  | _ => failAt ctx (OpArm.at o) ("unknown ability operation " ++ o.op)
 
 def Resolve.pairCon : Sexp := Compile.node "con" [Sexp.s "#Pair", i 0, i 2]
 

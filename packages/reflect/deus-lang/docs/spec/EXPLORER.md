@@ -49,10 +49,12 @@ share their type's or ability's hash. Visible kinds are `term`, `type`, `ability
 
 ```text
 ref     = {"name": string, "hash": string}
-change  = {"causal": string, "message": string, "by"?: string}
+change  = {"causal": string, "message": string, "by"?: string, "at"?: number}
 ```
 
-`by` is present when the change has a provenance record (`--by <agent>`).
+`by` is present when the change has a provenance record (`--by <agent>`). `at` is when the change was made,
+in seconds since the Unix epoch: from the history node's `at` ([D165](../DECISIONS.md)), or else from the
+publishing store's provenance. Changes made before D165 elsewhere have none.
 
 ## meta.json
 
@@ -206,6 +208,7 @@ with its first parent (an empty namespace for a root node).
 | `removed` | string[] | visible names no longer bound                                                      |
 | `tasks`   | string[] | ids of tasks whose record differs from the parent's                                |
 | `by`      | string   | optional, as in `change`                                                           |
+| `at`      | number   | optional, as in `change`                                                           |
 
 ```json
 {

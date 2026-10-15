@@ -214,8 +214,15 @@ def Explorer.Spec.withHome (body : Unit -> {IO, Throw Text} a) : {IO, Throw Text
 /-- The app's files, from the toolchain's sources. -/
 def Explorer.appFiles : List Text := ["index.html", "app.js", "app.css"]
 
+/-- `[("at", seconds)]` when the change's time is known: from its history node (D165), else from
+  this store's provenance, which recorded it for changes made here before nodes carried a time. -/
+def Explorer.atJson (dir : Text) (causal : Text) : {IO} List (Text, Json) :=
+  match madeAt dir causal with
+  | Option.some seconds => [("at", Json.num seconds)]
+  | Option.none => []
+
 def Explorer.changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json := Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
-  getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [])
+  getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [] ++ atJson dir (fst pair))
 
 /-- What a change did, against its first parent: names added, rebound or removed, and tasks it
   touched. A root change compares with an empty namespace. -/
@@ -224,7 +231,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let before :=
     match parentsOf dir causal with
     | p :: _ => readCausal dir p
-    | [] => Causal.mk "" [] "" "" "" "" ""
+    | [] => Causal.mk "" [] "" "" "" "" "" ""
   let diff := diffNamespaces dir before.snapshot node.snapshot
   let added := filterMap (fun change =>
     match change with
@@ -252,7 +259,8 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
     match (c, printers) with
     | ((name, old, new), Option.some (pBefore, pAfter)) => Json.obj [("name", Json.str name), ("from", Json.str (Entry.hash old)), ("hash", Json.str (Entry.hash new)), ("before", Json.str (sourceOf pBefore dir nsBefore name old)), ("after", Json.str (sourceOf pAfter dir nsAfter name new))]
     | _ => Json.null) changed)), ("removed", Json.arr (List.map (fun pair => Json.str (fst pair)) removed)), ("tasks", Json.arr (List.map Json.str touched))] ++
-    getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir causal)) [])
+    getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir causal)) [] ++
+    atJson dir causal)
 
 /-- Whether a definition has a verdict: tests and theorems are checked, other kinds never are. -/
 def Explorer.checked (e : Entry) : Bool := Entry.kind e == "test" || Entry.kind e == "theorem"
@@ -414,7 +422,7 @@ def Explorer.lastOf (name : Text) : Text := getOr (last? (Text.split name ".")) 
 def Explorer.logJson (dir : Text) (entry : (Text, (Text, Text))) : {IO} Json :=
   match entry with
   | (h, message, agent) => Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++
-      (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++ (if isSome (readObject dir h) then [] else [("imported", Json.bool true)]))
+      (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++ atJson dir h ++ (if isSome (readObject dir h) then [] else [("imported", Json.bool true)]))
 
 /-- Every hash a form names, builtins included. Unlike `Codebase.dependencies`, which lists what an
   update must propagate to, this also counts types named only in a signature, so `Bool` has users. -/
@@ -482,7 +490,7 @@ def Explorer.taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, 
           | Option.some form => (causalFromSexp form).message
           | Option.none => ""
         Json.obj [("change", Json.str h), ("message", Json.str message)]
-  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map commentJson t.comments)), ("history", Json.arr (List.map (Cli.changeJson dir) history))]
+  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map commentJson t.comments)), ("history", Json.arr (List.map (Explorer.changeJson dir) history))]
 
 def Explorer.verdictOf (dir : Text) (h : Text) : {IO} Text := trim (getOr (IO.readFile (dir ++ "/results/" ++ h)) "")
 

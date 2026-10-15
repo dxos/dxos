@@ -65,16 +65,20 @@ def Sim.run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
     | IO.time x4 -> k =>
         Ref.set w.clock (Ref.get w.clock + 1)
         k (Ref.get w.clock)
-    | IO.readStdin x5 -> k => k ""
+    | IO.wallClock x5 -> k =>
+        -- The same simulated clock, in nanoseconds: a history node's time is then deterministic too.
+        Ref.set w.clock (Ref.get w.clock + 1)
+        k (toText (Ref.get w.clock) ++ "000000000")
+    | IO.readStdin x6 -> k => k ""
     | IO.writeBytes p bytes -> k =>
         Ref.set w.files (Map.insert p (fromCodes bytes) (Ref.get w.files))
         k ()
-    | IO.getEnv x6 -> k => k Option.none
+    | IO.getEnv x7 -> k => k Option.none
     | IO.isDir p -> k => k (Set.contains p (Ref.get w.dirs))
-    | IO.wallClock x7 -> k =>
+    | IO.wallClock x8 -> k =>
         Ref.set w.clock (Ref.get w.clock + 1)
         k (toText (Ref.get w.clock))
-    | IO.exec program x8 -> k => k (127, "", program ++ ": processes are not simulated")
+    | IO.exec program x9 -> k => k (127, "", program ++ ": processes are not simulated")
     | IO.appendFile p t -> k =>
         mkdirs w (Sim.parent p)
         Ref.set

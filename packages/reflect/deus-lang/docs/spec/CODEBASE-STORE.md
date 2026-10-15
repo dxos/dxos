@@ -213,17 +213,19 @@ A history node (a causal node) records a namespace snapshot, its parents, a mess
 tasks snapshot:
 
 ```text
-causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " (tasks " hash ")" ] [ " (prior " hash ")" ] [ " (comments " hash ")" ] ")"
+causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " (tasks " hash ")" ] [ " (prior " hash ")" ] [ " (comments " hash ")" ] [ " (metas " hash ")" ] [ " (at " string ")" ] ")"
 ```
 
-| Field      | Meaning                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| `ns`       | hash of the namespace snapshot                                                                    |
-| `parents`  | zero parents for the first node, one for an ordinary change, two (ours, theirs) for a merge       |
-| `msg`      | why the change was made                                                                           |
-| `tasks`    | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))              |
-| `prior`    | hash of a `record` of history imported from an export; omitted otherwise ([D67](../DECISIONS.md)) |
-| `comments` | hash of the comments snapshot; omitted when there are no comments ([D82](../DECISIONS.md))        |
+| Field      | Meaning                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| `ns`       | hash of the namespace snapshot                                                                          |
+| `parents`  | zero parents for the first node, one for an ordinary change, two (ours, theirs) for a merge             |
+| `msg`      | why the change was made                                                                                 |
+| `tasks`    | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))                    |
+| `prior`    | hash of a `record` of history imported from an export; omitted otherwise ([D67](../DECISIONS.md))       |
+| `comments` | hash of the comments snapshot; omitted when there are no comments ([D82](../DECISIONS.md))              |
+| `metas`    | hash of the metadata snapshot ([D134](../DECISIONS.md))                                                 |
+| `at`       | when the node was made, decimal seconds since the Unix epoch; `init` has none ([D165](../DECISIONS.md)) |
 
 A writer MUST omit `(tasks …)` when the branch has no tasks, so a node without tasks hashes as it did
 before tasks existed. Readers find fields by head and treat a missing field as empty.
