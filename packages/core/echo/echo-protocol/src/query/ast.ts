@@ -756,35 +756,34 @@ export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> 
 export const Scope = Schema.Union([SpaceScope, FeedScope, RegistryScope]);
 export type Scope = Schema.Schema.Type<typeof Scope>;
 
-export const visit = (query: Query, visitor: (node: Query) => void) => {
-  visitor(query);
+/**
+ * The subqueries a node selects from. Built once: a `Match.value` pipeline built per call allocated every clause
+ * and its predicate on every node, and queries are walked on every result update.
+ */
+const subqueries: (query: Query) => readonly Query[] = Match.type<Query>().pipe(
+  Match.when({ type: 'filter' }, ({ selection }) => [selection]),
+  Match.when({ type: 'reference-traversal' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'incoming-references' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'relation' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'options' }, ({ query }) => [query]),
+  Match.when({ type: 'relation-traversal' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'union' }, ({ queries }) => queries),
+  Match.when({ type: 'set-difference' }, ({ source, exclude }) => [source, exclude]),
+  Match.when({ type: 'order' }, ({ query }) => [query]),
+  Match.when({ type: 'limit' }, ({ query }) => [query]),
+  Match.when({ type: 'skip' }, ({ query }) => [query]),
+  Match.when({ type: 'aggregate' }, ({ query }) => [query]),
+  Match.when({ type: 'from' }, (node) => (node.from._tag === 'query' ? [node.query, node.from.query] : [node.query])),
+  Match.when({ type: 'select' }, () => []),
+  Match.exhaustive,
+);
 
-  Match.value(query).pipe(
-    Match.when({ type: 'filter' }, ({ selection }) => visit(selection, visitor)),
-    Match.when({ type: 'reference-traversal' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'incoming-references' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
-    Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
-      visit(source, visitor);
-      visit(exclude, visitor);
-    }),
-    Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'skip' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'aggregate' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'from' }, (node) => {
-      visit(node.query, visitor);
-      if (node.from._tag === 'query') {
-        visit(node.from.query, visitor);
-      }
-    }),
-    Match.when({ type: 'select' }, () => {}),
-    Match.exhaustive,
-  );
+export const visit = (query: Query, visitor: (node: Query) => void): void => {
+  visitor(query);
+  for (const subquery of subqueries(query)) {
+    visit(subquery, visitor);
+  }
 };
 
 /**
