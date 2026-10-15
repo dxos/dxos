@@ -56,13 +56,14 @@ export const ThemeSwatch = ({ classNames, theme, registry }: ThemeSwatchProps) =
   const variant = styleVariant(styleSet, undefined);
   const shape = (hue: string) => {
     const classes = variantClasses(hue, variant, tone);
-    return mx('w-2.5 h-2 border', classes.surface, classes.border, RADIUS_CLASSES.sm);
+    return mx('w-2 h-1.5 border', classes.surface, classes.border, RADIUS_CLASSES.sm);
   };
   return (
     <span
       aria-hidden
       className={mx(
-        'relative inline-flex shrink-0 items-center justify-center gap-0.5 w-8 h-5 rounded-xs border border-separator overflow-hidden',
+        // Shorter than the trigger, so it sits inside the trigger's inset focus ring rather than over it.
+        'inline-flex shrink-0 items-center justify-center gap-0.5 w-7 h-3.5 rounded-xs border border-separator overflow-hidden',
         BACKGROUND_FILLS[background.surface] || SWATCH_CANVAS[tone],
         classNames,
       )}
@@ -129,7 +130,7 @@ export const ThemeBar = ({
           onValueChange={({ value }) => onThemeChange?.(value === DEFAULT_VALUE ? undefined : value)}
         >
           <Menu.RadioItem item={{ value: DEFAULT_VALUE, label: 'Default' }} data-testid='theme-option-default'>
-            <span className='w-8 shrink-0' />
+            <span className='w-7 shrink-0' />
             <Menu.ItemText />
             <Menu.ItemIndicator />
           </Menu.RadioItem>

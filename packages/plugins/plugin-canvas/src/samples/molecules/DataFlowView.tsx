@@ -12,6 +12,7 @@ import {
   defaultThemeRegistry,
   resolveLook,
 } from '@dxos/react-ui-canvas/scene';
+import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import {
   DATA_FLOW_SCENE_ID,
@@ -44,7 +45,7 @@ export type DataFlowViewProps = {
   running?: boolean;
   /** Off, only the containers and channels are drawn and nothing moves. */
   molecules?: boolean;
-  /** The canvas theme the diagram opens in; the theme bar changes it from there. */
+  /** The canvas theme the diagram opens in (unset, one following the app's mode); the theme bar changes it from there. */
   theme?: string;
   /** The grid over the theme's background, in place of its own; the theme bar changes it from there. */
   grid?: BackgroundGrid;
@@ -59,9 +60,12 @@ export const DataFlowView = ({
   options,
   running = true,
   molecules = true,
-  theme: initialTheme = 'paper',
+  theme: chosenTheme,
   grid: initialGrid,
 }: DataFlowViewProps) => {
+  // With no theme chosen, the diagram follows the app's light or dark mode: paper by day, the glow by night.
+  const { themeMode } = useThemeContext();
+  const initialTheme = chosenTheme ?? (themeMode === 'light' ? 'paper' : 'glass-night');
   const layout = useMemo(() => layoutDataFlow(spec), [spec]);
   const store = useMemo(() => createMemoryStore([createDataFlowScene(layout)]), [layout]);
   const simulation = useMemo(() => new DataFlowSimulation(layout, options), [layout, options]);

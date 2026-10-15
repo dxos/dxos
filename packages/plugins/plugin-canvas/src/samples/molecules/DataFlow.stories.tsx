@@ -131,7 +131,7 @@ const meta: Meta<DataFlowViewProps> = {
   title: 'plugins/plugin-canvas/samples/DataFlow',
   render: (args) => <DataFlowView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { spec: SPEC, running: true, theme: 'paper' },
+  args: { spec: SPEC, running: true },
 };
 
 export default meta;

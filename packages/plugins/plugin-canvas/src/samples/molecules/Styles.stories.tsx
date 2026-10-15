@@ -44,7 +44,7 @@ const meta: Meta<DataFlowViewProps> = {
   title: 'plugins/plugin-canvas/samples/Styles',
   render: (args) => <DataFlowView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { spec: APPS, options: PREFILL, running: true, theme: 'paper' },
+  args: { spec: APPS, options: PREFILL, running: true },
 };
 
 export default meta;
@@ -60,7 +60,7 @@ export const Playground: Story = {
 };
 
 /** Glass on warm paper: white cards with dark hairlines and mid-gray content, held light. */
-export const Paper: Story = {};
+export const Paper: Story = { args: { theme: 'paper' } };
 
 /** The original dark look: translucent frosted cards over two colour washes and dots. */
 export const GlassNight: Story = { name: 'Glass night', args: { theme: 'glass-night' } };
