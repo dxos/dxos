@@ -129,15 +129,6 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 - assignee: claude
 - labels: dogfood, spec
 
-## Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (`1cbfdd30`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec, prover
-
-Raised by the bindings thread too (D87): random Text almost never collides.
-
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo
@@ -991,6 +982,17 @@ Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
 - links change #6d6826c8bd
 
 Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
+
+## Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (`1cbfdd30`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec, prover
+
+Raised by the bindings thread too (D87): random Text almost never collides.
+
+> claude: Done (D135): by test N using g draws each binder from g applied to a random Int; the generator is a dependency of the theorem and a counterexample prints as (g seed). Testing.Spec R-1..R-4. Codebase.Spec L-2 and L-3 use Codebase.Spec.dottedNames. Bindings.Spec.crowded is the bindings thread's to convert.
 
 ## Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (`55a3e9d5`)
 

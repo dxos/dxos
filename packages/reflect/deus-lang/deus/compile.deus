@@ -115,18 +115,28 @@ def proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Te
     match e with
     | Entry.theorem _ => true
     | _ => false
-  let rec go rest inside acc :=
+  let isTerm := fun (e : Entry) =>
+    match e with
+    | Entry.term _ => true
+    | _ => false
+  -- Names in `[…]` are lemmas; names after `using` are generators (D135).
+  let rec go rest inside generators acc :=
     match rest with
     | [] => List.reverse acc
     | t :: more =>
-      if t == "[" then go more true (s t :: acc)
-      else if t == "]" then go more false (s t :: acc)
+      if t == "[" then go more true generators (s t :: acc)
+      else if t == "]" then go more false generators (s t :: acc)
+      else if t == "using" then go more inside true (s t :: acc)
+      else if generators then
+        match Names.lookup names t scope isTerm true with
+        | some (_, e) => go more inside generators (node "ref" [s (Entry.hash e)] :: acc)
+        | none => throw ("unknown generator " ++ t)
       else if inside && t != "," then
         match Names.lookup names t scope isLemma true with
-        | some (_, e) => go more inside (node "ref" [s (Entry.hash e)] :: acc)
+        | some (_, e) => go more inside generators (node "ref" [s (Entry.hash e)] :: acc)
         | none => throw ("unknown lemma " ++ t)
-      else go more inside (s t :: acc)
-  go tokens false []
+      else go more inside generators (s t :: acc)
+  go tokens false false []
 
 /-- Placeholder references `(ref "@Name")` in a form. -/
 def placeholders (form : Sexp) (acc : List Text) : List Text :=

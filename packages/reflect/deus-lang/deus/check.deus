@@ -182,6 +182,12 @@ def product (domains : List (List Sexp)) : List (List Sexp) :=
 def caseCore (prop : Sexp) (args : List Sexp) : Sexp :=
   if List.isEmpty args then prop else Sexp.list (Sexp.sym "app" :: prop :: args)
 
+/-- The proof tokens after `using`, or none. -/
+def afterUsing (tokens : List Sexp) : List Sexp :=
+  match tokens with
+  | [] => []
+  | t :: rest => if t == Sexp.str "using" then rest else afterUsing rest
+
 /-- Checks cases in order; the first failing one is the counterexample. -/
 def runCases (prop : Sexp) (cases : List (List Sexp)) (describe : List Sexp -> Text) : Option Text :=
   match cases with
@@ -223,10 +229,18 @@ def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {I
     | "test" :: rest =>
       let count := Option.getOr (Option.bind (List.head? rest) Int.fromText) 100
       let state := Ref.new (seedOf h)
-      let cases := List.map (fun _ => List.map (fun t => generate typeDecls state t 4) types) (List.range 0 count)
-      match runCases prop cases describe with
-      | none => Verdict.pass "test" count
-      | some reason => Verdict.fail reason
+      -- `using g …` draws each binder's case as `g` applied to a random Int (D135).
+      let generators := List.filterMap (fun x =>
+        match x with
+        | Sexp.list [Sexp.sym "ref", Sexp.str g] => some g
+        | _ => none) (afterUsing (Sexp.args proof))
+      if not (List.isEmpty generators) && List.length generators != List.length types then
+        Verdict.fail ("using names " ++ Int.toText (List.length generators) ++ " generators for " ++ Int.toText (List.length types) ++ " binders")
+      else
+        -- The image of a theorem is its proposition, so the generators it names load here.
+        match try (fun _ => Image.load (fun x => Codebase.readObject dir x) generators) with
+        | Result.err message => Verdict.fail message
+        | Result.ok _ => testCases prop types generators count state typeDecls describe
     | _ =>
       -- A tactic proof. Binder names come from metadata (the author's names, in order).
       let locals := List.map Sexp.asText (Codebase.metaList (Codebase.readMeta dir h) "locals")
@@ -250,6 +264,17 @@ def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {I
         | Result.ok used => Verdict.pass (if List.isEmpty weak then "proof" else "proof assuming tested lemmas") 1
         | Result.err reason => Verdict.fail reason
   | _ => Verdict.fail "not a theorem"
+
+/-- Runs `count` cases, each binder drawn from its generator, or by its type when `generators` is empty. -/
+def testCases (prop : Sexp) (types : List Sexp) (generators : List Text) (count : Int) (state : Ref Int) (typeDecls : Map Text Sexp) (describe : List Sexp -> Text) : Verdict :=
+  let draw := fun (t : Sexp) (g : Option Text) =>
+    match g with
+    | some ref => Sexp.list [Sexp.sym "app", Sexp.node "ref" [Sexp.str ref], Sexp.node "int" [Sexp.int (nextRandom state)]]
+    | none => generate typeDecls state t 4
+  let cases := List.map (fun _ => List.mapIndexed (fun i t => draw t (List.get? generators i)) types) (List.range 0 count)
+  match runCases prop cases describe with
+  | none => Verdict.pass "test" count
+  | some reason => Verdict.fail reason
 
 /-- A lemma's verdict, checking (and caching) it first if needed. -/
 def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=

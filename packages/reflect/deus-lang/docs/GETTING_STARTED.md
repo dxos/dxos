@@ -188,6 +188,8 @@ deus check Sort
 `wrongClaim` is false on purpose, and the prover shows the goal it could not close. The tactics
 are `induction`, `simp [lemmas]`, `auto` and `decide`. `by test n` checks a claim on n generated
 inputs instead of proving it, and the report says which kind of evidence each theorem has.
+`by test n using g` draws each input as `g` applied to a random `Int`, for laws whose interesting
+inputs random values rarely hit (D135).
 [`examples/soundness.deus`](../examples/soundness.deus) lists claims the prover must refuse,
 such as `x < x + 1`, which is false because `Int` wraps.
 

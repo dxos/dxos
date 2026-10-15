@@ -1,0 +1,55 @@
+/-- R-2: the failing case names the generator (by its shortest name) and its seed, as `(always (-1552261514))`. -/
+test Testing.Spec.counterexampleNamesTheSeed := Text.contains
+  "(always "
+  (Spec.verdict "theorem T.eight (n : Int) : n == 8 := by test 5 using T.always\n" "T.eight")
+
+/-- R-4: two generators for one binder fail the check. -/
+test Testing.Spec.generatorCountChecked := startsWith
+  "fail"
+  (Spec.verdict
+    "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always T.always\n"
+    "T.seven")
+
+/-- R-3: the theorem's object refers to the generator. -/
+test Testing.Spec.generatorIsADependency := inStore (fun dir =>
+  let ns := updated
+    dir
+    Map.empty
+    (Spec.lib ++ "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always\n")
+  refersTo dir ns "T.seven" "T.always")
+
+/-- A generator that always gives 7. -/
+def Testing.Spec.lib : Text := View.Spec.prelude ++ "def T.always (seed : Int) : Int := 7\n"
+
+/-- Runs a store action in a fresh simulated codebase; a thrown error reads as "error: …". -/
+def Testing.Spec.storeText (body : Text -> {IO, Throw Text} Text) : Text :=
+  match Sim.run 7 (fun _ =>
+    match try (fun _ =>
+      Codebase.init "cb"
+      body "cb") with
+    | Result.ok text => text
+    | Result.err message => "error: " ++ message) with
+  | (text, _) => text
+
+/-- R-3: an unknown generator does not compile. -/
+test Testing.Spec.unknownGeneratorRejected := not (checks "def T.always (seed : Int) : Int := 7\ntheorem T.seven (n : Int) : n == 7 := by test 20 using T.missing\n")
+
+/-- R-1: every case is 7. -/
+test Testing.Spec.usingDrawsFromGenerator := Spec.verdict "theorem T.seven (n : Int) : n == 7 := by test 20 using T.always\n" "T.seven" ==
+  "pass test"
+
+/-- The verdict of the theorem `name` in `source`, added to a fresh store and checked. -/
+def Testing.Spec.verdict (source : Text) (name : Text) : Text := storeText (fun dir =>
+  let ns := updated dir Map.empty (Spec.lib ++ source)
+  match Map.lookup name ns with
+  | Option.some (Entry.theorem h) =>
+      match lemmaVerdict dir ns h with
+      | Verdict.pass evidence _ => "pass " ++ evidence
+      | Verdict.fail reason => "fail " ++ reason
+      | _ => "other"
+  | _ => "missing")
+
+/-- R-1: without `using`, cases are drawn by type, and some are not 7. -/
+test Testing.Spec.withoutGeneratorDrawsByType := startsWith
+  "fail counterexample"
+  (Spec.verdict "theorem T.seven (n : Int) : n == 7 := by test 20\n" "T.seven")

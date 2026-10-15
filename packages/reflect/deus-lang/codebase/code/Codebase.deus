@@ -98,6 +98,9 @@ def Codebase.Spec.docOf (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} 
 /-- Names with dots in every position the tree splits at, from generated words. -/
 def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => [w, "A." ++ w, "A.B." ++ w, w ++ ".x", "." ++ w, w ++ "."]) words
 
+/-- A generator of names with dots in every position the tree splits at. -/
+def Codebase.Spec.dottedNames (seed : Int) : List Text := dotted (wordsOf seed)
+
 test Codebase.Spec.emptyNamespaceHash := inStore (fun dir => putNamespace dir Map.empty == "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595")
 
 /-- R-17: `A.g` takes over `A.f`'s old body, and so its hash; the new `A.f` still calls `A.g`, not itself. -/
@@ -193,7 +196,7 @@ def Codebase.Spec.metaChanges (dir : Text) (ns : Map Text Entry) (source : Text)
 /-- A namespace whose entries are terms named by the hash of their name. -/
 def Codebase.Spec.namespaceOf (names : List Text) : Map Text Entry := Map.fromList (List.map (fun n => (n, Entry.term (Text.sha256 n))) names)
 
-theorem Codebase.Spec.namespaceRoundTrip (words : List Text) : readsBack (Spec.namespaceOf (dotted words)) == true := by test 30
+theorem Codebase.Spec.namespaceRoundTrip (names : List Text) : readsBack (Spec.namespaceOf names) == true := by test 30 using dottedNames
 
 /-- R-16: updating the first name again changes its doc only. -/
 test Codebase.Spec.ownUpdateReplacesOwnDoc := inStore (fun dir =>
@@ -242,8 +245,8 @@ test Codebase.Spec.sharedHashKeepsEachDoc := inStore (fun dir =>
   let ns := updated dir Map.empty "/-- One. -/\ndef A.f := 1\n/-- Two. -/\ndef B.g := 1\n"
   Spec.docOf dir ns "A.f" == "One." && Spec.docOf dir ns "B.g" == "Two.")
 
-theorem Codebase.Spec.snapshotIgnoresOrder (words : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf (dotted words)) ==
-    putNamespace dir (Spec.namespaceOf (reverse (dotted words)))) == true := by test 30
+theorem Codebase.Spec.snapshotIgnoresOrder (names : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf names) == putNamespace dir (Spec.namespaceOf (reverse names))) ==
+    true := by test 30 using dottedNames
 
 /-- A task with a title, a state and labels; every other field empty. -/
 def Codebase.Spec.task (title : Text) (state : TaskState) (labels : List Text) : Task := Task.mk "t1" title state 0 "" labels "" "" [] []
@@ -308,6 +311,13 @@ test Codebase.Spec.wideNamespaceRoundTrip := readsBack (Spec.namespaceOf wide) &
   match readObject dir (putNamespace dir (Spec.namespaceOf wide)) with
   | Option.some (Sexp.list (_ :: Sexp.list (Sexp.sym "part" :: _ :: []) :: _)) => true
   | _ => false)
+
+/-- Up to four short words from a two-letter alphabet, so names collide and share prefixes. -/
+def Codebase.Spec.wordsOf (seed : Int) : List Text :=
+  let n := if seed < 0 then 0 - seed else seed
+  List.map
+    (fun i => Text.take (1 + n / (i * 3 + 1) % 3) (if n / (i + 1) % 2 == 0 then "aba" else "bab"))
+    (range 0 (n % 5))
 
 /-- Hashes of every object in the store. -/
 def Codebase.allObjects (dir : Text) : {IO} List Text := concatMap (fun shard => IO.listDir (dir ++ "/objects/" ++ shard)) (IO.listDir (dir ++ "/objects"))

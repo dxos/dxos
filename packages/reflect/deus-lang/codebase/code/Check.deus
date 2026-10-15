@@ -1,3 +1,9 @@
+/-- The proof tokens after `using`, or none. -/
+def Check.afterUsing (tokens : List Sexp) : List Sexp :=
+  match tokens with
+  | [] => []
+  | t :: rest => if t == Sexp.str "using" then rest else Check.afterUsing rest
+
 def Check.alphabet : List Text := ["a", "b", "z", " ", "0", "\n", "é", "-", "\""]
 
 def Check.below (state : Ref Int) (n : Int) : Int :=
@@ -46,12 +52,17 @@ def Check.checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp
       | "test" :: rest =>
           let count := getOr (Option.bind (head? rest) fromText) 100
           let state := Ref.new (seedOf h)
-          let cases := List.map
-            (fun _ => List.map (fun t => Check.generate typeDecls state t 4) types)
-            (range 0 count)
-          match runCases prop cases describe with
-          | Option.none => Verdict.pass "test" count
-          | Option.some reason => Verdict.fail reason
+          -- `using g …` draws each binder's case as `g` applied to a random Int (D135).
+          let generators := filterMap (fun x =>
+            match x with
+            | Sexp.list (Sexp.sym "ref" :: Sexp.str g :: []) => Option.some g
+            | _ => Option.none) (afterUsing (Sexp.args proof))
+          if not (List.isEmpty generators) && List.length generators != List.length types then Verdict.fail ("using names " ++ toText (List.length generators) ++ " generators for " ++
+            toText (List.length types) ++ " binders") else
+            -- The image of a theorem is its proposition, so the generators it names load here.
+            match try (fun _ => Image.load (fun x => readObject dir x) generators) with
+            | Result.err message => Verdict.fail message
+            | Result.ok _ => testCases prop types generators count state typeDecls describe
       | _ =>
           -- A tactic proof. Binder names come from metadata (the author's names, in order).
           let locals := List.map asText (metaList (readMeta dir h) "locals")
@@ -337,6 +348,17 @@ def Check.substVars (t : Sexp) (args : List Sexp) : Sexp :=
   | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) => getOr (get? args i) t
   | Sexp.list items => Sexp.list (List.map (fun x => Check.substVars x args) items)
   | _ => t
+
+/-- Runs `count` cases, each binder drawn from its generator, or by its type when `generators` is empty. -/
+def Check.testCases (prop : Sexp) (types : List Sexp) (generators : List Text) (count : Int) (state : Ref Int) (typeDecls : Map Text Sexp) (describe : List Sexp -> Text) : Verdict :=
+  let draw := fun t g =>
+    match g with
+    | Option.some ref => Sexp.list [Sexp.sym "app", Sexp.node "ref" [Sexp.str ref], Sexp.node "int" [Sexp.int (nextRandom state)]]
+    | Option.none => Check.generate typeDecls state t 4
+  let cases := List.map (fun _ => mapIndexed (fun i t => draw t (get? generators i)) types) (range 0 count)
+  match runCases prop cases describe with
+  | Option.none => Verdict.pass "test" count
+  | Option.some reason => Verdict.fail reason
 
 def Check.tests (args : Args) : {IO, Throw Text} Unit := Check.run args false
 

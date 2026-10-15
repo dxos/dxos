@@ -118,7 +118,7 @@ req R-2: builtin hashes (starting with #) are never dependencies
 ```mdl
 law L-2: a namespace reads back as written, as a whole and name by name
   theorem: Codebase.Spec.namespaceRoundTrip
-  statement: (words : List Text) : Codebase.Spec.readsBack (Codebase.Spec.namespaceOf (Codebase.Spec.dotted words)) = true
+  statement: (names : List Text) : Codebase.Spec.readsBack (Codebase.Spec.namespaceOf names) = true
 ```
 
 ```mdl

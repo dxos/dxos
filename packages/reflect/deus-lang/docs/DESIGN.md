@@ -282,13 +282,14 @@ Code that needs something outside the codebase says so in its effect row (D47):
 A `theorem` states a proposition over typed binders (`P -> Q` for hypotheses) and names its
 evidence:
 
-| Evidence       | Meaning                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------- |
-| `sorry`        | stated, not checked                                                                     |
-| `by test n`    | `n` generated cases passed (property-based; deterministic seed from the theorem's hash) |
-| `by decide`    | every case of finite binder types checked                                               |
-| `by rfl`       | closed proposition, evaluated to `true`                                                 |
-| `by <tactics>` | a formal proof: `induction x`, `cases x`, `simp [lemmas]`, `split`, `auto`, `trace`     |
+| Evidence            | Meaning                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `sorry`             | stated, not checked                                                                     |
+| `by test n`         | `n` generated cases passed (property-based; deterministic seed from the theorem's hash) |
+| `by test n using g` | the same, each binder drawn as `g` applied to a random `Int` (D135)                     |
+| `by decide`         | every case of finite binder types checked                                               |
+| `by rfl`            | closed proposition, evaluated to `true`                                                 |
+| `by <tactics>`      | a formal proof: `induction x`, `cases x`, `simp [lemmas]`, `split`, `auto`, `trace`     |
 
 ```deus
 theorem insertSorted (x : Int) (xs : List Int) : sorted xs = true -> sorted (insert x xs) = true := by
