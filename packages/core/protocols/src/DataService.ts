@@ -300,16 +300,29 @@ export const GarbageCollectionReport = Schema.Struct({
 });
 export interface GarbageCollectionReport extends Schema.Schema.Type<typeof GarbageCollectionReport> {}
 
+/** Progress through one kind of index work: `done` of `total` items, where `total` can grow as new data arrives. */
+export const IndexProgress = Schema.Struct({
+  done: Schema.Number,
+  total: Schema.Number,
+});
+export interface IndexProgress extends Schema.Schema.Type<typeof IndexProgress> {}
+
 /**
- * What the host's index is doing, for a boot screen or progress indicator: running index migrations,
- * catching the index up to the stored documents and feed blocks, or neither. `done` of `total` counts
- * migrations while migrating and documents plus feed blocks while indexing; `total` can grow while
- * indexing as new data arrives.
+ * What the host's index is doing, for a boot screen or progress indicator. `phase` is the work that
+ * leaves queries with nothing to read: running index migrations, or rebuilding the index over stored
+ * documents and feed blocks it has no cursor for. `done` of `total` counts migrations while migrating
+ * and documents plus feed blocks while indexing; `total` can grow while indexing as new data arrives.
+ *
+ * The optional lanes are work queries can answer through, from an index that is behind: `catchUp`
+ * counts indexed documents whose heads moved on, as after time offline, and `fullText` counts objects
+ * the full-text index has not reached, as after it is rebuilt.
  */
 export const IndexStatus = Schema.Struct({
   phase: Schema.Literals(['migrating', 'indexing', 'idle']),
   done: Schema.Number,
   total: Schema.Number,
+  catchUp: Schema.optional(IndexProgress),
+  fullText: Schema.optional(IndexProgress),
 });
 export interface IndexStatus extends Schema.Schema.Type<typeof IndexStatus> {}
 

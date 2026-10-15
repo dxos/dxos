@@ -121,6 +121,7 @@ export class AutomergeDataSource implements IndexDataSource {
     cursors: DataSourceCursor[];
     activity?: DocumentActivity[];
     more: boolean;
+    catchUp: number;
   }> {
     return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
@@ -137,11 +138,17 @@ export class AutomergeDataSource implements IndexDataSource {
       const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
       const limit = opts?.limit ?? Infinity;
       let more = false;
+      let catchUp = 0;
       for (const { documentId, heads } of allDocumentHeads) {
-        if (hasChanged(cursorMap.get(documentId), heads)) {
+        const cursor = cursorMap.get(documentId);
+        if (hasChanged(cursor, heads)) {
           if (changedDocuments.length >= limit) {
             more = true;
-            break;
+            // Counted rather than stopping here: the rest of the scan is a heads comparison per document.
+            if (cursor) {
+              catchUp++;
+            }
+            continue;
           }
           changedDocuments.push({ documentId, heads });
         }
@@ -236,7 +243,7 @@ export class AutomergeDataSource implements IndexDataSource {
       }
 
       if (!opts?.activity) {
-        return { objects, cursors: updatedCursors, more };
+        return { objects, cursors: updatedCursors, more, catchUp };
       }
       const activity: DocumentActivity[] = [...branchDiscards.values()];
       for (const [documentId, entry] of pendingActivity) {
@@ -246,7 +253,7 @@ export class AutomergeDataSource implements IndexDataSource {
         const isBranch = this.#branchDocumentIds.has(documentId) || this.#isBranchDocument?.(documentId);
         activity.push(isBranch ? { ...entry, full: true, changes: [] } : entry);
       }
-      return { objects, cursors: updatedCursors, activity, more };
+      return { objects, cursors: updatedCursors, activity, more, catchUp };
     });
   }
 }

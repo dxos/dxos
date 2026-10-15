@@ -13,6 +13,21 @@ import { type DataService } from '@dxos/protocols/rpc';
 
 const IDLE: DataService.IndexStatus = { phase: 'idle', done: 0, total: 0 };
 
+/** `remaining` items left in `progress`, growing its total to cover any that arrived since it was set; none once nothing remains. */
+const advance = (
+  progress: DataService.IndexProgress | undefined,
+  remaining: number,
+): DataService.IndexProgress | undefined => {
+  if (remaining <= 0) {
+    return undefined;
+  }
+  const total = Math.max(progress?.total ?? 0, (progress?.done ?? 0) + remaining);
+  return { done: total - remaining, total };
+};
+
+const sameProgress = (a: DataService.IndexProgress | undefined, b: DataService.IndexProgress | undefined): boolean =>
+  a?.done === b?.done && a?.total === b?.total;
+
 /** The host's current {@link DataService.IndexStatus}, with an event on each change. */
 export class IndexStatusTracker {
   readonly updated = new Event<DataService.IndexStatus>();
@@ -23,24 +38,46 @@ export class IndexStatusTracker {
     return this.#status;
   }
 
-  set(status: DataService.IndexStatus): void {
-    const { phase, done, total } = this.#status;
-    if (status.phase === phase && status.done === done && status.total === total) {
+  setMigrating(done: number, total: number): void {
+    this.#set({ ...this.#status, phase: 'migrating', done, total });
+  }
+
+  /** Records `remaining` items left to rebuild; see {@link countIndexBacklog}. */
+  setBacklog(remaining: number): void {
+    const { phase, done, total, ...lanes } = this.#status;
+    const rebuild = advance(phase === 'indexing' ? { done, total } : undefined, remaining);
+    this.#set(rebuild ? { ...lanes, phase: 'indexing', ...rebuild } : { ...lanes, ...IDLE });
+  }
+
+  /** Records `remaining` indexed documents whose heads moved on since the index read them. */
+  setCatchUp(remaining: number): void {
+    this.#setLane('catchUp', remaining);
+  }
+
+  /** Records `remaining` objects the full-text index has not reached. */
+  setFullText(remaining: number): void {
+    this.#setLane('fullText', remaining);
+  }
+
+  #setLane(lane: 'catchUp' | 'fullText', remaining: number): void {
+    const { [lane]: progress, ...rest } = this.#status;
+    const next = advance(progress, remaining);
+    this.#set(next ? { ...rest, [lane]: next } : rest);
+  }
+
+  #set(status: DataService.IndexStatus): void {
+    const current = this.#status;
+    if (
+      status.phase === current.phase &&
+      status.done === current.done &&
+      status.total === current.total &&
+      sameProgress(status.catchUp, current.catchUp) &&
+      sameProgress(status.fullText, current.fullText)
+    ) {
       return;
     }
     this.#status = status;
     this.updated.emit(status);
-  }
-
-  /** Records `remaining` items left to index, growing `total` to cover any that arrived since it was set. */
-  setBacklog(remaining: number): void {
-    if (remaining <= 0) {
-      this.set(IDLE);
-      return;
-    }
-    const indexed = this.#status.phase === 'indexing' ? this.#status.done : 0;
-    const total = Math.max(this.#status.phase === 'indexing' ? this.#status.total : 0, indexed + remaining);
-    this.set({ phase: 'indexing', done: total - remaining, total });
   }
 }
 

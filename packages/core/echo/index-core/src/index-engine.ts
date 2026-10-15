@@ -58,6 +58,8 @@ export type IndexingResult = {
    * leaves.
    */
   drained: boolean;
+  /** Indexed entries whose source moved on, left for a later pass; see {@link IndexDataSource.getChangedObjects}. */
+  catchUp?: number;
   spaces: ReadonlySet<SpaceId>;
   queues: ReadonlySet<EntityId>;
   documents: ReadonlySet<string>;
@@ -69,6 +71,7 @@ type MutableIndexingResult = {
   updated: number;
   done: boolean;
   drained: boolean;
+  catchUp: number;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -80,6 +83,7 @@ const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   updated: 0,
   done: true,
   drained: true,
+  catchUp: 0,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -425,6 +429,14 @@ export class IndexEngine {
     }).pipe(Effect.withSpan('IndexEngine.updateSecondaryIndexes'));
   }
 
+  /** How many objects {@link updateSecondaryIndexes} has yet to index. */
+  countSecondaryBacklog(): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
+      return yield* this.#indexedObjectSource.countChangedObjects(cursors.get(INDEX_NAMES.fts) ?? []);
+    });
+  }
+
   /**
    * Live rows carrying any of the given convergence keys in one space — the detection point-lookup
    * for convergence-key merging.
@@ -587,7 +599,7 @@ export class IndexEngine {
         if (ctx.disposed) {
           break;
         }
-        const { updated, done, drained, objects } = yield* this.#update(ctx, legs, dataSource, {
+        const { updated, done, drained, catchUp, objects } = yield* this.#update(ctx, legs, dataSource, {
           spaceId: opts.spaceId,
           limit: opts.limit,
           cursors,
@@ -595,6 +607,8 @@ export class IndexEngine {
         result.updated += updated;
         result.done = result.done && done;
         result.drained = result.drained && drained;
+        // The furthest-behind index, as the backlog is counted.
+        result.catchUp = Math.max(result.catchUp, catchUp);
         accumulateIndexingResult(result, objects);
       }
 
@@ -649,7 +663,7 @@ export class IndexEngine {
     source: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
-    { updated: number; done: boolean; drained: boolean; objects: readonly IndexerObject[] },
+    { updated: number; done: boolean; drained: boolean; catchUp: number; objects: readonly IndexerObject[] },
     SqlError.SqlError
   > {
     return Effect.gen({ self: this }, function* () {
@@ -663,6 +677,7 @@ export class IndexEngine {
         objects,
         cursors: updatedCursors,
         more,
+        catchUp = 0,
       } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
       });
@@ -670,7 +685,7 @@ export class IndexEngine {
       // An empty batch counts as drained even when the source says it stopped at the limit: the
       // entries it skipped (a document that will not load) do not advance, so waiting would spin.
       if (objects.length === 0) {
-        return { updated: 0, done: true, drained: true, objects: [] as readonly IndexerObject[] };
+        return { updated: 0, done: true, drained: true, catchUp, objects: [] as readonly IndexerObject[] };
       }
 
       const cursors = placeCursors(objects, updatedCursors);
@@ -683,12 +698,12 @@ export class IndexEngine {
           }
           if (ctx.disposed) {
             const indexed = objects.slice(0, written);
-            return { updated: indexed.length * legs.length, done: false, drained: false, objects: indexed };
+            return { updated: indexed.length * legs.length, done: false, drained: false, catchUp, objects: indexed };
           }
         }
         written = yield* sql.withTransaction(this.#writeTransaction(legs, source, objects, written, cursors));
       }
-      return { updated: objects.length * legs.length, done: false, drained: more === false, objects };
+      return { updated: objects.length * legs.length, done: false, drained: more === false, catchUp, objects };
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 

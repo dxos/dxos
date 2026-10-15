@@ -4,9 +4,9 @@
 
 The ECHO host reports what its index is doing, so an app can show index migrations and a rebuild after an upgrade instead of appearing to hang.
 
-- `@dxos/protocols`: `DataService.IndexStatus` (`migrating`, `indexing` or `idle`, with `done` of `total`) and the `DataService.subscribeIndexStatus` stream, which sends the current status and then each change.
-- `@dxos/echo-host`: `EchoHost.indexStatus` counts pending index migrations before running them and reports each store as it migrates. After opening, and at most once a second while a pass leaves work behind, it counts the backlog: documents with no primary-index cursor plus feed blocks past their feed's cursor. A pass that drains returns it to idle.
-- `@dxos/index-core`: `IndexEngine.pendingMigrations()`, `migrate({ onProgress })` and `IndexEngine.primaryIndexNames`.
+- `@dxos/protocols`: `DataService.IndexStatus` (`migrating`, `indexing` or `idle`, with `done` of `total`, plus optional `catchUp` and `fullText` progress) and the `DataService.subscribeIndexStatus` stream, which sends the current status and then each change.
+- `@dxos/echo-host`: `EchoHost.indexStatus` counts pending index migrations before running them and reports each store as it migrates. After opening, and at most once a second while a pass leaves work behind, it counts the backlog: documents with no primary-index cursor plus feed blocks past their feed's cursor. A pass that drains returns it to idle. Each pass also reports catch-up, the indexed documents whose heads moved on, and each full-text flush reports the objects the full-text index has yet to reach.
+- `@dxos/index-core`: `IndexEngine.pendingMigrations()`, `migrate({ onProgress })`, `IndexEngine.primaryIndexNames` and `IndexEngine.countSecondaryBacklog()`. A data source can report `catchUp` from `getChangedObjects`, and `IndexingResult.catchUp` carries it.
 - `@dxos/sql-sqlite`: `SqlMigrations.pending(migrations, table)` lists the migrations a `Migrator` history table has not recorded yet.
 - `@dxos/worker-framework`: a worker's runtime can send `status` messages before `ready`. Each one restarts the leader handshake deadline and the connection's initial-open deadline, so a long but progressing start is no longer cut off at 15 s. `Connection.workerStatus` exposes them.
 - `@dxos/client`: `Client.indexStatus` reports the status from the worker while the client opens, then from the host's stream.

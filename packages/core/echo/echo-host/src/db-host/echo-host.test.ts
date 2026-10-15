@@ -145,6 +145,60 @@ describe('EchoHost index status', () => {
     await expect.poll(() => host.indexStatus.current.phase).toBe('idle');
   });
 
+  test('reports catch-up on indexed documents whose heads moved on, without leaving idle', async () => {
+    const { host, saveObject } = await setup();
+    // More than one pass reads, so a pass leaves some for the next.
+    const objectIds = Array.from({ length: 60 }, () => EntityId.random());
+    const handles = [];
+    for (const objectId of objectIds) {
+      handles.push(await saveObject(objectId));
+    }
+    await host.updateIndexes();
+
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    handles.forEach((handle, index) =>
+      handle.change((doc) => {
+        doc.objects![objectIds[index]].data.title = 'edited';
+      }),
+    );
+    await host.flush(Context.default());
+    await host.updateIndexes();
+
+    expect(statuses.find((status) => status.catchUp)?.catchUp).toMatchObject({ done: 0 });
+    expect(statuses.every((status) => status.phase === 'idle')).toBe(true);
+    expect(host.indexStatus.current.catchUp).toBeUndefined();
+  });
+
+  test('reports a full-text rebuild as it advances, without leaving idle', async () => {
+    const { host, runtime, saveObjects } = await setup({ indexTransactionLimits: { maxObjects: 4 } });
+    await saveObjects(12);
+    await host.updateIndexes({ secondaryIndexes: true });
+    // As renaming the full-text index leaves it.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE sourceName = 'index'`;
+      }),
+    );
+
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.updateSecondaryIndexes();
+
+    expect(statuses.map((status) => status.fullText)).toEqual([
+      { done: 0, total: 12 },
+      { done: 4, total: 12 },
+      { done: 8, total: 12 },
+      undefined,
+    ]);
+    expect(statuses.every((status) => status.phase === 'idle')).toBe(true);
+  });
+
   test('the data service streams the current status, then each change', async () => {
     const { host } = await setup();
     const received: DataService.IndexStatus[] = [];

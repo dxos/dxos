@@ -395,11 +395,11 @@ export class EchoHost extends Resource {
     const pendingMigrations = await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.pendingMigrations());
     log('echo-host: running index engine migration...', { pending: pendingMigrations });
     if (pendingMigrations > 0) {
-      this.indexStatus.set({ phase: 'migrating', done: 0, total: pendingMigrations });
+      this.indexStatus.setMigrating(0, pendingMigrations);
     }
     await RuntimeProvider.runPromise(this._runtime)(
       this.indexEngine.migrate({
-        onProgress: (applied) => this.indexStatus.set({ phase: 'migrating', done: applied, total: pendingMigrations }),
+        onProgress: (applied) => this.indexStatus.setMigrating(applied, pendingMigrations),
       }),
     );
     log('echo-host: index engine migration done');
@@ -418,7 +418,6 @@ export class EchoHost extends Resource {
     const backlog = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
     this.#backlogCountedAt = performance.now();
     log('echo-host: index backlog', { backlog });
-    this.indexStatus.set({ phase: 'idle', done: 0, total: 0 });
     this.indexStatus.setBacklog(backlog);
 
     log('echo-host: opening query service...');
@@ -519,6 +518,8 @@ export class EchoHost extends Resource {
   async updateSecondaryIndexes(): Promise<number> {
     const ctx = this._ctx;
     const startedAt = performance.now();
+    const backlog = await this.indexEngine.countSecondaryBacklog().pipe(RuntimeProvider.runPromise(this._runtime));
+    this.indexStatus.setFullText(backlog);
     let records = 0;
     let batches = 0;
     let hint: InvalidationHint | undefined;
@@ -539,7 +540,9 @@ export class EchoHost extends Resource {
       if (result.done) {
         break;
       }
+      this.indexStatus.setFullText(backlog - records);
     }
+    this.indexStatus.setFullText(0);
 
     // A text query issued before this catch-up matched nothing and would never re-run on its own:
     // the indexer is the sole invalidation source, and this pass is the only writer of the rows.
@@ -1231,18 +1234,13 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * One indexing pass over both data sources.
-   *
-   * Spanned so that a pass is a single trace naming the requests that caused it, instead of one
-   * parentless `IndexEngine.update` root per data source with nothing to attribute it to. The
-   * `ctx` the decorator hands back carries the pass span, and `EffectEx.withContext` is what
-   * carries it across into the Effect world.
+   * Moves {@link indexStatus} on after a pass. The pass counted its catch-up as it read; the rebuild
+   * backlog is recounted at most every {@link INDEX_STATUS_INTERVAL_MS}. A drained pass ends any
+   * rebuild; documents that never load keep no cursor and would otherwise hold the status at
+   * indexing for good.
    */
-  /**
-   * Moves {@link indexStatus} on after a pass. A drained pass ends any rebuild; documents that never
-   * load keep no cursor and would otherwise hold the status at indexing for good.
-   */
-  async #refreshIndexStatus(drained: boolean): Promise<void> {
+  async #refreshIndexStatus({ drained, catchUp }: { drained: boolean; catchUp: number }): Promise<void> {
+    this.indexStatus.setCatchUp(catchUp);
     if (drained) {
       this.indexStatus.setBacklog(0);
       return;
@@ -1252,12 +1250,20 @@ export class EchoHost extends Resource {
     }
     this.#backlogCountedAt = performance.now();
     const remaining = await RuntimeProvider.runPromise(this._runtime)(countIndexBacklog());
-    // Catch-up on documents that already have cursors counts as nothing; leave a rebuild in progress as it is.
+    // With nothing left to rebuild, a pass still short of drained keeps a rebuild in progress until it drains.
     if (remaining > 0 || this.indexStatus.current.phase !== 'indexing') {
       this.indexStatus.setBacklog(remaining);
     }
   }
 
+  /**
+   * One indexing pass over both data sources.
+   *
+   * Spanned so that a pass is a single trace naming the requests that caused it, instead of one
+   * parentless `IndexEngine.update` root per data source with nothing to attribute it to. The
+   * `ctx` the decorator hands back carries the pass span, and `EffectEx.withContext` is what
+   * carries it across into the Effect world.
+   */
   @trace.span({
     op: 'indexer',
     // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
@@ -1396,7 +1402,7 @@ export class EchoHost extends Resource {
         this._queryService.invalidateQueries(hint);
       }
 
-      await this.#refreshIndexStatus(combinedResult.drained);
+      await this.#refreshIndexStatus(combinedResult);
 
       return {
         updated: combinedResult.updated,
@@ -1434,6 +1440,7 @@ type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
   drained: boolean;
+  catchUp: number;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -1445,6 +1452,7 @@ const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
   updated: 0,
   done: true,
   drained: true,
+  catchUp: 0,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -1456,6 +1464,7 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
   acc.updated += r.updated;
   acc.done = acc.done && r.done;
   acc.drained = acc.drained && r.drained;
+  acc.catchUp += r.catchUp ?? 0;
   for (const s of r.spaces) {
     acc.spaces.add(s);
   }

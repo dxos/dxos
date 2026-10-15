@@ -27,6 +27,14 @@ describe('gateStateFor', () => {
     expect(gateStateFor({ phase: 'indexing', done: 0, total: MAJOR_REINDEX_THRESHOLD - 1 }).pending).toBe(false);
     expect(gateStateFor({ phase: 'idle', done: 0, total: 0 }).pending).toBe(false);
   });
+
+  test('never holds for catch-up or a full-text rebuild', () => {
+    const lanes = { catchUp: { done: 0, total: 10_000 }, fullText: { done: 0, total: 10_000 } };
+    expect(gateStateFor({ phase: 'idle', done: 0, total: 0, ...lanes }).pending).toBe(false);
+    expect(gateStateFor({ phase: 'indexing', done: 0, total: MAJOR_REINDEX_THRESHOLD - 1, ...lanes }).pending).toBe(
+      false,
+    );
+  });
 });
 
 describe('followIndexStatus', () => {
