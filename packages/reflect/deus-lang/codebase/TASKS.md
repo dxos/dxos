@@ -124,14 +124,6 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
-## devex: a fresh container cannot run the full suite: the Rust wasm32 target and tsc are missing, and three threads re-diagnosed it (native, explorer, bindings) (`6cffbc44`)
-
-- state: todo
-- priority: high
-- labels: devex, perf
-
-Install the wasm32 target and tsc in the repo's cloud setup script or a SessionStart hook, and add a test preflight that names exactly what is missing.
-
 ## devex: merges into #13952 race and D-numbers collide (`602f4557`)
 
 - state: doing
@@ -933,6 +925,16 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - links `Print.definition` (#44b701111a)
 
 > claude: Binder names now follow Resolve.strip's order; colours on a terminal (D61). Long lines are not yet broken.
+
+## devex: a fresh container cannot run the full suite: the Rust wasm32 target and tsc are missing, and three threads re-diagnosed it (native, explorer, bindings) (`6cffbc44`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+
+Install the wasm32 target and tsc in the repo's cloud setup script or a SessionStart hook, and add a test preflight that names exactly what is missing.
+
+> claude: scripts/setup.sh installs the pinned Rust toolchain with wasm32-unknown-unknown and wasm32-wasip1 and the package's node_modules; src/preflight.test.ts names what is missing (cargo, a wasm target, tsc) with that fix. The repo-wide .config/claude-code-setup.sh is shared by every dxos agent, so it is left alone.
 
 ## devex: deus mdl over all specs takes 34 s (`7f677d04`)
 

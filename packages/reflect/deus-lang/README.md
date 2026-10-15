@@ -95,3 +95,10 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
 2. `moon run deus-lang:self-build` (or `node bin/deus.mjs compile deus --main Cli.main -o seed/deus.image`).
 3. Run it again: the second run must not change `seed/deus.image`.
 4. To use new syntax inside `deus/`, first land the compiler change and a rebuilt seed.
+
+## Running the tests in a fresh container
+
+`bash scripts/setup.sh` installs the Rust toolchain that `../deus-kernel/rust-toolchain.toml` pins,
+with its wasm targets, and this package's `node_modules`. `src/preflight.test.ts` fails first and
+names anything that is still missing, so a native, browser or bindings test does not fail later for
+that reason.

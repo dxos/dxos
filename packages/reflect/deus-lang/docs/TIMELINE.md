@@ -134,6 +134,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 124 | 10-15 00:30 | 32m 00s | `46731dee` | C and wasm back ends compare data: `==`, `<` and `compare` on constructed values and lists by per-type functions, 0 live words (D117, task f9cd5624); landed through the git export while metadata replication is broken (f4afc2c0) |
 | 125 | 10-15 00:10 | 12m 00s | `21061ff9` | feature maps in the codebase (D118): `feature` MDL blocks checked by `deus mdl`, `deus features` prints the tree with open tasks and problems, `Toolchain.Features` maps the toolchain (25 features); written spec-first, Features.Spec's 13 theorems ran red first |
 | 126 | 10-15 00:25 | 15m 00s | `1c91a00f` | devex: `scripts/merge-base.py` merges #13952's branch in one step: decisions and stages renumbered, seed rebuilt from the codebase in 3 s, export written back (task 602f4557) |
-| 127 | 10-15 00:40 | 15m 00s | this commit | devex: the dogfood test takes 34 s (was 124 s) and the restore test 44 s (was 89 s); the restore compiles deus/ once, as an update that must change nothing |
+| 127 | 10-15 00:40 | 15m 00s | `94bbc10d` | devex: the dogfood test takes 34 s (was 124 s) and the restore test 44 s (was 89 s); the restore compiles deus/ once, as an update that must change nothing |
+| 128 | 10-15 00:55 | 15m 00s | this commit | devex: `scripts/setup.sh` makes a fresh container able to run the suite (pinned Rust with wasm targets, node_modules); `src/preflight.test.ts` names what is missing |
 
-Total from stage 1 to stage 127: 22h 47m.
+Total from stage 1 to stage 128: 22h 47m.
