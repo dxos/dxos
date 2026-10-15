@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Knowledge, MemoryOperation, Profile } from '#types';
+import { AgentPresence, BrainService, Knowledge, MemoryOperation, Profile } from '#types';
 
 import { AgentOperationError } from './errors.ts';
 import { recordingAgent } from './knowledge.ts';
@@ -62,7 +62,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
       });
 
       // The agent's own words, so a watch never wakes on what it remembered.
-      yield* (yield* BrainService.BrainService).push(agent.id, facts, { quiet: [id] });
+      yield* (yield* BrainService.BrainService).push(AgentPresence.brainId(agent), facts, { quiet: [id] });
       return { memory: facts[0].graph ?? facts[0].id };
     }),
   ),

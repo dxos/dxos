@@ -275,7 +275,9 @@ op retrieveMemories
       goals: { goal: Ref<Goal>, title, horizon, status }[] }
   effects: [echo:read, brain:read]
   requires: [Database.Service, BrainService]
-  note: Live goals are every status but `dropped`; ties in observedAt break on id.
+  note: |
+    Live goals are every status but `dropped`; ties in observedAt break on id. Facts come from the agent's brain,
+    the one `AgentPresence.brainId` names (F-6.1).
 ```
 
 ```mdl
@@ -555,6 +557,13 @@ feat F-5: Interview and profile panel
     then: the properties panel updates without reopening
 ```
 
+```mdl
+feat F-6: One brain per agent
+
+  req F-6.1: An agent's brain is named by its identity's DID (`AgentPresence.brainId`), which every presence of it carries, so every space it is in shares one brain: its facts, its triggers and its wakes. An agent without an identity keeps a brain named by its home agent's id. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
+  req F-6.2: A watch is delivered in the space it was set from, where its goal and recipient live. `TriggerOperation.WatchFacts` records the agent there as the watch's origin, and an agent delivers only the watches set in its own space, so a turn elsewhere leaves them queued. EDGE's brain delivers those from its alarm, a minute after the facts that woke them or when their time comes, by running `TriggerOperation.RunDue` as the agent in each such space it still serves. A watch stored before watches recorded their origin is delivered at the agent's home. The in-app brain has no alarm, so there such a watch waits until a turn in its own space wakes a watch.
+```
+
 ## Acceptance
 
 Derived criteria, each executed by a vitest case or a storybook play function.
@@ -630,6 +639,17 @@ scenario T-8: Scripted interview fills the profile panel
     - the Goals region lists both goals and reads "Confirmed" twice
     - the Memories region lists the three recorded claims
     - the space holds one Person and two confirmed goals, and the agent's brain at least three memories
+```
+
+```mdl
+scenario T-9: A watch is delivered where it was set   # triggers.test.ts
+  # covers [F-6.2]
+  given: Kai with two watches on Dima, one set in Kai's space and one through Kai in another space
+  when: a fact of Dima's is pushed in Kai's space
+  then:
+    - only the watch set here fires, and its recipient gets one update
+    - the other watch's wake stays queued for its own space
+    - an agent delivers a watch in the space it was set from, and its home delivers one stored without an origin
 ```
 
 ## Not built
