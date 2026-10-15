@@ -251,7 +251,11 @@ export const DataFlowView = ({
             revealed={revealed}
             relayout={relayout && moved < 1 ? { ...relayout, progress: moved } : undefined}
             hubMorph={
-              morph && progress > 0 ? { ...morph, progress, applied: running ? applied : undefined } : undefined
+              // From the first frame the split is asked for, before its progress has moved off zero: otherwise that frame
+              // draws the split layout's dividers outright.
+              morph && (partitioned || progress > 0)
+                ? { ...morph, progress, applied: running ? applied : undefined }
+                : undefined
             }
           />
         }
