@@ -48,7 +48,7 @@ const APPS: DataFlowSpec = {
 
 const MIXED: DataFlowSpec = {
   ...SPEC,
-  hub: { label: 'Hypergraph', partitions: 2 },
+  hub: { label: 'Hypergraph', partitions: 3 },
   sinks: [
     { label: 'Docs', app: 'document' },
     { label: 'Sheets', app: 'spreadsheet' },
