@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type MulticastObservable } from '@dxos/async';
-import { type DataService } from '@dxos/protocols/rpc';
+import { DataService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities } from '#types';
 
@@ -46,8 +46,8 @@ export const gateStateFor = (status: DataService.IndexStatus): Capabilities.Boot
 
 /**
  * Drives a boot gate from the client's index status until it releases: the first status (or
- * {@link BOOT_GATE_BUDGET}) decides, and a gate left holding without a status for
- * {@link BOOT_GATE_STALL_BUDGET} releases. Returns a cleanup.
+ * {@link BOOT_GATE_BUDGET}) decides, and a gate left holding while no migration or rebuild moves on
+ * for {@link BOOT_GATE_STALL_BUDGET} releases. Returns a cleanup.
  */
 export const followIndexStatus = (
   indexStatus: MulticastObservable<DataService.IndexStatus | null>,
@@ -69,8 +69,15 @@ export const followIndexStatus = (
   };
 
   deadline = setTimeout(() => update(RELEASED), BOOT_GATE_BUDGET);
+  let previous: DataService.IndexStatus | undefined;
   const subscription = indexStatus.subscribe((status) => {
-    if (status) {
+    if (!status) {
+      return;
+    }
+    // After the first, a status that only moves a lane neither changes the gate nor restarts its stall budget.
+    const decides = previous === undefined || DataService.movesPhase(previous, status);
+    previous = status;
+    if (decides) {
       update(gateStateFor(status));
     }
   });

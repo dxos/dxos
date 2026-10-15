@@ -28,11 +28,40 @@ const advance = (
 const sameProgress = (a: DataService.IndexProgress | undefined, b: DataService.IndexProgress | undefined): boolean =>
   a?.done === b?.done && a?.total === b?.total;
 
-/** The host's current {@link DataService.IndexStatus}, with an event on each change. */
+/** `status` with `lane` set to `remaining` items, as {@link advance} grows it. */
+const withLane = (
+  status: DataService.IndexStatus,
+  lane: 'catchUp' | 'fullText',
+  remaining: number,
+): DataService.IndexStatus => {
+  const { [lane]: progress, ...rest } = status;
+  const next = advance(progress, remaining);
+  return next ? { ...rest, [lane]: next } : rest;
+};
+
+/** `status` with the rebuild set to `remaining` items, idle once none remain. */
+const withRebuild = (status: DataService.IndexStatus, remaining: number): DataService.IndexStatus => {
+  const { phase, done, total, ...lanes } = status;
+  const rebuild = advance(phase === 'indexing' ? { done, total } : undefined, remaining);
+  return rebuild ? { ...lanes, phase: 'indexing', ...rebuild } : { ...lanes, ...IDLE };
+};
+
+/** How often {@link IndexStatusTracker.afterPass} recounts the backlog while passes leave work behind. */
+export const BACKLOG_RECOUNT_INTERVAL = 1_000;
+
+/**
+ * The host's current {@link DataService.IndexStatus}, with an event on each change. Each update
+ * emits at most one status.
+ */
 export class IndexStatusTracker {
   readonly updated = new Event<DataService.IndexStatus>();
 
   #status = IDLE;
+
+  /** Feed blocks past their cursor at the last count; a pass counts only its documents' catch-up. */
+  #feedCatchUp = 0;
+
+  #countedAt = Number.NEGATIVE_INFINITY;
 
   get current(): DataService.IndexStatus {
     return this.#status;
@@ -42,27 +71,41 @@ export class IndexStatusTracker {
     this.#set({ ...this.#status, phase: 'migrating', done, total });
   }
 
-  /** Records `remaining` items left to rebuild; see {@link countIndexBacklog}. */
-  setBacklog(remaining: number): void {
-    const { phase, done, total, ...lanes } = this.#status;
-    const rebuild = advance(phase === 'indexing' ? { done, total } : undefined, remaining);
-    this.#set(rebuild ? { ...lanes, phase: 'indexing', ...rebuild } : { ...lanes, ...IDLE });
+  /** Records the backlog counted once the stores open, which ends any migration. */
+  opened(backlog: IndexBacklog): void {
+    this.#countedAt = performance.now();
+    this.#feedCatchUp = backlog.catchUp;
+    this.#set(withLane(withRebuild(this.#status, backlog.rebuild), 'catchUp', backlog.catchUp));
   }
 
-  /** Records `remaining` items past a cursor the index already holds: documents whose heads moved on, and feed blocks. */
-  setCatchUp(remaining: number): void {
-    this.#setLane('catchUp', remaining);
+  /**
+   * Moves the status on after a pass, which counted its documents' catch-up as it read, recounting the
+   * backlog with `count` at most every {@link BACKLOG_RECOUNT_INTERVAL}. A drained pass ends the
+   * rebuild and catch-up: a batch of documents that never load drains with work counted behind it,
+   * and no pass follows.
+   */
+  async afterPass(
+    { drained, catchUp }: { drained: boolean; catchUp: number },
+    count: () => Promise<IndexBacklog>,
+  ): Promise<void> {
+    if (drained) {
+      this.#feedCatchUp = 0;
+      this.#set(withLane(withRebuild(this.#status, 0), 'catchUp', 0));
+      return;
+    }
+    let status = this.#status;
+    if (performance.now() - this.#countedAt >= BACKLOG_RECOUNT_INTERVAL) {
+      this.#countedAt = performance.now();
+      const backlog = await count();
+      this.#feedCatchUp = backlog.catchUp;
+      status = withRebuild(this.#status, backlog.rebuild);
+    }
+    this.#set(withLane(status, 'catchUp', catchUp + this.#feedCatchUp));
   }
 
   /** Records `remaining` objects the full-text index has not reached. */
   setFullText(remaining: number): void {
-    this.#setLane('fullText', remaining);
-  }
-
-  #setLane(lane: 'catchUp' | 'fullText', remaining: number): void {
-    const { [lane]: progress, ...rest } = this.#status;
-    const next = advance(progress, remaining);
-    this.#set(next ? { ...rest, [lane]: next } : rest);
+    this.#set(withLane(this.#status, 'fullText', remaining));
   }
 
   #set(status: DataService.IndexStatus): void {

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, MulticastObservable, type ReadOnlyEvent, Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -93,6 +93,7 @@ export class Client {
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
   private readonly _indexStatusUpdate = new Event<DataService.IndexStatus | null>();
   private readonly _indexStatus = MulticastObservable.from(this._indexStatusUpdate, null);
+  private readonly _indexProgress = new Event<void>();
   private readonly _fatalErrorUpdate = new Event<Error | null>();
   private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
@@ -168,7 +169,7 @@ export class Client {
       void this.addTypes(this._options.types);
     }
     // The ECHO client outlives re-initialization, so its status is forwarded once.
-    this._echoClient.indexStatusUpdated.on((status) => this._indexStatusUpdate.emit(status));
+    this._echoClient.indexStatusUpdated.on((status) => this._setIndexStatus(status));
   }
 
   [inspect.custom](): string {
@@ -234,6 +235,23 @@ export class Client {
    */
   get indexStatus(): MulticastObservable<DataService.IndexStatus | null> {
     return this._indexStatus;
+  }
+
+  /**
+   * Fires as an index migration or rebuild moves on (see {@link DataService.movesPhase}), for a
+   * deadline that should wait out a slow upgrade but not catch-up or full-text work.
+   */
+  get indexProgress(): ReadOnlyEvent<void> {
+    return this._indexProgress;
+  }
+
+  /** Records a status from the worker's handshake or the host's stream. */
+  private _setIndexStatus(status: DataService.IndexStatus): void {
+    const previous = this._indexStatus.get();
+    this._indexStatusUpdate.emit(status);
+    if (DataService.movesPhase(previous, status)) {
+      this._indexProgress.emit();
+    }
   }
 
   get status(): MulticastObservable<SystemStatus | null> {
@@ -455,7 +473,7 @@ export class Client {
     services.hostStatus?.on((status) => {
       const decoded = Schema.decodeUnknownOption(DataService.IndexStatus)(status);
       if (Option.isSome(decoded)) {
-        this._indexStatusUpdate.emit(decoded.value);
+        this._setIndexStatus(decoded.value);
       }
     });
     this._iframeManager = this._options.shell

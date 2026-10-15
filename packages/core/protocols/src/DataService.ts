@@ -328,10 +328,13 @@ export const IndexStatus = Schema.Struct({
 export interface IndexStatus extends Schema.Schema.Type<typeof IndexStatus> {}
 
 /**
- * Whether a status reports work queries wait on, its `phase`, which is what a deadline waiting on
- * the index should treat as progress. A status that only moves a lane does not count.
+ * Whether `next` moves a migration or rebuild on from `previous` (idle when absent): what a deadline
+ * waiting on the index counts as progress. A status that only moves a lane does not.
  */
-export const blocksQueries = (status: IndexStatus): boolean => status.phase !== 'idle';
+export const movesPhase = (previous: IndexStatus | null | undefined, next: IndexStatus): boolean =>
+  next.phase !== (previous?.phase ?? 'idle') ||
+  next.done !== (previous?.done ?? 0) ||
+  next.total !== (previous?.total ?? 0);
 
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.

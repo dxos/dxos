@@ -42,11 +42,14 @@ describe('DataService wire schema', () => {
   });
 });
 
-describe('DataService.blocksQueries', () => {
-  test('a migration or rebuild blocks queries, and lanes alone do not', () => {
-    const lanes = { catchUp: { done: 0, total: 10 }, fullText: { done: 0, total: 10 } };
-    expect(DataService.blocksQueries({ phase: 'migrating', done: 0, total: 1 })).toBe(true);
-    expect(DataService.blocksQueries({ phase: 'indexing', done: 0, total: 1, ...lanes })).toBe(true);
-    expect(DataService.blocksQueries({ phase: 'idle', done: 0, total: 0, ...lanes })).toBe(false);
+describe('DataService.movesPhase', () => {
+  test('a migration or rebuild moving is progress, and a lane moving alone is not', () => {
+    const rebuild: DataService.IndexStatus = { phase: 'indexing', done: 10, total: 100 };
+    const catchUp = { done: 0, total: 10 };
+    expect(DataService.movesPhase(null, { phase: 'migrating', done: 0, total: 1 })).toBe(true);
+    expect(DataService.movesPhase(null, { phase: 'idle', done: 0, total: 0, catchUp })).toBe(false);
+    expect(DataService.movesPhase(rebuild, { ...rebuild, done: 20 })).toBe(true);
+    expect(DataService.movesPhase(rebuild, { ...rebuild, catchUp })).toBe(false);
+    expect(DataService.movesPhase(rebuild, { phase: 'idle', done: 0, total: 0, catchUp })).toBe(true);
   });
 });

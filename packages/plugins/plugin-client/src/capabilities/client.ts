@@ -11,14 +11,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Event, timeoutUnlessProgress } from '@dxos/async';
+import { timeoutUnlessProgress } from '@dxos/async';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
-import { DataService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
@@ -207,19 +206,8 @@ export default Capability.makeModule(
 );
 
 /**
- * Waits for `promise`, failing after `timeout` ms in which the client reports no index migration or
- * rebuild: a worker doing either on its first boot after an upgrade is slow, not hung.
+ * Waits for `promise`, failing after `timeout` ms in which no index migration or rebuild moves on: a
+ * worker doing either on its first boot after an upgrade is slow, not hung.
  */
-const untilStalled = async <T>(client: Client, promise: Promise<T>, timeout: number): Promise<T> => {
-  const progress = new Event();
-  const subscription = client.indexStatus.subscribe((status) => {
-    if (status && DataService.blocksQueries(status)) {
-      progress.emit();
-    }
-  });
-  try {
-    return await timeoutUnlessProgress(promise, timeout, progress);
-  } finally {
-    subscription.unsubscribe();
-  }
-};
+const untilStalled = <T>(client: Client, promise: Promise<T>, timeout: number): Promise<T> =>
+  timeoutUnlessProgress(promise, timeout, client.indexProgress);

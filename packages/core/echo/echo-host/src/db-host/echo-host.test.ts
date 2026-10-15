@@ -217,16 +217,30 @@ describe('EchoHost index status', () => {
     expect(statuses.every((status) => status.phase === 'idle')).toBe(true);
   });
 
-  test('a drained pass ends catch-up it counted', async () => {
-    const { host, saveDocs } = await setup();
-    // As a batch of documents that never load leaves the catch-up behind it counted.
-    const update = host.indexEngine.update.bind(host.indexEngine);
-    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
-      update(ctx, source, opts).pipe(Effect.map((result) => ({ ...result, catchUp: 5 }))),
+  test('full-text flushes run one at a time, so one run reports the lane', async () => {
+    const { host, runtime, saveObjects } = await setup({ indexTransactionLimits: { maxObjects: 4 } });
+    await saveObjects(12);
+    await host.updateIndexes({ secondaryIndexes: true });
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE sourceName = 'index'`;
+      }),
     );
-    await saveDocs();
-    await host.updateIndexes();
-    expect(host.indexStatus.current.catchUp).toBeUndefined();
+
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    const [first, second] = await Promise.all([host.updateSecondaryIndexes(), host.updateSecondaryIndexes()]);
+
+    expect([first, second]).toEqual([12, 0]);
+    expect(statuses.map((status) => status.fullText)).toEqual([
+      { done: 0, total: 12 },
+      { done: 4, total: 12 },
+      { done: 8, total: 12 },
+      undefined,
+    ]);
   });
 
   test('a failed full-text flush leaves no full-text lane', async () => {
@@ -278,7 +292,7 @@ describe('EchoHost index status', () => {
     });
 
     await expect.poll(() => received).toEqual([{ phase: 'idle', done: 0, total: 0 }]);
-    host.indexStatus.setBacklog(5);
+    host.indexStatus.opened({ rebuild: 5, catchUp: 0 });
     await expect.poll(() => received.at(-1)).toEqual({ phase: 'indexing', done: 0, total: 5 });
   });
 });

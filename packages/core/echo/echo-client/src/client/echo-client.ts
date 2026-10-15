@@ -85,11 +85,13 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
-  /** Each index status the host reports (see `DataService.IndexStatus`); also restarts one-shot query budgets. */
+  /** Each index status the host reports; see `DataService.IndexStatus`. */
   readonly indexStatusUpdated = new Event<DataService.IndexStatus>();
 
-  /** Statuses reporting work queries wait on; see {@link DataService.blocksQueries}. */
+  /** Each status that moves a migration or rebuild on (see {@link DataService.movesPhase}); restarts one-shot query budgets. */
   readonly #indexProgress = new Event<DataService.IndexStatus>();
+
+  #indexStatus: DataService.IndexStatus | undefined;
   #indexStatusCleanup: (() => void) | undefined;
 
   constructor(_: EchoClientProps = {}) {
@@ -138,8 +140,10 @@ export class EchoClient extends Resource {
     this.#indexStatusCleanup?.();
     this.#indexStatusCleanup = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexStatus'](), {
       onData: (status) => {
+        const previous = this.#indexStatus;
+        this.#indexStatus = status;
         this.indexStatusUpdated.emit(status);
-        if (DataService.blocksQueries(status)) {
+        if (DataService.movesPhase(previous, status)) {
           this.#indexProgress.emit(status);
         }
       },

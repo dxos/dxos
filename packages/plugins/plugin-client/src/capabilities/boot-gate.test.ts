@@ -84,4 +84,15 @@ describe('followIndexStatus', () => {
     expect(states.at(-1)).toEqual({ pending: false });
     cleanup();
   });
+
+  test('a status that only moves a lane does not restart the stall budget', async () => {
+    const { emit, states, cleanup } = await setup();
+    const rebuild: DataService.IndexStatus = { phase: 'indexing', done: 0, total: 1_000 };
+    emit(rebuild);
+    vi.advanceTimersByTime(BOOT_GATE_STALL_BUDGET - 1);
+    emit({ ...rebuild, catchUp: { done: 0, total: 50 } });
+    vi.advanceTimersByTime(1);
+    expect(states.at(-1)).toEqual({ pending: false });
+    cleanup();
+  });
 });
