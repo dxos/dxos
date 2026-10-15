@@ -53,7 +53,7 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className='flex flex-col w-full h-full'>
       <Toolbar.Root>
         <Button.Root
           icon={isometric ? 'ph--square--regular' : 'ph--cube--regular'}
