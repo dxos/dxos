@@ -74,8 +74,8 @@ const MORE_NAMES = [
 // Only hues the diagram has a colour for: any other would draw its source gray.
 const MORE_HUES = ['teal', 'amber', 'violet', 'sky', 'red', 'orange', 'green', 'blue', 'fuchsia'];
 
-/** How far each side extends: just past the view on the left; on the right far enough to pan along for a long while. */
-const REACH = { left: { buckets: 2, blocks: 2 }, right: { buckets: 12, blocks: 14 } };
+/** How far each side extends: the same both ways, well past the view, so the growth reads as going on without end. */
+const REACH = { left: { buckets: 7, blocks: 8 }, right: { buckets: 7, blocks: 8 } };
 
 /** The new sources on one side, outward; each side draws its names and hues from its own end of the lists. */
 const moreSources = (side: 'left' | 'right'): SourceSpec[] =>
@@ -103,8 +103,7 @@ const moreSinks = (side: 'left' | 'right'): { label: string; app?: AppKind }[] =
   });
 
 /**
- * ECHO extended past the view on both sides, while all that was there keeps its place: just past the left edge, and far
- * to the right, where the view then pans.
+ * ECHO extended past the view equally on both sides, while all that was there keeps its place.
  */
 const EXTENDED: DataFlowSpec = {
   ...APPS,
@@ -129,7 +128,7 @@ const CHAPTERS: readonly Scene[] = [
     // Grid lines for the silos, dots once the agent arrives, and a plain field from ECHO on.
     grid: 'lines',
     stage: 'silos',
-    duration: 20,
+    duration: 10,
   },
   {
     title: 'Monolithic Agents',
@@ -138,7 +137,7 @@ const CHAPTERS: readonly Scene[] = [
     options: { warmup: 8 },
     grid: 'dots',
     stage: 'silos',
-    duration: 20,
+    duration: 11,
   },
   // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then extends past
   // the view on both sides.
@@ -151,7 +150,7 @@ const CHAPTERS: readonly Scene[] = [
     // From here on the background is plain, so the eye stays on ECHO.
     grid: 'none',
     stage: 'echo',
-    duration: 24,
+    duration: 11,
   },
   {
     title: 'Spaces',
@@ -161,7 +160,7 @@ const CHAPTERS: readonly Scene[] = [
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 20,
+    duration: 10,
   },
   {
     title: 'Room to grow',
@@ -172,7 +171,7 @@ const CHAPTERS: readonly Scene[] = [
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 24,
+    duration: 14,
   },
 ];
 
