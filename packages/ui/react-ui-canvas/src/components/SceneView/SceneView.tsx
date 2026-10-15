@@ -1377,7 +1377,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
         )}
         {overlay}
       </div>
-      <GrainOverlay background={look.background} />
+      <GrainOverlay background={look.background} offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }} />
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
       {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span

@@ -250,7 +250,7 @@ export const GLOW_BACKGROUND: Background = {
     { hue: 'teal', x: 0.85, y: 0.9, strength: 0.22 },
   ],
   fade: true,
-  grain: 16 / 255,
+  grain: 8 / 255,
 };
 
 /** Warm off-white paper with a fine fibre grain and faint dots. */
@@ -261,7 +261,7 @@ export const PAPER_BACKGROUND: Background = {
   grid: 'dots',
   washes: [],
   fade: false,
-  grain: 18 / 255,
+  grain: 9 / 255,
   grainHue: 'warm',
 };
 

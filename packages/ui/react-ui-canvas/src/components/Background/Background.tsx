@@ -183,13 +183,19 @@ export const BackgroundFill = ({ background }: { background: Background }) => {
 /**
  * Screen-space grain over the whole view, one noise pixel per screen pixel: it breaks up the steps a dim gradient makes,
  * which read as bands, and gives paper its fibre. In the scene it would be resampled with the zoom and smoothed away.
+ * `offset` (the camera's translation in screen pixels) shifts the tile, so the grain travels with a pan as the scene
+ * does, while staying one pixel per screen pixel whatever the zoom.
  */
-export const GrainOverlay = ({ background }: { background: Background }) => {
+export const GrainOverlay = ({ background, offset }: { background: Background; offset?: { x: number; y: number } }) => {
   const noise = useNoise(background.grain, background.grainHue);
   return noise ? (
     <div
       className='dx-cover pointer-events-none'
-      style={{ backgroundImage: `url(${noise})` }}
+      style={{
+        backgroundImage: `url(${noise})`,
+        // Whole pixels, so the tile is never resampled between them and the grain stays crisp.
+        backgroundPosition: offset ? `${Math.round(offset.x)}px ${Math.round(offset.y)}px` : undefined,
+      }}
       data-testid='scene-background-grain'
     />
   ) : null;
