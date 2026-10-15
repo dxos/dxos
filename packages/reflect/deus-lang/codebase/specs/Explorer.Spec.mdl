@@ -151,6 +151,23 @@ req R-15: meta.json counts the codebase's events, 0 when it records none
   by: Explorer.Spec.metaCountsEvents
 ```
 
+## Features
+
+Feature maps (D118) say what the product is, feature by feature; the site shows each map as a tree
+so a reader sees what is shipped, what is still building and which tasks are open without the CLI.
+
+```mdl
+req R-16: features.json holds each feature map as deus features --json prints it: features in tree order with status, links, open tasks and problems
+  by: Explorer.Spec.featuresAreListed
+```
+
+```mdl
+req R-17: meta.json counts the features of every feature map, 0 when there is none
+  by: Explorer.Spec.metaCountsFeatures
+```
+
+The laws are the definitions under `Explorer.Spec`: `deus ls Explorer.Spec.` lists them and `deus view` prints them.
+
 ## Laws
 
 Each law builds a codebase in the deterministic simulation and generates its site there, with

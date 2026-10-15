@@ -21,6 +21,8 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   def/<page>.json                 one per visible definition
   change/<causal>.json            one per history node the app links to
   comments.json                   comments on definitions and changes, by subject (D82)
+  events.json                     what the analytics store recorded (D110)
+  features.json                   the feature maps, as `deus features --json` prints them (D121)
   assets/<sha256>                 the files comments and tasks attach
   console/                        with --console: the console's kernel, toolchain and codebase (D84)
 ```
@@ -64,10 +66,11 @@ change  = {"causal": string, "message": string, "by"?: string}
 | `open`        | number   | how many tasks are `todo` or `doing`                              |
 | `console`     | boolean  | whether the site has a [console](#console) (D84)                  |
 | `events`      | number   | how many [events](#eventsjson) the codebase recorded (D110)       |
+| `features`    | number   | how many [features](#featuresjson) the feature maps hold (D121)   |
 | `history`     | change[] | the branch's 30 most recent history nodes, newest first           |
 
 ```json
-{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"console":false,"events":0,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
+{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"console":false,"events":0,"features":0,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
 ```
 
 ## names.json
@@ -245,6 +248,25 @@ which opens the `k:events` card: a table of the latest rows per type, with `Code
 their definitions or changes. A definition or change card lists its events by type and column, adding
 those filed under a prefix of its hash.
 
+## features.json
+
+The feature maps ([D118](../DECISIONS.md)), as `Cli.featuresJson` writes them: the JSON `deus features --json`
+prints, one object per spec document that holds `feature` blocks (D121):
+
+| Field      | Type     | Content                                                                                                       |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `document` | string   | the feature map's document name                                                                               |
+| `features` | object[] | in tree order: `id`, `title`, `status`, `parent`, `depth`, `specs`, `defs`, `tasks`, `openTasks`, `problems`  |
+| `notes`    | string[] | blocks that do not parse, features whose parent is missing, then each feature's problems prefixed with its id |
+
+A problem that starts with `gap: ` is a known gap (linked to nothing, or unfinished with no open task); any other
+is an error `deus mdl` fails on. A map that cannot be read gives `[]` and `meta.json` counts 0.
+
+The app loads `features.json` only when `meta.json` counts features. The overview then has a Features tile,
+which opens the `k:features` card: each map as an indented tree with a status badge, open of all tasks, links
+to the spec namespaces, definitions and tasks it names (closed tasks struck through), problems as warnings and
+gaps in muted italics.
+
 ## comments.json
 
 An object from subject to its comments, oldest first. A subject is `def:<name>` or `change:<causal>`
@@ -360,7 +382,7 @@ the view when it is not the code workspace:
 
 ```text
 fragment = key ("," key)*
-key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks" | "events") | "v:" ("tasks" | "history" | "graph")
+key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks" | "events" | "features") | "v:" ("tasks" | "history" | "graph")
 ```
 
 For example `index.html#d:595ca8a5…,n:List,t:e0757e4e`. A card opened from another card goes right after it;

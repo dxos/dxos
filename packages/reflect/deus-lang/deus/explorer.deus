@@ -190,10 +190,18 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     | Result.ok pair => pair
     | Result.err _ => (Json.obj [("project", Json.str project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
   IO.writeFile (out ++ "/events.json") (Json.render (fst events))
+  -- Feature maps (D118) for the Features card; a map that cannot be read leaves the card empty rather than the site missing.
+  let featureMaps := match try (fun _ =>
+      let docs := Cli.featureDocuments dir ns
+      (Cli.featuresJson dir ns docs, List.sum (List.map (fun d => List.length (fst (Cli.featuresOf dir ns d))) docs))) with
+    | Result.ok pair => pair
+    | Result.err _ => (Json.arr [], 0)
+  IO.writeFile (out ++ "/features.json") (Json.render (fst featureMaps))
   IO.writeFile (out ++ "/meta.json") (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch),
     ("branches", Json.arr (List.map Json.str (Codebase.branches dir))), ("definitions", Json.num (List.length entries)),
     ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter Tasks.isOpen tasks))),
     ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("events", Json.num (snd events)),
+    ("features", Json.num (snd featureMaps)),
     ("history", Json.arr (List.map (logJson dir) (Cli.fullLog dir historyLimit)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
