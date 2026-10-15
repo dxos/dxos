@@ -42,6 +42,9 @@
       "path": "../react-ui-list"
     },
     {
+      "path": "../react-ui-menu"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

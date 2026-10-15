@@ -9,6 +9,7 @@ export * from './Grid/index.ts';
 export * from './InspectorMenu/index.ts';
 export * from './LatticeGrid/index.ts';
 export * from './Layers/index.ts';
+export * from './Objects/index.ts';
 export * from './Palette/index.ts';
 export * from './PartEditor/index.ts';
 export * from './Properties/index.ts';

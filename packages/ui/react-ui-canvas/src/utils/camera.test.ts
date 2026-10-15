@@ -7,17 +7,18 @@ import { type ExpectStatic, describe, test } from 'vitest';
 import { type Bounds, type Camera, type FrameNode } from '../model/types.ts';
 import {
   ISOMETRIC_POSE,
-  cameraTransform,
-  isPresentation,
-  keepPose,
   MAX_ZOOM,
   MIN_ZOOM,
+  cameraTransform,
   coverage,
   enterPortal,
   exitPortal,
   fitBounds,
+  isPresentation,
+  keepPose,
   portalFrame,
   sceneToScreen,
+  screenDeltaToScene,
   screenToScene,
   zoomAt,
 } from './camera.ts';
@@ -148,6 +149,17 @@ describe('presentation camera', () => {
     expect(cameraTransform(camera, viewport)).toBe(
       'translate(400px, 300px) rotateX(55deg) rotateZ(-35deg) translate(-400px, -300px) scale(2) translate(10px, 20px)',
     );
+  });
+
+  test('a screen delta inverts through zoom, tilt and spin', ({ expect }) => {
+    expect(screenDeltaToScene({ x: 0, y: 0, zoom: 2 }, { x: 10, y: 20 })).toEqual({ x: 5, y: 10 });
+    // Tilted 60°, the ground is foreshortened by half along y.
+    const tilted = screenDeltaToScene({ x: 0, y: 0, zoom: 1, tilt: 60 }, { x: 0, y: 10 });
+    expect(tilted.y).toBeCloseTo(20);
+    // Spun 90° clockwise, moving right on screen is moving up the scene.
+    const spun = screenDeltaToScene({ x: 0, y: 0, zoom: 1, spin: 90 }, { x: 10, y: 0 });
+    expect(spun.x).toBeCloseTo(0);
+    expect(spun.y).toBeCloseTo(-10);
   });
 
   test('a new camera without a pose keeps the current one; one with a pose sets it', ({ expect }) => {

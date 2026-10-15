@@ -60,6 +60,8 @@ export type CompoundEntry = {
   path: NodeId[];
   /** The scene the frame is in. */
   scene: SceneId;
+  /** The scenes from the root down to the one the frame is in: the view's path to show it. */
+  scenePath: SceneId[];
   frame: FrameNode;
   /** The scene the frame opens. */
   child: SceneId;
@@ -78,7 +80,7 @@ export const compoundName = (scenes: SceneMap, frame: FrameNode): string =>
  * from the store is listed without children; one opening a scene already on the path is listed but not followed.
  */
 export const compoundTree = (scenes: SceneMap, root: SceneId): CompoundEntry[] => {
-  const walk = (id: SceneId, path: NodeId[], ancestors: ReadonlySet<SceneId>): CompoundEntry[] => {
+  const walk = (id: SceneId, path: NodeId[], scenePath: SceneId[]): CompoundEntry[] => {
     const scene = scenes[id];
     if (!scene) {
       return [];
@@ -89,15 +91,16 @@ export const compoundTree = (scenes: SceneMap, root: SceneId): CompoundEntry[] =
       return {
         path: framePath,
         scene: id,
+        scenePath,
         frame,
         child: frame.scene,
         name: compoundName(scenes, frame),
         hidden: frame.hidden === true,
-        children: ancestors.has(frame.scene) ? [] : walk(frame.scene, framePath, new Set([...ancestors, frame.scene])),
+        children: scenePath.includes(frame.scene) ? [] : walk(frame.scene, framePath, [...scenePath, frame.scene]),
       };
     });
   };
-  return walk(root, [], new Set([root]));
+  return walk(root, [], [root]);
 };
 
 /** How many frames, in every scene of the store, open `id`. */

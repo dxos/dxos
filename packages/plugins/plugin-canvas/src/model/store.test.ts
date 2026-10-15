@@ -9,9 +9,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { isFrameNode } from '@dxos/react-ui-canvas/scene';
+import { groupIntoScene, isFrameNode, reduceIntent, ungroupScene } from '@dxos/react-ui-canvas/scene';
 
-import { clone, isNodeRecord, nodeKey, readScenes } from './content.ts';
+import { clone, isNodeRecord, isSceneRecord, nodeKey, readScenes, sceneKey } from './content.ts';
 import { objectRef, parseLinkedSceneId } from './frame-node.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';
 
@@ -237,6 +237,66 @@ describe('bindCanvasStore', () => {
       canvas.styles = { warn: { ...warning, name: 'Alert' } };
     });
     await expect.poll(() => styles && registry.get(styles).warn?.name).toBe('Alert');
+    bound.dispose();
+  });
+
+  test('a compound object, its name and visibility round-trip through the records, and ungrouping removes it', async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    Obj.update(canvas, (canvas) => {
+      canvas.content[nodeKey('a')] = {
+        kind: 'node',
+        scene: 'root',
+        node: { id: 'a', type: 'rect', z: 'a', ...frame, label: 'A' },
+      };
+    });
+    await db.flush();
+
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    const scenes = registry.get(bound.store.scenes);
+
+    // Group `a` into a compound object named "Group", hidden.
+    const group = groupIntoScene(scenes.root, ['a'], 'g');
+    expect(group).toBeDefined();
+    if (!group) {
+      return;
+    }
+    const parent = reduceIntent(scenes.root, { kind: 'batch', intents: group.intents });
+    registry.set(bound.store.scenes, {
+      ...scenes,
+      root: reduceIntent(parent, { kind: 'update', id: 'g', values: { hidden: true } }),
+      g: { ...group.child, name: 'Group' },
+    });
+    const sceneRecord = canvas.content[sceneKey('g')];
+    expect(isSceneRecord(sceneRecord) && sceneRecord.name).toBe('Group');
+    const nodeRecord = canvas.content[nodeKey('a')];
+    expect(isNodeRecord(nodeRecord) && nodeRecord.scene).toBe('g');
+    const frameRecord = canvas.content[nodeKey('g')];
+    expect(isNodeRecord(frameRecord) && frameRecord.node).toMatchObject({ type: 'frame', scene: 'g', hidden: true });
+
+    // Read back from the records, the compound object keeps its name and visibility.
+    const again = readScenes(clone(canvas.content));
+    expect(again.g.name).toBe('Group');
+    expect(again.root.nodes.g).toMatchObject({ hidden: true });
+
+    // Ungroup: `a` returns to the root, and the child scene's record goes.
+    const current = registry.get(bound.store.scenes);
+    const intents = ungroupScene(current.root, 'g', current.g, { createId: (prefix) => `${prefix}-new` });
+    expect(intents).toBeDefined();
+    const { g: _, ...rest } = current;
+    registry.set(bound.store.scenes, {
+      ...rest,
+      root: reduceIntent(current.root, { kind: 'batch', intents: intents ?? [] }),
+    });
+    expect(canvas.content[sceneKey('g')]).toBeUndefined();
+    expect(canvas.content[nodeKey('g')]).toBeUndefined();
+    const restored = canvas.content[nodeKey('a')];
+    expect(isNodeRecord(restored) && restored.scene).toBe('root');
     bound.dispose();
   });
 });

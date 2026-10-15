@@ -65,8 +65,10 @@ in `SceneView.tsx`, which is the same split as `LayersPanel` and `SceneView.Laye
   read-only: the capabilities become `readonlyCapabilities`, the selection is cleared, and the pointer machine
   starts no select, move, marquee or link gesture. Wheel zoom-at-point and auto-drill are off, because
   `screenToScene` cannot invert the tilt. Pan and the toolbar zoom buttons still work.
-- `transform-style: preserve-3d` goes on the camera div and on each portal's child container in `SceneLayer`, so
-  nested scenes stay in the ground plane.
+- Portals draw their children with 2D transforms, so the children stay in the ground plane without
+  `preserve-3d` (as built). The camera div gets `transform-style: preserve-3d` while posed, only so that a node
+  which draws itself in 3D (a device body) stands out of the plane. While posed, any press pans: a screen delta
+  inverts through the pose (`screenDeltaToScene`), but a point does not.
 - `animateCamera` interpolates `tilt` and `spin` linearly, together with the existing van Wijk zoom path.
 - Story `Presentation.stories.tsx`: a network of nested compound objects, and a toggle that animates between top
   and isometric.
@@ -120,7 +122,6 @@ createOverrideStore(base: SceneStore, overrides: Atom.Atom<SceneOverrides>): Sce
 
 ## Risks
 
-- `preserve-3d` with `overflow: hidden` flattens the 3D context. A portal that clips its child loses the tilt. The
-  portal clips through a parent that is not 3D, or clipping is turned off while a presentation camera is active.
-  The Presentation story is where this is checked.
+- `preserve-3d` with `overflow: hidden` flattens a 3D context. That matters only for a node that draws itself in
+  3D inside a clipping portal. Coplanar children are unaffected (as built).
 - Hit-testing under tilt is out of scope, so a tilted view cannot select anything.

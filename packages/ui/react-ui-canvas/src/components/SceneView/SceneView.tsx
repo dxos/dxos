@@ -65,15 +65,16 @@ import {
   NOMINAL_ZOOM,
   cameraTransform,
   fitBounds,
+  isPresentation,
   layerOpacity,
   panBy,
   sceneToScreen,
+  screenDeltaToScene,
   screenToScene,
   zoomAt,
 } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
-import { groupIntoScene } from '../../utils/group.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
 import {
   activeLayer,
@@ -85,14 +86,15 @@ import {
 } from '../../utils/layers.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
-import { sceneOptions } from '../../utils/scenes.ts';
+import { type CompoundEntry, compoundTree, sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
-import { recordScenes, redo, undo } from '../../utils/undo.ts';
+import { redo, undo } from '../../utils/undo.ts';
 import { About, type AboutStat } from '../About/About.tsx';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { LayersPanel } from '../Layers/Layers.tsx';
+import { ObjectsPanel } from '../Objects/Objects.tsx';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
@@ -100,6 +102,7 @@ import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } 
 import { Dock, DockProvider } from './Dock.tsx';
 import { INSPECTOR_CLASSES, type InspectorDef, useInspector } from './Inspector.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
+import { useCompoundActions } from './useCompoundActions.ts';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
@@ -189,7 +192,7 @@ const SceneViewRoot = ({
   onDisplayChange,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
-  readonly = false,
+  readonly: readonlyProp = false,
   onReadonlyChange,
   inspectors = 'docked',
   onInspectorsChange,
@@ -206,6 +209,9 @@ const SceneViewRoot = ({
   const visible = useMemo(() => visibleScene(scene), [scene]);
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
+  // A posed camera cannot map the pointer back onto the scene, so the view is only looked at while it is.
+  const presenting = isPresentation(camera);
+  const readonly = readonlyProp || presenting;
   const selection = useAtomValue(atoms.selection);
   const hover = useAtomValue(atoms.hover);
   const selectedPoint = useAtomValue(atoms.point);
@@ -411,12 +417,19 @@ const SceneViewRoot = ({
         cancelAnimation();
         touchNavigation();
         if (event.ctrlKey || event.metaKey) {
-          setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.01)));
+          setCamera((camera) =>
+            // Posed, the point under the pointer is unknown, so the zoom holds the centre of the view instead.
+            zoomAt(
+              camera,
+              isPresentation(camera) ? { x: viewport.width / 2, y: viewport.height / 2 } : pointer,
+              camera.zoom * Math.exp(-event.deltaY * 0.01),
+            ),
+          );
         } else {
-          setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
+          setCamera((camera) => panBy(camera, screenDeltaToScene(camera, { x: -event.deltaX, y: -event.deltaY })));
         }
       },
-      [setCamera, cancelAnimation, touchNavigation, exitFit],
+      [setCamera, cancelAnimation, touchNavigation, exitFit, viewport],
     ),
   );
 
@@ -527,6 +540,27 @@ const SceneViewRoot = ({
     snap,
   });
 
+  const compound = useCompoundActions({
+    registry,
+    atoms,
+    store,
+    projection,
+    capabilities,
+    scene,
+    path,
+    selection,
+    viewport,
+    inset,
+    interactedRef,
+    createId,
+    select,
+    setCamera,
+    animateTo,
+    exitFit,
+    drillIn,
+    pushHistory,
+  });
+
   const onSceneKey = useSceneKeys({
     registry,
     atoms,
@@ -547,6 +581,10 @@ const SceneViewRoot = ({
     onRedo,
     onFit: enterFit,
     onExitFit: exitFit,
+    canGroup: compound.canGroup,
+    canUngroup: compound.canUngroup,
+    group: compound.group,
+    ungroup: compound.ungroup,
     animateTo,
     drillIn,
     drillOut,
@@ -981,6 +1019,7 @@ const SceneViewRoot = ({
       camera={camera}
       pointer={pointer}
       measured={measured}
+      viewport={viewport}
       frameUnit={frameUnit}
       focus={focus}
       grid={grid}
@@ -997,7 +1036,7 @@ const SceneViewRoot = ({
       tool={tool}
       debug={debug}
       // Read-only, nothing is edited, so there is no dock taking room from the canvas and no inspector floats over it.
-      inspectors={readonly ? 'floating' : inspectors}
+      inspectors={readonlyProp ? 'floating' : inspectors}
       onInspectorsChange={onInspectorsChange}
       createFrame={createFrame}
       landing={landing}
@@ -1005,6 +1044,7 @@ const SceneViewRoot = ({
       linkHover={linkHover}
       select={select}
       toolbarActions={toolbarActions}
+      compound={compound}
       navigating={navigating}
       opening={opening}
       drillIn={drillIn}
@@ -1075,7 +1115,11 @@ SceneViewRoot.displayName = 'SceneView.Root';
 export type SceneViewCanvasProps = {
   /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
   liveDepth?: number;
-  /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
+  /**
+   * Extra layers drawn in the root scene's coordinates under the camera, above the scene, so they pan, zoom and tilt
+   * with it: one element (an SVG or a canvas) for many particles is far cheaper than as many nodes. It takes no pointer
+   * events. With `createOverrideStore` it is the seam an animation draws through.
+   */
   overlay?: ReactNode;
 };
 
@@ -1095,6 +1139,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     latticeBounds,
     camera,
     measured,
+    viewport,
     frameUnit,
     focus,
     grid,
@@ -1152,7 +1197,13 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
       )}
       <div
         className={mx('absolute pointer-events-none', !measured && 'invisible')}
-        style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
+        style={{
+          transform: cameraTransform(camera, viewport),
+          transformOrigin: '0 0',
+          // Posed, a node that draws itself in 3D (a device body) stands out of the ground plane rather than being
+          // flattened into it; portals use 2D transforms, so their children stay in the plane either way.
+          ...(isPresentation(camera) ? { transformStyle: 'preserve-3d' } : {}),
+        }}
       >
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
         {guides && !readonly && latticeOn && projection.lattice && (
@@ -1374,35 +1425,10 @@ const SceneViewProperties = ({
   overrides,
   sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+  const { projection, atoms, nodeRegistry, capabilities, store, path, compound } =
     useSceneViewContext('SceneView.Properties');
-  const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
-
-  // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
-  const onGroup = useCallback(() => {
-    const id = createId('scene');
-    const current = registry.get(projection.scene);
-    const group = groupIntoScene(current, selection, id, activeLayer(current, registry.get(atoms.layer)));
-    if (!group) {
-      return;
-    }
-    const before = registry.get(store.scenes);
-    registry.set(store.scenes, { ...before, [id]: { ...group.child, name: 'Untitled' } });
-    projection.apply({ kind: 'batch', intents: group.intents });
-    // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
-    // it the new scene would be an orphan, so it goes and the selection stays.
-    if (!registry.get(projection.scene).nodes[id]) {
-      const { [id]: _, ...scenes } = registry.get(store.scenes);
-      registry.set(store.scenes, scenes);
-      return;
-    }
-    // One undo step takes the new scene away with the shape that opens it.
-    recordScenes(registry, atoms.undo, path[path.length - 1], before);
-    registry.set(atoms.selection, new Set([id]));
-    registry.set(atoms.point, undefined);
-  }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
   // Docked, the panel stays in its section whatever is selected (it says when nothing is).
   return useInspector(
@@ -1421,7 +1447,7 @@ const SceneViewProperties = ({
         overrides={overrides}
         sceneOptions={options}
         styles={store.styles}
-        onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
+        onGroup={compound.canGroup ? compound.group : undefined}
         readonly={!capabilities.update}
       />
     ),
@@ -1450,6 +1476,15 @@ const LAYERS_INSPECTOR: InspectorDef = {
   icon: 'ph--stack--regular',
   order: 1,
   float: 'empty',
+};
+
+// Docked only: floating, the layers already take the place it would.
+const OBJECTS_INSPECTOR: InspectorDef = {
+  id: 'objects',
+  title: 'Objects',
+  icon: 'ph--cube--regular',
+  order: 1.5,
+  float: 'never',
 };
 
 // The counts are a dock section only, so a floating or read-only view shows none.
@@ -1548,6 +1583,49 @@ const SceneViewLayers = ({ classNames = INSPECTOR_CLASSES }: SceneViewLayersProp
 SceneViewLayers.displayName = 'SceneView.Layers';
 
 //
+// Objects
+//
+
+export type SceneViewObjectsProps = Util.ThemedClassName<{}>;
+
+/**
+ * The drawing's compound objects as a tree, from the root down whatever scene the view shows: an inspector docked
+ * beside the layers. Its edits are `useCompoundActions`, shared with the Properties panel and the keys.
+ */
+const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsProps) => {
+  const { store, path, selection, compound, capabilities } = useSceneViewContext('SceneView.Objects');
+  const scenes = useAtomValue(store.scenes);
+  const entries = useMemo(() => compoundTree(scenes, path[0]), [scenes, path]);
+  const sceneId = path[path.length - 1];
+  const isSelected = useCallback(
+    (entry: CompoundEntry) => entry.scene === sceneId && selection.has(entry.frame.id),
+    [sceneId, selection],
+  );
+  return useInspector(
+    OBJECTS_INSPECTOR,
+    ({ docked, classNames: chrome, onDockedChange }) => (
+      <ObjectsPanel
+        classNames={chrome}
+        docked={docked}
+        onDockedChange={onDockedChange}
+        entries={entries}
+        isSelected={isSelected}
+        readonly={!capabilities.update}
+        onGroup={compound.canGroup ? compound.group : undefined}
+        onUngroup={compound.canUngroup ? () => compound.ungroup() : undefined}
+        onSelect={compound.reveal}
+        onEnter={compound.enter}
+        onToggle={compound.toggleHidden}
+        onRename={compound.rename}
+      />
+    ),
+    classNames,
+  );
+};
+
+SceneViewObjects.displayName = 'SceneView.Objects';
+
+//
 // About
 //
 
@@ -1580,5 +1658,6 @@ export const SceneView = {
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
   Layers: SceneViewLayers,
+  Objects: SceneViewObjects,
   About: SceneViewAbout,
 };

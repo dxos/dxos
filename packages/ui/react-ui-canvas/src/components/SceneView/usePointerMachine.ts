@@ -36,7 +36,7 @@ import {
   isFrameNode,
   isPointEndpoint,
 } from '../../model/types.ts';
-import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
+import { boundsCenter, isPresentation, panBy, screenDeltaToScene, screenToScene } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting } from '../../utils/hit.ts';
 import { DEFAULT_LAYER, activeLayer } from '../../utils/layers.ts';
@@ -215,12 +215,14 @@ export const usePointerMachine = ({
 
   const onBackgroundPointerDown = useCallback(
     (event: PointerEvent) => {
-      if (event.target !== event.currentTarget) {
+      // Posed, the pointer cannot be mapped onto the scene, so any press pans, on a shape as on the background.
+      const presenting = isPresentation(registry.get(atoms.camera));
+      if (event.target !== event.currentTarget && !presenting) {
         return;
       }
       const currentTool = registry.get(atoms.tool);
       const point = toScene(event);
-      if (event.button === 1 || currentTool.kind === 'hand') {
+      if (event.button === 1 || currentTool.kind === 'hand' || (presenting && event.button === 0)) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
@@ -245,7 +247,7 @@ export const usePointerMachine = ({
         startDrag({ kind: 'marquee', from: point, to: point, mode }, event);
       }
     },
-    [registry, atoms.tool, toScene, startDrag, select, capabilities.create, capabilities.link, snap],
+    [registry, atoms.tool, atoms.camera, toScene, startDrag, select, capabilities.create, capabilities.link, snap],
   );
 
   /** Click selection shared by nodes and links: shift toggles, a plain click on an unselected element replaces. */
@@ -278,7 +280,11 @@ export const usePointerMachine = ({
   const onNodePointerDown = useCallback(
     (node: Node, event: PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
-      if ((currentTool.kind !== 'select' && currentTool.kind !== 'link') || event.button !== 0) {
+      if (
+        (currentTool.kind !== 'select' && currentTool.kind !== 'link') ||
+        event.button !== 0 ||
+        isPresentation(registry.get(atoms.camera))
+      ) {
         return;
       }
       event.stopPropagation();
@@ -313,6 +319,7 @@ export const usePointerMachine = ({
     [
       registry,
       atoms.tool,
+      atoms.camera,
       atoms.active,
       activate,
       clickSelect,
@@ -327,13 +334,14 @@ export const usePointerMachine = ({
   const onLinkPointerDown = useCallback(
     (link: Link, event: PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
-      if (currentTool.kind === 'hand' || event.button !== 0) {
+      // Posed, the press is left to bubble to the background, which pans.
+      if (currentTool.kind === 'hand' || event.button !== 0 || isPresentation(registry.get(atoms.camera))) {
         return;
       }
       event.stopPropagation();
       clickSelect(link.id, event);
     },
-    [registry, atoms.tool, clickSelect],
+    [registry, atoms.tool, atoms.camera, clickSelect],
   );
 
   const onHandlePointerDown = useCallback(
@@ -551,16 +559,15 @@ export const usePointerMachine = ({
       const current = registry.get(atoms.drag);
       if (!current) {
         if (!isNavigating()) {
-          updateHover(overCanvas(event.target, rootRef.current) ? toScene(event) : undefined);
+          const over = overCanvas(event.target, rootRef.current) && !isPresentation(registry.get(atoms.camera));
+          updateHover(over ? toScene(event) : undefined);
         }
         return;
       }
       switch (current.kind) {
         case 'pan': {
-          const zoom = registry.get(atoms.camera).zoom;
-          setCamera((camera) =>
-            panBy(camera, { x: (event.clientX - current.last.x) / zoom, y: (event.clientY - current.last.y) / zoom }),
-          );
+          const delta = { x: event.clientX - current.last.x, y: event.clientY - current.last.y };
+          setCamera((camera) => panBy(camera, screenDeltaToScene(camera, delta)));
           setDrag({ ...current, last: { x: event.clientX, y: event.clientY } });
           break;
         }

@@ -191,6 +191,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                     sceneFilter={isLocalScene}
                   />
                   <SceneView.Layers />
+                  <SceneView.Objects />
                   <SceneView.About />
                 </>
               )}

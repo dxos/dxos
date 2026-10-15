@@ -55,6 +55,7 @@ describe('compoundTree', () => {
     expect(a?.children.map((entry) => [entry.name, entry.path])).toEqual([
       ['Inner', [a?.frame.id, a?.children[0].frame.id]],
     ]);
+    expect(a?.children[0].scenePath).toEqual(['root', 'a']);
   });
 
   test('a frame that opens a scene on its own path is listed but not followed', ({ expect }) => {

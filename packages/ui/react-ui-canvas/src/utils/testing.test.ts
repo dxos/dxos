@@ -7,8 +7,9 @@ import { describe, test } from 'vitest';
 import { solve } from '../model/projections/constrained.ts';
 import { layoutGraph } from '../model/projections/dynamic.ts';
 import { MAJOR_GRID, type Point, type Scene } from '../model/types.ts';
+import { compoundTree } from './scenes.ts';
 import { nodeBounds } from './shapes.ts';
-import { createModelSceneTree, createSceneTree } from './testing.ts';
+import { createModelSceneTree, createNetworkTree, createSceneTree } from './testing.ts';
 
 /** Every edge of every node lies on the grid, which is what move and resize snap to. */
 const offGrid = (scene: Scene): string[] =>
@@ -99,3 +100,13 @@ const dynamic = (): Scene =>
     },
     { positions: {} },
   );
+
+describe('createNetworkTree', () => {
+  test('holds compound objects nested two deep', ({ expect }) => {
+    const { root, scenes } = createNetworkTree();
+    const tree = compoundTree(Object.fromEntries(scenes.map((scene) => [scene.id, scene])), root);
+    expect(tree.map((entry) => entry.name).sort()).toEqual(['Cloud', 'Office']);
+    const office = tree.find((entry) => entry.name === 'Office');
+    expect(office?.children.map((entry) => entry.name)).toEqual(['Desk']);
+  });
+});

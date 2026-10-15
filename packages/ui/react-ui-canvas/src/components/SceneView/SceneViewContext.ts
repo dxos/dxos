@@ -26,11 +26,13 @@ import {
   type NodeId,
   type Scene,
   type SceneId,
+  type Size,
   type Tool,
 } from '../../model/types.ts';
 import { type Clipboard } from '../../utils/clipboard.ts';
 import { type ElementHandlers } from '../SceneLayer/SceneLayer.tsx';
 import { type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { type CompoundActions } from './useCompoundActions.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneClipboard } from './useSceneClipboard.ts';
@@ -70,6 +72,8 @@ export type SceneViewContextValue = {
   pointer: { x: number; y: number };
   /** Whether the viewport has been measured; the scene stays hidden until it has. */
   measured: boolean;
+  /** The canvas's size in screen px; a posed camera turns about its centre. */
+  viewport: Size;
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   frameUnit: number;
   /** The portal filling most of the view and the opacity of the rest of the layer around it (`layerOpacity`). */
@@ -105,6 +109,8 @@ export type SceneViewContextValue = {
   linkHover: LinkId | undefined;
   select: (ids: Iterable<ElementId>) => void;
   toolbarActions: ToolbarActions;
+  /** Grouping, ungrouping and navigating compound objects (`useCompoundActions`). */
+  compound: CompoundActions;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &
   Pick<SceneNavigation, 'drillIn'> &
   Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &

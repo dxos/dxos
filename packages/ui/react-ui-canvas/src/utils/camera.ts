@@ -70,6 +70,24 @@ export const keepPose = (current: Camera, next: Camera): Camera => {
   return { ...next, ...(tilt !== undefined ? { tilt } : {}), ...(spin !== undefined ? { spin } : {}) };
 };
 
+/** Below this, a tilt's cosine is treated as this, so a view seen edge-on still pans by a finite amount. */
+const MIN_TILT_COSINE = 0.1;
+
+/**
+ * A movement on screen as a movement in the scene: the ground plane is projected orthographically, so a delta inverts
+ * through the pose (tilt foreshortens y, spin rotates) and the zoom, though a point under the pointer does not.
+ */
+export const screenDeltaToScene = (camera: Camera, delta: Point): Point => {
+  const { tilt, spin } = cameraPose(camera);
+  const cosine = Math.cos((tilt * Math.PI) / 180);
+  const y = delta.y / (Math.sign(cosine || 1) * Math.max(MIN_TILT_COSINE, Math.abs(cosine)));
+  const angle = (spin * Math.PI) / 180;
+  return {
+    x: (Math.cos(angle) * delta.x + Math.sin(angle) * y) / camera.zoom,
+    y: (-Math.sin(angle) * delta.x + Math.cos(angle) * y) / camera.zoom,
+  };
+};
+
 /**
  * The camera as one CSS transform with its origin at the viewport's top-left. A pose rotates the scene about the
  * viewport's centre, orthographically (no perspective), which is what an isometric view is.
