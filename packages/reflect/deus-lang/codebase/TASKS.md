@@ -33,6 +33,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > someone: Step 1 (D153): environment cells are counted and reused unless captured; peak memory 900 to 473 MB for 199 tests, 2.2 to 1.4 GB for deus mdl, same speed. Values are still immortal.
 
+> someone: Correction: step 1 is D154, not D153 (renumbered on merge).
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -88,15 +90,6 @@ Seen 2026-10-15: deus update deus/cli.deus (adding Cli.explorerDemo, Cli.isToolc
 - labels: dogfood
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
-
-## A definition's type is per hash, so an annotation narrower than the body is lost (`dda00bb4`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: types, codebase
-
-def T.id (n : Int) : Int := n hashes the same as id and views as a -> a; Embed.text and Embed.bytes, with equal bodies, both got Text -> a. The hash ignores annotations, so names that share a body share the first one's type. Either hash the declared signature or keep types per name (as D132 did for docs).
 
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
@@ -991,6 +984,17 @@ From docs/spec/README.md, Known divergences.
 - links change #c08af3d400
 
 From docs/spec/README.md, Known divergences.
+
+## A definition's type is per hash, so an annotation narrower than the body is lost (`dda00bb4`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: types, codebase
+
+def T.id (n : Int) : Int := n hashes the same as id and views as a -> a; Embed.text and Embed.bytes, with equal bodies, both got Text -> a. The hash ignores annotations, so names that share a body share the first one's type. Either hash the declared signature or keep types per name (as D132 did for docs).
+
+> claude: Sound as is: the shared scheme is the generalization of every sharer's (D116), i.e. the body's own type, so callers admit nothing unsound. Fixed the display (D153, View.Spec R-4): view and api blocks show a shared name's own signature.
 
 ## Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (`c50cd76e`)
 

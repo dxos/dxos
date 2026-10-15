@@ -135,7 +135,7 @@ describe('deus CLI native back ends', () => {
         ...c,
       );
       // Definitions that differ only in their annotations share a hash: its stored scheme fits both
-      // (D116), and their comparisons are decided at run time.
+      // (D116), and their comparisons are decided at run time. Each still views as declared (D153).
       deus(
         'add',
         file(
@@ -150,7 +150,7 @@ describe('deus CLI native back ends', () => {
         ),
         ...c,
       );
-      expect(deus('view', 'beforeText', ...c).stdout).toContain('-- : a -> a -> Bool\n');
+      expect(deus('view', 'beforeText', ...c).stdout).toContain('-- : Text -> Text -> Bool\n');
       for (const name of ['useInt', 'useText']) {
         expect(deus('build', name, '-o', join(scratch, name), '--c', ...c).code).toBe(0);
         for (const n of [2, 5]) {

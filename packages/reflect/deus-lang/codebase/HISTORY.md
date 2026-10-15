@@ -1,5 +1,21 @@
 # History of main
 
+- `895274d041` task: comment on b73b475d (by claude)
+- `39b2e8db06` update deus (by merge)
+- `1d0b6b7e4f` history: import 1134 changes
+- `e94dfdc564` history: import 1128 changes
+- `dd2232271e` task: import from /tmp/tmp7tiihuqg/tasks.sexp
+- `41290569bc` add /tmp/tmp7tiihuqg/merged/code /tmp/tmp7tiihuqg/merged/specs
+- `112cea84f2` update deus (by merge)
+- `c4f24f4f18` history: import 1124 changes
+- `dfc806fcb0` history: import 1122 changes
+- `43684e1b9b` task: import from /tmp/tmpf0e81phl/tasks.sexp
+- `61735bc5ac` add /tmp/tmpf0e81phl/merged/code /tmp/tmpf0e81phl/merged/specs
+- `8bfc2b8e38` task: set dda00bb4 state (by claude)
+- `4b7661b50c` task: comment on dda00bb4 (by claude)
+- `514a3f2725` update deus (by claude)
+- `ff1d632a44` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw.deus (by claude)
+- `61f82b7a1e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/view.mdl (by claude)
 - `8f77cc083d` task: comment on b73b475d
 - `1e32955d5c` update deus (by claude)
 - `fb1345316d` history: import 1124 changes

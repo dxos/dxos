@@ -83,6 +83,16 @@ req R-3: with the codebase at hand, a type or ability prints by its declared nam
   by: View.Spec.abilityByName | View.Spec.typeByName | View.Spec.undeclaredByIri
 ```
 
+Core has no names or annotations, so `def A.int (n : Int) : Int := n` and `def A.text (t : Text) : Text := t`
+share a hash, and the hash's scheme generalizes both (D116) to `a -> a`. Callers are checked against that
+scheme, which is the body's own type, so nothing unsound passes. A header, though, shows what its name
+declares (task dda00bb4).
+
+```mdl
+req R-4: a name whose body other names share shows its own declared type, not the shared scheme
+  by: View.Spec.sharedBodyShowsItsOwnType
+```
+
 ## Theorems
 
 The laws are the definitions under `View.Spec`: `deus ls View.Spec.` lists them and `deus view` prints them.

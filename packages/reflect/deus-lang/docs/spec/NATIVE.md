@@ -341,7 +341,7 @@ interpreter does not do:
 - `Code.steps` and `Code.cost` count the terms it evaluates, as the machine does, but its counts
   are not the kernels': a perf requirement's order holds natively, its exact step counts need not.
   `Code.defectTrace` is empty.
-- It frees only its own environment cells, once no scope or closure holds them (D153). Every block
+- It frees only its own environment cells, once no scope or closure holds them (D154). Every block
   it makes or receives is made immortal, so compiled code that shares one never writes into it,
   and `Array.set` copies the array.
 - Values do not carry their types, so `show`, `trace` and `Code.quote` in interpreted code render

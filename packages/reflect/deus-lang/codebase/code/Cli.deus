@@ -637,7 +637,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name
       let h := Entry.hash e
       let meta := Option.map (metaFor name) (readMeta dir h)
       let typed :=
-        match metaField meta "scheme" with
+        match ownScheme meta (List.length (getOr (Map.lookup h printer.namesByHash) [])) with
         | Option.some scheme => [("type", displaySchemeNamed printer.declared scheme)]
         | Option.none => []
       let verdict :=
@@ -1380,6 +1380,13 @@ def Cli.output (args : Args) (json : Unit -> Json) (text : Unit -> Text) : {IO} 
   let t := text ()
   if Text.isEmpty t then () else println t
 
+/-- The type a name shows: with other names on its hash, its own signature, since the shared scheme
+  generalizes every sharer's (D116, View.Spec R-4); otherwise the scheme. -/
+def Cli.ownScheme (meta : Option Sexp) (sharers : Int) : Option Sexp :=
+  match (sharers > 1, metaField meta "sig") with
+  | (true, Option.some sig) => Option.some (declaredScheme sig)
+  | _ => metaField meta "scheme"
+
 def Cli.parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
     match rest with
@@ -1901,7 +1908,7 @@ def Cli.viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
   let meta := Option.map (metaFor name) (readMeta dir h)
   let comment := if ts then "// " else "-- "
   let typeLine :=
-    match metaField meta "scheme" with
+    match ownScheme meta (List.length (getOr (Map.lookup h base.namesByHash) [])) with
     | Option.some scheme => comment ++ ": " ++ displaySchemeNamed base.declared scheme ++ "\n"
     | Option.none => ""
   let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
