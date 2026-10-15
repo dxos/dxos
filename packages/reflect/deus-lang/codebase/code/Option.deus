@@ -1,0 +1,25 @@
+def Option.bind (o : Option a) (f : a -> Option b) : Option b :=
+  match o with
+  | Option.none => Option.none
+  | Option.some x => f x
+
+def Option.getOr (o : Option a) (fallback : a) : a :=
+  match o with
+  | Option.none => fallback
+  | Option.some x => x
+
+def Option.isNone (o : Option a) : Bool := not (isSome o)
+
+def Option.isSome : Option a -> Bool
+| Option.none => false
+| Option.some _ => true
+
+def Option.map (f : a -> b) (x0 : Option a) : Option b :=
+  match x0 with
+  | Option.none => Option.none
+  | Option.some x => Option.some (f x)
+
+def Option.orElse (o : Option a) (other : Unit -> Option a) : Option a :=
+  match o with
+  | Option.none => other ()
+  | Option.some x => Option.some x

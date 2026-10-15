@@ -1,0 +1,153 @@
+---
+id: org.dxos.deus.spec.checking
+name: Checking.Spec
+version: 1.0
+---
+
+# Checked ascriptions and rows
+
+A type written inside a definition is a claim the checker holds the code to ([D95](../../docs/DECISIONS.md)). Before
+this, `(e : T)`, `let x : T := …` and a binder `(x : T)` were parsed and dropped, and a row written on a
+definition with no binders (`def x : {} Int := …`) was never attached to anything, so all of them were
+comments the compiler did not read.
+
+Written in the order of the process ([D92](../../docs/DECISIONS.md)): requirements, then the APIs and laws, then
+the implementation. The theorems below ran red on the old checker (4 of the first 10 failed) before any of
+it was written. `deus mdl Checking.Spec` checks the blocks; `deus check Checking.Spec` runs the
+theorems.
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+There is no new syntax and no new command. The parser keeps the type: `Expr.ann e T` for `(e : T)` and an
+annotated `let` value, `Pat.ann p T` for a binder. The resolver writes `(ann T e)`, `(ann T p)` in a pattern
+and `(annlocal T e)` under a `lam` whose binder is ascribed; `Resolve.unnote` removes them before hashing,
+as it removes comments (D66) and number spellings (D88), and `Resolve.unmark` keeps them for the checker.
+
+| Form             | Checker rule                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `(ann T e)`      | `T` is read like a signature, with its own fresh type and row variables; `e` is checked against it, and the result is `T`. |
+| `(ann T p)`      | In a pattern: the scrutinee's type is unified with `T`, then `p` is matched.                             |
+| `(annlocal T e)` | Local 0 is unified with `T`, then `e` is inferred.                                                       |
+
+A definition with no binders whose signature is `(teff (eff …) T)` is checked against `T` in the row the
+braces write, closed unless it names a tail (`{IO | r}`). Without braces the row is fresh, as before.
+
+```mdl
+api A-1: the checker's view of Core
+  signatures:
+  - Resolve.unmark : Sexp -> Sexp
+  - Types.signatureRow : Unifier -> List Sexp -> Ref (Map Text TType) -> Ref (Map Text TRow) -> TRow
+```
+
+```mdl
+api A-2: Resolve definitions other namespaces use
+  signatures:
+  - Resolve.arrowCount : Ty -> Int
+  - Resolve.equations : Ctx -> List Arm -> List (Option Text) -> {Throw Text} Sexp
+  - Resolve.expr : Ctx -> Expr -> List (Option Text) -> {Throw Text} Sexp
+  - Resolve.iriFor : Text -> Option Text -> Text
+  - Resolve.isStub : Sexp -> Bool
+  - Resolve.lambda : Ctx -> List Pat -> (List (Option Text) -> {Throw Text} Sexp) -> List (Option Text) -> {Throw Text} Sexp
+  - Resolve.n : Int -> Sexp
+  - Resolve.node : Text -> List Sexp -> Sexp
+  - Resolve.s : Text -> Sexp
+  - Resolve.stripNoted : Sexp -> (Sexp, (List Text, (List (Int, Text), (List (Int, Text), Sexp))))
+  - Resolve.stub : Text -> Sexp -> Sexp
+  - Resolve.stubOf : Sexp -> Option (Text, Text)
+  - Resolve.tuple : List Sexp -> Sexp
+  - Resolve.tyCore : Names -> Scope -> List Text -> Ty -> {Throw Text} Sexp
+  - Resolve.unpick : Map Text Sexp -> Sexp -> {Throw Text} Sexp
+```
+
+```mdl
+api A-3: Types definitions other namespaces use
+  signatures:
+  - Types.bool : TType
+  - Types.checkAgainst : Unifier -> TypeEnv {e} -> Sexp -> TType -> List TType -> TRow -> {Throw Text | e} Unit
+  - Types.checkRigid : Unifier -> Ref (Map Text TType) -> Ref (Map Text TRow) -> {Throw Text} Unit
+  - Types.freshRow : Unifier -> TRow
+  - Types.freshType : Unifier -> TType
+  - Types.infer : Unifier -> TypeEnv {e} -> Sexp -> List TType -> TRow -> {Throw Text | e} TType
+  - Types.newUnifier : Unit -> Unifier
+  - Types.scheme : Unifier -> TType -> Sexp
+  - Types.signatureType : Unifier -> Sexp -> Ref (Map Text TType) -> Ref (Map Text TRow) -> TType
+  - Types.unify : Unifier -> TType -> TType -> {Throw Text} Unit
+```
+
+## Ascriptions
+
+```mdl
+req R-1: (e : T) is checked; e must have type T and the expression has type T
+  by: Checking.Spec.ascriptionHolds | Checking.Spec.ascriptionMismatch
+```
+
+```mdl
+req R-2: let x : T := v and let f p : T := v check v, for f its body, against T
+  by: Checking.Spec.letAnnotationHolds | Checking.Spec.letAnnotationMismatch | Checking.Spec.letFunctionResult
+```
+
+```mdl
+law L-1: ascriptions are not part of Core, so a definition hashes as it does without them
+  theorem: Checking.Spec.ascriptionKeepsHash
+  evidence: proof
+```
+
+```mdl
+req R-3: a type variable in an ascription is flexible; it names a type and declares nothing general
+  by: Checking.Spec.ascriptionVariableIsFlexible
+```
+
+```mdl
+req R-4: a binder written (x : T) in a lambda, a local function or a pattern has type T
+  by: Checking.Spec.lambdaBinderChecked | Checking.Spec.patternBinderChecked | Checking.Spec.binderKeepsHash
+```
+
+## Rows on definitions without binders
+
+```mdl
+req R-5: a row written on a definition with no binders bounds what its body may perform
+  by: Checking.Spec.bareRowRejects | Checking.Spec.bareRowAdmits
+```
+
+```mdl
+req R-6: a definition with no binders and no written row stays unconstrained
+  by: Checking.Spec.bareWithoutRow
+```
+
+## Equality on functions
+
+Functions have no equality: two closures compare by identity at run time, so `f x == f 2` on a
+partial application is always false. `==` and `!=` reject an operand whose type is a function, which
+is what an extra parameter on a callee turns a full application into.
+
+```mdl
+req R-7: == and != on a function type are type errors; on a full application they compare its result
+  by: Checking.Spec.equalFunctionsRejected | Checking.Spec.unequalFunctionsRejected | Checking.Spec.equalResultsChecked
+```
+
+## Fields two structures share
+
+A field name may belong to several structures (task 31d3c1cd). `x.kind` then names the field of
+`x`'s structure, as the checker infers it; the stored Core calls that structure's accessor, so the
+hash is the one `P.A.kind x` has. A receiver whose type the checker does not know is ambiguous.
+
+```mdl
+req R-8: x.f with f in several structures picks the field of x's inferred structure, or is ambiguous
+  by: Checking.Spec.annotatedFieldResolves | Checking.Spec.inferredFieldResolves | Checking.Spec.pickedFieldIsChecked | Checking.Spec.unknownReceiverAmbiguous | Checking.Spec.pickedFieldKeepsHash
+```
+
+## Theorems
+
+Each theorem compiles a small source with `Compile.batch` and states whether it type-checks. The sources
+declare what they use, so the oracle is the compiler alone. Without the prelude an operator such as `+` has
+no known type, so a mismatch is stated with a binder's type, which is known.
+
+The laws are the definitions under `Checking.Spec`: `deus ls Checking.Spec.` lists them and `deus view` prints them.

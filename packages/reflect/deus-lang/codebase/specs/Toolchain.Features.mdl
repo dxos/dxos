@@ -1,0 +1,241 @@
+---
+id: org.dxos.deus.features.toolchain
+name: Toolchain.Features
+version: 1.0
+---
+
+# The DEUS toolchain: feature map
+
+What the toolchain is, feature by feature, and what each one is made of: its spec documents, its main
+definitions and its tasks ([Features.Spec](Features.Spec.mdl), D118). `deus features Toolchain.Features`
+prints the tree with open tasks; `deus mdl Toolchain.Features` fails when a shipped feature still has
+open work, and reports as known gaps a feature linked to nothing and unfinished work that no task tracks.
+
+Edit it in the codebase: `deus view Toolchain.Features > f.mdl`, change it, `deus update f.mdl`.
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `feature` | `org.dxos.deus.feature@1.0` |
+
+## The language and its kernel
+
+What a DEUS program is and what runs it.
+
+```mdl
+feature F-1: The language and its kernel
+  status: building
+  tasks: a1b73fb8
+```
+
+```mdl
+feature F-2: Self-hosting toolchain: the seed compiles itself to the same bytes
+  status: shipped
+  parent: F-1
+  specs: Compile.Spec | Parser.Spec | Image.Spec
+  defs: Compile.batch | Cli.main | Image.build | Lexer.lex | Parser.parse
+```
+
+```mdl
+feature F-3: Types with effect rows and abilities
+  status: shipped
+  parent: F-1
+  specs: Checking.Spec
+  defs: Types.infer | Compile.typecheck
+  tasks: 31d3c1cd | 84ec6ef7 | ab1ed867 | 1854b55d
+```
+
+```mdl
+feature F-4: Theorems: checked by test, decide and proof
+  status: building
+  parent: F-1
+  specs: Prove.Spec | Testing.Spec
+  defs: Check.checkTheorem | Prove.auto
+  tasks: 7ef8bf45 | 1cbfdd30 | 79f72c44
+```
+
+```mdl
+feature F-5: Pure arrays written in place when unique
+  status: shipped
+  parent: F-1
+  specs: Array.Spec
+  tasks: 95ca184f | 82d2d7a2
+```
+
+## The codebase
+
+Code, specs, tasks and features as hashed objects with history, which git only backs up.
+
+```mdl
+feature F-10: The codebase
+  status: building
+  tasks: 86d7b02a
+```
+
+```mdl
+feature F-11: Content-addressed store, history, branches and merges
+  status: shipped
+  parent: F-10
+  specs: Codebase.Spec
+  defs: Codebase.put | Codebase.commit
+```
+
+```mdl
+feature F-12: Tasks: issues kept with the code
+  status: building
+  specs: Tasks.Spec
+  parent: F-10
+  defs: Tasks.save | Tasks.merge
+  tasks: 823f7b83 | cb6c9a43 | dc22728a
+```
+
+```mdl
+feature F-13: Feature maps: what the product is, beside tasks
+  status: shipped
+  parent: F-10
+  specs: Features.Spec
+  defs: Features.problems | Features.render | Cli.features
+  tasks: 8a24ab99 | 381a725d
+```
+
+```mdl
+feature F-14: Specs in the codebase: requirements, APIs and laws checked by deus mdl
+  status: building
+  parent: F-10
+  specs: Compile.Spec | View.Spec | Coverage.Spec
+  defs: Cli.mdl | Spec.checkReq | Cli.coverage | Coverage.covers | Coverage.linked
+  tasks: 908495a0 | 8d6df186 | 6a3b0ebe | a2da28e2 | 1ab6c044 | 2a2b87a2 | 0d7b0142
+```
+
+```mdl
+feature F-15: Export to git and restore from it
+  status: shipped
+  parent: F-10
+  specs: Export.Spec
+  defs: Export.document
+```
+
+```mdl
+feature F-16: Replication and the shared R2 remote
+  status: building
+  parent: F-10
+  specs: Replicate.Spec
+  defs: Replicate.push | Replicate.pull | Codebase.recordMetas | Codebase.mergeMetas
+  tasks: e76e36b0 | f4afc2c0 | 4c9147ce
+```
+
+```mdl
+feature F-17: Work without git: files and artifacts in the codebase
+  status: building
+  parent: F-10
+  specs: Artifact.Spec
+  defs: Cli.artifact | Cli.ensureArtifacts | Cli.embed | Embed.text
+  tasks: 88004c30
+```
+
+```mdl
+feature F-18: Viewing code as source and dialects
+  status: building
+  parent: F-10
+  specs: View.Spec
+  defs: View.theoremDecl | Types.declaredNames
+  tasks: be4c4645 | ab1ed867
+```
+
+## Back ends
+
+Where compiled code runs besides the kernel.
+
+```mdl
+feature F-20: Back ends
+  status: building
+  tasks: cf0e3937
+```
+
+```mdl
+feature F-21: JavaScript back end
+  status: building
+  parent: F-20
+  specs: JsGen.Spec
+  defs: JsGen.compile
+  tasks: 1e8dee8b
+```
+
+```mdl
+feature F-22: Wasm back end
+  status: building
+  parent: F-20
+  specs: WasmEquality.Spec
+  defs: Wasm.compile
+  tasks: cf0e3937
+```
+
+```mdl
+feature F-23: Native C back end
+  status: building
+  parent: F-20
+  defs: CGen.compile
+  tasks: 72a1f2fb | e1cf2c6c | d780de91
+```
+
+```mdl
+feature F-24: TypeScript bindings
+  status: building
+  parent: F-20
+  specs: Bindings.Spec
+  defs: Bindings.generate
+  tasks: b6907aeb | 1474b99e | 353444f7
+```
+
+```mdl
+feature F-25: DEUS in the browser
+  status: building
+  parent: F-20
+  tasks: 62be7dc4 | 6e4360bd
+```
+
+## The codebase explorer
+
+```mdl
+feature F-30: The codebase explorer
+  status: building
+  specs: Explorer.Spec
+  defs: Explorer.generate
+  tasks: 861438d2 | 696086fe | 729ad2b4 | 3e686896
+```
+
+## Analytics: events as Parquet and Iceberg
+
+```mdl
+feature F-31: Analytics: events as Parquet and Iceberg
+  status: building
+  specs: Analytics.Spec
+  defs: Analytics.recordRun
+  tasks: c5955f97 | 1ad89782
+```
+
+## QA flows for web apps
+
+```mdl
+feature F-32: QA flows for web apps
+  status: building
+  specs: Notes.QA
+  tasks: 9428f054
+```
+
+## Models that read and change the codebase
+
+```mdl
+feature F-33: Models that read and change the codebase
+  status: planned
+  tasks: 10b95384 | 91b838f4
+```
+
+## Developer experience: where agents lose time
+
+```mdl
+feature F-40: Developer experience: where agents lose time
+  status: shipped
+  tasks: 6cffbc44 | 602f4557 | f264430b | b4e12f14 | 9e2f6916 | 44892ca0 | 7f677d04 | a99bf01d
+```

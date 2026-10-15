@@ -1,0 +1,427 @@
+/-
+  Tests and theorems.
+
+  A test is a `Bool` expression. A theorem is a proposition over typed binders plus the
+  evidence its author claims (docs/DECISIONS.md D13):
+
+    sorry       stated, not checked
+    by rfl      no binders; the proposition evaluates to `true`
+    by decide   every value of finite binder types is checked
+    by test n   n generated cases pass (seeded by the theorem's hash, so reruns are identical)
+
+  Results are cached under the hash of what was checked: unchanged code is never rechecked.
+  A defect inside a test or a theorem is caught at this boundary and reported as a failure.
+-/
+
+/-- The outcome of checking one test or theorem. -/
+inductive Verdict where
+  | pass (evidence : Text) (cases : Int)
+  | fail (reason : Text)
+  | unchecked
+
+namespace Check
+
+def toSexp : Verdict -> Sexp
+  | Verdict.pass evidence cases => Sexp.node "pass" [Sexp.str evidence, Sexp.int cases]
+  | Verdict.fail reason => Sexp.node "fail" [Sexp.str reason]
+  | Verdict.unchecked => Sexp.node "unchecked" []
+
+def fromSexp (s : Sexp) : Verdict :=
+  match s with
+  | Sexp.list [Sexp.sym "pass", Sexp.str evidence, Sexp.int cases] => Verdict.pass evidence cases
+  | Sexp.list [Sexp.sym "fail", Sexp.str reason] => Verdict.fail reason
+  | _ => Verdict.unchecked
+
+def cached (dir : Text) (h : Text) : {IO} Option Verdict :=
+  Option.map (fun t => fromSexp (Sexp.read t)) (IO.readFile (dir ++ "/results/" ++ h))
+
+def remember (dir : Text) (h : Text) (v : Verdict) : {IO} Unit :=
+  match v with
+  | Verdict.unchecked => ()
+  | _ => IO.writeFile (dir ++ "/results/" ++ h) (Sexp.print (toSexp v) ++ "\n")
+
+/-- Runs a loaded definition; a defect becomes `Result.err`. -/
+def guarded (h : Text) : Result Text a :=
+  handle Result.ok (Code.run h) with
+  | Defect.raise message -> _ => Result.err (message ++ Cli.defectTrace ())
+
+/-- Evaluates a Core term (built by the checker) in the running machine. -/
+def evalCore (core : Sexp) : Result Text a :=
+  let h := "check:" ++ Text.sha256 (Sexp.print core)
+  if Code.has h then guarded h
+  else
+    Code.load (Sexp.print (Sexp.node "def" [Sexp.str h, core]))
+    guarded h
+
+--
+-- Generators: values of a binder type, as Core terms.
+--
+
+/-- A deterministic generator: xorshift over a 32-bit state. -/
+def nextRandom (state : Ref Int) : Int :=
+  let x1 := Ref.get state
+  let x2 := Int.xor x1 (Int.shl x1 13)
+  let x3 := Int.xor x2 (Int.ushr x2 17)
+  let x4 := Int.xor x3 (Int.shl x3 5)
+  Ref.set state x4
+  x4
+
+def below (state : Ref Int) (n : Int) : Int :=
+  let r := Int.and (nextRandom state) 2147483647
+  if n <= 0 then 0 else r % n
+
+def seedOf (h : Text) : Int :=
+  match Int.fromText (Text.join "" (List.map (fun c => Int.toText (Int.and c 7)) (List.take 9 (Text.utf8 h)))) with
+  | some v => if v == 0 then 1 else v
+  | none => 1
+
+/-- Type declarations by IRI, for generating values of user types. -/
+def typesByIri (dir : Text) (ns : Map Text Entry) : {IO} Map Text Sexp :=
+  List.foldl (fun m pair =>
+    match snd pair with
+    | Entry.type h iri _ =>
+      match Codebase.readObject dir h with
+      | some obj => Map.insert iri obj m
+      | none => m
+    | _ => m) Map.empty (Map.toList ns)
+
+def substVars (t : Sexp) (args : List Sexp) : Sexp :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", Sexp.int i] => Option.getOr (List.get? args i) t
+  | Sexp.list items => Sexp.list (List.map (fun x => substVars x args) items)
+  | _ => t
+
+def headAndArgs (t : Sexp) : (Sexp, List Sexp) :=
+  match t with
+  | Sexp.list (Sexp.sym "tapp" :: f :: args) => (f, args)
+  | _ => (t, [])
+
+def con (hash : Text) (tag : Int) (fields : List Sexp) : Sexp :=
+  let c := Sexp.node "con" [Sexp.str hash, Sexp.int tag, Sexp.int (List.length fields)]
+  if List.isEmpty fields then c else Sexp.list (Sexp.sym "app" :: c :: fields)
+
+def alphabet : List Text := ["a", "b", "z", " ", "0", "\n", "é", "-", "\""]
+
+def interestingInts : List Int := [0, 1, -1, 2, 7, -100, 2147483647, -2147483648]
+
+/-- One random value of a type, as Core; `depth` bounds recursive types. -/
+def generate (types : Map Text Sexp) (state : Ref Int) (t : Sexp) (depth : Int) : Sexp :=
+  match headAndArgs t with
+  | (Sexp.list [Sexp.sym "tref", Sexp.str iri], args) =>
+    if iri == "#Int" then
+      let k := below state 4
+      let v := if k == 0 then Option.getOr (List.get? interestingInts (below state 8)) 0
+        else if k == 1 then nextRandom state
+        else below state 41 - 20
+      Sexp.node "int" [Sexp.int v]
+    else if iri == "#Text" then Sexp.node "text" [Sexp.str (Text.concat (List.map (fun _ => Option.getOr (List.get? alphabet (below state 9)) "a") (List.range 0 (below state 6))))]
+    else if iri == "#Bool" then con "#Bool" (below state 2) []
+    else if iri == "#Unit" then con "#Unit" 0 []
+    else if iri == "#List" then
+      let elem := Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])
+      let count := if depth <= 0 then 0 else below state 6
+      List.foldl (fun acc _ => con "#List" 1 [generate types state elem (depth - 1), acc]) (con "#List" 0 []) (List.range 0 count)
+    else if iri == "#Option" then
+      if below state 3 == 0 || depth <= 0 then con "#Option" 0 []
+      else con "#Option" 1 [generate types state (Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])) (depth - 1)]
+    else if iri == "#Array" then
+      -- `Array.make` then one `Array.set` per index, so each item is drawn on its own.
+      let elem := Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])
+      let count := if depth <= 0 then 0 else below state 6
+      let applyPrim := fun (p : Text) (xs : List Sexp) => Sexp.list (Sexp.sym "app" :: Sexp.node "prim" [Sexp.str p] :: xs)
+      let made := applyPrim "Array.make" [Sexp.node "int" [Sexp.int count], generate types state elem (depth - 1)]
+      List.foldl (fun acc i => applyPrim "Array.set" [acc, Sexp.node "int" [Sexp.int i], generate types state elem (depth - 1)]) made (List.range 0 count)
+    else if iri == "#Pair" then
+      match args with
+      | [a, b] => con "#Pair" 0 [generate types state a depth, generate types state b depth]
+      | _ => con "#Unit" 0 []
+    else
+      match Map.lookup iri types with
+      | some decl =>
+        let hash := Resolve.hashFor iri decl
+        let ctors := View.typeArgs decl
+        let nullary := List.filter (fun pair => List.length (Sexp.args (snd pair)) == 1) (List.mapIndexed (fun i c => (i, c)) ctors)
+        let pool := if depth <= 0 && not (List.isEmpty nullary) then nullary else List.mapIndexed (fun i c => (i, c)) ctors
+        match List.get? pool (below state (List.length pool)) with
+        | some (tag, c) => con hash tag (List.map (fun ft => generate types state (substVars ft args) (depth - 1)) (List.drop 1 (Sexp.args c)))
+        | none => defect ("cannot generate a value of " ++ iri)
+      | none => defect ("cannot generate a value of " ++ iri)
+  | _ => defect ("cannot generate a value of type " ++ Sexp.print t)
+
+/-- Every value of a finite type, or `none` if the type is infinite or too large. -/
+def enumerate (types : Map Text Sexp) (t : Sexp) : Option (List Sexp) :=
+  match headAndArgs t with
+  | (Sexp.list [Sexp.sym "tref", Sexp.str iri], args) =>
+    if iri == "#Bool" then some [con "#Bool" 0 [], con "#Bool" 1 []]
+    else if iri == "#Unit" then some [con "#Unit" 0 []]
+    else if iri == "#Option" then
+      Option.map (fun vs => con "#Option" 0 [] :: List.map (fun v => con "#Option" 1 [v]) vs) (Option.bind (List.head? args) (fun a => enumerate types a))
+    else if iri == "#Pair" then
+      match args with
+      | [a, b] =>
+        Option.bind (enumerate types a) (fun xs =>
+          Option.map (fun ys => List.concatMap (fun x => List.map (fun y => con "#Pair" 0 [x, y]) ys) xs) (enumerate types b))
+      | _ => none
+    else
+      match Map.lookup iri types with
+      | some decl =>
+        let ctors := View.typeArgs decl
+        if List.all (fun c => List.length (Sexp.args c) == 1) ctors then
+          let hash := Resolve.hashFor iri decl
+          some (List.mapIndexed (fun i _ => con hash i []) ctors)
+        else none
+      | none => none
+  | _ => none
+
+/-- Every combination of the binders' values. -/
+def product (domains : List (List Sexp)) : List (List Sexp) :=
+  match domains with
+  | [] => [[]]
+  | d :: rest => List.concatMap (fun v => List.map (fun vs => v :: vs) (product rest)) d
+
+def caseCore (prop : Sexp) (args : List Sexp) : Sexp :=
+  if List.isEmpty args then prop else Sexp.list (Sexp.sym "app" :: prop :: args)
+
+/-- The proof tokens after `using`, or none. -/
+def afterUsing (tokens : List Sexp) : List Sexp :=
+  match tokens with
+  | [] => []
+  | t :: rest => if t == Sexp.str "using" then rest else afterUsing rest
+
+/-- Checks cases in order; the first failing one is the counterexample. -/
+def runCases (prop : Sexp) (cases : List (List Sexp)) (describe : List Sexp -> Text) : Option Text :=
+  match cases with
+  | [] => none
+  | args :: rest =>
+    match evalCore (caseCore prop args) with
+    | Result.ok true => runCases prop rest describe
+    | Result.ok _ => some (if List.isEmpty args then "false" else "counterexample: " ++ describe args)
+    | Result.err message => some ("defect " ++ show message ++ (if List.isEmpty args then "" else " at " ++ describe args))
+
+def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {IO} Verdict :=
+  match obj with
+  | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+    let tactic := List.map (fun x =>
+      match x with
+      | Sexp.list [Sexp.sym "ref", Sexp.str l] => "#" ++ l
+      | _ => Sexp.asText x) (Sexp.args proof)
+    -- Only a failure is described, so the printer's name tables are not built for a theorem that passes.
+    let describe := fun (args : List Sexp) =>
+      let printer := Print.printer ns []
+      Text.join ", " (List.map (fun a => Print.expr printer a [] 0 100) args)
+    let typeDecls := typesByIri dir ns
+    match tactic with
+    | ["sorry"] => Verdict.unchecked
+    | ["rfl"] =>
+      if not (List.isEmpty types) then Verdict.fail "rfl needs a closed proposition (no binders); use decide or test"
+      else
+        match runCases prop [[]] describe with
+        | none => Verdict.pass "rfl" 1
+        | some reason => Verdict.fail reason
+    | ["decide"] =>
+      let domains := List.map (fun t => enumerate typeDecls t) types
+      if List.any Option.isNone domains then Verdict.fail "decide needs finite binder types; use test"
+      else
+        let cases := product (List.map (fun d => Option.getOr d []) domains)
+        match runCases prop cases describe with
+        | none => Verdict.pass "decide" (List.length cases)
+        | some reason => Verdict.fail reason
+    | "test" :: rest =>
+      let count := Option.getOr (Option.bind (List.head? rest) Int.fromText) 100
+      let state := Ref.new (seedOf h)
+      -- `using g …` draws each binder's case as `g` applied to a random Int (D135).
+      let generators := List.filterMap (fun x =>
+        match x with
+        | Sexp.list [Sexp.sym "ref", Sexp.str g] => some g
+        | _ => none) (afterUsing (Sexp.args proof))
+      if not (List.isEmpty generators) && List.length generators != List.length types then
+        Verdict.fail ("using names " ++ Int.toText (List.length generators) ++ " generators for " ++ Int.toText (List.length types) ++ " binders")
+      else
+        -- The image of a theorem is its proposition, so the generators it names load here.
+        match try (fun _ => Image.load (fun x => Codebase.readObject dir x) generators) with
+        | Result.err message => Verdict.fail message
+        | Result.ok _ => testCases prop types generators count state typeDecls describe
+    | _ =>
+      -- A tactic proof. Binder names come from metadata (the author's names, in order).
+      let locals := List.map Sexp.asText (Codebase.metaList (Codebase.readMeta dir h) "locals")
+      let names := List.mapIndexed (fun i _ => Option.getOr (List.get? locals i) ("x" ++ Int.toText i)) types
+      let pr := Prover.mk dir ns (Ref.new Map.empty) (Ref.new 20000) (Ref.new []) (Ref.new 0) (Ref.new []) (Ref.new [])
+      -- Lemmas must be checked first; one that is only tested weakens this verdict.
+      let lemmas := List.filterMap (fun x =>
+        match x with
+        | Sexp.list [Sexp.sym "ref", Sexp.str l] => some l
+        | _ => none) (Sexp.args proof)
+      let weak := List.filter (fun l =>
+        match lemmaVerdict dir ns l with
+        | Verdict.pass evidence _ => evidence == "test"
+        | _ => true) lemmas
+      if List.any (fun l =>
+        match lemmaVerdict dir ns l with
+        | Verdict.fail _ => true
+        | _ => false) lemmas then Verdict.fail "a lemma it uses does not hold"
+      else
+        match Prove.proveTheorem pr names types prop (Sexp.args proof) with
+        | Result.ok used => Verdict.pass (if List.isEmpty weak then "proof" else "proof assuming tested lemmas") 1
+        | Result.err reason => Verdict.fail reason
+  | _ => Verdict.fail "not a theorem"
+
+/-- Runs `count` cases, each binder drawn from its generator, or by its type when `generators` is empty. -/
+def testCases (prop : Sexp) (types : List Sexp) (generators : List Text) (count : Int) (state : Ref Int) (typeDecls : Map Text Sexp) (describe : List Sexp -> Text) : Verdict :=
+  let draw := fun (t : Sexp) (g : Option Text) =>
+    match g with
+    | some ref => Sexp.list [Sexp.sym "app", Sexp.node "ref" [Sexp.str ref], Sexp.node "int" [Sexp.int (nextRandom state)]]
+    | none => generate typeDecls state t 4
+  let drawn := List.map (fun _ => List.mapIndexed (fun i t => draw t (List.get? generators i)) types) (List.range 0 count)
+  -- `implies` is strict, so a case that fails a hypothesis is skipped; one whose hypothesis defects still runs, and reports it.
+  let hypotheses := List.map (fun hyp => withBody prop hyp) (hypothesesOf (bodyOf prop))
+  let cases := List.filter (fun args => not (List.any (fun hyp => evalCore (caseCore hyp args) == Result.ok false) hypotheses)) drawn
+  if List.isEmpty cases && count > 0 then Verdict.fail ("no case of " ++ Int.toText count ++ " met the hypotheses")
+  else
+    match runCases prop cases describe with
+    | none => Verdict.pass "test" (List.length cases)
+    | some reason => Verdict.fail reason
+
+/-- A proposition's body under its binders. -/
+def bodyOf (prop : Sexp) : Sexp :=
+  match prop with
+  | Sexp.list [Sexp.sym "lam", body] => bodyOf body
+  | _ => prop
+
+/-- `prop` with its body under the binders replaced by `body`. -/
+def withBody (prop : Sexp) (body : Sexp) : Sexp :=
+  match prop with
+  | Sexp.list [Sexp.sym "lam", inner] => Sexp.list [Sexp.sym "lam", withBody inner body]
+  | _ => body
+
+/-- The hypotheses of `H1 -> H2 -> C`, in order. -/
+def hypothesesOf (body : Sexp) : List Sexp :=
+  match body with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "implies"], hyp, rest] => hyp :: hypothesesOf rest
+  | _ => []
+
+/-- A lemma's verdict, checking (and caching) it first if needed. -/
+def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
+  match cached dir h with
+  | some v => v
+  | none =>
+    match Codebase.readObject dir h with
+    | some obj =>
+      match try (fun _ => Image.load (fun x => Codebase.readObject dir x) [h]) with
+      | Result.err message => Verdict.fail message
+      | Result.ok _ =>
+        let v := checkTheorem dir ns h obj
+        remember dir h v
+        v
+    | none => Verdict.fail "missing lemma"
+
+/-- A test, by default in a deterministic simulation seeded from its hash; integration tests run for real. -/
+def checkTest (h : Text) (integration : Bool) : {IO} Verdict :=
+  let outcome := if integration then fst (Observe.collect (fun _ => guarded h))
+    else
+      match Sim.run (seedOf h) (fun _ => fst (Observe.collect (fun _ => guarded h))) with
+      | (r, _) => r
+  match outcome with
+  | Result.ok true => Verdict.pass (if integration then "integration" else "test") 1
+  | Result.ok _ => Verdict.fail "returned false"
+  | Result.err message => Verdict.fail ("defect: " ++ message)
+
+/-- Whether a definition carries an attribute, e.g. `@[integration]`. -/
+def hasAttr (dir : Text) (h : Text) (name : Text) : {IO} Bool :=
+  List.any (fun a => Sexp.head a == name || (match a with
+    | Sexp.list (Sexp.str n :: _) => n == name
+    | _ => false)) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
+
+/-- A test's or a theorem's verdict, from the cache or checked now and cached; `none` for other entries. -/
+def verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option Verdict :=
+  match e with
+  | Entry.theorem h => some (lemmaVerdict dir ns h)
+  | Entry.test h =>
+    let integration := hasAttr dir h "integration"
+    match (if integration then none else cached dir h) with
+    | some v => some v
+    | none =>
+      let v := match try (fun _ => Image.load (Cli.fetcher dir) [h]) with
+        | Result.err message => Verdict.fail message
+        | Result.ok _ => checkTest h integration
+      if integration then () else remember dir h v
+      some v
+  | _ => none
+
+/-- Runs every test or theorem under a prefix; prints a report; exits 1 on failure. -/
+def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
+  let dir := Cli.openCodebase args
+  let ns := Codebase.current dir
+  let prefix := Option.getOr (List.head? args.positional) ""
+  let runIntegration := Cli.flag args "integration"
+  -- A kept verdict is keyed by the theorem alone, so after a checker change it may be stale (Prove.Spec R-8).
+  let fresh := Cli.flag args "fresh"
+  let selected := List.filter (fun pair =>
+    Text.startsWith prefix (fst pair) &&
+      (wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration")) &&
+      (match snd pair with
+      | Entry.test _ => not wantTheorems
+      | Entry.theorem _ => wantTheorems
+      | _ => false)) (Map.toList ns)
+  let eventTypes := Analytics.typesNow dir
+  let results := List.map (fun pair =>
+    match pair with
+    | (name, e) =>
+      let h := Entry.hash e
+      let integration := not wantTheorems && hasAttr dir h "integration"
+      let started := IO.time ()
+      -- An integration test talks to the real world, so its result is never reused.
+      let outcome := match (if integration || fresh then none else cached dir h) with
+        | some v => (name, v, true)
+        | none =>
+          Image.load (Cli.fetcher dir) [h]
+          let v := if wantTheorems then
+              match Codebase.readObject dir h with
+              | some obj => checkTheorem dir ns h obj
+              | none => Verdict.fail "missing object"
+            else checkTest h integration
+          if integration then () else remember dir h v
+          (name, v, false)
+      match outcome with
+      | (_, v, wasCached) =>
+        let fields := match v with
+          | Verdict.pass evidence cases => (true, evidence, cases, "")
+          | Verdict.fail reason => (false, "", 0, reason)
+          | Verdict.unchecked => (false, "sorry", 0, "unchecked")
+        match fields with
+        | (passed, evidence, cases, failure) =>
+          Analytics.recordRun dir eventTypes ns name (if wantTheorems then "theorem" else "test") passed wasCached (not integration) evidence cases failure (IO.time () - started)
+      outcome) selected
+  let failed := List.filter (fun r =>
+    match r with
+    | (_, Verdict.fail _, _) => true
+    | _ => false) results
+  let index := Codebase.nameIndex ns
+  let line := fun (r : (Text, Verdict, Bool)) =>
+    match r with
+    | (name, v, wasCached) =>
+      let suffix := if wasCached then "  (cached)" else ""
+      match v with
+      | Verdict.pass evidence cases =>
+        if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if Text.startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix
+        else "  ✓ " ++ name ++ suffix
+      | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ Cli.nameTrace index reason ++ suffix
+      | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
+  Cli.output args
+    (fun _ => Json.arr (List.map (fun r =>
+      match r with
+      | (name, v, wasCached) =>
+        let status := match v with
+          | Verdict.pass evidence cases => [("status", Json.str "pass"), ("evidence", Json.str evidence), ("cases", Json.num cases)]
+          | Verdict.fail reason => [("status", Json.str "fail"), ("reason", Json.str (Cli.nameTrace index reason))]
+          | Verdict.unchecked => [("status", Json.str "unchecked")]
+        Json.obj ([("name", Json.str name), ("cached", Json.bool wasCached)] ++ status)) results))
+    (fun _ =>
+      let summary := Int.toText (List.length results - List.length failed) ++ " passed, " ++ Int.toText (List.length failed) ++ " failed"
+      Text.join "\n" (List.map line results ++ [summary]))
+  if List.isEmpty failed then () else IO.exit 1
+
+def tests (args : Args) : {IO, Throw Text} Unit := run args false
+
+def theorems (args : Args) : {IO, Throw Text} Unit := run args true
+
+end Check

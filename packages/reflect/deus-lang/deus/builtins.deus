@@ -1,0 +1,186 @@
+/-
+  Builtins: the types, abilities and primitives the kernel implements.
+
+  An IRI that starts with `#` is a builtin identity: the kernel constructs and matches these
+  values itself (src/kernel/machine.ts), so their constructor order is fixed. Everything else
+  in DEUS is ordinary source.
+-/
+
+inductive Int @"#Int" where
+inductive Text @"#Text" where
+
+inductive Unit @"#Unit" where
+  | unit
+
+inductive Bool @"#Bool" where
+  | false
+  | true
+
+inductive List (a : Type) @"#List" where
+  | nil
+  | cons (head : a) (tail : List a)
+
+inductive Option (a : Type) @"#Option" where
+  | none
+  | some (value : a)
+
+structure Pair (a b : Type) @"#Pair" where
+  fst : a
+  snd : b
+
+/-- Host input/output; the kernel handles requests no DEUS handler caught. -/
+ability IO @"#IO" where
+  print : Text -> Unit
+  eprint : Text -> Unit
+  readFile : Text -> Option Text
+  writeFile : Text -> Text -> Unit
+  exists : Text -> Bool
+  listDir : Text -> List Text
+  mkdirp : Text -> Unit
+  remove : Text -> Unit
+  args : Unit -> List Text
+  exit : Int -> a
+  time : Unit -> Int
+  readStdin : Unit -> Text
+  writeBytes : Text -> List Int -> Unit
+  getEnv : Text -> Option Text
+  isDir : Text -> Bool
+  wallClock : Unit -> Text
+  appendFile : Text -> Text -> Unit
+  -- Runs a program with arguments: (exit code, stdout, stderr); 127 if it cannot start.
+  exec : Text -> List Text -> (Int, Text, Text)
+
+/--
+  Defects: the program is wrong. The kernel raises failed matches, division by zero and
+  `defect` as `Defect.raise`; a boundary may handle it but must not resume it.
+-/
+ability Defect @"#Defect" where
+  raise : Text -> a
+
+namespace Int
+def add : Int -> Int -> Int := prim "Int.add"
+def sub : Int -> Int -> Int := prim "Int.sub"
+def mul : Int -> Int -> Int := prim "Int.mul"
+def div : Int -> Int -> Int := prim "Int.div"
+def mod : Int -> Int -> Int := prim "Int.mod"
+def neg : Int -> Int := prim "Int.neg"
+def and : Int -> Int -> Int := prim "Int.and"
+def or : Int -> Int -> Int := prim "Int.or"
+def xor : Int -> Int -> Int := prim "Int.xor"
+def shl : Int -> Int -> Int := prim "Int.shl"
+def shr : Int -> Int -> Int := prim "Int.shr"
+def ushr : Int -> Int -> Int := prim "Int.ushr"
+def toText : Int -> Text := prim "Int.toText"
+def fromText : Text -> Option Int := prim "Int.fromText"
+end Int
+
+namespace Text
+def length : Text -> Int := prim "Text.length"
+/-- UTF-16 code unit at an index, or -1 outside the text. -/
+def code : Text -> Int -> Int := prim "Text.code"
+def slice : Text -> Int -> Int -> Text := prim "Text.slice"
+def fromCode : Int -> Text := prim "Text.fromCode"
+def concat : List Text -> Text := prim "Text.concat"
+def join : Text -> List Text -> Text := prim "Text.join"
+/-- `split t sep`: the text first, then the separator. -/
+def split : Text -> Text -> List Text := prim "Text.split"
+/-- First index of a substring at or after a position, or -1. -/
+def indexOf : Text -> Text -> Int -> Int := prim "Text.indexOf"
+def trim : Text -> Text := prim "Text.trim"
+def sha256 : Text -> Text := prim "Text.sha256"
+def fromCodes : List Int -> Text := prim "Text.fromCodes"
+def utf8 : Text -> List Int := prim "Text.utf8"
+end Text
+
+/-- Structural equality; functions are never equal. -/
+def eq : a -> a -> Bool := prim "eq"
+def neq : a -> a -> Bool := prim "neq"
+/-- Structural order (`<`, `<=`, `>`, `>=`), as `compare`. -/
+def lt : a -> a -> Bool := prim "lt"
+def le : a -> a -> Bool := prim "le"
+def gt : a -> a -> Bool := prim "gt"
+def ge : a -> a -> Bool := prim "ge"
+/-- `++`: concatenates two texts or two lists. -/
+def append : a -> a -> a := prim "append"
+/-- `a -> b` in a theorem's statement. -/
+def implies : Bool -> Bool -> Bool := prim "implies"
+/-- Structural order: -1, 0 or 1. -/
+def compare : a -> a -> Int := prim "compare"
+/-- Debug rendering of any value. -/
+def show : a -> Text := prim "show"
+def trace : Text -> a -> a := prim "trace"
+/-- Raises a defect: the program reached a state its author ruled out. -/
+def defect : Text -> a := prim "defect"
+
+/--
+  Mutable cells. Not rolled back when a continuation is resumed twice; code that needs
+  backtracking state uses a handler instead.
+-/
+inductive Ref (a : Type) @"#Ref" where
+
+namespace Ref
+def new : a -> Ref a := prim "Ref.new"
+def get : Ref a -> a := prim "Ref.get"
+def set : Ref a -> a -> Unit := prim "Ref.set"
+end Ref
+
+/--
+  An immutable array of fixed length (D96). `set` returns a new array and leaves the old one as
+  it was, but costs O(1) when the old one is not used again: the kernels keep versions (reading
+  an old one is slower), and the compiled back ends write in place when the array is unique. An
+  index outside `0 .. length` is a defect.
+-/
+inductive Array (a : Type) @"#Array" where
+
+namespace Array
+def make : Int -> a -> Array a := prim "Array.make"
+def length : Array a -> Int := prim "Array.length"
+def get : Array a -> Int -> a := prim "Array.get"
+def set : Array a -> Int -> a -> Array a := prim "Array.set"
+end Array
+
+/-- An immutable hash map with Text or Int keys, built once: O(1) lookups for indexes. -/
+inductive Dict (k v : Type) @"#Dict" where
+
+namespace Dict
+def fromList : List (k, v) -> Dict k v := prim "Dict.fromList"
+def lookup : k -> Dict k v -> Option v := prim "Dict.lookup"
+def contains : k -> Dict k v -> Bool := prim "Dict.contains"
+def size : Dict k v -> Int := prim "Dict.size"
+def keys : Dict k v -> List k := prim "Dict.keys"
+end Dict
+
+/-- A mutable hash map with Text or Int keys; like `Ref`, it is not rolled back by resumption. -/
+inductive MutMap (k v : Type) @"#MutMap" where
+
+namespace MutMap
+def new : Unit -> MutMap k v := prim "MutMap.new"
+def get : MutMap k v -> k -> Option v := prim "MutMap.get"
+def has : MutMap k v -> k -> Bool := prim "MutMap.has"
+def set : MutMap k v -> k -> v -> Unit := prim "MutMap.set"
+def delete : MutMap k v -> k -> Unit := prim "MutMap.delete"
+def size : MutMap k v -> Int := prim "MutMap.size"
+def keys : MutMap k v -> List k := prim "MutMap.keys"
+end MutMap
+
+namespace Code
+/-- Loads `(def "hash" term)` forms into the running machine. -/
+def load : Text -> Unit := prim "Code.load"
+def has : Text -> Bool := prim "Code.has"
+/-- A data value as Core text, for printing it with names. -/
+def quote : a -> Text := prim "Code.quote"
+/-- Evaluates a loaded definition in the caller's context (its effects reach the caller's handlers). -/
+def run : Text -> a := prim "Code.run"
+/-- Machine steps so far: the deterministic cost model for performance requirements. -/
+def steps : Unit -> Int := prim "Code.steps"
+/-- Hashes of the definitions on the stack when the last defect was raised, innermost first. -/
+def defectTrace : Unit -> List Text := prim "Code.defectTrace"
+/-- Machine steps a pure computation takes; its operations must be handled inside it. -/
+def cost : (Unit -> a) -> Int := prim "Code.cost"
+/-- The tag of a data value, a Bool's being 0 or 1: with `field` and `cast`, for code that walks a value by its type (D146). -/
+def tag : a -> Int := prim "Code.tag"
+/-- Field `i` of a data value. -/
+def field : a -> Int -> b := prim "Code.field"
+/-- The same value at another type, which the caller knows it has. -/
+def cast : a -> b := prim "Code.cast"
+end Code

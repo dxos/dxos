@@ -1,0 +1,46 @@
+/-- One change an agent or a person made to the codebase's history. -/
+@[event]
+structure Events.AgentChange @"urn:deus:event:AgentChange" where
+  change : CodeRef
+  agent : Text
+  action : Text
+  changeMessage : Text
+
+/-- One stage of the work log (docs/TIMELINE.md): a commit and the wall time since the one before. -/
+@[event]
+structure Events.AgentStage @"urn:deus:event:AgentStage" where
+  stage : Int
+  commitSha : Text
+  seconds : Int
+  summary : Text
+
+/-- One definition an agent wrote with `deus add` or `deus update`. -/
+@[event]
+structure Events.AgentWrote @"urn:deus:event:AgentWrote" where
+  definition : CodeRef
+  agent : Text
+  via : Text
+
+/-- One CI check run on a commit of the pull request that carries the codebase. -/
+@[event]
+structure Events.CiRun @"urn:deus:event:CiRun" where
+  checkName : Text
+  conclusion : Text
+  passed : Bool
+  commitSha : Text
+  pr : Int
+  seconds : Int
+  runUrl : Text
+
+/-- One run of a test or theorem by `deus test` or `deus check`. Integration tests talk to the real world, so they are the non-deterministic ones. -/
+@[event]
+structure Events.TestRun @"urn:deus:event:TestRun" where
+  subject : CodeRef
+  runKind : Text
+  passed : Bool
+  cached : Bool
+  deterministic : Bool
+  evidence : Text
+  cases : Int
+  failure : Text
+  ms : Int

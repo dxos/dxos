@@ -1,0 +1,2247 @@
+/-
+  The `deus` command line. Every command is DEUS code; the kernel only runs the seed.
+
+  People and agents use the same commands. `--json` switches output to one JSON document per
+  command, so an agent can read definitions and write patches without scraping text.
+-/
+
+namespace Cli
+
+/-- Command-line arguments split into positionals and `--flag value` / `--flag` options. -/
+structure Args where
+  positional : List Text
+  options : Map Text Text
+
+/-- Options that never take a value. -/
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
+
+def parseArgs (args : List Text) : Args :=
+  let rec go rest pos opts :=
+    match rest with
+    | [] => Args.mk (List.reverse pos) opts
+    | a :: more =>
+      if Text.startsWith "--" a then
+        let key := Text.drop 2 a
+        if Set.contains key booleanFlags then go more pos (Map.insert key "true" opts)
+        else
+          match more with
+          | v :: tail => go tail pos (Map.insert key v opts)
+          | [] => go more pos (Map.insert key "true" opts)
+      else if a == "-o" then
+        match more with
+        | v :: tail => go tail pos (Map.insert "out" v opts)
+        | [] => go more pos opts
+      else go more (a :: pos) opts
+  go args [] Map.empty
+
+def option (args : Args) (key : Text) : Option Text := Map.lookup key args.options
+
+/--
+  Splits `--flag value` options off the front of arguments, for commands like `run` whose
+  remaining arguments belong to someone else: `deus run --codebase c main a b`.
+-/
+def leadingOptions (argv : List Text) : (List Text, List Text) :=
+  match argv with
+  | a :: more =>
+    if Text.startsWith "--" a then
+      if Set.contains (Text.drop 2 a) booleanFlags then
+        match leadingOptions more with
+        | (options, rest) => (a :: options, rest)
+      else
+        match more with
+        | v :: tail =>
+          match leadingOptions tail with
+          | (options, rest) => (a :: v :: options, rest)
+        | [] => ([a], [])
+    else ([], argv)
+  | [] => ([], [])
+
+def flag (args : Args) (key : Text) : Bool := Map.contains key args.options
+
+def die (message : Text) : {IO} a :=
+  eprintln ("deus: " ++ message)
+  IO.exit 1
+
+def readSource (path : Text) : {IO, Throw Text} Text :=
+  match IO.readFile path with
+  | some text => text
+  | none => throw ("cannot read " ++ path)
+
+/-- Expands directories to the `.deus` and `.mdl` files they contain, sorted. -/
+def expandPaths (paths : List Text) : {IO} List Text :=
+  List.concatMap (fun path =>
+    if IO.isDir path then
+      List.map (fun f => path ++ "/" ++ f) (List.filter (fun f => Text.endsWith ".deus" f || Text.endsWith ".mdl" f) (IO.listDir path))
+    else [path]) paths
+
+/--
+  `DEUS_TYPECHECK=0` skips type checking (only to bootstrap a change to the checker itself);
+  `DEUS_TYPECHECK=warn` reports type errors as warnings.
+-/
+def checkTypes (u : Unit) : {IO} Text :=
+  match IO.getEnv "DEUS_TYPECHECK" with
+  | some "0" => "off"
+  | some "warn" => "warn"
+  | _ => "strict"
+
+def warn (b : Batch) : {IO} Unit := List.forEach b.warnings (fun w => eprintln ("warning: " ++ w))
+
+def parseFiles (paths : List Text) : {IO, Throw Text} List (Text, List Decl) :=
+  List.map (fun path => Compile.parseFile path (readSource path)) (expandPaths paths)
+
+/-- The codebase directory: `--codebase`, then `$DEUS_CODEBASE`, then one per user, `~/.deus`, as Unison keeps `~/.unison`. -/
+def codebaseDir (args : Args) : {IO} Text :=
+  match option args "codebase" with
+  | some dir => dir
+  | none =>
+    match IO.getEnv "DEUS_CODEBASE" with
+    | some dir => dir
+    | none => Option.getOr (IO.getEnv "HOME") "." ++ "/.deus"
+
+def openCodebase (args : Args) : {IO, Throw Text} Text :=
+  let dir := codebaseDir args
+  if Codebase.isCodebase dir then dir else throw ("no codebase at " ++ dir ++ " (run `deus init`)")
+
+def short (h : Text) : Text := if Text.startsWith "#" h then h else "#" ++ Text.take 10 h
+
+/-- Prints JSON when `--json` is set, otherwise the text. -/
+def output (args : Args) (json : Unit -> Json) (text : Unit -> Text) : {IO} Unit :=
+  if flag args "json" then println (Json.render (json ())) else
+    let t := text ()
+    if Text.isEmpty t then () else println t
+
+def entryJson (name : Text) (e : Entry) : Json :=
+  Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
+
+/--
+  Resolves a reference in a namespace to its full name and entry (D105): a name, a `#hashprefix`,
+  a name IRI `<project>/<name>`, or a pinned `<project>/<name>#<hash>`. A prefix that matches
+  more than one hash is an error; a pinned hash whose name moved resolves to another name of it.
+-/
+def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) :=
+  if Text.startsWith "#" name then
+    let prefix := Text.drop 1 name
+    match List.filter (fun pair => Text.startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
+    | [] => throw ("no definition with hash " ++ name)
+    | pair :: rest =>
+      match List.filter (fun other => Entry.hash (snd other) != Entry.hash (snd pair)) rest with
+      | [] => pair
+      | others => throw ("ambiguous hash " ++ name ++ ": " ++ Text.join ", " (List.map (fun p => fst p ++ " " ++ short (Entry.hash (snd p))) (List.take 5 (pair :: others))))
+  else if Text.contains "://" name then
+    match Analytics.parts name with
+    | (iri, fragment) =>
+      let bare := List.foldl (fun acc piece => piece) "" (Text.split iri "/")
+      if not (Analytics.isHex fragment) then lookupName ns bare
+      else
+        let h := Analytics.hashOf name
+        match Map.lookup bare ns with
+        | some e => if Entry.hash e == h then (bare, e) else lookupName ns ("#" ++ fragment)
+        | none => lookupName ns ("#" ++ fragment)
+  else
+    match Map.lookup name ns with
+    | some e => (name, e)
+    | none =>
+      match Names.lookup (Names.build ns) name (Scope.mk [] []) (fun _ => true) true with
+      | some hit => hit
+      | none => throw ("unknown name " ++ name)
+
+--
+-- Commands: compiling.
+--
+
+/-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
+def compile (args : Args) : {IO, Throw Text} Unit :=
+  let result := Compile.batch Map.empty (fun _ => none) (fun _ => none) (checkTypes ()) (parseFiles args.positional)
+  warn result
+  let main := Option.getOr (option args "main") "main"
+  let entry := match List.lookup main result.entries with
+    | some (Entry.term h) => h
+    | _ => throw ("no definition named " ++ main)
+  let objects := Map.fromList result.objects
+  let image := Image.build (fun h => Map.lookup h objects) entry
+  match option args "out" with
+  | some out => IO.writeFile out image
+  | none => IO.print image
+
+/-- `deus init [--empty]`: a codebase holding the builtins and prelude, or nothing with `--empty`. -/
+def init (args : Args) : {IO, Throw Text} Unit :=
+  let dir := codebaseDir args
+  Codebase.init dir
+  let library := match (flag args "empty", IO.getEnv "DEUS_HOME") with
+    | (false, some home) =>
+      addOrUpdate (Args.mk [home ++ "/deus/builtins.deus", home ++ "/deus/prelude.deus"] (Map.fromList [("codebase", dir), ("message", "standard library"), ("quiet", "true")])) false
+      true
+    | _ => false
+  output args (fun _ => Json.obj [("codebase", Json.str dir), ("branch", Json.str "main"), ("library", Json.bool library)])
+    (fun _ => "Initialized a codebase in " ++ dir ++ " on branch main" ++ (if library then ", with the builtins and prelude." else ", empty."))
+
+/-- Names a batch would change: (name, old, new) for every name already bound to something else. -/
+def changes (ns : Map Text Entry) (entries : List (Text, Entry)) : List (Text, Entry, Entry) :=
+  List.filterMap (fun pair =>
+    match pair with
+    | (name, e) =>
+      match Map.lookup name ns with
+      | some old => if old == e then none else some (name, old, e)
+      | none => none) entries
+
+/-- Dependencies of a batch's objects that their layer may not have, as `name (layer) -> name (layer)`. -/
+def layerCrossings (dir : Text) (batch : Batch) : {IO} List Text :=
+  let objects := Map.fromList batch.objects
+  let names := Map.fromList (List.map (fun pair => (Entry.hash (snd pair), fst pair)) batch.entries)
+  let nameOf := fun (h : Text) => Option.getOr (Map.lookup h names) (short h)
+  let formOf := fun (h : Text) => Option.orElse (Map.lookup h objects) (fun _ => Codebase.readObject dir h)
+  List.concatMap (fun pair =>
+    match pair with
+    | (h, form) =>
+      let layer := Codebase.layerOf form
+      List.filterMap (fun dep =>
+        match formOf dep with
+        | some depForm =>
+          let depLayer := Codebase.layerOf depForm
+          if List.any (fun allowed => allowed == depLayer) (Codebase.mayDependOn layer) then none
+          else some (nameOf h ++ " (" ++ layer ++ ") -> " ++ nameOf dep ++ " (" ++ depLayer ++ ")")
+        | none => none) (Codebase.dependencies form)) batch.objects
+
+/--
+  With `--by <agent>` (and `--prompt <file>`), records who produced a change in the provenance
+  layer: the agent, the prompt's SHA-256 and the objects the change wrote.
+-/
+def recordProvenance (dir : Text) (args : Args) (causal : Text) (objects : List Text) : {IO} Unit :=
+  match option args "by" with
+  | none => ()
+  | some agent =>
+    let prompt := match Option.bind (option args "prompt") IO.readFile with
+      | some text => [Sexp.node "prompt" [Sexp.str (Text.sha256 text)]]
+      | none => []
+    let form := Sexp.node "provenance" ([Sexp.node "by" [Sexp.str agent], Sexp.node "at" [Sexp.str (IO.wallClock ())]] ++ prompt ++ [Sexp.node "objects" (List.map Sexp.str objects)])
+    IO.writeFile (dir ++ "/provenance/" ++ causal) (Sexp.print form ++ "\n")
+
+/-- Who produced a causal node, from its provenance record. -/
+def producedBy (dir : Text) (causal : Text) : {IO} Option Text :=
+  Option.bind (IO.readFile (dir ++ "/provenance/" ++ causal)) (fun text =>
+    Option.map Sexp.asText (Codebase.metaField (some (Sexp.read text)) "by"))
+
+/--
+  When a change was made, in seconds since the Unix epoch: its history node's `at` (D165), or
+  else the time this store's provenance recorded (nanoseconds) for a change made here.
+-/
+def madeAt (dir : Text) (causal : Text) : {IO} Option Int :=
+  let fromNode := match Codebase.readObject dir causal with
+    | some form => Int.fromText (Codebase.causalFromSexp form).at
+    | none => none
+  Option.orElse fromNode (fun _ =>
+    Option.bind (IO.readFile (dir ++ "/provenance/" ++ causal)) (fun text =>
+      Option.bind (Codebase.metaField (some (Sexp.read text)) "at") (fun at =>
+        let ns := Sexp.asText at
+        if Text.length ns > 9 then Int.fromText (Text.take (Text.length ns - 9) ns) else none)))
+
+/-- The last path segment without its extension. -/
+def baseName (path : Text) : Text :=
+  let file := Option.getOr (List.last? (Text.split path "/")) path
+  let dot := Text.indexOf file "." 0
+  if dot > 0 then Text.take dot file else file
+
+/--
+  The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
+  `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
+  The document's prose is kept in each block's metadata (D99): its order, the text before it,
+  and on the first block the frontmatter and on the last the text after it, so the codebase holds
+  the whole document and the export writes it back.
+-/
+def specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) :=
+  List.concatMap (fun path =>
+    if not (Text.endsWith ".mdl" path) then []
+    else
+      let text := readSource path
+      let doc := Mdl.parse text
+      let prefix := Option.getOr (List.lookup "name" doc.front) (baseName path)
+      let declared := Mdl.declared doc
+      let blocks := List.filter Mdl.stored doc.blocks
+      let last := List.length blocks - 1
+      match Mdl.prose text with
+      | (leads, tail) =>
+        List.mapIndexed (fun i b =>
+          let uri := Option.getOr (List.lookup b.blockType declared) ""
+          let h := Codebase.put dir (Mdl.toSexp uri b)
+          let front := if i == 0 then [Sexp.node "front" (List.map (fun kv => Sexp.list [Sexp.str (fst kv), Sexp.str (snd kv)]) doc.front)] else []
+          let after := if i == last && not (Text.isEmpty tail) then [Sexp.node "tail" [Sexp.str tail]] else []
+          Codebase.writeMeta dir h (Sexp.node "meta" ([Sexp.node "document" [Sexp.str prefix], Sexp.node "order" [Sexp.int i], Sexp.node "lead" [Sexp.str (Option.getOr (List.get? leads i) "")]] ++ front ++ after))
+          (prefix ++ "." ++ b.blockId, Entry.spec h)) blocks) (expandPaths paths)
+
+/-- A type error's `(calling #<hash prefix>)` with the definition's name, since the checker sees only hashes. -/
+def nameCallee (ns : Map Text Entry) (message : Text) : Text :=
+  let marker := " (calling #"
+  let found := Text.indexOf message marker 0
+  if found < 0 then message
+  else
+    let start := found + Text.length marker
+    let prefix := Text.slice message start (start + 10)
+    match List.find (fun pair => Text.startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
+    | some (name, _) => Text.take (start - 1) message ++ name ++ Text.drop (start + 10) message
+    | none => message
+
+/--
+  Pairs of names in `ns` that bind one `Js.import` object of `batch` at different declared types
+  (Codebase.Spec R-21): Core has no types, so they share the object and the js target its codec.
+-/
+def sharedBindings (dir : Text) (ns : Map Text Entry) (batch : Batch) : {IO} List Text :=
+  match Map.lookup "Js.import" ns with
+  | some (Entry.term jsImport) =>
+    let declared := fun (name : Text) (h : Text) =>
+      match List.find (fun pair => fst pair == h && Option.map Sexp.asText (Codebase.metaField (some (snd pair)) "owner") == some name) batch.metas with
+      | some pair => Codebase.metaField (some (snd pair)) "sig"
+      | none => Option.bind (Codebase.readMeta dir h) (fun meta => Codebase.metaField (some (Codebase.metaFor name meta)) "sig")
+    let objectOf := fun (h : Text) =>
+      match List.find (fun pair => fst pair == h) batch.objects with
+      | some pair => some (snd pair)
+      | none => Codebase.readObject dir h
+    List.dedup (List.sort (List.concatMap (fun pair =>
+      match pair with
+      | (name, Entry.term h) =>
+        match objectOf h with
+        | some (Sexp.list [Sexp.sym "term", core]) =>
+          match JsGen.importOf jsImport core with
+          | some _ =>
+            let mine := declared name h
+            let others := List.filter (fun other => fst other != name && Entry.hash (snd other) == h && declared (fst other) h != mine) (Map.toList ns)
+            List.map (fun other => if name < fst other then name ++ " and " ++ fst other else fst other ++ " and " ++ name) others
+          | none => []
+        | _ => []
+      | _ => []) batch.entries))
+  | _ => []
+
+/-- What an update's sources are recorded against: the namespace and metadata they left (Codebase.Spec R-22). -/
+def sourcesKey (dir : Text) : {IO, Throw Text} Text :=
+  let c := Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))
+  c.snapshot ++ " " ++ c.metas
+
+/-- The recorded sources, when the codebase is still as the last update left it. -/
+def recordedSources (dir : Text) : {IO, Throw Text} Option (Map Text Text) :=
+  match IO.readFile (dir ++ "/cache/update-sources") with
+  | some text =>
+    match Text.lines text with
+    | key :: rows =>
+      if key != sourcesKey dir then none
+      else some (Map.fromList (List.filterMap (fun row =>
+        let i := Text.indexOf row " " 0
+        if i < 0 then none else some (Text.drop (i + 1) row, Text.take i row)) rows))
+    | [] => none
+  | none => none
+
+/--
+  Source files an update can skip: their text is what the last update compiled, and nothing has
+  changed the codebase since, so every definition in them is already current (Codebase.Spec R-22).
+-/
+def unchangedSources (known : Option (Map Text Text)) (sources : List (Text, Text)) : Map Text Unit :=
+  match known with
+  | some recorded => Set.fromList (List.map fst (List.filter (fun pair => Map.lookup (fst pair) recorded == some (snd pair)) sources))
+  | none => Set.empty
+
+/--
+  Records `sources` against the codebase the update left. Earlier rows are dropped: this update may
+  have changed what their files define (Codebase.Spec R-22).
+-/
+def rememberSources (dir : Text) (sources : List (Text, Text)) : {IO, Throw Text} Unit :=
+  IO.mkdirp (dir ++ "/cache")
+  IO.writeFile (dir ++ "/cache/update-sources") (Text.join "\n" (sourcesKey dir :: List.map (fun pair => snd pair ++ " " ++ fst pair) sources) ++ "\n")
+
+/-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
+def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let sources := List.map (fun path => (path, Text.sha256 (readSource path))) (expandPaths args.positional)
+  let known := if isUpdate && not (flag args "fresh") then recordedSources dir else none
+  let skipped := unchangedSources known sources
+  let batch := catch (fun _ => Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources))))
+    (fun e => throw (nameCallee ns e))
+  warn batch
+  let entries := batch.entries ++ specEntries dir args.positional
+  let replaced := changes ns entries
+  let crossings := layerCrossings dir batch
+  let trespasses := match Project.read dir with
+    | some p => Project.trespasses p entries
+    | none => []
+  let shared := sharedBindings dir (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns batch.entries) batch
+  if not (List.isEmpty crossings) then throw ("a layer may not depend on these:\n  " ++ Text.join "\n  " crossings)
+  else if not (List.isEmpty shared) then throw ("these bindings share one object, so they would share one codec; give each its own path or one type:\n  " ++ Text.join "\n  " shared)
+  else if not (List.isEmpty trespasses) then throw ("only a library may mint types under its IRI:\n  " ++ Text.join "\n  " trespasses)
+  else if not isUpdate && not (List.isEmpty replaced) then
+    throw ("these names already exist; use `deus update`:\n  " ++ Text.join "\n  " (List.map (fun c =>
+      match c with
+      | (name, _, _) => name) replaced))
+  else
+    let retagged := Update.metadataChanged ns batch.entries (fun h => Codebase.readMeta dir h) (Map.fromList batch.metas)
+    Codebase.store dir batch
+    let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
+    -- A dropped field, constructor or operation would keep a name that no source declares (R-18).
+    let orphaned := Update.orphans ns entries
+    let ns2 := List.foldl (fun m name => Map.remove name m) (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries) orphaned
+    let subst := Map.fromList (List.map (fun c =>
+      match c with
+      | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
+    let propagated := catch (fun _ => Update.propagate dir ns2 subst (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries)) (checkTypes ()))
+      (fun e => throw (Text.join "\n" (List.map (nameCallee ns2) (Text.split e "\n"))))
+    let ns3 := fst propagated
+    let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
+    let causal := Codebase.commit dir ns3 message
+    if isUpdate then rememberSources dir sources else ()
+    recordProvenance dir args causal (List.map fst batch.objects ++ List.map (fun pair => Entry.hash (snd pair)) (List.filter (fun pair => Entry.kind (snd pair) == "spec") entries))
+    match option args "by" with
+    | some agent => Analytics.recordWrites dir ns3 agent (if isUpdate then "update" else "add") (List.map fst added ++ List.map (fun c =>
+      match c with
+      | (name, _, _) => name) replaced)
+    | none => ()
+    match option args "closes" with
+    | some id =>
+      let t := Tasks.find (Tasks.current dir) id
+      recordProvenance dir args (Tasks.save dir [Tasks.link (Tasks.setField t "state" "done") (Attachment.change causal)] ("close " ++ t.id ++ " by " ++ short causal)) []
+    | none => ()
+    if flag args "quiet" then () else output args
+      (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
+        match c with
+        | (name, _, new) => entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("removed", Json.arr (List.map Json.str orphaned)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
+      (fun _ =>
+        let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
+        let updatedLines := List.map (fun c =>
+          match c with
+          | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
+        let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
+        let metadataLines := List.map (fun name => "  * " ++ name ++ " (metadata)") retagged
+        let removedLines := List.map (fun name => "  - " ++ name ++ " (no longer declared)") orphaned
+        let lines := addedLines ++ updatedLines ++ removedLines ++ metadataLines ++ propagatedLines
+        if List.isEmpty lines then "Nothing changed." else Text.join "\n" lines)
+
+--
+-- Commands: reading the codebase.
+--
+
+def ls (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let prefix := Option.getOr (List.head? args.positional) ""
+  let rows := List.filter (fun pair => Text.startsWith prefix (fst pair)) (Map.toList ns)
+  let width := List.foldl (fun w p => if Text.length (fst p) > w then Text.length (fst p) else w) 0 rows
+  let colour := Highlight.enabled ()
+  let paint := fun (code : Text) (t : Text) => if colour then Highlight.esc ++ "[" ++ code ++ "m" ++ t ++ Highlight.esc ++ "[0m" else t
+  let lines := List.map (fun p => Text.padRight (width + 2) (fst p) ++ paint "36" (Text.padRight 8 (Entry.kind (snd p))) ++ " " ++ paint "2" (short (Entry.hash (snd p)))) rows
+  output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows)) (fun _ => Text.join "\n" lines)
+
+def find (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let query := Option.getOr (List.head? args.positional) ""
+  let rows := List.filter (fun pair => Text.contains query (fst pair)) (Map.toList ns)
+  output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows))
+    (fun _ => Text.join "\n" (List.map (fun p => fst p ++ "  " ++ short (Entry.hash (snd p))) rows))
+
+def names (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (_, e) =>
+    let all := Codebase.namesOf ns (Entry.hash e)
+    output args (fun _ => Json.obj [("hash", Json.str (Entry.hash e)), ("names", Json.arr (List.map Json.str all))]) (fun _ => Text.join "\n" all)
+
+/-- Source text of one entry (a definition, a type, an ability). -/
+def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+  viewEntryWith (Print.printer ns []) dir ns name e core
+
+/-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
+def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+  viewEntryIn base dir ns name e (if core then "core" else "deus")
+
+/-- One entry in a dialect (D70): `deus` (the primary syntax), `ts` (TypeScript-like) or `core`. -/
+def viewEntryIn (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} Text :=
+  match viewParts base dir ns name e dialect with
+  | (header, source) => header ++ source
+
+/--
+  The type a name shows: with other names on its hash, its own signature, since the shared scheme
+  generalizes every sharer's (D116, View.Spec R-4); otherwise the scheme.
+-/
+def ownScheme (meta : Option Sexp) (sharers : Int) : Option Sexp :=
+  match (sharers > 1, Codebase.metaField meta "sig") with
+  | (true, some sig) => some (Types.declaredScheme sig)
+  | _ => Codebase.metaField meta "scheme"
+
+/-- The header comment lines, and the source (empty for a constructor, an operation or a field). -/
+def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} (Text, Text) :=
+  let core := dialect == "core"
+  let ts := dialect == "ts"
+  let h := Entry.hash e
+  let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
+  let comment := if ts then "// " else "-- "
+  let typeLine := match ownScheme meta (List.length (Option.getOr (Map.lookup h base.namesByHash) [])) with
+    | some scheme => comment ++ ": " ++ Types.displaySchemeNamed base.declared scheme ++ "\n"
+    | none => ""
+  let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
+  match e with
+  | Entry.ctor _ _ _ => (header ++ comment ++ "a constructor of " ++ Text.join ", " (Option.getOr (Map.lookup h base.namesByHash) []), "")
+  | Entry.op _ _ _ => (header ++ comment ++ "an operation of " ++ Text.join ", " (Option.getOr (Map.lookup h base.namesByHash) []), "")
+  | _ =>
+    -- A field accessor comes with its structure, so it prints as a note, as constructors do.
+    let owner := Text.join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
+    let isField := match Map.lookup owner ns with
+      | some (Entry.type _ _ fields) => List.contains (Names.lastSegment name) fields
+      | _ => false
+    if isField then (header ++ comment ++ "a field of structure " ++ owner, "")
+    else
+      match Codebase.readObject dir h with
+      | none => if Text.startsWith "#" h then (header ++ comment ++ "builtin", "") else throw ("missing object " ++ h)
+      | some obj =>
+        if core then (header, Sexp.print obj)
+        else
+          let locals := List.map Sexp.asText (Codebase.metaList meta "locals")
+          let p := Print.withSelf (Print.withLocals base locals) h name
+          let doc := Option.map Sexp.asText (Codebase.metaField meta "doc")
+          let display := Names.lastSegment name
+          if ts then
+            (header, match obj with
+              | Sexp.list [Sexp.sym "term", c] => Ts.definition p name c (Codebase.metaField meta "sig") doc
+              | Sexp.list [Sexp.sym "test", c] => Ts.testDecl p name c
+              | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+                Ts.theoremDecl p name types prop proof
+              | Sexp.list (Sexp.sym "type" :: _) => Ts.typeDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "ability" :: _) => Ts.abilityDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+              | _ => Sexp.print obj)
+          else
+            -- Comments come back from metadata: the lead above the declaration, notes inside it (D66).
+            let lead := match Codebase.metaField meta "lead" with
+              | some text => Print.commentLines (Sexp.asText text) 0
+              | none => ""
+            let notes := Print.notesOf meta
+            let spellings := Print.spellingsOf meta
+            -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
+            let docText := match doc with
+              | some d => "/-- " ++ d ++ " -/\n"
+              | none => ""
+            let attrs := List.map (fun a =>
+              match Sexp.asList a with
+              | key :: values => Sexp.asText key ++ Text.concat (List.map (fun v => " " ++ Print.quoteText (Sexp.asText v)) values)
+              | [] => "") (Codebase.metaList meta "attrs")
+            let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
+            (header, lead ++ docText ++ attrText ++ (match obj with
+              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes spellings c) (Codebase.metaField meta "sig") none
+              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes spellings c) [] 0
+              | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
+                View.theoremDecl p name types prop proof
+              | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "ability" :: _) => View.abilityDecl p ns name e obj meta
+              | Sexp.list (Sexp.sym "spec" :: _) => Mdl.render (snd (Mdl.fromSexp obj))
+              | _ => Sexp.print obj))
+
+def view (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  -- One printer for all entries: its name tables cost more to build than printing one definition.
+  let printer := Print.printer ns []
+  let dialect := if flag args "core" then "core" else Option.getOr (option args "dialect") "deus"
+  if dialect == "deus" || dialect == "ts" || dialect == "core" then () else throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
+  -- A spec document's name prints the whole document from its blocks (D99).
+  let documents := Export.specDocuments ns
+  -- (name, kind, hash, text); a document has no hash.
+  let shownFor := fun (name : Text) =>
+    if not (Map.contains name ns) && List.contains name documents then (name, "document", "", Export.document dir ns name)
+    else
+      match lookupName ns name with
+      | (full, e) => (full, Entry.kind e, Entry.hash e, viewEntryIn printer dir ns full e dialect)
+  let views := List.map shownFor args.positional
+  let shown := Text.join "\n\n" (List.map (fun v =>
+    match v with
+    | (_, kind, _, text) => if kind == "document" then text else Highlight.forTerminalIn dialect text) views)
+  output args
+    (fun _ => Json.arr (List.map (fun v =>
+      match v with
+      | (name, kind, h, text) => Json.obj ([("name", Json.str name), ("kind", Json.str kind)] ++ (if Text.isEmpty h then [] else [("hash", Json.str h)]) ++ [("source", Json.str text)])) views))
+    (fun _ => shown)
+
+def deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (name, e) =>
+    let h := Entry.hash e
+    let index := Codebase.nameIndex ns
+    let display := fun (x : Text) => Option.getOr (Map.lookup x index) (short x)
+    let found := if reverse then Update.dependentsOf dir ns h
+      else
+        match Codebase.readObject dir h with
+        | some obj => Codebase.dependencies obj
+        | none => []
+    output args (fun _ => Json.obj [("name", Json.str name), (if reverse then "dependents" else "dependencies", Json.arr (List.map (fun x => Json.obj [("hash", Json.str x), ("name", Json.str (display x))]) found))])
+      (fun _ => Text.join "\n" (List.map display found))
+
+--
+-- Commands: names.
+--
+
+/-- Moves a name and everything under it (`T` moves `T.mk`, `T.field`…). -/
+def mv (args : Args) (keep : Bool) : {IO, Throw Text} Unit :=
+  match args.positional with
+  | [from, to] =>
+    let dir := openCodebase args
+    let ns := Codebase.current dir
+    let moving := List.filter (fun pair => fst pair == from || Text.startsWith (from ++ ".") (fst pair)) (Map.toList ns)
+    if List.isEmpty moving then throw ("unknown name " ++ from)
+    else
+      let renamed := List.map (fun pair => (to ++ Text.drop (Text.length from) (fst pair), snd pair)) moving
+      match List.find (fun pair => Map.contains (fst pair) ns) renamed with
+      | some (taken, _) => throw (taken ++ " already exists")
+      | none =>
+        let without := if keep then ns else List.foldl (fun m pair => Map.remove (fst pair) m) ns moving
+        let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) without renamed
+        let _ := Codebase.commit dir ns2 ((if keep then "alias " else "move ") ++ from ++ " " ++ to)
+        output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) renamed)) (fun _ => Text.join "\n" (List.map (fun p => "  " ++ fst p) renamed))
+  | _ => throw "usage: deus mv <from> <to>"
+
+def rm (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let ns2 := List.foldl (fun m name =>
+    if Map.contains name m then Map.remove name m else throw ("unknown name " ++ name)) ns args.positional
+  let _ := Codebase.commit dir ns2 ("delete " ++ Text.join " " args.positional)
+  output args (fun _ => Json.arr (List.map Json.str args.positional)) (fun _ => "Deleted " ++ Text.join ", " args.positional ++ ".")
+
+--
+-- Commands: branches and history.
+--
+
+def branch (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | [] =>
+    let current := Codebase.currentBranch dir
+    let all := Codebase.branches dir
+    output args (fun _ => Json.obj [("current", Json.str current), ("branches", Json.arr (List.map Json.str all))])
+      (fun _ => Text.join "\n" (List.map (fun b => (if b == current then "* " else "  ") ++ b) all))
+  | [name] =>
+    if not (Codebase.validBranch name) then throw ("invalid branch name " ++ name)
+    else if Option.isSome (Codebase.branchHead dir name) then throw ("branch " ++ name ++ " exists")
+    else
+      Codebase.setBranch dir name (Codebase.headOf dir (Codebase.currentBranch dir))
+      IO.writeFile (dir ++ "/HEAD") (name ++ "\n")
+      output args (fun _ => Json.obj [("branch", Json.str name)]) (fun _ => "Created and switched to branch " ++ name ++ ".")
+  | _ => throw "usage: deus branch [name]"
+
+def switch (args : Args) : {IO, Throw Text} Unit :=
+  match args.positional with
+  | [name] =>
+    let dir := openCodebase args
+    let _ := Codebase.headOf dir name
+    IO.writeFile (dir ++ "/HEAD") (name ++ "\n")
+    output args (fun _ => Json.obj [("branch", Json.str name)]) (fun _ => "Switched to branch " ++ name ++ ".")
+  | _ => throw "usage: deus switch <branch>"
+
+def merge (args : Args) : {IO, Throw Text} Unit :=
+  match args.positional with
+  | [other] =>
+    let dir := openCodebase args
+    match Codebase.merge dir other with
+    | MergeResult.upToDate => output args (fun _ => Json.obj [("result", Json.str "up-to-date")]) (fun _ => "Already up to date.")
+    | MergeResult.fastForward h => output args (fun _ => Json.obj [("result", Json.str "fast-forward"), ("causal", Json.str h)]) (fun _ => "Fast-forwarded to " ++ short h ++ ".")
+    | MergeResult.merged h changed =>
+      output args (fun _ => Json.obj [("result", Json.str "merged"), ("causal", Json.str h), ("changed", Json.arr (List.map Json.str changed))])
+        (fun _ => "Merged " ++ other ++ " (" ++ short h ++ "):\n" ++ Text.join "\n" (List.map (fun x => "  " ++ x) changed))
+    | MergeResult.conflicts names =>
+      output args (fun _ => Json.obj [("result", Json.str "conflicts"), ("names", Json.arr (List.map Json.str names))])
+        (fun _ => "Conflicts; nothing was merged:\n" ++ Text.join "\n" (List.map (fun x => "  " ++ x) names))
+      IO.exit 1
+  | _ => throw "usage: deus merge <branch>"
+
+/--
+  The branch's first-parent history, newest first, as (causal, message, by), followed by the
+  history imported from exports (D67), so a restored codebase shows what came before it.
+-/
+def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, Text, Text) :=
+  let live := Codebase.history dir (Codebase.currentBranch dir) limit
+  let own := List.map (fun pair =>
+    match pair with
+    | (h, c) => (h, c.message, Option.getOr (producedBy dir h) "")) live
+  let imported := List.concatMap (fun pair => if Text.isEmpty (snd pair).prior then [] else Codebase.recordEntries dir (snd pair).prior) live
+  -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => List.reverse acc
+    | entry :: rest =>
+      match entry with
+      | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (List.reverse (unique (List.reverse (own ++ imported)) Set.empty []))
+
+def log (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let limit := Option.getOr (Option.bind (option args "n") Int.fromText) 20
+  let entries := fullLog dir limit
+  output args (fun _ => Json.arr (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) =>
+        Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++ (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++
+          Option.getOr (Option.map (fun seconds => [("at", Json.num seconds)]) (madeAt dir h)) [])) entries))
+    (fun _ => Text.join "\n" (List.map (fun entry =>
+      match entry with
+      | (h, message, agent) =>
+        short h ++ Option.getOr (Option.map (fun seconds => "  " ++ Codebase.utcTime seconds) (madeAt dir h)) "" ++ "  " ++ message ++
+          (if Text.isEmpty agent then "" else "  (by " ++ agent ++ ")")) entries))
+
+/-- Moves the branch back to its first parent; the undone node stays in the store. -/
+def undo (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let branchName := Codebase.currentBranch dir
+  let head := Codebase.headOf dir branchName
+  match (Codebase.readCausal dir head).parents with
+  | parent :: _ =>
+    Codebase.setBranch dir branchName parent
+    output args (fun _ => Json.obj [("causal", Json.str parent)]) (fun _ => "Undid " ++ short head ++ "; now at " ++ short parent ++ ".")
+  | [] => throw "nothing to undo"
+
+/--
+  `deus migrate`: rewrites history so every snapshot is a namespace tree (D72). Causal hashes
+  change, so a remote that already holds the old history should be replaced by a new one.
+-/
+def migrate (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match Codebase.migrate dir with
+  | (nodes, moved) =>
+    let remotes := if IO.isDir (dir ++ "/remotes") then IO.listDir (dir ++ "/remotes") else []
+    let note := if nodes == 0 || List.isEmpty remotes then "" else " Remotes still hold the old history (" ++ Text.join ", " remotes ++ "); push to a new remote to replace them."
+    output args (fun _ => Json.obj [("rewritten", Json.num nodes), ("branches", Json.num moved)])
+      (fun _ => "Rewrote " ++ Int.toText nodes ++ " history nodes; moved " ++ Int.toText moved ++ " branches." ++ note)
+
+/-- `deus layers`: each layer, where it lives, whether it is replicated, and its object count. -/
+def layers (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let counts := List.foldl (fun m h =>
+    match Codebase.readObject dir h with
+    | some form =>
+      let layer := Codebase.layerOf form
+      Map.insert layer (1 + Option.getOr (Map.lookup layer m) 0) m
+    | none => m) Map.empty (Codebase.allObjects dir)
+  let fileCount := fun (sub : Text) => if IO.isDir (dir ++ "/" ++ sub) then List.length (IO.listDir (dir ++ "/" ++ sub)) else 0
+  let rows := List.map (fun layer =>
+    match layer with
+    | (name, place, replicated) =>
+      let count := if place == "objects/" then Option.getOr (Map.lookup name counts) 0 else fileCount (Text.take (Text.length place - 1) place)
+      (name, place, replicated, count)) Codebase.layers
+  output args
+    (fun _ => Json.arr (List.map (fun row =>
+      match row with
+      | (name, place, replicated, count) => Json.obj [("layer", Json.str name), ("path", Json.str place), ("replicated", Json.bool replicated), ("entries", Json.num count)]) rows))
+    (fun _ => Text.join "\n" (List.map (fun row =>
+      match row with
+      | (name, place, replicated, count) => Text.padRight 12 name ++ Text.padRight 14 place ++ Text.padRight 12 (if replicated then "replicated" else "local") ++ Int.toText count) rows))
+
+/--
+  `deus project`: the project's IRI, its libraries, and the size of its subgraph.
+  `deus project init <iri>`: names the codebase's project.
+-/
+def project (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["init", iri] =>
+    match Project.read dir with
+    | some p => throw ("this codebase is already the project " ++ p.projectIri)
+    | none =>
+      Project.write dir (Project.mk iri [])
+      output args (fun _ => Json.obj [("project", Json.str iri)]) (fun _ => "Project " ++ iri ++ " (authority " ++ Project.authority iri ++ ").")
+  | [] =>
+    match Project.read dir with
+    | none => throw "this codebase has no project; run `deus project init <iri>`"
+    | some p =>
+      let parts := Project.subgraph dir (Codebase.current dir)
+      output args
+        (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (Project.authority p.projectIri)), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))),
+          ("libs", Json.arr (List.map (fun l => Json.obj [("name", Json.str l.libName), ("iri", Json.str l.libIri), ("release", Json.str l.release)]) p.libs))])
+        (fun _ => Text.join "\n" ([p.projectIri ++ "  (authority " ++ Project.authority p.projectIri ++ ")",
+          "  owns " ++ Int.toText (List.length (fst parts)) ++ " definitions; " ++ Int.toText (List.length (snd parts)) ++ " come from libraries"] ++
+          List.map (fun l => "  lib." ++ l.libName ++ "  " ++ l.libIri ++ " @ " ++ short l.release) p.libs))
+  | _ => throw "usage: deus project [init <iri>]"
+
+/-- `deus lib install <name> <codebase> [--branch b]`: mounts that project's branch head under `lib.<name>`. -/
+def lib (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["install", name, from] =>
+    let p := match Project.read dir with
+      | some p => p
+      | none => throw "this codebase has no project; run `deus project init <iri>`"
+    let installed := Project.install dir (Codebase.current dir) name from (Option.getOr (option args "branch") "main")
+    match installed with
+    | (l, ns) =>
+      Project.write dir { p with libs := l :: List.filter (fun other => other.libName != name) p.libs }
+      let causal := Codebase.commit dir ns ("lib install " ++ name ++ " " ++ l.libIri ++ " @ " ++ short l.release)
+      output args (fun _ => Json.obj [("lib", Json.str name), ("iri", Json.str l.libIri), ("release", Json.str l.release), ("causal", Json.str causal)])
+        (fun _ => "Installed lib." ++ name ++ " = " ++ l.libIri ++ " @ " ++ short l.release ++ ".")
+  | _ => throw "usage: deus lib install <name> <codebase> [--branch <branch>]"
+
+--
+-- Commands: replication.
+--
+
+/-- The DXOS account's R2 endpoint, so a thread needs only the access keys. -/
+def defaultEndpoint : Text := "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com"
+
+def toolchainIri : Text := "https://dxos.org/deus/toolchain"
+/-- The shared remote, served by the DEUS Worker over its private bucket (D164); its explorer is the Worker's `/`. -/
+def toolchainRemote : Text := "https://deus.dmytro-a80.workers.dev/v1/toolchain"
+
+/--
+  The remote the toolchain's own codebase has when none is configured: `origin`, which every
+  thread pulls and pushes.
+-/
+def defaultRemote (dir : Text) (name : Text) : {IO} Option Text :=
+  match Project.read dir with
+  | some p => if p.projectIri == toolchainIri && name == "origin" then some toolchainRemote else none
+  | none => none
+
+/-- Whether `name` reaches the shared toolchain remote, configured or by default. -/
+def isToolchainRemote (dir : Text) (name : Text) : {IO} Bool :=
+  let configured := Option.map Text.trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))
+  Option.getOr (Option.orElse configured (fun _ => defaultRemote dir name)) "" == toolchainRemote
+
+/--
+  Runs `body` against the remote `name`: a directory, `https://<host>/v1/<project>` (the DEUS
+  Worker, D164; writes send `$DEUS_API_KEY`), or `r2://<bucket>/<prefix>` (an S3-compatible bucket
+  at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID` and
+  `$R2_SECRET_ACCESS_KEY`).
+-/
+def withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw Text} a) : {IO, Throw Text} a :=
+  let url := match IO.readFile (dir ++ "/remotes/" ++ name ++ "/url") with
+    | some text => Text.trim text
+    | none =>
+      match defaultRemote dir name with
+      | some known => known
+      | none => throw ("no remote " ++ name ++ "; run `deus remote add " ++ name ++ " <dir|https://host/v1/project|r2://bucket/prefix>`")
+  if Text.startsWith "https://" url || Text.startsWith "http://" url then
+    -- Reads need no key; without one, a write gets the Worker's 401, which says what to set.
+    let config := dir ++ "/cache/remote-" ++ name ++ ".curl"
+    IO.mkdirp (dir ++ "/cache")
+    IO.exec "install" ["-m", "600", "/dev/null", config]
+    IO.writeFile config (match IO.getEnv "DEUS_API_KEY" with
+      | some key => "header = \"authorization: Bearer " ++ Text.trim key ++ "\"\n"
+      | none => "")
+    let result := try (fun _ => Replicate.http (if Text.endsWith "/" url then Text.take (Text.length url - 1) url else url) config body)
+    IO.remove config
+    match result with
+    | Result.ok value => value
+    | Result.err message => throw message
+  else if Text.startsWith "r2://" url then
+    let path := Text.drop 5 url
+    let slash := Text.indexOf path "/" 0
+    let bucketName := if slash < 0 then path else Text.take slash path
+    let prefix := if slash < 0 then "deus" else Text.drop (slash + 1) path
+    let need := fun (key : Text) => match IO.getEnv key with
+      | some value => value
+      | none => throw ("$" ++ key ++ " is not set")
+    let endpoint := Option.getOr (IO.getEnv "DEUS_R2_ENDPOINT") defaultEndpoint
+    let user := need "R2_ACCESS_KEY_ID" ++ ":" ++ need "R2_SECRET_ACCESS_KEY"
+    -- The file is made private before the secret is written to it.
+    let config := dir ++ "/cache/remote-" ++ name ++ ".curl"
+    IO.mkdirp (dir ++ "/cache")
+    IO.exec "install" ["-m", "600", "/dev/null", config]
+    IO.writeFile config ("user = \"" ++ user ++ "\"\n")
+    let result := try (fun _ => Replicate.bucket endpoint bucketName prefix config body)
+    IO.remove config
+    match result with
+    | Result.ok value => value
+    | Result.err message => throw message
+  else Replicate.directory url body
+
+/-- `deus remote add <name> <dir|https://host/v1/project|r2://bucket/prefix>` / `deus remote`: configure remotes. -/
+def remote (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["add", name, url] =>
+    if not (Codebase.validBranch name) then throw ("invalid remote name " ++ name)
+    else
+      IO.writeFile (dir ++ "/remotes/" ++ name ++ "/url") (url ++ "\n")
+      output args (fun _ => Json.obj [("remote", Json.str name), ("url", Json.str url)]) (fun _ => "Added remote " ++ name ++ " = " ++ url ++ ".")
+  | [] =>
+    let names := if IO.isDir (dir ++ "/remotes") then IO.listDir (dir ++ "/remotes") else []
+    let urls := List.map (fun n => (n, Text.trim (Option.getOr (IO.readFile (dir ++ "/remotes/" ++ n ++ "/url")) ""))) names
+    output args (fun _ => Json.arr (List.map (fun p => Json.obj [("remote", Json.str (fst p)), ("url", Json.str (snd p))]) urls))
+      (fun _ => Text.join "\n" (List.map (fun p => fst p ++ "  " ++ snd p) urls))
+  | _ => throw "usage: deus remote [add <name> <dir|https://host/v1/project|r2://bucket/prefix>]"
+
+def remoteName (args : Args) : Text := Option.getOr (List.head? args.positional) "origin"
+
+/-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. -/
+def push (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let branch := Option.getOr (option args "branch") (Codebase.currentBranch dir)
+  let pushed := withRemote dir name (fun _ =>
+    let bundle := Replicate.push dir name branch
+    let _ := Replicate.pushAssets dir
+    bundle)
+  -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch;
+  -- so does the shared toolchain remote on main, from whichever store pushes to it (D150, D164).
+  let siteOf := fun (target : Text) =>
+    let out := dir ++ "/cache/site-" ++ target
+    -- A site published with its console keeps it, on the codebase as pushed (D84).
+    let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir target)) "") then Explorer.console dir out else 0
+    let _ := Explorer.generate dir out
+    snd (publishSite dir target out false)
+  let onMain := branch == Codebase.currentBranch dir && branch == "main"
+  let targets := if IO.exists (siteManifest dir name) || (onMain && isToolchainRemote dir name) then [name] else []
+  let site := if branch == Codebase.currentBranch dir && not (List.isEmpty targets) then some (List.sum (List.map siteOf targets)) else none
+  let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
+  let siteText := Option.getOr (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site) ""
+  match pushed with
+  | some bundle => output args (fun _ => Json.obj ([("bundle", Json.str bundle)] ++ siteJson)) (fun _ => "Pushed " ++ branch ++ " to " ++ name ++ " as " ++ bundle ++ "." ++ siteText)
+  | none => output args (fun _ => Json.obj ([("bundle", Json.null)] ++ siteJson)) (fun _ => name ++ " already has " ++ branch ++ "." ++ siteText)
+
+/-- `deus pull [remote]`: imports new bundles and moves `<remote>.<branch>` to the remote's heads. -/
+def pull (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let branches := withRemote dir name (fun _ =>
+    let pulled := Replicate.pull dir name
+    let _ := Replicate.pullAssets dir
+    pulled)
+  output args
+    (fun _ => Json.arr (List.map (fun b => Json.obj [("branch", Json.str (fst b)), ("heads", Json.arr (List.map Json.str (snd b)))]) branches))
+    (fun _ => Text.join "\n" (List.map (fun b =>
+      match b with
+      | (branch, [h]) => name ++ "." ++ branch ++ "  " ++ short h
+      | (branch, hs) => name ++ "." ++ branch ++ "  " ++ Int.toText (List.length hs) ++ " heads (concurrent pushes); merge " ++ name ++ "." ++ branch ++ ".2 to join them") branches))
+
+/--
+  `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
+  bundles. It never drops history: a bundle goes only once strata hold all its objects (D73).
+-/
+def compact (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
+  if Map.contains "keep" args.options then throw "compact keeps the whole history (D73); there is no --keep"
+  else
+    match withRemote dir name (fun _ => Replicate.compact dir name level) with
+    | (written, deleted) =>
+      output args (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
+        (fun _ => "Wrote " ++ Int.toText (List.length written) ++ " level-" ++ Int.toText level ++ " bundles; deleted " ++ Int.toText (List.length deleted) ++ ".")
+
+--
+-- Commands: running.
+--
+
+/-- Objects for images and the machine: a cached `@[artifact]` constant is its kept value (Artifact.Spec R-4). -/
+def fetcher (dir : Text) : Text -> {IO} Option Sexp := fun h =>
+  match cachedValue dir h with
+  | some value => some (Sexp.node "term" [value])
+  | none => Codebase.readObject dir h
+
+/-- The value kept for the `@[artifact]` constant `h`, as Core; `none` until it is evaluated (Artifact.Spec). -/
+def cachedValue (dir : Text) (h : Text) : {IO} Option Sexp := Option.map Sexp.read (IO.readFile (artifactPath dir h))
+
+def artifactPath (dir : Text) (h : Text) : Text := dir ++ "/artifacts/value-" ++ h
+
+/-- Whether `h` is marked `@[artifact]`; the text test first spares parsing every definition's metadata. -/
+def isArtifact (dir : Text) (h : Text) : {IO} Bool :=
+  match IO.readFile (dir ++ "/meta/" ++ h) with
+  | some text => Text.contains "artifact" text && Check.hasAttr dir h "artifact"
+  | none => false
+
+/-- Evaluates every uncached `@[artifact]` constant `roots` reach and keeps its value; returns their hashes. -/
+def ensureArtifacts (dir : Text) (roots : List Text) : {IO, Throw Text} List Text :=
+  let wanted := List.filter (fun h => isArtifact dir h && Option.isNone (cachedValue dir h))
+    (List.map fst (Image.closure (fun h => Codebase.readObject dir h) roots))
+  List.map (fun h => evaluateArtifact dir h ("#" ++ short h)) wanted
+
+/-- Evaluates the constant `h` and keeps its value; `label` names it in the error a function gets (R-5). -/
+def evaluateArtifact (dir : Text) (h : Text) (label : Text) : {IO, Throw Text} Text :=
+  let quoted := match embeddedAsset dir h with
+    | some (kind, sha) =>
+      if not (Assets.has dir sha) then throw (label ++ " embeds the file " ++ sha ++ ", which is not in the asset store")
+      else if kind == "bytes" then
+        match Map.lookup "Embed.fromLatin1" (Codebase.current dir) with
+        | some e => "(app (ref \"" ++ Entry.hash e ++ "\") " ++ Code.quote (Text.fromCodes (assetBytes dir sha)) ++ ")"
+        | none => throw (label ++ " embeds a binary file, which needs Embed.fromLatin1 in the codebase")
+      else Code.quote (Option.getOr (IO.readFile (Assets.path dir sha)) "")
+    | none =>
+      Image.load (fun x => Codebase.readObject dir x) [h]
+      Code.quote (Code.run h)
+  if Text.contains "(prim \"<function>\")" quoted then throw (label ++ " is a function; an @[artifact] must be a first-order constant")
+  else
+    IO.mkdirp (dir ++ "/artifacts")
+    IO.writeFile (artifactPath dir h) (quoted ++ "\n")
+    h
+
+/--
+  `deus artifact <name> [--out file]`: evaluates an `@[artifact]` constant once and keeps its value
+  under its hash (task 88004c30); `--out` writes a Text value's characters to a file.
+-/
+def artifact (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let name := Option.getOr (List.head? args.positional) ""
+  match lookupName ns name with
+  | (_, Entry.term h) =>
+    if not (isArtifact dir h) then throw (name ++ " is not marked @[artifact]") else ()
+    let fresh := Option.isNone (cachedValue dir h)
+    let _ := if fresh then evaluateArtifact dir h name else h
+    match (option args "out", cachedValue dir h) with
+    | (some out, some (Sexp.list [Sexp.sym "text", Sexp.str value])) => IO.writeFile out value
+    | (some _, _) => throw (name ++ " is not a Text value, so --out cannot write it")
+    | _ => ()
+    if flag args "quiet" then () else output args (fun _ => Json.obj [("name", Json.str name), ("hash", Json.str h), ("evaluated", Json.bool fresh)])
+      (fun _ => (if fresh then "Evaluated and kept " else "Already kept ") ++ name ++ " " ++ short h ++ ".")
+  | _ => throw "usage: deus artifact <constant> [--out file]"
+
+/--
+  The asset an embedded constant names, with its kind: its body is exactly `Embed.text "<sha256>"`
+  (Artifact.Spec R-6) or `Embed.bytes "<sha256>"` (R-10).
+-/
+def embeddedAsset (dir : Text) (h : Text) : {IO, Throw Text} Option (Text, Text) :=
+  match Codebase.readObject dir h with
+  | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "ref", Sexp.str callee], Sexp.list [Sexp.sym "text", Sexp.str sha]]]) =>
+    let ns := Codebase.current dir
+    let names := fun kind => Option.map Entry.hash (Map.lookup ("Embed." ++ kind) ns) == some callee
+    if names "text" then some ("text", sha) else if names "bytes" then some ("bytes", sha) else none
+  | _ => none
+
+/-- An asset's bytes; the kernel reads files only as text, so `od` lists them. -/
+def assetBytes (dir : Text) (sha : Text) : {IO, Throw Text} List Int :=
+  match IO.exec "od" ["-An", "-v", "-tu1", Assets.path dir sha] with
+  | (0, out, _) => List.filterMap Int.fromText (Text.split (Text.replace "\n" " " out) " ")
+  | (_, _, err) => throw ("cannot read the embedded file " ++ sha ++ ": " ++ Text.trim err)
+
+/--
+  `deus embed <file> --as <Name>` keeps the file's text in the asset store under its SHA-256 and
+  defines `Name` as `Embed.text "<sha256>"`, so git carries the hash and never the text (task 88004c30).
+-/
+def embed (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match (args.positional, option args "as") with
+  | ([file], some name) =>
+    let binary := flag args "bytes"
+    let sha := if binary then (Assets.add dir file).hash else addText dir file
+    let kind := if binary then "bytes" else "text"
+    let valueType := if binary then "List Int" else "Text"
+    let source := dir ++ "/cache/embed.deus"
+    IO.mkdirp (dir ++ "/cache")
+    IO.writeFile source ("/-- Embedded from " ++ Assets.baseName file ++ " (deus embed). -/\n@[artifact]\ndef " ++ name ++ " : " ++ valueType ++ " := Embed." ++ kind ++ " \"" ++ sha ++ "\"\n")
+    let author := match option args "by" with
+      | some agent => ["--by", agent]
+      | none => []
+    addOrUpdate (parseArgs ([source, "--codebase", dir, "--quiet"] ++ author)) true
+    IO.remove source
+    if flag args "quiet" then () else output args (fun _ => Json.obj [("name", Json.str name), ("sha256", Json.str sha)])
+      (fun _ => "Embedded " ++ file ++ " as " ++ name ++ " " ++ Text.take 10 sha ++ ".")
+  | _ => throw "usage: deus embed <file> --as <Name> [--bytes]"
+
+/-- Keeps a text file in the asset store under the SHA-256 of its text; the kernel hashes text, so no host tool runs. -/
+def addText (dir : Text) (file : Text) : {IO, Throw Text} Text :=
+  match IO.readFile file with
+  | none => throw ("no file " ++ file)
+  | some text =>
+    let sha := Text.sha256 text
+    if Assets.has dir sha then ()
+    else
+      IO.mkdirp (dir ++ "/assets")
+      IO.writeFile (Assets.path dir sha) text
+    sha
+
+/-- The last defect's stack as `    at <hash>` lines, stable enough to cache with a verdict. -/
+def defectTrace (u : Unit) : Text :=
+  Text.join "" (List.map (fun h => "\n    at " ++ h) (Code.defectTrace ()))
+
+/--
+  Replaces the hashes in `    at <hash>` lines with names from the codebase, and drops lines for
+  definitions the codebase does not name (the toolchain's own handlers).
+-/
+def nameTrace (index : Map Text Text) (text : Text) : Text :=
+  Text.join "\n" (List.filterMap (fun l =>
+    if Text.startsWith "    at " l then Option.map (fun name => "    at " ++ name) (Map.lookup (Text.drop 7 l) index)
+    else some l) (Text.split text "\n"))
+
+/--
+  `deus run <name> [args…]`: runs `name ()` with `IO.args` answering the remaining arguments.
+  Telemetry goes to stderr as JSON lines, or as OTLP/JSON files under `$DEUS_OTLP`.
+-/
+def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match rest with
+  | [] => throw "usage: deus run <name> [args…]"
+  | name :: programArgs =>
+    match lookupName ns name with
+    | (_, Entry.term h) =>
+      let _ := ensureArtifacts dir [h]
+      Image.load (fetcher dir) [h]
+      let f := Code.run h
+      -- External artifacts are cached in the codebase's cache layer, by hash.
+      let program := fun (u : Unit) =>
+        External.docker (fun _ => External.fetching (dir ++ "/cache/fetch") (fun _ =>
+          handle f () with
+          | IO.args _ -> k => k programArgs))
+      let observed := fun (u : Unit) =>
+        match IO.getEnv "DEUS_OTLP" with
+        | some out => Observe.otlp out name program
+        | none => Observe.ndjson program
+      handle observed () with
+      | Defect.raise message -> _ =>
+        IO.eprint ("defect: " ++ nameTrace (Codebase.nameIndex ns) (message ++ defectTrace ()) ++ "\n")
+        IO.exit 70
+    | _ => throw (name ++ " is not a term")
+
+/-- Compiles `def it := <source>` against the codebase and loads it; returns its hash. -/
+def compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Text :=
+  (compileTyped dir ns source).compiledHash
+
+/-- A loaded expression: its hash, its type, and the data types its value may hold, for `quoteAt`. -/
+structure Compiled where
+  compiledHash : Text
+  compiledType : Sexp
+  compiledTypes : Map Text (Text, Sexp)
+
+/-- Compiles `def it := <source>` against the codebase and loads it. -/
+def compileTyped (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw Text} Compiled :=
+  let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" ("def it := " ++ source)]
+  match List.lookup "it" batch.entries with
+  | some (Entry.term h) =>
+    let objects := Map.fromList batch.objects
+    let fetch := fun (x : Text) => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)
+    Image.load fetch [h]
+    Compiled.mk h (Wasm.storedType (List.lookup h batch.metas)) (dataTypes fetch h)
+  | _ => throw ("cannot compile " ++ source)
+
+/-- The data types a value of definition `h` may hold, by IRI: the built-in ones and those its code constructs. -/
+def dataTypes (fetch : Text -> {IO, Throw Text} Option Sexp) (h : Text) : {IO, Throw Text} Map Text (Text, Sexp) :=
+  let hashes := ["#Unit", "#Bool", "#List", "#Option", "#Pair"] ++ List.dedup (List.foldl (fun acc pair => Image.nominal (snd pair) acc) [] (Image.closure fetch [h]))
+  Map.fromList (List.filterMap (fun x =>
+    match fetch x with
+    | some (Sexp.list (Sexp.sym "type" :: Sexp.str iri :: rest)) => some (iri, (x, Sexp.list (Sexp.sym "type" :: Sexp.str iri :: rest)))
+    | _ => none) hashes)
+
+/-- The constructors' field types of data type `t`, and the hash its constructors name, if `types` has it. -/
+def ctorsOf (types : Map Text (Text, Sexp)) (t : Sexp) : Option (Text, List (List Sexp)) :=
+  match Option.bind (Wasm.headName t) (fun n => Map.lookup n types) with
+  | some (hash, form) =>
+    let ctors := Wasm.ctorFields form
+    if List.isEmpty ctors then none else some (hash, List.map (List.map (Wasm.instantiate (Wasm.typeArgs t))) ctors)
+  | none => none
+
+/--
+  `value`, of type `t`, as Core text (D146). It is walked by its type, since a native build's values
+  do not carry their constructors' types: a Bool and an Int are the same words there, and so are the
+  nullary constructors of different types. A value whose type it does not know is quoted as it is.
+-/
+def quoteAt (types : Map Text (Text, Sexp)) (t : Sexp) (value : a) : Text :=
+  if t == Wasm.tref "#Int" then "(int " ++ Int.toText (Code.cast value) ++ ")"
+  else if t == Wasm.tref "#Text" then "(text " ++ Sexp.print (Sexp.str (Code.cast value)) ++ ")"
+  else if t == Wasm.tref "#Bool" then "(con \"#Bool\" " ++ Int.toText (Code.tag value) ++ " 0)"
+  else
+    match ctorsOf types t with
+    | some (hash, ctors) =>
+      let tag := Code.tag value
+      let fields := Option.getOr (List.get? ctors tag) []
+      let con := "(con " ++ Sexp.print (Sexp.str hash) ++ " " ++ Int.toText tag ++ " " ++ Int.toText (List.length fields) ++ ")"
+      if List.isEmpty fields then con
+      else "(app " ++ con ++ Text.concat (List.mapIndexed (fun i f => " " ++ quoteAt types f (Code.field value i)) fields) ++ ")"
+    | none => Code.quote value
+
+/-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it; the expression may perform `Workspace`. -/
+def eval (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let text := evaluate dir (forwarded args) (Text.join " " args.positional)
+  output args (fun _ => Json.obj [("value", Json.str text)]) (fun _ => text)
+
+/-- The options a command run under `Workspace` passes on: the codebase and the author. -/
+def forwarded (args : Args) : List Text :=
+  List.concatMap (fun key =>
+    match option args key with
+    | some value => ["--" ++ key, value]
+    | none => []) ["codebase", "by"]
+
+/-- `source` compiled against `dir` and run with `Workspace` handled; the value as source. -/
+def evaluate (dir : Text) (passed : List Text) (source : Text) : {IO, Throw Text} Text :=
+  let compiled := compileTyped dir (Codebase.current dir) source
+  let value := withWorkspace dir passed (fun _ => Code.run compiled.compiledHash)
+  Print.expr (Print.printer (Codebase.current dir) []) (Sexp.read (quoteAt compiled.compiledTypes compiled.compiledType value)) [] 0 0
+
+/-- Runs `body` with `Workspace` handled against `dir`; `passed` goes to every command it runs. -/
+def withWorkspace (dir : Text) (passed : List Text) (body : Unit -> {Workspace, IO, Throw Text} a) : {IO, Throw Text} a :=
+  handle body () with
+  | Workspace.names prefix -> k => k (List.filter (fun name => Text.startsWith prefix name) (Map.keys (Codebase.current dir)))
+  | Workspace.view name -> k =>
+    let ns := Codebase.current dir
+    k (match lookupName ns name with
+      | (full, e) => viewEntryIn (Print.printer ns []) dir ns full e "deus")
+  | Workspace.update source -> k =>
+    -- The source goes through a file, as `deus update` reads one.
+    IO.mkdirp (dir ++ "/tmp")
+    let path := dir ++ "/tmp/workspace-" ++ Text.take 16 (Text.sha256 source) ++ ".deus"
+    IO.writeFile path source
+    addOrUpdate (parseArgs ([path, "--quiet"] ++ passed)) true
+    IO.remove path
+    k ()
+  | Workspace.run argv -> k =>
+    dispatch (argv ++ passed)
+    k ()
+
+--
+-- Commands: documents.
+--
+
+/-- Runs `f ()` and turns a defect into `err`. -/
+def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
+  handle Result.ok (f ()) with
+  | Defect.raise message -> _ => Result.err message
+
+/--
+  What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
+  source, and for a test or a theorem its verdict (checked now unless a result is cached).
+-/
+def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+  let printer := facts.printer
+  match Map.lookup name ns with
+  | none => throw (name ++ " is not in the codebase")
+  | some e =>
+    let h := Entry.hash e
+    let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
+    let typed := match ownScheme meta (List.length (Option.getOr (Map.lookup h printer.namesByHash) [])) with
+      | some scheme => [("type", Types.displaySchemeNamed printer.declared scheme)]
+      | none => []
+    let verdict := match Check.verdictOf dir ns e with
+      | some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", Int.toText cases)]
+      | some (Verdict.fail reason) => [("verdict", "fail"), ("reason", reason)]
+      | some Verdict.unchecked => [("verdict", "unchecked")]
+      | none => []
+    -- Specs name things in full, so the statement prints every reference by its full name.
+    let statement := match Codebase.readObject dir h with
+      | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
+        let base := Print.withLocals printer (List.map Sexp.asText (Codebase.metaList meta "locals"))
+        let full := Printer.mk base.fullNames base.fullNames facts.fullTypes Map.empty base.declared base.namesByHash base.supply base.fresh
+        let decl := View.theoremDecl full name types prop proof
+        let stop := Text.indexOf decl " := " 0
+        [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
+      | some (Sexp.list [Sexp.sym "term", core]) => if Resolve.isStub core then [("implemented", "false")] else []
+      | _ => []
+    [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.withLocals printer []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
+
+/--
+  What every block of a `deus mdl` run reads from the namespace, built once: each lookup walked the
+  whole namespace, once per name an api block named.
+-/
+structure MdlFacts where
+  printer : Printer
+  fullTypes : Map Text Text
+  documents : List Text
+
+def mdlFacts (ns : Map Text Entry) : MdlFacts :=
+  let fullTypes := Map.fromList (List.filterMap (fun pair =>
+    match pair with
+    | (n, Entry.type _ iri _) => some (iri, n)
+    | (n, Entry.ability _ iri) => some (iri, n)
+    | _ => none) (Map.toList ns))
+  MdlFacts.mk (Print.printer ns []) fullTypes (Export.specDocuments ns)
+
+/--
+  Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
+  `facts` are `ns`'s, built once per run: its name tables cost more than describing a name.
+-/
+def withHost (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+  let tasks := Ref.new none
+  let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
+  handle body () with
+  | MdlHost.cost source -> k =>
+    k (match compiled ("fun (u : Unit) => " ++ source) with
+      | Result.ok h => guardDefect (fun _ => Code.cost (Code.run h))
+      | Result.err message => Result.err message)
+  | MdlHost.holds source -> k =>
+    k (match compiled source with
+      | Result.ok h => guardDefect (fun _ => Code.run h)
+      | Result.err message => Result.err message)
+  | MdlHost.run source -> k =>
+    k (match compiled source with
+      | Result.ok h => guardDefect (fun _ => Code.run h)
+      | Result.err message => Result.err message)
+  | MdlHost.js source -> k => k (jsCompare dir ns source)
+  | MdlHost.describe name -> k =>
+    k (if Text.startsWith "statement:" name then statementFact dir ns (Text.drop 10 name) else match featureFact dir facts.documents tasks name with
+      | some answer => answer
+      | none =>
+        match guardDefect (fun _ => try (fun _ => describeName dir ns facts name)) with
+        | Result.ok r => r
+        | Result.err message => Result.err message)
+
+/--
+  `statement:<theorem>\n<claim>`: whether the claim, compiled as the theorem's statement, is the
+  one it states (Compile.Spec R-19); comparing Core accepts any spelling of the same claim.
+-/
+def statementFact (dir : Text) (ns : Map Text Entry) (query : Text) : {IO} Result Text (List (Text, Text)) :=
+  let i := Text.indexOf query "\n" 0
+  let name := Text.take i query
+  let stated := Text.trim (Text.drop (i + 1) query)
+  let header := if Text.startsWith "(" stated || Text.startsWith ":" stated then stated else ": " ++ stated
+  let claim := fun (form : Option Sexp) =>
+    match form with
+    | some (Sexp.list (Sexp.sym "theorem" :: binders :: prop :: _)) => some (binders, prop)
+    | _ => none
+  let compiled := guardDefect (fun _ => try (fun _ =>
+    let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<statement>" ("theorem " ++ name ++ " " ++ Text.replace " = " " == " header ++ " := sorry\n")]
+    match List.lookup name batch.entries with
+    | some (Entry.theorem h) => Option.orElse (List.lookup h batch.objects) (fun _ => Codebase.readObject dir h)
+    | _ => none))
+  match (compiled, Map.lookup name ns) with
+  | (Result.ok (Result.ok form), some (Entry.theorem h)) =>
+    let same := Option.isSome (claim form) && claim form == claim (Codebase.readObject dir h)
+    Result.ok [("kind", "statement"), ("same", if same then "true" else "false")]
+  | (Result.ok (Result.err message), _) => Result.err ("the spec's statement does not compile: " ++ message)
+  | (Result.err message, _) => Result.err ("the spec's statement does not compile: " ++ message)
+  | _ => Result.err (name ++ " is not a theorem")
+
+/-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
+def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
+  Map.fromList (List.concatMap (fun pair =>
+    match snd pair with
+    | Entry.term h =>
+      List.filterMap (fun a =>
+        match a with
+        | Sexp.list [Sexp.str "ext", Sexp.str uri] => some (uri, h)
+        | _ => none) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
+    | _ => []) (Map.toList ns))
+
+/-- One block's outcome: `ok`, `fail` with its problems, `gap` when every problem is a known gap, or `unchecked` when no extension is found. -/
+structure Outcome where
+  place : Text
+  verdict : Text
+  problems : List Text
+
+/-- Runs one block through the extension `uri` names in the codebase; unchecked when there is none. -/
+def checkBlock (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
+  match Option.bind uri (fun u => Map.lookup u byUri) with
+  | none => Outcome.mk place "unchecked" []
+  | some h =>
+    Image.load (fetcher dir) [h]
+    let check := Code.run h
+    match withHost dir ns facts (fun _ => guardDefect (fun _ => check b)) with
+    | Result.ok [] => Outcome.mk place "ok" []
+    -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
+    | Result.ok problems => Outcome.mk place (if List.all (fun p => Text.startsWith "gap: " p) problems then "gap" else "fail") problems
+    | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
+
+/-- Checks one document: the core rules, then each block through its extension. -/
+def checkDoc (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
+  let doc := Mdl.parse (readSource path)
+  let core := Mdl.validate doc
+  let declared := Mdl.declared doc
+  let outcomes := List.map (fun b =>
+    checkBlock dir ns facts byUri (path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b) (List.lookup b.blockType declared) b)
+    (List.filter (fun b => b.blockType != "ext") doc.blocks)
+  if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
+
+/-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
+def checkSpecs (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+  let wanted := if List.isEmpty documents then facts.documents else documents
+  let orderOf := fun (h : Text) =>
+    match Codebase.metaField (Codebase.readMeta dir h) "order" with
+    | some (Sexp.int k) => k
+    | _ => 1000000
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => some (Export.documentOf name, name, h)
+    | _ => none) (Map.toList ns)
+  List.concatMap (fun d =>
+    let mine := List.filterMap (fun x =>
+      match x with
+      | (doc, name, h) => if doc == d then some (orderOf h, name, h) else none) blocks
+    List.filterMap (fun x =>
+      match x with
+      | (_, name, h) =>
+        Option.map (fun form =>
+          match Mdl.fromSexp form with
+          | (uri, b) => checkBlock dir ns facts byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h))
+      (List.sortBy (fun a b =>
+        match (a, b) with
+        | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
+
+/--
+  What `MdlHost.describe` says about `task:<id>` (its state and title) and `spec:<Doc>` names, which
+  feature blocks link (D118), and `vitest:<file> > <test>` evidence; `none` for any other name. `tasks` caches the branch's tasks, read on
+  first use.
+-/
+def featureFact (dir : Text) (documents : List Text) (tasks : Ref (Option (Map Text Task))) (name : Text) : {IO} Option (Result Text (List (Text, Text))) :=
+  if Text.startsWith "task:" name then
+    let all := match Ref.get tasks with
+      | some known => known
+      | none =>
+        let known := match try (fun _ => Tasks.current dir) with
+          | Result.ok found => found
+          | Result.err _ => Map.empty
+        Ref.set tasks (some known)
+        known
+    some (match Map.lookup (Text.drop 5 name) all with
+      | some t => Result.ok [("kind", "task"), ("state", Tasks.stateText t.state), ("title", t.title)]
+      | none => Result.err (name ++ " is not in the codebase"))
+  else if Text.startsWith "spec:" name then
+    some (if List.contains (Text.drop 5 name) documents then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase"))
+  else if Text.startsWith "vitest:" name then some (vitestFact (Text.drop 7 name))
+  else none
+
+/-- `vitest:<file> > <test>` evidence: the file must declare that test; the suite runs it (Compile.Spec R-17). -/
+def vitestFact (cited : Text) : {IO} Result Text (List (Text, Text)) :=
+  let i := Text.indexOf cited " > " 0
+  if i < 0 then Result.err ("vitest:" ++ cited ++ " names no test: write vitest:<file> > <test name>")
+  else
+    let file := Text.trim (Text.take i cited)
+    let testName := Text.trim (Text.drop (i + 3) cited)
+    let home := Option.map (fun dir => dir ++ "/" ++ file) (IO.getEnv "DEUS_HOME")
+    let source := match IO.readFile file with
+      | some text => some text
+      | none => Option.bind home IO.readFile
+    match source with
+    | none => Result.err ("vitest:" ++ cited ++ ": no file " ++ file)
+    | some text =>
+      let declares := fun call => List.any (fun quote => Text.contains (call ++ "(" ++ quote ++ testName ++ quote) text) ["'", "\"", "`"]
+      if declares "test" || declares "it" then Result.ok [("kind", "vitest"), ("verdict", "external"), ("file", file)]
+      else Result.err ("vitest:" ++ cited ++ ": " ++ file ++ " declares no test named " ++ testName)
+
+/-- A document's `feature` blocks as features, in document order, with the blocks that do not parse. -/
+def featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} (List Feature, List Text) :=
+  let orderOf := fun (h : Text) =>
+    match Codebase.metaField (Codebase.readMeta dir h) "order" with
+    | some (Sexp.int k) => k
+    | _ => 1000000
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) =>
+      if Export.documentOf name != d then none
+      else Option.bind (Codebase.readObject dir h) (fun form =>
+        match Mdl.fromSexp form with
+        | (_, b) => if b.blockType == "feature" then some (orderOf h, b) else none)
+    | _ => none) (Map.toList ns)
+  let sorted := List.map snd (List.sortBy (fun a b => compare (fst a) (fst b)) blocks)
+  List.foldl (fun acc b =>
+    match (acc, Features.fromBlock b) with
+    | ((fs, bad), Result.ok f) => (fs ++ [f], bad)
+    | ((fs, bad), Result.err found) => (fs, bad ++ List.map (fun p => b.blockId ++ ": " ++ p) found)) ([], []) sorted
+
+/-- What `deus features` knows about a name: a definition's kind and whether it is only declared, a task, or a spec document. -/
+def featureFacts (dir : Text) (ns : Map Text Entry) : {IO} Text -> {IO, Throw Text} Result Text (List (Text, Text)) :=
+  let tasks := Ref.new none
+  let documents := Export.specDocuments ns
+  fun (name : Text) =>
+    match featureFact dir documents tasks name with
+    | some answer => answer
+    | none =>
+      match Map.lookup name ns with
+      | none => Result.err (name ++ " is not in the codebase")
+      | some e =>
+        let stub := match Codebase.readObject dir (Entry.hash e) with
+          | some (Sexp.list [Sexp.sym "term", core]) => Resolve.isStub core
+          | _ => false
+        Result.ok ([("kind", Entry.kind e)] ++ (if stub then [("implemented", "false")] else []))
+
+/-- The spec documents that hold `feature` blocks. -/
+def featureDocuments (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} List Text :=
+  List.filter (fun d => not (List.isEmpty (fst (featuresOf dir ns d)))) (Export.specDocuments ns)
+
+/-- Problems that span the map (unparsed blocks, orphans) followed by each feature's own. -/
+def featureNotes (facts : Text -> {IO, Throw Text} Result Text (List (Text, Text))) (fs : List Feature) (bad : List Text) : {IO, Throw Text} List Text :=
+  bad ++ Features.orphans fs ++ List.concatMap (fun f => List.map (fun p => f.featureId ++ ": " ++ p) (Features.problems f facts)) fs
+
+/--
+  Feature maps as `deus features --json` prints them and the explorer's `features.json` holds them
+  (D118): per document, its features in tree order with status, links, open tasks and problems,
+  then notes on blocks that do not parse and features whose parent is missing.
+-/
+def featuresJson (dir : Text) (ns : Map Text Entry) (docs : List Text) : {IO, Throw Text} Json :=
+  let facts := featureFacts dir ns
+  Json.arr (List.map (fun d =>
+    match featuresOf dir ns d with
+    | (fs, bad) =>
+      Json.obj [("document", Json.str d), ("features", Json.arr (List.map (fun pair =>
+        match pair with
+        | (depth, f) =>
+          let opened := List.filter (fun id =>
+            match facts ("task:" ++ id) with
+            | Result.ok known => Features.isOpenState (Features.fact known "state")
+            | Result.err _ => false) f.taskIds
+          Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId),
+            ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)),
+            ("tasks", Json.arr (List.map Json.str f.taskIds)), ("openTasks", Json.arr (List.map Json.str opened)),
+            ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))),
+        ("notes", Json.arr (List.map Json.str (featureNotes facts fs bad)))]) docs)
+
+/--
+  `deus features [documents…]`: the feature maps (D118), each a tree of features with their status
+  and open tasks, then what is wrong or missing. With no arguments, every document with a
+  `feature` block.
+-/
+def features (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let facts := featureFacts dir ns
+  let docs := if List.isEmpty args.positional then featureDocuments dir ns else args.positional
+  if flag args "json" then println (Json.render (featuresJson dir ns docs)) else
+    let text := Text.join "\n\n" (List.map (fun d =>
+      match featuresOf dir ns d with
+      | (fs, bad) =>
+        let found := featureNotes facts fs bad
+        d ++ "\n" ++ Features.render fs facts ++ (if List.isEmpty found then "" else "\n" ++ Text.join "\n" (List.map (fun n => "  " ++ n) found))) docs)
+    if Text.isEmpty text then () else println text
+
+/--
+  `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D99), MDL
+  files, or with no arguments every spec document the codebase holds. Each block goes to the
+  extension its term's URI names in the codebase; a block whose extension the codebase lacks is
+  reported unchecked.
+-/
+def mdl (args : Args) : {IO, Throw Text} Unit := if flag args "coverage" then coverage args else checkMdl args
+
+def checkMdl (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let byUri := extensions dir ns
+  let facts := mdlFacts ns
+  let documents := List.filter (fun a => List.contains a facts.documents && not (IO.exists a)) args.positional
+  let files := List.filter (fun a => not (List.contains a documents)) args.positional
+  let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths files)
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns facts byUri documents else []
+  let outcomes := fromCodebase ++ List.concatMap (fun path => checkDoc dir ns facts byUri path) paths
+  let count := fun (v : Text) => List.length (List.filter (fun o => o.verdict == v) outcomes)
+  output args
+    (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
+    (fun _ => Text.join "\n" (List.map (fun o =>
+      Text.padRight 10 o.verdict ++ o.place ++ Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++
+      [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked" ++
+        (if count "gap" > 0 then ", " ++ Int.toText (count "gap") ++ " known gaps" else "")]))
+  if count "fail" > 0 then IO.exit 1 else ()
+
+/--
+  `deus mdl --coverage [documents…]`: each spec document's laws no block cites, the public
+  definitions in its api namespaces that no api block names (D125), and `@[req]` links to no
+  requirement. Omissions are reported, not failed.
+-/
+def coverage (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let entries := Map.toList ns
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => Option.map (fun form => (Export.documentOf name, snd (Mdl.fromSexp form))) (Codebase.readObject dir h)
+    | _ => none) entries
+  let named := Set.fromList (List.concatMap (fun pair => Coverage.apiNames (snd pair)) blocks)
+  let byHash := Codebase.namesByHash ns
+  -- A definition is public when a name in another namespace refers to it.
+  let public := List.foldl (fun acc pair =>
+    match pair with
+    | (name, Entry.term h) => usedOutside dir byHash name h acc
+    | (name, Entry.test h) => usedOutside dir byHash name h acc
+    | (name, Entry.theorem h) => usedOutside dir byHash name h acc
+    | _ => acc) Map.empty entries
+  let terms := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.term _) => if Set.contains name public then some name else none
+    | _ => none) entries
+  let reqs := Set.fromList (List.filterMap (fun pair => if (snd pair).blockType == "req" then some (fst pair ++ "." ++ (snd pair).blockId) else none) blocks)
+  let stored := Export.specDocuments ns
+  let wanted := if List.isEmpty args.positional then stored else List.filter (fun d => List.contains d stored) args.positional
+  let reports := List.map (fun d =>
+    let laws := List.filterMap (fun pair =>
+      match pair with
+      | (name, Entry.test _) => if Export.documentOf name == d then some name else none
+      | (name, Entry.theorem _) => if Export.documentOf name == d then some name else none
+      | _ => none) entries
+    let links := List.filterMap (fun law =>
+      match Map.lookup law ns with
+      | some (Entry.test h) => some (law, Coverage.reqLinks (Codebase.metaList (Codebase.readMeta dir h) "attrs"))
+      | some (Entry.theorem h) => some (law, Coverage.reqLinks (Codebase.metaList (Codebase.readMeta dir h) "attrs"))
+      | _ => none) laws
+    Coverage.linked reqs links (Coverage.covers d (List.filterMap (fun pair => if fst pair == d then some (snd pair) else none) blocks) laws named terms)) wanted
+  output args
+    (fun _ => Json.arr (List.map (fun c => Json.obj [("document", Json.str c.coverageDoc), ("uncitedLaws", Json.arr (List.map Json.str c.uncitedLaws)), ("unnamedApi", Json.arr (List.map Json.str c.unnamedApi)), ("danglingLinks", Json.arr (List.map Json.str c.danglingLinks))]) reports))
+    (fun _ => Text.join "\n" (List.concatMap Coverage.render reports ++
+      [Int.toText (List.sum (List.map (fun c => List.length c.uncitedLaws) reports)) ++ " uncited laws, " ++
+        Int.toText (List.sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names, " ++
+        Int.toText (List.sum (List.map (fun c => List.length c.danglingLinks) reports)) ++ " links to no requirement"]))
+
+/-- `acc` with each name `h`'s object refers to that lies outside `name`'s namespace. -/
+def usedOutside (dir : Text) (byHash : Map Text (List Text)) (name : Text) (h : Text) (acc : Map Text Unit) : {IO, Throw Text} Map Text Unit :=
+  let home := Coverage.namespaceOf name
+  match Codebase.readObject dir h with
+  | none => acc
+  | some form =>
+    List.foldl (fun marked dep =>
+      List.foldl (fun m target => if Coverage.namespaceOf target == home then m else Set.insert target m) marked (Option.getOr (Map.lookup dep byHash) [])) acc (Codebase.dependencies form)
+
+/-- `deus image <name> -o <file>`: the kernel image of a definition. -/
+def image (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (_, Entry.term h) =>
+    let _ := ensureArtifacts dir [h]
+    let text := Image.build (fetcher dir) h
+    match option args "out" with
+    | some out => IO.writeFile out text
+    | none => IO.print text
+  | _ => throw "usage: deus image <term> -o <file>"
+
+/--
+  `deus serve <handler> [--port n]`: serves a web handler on this machine (D57). The server is
+  built into the artifacts layer by the hash of its image, so serving unchanged code starts at
+  once. It runs until stopped.
+-/
+def serve (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (_, Entry.term h) =>
+    let _ := ensureArtifacts dir [h]
+    let image := Image.build (fetcher dir) h
+    let out := dir ++ "/artifacts/server-" ++ Text.sha256 image
+    let built := if IO.exists out then Result.ok () else try (fun _ =>
+      IO.mkdirp (dir ++ "/artifacts")
+      Build.server image out)
+    match built with
+    | Result.err f => throw (Failure.render f)
+    | Result.ok _ =>
+      let port := Option.getOr (option args "port") "8080"
+      IO.eprint ("serving " ++ Option.getOr (List.head? args.positional) "" ++ " on http://127.0.0.1:" ++ port ++ "\n")
+      match IO.exec "env" ["PORT=" ++ port, out] with
+      | (code, out2, err) =>
+        IO.print out2
+        IO.eprint err
+        if code == 0 then () else IO.exit code
+  | _ => throw "usage: deus serve <handler> [--port n]"
+
+/-- The image of the static-site handler (`platform/site.deus`), compiled from the toolchain's sources. -/
+def siteImage (u : Unit) : {IO, Throw Text} Text :=
+  let home := match IO.getEnv "DEUS_HOME" with
+    | some h => h
+    | none => throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+  let files := List.map (fun f => home ++ "/" ++ f) ["deus/builtins.deus", "deus/prelude.deus", "platform/web.deus", "platform/site.deus"]
+  let result := Compile.batch Map.empty (fun _ => none) (fun _ => none) (checkTypes ()) (parseFiles files)
+  match List.lookup "Site.serve" result.entries with
+  | some (Entry.term h) =>
+    let objects := Map.fromList result.objects
+    Image.build (fun x => Map.lookup x objects) h
+  | _ => throw "platform/site.deus has no Site.serve"
+
+/-- Every file under `dir`, as paths relative to it. -/
+def filesUnder (dir : Text) (prefix : Text) : {IO} List Text :=
+  List.concatMap (fun f =>
+    let path := if Text.isEmpty prefix then f else prefix ++ "/" ++ f
+    if IO.isDir (dir ++ "/" ++ path) then filesUnder dir path else [path]) (IO.listDir (if Text.isEmpty prefix then dir else dir ++ "/" ++ prefix))
+
+/-- Where `--publish` records what it uploaded to a remote; its presence means the remote hosts a site. -/
+def siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" ++ name ++ ".sums"
+
+/--
+  Uploads the explorer in `out` beside a remote's bundles, under `site/`. Files are compared by
+  content hash with the last upload, so a republish sends only what changed (`force` sends all).
+  The top-level files (the app and the indexes) go to `site/v/<version>/` and `site/HEAD` names
+  that version last, so a reader never mixes indexes from two pushes (D166). Returns (files, uploaded).
+-/
+def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Throw Text} (Int, Int) :=
+  let manifest := siteManifest dir name
+  let previous := if force then Map.empty else
+    Map.fromList (List.filterMap (fun line =>
+      match Text.split line " " with
+      | [sum, path] => some (path, sum)
+      | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
+  let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
+  let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
+  let top := List.filter (fun pair => not (Text.contains "/" (fst pair))) sums
+  let version := Text.take 16 (Text.sha256 (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") top)))
+  let moved := Map.lookup "HEAD" previous != some version
+  let changed := List.filter (fun pair => Text.contains "/" (fst pair) && Map.lookup (fst pair) previous != some (snd pair)) sums
+  let uploads := List.map (fun pair => ("site/" ++ fst pair, fst pair)) changed ++ (if moved then List.map (fun pair => ("site/v/" ++ version ++ "/" ++ fst pair, fst pair)) top else [])
+  withRemote dir name (fun _ =>
+    let _ := Replicate.pushAssets dir
+    Remote.writeAll (List.map (fun pair => (fst pair, Option.getOr (IO.readFile (out ++ "/" ++ snd pair)) "")) uploads)
+    if moved then Remote.writeAll [("site/HEAD", version)] else ())
+  IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums) ++ version ++ " HEAD\n")
+  (List.length sums, List.length uploads)
+
+/--
+  `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase
+  explorer for the current branch, then serves it locally, or uploads it next to a remote's bundles
+  (`<prefix>/site/`), where a public bucket serves it. `--console` adds a console that runs `deus`
+  in the page (D84); a site that has one keeps it.
+-/
+def explore (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let out := Option.getOr (option args "out") (dir ++ "/cache/site")
+  -- The console goes first, so meta.json can say whether the site has one.
+  let _ := if flag args "console" || IO.exists (out ++ "/console/codebase.json") then Explorer.console dir out else 0
+  let pages := Explorer.generate dir out
+  match (option args "publish", option args "out") with
+  | (some name, _) =>
+    match publishSite dir name out (flag args "force") with
+    | (files, uploaded) =>
+      output args (fun _ => Json.obj [("definitions", Json.num pages), ("remote", Json.str name), ("files", Json.num files), ("uploaded", Json.num uploaded)])
+        (fun _ => "Published " ++ Int.toText uploaded ++ " changed of " ++ Int.toText files ++ " files to " ++ name ++ " under site/ (open site/index.html at the bucket's public URL).")
+  | (none, some _) =>
+    output args (fun _ => Json.obj [("definitions", Json.num pages), ("out", Json.str out)]) (fun _ => "Wrote the explorer for " ++ Int.toText pages ++ " definitions to " ++ out ++ ".")
+  | (none, none) =>
+    let image := siteImage ()
+    let server := dir ++ "/artifacts/site-server-" ++ Text.sha256 image
+    let built := if IO.exists server then Result.ok () else try (fun _ =>
+      IO.mkdirp (dir ++ "/artifacts")
+      Build.server image server)
+    match built with
+    | Result.err f => throw (Failure.render f)
+    | Result.ok _ =>
+      let port := Option.getOr (option args "port") "8080"
+      IO.eprint ("Wrote the explorer for " ++ Int.toText pages ++ " definitions; exploring on http://127.0.0.1:" ++ port ++ "\n")
+      match IO.exec "env" ["PORT=" ++ port, "DEUS_SITE=" ++ out, server] with
+      | (code, _, err) =>
+        IO.eprint err
+        if code == 0 then () else IO.exit code
+
+/-- `deus build <term> -o <file> [--native]`: a standalone executable that runs `term ()`. -/
+def build (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  if flag args "js" then
+    match option args "out" with
+    | some out =>
+      let roots := List.map (fun name =>
+        match lookupName ns name with
+        | (_, Entry.term h) => (JsGen.mangle (Names.lastSegment name), h)
+        | _ => throw (name ++ " is not a term")) args.positional
+      if List.isEmpty roots then throw "usage: deus build <name…> -o <file.js> --js" else ()
+      writeJs dir ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) roots out
+      output args (fun _ => Json.obj [("module", Json.str out), ("map", Json.str (out ++ ".map"))]) (fun _ => "Built " ++ out ++ ".")
+    | none => throw "usage: deus build <name…> -o <file.js> --js"
+  else buildImage args dir ns
+
+/-- `deus build` for every target that runs an image or compiles one definition. -/
+def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} Unit :=
+  match (lookupName ns (Option.getOr (List.head? args.positional) ""), option args "out") with
+  | ((_, Entry.term h), some out) =>
+    let _ := ensureArtifacts dir [h]
+    let image := Image.build (fetcher dir) h
+    let target := fun (u : Unit) =>
+      if flag args "wasm" then
+        -- A signature names a type by IRI; the back end reads the type's object to compare its values (D100).
+        let byIri := Map.fromList (List.filterMap (fun pair =>
+          match snd pair with
+          | Entry.type th iri _ => some (iri, th)
+          | _ => none) (Map.toList ns))
+        let fetch := fun (x : Text) => Option.orElse (Codebase.readObject dir x) (fun _ => Option.bind (Map.lookup x byIri) (Codebase.readObject dir))
+        match try (fun _ => Wasm.compile fetch (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        | Result.ok bytes => IO.writeBytes out bytes
+        | Result.err message => throw (Failure.of message [])
+      else if flag args "c" then
+        match try (fun _ => CGen.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        | Result.ok source => Build.cExecutable source out
+        | Result.err message => throw (Failure.of message [])
+      else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
+      else if flag args "browser" then Build.browser image out
+      else if flag args "server" then Build.server image out
+      else if flag args "native" then Build.native image out
+      else Build.executable image out (dir ++ "/artifacts")
+    match try target with
+    | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
+    | Result.err f => throw (Failure.render f)
+  | _ => throw "usage: deus build <term> -o <file>"
+
+/--
+  Writes the JS module of `roots` (export name, hash) to `out` (D97), its source map to
+  `<out>.map`, and the runtime beside it as `deus-runtime.mjs`.
+-/
+def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (roots : List (Text, Text)) (out : Text) : {IO, Throw Text} Unit :=
+  let printer := Print.printer ns []
+  let jsImport := match Map.lookup "Js.import" ns with
+    | some (Entry.term h) => h
+    | _ => ""
+  let parts := Text.split out "/"
+  let folder := if List.length parts < 2 then "." else Text.join "/" (List.take (List.length parts - 1) parts)
+  let base := Option.getOr (List.last? parts) out
+  let home := match IO.getEnv "DEUS_HOME" with
+    | some h => h
+    | none => throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
+  let runtime := match IO.readFile (home ++ "/platform/js/runtime.mjs") with
+    | some text => text
+    | none => throw ("cannot read " ++ home ++ "/platform/js/runtime.mjs")
+  -- Wrapped: a closed-row function where `{Throw Text | r}` is expected hangs the checker (task in TASKS.md).
+  match JsGen.compile (fun h => fetch h) (fun h => meta h) (fun h name => Explorer.sourceOf printer dir ns name (Entry.term h)) ns jsImport roots "./deus-runtime.mjs" (base ++ ".map") with
+  | (code, map) =>
+    IO.writeFile out code
+    IO.writeFile (out ++ ".map") map
+    IO.writeFile (folder ++ "/deus-runtime.mjs") runtime
+
+/--
+  The value of `def it := <source>` on this kernel and on the js target, each printed as `deus eval`
+  prints it (D97). The module runs under `$DEUS_NODE`.
+-/
+def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result Text (Text, Text) :=
+  match try (fun _ =>
+    let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" ("def it := " ++ source)]
+    match List.lookup "it" batch.entries with
+    | some (Entry.term h) =>
+      let objects := Map.fromList batch.objects
+      let metas := Map.fromList batch.metas
+      let fetch := fun (x : Text) => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)
+      Image.load fetch [h]
+      let types := dataTypes fetch h
+      let printer := Print.printer ns []
+      let render := fun (quoted : Text) => Print.expr printer (Sexp.read quoted) [] 0 0
+      let kernel := match guardDefect (fun _ => quoteAt types (Wasm.storedType (Map.lookup h metas)) (Code.run h)) with
+        | Result.ok q => render q
+        | Result.err message => "defect: " ++ message
+      let out := dir ++ "/cache/js-" ++ Text.take 16 (Text.sha256 (h ++ source))
+      IO.mkdirp out
+      writeJs dir ns (fun x => Option.orElse (Map.lookup x objects) (fun _ => Codebase.readObject dir x)) (fun x => Option.orElse (Map.lookup x metas) (fun _ => Codebase.readMeta dir x)) [("it", h)] (out ++ "/it.js")
+      IO.writeFile (out ++ "/run.mjs") (Text.join "\n" [
+        "import { raw } from './it.js';",
+        "import { quote, DeusDefect } from './deus-runtime.mjs';",
+        "try { process.stdout.write(quote(raw.it)); } catch (err) {",
+        "  if (!(err instanceof DeusDefect)) throw err;",
+        "  process.stdout.write('defect: ' + err.message); }"])
+      let node := Option.getOr (IO.getEnv "DEUS_NODE") "node"
+      match IO.exec node [out ++ "/run.mjs"] with
+      | (0, stdout, _) => (kernel, if Text.startsWith "defect: " stdout then stdout else render stdout)
+      | (code, _, stderr) => throw ("node exited with " ++ Int.toText code ++ ": " ++ Text.trim stderr)
+    | _ => throw ("cannot compile " ++ source)) with
+  | Result.ok pair => Result.ok pair
+  | Result.err message => Result.err message
+
+/--
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81, D87): a JavaScript module and its
+  declarations for the functions under the prefixes, `<dir>/<stem>.js` and `<dir>/<stem>.d.ts`,
+  with the runtime and the wasm kernel it loads.
+-/
+def bindings (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match (args.positional, option args "out") with
+  | (first :: _, some out) =>
+    let stem := Option.getOr (option args "name") (Text.toLower (Names.lastSegment first))
+    let command := "deus bindings " ++ Text.join " " args.positional
+    match Bindings.generate dir args.positional command with
+    | (js, dts, exported, skipped) =>
+      let path := out ++ "/" ++ stem ++ ".js"
+      let types := out ++ "/" ++ stem ++ ".d.ts"
+      let copied := try (fun _ =>
+        let home := Build.require "DEUS_HOME"
+        IO.mkdirp out
+        IO.writeFile path js
+        IO.writeFile types dts
+        let _ := Build.tool "cp" [home ++ "/src/bindings/deus-runtime.js", home ++ "/src/bindings/deus-runtime.d.ts", out ++ "/"]
+        let _ := Build.tool "cp" [Build.wasmKernel (), out ++ "/deus_kernel.wasm"]
+        ())
+      match copied with
+      | Result.err f => throw (Failure.render f)
+      | Result.ok _ =>
+        List.forEach skipped (fun s => eprintln ("warning: not exported: " ++ fst s ++ ": " ++ snd s))
+        output args
+          (fun _ => Json.obj [("module", Json.str path), ("types", Json.str types), ("exported", Json.arr (List.map Json.str exported)),
+            ("skipped", Json.arr (List.map (fun s => Json.obj [("name", Json.str (fst s)), ("reason", Json.str (snd s))]) skipped))])
+          (fun _ => "Wrote " ++ path ++ " and " ++ types ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
+  | _ => throw "usage: deus bindings <prefix|name…> -o <dir> [--name stem]"
+
+--
+-- Commands: tasks (D59).
+--
+
+def attachmentJson (a : Attachment) : Json :=
+  match a with
+  | Attachment.definition name h => Json.obj [("definition", Json.str name), ("hash", Json.str h)]
+  | Attachment.change h => Json.obj [("change", Json.str h)]
+
+def assetJson (a : Asset) : Json := Json.obj [("hash", Json.str a.hash), ("type", Json.str a.mediaType), ("name", Json.str a.fileName)]
+
+def commentJson (c : Comment) : Json :=
+  Json.obj [("author", Json.str c.author), ("note", Json.str c.note), ("at", Json.str c.written), ("assets", Json.arr (List.map assetJson c.assets))]
+
+def taskJson (t : Task) : Json :=
+  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (Tasks.stateText t.state)), ("priority", Json.num t.priority),
+    ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details),
+    ("links", Json.arr (List.map attachmentJson t.links)), ("comments", Json.arr (List.map commentJson t.comments))]
+
+def taskLine (t : Task) : Text :=
+  let labels := if List.isEmpty t.labels then "" else "  [" ++ Text.join ", " t.labels ++ "]"
+  let assignee := if Text.isEmpty t.assignee then "" else "  @" ++ t.assignee
+  let pad := fun (n : Int) (x : Text) => x ++ Text.repeat (n - Text.length x) " "
+  t.id ++ "  " ++ pad 8 (Tasks.stateText t.state) ++ " " ++ pad 6 (Tasks.priorityText t.priority) ++ " " ++ t.title ++ labels ++ assignee
+
+def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json :=
+  Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
+    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [])
+
+def changeLine (dir : Text) (pair : (Text, Causal)) : {IO} Text :=
+  "  " ++ short (fst pair) ++ "  " ++ (snd pair).message ++ Option.getOr (Option.map (fun agent => "  (" ++ agent ++ ")") (producedBy dir (fst pair))) ""
+
+/-- A linked definition: its name, the hash it was linked at, its current hash, and the changes that rebound it. -/
+def linkReport (dir : Text) (ns : Map Text Entry) (a : Attachment) : {IO, Throw Text} (Json, List Text) :=
+  match a with
+  | Attachment.change h =>
+    let message := match Codebase.readObject dir h with
+      | some form => (Codebase.causalFromSexp form).message
+      | none => "(not in this store)"
+    (Json.obj [("change", Json.str h), ("message", Json.str message)], ["  change " ++ short h ++ "  " ++ message])
+  | Attachment.definition name h =>
+    let now := Option.map Entry.hash (Map.lookup name ns)
+    let changes := Tasks.historyOfName dir name 200
+    let state := match now with
+      | none => "  (no longer named)"
+      | some n => if n == h then "" else "  (now " ++ short n ++ ")"
+    (Json.obj [("definition", Json.str name), ("hash", Json.str h), ("current", Option.getOr (Option.map Json.str now) Json.null), ("changes", Json.arr (List.map (changeJson dir) changes))],
+      ("  " ++ name ++ "  " ++ short h ++ state) :: List.map (fun c => "  " ++ changeLine dir c) changes)
+
+/-- The options of `task new` / `task set` that name task fields, applied in order; a `--parent` must name another task (Tasks.Spec R-8). -/
+def applyFields (args : Args) (tasks : Map Text Task) (t : Task) : {Throw Text} Task :=
+  let set := List.foldl (fun acc field =>
+    match option args field with
+    | some value => Tasks.setField acc field value
+    | none => acc) t Tasks.fields
+  if Option.isSome (option args "parent") then Tasks.resolveParent tasks set else set
+
+/--
+  `deus task …` (D59): issues kept in the codebase, attached to definitions and changes.
+  `new <title…>`, `list` (open tasks; `--all`, `--state s`, `--label l`, `--about <name>`),
+  `show <id>`, `set <id> --state doing …`, `comment <id> <text…>`, `link <id> <name>|--change <causal>`
+  and `unlink <id> <name>`. `deus update … --closes <id>` closes a task with the change that fixed it.
+-/
+def task (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
+  let tasks := Tasks.current dir
+  let saved := fun (t : Task) (message : Text) =>
+    -- `--by` names who made the change, as it does for `update`, so history shows task work too.
+    recordProvenance dir args (Tasks.save dir [t] message) []
+    output args (fun _ => taskJson t) (fun _ => taskLine t)
+  match args.positional with
+  | "new" :: words =>
+    let title := Text.join " " words
+    if Text.isEmpty title then throw "usage: deus task new <title…>"
+    else
+      let t := applyFields args tasks (Tasks.blank (Tasks.freshId dir title author) title)
+      let linked := match option args "link" with
+        | some name =>
+          match lookupName (Codebase.current dir) name with
+          | (full, e) => Tasks.link t (Attachment.definition full (Entry.hash e))
+        | none => t
+      let attached := match attachments dir args with
+        | [] => linked
+        | assets => Tasks.comment linked (Comment.mk author "" (IO.wallClock ()) assets)
+      saved attached ("task: open " ++ t.id ++ " " ++ title)
+  | [] => task (Args.mk ["list"] args.options)
+  | ["list"] =>
+    let about := Option.map (fun name =>
+      match lookupName (Codebase.current dir) name with
+      | (full, e) => Set.fromList (List.map (fun t => t.id) (Tasks.about tasks full (Entry.hash e)))) (option args "about")
+    let keep := fun (t : Task) =>
+      let byState := match option args "state" with
+        | some s => Tasks.stateText t.state == s
+        | none => flag args "all" || Tasks.isOpen t
+      let byLabel := match option args "label" with
+        | some l => List.any (fun x => x == l) t.labels
+        | none => true
+      let byLink := match about with
+        | some ids => Set.contains t.id ids
+        | none => true
+      byState && byLabel && byLink
+    let rows := List.sortBy Tasks.order (List.filter keep (Map.values tasks))
+    output args (fun _ => Json.arr (List.map taskJson rows)) (fun _ => if List.isEmpty rows then "No tasks." else Text.join "
+" (List.map taskLine rows))
+  | ["show", id] =>
+    let t := Tasks.find tasks id
+    let ns := Codebase.current dir
+    let links := List.map (linkReport dir ns) t.links
+    let history := Tasks.historyOf dir t.id 200
+    let children := List.filter (fun c => c.parent == t.id) (Map.values tasks)
+    output args
+      (fun _ => Json.obj [("task", taskJson t), ("links", Json.arr (List.map fst links)), ("history", Json.arr (List.map (changeJson dir) history)), ("children", Json.arr (List.map taskJson children))])
+      (fun _ =>
+        let head := [t.id ++ "  " ++ t.title, Tasks.stateText t.state ++ " · " ++ Tasks.priorityText t.priority ++
+          (if Text.isEmpty t.assignee then "" else " · @" ++ t.assignee) ++ (if List.isEmpty t.labels then "" else " · " ++ Text.join ", " t.labels) ++
+          (if Text.isEmpty t.parent then "" else " · parent " ++ t.parent)]
+        let section := fun (title : Text) (lines : List Text) => if List.isEmpty lines then [] else ["", title] ++ lines
+        Text.join "\n" (head ++ (if Text.isEmpty t.details then [] else ["", t.details]) ++
+          section "Links" (List.concatMap snd links) ++
+          section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++
+          section "Comments" (List.map commentLine t.comments) ++
+          section "History" (List.map (changeLine dir) history)))
+  | ["set", id] =>
+    -- Options every command takes; any other name is a misspelt field, which would otherwise set nothing.
+    let unknown := List.filter (fun key => not (List.contains key (Tasks.fields ++ ["codebase", "by", "json", "quiet"]))) (Map.keys args.options)
+    if not (List.isEmpty unknown) then throw ("unknown task field " ++ Text.join ", " unknown ++ "; the fields are " ++ Text.join ", " Tasks.fields)
+    else
+      let t := applyFields args tasks (Tasks.find tasks id)
+      saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
+  | "comment" :: id :: words =>
+    let t := Tasks.find tasks id
+    saved (Tasks.comment t (Comment.mk author (Text.join " " words) (IO.wallClock ()) (attachments dir args))) ("task: comment on " ++ t.id)
+  | ["link", id] =>
+    let t := Tasks.find tasks id
+    match option args "change" with
+    | some h =>
+      let full := match List.filter (fun c => Text.startsWith h (fst c)) (Codebase.history dir (Codebase.currentBranch dir) 100000) with
+        | c :: _ => fst c
+        | [] => throw ("no change " ++ h ++ " on this branch")
+      saved (Tasks.link t (Attachment.change full)) ("task: link " ++ t.id ++ " to " ++ short full)
+    | none => throw "usage: deus task link <id> <name> | --change <causal>"
+  | ["link", id, name] =>
+    let t := Tasks.find tasks id
+    match lookupName (Codebase.current dir) name with
+    | (full, e) => saved (Tasks.link t (Attachment.definition full (Entry.hash e))) ("task: link " ++ t.id ++ " to " ++ full)
+  | ["unlink", id, name] =>
+    let t := Tasks.find tasks id
+    saved (Tasks.unlink t name) ("task: unlink " ++ t.id ++ " from " ++ name)
+  | ["import", path] =>
+    let n := Export.importTasks dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " tasks.")
+  | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
+
+/-- `--attach <file>` copied into the asset store (D82); none without the option. -/
+def attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
+  match option args "attach" with
+  | some file => [Assets.add dir file]
+  | none => []
+
+def commentLine (c : Comment) : Text :=
+  "  " ++ c.author ++ ": " ++ c.note ++ Text.concat (List.map (fun a => " [" ++ a.fileName ++ " " ++ Text.take 10 a.hash ++ "]") c.assets)
+
+/-- A comment's subject from what a command was given: a definition's name, `change:<causal>`, or `def:<name>`. -/
+def subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text :=
+  if Text.startsWith "change:" given then
+    let h := Text.drop 7 given
+    match List.filter (fun c => Text.startsWith h (fst c)) (Codebase.history dir (Codebase.currentBranch dir) 100000) with
+    | c :: _ => Comments.change (fst c)
+    | [] => throw ("no change " ++ h ++ " on this branch")
+  else
+    match lookupName (Codebase.current dir) (if Text.startsWith "def:" given then Text.drop 4 given else given) with
+    | (full, _) => Comments.definition full
+
+/-- `deus comment <name|change:h> <text…>` (D82): a comment on a definition or a change, kept in the codebase. -/
+def comment (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
+  match args.positional with
+  | given :: words =>
+    let subject := subjectOf dir given
+    let c := Comment.mk author (Text.join " " words) (IO.wallClock ()) (attachments dir args)
+    if Text.isEmpty c.note && List.isEmpty c.assets then throw "usage: deus comment <name|change:h> <text…> [--attach file]"
+    else
+      recordProvenance dir args (Comments.add dir [(subject, c)] ("comment on " ++ subject)) []
+      output args (fun _ => Json.obj [("subject", Json.str subject), ("comment", commentJson c)]) (fun _ => "Commented on " ++ subject ++ ".")
+  | [] => throw "usage: deus comment <name|change:h> <text…> [--attach file]"
+
+/-- `deus comments [<name|change:h>]`: the comments on one subject, or on every subject that has some. -/
+def comments (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["import", path] =>
+    let n := Export.importComments dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " comments.")
+  | _ =>
+    let all := Comments.current dir
+    let shown := match args.positional with
+      | [given] =>
+        let subject := subjectOf dir given
+        [(subject, Option.getOr (Map.lookup subject all) [])]
+      | _ => Map.toList all
+    output args (fun _ => Json.obj (List.map (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair)))) shown))
+      (fun _ => if List.all (fun pair => List.isEmpty (snd pair)) shown then "No comments."
+        else Text.join "\n" (List.concatMap (fun pair => [fst pair] ++ List.map commentLine (snd pair)) shown))
+
+/-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
+def asset (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["add", file] =>
+    let a := Assets.add dir file
+    output args (fun _ => assetJson a) (fun _ => a.hash ++ "  " ++ a.mediaType ++ "  " ++ a.fileName)
+  | _ => throw "usage: deus asset add <file>"
+
+/-- `deus inbox [remote]` (D82): applies the comments and tasks members filed in the hosted explorer. -/
+def inbox (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let lines := withRemote dir name (fun _ => Inbox.apply dir)
+  output args (fun _ => Json.arr (List.map Json.str lines)) (fun _ => if List.isEmpty lines then "The inbox is empty." else Text.join "\n" lines)
+
+/--
+  `deus export <dir>` (D64): the codebase as text for a git repository: source per namespace,
+  tasks, and history. `deus add <dir>/code` and `deus task import <dir>/tasks.sexp` restore it.
+-/
+def export (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match List.head? args.positional with
+  | none => throw "usage: deus export <dir>"
+  | some out =>
+    if flag args "terms" then
+      match Export.writeTerms dir out with
+      | (definitions, documents) =>
+        output args (fun _ => Json.obj [("definitions", Json.num definitions), ("documents", Json.num documents)])
+          (fun _ => "Exported " ++ Int.toText definitions ++ " definitions and " ++ Int.toText documents ++ " spec documents to " ++ out ++ ", one file each.")
+    else
+      match Export.write dir out with
+      | (files, definitions, tasks) =>
+        output args (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
+          (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++ " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
+
+/-- `deus history import <history.sexp>`: the history of an export, kept under the restore (D67). -/
+def history (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["import", path] =>
+    let n := Export.importHistory dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " changes into the history.")
+  | _ => throw "usage: deus history import <history.sexp>"
+
+def usage : Text :=
+  Text.join "\n" [
+    "usage: deus <command> [args] [--json] [--codebase <dir>]",
+    "",
+    "codebase",
+    "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)",
+    "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)",
+    "  update <files|dirs…>                 add or replace definitions; dependents are rehashed",
+    "                                       (both take --message <why> for the history, and",
+    "                                       --by <agent> [--prompt <file>] to record provenance);",
+    "                                       files unchanged since the last update are skipped (--fresh: none)",
+    "  ls [prefix]                          list names",
+    "  find <text>                          names containing text",
+    "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
+    "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax",
+    "  names <name|#hash>                   every name of a hash",
+    "  deps <name> / dependents <name>      what a definition uses / what uses it",
+    "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name",
+    "  rm <names…>                          remove names",
+    "",
+    "history",
+    "  branch [name]                        list branches, or create one and switch to it",
+    "  switch <branch>                      change branch",
+    "  merge <branch>                       three-way merge into the current branch",
+    "  log [--n N] / undo                   history / step the branch back",
+    "  history import <history.sexp>        keep an export's history under a restored codebase",
+    "  layers                               objects per layer (code, tests, proofs, history, results, …)",
+    "  migrate                              rewrite history with namespace-tree snapshots",
+    "",
+    "analytics (events about the codebase, in @[event] structures; push-only, D104)",
+    "  event types                          event types with their columns and counts",
+    "  event record <Type> field=value…     record an event (a ref field takes a name, an IRI or #hash)",
+    "  event import <file>                  record (event \"Type\" (field value)…) forms",
+    "  event backfill history|timeline <f>  AgentChange events from history.sexp, AgentStage from TIMELINE.md",
+    "  event list [Type] [--about name]     the latest events, of a type or about a definition",
+    "  event stats                          counts per type and per definition (--json: the explorer's events.json)",
+    "  event push [remote]                  write pending events to the remote as Parquet; never pulls",
+    "",
+    "projects",
+    "  project [init <iri>]                 the project's IRI, libraries and owned subgraph",
+    "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)",
+    "",
+    "replication",
+    "  remote add <name> <dir|url|r2://b/p> a remote: a directory, the DEUS Worker (https://<host>/v1/<project>),",
+    "                                       or an R2 bucket and prefix",
+    "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
+    "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
+    "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
+    "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer",
+    "",
+    "running",
+    "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",
+    "  eval <expr>                          evaluate an expression; it may use Workspace.names, .view,",
+    "                                       .update and .run to read and change the codebase",
+    "  artifact <constant> [--out file]     evaluate an @[artifact] constant once and keep its value by hash;",
+    "                                       run, image, build and serve then use the kept value",
+    "  embed <file> --as <Name> [--bytes]   keep a file in the asset store and define Name as its text (or, with",
+    "                                       --bytes, its bytes): an @[artifact] that names only the file's SHA-256",
+    "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
+    "                                       @[ext \"<uri>\"] term its Extensions table names",
+    "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D125)",
+    "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D118)",
+    "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
+    "                                       --integration also runs @[integration] tests for real",
+    "  check [prefix] [--fresh]             check theorems and report their evidence (--fresh: ignore kept verdicts)",
+    "  image <name> -o <file>               write a kernel image",
+    "  build <name> -o <file> [--native]    write a standalone executable that runs name ()",
+    "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)",
+    "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object",
+    "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel",
+    "  build <handler> -o <file> --server   write a standalone native web server for a handler",
+    "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)",
+    "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote",
+    "",
+    "tasks",
+    "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]",
+    "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first",
+    "  task show <id>                       a task, what it links (and how that changed since), its history",
+    "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)",
+    "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)",
+    "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)",
+    "  comments [<name|change:h>]           comments on one subject, or every subject with comments",
+    "  comments import <comments.sexp>      restore comments from an export",
+    "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256",
+    "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches",
+    "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
+    "  task import <tasks.sexp>             restore tasks from an export",
+    "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
+    "  export <dir> --terms                 one file per definition at its namespace path (A/B/c.deus), specs as A/B.mdl",
+    "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)",
+    "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm",
+    "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
+    "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",
+    "  compile <files|dirs…> --main <name>  compile files without a codebase",
+    ""]
+
+def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
+  match argv with
+  | [] => IO.print usage
+  | command :: rest =>
+    let args := parseArgs rest
+    if command == "compile" then compile args
+    else if command == "init" then init args
+    else if command == "add" then addOrUpdate args false
+    else if command == "update" then addOrUpdate args true
+    else if command == "ls" then ls args
+    else if command == "find" then find args
+    else if command == "view" then view args
+    else if command == "names" then names args
+    else if command == "deps" then deps args false
+    else if command == "dependents" then deps args true
+    else if command == "mv" then mv args false
+    else if command == "alias" then mv args true
+    else if command == "rm" then rm args
+    else if command == "branch" then branch args
+    else if command == "switch" then switch args
+    else if command == "merge" then merge args
+    else if command == "log" then log args
+    else if command == "layers" then layers args
+    else if command == "migrate" then migrate args
+    else if command == "project" then project args
+    else if command == "lib" then lib args
+    else if command == "remote" then remote args
+    else if command == "push" then push args
+    else if command == "pull" then pull args
+    else if command == "compact" then compact args
+    else if command == "undo" then undo args
+    else if command == "run" then
+      match leadingOptions rest with
+      | (options, program) => run (parseArgs options) program
+    else if command == "eval" then eval args
+    else if command == "artifact" then artifact args
+    else if command == "embed" then embed args
+    else if command == "mdl" then mdl args
+    else if command == "features" then features args
+    else if command == "test" then Check.tests args
+    else if command == "check" then Check.theorems args
+    else if command == "image" then image args
+    else if command == "build" then build args
+    else if command == "bindings" then bindings args
+    else if command == "serve" then serve args
+    else if command == "explore" then explore args
+    else if command == "task" then task args
+    else if command == "comment" then comment args
+    else if command == "comments" then comments args
+    else if command == "asset" then asset args
+    else if command == "inbox" then inbox args
+    else if command == "export" then export args
+    else if command == "history" then history args
+    else if command == "event" then Analytics.command args
+    else if command == "help" then IO.print usage
+    else die ("unknown command " ++ command ++ "\n" ++ usage)
+
+def main (u : Unit) : {IO} Unit :=
+  match try (fun _ => dispatch (IO.args ())) with
+  | Result.ok _ => ()
+  | Result.err message => die message
+
+end Cli

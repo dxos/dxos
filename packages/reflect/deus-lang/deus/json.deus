@@ -1,0 +1,42 @@
+/-
+  JSON output, for agents driving the CLI with `--json`.
+-/
+
+inductive Json where
+  | null
+  | bool (value : Bool)
+  | num (value : Int)
+  | str (value : Text)
+  | arr (items : List Json)
+  | obj (fields : List (Text, Json))
+
+namespace Json
+
+def escape (t : Text) : Text :=
+  let n := Text.length t
+  -- Characters that need no escape are copied a run at a time; per character, a page of source was the explorer's cost.
+  let rec go start i acc :=
+    if i >= n then Text.concat (List.reverse (Text.slice t start n :: acc))
+    else
+      let c := Text.code t i
+      if c == '"' || c == '\\' || c < 32 then
+        let piece := if c == '"' then "\\\""
+          else if c == '\\' then "\\\\"
+          else if c == 10 then "\\n"
+          else if c == 9 then "\\t"
+          else if c == 13 then "\\r"
+          else "\\u" ++ Sexp.hex4 c
+        go (i + 1) (i + 1) (piece :: Text.slice t start i :: acc)
+      else go start (i + 1) acc
+  "\"" ++ go 0 0 [] ++ "\""
+
+def render (j : Json) : Text :=
+  match j with
+  | Json.null => "null"
+  | Json.bool b => if b then "true" else "false"
+  | Json.num v => Int.toText v
+  | Json.str v => escape v
+  | Json.arr items => "[" ++ Text.join "," (List.map render items) ++ "]"
+  | Json.obj fields => "{" ++ Text.join "," (List.map (fun pair => escape (fst pair) ++ ":" ++ render (snd pair)) fields) ++ "}"
+
+end Json

@@ -1,0 +1,601 @@
+/-- R-3: two changes merge as the store merges a write: the later write, theirs, with the schemes generalized. -/
+theorem Replicate.Spec.bothChangedMerge : mergeMetas (withDoc "base") (withDoc "ours") (withDoc "theirs") == withDoc "theirs" := by rfl
+
+/-- R-2: `b` cloned `a`, then fast-forwards to `a`'s new doc. -/
+test Replicate.Spec.cloneGetsMetadataChange := twoStores (fun a b =>
+  commitSource a "/-- One. -/\ndef A.f := 1\n"
+  pullInto a b
+  commitSource a "/-- Two. -/\ndef A.f := 1\n"
+  pullInto a b
+  docIn b "A.f" == "Two.")
+
+/-- R-4: the objects a push sends hold the head's metadata snapshot. -/
+test Replicate.Spec.closureHoldsMetas := inStore (fun dir =>
+  let head := commitSource dir "/-- One. -/\ndef A.f := 1\n"
+  let root := Causal.metas (readCausal dir head)
+  not (Text.isEmpty root) && Map.contains root (Replicate.closureOf dir [head]))
+
+/-- R-1: a new doc alone makes a new node whose snapshot holds it. -/
+test Replicate.Spec.commitRecordsMetas := inStore (fun dir =>
+  let first := commitSource dir "/-- One. -/\ndef A.f := 1\n"
+  let second := commitSource dir "/-- Two. -/\ndef A.f := 1\n"
+  let h := Entry.hash (getOr (Map.lookup "A.f" (Codebase.current dir)) (Entry.term ""))
+  second != first && Option.bind
+    (Map.lookup h (readMetas dir (Causal.metas (readCausal dir second))))
+    (fun m => metaField (Option.some m) "doc") == Option.some (Sexp.str "Two."))
+
+/-- Compiles `source` over `dir`'s namespace, stores it and commits it; the new head. -/
+def Replicate.Spec.commitSource (dir : Text) (source : Text) : {IO, Throw Text} Text := commit dir (updated dir (Codebase.current dir) source) "change"
+
+/-- R-3: `b` added a name while `a` changed a doc; the merge has both. -/
+test Replicate.Spec.concurrentMetadataMerges := twoStores (fun a b =>
+  commitSource a "/-- One. -/\ndef A.f := 1\n"
+  pullInto a b
+  commitSource a "/-- Two. -/\ndef A.f := 1\n"
+  commitSource b "def B.g := 2\n"
+  pullInto a b
+  docIn b "A.f" == "Two." && Map.contains "B.g" (Codebase.current b))
+
+/-- `name`'s doc comment in `dir`'s current namespace. -/
+def Replicate.Spec.docIn (dir : Text) (name : Text) : {IO, Throw Text} Text := Spec.docOf dir (Codebase.current dir) name
+
+/-- R-3: our change stays where theirs kept the base. -/
+theorem Replicate.Spec.oursWhereTheirsUnchanged : mergeMetas (withDoc "base") (withDoc "ours") (withDoc "base") == withDoc "ours" := by rfl
+
+/-- Sends what `from`'s main reaches to `to` as one bundle, points `origin.main` at it, and merges it. -/
+def Replicate.Spec.pullInto (from : Text) (to : Text) : {IO, Throw Text} MergeResult :=
+  let head := headOf from "main"
+  import to "0-spec" (bundle from [("main", head)] (Map.keys (Replicate.closureOf from [head])))
+  setBranch to "origin.main" head
+  Codebase.merge to "origin.main"
+
+/-- R-3: their change wins where ours kept the base. -/
+theorem Replicate.Spec.theirsWhereOursUnchanged : mergeMetas (withDoc "base") (withDoc "base") (withDoc "theirs") == withDoc "theirs" := by rfl
+
+/-- Runs `body` with two fresh simulated codebases, `a` and `b`; a thrown error is `false`. -/
+def Replicate.Spec.twoStores (body : Text -> Text -> {IO, Throw Text} Bool) : Bool :=
+  match Sim.run 7 (fun _ =>
+    match try (fun _ =>
+      Codebase.init "a"
+      Codebase.init "b"
+      body "a" "b") with
+    | Result.ok held => held
+    | Result.err _ => false) with
+  | (held, _) => held
+
+/-- A metadata snapshot of one hash, `h`, with doc `doc`. -/
+def Replicate.Spec.withDoc (doc : Text) : Map Text Sexp := Map.fromList [("h", Sexp.node "meta" [Sexp.node "doc" [Sexp.str doc]])]
+
+/-- Whether a builtin object (`#List`) may enter the store: builtins are named by identity, not by
+  hash, so one is accepted only as a declaration of that identity and only where none is held. -/
+def Replicate.acceptsBuiltin (dir : Text) (h : Text) (form : Sexp) : {IO} Bool :=
+  match form with
+  | Sexp.list (Sexp.sym head :: Sexp.str iri :: _) => (head == "type" || head == "ability") && iri == h && isNone (readObject dir h)
+  | _ => false
+
+/-- A bundle whose claims name the remote heads they build on (`bases`, as (branch, causal)). -/
+def Replicate.basedBundle (dir : Text) (claims : List (Text, Text)) (bases : List (Text, Text)) (hashes : List Text) : {IO} Text :=
+  let sorted := dedup (sort hashes)
+  let pairs := fun head xs => List.map (fun c => Sexp.node head [Sexp.str (fst c), Sexp.str (snd c)]) (dedup (sort xs))
+  let objects := filterMap
+    (fun h => Option.map (fun form => Sexp.node "obj" [Sexp.str h, form]) (readObject dir h))
+    sorted
+  let metas := filterMap
+    (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (readMeta dir h))
+    sorted
+  Columnar.encode [Sexp.node "bundle" (pairs "branch" claims ++ pairs "base" bases ++ objects ++ metas)]
+
+def Replicate.branchesOf (seen : List Seen) : List Text := dedup (sort (List.map fst (concatMap (fun s => s.claims) seen)))
+
+/-- A remote in an S3-compatible bucket (Cloudflare R2): `endpoint` is the account's S3 endpoint,
+  `prefix` the project's folder. Requests are signed by curl (`--aws-sigv4`); the credentials go
+  in a private curl config file, never on a command line. -/
+def Replicate.bucket (endpoint : Text) (name : Text) (prefix : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
+  let base := endpoint ++ "/" ++ name
+  let folder := prefix ++ "/bundles/"
+  let curl := fun arguments => IO.exec
+    "curl"
+    (["-sS", "--fail-with-body", "-K", config, "--aws-sigv4", "aws:amz:auto:s3"] ++ arguments)
+  -- The names under a folder, one ListObjectsV2 page at a time.
+  let listUnder := fun under =>
+    let rec page token acc :=
+      let query := "?list-type=2&prefix=" ++ under ++
+        (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
+      match curl [base ++ query] with
+      | (0, xml, _) =>
+          let keys := List.map (fun key => Text.drop (Text.length under) key) (xmlValues "Key" xml)
+          match xmlValues "NextContinuationToken" xml with
+          | next :: _ => page next (acc ++ keys)
+          | [] => acc ++ keys
+      | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ trim err ++ " " ++ trim out)
+    page "" []
+  handle body () with
+  | Remote.list x0 -> k => k (listUnder folder)
+  | Remote.keys under -> k => k (listUnder (prefix ++ "/" ++ under ++ "/"))
+  | Remote.download key file -> k =>
+      match curl ["-o", file, base ++ "/" ++ prefix ++ "/" ++ key] with
+      | (0, _, _) => k true
+      | _ =>
+          IO.exec "rm" ["-f", file]
+          k false
+  | Remote.upload key file mediaType -> k =>
+      match curl ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/" ++ prefix ++ "/" ++ key] with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
+  | Remote.drop key -> k =>
+      curl ["-X", "DELETE", base ++ "/" ++ prefix ++ "/" ++ key]
+      k ()
+  | Remote.get key -> k =>
+      let staged := config ++ "." ++ key
+      let text :=
+        match curl ["-o", staged, base ++ "/" ++ folder ++ key] with
+        | (0, _, _) => gunzip staged
+        | _ => Option.none
+      IO.exec "rm" ["-f", staged]
+      k text
+  | Remote.put key text -> k =>
+      let staged := config ++ "." ++ key
+      gzipTo text staged
+      -- `If-None-Match: *` makes the write conditional: an existing bundle is never replaced.
+      let result := curl ["-X", "PUT", "-H", "If-None-Match: *", "--data-binary", "@" ++ staged, base ++ "/" ++ folder ++ key]
+      IO.remove staged
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => if Text.contains "PreconditionFailed" out then k () else defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
+  | Remote.delete key -> k =>
+      curl ["-X", "DELETE", base ++ "/" ++ folder ++ key]
+      k ()
+  | Remote.writeAll files -> k =>
+      -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+      -- each repeats the credentials, and the batch config is as private as the remote's.
+      let staged := config ++ ".d"
+      let batch := config ++ ".batch"
+      IO.mkdirp staged
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      let groups := mapIndexed (fun i pair =>
+        let path := fst pair
+        let file := staged ++ "/" ++ toText i
+        IO.writeFile file (snd pair)
+        let kind := contentType path
+        user ++
+          "aws-sigv4 = \"aws:amz:auto:s3\"\nfail-with-body\noutput = \"/dev/null\"\nheader = \"content-type: " ++ kind ++ "\"\nupload-file = \"" ++ file ++ "\"\nurl = \"" ++ base ++ "/" ++ prefix ++ "/" ++ path ++ "\"\n") files
+      IO.writeFile batch (join "next\n" groups)
+      let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+      IO.remove batch
+      IO.exec "rm" ["-rf", staged]
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("writing the site failed: " ++ trim err ++ " " ++ trim out)
+
+/-- The builtin objects the store holds; the checker reads constructor and operation types from them. -/
+def Replicate.builtinsOf (dir : Text) : {IO} Map Text Unit := Set.fromList (List.filter (fun h => startsWith "#" h) (allObjects dir))
+
+/-- The canonical bundle text for branch claims and objects (with their metadata), in columns (D60). -/
+def Replicate.bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO} Text := basedBundle dir claims [] hashes
+
+/-- The `x-deus-claim` header a bundle's claim sends a Worker: `<branch> <head> <base>,…`, or none without exactly one claim. -/
+def Replicate.claimHeader (text : Text) : Option Text :=
+  let items :=
+    match Columnar.read text with
+    | form :: [] => Sexp.args form
+    | _ => []
+  let pairsOf := fun head => filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym h :: Sexp.str branch :: Sexp.str causal :: []) => if h == head then Option.some (branch, causal) else Option.none
+    | _ => Option.none) items
+  match pairsOf "branch" with
+  | (branch, causal) :: [] =>
+      let bases := filterMap
+        (fun b => if fst b == branch then Option.some (snd b) else Option.none)
+        (pairsOf "base")
+      Option.some (branch ++ " " ++ causal ++ " " ++ (if List.isEmpty bases then "-" else join "," bases))
+  | _ => Option.none
+
+/-- Causal nodes, snapshots, and everything their entries reach, from the given heads. -/
+def Replicate.closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=
+  let nodes := foldl (fun acc h => union acc (ancestors dir h)) Map.empty heads
+  let causals := List.map (fun c => readCausal dir c) (Map.keys nodes)
+  let entryRoots := concatMap (fun c => rootsOf (Map.toList (readNamespace dir c.snapshot))) causals
+  -- Builtins travel too: a store pulled without them types every constructor pattern as unknown.
+  union (union nodes (reachable dir (concatMap snapshotsOf causals ++ entryRoots))) (builtinsOf dir)
+
+/-- Garbage collection under a retention policy (D54): keeps the history within `keep` generations
+  of every head, with everything its snapshots reach, as one bundle, and deletes every other
+  bundle. Older history becomes shallow. The result depends only on the heads and `keep`, so
+  clients collecting with the same policy write the same bundle. Returns (bundle, deleted,
+  objects dropped). -/
+def Replicate.collect (dir : Text) (remote : Text) (keep : Int) : {Remote, IO, Throw Text} (Text, (List Text, Int)) :=
+  let seen := sync dir remote
+  let claims := concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
+  let kept := recent dir (List.map snd claims) keep
+  let causals := List.map (fun c => readCausal dir c) kept
+  let snapshots := List.map (fun c => c.snapshot) causals
+  let entryRoots := concatMap (fun s => rootsOf (Map.toList (readNamespace dir s))) snapshots
+  let live := union (Set.fromList kept) (reachable dir (concatMap snapshotsOf causals ++ entryRoots))
+  let text := bundle dir claims (Map.keys live)
+  let name := Replicate.nameOf 99 text
+  let existing := List.map (fun s => s.bundleName) seen
+  if any (fun n => n == name) existing then () else
+    Remote.put name text
+    IO.writeFile
+      (seenDir dir remote ++ "/" ++ name)
+      (seenToText (Seen.mk name claims (Map.keys live)))
+  let stale := List.filter (fun s => s.bundleName != name) seen
+  forEach stale (fun s =>
+    Remote.delete s.bundleName
+    IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
+  let before := Set.fromList (concatMap (fun s => s.hashes) seen)
+  (name, List.map (fun s => s.bundleName) stale, List.length (List.filter (fun h => not (Map.contains h live)) (Map.keys before)))
+
+/-- Compacts the remote's history at `level`: writes one bundle per stratum, then deletes the
+  bundles of lower levels that compacted bundles cover. Returns (written, deleted). -/
+def Replicate.compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, Throw Text} (List Text, List Text) :=
+  let seen := sync dir remote
+  let heads := concatMap (fun b => headsOf dir seen b) (branchesOf seen)
+  let history := foldl (fun acc h => union acc (ancestors dir h)) Map.empty heads
+  let boundaries := List.filter (fun c => isBoundary level c) (Map.keys history)
+  let strata := List.map (fun b =>
+    let earlier := List.filter (fun other => other != b && Map.contains other (ancestors dir b)) boundaries
+    let before := if List.isEmpty earlier then Map.empty else Replicate.closureOf dir earlier
+    List.filter (fun h => not (Map.contains h before)) (Map.keys (Replicate.closureOf dir [b]))) boundaries
+  let existing := Set.fromList (List.map (fun s => s.bundleName) seen)
+  let written := filterMap (fun hashes =>
+    let text := bundle dir [] hashes
+    let name := Replicate.nameOf level text
+    if Set.contains name existing then Option.none else
+      Remote.put name text
+      IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name [] hashes))
+      Option.some name) strata
+  let covered := Set.fromList (List.concat strata)
+  let headClaims := concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
+  let removable := List.filter
+    (fun s => levelOf s.bundleName < level && not (List.isEmpty s.hashes) && List.all (fun h => Set.contains h covered) s.hashes)
+    seen
+  -- Claims that are still heads survive their bundle in a claims-only bundle.
+  let kept := List.filter
+    (fun c => any (fun hc => hc == c) headClaims)
+    (concatMap (fun s => s.claims) removable)
+  if List.isEmpty kept then () else
+    let text := bundle dir kept []
+    let name := Replicate.nameOf 0 text
+    if Set.contains name existing then () else
+      Remote.put name text
+      IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name kept []))
+  forEach removable (fun s =>
+    Remote.delete s.bundleName
+    IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
+  (written, List.map (fun s => s.bundleName) removable)
+
+/-- A remote in a local directory (another disk, a mounted share, or tests). Bundles are stored gzipped. -/
+def Replicate.directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
+  handle body () with
+  | Remote.list x0 -> k => k (if IO.isDir (root ++ "/bundles") then List.filter (fun n => not (endsWith ".tmp" n)) (IO.listDir (root ++ "/bundles")) else [])
+  | Remote.get name -> k => k (gunzip (root ++ "/bundles/" ++ name))
+  | Remote.put name text -> k =>
+      let path := root ++ "/bundles/" ++ name
+      if IO.exists path then () else
+        IO.mkdirp (root ++ "/bundles")
+        gzipTo text path
+      k ()
+  | Remote.delete name -> k =>
+      IO.remove (root ++ "/bundles/" ++ name)
+      k ()
+  | Remote.writeAll files -> k =>
+      forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
+      k ()
+  | Remote.keys folder -> k => k (if IO.isDir (root ++ "/" ++ folder) then List.filter (fun n => not (endsWith ".tmp" n)) (IO.listDir (root ++ "/" ++ folder)) else [])
+  | Remote.download key file -> k =>
+      let source := root ++ "/" ++ key
+      if not (IO.exists source) then k false else
+        match IO.exec "cp" [source, file] with
+        | (0, _, _) => k true
+        | _ => k false
+  | Remote.upload key file x1 -> k =>
+      let target := root ++ "/" ++ key
+      IO.mkdirp (Text.take (Text.length target - Text.length (Assets.baseName target) - 1) target)
+      match IO.exec "cp" [file, target ++ ".tmp"] with
+      | (0, _, _) =>
+          IO.exec "mv" [target ++ ".tmp", target]
+          k ()
+      | (_, _, err) => defect ("copying " ++ key ++ " failed: " ++ trim err)
+  | Remote.drop key -> k =>
+      IO.remove (root ++ "/" ++ key)
+      k ()
+
+/-- A file's text, decompressed if gzip compressed it (`-f` passes other files through unchanged). -/
+def Replicate.gunzip (path : Text) : {IO} Option Text := if not (IO.exists path) then Option.none else
+  match IO.exec "gzip" ["-dcf", path] with
+  | (0, text, _) => Option.some text
+  | _ => Option.none
+
+--
+-- Remotes.
+--
+/-- Compresses `text` into the file `out` with gzip; `-n` leaves out the name and time, so equal texts give equal files. -/
+def Replicate.gzipTo (text : Text) (out : Text) : {IO} Unit :=
+  let staged := out ++ ".tmp"
+  IO.writeFile staged text
+  match IO.exec "gzip" ["-n", "-9", "-f", staged] with
+  | (0, _, _) =>
+      IO.exec "mv" [staged ++ ".gz", out]
+      ()
+  | (_, _, err) => defect ("gzip failed: " ++ trim err)
+
+/-- The claimed causal nodes for `branch` that no other claim descends from, sorted. -/
+def Replicate.headsOf (dir : Text) (seen : List Seen) (branch : Text) : {IO, Throw Text} List Text :=
+  let claimed := dedup (sort (filterMap
+    (fun c => if fst c == branch then Option.some (snd c) else Option.none)
+    (concatMap (fun s => s.claims) seen)))
+  List.filter
+    (fun c => not (any (fun other => other != c && Map.contains c (ancestors dir other)) claimed))
+    claimed
+
+/-- A remote served by the DEUS Worker (D164): `base` is `https://<host>/v1/<project>`. Reads are
+  open; writes send the API key that `config`, a private curl config file, holds as a header. A
+  listing is one name per line. Bundles travel gzipped, as in a bucket, and the Worker checks that
+  each one hashes to its name. -/
+def Replicate.http (base : Text) (config : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
+  let curl := fun arguments => IO.exec "curl" (["-sS", "--fail-with-body", "-K", config] ++ arguments)
+  let listing := fun url =>
+    match curl [url] with
+    | (0, out, _) => List.filter (fun n => not (Text.isEmpty n)) (Text.lines out)
+    | (_, out, err) => defect ("listing " ++ url ++ " failed: " ++ trim err ++ " " ++ trim out)
+  let send := fun what arguments =>
+    match curl arguments with
+    | (0, _, _) => ()
+    | (_, out, err) => defect (what ++ " failed: " ++ trim err ++ " " ++ trim out)
+  handle body () with
+  | Remote.list x0 -> k => k (listing (base ++ "/bundles"))
+  | Remote.keys under -> k => k (listing (base ++ "/files/" ++ under ++ "/"))
+  | Remote.download key file -> k =>
+      match curl ["-o", file, base ++ "/files/" ++ key] with
+      | (0, _, _) => k true
+      | _ =>
+          IO.exec "rm" ["-f", file]
+          k false
+  | Remote.upload key file mediaType -> k =>
+      send
+        ("uploading " ++ key)
+        ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/files/" ++ key]
+      k ()
+  | Remote.drop key -> k =>
+      send ("deleting " ++ key) ["-X", "DELETE", base ++ "/files/" ++ key]
+      k ()
+  | Remote.get key -> k =>
+      let staged := config ++ "." ++ key
+      let text :=
+        match curl ["-o", staged, base ++ "/bundles/" ++ key] with
+        | (0, _, _) => gunzip staged
+        | _ => Option.none
+      IO.exec "rm" ["-f", staged]
+      k text
+  | Remote.put key text -> k =>
+      let staged := config ++ "." ++ key
+      gzipTo text staged
+      -- The Worker answers 200 for a bundle it already has, so a repeated push is not an error.
+      let claim :=
+        match claimHeader text with
+        | Option.some header => ["-H", "x-deus-claim: " ++ header]
+        | Option.none => []
+      let result := curl (["-X", "PUT", "-H", "content-type: application/gzip"] ++ claim ++
+        ["--data-binary", "@" ++ staged, base ++ "/bundles/" ++ key])
+      IO.remove staged
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ trim err ++ " " ++ trim out)
+  | Remote.delete key -> k =>
+      send ("deleting " ++ key) ["-X", "DELETE", base ++ "/bundles/" ++ key]
+      k ()
+  | Remote.writeAll files -> k =>
+      -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+      -- each repeats the key, and the batch config is as private as the remote's.
+      let staged := config ++ ".d"
+      let batch := config ++ ".batch"
+      IO.mkdirp staged
+      IO.exec "install" ["-m", "600", "/dev/null", batch]
+      let user := getOr (IO.readFile config) ""
+      let groups := mapIndexed (fun i pair =>
+        let path := fst pair
+        let file := staged ++ "/" ++ toText i
+        IO.writeFile file (snd pair)
+        user ++
+          "fail-with-body\noutput = \"/dev/null\"\nrequest = \"PUT\"\nheader = \"content-type: " ++ contentType path ++ "\"\ndata-binary = \"@" ++ file ++ "\"\nurl = \"" ++ base ++ "/files/" ++ path ++ "\"\n") files
+      IO.writeFile batch (join "next\n" groups)
+      let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+      IO.remove batch
+      IO.exec "rm" ["-rf", staged]
+      match result with
+      | (0, _, _) => k ()
+      | (_, out, err) => defect ("writing the site failed: " ++ trim err ++ " " ++ trim out)
+
+/-- Writes a bundle's objects and metadata into the store; returns what it holds. -/
+def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
+  let items :=
+    match Columnar.read text with
+    | form :: [] => Sexp.args form
+    | _ => defect ("bundle " ++ name ++ " is not one form")
+  let claims := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "branch" :: Sexp.str branch :: Sexp.str causal :: []) => Option.some (branch, causal)
+    | _ => Option.none) items
+  let carried := Map.fromList (filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) => Option.some (h, form)
+    | _ => Option.none) items)
+  let lookup := fun h =>
+    match Map.lookup h carried with
+    | Option.some form => Option.some form
+    | Option.none => readObject dir h
+  let hashes := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) =>
+        -- An object that is not what its name says would corrupt the store (D91).
+        if startsWith "#" h then if acceptsBuiltin dir h form then
+          writeObject dir h form
+          Option.some h
+        else Option.none else if verified h form lookup then
+          writeObject dir h form
+          Option.some h
+        else
+          IO.eprint ("deus: skipped object #" ++ Text.take 10 h ++ " in bundle " ++ name ++
+            ": its text does not hash to its name\n")
+          Option.none
+    | Sexp.list (Sexp.sym "meta" :: Sexp.str h :: form :: []) =>
+        if IO.exists (dir ++ "/meta/" ++ h) then () else writeMeta dir h form
+        Option.none
+    | _ => Option.none) items
+  Seen.mk name claims hashes
+
+def Replicate.isBoundary (level : Int) (h : Text) : Bool := startsWith (repeat level "0") h
+
+/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D91). -/
+def Replicate.isBundleName (name : Text) : Bool :=
+  let dash := indexOf name "-" 0
+  dash > 0 && isSome (fromText (Text.take dash name)) && isSha256 (Text.drop (dash + 1) name)
+
+def Replicate.levelOf (name : Text) : Int := getOr (fromText (Text.take (indexOf name "-" 0) name)) 0
+
+def Replicate.nameOf (level : Int) (text : Text) : Text := toText level ++ "-" ++ Text.sha256 text
+
+/-- Imports the remote and points `<remote>.<branch>` (and `.2`, `.3`… for concurrent heads) at its heads. -/
+def Replicate.pull (dir : Text) (remote : Text) : {Remote, IO, Throw Text} List (Text, List Text) :=
+  let seen := sync dir remote
+  List.map (fun branch =>
+    let heads := headsOf dir seen branch
+    forEach (mapIndexed (fun i h => (i, h)) heads) (fun pair => setBranch
+      dir
+      (remote ++ "." ++ branch ++ (if fst pair == 0 then "" else "." ++ toText (fst pair + 1)))
+      (snd pair))
+    (branch, heads)) (branchesOf seen)
+
+/-- Downloads the remote's assets the store lacks; returns how many. -/
+def Replicate.pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
+  let missing := List.filter (fun h => Assets.isHash h && not (Assets.has dir h)) (Remote.keys "assets")
+  IO.mkdirp (dir ++ "/assets")
+  List.length (List.filter (fun h =>
+    let staged := Assets.path dir h ++ ".tmp"
+    if Remote.download ("assets/" ++ h) staged && sha256File staged == h then
+      IO.exec "mv" [staged, Assets.path dir h]
+      true
+    else
+      IO.exec "rm" ["-f", staged]
+      false) missing)
+
+/-- Uploads what `branch` reaches and the remote lacks, with a claim for its head; none if up to date. -/
+def Replicate.push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text} Option Text :=
+  let seen := sync dir remote
+  let head := headOf dir branch
+  let known := Set.fromList (concatMap (fun s => s.hashes) seen)
+  let missing := List.filter (fun h => not (Set.contains h known)) (Map.keys (Replicate.closureOf dir [head]))
+  let claimed := any (fun s => any (fun c => c == (branch, head)) s.claims) seen
+  -- Pushing a head that leaves out a remote head would fork the branch (D167).
+  let bases := headsOf dir seen branch
+  let ancestry := ancestors dir head
+  let behind := List.filter (fun b => not (Map.contains b ancestry)) bases
+  if List.isEmpty missing && claimed then Option.none else if not (List.isEmpty behind) then Throw.throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++
+    Text.take 10 (getOr (head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again") else
+    let text := basedBundle dir [(branch, head)] (List.map (fun b => (branch, b)) bases) missing
+    let name := Replicate.nameOf 0 text
+    Remote.put name text
+    IO.writeFile
+      (seenDir dir remote ++ "/" ++ name)
+      (seenToText (Seen.mk name [(branch, head)] missing))
+    Option.some name
+
+/-- Uploads the store's assets the remote lacks; returns how many. -/
+def Replicate.pushAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
+  let there := Set.fromList (Remote.keys "assets")
+  let missing := List.filter (fun h => not (Set.contains h there)) (Assets.all dir)
+  forEach
+    missing
+    (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
+  List.length missing
+
+/-- Causal nodes at most `depth` parent links from `heads`. -/
+def Replicate.recent (dir : Text) (heads : List Text) (depth : Int) : {IO, Throw Text} List Text :=
+  let rec go frontier d seen :=
+    let fresh := List.filter (fun h => not (Map.contains h seen)) (dedup (sort frontier))
+    let seen2 := foldl (fun m h => Map.insert h () m) seen fresh
+    if d >= depth || List.isEmpty fresh then Map.keys seen2 else go (concatMap (fun h => parentsOf dir h) fresh) (d + 1) seen2
+  go heads 0 Map.empty
+
+def Replicate.seenDir (dir : Text) (remote : Text) : Text := dir ++ "/remotes/" ++ remote ++ "/seen"
+
+def Replicate.seenFromText (name : Text) (text : Text) : Seen :=
+  let items := Sexp.args (Sexp.read text)
+  let claims := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "branch" :: Sexp.str branch :: Sexp.str causal :: []) => Option.some (branch, causal)
+    | _ => Option.none) items
+  let hashes := getOr (Option.map
+    (fun x => List.map asText (Sexp.args x))
+    (List.find (fun x => head x == "hashes") items)) []
+  Seen.mk name claims hashes
+
+def Replicate.seenToText (s : Seen) : Text := Sexp.print (Sexp.node
+  "seen"
+  (List.map (fun c => Sexp.node "branch" [Sexp.str (fst c), Sexp.str (snd c)]) s.claims ++
+    [Sexp.node "hashes" (List.map Sexp.str s.hashes)]))
+
+/-- The content type a site file is served with, by the bundled server (`Site.contentType`) and by a
+  bucket the explorer is uploaded to: a browser refuses a module script or a stylesheet sent as
+  `text/plain`. -/
+def Replicate.siteType (path : Text) : Text := if endsWith ".html" path then "text/html; charset=utf-8" else if endsWith ".json" path then "application/json" else if endsWith ".css" path then "text/css" else if endsWith ".js" path || endsWith ".mjs" path then "text/javascript" else if endsWith ".svg" path then "image/svg+xml" else "text/plain; charset=utf-8"
+
+/-- Every bundle on the remote, importing the ones not seen before. -/
+def Replicate.sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
+  let listed := List.filter (fun n => not (Text.isEmpty n)) (Remote.list ())
+  let names := List.filter isBundleName listed
+  forEach
+    (List.filter (fun n => not (isBundleName n)) listed)
+    (fun n => IO.eprint ("deus: ignored bundles/" ++ n ++ " on " ++ remote ++ ": not a bundle name\n"))
+  filterMap (fun name =>
+    let path := seenDir dir remote ++ "/" ++ name
+    match IO.readFile path with
+    | Option.some text => Option.some (seenFromText name text)
+    | Option.none =>
+        match Remote.get name with
+        | Option.none => Option.none
+        | Option.some text =>
+            -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
+            if Text.sha256 text != Text.drop (indexOf name "-" 0 + 1) name then
+              IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++
+                ": its text does not hash to its name\n")
+              Option.none
+            else
+              let s := import dir name text
+              IO.writeFile path (seenToText s)
+              Option.some s) names
+
+def Replicate.union (a : Map Text Unit) (b : Map Text Unit) : Map Text Unit := foldl (fun m key => Map.insert key () m) a (Map.keys b)
+
+/-- A member reference of recursive group `g` back to `(self i)`, as the group was hashed (CORE.md). -/
+def Replicate.unself (g : Text) (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str r :: []) => if r == g then Sexp.node "self" [Sexp.int 0] else if startsWith (g ++ ".") r then
+      match fromText (Text.drop (Text.length g + 1) r) with
+      | Option.some i => Sexp.node "self" [Sexp.int i]
+      | Option.none => form
+    else form
+  | Sexp.list items => Sexp.list (List.map (fun x => Replicate.unself g x) items)
+  | _ => form
+
+/-- Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
+  recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group. -/
+def Replicate.verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool := if Text.sha256 (Sexp.print form) == h then true else
+  let dot := indexOf h "." 0
+  let g := if dot < 0 then h else Text.take dot h
+  let member := fun name => if name == h then Option.some form else lookup name
+  let rec gather i acc :=
+    match member (g ++ "." ++ toText i) with
+    | Option.some m => gather (i + 1) (m :: acc)
+    | Option.none => reverse acc
+  let members := if dot < 0 then [form] else gather 0 []
+  not (List.isEmpty members) && Text.sha256 (Sexp.print (Sexp.node "cycle" (List.map (fun m => Replicate.unself g m) members))) ==
+    g
+
+/-- The `<Key>` values of an S3 ListObjectsV2 response. -/
+def Replicate.xmlValues (tag : Text) (xml : Text) : List Text := filterMap (fun part =>
+  let close := indexOf part ("</" ++ tag ++ ">") 0
+  if close < 0 then Option.none else Option.some (Text.take close part)) (List.drop 1 (Text.split xml ("<" ++ tag ++ ">")))

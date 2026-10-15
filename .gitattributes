@@ -19,6 +19,11 @@ yarn.lock                    merge=binary
 # GitHub collapses them in PR review; text diff is kept for local `git diff`.
 .agents/reviews/**           linguist-generated=true
 
+# DEUS: the compiler image regenerated from deus/ (`deus compile`) and the text export of the
+# toolchain's codebase (`deus export`). Generated, so review collapses them.
+packages/reflect/deus-lang/seed/deus.image      linguist-generated=true
+packages/reflect/deus-lang/codebase/**          linguist-generated=true
+
 # Rush's JSON config files use JavaScript-style code comments.  The rule below prevents pedantic
 # syntax highlighters such as GitHub's from highlighting these comments as errors.  Your text editor
 # may also require a special configuration to allow comments in JSON.
@@ -33,3 +38,9 @@ yarn.lock                    merge=binary
 # Spline animation files
 *.spline filter=lfs diff=lfs merge=lfs -text
 *.splinecode filter=lfs diff=lfs merge=lfs -text
+
+# DEUS codebase exports: every line is one entry, so a union merge keeps both sides' changes (D89);
+# the next `deus export` settles a task left with two versions.
+packages/reflect/deus-lang/codebase/history.sexp   merge=union
+packages/reflect/deus-lang/codebase/tasks.sexp     merge=union
+packages/reflect/deus-lang/codebase/HISTORY.md     merge=union

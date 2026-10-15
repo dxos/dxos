@@ -1,0 +1,78 @@
+/-- The `api` block type. -/
+@[ext "org.dxos.deus.api@1.0"]
+def Spec.checkApi (b : Block) : {MdlHost} List Text :=
+  match List.filter
+    (fun l => not (Text.isEmpty l))
+    (List.map trim (Text.lines (Spec.prop b "signatures"))) with
+  | [] => ["api needs signatures:"]
+  | lines => concatMap signatureProblems lines
+
+/-- The `law` block type. -/
+@[ext "org.dxos.deus.law@1.0"]
+def Spec.checkLaw (b : Block) : {MdlHost} List Text :=
+  let name := trim (Spec.prop b "theorem")
+  let wanted := if Text.isEmpty (Spec.prop b "evidence") then "test" else trim (Spec.prop b "evidence")
+  if Text.isEmpty name then ["law needs theorem:"] else if wanted != "test" && wanted != "proof" then ["evidence: " ++ wanted ++ " is not one of test, proof"] else
+    match MdlHost.describe name with
+    | Result.err message => [message]
+    | Result.ok facts =>
+        let kind := prop0 facts "kind"
+        let stated := squash (replace " = " " == " (Spec.prop b "statement"))
+        let actual := squash (prop0 facts "statement")
+        -- Equal text is the common case; otherwise the claim is compiled and compared (Compile.Spec R-19).
+        let statement := if kind != "theorem" || Text.isEmpty stated || stated == actual then [] else
+          match MdlHost.describe ("statement:" ++ name ++ "\n" ++ trim (Spec.prop b "statement")) with
+          | Result.ok answer => if prop0 answer "same" == "true" then [] else ["the theorem states " ++ actual ++ ", the spec says " ++ stated]
+          | Result.err message => [message]
+        let verdict := prop0 facts "verdict"
+        let evidence := prop0 facts "evidence"
+        let held := if Text.isEmpty verdict then [name ++ " is a " ++ kind ++ ", not a theorem"] else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"] else if verdict != "pass" then [name ++ " fails: " ++ prop0 facts "reason"] else if wanted == "proof" && strength evidence < 2 then [name ++ " holds by " ++ evidence ++ "; the spec asks for a proof"] else []
+        statement ++ held
+
+/-- The `req` block type. -/
+@[ext "org.dxos.deus.req@1.0"]
+def Spec.checkReq (b : Block) : {MdlHost} List Text :=
+  match Spec.items (Spec.prop b "by") with
+  | [] => if Text.isEmpty (Spec.prop b "gap") then ["no evidence: name passing tests or theorems in by:, or the task that adds them in gap:"] else ["gap: " ++ Spec.prop b "gap"]
+  | names => concatMap evidenceProblems names
+
+/-- Problems with one piece of evidence: it must be a test or a theorem that passes. -/
+def Spec.evidenceProblems (name : Text) : {MdlHost} List Text := evidenceProblemsOf (fun n => MdlHost.describe n) name
+
+/-- `evidenceProblems` with the facts about a name given: a law must pass; a vitest test the suite runs is `external` (Compile.Spec R-17). -/
+def Spec.evidenceProblemsOf (facts : Text -> {e} Result Text (List (Text, Text))) (name : Text) : {e} List Text :=
+  match facts name with
+  | Result.err message => [message]
+  | Result.ok found =>
+      let verdict := prop0 found "verdict"
+      if Text.isEmpty verdict then [name ++ " is a " ++ prop0 found "kind" ++ ", not a test or a theorem"] else if verdict == "pass" || verdict == "external" then [] else if verdict == "unchecked" then [name ++ " is stated but not checked (sorry)"] else [name ++ " fails: " ++ prop0 found "reason"]
+
+/-- Items of a list property: separated by `|` or by lines. -/
+def Spec.items (t : Text) : List Text := List.filter (fun w => not (Text.isEmpty w)) (List.map trim (Text.split (replace "\n" "|" t) "|"))
+
+--
+-- MDL blocks.
+--
+def Spec.prop (b : Block) (key : Text) : Text := getOr (List.lookup key b.props) ""
+
+def Spec.prop0 (facts : List (Text, Text)) (key : Text) : Text := getOr (List.lookup key facts) ""
+
+/-- `Name : Type` as (name, type); the type is empty when the line has none. -/
+def Spec.signature (line : Text) : (Text, Text) :=
+  let i := indexOf line " : " 0
+  if i < 0 then (trim line, "") else (trim (Text.take i line), trim (Text.drop (i + 3) line))
+
+def Spec.signatureProblems (line : Text) : {MdlHost} List Text :=
+  match Spec.signature line with
+  | (name, stated) =>
+      match MdlHost.describe name with
+      | Result.err message => [message]
+      | Result.ok facts =>
+          let actual := prop0 facts "type"
+          if not (Text.isEmpty stated || squash stated == squash actual) then [name ++ " has type " ++ actual ++ ", the spec says " ++ stated] else if prop0 facts "implemented" == "false" then ["gap: " ++ name ++ " is declared but not implemented"] else []
+
+/-- Collapses runs of spaces and new lines to one space, so layout never makes a mismatch. -/
+def Spec.squash (t : Text) : Text := join " " (List.filter (fun w => not (Text.isEmpty w)) (Text.split (replace "\n" " " t) " "))
+
+/-- How strong a verdict's evidence is: 2 for a complete check (a proof, `decide`, `rfl`), 1 for tested cases, 0 otherwise. -/
+def Spec.strength (evidence : Text) : Int := if evidence == "proof" || evidence == "decide" || evidence == "rfl" then 2 else if evidence == "test" || evidence == "integration" || evidence == "proof assuming tested lemmas" then 1 else 0

@@ -1,0 +1,71 @@
+/-
+  A command-line program in the C back end (D129). `IO` operations that no handler in the
+  program takes are performed by the C runtime: printing, files, directories, arguments, the
+  environment, clocks, `exec` and `exit`. A handler of `IO` written in the program still wins.
+  A defect no handler takes ends the run with status 70, as `deus run` does (D137).
+
+    deus add examples/command.deus && deus build Command.main -o command --c
+    ./command count notes.txt
+-/
+
+namespace Command
+
+/-- The words of `t`: runs of characters that are not spaces. -/
+def words (t : Text) : List Text :=
+  List.filter (fun w => not (Text.length w == 0)) (Text.split (Text.replace "\t" " " (Text.replace "\n" " " t)) " ")
+
+/-- Lines, words and characters, as `wc` counts them. -/
+def count (t : Text) : Text :=
+  Int.toText (List.length (Text.lines t) - 1) ++ " " ++ Int.toText (List.length (words t)) ++ " " ++ Int.toText (Text.length t)
+
+/-- The `n` most frequent words, most frequent first, ties in alphabetical order. -/
+def frequent (t : Text) (n : Int) : List Text :=
+  let counts := MutMap.new ()
+  let _ := List.forEach (words (Text.toLower t)) (fun w => MutMap.set counts w (Option.getOr (MutMap.get counts w) 0 + 1))
+  let ranked := List.sortBy (fun a b => if snd a == snd b then compare (fst a) (fst b) else compare (snd b) (snd a)) (List.map (fun w => (w, Option.getOr (MutMap.get counts w) 0)) (MutMap.keys counts))
+  List.map (fun pair => Int.toText (snd pair) ++ " " ++ fst pair) (List.take n ranked)
+
+/-- Writes, appends, reads back, lists and removes files under `dir`. -/
+def roundtrip (dir : Text) : {IO} Text :=
+  let _ := IO.mkdirp (dir ++ "/sub")
+  let _ := IO.writeFile (dir ++ "/b.txt") "beta"
+  let _ := IO.writeFile (dir ++ "/a.txt") "alpha "
+  let _ := IO.appendFile (dir ++ "/a.txt") "αβγ"
+  let read := Option.getOr (IO.readFile (dir ++ "/a.txt")) "?"
+  let listed := Text.join "," (IO.listDir dir)
+  let kinds := (if IO.isDir (dir ++ "/sub") then "dir" else "file") ++ " " ++ (if IO.exists (dir ++ "/b.txt") then "yes" else "no")
+  let _ := IO.remove dir
+  read ++ " | " ++ listed ++ " | " ++ kinds ++ " | " ++ (if IO.exists dir then "kept" else "removed")
+
+/-- Prints `n` lines under a handler that counts them instead of printing. -/
+def quiet (n : Int) : {IO} Int :=
+  let printed := Ref.new 0
+  let _ := handle List.forEach (List.range 0 n) (fun i => println (Int.toText i)) with
+    | IO.print t -> resume => resume (Ref.set printed (Ref.get printed + Text.length t))
+  Ref.get printed
+
+/-- A defect raised under a handler of `Defect.raise`, which takes it instead of ending the run. -/
+def caught (word : Text) : Int :=
+  handle Text.length (defect ("bad " ++ word)) + 1 with
+  | Defect.raise message -> _ => 0 - Text.length message
+
+def main (u : Unit) : {IO} Unit :=
+  match IO.args () with
+  | ["count", path] =>
+    match IO.readFile path with
+    | some t => println (count t)
+    | none =>
+      let _ := eprintln ("cannot read " ++ path)
+      IO.exit 1
+  | ["freq", path, n] => List.forEach (frequent (Option.getOr (IO.readFile path) "") (Option.getOr (Int.fromText n) 10)) println
+  | ["roundtrip", dir] => println (roundtrip dir)
+  | ["quiet", n] => println (Int.toText (quiet (Option.getOr (Int.fromText n) 0)))
+  | ["exec"] =>
+    match IO.exec "sh" ["-c", "echo out; echo err >&2; exit 3"] with
+    | (code, out, err) => println (Int.toText code ++ " " ++ Text.trim out ++ " " ++ Text.trim err)
+  | ["env", name] => println (Option.getOr (IO.getEnv name) "unset")
+  | ["caught", word] => println (Int.toText (caught word))
+  | ["defect", word] => println (Int.toText (Text.length (defect ("unhandled " ++ word))))
+  | _ =>
+    let _ := eprintln "usage: command count|freq|roundtrip|quiet|exec|env|caught|defect …"
+    IO.exit 2

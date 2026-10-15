@@ -1,0 +1,115 @@
+---
+id: org.dxos.deus.spec.codebase-text
+name: Export.Spec
+version: 1.0
+---
+
+# Text export and restore: checked spec
+
+The checkable half of [CODEBASE-TEXT.md](../../docs/spec/CODEBASE-TEXT.md). The export is the codebase's backup in
+git, so its one promise is that restoring it gives back the same codebase: the same names bound to
+the same hashes, with the metadata people read. Written in the order of the process (D92);
+`deus mdl Export.Spec` checks it against the evidence in [Laws](#laws).
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: writing and restoring an export
+  signatures:
+  - Export.write : Text -> Text -> {IO, Throw Text} (Int, (Int, Int))
+  - Export.importTasks : Text -> Text -> {IO, Throw Text} Int
+  - Export.importHistory : Text -> Text -> {IO, Throw Text} Int
+  - Export.withUnnamed : Text -> Map Text Entry -> {IO} Map Text Entry
+  - Export.writeTerms : Text -> Text -> {IO, Throw Text} (Int, Int)
+```
+
+```mdl
+api A-2: Export definitions other namespaces use
+  signatures:
+  - Export.document : Text -> Map Text Entry -> Text -> {IO} Text
+  - Export.documentOf : Text -> Text
+  - Export.importComments : Text -> Text -> {IO, Throw Text} Int
+  - Export.specDocuments : Map Text Entry -> List Text
+```
+
+## Round trip
+
+```mdl
+law L-1: restoring an export gives the same namespace snapshot, whatever the program holds
+  theorem: Export.Spec.restoresTheSnapshot
+```
+
+```mdl
+req R-1: attributes, doc comments and ordinary comments come back as metadata
+  by: Export.Spec.restoresMetadata
+```
+
+```mdl
+req R-2: spec blocks are exported to specs/ and come back under the same names
+  by: Export.Spec.restoresSpecs
+```
+
+```mdl
+req R-3: a term that is still called but has no name is exported under Unnamed.h<hash> (D77)
+  by: Export.Spec.namesUnnamedCallees
+```
+
+```mdl
+req R-4: tasks come back as the same task objects
+  by: Export.Spec.restoresTasks
+```
+
+```mdl
+req R-5: exporting twice writes the same files
+  by: Export.Spec.exportIsStable
+```
+
+```mdl
+req R-6: histories imported more than once, as a merge imports both sides', export each change once
+  by: Export.Spec.historiesMergeAsSets
+```
+
+```mdl
+req R-7: an export removes the code and spec files of namespaces and documents the codebase no longer holds, so a restore cannot bring a removed name back
+  by: Export.Spec.dropsStaleFiles
+```
+
+```mdl
+req R-8: the export's code files alone compile `Cli.main` to the checked-in seed, so the toolchain builds from the codebase without `deus/`
+  by: vitest:src/seed.test.ts > compiles the codebase export to the seed
+```
+
+```mdl
+req R-9: an export reuses a definition's printed text while its name, hash, metadata, the names its hash goes by and the names of what it refers to are unchanged, and writes the same files an export without the cache writes
+  by: Export.Spec.cachedViewFollowsRename
+```
+
+## One file per definition
+
+`deus export <dir> --terms` writes the tree the deus-mirror backup keeps beside the store files (D168):
+each definition at `A/B/c.deus`, each spec document at `A/B.mdl`, and `FILES` listing them.
+
+```mdl
+req R-10: the files `deus export --terms` lists in FILES, added to a fresh codebase, give back the same namespace snapshot
+  by: Export.Spec.termsRestoreTheSnapshot
+```
+
+```mdl
+req R-11: a per-term export removes the files its previous run listed and this one did not write, and leaves other files alone
+  by: Export.Spec.termsDropStaleFiles
+```
+
+## Laws
+
+Each law builds a codebase in the deterministic simulation, exports it, restores the export into a
+second codebase through the same `add` the CLI runs, and compares.
+
+The laws are the definitions under `Export.Spec`: `deus ls Export.Spec.` lists them and `deus view` prints them.

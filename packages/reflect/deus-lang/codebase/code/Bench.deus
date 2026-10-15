@@ -1,0 +1,57 @@
+inductive Bench.Cells where
+  | nil
+  | cons (head : Int) (tail : Cells)
+
+inductive Bench.Tree where
+  | leaf
+  | node (left : Tree) (right : Tree)
+
+/-- Total Collatz steps of 1 … n: tail-recursive loops over integer arithmetic. -/
+def Bench.collatz (n : Int) : Int := collatzFrom 1 n 0
+
+def Bench.collatzFrom (i : Int) (n : Int) (acc : Int) : Int := if i > n then acc else Bench.collatzFrom (i + 1) n (acc + collatzLen i 0)
+
+def Bench.collatzLen (n : Int) (steps : Int) : Int := if n == 1 then steps else if n % 2 == 0 then Bench.collatzLen (n / 2) (steps + 1) else Bench.collatzLen (3 * n + 1) (steps + 1)
+
+test Bench.collatzSmall := collatz 10 == 67
+
+def Bench.count (t : Tree) : Int :=
+  match t with
+  | Tree.leaf => 1
+  | Tree.node l r => Bench.count l + Bench.count r + 1
+
+/-
+  Benchmark programs for comparing back ends (D80): each is first-order code over `Int` and
+  algebraic data, so the interpreter, the JIT, the wasm compiler and the C compiler all run it.
+  `docs/spec/NATIVE.md` has the numbers.
+-/
+/-- Doubly recursive calls on integers. -/
+def Bench.fib (n : Int) : Int := if n < 2 then n else Bench.fib (n - 1) + Bench.fib (n - 2)
+
+test Bench.fibSmall := fib 10 == 55
+
+def Bench.make (depth : Int) : Tree := if depth == 0 then Tree.leaf else Tree.node (Bench.make (depth - 1)) (Bench.make (depth - 1))
+
+def Bench.place (n : Int) (row : Int) (placed : Cells) : Int := if row == n then 1 else tryCol n row 0 placed 0
+
+/-- Solutions of the n-queens puzzle: search over cons lists. -/
+def Bench.queens (n : Int) : Int := Bench.place n 0 Cells.nil
+
+test Bench.queensSmall := queens 6 == 4
+
+/-- Whether a queen in column `col` is safe from the queens in `placed` (nearest row first). -/
+def Bench.safe (col : Int) (dist : Int) (placed : Cells) : Bool :=
+  match placed with
+  | Cells.nil => true
+  | Cells.cons q rest => q != col && q != col + dist && q != col - dist && Bench.safe col (dist + 1) rest
+
+/-- Builds and walks `n` complete trees of depth 16: allocation and matching. -/
+def Bench.trees (n : Int) : Int := treesFrom n 16 0
+
+def Bench.treesFrom (i : Int) (depth : Int) (acc : Int) : Int := if i == 0 then acc else Bench.treesFrom (i - 1) depth (acc + Bench.count (Bench.make depth))
+
+test Bench.treesSmall := treesFrom 2 3 0 == 30
+
+def Bench.tryCol (n : Int) (row : Int) (col : Int) (placed : Cells) (acc : Int) : Int := if col == n then acc else
+  let found := if safe col 1 placed then Bench.place n (row + 1) (Cells.cons col placed) else 0
+  Bench.tryCol n row (col + 1) placed (acc + found)

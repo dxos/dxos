@@ -1,0 +1,1265 @@
+# History of main
+
+- `39ceb324c7` merge origin.main into main
+- `f708c539ee` task: open 778cdac2 A freshly pulled store exports history without (by agent): provenance is not replicated in bundles (by claude)
+- `e1b9329234` task: set 24382769 state details (by claude)
+- `edfe83e6c1` Export.Spec R-10, R-11: the per-term export (D168) (by claude)
+- `698e38f85f` deus export --terms: one file per definition at its namespace path (D168) (by claude)
+- `32d2016847` task: set 24382769 state (by claude)
+- `cf61ed5b5c` task: open 24382769 deus export --terms: one file per term for the deus-mirror backup (by claude)
+- `aff4165a4a` close b642762b by #199edd07ef
+- `199edd07ef` Pushes cannot fork a branch: bases in bundles, x-deus-claim, Worker head CAS (D167)
+- `ccfaafcaf2` task: open ed106f59 Binary bundle format with an offset table
+- `758623d8aa` task: open b642762b A push cannot fork a branch: CLI base check and Worker head CAS
+- `3dd269d458` task: set 86720562 title details
+- `a2aef23e10` task: open 112d3cd9 Explorer reads the Worker indexes and renders in the page
+- `e910ae7977` task: open f0ade986 Worker indexes each pushed bundle from a queue
+- `0917c52524` task: open d9fb935f Index namespace: read bundles into data indexes, compiled to JS for the Worker
+- `61b49e1157` close b096c56e by #eb507d73ce
+- `eb507d73ce` Explorer: publish the top-level files as one version named by site/HEAD (D166)
+- `cd9b706528` task: set 86720562 details
+- `c9c811eb34` task: open fd34a928 Build only the explorer pages a bundle changes
+- `8bc1c3e8a8` task: open 7b7a26ad Wasm kernel reclaims memory during long runs
+- `3cfde3d582` Codebase.Spec R-23: history node times (D165)
+- `499112d837` Codebase.Spec: tests for history node times (D165)
+- `e812f6291c` close 36e1527d by #32f335f3bf
+- `32f335f3bf` History nodes carry the time they were made (at, seconds since the epoch); deus log and the explorer's History view show it (D165)
+- `0bb1c84f50` task: set 36e1527d state
+- `a92c226233` task: open 36e1527d Explorer History view shows each change's timestamp
+- `0568041d74` task: set e774b1fd state details
+- `03dc2465ba` task: open 48eee846 deus mdl compares effect-row variables by name: an api signature written with {IO | r} fails against an inferred {IO | e}; compare up to renaming
+- `362ac00a58` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164)
+- `489fdc3cfa` Remote.Spec: remotes over HTTPS through the DEUS Worker (D164)
+- `73e0053c43` delete Cli.explorerDemo
+- `f5046d914e` Remotes served by the DEUS Worker over HTTPS (Replicate.http); origin of the toolchain is https://deus.dmytro-a80.workers.dev/v1/toolchain, whose own explorer each push of main refreshes (D164)
+- `5b26d7c028` task: open 95822533 Push checks in the Worker, by priority: (1) no destructive history ops, (2) a policy on checks (which tests must pass), (3) extensible further checks; strategy first
+- `5a80b84ed5` task: open 86720562 Worker builds the explorer JSON from bundles itself (wasm kernel or a Container), so a push sends only bundles
+- `a3efae81c7` task: open 87c565cf deus key new|list|revoke: wrap the Worker's /v1/keys admin API in the CLI (scripts/deus-keys.mjs does it for now)
+- `e27622c30a` task: open b096c56e Explorer site: write index files under site/<causal>/ and a HEAD pointer last, so a reader never sees half a push
+- `232a5b6c82` task: set e774b1fd state
+- `8651a2f882` task: open e774b1fd Cloudflare setup: codebases in a private R2 bucket behind one Worker (replication API over HTTPS, explorer, D1 API keys for writes)
+- `62fcfd712a` history: import 1223 changes
+- `4415d0ca99` catch up with #13952 at c9951925 before the pause
+- `9dcda60615` update deus (by merge)
+- `9fda888898` history: import 1208 changes
+- `b25522c80e` history: import 1209 changes
+- `205337c959` task: import from /tmp/tmpvl69at_z/tasks.sexp
+- `8013f98024` add /tmp/tmpvl69at_z/merged/code /tmp/tmpvl69at_z/merged/specs
+- `7060aecef1` history: import 1199 changes
+- `7038a97524` task: import from tasks.sexp
+- `b4ef4e7681` catch up with #13952 at 843ac72e before the pause (by claude)
+- `5f5ea350ff` history: import 1144 changes
+- `807059293d` task: import from codebase/tasks.sexp
+- `e1548117c5` update codebase/code codebase/specs
+- `8fb47165c0` history: import 1124 changes
+- `9a9b42061a` task: import from codebase/tasks.sexp
+- `cd98107465` update codebase/code codebase/specs
+- `d33274282d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
+- `8bb85527da` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw2.deus (by claude)
+- `2c8226fb50` delete Dbg.e
+- `bf63e6469f` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `7439c26d80` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw2.deus (by claude)
+- `15b92ffe34` update deus (by claude)
+- `0479fe129d` delete Dbg.prof
+- `9813973fd4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `0f48b7ab7f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `e2b319d4c2` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `3152ef5711` update deus (by claude)
+- `4247869c4a` update deus (by claude)
+- `11804bae8f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
+- `390b45dafa` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/incrlaws.deus (by claude)
+- `c17f5e92c0` update deus (by claude)
+- `cef9c933ab` task: comment on 86d7b02a (by claude)
+- `9dc62e401b` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
+- `dba0f84cd4` task: comment on 0d7b0142 (by claude)
+- `024ab567a2` task: set 0d7b0142 state (by claude)
+- `c5c1c203d7` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
+- `1b383f7c1c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/checklaw.deus (by claude)
+- `edf56d66ed` update deus (by claude)
+- `f6cd5fc319` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/compile.mdl (by claude)
+- `32d0ca426a` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/stmtlaws.deus (by claude)
+- `60828a4bb9` task: comment on 1e8dee8b (by claude)
+- `8c1694713e` task: set 1e8dee8b state (by claude)
+- `42361c1c86` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bindlaws.deus (by claude)
+- `ce89785fda` delete Dbg.c
+- `a6c74a0d15` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `365257a236` update deus (by claude)
+- `fe9084726c` delete Dbg.b
+- `37596426cb` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bindlaws.deus (by claude)
+- `d6f18e5355` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `30e1fec0f3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
+- `703210fae4` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bindlaws.deus (by claude)
+- `5d6c5f8da5` task: comment on 79f72c44 (by claude)
+- `a94d082273` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/freshlaw.deus (by claude)
+- `13eee916cd` delete Dbg.fresh
+- `c764ddb073` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `45ea08dc4c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/freshlaw.deus (by claude)
+- `773ef7dc59` update deus (by claude)
+- `7b90eaf246` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/freshlaw.deus (by claude)
+- `c5660c35e3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/prove.mdl (by claude)
+- `dba42704d0` task: set a2da28e2 state (by claude)
+- `16df66a274` task: comment on a2da28e2 (by claude)
+- `1603432908` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/bind.mdl (by claude)
+- `d2878ca400` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/spec.deus (by claude)
+- `2669a5c6a3` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/vitestlaws.deus (by claude)
+- `eebc439ea3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/compile.mdl (by claude)
+- `c14cb80614` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/spec.deus (by claude)
+- `bcfddbca2f` task: comment on 1ab6c044 (by claude)
+- `ddee5f7174` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
+- `a534f7cb29` task: open 79f72c44 Theorem verdicts are cached by the theorem's hash alone, so a prover change never rechecks them (by claude)
+- `ff953ed093` update deus (by claude)
+- `278c6d79de` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/provelaws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/prove.mdl (by claude)
+- `db77e1395f` update deus (by merge)
+- `c3399b82c4` history: import 1144 changes
+- `409c3e0e40` history: import 1139 changes
+- `05012e11a6` task: import from /tmp/tmpk1m7cf8a/tasks.sexp
+- `e9ef0641f3` add /tmp/tmpk1m7cf8a/merged/code /tmp/tmpk1m7cf8a/merged/specs
+- `6449078bac` task: set f308d451 state (by claude)
+- `f82625cacf` task: comment on f308d451 (by claude)
+- `e13a50a478` update deus (by claude)
+- `3f7fbc02f8` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/grouplaw.deus (by claude)
+- `80c96e9826` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
+- `895274d041` task: comment on b73b475d (by claude)
+- `39b2e8db06` update deus (by merge)
+- `1d0b6b7e4f` history: import 1134 changes
+- `e94dfdc564` history: import 1128 changes
+- `dd2232271e` task: import from /tmp/tmp7tiihuqg/tasks.sexp
+- `41290569bc` add /tmp/tmp7tiihuqg/merged/code /tmp/tmp7tiihuqg/merged/specs
+- `112cea84f2` update deus (by merge)
+- `c4f24f4f18` history: import 1124 changes
+- `dfc806fcb0` history: import 1122 changes
+- `43684e1b9b` task: import from /tmp/tmpf0e81phl/tasks.sexp
+- `61735bc5ac` add /tmp/tmpf0e81phl/merged/code /tmp/tmpf0e81phl/merged/specs
+- `8bfc2b8e38` task: set dda00bb4 state (by claude)
+- `4b7661b50c` task: comment on dda00bb4 (by claude)
+- `514a3f2725` update deus (by claude)
+- `ff1d632a44` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/viewlaw.deus (by claude)
+- `61f82b7a1e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/view.mdl (by claude)
+- `8f77cc083d` task: comment on b73b475d
+- `1e32955d5c` update deus (by claude)
+- `fb1345316d` history: import 1124 changes
+- `e6b5de91e6` task: import from codebase/tasks.sexp
+- `a31cfa6051` task: set b73b475d assignee
+- `57875655ef` task: set b73b475d labels
+- `fac83c4866` task: set b73b475d priority
+- `6f00e125d7` task: open b73b475d Native interpreter: free memory by following the compiled code's reference counts instead of making every value immortal (D146); the 199-test run writes about 1 GB of fresh environments and blocks, and with inlining off deus_ipush and deus_dup are 15% each, while dispatch, env walks (1.8 hops) and page faults (0.45 of 2.0 s) are not the lever
+- `469a967d83` history: import 1117 changes
+- `f436c2ee2d` task: import from codebase/tasks.sexp
+- `988d670bf0` add codebase/code codebase/specs
+- `eeff472331` task: set 88004c30 state (by claude)
+- `51370cfff7` task: comment on 88004c30 (by claude)
+- `129d6769ac` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r10.deus (by claude)
+- `4060ebc6b0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `7b74216368` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r6.deus (by claude)
+- `eda606150e` update deus (by claude)
+- `4d0b9c42ed` task: open dda00bb4 A definition's type is per hash, so an annotation narrower than the body is lost (by claude)
+- `526c43130e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/byteslaws.deus (by claude)
+- `16d278bc8e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `25e47839ef` update deus (by claude)
+- `b4d4574fd5` update deus (by merge)
+- `8f83f622dc` history: import 1089 changes
+- `e811e5c581` history: import 1089 changes
+- `2d93c9ff64` task: import from /tmp/tmpz_fan1oe/tasks.sexp
+- `622bd6d819` add /tmp/tmpz_fan1oe/merged/code /tmp/tmpz_fan1oe/merged/specs
+- `7893825340` task: comment on 696086fe (by claude)
+- `db4f9eb668` history: import 1103 changes
+- `5fc5ecf78c` merge #13952's branch: curried lambdas (D149) (by claude)
+- `81e37b7ddb` history: import 1076 changes
+- `3864fd494c` task: import from codebase/tasks.sexp
+- `73e67efac2` update codebase/code codebase/specs
+- `fb5919dc2b` update deus (by merge)
+- `12932fa816` history: import 1076 changes
+- `40f0c9ea7e` history: import 1070 changes
+- `b80790fe5a` task: import from /tmp/tmp88g8yixk/tasks.sexp
+- `42966c55ed` add /tmp/tmp88g8yixk/merged/code /tmp/tmp88g8yixk/merged/specs
+- `091ebe5523` task: comment on 88004c30 (by claude)
+- `e961b5af89` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
+- `b2fd2223e9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `6a1daee40d` update deus (by claude)
+- `0a3c77d931` task: comment on e76e36b0 (by claude)
+- `86e06c376d` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/embedlaws.deus (by claude)
+- `b957a6a461` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `8d18b0284b` update deus (by claude)
+- `339f7670dc` task: open f308d451 Updating one member of a recursive group leaves dependents pointing at the old group (by claude)
+- `fda461f03d` re-resolve Artifact and Workspace specs to the current Cli group (by claude)
+- `6824aaf040` close 696086fe by #40884fb595 (by claude)
+- `40884fb595` a push to the shared toolchain remote refreshes the public explorer demo (D149) (by claude)
+- `b3eccf8399` history: import 1062 changes
+- `c76e0bd86d` task: import from tasks.sexp
+- `2d7a9fee76` merge #13952's branch: artifact constants (D146-D148) (by claude)
+- `0aaa2c092a` task: comment on 60e88be8 (by claude)
+- `ed88eaac93` update deus (by merge)
+- `22b0a54217` history: import 1062 changes
+- `3b49d85b3f` history: import 1045 changes
+- `5e236918b4` task: import from /tmp/tmppyt0kebd/tasks.sexp
+- `3a18ea6009` add /tmp/tmppyt0kebd/merged/code /tmp/tmppyt0kebd/merged/specs
+- `22b89e57a3` task: comment on 60e88be8
+- `52f28cab3b` task: set d0d2915a labels
+- `1dd4374e2d` task: set d0d2915a priority
+- `eb902e4747` task: open d0d2915a Native interpreter: show, trace and Code.quote by type, so Rendered.renderedSmall passes natively as on node (values carry no types; Bool shows as 0/1, D146)
+- `c5e9b3346c` update deus (by claude)
+- `60967372b3` history: import 1037 changes
+- `a905f790c5` task: import from codebase/tasks.sexp
+- `9759b5816a` add codebase/code codebase/specs
+- `97d3b3fbfc` update deus (by merge)
+- `6044c260f8` history: import 1037 changes
+- `8498114d5c` history: import 1043 changes
+- `d8d4009fe4` task: import from /tmp/tmpb0j197lz/tasks.sexp
+- `2feb9e074c` add /tmp/tmpb0j197lz/merged/code /tmp/tmpb0j197lz/merged/specs
+- `084dbd29ac` history: import 1023 changes
+- `4db18d07c6` history: import 1023 changes (by claude)
+- `7f44835cdb` task: import from codebase/tasks.sexp
+- `6ffa88350a` update codebase/code codebase/specs
+- `102a1f7fd6` history: import 1018 changes
+- `f65e70f4bc` task: import from codebase/tasks.sexp
+- `04d81118f5` update codebase/code codebase/specs
+- `56c420ca75` delete Unnamed.h2fee9e6b7d Unnamed.h3f84493ccc
+- `79fbb8aff4` history: import 965 changes
+- `ea56c07145` task: import from codebase/tasks.sexp
+- `ef4f48386a` Catch the remote up with the git export at de5f61f2 (D140)
+- `a62699329a` history: import 935 changes
+- `b828976716` task: import from codebase/tasks.sexp
+- `65502a99a5` Catch the remote up with the git export at 687dc9f7 (D137)
+- `f6943ca15f` update deus (by merge)
+- `a32d485ec2` history: import 1023 changes
+- `b4c300f712` history: import 1033 changes
+- `38cdddd0e3` task: import from /tmp/tmpqt177wfu/tasks.sexp
+- `ce4f088fce` add /tmp/tmpqt177wfu/merged/code /tmp/tmpqt177wfu/merged/specs
+- `f0333cb41c` update deus (by claude)
+- `924f1988c5` history: import 1018 changes
+- `41f913e8af` history: import 1010 changes
+- `afb382de6b` task: import from /tmp/tmpm9ol3os0/tasks.sexp
+- `5f20adb985` add /tmp/tmpm9ol3os0/merged/code /tmp/tmpm9ol3os0/merged/specs
+- `8fff0a3cc8` update deus (by claude)
+- `51b516c2ef` task: comment on 88004c30 (by claude)
+- `40660e52e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `bce604859a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artlaws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact2.mdl (by claude)
+- `59b60d6b1a` delete Debug.r2 (by claude)
+- `cc68163362` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/dbg.deus
+- `905c03b10a` delete Artifact.Spec.runEvaluatesOnce
+- `a648dcf6b1` update deus (by claude)
+- `9bcc7bd80e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
+- `f6b4401a3a` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/artifact.mdl (by claude)
+- `7750353b5d` task: comment on 60e88be8
+- `2e8d17b108` update deus (by claude)
+- `dd574bcb24` history: import 1018 changes
+- `86e15f924a` task: import from codebase/tasks.sexp
+- `e9798bf694` add codebase/code codebase/specs
+- `42f987d1f0` update deus (by merge)
+- `48837a0605` history: import 1000 changes
+- `579a9acc27` history: import 1009 changes
+- `594270c9d2` task: import from /tmp/tmp_q7zebks/tasks.sexp
+- `35ee3f9c65` add /tmp/tmp_q7zebks/merged/code /tmp/tmp_q7zebks/merged/specs
+- `69add6faeb` task: comment on 1ab6c044 (by claude)
+- `34925ba12f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `eab8f32cd2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
+- `b7f1509790` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/image.mdl (by claude)
+- `8a33fd7308` update deus (by claude)
+- `3ed8cd0ba3` update deus (by merge)
+- `ddc1aecd8a` history: import 996 changes
+- `f743293630` history: import 972 changes
+- `9ab8e1004e` task: import from /tmp/tmpuxmjym96/tasks.sexp
+- `322df425ff` add /tmp/tmpuxmjym96/merged/code /tmp/tmpuxmjym96/merged/specs
+- `404463cfd4` task: comment on 1ab6c044 (by claude)
+- `1a9214b4e4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `1b38d19430` update deus (by claude)
+- `59268186db` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tasks.mdl (by claude)
+- `f5f757cfde` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tasks.mdl (by claude)
+- `3a31a3937b` update deus (by claude)
+- `5211044678` task: comment on 1ab6c044 (by claude)
+- `6c643003be` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `a5d37eb90e` update deus (by claude)
+- `32c3dc8160` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/parser.mdl (by claude)
+- `cb7214d86e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/parser.mdl (by claude)
+- `2f3955cad4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cb.mdl (by claude)
+- `1dcbd7e801` update deus (by claude)
+- `456e4c15d2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law19.deus (by claude)
+- `9f62db14b1` task: comment on 53e409cd (by claude)
+- `ded0576b51` task: set 53e409cd state (by claude)
+- `b1c6778a0b` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law19.deus (by claude)
+- `71e20205e6` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/helper.deus (by claude)
+- `96d1360b82` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cb.mdl (by claude)
+- `43960758c9` update deus (by merge)
+- `f5c027e993` history: import 965 changes
+- `b0b3676338` history: import 962 changes
+- `06f545459b` task: import from /tmp/tmp60xajc8g/tasks.sexp
+- `adef1a6c15` add /tmp/tmp60xajc8g/merged/code /tmp/tmp60xajc8g/merged/specs
+- `c9036732bc` task: open 53e409cd deus update rehashes dependents without type-checking them, so a changed signature leaves an ill-typed caller that only a restore reports (Compile.Spec.apiReportsDeclarationsAsGaps after D140) (by claude)
+- `7ef98a03c9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/law.deus (by claude)
+- `5cdd38255e` delete Cli.MdlFacts.declared (by claude)
+- `803c545420` update deus (by claude)
+- `8d4f94d1c8` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cb.mdl (by claude)
+- `b2118ecb1f` update deus (by claude)
+- `9e84cd4cb6` update deus (by claude)
+- `e69797f657` task: link 60e88be8 to CGen.codeRuntime
+- `3d3f26560e` task: set 60e88be8 state
+- `fee8274c35` task: comment on 60e88be8 (by claude)
+- `315f4fea21` native Core interpreter (D143) (by claude)
+- `db80f8c8c0` history: import 965 changes
+- `506986bb97` task: import from codebase/tasks.sexp
+- `e9a7188d56` add codebase/code codebase/specs
+- `bf1d51f864` update deus (by merge)
+- `c562dd221e` history: import 955 changes
+- `f9a2c9e537` history: import 940 changes
+- `06284d784b` task: import from /tmp/tmpsro5r533/tasks.sexp
+- `34d0771186` add /tmp/tmpsro5r533/merged/code /tmp/tmpsro5r533/merged/specs
+- `0cbf27c419` task: comment on cda44092 (by claude)
+- `119e671691` task: set cda44092 state (by claude)
+- `72f35cce64` update deus (by claude)
+- `4fc07ff59d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
+- `2bdda0f75f` delete Unnamed.h2fee9e6b7d Unnamed.h3f84493ccc
+- `ee4306fafb` task: open cda44092 Two stale definitions export as Unnamed.deus: old versions of Cli.withRemote and Analytics.command, lost their names in the D108 merge (by claude)
+- `e0c7da7ab6` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ws.mdl (by claude)
+- `db7865d2ee` update deus (by merge)
+- `cb3bc9db09` history: import 935 changes
+- `462f79b35e` history: import 931 changes
+- `68f57dfa92` task: import from /tmp/tmppqybtjes/tasks.sexp
+- `95f0dfe88e` add /tmp/tmppqybtjes/merged/code /tmp/tmppqybtjes/merged/specs
+- `e227cdbd69` task: comment on 10b95384 (by claude)
+- `8d474ded61` task: set 10b95384 state (by claude)
+- `7cea805ca8` update deus (by claude)
+- `958149a60d` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ws.mdl (by claude)
+- `4f1e55d2d6` update deus (by claude)
+- `9be4411da3` update deus (by claude)
+- `25cac1d555` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Workspace.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/wslaws.deus (by claude)
+- `34bb23ab7b` update deus (by claude)
+- `ada6a4b8ce` Rehash after wasm.deus (D140) (by claude)
+- `faad5a9a36` Native C: the whole deus CLI builds; Code.* raises a defect natively; data types by table (D140) (by claude)
+- `18f95dee7d` history: import 935 changes
+- `83a11b24ed` task: import from codebase/tasks.sexp
+- `54dde71085` add codebase/code codebase/specs
+- `df5727a9a3` Renumber D136 to D137 (by claude)
+- `9bd05183e7` update deus (by merge)
+- `0004ee2d41` history: import 923 changes
+- `be0b310f6c` history: import 920 changes
+- `38bb9d4f65` task: import from /tmp/tmpf4vx0azz/tasks.sexp
+- `76784d8bc0` add /tmp/tmpf4vx0azz/merged/code /tmp/tmpf4vx0azz/merged/specs
+- `ea0d21d5e6` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ex.deus (by claude)
+- `383fa9c836` task: comment on 7ef8bf45 (by claude)
+- `5555eef319` task: set 7ef8bf45 state (by claude)
+- `12b7ee844e` update deus (by claude)
+- `6b96eb98a2` update deus (by claude)
+- `5999a6962c` update deus (by claude)
+- `732fd1ad9c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ts.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/hyp.deus (by claude)
+- `04a1f5bd95` task: comment on 2a2b87a2 (by claude)
+- `e2aba1a255` task: set 2a2b87a2 state (by claude)
+- `167b1b0553` task: comment on 60e88be8 (by claude)
+- `c4de611752` Rehash after wasm.deus (D136) (by claude)
+- `8148f1d5b4` Native C: the compiler builds natively; definitions by hash, defects as Defect requests, partly typed comparisons, no over-application loop (D136) (by claude)
+- `9120895940` history: import 914 changes
+- `ef1387a893` task: import from codebase/tasks.sexp
+- `0b2eaf7131` add codebase/code codebase/specs
+- `9a00388d01` task: comment on 1cbfdd30 (by claude)
+- `ff9390afe5` task: set 1cbfdd30 state (by claude)
+- `369b918ac7` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
+- `f49a2afd29` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/gen.deus (by claude)
+- `0fbec2ed18` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
+- `748e608d43` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ce.deus (by claude)
+- `e924d4ea64` update deus (by claude)
+- `383c50b0bd` update deus (by claude)
+- `8473c595b7` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Testing.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/testlaws.deus (by claude)
+- `3c1e9887c9` task: comment on 4c9147ce (by claude)
+- `267f6a3ed2` task: comment on f4afc2c0 (by claude)
+- `0f37d9cae8` task: set 4c9147ce state (by claude)
+- `8258e3ffa5` task: set f4afc2c0 state (by claude)
+- `65f4d17190` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `88063d835c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/wd.deus (by claude)
+- `bf9fc7bbce` update deus (by claude)
+- `df0bddebfb` update deus/codebase.deus (by claude)
+- `6e76b24ac2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/Replicate.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/replaws.deus (by claude)
+- `8d7b7bc294` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/causalfix.deus (by claude)
+- `dccf008e03` task: set f4afc2c0 state (by claude)
+- `e0570babd4` update deus/codebase.deus (by claude)
+- `775fe75cbc` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r16b.deus (by claude)
+- `10e4683a29` task: comment on 62f3f4d0 (by claude)
+- `a1b9427e75` task: set 62f3f4d0 state (by claude)
+- `c11a4a13e1` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r17b.deus (by claude)
+- `2415ef1e0a` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd.deus (by claude)
+- `6feaefdb00` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r17.deus (by claude)
+- `96b1935261` update deus (by claude)
+- `11de0af5bb` update deus (by claude)
+- `9386f5d977` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r16.deus (by claude)
+- `92da89313a` update deus/codebase.deus (by claude)
+- `7ece3c0cd9` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cslaw2.deus (by claude)
+- `a5519693a3` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cslaw2.deus (by claude)
+- `0bf5d34791` update deus/update.deus (by claude)
+- `32ab93249f` task: comment on a08c4408 (by claude)
+- `fb25502efc` task: set a08c4408 state (by claude)
+- `e68a32b382` update deus (by claude)
+- `9aed252676` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cs.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cslaws.deus (by claude)
+- `f88fae0566` update deus/update.deus (by claude)
+- `12657c0b4c` task: set a08c4408 priority (by claude)
+- `588c02d414` task: open a08c4408 deus update reports 'Nothing changed' when only a definition's metadata changed (an added @[req] attribute is stored but not listed) (by claude)
+- `9f09a18d5a` task: comment on 6a3b0ebe (by claude)
+- `2729e504ce` task: set 6a3b0ebe state (by claude)
+- `e2aa18e5c6` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `4d4c5a4dfa` update deus (by claude)
+- `f0b3c7c980` update deus (by claude)
+- `bf66525861` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/covlaws.deus (by claude)
+- `cc272ef328` update deus/coverage.deus (by claude)
+- `dc4eacbf29` task: comment on dc22728a
+- `e13eed389e` task: set dc22728a state
+- `00e007e47f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/export.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cm/Export.Spec.mdl (by claude)
+- `7c437fa2f3` history: import 854 changes (by merge)
+- `38b5a5a4bd` history: import 854 changes
+- `bc05359a9b` task: import from /tmp/tmp355x44qi/tasks.sexp
+- `5c215aa568` add /tmp/tmp355x44qi/merged/code /tmp/tmp355x44qi/merged/specs
+- `51139cae5f` task: comment on 60e88be8 (by claude)
+- `577b95ae84` Native C: IO host operations; a program of Unit builds to a command (D129) (by claude)
+- `2f3a69291e` history: import 849 changes
+- `7c4b0ea752` task: import from codebase/tasks.sexp
+- `c9b261c701` add codebase/code codebase/specs
+- `9b6101917c` task: set 8d6df186 title labels
+- `42e26b44dd` task: comment on 8d6df186
+- `f5d7314079` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Analytics.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Checking.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Compile.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Coverage.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Export.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/Features.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/JsGen.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/api/View.Spec.mdl (by claude)
+- `72b0c44c55` update deus (by claude)
+- `65bd4845f2` update deus (by claude)
+- `f05d65e1ff` task: comment on 31d3c1cd
+- `1d3dff7d9a` task: comment on 908495a0
+- `16bed1ea32` task: set 31d3c1cd state
+- `3420a2904c` task: set 908495a0 state
+- `4cf441fa2c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `1a01227a33` history: import 835 changes (by merge)
+- `f53e7b1774` task: import from /tmp/tmpgk00l3cr/tasks.sexp
+- `62b25c4afc` history: import 833 changes
+- `efe583e598` task: import from /tmp/tmpgk00l3cr/tasks.sexp
+- `b4b7ab9b08` add /tmp/tmpgk00l3cr/merged/code /tmp/tmpgk00l3cr/merged/specs
+- `cdc0b95c8d` delete CGen.effMayAbort
+- `7750711ed8` task: open 60e88be8 Native: IO host operations in the C back end, so a {IO} program (print, readFile, args, exit…) builds to a native CLI; then Code.run, toward compiling the toolchain natively
+- `bcca0c821b` Native C: constants computed once, constructors and operations as values, linear abort analysis (D127) (by claude)
+- `a991ad9a5e` history: import 829 changes
+- `a42b7c6a72` task: import from codebase/tasks.sexp
+- `2d6e8a1808` add codebase/code codebase/specs
+- `8eecb18772` task: comment on 31d3c1cd
+- `ac7e65f717` task: set 31d3c1cd state
+- `4e56d55f5f` update deus (by claude)
+- `1a899feb4b` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/fld/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/fld/Checking.Spec.mdl (by claude)
+- `824371ab26` task: set dc22728a labels
+- `7c717d0d8c` task: open dc22728a Laws for comment-thread and history-record merges (the rest of 823f7b83's title; R-10 covered task merges only) (by claude)
+- `45201fcb2f` task: comment on cb6c9a43
+- `092f407f83` task: comment on 823f7b83
+- `09a900785c` task: set 823f7b83 state
+- `7a7d114a4e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws2.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `c25b4457b4` delete Codebase.Spec.crossings
+- `20a09010e5` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws2.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `89e951ba00` update deus (by claude)
+- `1af1cb4fff` task: set cb6c9a43 state
+- `f59d46337a` task: comment on a8150b0c
+- `2c33a39c84` task: set a8150b0c state
+- `a8086e5ba9` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus (by claude)
+- `32c236ec49` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/upd/Codebase.Spec.mdl (by claude)
+- `23c8aff615` task: set a8150b0c priority labels
+- `db5b5e73e9` task: open a8150b0c deus update: importing an export into a codebase that holds older definitions leaves dependents on stale hashes, which export as Unnamed.deus (seen at 64b55ea3; merge-base.py avoids it with a fresh restore) (by claude)
+- `c485df95ac` task: comment on 602f4557
+- `cc4e504a88` update deus (by claude)
+- `1b9e2d9cb1` history: import 796 changes (by claude)
+- `9cec7dd037` task: import from /tmp/tmpszia9cai/tasks.sexp
+- `3000e1dc81` history: import 802 changes
+- `3a92cd33c6` task: import from /tmp/tmpszia9cai/tasks.sexp
+- `dd4dbd1482` add /tmp/tmpszia9cai/merged/code /tmp/tmpszia9cai/merged/specs
+- `844bfe4aee` C and wasm back ends compile handlers whose clauses resume in tail position or abort (D124, task e1cf2c6c) (by claude)
+- `000e042441` history: import 792 changes
+- `ae5fc9cc24` task: import from codebase/tasks.sexp
+- `4bd47ec39b` add codebase/code codebase/specs
+- `10edc4793f` update deus (by claude)
+- `ea550bd267` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `0ccd9cb210` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `e91385a41c` task: set 908495a0 state
+- `80f16f5b41` task: set 8d6df186 labels
+- `af276e6be6` task: open 8d6df186 Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (by claude)
+- `d57cfc2055` update deus (by claude)
+- `3a268bb7f5` update deus (by claude)
+- `0a507af5f0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov/Coverage.Spec.mdl (by claude)
+- `8900eae06b` update deus (by claude)
+- `e86da1f72b` task: comment on 84ec6ef7
+- `61fa96e18f` task: set 84ec6ef7 state
+- `1a34186c1e` update deus (by claude)
+- `bbdb65838f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/eq/Checking.Spec.mdl (by claude)
+- `73876a5f17` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/eq/laws.deus (by claude)
+- `4979d8c660` history: import 767 changes (by merge)
+- `529810a14a` task: import from /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/tasks.sexp
+- `9fb0f089b8` update /tmp/tmpfy_mjmgx/merged/Cli.deus /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/tmpfy_mjmgx/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl (by merge)
+- `0983a64a7c` delete View.Spec.declared View.Spec.scheme
+- `f0b7e6344c` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/Cli.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/Compile.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/Features.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/Mdl.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/Toolchain.Features.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/Types.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/View.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/ours/View.deus (by merge)
+- `beb30c0b39` update deus (by merge)
+- `da6735eadc` history: import 754 changes
+- `0330b3d44b` task: import from /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/tasks.sexp
+- `a3df216d7f` update /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Aliasing.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Analytics.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Array.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Assets.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Bench.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Bindings.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Build.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/CGen.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Check.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Checking.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Cli.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Closures.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Code.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Codebase.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Columnar.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Comments.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Compile.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Counter.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Dict.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Entry.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Events.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Export.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/External.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Failure.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Features.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Highlight.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Image.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Inbox.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Int.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Json.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Lexer.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/List.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Log.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Map.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Mdl.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/MutMap.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Names.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Notes.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Observe.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Option.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Parquet.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Parser.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Perf.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Print.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Project.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Prove.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Qa.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Ref.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Rendered.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Replicate.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Resolve.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Set.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Sexp.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Sim.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Site.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Sort.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Sorting.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Spec.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Structural.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Tables.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Tally.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Tasks.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Tests.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Text.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Texts.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Tour.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Trace.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Ts.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Types.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Unique.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Unnamed.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Unsound.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Update.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/View.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Wasm.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/WasmEquality.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/Web.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/code/_root.deus /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Analytics.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Array.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Bindings.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Checking.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Codebase.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Compile.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Export.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Features.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Notes.QA.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/Toolchain.Features.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/View.Spec.mdl /tmp/tmp6xeh3fkk/packages/reflect/deus-lang/codebase/specs/WasmEquality.Spec.mdl (by merge)
+- `569c315026` move View.Spec.scheme View.Spec.taskToHost
+- `e36b2a138c` move View.Spec.declared View.Spec.codebaseNames
+- `d5b10a7f5e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `5cd77d0993` task: set ab1ed867 state
+- `05dc0408c0` task: comment on ab1ed867 (by claude)
+- `75a6fc0bd4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `00672df673` update deus (by claude)
+- `7702abecf7` delete Types.typeNames
+- `61d631476f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/view/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/view/View.Spec.mdl (by claude)
+- `40df71b165` update deus (by claude)
+- `46b4ad7ac0` update deus (by claude)
+- `5fff9cd9f2` task: comment on 381a725d (by claude)
+- `67f6bc1321` export: merge tasks from codebase
+- `1c433a64f1` update deus (by merge)
+- `8ea5d7159c` history: import 754 changes
+- `7843d7ac7c` task: import from /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/tasks.sexp
+- `a9ee19dcf3` update /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Aliasing.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Analytics.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Array.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Assets.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Bench.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Bindings.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Build.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/CGen.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Check.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Checking.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Cli.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Closures.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Code.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Codebase.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Columnar.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Comments.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Compile.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Counter.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Dict.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Entry.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Events.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Export.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/External.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Failure.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Features.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Highlight.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Image.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Inbox.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Int.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Json.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Lexer.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/List.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Log.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Map.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Mdl.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/MutMap.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Names.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Notes.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Observe.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Option.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Parquet.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Parser.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Perf.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Print.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Project.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Prove.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Qa.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Ref.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Rendered.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Replicate.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Resolve.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Set.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Sexp.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Sim.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Site.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Sort.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Sorting.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Spec.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Structural.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Tables.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Tally.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Tasks.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Tests.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Text.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Texts.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Tour.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Trace.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Ts.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Types.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Unique.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Unnamed.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Unsound.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Update.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/View.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Wasm.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/WasmEquality.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/Web.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/code/_root.deus /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Analytics.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Array.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Bindings.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Checking.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Codebase.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Compile.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Export.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Features.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Notes.QA.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/Toolchain.Features.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/View.Spec.mdl /tmp/tmpr1v8bubz/packages/reflect/deus-lang/codebase/specs/WasmEquality.Spec.mdl (by merge)
+- `89c051292e` task: set 381a725d state (by claude)
+- `5470770699` task: comment on 381a725d (by claude)
+- `1581bc83eb` Explorer.Spec: features.json and meta.features (R-16, R-17) (by claude)
+- `dd1e520cef` deus-lang: Explorer.generate writes features.json and meta.features; Cli.featuresJson is shared with deus features (D118) (by claude)
+- `861153ed18` history: import 744 changes
+- `7b3fd1cd9a` task: import from tasks.sexp
+- `b50b1a128d` add code specs
+- `a7e23733d0` close 72a1f2fb by #c886759cc6 (by claude)
+- `c886759cc6` C and wasm back ends compile show, Text.utf8, Text.fromCodes and Text.sha256 (D120) (by claude)
+- `79be6887e1` history: import 749 changes
+- `91b9b832cc` task: import from codebase/tasks.sexp
+- `93bf75e61d` add codebase/code codebase/specs
+- `13466f798a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `5d7e149aae` task: set 602f4557 state
+- `e110e45247` task: comment on 602f4557 (by claude)
+- `0ed94fe0fd` task: set 9e2f6916 state
+- `ca6c735225` task: comment on 9e2f6916 (by claude)
+- `cc6cc5a238` history: import 740 changes (by merge)
+- `6bca62fa14` update /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Aliasing.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Analytics.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Array.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Assets.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Bench.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Bindings.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Build.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/CGen.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Check.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Checking.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Cli.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Closures.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Code.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Codebase.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Columnar.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Comments.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Compile.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Counter.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Dict.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Entry.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Events.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Export.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/External.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Failure.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Features.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Highlight.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Image.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Inbox.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Int.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Json.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Lexer.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/List.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Log.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Map.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Mdl.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/MutMap.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Names.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Notes.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Observe.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Option.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Parquet.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Parser.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Perf.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Print.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Project.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Prove.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Qa.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Ref.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Replicate.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Resolve.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Set.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Sexp.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Sim.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Site.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Sort.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Sorting.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Spec.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Structural.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Tables.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Tally.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Tasks.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Tests.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Text.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Texts.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Tour.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Trace.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Ts.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Types.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Unique.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Unnamed.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Unsound.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Update.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/View.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Wasm.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/WasmEquality.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/Web.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/code/_root.deus /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Analytics.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Array.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Bindings.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Checking.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Codebase.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Compile.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Export.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Features.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Notes.QA.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/Toolchain.Features.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/View.Spec.mdl /tmp/tmpes6h2vzx/packages/reflect/deus-lang/codebase/specs/WasmEquality.Spec.mdl (by merge)
+- `a322239bd2` task: set 6cffbc44 state
+- `54942183ff` task: comment on 6cffbc44 (by claude)
+- `3c29e9b402` Tables test expects the new word counts (by claude)
+- `99c28a3bd0` C and wasm back ends compile Dict, MutMap and Map (D119) (by claude)
+- `e5cd37dfe0` history: import 731 changes
+- `55f90bb61b` task: import from codebase/tasks.sexp
+- `78e2018de0` add codebase/code codebase/specs
+- `8a982538db` task: set b4e12f14 state
+- `8d71855b01` task: comment on b4e12f14 (by claude)
+- `f596a0bb31` task: set f264430b state
+- `61e15dea1c` task: comment on f264430b (by claude)
+- `2a6b52e147` task: set 602f4557 state
+- `4b890c0dac` task: comment on 602f4557 (by claude)
+- `3cfdea41af` history: import 707 changes
+- `9b6f2fc529` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `6b10820fac` update deus (by claude)
+- `1621f4b14c` update deus (by claude)
+- `7b4964032d` history: import 702 changes
+- `e687b6f7d0` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `9f1796bfc9` task: set 8a24ab99 state
+- `449b8e61d6` task: comment on 8a24ab99 (by claude)
+- `081c6f5fc4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Toolchain.Features.mdl (by claude)
+- `97c163ea5c` task: open 381a725d Explorer: show feature maps from deus features --json: the tree with status, open tasks and problems, each feature linking its specs, definitions and tasks
+- `84f69a69f0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Toolchain.Features.mdl (by claude)
+- `dea8e1e128` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Toolchain.Features.mdl (by claude)
+- `e412ea4c7f` update deus (by claude)
+- `7ebe0892d0` delete Feature.defs Feature.id Feature.parent Feature.specs Feature.status Feature.tasks Feature.title
+- `cc970bd692` task: open ab1ed867 Type headers print an ability by its IRI's last segment, so MdlHost (urn:deus:mdl:Host) prints as Host; print the ability's own name
+- `e453d2fac0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `b222da0c51` update deus/features.deus (by claude)
+- `fc5115e0a2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `d7fd728b5b` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `eb43607e8f` update deus/features.deus (by claude)
+- `6e164a75f4` add deus/features.deus (by claude)
+- `aedec61ade` task: comment on e76e36b0 (by claude)
+- `4341bed77f` close f9cd5624 by #c9c3e09be7 (by claude)
+- `c9c3e09be7` C and wasm back ends compare data by per-type functions (D117) (by claude)
+- `ef951547a1` history: import 702 changes
+- `872dcf4a93` task: import from codebase/tasks.sexp
+- `f255972bcc` add codebase/code codebase/specs
+- `922cec2bc5` task: link 62f3f4d0 to Codebase.mergeMeta
+- `2ee07a4da0` task: link f4afc2c0 to Replicate.import
+- `bbdf5cd081` task: open 62f3f4d0 Names that share a hash keep only the last name's doc, comments and parameter names (by claude)
+- `aa666ea0fa` task: comment on f4afc2c0 (by claude)
+- `0b3045184c` task: set f4afc2c0 title priority labels (by claude)
+- `daac5bc3f2` history: import 696 changes
+- `9db52bfe04` task: comment on 72a1f2fb (by claude)
+- `f86efb6645` task: set 4c9147ce details
+- `07d08fc81a` task: set 4c9147ce title
+- `729219806d` renumber the Text runtime to D115 and the shared-hash scheme to D116, after a concurrent D113/D114 (by claude)
+- `d6226b3530` history: import 694 changes
+- `8d312f787b` task: import from codebase/tasks.sexp
+- `f5755843fa` catch up with #13952's export: JIT callbacks and one printer per mdl run (cfe0e8e4) (by claude)
+- `30b9cf5cac` Text programs renamed so no name or hash is shared with Sorting or the toolchain (D113) (by claude)
+- `bfb444796f` delete Texts.all Texts.appended Texts.insert Texts.keys Texts.keysGo Texts.kind Texts.kinds Texts.lengths Texts.numbers Texts.occurrences Texts.orderedGo Texts.parseLoop Texts.parsed Texts.phrase Texts.searched Texts.shown Texts.sortTexts Texts.sorted Texts.step Texts.sumParsed Texts.textsSmall
+- `32c632dc0b` task: open f9cd5624 Native: structural equality and ordering of data in the C back end
+- `2ebc88ebd1` task: open 4c9147ce Replication keeps the first scheme of a shared hash; merge schemes as the store does since D114
+- `77b64e330d` task: comment on 72a1f2fb (by claude)
+- `702d8b68ad` Text programs for the C back end (D113) (by claude)
+- `06b414aaec` C back end compiles Text with a runtime ported from the Rust kernel (D113); a hash keeps a scheme that fits every name (D114) (by claude)
+- `536bd782ef` history: import 668 changes
+- `58480b86c8` export: merge 5 changes from codebase
+- `8f9856ca45` task: set a99bf01d state
+- `28273fc62b` task: comment on a99bf01d (by claude)
+- `a1c034c828` task: set 1854b55d state
+- `8f2b9ee56e` task: comment on 1854b55d (by claude)
+- `607b0ae966` task: open 8a24ab99 Feature maps in the codebase alongside tasks: a tree of features with status, linking specs, requirements, definitions and tasks; CLI, a backfilled map of the toolchain, shown in the explorer
+- `b8773f11e9` task: open 84ec6ef7 Type checker: a test comparing a partial application with == passes the checker and returns false (Compile.Spec.apiReportsDeclarationsAsGaps after withHost gained a parameter); updates should reject it
+- `328f1ddb76` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/edit-api.deus (by claude)
+- `cee7a31873` task: comment on 7f677d04 (by claude)
+- `e598ded948` task: comment on 44892ca0 (by claude)
+- `638043f48f` task: set 44892ca0 state
+- `95fa9e2cc1` close 7f677d04 by #93f3e01096 (by claude)
+- `93f3e01096` update deus (by claude)
+- `f84f1e8092` history: import 702 changes
+- `2b352668f1` task: import from tasks.sexp
+- `753edf4687` history: import 646 changes
+- `c892328cc0` task: import from tasks.sexp
+- `fc7658bcb6` merge #13952's branch: JsGen.Spec refusals (22d58083) (by claude)
+- `e7cadb3cf0` export: merge 7 changes from codebase
+- `f5bf3f0de8` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `adbe79e87a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl
+- `28e7c11f97` task: open 6cffbc44 devex: a fresh container cannot run the full suite: the Rust wasm32 target and tsc are missing, and three threads re-diagnosed it (native, explorer, bindings)
+- `4216b258ab` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/lost-task.sexp
+- `8ad03b07e3` export: merge 7 changes from codebase
+- `2b106be4eb` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `1ba9d2d8dd` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Aliasing.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Analytics.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Array.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Assets.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Bench.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Bindings.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Build.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/CGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Check.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Checking.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Cli.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Closures.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Code.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Codebase.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Columnar.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Comments.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Compile.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Counter.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Dict.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Entry.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Events.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Export.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/External.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Failure.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Highlight.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Image.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Inbox.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Int.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Json.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Lexer.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/List.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Log.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Map.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Mdl.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/MutMap.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Names.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Notes.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Observe.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Option.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Parquet.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Parser.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Perf.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Print.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Project.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Prove.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Qa.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Ref.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Replicate.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Resolve.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Set.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sexp.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sim.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Site.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sort.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sorting.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Spec.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tally.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tasks.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tests.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Text.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tour.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Trace.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Ts.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Types.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Unique.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Unnamed.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Unsound.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Update.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/View.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Wasm.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/WasmEquality.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Web.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/_root.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Analytics.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Array.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Bindings.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Checking.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Compile.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Export.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Notes.QA.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/View.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/WasmEquality.Spec.mdl
+- `a1a57020ee` export: merge 26 changes from codebase
+- `2e57f4437a` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `de86c9c9ac` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Aliasing.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Analytics.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Array.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Assets.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Bench.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Bindings.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Build.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/CGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Check.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Checking.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Cli.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Closures.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Code.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Codebase.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Columnar.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Comments.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Compile.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Counter.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Dict.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Entry.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Events.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Explorer.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Export.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/External.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Failure.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Highlight.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Image.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Inbox.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Int.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Json.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Lexer.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/List.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Log.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Map.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Mdl.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/MutMap.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Names.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Notes.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Observe.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Option.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Parquet.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Parser.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Perf.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Print.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Project.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Prove.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Qa.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Ref.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Replicate.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Resolve.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Set.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sexp.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sim.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Site.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sort.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Sorting.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Spec.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tally.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tasks.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tests.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Text.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Tour.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Trace.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Ts.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Types.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Unique.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Unnamed.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Unsound.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Update.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/View.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Wasm.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/WasmEquality.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/Web.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/_root.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Analytics.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Array.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Bindings.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Checking.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Codebase.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Compile.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Explorer.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Export.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/Notes.QA.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/View.Spec.mdl /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/WasmEquality.Spec.mdl
+- `7dfe60f632` task: open 9e2f6916 devex: the seed fixpoint compiles the toolchain twice (17 s)
+- `38aa3e8f21` task: open 602f4557 devex: merges into #13952 race and D-numbers collide
+- `c7ab32eac8` task: open b4e12f14 devex: the restore test takes 89 s and compiles deus/ twice
+- `2b21b1d6f7` task: open f264430b devex: the dogfood test takes 124 s
+- `5f7d5f1997` task: open 7f677d04 devex: deus mdl over all specs takes 34 s
+- `dded1cf89e` task: open 44892ca0 devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x
+- `7e4e80fa01` task: set 05658284 state
+- `c12e0556c6` task: comment on 05658284 (by claude)
+- `518cddbd4f` task: set 508d9443 state
+- `a69a1ed715` task: comment on 508d9443 (by claude)
+- `ae7acb3d31` JsGen.Spec: R-2 has its test; R-3 refuses inline Js.import (by claude)
+- `c138b36135` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
+- `44908d81fd` JsGen.Spec: refusal tests for multi-shot handlers and inline Js.import (by claude)
+- `00911c2f8b` task: comment on c62198a1
+- `ef3d1009b4` task: set c62198a1 state
+- `c2c2882e4b` task: link c62198a1 to #1883dc98b6
+- `1883dc98b6` builtin objects travel in bundles; unknown constructors still bind every pattern variable (D112)
+- `08d609da41` history: import 632 changes
+- `4f330f0e82` task: import from tasks.sexp
+- `64516ee1c5` merge #13952's branch: explorer events (D110), C closures (D111)
+- `e5816f8806` task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (by claude)
+- `d4da286202` close 610b2785 by #0ab73f8ca1 (by claude)
+- `0ab73f8ca1` C back end: closures, partial application and lambda-lifted letrec (D111) (by claude)
+- `d2791171c6` history: import 627 changes
+- `671c6d2637` task: import from tasks.sexp
+- `9d20d6564f` task: set 381f55f3 state details (by claude)
+- `b28f47c0ce` history: import 623 changes
+- `d77982c141` task: import from tasks.sexp
+- `fa2371ce09` add code specs
+- `072f91e168` task: set ca75d545 state (by claude)
+- `086d4e6828` task: comment on ca75d545 (by claude)
+- `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)
+- `5af5f624f5` the explorer writes events.json and meta.events (R-14, R-15) (by claude)
+- `c77c21729f` Explorer.Spec R-14, R-15: events.json and the meta count, spec first (by claude)
+- `102beac5d7` merge #13952's branch: View.Spec and the specs as exported (by claude)
+- `400cb8ebc9` history: import 698 changes
+- `5dab22c540` task: import from codebase/tasks.sexp
+- `3885974323` merge #13952's branch: View fix (D108) (by claude)
+- `dfc08c5d11` history: import 590 changes
+- `9aa61666e1` task: import from codebase/tasks.sexp
+- `c37c95c07d` merge #13952's branch: Parquet column statistics (by claude)
+- `892406fc07` export: merge 9 changes from codebase
+- `a6a09e7efc` export: merge tasks from codebase
+- `d3ac71beee` merge #13952's branch (by claude)
+- `5305c4a8cc` import #13952's export (Parquet statistics) (by claude)
+- `1cf702b82d` export: merge 32 changes from codebase
+- `f599a785ab` export: merge tasks from codebase
+- `b7051d6a4f` merge #13952's branch; View fix renumbered D108 (by claude)
+- `c7a47c3993` import #13952's export (analytics, Composer plugin, graph view) (by claude)
+- `ef3734357f` export: merge 21 changes from codebase
+- `14e27c9c0a` export: merge tasks from codebase
+- `3de400a062` merge #13952's branch; View fix renumbered D106 (by claude)
+- `c7ed4d5991` export: merge 9 changes from codebase
+- `a99a99e525` export: merge tasks from codebase
+- `74838b1914` merge #13952's branch (D102, D103); View fix renumbered D104 (by claude)
+- `7093a34ef8` export: merge 13 changes from codebase
+- `eef27fdc12` export: merge tasks from codebase
+- `eb47c4209c` merge #13952's branch (D101, D102); View fix renumbered D103 (by claude)
+- `5c0e49121c` Explorer.Spec: api signatures name types as the header now prints them (D101) (by claude)
+- `f8d7887d0d` task: set f6a2c2ff state (by claude)
+- `7e1fcbca9a` close 4f7f9e40 by #8cb84289e1 (by claude)
+- `8cb84289e1` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/specs/VIEW.mdl (by claude)
+- `1e5d40d2d6` cli: bring Cli.dispatch and Cli.main up to date with deus/ (by claude)
+- `87e96d9f73` close 4b1eb1a9 by #7886bef5ce (by claude)
+- `7886bef5ce` cli: origin and the R2 endpoint default for the toolchain codebase (D108) (by claude)
+- `a00feaab57` task: set 4b1eb1a9 state priority assignee labels details (by claude)
+- `6a48195085` task: open 4b1eb1a9 The CLI defaults origin and the R2 endpoint for the toolchain codebase (by claude)
+- `97932915fc` task: set 72207dc1 state details (by claude)
+- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
+- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
+- `5f3ee9bd61` history: import 580 changes
+- `bdbadcd847` task: import from tasks.sexp
+- `6e64e08bbb` task: comment on e76e36b0 (by claude)
+- `f06a7a09f3` history: import 577 changes
+- `8637e168f4` task: import from tasks.sexp
+- `8fb40df7ae` add code specs
+- `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
+- `c1094317db` users exclude the definition itself (D101) (by claude)
+- `6ca942925a` history: import 586 changes
+- `b2dd88f2c9` task: import from tasks.sexp
+- `9d9673a128` merge: the explorer's graph view (D99) (by claude)
+- `219688316c` history: import 448 changes
+- `dcd5501500` task: import from tasks.sexp
+- `e95740510c` add code specs
+- `2efffdfa02` close 55a3e9d5 by #3899aa8081 (by claude)
+- `3899aa8081` the explorer's graph view; users exclude the definition itself (D96) (by claude)
+- `bd968a8e7b` task: open 55a3e9d5 Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (by claude)
+- `68fd7c720d` history: import 408 changes
+- `817e132bb0` task: import from tasks.sexp
+- `09cc7dae97` add code specs
+- `4e23b5e485` task: comment on 771e6f9e (by claude)
+- `3815cceaee` history: import 558 changes (by claude)
+- `845a8ce02c` task: import from tasks.sexp
+- `059bcafd6c` add code specs
+- `cf058fac29` export: merge tasks from codebase
+- `1a7a8cb1c2` task: comment on 771e6f9e (by claude)
+- `0798d17c17` history: import 532 changes (by claude)
+- `f7be59b176` task: import from tasks.sexp
+- `7cfe0a41ea` add code specs
+- `44545eb04d` task: comment on e76e36b0 (by claude)
+- `129416dd29` task: open 91b838f4 Run the DEUS skill through the Composer assistant with a live model
+- `8dcb4028b0` task: open 05658284 Test that the JS back end refuses Js.import inside an expression
+- `5682baf33c` task: open 1e8dee8b A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec
+- `92327e0846` task: set 5d6c67b4 state
+- `51a90a44c7` task: comment on 5d6c67b4 (by claude)
+- `f4563342df` task: set 771e6f9e state
+- `e9b5cdc855` task: comment on 771e6f9e (by claude)
+- `a44c701daa` JS target: inline Js.import refused; Composer plugin bindings (by claude)
+- `e55740c728` analytics decisions renumbered D104, D105 (by claude)
+- `43a62f2c19` history: import 540 changes
+- `c769c10b59` task: import from tasks.sexp
+- `8be1d54ed3` add code specs
+- `f8f410ac05` export: merge tasks from codebase
+- `4b59911ace` analytics decisions renumbered D103, D104 (by claude)
+- `44f4b80a35` history: import 526 changes
+- `0b582fa2ae` task: import from tasks.sexp
+- `027cb63f7b` add code specs
+- `90521a638a` task: comment on 72207dc1 (by claude)
+- `77856573c6` history: import 515 changes
+- `397db919a9` task: import from tasks.sexp
+- `661910e409` add code specs
+- `6ad8d8e787` analytics decisions renumbered D102, D103 (by claude)
+- `731819a207` task: set 87707577 state (by claude)
+- `5e0af148e7` task: set 87707577 details (by claude)
+- `ae13da09a7` task: open 72207dc1 The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (by claude)
+- `182ea2fa92` close 3c8a311c by #d3d028011c (by claude)
+- `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
+- `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
+- `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
+- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
+- `e468baa69b` task: comment on 12663f55 (by claude)
+- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
+- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
+- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
+- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
+- `616c10e45e` history: import 511 changes
+- `a5ec773714` task: import from tasks.sexp
+- `3796ba0f06` task: set 38603468 state details (by claude)
+- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
+- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
+- `26b25952c4` history: import 507 changes
+- `ce1b500e79` task: import from tasks.sexp
+- `880640eb13` task: set e76e36b0 state (by claude)
+- `ea44281ed7` task: set e76e36b0 details (by claude)
+- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
+- `77337bc6cf` history: import 501 changes
+- `1e220da057` task: import from tasks.sexp
+- `3c07f87183` add code specs
+- `dbfeb70ff7` export: merge 21 changes from codebase
+- `1ec8ae9075` export: merge tasks from codebase
+- `d2758d5ca1` specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in (by claude)
+- `f8586fdfa8` merge #13952's branch (specs in the codebase, D99) (by claude)
+- `554813dc73` export: merge 4 changes from codebase
+- `c0d0ed9ccd` merge #13952's branch (C argument moves D98) (by claude)
+- `bd80e93178` import the examples and Array.Spec that #13952's export carries (by claude)
+- `ece09cfdea` specs: the checked specs live in the codebase (by claude)
+- `3095ac663f` export: merge 65 changes from codebase
+- `494c9ca6b9` export: merge tasks from codebase
+- `75e91c7092` merge #13952's branch (pure Array D96, JS target D97) (by claude)
+- `380ed47988` export: merge 6 changes from codebase
+- `995c501193` export: merge tasks from codebase
+- `e494c469b1` merge #13952's branch (explorer spec backfill) (by claude)
+- `609c728841` close 11a42afd by #387eb2652a (by claude)
+- `387eb2652a` update deus (by claude)
+- `1cb8a6f2e3` close 186feaf2 by #4b89319b5e (by claude)
+- `4b89319b5e` update deus (by claude)
+- `cbda6c4132` task: set eea32f23 state (by claude)
+- `34196e906f` task: comment on eea32f23 (by claude)
+- `a27891d862` task: set e69b5384 state (by claude)
+- `72fc605f2a` task: comment on e69b5384 (by claude)
+- `dbb2442b37` task: set ef597118 state (by claude)
+- `1c96af371b` task: comment on ef597118 (by claude)
+- `3091e9e3c4` task: set de710f29 state (by claude)
+- `f9a906953b` task: comment on de710f29 (by claude)
+- `89fb104aa7` task: set e84ff062 state (by claude)
+- `ec2f53037b` task: comment on e84ff062 (by claude)
+- `2d5d11dc09` task: set 091e43c0 state (by claude)
+- `b96e604f28` task: comment on 091e43c0 (by claude)
+- `fe568ce2e8` task: set c338b56e state (by claude)
+- `fa4afec10c` task: comment on c338b56e (by claude)
+- `309d01bf5b` task: set d807958c state (by claude)
+- `5d47ec5173` task: comment on d807958c (by claude)
+- `a0a219d54d` task: set 434a6dbc state (by claude)
+- `b40ab40d46` task: comment on 434a6dbc (by claude)
+- `3a63170822` task: set 932f4034 state (by claude)
+- `4e4f0d8ade` task: comment on 932f4034 (by claude)
+- `4fa0ad8131` export: merge 35 changes from codebase
+- `e8b6a8fb9d` export: merge tasks from codebase
+- `2c40570335` update docs/spec/CHECKING.mdl (by claude)
+- `68f6e51330` merge #13952's branch (spec process D92, report tool D93, declarations D94); checked ascriptions renumbered D95 (by claude)
+- `8a8f8bc6e2` add docs/spec/CHECKING.mdl (by claude)
+- `ab6a7be376` close a03fdfb6 by #a40db3f119 (by claude)
+- `a40db3f119` check ascriptions, binder types and bare rows (D92) (by claude)
+- `bc7cfd4401` update docs/spec/CHECKING.mdl
+- `d3c92c98f9` export: merge 6 changes from codebase
+- `c610f5d907` export: merge tasks from codebase
+- `634f0cce36` merge #13952's branch (wasm refcounting, D90); pull verification renumbered D91 (by claude)
+- `6603ee130b` close 7afeaa0c by #1efeb3fb7d (by claude)
+- `1efeb3fb7d` pull: verify bundle names, bundle and object hashes, cycle members included (D90) (by claude)
+- `83474d34b9` export: merge 19 changes from codebase
+- `aabff4cf3c` export: merge tasks from codebase
+- `63e3914ad2` merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89 (by claude)
+- `374b38babb` export: merge 4 changes from codebase
+- `bd6bedcbc4` export: merge tasks from codebase
+- `cb1f41b30f` merge #13952's branch: explorer console (D84, D85); spellings and union merge renumbered D86, D87 (by claude)
+- `1e1b206397` export: settle a task a git union merge left on two lines (D85) (by claude)
+- `ebc49e0bde` history: import 68 changes
+- `2dffd26498` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/recover-tasks.sexp
+- `da37aed4f5` export: merge 36 changes from codebase
+- `8ddc568763` export: merge tasks from codebase
+- `ce407c2357` close 0d21d8d5 by #6d6826c8bd (by claude)
+- `6d6826c8bd` number literals keep their spelling for view and export (D84) (by claude)
+- `b8fc2ca902` history: import 9 changes
+- `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
+- `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
+- `f157773921` task: set 2bbc3445 state (by claude)
+- `a9a106ca2d` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/repair/tasks.sexp
+- `ae6d9689f5` export: merge 11 changes from codebase
+- `78780510c3` export: merge tasks from codebase
+- `0b6f989667` merge #13952's branch: deus build --browser (D78) with the export merge (D79) (by claude)
+- `e630b09568` log: a change shared by several records keeps its oldest position (D78) (by claude)
+- `1b03a289c4` task: set a7a44f7d state details (by claude)
+- `b8e5ff6f29` export: merge 14 changes from codebase
+- `c87fd4be9f` export: merge tasks from codebase
+- `4a55fae398` close a93aee73 by #8159bef4fa (by claude)
+- `8159bef4fa` export: merge tasks and history from other codebases (D78) (by claude)
+- `cac5611fdc` task: open a93aee73 Exports from several containers overwrite each other's history and tasks (by claude)
+- `8f8f989872` task: comment on b8b3aab7 (by claude)
+- `67fa289311` task: set b8b3aab7 state (by claude)
+- `cb694883a2` task: open b8b3aab7 codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (by claude)
+- `09d81923ca` export names unnamed callees (D77); Text.fromCodes surrogate pairs (D76) (by claude)
+- `bfe27e468c` close 2bbc3445 by #fa20112443 (by claude)
+- `fa20112443` Text.fromCodes encodes code points above U+FFFF as surrogate pairs (D72) (by claude)
+- `d5df8ec2b7` task: comment on be4c4645 (by claude)
+- `3153eb0b41` task: comment on 9428f054 (by claude)
+- `4c3293900d` task: comment on 861438d2 (by claude)
+- `2080975ba9` task: set 861438d2 state (by claude)
+- `612c223e35` task: set a7a44f7d state (by claude)
+- `11651e3bd9` task: set 279f2266 state (by claude)
+- `7993ab6e7f` task: set 1a316e76 state (by claude)
+- `a9ba98d033` task: open a7a44f7d Namespace trees, deus migrate and full-history compaction (by claude)
+- `a7b6854939` task: open 279f2266 Builtins are URIs at the embedding boundary (urn:deus:builtin:IO) (by claude)
+- `c94273b927` task: open 1a316e76 One specification per format under docs/spec (by claude)
+- `9210ebb09b` close bf5681bf by #e7f95e998b (by claude)
+- `e7f95e998b` prover: unknown tactics fail the proof (D71) (by claude)
+- `4e18596be8` merge the TypeScript-like dialect (D70) from #13952 (by claude)
+- `2d1240fb34` task: import 2 tasks
+- `2aa065727b` task: open 186feaf2 wasm: structural equality on constructed values (by claude)
+- `e4901e522a` close 40cb2f16 by #c08af3d400 (by claude)
+- `c08af3d400` wasm: compare by type, refuse address compares (D69) (by claude)
+- `5d148858db` task: set 5fe4c8b1 state (by claude)
+- `404c368e60` task: set 11b93dc9 state (by claude)
+- `501bf19fea` close 5a02d566 by #1778b66c03 (by claude)
+- `1778b66c03` restores keep history; strings escape as hex; export keeps attributes, specs and the project (by claude)
+- `6adb43ae51` history: import 69 changes
+- `d29d46ccb6` export keeps docs, attributes, specs and the project (by claude)
+- `de504398e7` task: open 11a42afd Docs disagree with the code in eight places listed in docs/spec/README.md (by claude)
+- `5cb2f5d914` task: open 5fe4c8b1 deus export drops attributes, .mdl specs, the project file and some doc comments (by claude)
+- `5b3d421650` task: open 7afeaa0c Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (by claude)
+- `f081f7d7e5` task: open a03fdfb6 Type ascriptions are erased before checking; a row on a definition without binders is not checked (by claude)
+- `e609a8401c` task: open bf5681bf The prover ignores tactic names it does not know (by claude)
+- `1ba1623224` task: open 2bbc3445 Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (by claude)
+- `28ae9efd13` task: open 40cb2f16 wasm compares constructed values by address: some x == some x is 0 (by claude)
+- `f5613514d3` task: open 11b93dc9 view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (by claude)
+- `30e21b3285` task: open 0d21d8d5 Character literals print as numbers ('"' becomes 34) (by claude)
+- `a6bce7d29d` task: comment on b09507db (by claude)
+- `2ff94c39f7` close b09507db by #c1f5fb9764 (by claude)
+- `c1f5fb9764` Ordinary comments kept as metadata on Core (D66) (by claude)
+- `f23a0544a3` task: open 5a02d566 Restoring the git export loses history, so the next export rewrites HISTORY.md (by claude)
+- `35f036f799` task: link 9428f054 to Qa.check (by claude)
+- `1c5eda1dc1` task: comment on 9428f054 (by claude)
+- `284e7679a0` task: set 9428f054 state (by claude)
+- `c12c31e45e` add examples/notes.mdl (by claude)
+- `aa83cb54dc` QA flows for web apps as MDL qa blocks (D65) (by claude)
+- `8cb4d36100` task: open 10b95384 deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (by claude)
+- `419db4fb56` task: open 88004c30 Embed files in the codebase, never in git, and make artifacts cached constants (by claude)
+- `36e16d03e0` task: open 86d7b02a Work without git: the codebase is where the toolchain is developed, git only backs it up (by claude)
+- `ec51f12cdc` task: open 861438d2 The codebase explorer app needs to be much better (by claude)
+- `0e7a5bfb2c` task: open 9428f054 QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (by claude)
+- `7453b3a1b7` task: import 18 tasks
+- `bff1b8d98b` add code
+- `67c7d5a614` init
+- `0833dc37cb` task: set 50e58574 details
+- `8755200a57` history: import 459 changes (by claude)
+- `d435c5cfa7` task: import from tasks.sexp
+- `4c8ea1ee27` add code specs
+- `7b35b30de6` task: set 50e58574 details
+- `302f8b5248` history: import 451 changes (by claude)
+- `c2c006d631` task: import from tasks.sexp
+- `5e722d76ec` add code specs
+- `4c432b5427` task: set 50e58574 details
+- `611a529b6e` history: import 404 changes (by claude)
+- `5eba8c36bd` task: import from tasks.sexp
+- `32b847eed4` add code specs
+- `82b26f3b0b` task: open f4afc2c0 A pull keeps existing metadata, so spec prose edited in two codebases does not merge
+- `643c8e815d` task: open 3e686896 Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase
+- `1f094af5f5` task: set b4d7a440 state assignee
+- `254574a07f` task: set 50e58574 state assignee
+- `361dc8fcd7` task: open 50e58574 Specs live in the codebase: documents keep their prose, deus view and deus mdl take a document, docs/spec/*.mdl removed
+- `a4d50c65e3` specs live in the codebase: documents keep their prose and order (D96) (by claude)
+- `6c113461a6` history: import 408 changes
+- `e565d47432` task: import from tasks.sexp
+- `a44472206d` add code specs
+- `211fc54767` C back end: a local passed as an argument moves there when later arguments only read it (D98) (by claude)
+- `5abc62eac7` history: import 438 changes
+- `5460cc4043` task: import from tasks.sexp
+- `dd19da2a63` add code specs
+- `c53158568a` Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97 (by claude)
+- `65aa9a06c5` history: import 434 changes
+- `fc3475b4c1` task: import from tasks.sexp
+- `3f2af1b29d` add code specs
+- `efb62b2ac7` Merge #13952's branch (explorer spec backfill) into the JS target (by claude)
+- `31a71813bc` history: import 410 changes
+- `3487bc898b` history: import 442 changes
+- `797c4cd451` task: import from tasks.sexp
+- `cedb78ea51` add code specs
+- `280dd114dc` Merge #13952's branch into the JS target (D96) (by claude)
+- `c8547225d9` history: import 426 changes
+- `bdfda4a33d` task: import from tasks.sexp
+- `dd81587487` add code specs
+- `489553f1e8` delete JsGen.Spec.Shape.circle JsGen.Spec.Shape.rect
+- `0c44e5f6ba` delete JsGen.Spec.Shape JsGen.Spec.area
+- `0f628d8efe` JsGen.Spec: names that do not clash with the tour (by claude)
+- `a76744d439` task: set c06f5905 state (by claude)
+- `91e117df73` task: set 78c17e2d state (by claude)
+- `1593c56b87` close 86ef7d80 by #a3b91d88c1 (by claude)
+- `a3b91d88c1` JS back end: deus build --js, direct style, source-mapped, spec-first in JS.mdl (D94) (by claude)
+- `d899edd608` task: set 5d6c67b4 priority labels (by claude)
+- `cc9f3cc6b1` task: open 5d6c67b4 Composer assistant skills for writing DEUS and using the codebase
+- `16dd2a7243` task: set 771e6f9e state (by claude)
+- `8d0b1cf442` task: set 771e6f9e details (by claude)
+- `2372949034` task: set 771e6f9e priority labels (by claude)
+- `1bb9f66932` task: open 771e6f9e Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL
+- `abb86679f0` task: set 1854b55d details (by claude)
+- `b79db127bf` task: set 1854b55d priority labels (by claude)
+- `f10a720bbc` task: open 1854b55d Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it
+- `7f4e2ad7d6` task: set 508d9443 details (by claude)
+- `ce83aa6993` task: set 508d9443 priority labels (by claude)
+- `882f13afdd` task: open 508d9443 JS back end refuses multi-shot handlers by name: a test for the refusal
+- `92835e5e18` task: set c06f5905 details (by claude)
+- `555e0b0b80` task: set c06f5905 priority labels (by claude)
+- `2952318075` task: open c06f5905 React bindings: hooks as an ability, a todo app in DEUS (D94)
+- `e710870ece` task: set 78c17e2d details (by claude)
+- `26c4a3df9d` task: set 78c17e2d priority labels (by claude)
+- `3d882093bf` task: open 78c17e2d JS interop: Js.import bindings with codecs from the signature (D94)
+- `9440cb0c70` task: set 86ef7d80 details (by claude)
+- `01bdc803df` task: set 86ef7d80 priority labels (by claude)
+- `6c41a3a2d6` task: open 86ef7d80 JS back end: deus build --js, direct style, source maps (D94)
+- `ccf54ad86f` history: import 353 changes
+- `f13276e40e` task: import from tasks.sexp
+- `32032ea1fa` task: open 2a2b87a2 Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (by claude)
+- `4840de1a1a` the explorer's writing and console in its checked spec (from #13952's branch) (by claude)
+- `916dd946a8` history: import 408 changes
+- `b85fb6bdf9` task: import from /tmp/claude-0/-home-user-dxos/7218d591-3085-5d07-8746-c4ab5dbc3b34/scratchpad/theirs/codebase/tasks.sexp
+- `724f14b2e7` history: import 382 changes
+- `2d3f491949` task: import from tasks.sexp
+- `ac74022d77` add code specs
+- `66bce7945c` task: open 7ef8bf45 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (by claude)
+- `99e026a5cf` task: set a1b73fb8 title (by claude)
+- `afaebd5eba` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `a1a75cd968` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `96333fa979` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `758744e3a8` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `616fe2a423` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `ab1c356e8d` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `99ac1e29bb` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `a2774f99ed` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `0e439a4fad` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `4916079850` close 95ca184f by #034fda7dc8 (by claude)
+- `034fda7dc8` history: import 367 changes (by claude)
+- `ab089e6fd9` task: import from tasks.sexp
+- `4589165e18` add code specs
+- `d90027cba3` close c50cd76e by #9cee717581 (by claude)
+- `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
+- `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
+- `99b512f359` history: import 359 changes
+- `7b6f241c41` task: import from tasks.sexp
+- `b878c25ce1` add code specs
+- `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
+- `aad1732770` task: link cf5e187f to Resolve.stub
+- `c52516022a` task: set cf5e187f state
+- `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
+- `135f9abba9` task: set cf5e187f assignee
+- `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
+- `32d6c2d287` task: set 20dbe121 state (by claude)
+- `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
+- `7829722c1b` history: import 351 changes
+- `ae69cbd311` task: import from tasks.sexp
+- `08e90dab62` add code specs
+- `438184d11a` close e4a19978 by #458d0633bd (by claude)
+- `458d0633bd` the explorer's report tool: a screenshot filed as a labelled task (D90) (by claude)
+- `993938b5c3` task: open e4a19978 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
+- `089232a06c` task: set 6ffdc230 details (by claude)
+- `b1615b9a4a` history: import 347 changes (by claude)
+- `4d335b2648` task: import from tasks.sexp
+- `e373ff3964` add code specs
+- `74b97aebd0` close 6ffdc230 by #10e77371ec (by claude)
+- `10e77371ec` checked specs for the codebase store, compile, export and explorer; req, api and law blocks (D91) (by claude)
+- `3f7d3447c4` task: open 1ab6c044 Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (by claude)
+- `6ed8a2b666` task: open b4d7a440 BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (by claude)
+- `22fa7745e5` task: open 908495a0 deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (by claude)
+- `165385e432` task: open 0d7b0142 law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (by claude)
+- `83f2d1149c` task: open 1cbfdd30 Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (by claude)
+- `fc3b0088f4` task: open 6a3b0ebe MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (by claude)
+- `33a1f4c824` task: open f6a2c2ff Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (by claude)
+- `c4d35b8416` task: open 4f7f9e40 Theorem view prints P -> Q as prim "implies" (P) (Q) (by claude)
+- `c36de0222a` task: open a2da28e2 A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (by claude)
+- `ef4bb40a88` task: open 823f7b83 Laws for task, comment and history-record merges, and for add/update refusing layer crossings (by claude)
+- `6370cf7401` task: open 6ffdc230 Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (by claude)
+- `192a0b9794` toolchain sources at #13952's head (by claude)
+- `41879b7d7e` history: import 319 changes
+- `ffc6ea6551` task: import from tasks.sexp
+- `3b48b9e68d` add code specs
+- `57f679f52c` close ef46861c by #9081760a10 (by claude)
+- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
+- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
+- `74c2b4296d` history: import 313 changes
+- `eb9b7f4404` task: import from tasks.sexp
+- `617221bcb6` add code specs
+- `8fefe275fc` task: comment on 27d2d190 (by claude)
+- `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
+- `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)
+- `a1cc2bcbf9` Bindings emit a .js module and a hand-written-looking .d.ts; spec-first in BINDINGS.mdl, whose theorems found a distinct() collision bug (D87) (by claude)
+- `5f721fc110` task: set 27d2d190 state (by claude)
+- `03e8b7f152` task: open 27d2d190 Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl
+- `44071e35f6` history: import 223 changes
+- `6a9d543900` task: import from tasks.sexp
+- `a050870707` add code specs
+- `18b3ef016c` C back end: MUSTTAIL only where the C compiler has it (D86) (by claude)
+- `22f3b808cf` task: open f7d39ad6 Native: reuse freed blocks over 256 words (long arrays) in the C back end (by claude)
+- `5f3fbc3f4d` task: open ef46861c Native: reference counting with reuse in the wasm back end (D86's scheme) (by claude)
+- `06539159c6` task: set 62d1bdda details (by claude)
+- `a6a923b3cb` close 62d1bdda by #dbf6867c1b (by claude)
+- `dbf6867c1b` C back end: reference counting with reuse, borrowed parameters, in-place matches (D86) (by claude)
+- `a39946d067` task: set 62d1bdda state (by claude)
+- `07c79505a1` history: import 213 changes
+- `42c39f5638` task: import from tasks.sexp
+- `14b39bdcec` add code specs
+- `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
+- `44e512757f` close d2328509 by #0f3089d483 (by claude)
+- `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)
+- `78c160790e` history: import 209 changes
+- `e1fa6d0eb4` task: open c338b56e Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
+- `cda9251c00` task: open 434a6dbc Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
+- `215b405dad` task: open d807958c Native: closure conversion and partial application in the C back end (by claude)
+- `cf05f0f744` task: open 932f4034 Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
+- `9dedf7f070` task: set babdb4f2 details (by claude)
+- `d4211dd9fb` close babdb4f2 by #83dbe4c096 (by claude)
+- `83dbe4c096` C back end compiled by clang/LLVM (deus build --c) and benchmarks of every back end (D79) (by claude)
+- `cb399207a1` task: open babdb4f2 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
+- `9ba4d92091` history: import 146 changes
+- `073671715e` task: import 47 tasks
+- `c648f7f874` add code specs
+- `6bf2adb8ab` delete Geometry.Color Geometry.Log Geometry.Point Geometry.Point.x Geometry.Point.y Geometry.Shape Geometry.Tree Geometry.area Geometry.firstOf Geometry.greet Geometry.insert Geometry.lookup Geometry.mean Geometry.move Geometry.paint Geometry.ratio Geometry.sorted Geometry.stats Geometry.total
+- `45a408e0d4` task: open eea32f23 TypeScript bindings: run in-process on the TypeScript kernel too
+- `24083cded2` task: open de710f29 TypeScript bindings: pass functions across (callbacks and closures)
+- `17759b3b47` task: open 091e43c0 TypeScript bindings: export polymorphic functions with codec parameters
+- `e18c04f0fa` task: comment on db71c327 (by claude)
+- `e05dcb4087` close db71c327 by #c564461f42 (by claude)
+- `c564461f42` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D79) (by claude)
+- `28ea0c91cd` task: set db71c327 state (by claude)
+- `5eab0fe7ba` task: open db71c327 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `3e5bea8a28` task: set 77740edd state (by claude)
+- `15483974b6` task: link 77740edd to #feaea530df (by claude)
+- `b02f44ca79` task: set 22a99190 state (by claude)
+- `ef57769f4b` task: link 22a99190 to #feaea530df (by claude)
+- `572b3e7014` close fb964840 by #feaea530df (by claude)
+- `feaea530df` the explorer writes: GitHub sign-in, comments, tasks with images (D79) (by claude)
+- `22b72c5a39` task: open 77740edd File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `5b1db4e0fd` task: open 22a99190 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `700b39b3f0` task: open fb964840 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `f55f8efcd0` task: open e69b5384 TypeScript bindings: run in-process on the TypeScript kernel too (by claude)
+- `ba9706cb05` task: open ef597118 TypeScript bindings: pass functions across (callbacks and closures)
+- `24786018c1` task: open e84ff062 TypeScript bindings: export polymorphic functions with codec parameters
+- `45a72f0783` task: comment on 207cac21 (by claude)
+- `312532e1eb` close 207cac21 by #e6755a8eeb (by claude)
+- `e6755a8eeb` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D80) (by claude)
+- `8d944ac3a0` task: set 207cac21 state (by claude)
+- `6e72aa4658` task: open 207cac21 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `ee0d3f4cf3` history: import 163 changes
+- `ec9395650d` task: import from tasks.sexp
+- `299d342e26` add code specs
+- `a8ab9e89a8` task: set d2d4e786 state (by claude)
+- `f11b70ad85` task: link d2d4e786 to #c432032637 (by claude)
+- `49e57d6b52` task: set d1534a34 state (by claude)
+- `53a78fb055` task: link d1534a34 to #c432032637 (by claude)
+- `fd900ab2e9` close a00fa56e by #c432032637 (by claude)
+- `c432032637` the explorer writes: GitHub sign-in, comments, tasks with images (D80) (by claude)
+- `2286d547e1` task: open d2d4e786 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `61bfd14312` task: open d1534a34 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `a180997d4f` task: open a00fa56e Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `b75d5795ff` task: set 16d433b5 state (by claude)
+- `6cdd718b34` task: link 16d433b5 to #c3aa27a438 (by claude)
+- `d558b3bb4c` task: set b827edb2 state (by claude)
+- `5e79a11a52` task: link b827edb2 to #c3aa27a438 (by claude)
+- `d2170f01b4` close 3bb7f0f7 by #c3aa27a438 (by claude)
+- `c3aa27a438` the explorer writes: GitHub sign-in, comments, tasks with images (D81) (by claude)
+- `3ee200e1f8` task: open 16d433b5 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `da0eac7119` task: open b827edb2 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `678df20acd` task: open 3bb7f0f7 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `8020860c75` task: open a1b73fb8 TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D81) (by claude)
+- `94c0d1648a` task: open cf0e3937 Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D81) (by claude)
+- `d537d8fd8f` task: open 95ca184f Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D81) (by claude)
+- `8c98b7fd26` close 8aa78a39 by #448eda5928 (by claude)
+- `448eda5928` sorting case study (D81): mutable Array in both kernels, wasm and C; Ref and primitive inlining in the compiled back ends (by claude)
+- `e2a8b80692` task: set 8aa78a39 state assignee details (by claude)
+- `e3cdb18335` task: open 8aa78a39 Sorting case study: does immutability make DEUS slow, and does it need mutable memory (by claude)
+- `84ea0dfca4` history: import 194 changes (by claude)
+- `c3d8f786c1` task: import from tasks.sexp
+- `03d2b5612f` add code specs
+- `17d48b3b3e` history: import 206 changes (by claude)
+- `cad965875a` task: import from tasks.sexp
+- `3b25b5f78f` add code specs
+- `32d2bffc00` task: set 747a4182 state (by claude)
+- `f75fd70e74` task: link 747a4182 to #68dcd2f5f1 (by claude)
+- `213c2a9ed5` task: set 81438cac state (by claude)
+- `fea464b8b5` task: link 81438cac to #68dcd2f5f1 (by claude)
+- `bb588af416` close 4909bee3 by #68dcd2f5f1 (by claude)
+- `68dcd2f5f1` the explorer writes: GitHub sign-in, comments, tasks with images (D82) (by claude)
+- `007a69d576` task: open 747a4182 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `1ff3a83889` task: open 81438cac Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `09f2f89158` task: open 4909bee3 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `e666974c28` history: import 194 changes
+- `1f241c967c` task: import from tasks.sexp
+- `804de180dc` add code specs
+- `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
+- `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
+- `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters
+- `39cbb23245` task: comment on 17d50ae5 (by claude)
+- `37bffc2ffa` close 17d50ae5 by #7510a284be (by claude)
+- `7510a284be` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D81) (by claude)
+- `a6ec8f1d0b` task: set 17d50ae5 state (by claude)
+- `faa4e8b624` task: open 17d50ae5 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `c0daf520e4` history: import 184 changes
+- `afa110cf75` task: import from tasks.sexp
+- `71eb24530c` export: merge 10 changes from codebase
+- `86db7b80c4` task: open e1cf2c6c Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
+- `259f06882e` task: open 72a1f2fb Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
+- `336d93ba48` task: open 610b2785 Native: closure conversion and partial application in the C back end (by claude)
+- `cf09e48794` task: open 62d1bdda Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
+- `00e0968450` task: set 7ca05fc5 details (by claude)
+- `97914d416e` close 7ca05fc5 by #9aa115afc5 (by claude)
+- `9aa115afc5` task: open 7ca05fc5 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
+- `4e8f52cb61` history: import 163 changes
+- `be6879448e` task: import from tasks.sexp
+- `47072308f5` add code specs
+- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
+- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
+- `5ed69c23c8` task: set dfaad231 state
+- `28ca458c20` task: set dfaad231 details
+- `63d82046a6` task: set dfaad231 priority assignee labels
+- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
+- `cdef7f9a58` history: import 108 changes
+- `89c5f19d03` task: import 37 tasks
+- `b646385392` add code specs
+- `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
+- `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
+- `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
+- `e9736e3585` task: open d2328509 Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (by claude)
+- `5ffb35ed9a` close 3b617154 by #96cf462d73 (by claude)
+- `96cf462d73` deus build --browser: a static page running an image on the wasm kernel with an in-memory file system (D78) (by claude)
+- `86f256e943` task: set 3b617154 state (by claude)
+- `a476baf0f1` task: open 3b617154 Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (by claude)
+- `24bf075943` history: import 134 changes
+- `a1aac3aaba` task: import 42 tasks
+- `a613239c2d` add code specs
+- `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
+- `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
+- `e11ebf252d` task: set b2166fc8 priority assignee labels details
+- `3f860ada05` task: open b2166fc8 Bring the codebase up to date with the toolchain sources; the export had raw hashes (by claude)
+- `3475042833` history: import 126 changes
+- `be0842c2ee` task: import 41 tasks
+- `2ab0189bcb` add /tmp/claude-0/-home-claude-dxos/9f10d708-cc29-559d-a814-8f86a4793dbc/scratchpad/code4 /home/claude/dxos/packages/reflect/deus-lang/codebase/specs
+- `d2411251ec` task: set a7a44f7d details (by claude)
+- `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
+- `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)
+- `a37df20cc0` codebase: namespace-tree snapshots, deus migrate, full history on the remote (D72-D74) (by claude)
+- `ae188264ee` history: import 118 changes
+- `aa8672c1cf` task: import 39 tasks
+- `a289e87b7a` add code specs
+- `5ed10805c0` task: comment on b09507db (by claude)
+- `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
+- `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)
+- `3d113647c7` close a75452c4 by #87b9ac35c4 (by claude)
+- `87b9ac35c4` explorer: aliases from one inverted index (by claude)
+- `20ce06f6f1` task: open a75452c4 deus explore is quadratic in names: aliases scan the whole namespace per definition (by claude)
+- `38988f9ff0` task: comment on b09507db (by claude)
+- `2c28274f3c` close 1ce541ac by #e48cf63f71 (by claude)
+- `e48cf63f71` toolchain: explorer pages for changes (by claude)
+- `4f1469095a` task: set 1ce541ac state assignee (by claude)
+- `ab617e698f` task: comment on 5d370204 (by claude)
+- `1024936895` close 5d370204 by #69a3390756 (by claude)
+- `69a3390756` toolchain: view shares one printer (45 s to 2 s for 1000 definitions) (by claude)
+- `16d8f0ddf9` task: set 5d370204 state assignee (by claude)
+- `1c5e8587ea` task: comment on b09507db (by claude)
+- `65dc35b0b4` close 4bf3eed4 by #e2a4045a8a (by claude)
+- `e2a4045a8a` toolchain: declarations keep parameter and field names (by claude)
+- `0d02b98851` task: set 4bf3eed4 state assignee (by claude)
+- `0f63a1ecdd` close 9caae4c1 by #ed7e98a85a (by claude)
+- `ed7e98a85a` toolchain: deus run takes options before the name (by claude)
+- `4c9083f657` task: set 9caae4c1 state assignee (by claude)
+- `ce7a699915` task: comment on 3d6508e4 (by claude)
+- `271e638119` close 3d6508e4 by #f48010e0fa (by claude)
+- `f48010e0fa` toolchain: task changes record their author (by claude)
+- `28fad4063b` task: set 3d6508e4 state assignee
+- `54bd89e634` task: set 4a833ce9 state
+- `16404fb626` task: comment on 4a833ce9
+- `b62e34a440` task: set 4a833ce9 state assignee
+- `9c4c7f8fc0` task: open 1ce541ac Explorer: show the source of a change, not only its message
+- `2119c92825` task: open 3d6508e4 Task changes do not record who made them as provenance
+- `1eecf8089b` toolchain: the export explains itself (README.md) (by claude)
+- `e5c28d74b9` task: comment on 0c53d3bd
+- `20d837376a` close 0c53d3bd by #7b79105804
+- `7b79105804` toolchain: deus export and task import (D64) (by claude)
+- `4caa1eed52` task: open 9caae4c1 deus run takes the codebase only from the environment
+- `782b470963` task: open 4bf3eed4 Inductive constructors lose their field names when printed
+- `9ebba1a94d` task: open 0c53d3bd Back up the codebase to GitHub as text
+- `fcf1e16472` task: open b09507db Keep ordinary comments, so the codebase can be the source of truth for the toolchain
+- `21385b6489` task: open 5d370204 Self-hosting test takes 74 s since the round trip covers everything
+- `c361ae81ed` task: open 4a833ce9 deus view output is cut off when piped
+- `66711bb3a0` toolchain: whole-codebase round trip (D63) (by claude)
+- `394c982dc5` task: comment on ad0006da
+- `376df582c8` task: set ad0006da state
+- `30a2360696` task: set 7c7b9ca0 state
+- `b4f8e21aae` close d7eba020 by #f7f6be3863
+- `f7f6be3863` toolchain: printer layout and round trip (D63)
+- `aa73fd29cc` task: open d7eba020 Break long lines in deus view output
+- `f261dfbbb8` task: set 7c7b9ca0 state
+- `e8d47fc82e` task: comment on 7c7b9ca0
+- `05b8d8f8d0` task: set ad0006da state assignee
+- `4c5ea04fd1` task: set 553faf09 state assignee
+- `4e18c4bc35` task: set 57a25668 state assignee
+- `5246d13134` task: set 84014a86 state assignee
+- `15319c869d` task: set 0f23f671 state assignee
+- `ece378b321` task: set 7c7b9ca0 state assignee
+- `cc81c503c0` task: set 4483b915 state assignee
+- `d016ca6d79` task: set 915c9c9e state assignee
+- `f60620e0a6` task: open 553faf09 Task viewer in the codebase explorer
+- `52d01b89e7` task: open 57a25668 Gitignore .deus and keep one codebase in the home directory
+- `1173a00b0a` task: open ad0006da Host the explorer on a Worker kept current from R2
+- `3a1e5b8c62` task: open 84014a86 Explorer as an SPA showing several definitions at once
+- `010941eed1` task: open 0f23f671 Native deus fails with DEUS_HOME is not set
+- `c87b8c13cf` task: open 7c7b9ca0 deus view output not formatted correctly, and no colours
+- `c4db00626c` task: open 4483b915 Explain how deus add deus resolves its path
+- `c73204318c` task: open 915c9c9e Builtins should come by default on init
+- `7fdf3497f0` platform and examples
+- `7f33145d2d` the toolchain
+- `42f6b2c6aa` standard library
+- `67c7d5a614` init

@@ -1,0 +1,132 @@
+/-- The attributes `source`'s definition `name` stores, compiled alone. -/
+def Coverage.Spec.attrsOf (source : Text) (name : Text) : List Sexp :=
+  match try (fun _ => batch
+    Map.empty
+    (fun _ => Option.none)
+    (fun _ => Option.none)
+    "off"
+    [parseFile "t.deus" (View.Spec.prelude ++ source)]) with
+  | Result.ok b =>
+      match List.lookup name b.entries with
+      | Option.some (Entry.theorem h) => metaList (List.lookup h (Batch.metas b)) "attrs"
+      | Option.some (Entry.test h) => metaList (List.lookup h (Batch.metas b)) "attrs"
+      | _ => []
+  | Result.err _ => []
+
+/-- A block of `blockType` with one property. -/
+def Coverage.Spec.block (blockType : Text) (key : Text) (value : Text) : Block := Block.mk blockType "X-1" "t" [(key, value)] 1
+
+/-- An api naming `Lib.a` and `Lib.b`, a req citing `Doc.one`, and a law citing `Doc.two`. -/
+def Coverage.Spec.blocks : List Block := [Coverage.Spec.block "api" "signatures" "- Lib.a : Int\n- Lib.b : Int -> Int", Coverage.Spec.block "req" "by" "Doc.one", Coverage.Spec.block "law" "theorem" "Doc.two"]
+
+/-- R-1: laws a req or a law cites are covered. -/
+theorem Coverage.Spec.citedLawsCovered : (Spec.of ["Doc.one", "Doc.two"] [] []).uncitedLaws == [] := by rfl
+
+/-- R-7: a link to R-9 backs nothing and is reported. -/
+theorem Coverage.Spec.danglingLinkReported : (linked reqs [("Doc.three", ["Doc.R-9"])] (Spec.of ["Doc.three"] [] [])).danglingLinks ==
+    ["Doc.three -> Doc.R-9"] := by rfl
+
+/-- R-6: `Doc.three` names no `by:` but links to R-1, which `Doc` states. -/
+theorem Coverage.Spec.linkCovers : (linked reqs [("Doc.three", ["Doc.R-1"])] (Spec.of ["Doc.one", "Doc.three"] [] [])).uncitedLaws ==
+    [] := by rfl
+
+/-- R-6: the targets of `req` attributes, and nothing from other attributes. -/
+theorem Coverage.Spec.linksReadFromAttributes : reqLinks [Sexp.list [Sexp.str "req", Sexp.str "Doc.R-1"], Sexp.list [Sexp.str "integration"], Sexp.list [Sexp.str "req", Sexp.str "Doc.R-2"]] ==
+    ["Doc.R-1", "Doc.R-2"] := by rfl
+
+/-- R-2: a name another document's api states is covered. -/
+theorem Coverage.Spec.namedElsewhereCovered : (Spec.of [] ["Lib.c"] ["Lib.c"]).unnamedApi == [] := by rfl
+
+/-- The coverage of `Doc` with laws `laws`, public definitions `public`, and api names stated elsewhere `elsewhere`. -/
+def Coverage.Spec.of (laws : List Text) (public : List Text) (elsewhere : List Text) : SpecCoverage := covers "Doc" Spec.blocks laws (Set.fromList (concatMap cited Spec.blocks ++ elsewhere)) public
+
+/-- R-2: a namespace no api block of the document covers is another document's business. -/
+theorem Coverage.Spec.otherNamespaceIgnored : (Spec.of [] ["Other.x"] []).unnamedApi == [] := by rfl
+
+/-- R-4: nothing omitted reads as covered. -/
+theorem Coverage.Spec.rendersCovered : Coverage.render (Spec.of ["Doc.one"] ["Lib.a"] []) == ["Doc: covered"] := by rfl
+
+/-- R-7: dangling links print on their own line. -/
+theorem Coverage.Spec.rendersDanglingLinks : Coverage.render (linked reqs [("Doc.one", ["Doc.R-9"])] (Spec.of ["Doc.one"] [] [])) ==
+    ["Doc", "  links to no requirement: Doc.one -> Doc.R-9"] := by rfl
+
+/-- R-4: omissions print by kind, definitions grouped by namespace. -/
+theorem Coverage.Spec.rendersOmissions : Coverage.render (Spec.of ["Doc.three"] ["Lib.d", "Lib.c"] []) ==
+    ["Doc", "  laws no block cites: Doc.three", "  Lib: 2 public definition(s) no api block names: c, d"] := by rfl
+
+/-- `Doc` states requirement R-1 only. -/
+def Coverage.Spec.reqs : Map Text Unit := Set.fromList ["Doc.R-1"]
+
+/-- R-3: the signature's row keeps it whole. -/
+theorem Coverage.Spec.rowInSignature : cited (Coverage.Spec.block "api" "signatures" "- Lib.f : (Unit -> {IO | e} a) -> {e} a\n- Lib.g : Int") ==
+    ["Lib.f", "Lib.g"] := by rfl
+
+/-- R-5: `@[req …]` on a theorem is stored. -/
+@[req "Coverage.Spec.R-5"]
+theorem Coverage.Spec.theoremKeepsAttributes : reqLinks (attrsOf "@[req \"Doc.R-1\"]\ntheorem Doc.t : true == true := by rfl\n" "Doc.t") ==
+    ["Doc.R-1"] := by rfl
+
+/-- R-1: `Doc.three` is cited by nothing. -/
+theorem Coverage.Spec.uncitedLawReported : (Spec.of ["Doc.one", "Doc.two", "Doc.three"] [] []).uncitedLaws == ["Doc.three"] := by rfl
+
+/-- R-2: `Lib.c` is public, in a namespace the api covers, and named by no api. -/
+theorem Coverage.Spec.unnamedPublicReported : (Spec.of [] ["Lib.a", "Lib.c"] []).unnamedApi == ["Lib.c"] := by rfl
+
+/-- The names an api block states; its signatures are one per line, since a type may contain `|`. -/
+def Coverage.apiNames (b : Block) : List Text := if b.blockType != "api" then [] else List.filter
+  (fun n => not (Text.isEmpty n))
+  (List.map (fun l => signatureName (trim l)) (Text.split (Features.prop b "signatures") "\n"))
+
+/-- The names a block cites: an api's signatures, a req's `by:` and a law's `theorem:`. -/
+def Coverage.cited (b : Block) : List Text := if b.blockType == "api" then apiNames b else if b.blockType == "req" then Features.items (Features.prop b "by") else if b.blockType == "law" then Features.items (Features.prop b "theorem") else []
+
+/-- The coverage of `doc`, whose blocks are `blocks` and whose tests and theorems are `laws`.
+  `named` holds every name an api block of any document states, and `public` the definitions used
+  outside their own namespace. -/
+def Coverage.covers (doc : Text) (blocks : List Block) (laws : List Text) (named : Map Text Unit) (public : List Text) : SpecCoverage :=
+  let citedHere := Set.fromList (concatMap cited blocks)
+  let spaces := Set.fromList (List.map Coverage.namespaceOf (concatMap apiNames blocks))
+  SpecCoverage.mk doc (List.filter (fun n => not (Set.contains n citedHere)) laws) (List.filter
+    (fun n => Set.contains (Coverage.namespaceOf n) spaces && not (Set.contains n named))
+    public) []
+
+/-- `c` with its laws' links to requirements applied: `links` pairs each law with the requirements it
+  names, and `reqs` holds every requirement, as `Doc.R-1`, that a document states. -/
+def Coverage.linked (reqs : Map Text Unit) (links : List (Text, List Text)) (c : SpecCoverage) : SpecCoverage :=
+  let backed := Set.fromList (filterMap
+    (fun l => if any (fun t => Set.contains t reqs) (snd l) then Option.some (fst l) else Option.none)
+    links)
+  let dangling := concatMap (fun l => filterMap
+    (fun t => if Set.contains t reqs then Option.none else Option.some (fst l ++ " -> " ++ t))
+    (snd l)) links
+  SpecCoverage.mk
+    c.coverageDoc
+    (List.filter (fun n => not (Set.contains n backed)) c.uncitedLaws)
+    c.unnamedApi
+    (c.danglingLinks ++ dangling)
+
+/-- Everything before a name's last `.`, or `""`. -/
+def Coverage.namespaceOf (name : Text) : Text :=
+  let rec go i := if i < 0 then "" else if code name i == '.' then Text.take i name else go (i - 1)
+  go (Text.length name - 1)
+
+/-- The text report: the document, then each kind of omission on its own line. -/
+def Coverage.render (c : SpecCoverage) : List Text := if List.isEmpty c.uncitedLaws && List.isEmpty c.unnamedApi && List.isEmpty c.danglingLinks then [c.coverageDoc ++ ": covered"] else
+  let groups := groups (List.map (fun n => (Coverage.namespaceOf n, n)) c.unnamedApi)
+  [c.coverageDoc] ++
+    (if List.isEmpty c.uncitedLaws then [] else ["  laws no block cites: " ++ join ", " c.uncitedLaws]) ++ (if List.isEmpty c.danglingLinks then [] else ["  links to no requirement: " ++ join ", " c.danglingLinks]) ++ List.map (fun g =>
+    match g with
+    | (space, names) => "  " ++ space ++ ": " ++ toText (List.length names) ++
+        " public definition(s) no api block names: " ++ join ", " (sort (List.map lastSegment names))) (sortBy (fun a b => compare (fst a) (fst b)) groups)
+
+/-- The requirements a law's attributes name, `@[req "Doc.R-1"]`. -/
+def Coverage.reqLinks (attrs : List Sexp) : List Text := filterMap (fun a =>
+  match a with
+  | Sexp.list (Sexp.str "req" :: Sexp.str target :: []) => Option.some target
+  | _ => Option.none) attrs
+
+/-- The name in an api signature line, `- Name : Type`. -/
+def Coverage.signatureName (line : Text) : Text :=
+  let bare := if startsWith "- " line then Text.drop 2 line else line
+  let i := indexOf bare " : " 0
+  trim (if i < 0 then bare else Text.take i bare)

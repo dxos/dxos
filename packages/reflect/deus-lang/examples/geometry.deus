@@ -1,0 +1,94 @@
+/-
+  TypeScript interop (D81, D87): `deus bindings Geometry -o <dir>` writes a JavaScript module and
+  its `.d.ts` whose functions call these on the wasm kernel. TypeScript answers the `Log` ability;
+  the `Throw Text` that `ratio` performs rejects with `DeusThrow` unless TypeScript answers it too.
+  `Shapes.scale` is `Shapes.scale` in TypeScript; `firstOf` is polymorphic, so it is reported and
+  left out.
+  src/bindings/bindings.test.ts drives it.
+-/
+
+namespace Geometry
+
+/-- A plane figure. -/
+inductive Shape where
+  | circle (r : Int)
+  | rect (w : Int) (h : Int)
+
+structure Point where
+  x : Int
+  y : Int
+
+inductive Color where
+  | red
+  | green
+  | blue
+
+/-- A binary search tree. -/
+inductive Tree (a : Type) where
+  | leaf
+  | node (left : Tree a) (value : a) (right : Tree a)
+
+ability Log @"urn:deus:example:Log" where
+  info : Text -> Unit
+
+/-- Area, with pi taken as 3. -/
+def area (s : Shape) : Int :=
+  match s with
+  | Shape.circle r => 3 * r * r
+  | Shape.rect w h => w * h
+
+def move (p : Point) (dx : Int) (dy : Int) : Point := Point.mk (p.x + dx) (p.y + dy)
+
+/-- The summed area; logs how many shapes it saw. -/
+def total (shapes : List Shape) : {Log} Int :=
+  Log.info ("summing " ++ Int.toText (List.length shapes) ++ " shapes")
+  List.foldl (fun acc s => acc + area s) 0 shapes
+
+/-- How many shapes, and the smallest and largest area. -/
+def stats (shapes : List Shape) : (Int, Int, Int) :=
+  let areas := List.map area shapes
+  (List.length areas, List.foldl min 2147483647 areas, List.foldl max 0 areas)
+
+/-- The integer mean; an empty list divides by zero, a defect the host sees as `DeusDefect`. -/
+def mean (xs : List Int) : Int := Int.div (List.foldl (fun a b => a + b) 0 xs) (List.length xs)
+
+def lookup (pairs : List (Text, Int)) (key : Text) : Option Int :=
+  Option.map snd (List.find (fun p => fst p == key) pairs)
+
+def paint (c : Color) : Text :=
+  match c with
+  | Color.red => "#f00"
+  | Color.green => "#0f0"
+  | Color.blue => "#00f"
+
+def insert (t : Tree Int) (x : Int) : Tree Int :=
+  match t with
+  | Tree.leaf => Tree.node Tree.leaf x Tree.leaf
+  | Tree.node l v r => if x < v then Tree.node (insert l x) v r else Tree.node l v (insert r x)
+
+def sorted (t : Tree Int) : List Int :=
+  match t with
+  | Tree.leaf => []
+  | Tree.node l v r => sorted l ++ [v] ++ sorted r
+
+/-- `a / b`; a zero divisor is a `Throw Text` the host answers. -/
+def ratio (a : Int) (b : Int) : {Throw Text} Int :=
+  if b == 0 then throw "division by zero" else Int.div a b
+
+def greet (u : Unit) : {IO} Text :=
+  IO.print "hello from DEUS\n"
+  "greeted"
+
+def firstOf (xs : List a) : Option a := List.head? xs
+
+namespace Shapes
+
+/-- Scales a shape by `k`. -/
+def scale (k : Int) (s : Shape) : Shape :=
+  match s with
+  | Shape.circle r => Shape.circle (k * r)
+  | Shape.rect w h => Shape.rect (k * w) (k * h)
+
+end Shapes
+
+end Geometry

@@ -1,0 +1,916 @@
+/-- Other objects of the same class, by name: a call is a request served by that object. -/
+ability Actors @"urn:deus:web:Actors" where
+  call : Text -> Request -> Response
+
+/-- The object's alarm: `set` schedules one `ALARM /alarm` request after the given milliseconds, replacing any earlier one. -/
+ability Alarm @"urn:deus:web:Alarm" where
+  set : Int -> Unit
+
+-- Comments written before a statement or an arm; they become metadata, never Core (D66).
+
+-- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D88).
+/-- One `| p, q => body` arm. -/
+structure Arm where
+  pats : List Pat
+  body : Expr
+
+/-- An immutable array of fixed length (D96). `set` returns a new array and leaves the old one as
+  it was, but costs O(1) when the old one is not used again: the kernels keep versions (reading
+  an old one is slower), and the compiled back ends write in place when the array is unique. An
+  index outside `0 .. length` is a defect. -/
+inductive Array a @"#Array" where
+
+/-- A file attached to a comment (D82): its bytes are in the codebase's asset store under their
+  SHA-256, never in an object, so a screenshot does not bloat bundles or the git export. -/
+structure Asset @"urn:deus:task:Asset" where
+  hash : Text
+  mediaType : Text
+  fileName : Text
+
+/-- What a task is about: a definition (its name, and its hash when linked) or a change. -/
+inductive Attachment @"urn:deus:task:Attachment" where
+  | definition (name : Text) (hash : Text)
+  | change (hash : Text)
+
+structure Attr where
+  attr : Text
+  values : List Text
+
+/-- The result of compiling a batch of declarations. -/
+structure Batch where
+  objects : List (Text, Sexp)
+  entries : List (Text, Entry)
+  metas : List (Text, Sexp)
+  warnings : List Text
+
+structure Binder where
+  binder : Text
+  annot : Option Ty
+
+/-
+  `.mdl` documents (D46).
+
+  - DEUS code lives in ```deus fences. `deusSource` blanks the lines outside fences rather than
+    removing them, so positions in errors point into the document.
+  - Typed blocks live in ```mdl fences: a header `<type> [<id>][: <title>]`, then `key: value`
+    lines. `parse` reads them, the frontmatter and the Extensions table (term → URI) into data.
+  - An extension is a DEUS function `Block -> {MdlHost} List Text` published with
+    `@[ext "<uri>"]`; `deus mdl` runs every block through the extension its term names. The empty
+    list means the block holds; otherwise each text is one problem.
+-/
+/-- One ```mdl block; `props` keeps the document's order, and `lineNo` is its header's line. -/
+structure Block @"urn:deus:mdl:Block" where
+  blockType : Text
+  blockId : Text
+  blockTitle : Text
+  props : List (Text, Text)
+  lineNo : Int
+
+inductive Bool @"#Bool" where
+  | false
+  | true
+
+/-- A value in an event row. -/
+inductive Cell @"urn:deus:analytics:Cell" where
+  | int (value : Int)
+  | bool (value : Bool)
+  | text (value : Text)
+
+/-
+  The analytics store (D104): events about the codebase, kept beside it.
+
+  - An event type is a `structure` marked `@[event]`, so it lives in the codebase like any
+    definition. Its fields are flat: `Int`, `Bool`, `Text` or `CodeRef`, a reference into the
+    codebase. Events point at the codebase; nothing in the codebase points at an event.
+  - A client records rows locally, then pushes them; it never pulls. A push writes one Parquet
+    file per event type and batch, `events/<Type>/<type hash>/<batch>.parquet` on the remote,
+    named by content, so pushes never conflict. Basin SQL reads them once they are registered
+    as Iceberg tables (scripts/analytics-publish.py).
+  - Every row also carries `event_id`, `recorded_at` (microseconds, UTC) and `recorded_by`.
+
+  Locally, `events/pending/<Type>@<hash>.sexp` holds rows not pushed yet and
+  `events/pushed/…` the rows already pushed, one `(row id at by value…)` per line, so counts
+  never need the remote.
+
+  A `CodeRef` holds one of three forms (D105): a name IRI `<project>/<name>` (follows the name),
+  a pinned `<project>/<name>#<hash>` (fixed, and names the definition), or a bare `#<hash>`.
+  Recorders write the pinned form; a builtin's fragment is its name (`…/Bool#Bool`).
+-/
+/-- A reference into the codebase, as text in one of the three forms above. -/
+structure CodeRef @"urn:deus:analytics:CodeRef" where
+  target : Text
+
+/-- A column of an event table: the field's name and `int`, `bool`, `text`, `ref` or `time`. -/
+structure Column @"urn:deus:analytics:Column" where
+  columnName : Text
+  columnType : Text
+
+/-- A note by someone; `written` is when (RFC 3339 or nanoseconds since the epoch, or `""`), `assets` what it attaches. -/
+structure Comment @"urn:deus:task:Comment" where
+  author : Text
+  note : Text
+  written : Text
+  assets : List Asset
+
+/-- A container image pinned by digest (`name@sha256:<hex>`) and how to run it. -/
+structure Container @"urn:deus:external:Container" where
+  image : Text
+  command : List Text
+  env : List (Text, Text)
+  ports : List (Int, Int)
+
+/-- Starts a container (its id) and stops one by id. -/
+ability Containers @"urn:deus:external:Containers" where
+  start : Container -> Result Text Text
+  stop : Text -> Unit
+
+inductive Decl where
+  | defn (name : Text) (binders : List Binder) (type : Option Ty) (body : Option Expr) (arms : Option (List Arm)) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | thm (name : Text) (binders : List Binder) (prop : Expr) (proof : List Text) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | check (name : Text) (body : Expr) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | data (name : Text) (params : List Text) (iri : Option Text) (ctors : List (Text, List (Text, Ty))) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | record (name : Text) (params : List Text) (iri : Option Text) (fields : List (Text, Ty)) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | effect (name : Text) (params : List Text) (iri : Option Text) (ops : List (Text, Ty)) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | ns (name : Text)
+  | endNs (name : Option Text)
+  | openNs (names : List Text)
+  | comment (text : Text)
+
+-- Runs a program with arguments: (exit code, stdout, stderr); 127 if it cannot start.
+/-- Defects: the program is wrong. The kernel raises failed matches, division by zero and
+  `defect` as `Defect.raise`; a boundary may handle it but must not resume it. -/
+ability Defect @"#Defect" where
+  raise : Text -> a
+
+/-- An immutable hash map with Text or Int keys, built once: O(1) lookups for indexes. -/
+inductive Dict k v @"#Dict" where
+
+/-- A parsed document: frontmatter, the Extensions table, and the blocks in order. -/
+structure Doc @"urn:deus:mdl:Doc" where
+  front : List (Text, Text)
+  terms : List (Text, Text)
+  blocks : List Block
+
+/-
+  Resolver: declarations to Core, then to content-addressed objects.
+
+  1. Types and abilities are hashed first. They refer to other types by IRI, never by hash,
+     so their hashes need no ordering (docs/DECISIONS.md D6).
+  2. Bodies are desugared to Core. A reference to a definition in the same batch is a
+     placeholder `(ref "@Fully.Qualified")`; one to the codebase is `(ref "<hash>")`.
+  3. Terms are grouped into strongly connected components and hashed dependencies-first;
+     a recursive group is hashed as one cycle (Unison's scheme, D5).
+-/
+/-- What a name denotes in a namespace. -/
+inductive Entry where
+  | term (hash : Text)
+  | ctor (type : Text) (tag : Int) (arity : Int)
+  | type (hash : Text) (iri : Text) (fields : List Text)
+  | ability (hash : Text) (iri : Text)
+  | op (owner : Text) (index : Int) (arity : Int)
+  | test (hash : Text)
+  | theorem (hash : Text)
+  | spec (hash : Text)
+
+/-- What a handler sees. Times come from the handler's clock. -/
+inductive Event where
+  | log (level : Text) (message : Text) (fields : List (Text, Text)) (within : Int) (time : Text)
+  | span (id : Int) (parent : Int) (name : Text) (attrs : List (Text, Text)) (begin : Text) (finished : Text)
+  | metric (kind : Text) (name : Text) (value : Int) (time : Text)
+
+/-- An event type found in the codebase. -/
+structure EventType @"urn:deus:analytics:EventType" where
+  typeName : Text
+  typeHash : Text
+  columns : List Column
+
+-- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D88).
+
+-- `(p : T)`: checked against `T`, never Core (D95).
+inductive Expr where
+  | var (name : Text) (pos : Pos)
+  | dot (name : Text) (pos : Pos)
+  | int (value : Int)
+  | text (value : Text)
+  | bool (value : Bool)
+  | unit
+  | app (f : Expr) (args : List Expr)
+  | lam (params : List Pat) (body : Expr)
+  | lamMatch (arms : List Arm)
+  | letPat (pat : Pat) (value : Expr) (body : Expr)
+  | letFun (name : Text) (params : List Pat) (value : Expr) (body : Expr) (isRec : Bool)
+  | seq (first : Expr) (rest : Expr)
+  | ite (cond : Expr) (yes : Expr) (no : Expr)
+  | matchOn (scruts : List Expr) (arms : List Arm)
+  | handleWith (body : Expr) (ret : Option (Pat, Expr)) (ops : List OpArm)
+  | binop (op : Text) (left : Expr) (right : Expr) (pos : Pos)
+  | neg (e : Expr)
+  | not (e : Expr)
+  | tuple (items : List Expr)
+  | list (items : List Expr)
+  | prim (name : Text)
+  | record (base : Option Expr) (fields : List (Text, Expr)) (pos : Pos)
+  | ann (e : Expr) (type : Ty)
+  | proj (e : Expr) (field : Text) (pos : Pos)
+  | note (text : Text) (e : Expr)
+  | spelled (text : Text) (e : Expr)
+
+/-- A checked error with context: what failed, the facts that locate it, and what it wraps. -/
+structure Failure where
+  reason : Text
+  facts : List (Text, Text)
+  cause : Option Failure
+
+/-
+  Feature maps (D118): what the product is, beside tasks, which say what to do next. A feature map
+  is an MDL document of `feature` blocks, stored in the codebase like a spec (D99); each feature has
+  a status and links the spec documents, definitions and tasks that make it up.
+-/
+/-- One `feature` block. `featureStatus` is planned, building, shipped or dropped; `parentId` is another
+  block id or `""`. Field names carry the type's name because field names are global (task 31d3c1cd). -/
+structure Feature @"urn:deus:feature:Feature" where
+  featureId : Text
+  featureTitle : Text
+  featureStatus : Text
+  parentId : Text
+  specDocs : List Text
+  definitions : List Text
+  taskIds : List Text
+
+/-- Resolves a requirement to a local path, or says why it cannot. -/
+ability Fetch @"urn:deus:external:Fetch" where
+  fetch : Requirement -> Result Text Text
+
+/-- An open goal: hypotheses known to be true, the proposition, and the types of free variables. -/
+structure Goal where
+  hyps : List Sym
+  prop : Sym
+  vars : List (Text, Sexp)
+
+/-- Outbound HTTP. -/
+ability Http @"urn:deus:web:Http" where
+  fetch : Request -> Response
+
+/-- Host input/output; the kernel handles requests no DEUS handler caught. -/
+ability IO @"#IO" where
+  print : Text -> Unit
+  eprint : Text -> Unit
+  readFile : Text -> Option Text
+  writeFile : Text -> Text -> Unit
+  exists : Text -> Bool
+  listDir : Text -> List Text
+  mkdirp : Text -> Unit
+  remove : Text -> Unit
+  args : Unit -> List Text
+  exit : Int -> a
+  time : Unit -> Int
+  readStdin : Unit -> Text
+  writeBytes : Text -> List Int -> Unit
+  getEnv : Text -> Option Text
+  isDir : Text -> Bool
+  wallClock : Unit -> Text
+  appendFile : Text -> Text -> Unit
+  exec : Text -> List Text -> (Int, (Text, Text))
+
+/-
+  Builtins: the types, abilities and primitives the kernel implements.
+
+  An IRI that starts with `#` is a builtin identity: the kernel constructs and matches these
+  values itself (src/kernel/machine.ts), so their constructor order is fixed. Everything else
+  in DEUS is ordinary source.
+-/
+inductive Int @"#Int" where
+
+/-
+  Batch compilation: parsed files plus a base namespace to hashed objects and new names.
+-/
+/-- A declaration together with where it was written. -/
+structure Item where
+  decl : Decl
+  fqn : Text
+  declScope : Scope
+  path : Text
+  lead : Text
+
+/-
+  JSON output, for agents driving the CLI with `--json`.
+-/
+inductive Json where
+  | null
+  | bool (value : Bool)
+  | num (value : Int)
+  | str (value : Text)
+  | arr (items : List Json)
+  | obj (fields : List (Text, Json))
+
+/-
+  Lexer: source text to tokens. Each token records its column and whether it starts a line,
+  which is all the parser's offside rule needs.
+-/
+inductive Kind where
+  | ident
+  | dot
+  | proj
+  | int
+  | text
+  | sym
+  | kw
+  | doc
+  | eof
+  | comment
+
+/-
+  Projects (P1, D49): a codebase is one project, named globally by an IRI whose authority and
+  leading path say who owns it (`https://dxos.org/deus/std`). Its dependencies are pinned
+  releases of other projects (a causal hash), mounted under `lib.<name>` as in UCM, with their
+  objects copied into this store (identical hashes deduplicate).
+
+  A project's subgraph is inferred, not tagged: the definitions its own names reach, minus those
+  its libraries reach. A hash two projects share therefore belongs to the library that provides
+  it. A type whose IRI lies under a library's IRI may be minted only by that library.
+
+    project   (project (iri "<iri>") (lib "<name>" "<iri>" "<causal>")…)
+-/
+structure Lib @"urn:deus:project:Lib" where
+  libName : Text
+  libIri : Text
+  release : Text
+
+inductive List a @"#List" where
+  | nil
+  | cons (head : a) (tail : List a)
+
+/-
+  Observability as abilities (D31): code logs, opens spans and records metrics through effects
+  in its row, and a handler chooses where they go.
+
+  - `Observe.collect` keeps events in a list, stamped by a logical clock, so tests can assert on
+    them deterministically.
+  - `Observe.ndjson` prints one JSON object per event to stderr.
+  - `Observe.otlp` appends OpenTelemetry JSON to `traces.jsonl`, `logs.jsonl` and
+    `metrics.jsonl`, one export request per line (the collector's `otlpjsonfile` format). Each
+    event is written when it happens, so telemetry before a defect survives.
+-/
+/-- Structured logging: a level, a message and key–value fields. -/
+ability Log where
+  emit : Text -> Text -> List (Text, Text) -> Unit
+
+/-
+  Map: an AVL tree ordered by the structural `compare`.
+-/
+inductive Map k v where
+  | tip
+  | node (height : Int) (left : Map k v) (key : k) (value : v) (right : Map k v)
+
+/-- What an extension may ask of the toolchain about the codebase the document is checked against.
+  `cost`, `holds` and `run` take DEUS source: `cost` is the machine steps an expression takes to
+  evaluate, `holds` whether a `Bool` expression is true, and `run` the value of a `Text`
+  expression. `describe` takes a name and returns what the codebase knows about it as properties
+  (`kind`, `type`, `view`, and for tests and theorems `verdict` and `evidence`). A compile error,
+  a missing name or a defect is an `err`. -/
+ability MdlHost @"urn:deus:mdl:Host" where
+  cost : Text -> Result Text Int
+  holds : Text -> Result Text Bool
+  run : Text -> Result Text Text
+  describe : Text -> Result Text (List (Text, Text))
+  js : Text -> Result Text (Text, Text)
+
+/-- Metrics: a counter adds to its total; a gauge records a current value. -/
+ability Metrics where
+  counter : Text -> Int -> Unit
+  gauge : Text -> Int -> Unit
+
+/-- A mutable hash map with Text or Int keys; like `Ref`, it is not rolled back by resumption. -/
+inductive MutMap k v @"#MutMap" where
+
+/-- A name table with the indexes resolution needs. -/
+structure Names where
+  table : Map Text Entry
+  index : Dict Text Entry
+  bySegment : Dict Text (List Text)
+  fieldOwners : Dict Text (List Text)
+
+/-- One `| op args -> k => body` handler clause. -/
+structure OpArm where
+  op : Text
+  args : List Pat
+  resume : Option Text
+  clause : Expr
+  at : Pos
+
+inductive Option a @"#Option" where
+  | none
+  | some (value : a)
+
+structure Pair a b @"#Pair" where
+  fst : a
+  snd : b
+
+/-
+  Parser: tokens to declarations, with Lean's offside rule.
+
+  `stop` is the offside column: a token that starts a line at or left of it ends the current
+  expression. A body that starts on a new line is a block whose statements share a column.
+-/
+structure Parser where
+  toks : Ref (List Token)
+  stop : Ref Int
+  notes : Ref (List Token)
+
+-- A row as a type argument, for a type with a row parameter: `Box {IO | r}`.
+inductive Pat where
+  | wild
+  | id (name : Text) (args : List Pat) (pos : Pos)
+  | dot (name : Text) (args : List Pat) (pos : Pos)
+  | int (value : Int)
+  | text (value : Text)
+  | bool (value : Bool)
+  | cons (head : Pat) (tail : Pat)
+  | tuple (items : List Pat)
+  | list (items : List Pat)
+  | unit
+  | as (name : Text) (pat : Pat)
+  | spelled (text : Text) (pat : Pat)
+  | ann (pat : Pat) (type : Ty)
+
+/-
+  Surface syntax tree produced by the parser and consumed by the resolver.
+  Constructor names avoid keywords (`let`, `if`, `match`…), hence `letPat`, `ite`, `matchOn`.
+-/
+structure Pos where
+  atLine : Int
+  atCol : Int
+
+/-
+  Printer: Core back to DEUS source, as Unison's `view` does. Dependencies print under their
+  current names (so a rename shows up everywhere at once); locals print under the author's
+  names, kept as metadata in binder order (see `Resolve.strip`).
+-/
+structure Printer where
+  display : Map Text Text
+  fullNames : Map Text Text
+  typeNames : Map Text Text
+  fieldNames : Map Text Text
+  declared : Map Text Text
+  namesByHash : Map Text (List Text)
+  supply : Ref (List Text)
+  fresh : Ref Int
+
+structure Project @"urn:deus:project:Project" where
+  projectIri : Text
+  libs : List Lib
+
+/-- Shared prover state for one theorem. -/
+structure Prover where
+  store : Text
+  nsMap : Map Text Entry
+  bodies : Ref (Map Text (Option (Int, Sexp)))
+  fuel : Ref Int
+  stuckOn : Ref (List Text)
+  counter : Ref Int
+  lemmaRules : Ref (List Rule)
+  assumptions : Ref (List Text)
+
+/-
+  Deterministic simulation: the abilities a program uses, implemented in memory.
+
+  Tests run under `Sim.run` by default: `IO` reads and writes an in-memory file system, time is
+  a counter, output is captured, and `Random` is seeded. The same seed gives the same run, so a
+  result can be cached by the hash of what ran. A test marked `@[integration]` runs against the
+  real host instead (`deus test --integration`), and its result is never cached.
+-/
+/-- Randomness as an ability, so tests can seed it and production can use real entropy. -/
+ability Random where
+  nextInt : Int -> Int
+
+/-- Mutable cells. Not rolled back when a continuation is resumed twice; code that needs
+  backtracking state uses a handler instead. -/
+inductive Ref a @"#Ref" where
+
+/-
+  The outside world as pinned data (P2, P5; D47).
+
+  - A `Requirement` names an artifact in a `Registry` and the SHA-256 its bytes must have, as a
+    Nix fixed-output derivation does. Requirements are definitions, so the codebase is the
+    lockfile: changing a version or a hash changes the hash of everything that uses it.
+  - `Fetch` gives a requirement's local path; a function that needs a binary has it in its row.
+    `External.fetching` downloads, verifies and caches under `<cache>/<sha256>`, and refuses a
+    mismatch; `External.simulateFetch` answers from memory for deterministic tests.
+  - A `Container` is an image pinned by digest plus how to run it; `Containers` starts and stops
+    one. `External.docker` shells out to the host's runtime; `External.simulateContainers`
+    records what would run.
+  - `requirement` and `container` MDL blocks are extensions defined here; both lower to the data
+    above and check it.
+-/
+/-- Where artifacts come from: a URL template over `{package}`, `{version}` and `{platform}`. -/
+structure Registry @"urn:deus:external:Registry" where
+  registryName : Text
+  urlTemplate : Text
+
+/-
+  Replication through an object store (P3, D50).
+
+  A remote holds immutable bundles under `bundles/<level>-<sha256>`. A bundle is one canonical
+  S-expression: branch claims, then objects and metadata, each sorted by hash:
+
+    (bundle (branch "main" "<causal>")… (base "main" "<causal>")… (obj "<hash>" <form>)… (meta "<hash>" <form>)…)
+
+  A `base` names a head of the branch on the remote that the claim builds on (D167); readers that
+  do not know it skip it.
+
+  - `push` uploads one level-0 bundle with the objects the remote lacks and a claim for the
+    branch head. Names are content hashes, so writes never conflict and nothing is overwritten.
+  - `pull` imports bundles not seen before and sets the tracking branch `<remote>.<branch>` to the
+    claimed heads that no other claim descends from. Two concurrent pushes leave two heads,
+    `<remote>.<branch>` and `<remote>.<branch>.2`, to merge as local branches are.
+  - `compact` collects history into strata (sedimentree): a causal node whose hash starts with `k`
+    zeros closes a level-k stratum, which holds what that node reaches and no earlier boundary
+    does. Boundaries come from hashes and bundles are canonical, so clients compacting the same
+    history write byte-identical bundles. A smaller bundle is deleted once compacted bundles hold
+    all its objects; claims that are still heads move to a claims-only bundle first.
+  - Nothing else is ever deleted: the whole history stays on the remote, as git keeps it (D73).
+
+  Locally, `remotes/<name>/url` names the remote, and `remotes/<name>/seen/<bundle>` lists a seen
+  bundle's claims and hashes, so a pull reads each bundle once.
+-/
+/-- An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
+  the bundles (the explorer's site) as (path, content) pairs, replacing what was there. The file
+  operations (D82) move files byte for byte under a folder beside the bundles: `keys folder` lists
+  the names in it, `download key file` copies one to a local file and says whether it existed,
+  `upload key file mediaType` stores one, and `drop key` deletes one. Assets and the explorer's
+  inbox use them. -/
+ability Remote @"urn:deus:replicate:Remote" where
+  list : Unit -> List Text
+  get : Text -> Option Text
+  put : Text -> Text -> Unit
+  delete : Text -> Unit
+  writeAll : List (Text, Text) -> Unit
+  keys : Text -> List Text
+  download : Text -> Text -> Bool
+  upload : Text -> Text -> Text -> Unit
+  drop : Text -> Unit
+
+/-
+  The web as DEUS data and abilities (P7, D45, D57), independent of where it runs.
+
+  A handler is a function `Request -> {Storage, Http, Actors, Alarm, IO} Response` named by its
+  definition. It serves a named object (a Durable Object, an actor). Its row says what it
+  touches: `Storage` is the object's own storage, `Http` is outbound requests, `Actors` calls
+  other objects by name, and `Alarm` schedules a later request to itself.
+
+  Three runtimes run the same handler:
+  - `Web.simulate` and `Web.simulateMany`: in memory, on a logical clock, for tests.
+  - `deus build <handler> --server` (or `deus serve`): a standalone native binary, serving
+    HTTP with storage on disk (`deus-kernel/src/server.rs`).
+  - `deus build <handler> --worker`: a Cloudflare Worker, with one Durable Object per name
+    (`deus-kernel/embed/worker.mjs`).
+-/
+structure Request @"urn:deus:web:Request" where
+  verb : Text
+  url : Text
+  payload : Text
+
+/-- A pinned artifact. `entry` is the file to use inside an archive (extracted with `tar`), or ""
+  for the downloaded file itself. -/
+structure Requirement @"urn:deus:external:Requirement" where
+  registry : Registry
+  pkg : Text
+  version : Text
+  platform : Text
+  sha256 : Text
+  entry : Text
+
+structure Response @"urn:deus:web:Response" where
+  status : Int
+  content : Text
+  headers : List (Text, Text)
+
+inductive Result e a where
+  | ok (value : a)
+  | err (error : e)
+
+/-- A recorded event: its id, when (microseconds since the epoch, as decimal text), by whom, and one cell per field. -/
+structure Row @"urn:deus:analytics:Row" where
+  eventId : Text
+  recordedAt : Text
+  recordedBy : Text
+  cells : List Cell
+
+/-- A rewrite rule: `lhs` (with pattern variables) becomes `rhs` when every condition is `true`. -/
+structure Rule where
+  lhs : Sym
+  rhs : Sym
+  conds : List Sym
+
+structure Scope where
+  ns : List Text
+  opens : List Text
+
+/-- A seen bundle: its claims (branch, causal) and the hashes of its objects. -/
+structure Seen @"urn:deus:replicate:Seen" where
+  bundleName : Text
+  claims : List (Text, Text)
+  hashes : List Text
+
+/-
+  Canonical S-expressions: the format of Core terms, codebase objects and images.
+  The printer must agree byte-for-byte with src/kernel/sexp.ts, because hashes are taken
+  over this text.
+-/
+inductive Sexp where
+  | int (value : Int)
+  | sym (name : Text)
+  | str (value : Text)
+  | list (items : List Sexp)
+
+/-
+  Spec coverage (D125): what a spec document leaves unstated. A law of the document (a test or a
+  theorem under its name) that no block cites backs no promise, and a public definition in a namespace
+  the document's api blocks cover that no api block names is an API no spec states.
+-/
+/-- One spec document's coverage. Field names carry the type's name because field names are global (task 31d3c1cd). -/
+structure SpecCoverage @"urn:deus:coverage:SpecCoverage" where
+  coverageDoc : Text
+  uncitedLaws : List Text
+  unnamedApi : List Text
+  danglingLinks : List Text
+
+/-- A Durable Object's own transactional storage. -/
+ability Storage @"urn:deus:web:Storage" where
+  get : Text -> Option Text
+  put : Text -> Text -> Unit
+  delete : Text -> Bool
+
+/-- Evaluation that cannot proceed without knowing more (a match on an unknown value). -/
+ability Stuck where
+  stuck : Text -> a
+
+/-
+  The prover: Lean-style tactic proofs over DEUS definitions.
+
+  A theorem's proposition is a `Bool` expression over its binders; `P -> Q` is `implies P Q`.
+  Proving it means showing it evaluates to `true` for every value of the binders.
+
+  Trusted base (what a "proved" verdict relies on):
+
+  - Symbolic evaluation of Core. A definition is unfolded only if it is pure (no abilities,
+    no mutable or reflective primitives) and every recursive call is on a strict subterm of a
+    matched parameter (structural recursion), so the equations used hold for all inputs.
+    A `match` whose scrutinee is not yet a constructor blocks the unfolding instead of guessing.
+  - Structural induction over finite data (DEUS values are finite).
+  - Case splits on `Bool` conditions (excluded middle for terminating computations).
+  - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
+    order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
+  - The `Array` laws (D96, the codebase's `Array.Spec`): `length (make n x) = n` for `0 <= n`;
+    `get (make n x) i = x` and `get (set a i v) j = if i == j then v else get a j`, with `length`
+    of a `set` unchanged, when the index is in bounds; `set (set a i v) i w = set a i w`; and
+    `set a i (get a i) = a` in bounds. An index out of bounds is a defect, so a term whose bound
+    is undecided stays folded under an `if` on the bound.
+  - Rewriting with hypotheses and with lemmas that are themselves proved. A lemma that is
+    only tested downgrades the verdict and says so.
+
+  Tactics (applied to every open goal, separated by `;` or `<;>`):
+
+    intro              move `P ->` hypotheses into the context (also done implicitly)
+    induction x        structural induction on a binder of an inductive type
+    cases x            case analysis on a binder
+    simp [l₁, …]       evaluate and rewrite with hypotheses and the given lemmas
+    split              case split on the first undecided `if` condition
+    auto [l₁, …]       simp, then split / case on stuck variables, recursively (bounded)
+    trace              print the open goals
+
+  Any other name fails the proof (D71). `rfl`, `decide`, `test n` and `sorry` are whole proofs,
+  checked by `deus/check.deus`, not steps of a script.
+-/
+/-- Symbolic values: data, free variables, and terms evaluation could not reduce. -/
+inductive Sym where
+  | int (value : Int)
+  | text (value : Text)
+  | data (type : Text) (tag : Int) (fields : List Sym)
+  | fv (name : Text)
+  | pv (name : Text)
+  | call (hash : Text) (args : List Sym)
+  | fn (hash : Text) (args : List Sym)
+  | ctorFn (type : Text) (tag : Int) (arity : Int) (args : List Sym)
+  | primFn (name : Text) (args : List Sym)
+  | prim (name : Text) (args : List Sym)
+  | ite (cond : Sym) (yes : Sym) (no : Sym)
+  | clo (env : List Sym) (body : Sexp)
+  | app (f : Sym) (args : List Sym)
+
+-- The argument of a row parameter (D55): `Box {IO | r}`.
+inductive TRow where
+  | empty
+  | extend (label : TType) (rest : TRow)
+  | var (id : Int)
+
+/-
+  Types: Hindley–Milner inference with row-polymorphic ability sets (Leijen's scoped
+  labels, as in Koka), over resolved Core.
+
+  - `a -> {E | r} b`: a function whose call may perform the abilities in its row. Rows are
+    inferred; an arrow written without braces in a signature has a fresh row (it constrains no
+    effects), and a written row such as `{IO, Throw Text}` is closed.
+  - A handler removes the ability it handles from the row of its body; anything else flows
+    out. So a `Throw e` the caller does not handle stays in the caller's type: errors are
+    checked (D14). Defects are not in types.
+  - Top-level definitions are generalized; locals are monomorphic. A recursive group is
+    inferred together.
+  - A type parameter used as a row inside a field (`run : Unit -> {r} Int`) is a row parameter
+    (D55): the type is applied to a row, `Box {IO | r}`, and the field's effects are the row's.
+    Field arrows are closed, and one written without braces is pure, so a function stored in
+    data keeps its effects.
+-/
+inductive TType where
+  | con (iri : Text) (args : List TType)
+  | fn (from : TType) (row : TRow) (to : TType)
+  | var (id : Int)
+  | row (r : TRow)
+
+/-- An issue. `priority` is Linear's: 0 none, 1 urgent, 2 high, 3 medium, 4 low. `parent` is a task id or `""`. -/
+structure Task @"urn:deus:task:Task" where
+  id : Text
+  title : Text
+  state : TaskState
+  priority : Int
+  assignee : Text
+  labels : List Text
+  parent : Text
+  details : Text
+  links : List Attachment
+  comments : List Comment
+
+/-
+  Tasks (D59): issues kept in the codebase, attached to the definitions and changes they are
+  about, as Linear or GitHub issues are attached to files and commits.
+
+  A task is a hashed object in the `tasks` layer, named by a short id. Every history node points
+  at a tasks snapshot (id -> task hash) beside its namespace snapshot, so tasks branch, merge
+  and replicate with the code: a task closed on a fix branch is closed where the branch merges.
+  A task links definitions by name, with the hash each had when linked, and changes by causal
+  hash. Its own history, and that of what it links, is read from the branch's history.
+-/
+inductive TaskState @"urn:deus:task:State" where
+  | todo
+  | doing
+  | done
+  | canceled
+
+inductive Text @"#Text" where
+
+/-- A Thrift value, for the compact protocol Parquet uses for its metadata. -/
+inductive Thrift @"urn:deus:analytics:Thrift" where
+  | i32 (value : Int)
+  | i64 (value : Int)
+  | bin (bytes : List Int)
+  | flag (value : Bool)
+  | items (elemType : Int) (values : List Thrift)
+  | fields (pairs : List (Int, Thrift))
+
+/-- Checked, expected failure: callers see `Throw e` in the effect row until a handler removes it. -/
+ability Throw e where
+  throw : e -> a
+
+-- An ordinary comment, `-- …` or `/- … -/`; the parser keeps it beside the tokens (D66).
+structure Token where
+  kind : Kind
+  value : Text
+  line : Int
+  col : Int
+  bol : Bool
+  spelling : Text
+
+/-- Tracing: `start` opens a span and returns its id; `finish` closes it. -/
+ability Trace where
+  start : Text -> List (Text, Text) -> Int
+  finish : Int -> Unit
+
+inductive Ty where
+  | named (name : Text) (args : List Ty)
+  | arrow (from : Ty) (to : Ty) (effects : Option (List Ty))
+  | tuple (items : List Ty)
+  | unit
+  | effects (row : List Ty) (result : Ty)
+  | row (items : List Ty)
+
+/-- Mutable unification state for one batch. -/
+structure Unifier where
+  types : MutMap Int TType
+  rows : MutMap Int TRow
+  next : Ref Int
+
+inductive Unit @"#Unit" where
+  | unit
+
+/-
+  Tests and theorems.
+
+  A test is a `Bool` expression. A theorem is a proposition over typed binders plus the
+  evidence its author claims (docs/DECISIONS.md D13):
+
+    sorry       stated, not checked
+    by rfl      no binders; the proposition evaluates to `true`
+    by decide   every value of finite binder types is checked
+    by test n   n generated cases pass (seeded by the theorem's hash, so reruns are identical)
+
+  Results are cached under the hash of what was checked: unchanged code is never rechecked.
+  A defect inside a test or a theorem is caught at this boundary and reported as a failure.
+-/
+/-- The outcome of checking one test or theorem. -/
+inductive Verdict where
+  | pass (evidence : Text) (cases : Int)
+  | fail (reason : Text)
+  | unchecked
+
+/-
+  The codebase as an ability (D138): a snippet `deus eval` runs can read and change the codebase
+  it runs against, so an agent scripts a change in DEUS instead of chaining CLI calls.
+  `Cli.withWorkspace` handles it.
+-/
+/-- `names prefix` lists the names that start with `prefix`; `view name` is a name's source as
+  `deus view` prints it; `update source` adds or replaces the definitions in `source`, as
+  `deus update` does; `run argv` runs any `deus` command, such as `["task", "set", "3f2a", "--state", "done"]`.
+  Each operation sees the codebase as the ones before it left it. -/
+ability Workspace @"urn:deus:workspace:Workspace" where
+  names : Text -> List Text
+  view : Text -> Text
+  update : Text -> Unit
+  run : List Text -> Unit
+
+/-- The state of one simulated run. -/
+structure World where
+  files : Ref (Map Text Text)
+  dirs : Ref (Map Text Unit)
+  output : Ref (List Text)
+  clock : Ref Int
+  rng : Ref Int
+
+/-- `++`: concatenates two texts or two lists. -/
+def append : a -> a -> a := prim "append"
+
+/-- Runs `body`, recovering from a `throw` with `onError`. -/
+def catch (body : Unit -> {Throw e | r} a) (onError : e -> {r} a) : {r} a :=
+  handle body () with
+  | Throw.throw e -> x0 => onError e
+
+/-- Structural order: -1, 0 or 1. -/
+def compare : a -> a -> Int := prim "compare"
+
+def const (x : a) (y : b) : a := x
+
+/-- Raises a defect: the program reached a state its author ruled out. -/
+def defect : Text -> a := prim "defect"
+
+def eprintln (t : Text) : {IO} Unit := IO.eprint (t ++ "\n")
+
+/-- Structural equality; functions are never equal. -/
+def eq : a -> a -> Bool := prim "eq"
+
+def fst (p : (a, b)) : a :=
+  match p with
+  | (x, _) => x
+
+def ge : a -> a -> Bool := prim "ge"
+
+def gt : a -> a -> Bool := prim "gt"
+
+/-
+  Prelude: lists, options, results, maps and text helpers.
+
+  There are no type classes yet, so equality and ordering are the structural primitives
+  `eq` and `compare` (see docs/DECISIONS.md D10).
+-/
+def id (x : a) : a := x
+
+/-- `a -> b` in a theorem's statement. -/
+def implies : Bool -> Bool -> Bool := prim "implies"
+
+def le : a -> a -> Bool := prim "le"
+
+/-- Structural order (`<`, `<=`, `>`, `>=`), as `compare`. -/
+def lt : a -> a -> Bool := prim "lt"
+
+def max (a : Int) (b : Int) : Int := if a < b then b else a
+
+def min (a : Int) (b : Int) : Int := if a < b then a else b
+
+def neq : a -> a -> Bool := prim "neq"
+
+def not (b : Bool) : Bool := if b then false else true
+
+def println (t : Text) : {IO} Unit := IO.print (t ++ "\n")
+
+/-- Debug rendering of any value. -/
+def show : a -> Text := prim "show"
+
+def snd (p : (a, b)) : b :=
+  match p with
+  | (_, y) => y
+
+def trace : Text -> a -> a := prim "trace"
+
+/-- Runs `body`, turning a `throw` into `Result.err`. -/
+def try (body : Unit -> {Throw e | r} a) : {r} Result e a :=
+  handle body () with
+  | return x => Result.ok x
+  | Throw.throw e -> x0 => Result.err e

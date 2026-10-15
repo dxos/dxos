@@ -1,0 +1,59 @@
+def Names.build (table : Map Text Entry) : Names :=
+  let entries := Map.toList table
+  let bySegment := groups (List.map (fun pair => (lastSegment (fst pair), fst pair)) entries)
+  let fieldOwners := groups (concatMap (fun pair =>
+    match pair with
+    | (fqn, Entry.type _ _ fields) => List.map (fun f => (f, fqn)) fields
+    | _ => []) entries)
+  Names.mk table (Dict.fromList entries) (Dict.fromList bySegment) (Dict.fromList fieldOwners)
+
+/-- Pairs grouped by key, each group's values in descending order; sorting once is cheaper than a map insert per pair. -/
+def Names.groups (pairs : List (Text, Text)) : List (Text, List Text) :=
+  let rec go xs key acc out :=
+    match xs with
+    | [] => if List.isEmpty acc then out else (key, acc) :: out
+    | pair :: rest => if fst pair == key then go rest key (snd pair :: acc) out else go rest (fst pair) [snd pair] (if List.isEmpty acc then out else (key, acc) :: out)
+  go (sort pairs) "" [] []
+
+def Names.joinName (prefix : List Text) (name : Text) : Text := join "." (prefix ++ [name])
+
+def Names.lastSegment (name : Text) : Text :=
+  let rec go i := if i < 0 then name else if code name i == '.' then Text.drop (i + 1) name else go (i - 1)
+  go (Text.length name - 1)
+
+/-- Resolves a name: the namespace chain innermost first, then `open`s, then (if `suffix`) a
+  unique fully qualified name ending in `.name`, as Unison's suffix-based names. -/
+def Names.lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) (suffix : Bool) : {Throw Text} Option (Text, Entry) :=
+  let index := names.index
+  let probe := fun fqn =>
+    match Dict.lookup fqn index with
+    | Option.some e => if want e then Option.some (fqn, e) else Option.none
+    | Option.none => Option.none
+  let rec chain prefix :=
+    match probe (joinName (reverse prefix) name) with
+    | Option.some hit => Option.some hit
+    | Option.none =>
+        match prefix with
+        | [] => Option.none
+        | _ :: rest => chain rest
+  let rec viaOpens os :=
+    match os with
+    | [] => Option.none
+    | o :: rest =>
+        match probe (o ++ "." ++ name) with
+        | Option.some hit => Option.some hit
+        | Option.none => viaOpens rest
+  match chain (reverse scope.ns) with
+  | Option.some hit => Option.some hit
+  | Option.none =>
+      match viaOpens scope.opens with
+      | Option.some hit => Option.some hit
+      | Option.none => if not suffix then Option.none else
+          let candidates := getOr (Dict.lookup (lastSegment name) names.bySegment) []
+          let matches := List.filter
+            (fun fqn => (fqn == name || endsWith ("." ++ name) fqn) && isSome (probe fqn))
+            candidates
+          match matches with
+          | [] => Option.none
+          | fqn :: [] => probe fqn
+          | _ => Throw.throw ("ambiguous name " ++ name ++ ": " ++ join ", " (sort matches))

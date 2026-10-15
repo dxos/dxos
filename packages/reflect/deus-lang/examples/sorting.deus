@@ -1,0 +1,266 @@
+/-
+  Sorting with and without mutable memory: the case study behind D83 and D96
+  (docs/IMMUTABILITY.md).
+
+  Every sort here is first-order and specialised to `Int`, so the same definitions run on the
+  interpreter and compile to wasm (`deus build Sorting.benchMerge --wasm`). Loops are top-level
+  tail-recursive definitions because the wasm subset has no `let rec`.
+
+    deus add examples/sorting.deus && deus test
+-/
+
+namespace Sorting
+
+--
+-- Input and checks.
+--
+
+/-- A linear congruential generator, so every back end sorts the same numbers. -/
+def next (s : Int) : Int := Int.and (s * 1103515245 + 12345) 0x7FFFFFFF
+
+def randomGo (acc : List Int) (k : Int) (s : Int) : List Int :=
+  if k == 0 then acc else randomGo (Int.ushr s 8 :: acc) (k - 1) (next s)
+
+/-- `n` pseudo-random numbers in 0 .. 2^23. -/
+def random (n : Int) (seed : Int) : List Int := randomGo [] n (next seed)
+
+def revGo (acc : List Int) (xs : List Int) : List Int :=
+  match xs with
+  | [] => acc
+  | x :: rest => revGo (x :: acc) rest
+
+def rev (xs : List Int) : List Int := revGo [] xs
+
+/-- The length of `xs` if it is in order, else -1: one number a host can compare. -/
+def checkGo (prev : Int) (n : Int) (xs : List Int) : Int :=
+  match xs with
+  | [] => n
+  | x :: rest => if x < prev then -1 else checkGo x (n + 1) rest
+
+def check (xs : List Int) : Int :=
+  match xs with
+  | [] => 0
+  | x :: rest => checkGo x 1 rest
+
+--
+-- 1. Bottom-up merge sort on immutable lists.
+--
+
+/-- Merges two sorted lists: taken elements collect reversed in `acc`, which is reversed onto the rest. -/
+def mergeGo (acc : List Int) (xs : List Int) (ys : List Int) : List Int :=
+  match xs with
+  | [] => revGo ys acc
+  | x :: xt =>
+    match ys with
+    | [] => revGo xs acc
+    | y :: yt => if x <= y then mergeGo (x :: acc) xt ys else mergeGo (y :: acc) xs yt
+
+def merge (xs : List Int) (ys : List Int) : List Int := mergeGo [] xs ys
+
+/-- Every element as a run of one. -/
+def runsGo (acc : List (List Int)) (xs : List Int) : List (List Int) :=
+  match xs with
+  | [] => acc
+  | x :: rest => runsGo ([x] :: acc) rest
+
+/-- One pass: merges neighbouring runs. -/
+def pairsGo (acc : List (List Int)) (runs : List (List Int)) : List (List Int) :=
+  match runs with
+  | a :: b :: rest => pairsGo (merge a b :: acc) rest
+  | [a] => a :: acc
+  | [] => acc
+
+def mergeAll (runs : List (List Int)) : List Int :=
+  match runs with
+  | [] => []
+  | [r] => r
+  | _ => mergeAll (pairsGo [] runs)
+
+def mergeSort (xs : List Int) : List Int := mergeAll (runsGo [] xs)
+
+--
+-- 2. Quicksort on immutable lists.
+--
+
+/-- `xs` sorted, followed by `rest`; the accumulator saves the appends. -/
+def quickAcc (xs : List Int) (rest : List Int) : List Int :=
+  match xs with
+  | [] => rest
+  | p :: tl => partitionGo p tl [] [] rest
+
+def partitionGo (p : Int) (xs : List Int) (lo : List Int) (hi : List Int) (rest : List Int) : List Int :=
+  match xs with
+  | [] => quickAcc lo (p :: quickAcc hi rest)
+  | x :: t => if x < p then partitionGo p t (x :: lo) hi rest else partitionGo p t lo (x :: hi) rest
+
+def quickSort (xs : List Int) : List Int := quickAcc xs []
+
+--
+-- 3. Heap sort through a persistent leftist heap.
+--
+
+/-- A leftist max-heap: every node's left spine is at least as long as its right one. -/
+inductive Heap where
+  | leaf
+  | node (rank : Int) (x : Int) (l : Heap) (r : Heap)
+
+def rank (h : Heap) : Int :=
+  match h with
+  | Heap.leaf => 0
+  | Heap.node k _ _ _ => k
+
+def make (x : Int) (a : Heap) (b : Heap) : Heap :=
+  if rank a >= rank b then Heap.node (rank b + 1) x a b else Heap.node (rank a + 1) x b a
+
+def meld (a : Heap) (b : Heap) : Heap :=
+  match a with
+  | Heap.leaf => b
+  | Heap.node _ x al ar =>
+    match b with
+    | Heap.leaf => a
+    | Heap.node _ y bl br => if x >= y then make x al (meld ar b) else make y bl (meld a br)
+
+def heapGo (h : Heap) (xs : List Int) : Heap :=
+  match xs with
+  | [] => h
+  | x :: rest => heapGo (meld (Heap.node 1 x Heap.leaf Heap.leaf) h) rest
+
+/-- Pops the maximum onto `acc` until the heap is empty, so `acc` ends ascending. -/
+def drainGo (acc : List Int) (h : Heap) : List Int :=
+  match h with
+  | Heap.leaf => acc
+  | Heap.node _ x l r => drainGo (x :: acc) (meld l r)
+
+def heapSort (xs : List Int) : List Int := drainGo [] (heapGo Heap.leaf xs)
+
+--
+-- 4. Quicksort over the immutable `Array` (D96), threading each new version: written purely, it
+--    runs in place because no old version is used again.
+--
+
+def swap (a : Array Int) (i : Int) (j : Int) : Array Int :=
+  let x := Array.get a i
+  Array.set (Array.set a i (Array.get a j)) j x
+
+/-- Lomuto partition of `[j, hi)` around `pivot`: the new array and where the pivot belongs. -/
+def lomuto (a : Array Int) (pivot : Int) (i : Int) (j : Int) (hi : Int) : (Array Int, Int) :=
+  if j >= hi then (a, i)
+  else if Array.get a j < pivot then lomuto (swap a i j) pivot (i + 1) (j + 1) hi
+  else lomuto a pivot i (j + 1) hi
+
+/-- `a` with `[lo, hi)` sorted, pivoting on the middle element. -/
+def quickArray (a : Array Int) (lo : Int) (hi : Int) : Array Int :=
+  if hi - lo <= 1 then a
+  else
+    let b := swap a (lo + (hi - lo) / 2) (hi - 1)
+    match lomuto b (Array.get b (hi - 1)) lo lo (hi - 1) with
+    | (c, p) => quickArray (quickArray (swap c p (hi - 1)) lo p) (p + 1) hi
+
+def fillGo (a : Array Int) (i : Int) (xs : List Int) : Array Int :=
+  match xs with
+  | [] => a
+  | x :: rest => fillGo (Array.set a i x) (i + 1) rest
+
+def lengthGo (n : Int) (xs : List Int) : Int :=
+  match xs with
+  | [] => n
+  | _ :: rest => lengthGo (n + 1) rest
+
+def fromList (xs : List Int) : Array Int := fillGo (Array.make (lengthGo 0 xs) 0) 0 xs
+
+def toListGo (a : Array Int) (i : Int) (acc : List Int) : List Int :=
+  if i < 0 then acc else toListGo a (i - 1) (Array.get a i :: acc)
+
+def toList (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
+
+def arraySort (xs : List Int) : List Int :=
+  let a := fromList xs
+  toList (quickArray a 0 (Array.length a))
+
+/-- An old version stays as it was, however the new ones are used. -/
+test arrayKeepsOld :=
+  let a := fromList [3, 1, 2]
+  let b := swap a 0 1
+  let c := Array.set b 2 9
+  toList a == [3, 1, 2] && toList b == [1, 3, 2] && toList c == [1, 3, 9] && toList (Array.set a 0 7) == [7, 1, 2]
+
+--
+-- 5. The same in-place quicksort over the `MutMap` that exists today, as an `Int`-keyed array.
+--
+
+def at (m : MutMap Int Int) (i : Int) : Int := Option.getOr (MutMap.get m i) 0
+
+def swapM (m : MutMap Int Int) (i : Int) (j : Int) : Unit :=
+  let t := at m i
+  MutMap.set m i (at m j)
+  MutMap.set m j t
+
+def lomutoM (m : MutMap Int Int) (pivot : Int) (i : Int) (j : Int) (hi : Int) : Int :=
+  if j >= hi then i
+  else if at m j < pivot then
+    swapM m i j
+    lomutoM m pivot (i + 1) (j + 1) hi
+  else lomutoM m pivot i (j + 1) hi
+
+def quickMap (m : MutMap Int Int) (lo : Int) (hi : Int) : Unit :=
+  if hi - lo <= 1 then ()
+  else
+    swapM m (lo + (hi - lo) / 2) (hi - 1)
+    let p := lomutoM m (at m (hi - 1)) lo lo (hi - 1)
+    swapM m p (hi - 1)
+    quickMap m lo p
+    quickMap m (p + 1) hi
+
+def mapSort (xs : List Int) : List Int :=
+  let m := MutMap.new ()
+  let n := List.length xs
+  List.forEach (List.mapIndexed (fun i x => (i, x)) xs) (fun p => MutMap.set m (fst p) (snd p))
+  quickMap m 0 n
+  List.map (fun i => at m i) (List.range 0 n)
+
+--
+-- Benchmarks: sort `n` numbers from `seed`; the result is `n` when the output is in order.
+--
+
+def benchInput (n : Int) (seed : Int) : Int := lengthGo 0 (random n seed)
+
+def benchMerge (n : Int) (seed : Int) : Int := check (mergeSort (random n seed))
+
+def benchQuick (n : Int) (seed : Int) : Int := check (quickSort (random n seed))
+
+def benchHeap (n : Int) (seed : Int) : Int := check (heapSort (random n seed))
+
+def benchArray (n : Int) (seed : Int) : Int := check (arraySort (random n seed))
+
+def benchPrelude (n : Int) (seed : Int) : Int := check (List.sort (random n seed))
+
+def benchMap (n : Int) (seed : Int) : Int := check (mapSort (random n seed))
+
+
+--
+-- Tests.
+--
+
+def sample : List Int := [5, 3, 9, 1, 5, 0, -2, 7, 3, 3]
+
+test mergeSorts := mergeSort sample == List.sort sample
+
+test quickSorts := quickSort sample == List.sort sample
+
+test heapSorts := heapSort sample == List.sort sample
+
+test arraySorts := arraySort sample == List.sort sample
+
+test mapSorts := mapSort sample == List.sort sample
+
+
+test emptyAndOne := mergeSort [] == [] && quickSort [4] == [4] && heapSort [] == [] && arraySort [] == []
+
+test agreeOnRandom :=
+  let xs := random 500 7
+  let expected := List.sort xs
+  mergeSort xs == expected && quickSort xs == expected && heapSort xs == expected && arraySort xs == expected
+
+test benchesCheck := benchMerge 300 1 == 300 && benchQuick 300 1 == 300 && benchHeap 300 1 == 300 && benchArray 300 1 == 300
+
+end Sorting

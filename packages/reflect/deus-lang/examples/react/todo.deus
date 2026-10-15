@@ -1,0 +1,72 @@
+/-
+  A React web app written in DEUS (D97): a counter and a todo list. Components are DEUS functions
+  that perform `Hooks`; `React.component` runs them under React. Build and serve it with
+  `examples/react/build.sh`, which compiles `TodoApp.main` with `deus build --js` and bundles
+  React with esbuild.
+-/
+
+namespace TodoApp
+
+open React
+
+structure Todo where
+  id : Int
+  title : Text
+  done : Bool
+
+/-- A button that counts its clicks, starting at `start`. -/
+def counter (start : Int) : {Hooks} Element :=
+  let (n, setN) := Hooks.useState start
+  h "div" [className "counter"] [
+    h "button" [className "dec", onClick (fun _ => setN (n - 1))] [text "−"],
+    h "span" [className "value"] [text (Int.toText n)],
+    h "button" [className "inc", onClick (fun _ => setN (n + 1))] [text "+"]]
+
+def Counter : Component Int := component "Counter" counter
+
+def toggle (id : Int) (todos : List Todo) : List Todo :=
+  List.map (fun t => if t.id == id then { t with done := not t.done } else t) todos
+
+def remaining (todos : List Todo) : Int := List.length (List.filter (fun t => not t.done) todos)
+
+def item (props : (Todo, Int -> Unit)) : {Hooks} Element :=
+  match props with
+  | (todo, onToggle) =>
+    h "li" [className (if todo.done then "todo done" else "todo"), onClick (fun _ => onToggle todo.id)] [
+      h "input" [("type", Js.text "checkbox"), ("checked", Js.bool todo.done), ("readOnly", Js.bool true)] [],
+      text todo.title]
+
+def Item : Component (Todo, Int -> Unit) := component "Item" item
+
+/-- The todo list: a field to add one, the items, and how many are left. -/
+def todoList (initial : List Text) : {Hooks} Element :=
+  let (todos, setTodos) := Hooks.useState (List.mapIndexed (fun i t => Todo.mk i t false) initial)
+  let (draft, setDraft) := Hooks.useState ""
+  let add := fun (u : Unit) =>
+    if Text.isEmpty (Text.trim draft) then ()
+    else
+      setTodos (todos ++ [Todo.mk (List.length todos) (Text.trim draft) false])
+      setDraft ""
+  h "section" [className "todos"] [
+    h "form" [("onSubmit", Js.fn1 (fun e =>
+      let _ := Js.method e "preventDefault" []
+      add ()))] [
+      h "input" [attr "placeholder" "What needs doing?", ("value", Js.text draft), onInput setDraft] [],
+      h "button" [attr "type" "submit"] [text "Add"]],
+    h "ul" [] (List.map (fun t => keyed (Int.toText t.id) Item (t, fun id => setTodos (toggle id todos))) todos),
+    h "p" [className "left"] [text (Int.toText (remaining todos) ++ " of " ++ Int.toText (List.length todos) ++ " left")]]
+
+def TodoList : Component (List Text) := component "TodoList" todoList
+
+def app (u : Unit) : {Hooks} Element :=
+  h "main" [] [
+    h "h1" [] [text "DEUS × React"],
+    h "p" [className "lede"] [text "Every component on this page is a DEUS function compiled to JavaScript."],
+    el Counter 3,
+    el TodoList ["Compile DEUS to JavaScript", "Bind React's hooks as an ability", "Load a plugin into Composer"]]
+
+def App : Component Unit := component "App" app
+
+def main (u : Unit) : Unit := mount "root" (el App ())
+
+end TodoApp

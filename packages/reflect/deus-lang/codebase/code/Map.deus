@@ -1,0 +1,110 @@
+/-- Whether keys strictly ascend, as `toList` returns them and as stored snapshots hold them. -/
+def Map.ascending (pairs : List (k, v)) : Bool :=
+  match pairs with
+  | a :: rest =>
+      match rest with
+      | b :: _ => compare (fst a) (fst b) < 0 && Map.ascending rest
+      | [] => true
+  | [] => true
+
+def Map.balance (l : Map k v) (key : k) (value : v) (r : Map k v) : Map k v :=
+  let hl := height l
+  let hr := height r
+  if hl > hr + 1 then
+    match l with
+    | Map.node _ ll _ _ lr => if height ll >= height lr then rotateRight (Map.mk l key value r) else rotateRight (Map.mk (rotateLeft l) key value r)
+    | Map.tip => Map.mk l key value r
+  else if hr > hl + 1 then
+    match r with
+    | Map.node _ rl _ _ rr => if height rr >= height rl then rotateLeft (Map.mk l key value r) else rotateLeft (Map.mk l key value (rotateRight r))
+    | Map.tip => Map.mk l key value r
+  else Map.mk l key value r
+
+def Map.contains (key : k) (m : Map k v) : Bool := isSome (Map.lookup key m)
+
+def Map.empty : Map k v := Map.tip
+
+def Map.filter (p : k -> v -> Bool) (m : Map k v) : Map k v := Map.fromList (List.filter (fun pair => p (fst pair) (snd pair)) (Map.toList m))
+
+def Map.foldr (f : k -> v -> b -> b) (init : b) (m : Map k v) : b :=
+  match m with
+  | Map.tip => init
+  | Map.node _ l key value r => Map.foldr f (f key value (Map.foldr f init r)) l
+
+/-- A balanced tree from strictly ascending pairs in linear time: the middle pair is the root. -/
+def Map.fromAscending (pairs : List (k, v)) : Map k v :=
+  let rec build n xs := if n == 0 then (Map.tip, xs) else
+    let half := n / 2
+    match build half xs with
+    | (l, rest) =>
+        match rest with
+        | pair :: rest2 =>
+            match build (n - half - 1) rest2 with
+            | (r, rest3) => (Map.mk l (fst pair) (snd pair) r, rest3)
+        | [] => (l, [])
+  fst (build (List.length pairs) pairs)
+
+/-- Later pairs win over earlier ones with the same key. Ascending input skips rebalancing. -/
+def Map.fromList (pairs : List (k, v)) : Map k v := if ascending pairs then fromAscending pairs else foldl (fun m p => Map.insert (fst p) (snd p) m) Map.tip pairs
+
+def Map.height : Map k v -> Int
+| Map.tip => 0
+| Map.node h _ _ _ _ => h
+
+def Map.insert (key : k) (value : v) (m : Map k v) : Map k v :=
+  match m with
+  | Map.tip => Map.node 1 Map.tip key value Map.tip
+  | Map.node h l k2 v2 r =>
+      let c := compare key k2
+      if c < 0 then balance (Map.insert key value l) k2 v2 r else if c > 0 then balance l k2 v2 (Map.insert key value r) else Map.node h l key value r
+
+def Map.keys (m : Map k v) : List k := Map.foldr (fun key _ acc => key :: acc) [] m
+
+def Map.lookup (key : k) (m : Map k v) : Option v :=
+  match m with
+  | Map.tip => Option.none
+  | Map.node _ l k2 v2 r =>
+      let c := compare key k2
+      if c < 0 then Map.lookup key l else if c > 0 then Map.lookup key r else Option.some v2
+
+def Map.mapValues (f : v -> w) (m : Map k v) : Map k w :=
+  match m with
+  | Map.tip => Map.tip
+  | Map.node h l key value r => Map.node h (Map.mapValues f l) key (f value) (Map.mapValues f r)
+
+def Map.mk (l : Map k v) (key : k) (value : v) (r : Map k v) : Map k v := Map.node (1 + max (height l) (height r)) l key value r
+
+def Map.remove (key : k) (m : Map k v) : Map k v :=
+  match m with
+  | Map.tip => Map.tip
+  | Map.node _ l k2 v2 r =>
+      let c := compare key k2
+      if c < 0 then balance (Map.remove key l) k2 v2 r else if c > 0 then balance l k2 v2 (Map.remove key r) else
+        match r with
+        | Map.tip => l
+        | _ =>
+            match removeMin r with
+            | (mk2, mv, r2) => balance l mk2 mv r2
+
+def Map.removeMin : Map k v -> (k, (v, Map k v))
+| Map.node _ Map.tip key value r => (key, value, r)
+| Map.node _ l key value r =>
+  match Map.removeMin l with
+  | (mk2, mv, l2) => (mk2, mv, balance l2 key value r)
+| Map.tip => defect "Map.removeMin: empty"
+
+def Map.rotateLeft : Map k v -> Map k v
+| Map.node _ l key value (Map.node _ rl rk rv rr) => Map.mk (Map.mk l key value rl) rk rv rr
+| t => t
+
+def Map.rotateRight : Map k v -> Map k v
+| Map.node _ (Map.node _ ll lk lv lr) key value r => Map.mk ll lk lv (Map.mk lr key value r)
+| t => t
+
+def Map.size (m : Map k v) : Int := Map.foldr (fun _ _ n => n + 1) 0 m
+
+def Map.toList (m : Map k v) : List (k, v) := Map.foldr (fun key value acc => (key, value) :: acc) [] m
+
+def Map.update (key : k) (f : Option v -> v) (m : Map k v) : Map k v := Map.insert key (f (Map.lookup key m)) m
+
+def Map.values (m : Map k v) : List v := Map.foldr (fun _ value acc => value :: acc) [] m

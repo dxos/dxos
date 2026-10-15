@@ -1,0 +1,60 @@
+def Entry.fromSexp (s : Sexp) : Entry :=
+  let a := Sexp.args s
+  let txt := fun k => asText (getOr (get? a k) (Sexp.str ""))
+  let num := fun k => Sexp.asInt (getOr (get? a k) (Sexp.int 0))
+  let h := head s
+  if h == "term" then Entry.term (txt 0) else if h == "ctor" then Entry.ctor (txt 0) (num 1) (num 2) else if h == "type" then Entry.type (txt 0) (txt 1) (List.map asText (Sexp.asList (getOr (get? a 2) (Sexp.list [])))) else if h == "ability" then Entry.ability (txt 0) (txt 1) else if h == "op" then Entry.op (txt 0) (num 1) (num 2) else if h == "test" then Entry.test (txt 0) else if h == "theorem" then Entry.theorem (txt 0) else if h == "spec" then Entry.spec (txt 0) else defect ("unknown entry " ++ Sexp.print s)
+
+/-- The hash an entry names (a constructor or operation names its type's or ability's). -/
+def Entry.hash : Entry -> Text
+| Entry.term h => h
+| Entry.ctor t _ _ => t
+| Entry.type h _ _ => h
+| Entry.ability h _ => h
+| Entry.op a _ _ => a
+| Entry.test h => h
+| Entry.theorem h => h
+| Entry.spec h => h
+
+def Entry.isCtor (e : Entry) : Bool :=
+  match e with
+  | Entry.ctor _ _ _ => true
+  | _ => false
+
+def Entry.isOp (e : Entry) : Bool :=
+  match e with
+  | Entry.op _ _ _ => true
+  | _ => false
+
+def Entry.isTypeName (e : Entry) : Bool :=
+  match e with
+  | Entry.type _ _ _ => true
+  | Entry.ability _ _ => true
+  | _ => false
+
+def Entry.isValue (e : Entry) : Bool :=
+  match e with
+  | Entry.term _ => true
+  | Entry.ctor _ _ _ => true
+  | Entry.op _ _ _ => true
+  | _ => false
+
+def Entry.kind : Entry -> Text
+| Entry.term _ => "term"
+| Entry.ctor _ _ _ => "ctor"
+| Entry.type _ _ _ => "type"
+| Entry.ability _ _ => "ability"
+| Entry.op _ _ _ => "op"
+| Entry.test _ => "test"
+| Entry.theorem _ => "theorem"
+| Entry.spec _ => "spec"
+
+def Entry.toSexp : Entry -> Sexp
+| Entry.term h => Sexp.node "term" [Sexp.s h]
+| Entry.ctor t tag n => Sexp.node "ctor" [Sexp.s t, i tag, i n]
+| Entry.type h iri fields => Sexp.node "type" [Sexp.s h, Sexp.s iri, Sexp.list (List.map Sexp.s fields)]
+| Entry.ability h iri => Sexp.node "ability" [Sexp.s h, Sexp.s iri]
+| Entry.op a index n => Sexp.node "op" [Sexp.s a, i index, i n]
+| Entry.test h => Sexp.node "test" [Sexp.s h]
+| Entry.theorem h => Sexp.node "theorem" [Sexp.s h]
+| Entry.spec h => Sexp.node "spec" [Sexp.s h]

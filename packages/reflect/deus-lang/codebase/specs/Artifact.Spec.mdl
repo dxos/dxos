@@ -1,0 +1,109 @@
+---
+id: org.dxos.deus.spec.artifact
+name: Artifact.Spec
+version: 1.0
+---
+
+# Artifacts: cached constants
+
+Dmytro: "an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main;
+evaluating it once caches the result in the artifacts layer by the hash of the expression" (task
+88004c30). A constant marked `@[artifact]` is evaluated once and its value is kept in the artifacts
+layer under the constant's hash. The hash covers the constant's body and, through its references,
+everything it is computed from, so a change to any of those gives a new hash and the next use evaluates
+it again; nothing is ever invalidated by hand. Whatever the evaluation reads from outside the
+codebase (files, tools, the network) is not in the hash. Written in the order of the process (D92).
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: cached constants
+  signatures:
+  - Cli.ensureArtifacts : Text -> List Text -> {IO, Throw Text} List Text
+  - Cli.cachedValue : Text -> Text -> {IO} Option Sexp
+  - Cli.artifact : Args -> {IO, Throw Text} Unit
+```
+
+```mdl
+api A-2: embedded files
+  signatures:
+  - Cli.embed : Args -> {IO, Throw Text} Unit
+  - Cli.embeddedAsset : Text -> Text -> {IO, Throw Text} Option (Text, Text)
+  - Embed.text : Text -> Text
+  - Embed.bytes : Text -> List Int
+```
+
+## Requirements
+
+```mdl
+req R-1: deus artifact <name> evaluates an @[artifact] constant and keeps its value under the constant's hash in the artifacts layer
+  by: Artifact.Spec.artifactKeepsItsValue
+```
+
+```mdl
+req R-2: the first deus run of a program fills the cache for each @[artifact] constant it uses, evaluating it once
+  by: Artifact.Spec.runFillsTheCache
+```
+
+```mdl
+req R-3: a change to anything the constant is computed from gives it a new hash, so the next use evaluates it again
+  by: Artifact.Spec.changeEvaluatesAgain
+```
+
+```mdl
+req R-4: an image of a program that uses a cached constant holds its value, not the definitions it was computed from
+  by: Artifact.Spec.imageHoldsTheValue
+```
+
+```mdl
+req R-5: only a first-order constant can be an artifact: a function, or a definition with parameters, is refused by name
+  by: Artifact.Spec.functionsAreRefused
+```
+
+## Embedded files
+
+A file a program needs, such as a page, a stylesheet or a fixture, lives in the codebase rather than in
+git. `deus embed <file> --as <Name>` keeps the file's text in the asset store (D82) under its SHA-256
+and defines `Name` as the artifact `Embed.text "<sha256>"`. The definition names only the hash, so
+its own hash changes exactly when the file's text does, and the store's copy is the kept value.
+
+```mdl
+req R-6: deus embed <file> --as <Name> keeps the file's text in the asset store under its SHA-256 and defines Name as an @[artifact] constant Embed.text "<sha256>"
+  by: Artifact.Spec.embedKeepsTheFile
+```
+
+```mdl
+req R-7: a program that uses an embedded constant gets the file's text from the store, after the file itself is gone
+  by: Artifact.Spec.embeddedValueIsTheText
+```
+
+```mdl
+req R-8: the git export names an embedded file by its hash and never carries its text
+  by: Artifact.Spec.exportNamesTheHash
+```
+
+```mdl
+req R-9: an embedded constant whose file is missing from the store fails, naming the constant and the hash
+  by: Artifact.Spec.missingFileIsNamed
+```
+
+A binary file, such as an image or a font, is embedded with `--bytes`: the store keeps the file as it is
+and `Name` is `Embed.bytes "<sha256>"`, a `List Int` of its bytes. The kernel reads files only as text, so
+storing and reading the bytes runs host tools (`sha256sum`, `cp`, `od`); its law runs them for real.
+
+```mdl
+req R-10: deus embed <file> --as <Name> --bytes keeps a binary file in the asset store, and a program that uses Name writes back the same bytes after the file is gone
+  by: Artifact.Spec.bytesRoundTrip
+```
+
+## Laws
+
+Each law runs the CLI on a codebase in the deterministic simulation; `deus ls Artifact.Spec.` lists them. The laws run in one
+machine, which keeps a constant's value once computed, so each law uses its own program text and so its own hashes.

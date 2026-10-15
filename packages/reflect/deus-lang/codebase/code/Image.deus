@@ -1,0 +1,108 @@
+/-- R-1: the closure of several roots is the same in any order. -/
+test Image.Spec.closureIgnoresRootOrder := Spec.closureOf ["u1", "m1"] == Spec.closureOf ["m1", "u1"] && Spec.closureOf ["m1", "u1"] == ["f1", "g1", "m1", "u1"]
+
+/-- R-1: main reaches f and g, once each, sorted; u is not reached. -/
+test Image.Spec.closureIsReachable := Spec.closureOf ["m1"] == ["f1", "g1", "m1"] && Spec.closureOf ["g1"] == ["g1"]
+
+/-- The hashes in `roots`' closure, in image order; empty when the build fails. -/
+def Image.Spec.closureOf (roots : List Text) : List Text :=
+  match try (fun _ => closure Spec.fetch roots) with
+  | Result.ok defs => List.map fst defs
+  | Result.err _ => []
+
+def Image.Spec.fetch (h : Text) : {Throw Text} Option Sexp := Map.lookup h Spec.objects
+
+/-- The image lines for `main`, or the error. -/
+def Image.Spec.lines (main : Text) : Result Text (List Text) := try (fun _ => Text.split (Image.build Spec.fetch main) "\n")
+
+/-- R-4: the image of m1 ends with its main line and a new line. -/
+test Image.Spec.mainLineLast :=
+  match Spec.lines "m1" with
+  | Result.ok ls =>
+      match reverse ls with
+      | "" :: last :: _ => last == "(main \"m1\")"
+      | _ => false
+  | Result.err _ => false
+
+/-- R-2: a reference to an absent hash fails with its name. -/
+test Image.Spec.missingDefinitionFails :=
+  match try (fun _ => closure (fun h => if h == "g1" then Option.none else Spec.fetch h) ["m1"]) with
+  | Result.err message => message == "missing definition #g1"
+  | Result.ok _ => false
+
+/-- R-3: T, which f constructs, has its line; the builtin Bool and the type only u uses do not. -/
+test Image.Spec.nominalLines :=
+  match Spec.lines "m1" with
+  | Result.ok ls => List.contains "(type \"t1\" \"urn:spec:T\")" ls && not (any (fun l => Text.contains "Unused" l || Text.contains "#Bool\" \"" l) ls)
+  | Result.err _ => false
+
+/-- A store of five objects: main calls f and g, f calls g, unused calls f; T is a user type, B builtin. -/
+def Image.Spec.objects : Map Text Sexp :=
+  let term := fun body => Sexp.node "term" [body]
+  let ref := fun h => Sexp.node "ref" [Sexp.str h]
+  Map.fromList [("m1", term (Sexp.node "app" [ref "f1", ref "g1"])), ("f1", term (Sexp.node "app" [ref "g1", Sexp.node "con" [Sexp.str "t1", Sexp.int 0]])), ("g1", term (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 1])), ("u1", term (Sexp.node "app" [ref "f1", Sexp.node "con" [Sexp.str "t2", Sexp.int 0]])), ("t1", Sexp.node "type" [Sexp.str "urn:spec:T"]), ("t2", Sexp.node "type" [Sexp.str "urn:spec:Unused"])]
+
+/-- The image text for an entry point. -/
+def Image.build (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} Text :=
+  let defs := closure fetch [main]
+  join "\n" (List.map defForm defs ++ nominalForms fetch defs ++
+    [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
+
+/-- Every definition reachable from `roots`, as (hash, core) sorted by hash. -/
+def Image.closure (fetch : Text -> {Throw Text | r} Option Sexp) (roots : List Text) : {Throw Text | r} List (Text, Sexp) :=
+  let rec go work seen acc :=
+    match work with
+    | [] => acc
+    | h :: rest => if Set.contains h seen then go rest seen acc else
+        match Option.bind (fetch h) Image.coreOf with
+        | Option.some core => go (refs core rest) (Set.insert h seen) ((h, core) :: acc)
+        | Option.none => Throw.throw ("missing definition #" ++ h)
+  sortBy (fun a b => compare (fst a) (fst b)) (go roots Map.empty [])
+
+/-- The runnable Core of an object: a term's or test's body, a theorem's proposition. -/
+def Image.coreOf (obj : Sexp) : Option Sexp :=
+  match obj with
+  | Sexp.list (Sexp.sym "term" :: core :: []) => Option.some core
+  | Sexp.list (Sexp.sym "test" :: core :: []) => Option.some core
+  | Sexp.list (Sexp.sym "theorem" :: _ :: core :: _) => Option.some core
+  | _ => Option.none
+
+def Image.defForm (pair : (Text, Sexp)) : Text :=
+  match pair with
+  | (h, core) => Sexp.print (Sexp.node "def" [Sexp.str h, core])
+
+/-- Loads definitions into the running machine (for `run` and the test runner). -/
+def Image.load (fetch : Text -> {Throw Text | r} Option Sexp) (roots : List Text) : {Throw Text | r} Unit :=
+  let pending := List.filter (fun pair => not (Code.has (fst pair))) (closure fetch roots)
+  if List.isEmpty pending then () else Code.load (join "\n" (List.map defForm pending))
+
+/-- Hashes of the user types and abilities a form constructs, matches or performs. -/
+def Image.nominal (form : Sexp) (acc : List Text) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym head :: Sexp.str h :: rest) =>
+      let inner := foldl (fun a x => Image.nominal x a) acc rest
+      if (head == "op" || head == "con" || head == "pcon") && not (startsWith "#" h) then h :: inner else inner
+  | Sexp.list items => foldl (fun a x => Image.nominal x a) acc items
+  | _ => acc
+
+/-- `(type "hash" "iri")` and `(ability "hash" "iri")` for each user type and ability the
+  definitions use: an embedder (a Worker) speaks in stable IRIs, while Core names a type by the
+  hash of its shape. -/
+def Image.nominalForms (fetch : Text -> {Throw Text | r} Option Sexp) (defs : List (Text, Sexp)) : {Throw Text | r} List Text :=
+  let hashes := dedup (sort (foldl (fun acc pair => nominal (snd pair) acc) [] defs))
+  filterMap (fun h =>
+    match fetch h with
+    | Option.some (Sexp.list (Sexp.sym kind :: Sexp.str iri :: _)) => if kind == "type" || kind == "ability" then Option.some (Sexp.print (Sexp.node kind [Sexp.str h, Sexp.str iri])) else Option.none
+    | _ => Option.none) hashes
+
+/-
+  Images: the closure of a definition as `(def "hash" core)` forms sorted by hash, then a
+  `(type "hash" "iri")` or `(ability "hash" "iri")` line for each user type and ability they use,
+  then `(main "hash")`, so the same code always yields the same bytes. The kernel loads images.
+-/
+/-- Hashes referenced by `(ref …)` in a form. -/
+def Image.refs (form : Sexp) (acc : List Text) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => h :: acc
+  | Sexp.list items => foldl (fun a x => Image.refs x a) acc items
+  | _ => acc

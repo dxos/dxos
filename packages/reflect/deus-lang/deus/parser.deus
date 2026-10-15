@@ -1,0 +1,807 @@
+/-
+  Parser: tokens to declarations, with Lean's offside rule.
+
+  `stop` is the offside column: a token that starts a line at or left of it ends the current
+  expression. A body that starts on a new line is a block whose statements share a column.
+-/
+
+structure Parser where
+  toks : Ref (List Token)
+  stop : Ref Int
+  -- Comments not yet attached, in source order; `notesBefore` hands them to the next statement.
+  notes : Ref (List Token)
+
+namespace Parser
+
+def eofToken : Token := Token.mk Kind.eof "" 0 0 true ""
+
+def peek (p : Parser) : Token :=
+  match Ref.get p.toks with
+  | t :: _ => t
+  | [] => eofToken
+
+def peekAt (p : Parser) (k : Int) : Token :=
+  let rec go ts j :=
+    match ts with
+    | [] => eofToken
+    | [t] => t
+    | t :: rest => if j == 0 then t else go rest (j - 1)
+  go (Ref.get p.toks) k
+
+def next (p : Parser) : Token :=
+  match Ref.get p.toks with
+  | [] => eofToken
+  | [t] => t
+  | t :: rest =>
+    Ref.set p.toks rest
+    t
+
+def skip (p : Parser) : Unit :=
+  let _ := next p
+  ()
+
+def kindName : Kind -> Text
+  | Kind.ident => "ident"
+  | Kind.dot => "dot"
+  | Kind.proj => "proj"
+  | Kind.int => "int"
+  | Kind.text => "text"
+  | Kind.sym => "sym"
+  | Kind.kw => "kw"
+  | Kind.doc => "doc"
+  | Kind.eof => "eof"
+  | Kind.comment => "comment"
+
+def errorAt (t : Token) (message : Text) : {Throw Text} a :=
+  match t with
+  | Token.mk kind value line col _ _ =>
+    throw (Int.toText line ++ ":" ++ Int.toText col ++ ": " ++ message ++ " (at " ++ kindName kind ++ " " ++ show value ++ ")")
+
+def error (p : Parser) (message : Text) : {Throw Text} a := errorAt (peek p) message
+
+def isKind (t : Token) (k : Kind) : Bool := t.kind == k
+
+/-- A comment's lines with the indentation of its first line removed from the later ones. -/
+def dedent (t : Token) : Text :=
+  match Text.lines t.value with
+  | [] => ""
+  | first :: rest =>
+    Text.join "\n" (first :: List.map (fun l =>
+      let rec lead i := if i < t.col && i < Text.length l && Text.code l i == ' ' then lead (i + 1) else i
+      Text.drop (lead 0) l) rest)
+
+/-- The comments written before `line`, one per line, removed from the queue; none if there are none. -/
+def notesBefore (p : Parser) (line : Int) : Option Text :=
+  let rec split ts acc :=
+    match ts with
+    | t :: rest => if t.line < line then split rest (t :: acc) else (List.reverse acc, ts)
+    | [] => (List.reverse acc, [])
+  -- A blank line between two comments is kept, so separate paragraphs stay separate.
+  let rec join ts previousEnd acc :=
+    match ts with
+    | [] => Text.concat (List.reverse acc)
+    | t :: rest =>
+      let gap := if previousEnd < 0 then "" else if t.line > previousEnd + 1 then "\n\n" else "\n"
+      join rest (t.line + List.length (Text.lines t.value) - 1) (dedent t :: gap :: acc)
+  match split (Ref.get p.notes) [] with
+  | ([], _) => none
+  | (taken, rest) =>
+    Ref.set p.notes rest
+    some (join taken (-1) [])
+
+def noted (note : Option Text) (e : Expr) : Expr :=
+  match note with
+  | some text => Expr.note text e
+  | none => e
+
+def isTok (t : Token) (value : Text) : Bool := (t.kind == Kind.sym || t.kind == Kind.kw) && t.value == value
+
+def is (p : Parser) (value : Text) : Bool := isTok (peek p) value
+
+def expect (p : Parser) (value : Text) : {Throw Text} Token :=
+  if is p value then next p else error p ("expected '" ++ value ++ "'")
+
+def ident (p : Parser) : {Throw Text} Text :=
+  let t := peek p
+  if t.kind == Kind.ident then
+    skip p
+    t.value
+  else error p "expected identifier"
+
+def offsideTok (p : Parser) (t : Token) : Bool := t.kind == Kind.eof || (t.bol && t.col <= Ref.get p.stop)
+
+def offside (p : Parser) : Bool := offsideTok p (peek p)
+
+def posOf (t : Token) : Pos := Pos.mk t.line t.col
+
+def withStop (p : Parser) (col : Int) (body : Unit -> a) : a :=
+  let saved := Ref.get p.stop
+  Ref.set p.stop col
+  let result := body ()
+  Ref.set p.stop saved
+  result
+
+/-- Binary operators: (precedence, right-associative?), Lean's table. -/
+def binop (op : Text) : Option (Int, Bool) :=
+  if op == "|>" then some (10, false)
+  else if op == "<|" then some (10, true)
+  else if op == "||" then some (30, true)
+  else if op == "&&" then some (35, true)
+  else if op == "==" || op == "!=" || op == "=" || op == "<" || op == "<=" || op == ">" || op == ">=" then some (50, false)
+  else if op == "++" || op == "+" || op == "-" then some (65, false)
+  else if op == "::" then some (67, true)
+  else if op == "*" || op == "/" || op == "%" then some (70, false)
+  else none
+
+--
+-- Declarations.
+--
+
+def file (p : Parser) : {Throw Text} List Decl :=
+  let rec go acc :=
+    let t := peek p
+    let lead := match notesBefore p (if t.kind == Kind.eof then t.line + 1 else t.line) with
+      | some text => [Decl.comment text]
+      | none => []
+    if t.kind == Kind.eof then List.reverse (lead ++ acc) else go (decl p :: lead ++ acc)
+  go []
+
+def attrs (p : Parser) : {Throw Text} List Attr :=
+  if is p "@[" then
+    skip p
+    let rec go acc :=
+      if is p "]" then
+        skip p
+        List.reverse acc
+      else if (peek p).kind == Kind.eof then error p "unterminated attribute list"
+      else
+        let name := ident p
+        let rec values vs :=
+          if is p "," || is p "]" then List.reverse vs
+          else if (peek p).kind == Kind.eof then error p "unterminated attribute list"
+          else values ((next p).value :: vs)
+        let vs := values []
+        if is p "," then skip p else ()
+        go (Attr.mk name vs :: acc)
+    go []
+  else []
+
+def decl (p : Parser) : {Throw Text} Decl :=
+  let doc := if (peek p).kind == Kind.doc then some (next p).value else none
+  let attributes := attrs p
+  let t := peek p
+  if not t.bol || t.col != 0 then error p "declarations start at column 0"
+  else
+    let pos := posOf t
+    let word := if t.kind == Kind.kw then t.value else ""
+    if word == "def" then
+      skip p
+      let name := ident p
+      let bs := binders p
+      let type := if is p ":" then
+          skip p
+          some (withStop p 0 (fun _ => ty p))
+        else none
+      let after := peek p
+      if is p "|" then Decl.defn name bs type none (some (arms p)) doc attributes pos
+      else if after.kind == Kind.eof || (after.bol && after.col == 0) then
+        -- A declaration (D93): the signature must be complete, since nothing else gives the type.
+        if Option.isNone type then errorAt t ("declaration " ++ name ++ " has no body, so it needs a result type")
+        else if List.any (fun b => Option.isNone b.annot) bs then errorAt t ("declaration " ++ name ++ " has no body, so every parameter needs a type")
+        else Decl.defn name bs type none none doc attributes pos
+      else
+        let _ := expect p ":="
+        Decl.defn name bs type (some (body p)) none doc attributes pos
+    else if word == "theorem" then
+      skip p
+      let name := ident p
+      let bs := binders p
+      let _ := expect p ":"
+      -- `P -> Q -> R`: hypotheses then the conclusion.
+      let rec props acc :=
+        if is p "->" then
+          skip p
+          props (expr p :: acc)
+        else acc
+      let reversed := props [expr p]
+      let prop := match reversed with
+        | conclusion :: hyps => List.foldl (fun acc h => Expr.binop "->" h acc pos) conclusion hyps
+        | [] => Expr.unit
+      let _ := expect p ":="
+      if is p "sorry" then
+        skip p
+        Decl.thm name bs prop ["sorry"] doc attributes pos
+      else
+        let _ := expect p "by"
+        let rec tactic acc := if offside p then List.reverse acc else tactic ((next p).value :: acc)
+        Decl.thm name bs prop (tactic []) doc attributes pos
+    else if word == "test" then
+      skip p
+      let name := ident p
+      let _ := expect p ":="
+      Decl.check name (body p) doc attributes pos
+    else if word == "inductive" then
+      skip p
+      let name := ident p
+      let params := typeParams p
+      let iri := iriOf p
+      let _ := expect p "where"
+      let rec ctors acc :=
+        if is p "|" then
+          skip p
+          -- Constructor names may be keywords (`true`, `prim`); qualified uses lex as identifiers.
+          let ctorName := if (peek p).kind == Kind.kw then (next p).value else ident p
+          let fields := withStop p 0 (fun _ => ctorFields p)
+          ctors ((ctorName, fields) :: acc)
+        else List.reverse acc
+      Decl.data name params iri (ctors []) doc attributes pos
+    else if word == "structure" || word == "ability" then
+      skip p
+      let name := ident p
+      let params := typeParams p
+      let iri := iriOf p
+      let _ := expect p "where"
+      let rec fields acc :=
+        let f := peek p
+        if f.bol && f.col > 0 && f.kind == Kind.ident then
+          let fieldName := ident p
+          let _ := expect p ":"
+          let type := withStop p f.col (fun _ => ty p)
+          fields ((fieldName, type) :: acc)
+        else List.reverse acc
+      let fs := fields []
+      if word == "structure" then Decl.record name params iri fs doc attributes pos else Decl.effect name params iri fs doc attributes pos
+    else if word == "namespace" then
+      skip p
+      Decl.ns (ident p)
+    else if word == "end" then
+      skip p
+      let n := peek p
+      if n.kind == Kind.ident && not n.bol then Decl.endNs (some (ident p)) else Decl.endNs none
+    else if word == "open" then
+      skip p
+      let rec names acc :=
+        let n := peek p
+        if n.kind == Kind.ident && not n.bol then names (ident p :: acc) else List.reverse acc
+      Decl.openNs (names [])
+    else error p "expected a declaration"
+
+/-- Whether the tokens from `k` are identifiers followed by `:`, as in a `(x y : T)` binder. -/
+def namesThenColon (p : Parser) (k : Int) : Bool :=
+  let t := peekAt p k
+  if isTok t ":" then true else if t.kind == Kind.ident then namesThenColon p (k + 1) else false
+
+/-- Constructor fields as (name, type): `(x : T)` binders, bare type atoms or a `: A -> B -> T` signature, which are unnamed (`""`). -/
+def ctorFields (p : Parser) : {Throw Text} List (Text, Ty) :=
+  let rec go acc :=
+    if offside p || is p "|" || is p ":" then List.reverse acc
+    else if is p "(" && (peekAt p 1).kind == Kind.ident && namesThenColon p 2 then
+      go (List.reverse (List.map (fun b => match b.annot with
+        | some t => (b.binder, t)
+        | none => error p "constructor field needs a type") (binder p)) ++ acc)
+    else go (("", tyAtom p) :: acc)
+  let fields := go []
+  if is p ":" then
+    skip p
+    let rec args t acc :=
+      match t with
+      | Ty.arrow a b _ => args b (("", a) :: acc)
+      | _ => List.reverse acc
+    fields ++ args (ty p) []
+  else fields
+
+def iriOf (p : Parser) : {Throw Text} Option Text :=
+  if is p "@" then
+    skip p
+    let t := next p
+    if t.kind == Kind.text then some t.value else errorAt t "expected IRI string"
+  else none
+
+def typeParams (p : Parser) : {Throw Text} List Text :=
+  let rec go acc :=
+    if (peek p).kind == Kind.ident then go (ident p :: acc)
+    else if is p "(" || is p "{" then go (List.reverse (List.map (fun b => b.binder) (binder p)) ++ acc)
+    else List.reverse acc
+  go []
+
+def binders (p : Parser) : {Throw Text} List Binder :=
+  let rec go acc :=
+    if (peek p).kind == Kind.ident then go (Binder.mk (ident p) none :: acc)
+    else if is p "(" then go (List.reverse (binder p) ++ acc)
+    else if is p "{" then
+      -- Implicit binders name type variables; they are erased.
+      let _ := binder p
+      go acc
+    else List.reverse acc
+  go []
+
+/-- `(a b : T)` or `{a : T}`. -/
+def binder (p : Parser) : {Throw Text} List Binder :=
+  let close := if (next p).value == "(" then ")" else "}"
+  let rec names acc := if (peek p).kind == Kind.ident then names (ident p :: acc) else List.reverse acc
+  let ns := names []
+  let type := if is p ":" then
+      skip p
+      some (withStop p (-1) (fun _ => ty p))
+    else none
+  let _ := expect p close
+  List.map (fun n => Binder.mk n type) ns
+
+--
+-- Types.
+--
+
+def ty (p : Parser) : {Throw Text} Ty :=
+  let a := tyApp p
+  if is p "->" && not (offside p) then
+    skip p
+    let effects := if is p "{" then some (row p) else none
+    Ty.arrow a (ty p) effects
+  else a
+
+/-- `{E₁, E₂ | r}`: abilities, then an optional row variable (the rest is open). -/
+def row (p : Parser) : {Throw Text} List Ty :=
+  let _ := expect p "{"
+  let rec go acc :=
+    if is p "}" then
+      skip p
+      List.reverse acc
+    else if (peek p).kind == Kind.eof then error p "expected '}'"
+    else if is p "|" then
+      skip p
+      let tail := Ty.named (ident p) []
+      let _ := expect p "}"
+      List.reverse (tail :: acc)
+    else
+      let e := tyApp p
+      if is p "," then skip p else ()
+      go (e :: acc)
+  go []
+
+def tyApp (p : Parser) : {Throw Text} Ty :=
+  let head := tyAtom p
+  match head with
+  | Ty.named name [] =>
+    let rec go acc :=
+      if not (offside p) && ((peek p).kind == Kind.ident || is p "(") then go (tyAtom p :: acc)
+      else if not (offside p) && is p "{" then go (Ty.row (row p) :: acc)
+      else List.reverse acc
+    let args := go []
+    if List.isEmpty args then head else Ty.named name args
+  | _ => head
+
+def tyAtom (p : Parser) : {Throw Text} Ty :=
+  if (peek p).kind == Kind.ident then Ty.named (ident p) []
+  else if is p "{" then
+    -- A result that performs abilities: `{IO, Throw Text} a`.
+    let effs := row p
+    Ty.effects effs (tyApp p)
+  else
+    let _ := expect p "("
+    if is p ")" then
+      skip p
+      Ty.unit
+    else
+      withStop p (-1) (fun _ =>
+        let first := ty p
+        if is p "," then
+          let rec go acc :=
+            if is p "," then
+              skip p
+              go (ty p :: acc)
+            else List.reverse acc
+          let items := go [first]
+          let _ := expect p ")"
+          Ty.tuple items
+        else
+          let _ := expect p ")"
+          first)
+
+--
+-- Expressions.
+--
+
+/-- A body: a block when it starts on a new line, else one expression. -/
+def body (p : Parser) : {Throw Text} Expr :=
+  let t := peek p
+  if t.bol then
+    if t.col <= Ref.get p.stop || t.kind == Kind.eof then error p "expected an indented body"
+    else block p t.col
+  else expr p
+
+def block (p : Parser) (col : Int) : {Throw Text} Expr := withStop p col (fun _ => stmts p col)
+
+def continues (p : Parser) (col : Int) : Bool :=
+  if is p ";" then
+    skip p
+    true
+  else
+    let t := peek p
+    t.bol && t.col == col && t.kind != Kind.eof
+
+/-- Statements at column `col`: `let` lines and expressions; the last one is the value. -/
+def stmts (p : Parser) (col : Int) : {Throw Text} Expr :=
+  let note := notesBefore p (peek p).line
+  noted note (statement p col)
+
+def statement (p : Parser) (col : Int) : {Throw Text} Expr :=
+  if is p "let" then
+    let letTok := next p
+    let isRec := if is p "rec" then
+        skip p
+        true
+      else false
+    if (peek p).kind == Kind.ident && not (isTok (peekAt p 1) "@") && not (isTok (peekAt p 1) ":=") then
+      let name := ident p
+      let rec params acc := if is p ":=" || is p ":" then List.reverse acc else params (patAtom p :: acc)
+      let ps := params []
+      let result := if is p ":" then
+          skip p
+          some (ty p)
+        else none
+      let _ := expect p ":="
+      let value := ascribed (body p) result
+      if not (continues p col) then errorAt letTok "a let needs a body on the next line"
+      else Expr.letFun name ps value (stmts p col) isRec
+    else if isRec then error p "let rec needs a function"
+    else
+      let pat := patt p
+      let annotation := if is p ":" then
+          skip p
+          some (ty p)
+        else none
+      let _ := expect p ":="
+      let value := ascribed (body p) annotation
+      if not (continues p col) then errorAt letTok "a let needs a body on the next line"
+      else Expr.letPat pat value (stmts p col)
+  else
+    let first := expr p
+    if continues p col then Expr.seq first (stmts p col) else first
+
+def expr (p : Parser) : {Throw Text} Expr :=
+  if is p "let" then stmts p (peek p).col else op p 0
+
+def op (p : Parser) (min : Int) : {Throw Text} Expr :=
+  let rec go left :=
+    let t := peek p
+    if offsideTok p t || t.kind != Kind.sym then left
+    else
+      match binop t.value with
+      | none => left
+      | some (prec, right) =>
+        if prec < min then left
+        else
+          skip p
+          let r := op p (if right then prec else prec + 1)
+          go (Expr.binop t.value left r (posOf t))
+  go (unary p)
+
+def unary (p : Parser) : {Throw Text} Expr :=
+  if is p "-" then
+    skip p
+    if (peek p).kind == Kind.int then
+      match Int.fromText (next p).value with
+      | some n => Expr.int (Int.neg n)
+      | none => error p "bad number"
+    else Expr.neg (unary p)
+  else if is p "!" then
+    skip p
+    Expr.not (unary p)
+  else app p
+
+def startsArg (p : Parser) : Bool :=
+  let t := peek p
+  if offsideTok p t then false
+  else if t.kind == Kind.ident || t.kind == Kind.dot || t.kind == Kind.int || t.kind == Kind.text then true
+  else if t.kind == Kind.kw then t.value == "true" || t.value == "false" || t.value == "prim" || t.value == "fun" || t.value == "do"
+  else if t.kind == Kind.sym then t.value == "(" || t.value == "[" || t.value == "{"
+  else false
+
+def app (p : Parser) : {Throw Text} Expr :=
+  let f := atom p
+  let rec go acc := if startsArg p then go (atom p :: acc) else List.reverse acc
+  let args := go []
+  if List.isEmpty args then f else Expr.app f args
+
+/-- `e`, checked against the type a `let` writes (D95). -/
+def ascribed (e : Expr) (annotation : Option Ty) : Expr :=
+  match annotation with
+  | some t => Expr.ann e t
+  | none => e
+
+def intOf (t : Token) : Int := Option.getOr (Int.fromText t.value) 0
+
+/-- An integer literal, keeping how the source wrote it for `view` (it never reaches Core). -/
+def intExpr (t : Token) : Expr :=
+  if Text.isEmpty t.spelling then Expr.int (intOf t) else Expr.spelled t.spelling (Expr.int (intOf t))
+
+def intPat (t : Token) : Pat :=
+  if Text.isEmpty t.spelling then Pat.int (intOf t) else Pat.spelled t.spelling (Pat.int (intOf t))
+
+/-- An atom followed by any `(e).field` projections. -/
+def atom (p : Parser) : {Throw Text} Expr :=
+  let rec projections e :=
+    let t := peek p
+    if t.kind == Kind.proj then
+      skip p
+      projections (Expr.proj e t.value (posOf t))
+    else e
+  projections (atomBase p)
+
+def atomBase (p : Parser) : {Throw Text} Expr :=
+  let t := peek p
+  let pos := posOf t
+  if t.kind == Kind.ident then
+    skip p
+    Expr.var t.value pos
+  else if t.kind == Kind.dot then
+    skip p
+    Expr.dot t.value pos
+  else if t.kind == Kind.int then
+    skip p
+    intExpr t
+  else if t.kind == Kind.text then
+    skip p
+    Expr.text t.value
+  else if t.kind == Kind.kw then
+    if t.value == "true" || t.value == "false" then
+      skip p
+      Expr.bool (t.value == "true")
+    else if t.value == "prim" then
+      skip p
+      let name := next p
+      if name.kind == Kind.text then Expr.prim name.value else errorAt name "expected primitive name"
+    else if t.value == "fun" then funExpr p
+    else if t.value == "if" then ifExpr p
+    else if t.value == "match" then matchExpr p
+    else if t.value == "handle" then handleExpr p
+    else if t.value == "do" then
+      skip p
+      body p
+    else if t.value == "let" then stmts p t.col
+    else error p "expected an expression"
+  else if isTok t "(" then
+    skip p
+    if is p ")" then
+      skip p
+      Expr.unit
+    else
+      withStop p (-1) (fun _ =>
+        let first := expr p
+        if is p ":" then
+          skip p
+          let type := ty p
+          let _ := expect p ")"
+          Expr.ann first type
+        else if is p "," then
+          let rec go acc :=
+            if is p "," then
+              skip p
+              go (expr p :: acc)
+            else List.reverse acc
+          let items := go [first]
+          let _ := expect p ")"
+          Expr.tuple items
+        else
+          let _ := expect p ")"
+          first)
+  else if isTok t "[" then
+    skip p
+    withStop p (-1) (fun _ =>
+      let rec go acc :=
+        if is p "]" then
+          skip p
+          List.reverse acc
+        else
+          let item := expr p
+          if not (is p "]") then
+            let _ := expect p ","
+            ()
+          else ()
+          go (item :: acc)
+      Expr.list (go []))
+  else if isTok t "{" then
+    skip p
+    withStop p (-1) (fun _ =>
+      let base := if (peek p).kind == Kind.ident && isTok (peekAt p 1) ":=" then none
+        else
+          let b := expr p
+          let _ := expect p "with"
+          some b
+      let rec fields acc :=
+        if is p "}" then
+          skip p
+          List.reverse acc
+        else
+          let name := ident p
+          let _ := expect p ":="
+          let value := expr p
+          if not (is p "}") then
+            let _ := expect p ","
+            ()
+          else ()
+          fields ((name, value) :: acc)
+      Expr.record base (fields []) pos)
+  else error p "expected an expression"
+
+def funExpr (p : Parser) : {Throw Text} Expr :=
+  let _ := expect p "fun"
+  if is p "|" then Expr.lamMatch (arms p)
+  else
+    let rec params acc :=
+      if is p "=>" then
+        skip p
+        List.reverse acc
+      else params (patAtom p :: acc)
+    let ps := params []
+    Expr.lam ps (body p)
+
+def ifExpr (p : Parser) : {Throw Text} Expr :=
+  let _ := expect p "if"
+  let cond := expr p
+  let _ := expect p "then"
+  let yes := body p
+  let _ := expect p "else"
+  Expr.ite cond yes (body p)
+
+def matchExpr (p : Parser) : {Throw Text} Expr :=
+  let _ := expect p "match"
+  let rec scruts acc :=
+    if is p "," then
+      skip p
+      scruts (expr p :: acc)
+    else List.reverse acc
+  let ss := scruts [expr p]
+  let _ := expect p "with"
+  Expr.matchOn ss (arms p)
+
+/-- Whether another arm follows: a `|` that is inline, or line-initial at the arms' column. -/
+def moreArms (p : Parser) (col : Option Int) : Bool :=
+  let t := peek p
+  isTok t "|" && (not t.bol || col == some t.col)
+
+def armBody (p : Parser) (col : Option Int) : {Throw Text} Expr :=
+  match col with
+  | none => body p
+  | some c => withStop p c (fun _ => body p)
+
+def arms (p : Parser) : {Throw Text} List Arm :=
+  let first := peek p
+  let col := if first.bol then some first.col else none
+  let rec go acc :=
+    if moreArms p col then
+      let note := notesBefore p (peek p).line
+      skip p
+      let rec pats ps :=
+        if is p "," then
+          skip p
+          pats (patt p :: ps)
+        else List.reverse ps
+      let ps := pats [patt p]
+      let _ := expect p "=>"
+      go (Arm.mk ps (noted note (armBody p col)) :: acc)
+    else List.reverse acc
+  let result := go []
+  if List.isEmpty result then error p "expected '|'" else result
+
+def handleExpr (p : Parser) : {Throw Text} Expr :=
+  let _ := expect p "handle"
+  let b := body p
+  let _ := expect p "with"
+  let first := peek p
+  let col := if first.bol then some first.col else none
+  let rec go ret ops :=
+    if moreArms p col then
+      let note := notesBefore p (peek p).line
+      skip p
+      if is p "return" then
+        skip p
+        let pat := patt p
+        let _ := expect p "=>"
+        go (some (pat, armBody p col)) ops
+      else
+        let pos := posOf (peek p)
+        let name := if (peek p).kind == Kind.dot then (next p).value else ident p
+        let rec args acc :=
+          if is p "->" then
+            skip p
+            List.reverse acc
+          else args (patAtom p :: acc)
+        let ps := args []
+        let k := if is p "_" then
+            skip p
+            none
+          else some (ident p)
+        let _ := expect p "=>"
+        go ret (OpArm.mk name ps k (armBody p col) pos :: ops)
+    else Expr.handleWith b ret (List.reverse ops)
+  go none []
+
+--
+-- Patterns.
+--
+
+def patt (p : Parser) : {Throw Text} Pat :=
+  let head := patApp p
+  if is p "::" then
+    skip p
+    Pat.cons head (patt p)
+  else head
+
+def startsPatAtom (p : Parser) : Bool :=
+  let t := peek p
+  t.kind == Kind.ident || t.kind == Kind.dot || t.kind == Kind.int || t.kind == Kind.text || is p "_" || is p "(" || is p "[" || is p "true" || is p "false" || is p "-"
+
+def patApp (p : Parser) : {Throw Text} Pat :=
+  let t := peek p
+  if (t.kind == Kind.ident && not (isTok (peekAt p 1) "@")) || t.kind == Kind.dot then
+    skip p
+    let rec go acc := if startsPatAtom p && not (offside p) then go (patAtom p :: acc) else List.reverse acc
+    let args := go []
+    if t.kind == Kind.dot then Pat.dot t.value args (posOf t) else Pat.id t.value args (posOf t)
+  else patAtom p
+
+def patAtom (p : Parser) : {Throw Text} Pat :=
+  let t := next p
+  let pos := posOf t
+  if t.kind == Kind.ident then
+    if is p "@" then
+      skip p
+      Pat.as t.value (patAtom p)
+    else Pat.id t.value [] pos
+  else if t.kind == Kind.dot then Pat.dot t.value [] pos
+  else if t.kind == Kind.int then intPat t
+  else if t.kind == Kind.text then Pat.text t.value
+  else if isTok t "true" then Pat.bool true
+  else if isTok t "false" then Pat.bool false
+  else if isTok t "_" then Pat.wild
+  else if isTok t "-" then
+    let number := next p
+    if number.kind == Kind.int then Pat.int (Int.neg (intOf number)) else errorAt number "expected a number"
+  else if isTok t "(" then
+    if is p ")" then
+      skip p
+      Pat.unit
+    else
+      withStop p (-1) (fun _ =>
+        let first := patt p
+        -- `(x : T)`: an ascribed binder, checked (D95).
+        let first := if is p ":" then
+            skip p
+            Pat.ann first (ty p)
+          else first
+        if is p "," then
+          let rec go acc :=
+            if is p "," then
+              skip p
+              go (patt p :: acc)
+            else List.reverse acc
+          let items := go [first]
+          let _ := expect p ")"
+          Pat.tuple items
+        else
+          let _ := expect p ")"
+          first)
+  else if isTok t "[" then
+    withStop p (-1) (fun _ =>
+      let rec go acc :=
+        if is p "]" then
+          skip p
+          List.reverse acc
+        else
+          let item := patt p
+          if not (is p "]") then
+            let _ := expect p ","
+            ()
+          else ()
+          go (item :: acc)
+      Pat.list (go []))
+  else errorAt t "expected a pattern"
+
+/-- Parses a whole source file. -/
+def parse (source : Text) : {Throw Text} List Decl :=
+  let tokens := Lexer.lex source
+  let p := Parser.mk (Ref.new (List.filter (fun t => t.kind != Kind.comment) tokens)) (Ref.new 0) (Ref.new (List.filter (fun t => t.kind == Kind.comment) tokens))
+  file p
+
+end Parser

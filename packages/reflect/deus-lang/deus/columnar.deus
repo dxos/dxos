@@ -1,0 +1,139 @@
+/-
+  A columnar text encoding for s-expressions (D60), used for replication bundles.
+
+  A bundle is mostly the same few symbols, a few thousand distinct strings and under a thousand
+  distinct hashes, repeated: the toolchain's bundle has 11,193 hash occurrences of 925 hashes.
+  The encoding splits a form into columns, so each value is written once and the rest are small
+  references, and so that like values sit together for the compressor:
+
+    DEUSCOL1
+    <shape>     one character per token: ( ) s(ymbol) t(ext) h(ash) i(nteger)
+    <symbols>   the distinct symbols, as one s-expression list of strings
+    <strings>   the distinct strings that are not hashes, likewise
+    <hashes>    the distinct 64-hex-digit strings, concatenated
+    <refs>      four lines of space-separated numbers: symbol, string and hash indexes, then integers
+
+  Dictionaries are numbered in order of first use, so encoding is deterministic. Measured on the
+  toolchain's bundle (1.67 MB as text), gzip gives 358 KB on the text and 174 KB on the columns.
+-/
+
+namespace Columnar
+
+def header : Text := "DEUSCOL1"
+
+/-- Whether a string is a hash: 64 lowercase hex digits. -/
+def isHash (t : Text) : Bool :=
+  let rec hex i :=
+    if i >= 64 then true
+    else
+      let c := Text.code t i
+      ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) && hex (i + 1)
+  Text.length t == 64 && hex 0
+
+/-- The index of `x` in a dictionary, adding it at the end when new. -/
+def intern (index : MutMap Text Int) (values : Ref (List Text)) (x : Text) : Int :=
+  match MutMap.get index x with
+  | some i => i
+  | none =>
+    let i := MutMap.size index
+    MutMap.set index x i
+    Ref.set values (x :: Ref.get values)
+    i
+
+def numbers (refs : Ref (List Int)) : Text := Text.join " " (List.map Int.toText (List.reverse (Ref.get refs)))
+
+def encode (forms : List Sexp) : Text :=
+  let shape := Ref.new []
+  let symbolIndex := MutMap.new ()
+  let symbols := Ref.new []
+  let stringIndex := MutMap.new ()
+  let strings := Ref.new []
+  let hashIndex := MutMap.new ()
+  let hashes := Ref.new []
+  let symbolRefs := Ref.new []
+  let stringRefs := Ref.new []
+  let hashRefs := Ref.new []
+  let ints := Ref.new []
+  let emit := fun (kind : Text) (refs : Ref (List Int)) (n : Int) =>
+    Ref.set shape (kind :: Ref.get shape)
+    Ref.set refs (n :: Ref.get refs)
+  let rec walk x :=
+    match x with
+    | Sexp.list items =>
+      Ref.set shape ("(" :: Ref.get shape)
+      List.forEach items walk
+      Ref.set shape (")" :: Ref.get shape)
+    | Sexp.sym name => emit "s" symbolRefs (intern symbolIndex symbols name)
+    | Sexp.str value =>
+      if isHash value then emit "h" hashRefs (intern hashIndex hashes value)
+      else emit "t" stringRefs (intern stringIndex strings value)
+    | Sexp.int n => emit "i" ints n
+  List.forEach forms walk
+  let dictionary := fun (values : Ref (List Text)) => Sexp.print (Sexp.list (List.map Sexp.str (List.reverse (Ref.get values))))
+  Text.join "\n" [header, Text.concat (List.reverse (Ref.get shape)), dictionary symbols, dictionary strings,
+    Text.concat (List.reverse (Ref.get hashes)), numbers symbolRefs, numbers stringRefs, numbers hashRefs, numbers ints]
+
+def parseNumbers (line : Text) : List Int :=
+  List.filterMap (fun x => if Text.isEmpty x then none else Int.fromText x) (Text.split line " ")
+
+def parseDictionary (line : Text) : Dict Int Text :=
+  match Sexp.read line with
+  | Sexp.list items => Dict.fromList (List.mapIndexed (fun i x => (i, Sexp.asText x)) items)
+  | _ => defect "columnar: bad dictionary"
+
+def decode (t : Text) : List Sexp :=
+  match Text.split t "\n" with
+  | [_, shape, symbolLine, stringLine, hashes, symbolLine2, stringLine2, hashLine, intLine] =>
+    let symbols := parseDictionary symbolLine
+    let strings := parseDictionary stringLine
+    let symbolRefs := Ref.new (parseNumbers symbolLine2)
+    let stringRefs := Ref.new (parseNumbers stringLine2)
+    let hashRefs := Ref.new (parseNumbers hashLine)
+    let ints := Ref.new (parseNumbers intLine)
+    let next := fun (refs : Ref (List Int)) =>
+      match Ref.get refs with
+      | x :: rest =>
+        Ref.set refs rest
+        x
+      | [] => defect "columnar: a column ended early"
+    let entry := fun (dict : Dict Int Text) (i : Int) =>
+      match Dict.lookup i dict with
+      | some x => x
+      | none => defect ("columnar: no entry " ++ Int.toText i)
+    let n := Text.length shape
+    let rec go i stack done :=
+      if i >= n then
+        match stack with
+        | [] => List.reverse done
+        | _ => defect "columnar: unbalanced ("
+      else
+        let c := Text.code shape i
+        if c == '(' then go (i + 1) ([] :: stack) done
+        else if c == ')' then
+          match stack with
+          | [] => defect "columnar: unbalanced )"
+          | top :: rest =>
+            match Sexp.push (Sexp.list (List.reverse top)) rest done with
+            | (stack2, done2) => go (i + 1) stack2 done2
+        else
+          let form := if c == 's' then Sexp.sym (entry symbols (next symbolRefs))
+            else if c == 't' then Sexp.str (entry strings (next stringRefs))
+            else if c == 'h' then
+              let h := next hashRefs
+              Sexp.str (Text.slice hashes (h * 64) (h * 64 + 64))
+            else Sexp.int (next ints)
+          match Sexp.push form stack done with
+          | (stack2, done2) => go (i + 1) stack2 done2
+    go 0 [] []
+  | _ => defect "columnar: expected 9 lines"
+
+/-- Reads either encoding: columnar text, or plain s-expressions (bundles written before D60). -/
+def read (t : Text) : List Sexp := if Text.startsWith header t then decode t else Sexp.readAll t
+
+test roundTrips :=
+  let bundle := Sexp.node "bundle" [Sexp.node "obj" [Sexp.str (Text.sha256 "a"), Sexp.node "term" [Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]]]],
+    Sexp.node "meta" [Sexp.str (Text.sha256 "a"), Sexp.node "doc" [Sexp.str "line one\nline \"two\""]], Sexp.node "n" [Sexp.int (0 - 3), Sexp.list []]]
+  let forms := [bundle, Sexp.str (Text.sha256 "a")]
+  read (encode forms) == forms && read (Sexp.print bundle) == [bundle]
+
+end Columnar

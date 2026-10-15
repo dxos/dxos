@@ -1,0 +1,218 @@
+test Tests.astralEscapes := fromCodes [128512] == "😀" && Text.length (fromCodes [128512]) == 2 && tokenValues "\"😀\"" == ["😀", ""]
+
+test Tests.controlCharactersPrintAsHex := quoteText (fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" && tokenValues "\"\\u{1b}\"" == [fromCode 27, ""]
+
+test Tests.externalLowersBlocks :=
+  let block := fun kind props => Block.mk kind "x" "" props 1
+  containerOf (block
+    "container"
+    [("image", "redis@sha256:" ++ sampleHash), ("ports", "6379:6379"), ("env", "A=1\nB=2"), ("command", "redis-server --save")]) == Result.ok (Container.mk
+    ("redis@sha256:" ++ sampleHash)
+    ["redis-server", "--save"]
+    [("A", "1"), ("B", "2")]
+    [(6379, 6379)]) && External.problemsOf (requirementOf (block "requirement" [("registry", "pypi")])) ==
+    ["registry: `pypi` is not one of npm, crates, github, url"]
+
+test Tests.externalRefusesUnpinnedRequirements := External.problems (match sampleTool with
+| Requirement.mk x0 x1 x2 x3 x4 x5 => Requirement.mk x0 x1 "latest" x3 x4 x5) == ["version: latest floats; pin a version"] && External.problems (match sampleTool with
+| Requirement.mk x6 x7 x8 x9 x10 x11 => Requirement.mk x6 x7 x8 x9 "abc" x11) == ["sha256: must be 64 lowercase hex digits, got `abc`"] && External.problems sampleTool == []
+
+test Tests.externalResolvesRegistryUrls := External.resolve sampleTool ==
+  "https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.0/wasmtime.tar.xz" && External.resolve (Requirement.mk npm "left-pad" "1.3.0" "" sampleHash "") ==
+  "https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz"
+
+test Tests.externalSimulatesContainers :=
+  let pinned := Container.mk
+    ("postgres:16@sha256:" ++ sampleHash)
+    ["postgres"]
+    [("PGPASSWORD", "x")]
+    [(5432, 5432)]
+  match simulateContainers (fun _ =>
+    let started := Containers.start pinned
+    Containers.stop "sim-1"
+    (started, Containers.start (match pinned with
+    | Container.mk x1 x2 x3 x4 => Container.mk "postgres:16" x2 x3 x4))) with
+  | ((started, refused), log) => started == Result.ok "sim-1" && refused == Result.err "image: postgres:16 has no @sha256: digest; a tag alone may move" && log == ["docker run -d --rm -e PGPASSWORD=x -p 5432:5432 postgres:16@sha256:" ++ sampleHash ++
+      " postgres", "docker stop sim-1"]
+
+test Tests.externalSimulatesFetch := simulateFetch
+  [(sampleHash, "/sim/wasmtime")]
+  (fun _ => (Fetch.fetch sampleTool, Fetch.fetch (match sampleTool with
+  | Requirement.mk x1 x2 x3 x4 x5 x6 => Requirement.mk x1 x2 x3 x4 (repeat 64 "b") x6))) == (Result.ok "/sim/wasmtime", Result.err "not fetched: https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.0/wasmtime.tar.xz")
+
+test Tests.failureContextChains :=
+  let load := fun u => Failure.context
+    "loading config"
+    [("path", "a.toml")]
+    (fun _ => Failure.context
+      "parsing"
+      [("line", "3")]
+      (fun _ => Throw.throw (Failure.of "unexpected '='" [])))
+  match try load with
+  | Result.err f => Failure.render f ==
+      "loading config (path=a.toml)\n  caused by: parsing (line=3)\n  caused by: unexpected '='"
+  | Result.ok _ => false
+
+test Tests.hashIgnoresLocalNames :=
+  let compileOne := fun source =>
+    match try (fun _ => batch
+      Map.empty
+      (fun _ => Option.none)
+      (fun _ => Option.none)
+      "strict"
+      [parseFile "t.deus" source]) with
+    | Result.ok b => List.lookup "f" b.entries
+    | Result.err _ => Option.none
+  let original := compileOne "def f x := x + 1\n"
+  isSome original && original == compileOne "def f renamed := renamed + 1\n" && original != compileOne "def f x := x + 2\n"
+
+test Tests.layersFollowObjectKinds := List.map
+  (fun kind => layerOf (Sexp.node kind []))
+  ["term", "type", "test", "theorem", "spec", "causal"] == ["code", "code", "tests", "proofs", "spec", "history"] && mayDependOn "code" == ["code"]
+
+test Tests.lexerCodePointEscape := tokenValues "\"\\u{41}x\"" == ["Ax", ""]
+
+test Tests.lexerProjection :=
+  match try (fun _ => lex "(f x).y") with
+  | Result.ok tokens => any (fun t => t.kind == Kind.proj && t.value == "y") tokens
+  | Result.err _ => false
+
+test Tests.lexerRejectsUnclosedEscape :=
+  match try (fun _ => lex "\"\\u{41\" }") with
+  | Result.ok _ => false
+  | Result.err _ => true
+
+test Tests.lexerSymbols := tokenValues "x :: xs ++ [1] |> f" == ["x", "::", "xs", "++", "[", "1", "]", "|>", "f", ""]
+
+test Tests.lexerUnicode := tokenValues "fun x → x" == ["fun", "x", "->", "x", ""]
+
+theorem Tests.mapInsertLookup (k : Int) (v : Int) (xs : List Int) : Map.lookup k (Map.insert k v (Map.fromList (List.map (fun x => (x, x)) xs))) == Option.some v := by test 100
+
+test Tests.maximumOfNegatives := maximum [0 - 3, 0 - 5] == 0 - 3 && maximum [] == 0
+
+test Tests.mdlFencesKeepLines := deusSource "# Doc\n```deus\ndef a := 1\n```\ntext" == "\n\ndef a := 1\n\n"
+
+test Tests.mdlParsesDocuments :=
+  let doc := Mdl.parse mdlSample
+  doc.front == [("id", "org.example.doc")] && doc.terms == [("perf", "org.example.perf@1.0")] && List.map (fun b => (b.blockType, b.blockId, b.blockTitle, b.lineNo)) doc.blocks ==
+    [("perf", "P-1", "fast enough", 11), ("ext", "note", "", 22), ("note", "P-1", "", 26), ("todo", "", "", 29)] && Option.map (fun b => b.props) (head? doc.blocks) ==
+    Option.some [("prose", "Prose first."), ("run", "f 1"), ("sizes", "1\n2")]
+
+def Tests.mdlSample : Text := join
+  "\n"
+  ["---", "id: org.example.doc", "---", "# Doc", "## Extensions", "| Term | URI |", "| --- | --- |", "| `perf` | `org.example.perf@1.0` |", "## Body", "```mdl", "perf P-1: fast enough", "  Prose first.", "  run: f 1  # a comment", "  sizes:", "  - 1", "  - 2", "```", "```deus", "def x := 1", "```", "```mdl", "ext note", "  uri: org.example.note@1.0", "```", "```mdl", "note P-1", "```", "```mdl", "todo", "```"]
+
+test Tests.mdlValidatesDeclarations := validate (Mdl.parse mdlSample) ==
+  ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
+
+test Tests.mutualRecursionHashesAsCycle :=
+  let source := "def even n := if n == 0 then true else odd (n - 1)\ndef odd n := if n == 0 then false else even (n - 1)\n"
+  match try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "strict" [parseFile "t.deus" source]) with
+  | Result.ok b =>
+      match (List.lookup "even" b.entries, List.lookup "odd" b.entries) with
+      | (Option.some (Entry.term e), Option.some (Entry.term o)) => Text.contains "." e && Text.take 64 e == Text.take 64 o
+      | _ => false
+  | Result.err _ => false
+
+theorem Tests.notInvolutive (b : Bool) : not (not b) == b := by decide
+
+test Tests.observeNestsSpans :=
+  let traced := fun u => Trace.span "outer" [] (fun _ => Trace.span "inner" [("k", "v")] (fun _ => Log.info "hi" []))
+  match Observe.collect traced with
+  | (_, events) => events ==
+      [Event.log "info" "hi" [] 2 "3", Event.span 2 1 "inner" [("k", "v")] "2" "4", Event.span 1 0 "outer" [] "1" "5"]
+
+theorem Tests.optionOrElse (o : Option Bool) : orElse o (fun _ => o) == o := by decide
+
+test Tests.parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 2\n"
+
+test Tests.parserRejectsIndentedDecl := not (parses "  def f := 1\n")
+
+test Tests.parserTypeApplicationField := parses "inductive W where\n  | wrap (List Int)\n  | pair (x y : Int)\n"
+
+/-
+  Tests and theorems about the toolchain itself, run by `deus test` and `deus check` on a
+  codebase built from `deus/` (src/cli.test.ts does that in CI).
+-/
+def Tests.parses (source : Text) : Bool :=
+  match try (fun _ => Parser.parse source) with
+  | Result.ok _ => true
+  | Result.err _ => false
+
+test Tests.projectAuthorityAndOwnership := authority "https://dxos.org/deus/std" == "dxos.org" && authority "urn:deus:x" == "urn:deus:x" && owns "https://dxos.org/deus/std" "https://dxos.org/deus/std/Shape" && not (owns "https://dxos.org/deus/std" "https://dxos.org/deus/stdlib/Shape")
+
+theorem Tests.quoteRoundTrip (t : Text) : Sexp.read (Sexp.print (Sexp.str t)) == Sexp.str t := by test 200
+
+@[integration]
+test Tests.realFileSystem :=
+  IO.writeFile "/tmp/deus-integration-probe.txt" "ok"
+  IO.readFile "/tmp/deus-integration-probe.txt" == Option.some "ok"
+
+test Tests.resolveStripsNames :=
+  match strip (Sexp.node "lam" [Sexp.str "x", Sexp.node "var" [Sexp.int 0]]) with
+  | (core, names) => core == Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]] && names == ["x"]
+
+theorem Tests.reverseInvolutive (xs : List Int) : reverse (reverse xs) == xs := by test 100
+
+/-- A program touching most syntax; every prefix of it must parse or fail, never hang. -/
+def Tests.sample : Text := "namespace N\n@[req \"F-1\"]\n/-- doc -/\ninductive T @\"urn:t\" where\n  | a\n  | b (x : Int)\nstructure P where\n  x : Int\nability A where\n  op : Int -> {A | r} Int\ndef f (p : P) : {Throw Text | r} Int :=\n  let q := { p with x := 1 }\n  match q.x, [1, 2] with\n  | 0, x :: _ => handle op x with\n    | return y => y\n    | op v -> k => k (v + 1)\n  | _, _ => if true then (fun (z : Int) => z) 3 else -1\ntheorem t (n : Int) : n = n -> f (P.mk n) = n := by induction n; simp [t]\ntest u := \"s\\n\" ++ 'c' == \"x\"\nend N\n"
+
+def Tests.sampleHash : Text := repeat 64 "a"
+
+def Tests.sampleTool : Requirement := Requirement.mk
+  github
+  "bytecodealliance/wasmtime"
+  "v25.0.0"
+  "wasmtime.tar.xz"
+  sampleHash
+  "wasmtime/wasmtime"
+
+test Tests.seededRandomRepeats :=
+  let draw := fun u => List.map (fun _ => Random.nextInt 1000) (range 0 5)
+  fst (Sim.run 42 draw) == fst (Sim.run 42 draw) && fst (Sim.run 42 draw) != fst (Sim.run 43 draw)
+
+test Tests.sexpRoundTrip :=
+  let text := "(def \"a\\nb\" (lam (app (var 0) (int -12) (text \"q\\\"\\u0001\"))))"
+  Sexp.print (Sexp.read text) == text
+
+test Tests.simulatedAppend :=
+  match Sim.run 1 (fun _ =>
+    IO.appendFile "log/a.txt" "x"
+    IO.appendFile "log/a.txt" "y"
+    IO.readFile "log/a.txt") with
+  | (result, _) => result == Option.some "xy"
+
+test Tests.simulatedFileSystem :=
+  match Sim.run 7 (fun _ =>
+    IO.writeFile "a/b.txt" "hello"
+    let back := IO.readFile "a/b.txt"
+    let listed := IO.listDir "a"
+    IO.print "done"
+    (back, listed, IO.isDir "a")) with
+  | (result, out) => result == (Option.some "hello", ["b.txt"], true) && out == "done"
+
+theorem Tests.sortIsSorted (xs : List Int) : sort (sort xs) == sort xs := by test 100
+
+test Tests.specBlocksRoundTrip :=
+  match head? (Mdl.parse mdlSample).blocks with
+  | Option.some b => Mdl.fromSexp (Mdl.toSexp "org.example.perf@1.0" b) == ("org.example.perf@1.0", match b with
+    | Block.mk x0 x1 x2 x3 x4 => Block.mk x0 x1 x2 x3 0)
+  | Option.none => false
+
+theorem Tests.textReplaceIdentity (t : Text) : replace "a" "a" t == t := by test 100
+
+test Tests.textSplitJoin := Text.split "a, b, c" ", " == ["a", "b", "c"] && join ", " (Text.split "a, b" ", ") == "a, b"
+
+def Tests.tokenValues (source : Text) : List Text :=
+  match try (fun _ => lex source) with
+  | Result.ok tokens => List.map (fun t => t.value) tokens
+  | Result.err e => [e]
+
+test Tests.truncatedSourcesTerminate :=
+  let n := Text.length Tests.sample
+  List.all (fun k =>
+    match try (fun _ => Parser.parse (Text.take k Tests.sample)) with
+    | Result.ok _ => true
+    | Result.err _ => true) (range 0 (n + 1))
+
+test Tests.wasmLeb128 := uleb 624485 == [229, 142, 38] && sleb (-123456) == [192, 187, 120] && sleb 63 == [63] && sleb 64 == [192, 0]

@@ -1,0 +1,82 @@
+/-- The module for `main` in `source`, or none when it fails to compile or falls outside the subset. -/
+def WasmEquality.Spec.built (source : Text) (main : Text) : Option (List Int) :=
+  match try (fun _ => batch
+    Map.empty
+    (fun _ => Option.none)
+    (fun _ => Option.none)
+    "strict"
+    [parseFile "t.deus" (WasmEquality.Spec.prelude ++ source)]) with
+  | Result.ok b =>
+      match List.lookup main b.entries with
+      | Option.some (Entry.term h) =>
+          match try (fun _ => Wasm.compile (Spec.lookup b.objects) (fun x => List.lookup x (Batch.metas b)) h main) with
+          | Result.ok bytes => Option.some bytes
+          | Result.err _ => Option.none
+      | _ => Option.none
+  | Result.err _ => Option.none
+
+def WasmEquality.Spec.compiles (source : Text) (main : Text) : Bool := isSome (built source main)
+
+/-- R-1: a nullary constructor's arguments are unknown; the other side's type is enough. -/
+theorem WasmEquality.Spec.constructorAgainstNullary : WasmEquality.Spec.compiles "def isNone (x : Int) : Bool := some x == none\n" "isNone" == true := by rfl
+
+/-- The number of functions a module declares: the count that opens its function section (3). -/
+def WasmEquality.Spec.functionCount (bytes : List Int) : Int :=
+  let rec go rest :=
+    match rest with
+    | id :: size :: body => if id == 3 then getOr (head? body) 0 else go (List.drop size body)
+    | _ => 0
+  go (List.drop 8 bytes)
+
+/-- R-4: functions are never equal in the interpreter; the subset has no function values to compare. -/
+theorem WasmEquality.Spec.functionFieldRefused : WasmEquality.Spec.compiles
+    "inductive Box where\n  | box (f : Int -> Int)\ndef same (b : Box) : Bool := b == b\n"
+    "same" == false := by rfl
+
+def WasmEquality.Spec.functions (source : Text) (main : Text) : Int :=
+  match built source main with
+  | Option.some bytes => functionCount bytes
+  | Option.none => 0
+
+/-- An object by hash, or a type by its IRI, as `deus build` reads them. -/
+def WasmEquality.Spec.lookup (objects : List (Text, Sexp)) (key : Text) : Option Sexp :=
+  match List.lookup key objects with
+  | Option.some form => Option.some form
+  | Option.none => head? (filterMap (fun pair =>
+      match snd pair with
+      | Sexp.list (Sexp.sym "type" :: Sexp.str iri :: _) => if iri == key then Option.some (snd pair) else Option.none
+      | _ => Option.none) objects)
+
+/-- R-3: `Option (Option Int)` calls `Option Int` for its field. -/
+theorem WasmEquality.Spec.nestedTypeTwoFunctions : functions "def deep (x : Int) : Bool := some (some x) == some none\n" "deep" == 4 := by rfl
+
+/-- R-3: two comparisons of one type share a function: the definition, `alloc`, `Option Int`. -/
+theorem WasmEquality.Spec.oneFunctionPerType : functions
+    "def both (x : Int) : Bool := if some x == some 1 then some 2 != some x else false\n"
+    "both" == 3 := by rfl
+
+/-- R-1: `some x == some x` compiles. -/
+theorem WasmEquality.Spec.optionEquality : WasmEquality.Spec.compiles "def same (x : Int) : Bool := some x == some x\n" "same" == true := by rfl
+
+/-- R-2: `!=` compiles. -/
+theorem WasmEquality.Spec.optionInequality : WasmEquality.Spec.compiles "def differ (x : Int) : Bool := some x != some 1\n" "differ" == true := by rfl
+
+/-- R-4: order on data has no structural compare in the subset. -/
+theorem WasmEquality.Spec.orderRefused : WasmEquality.Spec.compiles "def less (x : Int) : Bool := some x < some x\n" "less" == false := by rfl
+
+def WasmEquality.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\ninductive Option (a : Type) @\"#Option\" where\n  | none\n  | some (value : a)\ndef eq : a -> a -> Bool := prim \"eq\"\ndef neq : a -> a -> Bool := prim \"neq\"\ndef lt : a -> a -> Bool := prim \"lt\"\n"
+
+/-- R-3: `Tree Int` calls itself for its subtrees. -/
+theorem WasmEquality.Spec.recursiveTypeOneFunction : functions (Spec.tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" == 3 := by rfl
+
+/-- L-1: an `Int` comparison adds nothing: the definition and `alloc`. -/
+theorem WasmEquality.Spec.scalarAddsNothing : functions "def same (x : Int) : Bool := x == x\n" "same" == 2 := by rfl
+
+def WasmEquality.Spec.tree : Text := "inductive Tree (a : Type) where\n  | leaf\n  | node (l : Tree a) (v : a) (r : Tree a)\n"
+
+/-- R-1: a user type seen only through a parameter's signature, which names it by IRI. -/
+theorem WasmEquality.Spec.userTypeParameter : WasmEquality.Spec.compiles (Spec.tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" ==
+    true := by rfl
+
+/-- R-4: `Option a` names no layout for its field. -/
+theorem WasmEquality.Spec.variableRefused : WasmEquality.Spec.compiles "def same (x : Option a) : Bool := x == x\n" "same" == false := by rfl

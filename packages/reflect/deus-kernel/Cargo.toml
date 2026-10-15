@@ -1,0 +1,28 @@
+[package]
+name = "deus-kernel"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "The DEUS kernel in Rust: a CEK machine for Core images, natively and on wasm32-wasip1."
+license = "FSL-1.1-Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "deus-kernel"
+path = "src/main.rs"
+
+[dependencies]
+sha2 = { version = "0.10", default-features = false }
+# Constructor fields inline: a cons cell, pair or option is one allocation, not two.
+smallvec = { version = "1", features = ["union", "const_generics"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+# The seed test runs the whole compiler on the kernel; unoptimized, that takes minutes.
+[profile.dev]
+opt-level = 2

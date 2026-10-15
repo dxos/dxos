@@ -1,0 +1,56 @@
+---
+id: org.dxos.deus.spec.image
+name: Image.Spec
+version: 1.0
+---
+
+# Images: checked spec
+
+An image is what the kernels load and what `seed/deus.image` is: the closure of one entry point as
+`(def "hash" core)` lines sorted by hash, a `(type …)` or `(ability …)` line for each user type and
+ability they use, and `(main "hash")` ([deus/image.deus](../../deus/image.deus)). This document states
+what an image holds and that it depends only on the code (task 1ab6c044). The laws build images from a
+map of objects, so they read no store. Written in the order of the process (D92).
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: building images
+  signatures:
+  - Image.build : (Text -> {Throw Text | e} Option Sexp) -> Text -> {Throw Text | e} Text
+  - Image.closure : (Text -> {Throw Text | e} Option Sexp) -> List Text -> {Throw Text | e} List (Text, Sexp)
+  - Image.load : (Text -> {Throw Text | e} Option Sexp) -> List Text -> {Throw Text | e} Unit
+```
+
+## Requirements
+
+```mdl
+req R-1: an image holds every definition its entry point reaches, each once, sorted by hash, and no other
+  by: Image.Spec.closureIsReachable | Image.Spec.closureIgnoresRootOrder
+```
+
+```mdl
+req R-2: a reference to a definition the store does not have fails the build and names its hash
+  by: Image.Spec.missingDefinitionFails
+```
+
+```mdl
+req R-3: each user type and ability the definitions construct, match or perform gets one line with its IRI; builtin types and unused ones get none
+  by: Image.Spec.nominalLines
+```
+
+```mdl
+req R-4: the last line names the entry point, and the image ends with a new line
+  by: Image.Spec.mainLineLast
+```
+
+## Laws
+
+Each law is a test under `Image.Spec`; `deus ls Image.Spec.` lists them.

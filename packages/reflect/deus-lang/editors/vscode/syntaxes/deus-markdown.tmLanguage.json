@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "markdown.deus.codeblock",
+  "injectionSelector": "L:text.html.markdown",
+  "patterns": [
+    {
+      "include": "#fence"
+    },
+    {
+      "include": "#mdl"
+    }
+  ],
+  "repository": {
+    "fence": {
+      "name": "markup.fenced_code.block.markdown",
+      "begin": "(^|\\G)(\\s*)(`{3,})\\s*(deus)\\b.*$",
+      "beginCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        },
+        "4": {
+          "name": "fenced_code.block.language.markdown"
+        }
+      },
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "endCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "(^|\\G)(\\s*)(.*)",
+          "while": "(^|\\G)(?!\\s*`{3,}\\s*$)",
+          "contentName": "meta.embedded.block.deus",
+          "patterns": [
+            {
+              "include": "source.deus"
+            }
+          ]
+        }
+      ]
+    },
+    "mdl": {
+      "name": "markup.fenced_code.block.markdown",
+      "comment": "Typed MDL blocks: a header `<type> [<id>][: <title>]`, then `key: value` lines (D46).",
+      "begin": "(^|\\G)(\\s*)(`{3,})\\s*(mdl)\\b.*$",
+      "beginCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        },
+        "4": {
+          "name": "fenced_code.block.language.markdown"
+        }
+      },
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "endCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        }
+      },
+      "patterns": [
+        {
+          "match": "^\\s*#.*$",
+          "name": "comment.line.number-sign.mdl"
+        },
+        {
+          "match": "^(\\S+)(?:\\s+([^\\s:]+))?(?:\\s*:\\s*(.*))?$",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.mdl"
+            },
+            "2": {
+              "name": "entity.name.mdl"
+            },
+            "3": {
+              "name": "string.unquoted.title.mdl"
+            }
+          }
+        },
+        {
+          "match": "^\\s+([A-Za-z0-9_?-]+)\\s*:",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.mdl"
+            }
+          }
+        },
+        {
+          "match": "^\\s+-\\s",
+          "name": "punctuation.definition.list.mdl"
+        }
+      ]
+    }
+  }
+}

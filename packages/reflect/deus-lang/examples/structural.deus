@@ -1,0 +1,44 @@
+/-
+  Structural equality and order of data in the C back end (D117): `==`, `<` and `compare` on
+  constructed values, as both kernels define them: tags first, then fields in order. The same
+  definitions run on the interpreter and compile to C and to wasm.
+
+    deus add examples/structural.deus && deus build Structural.structural -o eq --c
+-/
+
+namespace Structural
+
+inductive Sprite where
+  | pixel
+  | disc (r : Int)
+  | panel (w : Int) (h : Int)
+  | labelled (label : Text) (inner : Sprite)
+
+def makeSprites (n : Int) (acc : List Sprite) : List Sprite :=
+  if n == 0 then acc
+  else
+    let sprite := if n % 4 == 0 then Sprite.pixel else if n % 4 == 1 then Sprite.disc (n % 7) else if n % 4 == 2 then Sprite.panel (n % 3) (n % 5) else Sprite.labelled (Int.toText (n % 2)) (Sprite.disc 1)
+    makeSprites (n - 1) (sprite :: acc)
+
+def equalSprites (x : Sprite) (xs : List Sprite) (acc : Int) : Int :=
+  match xs with
+  | [] => acc
+  | y :: rest => equalSprites x rest (if x == y then acc + 1 else acc)
+
+def lessSprites (x : Sprite) (xs : List Sprite) (acc : Int) : Int :=
+  match xs with
+  | [] => acc
+  | y :: rest => lessSprites x rest (if y < x then acc + 1 else acc)
+
+/-- Lists compare item by item, and a shorter prefix comes first. -/
+def listOrder (n : Int) : Int :=
+  let a := List.range 0 n
+  let b := List.range 0 n
+  (if a == b then 1 else 0) + (if [Option.some 1, Option.none] == [Option.some 1, Option.none] then 10 else 0) + (if [1, 2] < [1, 3] then 100 else 0) + compare [2] [1, 5]
+
+/-- Every comparison here, as one number the tests compare across back ends. -/
+def structural (n : Int) : Int :=
+  let sprites := makeSprites n []
+  equalSprites (Sprite.panel 1 2) sprites 0 + 1000 * lessSprites (Sprite.labelled "1" Sprite.pixel) sprites 0 + 1000000 * listOrder 50
+
+test structuralSmall := structural 200 == 112150003
