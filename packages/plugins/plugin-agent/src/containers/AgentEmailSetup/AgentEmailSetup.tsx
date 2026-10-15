@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
@@ -41,17 +41,24 @@ export const AgentEmailSetup = ({ role, agent, attendableId }: AgentEmailSetupPr
     [name],
   );
 
+  // A ref, not state: a second submit can land before a re-render would show the first one in flight.
+  const creating = useRef(false);
   const handleCreate = useCallback(
     async (properties: AgentEmail.Properties) => {
-      if (!db) {
+      if (!db || creating.current) {
         return;
       }
-      const { error } = await invokePromise(
-        AgentOperation.CreateEmailChannel,
-        { agent: Ref.make(agent), ...properties },
-        { spaceId: db.spaceId },
-      );
-      setError(error?.message);
+      creating.current = true;
+      try {
+        const { error } = await invokePromise(
+          AgentOperation.CreateEmailChannel,
+          { agent: Ref.make(agent), ...properties },
+          { spaceId: db.spaceId },
+        );
+        setError(error?.message);
+      } finally {
+        creating.current = false;
+      }
     },
     [db, agent, invokePromise],
   );
