@@ -173,6 +173,13 @@ await page.clock.install({ time: 0 });
 const query = new URLSearchParams({ id: options.story, viewMode: 'story', globals: options.globals });
 await page.goto(`${options.url}/iframe.html?${query}`);
 await page.waitForSelector('[data-testid="scene-view"]', { timeout: 120_000 });
+// Storybook applies the theme a moment after the story mounts; capturing before then opens the video in the wrong one.
+const mode = /theme:(dark|light)/.exec(options.globals)?.[1];
+if (mode) {
+  await page.waitForFunction((dark) => document.documentElement.classList.contains('dark') === dark, mode === 'dark', {
+    timeout: 30_000,
+  });
+}
 await page.clock.pauseAt((await page.evaluate(() => Date.now())) + step);
 
 /** Lets the page finish the work a clock step started (React renders on message events, which the clock leaves real). */
