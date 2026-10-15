@@ -17,7 +17,7 @@ const SPEC: DataFlowSpec = {
     { id: 'sheets', label: 'Sheets', hue: 'green' },
     { id: 'realtime', label: 'Realtime', hue: 'fuchsia' },
   ],
-  hub: { label: 'Hypergraph' },
+  hub: { label: 'Hypergraph', partitions: 3 },
   sinks: [{ label: 'Agent' }],
 };
 
@@ -105,6 +105,15 @@ const SILOS: DataFlowSpec = {
  * an app writes a piece of its content back up to its source. Molecules stay in the channels; the apps light up.
  */
 export const Silos: StoryObj<DataFlowViewProps> = { args: { spec: SILOS } };
+
+const MONOLITH: DataFlowSpec = { ...SILOS, monolith: true, hub: { label: 'Agent' }, group: { label: 'OAuth' } };
+
+/**
+ * The silos with one monolithic agent, a peer of the applications, that reads every source at once: as molecules form,
+ * copies of about half of them appear in the OAuth container above the agent's channel and drop into its lattice,
+ * while the originals still flow down to their own apps.
+ */
+export const Monolith: StoryObj<DataFlowViewProps> = { args: { spec: MONOLITH } };
 
 /** Nine sources around a round hub, which grows as a cluster from its centre; there is no agent below. */
 export const Radial: StoryObj<DataFlowViewProps> = { args: { spec: RADIAL } };

@@ -32,6 +32,16 @@ export type Block = {
   app?: AppKind;
   /** A block that takes no part in the diagram (the silos have no hub), so nothing draws it. */
   hidden?: boolean;
+  /** A container around other blocks: drawn as a labelled frame with no well of its own. */
+  group?: boolean;
+  /** A well split into partitions: each bucket is its own white well, and its own lattice. */
+  buckets?: readonly Rect[];
+  /**
+   * For a partitioned well, the unseen horizontal channels above and below its buckets (their centre lines' heights)
+   * that molecules run along between the vertical channels and the buckets; `left`..`right` is their extent, `width`
+   * their thickness.
+   */
+  lanes?: { top: number; bottom: number; left: number; right: number; width: number };
 };
 
 /** The applications a sink can be, each drawn as a simplified view of its content. */
@@ -59,11 +69,21 @@ export type DataFlowVariant = 'stacked' | 'radial' | 'silos';
 export type DataFlowSpec = {
   variant?: DataFlowVariant;
   sources: readonly SourceSpec[];
-  hub: { label: string };
+  /** `partitions` splits the hub's well into that many visible buckets. */
+  hub: { label: string; partitions?: number };
   /** The stacked variant's sinks (agents or applications), side by side under the hub; the radial variant has none. */
   sinks?: readonly { label: string; app?: AppKind }[];
   /** Scene units between neighbouring lattice sites. */
   spacing?: number;
+  /** The label of the monolithic variant's container around the sources. */
+  group?: { label: string };
+  /** Draws only the hub and what has landed in it, for looking at the hub's container on its own. */
+  focus?: 'hub';
+  /**
+   * The silos with one monolithic agent that reads every source at once: the hub, drawn as a peer of the applications
+   * at the end of their row, fed by one channel from a container around all the sources.
+   */
+  monolith?: boolean;
 };
 
 export type SourceBlock = Block & { hue: string; grid: HexGrid };
@@ -77,8 +97,15 @@ export type DataFlowLayout = {
   channels: readonly Channel[];
   hubGrid: HexGrid;
   sinkGrids: readonly HexGrid[];
-  /** The silos: sink `i` is source `i`'s own application, joined by channel `i`, and the hub is hidden. */
+  /** Only the hub is drawn (the other blocks still work, unseen). */
+  focus?: 'hub';
+  /** The silos: sink `i` is source `i`'s own application, joined by channel `i`; the hub is hidden unless monolithic. */
   silos?: boolean;
+  /**
+   * In the silos, the monolithic agent's feed: `group` spans every source and the agent's column; molecules for the
+   * agent appear in it above channel `down` and drop into the agent. `lane` is the height of the strip along its top.
+   */
+  monolith?: { group: Block; lane: number; down: number };
 };
 
 /** Multiples of the canvas's 64px major grid, so the blocks sit on it. */
@@ -89,6 +116,9 @@ const NARROW_SINK_SIZE = { width: 192, height: 256 };
 /** The silos' applications, as wide as their sources, and the longer channels joining each pair. */
 const SILO_APP_SIZE = { width: 192, height: 256 };
 const SILO_CHANNEL_HEIGHT = 192;
+/** The padding of the container around the sources, and the height of the lane along its top. */
+const GROUP_INSET = 24;
+const GROUP_LANE = 48;
 const HUB_HEIGHT = 320;
 const GAP = 64;
 const CHANNEL_HEIGHT = 128;
@@ -111,6 +141,40 @@ const wellOf = (frame: Rect): Rect => ({
   height: frame.height - TITLE_INSET - WELL_INSET,
 });
 
+/** Gray frame left between a partitioned well's buckets. */
+const BUCKET_GAP = 12;
+
+/** Thickness of a partitioned hub's horizontal channels, and the frame between each and the buckets. */
+const LANE_WIDTH = 40;
+const LANE_GAP = 8;
+
+/** A partitioned hub is taller, to keep its buckets roomy beside its horizontal channels. */
+const PARTITIONED_HUB_HEIGHT = 416;
+
+/** `region` split side by side into `count` buckets with frame between them. */
+const bucketsOf = (region: Rect, count: number): Rect[] => {
+  const width = (region.width - (count - 1) * BUCKET_GAP) / count;
+  return Array.from({ length: count }, (_, index) => ({
+    x: region.x + index * (width + BUCKET_GAP),
+    y: region.y,
+    width,
+    height: region.height,
+  }));
+};
+
+/**
+ * The lattice of each of a well's buckets, inset as a grid is: its sites must fall inside one of them. The margins
+ * plus the gap keep neighbouring buckets more than a lattice step apart, so no molecule (its atoms joined by single
+ * steps) can straddle two.
+ */
+export const regionsOf = (buckets: readonly Rect[]): Rect[] =>
+  buckets.map((bucket) => ({
+    x: bucket.x + GRID_MARGIN,
+    y: bucket.y + GRID_MARGIN,
+    width: bucket.width - 2 * GRID_MARGIN,
+    height: bucket.height - 2 * GRID_MARGIN,
+  }));
+
 /** The well's lattice, centred in it; a round well's lattice stays inside its circle. */
 export const gridOf = (well: Rect, spacing: number, round = false): HexGrid => ({
   origin: { x: well.x + well.width / 2, y: well.y + well.height / 2 },
@@ -130,8 +194,11 @@ const sourceBlock = (source: SourceSpec, frame: Rect, spacing: number): SourceBl
 };
 
 /** Lays out the diagram for its variant. */
-export const layoutDataFlow = (spec: DataFlowSpec): DataFlowLayout =>
-  spec.variant === 'radial' ? layoutRadial(spec) : spec.variant === 'silos' ? layoutSilos(spec) : layoutStacked(spec);
+export const layoutDataFlow = (spec: DataFlowSpec): DataFlowLayout => {
+  const layout =
+    spec.variant === 'radial' ? layoutRadial(spec) : spec.variant === 'silos' ? layoutSilos(spec) : layoutStacked(spec);
+  return spec.focus ? { ...layout, focus: spec.focus } : layout;
+};
 
 /** Each source above its own application, joined by a channel of its own; no hub between them. */
 const layoutSilos = (spec: DataFlowSpec): DataFlowLayout => {
@@ -158,8 +225,54 @@ const layoutSilos = (spec: DataFlowSpec): DataFlowLayout => {
       width: CHANNEL_WIDTH,
     };
   });
-  // The silos have no hub; an empty one stands in, hidden, so code written for a hub has something to hold.
   const empty = { x: 0, y: 0, width: 0, height: 0 };
+  if (spec.monolith) {
+    // The agent is one more box at the end of the applications' row, fed from a container around all the sources.
+    const frame = {
+      x: sources.length * (SOURCE_SIZE.width + GAP),
+      y: SOURCE_SIZE.height + SILO_CHANNEL_HEIGHT,
+      ...SILO_APP_SIZE,
+    };
+    const hub = { id: 'hub', label: spec.hub.label, frame, well: wellOf(frame) };
+    // As wide as the sources and the agent's column together, so the agent's channel drops straight out of it.
+    const row = (sources.length + 1) * SOURCE_SIZE.width + sources.length * GAP;
+    const groupFrame = {
+      x: -GROUP_INSET,
+      y: -(TITLE_INSET + GROUP_LANE),
+      width: row + 2 * GROUP_INSET,
+      height: SOURCE_SIZE.height + TITLE_INSET + GROUP_LANE + GROUP_INSET,
+    };
+    const group = {
+      id: 'databases',
+      label: spec.group?.label ?? 'Databases',
+      frame: groupFrame,
+      well: groupFrame,
+      group: true,
+    };
+    // Molecules for the agent run along the lane between the group's label and the sources' tops.
+    const lane = -GROUP_LANE / 2;
+    const x = frame.x + frame.width / 2;
+    const down = channels.length;
+    channels.push({
+      id: 'channel-agent',
+      hue: 'neutral',
+      from: { x, y: groupFrame.y + groupFrame.height },
+      to: { x, y: frame.y },
+      width: CHANNEL_WIDTH,
+    });
+    return {
+      sources,
+      hub,
+      sinks,
+      channels,
+      hubGrid: gridOf(hub.well, spacing),
+      sinkGrids: sinks.map((sink) => gridOf(sink.well, spacing)),
+      silos: true,
+      monolith: { group, lane, down },
+    };
+  }
+
+  // The silos have no hub; an empty one stands in, hidden, so code written for a hub has something to hold.
   const hub = { id: 'hub', label: spec.hub.label, frame: empty, well: empty, hidden: true };
   return {
     sources,
@@ -181,8 +294,40 @@ const layoutStacked = (spec: DataFlowSpec): DataFlowLayout => {
     sourceBlock(source, { x: index * (SOURCE_SIZE.width + GAP), y: 0, ...SOURCE_SIZE }, spacing),
   );
 
-  const hubFrame = { x: 0, y: SOURCE_SIZE.height + CHANNEL_HEIGHT, width, height: HUB_HEIGHT };
-  const hub = { id: 'hub', label: spec.hub.label, frame: hubFrame, well: wellOf(hubFrame) };
+  const partitions = spec.hub.partitions ?? 1;
+  const hubFrame = {
+    x: 0,
+    y: SOURCE_SIZE.height + CHANNEL_HEIGHT,
+    width,
+    height: partitions > 1 ? PARTITIONED_HUB_HEIGHT : HUB_HEIGHT,
+  };
+  const hubWell = wellOf(hubFrame);
+  // Partitioned, the well holds a horizontal channel along its top and bottom with the buckets between them.
+  const hub =
+    partitions > 1
+      ? {
+          id: 'hub',
+          label: spec.hub.label,
+          frame: hubFrame,
+          well: hubWell,
+          buckets: bucketsOf(
+            {
+              x: hubWell.x,
+              y: hubWell.y + LANE_WIDTH + LANE_GAP,
+              width: hubWell.width,
+              height: hubWell.height - 2 * (LANE_WIDTH + LANE_GAP),
+            },
+            partitions,
+          ),
+          lanes: {
+            top: hubWell.y + LANE_WIDTH / 2,
+            bottom: hubWell.y + hubWell.height - LANE_WIDTH / 2,
+            left: hubWell.x,
+            right: hubWell.x + hubWell.width,
+            width: LANE_WIDTH,
+          },
+        }
+      : { id: 'hub', label: spec.hub.label, frame: hubFrame, well: hubWell };
 
   const channels: Channel[] = sources.map((source) => ({
     id: `channel-${source.id}`,
@@ -377,7 +522,12 @@ export const baseOf = (block: Block): Rect => ({
  * shapes offer only one corner radius and the base, frame and well need concentric ones.
  */
 export const createDataFlowScene = (layout: DataFlowLayout): Scene => {
-  const blocks = [...layout.sources, layout.hub, ...layout.sinks].filter((block) => !block.hidden);
+  const blocks = [
+    ...(layout.monolith ? [layout.monolith.group] : []),
+    ...layout.sources,
+    layout.hub,
+    ...layout.sinks,
+  ].filter((block) => !block.hidden && (!layout.focus || block === layout.hub));
   const keys = initialKeys(blocks.length);
   const nodes: Record<string, Node> = {};
   blocks.forEach((block, index) => {

@@ -403,6 +403,45 @@ describe('simulation', () => {
     expect([...synced].sort()).toEqual([0, 1, 2]);
   });
 
+  test('feeds the monolithic agent from every source through the databases container, keeping molecules apart', ({
+    expect,
+  }) => {
+    const layout = layoutDataFlow({
+      ...SPEC,
+      variant: 'silos',
+      monolith: true,
+      sinks: [
+        { label: 'Inbox', app: 'list' },
+        { label: 'Document', app: 'document' },
+        { label: 'Sheets', app: 'spreadsheet' },
+        { label: 'Board', app: 'kanban' },
+      ],
+    });
+    expect(layout.monolith).toBeDefined();
+    const simulation = new DataFlowSimulation(layout, { seed: 21 });
+    const hues = new Set<string>();
+    let closest = Infinity;
+    for (let elapsed = 0; elapsed < 60; elapsed += 1 / 30) {
+      simulation.step(1 / 30);
+      for (const body of simulation.bodies) {
+        if (body.zone === 'hub' && body.phase === 'docked') {
+          hues.add(body.hue);
+        }
+      }
+      const moving = simulation.bodies.filter((body) => body.phase === 'travelling' && body.cleared);
+      for (let i = 0; i < moving.length; i++) {
+        for (let j = i + 1; j < moving.length; j++) {
+          closest = Math.min(
+            closest,
+            Math.hypot(moving[i].cursor.x - moving[j].cursor.x, moving[i].cursor.y - moving[j].cursor.y),
+          );
+        }
+      }
+    }
+    expect(hues.size).toBe(4);
+    expect(closest).toBeGreaterThan(30);
+  });
+
   test('replays the same way from the same seed', ({ expect }) => {
     const layout = layoutDataFlow(SPEC);
     const first = new DataFlowSimulation(layout, { seed: 11 });

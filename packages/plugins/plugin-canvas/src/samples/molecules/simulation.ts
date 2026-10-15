@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppSlot, type DataFlowLayout, type HexGrid, type Rect, appSlots } from './layout.ts';
+import { type AppSlot, type DataFlowLayout, type HexGrid, type Rect, appSlots, regionsOf } from './layout.ts';
 import {
   type Hex,
   type Molecule,
@@ -86,6 +86,8 @@ export type Body = {
   agent?: number;
   /** For a molecule flowing into an application, the content slot it fills. */
   slot?: number;
+  /** For a source molecule, whether the monolithic agent has already taken a copy of it. */
+  read?: boolean;
   /** For a hub molecule due to sync, the agent its copy goes to (otherwise a random one at hand-off). */
   syncTo?: number;
 };
@@ -139,11 +141,13 @@ export type SimulationOptions = {
   spawnAgents?: { first: number; every: number };
   /** Starts every application with content already in it, most settled and a little fresh, for a still picture. */
   prefill?: boolean;
+  /** Seconds the simulation runs before its first frame, so it opens with its lattices already grown. */
+  warmup?: number;
   /** Which hub molecules sync to the sink; every third by default. */
   subset?: (body: Body) => boolean;
 };
 
-const DEFAULTS: Required<Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill'>> = {
+const DEFAULTS: Required<Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup'>> = {
   interval: 1.4,
   perSource: 2,
   speed: 240,
@@ -278,6 +282,9 @@ const SLOW_DECAY = 16;
 const TINT_DELAY = 1;
 const TINT_TIME = 1.5;
 
+/** The share of source molecules the monolithic agent takes a copy of. */
+const AGENT_READS = 0.5;
+
 /** Seconds a new agent takes to fade in; its catch-up sync starts once it has. */
 export const AGENT_FADE = 0.8;
 
@@ -287,6 +294,9 @@ const CATCH_UP_STAGGER = 0.8;
 
 /** Seconds a docked molecule settles before it passes itself on. */
 const HANDOFF_DELAY = { min: 3, max: 8 };
+
+/** The step a warm-up runs at: one frame at 30 frames a second. */
+const WARMUP_STEP = 1 / 30;
 
 /** Longest frame step the simulation takes, so a backgrounded tab does not teleport everything on return. */
 const MAX_STEP = 1 / 20;
@@ -340,11 +350,16 @@ class Crystal {
   /** How many sites the lattice may take in all; counted once, on first use. */
   #capacity?: number;
 
-  constructor(grid: HexGrid, shape: CrystalShape) {
+  /** For a partitioned well, the regions its sites must fall in: one per bucket. */
+  readonly #regions?: readonly Rect[];
+
+  constructor(grid: HexGrid, shape: CrystalShape, regions?: readonly Rect[]) {
     this.grid = grid;
     this.#shape = shape;
+    this.#regions = regions;
     const height = (grid.spacing * Math.sqrt(3)) / 2;
-    const margin = shape === 'band' ? BAND_MARGIN_ROWS : 0;
+    // A partitioned well's buckets sit between horizontal channels, which take the place of the band's empty rows.
+    const margin = shape === 'band' && !regions ? BAND_MARGIN_ROWS : 0;
     this.#rows = {
       min: Math.ceil((grid.bounds.y - grid.origin.y) / height) + margin,
       max: Math.floor((grid.bounds.y + grid.bounds.height - grid.origin.y) / height) - margin,
@@ -596,6 +611,14 @@ class Crystal {
     if (radius !== undefined && Math.hypot(x - origin.x, y - origin.y) > radius) {
       return false;
     }
+    if (
+      this.#regions &&
+      !this.#regions.some(
+        (region) => x >= region.x && x <= region.x + region.width && y >= region.y && y <= region.y + region.height,
+      )
+    ) {
+      return false;
+    }
     return x >= bounds.x && x <= bounds.x + bounds.width && y >= bounds.y && y <= bounds.y + bounds.height;
   }
 
@@ -674,13 +697,20 @@ export class DataFlowSimulation {
   #time = 0;
   #serial = 0;
 
-  constructor(layout: DataFlowLayout, { seed, subset, spawnAgents, prefill, ...options }: SimulationOptions = {}) {
+  constructor(
+    layout: DataFlowLayout,
+    { seed, subset, spawnAgents, prefill, warmup = 0, ...options }: SimulationOptions = {},
+  ) {
     this.#layout = layout;
     this.#options = { ...DEFAULTS, ...options };
     this.#spawnAgents = spawnAgents;
     this.#subset = subset ?? ((body) => body.serial % 3 === 0);
     this.#random = createRandom(seed);
-    this.#hub = new Crystal(layout.hubGrid, layout.hub.round ? 'blob' : 'band');
+    this.#hub = new Crystal(
+      layout.hubGrid,
+      layout.hub.round || layout.monolith ? 'blob' : 'band',
+      layout.hub.buckets && regionsOf(layout.hub.buckets),
+    );
     this.#sinks = layout.sinks.map((sink, index) =>
       sink.app ? undefined : new Crystal(layout.sinkGrids[index], 'blob'),
     );
@@ -698,6 +728,10 @@ export class DataFlowSimulation {
     // Staggered, so the sources do not all form their first molecule on the same frame.
     this.#nextSpawn = layout.sources.map(() => this.#random() * this.#options.interval);
     this.#nextUp = this.#options.upInterval * (1 + this.#random());
+    // Last, once everything the simulation steps through is set up.
+    for (let elapsed = 0; elapsed < warmup; elapsed += WARMUP_STEP) {
+      this.step(WARMUP_STEP);
+    }
   }
 
   get time(): number {
@@ -1054,6 +1088,11 @@ export class DataFlowSimulation {
 
   /** Sends a formed molecule down its source's channel to its place on the hub lattice. */
   #depart(body: Body): void {
+    // The monolithic agent reads every source: about half of what forms also rises, as a copy, into it.
+    if (this.#layout.monolith && !body.read && this.#random() < AGENT_READS) {
+      body.read = true;
+      this.#readUp(body);
+    }
     // One molecule at a time leaves a source's well, so those setting off never crowd each other on the way out.
     const { well } = this.#layout.sources[body.source];
     const leaving = this.#bodies.some(
@@ -1183,6 +1222,10 @@ export class DataFlowSimulation {
 
   /** The empty row above (or below) the hub's band, where molecules move sideways to the section they are headed for. */
   #lane(side: 'top' | 'bottom'): number {
+    const { lanes } = this.#layout.hub;
+    if (lanes) {
+      return lanes[side];
+    }
     const { bounds, spacing } = this.#layout.hubGrid;
     const row = (spacing * Math.sqrt(3)) / 2;
     return side === 'top' ? bounds.y + row : bounds.y + bounds.height - row;
@@ -1278,7 +1321,8 @@ export class DataFlowSimulation {
     // sink (or back) without stopping in the hub.
     const passes = body.authored
       ? body.zone === 'sink' || this.#random() < this.#options.writeback
-      : body.zone === 'hub' && this.#syncing && this.#subset(body);
+      : // In the silos the apps are fed straight from their sources, so the hub (a monolithic agent) syncs to none of them.
+        body.zone === 'hub' && !this.#layout.silos && this.#syncing && this.#subset(body);
     if (passes) {
       body.handoff = this.#time + between(this.#random, HANDOFF_DELAY.min, HANDOFF_DELAY.max);
     }
@@ -1449,6 +1493,45 @@ export class DataFlowSimulation {
     ]);
     body.synced = true;
     this.#bodies.push(copy);
+  }
+
+  /**
+   * A copy of a source's molecule for the monolithic agent: it appears in the empty space above the agent's channel,
+   * inside the container around the sources, and drops down the channel onto the agent's lattice. Skipped while the
+   * last copy is still there, so copies never pile up on the spot.
+   */
+  #readUp(body: Body): void {
+    const feed = this.#layout.monolith;
+    if (!feed) {
+      return;
+    }
+    const down = this.#layout.channels[feed.down];
+    const sources = this.#layout.sources;
+    const row = sources[0]?.frame;
+    const spot = { x: down.from.x, y: row ? row.y + row.height / 2 : down.from.y - QUEUE_GAP };
+    const crowded = this.#bodies.some(
+      (other) =>
+        other.phase === 'travelling' && Math.hypot(other.cursor.x - spot.x, other.cursor.y - spot.y) < QUEUE_GAP,
+    );
+    if (crowded) {
+      return;
+    }
+    const downGate = channelGate(feed.down, 1);
+    const into = this.#wellGate('well-agent');
+    const copy = this.#copy(body, 'read');
+    const middle = centre(copy.offsets);
+    copy.position = { x: spot.x - middle.x, y: spot.y - middle.y };
+    copy.opacity = 0;
+    const entry = { x: down.to.x, y: this.#layout.hub.well.y + this.#layout.hubGrid.spacing };
+    const sent = this.#send(copy, 'hub', entry, (target) => [
+      { point: down.from, gate: downGate },
+      { point: down.to, gate: downGate },
+      { point: entry, gate: downGate, gates: [into] },
+      ...square(entry, target, 'x', into),
+    ]);
+    if (sent) {
+      this.#bodies.push(copy);
+    }
   }
 
   /** In a silo, straight from the source's well down its own channel into its own application. */
