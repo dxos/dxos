@@ -1,5 +1,12 @@
 # History of main
 
+- `a31cfa6051` task: set b73b475d assignee
+- `57875655ef` task: set b73b475d labels
+- `fac83c4866` task: set b73b475d priority
+- `6f00e125d7` task: open b73b475d Native interpreter: free memory by following the compiled code's reference counts instead of making every value immortal (D146); the 199-test run writes about 1 GB of fresh environments and blocks, and with inlining off deus_ipush and deus_dup are 15% each, while dispatch, env walks (1.8 hops) and page faults (0.45 of 2.0 s) are not the lever
+- `469a967d83` history: import 1117 changes
+- `f436c2ee2d` task: import from codebase/tasks.sexp
+- `988d670bf0` add codebase/code codebase/specs
 - `eeff472331` task: set 88004c30 state (by claude)
 - `51370cfff7` task: comment on 88004c30 (by claude)
 - `129d6769ac` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r10.deus (by claude)
