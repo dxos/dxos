@@ -54,7 +54,7 @@ const APPS: DataFlowSpec = {
 const CHAPTERS: readonly Scene[] = [
   // The first two chapters share one stage: the monolithic agent's parts fade in over the running silos.
   {
-    title: 'Silos',
+    title: 'The Silo Problem',
     caption: 'Each application keeps its own data, fed only by its own source.',
     spec: MONOLITH,
     revealed: false,
