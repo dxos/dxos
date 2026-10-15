@@ -108,6 +108,8 @@ export const LOOKS: readonly Look[] = STYLE_SET_IDS;
 export type LookTone = 'light' | 'dark';
 
 type Palette = {
+  /** The stroke of the monolithic agent's grant lines. */
+  grant: string;
   /** The base a frame sits on; none for a look without one. */
   base?: string;
   frame: string;
@@ -139,6 +141,7 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: true,
     group: 'fill-neutral-400',
     label: 'fill-neutral-fg',
+    grant: 'stroke-white/20',
     well: 'fill-white',
     inset: true,
     channel: 'tube',
@@ -156,6 +159,7 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-neutral-900',
     label: 'fill-neutral-200',
+    grant: 'stroke-white/20',
     well: 'fill-neutral-900',
     inset: false,
     channel: 'solid',
@@ -173,6 +177,7 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-none',
     label: 'fill-neutral-300',
+    grant: 'stroke-white/20',
     well: 'fill-none',
     wellStroke: 'stroke-neutral-700',
     inset: false,
@@ -191,6 +196,7 @@ const DARK_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-white/5',
     label: 'fill-neutral-100',
+    grant: 'stroke-white/20',
     well: 'fill-black/30',
     wellStroke: 'stroke-white/10',
     inset: false,
@@ -214,6 +220,7 @@ const LIGHT_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-neutral-50',
     label: 'fill-neutral-700',
+    grant: 'stroke-neutral-900/15',
     well: 'fill-white',
     wellStroke: 'stroke-neutral-200',
     inset: false,
@@ -232,6 +239,7 @@ const LIGHT_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-none',
     label: 'fill-neutral-700',
+    grant: 'stroke-neutral-900/15',
     well: 'fill-none',
     wellStroke: 'stroke-neutral-300',
     inset: false,
@@ -250,6 +258,7 @@ const LIGHT_PALETTES: Record<Look, Palette> = {
     raised: false,
     group: 'fill-white/30',
     label: 'fill-neutral-800',
+    grant: 'stroke-neutral-900/15',
     well: 'fill-black/5',
     wellStroke: 'stroke-black/10',
     inset: false,
@@ -313,6 +322,51 @@ const BlockOutline = ({ rect, round, radius }: { rect: Block['frame']; round?: b
   ) : (
     <rect {...rect} rx={radius} fill='black' />
   );
+
+/** Rise above the bases to the lowest grant line, the gap between stacked lines, and the spread of their starts. */
+const GRANT_RISE = 40;
+/** As wide as the canvas's own smart lines in these looks, which read as conduits rather than hairlines. */
+const GRANT_WIDTH = 8;
+const GRANT_PITCH = 20;
+const GRANT_SPREAD = 28;
+const GRANT_CORNER = 16;
+
+/**
+ * The monolithic agent's grants: a line from the top of its OAuth box to the top of each source, each on a level of its
+ * own (the nearest source lowest) and leaving the box at its own point, so no two lines share a run or cross.
+ */
+const GrantLines = ({ feed, sources }: { feed: Block; sources: readonly Block[] }) => {
+  const palette = useContext(LookContext);
+  const top = baseOf(feed).y;
+  const nearestFirst = [...sources].sort(
+    (a, b) => Math.abs(feed.frame.x - a.frame.x) - Math.abs(feed.frame.x - b.frame.x),
+  );
+  const centre = feed.frame.x + feed.frame.width / 2;
+  return (
+    <g className={mx('fill-none', palette.grant)} strokeWidth={GRANT_WIDTH}>
+      {nearestFirst.map((source, index) => {
+        const start = centre + (index - (nearestFirst.length - 1) / 2) * GRANT_SPREAD;
+        const end = source.frame.x + source.frame.width / 2;
+        const level = top - GRANT_RISE - index * GRANT_PITCH;
+        const turn = Math.sign(end - start) * GRANT_CORNER;
+        const sourceTop = baseOf(source).y;
+        return (
+          <path
+            key={source.id}
+            d={[
+              `M ${start} ${top}`,
+              `L ${start} ${level + GRANT_CORNER}`,
+              `Q ${start} ${level} ${start + turn} ${level}`,
+              `L ${end - turn} ${level}`,
+              `Q ${end} ${level} ${end} ${level + GRANT_CORNER}`,
+              `L ${end} ${sourceTop}`,
+            ].join(' ')}
+          />
+        );
+      })}
+    </g>
+  );
+};
 
 /** A plain strip along the channel at any angle, between the two points it is given. */
 const channelPoints = ({ from, to, width }: Channel): string => {
@@ -735,6 +789,7 @@ export const MoleculeOverlay = ({
               <ContainerBase block={block} />
             </g>
           ))}
+          {layout.monolith && !layout.focus && <GrantLines feed={layout.monolith.feed} sources={layout.sources} />}
           {extent && (
             <defs>
               <mask id={`${base}-channels`} maskUnits='userSpaceOnUse' {...extent}>
