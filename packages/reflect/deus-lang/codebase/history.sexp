@@ -1,3 +1,7 @@
+(entry "8f77cc083da334b4059890abfdb9af63e95ed4054a4a8f39a149132360be972a" "task: comment on b73b475d" "")
+(entry "1e32955d5ce06307b178ed8c07d8754f3781c2e339e7e377cad626d7c7414a10" "update deus" "claude")
+(entry "fb1345316d32ea5987872bd23d501fa89bb883d41a0630fa3bb6cd8eadcc7af0" "history: import 1124 changes" "")
+(entry "e6b5de91e6a77c25b372e1fc99ca2052d7457c178db97dff7d2177b83a63d68e" "task: import from codebase/tasks.sexp" "")
 (entry "a31cfa60511be511d25f2db9c3515a79e060a64c8989fc884f07e9162ece164d" "task: set b73b475d assignee" "")
 (entry "57875655efdb06576acde292f18b97d8380f19270a700af37f5006e5827e14d7" "task: set b73b475d labels" "")
 (entry "fac83c48661ce598ee8d5501987f8fde4738452831aae5ce6e23e00ceab6e5b2" "task: set b73b475d priority" "")
