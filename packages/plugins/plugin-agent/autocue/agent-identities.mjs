@@ -182,14 +182,31 @@ const enableIdentities = async (page, gesture) => {
   await waitFor(() => isOn(toggle), { what: `"${SETTING}" to be on` });
 };
 
-/** Opens the agent's chat from the current space's Settings › Agents. */
+/** Opens the agent's chat from the current space's Settings › Agents, whose list opens an agent on click. */
 const openAgent = async (peer) => {
   const { page } = peer;
-  await expandRow(peer, currentWorkspace(page).getByTestId('spacePlugin.settings').first());
-  await expandRow(peer, currentWorkspace(page).getByTestId('agentPlugin.agentsSection').first());
-  await peer.click(treeRow(page, AGENT).getByTestId('treeItem.heading').first());
+  await openSpaceSettings(peer, 'agentPlugin.agentsSection');
+  await peer.click(
+    page.locator(`${PLANK} [data-scope="listbox"][data-part="item"]`).filter({ hasText: AGENT }).first(),
+  );
   await page.locator(PROMPT).first().waitFor({ timeout: TIMEOUT });
 };
+
+/** Whether the named space holds an agent called Kai, as op:listAgents reports it. */
+const holdsAgent = (page, spaceName) =>
+  page.evaluate(
+    async ([name, agent]) => {
+      const space = (globalThis.dxos?.client?.spaces.get() ?? []).find((space) => space.properties?.name === name);
+      if (!space) {
+        return false;
+      }
+      const listed = await globalThis.composer
+        .invoke('org.dxos.operation.agent.list', {}, { spaceId: space.id })
+        .catch(() => undefined);
+      return (listed?.agents ?? []).some((entry) => entry.name === agent);
+    },
+    [spaceName, AGENT],
+  );
 
 /**
  * Waits for the turn a message started to finish: the chat's activity indicator (shown only while a turn runs) is
@@ -477,8 +494,9 @@ export const steps = [
       await bob.click(page.getByTestId('contact-picker.trigger').first());
       await bob.click(page.getByTestId('contact-picker.item').filter({ hasText: AGENT }).first());
       await bob.click(page.getByTestId('contactPicker.add'));
-      // The space lists it under Settings › Agents once it is here, and among its members.
+      // The space lists it among its members, and holds Kai's presence, which its Settings › Agents lists.
       await waitFor(() => listsAgentAsMember(page), { what: `${OTHER} to list ${AGENT} among its members` });
+      await waitFor(() => holdsAgent(page, OTHER), { what: `${OTHER} to hold ${AGENT}` });
     },
   },
   {

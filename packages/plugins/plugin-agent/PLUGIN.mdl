@@ -1086,7 +1086,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     from its brain. The autocue flow `autocue/agent-identities.mjs` walks it side by side, one browser per person.
   actors: human
   covers: [F-1.4, F-6.1, F-7.1, F-7.2, F-7.3, F-7.4, F-7.5, F-7.7, F-7.8, F-8.1, F-8.4, F-8.6]
-  status: unverified          # 2026-10-14 passed through "Add to space", before agents moved to Settings › Agents
+  status: passing             # 2026-10-15, recorded by autocue/agent-identities.mjs against local EDGE (dxos/edge#1313)
   given:
     - alice: an identity with the display name "Alice", on one device
     - bob: an identity with the display name "Bob", on another device
@@ -1144,7 +1144,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       expect: |
         Kai calls Recall and answers from its brain with what Alice told it, naming her: at least Lisbon,
         November 14, 12 people and the 8,000 euro budget
-      note: NO `invoke` — model-driven; these words were never said in Offsite team. On 2026-10-13 Kai answered "So far for the offsite: Lisbon, November 14, for 12 people, with a budget of €8,000 — all per Alice."
+      note: NO `invoke` — model-driven; these words were never said in Offsite team. On 2026-10-15 Kai answered "Here's what we have for the offsite: it's in Lisbon on November 14 for 12 people, budget is €8,000, and flights are still open/unbooked. Dima is handling the venue booking. (Alice shared these details on Oct 15.)"
   after:
     - name: Remove Kai from Offsite team and Bob from Kai's space
       do: In Offsite team's Settings › Agents delete Kai; in Kai's space open Settings › Members and remove Bob.
