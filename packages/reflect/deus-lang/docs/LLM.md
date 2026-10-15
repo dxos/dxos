@@ -1,5 +1,7 @@
 # Driving DEUS from an agent
 
+Read [OPERATIONS.md](./OPERATIONS.md) first: the standing instructions, where each credential is, and the services.
+
 Agents use the same `deus` CLI as people. There is no separate API: read definitions with
 `view`, change them by writing source and running `update`, and check the result with `test`
 and `check`. Add `--json` to a command for one machine-readable JSON document on stdout
