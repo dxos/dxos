@@ -145,6 +145,15 @@ def Types.declaredNames (ns : Map Text Entry) : Map Text Text := Map.foldr (fun 
   | Entry.ability _ iri => Map.insert iri (lastSegment name) acc
   | _ => acc) Map.empty ns
 
+/-- The scheme a declared signature stands for, read as `Compile.typecheck` reads it (a constant's row aside, D95). -/
+def Types.declaredScheme (sig : Sexp) : Sexp :=
+  let u := newUnifier ()
+  let declared :=
+    match sig with
+    | Sexp.list (Sexp.sym "teff" :: _ :: result :: []) => result
+    | other => other
+  scheme u (signatureType u declared (Ref.new Map.empty) (Ref.new Map.empty))
+
 def Types.display (u : Unifier) (t : TType) : Text := showType (zonk u t) (Ref.new Map.empty) 0
 
 /-- A stored scheme as text, e.g. `(a -> b) -> List a -> List b`. -/

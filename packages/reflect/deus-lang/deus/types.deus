@@ -636,6 +636,14 @@ def handler (u : Unifier) (env : TypeEnv {r}) (body : Sexp) (clauses : List Sexp
 /-- Generalizes by printing: every remaining variable is quantified (top level has no free env). -/
 def scheme (u : Unifier) (t : TType) : Sexp := typeToSexp (zonk u t)
 
+/-- The scheme a declared signature stands for, read as `Compile.typecheck` reads it (a constant's row aside, D95). -/
+def declaredScheme (sig : Sexp) : Sexp :=
+  let u := newUnifier ()
+  let declared := match sig with
+    | Sexp.list [Sexp.sym "teff", _, result] => result
+    | other => other
+  scheme u (signatureType u declared (Ref.new Map.empty) (Ref.new Map.empty))
+
 def display (u : Unifier) (t : TType) : Text := showType (zonk u t) (Ref.new Map.empty) 0
 
 /-- A written signature: arrows without braces constrain nothing; written rows are closed. -/

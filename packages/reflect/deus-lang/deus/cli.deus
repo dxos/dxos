@@ -370,6 +370,15 @@ def viewEntryIn (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text
   match viewParts base dir ns name e dialect with
   | (header, source) => header ++ source
 
+/--
+  The type a name shows: with other names on its hash, its own signature, since the shared scheme
+  generalizes every sharer's (D116, View.Spec R-4); otherwise the scheme.
+-/
+def ownScheme (meta : Option Sexp) (sharers : Int) : Option Sexp :=
+  match (sharers > 1, Codebase.metaField meta "sig") with
+  | (true, some sig) => some (Types.declaredScheme sig)
+  | _ => Codebase.metaField meta "scheme"
+
 /-- The header comment lines, and the source (empty for a constructor, an operation or a field). -/
 def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} (Text, Text) :=
   let core := dialect == "core"
@@ -377,7 +386,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
   let h := Entry.hash e
   let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
   let comment := if ts then "// " else "-- "
-  let typeLine := match Codebase.metaField meta "scheme" with
+  let typeLine := match ownScheme meta (List.length (Option.getOr (Map.lookup h base.namesByHash) [])) with
     | some scheme => comment ++ ": " ++ Types.displaySchemeNamed base.declared scheme ++ "\n"
     | none => ""
   let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
@@ -1093,7 +1102,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : T
   | some e =>
     let h := Entry.hash e
     let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
-    let typed := match Codebase.metaField meta "scheme" with
+    let typed := match ownScheme meta (List.length (Option.getOr (Map.lookup h printer.namesByHash) [])) with
       | some scheme => [("type", Types.displaySchemeNamed printer.declared scheme)]
       | none => []
     let verdict := match Check.verdictOf dir ns e with

@@ -43,6 +43,15 @@ def View.Spec.printed (source : Text) (name : Text) : Option (Text, Text) :=
       | _ => Option.none
   | Result.err _ => Option.none
 
+/-- R-4: two names with one body each show the type they declare. -/
+test View.Spec.sharedBodyShowsItsOwnType := inStore (fun dir =>
+  let ns := cliUpdate dir "def A.int (n : Int) : Int := n\ndef A.text (t : Text) : Text := t\n"
+  let header := fun name =>
+    match Map.lookup name ns with
+    | Option.some e => fst (viewParts (Print.printer ns []) dir ns name e "deus")
+    | Option.none => ""
+  Text.contains ": Int -> Int\n" (header "A.int") && Text.contains ": Text -> Text\n" (header "A.text"))
+
 /-- `Task -> {Host} Int`, as a scheme stores it. -/
 def View.Spec.taskToHost : Sexp := Sexp.list [Sexp.sym "tfun", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:task:Task"], Sexp.list [Sexp.sym "tref", Sexp.str "#Int"], Sexp.list [Sexp.sym "eff", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:mdl:Host"]]]
 
