@@ -91,10 +91,14 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
 
 ## Changing the compiler
 
-1. Edit `deus/`.
-2. `moon run deus-lang:self-build` (or `node bin/deus.mjs compile deus --main Cli.main -o seed/deus.image`).
-3. Run it again: the second run must not change `seed/deus.image`.
-4. To use new syntax inside `deus/`, first land the compiler change and a rebuilt seed.
+1. Edit `deus/`, then `node bin/deus.mjs update deus` to bring the change into the codebase.
+2. `node bin/deus.mjs image Cli.main -o seed/deus.image` writes the new seed from the codebase in about
+   3 s, the same bytes as compiling `deus/` with it.
+3. Check the fixpoint once before you commit: `moon run deus-lang:self-build` (or
+   `node bin/deus.mjs compile deus --main Cli.main -o seed/deus.image`) must not change `seed/deus.image`.
+   `src/seed.test.ts` checks it in CI too.
+4. `node bin/deus.mjs export codebase`, so the export in git matches `deus/`.
+5. To use new syntax inside `deus/`, first land the compiler change and a rebuilt seed.
 
 ## Running the tests in a fresh container
 

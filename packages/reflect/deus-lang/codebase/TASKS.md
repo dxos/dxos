@@ -124,24 +124,6 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
-## devex: merges into #13952 race and D-numbers collide (`602f4557`)
-
-- state: doing
-- priority: high
-- labels: devex, perf
-
-Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
-
-> claude: scripts/merge-base.py: fetch, merge, renumber decisions and stages, take theirs for seed and export, import their export into the local codebase, rebuild the seed with deus image Cli.main, export. Closing once it has handled a real merge.
-
-## devex: the seed fixpoint compiles the toolchain twice (17 s) (`9e2f6916`)
-
-- state: todo
-- priority: high
-- labels: devex, perf
-
-Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
-
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo
@@ -947,6 +929,18 @@ Every agent runs it before each commit; cache unchanged specs by hash.
 
 > claude: deus mdl 36 s to 7 s (D114): one printer per run instead of two per described name, and checkTheorem builds its printer only to describe a failure. Output byte-identical (mdl --json).
 
+## devex: merges into #13952 race and D-numbers collide (`602f4557`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+
+Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
+
+> claude: scripts/merge-base.py: fetch, merge, renumber decisions and stages, take theirs for seed and export, import their export into the local codebase, rebuild the seed with deus image Cli.main, export. Closing once it has handled a real merge.
+
+> claude: scripts/merge-base.py handled a real merge (D119, 2d06100d): decisions and stages renumbered, seed rebuilt and fixpoint held, export written, suite green.
+
 ## devex: the dogfood test takes 124 s (`f264430b`)
 
 - state: done
@@ -966,6 +960,16 @@ Its view round-trip re-adds the whole printed toolchain; blocked on the printed-
 Restore once into a shared codebase, or reuse the dogfood codebase.
 
 > claude: 89 s to 44 s: D113/D114, and the test now compiles deus/ once (deus update over the restore must say Nothing changed) instead of building a second codebase to compare hashes.
+
+## devex: the seed fixpoint compiles the toolchain twice (17 s) (`9e2f6916`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+
+Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
+
+> claude: deus image Cli.main writes the seed from the codebase in 3.4 s, byte-identical to compiling deus/ (checked on every merge today). README's 'Changing the compiler' now uses it; the fixpoint compile is checked once before a commit and in CI.
 
 ## devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x (`44892ca0`)
 
