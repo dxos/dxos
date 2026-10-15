@@ -10,12 +10,18 @@ import {
   type Intent,
   type LayerId,
   type Link,
+  type Node,
+  type NodeId,
+  type Point,
   type Scene,
   endpointNode,
+  isFrameNode,
+  isPointEndpoint,
 } from '../model/types.ts';
+import { boundsCenter } from './camera.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, sceneLayers } from './layers.ts';
-import { topZ } from './order.ts';
+import { between, sortByZ, topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** What grouping a selection makes: the new scene, and the intents that replace the selection with its shape. */
@@ -91,4 +97,110 @@ export const groupIntoScene = (
       { kind: 'delete', ids: [...inside] },
     ],
   };
+};
+
+export type UngroupOptions = {
+  /** Another frame still opens the child scene, which stays, so every element it brings needs a new id. */
+  shared?: boolean;
+  /** Mints an id for an element whose own is taken (`prefix` is its type). */
+  createId: (prefix: string) => string;
+};
+
+/**
+ * The inverse of `groupIntoScene`: the intents that replace the frame `frameId` with the contents of its `child`
+ * scene. The child's nodes are mapped onto the frame as it is now, so they land where it shows them after it was
+ * moved or resized: the child's own bounds are centred on the frame and shrunk to fit it, never magnified. They go on
+ * the frame's layer, above everything else, in their own order. A link on the frame re-attaches to the child node
+ * nearest its other end. An element keeps its id unless the scene already has it or the child is `shared`. None when
+ * the frame is missing, locked, not a frame, or opens another scene.
+ */
+export const ungroupScene = (
+  scene: Scene,
+  frameId: NodeId,
+  child: Scene,
+  { shared = false, createId }: UngroupOptions,
+): Intent[] | undefined => {
+  const frame = scene.nodes[frameId];
+  if (!frame || !isFrameNode(frame) || frame.locked || frame.scene !== child.id) {
+    return undefined;
+  }
+
+  const target = nodeBounds(frame);
+  const source = unionBounds(Object.values(child.nodes).map(nodeBounds));
+  const scale = source ? 1 / Math.max(1, source.width / target.width, source.height / target.height) : 1;
+  const from = source ? boundsCenter(source) : { x: 0, y: 0 };
+  const to = boundsCenter(target);
+  const map = (point: Point): Point => ({ x: to.x + (point.x - from.x) * scale, y: to.y + (point.y - from.y) * scale });
+
+  const taken = new Set([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+  const ids = new Map<ElementId, ElementId>();
+  const rename = (element: Element & { type: string }): ElementId => {
+    const id = shared || taken.has(element.id) ? createId(element.type) : element.id;
+    ids.set(element.id, id);
+    return id;
+  };
+  const layer = elementLayer(frame, sceneLayers(scene));
+
+  let nodeZ = topZ(Object.values(scene.nodes));
+  const nodes: Node[] = sortByZ(Object.values(child.nodes)).map((node) => ({
+    ...node,
+    id: rename(node),
+    z: (nodeZ = between(nodeZ, undefined)),
+    layer,
+    center: map(node.center),
+    size: { width: node.size.width * scale, height: node.size.height * scale },
+  }));
+
+  let linkZ = topZ(Object.values(scene.links));
+  const remap = (end: Endpoint): Endpoint =>
+    isPointEndpoint(end) ? { point: map(end.point) } : { ...end, node: ids.get(end.node) ?? end.node };
+  const links: Link[] = sortByZ(Object.values(child.links)).map((link) => {
+    const id = rename(link);
+    const base = {
+      id,
+      z: (linkZ = between(linkZ, undefined)),
+      layer,
+      source: remap(link.source),
+      target: remap(link.target),
+    };
+    return link.type === 'spline' ? { ...link, ...base, points: link.points.map(map) } : { ...link, ...base };
+  });
+
+  // Where a link's other end is, so it re-attaches to the child node nearest it.
+  const position = (end: Endpoint): Point | undefined => {
+    if (isPointEndpoint(end)) {
+      return end.point;
+    }
+    return scene.nodes[end.node]?.center;
+  };
+  const nearest = (point: Point | undefined): NodeId | undefined => {
+    let best: { id: NodeId; distance: number } | undefined;
+    for (const node of nodes) {
+      const distance = point ? Math.hypot(node.center.x - point.x, node.center.y - point.y) : 0;
+      if (!best || distance < best.distance) {
+        best = { id: node.id, distance };
+      }
+    }
+    return best?.id;
+  };
+  const onFrame = (end: Endpoint) => endpointNode(end) === frameId;
+  const reattached = Object.values(scene.links).flatMap((link): Intent[] => {
+    if (!onFrame(link.source) && !onFrame(link.target)) {
+      return [];
+    }
+    const near = nearest(position(onFrame(link.source) ? link.target : link.source));
+    if (near === undefined) {
+      return [];
+    }
+    const end = (value: Endpoint): Endpoint => (onFrame(value) ? { node: near } : value);
+    return [{ kind: 'update', id: link.id, values: { source: end(link.source), target: end(link.target) } }];
+  });
+
+  return [
+    ...nodes.map((node): Intent => ({ kind: 'create', node })),
+    ...links.map((link): Intent => ({ kind: 'link', link })),
+    // Re-attached before the frame goes, since deleting a node takes the links still on it.
+    ...reattached,
+    { kind: 'delete', ids: [frameId] },
+  ];
 };

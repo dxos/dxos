@@ -136,4 +136,20 @@ describe('layers', () => {
     expect(Object.keys(merged.nodes).sort()).toEqual(['a', 'b']);
     expect(Object.keys(merged.links)).toEqual(['ab']);
   });
+
+  test('a hidden node is not drawn, nor are the links on it', ({ expect }) => {
+    const hidden = reduceIntent(base, { kind: 'update', id: 'a', values: { hidden: true } });
+    const visible = visibleScene(hidden);
+    expect(Object.keys(visible.nodes)).toEqual(['b']);
+    expect(Object.keys(visible.links)).toEqual([]);
+    const shown = reduceIntent(hidden, { kind: 'update', id: 'a', values: { hidden: false } });
+    expect(visibleScene(shown)).toBe(shown);
+  });
+
+  test('a hidden link is not drawn, and its nodes stay', ({ expect }) => {
+    const hidden = reduceIntent(base, { kind: 'update', id: 'ab', values: { hidden: true } });
+    const visible = visibleScene(hidden);
+    expect(Object.keys(visible.nodes).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(visible.links)).toEqual([]);
+  });
 });

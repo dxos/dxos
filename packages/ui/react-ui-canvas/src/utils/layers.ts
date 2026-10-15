@@ -48,20 +48,19 @@ export const layerOrder = (nodes: readonly Node[], layers: readonly Layer[]): No
 };
 
 /**
- * The scene as drawn and hit: without the elements of hidden layers, or the links to a node that is hidden. The same
- * scene when no layer is hidden, so a memo over it holds.
+ * The scene as drawn and hit: without hidden elements, the elements of hidden layers, or the links to a node that is
+ * hidden. The same scene when nothing is hidden, so a memo over it holds.
  */
 export const visibleScene = (scene: Scene): Scene => {
   const layers = sceneLayers(scene);
   const hidden = new Set(layers.filter((layer) => layer.hidden).map((layer) => layer.id));
-  if (hidden.size === 0) {
+  const isHidden = (element: Element) => element.hidden === true || hidden.has(elementLayer(element, layers));
+  if (![...Object.values(scene.nodes), ...Object.values(scene.links)].some(isHidden)) {
     return scene;
   }
-  const nodes = Object.fromEntries(
-    Object.entries(scene.nodes).filter(([, node]) => !hidden.has(elementLayer(node, layers))),
-  );
+  const nodes = Object.fromEntries(Object.entries(scene.nodes).filter(([, node]) => !isHidden(node)));
   const shown = (link: Link) =>
-    !hidden.has(elementLayer(link, layers)) &&
+    !isHidden(link) &&
     [link.source, link.target].every((end) => {
       const node = endpointNode(end);
       return node === undefined || nodes[node] !== undefined;
