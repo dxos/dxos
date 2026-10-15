@@ -98,6 +98,13 @@ tasks. Edit it like a spec (`deus view Toolchain.Features > f.mdl`, `deus update
 starts or ends, keep the feature that owns it current. `deus features` prints the tree with open tasks,
 and `deus mdl` fails a shipped feature with open work.
 
+## Coverage
+
+`deus mdl` checks what a spec says; `deus mdl --coverage [documents…]` reports what it leaves out
+(D124): laws of the document that no `req` or `law` block cites, and public definitions (used
+outside their own namespace) in the namespaces its api blocks cover that no api block names. It
+reports, and never fails; the restore test keeps uncited laws at zero.
+
 ## Before and after
 
 | Measure                                  | Before                   | After                                                            |

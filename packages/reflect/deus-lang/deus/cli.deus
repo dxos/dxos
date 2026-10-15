@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -1099,7 +1099,9 @@ def features (args : Args) : {IO, Throw Text} Unit :=
   extension its term's URI names in the codebase; a block whose extension the codebase lacks is
   reported unchecked.
 -/
-def mdl (args : Args) : {IO, Throw Text} Unit :=
+def mdl (args : Args) : {IO, Throw Text} Unit := if flag args "coverage" then coverage args else checkMdl args
+
+def checkMdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
@@ -1118,6 +1120,55 @@ def mdl (args : Args) : {IO, Throw Text} Unit :=
       [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked" ++
         (if count "gap" > 0 then ", " ++ Int.toText (count "gap") ++ " known gaps" else "")]))
   if count "fail" > 0 then IO.exit 1 else ()
+
+/--
+  `deus mdl --coverage [documents…]`: each spec document's laws no block cites, and the public
+  definitions in its api namespaces that no api block names (D124). Omissions are reported, not failed.
+-/
+def coverage (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let entries := Map.toList ns
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => Option.map (fun form => (Export.documentOf name, snd (Mdl.fromSexp form))) (Codebase.readObject dir h)
+    | _ => none) entries
+  let named := Set.fromList (List.concatMap (fun pair => Coverage.apiNames (snd pair)) blocks)
+  let byHash := Codebase.namesByHash ns
+  -- A definition is public when a name in another namespace refers to it.
+  let public := List.foldl (fun acc pair =>
+    match pair with
+    | (name, Entry.term h) => usedOutside dir byHash name h acc
+    | (name, Entry.test h) => usedOutside dir byHash name h acc
+    | (name, Entry.theorem h) => usedOutside dir byHash name h acc
+    | _ => acc) Map.empty entries
+  let terms := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.term _) => if Set.contains name public then some name else none
+    | _ => none) entries
+  let stored := Export.specDocuments ns
+  let wanted := if List.isEmpty args.positional then stored else List.filter (fun d => List.contains d stored) args.positional
+  let reports := List.map (fun d =>
+    let laws := List.filterMap (fun pair =>
+      match pair with
+      | (name, Entry.test _) => if Export.documentOf name == d then some name else none
+      | (name, Entry.theorem _) => if Export.documentOf name == d then some name else none
+      | _ => none) entries
+    Coverage.covers d (List.filterMap (fun pair => if fst pair == d then some (snd pair) else none) blocks) laws named terms) wanted
+  output args
+    (fun _ => Json.arr (List.map (fun c => Json.obj [("document", Json.str c.coverageDoc), ("uncitedLaws", Json.arr (List.map Json.str c.uncitedLaws)), ("unnamedApi", Json.arr (List.map Json.str c.unnamedApi))]) reports))
+    (fun _ => Text.join "\n" (List.concatMap Coverage.render reports ++
+      [Int.toText (List.sum (List.map (fun c => List.length c.uncitedLaws) reports)) ++ " uncited laws, " ++
+        Int.toText (List.sum (List.map (fun c => List.length c.unnamedApi) reports)) ++ " public definitions no api names"]))
+
+/-- `acc` with each name `h`'s object refers to that lies outside `name`'s namespace. -/
+def usedOutside (dir : Text) (byHash : Map Text (List Text)) (name : Text) (h : Text) (acc : Map Text Unit) : {IO, Throw Text} Map Text Unit :=
+  let home := Coverage.namespaceOf name
+  match Codebase.readObject dir h with
+  | none => acc
+  | some form =>
+    List.foldl (fun marked dep =>
+      List.foldl (fun m target => if Coverage.namespaceOf target == home then m else Set.insert target m) marked (Option.getOr (Map.lookup dep byHash) [])) acc (Codebase.dependencies form)
 
 /-- `deus image <name> -o <file>`: the kernel image of a definition. -/
 def image (args : Args) : {IO, Throw Text} Unit :=
@@ -1670,6 +1721,7 @@ def usage : Text :=
     "  eval <expr>                          evaluate an expression",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
+    "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D124)",
     "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D118)",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",

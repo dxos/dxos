@@ -44,7 +44,10 @@ test Tests.failureContextChains :=
   let load := fun u => Failure.context
     "loading config"
     [("path", "a.toml")]
-    (fun _ => Failure.context "parsing" [("line", "3")] (fun _ => Throw.throw (of "unexpected '='" [])))
+    (fun _ => Failure.context
+      "parsing"
+      [("line", "3")]
+      (fun _ => Throw.throw (Failure.of "unexpected '='" [])))
   match try load with
   | Result.err f => Failure.render f ==
       "loading config (path=a.toml)\n  caused by: parsing (line=3)\n  caused by: unexpected '='"

@@ -1,0 +1,61 @@
+/-
+  Spec coverage (D124): what a spec document leaves unstated. A law of the document (a test or a
+  theorem under its name) that no block cites backs no promise, and a public definition in a namespace
+  the document's api blocks cover that no api block names is an API no spec states.
+-/
+
+/-- One spec document's coverage. Field names carry the type's name because field names are global (task 31d3c1cd). -/
+structure SpecCoverage @"urn:deus:coverage:SpecCoverage" where
+  coverageDoc : Text
+  uncitedLaws : List Text
+  unnamedApi : List Text
+
+namespace Coverage
+
+/-- The name in an api signature line, `- Name : Type`. -/
+def signatureName (line : Text) : Text :=
+  let bare := if Text.startsWith "- " line then Text.drop 2 line else line
+  let i := Text.indexOf bare " : " 0
+  Text.trim (if i < 0 then bare else Text.take i bare)
+
+/-- The names an api block states; its signatures are one per line, since a type may contain `|`. -/
+def apiNames (b : Block) : List Text :=
+  if b.blockType != "api" then []
+  else List.filter (fun n => not (Text.isEmpty n)) (List.map (fun l => signatureName (Text.trim l)) (Text.split (Features.prop b "signatures") "\n"))
+
+/-- The names a block cites: an api's signatures, a req's `by:` and a law's `theorem:`. -/
+def cited (b : Block) : List Text :=
+  if b.blockType == "api" then apiNames b
+  else if b.blockType == "req" then Features.items (Features.prop b "by")
+  else if b.blockType == "law" then Features.items (Features.prop b "theorem")
+  else []
+
+/-- Everything before a name's last `.`, or `""`. -/
+def namespaceOf (name : Text) : Text :=
+  let rec go i := if i < 0 then "" else if Text.code name i == '.' then Text.take i name else go (i - 1)
+  go (Text.length name - 1)
+
+/--
+  The coverage of `doc`, whose blocks are `blocks` and whose tests and theorems are `laws`.
+  `named` holds every name an api block of any document states, and `public` the definitions used
+  outside their own namespace.
+-/
+def covers (doc : Text) (blocks : List Block) (laws : List Text) (named : Map Text Unit) (public : List Text) : SpecCoverage :=
+  let citedHere := Set.fromList (List.concatMap cited blocks)
+  let spaces := Set.fromList (List.map namespaceOf (List.concatMap apiNames blocks))
+  SpecCoverage.mk doc
+    (List.filter (fun n => not (Set.contains n citedHere)) laws)
+    (List.filter (fun n => Set.contains (namespaceOf n) spaces && not (Set.contains n named)) public)
+
+/-- The text report: the document, then each kind of omission on its own line. -/
+def render (c : SpecCoverage) : List Text :=
+  if List.isEmpty c.uncitedLaws && List.isEmpty c.unnamedApi then [c.coverageDoc ++ ": covered"]
+  else
+    let groups := Names.groups (List.map (fun n => (namespaceOf n, n)) c.unnamedApi)
+    [c.coverageDoc] ++
+      (if List.isEmpty c.uncitedLaws then [] else ["  laws no block cites: " ++ Text.join ", " c.uncitedLaws]) ++
+      List.map (fun g =>
+        match g with
+        | (space, names) => "  " ++ space ++ ": " ++ Int.toText (List.length names) ++ " public definition(s) no api block names: " ++ Text.join ", " (List.sort (List.map Names.lastSegment names))) (List.sortBy (fun a b => compare (fst a) (fst b)) groups)
+
+end Coverage

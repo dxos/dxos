@@ -5,7 +5,7 @@ def Features.Spec.facts (name : Text) : Result Text (List (Text, Text)) := if na
 def Features.Spec.family : List Feature := [feature "F-1" [("status", "building")], feature "F-2" [("status", "shipped"), ("parent", "F-1")], feature "F-4" [("status", "planned")], feature "F-3" [("status", "building"), ("parent", "F-2"), ("tasks", "open1 | done1")]]
 
 def Features.Spec.feature (id : Text) (props : List (Text, Text)) : Feature :=
-  match fromBlock (Spec.block id props) with
+  match fromBlock (Features.Spec.block id props) with
   | Result.ok f => f
   | Result.err _ => Feature.mk id "" "planned" "" [] [] []
 
@@ -20,7 +20,7 @@ theorem Features.Spec.orphansPrintAsRoots : List.map (fun pair => (fst pair, (sn
 theorem Features.Spec.orphansReported : orphans lost == ["F-5: no parent F-9"] := by rfl
 
 def Features.Spec.problemsOf (props : List (Text, Text)) : List Text :=
-  match fromBlock (Spec.block "F-1" props) with
+  match fromBlock (Features.Spec.block "F-1" props) with
   | Result.ok f => Features.problems f Spec.facts
   | Result.err found => found
 

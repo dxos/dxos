@@ -1,5 +1,15 @@
 # History of main
 
+- `10edc4793f` update deus (by claude)
+- `ea550bd267` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `0ccd9cb210` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/tf.mdl (by claude)
+- `e91385a41c` task: set 908495a0 state
+- `80f16f5b41` task: set 8d6df186 labels
+- `af276e6be6` task: open 8d6df186 Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (by claude)
+- `d57cfc2055` update deus (by claude)
+- `3a268bb7f5` update deus (by claude)
+- `0a507af5f0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov/laws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cov/Coverage.Spec.mdl (by claude)
+- `8900eae06b` update deus (by claude)
 - `e86da1f72b` task: comment on 84ec6ef7
 - `61fa96e18f` task: set 84ec6ef7 state
 - `1a34186c1e` update deus (by claude)

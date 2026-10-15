@@ -41,5 +41,13 @@ describe('deus CLI export restore', () => {
     const toolchain = maps.find((map) => map.document === 'Toolchain.Features');
     expect(toolchain?.features.length).toBeGreaterThan(10);
     expect(toolchain?.features.filter((f) => f.status === 'shipped' && f.problems.length > 0)).toEqual([]);
+
+    // Every law a spec document holds is cited by one of its blocks (D124).
+    const coverage = JSON.parse(deus('mdl', '--coverage', '--json', '--codebase', restored).stdout) as {
+      document: string;
+      uncitedLaws: string[];
+    }[];
+    expect(coverage.map((c) => c.document)).toContain('Coverage.Spec');
+    expect(coverage.filter((c) => c.uncitedLaws.length > 0)).toEqual([]);
   });
 });

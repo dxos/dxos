@@ -90,7 +90,7 @@ feature F-12: Tasks: issues kept with the code
 
 ```mdl
 feature F-13: Feature maps: what the product is, beside tasks
-  status: building
+  status: shipped
   parent: F-10
   specs: Features.Spec
   defs: Features.problems | Features.render | Cli.features
@@ -101,9 +101,9 @@ feature F-13: Feature maps: what the product is, beside tasks
 feature F-14: Specs in the codebase: requirements, APIs and laws checked by deus mdl
   status: building
   parent: F-10
-  specs: Compile.Spec | View.Spec
-  defs: Cli.mdl | Spec.checkReq
-  tasks: 908495a0 | 6a3b0ebe | a2da28e2 | 1ab6c044 | 2a2b87a2 | 0d7b0142
+  specs: Compile.Spec | View.Spec | Coverage.Spec
+  defs: Cli.mdl | Spec.checkReq | Cli.coverage | Coverage.covers
+  tasks: 908495a0 | 8d6df186 | 6a3b0ebe | a2da28e2 | 1ab6c044 | 2a2b87a2 | 0d7b0142
 ```
 
 ```mdl

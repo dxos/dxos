@@ -248,13 +248,6 @@ Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is
 
 Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
-## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: mdl, spec
-
 ## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
 
 - state: todo
@@ -301,6 +294,12 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - labels: explorer, spec
 
 Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metadata; the explorer lists blocks only.
+
+## Name the public APIs deus mdl --coverage reports (170 at D124), or tighten what counts as public: a spec law's use makes an internal helper public (`8d6df186`)
+
+- state: todo
+- priority: none
+- labels: mdl, spec
 
 ## deus task set ignores an unknown field (--status) instead of refusing it (`cb6c9a43`)
 
@@ -1294,6 +1293,13 @@ Follow-up of 207cac21: a parameter or result of function type is skipped. A TS c
 - links change #87b9ac35c4
 
 Profile: Map.foldr 2.0M and Entry.hash 1.7M entries of 8 s, from Codebase.namesOf per definition. Invert the namespace once.
+
+## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 

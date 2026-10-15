@@ -618,6 +618,17 @@ inductive Sexp where
   | str (value : Text)
   | list (items : List Sexp)
 
+/-
+  Spec coverage (D124): what a spec document leaves unstated. A law of the document (a test or a
+  theorem under its name) that no block cites backs no promise, and a public definition in a namespace
+  the document's api blocks cover that no api block names is an API no spec states.
+-/
+/-- One spec document's coverage. Field names carry the type's name because field names are global (task 31d3c1cd). -/
+structure SpecCoverage @"urn:deus:coverage:SpecCoverage" where
+  coverageDoc : Text
+  uncitedLaws : List Text
+  unnamedApi : List Text
+
 /-- A Durable Object's own transactional storage. -/
 ability Storage @"urn:deus:web:Storage" where
   get : Text -> Option Text
