@@ -1,5 +1,15 @@
 # History of main
 
+- `eeff472331` task: set 88004c30 state (by claude)
+- `51370cfff7` task: comment on 88004c30 (by claude)
+- `129d6769ac` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r10.deus (by claude)
+- `4060ebc6b0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `7b74216368` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/r6.deus (by claude)
+- `eda606150e` update deus (by claude)
+- `4d0b9c42ed` task: open dda00bb4 A definition's type is per hash, so an annotation narrower than the body is lost (by claude)
+- `526c43130e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/byteslaws.deus (by claude)
+- `16d278bc8e` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/art.mdl (by claude)
+- `25e47839ef` update deus (by claude)
 - `b4d4574fd5` update deus (by merge)
 - `8f83f622dc` history: import 1089 changes
 - `e811e5c581` history: import 1089 changes

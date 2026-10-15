@@ -35,8 +35,9 @@ api A-1: cached constants
 api A-2: embedded files
   signatures:
   - Cli.embed : Args -> {IO, Throw Text} Unit
-  - Cli.embeddedAsset : Text -> Text -> {IO, Throw Text} Option Text
+  - Cli.embeddedAsset : Text -> Text -> {IO, Throw Text} Option (Text, Text)
   - Embed.text : Text -> Text
+  - Embed.bytes : Text -> List Int
 ```
 
 ## Requirements
@@ -91,6 +92,15 @@ req R-8: the git export names an embedded file by its hash and never carries its
 ```mdl
 req R-9: an embedded constant whose file is missing from the store fails, naming the constant and the hash
   by: Artifact.Spec.missingFileIsNamed
+```
+
+A binary file, such as an image or a font, is embedded with `--bytes`: the store keeps the file as it is
+and `Name` is `Embed.bytes "<sha256>"`, a `List Int` of its bytes. The kernel reads files only as text, so
+storing and reading the bytes runs host tools (`sha256sum`, `cp`, `od`); its law runs them for real.
+
+```mdl
+req R-10: deus embed <file> --as <Name> --bytes keeps a binary file in the asset store, and a program that uses Name writes back the same bytes after the file is gone
+  by: Artifact.Spec.bytesRoundTrip
 ```
 
 ## Laws

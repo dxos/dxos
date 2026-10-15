@@ -40,6 +40,7 @@ deus update fix.deus --closes 3f2a                           # …closed by the 
 deus eval 'List.map Workspace.view (Workspace.names "Sort.")'  # script reads and edits in DEUS (D138)
 deus artifact App.bundle --out bundle.js                     # an @[artifact] constant, evaluated once (D148)
 deus embed page.html --as Site.page                          # a file kept in the codebase, not in git (D151)
+deus embed logo.png --as Site.logo --bytes                   # …or a binary one, as its bytes (D152)
 deus explore                                                 # browse the codebase on :8080
 deus explore --publish origin                                # …or host it beside the bundles
 deus export codebase                                         # the codebase as text, for git (D64)

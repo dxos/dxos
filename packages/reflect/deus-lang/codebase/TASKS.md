@@ -24,19 +24,6 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > claude: Container for thread 'Continue DEUS pending work' has no R2 keys (2026-10-15 05:40): git #13952 is at 7a9e6957 and ahead of R2; a keyed thread should pull the export and push.
 
-## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: dogfood, artifacts
-
-From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
-
-> claude: Slice 1 (D146, Artifact.Spec): @[artifact] constants. deus artifact <name> [--out f] evaluates once and keeps the value at artifacts/value-<hash>; run, image, build and serve fill missing ones first and use kept values, so images carry the value, not its inputs. Left: embedding files (an asset reference as a constant), and a Bytes value so a binary need not be Text.
-
-> claude: Slice 2 (D149, Artifact.Spec R-6..R-9): deus embed <file> --as <Name> keeps a text file in the asset store and defines Name := Embed.text "<sha256>" as an @[artifact]; evaluation reads the store, export carries only the hash. Left: a Bytes value for binary files.
-
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -92,6 +79,15 @@ Seen 2026-10-15: deus update deus/cli.deus (adding Cli.explorerDemo, Cli.isToolc
 - labels: dogfood
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
+
+## A definition's type is per hash, so an annotation narrower than the body is lost (`dda00bb4`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: types, codebase
+
+def T.id (n : Int) : Int := n hashes the same as id and views as a -> a; Embed.text and Embed.bytes, with equal bodies, both got Text -> a. The hash ignores annotations, so names that share a body share the first one's type. Either hash the declared signature or keep types per name (as D132 did for docs).
 
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
@@ -364,6 +360,21 @@ From Dmytro: how much of .mdl are you dogfooding? the general process should be 
 - links change #96cf462d73
 
 Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer for example)
+
+## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, artifacts
+
+From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
+
+> claude: Slice 1 (D146, Artifact.Spec): @[artifact] constants. deus artifact <name> [--out f] evaluates once and keeps the value at artifacts/value-<hash>; run, image, build and serve fill missing ones first and use kept values, so images carry the value, not its inputs. Left: embedding files (an asset reference as a constant), and a Bytes value so a binary need not be Text.
+
+> claude: Slice 2 (D149, Artifact.Spec R-6..R-9): deus embed <file> --as <Name> keeps a text file in the asset store and defines Name := Embed.text "<sha256>" as an @[artifact]; evaluation reads the store, export carries only the hash. Left: a Bytes value for binary files.
+
+> claude: Slice 3 (D152, Artifact.Spec R-10): deus embed --bytes keeps a binary file as it is and Name : List Int := Embed.bytes "<sha256>"; the kept value is Embed.fromLatin1 of one text, since a long list literal overflowed the kernel. A 300 KB file round-trips in about 2 s.
 
 ## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`3bb7f0f7`)
 

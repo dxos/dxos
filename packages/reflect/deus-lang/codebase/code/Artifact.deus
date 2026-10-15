@@ -6,6 +6,24 @@ test Artifact.Spec.artifactKeepsItsValue := inStore (fun dir =>
   | Option.some e => cachedValue dir (Entry.hash e) == Option.some (Sexp.node "text" [Sexp.str "v1"]) && evaluations () == 1
   | Option.none => false)
 
+/-- R-10: a binary file embedded with `--bytes` comes back byte for byte from a program, after the file is gone. -/
+@[integration]
+test Artifact.Spec.bytesRoundTrip := inRealStore (fun root dir =>
+  let source := fun text =>
+    IO.writeFile (root ++ "/t.deus") (Compile.Spec.prelude ++ embedLib ++ text)
+    addOrUpdate (parseArgs [root ++ "/t.deus", "--codebase", dir, "--quiet"]) true
+  source ""
+  let bytes := List.map (fun i => (i * 37 + i / 7) % 256) (range 0 5000)
+  IO.writeBytes (root ++ "/in.bin") bytes
+  IO.writeBytes (root ++ "/kept.bin") bytes
+  cli dir ["embed", root ++ "/in.bin", "--as", "A.blob", "--bytes"]
+  IO.remove (root ++ "/in.bin")
+  source ("def A.main (u : Unit) : Unit := IO.writeBytes \"" ++ root ++ "/out.bin\" A.blob\n")
+  dispatch ["run", "--codebase", dir, "A.main"]
+  match IO.exec "cmp" [root ++ "/kept.bin", root ++ "/out.bin"] with
+  | (0, _, _) => true
+  | _ => false)
+
 /-- R-3: after `A.base` changes, the next run evaluates `A.big` again and writes the new value. -/
 test Artifact.Spec.changeEvaluatesAgain := inStore (fun dir =>
   cliUpdate dir (Artifact.Spec.program "x1")
@@ -28,11 +46,12 @@ def Artifact.Spec.embedFile (dir : Text) (file : Text) (text : Text) (name : Tex
 test Artifact.Spec.embedKeepsTheFile := inStore (fun dir =>
   let sha := embedFile dir "page1.txt" "<p>e1</p>" "A.page1"
   match Map.lookup "A.page1" (Codebase.current dir) with
-  | Option.some e => IO.readFile (Assets.path dir sha) == Option.some "<p>e1</p>" && isArtifact dir (Entry.hash e) && embeddedAsset dir (Entry.hash e) == Option.some sha
+  | Option.some e => IO.readFile (Assets.path dir sha) == Option.some "<p>e1</p>" && isArtifact dir (Entry.hash e) && embeddedAsset dir (Entry.hash e) == Option.some ("text", sha)
   | Option.none => false)
 
-/-- `Artifact.Spec.lib` with `Embed.text`, which `deus embed` names. -/
-def Artifact.Spec.embedLib : Text := Artifact.Spec.lib ++ "def Embed.text (sha : Text) : Text := sha\n"
+/-- `Artifact.Spec.lib` with `Embed.text` and `Embed.bytes`, which `deus embed` names. -/
+def Artifact.Spec.embedLib : Text := Artifact.Spec.lib ++
+  "def Embed.text (sha : Text) : Text := sha\ndef Embed.bytes (sha : Text) : List Int := List.nil\n" ++ latin1
 
 /-- R-7: after the file is removed, a run of `A.main` still writes the embedded text. -/
 test Artifact.Spec.embeddedValueIsTheText := inStore (fun dir =>
@@ -71,6 +90,24 @@ test Artifact.Spec.imageHoldsTheValue := inStore (fun dir =>
   match Map.lookup "A.base" ns with
   | Option.some e => Text.contains "\"y1\"" image && not (Text.contains (Entry.hash e) image) && not (Text.contains "evaluations" image)
   | Option.none => false)
+
+/-- Runs `body` on a fresh codebase in a real temporary directory, which it removes after; a thrown error is `false`. -/
+def Artifact.Spec.inRealStore (body : Text -> Text -> {IO, Throw Text} Bool) : {IO} Bool :=
+  match IO.exec "mktemp" ["-d"] with
+  | (0, out, _) =>
+      let root := trim out
+      let held :=
+        match try (fun _ =>
+          Codebase.init (root ++ "/cb")
+          body root (root ++ "/cb")) with
+        | Result.ok value => value
+        | Result.err _ => false
+      IO.exec "rm" ["-rf", root]
+      held
+  | _ => false
+
+/-- `Embed.fromLatin1`, which a binary's kept value applies, with the builtins it calls. -/
+def Artifact.Spec.latin1 : Text := "def Text.utf8 : Text -> List Int := prim \"Text.utf8\"\ndef Embed.back (acc : List Int) (xs : List Int) : List Int :=\n  match xs with\n  | List.nil => acc\n  | List.cons x rest => Embed.back (List.cons x acc) rest\ndef Embed.fromLatin1 (latin1 : Text) : List Int :=\n  let rec go acc units :=\n    match units with\n    | List.nil => Embed.back List.nil acc\n    | List.cons b rest =>\n      if b < 128 then go (List.cons b acc) rest\n      else\n        match rest with\n        | List.cons c more => go (List.cons ((b - 192) * 64 + (c - 128)) acc) more\n        | List.nil => Embed.back List.nil acc\n  go List.nil (Text.utf8 latin1)\n"
 
 /-- The builtins the program uses: `IO` up to `appendFile`, in the kernel's order. -/
 def Artifact.Spec.lib : Text := "inductive Option a @\"#Option\" where\n  | none\n  | some (value : a)\nability IO @\"#IO\" where\n  print : Text -> Unit\n  eprint : Text -> Unit\n  readFile : Text -> Option Text\n  writeFile : Text -> Text -> Unit\n  exists : Text -> Bool\n  listDir : Text -> List Text\n  mkdirp : Text -> Unit\n  remove : Text -> Unit\n  args : Unit -> List Text\n  exit : Int -> a\n  time : Unit -> Int\n  readStdin : Unit -> Text\n  writeBytes : Text -> List Int -> Unit\n  getEnv : Text -> Option Text\n  isDir : Text -> Bool\n  wallClock : Unit -> Text\n  appendFile : Text -> Text -> Unit\ninductive List a @\"#List\" where\n  | nil\n  | cons (head : a) (tail : List a)\n"

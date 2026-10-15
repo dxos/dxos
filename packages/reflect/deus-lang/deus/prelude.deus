@@ -323,7 +323,26 @@ namespace Embed
   A file embedded with `deus embed`: the asset store holds its text under `sha`, and the `@[artifact]`
   constant naming it keeps that text as its value (Artifact.Spec R-6); evaluated any other way, it never loaded.
 -/
-def text (sha : Text) : Text := defect ("the embedded file " ++ sha ++ " was not loaded from the asset store")
+def text (sha : Text) : Text := defect ("the embedded text file " ++ sha ++ " was not loaded from the asset store")
+
+/-- A binary file embedded with `deus embed --bytes`, as its bytes; like `text`, only its artifact's kept value is real. -/
+def bytes (sha : Text) : List Int := defect ("the embedded binary file " ++ sha ++ " was not loaded from the asset store")
+
+/--
+  The bytes a text of codes 0 to 255 stands for, one per character. An embedded binary's kept value is
+  this applied to such a text, since a list literal that long nests too deep for the kernel to load.
+-/
+def fromLatin1 (latin1 : Text) : List Int :=
+  let rec go acc units :=
+    match units with
+    | [] => List.reverse acc
+    | b :: rest =>
+      if b < 128 then go (b :: acc) rest
+      else
+        match rest with
+        | c :: more => go (((b - 192) * 64 + (c - 128)) :: acc) more
+        | [] => List.reverse acc
+  go [] (Text.utf8 latin1)
 
 end Embed
 
