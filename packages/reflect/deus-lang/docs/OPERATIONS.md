@@ -71,7 +71,13 @@ cd packages/reflect/deus-lang/platform/worker
 CLOUDFLARE_API_TOKEN="$(op read 'op://CI/DEUS token/credential')" CI=1 /home/user/dxos/node_modules/.bin/wrangler deploy
 ```
 
-Run `src/worker-remote.test.ts` first. Deploy only committed code, so git says what is live. Last deploy:
+Before deploying: `node scripts/build-worker.mjs --live` (the explorer app and its DEUS code compiled to JS from
+`~/.deus`, into `platform/worker/gen/`), then `src/worker-remote.test.ts` and `src/live-explorer.test.ts`. Deploy only
+committed code, so git says what is live.
+
+The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head, and `/live/<causal>/index.json`,
+`def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `wrangler tail
+deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
 2026-10-15 18:16 UTC, version 8a76fec2 (path links for names ending like a file).
 
 ## Budget guard (D190)

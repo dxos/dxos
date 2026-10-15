@@ -225,5 +225,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 215 | 10-15 13:40 | 9m 00s | this commit | `scripts/sync-deus.py` also deletes from deus/ the definitions the codebase deleted, so a later whole-file `deus update` cannot bring them back (DataSafety.Spec, task 43cb6ea0) |
 | 216 | 10-15 18:20 | 4h 40m | `81b23f7b` | Budget guard (D190): the $10 budget alert calls `deus-guard`, which cuts every other Worker's route and crons (drilled on a canary); explorer path links for names that end like a file (`List.map`); env key granted `@dxos/*` |
 | 217 | 10-15 18:30 | 10m 00s | this commit | Deletes keep a copy: the Worker moves deleted bundles and assets to the trash, directory remotes too, and `deus compact` deletes only once the remote lists every stratum it wrote; the deployed Worker checked live for the 426 epoch gate and the head log (D191, task 91357967) |
+| 218 | 10-15 19:40 | 1h 10m | this commit | Live explorer (D192): the Worker draws every page from the hosted codebase with the explorer's own DEUS code compiled to JS, serves the app itself, warms each pushed head; `deus push` to the Worker no longer publishes the site; `deus add` reads directories recursively; `@dxos/base` and `@dxos/examples` build from the toolchain with identical hashes |
 
-Total from stage 1 to stage 217: 62h 46m.
+Total from stage 1 to stage 218: 63h 56m.

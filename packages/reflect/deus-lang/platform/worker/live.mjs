@@ -65,6 +65,18 @@ export const live = async (request, env, ctx, project, rest) => {
   return page(text);
 };
 
+/** Draws the main branch head's index, so it is in the bucket before anyone asks; failures are only logged. */
+export const warmLive = async (env, ctx, project) => {
+  try {
+    const head = await readHead(env, project, 'main');
+    if (head) {
+      await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'index.json']);
+    }
+  } catch (error) {
+    console.error('warming the live explorer failed', error);
+  }
+};
+
 const page = (body) =>
   new Response(body, {
     headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=31536000, immutable' },

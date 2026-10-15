@@ -1062,6 +1062,11 @@ def isToolchainRemote (dir : Text) (name : Text) : {IO} Bool :=
   let configured := Option.map trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))
   getOr (Option.orElse configured (fun _ => defaultRemote dir name)) "" == toolchainRemote
 
+/-- Whether `name` is a DEUS Worker (`https://…/v1/<project>`), which draws its explorer from the codebase it holds (D192). -/
+def drawsLive (dir : Text) (name : Text) : {IO} Bool :=
+  let configured := Option.map trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))
+  Text.startsWith "https://" (getOr (Option.orElse configured (fun _ => defaultRemote dir name)) "")
+
 /-- Runs `body` against the remote `name`: a directory, `https://<host>/v1/<project>` (the DEUS
   Worker, D164; writes send `$DEUS_API_KEY`), or `r2://<bucket>/<prefix>` (an S3-compatible bucket
   at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID` and
@@ -1170,7 +1175,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   -- The remote now holds this head, so the next push checks only what changes after it.
   setBranch dir (name ++ "." ++ branch) (headOf dir branch)
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch;
-  -- so does the shared toolchain remote on main, from whichever store pushes to it (D150, D164).
+  -- so does the shared toolchain remote on main (D150, D164). A DEUS Worker draws it live instead (D192).
   let siteOf := fun target =>
     let out := dir ++ "/cache/site-" ++ target
     -- A site published with its console keeps it, on the codebase as pushed (D84).
@@ -1178,7 +1183,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
     Explorer.generate dir out
     snd (publishSite dir target out false)
   let onMain := branch == currentBranch dir && branch == "main"
-  let targets := if IO.exists (siteManifest dir name) || onMain && isToolchainRemote dir name then [name] else []
+  let targets := if (IO.exists (siteManifest dir name) || onMain && isToolchainRemote dir name) && not (drawsLive dir name) then [name] else []
   let site := if branch == currentBranch dir && not (List.isEmpty targets) then Option.some (sum (List.map siteOf targets)) else Option.none
   let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []
   let siteText := getOr

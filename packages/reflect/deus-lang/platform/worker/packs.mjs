@@ -7,6 +7,7 @@
 // index into one combined index (`packindex`), which an isolate keeps in memory, so a lookup is a
 // binary search and one ranged read of the line, however large the codebase.
 
+import { warmLive } from './live.mjs';
 import { HttpError, authorize, json, listAll, readHead } from './remote.mjs';
 
 /** `<bundle>` or `<bundle>.idx`. */
@@ -88,6 +89,8 @@ export const packs = async (request, env, ctx, project, rest) => {
     });
     if (index) {
       await mergeCombined(env.BUCKET, project, [bundle]);
+      // The pack completes a push: drawing the head's explorer now spares its first visitor the wait (D192).
+      ctx.waitUntil(warmLive(env, ctx, project));
     }
     return logged(json({ pack: rest[0], stored: true }, 201));
   }
