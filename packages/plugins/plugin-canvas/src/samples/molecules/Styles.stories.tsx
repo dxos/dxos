@@ -66,7 +66,7 @@ export const Paper: Story = { args: { theme: 'paper' } };
 export const Glass: Story = { args: { theme: 'glass-night' } };
 
 /** Glass on the bare dark canvas, as the glass look first looked. */
-export const Night: Story = { args: { theme: 'night' } };
+export const Neon: Story = { args: { theme: 'night' } };
 
 /** Cards with hairline borders and solid muted channels over dots, held dark. */
 export const Flat: Story = { args: { theme: 'flat' } };
