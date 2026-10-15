@@ -194,6 +194,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 184 | 10-15 09:25 | 15m 00s | `ba589da6` | History nodes record when they were made; `deus log` and the explorer's History view show the time (Codebase.Spec R-23, D165). |
 | 185 | 10-15 09:50 | 25m 00s | `3a2224e6` | The explorer publishes its indexes as one version named by `site/HEAD`, and the Worker pins each page to the version it loaded, so a push never shows a mix; DEUS on the wasm kernel measured too large to build the site in a Worker (D166). |
 | 186 | 10-15 10:09 | 19m 00s | `8b0847fc` | A push cannot fork a branch: the CLI refuses a head that leaves out a remote head, and the Worker moves each branch head in D1 only from the head a push names (Remote.Spec, D167). |
-| 187 | 10-15 10:30 | 21m 00s | this commit | `deus export --terms` writes one file per definition at its namespace path, and an hourly routine mirrors the codebase (store files, Worker bundles and the per-term tree) to dxos/deus-mirror (Export.Spec R-10, R-11, D168). |
+| 187 | 10-15 10:30 | 21m 00s | `b7bf9712` | `deus export --terms` writes one file per definition at its namespace path, and an hourly routine mirrors the codebase (store files, Worker bundles and the per-term tree) to dxos/deus-mirror (Export.Spec R-10, R-11, D168). |
+| 188 | 10-15 10:42 | 12m 00s | this commit | The embedding kernel reuses its machine for the same image: no re-parse per command, `help` in the page 102 ms to 11 ms (D169, task d780de91) |
 
-Total from stage 1 to stage 187: 50h 08m.
+Total from stage 1 to stage 188: 50h 20m.

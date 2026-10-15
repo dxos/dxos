@@ -16,6 +16,21 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > claude: Container for thread 'Continue DEUS pending work' has no R2 keys (2026-10-15 05:40): git #13952 is at 7a9e6957 and ahead of R2; a keyed thread should pull the export and push.
 
+## Export from a freshly pulled store rewrites 48 code/ files: names print qualified (toText becomes Int.toText, t.id becomes Task.id t), so a session working only from the hosted codebase cannot export without churn (`dd4fab36`)
+
+- state: todo
+- priority: high
+- labels: dogfood, replication, devex
+
+Seen 2026-10-15 at origin.main #47191cdfb8: a fresh store (init --empty, project init, pull, merge) exported 48 changed files in codebase/code against #13952's export, every hunk a printing difference. Likely the printer's scope (imports, field access) comes from local metadata a pull does not carry. Related: 778cdac2 (provenance lost in pulled history).
+
+## Move legacy unused files in packages/reflect/deus-lang into legacy/ (`4e7f3248`)
+
+- state: doing
+- priority: high
+- assignee: claude
+- labels: devex, cleanup
+
 ## Native interpreter: free memory by following the compiled code's reference counts instead of making every value immortal (D146); the 199-test run writes about 1 GB of fresh environments and blocks, and with inlining off deus_ipush and deus_dup are 15% each, while dispatch, env walks (1.8 hops) and page faults (0.45 of 2.0 s) are not the lever (`b73b475d`)
 
 - state: todo
@@ -29,10 +44,12 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
-- state: todo
+- state: doing
 - priority: high
 - assignee: claude
 - labels: analytics, cloudflare
+
+Go-ahead given (Dmytro, 2026-10-15 10:24: "cloudflare account setup, you can continue"). Events are pushed through the Worker to deus-codebases/toolchain/events/ (D169). Remaining: Basin Catalog on deus-codebases plus its token and S3 keys in /mnt/project-files/.secrets/basin.env (asked of the Cloudflare hosting thread), then scripts/analytics-publish.py https://deus.dmytro-a80.workers.dev/v1/toolchain --basin.
 
 ## Push checks in the Worker, by priority: (1) no destructive history ops, (2) a policy on checks (which tests must pass), (3) extensible further checks; strategy first (`95822533`)
 
@@ -57,6 +74,13 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 > claude: Simulation is done (D65, qa blocks run by deus mdl). Left: run the same flows against deus serve and in a browser.
 
+## Stop committing the codebase export to PR 13952: deus-mirror is the backup, the PR holds only what is not in the codebase (`6e3e8224`)
+
+- state: doing
+- priority: high
+- assignee: claude
+- labels: devex, vcs
+
 ## The codebase explorer app needs to be much better (`861438d2`)
 
 - state: doing
@@ -67,6 +91,13 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
+
+## Time a fresh session's whole cycle (pull, merge, change, push, export, PR merge) and fix the worst steps (`87d792ad`)
+
+- state: doing
+- priority: high
+- assignee: claude
+- labels: devex, perf
 
 ## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
 
@@ -117,13 +148,6 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 > claude: Image done: Image.Spec (4 reqs, no bug found). Left: prover and check beyond Checking.Spec, wasm and C back ends (the native thread's area).
 
 > claude: Prove.Spec added (D156): decide, sorry, simp arithmetic, failures, unknown tactics. Remaining: wasm and C back ends (native thread).
-
-## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: wasm, perf, embedding
 
 ## Native interpreter: show, trace and Code.quote by type, so Rendered.renderedSmall passes natively as on node (values carry no types; Bool shows as 0/1, D146) (`d0d2915a`)
 
@@ -432,6 +456,8 @@ Surfaces and ECHO access written in DEUS, compiled with --js, loaded into Compos
 > claude: Its decision was renumbered D104 in the merge (D102 and D103 were taken).
 
 > claude: Renumbered again: the decision is D106.
+
+> claude: The bindings (Js, React, Composer) and both examples (TodoApp, DeusPlugin) are now in the codebase; deus build DeusPlugin.plugin --js and deus build TodoApp.main --js build from it.
 
 ## Declarations without a body: def f with a full signature and no implementation (`cf5e187f`)
 
@@ -1155,6 +1181,15 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 Raised by the bindings thread too (D87): random Text almost never collides.
 
 > claude: Done (D135): by test N using g draws each binder from g applied to a random Int; the generator is a dependency of the theorem and a counterexample prints as (g seed). Testing.Spec R-1..R-4. Codebase.Spec L-2 and L-3 use Codebase.Spec.dottedNames. Bindings.Spec.crowded is the bindings thread's to convert.
+
+## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: wasm, perf, embedding
+
+deus_start keeps the machine when the image bytes match the last call and resets its run state (Machine::reset): parsing the 1.4 MB seed (about 90 ms) and compiling definitions happen once per instance. help drops from 102 ms to 11 ms; heavier commands save the same 90 ms. Only closures over no environment stay cached across calls, so a global Ref or effect result never leaks into the next run (D169).
 
 ## Explorer History view shows each change's timestamp (`36e1527d`)
 

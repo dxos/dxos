@@ -72,6 +72,8 @@ impl Host for EmbedHost {
 thread_local! {
     static MACHINE: RefCell<Option<Machine>> = const { RefCell::new(None) };
     static OUTPUT: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+    /// The image the machine was loaded from and its `main`, to reuse the machine for the same image.
+    static LOADED: RefCell<Option<(Vec<u8>, String)>> = const { RefCell::new(None) };
 }
 
 /// Allocates `len` bytes for the embedder to write input into.
@@ -160,7 +162,8 @@ fn respond(json: String) -> usize {
 }
 
 /// Loads an image and calls `entry` (a hash, or the image's `main` when empty) with the JSON
-/// value `argument`. Returns the length of the result at `deus_output`.
+/// value `argument`. Returns the length of the result at `deus_output`. Given the same image
+/// bytes as the last call, it reuses that machine's compiled code (`Machine::reset`).
 ///
 /// # Safety
 /// Each pointer must address its length of initialized bytes.
@@ -173,18 +176,41 @@ pub unsafe extern "C" fn deus_start(
     argument: *const u8,
     argument_len: usize,
 ) -> usize {
-    let image = input(image, image_len);
+    let bytes = std::slice::from_raw_parts(image, image_len);
     let mut entry_hash = input(entry_hash, entry_len);
     let argument = input(argument, argument_len);
-    let mut machine = Machine::new(
-        crate::prims::create(),
-        Box::new(EmbedHost),
-        &Options::default(),
-    );
+    let cached = MACHINE.with(|cell| cell.borrow_mut().take()).filter(|_| {
+        LOADED.with(|loaded| matches!(&*loaded.borrow(), Some((previous, _)) if previous.as_slice() == bytes))
+    });
+    let reused = cached.is_some();
+    let mut machine = match cached {
+        Some(mut machine) => {
+            machine.reset();
+            machine
+        }
+        None => {
+            LOADED.with(|loaded| *loaded.borrow_mut() = None);
+            Machine::new(
+                crate::prims::create(),
+                Box::new(EmbedHost),
+                &Options::default(),
+            )
+        }
+    };
     let json = (|| {
-        let forms = read_all(&text(&image)).map_err(Fail::Panic)?;
-        if entry_hash.is_empty() {
-            entry_hash = forms
+        if reused {
+            if entry_hash.is_empty() {
+                entry_hash = LOADED.with(|loaded| {
+                    loaded
+                        .borrow()
+                        .as_ref()
+                        .map(|(_, main)| main.clone())
+                        .unwrap_or_default()
+                });
+            }
+        } else {
+            let forms = read_all(&text(&String::from_utf8_lossy(bytes))).map_err(Fail::Panic)?;
+            let main = forms
                 .iter()
                 .find_map(|form| match form {
                     Sexp::List(items) if matches!(items.first(), Some(Sexp::Sym(head)) if &**head == "main") => match items.get(1) {
@@ -193,9 +219,16 @@ pub unsafe extern "C" fn deus_start(
                     },
                     _ => None,
                 })
-                .ok_or_else(|| Fail::Panic("image has no (main \"hash\") form".into()))?;
+                .unwrap_or_default();
+            machine.load(&forms)?;
+            LOADED.with(|loaded| *loaded.borrow_mut() = Some((bytes.to_vec(), main.clone())));
+            if entry_hash.is_empty() {
+                entry_hash = main;
+            }
         }
-        machine.load(&forms)?;
+        if entry_hash.is_empty() {
+            return Err(Fail::Panic("image has no (main \"hash\") form".into()));
+        }
         decode(&argument, &mut machine.symbols, &machine.iris).map_err(Fail::Panic)
     })();
     let json = match json {

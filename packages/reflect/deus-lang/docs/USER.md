@@ -512,3 +512,10 @@ run it once now
 the mirror is a backup in codebase in case we break codebase
 
 it should have codebase files commited in its native format, as well as have a directory tree where every term is losslesly rendered, one files per term, with proper path
+
+---
+
+recite core instructions and continue working:
+
+- focus on devex and perf, make sure sessions can use hosted codebase as the main record efficiently without workarounds
+- on https://github.com/dxos/dxos/pull/13952 put any legacy unsued files under legacy/ dir in the package

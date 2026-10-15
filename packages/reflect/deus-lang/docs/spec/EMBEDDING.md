@@ -69,8 +69,11 @@ definition that is not a function fails with a defect.
 
 ## Instances and runs
 
-An instance holds at most one machine. `deus_start` builds a fresh machine from the image, replacing the
-previous one along with any suspended run. `deus_resume` continues the machine's suspended run. A run that
+An instance holds at most one machine. `deus_start` replaces the previous run, suspended or not. When its
+image bytes equal the previous call's, it keeps the machine and its compiled definitions and only resets the
+run state ([D169](../DECISIONS.md)): globals that are closures over no environment stay, and every other
+global value (a `Ref` cell, the result of an effect) is evaluated again, so no state passes from one run to
+the next. Any other image builds a fresh machine. Reuse saves parsing the image, about 90 ms for the seed. `deus_resume` continues the machine's suspended run. A run that
 has finished (any state other than `suspend`) cannot be resumed. To serve several runs that may be
 suspended at the same time, an embedder instantiates the module once per concurrent run; the Worker keeps a
 pool of idle instances for this ([D52](../DECISIONS.md)).
@@ -263,7 +266,7 @@ one UTF-16 code unit.
 ([IMAGE.md](./IMAGE.md#browser-page)). With the toolchain seed as the image, every CLI command runs in
 the page against the in-memory files. Measured in headless Chromium on the toolchain's own codebase
 (2,800 files): `ls` 0.37 s, `view` 0.8 s, `eval` 0.95 s, `test Json` 0.46 s. These are the native Rust
-kernel's times; most of the cost is the toolchain, plus about 60 ms per command to read the image again.
+kernel's times; the cost is the toolchain itself, since the kernel reads the image once per instance ([D169](../DECISIONS.md)).
 
 ## The WASI kernel
 

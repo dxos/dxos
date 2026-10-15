@@ -85,3 +85,18 @@ test('a defect comes back with its message and trace', async () => {
   const result = kernel.start('(def "main" (lam (app (prim "Int.div") (int 1) (int 0)))) (main "main")');
   assert.deepEqual(result, { state: 'defect', message: 'division by zero', trace: ['main'] });
 });
+
+test('a second start on the same image reuses its code but not its state', async () => {
+  const kernel = await createKernel(
+    readFileSync(join(crate, 'target/wasm32-unknown-unknown/release/deus_kernel.wasm')),
+  );
+  const counter = [
+    '(def "counter" (app (prim "Ref.new") (int 0)))',
+    '(def "main" (lam (seq (app (prim "Ref.set") (ref "counter") (app (prim "Int.add") (app (prim "Ref.get") (ref "counter")) (int 1))) (app (prim "Ref.get") (ref "counter")))))',
+    '(main "main")',
+  ].join('\n');
+  assert.deepEqual(kernel.start(counter), { state: 'done', value: 1 });
+  assert.deepEqual(kernel.start(counter), { state: 'done', value: 1 });
+  assert.deepEqual(kernel.start('(def "main" (lam (int 7))) (main "main")'), { state: 'done', value: 7 });
+  assert.deepEqual(kernel.start(counter, 'main'), { state: 'done', value: 1 });
+});

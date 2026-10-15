@@ -707,6 +707,25 @@ impl Machine {
     }
 
     /// Evaluates the global `hash` applied to `args`.
+    /// Drops what a run left behind but keeps the compiled code, so an embedder that calls the
+    /// same image again skips parsing and compiling it. Only closures over no environment stay
+    /// cached: any other global value may hold a `Ref` cell or the result of an effect.
+    pub fn reset(&mut self) {
+        for index in 0..self.globals.len() {
+            let pure = match self.globals[index].term {
+                Some(term) => self.nodes[term as usize].t == LAM,
+                None => false,
+            };
+            if !pure {
+                self.globals[index].value = None;
+            }
+        }
+        self.steps = 0;
+        self.measuring = 0;
+        self.defect_trace.clear();
+        self.current = None;
+    }
+
     pub fn call(&mut self, hash: &str, args: Vec<Value>) -> Result<Value, Fail> {
         let callee = self.ref_term(hash);
         if args.is_empty() {
