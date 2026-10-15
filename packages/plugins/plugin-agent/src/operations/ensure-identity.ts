@@ -35,8 +35,11 @@ export const CREATOR_SOURCE = 'org.dxos.agent/creator';
 /** `Obj.Meta` key source of the agent's own space, which its creator joins. */
 export const SPACE_SOURCE = 'org.dxos.agent/space';
 
-/** The agents whose join is running in this runtime, which opening one of them must not start again. */
-const joining = new Set<string>();
+/**
+ * The agents whose join ran in this runtime and did not fail, which opening one of them must not start again: a finished
+ * join's credentials take a moment to reach the client, so checking them at once would find them missing.
+ */
+const joined = new Set<string>();
 
 /**
  * EDGE's answer to `POST /compute/brain`: the brain's identity and the caller's membership of the agent's default
@@ -178,12 +181,17 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
             );
           }
         });
-        joining.add(did);
+        joined.add(did);
         return Effect.forkDetach(
           run.pipe(
             Effect.retry(JOIN_RETRIES),
-            Effect.catchCause((cause) => Effect.sync(() => log.warn('agent membership not written', { cause }))),
-            Effect.ensuring(Effect.sync(() => joining.delete(did))),
+            Effect.catchCause((cause) =>
+              Effect.sync(() => {
+                // Forgotten, so that opening the agent finishes the join.
+                joined.delete(did);
+                log.warn('agent membership not written', { cause });
+              }),
+            ),
           ),
         ).pipe(Effect.asVoid);
       };
@@ -193,7 +201,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
         const self = Option.getOrUndefined(client)?.halo.identity.get();
         const selfKey = toPublicKey(self?.identityKey);
         const missing =
-          Option.isSome(client) && !joining.has(agent.did)
+          Option.isSome(client) && !joined.has(agent.did)
             ? missingJoin({
                 agent,
                 self: self && selfKey ? { did: self.did, identityKey: selfKey } : undefined,
