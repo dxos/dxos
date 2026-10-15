@@ -10,7 +10,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 
 /** One scene of a sequence: a diagram, how long it plays, and the caption that says what it shows. */
-export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'revealed' | 'partitioned'> & {
+export type Scene = Pick<DataFlowViewProps, 'spec' | 'options' | 'theme' | 'grid' | 'revealed' | 'partitioned'> & {
   title: string;
   caption: string;
   /**
@@ -100,6 +100,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
           options={lead.options}
           continuous={scene.stage !== undefined}
           theme={scene.theme}
+          grid={scene.grid}
           revealed={scene.revealed}
           partitioned={scene.partitioned}
         />

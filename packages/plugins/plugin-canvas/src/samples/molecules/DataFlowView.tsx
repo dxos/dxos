@@ -36,7 +36,16 @@ const RELAYOUT_MS = 8000;
 
 /** How far into a growing relayout the hub has passed the edges of the view, and the pan that then sets off along it. */
 const DRIFT_START = 0.2;
-const DRIFT = { x: 40, y: 0 };
+/** The pan's speed (scene units per second): it sets off slowly and gathers pace to its top speed. */
+const DRIFT = { start: 40, top: 240, acceleration: 12 };
+
+const driftSpeedAt = (seconds: number) => Math.min(DRIFT.top, DRIFT.start + DRIFT.acceleration * seconds);
+
+/** How far the pan has gone after `seconds`: speeding up evenly, then at its top speed. */
+const driftDistanceAt = (seconds: number) => {
+  const rising = Math.min(seconds, (DRIFT.top - DRIFT.start) / DRIFT.acceleration);
+  return DRIFT.start * rising + (DRIFT.acceleration * rising * rising) / 2 + DRIFT.top * (seconds - rising);
+};
 
 /** How far past the hub's old edges the focus reaches (roughly the camera's margin), and how often it is moved. */
 const FOCUS_MARGIN = 160;
@@ -215,17 +224,22 @@ export const DataFlowView = ({
   // Once a growing hub has passed the edges of the view, the view sets off rightward along it, and keeps going.
   const drifting =
     relayout !== undefined && relayout.from.hub.frame.width < layout.hub.frame.width && moved >= DRIFT_START;
-  // While the view pans, the stretch on screen is the simulation's focus: it starts as the hub as it was (what the camera
-  // framed) and slides along at the pan's speed, so what is in view is where molecules are made and used.
+  // While the view pans (picking up speed as it goes), the stretch on screen is the simulation's focus: it starts as the
+  // hub as it was (what the camera framed) and slides along with the pan, so what is in view is where molecules are made
+  // and used.
+  const [driftSpeed, setDriftSpeed] = useState(DRIFT.start);
   useEffect(() => {
     if (!drifting || !relayout) {
       simulation.focus(undefined);
+      setDriftSpeed(DRIFT.start);
       return;
     }
     const { frame } = relayout.from.hub;
     const started = performance.now();
     const timer = setInterval(() => {
-      const travelled = (DRIFT.x * (performance.now() - started)) / 1000;
+      const seconds = (performance.now() - started) / 1000;
+      setDriftSpeed(driftSpeedAt(seconds));
+      const travelled = driftDistanceAt(seconds);
       simulation.focus({
         left: frame.x - FOCUS_MARGIN + travelled,
         right: frame.x + frame.width + FOCUS_MARGIN + travelled,
@@ -260,7 +274,7 @@ export const DataFlowView = ({
       // The camera widens over the same second the monolithic agent fades in, so the two settle together; a relayout
       // leaves it where it is, so a diagram that extends runs on past the edges of the view.
       refitDuration={REVEAL_MS}
-      drift={drifting ? DRIFT : undefined}
+      drift={drifting ? { x: driftSpeed, y: 0 } : undefined}
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >

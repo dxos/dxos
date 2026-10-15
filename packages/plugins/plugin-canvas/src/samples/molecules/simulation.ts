@@ -301,6 +301,9 @@ const BASE_SINKS = 4;
 const FOCUS_BOOST = 2;
 const FOCUS_SHARE = 0.8;
 
+/** The messages a conversation opens with. */
+const OPENING_MESSAGES = 2;
+
 /** Molecules tried when seeding a bucket a relayout adds, so it arrives part full. */
 const SEED_MOLECULES = 14;
 
@@ -895,8 +898,11 @@ export class DataFlowSimulation {
         : new Crystal(next.sinkGrids[index], 'blob');
     });
     this.#apps = next.sinks.map((sink, index) => {
+      if (index >= before.sinks.length) {
+        return this.#appContent(sink);
+      }
       const slots = appSlots(sink);
-      const items = index < before.sinks.length ? this.#apps[index].items : slots.map(() => undefined);
+      const { items } = this.#apps[index];
       return { slots, items: slots.map((_, slot) => items[slot]), reserved: new Set<number>() };
     });
     next.sinks.forEach((sink, index) => {
@@ -1034,10 +1040,7 @@ export class DataFlowSimulation {
     this.#sinks = layout.sinks.map((sink, index) =>
       sink.app ? undefined : new Crystal(layout.sinkGrids[index], 'blob'),
     );
-    this.#apps = layout.sinks.map((sink) => {
-      const slots = appSlots(sink);
-      return { slots, items: slots.map(() => undefined), reserved: new Set<number>() };
-    });
+    this.#apps = layout.sinks.map((sink) => this.#appContent(sink));
     if (prefill) {
       this.#prefill();
     }
@@ -1670,8 +1673,13 @@ export class DataFlowSimulation {
       // An application takes the molecule in as a piece of its content.
       const app = this.#apps[body.agent ?? 0];
       if (app && body.slot !== undefined) {
-        app.items[body.slot] = { hue: body.hue, source: body.source, since: this.#time };
         app.reserved.delete(body.slot);
+        // A conversation takes it as a new message at the end; any other app fills the slot it was given.
+        if (this.#layout.sinks[body.agent ?? 0]?.app === 'messaging') {
+          this.#post(body.agent ?? 0, body.hue, body.source);
+        } else {
+          app.items[body.slot] = { hue: body.hue, source: body.source, since: this.#time };
+        }
       }
       body.phase = 'leaving';
       return;
@@ -1794,6 +1802,38 @@ export class DataFlowSimulation {
         }
       });
     }
+  }
+
+  /** An application's empty content; a conversation opens with its first two messages already there. */
+  #appContent(sink: Block): { slots: readonly AppSlot[]; items: (AppItem | undefined)[]; reserved: Set<number> } {
+    const slots = appSlots(sink);
+    const sources = this.#layout.sources;
+    const items: (AppItem | undefined)[] = slots.map((_, slot) => {
+      if (sink.app !== 'messaging' || slot >= OPENING_MESSAGES || sources.length === 0) {
+        return undefined;
+      }
+      const source = Math.floor(this.#random() * sources.length);
+      return { hue: sources[source].hue, source, since: -60 };
+    });
+    return { slots, items, reserved: new Set<number>() };
+  }
+
+  /**
+   * Adds a message to the end of conversation `agent`; once it is full, the two oldest scroll off the top first, so
+   * every message keeps its side (they alternate left and right).
+   */
+  #post(agent: number, hue: string, source: number): void {
+    const app = this.#apps[agent];
+    if (!app) {
+      return;
+    }
+    let next = app.items.findIndex((item) => item === undefined);
+    if (next < 0) {
+      app.items.splice(0, 2);
+      app.items.push(undefined, undefined);
+      next = app.items.length - 2;
+    }
+    app.items[next] = { hue, source, since: this.#time };
   }
 
   /** The middle of an application's frame: molecules flowing in or out pass behind the app to and from here. */
@@ -1985,7 +2025,12 @@ export class DataFlowSimulation {
     if (!item) {
       return;
     }
-    item.since = this.#time;
+    // What a conversation sends is a message of its own; any other app lights up the content it sends.
+    if (sink.app === 'messaging') {
+      this.#post(agent, item.hue, item.source);
+    } else {
+      item.since = this.#time;
+    }
     const index = sources.length + agent;
     const channel = channels[index];
     const gate = channelGate(index, -1);

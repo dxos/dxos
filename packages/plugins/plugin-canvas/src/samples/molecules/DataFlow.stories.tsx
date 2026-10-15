@@ -147,6 +147,8 @@ const CHAPTERS: readonly Scene[] = [
     spec: APPS,
     options: { warmup: 16 },
     partitioned: false,
+    // From here on the background is plain, so the eye stays on ECHO.
+    grid: 'none',
     stage: 'echo',
     duration: 24,
   },
@@ -156,6 +158,7 @@ const CHAPTERS: readonly Scene[] = [
     spec: APPS,
     options: { warmup: 16 },
     partitioned: true,
+    grid: 'none',
     stage: 'echo',
     duration: 20,
   },
@@ -166,6 +169,7 @@ const CHAPTERS: readonly Scene[] = [
     spec: EXTENDED,
     options: { warmup: 16 },
     partitioned: true,
+    grid: 'none',
     stage: 'echo',
     duration: 24,
   },
@@ -201,8 +205,8 @@ const transition = (scenes: readonly Scene[], autostart: boolean): Scene[] =>
   scenes.map((scene, index) => (index === 0 && autostart ? { ...scene, duration: LEAD_IN } : scene));
 
 const chapter = (index: number): Story => {
-  const { title, spec, options, revealed, partitioned } = CHAPTERS[index];
-  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned } };
+  const { title, spec, options, revealed, partitioned, grid } = CHAPTERS[index];
+  return { name: `${index + 1}. ${title}`, args: { spec, options, revealed, partitioned, grid } };
 };
 
 /**
