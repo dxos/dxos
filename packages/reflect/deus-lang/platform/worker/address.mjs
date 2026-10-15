@@ -45,8 +45,28 @@ export const projectAt = (segments) => {
 export const addressOfFolder = (folder) =>
   LEGACY_ADDRESSES.get(folder) ?? (folder.includes('/') ? `@${folder}` : undefined);
 
-/** A project a key may be granted: an address, or a legacy folder name. */
-export const isGrantable = (project) =>
-  typeof project === 'string' &&
-  (LEGACY.test(project) ||
-    (project.startsWith('@') && projectAt(project.split('/'))?.used === 2 && project.split('/').length === 2));
+/** A project a key may be granted: an address, every project of an owner (`@owner/*`), or a legacy folder name. */
+export const isGrantable = (project) => {
+  if (typeof project !== 'string') {
+    return false;
+  }
+  const segments = project.split('/');
+  if (segments.length === 2 && segments[1] === '*') {
+    return projectAt([segments[0], 'x'])?.used === 2;
+  }
+  return LEGACY.test(project) || (project.startsWith('@') && segments.length === 2 && projectAt(segments)?.used === 2);
+};
+
+/** Whether a key granted `projects` may write to the project in `folder`. */
+export const grants = (projects, folder) => {
+  if (projects === '*') {
+    return true;
+  }
+  const address = addressOfFolder(folder);
+  return projects.some(
+    (granted) =>
+      granted === folder ||
+      granted === address ||
+      (granted.endsWith('/*') && address !== undefined && address.startsWith(granted.slice(0, -1))),
+  );
+};

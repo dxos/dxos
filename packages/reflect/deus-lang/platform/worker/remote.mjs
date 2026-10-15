@@ -7,7 +7,7 @@
 // bucket binding, so no client needs R2 credentials. Reads are open; every write carries an API
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
-import { addressOfFolder, isGrantable, projectAt } from './address.mjs';
+import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
 import { nameAt, names, objects, packs } from './packs.mjs';
 
 /** `<level>-<sha256>`, the name of an immutable bundle (D50, D91). */
@@ -365,10 +365,9 @@ export const authorize = async (request, env, ctx, scope, project) => {
     throw new HttpError(403, `this API key lacks the ${scope} scope`);
   }
   const projects = JSON.parse(row.projects);
-  // A key names projects by address or, from before addresses, by folder; either grants the project.
-  const address = project && addressOfFolder(project);
-  if (project && projects !== '*' && !projects.includes(project) && !(address && projects.includes(address))) {
-    throw new HttpError(403, `this API key cannot write to ${address ?? project}`);
+  // A key names projects by address, by owner (`@dxos/*`) or, from before addresses, by folder.
+  if (project && !grants(projects, project)) {
+    throw new HttpError(403, `this API key cannot write to ${addressOfFolder(project) ?? project}`);
   }
   const url = new URL(request.url);
   // The row is written after the response, so logging never slows or fails a write. Explorer files
@@ -419,7 +418,7 @@ const keysApi = async (request, env, ctx, rest) => {
       throw new HttpError(400, `scopes are some of ${SCOPES.join(', ')}`);
     }
     if (projects !== '*' && !(Array.isArray(projects) && projects.every(isGrantable))) {
-      throw new HttpError(400, 'projects is "*" or a list of project addresses (@owner/project)');
+      throw new HttpError(400, 'projects is "*" or a list of project addresses (@owner/project or @owner/*)');
     }
     const days = Number(body.expiresInDays);
     const minted = await mintKey();

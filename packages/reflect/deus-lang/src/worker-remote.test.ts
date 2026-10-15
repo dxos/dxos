@@ -556,6 +556,14 @@ describe('replication API', () => {
     expect((await mint(['@acme/demo', 'toolchain'])).status).toBe(201);
     expect((await mint(['@acme'])).status).toBe(400);
     expect((await mint(['@acme/demo/Cli'])).status).toBe(400);
+    expect((await mint(['@acme/*'])).status).toBe(201);
+    expect((await mint(['@*/demo'])).status).toBe(400);
+
+    // `@owner/*` grants every project of that owner, and no other owner's (200: the toolchain holds `a` already).
+    const owner = await insertKey(db, ['push'], ['@acme/*']);
+    expect((await put('@acme/second', a, owner)).status).toBe(201);
+    expect((await put('@acmex/demo', a, owner)).status).toBe(403);
+    expect((await put('toolchain', a, await insertKey(db, ['push'], ['@dxos/*']), hash('2'))).status).toBe(200);
 
     // Each project's explorer is served at /@owner/project/, and a definition's name opens the page.
     await bucket.put('acme/demo/site/v/0000000000000001/index.html', '<html><head></head>demo</html>');
