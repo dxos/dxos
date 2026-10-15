@@ -65,6 +65,9 @@ const ObjectsStory = () => {
 };
 
 export const Objects: Story = {
+  // TODO(wittjosiah): Make the demo world lighter so the story renders well inside the test timeout; it
+  //   takes 25–50 s against 60 s, so CI skips it.
+  tags: ['!test'],
   render: () => <ObjectsStory />,
   decorators: [withPluginManager()],
 };

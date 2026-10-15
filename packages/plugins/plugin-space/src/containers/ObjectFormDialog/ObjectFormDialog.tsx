@@ -322,11 +322,11 @@ const ObjectFormDialogBody = ({
   const handleCancel = useCallback(() => closeRef.current?.click(), []);
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
-    ({ metadata, data = {} }) =>
-      Effect.gen(function* () {
+    async ({ metadata, data = {} }) => {
+      const object = await Effect.gen(function* () {
         if (!target || confirmed.current) {
           // TODO(wittjosiah): UI feedback when there is no target.
-          return;
+          return undefined;
         }
 
         // A draft is built after the dialog has closed, so the unmount below lands before the object
@@ -343,18 +343,28 @@ const ObjectFormDialogBody = ({
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
-        // A create may legitimately finish without an object: the connector entry hands off to an
-        // OAuth popup or credential dialog and the Connection appears later, out of band.
-        if (result.object) {
-          yield* navigateTo(result.object);
-        }
+        return result.object;
       }).pipe(
         // A failed create still has to settle, or the operation waiting on the dialog never returns.
         Effect.ensuring(Effect.sync(() => handle?.settle())),
         Effect.provideService(Capability.Service, manager.capabilities),
         Effect.provideService(Operation.Service, operationInvoker),
         EffectEx.runAndForwardErrors,
-      ),
+      );
+
+      // A create may legitimately finish without an object: the connector entry hands off to an
+      // OAuth popup or credential dialog and the Connection appears later, out of band. Detached, as in
+      // the live path: the dialog has already closed, so a teardown interrupting the navigation is not
+      // an error.
+      if (object) {
+        EffectEx.runDetached(
+          navigateTo(object).pipe(
+            Effect.provideService(Capability.Service, manager.capabilities),
+            Effect.provideService(Operation.Service, operationInvoker),
+          ),
+        );
+      }
+    },
     [target, parent, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
   );
 

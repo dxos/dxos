@@ -147,11 +147,13 @@ export const Placement: Story = {
   args: { markers: defaultMarkers },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
-    const ticks = canvasElement.querySelectorAll<HTMLElement>('[role="navigation"] button');
+    // Looked up on every use: the rail re-renders its ticks once it has measured its height, which can
+    // land after this runs and would leave a captured tick detached, so a hover on it reaches nothing.
+    const tick = (index: number) => canvasElement.querySelectorAll<HTMLElement>('[role="navigation"] button')[index];
 
     const hover = (index: number) => {
-      const bounds = ticks[index].getBoundingClientRect();
-      ticks[index].dispatchEvent(
+      const bounds = tick(index).getBoundingClientRect();
+      tick(index).dispatchEvent(
         new PointerEvent('pointerover', {
           bubbles: true,
           pointerType: 'mouse',
@@ -163,7 +165,7 @@ export const Placement: Story = {
 
     // Positioning runs on animation frames after the card mounts, so poll rather than wait a fixed number of frames.
     const placement = (index: number) => {
-      const bounds = ticks[index].getBoundingClientRect();
+      const bounds = tick(index).getBoundingClientRect();
       const card = doc
         .querySelector<HTMLElement>('[data-scope="popover"][data-part="positioner"]')
         ?.getBoundingClientRect();
@@ -173,10 +175,18 @@ export const Placement: Story = {
       };
     };
 
-    hover(3);
-    await waitFor(() => expect(placement(3)).toEqual({ beside: true, centred: true }), { timeout: 5_000 });
-    hover(8);
-    await waitFor(() => expect(placement(8)).toEqual({ beside: true, centred: true }), { timeout: 5_000 });
+    // Hovered again on each poll, so a hover that landed before the ticks settled is not the only one.
+    const expectPlaced = (index: number) =>
+      waitFor(
+        () => {
+          hover(index);
+          expect(placement(index)).toEqual({ beside: true, centred: true });
+        },
+        { timeout: 5_000 },
+      );
+
+    await expectPlaced(3);
+    await expectPlaced(8);
   },
 };
 
