@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-animation
+    status: active
+    user: burdon
+    host: burdon-mbp-2231
+    created: 2026-10-14
+    summary: 'Composer plugin for scripted, long-running (~3 min) camera animations over parametric hierarchical networks of device nodes (phone/laptop/server): 2.5D three.js scene, iso/top views, LOD (device close-up to schematic), animated packets, node properties, MDL flow scripts, interactive takeover, autocue export. Spike: Data Path / Device Bench artifacts.'
+    tasks: .agents/projects/plugin-animation/TASKS.md
+    design: agents/superpowers/specs/2026-10-14-plugin-animation-design.md
+    prs: []
+    resume: 'Spec written (agents/superpowers/specs/2026-10-14-plugin-animation-design.md). NEXT: user review, then writing-plans for P1 (@dxos/animation + deus flow grammar).'
   - name: plugin-messenger
     status: active
     user: burdon
