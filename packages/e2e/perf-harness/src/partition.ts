@@ -24,6 +24,9 @@ export type PartitionOptions = {
 
 const FORBIDDEN = 'HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n';
 
+/** Nothing listens on the discard port, so an offline bundle's EDGE connections fail at once, locally. */
+export const OFFLINE_EDGE_URL = 'http://127.0.0.1:9/';
+
 /** The environments under `dxos.network` that are not production. */
 const NON_PRODUCTION_EDGE = new Set(['dev.dxos.network', 'preview.dxos.network', 'staging.dxos.network']);
 
