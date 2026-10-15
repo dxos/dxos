@@ -1,5 +1,17 @@
 # History of main
 
+- `112cea84f2` update deus (by merge)
+- `c4f24f4f18` history: import 1124 changes
+- `dfc806fcb0` history: import 1122 changes
+- `43684e1b9b` task: import from /tmp/tmpf0e81phl/tasks.sexp
+- `61735bc5ac` add /tmp/tmpf0e81phl/merged/code /tmp/tmpf0e81phl/merged/specs
+- `a31cfa6051` task: set b73b475d assignee
+- `57875655ef` task: set b73b475d labels
+- `fac83c4866` task: set b73b475d priority
+- `6f00e125d7` task: open b73b475d Native interpreter: free memory by following the compiled code's reference counts instead of making every value immortal (D146); the 199-test run writes about 1 GB of fresh environments and blocks, and with inlining off deus_ipush and deus_dup are 15% each, while dispatch, env walks (1.8 hops) and page faults (0.45 of 2.0 s) are not the lever
+- `469a967d83` history: import 1117 changes
+- `f436c2ee2d` task: import from codebase/tasks.sexp
+- `988d670bf0` add codebase/code codebase/specs
 - `8bfc2b8e38` task: set dda00bb4 state (by claude)
 - `4b7661b50c` task: comment on dda00bb4 (by claude)
 - `514a3f2725` update deus (by claude)

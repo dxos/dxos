@@ -24,6 +24,13 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > claude: Container for thread 'Continue DEUS pending work' has no R2 keys (2026-10-15 05:40): git #13952 is at 7a9e6957 and ahead of R2; a keyed thread should pull the export and push.
 
+## Native interpreter: free memory by following the compiled code's reference counts instead of making every value immortal (D146); the 199-test run writes about 1 GB of fresh environments and blocks, and with inlining off deus_ipush and deus_dup are 15% each, while dispatch, env walks (1.8 hops) and page faults (0.45 of 2.0 s) are not the lever (`b73b475d`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: native, perf
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
