@@ -952,7 +952,8 @@ export const MoleculeOverlay = ({
   return (
     <LookContext.Provider value={palette}>
       <DepthContext.Provider value={depth}>
-        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+        {/* The simulation time it drew, so a frame-by-frame render can wait for each frame to be drawn before capturing. */}
+        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1} data-frame-time={time}>
           <DepthDefs {...depth} />
           {/* Bases first, then the channels over their rims, then the containers, so a channel runs into its frame. */}
           {groups.map((group) => (

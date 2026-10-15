@@ -86,6 +86,8 @@ const encoder = () => {
 };
 
 const { ffmpeg, format: available } = encoder();
+// Lossless frames where the encoder can read them: JPEG would smooth away the dither that hides gradient bands.
+const lossless = available === 'mp4';
 // An `--out` file's extension picks the container; otherwise the best the encoder can do.
 const asked = options.out && path.extname(options.out).slice(1);
 const format = asked === 'webm' || asked === 'mp4' ? asked : available;
@@ -99,7 +101,21 @@ mkdirSync(path.dirname(out), { recursive: true });
 // Each frame is piped to the encoder as it is captured (as Playwright's own recorder does), so nothing waits on disk.
 const codec =
   format === 'mp4'
-    ? ['-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']
+    ? // Tuned for grain and at high quality, so the dither that keeps dim gradients smooth survives the encode.
+      [
+        '-c:v',
+        'libx264',
+        '-preset',
+        'slow',
+        '-tune',
+        'grain',
+        '-crf',
+        '12',
+        '-pix_fmt',
+        'yuv420p',
+        '-movflags',
+        '+faststart',
+      ]
     : available === 'mp4'
       ? // A full ffmpeg: VP9 at constant quality, as Autocue encodes.
         ['-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '24', '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2']
@@ -131,7 +147,7 @@ const encoding = spawn(
     '-f',
     'image2pipe',
     '-c:v',
-    'mjpeg',
+    lossless ? 'png' : 'mjpeg',
     '-i',
     'pipe:0',
     ...codec,
@@ -157,6 +173,10 @@ await page.waitForSelector('[data-testid="scene-view"]', { timeout: 120_000 });
 await page.clock.pauseAt((await page.evaluate(() => Date.now())) + step);
 
 /** Lets the page finish the work a clock step started (React renders on message events, which the clock leaves real). */
+/** The frame the page last drew, if it marks one (`data-frame-time` on any element); undefined otherwise. */
+const drawn = () =>
+  page.evaluate(() => document.querySelector('[data-frame-time]')?.getAttribute('data-frame-time') ?? undefined);
+
 const settle = () =>
   page.evaluate(
     () =>
@@ -170,9 +190,26 @@ const settle = () =>
 
 const started = Date.now();
 for (let frame = 0; frame < frames; frame++) {
+  const before = await drawn();
   await page.clock.runFor(step);
+  // React splits a large render into small tasks, so wait for the page to mark the new frame drawn; a few turns of the
+  // event loop alone can leave the capture a frame behind on a busy frame, which shows as a stutter.
+  if (before !== undefined) {
+    await page
+      .waitForFunction(
+        (last) => document.querySelector('[data-frame-time]')?.getAttribute('data-frame-time') !== last,
+        before,
+        {
+          timeout: 10_000,
+          polling: 'raf',
+        },
+      )
+      .catch(() => undefined);
+  }
   await settle();
-  const image = await page.screenshot({ type: 'jpeg', quality: 95 });
+  const image = lossless
+    ? await page.screenshot({ type: 'png' })
+    : await page.screenshot({ type: 'jpeg', quality: 95 });
   if (!encoding.stdin.write(image)) {
     await once(encoding.stdin, 'drain');
   }

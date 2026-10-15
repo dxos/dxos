@@ -74,13 +74,14 @@ const MORE_NAMES = [
 // Only hues the diagram has a colour for: any other would draw its source gray.
 const MORE_HUES = ['teal', 'amber', 'violet', 'sky', 'red', 'orange', 'green', 'blue', 'fuchsia'];
 
-/** How far each side extends: far enough past the view (about three times its width) to read as going on without end. */
-const REACH = { buckets: 9, blocks: 10 };
+/** How far each side extends: just past the view on the left; on the right far enough to pan along for a long while. */
+const REACH = { left: { buckets: 2, blocks: 2 }, right: { buckets: 12, blocks: 14 } };
 
-const moreSources = (side: 0 | 1): SourceSpec[] =>
-  Array.from({ length: REACH.blocks }, (_, index) => {
-    const at = 2 * index + side;
-    return { id: `more-${at}`, label: MORE_NAMES[at % MORE_NAMES.length], hue: MORE_HUES[at % MORE_HUES.length] };
+/** The new sources on one side, outward; each side draws its names and hues from its own end of the lists. */
+const moreSources = (side: 'left' | 'right'): SourceSpec[] =>
+  Array.from({ length: REACH[side].blocks }, (_, index) => {
+    const at = side === 'left' ? MORE_NAMES.length - 1 - index : index;
+    return { id: `more-${side}-${index}`, label: MORE_NAMES[at], hue: MORE_HUES[at % MORE_HUES.length] };
   });
 
 /** Applications the bottom row's newcomers take, in turn, between the agents. */
@@ -93,27 +94,24 @@ const MORE_APPS: readonly { label: string; app: AppKind }[] = [
 ];
 
 /** The bottom row's newcomers, outward on one side: agents and applications in turn, agents numbered left to right. */
-const moreSinks = (side: -1 | 1): { label: string; app?: AppKind }[] =>
-  Array.from({ length: REACH.blocks }, (_, index) => {
-    const number = side < 0 ? REACH.blocks - index : REACH.blocks + index + 1;
-    return index % 2 === 0 ? { label: `Agent ${number}` } : MORE_APPS[(index + (side < 0 ? 0 : 2)) % MORE_APPS.length];
+const moreSinks = (side: 'left' | 'right'): { label: string; app?: AppKind }[] =>
+  Array.from({ length: REACH[side].blocks }, (_, index) => {
+    const number = side === 'left' ? REACH.left.blocks - index : REACH.left.blocks + index + 1;
+    return index % 2 === 0
+      ? { label: `Agent ${number}` }
+      : MORE_APPS[(index + (side === 'left' ? 0 : 2)) % MORE_APPS.length];
   });
 
-/** ECHO extended past the view on both sides, while all that was there keeps its place; agents number left to right. */
+/**
+ * ECHO extended past the view on both sides, while all that was there keeps its place: just past the left edge, and far
+ * to the right, where the view then pans.
+ */
 const EXTENDED: DataFlowSpec = {
   ...APPS,
   hub: { label: '', partitions: 3 },
   extend: {
-    left: {
-      buckets: REACH.buckets,
-      sources: moreSources(0),
-      sinks: moreSinks(-1),
-    },
-    right: {
-      buckets: REACH.buckets,
-      sources: moreSources(1),
-      sinks: moreSinks(1),
-    },
+    left: { buckets: REACH.left.buckets, sources: moreSources('left'), sinks: moreSinks('left') },
+    right: { buckets: REACH.right.buckets, sources: moreSources('right'), sinks: moreSinks('right') },
   },
 };
 

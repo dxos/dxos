@@ -297,6 +297,9 @@ const SOURCE_RAMP = 2;
 /** The sinks a diagram's write-up pace is set for; with more, writes come that much more often. */
 const BASE_SINKS = 4;
 
+/** How far a source's molecules spread across a partitioned hub, in bucket widths. */
+const NEAR_BUCKETS = 1.5;
+
 /** How much faster sources in the focus supply (and apps in it write), and the share of traffic its sinks draw. */
 const FOCUS_BOOST = 2;
 const FOCUS_SHARE = 0.8;
@@ -309,6 +312,9 @@ const SEED_MOLECULES = 14;
 
 /** How much of a band (or bucket) the hub's aims reach across, centre-weighted: they thin out toward its walls. */
 const AIM_SPREAD = 0.8;
+
+/** The molecules the monolithic agent copies from the sources the moment it is revealed. */
+const READ_BURST = 4;
 
 /** The share of source molecules the monolithic agent takes a copy of. */
 const AGENT_READS = 0.5;
@@ -1007,7 +1013,18 @@ export class DataFlowSimulation {
       return;
     }
     this.#agentReads = on;
-    if (on || !this.#layout.monolith) {
+    if (!this.#layout.monolith) {
+      return;
+    }
+    if (on) {
+      // It starts at once on what the sources already hold, rather than waiting for new molecules to form and set off.
+      this.#bodies
+        .filter((body) => body.zone === 'source' && body.phase === 'forming' && !body.read)
+        .slice(0, READ_BURST)
+        .forEach((body) => {
+          body.read = true;
+          this.#readUp(body);
+        });
       return;
     }
     for (const body of this.#bodies) {
@@ -1483,6 +1500,23 @@ export class DataFlowSimulation {
     }
   }
 
+  /**
+   * A bucket at random, weighted to those near `x` (where a source's channel meets the hub): each source feeds the
+   * buckets around it, so an extended hub's far buckets fill from their own sources and none near the middle starves.
+   */
+  #nearBucket(buckets: readonly Rect[], x: number): Rect {
+    const reach = NEAR_BUCKETS * (buckets[0]?.width ?? 1);
+    const weights = buckets.map((bucket) => Math.exp(-(((bucket.x + bucket.width / 2 - x) / reach) ** 2)));
+    let pick = this.#random() * weights.reduce((sum, weight) => sum + weight, 0);
+    for (let index = 0; index < buckets.length; index++) {
+      pick -= weights[index];
+      if (pick <= 0) {
+        return buckets[index];
+      }
+    }
+    return buckets[buckets.length - 1];
+  }
+
   /** Down the source's channel, sideways along the lane above the band to a random section, then down onto it. */
   #departStacked(body: Body): boolean {
     const channel = this.#layout.channels[body.source];
@@ -1493,7 +1527,7 @@ export class DataFlowSimulation {
     // beneath it; the aims crowd toward the middle, so the lattice keeps clear of the walls.
     const { bounds, origin } = this.#layout.hubGrid;
     const { buckets } = this.#layout.hub;
-    const region = buckets ? buckets[Math.floor(this.#random() * buckets.length)] : bounds;
+    const region = buckets ? this.#nearBucket(buckets, channel.to.x) : bounds;
     const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
     const aim = { x: region.x + region.width * (0.5 + spread / 2), y: origin.y };
     const well = this.#wellGate(`well-source-${body.source}`);
