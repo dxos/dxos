@@ -3,7 +3,7 @@
 //
 
 // The native CLI that `bin/deus.mjs` runs in place of the seed (D171): one build per seed, cached by
-// the seed's hash, made in the background from the export, which compiles to the seed (D161).
+// the seed's hash, made in the background from `deus/`, which compiles to the seed.
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -70,7 +70,7 @@ const build = (dir) => {
     });
   try {
     deus('init', '--empty');
-    deus('add', join(home, 'codebase/code'));
+    deus('add', join(home, 'deus'));
     deus('build', 'Cli.main', '-o', join(dir, 'deus.tmp'), '--c');
     renameSync(join(dir, 'deus.tmp'), join(dir, 'deus'));
     rmSync(join(dir, 'deus.tmp.c'), { force: true });
