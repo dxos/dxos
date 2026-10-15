@@ -188,5 +188,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 178 | 10-15 07:50 | 20m 00s | this commit | Two `Js.import` bindings of one body at different types are refused instead of sharing one codec (task 1e8dee8b, Codebase.Spec R-21, D159). |
 | 179 | 10-15 08:15 | 25m 00s | this commit | A law's `statement:` is compared as compiled Core, so any spelling of the claim is accepted (task 0d7b0142, Compile.Spec R-19, D160); Toolchain.Features F-4 now tracks the open prover-cache task, and `deus mdl` reports 275 ok and 6 known gaps. |
 | 180 | 10-15 08:30 | 15m 00s | this commit | The codebase export compiles to the seed byte for byte, and the suite now checks it, so the toolchain builds without `deus/` (task 86d7b02a in part, Export.Spec R-8, D161). |
+| 181 | 10-15 09:05 | 35m 00s | this commit | `deus update` skips files unchanged since the last update while the codebase is as it left it: `deus update deus` with nothing changed takes 1.1 s instead of 17 s (Codebase.Spec R-22, D162). |
 
-Total from stage 1 to stage 180: 47h 12m.
+Total from stage 1 to stage 181: 47h 47m.

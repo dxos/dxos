@@ -223,6 +223,11 @@ req R-21: two `Js.import` bindings with one body but different declared types ar
 ```
 
 ```mdl
+req R-22: `deus update` skips a source file whose text the last update compiled, while nothing else has changed the codebase since; the result is what a full update (`--fresh`) stores
+  by: Codebase.Spec.skippingMatchesFullUpdate | Codebase.Spec.unchangedFileReappliedAfterOtherUpdate
+```
+
+```mdl
 req R-10: tasks merge field by field; labels and links merge as sets
   by: Codebase.Spec.tasksMergeFieldByField | Codebase.Spec.tasksMergeLabelsAsSets | Codebase.Spec.tasksMergeConflict
 ```

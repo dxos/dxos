@@ -1,5 +1,10 @@
 # History of main
 
+- `3152ef5711` update deus (by claude)
+- `4247869c4a` update deus (by claude)
+- `11804bae8f` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/cbspec.mdl (by claude)
+- `390b45dafa` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/incrlaws.deus (by claude)
+- `c17f5e92c0` update deus (by claude)
 - `cef9c933ab` task: comment on 86d7b02a (by claude)
 - `9dc62e401b` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/export.mdl (by claude)
 - `dba0f84cd4` task: comment on 0d7b0142 (by claude)

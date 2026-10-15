@@ -296,11 +296,49 @@ def sharedBindings (dir : Text) (ns : Map Text Entry) (batch : Batch) : {IO} Lis
       | _ => []) batch.entries))
   | _ => []
 
+/-- What an update's sources are recorded against: the namespace and metadata they left (Codebase.Spec R-22). -/
+def sourcesKey (dir : Text) : {IO, Throw Text} Text :=
+  let c := Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))
+  c.snapshot ++ " " ++ c.metas
+
+/-- The recorded sources, when the codebase is still as the last update left it. -/
+def recordedSources (dir : Text) : {IO, Throw Text} Option (Map Text Text) :=
+  match IO.readFile (dir ++ "/cache/update-sources") with
+  | some text =>
+    match Text.lines text with
+    | key :: rows =>
+      if key != sourcesKey dir then none
+      else some (Map.fromList (List.filterMap (fun row =>
+        let i := Text.indexOf row " " 0
+        if i < 0 then none else some (Text.drop (i + 1) row, Text.take i row)) rows))
+    | [] => none
+  | none => none
+
+/--
+  Source files an update can skip: their text is what the last update compiled, and nothing has
+  changed the codebase since, so every definition in them is already current (Codebase.Spec R-22).
+-/
+def unchangedSources (known : Option (Map Text Text)) (sources : List (Text, Text)) : Map Text Unit :=
+  match known with
+  | some recorded => Set.fromList (List.map fst (List.filter (fun pair => Map.lookup (fst pair) recorded == some (snd pair)) sources))
+  | none => Set.empty
+
+/--
+  Records `sources` against the codebase the update left. Earlier rows are dropped: this update may
+  have changed what their files define (Codebase.Spec R-22).
+-/
+def rememberSources (dir : Text) (sources : List (Text, Text)) : {IO, Throw Text} Unit :=
+  IO.mkdirp (dir ++ "/cache")
+  IO.writeFile (dir ++ "/cache/update-sources") (Text.join "\n" (sourcesKey dir :: List.map (fun pair => snd pair ++ " " ++ fst pair) sources) ++ "\n")
+
 /-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
 def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let batch := catch (fun _ => Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles args.positional))
+  let sources := List.map (fun path => (path, Text.sha256 (readSource path))) (expandPaths args.positional)
+  let known := if isUpdate && not (flag args "fresh") then recordedSources dir else none
+  let skipped := unchangedSources known sources
+  let batch := catch (fun _ => Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources))))
     (fun e => throw (nameCallee ns e))
   warn batch
   let entries := batch.entries ++ specEntries dir args.positional
@@ -332,6 +370,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let ns3 := fst propagated
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
+    if isUpdate then rememberSources dir sources else ()
     recordProvenance dir args causal (List.map fst batch.objects ++ List.map (fun pair => Entry.hash (snd pair)) (List.filter (fun pair => Entry.kind (snd pair) == "spec") entries))
     match option args "by" with
     | some agent => Analytics.recordWrites dir ns3 agent (if isUpdate then "update" else "add") (List.map fst added ++ List.map (fun c =>
@@ -2018,7 +2057,8 @@ def usage : Text :=
     "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)",
     "  update <files|dirs…>                 add or replace definitions; dependents are rehashed",
     "                                       (both take --message <why> for the history, and",
-    "                                       --by <agent> [--prompt <file>] to record provenance)",
+    "                                       --by <agent> [--prompt <file>] to record provenance);",
+    "                                       files unchanged since the last update are skipped (--fresh: none)",
     "  ls [prefix]                          list names",
     "  find <text>                          names containing text",
     "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
