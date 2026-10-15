@@ -122,6 +122,8 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 
 > claude: Image done: Image.Spec (4 reqs, no bug found). Left: prover and check beyond Checking.Spec, wasm and C back ends (the native thread's area).
 
+> claude: Prove.Spec added (D156): decide, sorry, simp arithmetic, failures, unknown tactics. Remaining: wasm and C back ends (native thread).
+
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo
@@ -155,6 +157,15 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
+
+## Theorem verdicts are cached by the theorem's hash alone, so a prover change never rechecks them (`79f72c44`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: prover, cache
+
+results/<h> keeps a verdict for the theorem hash h; a change to Prove or Check that would turn a pass into a fail (or back) is invisible until the cache is cleared, and deus check --force does not bypass it. Key results by the theorem hash and the checker's own hash, or clear results when the seed changes. Found while adding Prove.Spec: an empty-cache run had to be done by hand.
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 

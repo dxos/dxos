@@ -273,6 +273,15 @@ def decideEq (a : Sym) (b : Sym) : Option Bool :=
     | (Sym.int _, Sym.data _ _ _) => some false
     | _ => none
 
+/--
+  `a - b` when its unknowns cancel, so an equality of sums is decided (Prove.Spec R-4). It holds in Int,
+  which wraps: the ring laws do, and an order between the sums would not (R-5), so only `eq` uses it.
+-/
+def difference (a : Sym) (b : Sym) : Option Int :=
+  match canonical (Sym.prim "Int.sub" [a, b]) with
+  | Sym.int k => some k
+  | _ => none
+
 def ordered (a : Sym) (b : Sym) : (Sym, Sym) := if compare (key a) (key b) <= 0 then (a, b) else (b, a)
 
 /-- The first argument that is an undecided `if`, split into the two argument lists. -/
@@ -308,7 +317,10 @@ def primitiveDirect (name : Text) (args : List Sym) : Sym :=
   | ("eq", [a, b]) =>
     match decideEq a b with
     | some v => boolSym v
-    | none => Sym.prim "eq" [a, b]
+    | none =>
+      match difference a b with
+      | some k => boolSym (k == 0)
+      | none => Sym.prim "eq" [a, b]
   | ("neq", [a, b]) =>
     match decideEq a b with
     | some v => boolSym (not v)

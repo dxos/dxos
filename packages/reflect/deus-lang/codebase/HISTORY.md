@@ -1,5 +1,10 @@
 # History of main
 
+- `bcfddbca2f` task: comment on 1ab6c044 (by claude)
+- `ddee5f7174` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat.mdl (by claude)
+- `a534f7cb29` task: open 79f72c44 Theorem verdicts are cached by the theorem's hash alone, so a prover change never rechecks them (by claude)
+- `ff953ed093` update deus (by claude)
+- `278c6d79de` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/provelaws.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/prove.mdl (by claude)
 - `db77e1395f` update deus (by merge)
 - `c3399b82c4` history: import 1144 changes
 - `409c3e0e40` history: import 1139 changes

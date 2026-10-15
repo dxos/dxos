@@ -1,0 +1,76 @@
+---
+id: org.dxos.deus.spec.prove
+name: Prove.Spec
+version: 1.0
+---
+
+# Theorems: decide, simp and the other tactics
+
+A theorem is checked by its proof: `by decide` evaluates a closed proposition, `by test N` checks N
+cases (Testing.Spec), and a tactic proof (`simp`, `intro`, `split`, `auto`, `induction`, `cases`) runs
+the symbolic prover in `Prove`. `sorry` records the claim unchecked. The prover works in DEUS's `Int`,
+which wraps at 32 bits: it may use what holds in that ring, such as `n * 2 == n + n`, and must not use
+what holds only in the integers, such as `n < n + 1`, which fails at 2147483647. Written in the order
+of the process (D92).
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: checking a theorem
+  signatures:
+  - Prove.proveTheorem : Prover -> List Text -> List Sexp -> Sexp -> List Sexp -> {IO} Result Text Text
+  - Check.lemmaVerdict : Text -> Map Text Entry -> Text -> {IO} Verdict
+```
+
+## Whole proofs
+
+```mdl
+req R-1: by decide proves a true closed proposition and refuses a false one by saying it is false
+  by: Prove.Spec.decideProvesTrue | Prove.Spec.decideRefusesFalse
+```
+
+```mdl
+req R-2: sorry records a theorem unchecked, never as proved
+  by: Prove.Spec.sorryIsUnchecked
+```
+
+## Arithmetic
+
+```mdl
+req R-3: simp proves identities of the Int ring, collecting the terms of each sum
+  by: Prove.Spec.simpProvesRingIdentities
+```
+
+```mdl
+req R-4: an equality of two sums whose difference is a constant is decided by that constant
+  by: Prove.Spec.equalityByDifference
+```
+
+```mdl
+req R-5: an order that holds only without wrapping is not proved, and by test finds where it fails
+  by: Prove.Spec.orderIsNotAssumed
+```
+
+## Failures
+
+```mdl
+req R-6: a proof that leaves goals fails with how many are left and the first of them
+  by: Prove.Spec.goalsLeftAreShown
+```
+
+```mdl
+req R-7: an unknown tactic is refused by name, with the list of tactics
+  by: Prove.Spec.unknownTacticRefused
+```
+
+## Laws
+
+Each law adds a theorem to a fresh simulated store and checks it (`Testing.Spec.verdict`). The laws run
+in one machine, which keeps a checked value, so each law states its own theorem.

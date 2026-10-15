@@ -347,8 +347,8 @@ def Check.runCases (prop : Sexp) (cases : List (List Sexp)) (describe : List Sex
   | args :: rest =>
       match Check.evalCore (caseCore prop args) with
       | Result.ok true => Check.runCases prop rest describe
-      | Result.ok _ => Option.some ("counterexample: " ++ describe args)
-      | Result.err message => Option.some ("defect " ++ show message ++ " at " ++ describe args)
+      | Result.ok _ => Option.some (if List.isEmpty args then "false" else "counterexample: " ++ describe args)
+      | Result.err message => Option.some ("defect " ++ show message ++ (if List.isEmpty args then "" else " at " ++ describe args))
 
 def Check.seedOf (h : Text) : Int :=
   match fromText (join "" (List.map (fun c => toText (and c 7)) (List.take 9 (utf8 h)))) with

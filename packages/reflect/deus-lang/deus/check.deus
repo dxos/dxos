@@ -195,8 +195,8 @@ def runCases (prop : Sexp) (cases : List (List Sexp)) (describe : List Sexp -> T
   | args :: rest =>
     match evalCore (caseCore prop args) with
     | Result.ok true => runCases prop rest describe
-    | Result.ok _ => some ("counterexample: " ++ describe args)
-    | Result.err message => some ("defect " ++ show message ++ " at " ++ describe args)
+    | Result.ok _ => some (if List.isEmpty args then "false" else "counterexample: " ++ describe args)
+    | Result.err message => some ("defect " ++ show message ++ (if List.isEmpty args then "" else " at " ++ describe args))
 
 def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {IO} Verdict :=
   match obj with

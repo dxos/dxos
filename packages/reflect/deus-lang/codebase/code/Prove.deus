@@ -4,6 +4,37 @@ inductive Prove.Origin where
   | part (index : Int)
   | other
 
+/-- R-1: `2 + 2 == 4` is decided true. -/
+test Prove.Spec.decideProvesTrue := Spec.verdict "theorem T.four : 2 + 2 == 4 := by decide\n" "T.four" == "pass decide"
+
+/-- R-1: `2 + 2 == 5` is refused as false, with no empty counterexample. -/
+test Prove.Spec.decideRefusesFalse := Spec.verdict "theorem T.five : 2 + 2 == 5 := by decide\n" "T.five" == "fail false"
+
+/-- R-4: `n + 1` is never `n`, and `2 * n + m` is `m + n + n`. -/
+test Prove.Spec.equalityByDifference := Spec.verdict "theorem T.succ (n : Int) : n + 1 != n := by simp\n" "T.succ" == "pass proof" && Spec.verdict "theorem T.twice (n : Int) (m : Int) : 2 * n + m == m + n + n := by simp\n" "T.twice" ==
+  "pass proof"
+
+/-- R-6: `n * n >= 0` is left as one goal, shown. -/
+test Prove.Spec.goalsLeftAreShown := startsWith
+  "fail 1 goal(s) left; first:"
+  (Spec.verdict "theorem T.square (n : Int) : n * n >= 0 := by simp\n" "T.square")
+
+/-- R-5: `n < n + 1` is not proved, and testing it finds 2147483647. -/
+test Prove.Spec.orderIsNotAssumed := startsWith "fail" (Spec.verdict "theorem T.less (n : Int) : n < n + 1 := by auto\n" "T.less") && Spec.verdict "theorem T.lessTested (n : Int) : n < n + 1 := by test 200\n" "T.lessTested" ==
+  "fail counterexample: 2147483647"
+
+/-- R-3: a sum with a term that cancels and a doubled one is collected. -/
+test Prove.Spec.simpProvesRingIdentities := Spec.verdict "theorem T.ring (n : Int) (m : Int) : n * 2 + m - m == n + n := by simp\n" "T.ring" ==
+  "pass proof"
+
+/-- R-2: a `sorry` is neither a pass nor a fail. -/
+test Prove.Spec.sorryIsUnchecked := Spec.verdict "theorem T.never (n : Int) : n + 1 == n := sorry\n" "T.never" == "other"
+
+/-- R-7: `frobnicate` is named, and so are the tactics. -/
+test Prove.Spec.unknownTacticRefused :=
+  let verdict := Spec.verdict "theorem T.same (n : Int) : n == n := by frobnicate\n" "T.same"
+  Text.contains "unknown tactic frobnicate" verdict && Text.contains "simp, intro, split, auto, induction, cases" verdict
+
 /-- A tactic step parsed from the proof tokens. -/
 structure Prove.Step where
   tactic : Text
@@ -186,6 +217,13 @@ def Prove.definitionOf (pr : Prover) (h : Text) : {IO} Option (Int, Sexp) :=
         | _ => Option.none
       Ref.set pr.bodies (Map.insert h result (Ref.get pr.bodies))
       result
+
+/-- `a - b` when its unknowns cancel, so an equality of sums is decided (Prove.Spec R-4). It holds in Int,
+  which wraps: the ring laws do, and an order between the sums would not (R-5), so only `eq` uses it. -/
+def Prove.difference (a : Sym) (b : Sym) : Option Int :=
+  match canonical (Sym.prim "Int.sub" [a, b]) with
+  | Sym.int k => Option.some k
+  | _ => Option.none
 
 def Prove.evalCore (pr : Prover) (t : Sexp) (env : List Sym) : {Stuck, IO} Sym :=
   match t with
@@ -553,7 +591,10 @@ def Prove.primitiveDirect (name : Text) (args : List Sym) : Sym :=
   | ("eq", a :: b :: []) =>
       match decideEq a b with
       | Option.some v => boolSym v
-      | Option.none => Sym.prim "eq" [a, b]
+      | Option.none =>
+          match difference a b with
+          | Option.some k => boolSym (k == 0)
+          | Option.none => Sym.prim "eq" [a, b]
   | ("neq", a :: b :: []) =>
       match decideEq a b with
       | Option.some v => boolSym (not v)
