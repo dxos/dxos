@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { THEME_IDS } from '@dxos/react-ui-canvas/scene';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
@@ -38,7 +37,7 @@ const PREFILL = { prefill: true };
  *
  * Test:
  * 1. Each story draws the five sources, channels and apps in its theme.
- * 2. The bar at the bottom right opens the theme list and picks the grid; in the playground the controls do too.
+ * 2. The bar at the bottom right opens the theme list and picks the grid.
  */
 const meta: Meta<DataFlowViewProps> = {
   title: 'plugins/plugin-canvas/samples/Styles',
@@ -51,13 +50,8 @@ export default meta;
 
 type Story = StoryObj<DataFlowViewProps>;
 
-/** Every theme and grid to pick from. */
-export const Playground: Story = {
-  argTypes: {
-    theme: { control: 'inline-radio', options: THEME_IDS },
-    grid: { control: 'inline-radio', options: [undefined, 'dots', 'lines', 'none'] },
-  },
-};
+/** No theme chosen, as "Default" in the theme bar: paper in the app's light mode, glass in its dark mode. */
+export const Default: Story = {};
 
 /** Glass on warm paper: white cards with dark hairlines and mid-gray content, held light. */
 export const Paper: Story = { args: { theme: 'paper' } };
