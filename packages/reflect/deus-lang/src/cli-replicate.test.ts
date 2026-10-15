@@ -93,6 +93,18 @@ describe('deus CLI replication', () => {
       deus('merge', 'origin.main', ...a);
       expect(deus('view', 'even', 'odd', ...a).stdout).toMatch(/def even[^\n]*n <= 0[\s\S]*def odd[^\n]*n <= 0/);
 
+      // A dependent both sides only rehashed calls both edits after the merge, not a hash no name has (D187).
+      // Values no other name in the store has, since equal definitions share a hash.
+      deus('add', file('fg.deus', 'def f : Int := 301\ndef g : Int := 302\ndef h : Int := f + g\n'), ...a);
+      deus('push', ...a);
+      deus('pull', ...b);
+      deus('merge', 'origin.main', ...b);
+      deus('update', file('f.deus', 'def f : Int := 10\n'), ...a);
+      deus('push', ...a);
+      deus('update', file('g.deus', 'def g : Int := 20\n'), ...b);
+      expect(deus('push', ...b).code).toBe(0);
+      expect(deus('eval', 'h', ...b).stdout).toBe('30\n');
+
       // Enough history for level-1 boundaries (causal hashes starting with 0).
       for (let i = 1; i <= 70; i++) {
         deus('add', file('v.deus', `def v${i} : Int := ${i}\n`), '--message', `v${i}`, ...a);
