@@ -725,3 +725,13 @@ Branch main · 346 definitions · 0 tasks
 ---
 
 counters global
+
+---
+
+dont stop
+
+---
+
+cards look too busy and lack descriptions
+
+(with a screenshot of the hub's project cards: seven count tiles per project and no description)

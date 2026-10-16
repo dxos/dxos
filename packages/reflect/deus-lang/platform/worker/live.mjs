@@ -106,6 +106,19 @@ const summaryOfIndex = (index) => {
     kinds[entry.kind] = (kinds[entry.kind] ?? 0) + 1;
   }
   const meta = index.meta ?? {};
+  // What the project is mostly made of, for a card that has no feature map to describe it.
+  const sizes = {};
+  for (const entry of index.names ?? []) {
+    const top = entry.name.includes('.') ? entry.name.slice(0, entry.name.indexOf('.')) : '';
+    if (top && !/\.(Spec|Features|QA)$/.test(entry.name.split('.').slice(0, 2).join('.'))) {
+      sizes[top] = (sizes[top] ?? 0) + 1;
+    }
+  }
+  const namespaces = Object.entries(sizes)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 6)
+    .map(([name]) => name);
+  const map = (index.features ?? []).find((entry) => entry.document?.endsWith('.Features'))?.document;
   return {
     branch: meta.branch,
     definitions: meta.definitions,
@@ -113,6 +126,8 @@ const summaryOfIndex = (index) => {
     open: meta.open,
     features: meta.features ?? 0,
     kinds,
+    namespaces,
+    ...(map ? { featureMap: map } : {}),
   };
 };
 
@@ -148,6 +163,10 @@ export const projectSummaries = async (env, ctx) => {
         return undefined;
       }
       let summary = await storedPage(env, ctx, summaryKey(folder, shown.causal));
+      // A summary from before it named namespaces is drawn again from the index.
+      if (summary !== undefined && !('namespaces' in JSON.parse(summary))) {
+        summary = undefined;
+      }
       if (summary === undefined) {
         // A head drawn before summaries were kept: read its index once and keep the summary.
         const index = await storedPage(env, ctx, `${folder}/live/${shown.causal}/index.json`);
@@ -158,6 +177,7 @@ export const projectSummaries = async (env, ctx) => {
         await env.BUCKET.put(summaryKey(folder, shown.causal), summary, {
           httpMetadata: { contentType: 'application/json' },
         });
+        remember(env, ctx, summaryKey(folder, shown.causal), summary, PAGE_TTL);
       }
       return { address: addressOfFolder(folder) ?? folder, causal: shown.causal, ...JSON.parse(summary) };
     }),

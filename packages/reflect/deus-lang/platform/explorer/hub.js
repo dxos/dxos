@@ -57,6 +57,22 @@ const renderTotals = (projects) => {
     tiles(counts, (kind) => (kind === 'namespace' ? '#hub-projects' : '#'));
 };
 
+/** A project's counts as one quiet line of small labelled numbers, each opening that list in its explorer. */
+const countLine = (project, home) =>
+  `<p class="hub-counts">${countsOf(project)
+    .filter(([kind, , , value]) => value > 0 || kind !== 'task')
+    .map(
+      ([kind, glyph, label, value]) =>
+        `<a href="${escape(`${home}#k:${kind === 'task' ? 'tasks' : kind}`)}" title="${escape(label)}">${icon(kind, glyph)}<b>${count(value)}</b> ${escape(label)}</a>`,
+    )
+    .join('')}</p>`;
+
+/** Until its feature map's introduction arrives, a project is described by what it is mostly made of. */
+const fallbackDescription = (project) =>
+  project.namespaces?.length > 0
+    ? `Mostly ${project.namespaces.slice(0, -1).join(', ')}${project.namespaces.length > 1 ? ' and ' : ''}${project.namespaces.at(-1)}.`
+    : '';
+
 const renderProjects = (projects) => {
   element('hub-projects').innerHTML =
     '<h3 class="group-title">Projects</h3>' +
@@ -64,15 +80,39 @@ const renderProjects = (projects) => {
       .map((project) => {
         const home = `/${project.address}/`;
         return (
-          `<article class="hub-project"><header><a class="hub-project-name" href="${escape(home)}">${escape(project.address)}</a>` +
+          `<a class="hub-project" href="${escape(home)}"><header><span class="hub-project-name">${escape(project.address)}</span>` +
           (project.branch ? `<span class="chip">${escape(project.branch)}</span>` : '') +
-          `</header><p class="muted">${project.drawing ? 'Being drawn for the first time.' : `${count(project.definitions)} definitions · ${count(project.tasks)} tasks`}</p>` +
-          (project.drawing ? '' : tiles(countsOf(project), (kind) => `${home}#k:${kind === 'task' ? 'tasks' : kind}`)) +
-          '</article>'
+          `<span class="muted hub-size">${project.drawing ? 'being drawn' : `${count(project.definitions)} definitions`}</span></header>` +
+          `<p class="hub-description" data-description="${escape(project.address)}">${escape(fallbackDescription(project))}</p>` +
+          '</a>' +
+          (project.drawing ? '' : countLine(project, home))
         );
       })
+      .map((card) => `<article class="hub-card">${card}</article>`)
       .join('')}</div>`;
+  void describe(projects);
 };
+
+/** The first paragraph of each project's feature map, which says what the project is. */
+const describe = (projects) =>
+  Promise.all(
+    projects
+      .filter((project) => project.featureMap && !project.drawing)
+      .map(async (project) => {
+        const response = await fetch(`/v1/${project.address}/live/${project.causal}/doc/${project.featureMap}.json`);
+        const text = response.ok ? (await response.json()).text : '';
+        const body = text.slice(text.search(/^# /m)).split('\n').slice(1).join('\n').trim();
+        const paragraph =
+          body
+            .split(/\n\s*\n/)[0]
+            ?.replace(/\s+/g, ' ')
+            .replace(/`/g, '') ?? '';
+        const slot = document.querySelector(`[data-description="${CSS.escape(project.address)}"]`);
+        if (slot && paragraph && !paragraph.startsWith('#')) {
+          slot.textContent = paragraph;
+        }
+      }),
+  );
 
 //
 // Search: each project's names, fetched when the visitor first types.
