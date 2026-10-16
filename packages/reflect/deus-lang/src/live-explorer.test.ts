@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { appFiles, hubFiles } from '../platform/worker/gen/explorer-app.mjs';
+import { checkHistory } from '../platform/worker/live.mjs';
 import worker, { type Bucket, type Env } from '../platform/worker/worker.mjs';
 import { cliHarness } from './cli-harness.ts';
 
@@ -356,6 +357,39 @@ describe('live explorer (D192)', () => {
     ]);
     expect(kept.get('projects')?.ttl).toBe(60);
   });
+
+  test(
+    'a pushed head is checked to descend from the head before it (D201)',
+    { timeout: 120_000 },
+    async ({ expect }) => {
+      const bucket = join(scratch, 'bucket');
+      const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
+      const head = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
+      // Drawing the head's index keeps its first-parent chain beside it, which gives its ancestors.
+      const pending: Promise<unknown>[] = [];
+      await worker.fetch(new Request(`https://deus.test/v1/toolchain/live/${head}/index.json`), env, {
+        waitUntil: (promise: Promise<unknown>) => pending.push(promise),
+      });
+      await Promise.all(pending);
+      const chain: string[] = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', head, 'chain.json'), 'utf8'));
+      const log = (at: number, causal: string, previous: string | null) => {
+        mkdirSync(join(bucket, 'toolchain', 'headlog', 'main'), { recursive: true });
+        writeFileSync(
+          join(bucket, 'toolchain', 'headlog', 'main', `${String(at).padStart(13, '0')}-${causal}`),
+          JSON.stringify({ causal, previous }),
+        );
+      };
+      log(1, head, chain[2]);
+      expect(await checkHistory(env, 'toolchain', 'main', head)).toMatchObject({ ok: true, previous: chain[2] });
+      // A head whose history does not reach the previous one is what a push that drops history leaves.
+      const elsewhere = 'f'.repeat(64);
+      log(2, chain[1], elsewhere);
+      const lost = await checkHistory(env, 'toolchain', 'main', chain[1]);
+      expect(lost).toMatchObject({ ok: false, previous: elsewhere });
+      expect(lost.why).toContain('dropped its history');
+      expect(JSON.parse(readFileSync(join(bucket, 'toolchain', 'checks', `${chain[1]}.json`), 'utf8')).ok).toBe(false);
+    },
+  );
 
   test('the Worker ships the explorer app as platform/explorer has it', ({ expect }) => {
     // `node scripts/build-worker.mjs` rewrites the module after the app changes.

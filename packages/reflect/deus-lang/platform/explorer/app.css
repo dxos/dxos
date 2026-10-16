@@ -2732,3 +2732,9 @@ pre.block-value {
 .hub-counts .icon {
   transform: scale(0.85);
 }
+
+.hub-warning {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fail);
+}

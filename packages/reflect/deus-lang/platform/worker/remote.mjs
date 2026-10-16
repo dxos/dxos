@@ -260,7 +260,7 @@ export const requiredEpoch = async (bucket, project, causal) => {
 };
 
 /** Where the log of a branch's heads lives: one immutable object per move, named by time and head. */
-const headLogKey = (project, branch) => `${project}/headlog/${branch}/`;
+export const headLogKey = (project, branch) => `${project}/headlog/${branch}/`;
 
 const LOGGED = /^[0-9]{13}-[0-9a-f]{64}$/;
 

@@ -19,7 +19,7 @@ import { addressOfFolder } from './address.mjs';
 import * as runtime from './gen/deus-runtime.mjs';
 import * as explorer from './gen/explorer-live.js';
 import { lookupMany, parseSexp } from './packs.mjs';
-import { HttpError, json, listAll, listFolders, readHead } from './remote.mjs';
+import { HttpError, headLogKey, json, listAll, listFolders, readHead } from './remote.mjs';
 
 const ROOT = '/codebase';
 const HASH = /^[0-9a-f]{64}$/;
@@ -184,7 +184,13 @@ export const projectSummaries = async (env, ctx) => {
         });
         remember(env, ctx, summaryKey(folder, shown.causal), summary, PAGE_TTL);
       }
-      return { address: addressOfFolder(folder) ?? folder, causal: shown.causal, ...JSON.parse(summary) };
+      const check = await historyCheckOf(env.BUCKET, folder, shown.causal);
+      return {
+        address: addressOfFolder(folder) ?? folder,
+        causal: shown.causal,
+        ...JSON.parse(summary),
+        ...(check && !check.ok ? { historyCheck: check } : {}),
+      };
     }),
   );
   const listed = projects.filter(Boolean).sort((left, right) => left.address.localeCompare(right.address));
@@ -311,6 +317,7 @@ export const warmLive = async (env, ctx, project) => {
     );
     // The overview links its head's change first.
     await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'change', `${head.causal}.json`]);
+    await checkHistory(env, project, 'main', head.causal);
     // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
     const names = JSON.parse(await response.text()).names ?? [];
     const chunks = [];
@@ -774,6 +781,80 @@ const prefetchHistory = async (files) => {
     }),
   );
   return chain;
+};
+
+//
+// Push checks (D201): what the Worker verifies about a head after a push moved the branch to it.
+//
+
+const checkKey = (project, causal) => `${project}/checks/${causal}.json`;
+
+/** Parents a history check walks before it gives up: far more than any push adds. */
+const CHECK_LIMIT = 5000;
+
+/**
+ * Whether `causal` descends from the head the branch had before the push that moved it there, by every
+ * parent, not only the first: a push claims its base, and this is where the claim is verified. The verdict
+ * is kept at `<project>/checks/<causal>.json`; a head that lost the previous one is logged loudly, and
+ * `deus restore` brings the lost names back from the head log.
+ */
+export const checkHistory = async (env, project, branch, causal) => {
+  const entry = (await listAll(env.BUCKET, headLogKey(project, branch))).find((key) => key.endsWith(`-${causal}`));
+  const logged = entry ? await env.BUCKET.get(`${headLogKey(project, branch)}${entry}`) : null;
+  const previous = logged ? JSON.parse(await logged.text()).previous : null;
+  let verdict;
+  if (!previous) {
+    verdict = { check: 'history', causal, ok: true, why: 'the branch had no head before' };
+  } else {
+    const files = filesAt(env.BUCKET, project, causal);
+    const seen = new Set();
+    let level = [causal];
+    let found = false;
+    while (level.length > 0 && !found && seen.size < CHECK_LIMIT) {
+      level.forEach((hash) => seen.add(hash));
+      await fetchAll(
+        files,
+        level.map((hash) => `o${hash}`),
+      );
+      const next = [];
+      for (const hash of level) {
+        const text = files.texts.get(`o${hash}`);
+        for (const parent of text ? causalFields(text).parents : []) {
+          found ||= parent === previous;
+          if (!seen.has(parent)) {
+            next.push(parent);
+          }
+        }
+      }
+      level = [...new Set(next)];
+    }
+    verdict = {
+      check: 'history',
+      causal,
+      previous,
+      ok: found || previous === causal,
+      why: found
+        ? 'descends from the previous head'
+        : seen.size >= CHECK_LIMIT
+          ? `the previous head is not within ${CHECK_LIMIT} ancestors`
+          : 'does not descend from the previous head: the push dropped its history',
+    };
+    if (!verdict.ok) {
+      console.error(
+        `push check failed for ${project} ${branch} #${causal.slice(0, 10)}: ${verdict.why} #${previous.slice(0, 10)}`,
+      );
+    }
+  }
+  await env.BUCKET.put(checkKey(project, causal), JSON.stringify(verdict), {
+    httpMetadata: { contentType: 'application/json' },
+  });
+  return verdict;
+};
+
+/** The history check of a head, if one ran. */
+export const historyCheckOf = async (bucket, project, causal) => {
+  const stored = await bucket.get(checkKey(project, causal));
+  return stored ? JSON.parse(await stored.text()) : undefined;
 };
 
 /** Where an isolate keeps everything it read for a project, so the next cold one reads it at once. */

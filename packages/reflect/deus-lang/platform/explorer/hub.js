@@ -84,6 +84,9 @@ const renderProjects = (projects) => {
           (project.branch ? `<span class="chip">${escape(project.branch)}</span>` : '') +
           `<span class="muted hub-size">${project.drawing ? 'being drawn' : `${count(project.definitions)} definitions`}</span></header>` +
           `<p class="hub-description" data-description="${escape(project.address)}">${escape(fallbackDescription(project))}</p>` +
+          (project.historyCheck
+            ? `<p class="hub-warning">⚠ Its head #${escape(project.historyCheck.causal.slice(0, 10))} does not descend from the head before it, #${escape(project.historyCheck.previous.slice(0, 10))}: a push dropped history. <code>deus heads</code> lists both and <code>deus restore</code> brings the names back.</p>`
+            : '') +
           '</a>' +
           (project.drawing ? '' : countLine(project, home))
         );
