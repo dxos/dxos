@@ -111,6 +111,10 @@ describe('live explorer (D192)', () => {
       // A member of a recursive group is named by its group's hash and its position.
       const member = index.names.find((entry: { hash: string }) => /\.[0-9]+$/.test(entry.hash));
       expect(await get(`/v1/toolchain/live/${head}/def/${member.hash}.json`)).toEqual(site(`def/${member.hash}.json`));
+      // A builtin's page shows its declaration; its object lives under `objects/#B/`.
+      const bool = await get(`/v1/toolchain/live/${head}/def/_Bool.json`);
+      expect(bool).toEqual(site('def/_Bool.json'));
+      expect(bool.html).toContain('Bool');
       const map = index.names.find((entry: { name: string }) => entry.name === 'List.map');
       expect(await get(`/v1/toolchain/live/${head}/def/${map.hash}.json`)).toEqual(site(`def/${map.hash}.json`));
       // What a causal shows never changes, so it is kept in the bucket after the first request.

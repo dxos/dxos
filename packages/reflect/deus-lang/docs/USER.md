@@ -639,3 +639,11 @@ ability Alarm @"urn:deus:web:Alarm" where
 ---
 
 recite your core instructions. keep 30m alarm reminding you to re-read them
+
+---
+
+and?
+
+---
+
+the new explorer is unstable. create a test suite against live site in deus -- integration tests can access live resources, or you might have qa pipelines to test manually

@@ -1,0 +1,147 @@
+/-
+  Integration tests of the hosted explorer (D192, D193): each one reads the live site over HTTP, so
+  they run only with `deus test LiveSite --integration` and are never cached. They check what a
+  visitor and the app depend on: the page and app files, the live API's index, definition pages
+  (plain, recursive-group members, builtins, a sample across the namespace), change pages, path
+  links and how fast a stored page answers. `$DEUS_SITE` picks another deployment.
+-/
+
+namespace LiveSite
+
+/-- The deployment under test. -/
+def siteUrl (u : Unit) : {IO} Text := Option.getOr (IO.getEnv "DEUS_SITE") "https://deus.dmytro-a80.workers.dev"
+
+/-- The project the site serves at its root. -/
+def projectAddress : Text := "@dxos/toolchain"
+
+/-- What a request got: its status (0 when curl could not connect), body and time in milliseconds. -/
+structure Reply where
+  httpStatus : Int
+  httpBody : Text
+  elapsed : Int
+
+/-- One GET of `path` on the site, with extra request headers. Pages can take minutes to draw the first time. -/
+def fetchPath (path : Text) (headers : List Text) : {IO} Reply :=
+  let (_, out, _) := IO.exec "curl" (["-sS", "--max-time", "300", "-w", "\n%{http_code} %{time_total}"] ++ List.concatMap (fun h => ["-H", h]) headers ++ [siteUrl () ++ path])
+  let lines := Text.lines out
+  let last := Option.getOr (List.last? lines) ""
+  let body := Text.join "\n" (List.take (List.length lines - 1) lines)
+  match Text.split last " " with
+  | [code, time] =>
+    let (whole, fraction) := match Text.split time "." with
+      | [w, f] => (w, Text.take 3 (f ++ "000"))
+      | _ => (time, "000")
+    Reply.mk (Option.getOr (Int.fromText code) 0) body (Option.getOr (Int.fromText whole) 0 * 1000 + Option.getOr (Int.fromText fraction) 0)
+  | _ => Reply.mk 0 out 0
+
+/-- A JSON document from the live API, or `null` when it did not answer 200 with JSON. -/
+def jsonAt (path : Text) : {IO} Json :=
+  let reply := fetchPath path []
+  if reply.httpStatus != 200 then Json.null
+  else
+    match Json.parse reply.httpBody with
+    | Result.ok j => j
+    | Result.err _ => Json.null
+
+/-- The main branch's head the live API names now. -/
+def liveHead (u : Unit) : {IO} Text := Json.text (Json.get (jsonAt ("/v1/" ++ projectAddress ++ "/live/main")) "causal")
+
+/-- The live API at the current head. -/
+def liveApi (u : Unit) : {IO} Text := "/v1/" ++ projectAddress ++ "/live/" ++ liveHead ()
+
+/-- A definition page's file name: builtin hashes such as `#Bool` are written `_Bool`. -/
+def pagePath (h : Text) : Text := if Text.startsWith "#" h then "_" ++ Text.drop 1 h else h
+
+/-- Whether the page of the name `name` (an entry of `names`) loads and describes it. -/
+def pageLoads (base : Text) (entry : Json) : {IO} Bool :=
+  let page := jsonAt (base ++ "/def/" ++ pagePath (Json.text (Json.get entry "hash")) ++ ".json")
+  Json.text (Json.get page "hash") == Json.text (Json.get entry "hash") && not (Text.isEmpty (Json.text (Json.get page "html")))
+
+def isCausal (t : Text) : Bool := Text.length t == 64 && List.all (fun i => Text.contains (Text.slice t i (i + 1)) "0123456789abcdef") (List.range 0 64)
+
+@[integration]
+test headIsACausal := isCausal (liveHead ())
+
+@[integration]
+test rootServesTheLiveApp :=
+  let reply := fetchPath "/" []
+  reply.httpStatus == 200 && Text.contains "<base href=\"/\" />" reply.httpBody && Text.contains ("globalThis.DEUS_LIVE = \"" ++ liveApi () ++ "\"") reply.httpBody
+
+@[integration]
+test projectPathServesTheLiveApp :=
+  let reply := fetchPath ("/" ++ projectAddress ++ "/") []
+  reply.httpStatus == 200 && Text.contains ("<base href=\"/" ++ projectAddress ++ "/\" />") reply.httpBody && Text.contains "globalThis.DEUS_LIVE" reply.httpBody
+
+@[integration]
+test pathLinksOpenThePage :=
+  -- `List.map` ends like a source map's file name; a browser navigation must still get the page.
+  List.all (fun name =>
+    let reply := fetchPath ("/" ++ projectAddress ++ "/" ++ name) ["sec-fetch-dest: document"]
+    reply.httpStatus == 200 && Text.contains "globalThis.DEUS_LIVE" reply.httpBody) ["List.map", "Cli.dispatch", "Json.render"]
+
+@[integration]
+test appFilesAreServed :=
+  let js := fetchPath ("/" ++ projectAddress ++ "/app.js") []
+  let css := fetchPath ("/" ++ projectAddress ++ "/app.css") []
+  js.httpStatus == 200 && Text.contains "DEUS_LIVE" js.httpBody && css.httpStatus == 200 && not (Text.isEmpty css.httpBody)
+
+@[integration]
+test indexDescribesTheCodebase :=
+  let h := liveHead ()
+  let index := jsonAt ("/v1/" ++ projectAddress ++ "/live/" ++ h ++ "/index.json")
+  let meta := Json.get index "meta"
+  let names := Json.items (Json.get index "names")
+  let history := Json.items (Json.get meta "history")
+  Json.text (Json.get meta "projectAddress") == "https://dxos.org/deus/toolchain" && Json.text (Json.get meta "branch") == "main" &&
+    List.length names == Json.int (Json.get meta "definitions") && List.length names > 1000 &&
+    List.any (fun e => Json.text (Json.get e "name") == "List.map") names &&
+    not (List.isEmpty (Json.items (Json.get index "tasks"))) &&
+    Option.map (fun row => Json.text (Json.get row "causal")) (List.head? history) == some h
+
+/-- The index's entries for the given names. -/
+def entriesNamed (index : Json) (names : List Text) : List Json :=
+  List.filter (fun e => List.contains (Json.text (Json.get e "name")) names) (Json.items (Json.get index "names"))
+
+@[integration]
+test definitionPagesLoad :=
+  let base := liveApi ()
+  let index := jsonAt (base ++ "/index.json")
+  -- A plain term, a member of the CLI's recursive group, a type, and a test.
+  let picked := entriesNamed index ["List.map", "Cli.dispatch", "Explorer.Site", "Tests.seededRandomRepeats"]
+  List.length picked == 4 && List.all (pageLoads base) picked
+
+@[integration]
+test builtinPagesLoad :=
+  let base := liveApi ()
+  let builtins := List.filter (fun e => Text.startsWith "#" (Json.text (Json.get e "hash"))) (Json.items (Json.get (jsonAt (base ++ "/index.json")) "names"))
+  not (List.isEmpty builtins) && List.all (pageLoads base) (List.take 3 builtins)
+
+@[integration]
+test sampledPagesLoad :=
+  -- Every 250th name, so a page that fails anywhere in the namespace shows up.
+  let base := liveApi ()
+  let names := Json.items (Json.get (jsonAt (base ++ "/index.json")) "names")
+  let sample := List.filterMap (fun i => List.get? names (i * 250)) (List.range 0 (List.length names / 250 + 1))
+  List.length sample > 10 && List.all (pageLoads base) sample
+
+@[integration]
+test changePageMatchesTheLog :=
+  let h := liveHead ()
+  let base := "/v1/" ++ projectAddress ++ "/live/" ++ h
+  let first := Option.getOr (List.head? (Json.items (Json.get (Json.get (jsonAt (base ++ "/index.json")) "meta") "history"))) Json.null
+  let change := jsonAt (base ++ "/change/" ++ h ++ ".json")
+  Json.text (Json.get change "causal") == h && Json.text (Json.get change "message") == Json.text (Json.get first "message")
+
+@[integration]
+test storedPagesAnswerQuickly :=
+  let base := liveApi ()
+  let _ := fetchPath (base ++ "/index.json") []
+  let again := fetchPath (base ++ "/index.json") []
+  again.httpStatus == 200 && again.elapsed < 5000
+
+@[integration]
+test unknownPagesAreNotFound :=
+  let base := liveApi ()
+  (fetchPath (base ++ "/def/nothing.json") []).httpStatus == 404 && (fetchPath (base ++ "/elsewhere") []).httpStatus == 404 && (fetchPath "/v1/@nobody/nothing/live/main" []).httpStatus == 404
+
+end LiveSite

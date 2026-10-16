@@ -1,5 +1,6 @@
 /-
-  JSON output, for agents driving the CLI with `--json`.
+  JSON output, for agents driving the CLI with `--json`, and JSON input, for programs that read what
+  an HTTP service answers (the live explorer's integration tests, D193).
 -/
 
 inductive Json where
@@ -38,5 +39,134 @@ def render (j : Json) : Text :=
   | Json.str v => escape v
   | Json.arr items => "[" ++ Text.join "," (List.map render items) ++ "]"
   | Json.obj fields => "{" ++ Text.join "," (List.map (fun pair => escape (fst pair) ++ ":" ++ render (snd pair)) fields) ++ "}"
+
+/-- Whitespace JSON allows between tokens. -/
+def isSpace (c : Int) : Bool := c == 32 || c == 10 || c == 13 || c == 9
+
+/-- The first position at or after `i` that is not whitespace. -/
+def skipSpace (text : Text) (i : Int) : Int :=
+  if i < Text.length text && isSpace (Text.code text i) then skipSpace text (i + 1) else i
+
+/-- The position after `word`, which must start at `i`. -/
+def expectAt (text : Text) (i : Int) (word : Text) : {Throw Text} Int :=
+  if Text.slice text i (i + Text.length word) == word then i + Text.length word
+  else Throw.throw ("expected " ++ word ++ " at " ++ Int.toText i)
+
+/-- A string's text from just after its opening quote, and the position after its closing one. -/
+def readString (text : Text) (i : Int) (acc : List Text) : {Throw Text} (Text, Int) :=
+  let n := Text.length text
+  if i >= n then Throw.throw "a string ends at the end of the text"
+  else
+    let c := Text.code text i
+    if c == '"' then (Text.concat (List.reverse acc), i + 1)
+    else if c == '\\' then
+      let e := Text.code text (i + 1)
+      if e == 'u' then readString text (i + 6) (Text.fromCode (List.foldl (fun v k => v * 16 + Sexp.hexValue (Text.code text (i + 2 + k))) 0 (List.range 0 4)) :: acc)
+      else
+        let piece := if e == 'n' then "\n" else if e == 't' then "\t" else if e == 'r' then "\r" else if e == 'b' then Text.fromCode 8 else if e == 'f' then Text.fromCode 12 else Text.fromCode e
+        readString text (i + 2) (piece :: acc)
+    else
+      -- A run without quotes or escapes is copied at once.
+      let rec plain j := if j < n && Text.code text j != '"' && Text.code text j != '\\' then plain (j + 1) else j
+      let j := plain i
+      readString text j (Text.slice text i j :: acc)
+
+/-- A number at `i` and the position after it; only its integer part is kept. -/
+def readNumber (text : Text) (i : Int) : {Throw Text} (Json, Int) :=
+  let n := Text.length text
+  let rec digits j := if j < n && Text.code text j >= '0' && Text.code text j <= '9' then digits (j + 1) else j
+  let whole := digits (if i < n && Text.code text i == '-' then i + 1 else i)
+  let rec rest j := if j < n && (Text.code text j == '.' || Text.code text j == 'e' || Text.code text j == 'E' || Text.code text j == '+' || Text.code text j == '-' || (Text.code text j >= '0' && Text.code text j <= '9')) then rest (j + 1) else j
+  match Int.fromText (Text.slice text i whole) with
+  | some v => (Json.num v, rest whole)
+  | none => Throw.throw ("expected a number at " ++ Int.toText i)
+
+/-- The value at or after `i`, and the position after it. -/
+def readValue (text : Text) (i : Int) : {Throw Text} (Json, Int) :=
+  let i := skipSpace text i
+  if i >= Text.length text then Throw.throw "expected a value at the end of the text"
+  else
+    let c := Text.code text i
+    if c == '{' then readMembers text (skipSpace text (i + 1)) []
+    else if c == '[' then readItems text (skipSpace text (i + 1)) []
+    else if c == '"' then
+      let (t, j) := readString text (i + 1) []
+      (Json.str t, j)
+    else if c == 't' then (Json.bool true, expectAt text i "true")
+    else if c == 'f' then (Json.bool false, expectAt text i "false")
+    else if c == 'n' then (Json.null, expectAt text i "null")
+    else readNumber text i
+
+/-- An array's remaining items from `i`, after its `[`. -/
+def readItems (text : Text) (i : Int) (acc : List Json) : {Throw Text} (Json, Int) :=
+  if i < Text.length text && Text.code text i == ']' then (Json.arr (List.reverse acc), i + 1)
+  else
+    let (v, j) := readValue text i
+    let j := skipSpace text j
+    if j < Text.length text && Text.code text j == ',' then readItems text (skipSpace text (j + 1)) (v :: acc)
+    else (Json.arr (List.reverse (v :: acc)), expectAt text j "]")
+
+/-- An object's remaining members from `i`, after its `{`. -/
+def readMembers (text : Text) (i : Int) (acc : List (Text, Json)) : {Throw Text} (Json, Int) :=
+  if i < Text.length text && Text.code text i == '}' then (Json.obj (List.reverse acc), i + 1)
+  else
+    let (k, j) := readString text (expectAt text i "\"") []
+    let (v, l) := readValue text (expectAt text (skipSpace text j) ":")
+    let l := skipSpace text l
+    if l < Text.length text && Text.code text l == ',' then readMembers text (skipSpace text (l + 1)) ((k, v) :: acc)
+    else (Json.obj (List.reverse ((k, v) :: acc)), expectAt text l "}")
+
+/--
+  Reads one JSON document. Numbers keep their integer part, since `Json.num` holds an `Int`: `2.5`
+  reads as 2 and `-1e3` as -1. A `\\u` escape becomes that code unit, so a surrogate pair stays a pair.
+-/
+def parse (text : Text) : Result Text Json :=
+  try (fun _ =>
+    let (v, i) := readValue text 0
+    if skipSpace text i == Text.length text then v else Throw.throw ("text after the value at " ++ Int.toText (skipSpace text i)))
+
+/-- A field of an object, or `null` for anything else or a missing field. -/
+def get (j : Json) (key : Text) : Json :=
+  match j with
+  | Json.obj fields => Option.getOr (Option.map snd (List.find (fun pair => fst pair == key) fields)) Json.null
+  | _ => Json.null
+
+/-- An array's items, or none. -/
+def items (j : Json) : List Json :=
+  match j with
+  | Json.arr xs => xs
+  | _ => []
+
+/-- A string's text, or `""`. -/
+def text (j : Json) : Text :=
+  match j with
+  | Json.str t => t
+  | _ => ""
+
+/-- A number's value, or 0. -/
+def int (j : Json) : Int :=
+  match j with
+  | Json.num v => v
+  | _ => 0
+
+test parsesWhatRenderWrites :=
+  let doc := Json.obj [("a", Json.arr [Json.num 1, Json.num (-2), Json.null]), ("b", Json.str ("q\"\\\n" ++ Text.fromCode 1 ++ "é")), ("c", Json.bool false), ("d", Json.obj [])]
+  Json.parse (Json.render doc) == Result.ok doc
+
+test parsesWhitespaceAndEscapes :=
+  Json.parse " { \"k\" : [ true , \"\\u0041\\t\" ] } " == Result.ok (Json.obj [("k", Json.arr [Json.bool true, Json.str "A\t"])])
+
+test numbersKeepTheirIntegerPart :=
+  Json.parse "[2.5, -1e3, 0]" == Result.ok (Json.arr [Json.num 2, Json.num (-1), Json.num 0])
+
+test refusesBrokenDocuments :=
+  List.all (fun t => match Json.parse t with
+    | Result.ok _ => false
+    | Result.err _ => true) ["", "{", "[1,", "\"open", "{\"a\" 1}", "[1] 2", "tru"]
+
+test accessorsReadNestedFields :=
+  match Json.parse "{\"meta\": {\"n\": 3, \"name\": \"x\"}, \"names\": [1, 2]}" with
+  | Result.ok j => Json.int (Json.get (Json.get j "meta") "n") == 3 && Json.text (Json.get (Json.get j "meta") "name") == "x" && List.length (Json.items (Json.get j "names")) == 2 && Json.get j "missing" == Json.null
+  | Result.err _ => false
 
 end Json

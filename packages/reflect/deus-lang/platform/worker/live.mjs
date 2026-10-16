@@ -60,7 +60,13 @@ export const live = async (request, env, ctx, project, rest) => {
   if (stored) {
     return page(stored.body);
   }
-  const text = await render(env, ctx, project, causal, more);
+  // One render per page at a time; a request for a page being drawn waits for it.
+  let rendering = drawing.get(key);
+  if (!rendering) {
+    rendering = render(env, ctx, project, causal, more).finally(() => drawing.delete(key));
+    drawing.set(key, rendering);
+  }
+  const text = await rendering;
   ctx.waitUntil(env.BUCKET.put(key, text, { httpMetadata: { contentType: 'application/json' } }));
   return page(text);
 };
@@ -76,6 +82,9 @@ export const warmLive = async (env, ctx, project) => {
     console.error('warming the live explorer failed', error);
   }
 };
+
+/** Pages being drawn in this isolate, by bucket key. */
+const drawing = new Map();
 
 const page = (body) =>
   new Response(body, {
@@ -127,14 +136,23 @@ const draw = async (env, files, project, causal, path) => {
  */
 const sites = new Map();
 
-const siteOf = async (files) => {
+const siteOf = (files) => {
   const cached = sites.get(files.project);
   if (cached?.causal === files.causal) {
     return cached.site;
   }
-  await prefetchNamespace(files);
-  const site = await run(files, () => explorer.raw.site(ROOT));
+  // Requests that arrive together share one build: the app opens several pages at once, and each
+  // build holds every definition, so parallel builds would exhaust the isolate's memory.
+  const site = (async () => {
+    await prefetchNamespace(files);
+    return run(files, () => explorer.raw.site(ROOT));
+  })();
   sites.set(files.project, { causal: files.causal, site });
+  site.catch(() => {
+    if (sites.get(files.project)?.site === site) {
+      sites.delete(files.project);
+    }
+  });
   return site;
 };
 
@@ -152,7 +170,8 @@ const filesAt = (bucket, project, causal) => {
 
 /** The pack key a codebase path reads, or undefined for a path that is not an object or metadata. */
 const keyOf = (path) => {
-  const object = /^\/codebase\/objects\/[0-9a-f]{2}\/([^/]+)$/.exec(path);
+  // Builtins are named `#Bool`, so their directory is `#B`, not two hex digits.
+  const object = /^\/codebase\/objects\/[^/]{2}\/([^/]+)$/.exec(path);
   if (object) {
     return `o${object[1]}`;
   }
