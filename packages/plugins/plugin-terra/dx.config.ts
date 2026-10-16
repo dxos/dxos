@@ -19,6 +19,7 @@ export default Config2.make({
       live parameters let users reshape the terrain in real-time.
     `,
     icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'green' },
+    screenshots: [{ light: 'https://assets.composer.space/demos/2026-10-16-plugin-terra.mp4?v=6687a7c1' }],
     tags: ['labs'],
   },
 });
