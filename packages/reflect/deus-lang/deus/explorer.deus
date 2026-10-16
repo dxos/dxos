@@ -172,7 +172,7 @@ structure Site where
   entries : List (Text, Entry)
   index : Map Text Text
   namesByHash : Map Text (List Text)
-  metaOf : Map Text (Option Sexp)
+  info : Map Text (Text, Text)
   depsOf : Map Text (List Text)
   dependents : Map Text (List Text)
   printer : Printer
@@ -187,38 +187,43 @@ def site (dir : Text) : {IO, Throw Text} Site :=
     match Project.read dir with
     | Option.some p => p.projectIri
     | Option.none => "codebase"
-  -- Each definition's object and metadata are read once: its dependencies, and dependents inverted from them.
-  let metaOf := Map.fromList (List.map (fun pair => (Entry.hash (snd pair), readMeta dir (Entry.hash (snd pair)))) entries)
-  let metaFor := fun h => getOr (Map.lookup h metaOf) Option.none
+  -- Each definition's object and metadata are read once and not kept: what the pages need of them is its
+  -- dependencies, the parameter names its calls show, and each name's signature and summary. Keeping every
+  -- form held 200 MB for the toolchain, past a Worker isolate's 128 MB (D192).
   let facts := List.map (fun pair =>
     let h := Entry.hash (snd pair)
-    let object := readObject dir h
+    let meta := readMeta dir h
+    let object := peekObject dir h
     let fromObject := getOr (Option.map namedHashes object) []
-    let fromScheme := getOr (Option.map namedHashes (metaField (metaFor h) "scheme")) []
-    (h, dedup (sort (fromObject ++ fromScheme)), hintsOf (fst pair) (snd pair) object (metaFor h))) entries
+    let fromScheme := getOr (Option.map namedHashes (metaField meta "scheme")) []
+    let named := Option.map (Codebase.metaFor (fst pair)) meta
+    (h, dedup (sort (fromObject ++ fromScheme)), hintsOf (fst pair) (snd pair) object meta, (fst pair, (Explorer.signature named, summaryOf (Explorer.docOf named))))) entries
   let depsOf := Map.fromList (List.map (fun f =>
-    let (h, deps, _) := f
+    let (h, deps, _, _) := f
     (h, deps)) facts)
   -- Calls show their callee's parameter names (D174); `deus view` prints without them, as source that parses.
   let printer := withHints (Print.printer ns []) (Map.fromList (concatMap (fun f =>
-    let (_, _, hs) := f
+    let (_, _, hs, _) := f
     hs) facts))
   let dependents := Map.foldr
     (fun h ds m => foldl (fun m2 d => Map.insert d (h :: getOr (Map.lookup d m2) []) m2) m ds)
     Map.empty
     depsOf
   let tasks := sortBy order (Map.values (Tasks.current dir))
-  Site.mk dir project (currentBranch dir) ns entries (nameIndex ns) (Codebase.namesByHash ns) metaOf depsOf dependents printer tasks (Map.fromList (List.map (fun t => (Task.id t, t)) tasks))
+  let info := Map.fromList (List.map (fun f =>
+    let (_, _, _, named) := f
+    named) facts)
+  Site.mk dir project (currentBranch dir) ns entries (nameIndex ns) (Codebase.namesByHash ns) info depsOf dependents printer tasks (Map.fromList (List.map (fun t => (Task.id t, t)) tasks))
 
-/-- A name's metadata in the site, as `Codebase.metaFor` reads it. -/
-def siteMeta (s : Site) (name : Text) (h : Text) : Option Sexp := Option.map (Codebase.metaFor name) (getOr (Map.lookup h s.metaOf) Option.none)
+/-- A name's metadata, as `Codebase.metaFor` reads it; read when a page needs it, since a site keeps none. -/
+def siteMeta (s : Site) (name : Text) (h : Text) : {IO} Option Sexp := Option.map (Codebase.metaFor name) (readMeta s.dir h)
 
 /-- `names.json`: every visible name with its kind, hash, signature, doc summary and test status, so the
   app can list, search and preview names without opening their pages. -/
 def namesJson (s : Site) : {IO} Json := Json.arr (List.map (fun pair =>
   let h := Entry.hash (snd pair)
-  let meta := siteMeta s (fst pair) h
-  Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature meta)), ("summary", Json.str (summaryOf (Explorer.docOf meta))), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf s.dir h) else ""))]) s.entries)
+  let (sig, summary) := getOr (Map.lookup (fst pair) s.info) ("", "")
+  Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str sig), ("summary", Json.str summary), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf s.dir h) else ""))]) s.entries)
 
 /-- `tasks.json`: every task, with the changes that touched it. -/
 def tasksJson (s : Site) : {IO, Throw Text} Json :=

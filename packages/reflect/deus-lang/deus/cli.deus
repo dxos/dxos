@@ -812,9 +812,13 @@ def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, (Text, Tex
   let own := List.map (fun pair =>
     let (h, c) := pair
     (h, c.message, getOr (producedBy dir h) "")) live
-  let imported := concatMap
-    (fun pair => if Text.isEmpty (snd pair).prior then [] else recordEntries dir (snd pair).prior)
-    live
+  -- Many changes share one prior record; each is read once, at its last (oldest) place, which is where
+  -- `unique` keeps its entries anyway. Reading it per change built 50 copies of 577 entries.
+  let rec lastOnce priors seen acc :=
+    match priors with
+    | [] => acc
+    | p :: rest => if Text.isEmpty p || Set.contains p seen then lastOnce rest seen acc else lastOnce rest (Set.insert p seen) (p :: acc)
+  let imported := concatMap (fun prior => recordEntries dir prior) (lastOnce (reverse (List.map (fun pair => (snd pair).prior) live)) Map.empty [])
   -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
   let rec unique entries seen acc :=
     match entries with

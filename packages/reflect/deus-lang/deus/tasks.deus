@@ -184,7 +184,8 @@ def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := sna
 
 /-- A tasks snapshot by its hash, as id -> task object hash; `""` is no tasks. -/
 def snapshotAt (dir : Text) (h : Text) : {IO, Throw Text} Map Text Text := if Text.isEmpty h then Map.empty else
-  match readObject dir h with
+  -- Not cached: a task history reads one snapshot per change, and keeping them all held tens of MB (D192).
+  match Codebase.peekObject dir h with
   | Option.none => Throw.throw ("missing tasks snapshot #" ++ h)
   | Option.some form => Map.fromList (List.map (fun item =>
       match Sexp.args item with

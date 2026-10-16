@@ -44,6 +44,12 @@ def readObject (dir : Text) (h : Text) : {IO} Option Sexp :=
       MutMap.set objectCache h form
       some form
 
+/-- `readObject` without keeping the form: a pass over every object (the explorer's, D192) holds one at a time. -/
+def peekObject (dir : Text) (h : Text) : {IO} Option Sexp :=
+  match MutMap.get objectCache h with
+  | some form => some form
+  | none => Option.map Sexp.read (IO.readFile (objectPath dir h))
+
 def writeObject (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
   let path := objectPath dir h
   if IO.exists path then () else IO.writeFile path (Sexp.print form ++ "\n")
@@ -309,6 +315,12 @@ def readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   | Option.some form => causalFromSexp form
   | Option.none => Throw.throw ("missing history node #" ++ h)
 
+/-- `readCausal` without caching the node: a walk over a long history holds one node at a time (D192). -/
+def peekCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
+  match peekObject dir h with
+  | Option.some form => causalFromSexp form
+  | Option.none => Throw.throw ("missing history node #" ++ h)
+
 /-- A namespace node's items, with its parts expanded: `(n name entry)` and `(sub segment hash)` forms. -/
 def nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp :=
   match readObject dir h with
@@ -477,7 +489,7 @@ def commitPrior (dir : Text) (record : Sexp) (message : Text) : {IO, Throw Text}
 
 /-- The entries of a prior record: (causal, message, by). -/
 def recordEntries (dir : Text) (h : Text) : {IO} List (Text, Text, Text) :=
-  match readObject dir h with
+  match peekObject dir h with
   | some form =>
     List.filterMap (fun x =>
       match x with
@@ -504,8 +516,8 @@ def parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text := List.filte
 /-- First-parent history of a branch, newest first. -/
 def history (dir : Text) (branch : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
   let rec go h k acc := if k <= 0 then reverse acc else
-    let c := readCausal dir h
-    match parentsOf dir h with
+    let c := peekCausal dir h
+    match List.filter (fun p => IO.exists (objectPath dir p)) c.parents with
     | [] => reverse ((h, c) :: acc)
     | p :: _ => go p (k - 1) ((h, c) :: acc)
   go (headOf dir branch) limit []

@@ -5,6 +5,7 @@ rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "
 rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "urn:deus:Throw", ["throw"]);
 rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "urn:deus:Throw", ["throw"]);
 rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "urn:deus:Throw", ["throw"]);
+rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "urn:deus:Throw", ["throw"]);
 
 function Explorer$site(dir) {
   const ns = Codebase$current(dir);
@@ -23,37 +24,46 @@ function Explorer$site(dir) {
     }
     rt.nomatch(t0);
   }
-  const metaOf = Map$fromList(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [Entry$hash(snd(pair)), Codebase$readMeta(dir, Entry$hash(snd(pair)))]), "Explorer.site/\u03bb"), entries));
-  const metaFor = rt.named((h) => Option$getOr(Map$lookup(h, metaOf), rt.con0("#Option", 0)), "Explorer.site/\u03bb");
-  const facts = List$map(rt.named((pair_1) => {
-  const h_1 = Entry$hash(snd(pair_1));
-  const object = Codebase$readObject(dir, h_1);
+  const facts = List$map(rt.named((pair) => {
+  const h = Entry$hash(snd(pair));
+  const meta = Codebase$readMeta(dir, h);
+  const object = Codebase$peekObject(dir, h);
   const fromObject = Option$getOr(Option$map(Explorer$namedHashes, object), rt.NIL);
-  const fromScheme = Option$getOr(Option$map(Explorer$namedHashes, Codebase$metaField(rt.ap(metaFor, h_1), "scheme")), rt.NIL);
-  return new rt.Con("#Pair", 0, [h_1, new rt.Con("#Pair", 0, [List$dedup(List$sort(rt.ap(rt.prims["append"], fromObject, fromScheme))), Explorer$hintsOf(fst(pair_1), snd(pair_1), object, rt.ap(metaFor, h_1))])]);
+  const fromScheme = Option$getOr(Option$map(Explorer$namedHashes, Codebase$metaField(meta, "scheme")), rt.NIL);
+  const named = Option$map(rt.ap(Codebase$metaFor, fst(pair)), meta);
+  return new rt.Con("#Pair", 0, [h, new rt.Con("#Pair", 0, [List$dedup(List$sort(rt.ap(rt.prims["append"], fromObject, fromScheme))), new rt.Con("#Pair", 0, [Explorer$hintsOf(fst(pair), snd(pair), object, meta), new rt.Con("#Pair", 0, [fst(pair), new rt.Con("#Pair", 0, [Explorer$signature(named), Explorer$summaryOf(Explorer$docOf(named))])])])])]);
 }, "Explorer.site/\u03bb"), entries);
   const depsOf = Map$fromList(List$map(rt.named((f) => {
   m2: {
-    if (f.tag === 0 && f.fields[1].tag === 0) {
-      const h_2 = f.fields[0];
+    if (f.tag === 0 && f.fields[1].tag === 0 && f.fields[1].fields[1].tag === 0) {
+      const h_1 = f.fields[0];
       const deps = f.fields[1].fields[0];
-      return new rt.Con("#Pair", 0, [h_2, deps]);
+      return new rt.Con("#Pair", 0, [h_1, deps]);
     }
     rt.nomatch(f);
   }
 }, "Explorer.site/\u03bb"), facts));
   const printer = Print$withHints(Print$printer(ns, rt.NIL), Map$fromList(List$concatMap(rt.named((f_1) => {
   m3: {
-    if (f_1.tag === 0 && f_1.fields[1].tag === 0) {
-      const hs = f_1.fields[1].fields[1];
+    if (f_1.tag === 0 && f_1.fields[1].tag === 0 && f_1.fields[1].fields[1].tag === 0) {
+      const hs = f_1.fields[1].fields[1].fields[0];
       return hs;
     }
     rt.nomatch(f_1);
   }
 }, "Explorer.site/\u03bb"), facts)));
-  const dependents = Map$foldr(rt.named((h_3, ds, m) => List$foldl(rt.named((m2_1, d) => Map$insert(d, rt.cons(h_3, Option$getOr(Map$lookup(d, m2_1), rt.NIL)), m2_1), "Explorer.site/\u03bb"), m, ds), "Explorer.site/\u03bb"), Set$empty(), depsOf);
+  const dependents = Map$foldr(rt.named((h_2, ds, m) => List$foldl(rt.named((m2_1, d) => Map$insert(d, rt.cons(h_2, Option$getOr(Map$lookup(d, m2_1), rt.NIL)), m2_1), "Explorer.site/\u03bb"), m, ds), "Explorer.site/\u03bb"), Set$empty(), depsOf);
   const tasks = List$sortBy(Tasks$order, Map$values(Tasks$current(dir)));
-  return new rt.Con("d03cbf027f2fe5296087cf00dbdddcc0503b12b024a7e1165f567e673a352b7d", 0, [dir, project, Codebase$currentBranch(dir), ns, entries, Codebase$nameIndex(ns), Codebase$namesByHash(ns), metaOf, depsOf, dependents, printer, tasks, Map$fromList(List$map(rt.named((t) => new rt.Con("#Pair", 0, [Task$id(t), t]), "Explorer.site/\u03bb"), tasks))]);
+  const info = Map$fromList(List$map(rt.named((f_2) => {
+  m4: {
+    if (f_2.tag === 0 && f_2.fields[1].tag === 0 && f_2.fields[1].fields[1].tag === 0) {
+      const named_1 = f_2.fields[1].fields[1].fields[1];
+      return named_1;
+    }
+    rt.nomatch(f_2);
+  }
+}, "Explorer.site/\u03bb"), facts));
+  return new rt.Con("cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", 0, [dir, project, Codebase$currentBranch(dir), ns, entries, Codebase$nameIndex(ns), Codebase$namesByHash(ns), info, depsOf, dependents, printer, tasks, Map$fromList(List$map(rt.named((t) => new rt.Con("#Pair", 0, [Task$id(t), t]), "Explorer.site/\u03bb"), tasks))]);
 }
 rt.named(Explorer$site, "Explorer.site");
 
@@ -148,15 +158,6 @@ function Project$projectIri(v) {
 }
 rt.named(Project$projectIri, "Project.projectIri");
 
-function Map$fromList(pairs) {
-  if (Map$ascending(pairs)) {
-    return Map$fromAscending(pairs);
-  } else {
-    return List$foldl(rt.named((m, p) => Map$insert(fst(p), snd(p), m), "Map.fromList/\u03bb"), rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), pairs);
-  }
-}
-rt.named(Map$fromList, "Map.fromList");
-
 function List$map(f, xs) {
   function go(acc$, ys$) {
     for (;;) {
@@ -236,6 +237,21 @@ function Codebase$readMeta(dir, h) {
 }
 rt.named(Codebase$readMeta, "Codebase.readMeta");
 
+function Codebase$peekObject(dir, h) {
+  const t0 = rt.ap(rt.prims["MutMap.get"], Codebase$objectCache(), h);
+  m1: {
+    if (t0.tag === 1) {
+      const form = t0.fields[0];
+      return new rt.Con("#Option", 1, [form]);
+    }
+    if (t0.tag === 0) {
+      return Option$map(Sexp$read, rt.perform("#IO", 2, [Codebase$objectPath(dir, h)]));
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Codebase$peekObject, "Codebase.peekObject");
+
 function Option$getOr(o, fallback) {
   m0: {
     if (o.tag === 0) {
@@ -249,66 +265,6 @@ function Option$getOr(o, fallback) {
   }
 }
 rt.named(Option$getOr, "Option.getOr");
-
-function Map$lookup(key$, m$) {
-  for (;;) {
-    const key = key$, m = m$;
-    m0: {
-      if (m.tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      if (m.tag === 1) {
-        const l = m.fields[1];
-        const k2 = m.fields[2];
-        const v2 = m.fields[3];
-        const r = m.fields[4];
-        const c = rt.ap(rt.prims["compare"], key, k2);
-        if ((c < 0)) {
-          key$ = key;
-          m$ = l;
-          continue;
-        } else {
-          if ((c > 0)) {
-            key$ = key;
-            m$ = r;
-            continue;
-          } else {
-            return new rt.Con("#Option", 1, [v2]);
-          }
-        }
-      }
-      rt.nomatch(m);
-    }
-  }
-}
-rt.named(Map$lookup, "Map.lookup");
-
-function Codebase$readObject(dir, h) {
-  const t0 = rt.ap(rt.prims["MutMap.get"], Codebase$objectCache(), h);
-  m1: {
-    if (t0.tag === 1) {
-      const form = t0.fields[0];
-      return new rt.Con("#Option", 1, [form]);
-    }
-    if (t0.tag === 0) {
-      const t2 = rt.perform("#IO", 2, [Codebase$objectPath(dir, h)]);
-      m3: {
-        if (t2.tag === 0) {
-          return rt.con0("#Option", 0);
-        }
-        if (t2.tag === 1) {
-          const text = t2.fields[0];
-          const form_1 = Sexp$read(text);
-          rt.ap(rt.prims["MutMap.set"], Codebase$objectCache(), h, form_1);
-          return new rt.Con("#Option", 1, [form_1]);
-        }
-        rt.nomatch(t2);
-      }
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Codebase$readObject, "Codebase.readObject");
 
 function Option$map(f, v) {
   m0: {
@@ -368,6 +324,39 @@ function Codebase$metaField(form, key) {
   }
 }
 rt.named(Codebase$metaField, "Codebase.metaField");
+
+function Codebase$metaFor(name, meta) {
+  const shared = List$filter(rt.named((item) => (Sexp$head(item) !== "for"), "Codebase.metaFor/\u03bb"), Sexp$args(meta));
+  const t0 = List$find(rt.named((item_1) => {
+  if ((Sexp$head(item_1) === "for")) {
+    return rt.equal(Codebase$forName(item_1), name);
+  } else {
+    return false;
+  }
+}, "Codebase.metaFor/\u03bb"), Sexp$args(meta));
+  m1: {
+    if (t0.tag === 1) {
+      const entry = t0.fields[0];
+      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), List$filter(rt.named((item_2) => (Sexp$head(item_2) === "scheme"), "Codebase.metaFor/\u03bb"), shared)), List$drop(1, Sexp$args(entry)))]);
+    }
+    if (t0.tag === 0) {
+      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), shared)]);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Codebase$metaFor, "Codebase.metaFor");
+
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(fst, "fst");
 
 function List$dedup(v$) {
   for (;;) {
@@ -436,16 +425,29 @@ function Explorer$hintsOf(name, e, object, meta) {
 }
 rt.named(Explorer$hintsOf, "Explorer.hintsOf");
 
-function fst(p) {
-  m0: {
-    if (p.tag === 0) {
-      const x = p.fields[0];
-      return x;
-    }
-    rt.nomatch(p);
+function Explorer$signature(meta) {
+  return Option$getOr(Option$map(rt.named((s) => Types$displayScheme(s), "Explorer.signature/\u03bb"), Codebase$metaField(meta, "scheme")), "");
+}
+rt.named(Explorer$signature, "Explorer.signature");
+
+function Explorer$summaryOf(doc) {
+  return rt.ap(rt.prims["Text.trim"], Option$getOr(Option$bind(doc, rt.named((d) => List$head$p(Text$lines(rt.ap(rt.prims["Text.trim"], d))), "Explorer.summaryOf/\u03bb")), ""));
+}
+rt.named(Explorer$summaryOf, "Explorer.summaryOf");
+
+function Explorer$docOf(meta) {
+  return Option$map(Sexp$asText, Codebase$metaField(meta, "doc"));
+}
+rt.named(Explorer$docOf, "Explorer.docOf");
+
+function Map$fromList(pairs) {
+  if (Map$ascending(pairs)) {
+    return Map$fromAscending(pairs);
+  } else {
+    return List$foldl(rt.named((m, p) => Map$insert(fst(p), snd(p), m), "Map.fromList/\u03bb"), rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), pairs);
   }
 }
-rt.named(fst, "fst");
+rt.named(Map$fromList, "Map.fromList");
 
 function Print$withHints(base, hints) {
   return new rt.Con("7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), hints, Printer$rules(base)]);
@@ -601,6 +603,39 @@ function Map$insert(key, value, m) {
   }
 }
 rt.named(Map$insert, "Map.insert");
+
+function Map$lookup(key$, m$) {
+  for (;;) {
+    const key = key$, m = m$;
+    m0: {
+      if (m.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (m.tag === 1) {
+        const l = m.fields[1];
+        const k2 = m.fields[2];
+        const v2 = m.fields[3];
+        const r = m.fields[4];
+        const c = rt.ap(rt.prims["compare"], key, k2);
+        if ((c < 0)) {
+          key$ = key;
+          m$ = l;
+          continue;
+        } else {
+          if ((c > 0)) {
+            key$ = key;
+            m$ = r;
+            continue;
+          } else {
+            return new rt.Con("#Option", 1, [v2]);
+          }
+        }
+      }
+      rt.nomatch(m);
+    }
+  }
+}
+rt.named(Map$lookup, "Map.lookup");
 
 const Set$empty = rt.lazy("Set.empty", () => rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0));
 
@@ -817,28 +852,35 @@ rt.named(Explorer$metaJson, "Explorer.metaJson");
 function Explorer$namesJson(s) {
   return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.named((pair) => {
   const h = Entry$hash(snd(pair));
-  const meta = Explorer$siteMeta(s, fst(pair), h);
-  const t0 = new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [fst(pair)])]);
-  const t1 = new rt.Con("#Pair", 0, ["kind", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$kind(snd(pair))])]);
-  const t2 = new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [h])]);
-  const t3 = new rt.Con("#Pair", 0, ["sig", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$signature(meta)])]);
-  const t4 = new rt.Con("#Pair", 0, ["summary", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$summaryOf(Explorer$docOf(meta))])]);
-  let r5;
-  if (Explorer$checked(snd(pair))) {
-    r5 = Explorer$statusOf(Explorer$verdictOf(Explorer$Site$dir(s), h));
-  } else {
-    r5 = "";
+  const t0 = Option$getOr(Map$lookup(fst(pair), Explorer$Site$info(s)), new rt.Con("#Pair", 0, ["", ""]));
+  m1: {
+    if (t0.tag === 0) {
+      const sig = t0.fields[0];
+      const summary = t0.fields[1];
+      const t2 = new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [fst(pair)])]);
+      const t3 = new rt.Con("#Pair", 0, ["kind", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$kind(snd(pair))])]);
+      const t4 = new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [h])]);
+      const t5 = new rt.Con("#Pair", 0, ["sig", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [sig])]);
+      const t6 = new rt.Con("#Pair", 0, ["summary", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [summary])]);
+      let r7;
+      if (Explorer$checked(snd(pair))) {
+        r7 = Explorer$statusOf(Explorer$verdictOf(Explorer$Site$dir(s), h));
+      } else {
+        r7 = "";
+      }
+      const t8 = new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [r7]);
+      const t9 = new rt.Con("#Pair", 0, ["status", t8]);
+      const t10 = rt.NIL;
+      const t11 = rt.cons(t9, t10);
+      const t12 = rt.cons(t6, t11);
+      const t13 = rt.cons(t5, t12);
+      const t14 = rt.cons(t4, t13);
+      const t15 = rt.cons(t3, t14);
+      const t16 = rt.cons(t2, t15);
+      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [t16]);
+    }
+    rt.nomatch(t0);
   }
-  const t6 = new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [r5]);
-  const t7 = new rt.Con("#Pair", 0, ["status", t6]);
-  const t8 = rt.NIL;
-  const t9 = rt.cons(t7, t8);
-  const t10 = rt.cons(t4, t9);
-  const t11 = rt.cons(t3, t10);
-  const t12 = rt.cons(t2, t11);
-  const t13 = rt.cons(t1, t12);
-  const t14 = rt.cons(t0, t13);
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [t14]);
 }, "Explorer.namesJson/\u03bb"), Explorer$Site$entries(s))]);
 }
 rt.named(Explorer$namesJson, "Explorer.namesJson");
@@ -1062,78 +1104,6 @@ function Project$file(dir) {
 }
 rt.named(Project$file, "Project.file");
 
-function Map$ascending(pairs$) {
-  for (;;) {
-    const pairs = pairs$;
-    m0: {
-      if (pairs.tag === 1) {
-        const a = pairs.fields[0];
-        const rest = pairs.fields[1];
-        m1: {
-          if (rest.tag === 1) {
-            const b = rest.fields[0];
-            if ((rt.ap(rt.prims["compare"], fst(a), fst(b)) < 0)) {
-              pairs$ = rest;
-              continue;
-            } else {
-              return false;
-            }
-          }
-          if (rest.tag === 0) {
-            return true;
-          }
-          rt.nomatch(rest);
-        }
-      }
-      if (pairs.tag === 0) {
-        return true;
-      }
-      rt.nomatch(pairs);
-    }
-  }
-}
-rt.named(Map$ascending, "Map.ascending");
-
-function Map$fromAscending(pairs) {
-  function build(n, xs) {
-    if ((n === 0)) {
-      return new rt.Con("#Pair", 0, [rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), xs]);
-    } else {
-      const half = rt.div(n, 2);
-      const t0 = rt.ap(build, half, xs);
-      m1: {
-        if (t0.tag === 0) {
-          const l = t0.fields[0];
-          const rest = t0.fields[1];
-          m2: {
-            if (rest.tag === 1) {
-              const pair = rest.fields[0];
-              const rest2 = rest.fields[1];
-              const t3 = rt.ap(build, ((((n - half) | 0) - 1) | 0), rest2);
-              m4: {
-                if (t3.tag === 0) {
-                  const r = t3.fields[0];
-                  const rest3 = t3.fields[1];
-                  return new rt.Con("#Pair", 0, [Map$mk(l, fst(pair), snd(pair), r), rest3]);
-                }
-                rt.nomatch(t3);
-              }
-            }
-            if (rest.tag === 0) {
-              return new rt.Con("#Pair", 0, [l, rt.NIL]);
-            }
-            rt.nomatch(rest);
-          }
-        }
-        rt.nomatch(t0);
-      }
-    }
-  }
-  rt.named(build, "build");
-  return fst(rt.ap(build, List$length(pairs), pairs));
-}
-rt.named(Map$fromAscending, "Map.fromAscending");
-
 const Codebase$objectCache = rt.lazy("Codebase.objectCache", () => rt.ap(rt.prims["MutMap.new"], undefined));
 
 function Codebase$objectPath(dir, h) {
@@ -1228,6 +1198,34 @@ function List$head$p(v) {
 }
 rt.named(List$head$p, "List.head?");
 
+function Codebase$forName(entry) {
+  return Option$getOr(Option$map(Sexp$asText, List$head$p(Sexp$args(entry))), "");
+}
+rt.named(Codebase$forName, "Codebase.forName");
+
+function List$drop(n$, xs$) {
+  for (;;) {
+    const n = n$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return rt.NIL;
+      }
+      if (xs.tag === 1) {
+        const rest = xs.fields[1];
+        if ((n <= 0)) {
+          return xs;
+        } else {
+          n$ = ((n - 1) | 0);
+          xs$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$drop, "List.drop");
+
 function Explorer$arity(core) {
   m0: {
     if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "lam" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].tag === 0) {
@@ -1283,28 +1281,6 @@ function Codebase$metaList(form, key) {
   }
 }
 rt.named(Codebase$metaList, "Codebase.metaList");
-
-function Codebase$metaFor(name, meta) {
-  const shared = List$filter(rt.named((item) => (Sexp$head(item) !== "for"), "Codebase.metaFor/\u03bb"), Sexp$args(meta));
-  const t0 = List$find(rt.named((item_1) => {
-  if ((Sexp$head(item_1) === "for")) {
-    return rt.equal(Codebase$forName(item_1), name);
-  } else {
-    return false;
-  }
-}, "Codebase.metaFor/\u03bb"), Sexp$args(meta));
-  m1: {
-    if (t0.tag === 1) {
-      const entry = t0.fields[0];
-      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), List$filter(rt.named((item_2) => (Sexp$head(item_2) === "scheme"), "Codebase.metaFor/\u03bb"), shared)), List$drop(1, Sexp$args(entry)))]);
-    }
-    if (t0.tag === 0) {
-      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), shared)]);
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Codebase$metaFor, "Codebase.metaFor");
 
 function List$length(xs) {
   function go(acc$, ys$) {
@@ -1370,6 +1346,88 @@ function List$isEmpty(v) {
   }
 }
 rt.named(List$isEmpty, "List.isEmpty");
+
+function Types$displayScheme(scheme) {
+  return Types$displaySchemeNamed(Set$empty(), scheme);
+}
+rt.named(Types$displayScheme, "Types.displayScheme");
+
+function Text$lines(t) {
+  return rt.ap(rt.prims["Text.split"], t, "\n");
+}
+rt.named(Text$lines, "Text.lines");
+
+function Map$ascending(pairs$) {
+  for (;;) {
+    const pairs = pairs$;
+    m0: {
+      if (pairs.tag === 1) {
+        const a = pairs.fields[0];
+        const rest = pairs.fields[1];
+        m1: {
+          if (rest.tag === 1) {
+            const b = rest.fields[0];
+            if ((rt.ap(rt.prims["compare"], fst(a), fst(b)) < 0)) {
+              pairs$ = rest;
+              continue;
+            } else {
+              return false;
+            }
+          }
+          if (rest.tag === 0) {
+            return true;
+          }
+          rt.nomatch(rest);
+        }
+      }
+      if (pairs.tag === 0) {
+        return true;
+      }
+      rt.nomatch(pairs);
+    }
+  }
+}
+rt.named(Map$ascending, "Map.ascending");
+
+function Map$fromAscending(pairs) {
+  function build(n, xs) {
+    if ((n === 0)) {
+      return new rt.Con("#Pair", 0, [rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), xs]);
+    } else {
+      const half = rt.div(n, 2);
+      const t0 = rt.ap(build, half, xs);
+      m1: {
+        if (t0.tag === 0) {
+          const l = t0.fields[0];
+          const rest = t0.fields[1];
+          m2: {
+            if (rest.tag === 1) {
+              const pair = rest.fields[0];
+              const rest2 = rest.fields[1];
+              const t3 = rt.ap(build, ((((n - half) | 0) - 1) | 0), rest2);
+              m4: {
+                if (t3.tag === 0) {
+                  const r = t3.fields[0];
+                  const rest3 = t3.fields[1];
+                  return new rt.Con("#Pair", 0, [Map$mk(l, fst(pair), snd(pair), r), rest3]);
+                }
+                rt.nomatch(t3);
+              }
+            }
+            if (rest.tag === 0) {
+              return new rt.Con("#Pair", 0, [l, rt.NIL]);
+            }
+            rt.nomatch(rest);
+          }
+        }
+        rt.nomatch(t0);
+      }
+    }
+  }
+  rt.named(build, "build");
+  return fst(rt.ap(build, List$length(pairs), pairs));
+}
+rt.named(Map$fromAscending, "Map.fromAscending");
 
 function Printer$display(v) {
   m0: {
@@ -1745,29 +1803,6 @@ function List$merge(cmp, xs, ys) {
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(List$merge, "List.merge");
-
-function List$drop(n$, xs$) {
-  for (;;) {
-    const n = n$, xs = xs$;
-    m0: {
-      if (xs.tag === 0) {
-        return rt.NIL;
-      }
-      if (xs.tag === 1) {
-        const rest = xs.fields[1];
-        if ((n <= 0)) {
-          return xs;
-        } else {
-          n$ = ((n - 1) | 0);
-          xs$ = rest;
-          continue;
-        }
-      }
-      rt.nomatch(xs);
-    }
-  }
-}
-rt.named(List$drop, "List.drop");
 
 function Tasks$isOpen(t) {
   if (rt.equal(Task$state(t), rt.con0("9e891131338d0d7a162df929ca47a8833b06234f9b72b853fcfaa9d091fae2e2", 0))) {
@@ -2279,35 +2314,62 @@ function Cli$fullLog(dir, limit) {
     rt.nomatch(pair);
   }
 }, "Cli.fullLog/\u03bb"), live);
-  const imported = List$concatMap(rt.named((pair_1) => {
-  if (Text$isEmpty(Codebase$Causal$prior(snd(pair_1)))) {
-    return rt.NIL;
-  } else {
-    return Codebase$recordEntries(dir, Codebase$Causal$prior(snd(pair_1)));
-  }
-}, "Cli.fullLog/\u03bb"), live);
-  function unique(entries$, seen$, acc$) {
+  function lastOnce(priors$, seen$, acc$) {
     for (;;) {
-      const entries = entries$, seen = seen$, acc = acc$;
+      const priors = priors$, seen = seen$, acc = acc$;
       m1: {
+        if (priors.tag === 0) {
+          return acc;
+        }
+        if (priors.tag === 1) {
+          const p = priors.fields[0];
+          const rest = priors.fields[1];
+          let r2;
+          if (Text$isEmpty(p)) {
+            r2 = true;
+          } else {
+            r2 = Set$contains(p, seen);
+          }
+          if (r2) {
+            priors$ = rest;
+            seen$ = seen;
+            acc$ = acc;
+            continue;
+          } else {
+            priors$ = rest;
+            seen$ = Set$insert(p, seen);
+            acc$ = rt.cons(p, acc);
+            continue;
+          }
+        }
+        rt.nomatch(priors);
+      }
+    }
+  }
+  rt.named(lastOnce, "lastOnce");
+  const imported = List$concatMap(rt.named((prior) => Codebase$recordEntries(dir, prior), "Cli.fullLog/\u03bb"), rt.ap(lastOnce, List$reverse(List$map(rt.named((pair_1) => Codebase$Causal$prior(snd(pair_1)), "Cli.fullLog/\u03bb"), live)), Set$empty(), rt.NIL));
+  function unique(entries$, seen_1$, acc_1$) {
+    for (;;) {
+      const entries = entries$, seen_1 = seen_1$, acc_1 = acc_1$;
+      m3: {
         if (entries.tag === 0) {
-          return List$reverse(acc);
+          return List$reverse(acc_1);
         }
         if (entries.tag === 1) {
           const entry = entries.fields[0];
-          const rest = entries.fields[1];
-          m2: {
+          const rest_1 = entries.fields[1];
+          m4: {
             if (entry.tag === 0 && entry.fields[1].tag === 0) {
               const h_1 = entry.fields[0];
-              if (Set$contains(h_1, seen)) {
-                entries$ = rest;
-                seen$ = seen;
-                acc$ = acc;
+              if (Set$contains(h_1, seen_1)) {
+                entries$ = rest_1;
+                seen_1$ = seen_1;
+                acc_1$ = acc_1;
                 continue;
               } else {
-                entries$ = rest;
-                seen$ = Set$insert(h_1, seen);
-                acc$ = rt.cons(entry, acc);
+                entries$ = rest_1;
+                seen_1$ = Set$insert(h_1, seen_1);
+                acc_1$ = rt.cons(entry, acc_1);
                 continue;
               }
             }
@@ -2325,10 +2387,28 @@ rt.named(Cli$fullLog, "Cli.fullLog");
 
 const Explorer$historyLimit = rt.lazy("Explorer.historyLimit", () => 1000);
 
-function Explorer$siteMeta(s, name, h) {
-  return Option$map(rt.ap(Codebase$metaFor, name), Option$getOr(Map$lookup(h, Explorer$Site$metaOf(s)), rt.con0("#Option", 0)));
+function Explorer$Site$info(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      const v_9 = v.fields[8];
+      const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
+      const v_12 = v.fields[11];
+      const v_13 = v.fields[12];
+      return v_8;
+    }
+    rt.nomatch(v);
+  }
 }
-rt.named(Explorer$siteMeta, "Explorer.siteMeta");
+rt.named(Explorer$Site$info, "Explorer.Site.info");
 
 function Entry$kind(v) {
   m0: {
@@ -2360,21 +2440,6 @@ function Entry$kind(v) {
   }
 }
 rt.named(Entry$kind, "Entry.kind");
-
-function Explorer$signature(meta) {
-  return Option$getOr(Option$map(rt.named((s) => Types$displayScheme(s), "Explorer.signature/\u03bb"), Codebase$metaField(meta, "scheme")), "");
-}
-rt.named(Explorer$signature, "Explorer.signature");
-
-function Explorer$summaryOf(doc) {
-  return rt.ap(rt.prims["Text.trim"], Option$getOr(Option$bind(doc, rt.named((d) => List$head$p(Text$lines(rt.ap(rt.prims["Text.trim"], d))), "Explorer.summaryOf/\u03bb")), ""));
-}
-rt.named(Explorer$summaryOf, "Explorer.summaryOf");
-
-function Explorer$docOf(meta) {
-  return Option$map(Sexp$asText, Codebase$metaField(meta, "doc"));
-}
-rt.named(Explorer$docOf, "Explorer.docOf");
 
 function Explorer$checked(e) {
   if ((Entry$kind(e) === "test")) {
@@ -3065,11 +3130,6 @@ function Sexp$readAll(t) {
 }
 rt.named(Sexp$readAll, "Sexp.readAll");
 
-function Map$mk(l, key, value, r) {
-  return new rt.Con("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 1, [((1 + max(Map$height(l), Map$height(r))) | 0), l, key, value, r]);
-}
-rt.named(Map$mk, "Map.mk");
-
 function Text$take(n, t) {
   return rt.ap(rt.prims["Text.slice"], t, 0, n);
 }
@@ -3093,10 +3153,18 @@ function Sexp$print(s) {
 }
 rt.named(Sexp$print, "Sexp.print");
 
-function Codebase$forName(entry) {
-  return Option$getOr(Option$map(Sexp$asText, List$head$p(Sexp$args(entry))), "");
+function Types$displaySchemeNamed(names, scheme) {
+  const u = Types$newUnifier(undefined);
+  const t = Types$zonk(u, Types$fromSexp(u, scheme, rt.ap(rt.prims["Ref.new"], Set$empty()), rt.ap(rt.prims["Ref.new"], Set$empty()), rt.NIL, false));
+  const shared = List$filter(rt.named((pair) => (snd(pair) > 1), "Types.displaySchemeNamed/\u03bb"), Map$toList(Types$rowVarCounts(t, Set$empty())));
+  return Types$showTypeWith(names, t, rt.ap(rt.prims["Ref.new"], Set$empty()), 0, Set$fromList(List$map(fst, shared)));
 }
-rt.named(Codebase$forName, "Codebase.forName");
+rt.named(Types$displaySchemeNamed, "Types.displaySchemeNamed");
+
+function Map$mk(l, key, value, r) {
+  return new rt.Con("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 1, [((1 + max(Map$height(l), Map$height(r))) | 0), l, key, value, r]);
+}
+rt.named(Map$mk, "Map.mk");
 
 function Names$groups(pairs) {
   function go(xs$, key$, acc$, out$) {
@@ -3261,7 +3329,7 @@ function Tasks$snapshotAt(dir, h) {
   if (Text$isEmpty(h)) {
     return Set$empty();
   } else {
-    const t0 = Codebase$readObject(dir, h);
+    const t0 = Codebase$peekObject(dir, h);
     m1: {
       if (t0.tag === 0) {
         return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing tasks snapshot #", h)]);
@@ -3306,6 +3374,33 @@ function Codebase$Causal$tasks(v) {
   }
 }
 rt.named(Codebase$Causal$tasks, "Codebase.Causal.tasks");
+
+function Codebase$readObject(dir, h) {
+  const t0 = rt.ap(rt.prims["MutMap.get"], Codebase$objectCache(), h);
+  m1: {
+    if (t0.tag === 1) {
+      const form = t0.fields[0];
+      return new rt.Con("#Option", 1, [form]);
+    }
+    if (t0.tag === 0) {
+      const t2 = rt.perform("#IO", 2, [Codebase$objectPath(dir, h)]);
+      m3: {
+        if (t2.tag === 0) {
+          return rt.con0("#Option", 0);
+        }
+        if (t2.tag === 1) {
+          const text = t2.fields[0];
+          const form_1 = Sexp$read(text);
+          rt.ap(rt.prims["MutMap.set"], Codebase$objectCache(), h, form_1);
+          return new rt.Con("#Option", 1, [form_1]);
+        }
+        rt.nomatch(t2);
+      }
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Codebase$readObject, "Codebase.readObject");
 
 function Codebase$causalFromSexp(form) {
   const field = rt.named((key) => Option$getOr(List$find(rt.named((x) => rt.equal(Sexp$head(x), key), "Codebase.causalFromSexp/\u03bb"), Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])), "Codebase.causalFromSexp/\u03bb");
@@ -3900,15 +3995,15 @@ function Codebase$history(dir, branch, limit) {
       if ((k <= 0)) {
         return List$reverse(acc);
       } else {
-        const c = Codebase$readCausal(dir, h);
-        const t0 = Codebase$parentsOf(dir, h);
+        const c = Codebase$peekCausal(dir, h);
+        const t0 = List$filter(rt.named((p) => rt.perform("#IO", 4, [Codebase$objectPath(dir, p)]), "Codebase.history/\u03bb"), Codebase$Causal$parents(c));
         m1: {
           if (t0.tag === 0) {
             return List$reverse(rt.cons(new rt.Con("#Pair", 0, [h, c]), acc));
           }
           if (t0.tag === 1) {
-            const p = t0.fields[0];
-            h$ = p;
+            const p_1 = t0.fields[0];
+            h$ = p_1;
             k$ = ((k - 1) | 0);
             acc$ = rt.cons(new rt.Con("#Pair", 0, [h, c]), acc);
             continue;
@@ -3923,26 +4018,18 @@ function Codebase$history(dir, branch, limit) {
 }
 rt.named(Codebase$history, "Codebase.history");
 
-function Codebase$Causal$prior(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      const v_4 = v.fields[3];
-      const v_5 = v.fields[4];
-      const v_6 = v.fields[5];
-      const v_7 = v.fields[6];
-      const v_8 = v.fields[7];
-      return v_5;
-    }
-    rt.nomatch(v);
-  }
+function Set$contains(x, s) {
+  return Map$contains(x, s);
 }
-rt.named(Codebase$Causal$prior, "Codebase.Causal.prior");
+rt.named(Set$contains, "Set.contains");
+
+function Set$insert(x, s) {
+  return Map$insert(x, undefined, s);
+}
+rt.named(Set$insert, "Set.insert");
 
 function Codebase$recordEntries(dir, h) {
-  const t0 = Codebase$readObject(dir, h);
+  const t0 = Codebase$peekObject(dir, h);
   m1: {
     if (t0.tag === 1) {
       const form = t0.fields[0];
@@ -3969,17 +4056,7 @@ function Codebase$recordEntries(dir, h) {
 }
 rt.named(Codebase$recordEntries, "Codebase.recordEntries");
 
-function Set$contains(x, s) {
-  return Map$contains(x, s);
-}
-rt.named(Set$contains, "Set.contains");
-
-function Set$insert(x, s) {
-  return Map$insert(x, undefined, s);
-}
-rt.named(Set$insert, "Set.insert");
-
-function Explorer$Site$metaOf(v) {
+function Codebase$Causal$prior(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -3990,27 +4067,12 @@ function Explorer$Site$metaOf(v) {
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
       const v_8 = v.fields[7];
-      const v_9 = v.fields[8];
-      const v_10 = v.fields[9];
-      const v_11 = v.fields[10];
-      const v_12 = v.fields[11];
-      const v_13 = v.fields[12];
-      return v_8;
+      return v_5;
     }
     rt.nomatch(v);
   }
 }
-rt.named(Explorer$Site$metaOf, "Explorer.Site.metaOf");
-
-function Types$displayScheme(scheme) {
-  return Types$displaySchemeNamed(Set$empty(), scheme);
-}
-rt.named(Types$displayScheme, "Types.displayScheme");
-
-function Text$lines(t) {
-  return rt.ap(rt.prims["Text.split"], t, "\n");
-}
-rt.named(Text$lines, "Text.lines");
+rt.named(Codebase$Causal$prior, "Codebase.Causal.prior");
 
 function Text$startsWith(prefix, t) {
   if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
@@ -4431,6 +4493,11 @@ function Cli$short(h) {
 }
 rt.named(Cli$short, "Cli.short");
 
+function Explorer$siteMeta(s, name, h) {
+  return Option$map(rt.ap(Codebase$metaFor, name), Codebase$readMeta(Explorer$Site$dir(s), h));
+}
+rt.named(Explorer$siteMeta, "Explorer.siteMeta");
+
 function Explorer$Site$namesByHash(v) {
   m0: {
     if (v.tag === 0) {
@@ -4729,15 +4796,6 @@ function Sexp$push(form, stack, done) {
 }
 rt.named(Sexp$push, "Sexp.push");
 
-function max(a, b) {
-  if (rt.ap(rt.prims["lt"], a, b)) {
-    return b;
-  } else {
-    return a;
-  }
-}
-rt.named(max, "max");
-
 function Sexp$emit(s, acc) {
   m0: {
     if (s.tag === 0) {
@@ -4787,6 +4845,200 @@ function Sexp$emit(s, acc) {
   }
 }
 rt.named(Sexp$emit, "Sexp.emit");
+
+function Types$newUnifier(u) {
+  return new rt.Con("832925ce40579dd890765ef88c8af15820aabe0bdfb911cba5551778bfe50554", 0, [rt.ap(rt.prims["MutMap.new"], undefined), rt.ap(rt.prims["MutMap.new"], undefined), rt.ap(rt.prims["Ref.new"], 0)]);
+}
+rt.named(Types$newUnifier, "Types.newUnifier");
+
+function Types$zonk(u, t) {
+  const t0 = Types$resolve(u, t);
+  m1: {
+    if (t0.tag === 0) {
+      const iri = t0.fields[0];
+      const args = t0.fields[1];
+      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, List$map(rt.named((a) => Types$zonk(u, a), "Types.zonk/\u03bb"), args)]);
+    }
+    if (t0.tag === 1) {
+      const a_1 = t0.fields[0];
+      const r = t0.fields[1];
+      const b = t0.fields[2];
+      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 1, [Types$zonk(u, a_1), Types$zonkRow(u, r), Types$zonk(u, b)]);
+    }
+    if (t0.tag === 3) {
+      const r_1 = t0.fields[0];
+      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 3, [Types$zonkRow(u, r_1)]);
+    }
+    if (true) {
+      const v = t0;
+      return v;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Types$zonk, "Types.zonk");
+
+function Types$fromSexp(u$, s$, vars$, rowVars$, params$, openArrows$) {
+  for (;;) {
+    const u = u$, s = s$, vars = vars$, rowVars = rowVars$, params = params$, openArrows = openArrows$;
+    const named = rt.named((key) => {
+  const t0 = Map$lookup(key, rt.ap(rt.prims["Ref.get"], vars));
+  m1: {
+    if (t0.tag === 1) {
+      const t = t0.fields[0];
+      return t;
+    }
+    if (t0.tag === 0) {
+      const t_1 = Types$freshType(u);
+      rt.ap(rt.prims["Ref.set"], vars, Map$insert(key, t_1, rt.ap(rt.prims["Ref.get"], vars)));
+      return t_1;
+    }
+    rt.nomatch(t0);
+  }
+}, "Types.fromSexp/\u03bb");
+    m2: {
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
+        const iri = s.fields[0].fields[1].fields[0].fields[0];
+        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, rt.NIL]);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 0 && s.fields[0].fields[1].fields[1].tag === 0) {
+        const i = s.fields[0].fields[1].fields[0].fields[0];
+        return Option$getOr(List$get$p(params, i), rt.ap(named, rt.ap(rt.prims["append"], "#", rt.ap(rt.prims["Int.toText"], i))));
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0] === "?" && s.fields[0].fields[1].fields[1].tag === 0) {
+        return Types$freshType(u);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
+        const name = s.fields[0].fields[1].fields[0].fields[0];
+        return rt.ap(named, name);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "teff" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 0) {
+        const t_2 = s.fields[0].fields[1].fields[1].fields[0];
+        u$ = u;
+        s$ = t_2;
+        vars$ = vars;
+        rowVars$ = rowVars;
+        params$ = params;
+        openArrows$ = openArrows;
+        continue;
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "trow") {
+        const effs = s.fields[0].fields[1];
+        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 3, [Types$rowFromSexp(u, effs, vars, rowVars, params, false)]);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 3 && s.fields[0].fields[1].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0) {
+        const iri_1 = s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
+        const args = s.fields[0].fields[1].fields[1];
+        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri_1, List$map(rt.named((a) => Types$fromSexp(u, a, vars, rowVars, params, false), "Types.fromSexp/\u03bb"), args)]);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1) {
+        const head = s.fields[0].fields[1].fields[0];
+        const args_1 = s.fields[0].fields[1].fields[1];
+        return Types$freshType(u);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tfun" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 0) {
+        const a_1 = s.fields[0].fields[1].fields[0];
+        const b = s.fields[0].fields[1].fields[1].fields[0];
+        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 1, [Types$fromSexp(u, a_1, vars, rowVars, params, false), Types$freshRow(u), Types$fromSexp(u, b, vars, rowVars, params, openArrows)]);
+      }
+      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tfun" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 3 && s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[0].fields[0] === "eff" && s.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+        const a_2 = s.fields[0].fields[1].fields[0];
+        const b_1 = s.fields[0].fields[1].fields[1].fields[0];
+        const effs_1 = s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1];
+        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 1, [Types$fromSexp(u, a_2, vars, rowVars, params, false), Types$rowFromSexp(u, effs_1, vars, rowVars, params, openArrows), Types$fromSexp(u, b_1, vars, rowVars, params, openArrows)]);
+      }
+      if (true) {
+        return Types$freshType(u);
+      }
+      rt.nomatch(s);
+    }
+  }
+}
+rt.named(Types$fromSexp, "Types.fromSexp");
+
+function Types$rowVarCounts(t$, acc$) {
+  for (;;) {
+    const t = t$, acc = acc$;
+    m0: {
+      if (t.tag === 0) {
+        const args = t.fields[1];
+        return List$foldl(rt.named((m, a) => Types$rowVarCounts(a, m), "Types.rowVarCounts/\u03bb"), acc, args);
+      }
+      if (t.tag === 1) {
+        const a_1 = t.fields[0];
+        const r = t.fields[1];
+        const b = t.fields[2];
+        t$ = b;
+        acc$ = Types$rowCounts(r, Types$rowVarCounts(a_1, acc));
+        continue;
+      }
+      if (t.tag === 2) {
+        return acc;
+      }
+      if (t.tag === 3) {
+        const r_1 = t.fields[0];
+        return Types$rowCounts(r_1, acc);
+      }
+      rt.nomatch(t);
+    }
+  }
+}
+rt.named(Types$rowVarCounts, "Types.rowVarCounts");
+
+function Types$showTypeWith(names, t, seen, prec, shared) {
+  m0: {
+    if (t.tag === 2) {
+      const id = t.fields[0];
+      return Types$varName(seen, rt.ap(rt.prims["append"], "t", rt.ap(rt.prims["Int.toText"], id)), false);
+    }
+    if (t.tag === 0 && t.fields[0] === "#Pair" && t.fields[1].tag === 1 && t.fields[1].fields[1].tag === 1 && t.fields[1].fields[1].fields[1].tag === 0) {
+      const a = t.fields[1].fields[0];
+      const b = t.fields[1].fields[1].fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", Types$showTypeWith(names, a, seen, 0, shared)), ", "), Types$showTypeWith(names, b, seen, 0, shared)), ")");
+    }
+    if (t.tag === 0 && t.fields[1].tag === 0) {
+      const iri = t.fields[0];
+      return Types$nameOf(names, iri);
+    }
+    if (t.tag === 0) {
+      const iri_1 = t.fields[0];
+      const args = t.fields[1];
+      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$nameOf(names, iri_1), rt.ap(rt.prims["Text.concat"], List$map(rt.named((a_1) => rt.ap(rt.prims["append"], " ", Types$showTypeWith(names, a_1, seen, 100, shared)), "Types.showTypeWith/\u03bb"), args))));
+    }
+    if (t.tag === 1) {
+      const a_2 = t.fields[0];
+      const r = t.fields[1];
+      const b_1 = t.fields[2];
+      const rowText = Types$showRowWith(names, r, seen, shared);
+      const t1 = rt.ap(rt.prims["append"], Types$showTypeWith(names, a_2, seen, 11, shared), " -> ");
+      let r2;
+      if ((rowText === "")) {
+        r2 = "";
+      } else {
+        r2 = rt.ap(rt.prims["append"], rowText, " ");
+      }
+      const t3 = rt.ap(rt.prims["append"], t1, r2);
+      const t4 = Types$showTypeWith(names, b_1, seen, 10, shared);
+      const t5 = rt.ap(rt.prims["append"], t3, t4);
+      return Print$paren(10, prec, t5);
+    }
+    if (t.tag === 3) {
+      const r_1 = t.fields[0];
+      return Types$rowArgument(Types$showRow(r_1, seen), Types$resolveTail(r_1), seen);
+    }
+    rt.nomatch(t);
+  }
+}
+rt.named(Types$showTypeWith, "Types.showTypeWith");
+
+function max(a, b) {
+  if (rt.ap(rt.prims["lt"], a, b)) {
+    return b;
+  } else {
+    return a;
+  }
+}
+rt.named(max, "max");
 
 function List$lookup(key$, v$) {
   for (;;) {
@@ -5309,13 +5561,20 @@ function Sexp$hexDigit(n) {
 }
 rt.named(Sexp$hexDigit, "Sexp.hexDigit");
 
-function Types$displaySchemeNamed(names, scheme) {
-  const u = Types$newUnifier(undefined);
-  const t = Types$zonk(u, Types$fromSexp(u, scheme, rt.ap(rt.prims["Ref.new"], Set$empty()), rt.ap(rt.prims["Ref.new"], Set$empty()), rt.NIL, false));
-  const shared = List$filter(rt.named((pair) => (snd(pair) > 1), "Types.displaySchemeNamed/\u03bb"), Map$toList(Types$rowVarCounts(t, Set$empty())));
-  return Types$showTypeWith(names, t, rt.ap(rt.prims["Ref.new"], Set$empty()), 0, Set$fromList(List$map(fst, shared)));
+function Codebase$peekCausal(dir, h) {
+  const t0 = Codebase$peekObject(dir, h);
+  m1: {
+    if (t0.tag === 1) {
+      const form = t0.fields[0];
+      return Codebase$causalFromSexp(form);
+    }
+    if (t0.tag === 0) {
+      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing history node #", h)]);
+    }
+    rt.nomatch(t0);
+  }
 }
-rt.named(Types$displaySchemeNamed, "Types.displaySchemeNamed");
+rt.named(Codebase$peekCausal, "Codebase.peekCausal");
 
 function Asset$hash(v) {
   m0: {
@@ -5919,6 +6178,330 @@ function Sexp$quote(t) {
 }
 rt.named(Sexp$quote, "Sexp.quote");
 
+function Types$resolve(u, t) {
+  m0: {
+    if (t.tag === 2) {
+      const id = t.fields[0];
+      const t1 = rt.ap(rt.prims["MutMap.get"], Unifier$types(u), id);
+      m2: {
+        if (t1.tag === 1) {
+          const bound = t1.fields[0];
+          const r = Types$resolve(u, bound);
+          rt.ap(rt.prims["MutMap.set"], Unifier$types(u), id, r);
+          return r;
+        }
+        if (t1.tag === 0) {
+          return t;
+        }
+        rt.nomatch(t1);
+      }
+    }
+    if (true) {
+      return t;
+    }
+    rt.nomatch(t);
+  }
+}
+rt.named(Types$resolve, "Types.resolve");
+
+function Types$zonkRow(u, r) {
+  const t0 = Types$resolveRow(u, r);
+  m1: {
+    if (t0.tag === 1) {
+      const l = t0.fields[0];
+      const rest = t0.fields[1];
+      return new rt.Con("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 1, [Types$zonk(u, l), Types$zonkRow(u, rest)]);
+    }
+    if (true) {
+      const other = t0;
+      return other;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Types$zonkRow, "Types.zonkRow");
+
+function Types$freshType(u) {
+  return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 2, [Types$fresh(u)]);
+}
+rt.named(Types$freshType, "Types.freshType");
+
+function Types$rowFromSexp(u, effs, vars, rowVars, params, openArrows) {
+  m0: {
+    if (effs.tag === 0) {
+      if (openArrows) {
+        return Types$freshRow(u);
+      } else {
+        return rt.con0("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 0);
+      }
+    }
+    if (effs.tag === 1 && effs.fields[0].tag === 3 && effs.fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].fields[0] === "tvar" && effs.fields[0].fields[0].fields[1].tag === 1 && effs.fields[0].fields[0].fields[1].fields[0].tag === 2 && effs.fields[0].fields[0].fields[1].fields[1].tag === 0 && effs.fields[1].tag === 0) {
+      const name = effs.fields[0].fields[0].fields[1].fields[0].fields[0];
+      const t1 = Map$lookup(name, rt.ap(rt.prims["Ref.get"], rowVars));
+      m2: {
+        if (t1.tag === 1) {
+          const r = t1.fields[0];
+          return r;
+        }
+        if (t1.tag === 0) {
+          const r_1 = Types$freshRow(u);
+          rt.ap(rt.prims["Ref.set"], rowVars, Map$insert(name, r_1, rt.ap(rt.prims["Ref.get"], rowVars)));
+          return r_1;
+        }
+        rt.nomatch(t1);
+      }
+    }
+    if (effs.tag === 1 && effs.fields[0].tag === 3 && effs.fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].fields[0] === "tvar" && effs.fields[0].fields[0].fields[1].tag === 1 && effs.fields[0].fields[0].fields[1].fields[0].tag === 0 && effs.fields[0].fields[0].fields[1].fields[1].tag === 0 && effs.fields[1].tag === 0) {
+      const i = effs.fields[0].fields[0].fields[1].fields[0].fields[0];
+      return Types$paramRow(u, params, i);
+    }
+    if (effs.tag === 1) {
+      const e = effs.fields[0];
+      const rest = effs.fields[1];
+      return new rt.Con("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 1, [Types$fromSexp(u, e, vars, rowVars, params, false), Types$rowFromSexp(u, rest, vars, rowVars, params, openArrows)]);
+    }
+    rt.nomatch(effs);
+  }
+}
+rt.named(Types$rowFromSexp, "Types.rowFromSexp");
+
+function Types$freshRow(u) {
+  return new rt.Con("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 2, [Types$fresh(u)]);
+}
+rt.named(Types$freshRow, "Types.freshRow");
+
+function Types$rowCounts(r$, acc$) {
+  for (;;) {
+    const r = r$, acc = acc$;
+    m0: {
+      if (r.tag === 1) {
+        const l = r.fields[0];
+        const rest = r.fields[1];
+        r$ = rest;
+        acc$ = Types$rowVarCounts(l, acc);
+        continue;
+      }
+      if (r.tag === 2) {
+        const id = r.fields[0];
+        return Map$update(id, rt.named((old) => ((Option$getOr(old, 0) + 1) | 0), "Types.rowCounts/\u03bb"), acc);
+      }
+      if (r.tag === 0) {
+        return acc;
+      }
+      rt.nomatch(r);
+    }
+  }
+}
+rt.named(Types$rowCounts, "Types.rowCounts");
+
+function Types$varName(seen, key, row) {
+  const t0 = Map$lookup(key, rt.ap(rt.prims["Ref.get"], seen));
+  m1: {
+    if (t0.tag === 1) {
+      const name = t0.fields[0];
+      return name;
+    }
+    if (t0.tag === 0) {
+      const count = List$length(List$filter(rt.named((pair) => {
+      let r2;
+      if (row) {
+        r2 = "r";
+      } else {
+        r2 = "t";
+      }
+      const t3 = fst(pair);
+      return Text$startsWith(r2, t3);
+    }, "Types.varName/\u03bb"), Map$toList(rt.ap(rt.prims["Ref.get"], seen))));
+      let name_1;
+      if (row) {
+        if ((count === 0)) {
+          name_1 = "e";
+        } else {
+          name_1 = rt.ap(rt.prims["append"], "e", rt.ap(rt.prims["Int.toText"], count));
+        }
+      } else {
+        if ((count < 4)) {
+          name_1 = rt.ap(rt.prims["Text.fromCode"], ((97 + count) | 0));
+        } else {
+          name_1 = rt.ap(rt.prims["append"], "t", rt.ap(rt.prims["Int.toText"], count));
+        }
+      }
+      rt.ap(rt.prims["Ref.set"], seen, Map$insert(key, name_1, rt.ap(rt.prims["Ref.get"], seen)));
+      return name_1;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Types$varName, "Types.varName");
+
+function Types$nameOf(names, iri) {
+  const t0 = Map$lookup(iri, names);
+  m1: {
+    if (t0.tag === 1) {
+      const name = t0.fields[0];
+      return name;
+    }
+    if (t0.tag === 0) {
+      return Types$iriName(iri);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Types$nameOf, "Types.nameOf");
+
+function Print$paren(level, ctx, t) {
+  if (rt.ap(rt.prims["lt"], level, ctx)) {
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", t), ")");
+  } else {
+    return t;
+  }
+}
+rt.named(Print$paren, "Print.paren");
+
+function Types$showRowWith(names, r, seen, shared) {
+  function labels(row$, acc$) {
+    for (;;) {
+      const row = row$, acc = acc$;
+      m0: {
+        if (row.tag === 1) {
+          const l = row.fields[0];
+          const rest = row.fields[1];
+          row$ = rest;
+          acc$ = rt.cons(Types$showTypeWith(names, l, seen, 0, shared), acc);
+          continue;
+        }
+        if (row.tag === 2) {
+          const id = row.fields[0];
+          const t1 = List$reverse(acc);
+          let r2;
+          if (Set$contains(id, shared)) {
+            r2 = new rt.Con("#Option", 1, [Types$varName(seen, rt.ap(rt.prims["append"], "r", rt.ap(rt.prims["Int.toText"], id)), true)]);
+          } else {
+            r2 = rt.con0("#Option", 0);
+          }
+          const t3 = new rt.Con("#Pair", 0, [r2, true]);
+          return new rt.Con("#Pair", 0, [t1, t3]);
+        }
+        if (row.tag === 0) {
+          return new rt.Con("#Pair", 0, [List$reverse(acc), new rt.Con("#Pair", 0, [rt.con0("#Option", 0), false])]);
+        }
+        rt.nomatch(row);
+      }
+    }
+  }
+  rt.named(labels, "labels");
+  const t4 = rt.ap(labels, r, rt.NIL);
+  m5: {
+    if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0 && t4.fields[1].fields[1] === true) {
+      return "";
+    }
+    if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0 && t4.fields[1].fields[1] === false) {
+      return "{}";
+    }
+    if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1) {
+      const tail = t4.fields[1].fields[0].fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", tail), "}");
+    }
+    if (t4.tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0) {
+      const ls = t4.fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls)), "}");
+    }
+    if (t4.tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1) {
+      const ls_1 = t4.fields[0];
+      const tail_1 = t4.fields[1].fields[0].fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls_1)), " | "), tail_1), "}");
+    }
+    rt.nomatch(t4);
+  }
+}
+rt.named(Types$showRowWith, "Types.showRowWith");
+
+function Types$rowArgument(text, tail, seen) {
+  if ((text !== "")) {
+    return text;
+  } else {
+    m0: {
+      if (tail.tag === 1) {
+        const id = tail.fields[0];
+        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", Types$varName(seen, rt.ap(rt.prims["append"], "r", rt.ap(rt.prims["Int.toText"], id)), true)), "}");
+      }
+      if (tail.tag === 0) {
+        return "{}";
+      }
+      rt.nomatch(tail);
+    }
+  }
+}
+rt.named(Types$rowArgument, "Types.rowArgument");
+
+function Types$showRow(r, seen) {
+  function labels(row$, acc$) {
+    for (;;) {
+      const row = row$, acc = acc$;
+      m0: {
+        if (row.tag === 1) {
+          const l = row.fields[0];
+          const rest = row.fields[1];
+          row$ = rest;
+          acc$ = rt.cons(Types$showType(l, seen, 0), acc);
+          continue;
+        }
+        if (row.tag === 2) {
+          const id = row.fields[0];
+          return new rt.Con("#Pair", 0, [List$reverse(acc), new rt.Con("#Option", 1, [Types$varName(seen, rt.ap(rt.prims["append"], "r", rt.ap(rt.prims["Int.toText"], id)), true)])]);
+        }
+        if (row.tag === 0) {
+          return new rt.Con("#Pair", 0, [List$reverse(acc), rt.con0("#Option", 0)]);
+        }
+        rt.nomatch(row);
+      }
+    }
+  }
+  rt.named(labels, "labels");
+  const t1 = rt.ap(labels, r, rt.NIL);
+  m2: {
+    if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1) {
+      return "";
+    }
+    if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 0) {
+      return "{}";
+    }
+    if (t1.tag === 0 && t1.fields[1].tag === 0) {
+      const ls = t1.fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls)), "}");
+    }
+    if (t1.tag === 0 && t1.fields[1].tag === 1) {
+      const ls_1 = t1.fields[0];
+      const tail = t1.fields[1].fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls_1)), " | "), tail), "}");
+    }
+    rt.nomatch(t1);
+  }
+}
+rt.named(Types$showRow, "Types.showRow");
+
+function Types$resolveTail(r$) {
+  for (;;) {
+    const r = r$;
+    m0: {
+      if (r.tag === 1) {
+        const rest = r.fields[1];
+        r$ = rest;
+        continue;
+      }
+      if (r.tag === 2) {
+        const id = r.fields[0];
+        return new rt.Con("#Option", 1, [id]);
+      }
+      if (r.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      rt.nomatch(r);
+    }
+  }
+}
+rt.named(Types$resolveTail, "Types.resolveTail");
+
 function Tasks$assetFromSexp(form) {
   const t0 = Sexp$args(form);
   m1: {
@@ -6139,191 +6722,6 @@ function Text$replace(old, _new, t) {
   return rt.ap(rt.prims["Text.join"], _new, rt.ap(rt.prims["Text.split"], t, old));
 }
 rt.named(Text$replace, "Text.replace");
-
-function Types$newUnifier(u) {
-  return new rt.Con("832925ce40579dd890765ef88c8af15820aabe0bdfb911cba5551778bfe50554", 0, [rt.ap(rt.prims["MutMap.new"], undefined), rt.ap(rt.prims["MutMap.new"], undefined), rt.ap(rt.prims["Ref.new"], 0)]);
-}
-rt.named(Types$newUnifier, "Types.newUnifier");
-
-function Types$zonk(u, t) {
-  const t0 = Types$resolve(u, t);
-  m1: {
-    if (t0.tag === 0) {
-      const iri = t0.fields[0];
-      const args = t0.fields[1];
-      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, List$map(rt.named((a) => Types$zonk(u, a), "Types.zonk/\u03bb"), args)]);
-    }
-    if (t0.tag === 1) {
-      const a_1 = t0.fields[0];
-      const r = t0.fields[1];
-      const b = t0.fields[2];
-      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 1, [Types$zonk(u, a_1), Types$zonkRow(u, r), Types$zonk(u, b)]);
-    }
-    if (t0.tag === 3) {
-      const r_1 = t0.fields[0];
-      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 3, [Types$zonkRow(u, r_1)]);
-    }
-    if (true) {
-      const v = t0;
-      return v;
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Types$zonk, "Types.zonk");
-
-function Types$fromSexp(u$, s$, vars$, rowVars$, params$, openArrows$) {
-  for (;;) {
-    const u = u$, s = s$, vars = vars$, rowVars = rowVars$, params = params$, openArrows = openArrows$;
-    const named = rt.named((key) => {
-  const t0 = Map$lookup(key, rt.ap(rt.prims["Ref.get"], vars));
-  m1: {
-    if (t0.tag === 1) {
-      const t = t0.fields[0];
-      return t;
-    }
-    if (t0.tag === 0) {
-      const t_1 = Types$freshType(u);
-      rt.ap(rt.prims["Ref.set"], vars, Map$insert(key, t_1, rt.ap(rt.prims["Ref.get"], vars)));
-      return t_1;
-    }
-    rt.nomatch(t0);
-  }
-}, "Types.fromSexp/\u03bb");
-    m2: {
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
-        const iri = s.fields[0].fields[1].fields[0].fields[0];
-        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, rt.NIL]);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 0 && s.fields[0].fields[1].fields[1].tag === 0) {
-        const i = s.fields[0].fields[1].fields[0].fields[0];
-        return Option$getOr(List$get$p(params, i), rt.ap(named, rt.ap(rt.prims["append"], "#", rt.ap(rt.prims["Int.toText"], i))));
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0] === "?" && s.fields[0].fields[1].fields[1].tag === 0) {
-        return Types$freshType(u);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
-        const name = s.fields[0].fields[1].fields[0].fields[0];
-        return rt.ap(named, name);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "teff" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 0) {
-        const t_2 = s.fields[0].fields[1].fields[1].fields[0];
-        u$ = u;
-        s$ = t_2;
-        vars$ = vars;
-        rowVars$ = rowVars;
-        params$ = params;
-        openArrows$ = openArrows;
-        continue;
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "trow") {
-        const effs = s.fields[0].fields[1];
-        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 3, [Types$rowFromSexp(u, effs, vars, rowVars, params, false)]);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 3 && s.fields[0].fields[1].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0) {
-        const iri_1 = s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
-        const args = s.fields[0].fields[1].fields[1];
-        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri_1, List$map(rt.named((a) => Types$fromSexp(u, a, vars, rowVars, params, false), "Types.fromSexp/\u03bb"), args)]);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1) {
-        const head = s.fields[0].fields[1].fields[0];
-        const args_1 = s.fields[0].fields[1].fields[1];
-        return Types$freshType(u);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tfun" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 0) {
-        const a_1 = s.fields[0].fields[1].fields[0];
-        const b = s.fields[0].fields[1].fields[1].fields[0];
-        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 1, [Types$fromSexp(u, a_1, vars, rowVars, params, false), Types$freshRow(u), Types$fromSexp(u, b, vars, rowVars, params, openArrows)]);
-      }
-      if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tfun" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 3 && s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[0].fields[0] === "eff" && s.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
-        const a_2 = s.fields[0].fields[1].fields[0];
-        const b_1 = s.fields[0].fields[1].fields[1].fields[0];
-        const effs_1 = s.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1];
-        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 1, [Types$fromSexp(u, a_2, vars, rowVars, params, false), Types$rowFromSexp(u, effs_1, vars, rowVars, params, openArrows), Types$fromSexp(u, b_1, vars, rowVars, params, openArrows)]);
-      }
-      if (true) {
-        return Types$freshType(u);
-      }
-      rt.nomatch(s);
-    }
-  }
-}
-rt.named(Types$fromSexp, "Types.fromSexp");
-
-function Types$rowVarCounts(t$, acc$) {
-  for (;;) {
-    const t = t$, acc = acc$;
-    m0: {
-      if (t.tag === 0) {
-        const args = t.fields[1];
-        return List$foldl(rt.named((m, a) => Types$rowVarCounts(a, m), "Types.rowVarCounts/\u03bb"), acc, args);
-      }
-      if (t.tag === 1) {
-        const a_1 = t.fields[0];
-        const r = t.fields[1];
-        const b = t.fields[2];
-        t$ = b;
-        acc$ = Types$rowCounts(r, Types$rowVarCounts(a_1, acc));
-        continue;
-      }
-      if (t.tag === 2) {
-        return acc;
-      }
-      if (t.tag === 3) {
-        const r_1 = t.fields[0];
-        return Types$rowCounts(r_1, acc);
-      }
-      rt.nomatch(t);
-    }
-  }
-}
-rt.named(Types$rowVarCounts, "Types.rowVarCounts");
-
-function Types$showTypeWith(names, t, seen, prec, shared) {
-  m0: {
-    if (t.tag === 2) {
-      const id = t.fields[0];
-      return Types$varName(seen, rt.ap(rt.prims["append"], "t", rt.ap(rt.prims["Int.toText"], id)), false);
-    }
-    if (t.tag === 0 && t.fields[0] === "#Pair" && t.fields[1].tag === 1 && t.fields[1].fields[1].tag === 1 && t.fields[1].fields[1].fields[1].tag === 0) {
-      const a = t.fields[1].fields[0];
-      const b = t.fields[1].fields[1].fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", Types$showTypeWith(names, a, seen, 0, shared)), ", "), Types$showTypeWith(names, b, seen, 0, shared)), ")");
-    }
-    if (t.tag === 0 && t.fields[1].tag === 0) {
-      const iri = t.fields[0];
-      return Types$nameOf(names, iri);
-    }
-    if (t.tag === 0) {
-      const iri_1 = t.fields[0];
-      const args = t.fields[1];
-      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$nameOf(names, iri_1), rt.ap(rt.prims["Text.concat"], List$map(rt.named((a_1) => rt.ap(rt.prims["append"], " ", Types$showTypeWith(names, a_1, seen, 100, shared)), "Types.showTypeWith/\u03bb"), args))));
-    }
-    if (t.tag === 1) {
-      const a_2 = t.fields[0];
-      const r = t.fields[1];
-      const b_1 = t.fields[2];
-      const rowText = Types$showRowWith(names, r, seen, shared);
-      const t1 = rt.ap(rt.prims["append"], Types$showTypeWith(names, a_2, seen, 11, shared), " -> ");
-      let r2;
-      if ((rowText === "")) {
-        r2 = "";
-      } else {
-        r2 = rt.ap(rt.prims["append"], rowText, " ");
-      }
-      const t3 = rt.ap(rt.prims["append"], t1, r2);
-      const t4 = Types$showTypeWith(names, b_1, seen, 10, shared);
-      const t5 = rt.ap(rt.prims["append"], t3, t4);
-      return Print$paren(10, prec, t5);
-    }
-    if (t.tag === 3) {
-      const r_1 = t.fields[0];
-      return Types$rowArgument(Types$showRow(r_1, seen), Types$resolveTail(r_1), seen);
-    }
-    rt.nomatch(t);
-  }
-}
-rt.named(Types$showTypeWith, "Types.showTypeWith");
 
 function Cli$ownScheme(meta, sharers) {
   const t0 = new rt.Con("#Pair", 0, [(sharers > 1), Codebase$metaField(meta, "sig")]);
@@ -7503,6 +7901,137 @@ function Sexp$quoteCode(c) {
 }
 rt.named(Sexp$quoteCode, "Sexp.quoteCode");
 
+function Unifier$types(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Unifier$types, "Unifier.types");
+
+function Types$resolveRow(u$, r$) {
+  for (;;) {
+    const u = u$, r = r$;
+    m0: {
+      if (r.tag === 2) {
+        const id = r.fields[0];
+        const t1 = rt.ap(rt.prims["MutMap.get"], Unifier$rows(u), id);
+        m2: {
+          if (t1.tag === 1) {
+            const bound = t1.fields[0];
+            u$ = u;
+            r$ = bound;
+            continue;
+          }
+          if (t1.tag === 0) {
+            return r;
+          }
+          rt.nomatch(t1);
+        }
+      }
+      if (true) {
+        return r;
+      }
+      rt.nomatch(r);
+    }
+  }
+}
+rt.named(Types$resolveRow, "Types.resolveRow");
+
+function Types$fresh(u) {
+  const k = rt.ap(rt.prims["Ref.get"], Unifier$next(u));
+  rt.ap(rt.prims["Ref.set"], Unifier$next(u), ((k + 1) | 0));
+  return k;
+}
+rt.named(Types$fresh, "Types.fresh");
+
+function Types$paramRow(u, params, i) {
+  const t0 = Option$map(rt.named((t) => Types$resolve(u, t), "Types.paramRow/\u03bb"), List$get$p(params, i));
+  m1: {
+    if (t0.tag === 1 && t0.fields[0].tag === 3) {
+      const r = t0.fields[0].fields[0];
+      return r;
+    }
+    if (t0.tag === 1 && t0.fields[0].tag === 2) {
+      const id = t0.fields[0].fields[0];
+      const r_1 = Types$freshRow(u);
+      rt.ap(rt.prims["MutMap.set"], Unifier$types(u), id, new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 3, [r_1]));
+      return r_1;
+    }
+    if (true) {
+      return Types$freshRow(u);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Types$paramRow, "Types.paramRow");
+
+function Map$update(key, f, m) {
+  return Map$insert(key, rt.ap(f, Map$lookup(key, m)), m);
+}
+rt.named(Map$update, "Map.update");
+
+function Types$iriName(iri) {
+  if (Text$startsWith("#", iri)) {
+    return Text$drop(1, iri);
+  } else {
+    const afterSlash = Option$getOr(List$last$p(rt.ap(rt.prims["Text.split"], iri, "/")), iri);
+    return Names$lastSegment(Option$getOr(List$last$p(rt.ap(rt.prims["Text.split"], afterSlash, ":")), afterSlash));
+  }
+}
+rt.named(Types$iriName, "Types.iriName");
+
+function Types$showType(t, seen, prec) {
+  m0: {
+    if (t.tag === 2) {
+      const id = t.fields[0];
+      return Types$varName(seen, rt.ap(rt.prims["append"], "t", rt.ap(rt.prims["Int.toText"], id)), false);
+    }
+    if (t.tag === 0 && t.fields[0] === "#Pair" && t.fields[1].tag === 1 && t.fields[1].fields[1].tag === 1 && t.fields[1].fields[1].fields[1].tag === 0) {
+      const a = t.fields[1].fields[0];
+      const b = t.fields[1].fields[1].fields[0];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", Types$showType(a, seen, 0)), ", "), Types$showType(b, seen, 0)), ")");
+    }
+    if (t.tag === 0 && t.fields[1].tag === 0) {
+      const iri = t.fields[0];
+      return Types$iriName(iri);
+    }
+    if (t.tag === 0) {
+      const iri_1 = t.fields[0];
+      const args = t.fields[1];
+      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$iriName(iri_1), rt.ap(rt.prims["Text.concat"], List$map(rt.named((a_1) => rt.ap(rt.prims["append"], " ", Types$showType(a_1, seen, 100)), "Types.showType/\u03bb"), args))));
+    }
+    if (t.tag === 1) {
+      const a_2 = t.fields[0];
+      const r = t.fields[1];
+      const b_1 = t.fields[2];
+      const rowText = Types$showRow(r, seen);
+      const t1 = rt.ap(rt.prims["append"], Types$showType(a_2, seen, 11), " -> ");
+      let r2;
+      if ((rowText === "")) {
+        r2 = "";
+      } else {
+        r2 = rt.ap(rt.prims["append"], rowText, " ");
+      }
+      const t3 = rt.ap(rt.prims["append"], t1, r2);
+      const t4 = Types$showType(b_1, seen, 10);
+      const t5 = rt.ap(rt.prims["append"], t3, t4);
+      return Print$paren(10, prec, t5);
+    }
+    if (t.tag === 3) {
+      const r_1 = t.fields[0];
+      return Types$rowArgument(Types$showRow(r_1, seen), Types$resolveTail(r_1), seen);
+    }
+    rt.nomatch(t);
+  }
+}
+rt.named(Types$showType, "Types.showType");
+
 function Analytics$parts(ref) {
   function lastHash(i$) {
     for (;;) {
@@ -7574,330 +8103,6 @@ function Analytics$cellOf(s) {
   }
 }
 rt.named(Analytics$cellOf, "Analytics.cellOf");
-
-function Types$resolve(u, t) {
-  m0: {
-    if (t.tag === 2) {
-      const id = t.fields[0];
-      const t1 = rt.ap(rt.prims["MutMap.get"], Unifier$types(u), id);
-      m2: {
-        if (t1.tag === 1) {
-          const bound = t1.fields[0];
-          const r = Types$resolve(u, bound);
-          rt.ap(rt.prims["MutMap.set"], Unifier$types(u), id, r);
-          return r;
-        }
-        if (t1.tag === 0) {
-          return t;
-        }
-        rt.nomatch(t1);
-      }
-    }
-    if (true) {
-      return t;
-    }
-    rt.nomatch(t);
-  }
-}
-rt.named(Types$resolve, "Types.resolve");
-
-function Types$zonkRow(u, r) {
-  const t0 = Types$resolveRow(u, r);
-  m1: {
-    if (t0.tag === 1) {
-      const l = t0.fields[0];
-      const rest = t0.fields[1];
-      return new rt.Con("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 1, [Types$zonk(u, l), Types$zonkRow(u, rest)]);
-    }
-    if (true) {
-      const other = t0;
-      return other;
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Types$zonkRow, "Types.zonkRow");
-
-function Types$freshType(u) {
-  return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 2, [Types$fresh(u)]);
-}
-rt.named(Types$freshType, "Types.freshType");
-
-function Types$rowFromSexp(u, effs, vars, rowVars, params, openArrows) {
-  m0: {
-    if (effs.tag === 0) {
-      if (openArrows) {
-        return Types$freshRow(u);
-      } else {
-        return rt.con0("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 0);
-      }
-    }
-    if (effs.tag === 1 && effs.fields[0].tag === 3 && effs.fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].fields[0] === "tvar" && effs.fields[0].fields[0].fields[1].tag === 1 && effs.fields[0].fields[0].fields[1].fields[0].tag === 2 && effs.fields[0].fields[0].fields[1].fields[1].tag === 0 && effs.fields[1].tag === 0) {
-      const name = effs.fields[0].fields[0].fields[1].fields[0].fields[0];
-      const t1 = Map$lookup(name, rt.ap(rt.prims["Ref.get"], rowVars));
-      m2: {
-        if (t1.tag === 1) {
-          const r = t1.fields[0];
-          return r;
-        }
-        if (t1.tag === 0) {
-          const r_1 = Types$freshRow(u);
-          rt.ap(rt.prims["Ref.set"], rowVars, Map$insert(name, r_1, rt.ap(rt.prims["Ref.get"], rowVars)));
-          return r_1;
-        }
-        rt.nomatch(t1);
-      }
-    }
-    if (effs.tag === 1 && effs.fields[0].tag === 3 && effs.fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].tag === 1 && effs.fields[0].fields[0].fields[0].fields[0] === "tvar" && effs.fields[0].fields[0].fields[1].tag === 1 && effs.fields[0].fields[0].fields[1].fields[0].tag === 0 && effs.fields[0].fields[0].fields[1].fields[1].tag === 0 && effs.fields[1].tag === 0) {
-      const i = effs.fields[0].fields[0].fields[1].fields[0].fields[0];
-      return Types$paramRow(u, params, i);
-    }
-    if (effs.tag === 1) {
-      const e = effs.fields[0];
-      const rest = effs.fields[1];
-      return new rt.Con("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 1, [Types$fromSexp(u, e, vars, rowVars, params, false), Types$rowFromSexp(u, rest, vars, rowVars, params, openArrows)]);
-    }
-    rt.nomatch(effs);
-  }
-}
-rt.named(Types$rowFromSexp, "Types.rowFromSexp");
-
-function Types$freshRow(u) {
-  return new rt.Con("97f6da8b1231da36223893f3443574ebf0ed809127272555fb2becd447ff688d", 2, [Types$fresh(u)]);
-}
-rt.named(Types$freshRow, "Types.freshRow");
-
-function Types$rowCounts(r$, acc$) {
-  for (;;) {
-    const r = r$, acc = acc$;
-    m0: {
-      if (r.tag === 1) {
-        const l = r.fields[0];
-        const rest = r.fields[1];
-        r$ = rest;
-        acc$ = Types$rowVarCounts(l, acc);
-        continue;
-      }
-      if (r.tag === 2) {
-        const id = r.fields[0];
-        return Map$update(id, rt.named((old) => ((Option$getOr(old, 0) + 1) | 0), "Types.rowCounts/\u03bb"), acc);
-      }
-      if (r.tag === 0) {
-        return acc;
-      }
-      rt.nomatch(r);
-    }
-  }
-}
-rt.named(Types$rowCounts, "Types.rowCounts");
-
-function Types$varName(seen, key, row) {
-  const t0 = Map$lookup(key, rt.ap(rt.prims["Ref.get"], seen));
-  m1: {
-    if (t0.tag === 1) {
-      const name = t0.fields[0];
-      return name;
-    }
-    if (t0.tag === 0) {
-      const count = List$length(List$filter(rt.named((pair) => {
-      let r2;
-      if (row) {
-        r2 = "r";
-      } else {
-        r2 = "t";
-      }
-      const t3 = fst(pair);
-      return Text$startsWith(r2, t3);
-    }, "Types.varName/\u03bb"), Map$toList(rt.ap(rt.prims["Ref.get"], seen))));
-      let name_1;
-      if (row) {
-        if ((count === 0)) {
-          name_1 = "e";
-        } else {
-          name_1 = rt.ap(rt.prims["append"], "e", rt.ap(rt.prims["Int.toText"], count));
-        }
-      } else {
-        if ((count < 4)) {
-          name_1 = rt.ap(rt.prims["Text.fromCode"], ((97 + count) | 0));
-        } else {
-          name_1 = rt.ap(rt.prims["append"], "t", rt.ap(rt.prims["Int.toText"], count));
-        }
-      }
-      rt.ap(rt.prims["Ref.set"], seen, Map$insert(key, name_1, rt.ap(rt.prims["Ref.get"], seen)));
-      return name_1;
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Types$varName, "Types.varName");
-
-function Types$nameOf(names, iri) {
-  const t0 = Map$lookup(iri, names);
-  m1: {
-    if (t0.tag === 1) {
-      const name = t0.fields[0];
-      return name;
-    }
-    if (t0.tag === 0) {
-      return Types$iriName(iri);
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Types$nameOf, "Types.nameOf");
-
-function Print$paren(level, ctx, t) {
-  if (rt.ap(rt.prims["lt"], level, ctx)) {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", t), ")");
-  } else {
-    return t;
-  }
-}
-rt.named(Print$paren, "Print.paren");
-
-function Types$showRowWith(names, r, seen, shared) {
-  function labels(row$, acc$) {
-    for (;;) {
-      const row = row$, acc = acc$;
-      m0: {
-        if (row.tag === 1) {
-          const l = row.fields[0];
-          const rest = row.fields[1];
-          row$ = rest;
-          acc$ = rt.cons(Types$showTypeWith(names, l, seen, 0, shared), acc);
-          continue;
-        }
-        if (row.tag === 2) {
-          const id = row.fields[0];
-          const t1 = List$reverse(acc);
-          let r2;
-          if (Set$contains(id, shared)) {
-            r2 = new rt.Con("#Option", 1, [Types$varName(seen, rt.ap(rt.prims["append"], "r", rt.ap(rt.prims["Int.toText"], id)), true)]);
-          } else {
-            r2 = rt.con0("#Option", 0);
-          }
-          const t3 = new rt.Con("#Pair", 0, [r2, true]);
-          return new rt.Con("#Pair", 0, [t1, t3]);
-        }
-        if (row.tag === 0) {
-          return new rt.Con("#Pair", 0, [List$reverse(acc), new rt.Con("#Pair", 0, [rt.con0("#Option", 0), false])]);
-        }
-        rt.nomatch(row);
-      }
-    }
-  }
-  rt.named(labels, "labels");
-  const t4 = rt.ap(labels, r, rt.NIL);
-  m5: {
-    if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0 && t4.fields[1].fields[1] === true) {
-      return "";
-    }
-    if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0 && t4.fields[1].fields[1] === false) {
-      return "{}";
-    }
-    if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1) {
-      const tail = t4.fields[1].fields[0].fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", tail), "}");
-    }
-    if (t4.tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0) {
-      const ls = t4.fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls)), "}");
-    }
-    if (t4.tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1) {
-      const ls_1 = t4.fields[0];
-      const tail_1 = t4.fields[1].fields[0].fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls_1)), " | "), tail_1), "}");
-    }
-    rt.nomatch(t4);
-  }
-}
-rt.named(Types$showRowWith, "Types.showRowWith");
-
-function Types$rowArgument(text, tail, seen) {
-  if ((text !== "")) {
-    return text;
-  } else {
-    m0: {
-      if (tail.tag === 1) {
-        const id = tail.fields[0];
-        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", Types$varName(seen, rt.ap(rt.prims["append"], "r", rt.ap(rt.prims["Int.toText"], id)), true)), "}");
-      }
-      if (tail.tag === 0) {
-        return "{}";
-      }
-      rt.nomatch(tail);
-    }
-  }
-}
-rt.named(Types$rowArgument, "Types.rowArgument");
-
-function Types$showRow(r, seen) {
-  function labels(row$, acc$) {
-    for (;;) {
-      const row = row$, acc = acc$;
-      m0: {
-        if (row.tag === 1) {
-          const l = row.fields[0];
-          const rest = row.fields[1];
-          row$ = rest;
-          acc$ = rt.cons(Types$showType(l, seen, 0), acc);
-          continue;
-        }
-        if (row.tag === 2) {
-          const id = row.fields[0];
-          return new rt.Con("#Pair", 0, [List$reverse(acc), new rt.Con("#Option", 1, [Types$varName(seen, rt.ap(rt.prims["append"], "r", rt.ap(rt.prims["Int.toText"], id)), true)])]);
-        }
-        if (row.tag === 0) {
-          return new rt.Con("#Pair", 0, [List$reverse(acc), rt.con0("#Option", 0)]);
-        }
-        rt.nomatch(row);
-      }
-    }
-  }
-  rt.named(labels, "labels");
-  const t1 = rt.ap(labels, r, rt.NIL);
-  m2: {
-    if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1) {
-      return "";
-    }
-    if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 0) {
-      return "{}";
-    }
-    if (t1.tag === 0 && t1.fields[1].tag === 0) {
-      const ls = t1.fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls)), "}");
-    }
-    if (t1.tag === 0 && t1.fields[1].tag === 1) {
-      const ls_1 = t1.fields[0];
-      const tail = t1.fields[1].fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ", ", ls_1)), " | "), tail), "}");
-    }
-    rt.nomatch(t1);
-  }
-}
-rt.named(Types$showRow, "Types.showRow");
-
-function Types$resolveTail(r$) {
-  for (;;) {
-    const r = r$;
-    m0: {
-      if (r.tag === 1) {
-        const rest = r.fields[1];
-        r$ = rest;
-        continue;
-      }
-      if (r.tag === 2) {
-        const id = r.fields[0];
-        return new rt.Con("#Option", 1, [id]);
-      }
-      if (r.tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      rt.nomatch(r);
-    }
-  }
-}
-rt.named(Types$resolveTail, "Types.resolveTail");
 
 function Types$declaredScheme(sig) {
   const u = Types$newUnifier(undefined);
@@ -9435,136 +9640,31 @@ function Text$isDigit(c) {
 }
 rt.named(Text$isDigit, "Text.isDigit");
 
-function Unifier$types(v) {
+function Unifier$rows(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
       const v_2 = v.fields[1];
       const v_3 = v.fields[2];
-      return v_1;
+      return v_2;
     }
     rt.nomatch(v);
   }
 }
-rt.named(Unifier$types, "Unifier.types");
+rt.named(Unifier$rows, "Unifier.rows");
 
-function Types$resolveRow(u$, r$) {
-  for (;;) {
-    const u = u$, r = r$;
-    m0: {
-      if (r.tag === 2) {
-        const id = r.fields[0];
-        const t1 = rt.ap(rt.prims["MutMap.get"], Unifier$rows(u), id);
-        m2: {
-          if (t1.tag === 1) {
-            const bound = t1.fields[0];
-            u$ = u;
-            r$ = bound;
-            continue;
-          }
-          if (t1.tag === 0) {
-            return r;
-          }
-          rt.nomatch(t1);
-        }
-      }
-      if (true) {
-        return r;
-      }
-      rt.nomatch(r);
-    }
-  }
-}
-rt.named(Types$resolveRow, "Types.resolveRow");
-
-function Types$fresh(u) {
-  const k = rt.ap(rt.prims["Ref.get"], Unifier$next(u));
-  rt.ap(rt.prims["Ref.set"], Unifier$next(u), ((k + 1) | 0));
-  return k;
-}
-rt.named(Types$fresh, "Types.fresh");
-
-function Types$paramRow(u, params, i) {
-  const t0 = Option$map(rt.named((t) => Types$resolve(u, t), "Types.paramRow/\u03bb"), List$get$p(params, i));
-  m1: {
-    if (t0.tag === 1 && t0.fields[0].tag === 3) {
-      const r = t0.fields[0].fields[0];
-      return r;
-    }
-    if (t0.tag === 1 && t0.fields[0].tag === 2) {
-      const id = t0.fields[0].fields[0];
-      const r_1 = Types$freshRow(u);
-      rt.ap(rt.prims["MutMap.set"], Unifier$types(u), id, new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 3, [r_1]));
-      return r_1;
-    }
-    if (true) {
-      return Types$freshRow(u);
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Types$paramRow, "Types.paramRow");
-
-function Map$update(key, f, m) {
-  return Map$insert(key, rt.ap(f, Map$lookup(key, m)), m);
-}
-rt.named(Map$update, "Map.update");
-
-function Types$iriName(iri) {
-  if (Text$startsWith("#", iri)) {
-    return Text$drop(1, iri);
-  } else {
-    const afterSlash = Option$getOr(List$last$p(rt.ap(rt.prims["Text.split"], iri, "/")), iri);
-    return Names$lastSegment(Option$getOr(List$last$p(rt.ap(rt.prims["Text.split"], afterSlash, ":")), afterSlash));
-  }
-}
-rt.named(Types$iriName, "Types.iriName");
-
-function Types$showType(t, seen, prec) {
+function Unifier$next(v) {
   m0: {
-    if (t.tag === 2) {
-      const id = t.fields[0];
-      return Types$varName(seen, rt.ap(rt.prims["append"], "t", rt.ap(rt.prims["Int.toText"], id)), false);
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_3;
     }
-    if (t.tag === 0 && t.fields[0] === "#Pair" && t.fields[1].tag === 1 && t.fields[1].fields[1].tag === 1 && t.fields[1].fields[1].fields[1].tag === 0) {
-      const a = t.fields[1].fields[0];
-      const b = t.fields[1].fields[1].fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", Types$showType(a, seen, 0)), ", "), Types$showType(b, seen, 0)), ")");
-    }
-    if (t.tag === 0 && t.fields[1].tag === 0) {
-      const iri = t.fields[0];
-      return Types$iriName(iri);
-    }
-    if (t.tag === 0) {
-      const iri_1 = t.fields[0];
-      const args = t.fields[1];
-      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$iriName(iri_1), rt.ap(rt.prims["Text.concat"], List$map(rt.named((a_1) => rt.ap(rt.prims["append"], " ", Types$showType(a_1, seen, 100)), "Types.showType/\u03bb"), args))));
-    }
-    if (t.tag === 1) {
-      const a_2 = t.fields[0];
-      const r = t.fields[1];
-      const b_1 = t.fields[2];
-      const rowText = Types$showRow(r, seen);
-      const t1 = rt.ap(rt.prims["append"], Types$showType(a_2, seen, 11), " -> ");
-      let r2;
-      if ((rowText === "")) {
-        r2 = "";
-      } else {
-        r2 = rt.ap(rt.prims["append"], rowText, " ");
-      }
-      const t3 = rt.ap(rt.prims["append"], t1, r2);
-      const t4 = Types$showType(b_1, seen, 10);
-      const t5 = rt.ap(rt.prims["append"], t3, t4);
-      return Print$paren(10, prec, t5);
-    }
-    if (t.tag === 3) {
-      const r_1 = t.fields[0];
-      return Types$rowArgument(Types$showRow(r_1, seen), Types$resolveTail(r_1), seen);
-    }
-    rt.nomatch(t);
+    rt.nomatch(v);
   }
 }
-rt.named(Types$showType, "Types.showType");
+rt.named(Unifier$next, "Unifier.next");
 
 function Types$scheme(u, t) {
   return Types$typeToSexp(Types$zonk(u, t));
@@ -10543,32 +10643,6 @@ function Print$infixOf(name) {
   }
 }
 rt.named(Print$infixOf, "Print.infixOf");
-
-function Unifier$rows(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      return v_2;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Unifier$rows, "Unifier.rows");
-
-function Unifier$next(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      return v_3;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Unifier$next, "Unifier.next");
 
 function Types$typeToSexp(t) {
   m0: {
@@ -12541,8 +12615,8 @@ export const raw = {
   liveDef: Explorer$liveDef,
   liveChange: Explorer$liveChange,
 };
-export const site = rt.exportFn(Explorer$site, [['text']], ['struct', "d03cbf027f2fe5296087cf00dbdddcc0503b12b024a7e1165f567e673a352b7d", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "metaOf", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]);
-export const liveIndex = rt.exportFn(Explorer$liveIndex, [['struct', "d03cbf027f2fe5296087cf00dbdddcc0503b12b024a7e1165f567e673a352b7d", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "metaOf", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]], ['text']);
-export const liveDef = rt.exportFn(Explorer$liveDef, [['struct', "d03cbf027f2fe5296087cf00dbdddcc0503b12b024a7e1165f567e673a352b7d", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "metaOf", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
+export const site = rt.exportFn(Explorer$site, [['text']], ['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]);
+export const liveIndex = rt.exportFn(Explorer$liveIndex, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]], ['text']);
+export const liveDef = rt.exportFn(Explorer$liveDef, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
 export const liveChange = rt.exportFn(Explorer$liveChange, [['text'], ['text']], ['text']);
 //# sourceMappingURL=explorer-live.js.map

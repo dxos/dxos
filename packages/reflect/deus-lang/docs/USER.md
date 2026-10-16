@@ -659,3 +659,11 @@ setup enough safeguards (hooks, alarms, watchers) so this doesnt happen again
 ---
 
 and codebase still slow https://deus.dmytro-a80.workers.dev/@dxos/base/
+
+---
+
+definition of done -> work until you run out of tasks, and then work on perf
+
+---
+
+and dx
