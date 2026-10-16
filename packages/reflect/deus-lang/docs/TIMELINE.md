@@ -245,5 +245,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 235 | 10-16 14:36 | 37m 00s | this commit | @dxos/web published (D211): the four projects of D189 exist; constructor patterns and builtins through library mounts; each project counts its own checks |
 | 236 | 10-16 14:40 | 4m 00s | this commit | Base closed over Pair and Defect, every project upgraded; api signatures compared up to variable renaming; Explorer.Spec and WasmEquality.Spec name every public definition; three tasks closed |
 | 237 | 10-16 14:52 | 12m 00s | this commit | Overviews count their own project; JIT journals fewer Ref writes (D212); short history lines in the CLI |
+| 238 | 10-16 15:04 | 12m 00s | this commit | TypeScript bindings export polymorphic functions with codec parameters (task b6907aeb); Bindings.Spec says how |
 
-Total from stage 1 to stage 237: 73h 32m.
+Total from stage 1 to stage 238: 73h 44m.
