@@ -16585,6 +16585,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
@@ -16663,6 +16666,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-plot':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-plot
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -24313,6 +24319,49 @@ importers:
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
+  packages/ui/react-ui-plot:
+    dependencies:
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
+      '@observablehq/plot':
+        specifier: 'catalog:'
+        version: 0.6.11
+      d3:
+        specifier: 'catalog:'
+        version: 7.9.0
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+      react-resize-detector:
+        specifier: 'catalog:'
+        version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@types/d3':
+        specifier: 'catalog:'
+        version: 7.4.3
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
 
   packages/ui/react-ui-query:
     dependencies:
@@ -34225,9 +34274,6 @@ packages:
 
   '@types/d3-force@3.0.10':
     resolution: {integrity: sha512-ZYeSaCF3p73RdOKcjj+swRlZfnYpK1EbaDiYICEEp5Q6sUiqFaFQ9qgoshp5CzIyyb/yD09kD9o2zEltCexlgw==}
-
-  '@types/d3-force@3.0.3':
-    resolution: {integrity: sha512-z8GteGVfkWJMKsx6hwC3SiTSLspL98VNpmvLpEFJQpZPq6xpA1I8HNBDNSpukfK0Vb0l64zGFhzunLgEAcBWSA==}
 
   '@types/d3-format@3.0.1':
     resolution: {integrity: sha512-5KY70ifCCzorkLuIkDe0Z9YTf9RR2CjBX1iaJG+rgM/cPP+sO+q9YdQ9WdhQcgPj1EQiJ2/0+yUkkziTG6Lubg==}
@@ -56387,8 +56433,6 @@ snapshots:
 
   '@types/d3-force@3.0.10': {}
 
-  '@types/d3-force@3.0.3': {}
-
   '@types/d3-format@3.0.1': {}
 
   '@types/d3-geo@3.0.2':
@@ -56450,7 +56494,7 @@ snapshots:
       '@types/d3-dsv': 3.0.0
       '@types/d3-ease': 3.0.0
       '@types/d3-fetch': 3.0.1
-      '@types/d3-force': 3.0.3
+      '@types/d3-force': 3.0.10
       '@types/d3-format': 3.0.1
       '@types/d3-geo': 3.0.2
       '@types/d3-hierarchy': 3.1.6

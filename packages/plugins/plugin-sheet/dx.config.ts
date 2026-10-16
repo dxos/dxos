@@ -30,6 +30,7 @@ export default Config2.make({
       { dark: 'https://media.dxos.network/plugin-details-sheet-dark.png' },
       { dark: 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-08-27-qa-flows/plugin-sheet-QA-1.webm' },
       { dark: 'https://assets.composer.space/demos/2026-10-09-plugin-sheet.mp4?v=f7e67bab' },
+      { light: 'https://assets.composer.space/demos/2026-10-16-plugin-sheet.mp4?v=bc00ceef' },
     ],
     tags: ['alpha'],
   },

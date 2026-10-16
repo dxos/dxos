@@ -85,6 +85,7 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
           Ref.make(notes.cuppingNotes),
           Ref.make(sheets.greenInventory),
           Ref.make(sheets.priceList),
+          Ref.make(sheets.salesReport),
         ]);
         yield* phases.projects({ taskSets, notes, drawings, about: docs.about, mailbox, organizations });
         yield* SampleSpace.collection('Roastery Handbook', [

@@ -856,6 +856,9 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-plot/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-query/tsconfig.json"
     },
     {
