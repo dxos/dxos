@@ -87,7 +87,7 @@
   --color-grid-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-  --color-grid-header: light-dark(var(--color-emerald-100), oklch(from var(--color-emerald-900) l c h / 0.5));
+  --color-grid-header: light-dark(var(--color-emerald-200), oklch(from var(--color-emerald-800) l c h / 0.6));
   --color-grid-header-fg: light-dark(var(--color-emerald-900), var(--color-emerald-100));
   --color-grid-selection-surface: light-dark(var(--color-blue-500), var(--color-blue-400));
   --color-grid-selection-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
