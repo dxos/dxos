@@ -13,7 +13,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { createChartTestCells, createChartTestRanges, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
@@ -93,7 +95,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...formTranslations, ...uiTranslations],
   },
 } satisfies Meta;
 

@@ -65,8 +65,8 @@ export const createChartTestCells = (): Record<string, Sheet.CellValue> => {
   return cells;
 };
 
-/** Highlighted header rows, with the headers of numeric columns aligned to the end like their values. */
+/** Header rows, with the headers of numeric columns aligned to the end like their values. */
 export const createChartTestRanges = (): Sheet.Range[] => [
-  ...['A1:C1', 'E1:F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.styleKey, value: 'highlight' })),
+  ...['A1:C1', 'E1:F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.styleKey, value: 'header' })),
   ...['B1:C1', 'F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.alignKey, value: 'end' })),
 ];

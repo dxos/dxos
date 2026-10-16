@@ -33,6 +33,7 @@ export const translations = [
         'range-value.center.label': 'Align center',
         'range-value.end.label': 'Align right',
         'range-value.softwrap.label': 'Wrap text',
+        'range-value.header.label': 'Header',
         'range-value.highlight.label': 'Highlight',
 
         'toolbar-action.label': '{{value}}',
@@ -66,9 +67,6 @@ export const translations = [
         'chart-type.bar.label': 'Bar',
         'chart-type.pie.label': 'Pie',
         'chart-type.xy.label': 'XY',
-        'chart-tabs.label': 'Chart view',
-        'chart-tab.label': 'Chart',
-        'settings-tab.label': 'Settings',
         'invalid-range.message': 'Invalid range',
       },
     },

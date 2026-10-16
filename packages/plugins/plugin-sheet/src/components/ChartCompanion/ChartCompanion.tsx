@@ -11,8 +11,9 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import { Plot, type PlotValue, toPlotData } from '@dxos/react-ui-plot';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
-import * as Tabs from '@dxos/react-ui/Tabs';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
@@ -45,7 +46,7 @@ export const ChartCompanion = ({
 }: ChartCompanionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
-  const [tab, setTab] = useState('chart');
+  const [editing, setEditing] = useState(false);
   const current = charts.find((chart) => chart.id === selected);
 
   const handleAdd = useCallback(() => {
@@ -71,6 +72,7 @@ export const ChartCompanion = ({
   const handleSelect = useCallback(
     (id: string) => {
       setSelected(id);
+      setEditing(false);
       const chart = charts.find((chart) => chart.id === id);
       if (chart) {
         onSelectRange?.(chart.range);
@@ -99,14 +101,17 @@ export const ChartCompanion = ({
           },
           () => selection && handleUpdate({ range: selection }),
         )
-        .action(
-          'delete',
-          {
-            label: ['delete-chart.label', { ns: meta.profile.key }],
-            icon: 'ph--trash--regular',
-            disabled: !current,
-          },
-          handleDelete,
+        .separator('gap')
+        .menu('more', (menu) =>
+          menu.action(
+            'delete',
+            {
+              label: ['delete-chart.label', { ns: meta.profile.key }],
+              icon: 'ph--trash--regular',
+              disabled: !current,
+            },
+            handleDelete,
+          ),
         )
         .build(),
     [current, selection, handleAdd, handleUpdate, handleDelete],
@@ -129,21 +134,31 @@ export const ChartCompanion = ({
       </Panel.Header>
       <Panel.Body asChild>
         <Splitter.Root orientation='vertical' defaultSize={10} minSize={4} resizable>
-          <Splitter.Panel position='start'>
-            <Listbox.Root items={items} value={selected} onValueChange={handleSelect}>
-              <Listbox.Viewport>
-                <Listbox.Content aria-label={t('chart-list.label')} padBlock>
-                  {items.map((item) => (
-                    <Listbox.Item key={item.value} id={item.value} data-testid='chart-companion.item'>
-                      <Listbox.ItemIcon icon={chartIcon(charts.find((chart) => chart.id === item.value)?.type)} />
-                      <Listbox.ItemText />
-                      <Listbox.ItemDescription />
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
-              </Listbox.Viewport>
-              <Listbox.Empty>{t('no-charts.message')}</Listbox.Empty>
-            </Listbox.Root>
+          <Splitter.Panel position='start' asChild>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport>
+                <Listbox.Root items={items} value={selected} onValueChange={handleSelect}>
+                  <Listbox.Content aria-label={t('chart-list.label')} padBlock>
+                    {items.map((item) => (
+                      <Listbox.Item key={item.value} id={item.value} data-testid='chart-companion.item'>
+                        <Listbox.ItemIcon icon={chartIcon(charts.find((chart) => chart.id === item.value)?.type)} />
+                        <Listbox.ItemText />
+                        <Listbox.ItemDescription />
+                        <SystemButton.Edit
+                          variant='ghost'
+                          iconOnly
+                          onClick={() => {
+                            handleSelect(item.value);
+                            setEditing(true);
+                          }}
+                        />
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                  <Listbox.Empty>{t('no-charts.message')}</Listbox.Empty>
+                </Listbox.Root>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Splitter.Panel>
           <Splitter.ResizeTrigger aria-label={t('resize-chart-list.label')} />
           <Splitter.Panel position='end'>
@@ -151,10 +166,13 @@ export const ChartCompanion = ({
               <ChartDetail
                 key={current.id}
                 chart={current}
-                tab={tab}
-                onTabChange={setTab}
+                editing={editing}
                 getValues={getValues}
-                onUpdate={handleUpdate}
+                onUpdate={(values) => {
+                  handleUpdate(values);
+                  setEditing(false);
+                }}
+                onCancel={() => setEditing(false)}
               />
             ) : (
               <Typography.Text classNames='p-2 text-fg-subtle'>{t('no-chart-selected.message')}</Typography.Text>
@@ -170,41 +188,36 @@ ChartCompanion.displayName = 'ChartCompanion';
 
 type ChartDetailProps = Pick<ChartCompanionProps, 'getValues'> & {
   chart: ChartSpec;
-  tab: string;
-  onTabChange: (tab: string) => void;
+  editing: boolean;
   onUpdate: (values: Partial<ChartSpec>) => void;
+  onCancel: () => void;
 };
 
-const ChartDetail = ({ chart, tab, onTabChange, getValues, onUpdate }: ChartDetailProps) => {
+/** The selected chart, or its settings form while editing. */
+const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDetailProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => {
     const values = getValues(chart.range);
     return values && toPlotData(values, { header: chart.header });
   }, [getValues, chart.range, chart.header]);
 
-  return (
-    <Tabs.Root value={tab} onValueChange={onTabChange} classNames='h-full'>
-      <Tabs.List aria-label={t('chart-tabs.label')}>
-        <Tabs.Trigger value='chart' icon='ph--chart-bar--regular' label={t('chart-tab.label')} />
-        <Tabs.Trigger value='settings' icon='ph--sliders-horizontal--regular' label={t('settings-tab.label')} />
-      </Tabs.List>
-      <Tabs.Content value='chart' data-testid='chart-companion.chart'>
-        {data ? (
-          <Plot data={data} options={chart} classNames='p-2' />
-        ) : (
-          <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
-        )}
-      </Tabs.Content>
-      <Tabs.Content value='settings'>
-        <Form.Root schema={ChartSpec} values={chart} onValuesChanged={onUpdate}>
-          <Form.Viewport scroll>
-            <Form.Content>
-              <Form.Fields />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </Tabs.Content>
-    </Tabs.Root>
+  if (editing) {
+    return (
+      <Form.Root schema={ChartSpec} values={chart} onSave={onUpdate} onCancel={onCancel}>
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  }
+
+  return data ? (
+    <Plot data={data} options={chart} classNames='p-2' />
+  ) : (
+    <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
   );
 };
 
