@@ -42,6 +42,9 @@ const repoUrl = (target) => {
   return REPO_URL + (/^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`);
 };
 
+/** A file in git named in prose (`examples/react/index.html`), which the site does not serve but GitHub does. */
+const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/;
+
 /** HTML with each decision number (D96) outside a link made a link to the decision log. */
 const decisionLinks = (html) => {
   let inLink = 0;
@@ -681,7 +684,11 @@ const inlineDoc = (text, namespace) =>
     escape(text)
       .replace(/`([^`]+)`/g, (_, code) => {
         const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
-        return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${code}</code>`;
+        return entry
+          ? `<code>${defLink(entry.name, entry.hash, code)}</code>`
+          : REPO_PATH.test(code)
+            ? `<code><a href="${repoUrl(code)}" target="_blank" rel="noopener">${code}</a></code>`
+            : `<code>${code}</code>`;
       })
       // `Syntax.Spec R-3` in a comment is the requirement it implements, so it links there.
       .replace(
@@ -1674,7 +1681,12 @@ const inlineMd = (text, namespace) =>
           if (!entry && (nodeAt(code)?.children.size ?? 0) > 0) {
             return `<code><a class="ref" data-open="n:${escape(code)}">${escape(code)}</a></code>`;
           }
-          return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${escape(code)}</code>`;
+          if (entry) {
+            return `<code>${defLink(entry.name, entry.hash, code)}</code>`;
+          }
+          return REPO_PATH.test(code)
+            ? `<code><a href="${escape(repoUrl(code))}" target="_blank" rel="noopener">${escape(code)}</a></code>`
+            : `<code>${escape(code)}</code>`;
         }
         return escape(piece)
           .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
