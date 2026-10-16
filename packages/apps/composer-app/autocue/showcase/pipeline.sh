@@ -37,22 +37,6 @@ for index in range(36):
 print('grid laid out from', len(order), 'clips')
 EOF
 echo "== composite"
-R=$ROOT/temp/composite
-rm -rf "$R" && mkdir -p "$R"
-lsof -ti tcp:7334 -sTCP:LISTEN | xargs -r kill -9
-node "$ROOT/.agents/skills/autocue/scripts/driver.mjs" --port 7334 \
-  --url "http://localhost:9015/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story&args=controls:!false&globals=theme:light" --out "$R" \
-  --width 1920 --height 1080 --scale 1 --overlay off --gpu on --theme light --fps 60 --captions off --ready video --settle 0 \
-  --ready-timeout 180000 > "$R/driver.log" 2>&1 &
-until [ -f "$R/token" ]; do sleep 1; done
-T=$(cat "$R/token")
-C() { curl -sS -H "x-demo-token: $T" localhost:7334/cmd -d "$1"; echo; }
-C '{"op":"goto"}' > /dev/null
-C '{"op":"eval","hud":false,"expr":"(async()=>{for(let i=0;i<60;i++){const v=[...document.querySelectorAll(`video`)];if(v.length>=36&&v.every(x=>x.readyState>=3))return v.length;await new Promise(r=>setTimeout(r,500))}return 0})()"}'
-C '{"op":"cut"}' > /dev/null
-C '{"op":"eval","hud":false,"expr":"document.querySelector(`button[aria-label=Replay]`).click()"}' > /dev/null
-C '{"op":"sleep","ms":47000}' > /dev/null
-C '{"op":"stop"}' > /dev/null
-ffmpeg -nostdin -hide_banner -loglevel error -y -i "$R/session.webm" -vf fps=60 -c:v libx264 -preset medium -crf 20 \
-  -pix_fmt yuv420p -movflags +faststart "$R/composite.mp4"
-echo "== done $(ffprobe -v error -show_entries stream=r_frame_rate:format=duration -of csv=p=0 "$R/composite.mp4" | tr '\n' ' ')"
+# Rendered frame by frame from the stepped story: a live screencast manages about 25 fps at 1080p.
+mkdir -p "$ROOT/temp/composite"
+node "$SCRIPTS/render.mjs" --out "$ROOT/temp/composite/composite.mp4" --fps 60 --theme light

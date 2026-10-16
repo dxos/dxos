@@ -36,7 +36,18 @@ type GridZoomProps = {
   duration: number;
   /** Shows the replay button and timing readout; off for a recording, which must carry no overlay. */
   controls?: boolean;
+  /**
+   * Renders one frame at a time instead of in real time: the clips pause, and `window.gridZoom.seek(ms)` moves the
+   * camera and every visible clip to `ms`, so a recorder can screenshot exact frames at any rate.
+   */
+  stepped?: boolean;
 };
+
+declare global {
+  interface Window {
+    gridZoom?: { total: number; seek: (ms: number) => Promise<void> };
+  }
+}
 
 /** One leg of the camera's path: held on a tile (`focus`), or moving between two cameras. */
 type Shot = { ms: number; focus?: string; move?: (t: number) => Camera; camera?: Camera };
@@ -65,9 +76,11 @@ type TileProps = {
   bounds: Bounds;
   /** Called with the clip once its length is known, or with nothing if it has no clip. */
   onLoad?: (video?: HTMLVideoElement) => void;
+  /** Plays in real time; off when the story is stepped and the clip is seeked frame by frame. */
+  playing: boolean;
 };
 
-const Tile = ({ clip, label, bounds, onLoad }: TileProps) => {
+const Tile = ({ clip, label, bounds, onLoad, playing }: TileProps) => {
   const [failed, setFailed] = useState(false);
   // A non-literal URL so Vite resolves it at runtime instead of bundling a file that only exists locally.
   const src = useMemo(() => new URL(`${CLIPS_DIR}${clip}.mp4`, import.meta.url).href, [clip]);
@@ -82,12 +95,13 @@ const Tile = ({ clip, label, bounds, onLoad }: TileProps) => {
         <video
           className='dx-fill object-cover'
           src={src}
-          autoPlay
+          autoPlay={playing}
           muted
           loop
           playsInline
+          preload='auto'
           // Chrome pauses muted autoplay video while it is off-screen and does not reliably resume it.
-          onPause={(event) => void event.currentTarget.play().catch(() => {})}
+          onPause={playing ? (event) => void event.currentTarget.play().catch(() => {}) : undefined}
           onLoadedMetadata={(event) => onLoad?.(event.currentTarget)}
           onError={() => {
             setFailed(true);
@@ -104,7 +118,17 @@ const Tile = ({ clip, label, bounds, onLoad }: TileProps) => {
  * plays, slides right to each further cell at the same zoom, then zooms out along `interpolateCamera`'s path until the
  * whole grid (and any tour cell outside it) fits.
  */
-const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration, controls = true }: GridZoomProps) => {
+const DefaultStory = ({
+  cols,
+  rows,
+  gap,
+  tour: tourProp,
+  hold,
+  pan,
+  duration,
+  controls = true,
+  stepped = false,
+}: GridZoomProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
   const [elapsed, setElapsed] = useState(0);
@@ -166,7 +190,7 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration, co
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
 
   useEffect(() => {
-    if (!ready || shots.length === 0) {
+    if (!ready || shots.length === 0 || stepped) {
       return;
     }
     let frame = 0;
@@ -191,13 +215,63 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration, co
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run, ready, shots, total]);
+  }, [run, ready, shots, total, stepped]);
+
+  useEffect(() => {
+    if (!ready || shots.length === 0 || !stepped) {
+      return;
+    }
+    // When each toured clip's hold starts, so a seek can play it from its beginning as the camera arrives.
+    const holdStart = new Map<string, number>();
+    shots.reduce((start, shot) => {
+      if (shot.focus) {
+        holdStart.set(shot.focus, start);
+      }
+      return start + shot.ms;
+    }, 0);
+    window.gridZoom = {
+      total,
+      seek: async (ms) => {
+        setElapsed(ms);
+        const { shot, t } = shotAt(shots, ms);
+        const camera = shot.camera ?? shot.move?.(easeInOut(t));
+        if (!camera) {
+          return;
+        }
+        await Promise.all(
+          cells.map((cell) => {
+            const video = videos.current.get(cell.id);
+            const box = screenBounds(camera, cell.bounds);
+            const onScreen =
+              box.x < viewport.width && box.y < viewport.height && box.x + box.width > 0 && box.y + box.height > 0;
+            if (!video || !onScreen || !Number.isFinite(video.duration)) {
+              return undefined;
+            }
+            const start = holdStart.get(cell.id);
+            const time = (Math.max(0, start === undefined ? ms : ms - start) / 1_000) % video.duration;
+            if (Math.abs(video.currentTime - time) < 0.001) {
+              return undefined;
+            }
+            return new Promise<void>((resolve) => {
+              video.addEventListener('seeked', () => resolve(), { once: true });
+              video.currentTime = time;
+            });
+          }),
+        );
+        // Two frames: one for React to commit the camera, one for the compositor to paint it.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      },
+    };
+    return () => {
+      delete window.gridZoom;
+    };
+  }, [ready, shots, total, stepped, cells, viewport]);
 
   const { shot, t } = shotAt(shots, elapsed);
   const camera = shot?.camera ?? shot?.move?.(easeInOut(t));
 
   return (
-    <div ref={ref} className='relative dx-fill overflow-hidden bg-group-surface'>
+    <div ref={ref} className='relative dx-fill overflow-hidden bg-neutral-950'>
       {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
       {camera &&
         cells.map((cell) => (
@@ -206,6 +280,7 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration, co
             clip={cell.clip}
             label={cell.label}
             bounds={screenBounds(camera, cell.bounds)}
+            playing={!stepped}
             onLoad={(video) => {
               if (video) {
                 videos.current.set(cell.id, video);
@@ -258,5 +333,5 @@ export default meta;
 type Story = StoryObj<GridZoomProps>;
 
 export const Default: Story = {
-  args: { cols: 6, rows: 6, gap: 32, hold: 10_000, pan: 1_500, duration: 12_000, controls: true },
+  args: { cols: 6, rows: 6, gap: 32, hold: 10_000, pan: 1_500, duration: 12_000, controls: true, stepped: false },
 };

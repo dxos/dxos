@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cuts every `clip: <name>` step of a take into <clips>/<name>.mp4 (5s, plank cropped to 16:9, 960x540) and tiles a
+# Cuts every `clip: <name>` step of a take into <clips>/<name>.mp4 (5s, the whole app frame, navtree included, at 960x540) and tiles a
 # mid-clip frame of each into <take>/sheet.png.
 # usage: cut.sh <take-dir> <clips-dir>
 set -euo pipefail
@@ -23,7 +23,7 @@ i=0
 while read -r start name; do
   i=$((i + 1))
   ffmpeg -nostdin -hide_banner -loglevel error -y -i "$TAKE/session.webm" -ss "$start" -t 5 \
-    -vf "crop=1840:1035:350:44,fps=60,scale=960:540" -c:v libx264 -preset veryfast -g 60 -crf 22 \
+    -vf "fps=60,scale=960:540" -c:v libx264 -preset veryfast -g 60 -crf 22 \
     -pix_fmt yuv420p -an "$CLIPS/$name.mp4"
   ffmpeg -nostdin -loglevel error -y -ss 3 -i "$CLIPS/$name.mp4" -frames:v 1 -vf "scale=480:270" \
     "$TAKE/frames/$(printf %02d $i).png"

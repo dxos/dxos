@@ -17,6 +17,6 @@ print(match['ms'] / 1000 + float(sys.argv[3]))
 EOF
 )
 ffmpeg -nostdin -hide_banner -loglevel error -y -i "$TAKE/session.webm" -ss "$START" -t "$SECONDS_" \
-  -vf "crop=1840:1035:350:44,fps=60,scale=960:540" -c:v libx264 -preset veryfast -g 60 -crf 22 \
+  -vf "fps=60,scale=960:540" -c:v libx264 -preset veryfast -g 60 -crf 22 \
   -pix_fmt yuv420p -an "$CLIPS/$NAME.mp4"
 echo "$NAME $START $(ffprobe -v error -show_entries format=duration -of csv=p=0 "$CLIPS/$NAME.mp4")"
