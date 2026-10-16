@@ -16,3 +16,7 @@ typescript:
   rootOptionsConfigFileName: 'tsconfig.base.json'
   syncProjectReferences: false
   syncProjectReferencesToPaths: false
+
+# Keys every task on the third-party packages its project can load: tools/moon-dependency-closure.
+dependency-closure:
+  plugin: 'file://../tools/moon-dependency-closure/dependency-closure.wasm'

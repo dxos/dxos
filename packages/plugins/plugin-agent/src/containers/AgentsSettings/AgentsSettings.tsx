@@ -3,26 +3,28 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Agent from '@dxos/assistant/Agent';
-import { Filter, Order, Query, Type } from '@dxos/echo';
+import { type Database, Filter, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
-import { AgentOperation } from '#types';
 
 import { agentDeckSubject } from '../../constants.ts';
+import { createAgent } from './create-agent.ts';
 
 // The add-agent action uses Form's `settings` variant for its labeled-row chrome; there are no fields to bind.
 const ACTIONS_SCHEMA = Schema.Struct({});
@@ -49,17 +51,35 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
     [space, invokePromise],
   );
 
+  // Named before it is created: with the plugin's setting on, EDGE names the agent's identity and space at creation.
+  const [name, setName] = useState('');
+  const create = Hooks.useSpaceCallback(space?.db.spaceId, [], (db: Database.Database, agentName: string) =>
+    createAgent(db, { name: agentName }),
+  );
+  // Set before the first await, since creation can wait up to 15 s on EDGE and a second click would add a second agent.
+  const adding = useRef(false);
+  const [pending, setPending] = useState(false);
   const handleAdd = useCallback(async () => {
-    if (!space) {
+    if (!space || adding.current) {
       return;
     }
-    const { data } = await invokePromise(AgentOperation.CreateAgent, { name: '' }, { spaceId: space.db.spaceId });
-    const eid = data && EID.tryParse(data.agent.uri);
-    const id = eid && EID.getEntityId(eid);
-    if (id) {
-      open(id);
+    adding.current = true;
+    setPending(true);
+    try {
+      const submitted = name;
+      const agent = await create(space.db, submitted.trim()).catch((error) =>
+        log.error('agent not created', { error }),
+      );
+      if (agent) {
+        // Keeps a name typed for the next agent while this one was being created.
+        setName((current) => (current === submitted ? '' : current));
+        open(agent.id);
+      }
+    } finally {
+      adding.current = false;
+      setPending(false);
     }
-  }, [space, invokePromise, open]);
+  }, [space, create, name, open]);
 
   const handleDelete = useCallback(
     (agent: Agent.Agent) => {
@@ -76,9 +96,18 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
         <Form.Content>
           <Form.FieldSet label={t('agents-section.label')} description={t('agents-section.description')}>
             <Form.Field standalone label={t('add-agent.label')} description={t('add-agent.description')}>
-              <Button.Root onClick={() => void handleAdd()} data-testid='agentPlugin.addAgent'>
-                {t('add-agent.button')}
-              </Button.Root>
+              <Layout.Flex align='center' gap='sm'>
+                <Input.Root
+                  placeholder={t('new-agent.name')}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => event.key === 'Enter' && void handleAdd()}
+                  data-testid='agentPlugin.addAgentName'
+                />
+                <Button.Root onClick={() => void handleAdd()} disabled={pending} data-testid='agentPlugin.addAgent'>
+                  {t('add-agent.button')}
+                </Button.Root>
+              </Layout.Flex>
             </Form.Field>
           </Form.FieldSet>
 

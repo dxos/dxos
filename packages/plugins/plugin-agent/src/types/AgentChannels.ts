@@ -74,6 +74,12 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
     return yield* Effect.forEach(list?.channels ?? [], (ref) => Database.load(ref).pipe(Effect.orDie));
   });
 
+/**
+ * `Message.properties` flag on a message queued for a mirrored channel's host to post (EDGE's Discord bot). The host
+ * posts only these: the agent's own text in a channel conversation is not sent, it speaks through its channel skills.
+ */
+export const OUTBOUND_PROPERTY = 'outbound';
+
 /** `Obj.Meta` key source of a chat that mirrors one conversation (a channel, or a thread inside one). */
 export const CHAT_SOURCE = 'org.dxos.agent/channel';
 

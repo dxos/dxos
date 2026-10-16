@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type RDF } from '@dxos/pipeline-rdf';
 
-import { BrainService, Goal, Profile, RelayOperation, Trigger } from '#types';
+import { AgentPresence, BrainService, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
 import { agentId, personDid } from './members.ts';
@@ -50,7 +50,10 @@ export const pushFacts: (
     return { fired: [], undelivered: [] };
   }
   // The id `readSource` attributes the agent's own messages to.
-  const queued = yield* brain.push(agent.id, facts, { quiet: [agentId(agent)], ...(read ? { read } : {}) });
+  const queued = yield* brain.push(AgentPresence.brainId(agent), facts, {
+    quiet: [agentId(agent)],
+    ...(read ? { read } : {}),
+  });
   if (queued === 0) {
     return { fired: [], undelivered: [] };
   }
@@ -63,6 +66,9 @@ export const pushFacts: (
  * (and the conversation `transcript`, when a turn caused them) under the relay rules. A one-time
  * subscription also marks its goal achieved and is removed; an ongoing one acknowledges its events and
  * keeps watching. Subscriptions whose goal closed meanwhile are removed undelivered.
+ *
+ * Only the subscriptions set in this space (`AgentPresence.delivers`): another space's goal and recipient do not
+ * resolve here. Their events stay queued for that space, where EDGE's brain delivers them (`RunDue`).
  */
 export const deliver: (
   agent: Agent.Agent,
@@ -73,10 +79,14 @@ export const deliver: (
   AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
 > = Effect.fnUntraced(function* (agent, transcript) {
   const brain = yield* BrainService.BrainService;
+  const { db } = yield* Database.Service;
   const fired: string[] = [];
   const undelivered: string[] = [];
 
-  for (const subscription of yield* brain.subscriptions(agent.id)) {
+  const subscriptions = (yield* brain.subscriptions(AgentPresence.brainId(agent))).filter(({ origin }) =>
+    AgentPresence.delivers(agent, db.spaceId, origin),
+  );
+  for (const subscription of subscriptions) {
     const allEvents = yield* brain.take(subscription.id);
     if (allEvents.length === 0) {
       continue;
@@ -129,7 +139,10 @@ export const deliver: (
       ),
     });
     // Composing is a model call, long enough for the watch to be cancelled meanwhile (e.g. set up for the wrong person).
-    if (!closes && !(yield* brain.subscriptions(agent.id)).some(({ id }) => id === subscription.id)) {
+    if (
+      !closes &&
+      !(yield* brain.subscriptions(AgentPresence.brainId(agent))).some(({ id }) => id === subscription.id)
+    ) {
       continue;
     }
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
