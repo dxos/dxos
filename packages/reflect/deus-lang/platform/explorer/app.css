@@ -568,8 +568,15 @@ pre.source {
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--code);
+  /* Shadows at an edge that has more code past it: the covers scroll with the text and hide a shadow at the end. */
+  background:
+    linear-gradient(to right, var(--code) 30%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--code) 30%, transparent) right / 28px 100% no-repeat local,
+    linear-gradient(to right, var(--line), transparent) left / 12px 100% no-repeat scroll,
+    linear-gradient(to left, var(--line), transparent) right / 12px 100% no-repeat scroll,
+    var(--code);
   overflow-x: auto;
+  scrollbar-width: thin;
   line-height: 1.6;
   tab-size: 2;
 }
@@ -1396,6 +1403,14 @@ ul.rows {
   text-decoration: none;
 }
 
+.task-title {
+  /* A title can run to a paragraph; three lines tell cards apart, and the card holds the rest. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
 .task-card.done .task-title,
 .task-card.canceled .task-title {
   color: var(--muted);
@@ -1473,6 +1488,15 @@ ul.rows {
   flex: none;
 }
 
+.history-filter {
+  margin: 0 0 12px;
+}
+
+#history-view[data-filter='code'] li.task-change,
+#history-view[data-filter='tasks'] li:not(.task-change) {
+  display: none;
+}
+
 /* A phone has no room for the message beside the counts, date and hash, so they go on a line below it. */
 @media (max-width: 760px) {
   .timeline-row {
@@ -1530,7 +1554,8 @@ ul.rows {
   list-style: none;
 }
 
-.stats li a {
+.stats li a,
+.stats li .tile {
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
@@ -1876,6 +1901,22 @@ ul.rows {
   .row-summary,
   .result-summary {
     display: none;
+  }
+
+  /* A phone shows the whole name, which is what was matched, and the signature under it. */
+  .result {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .result-name {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .result-sig {
+    flex: 1 0 100%;
   }
 }
 
@@ -2478,6 +2519,12 @@ ul.features {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.doc-row .count {
+  flex: none;
+  margin-left: auto;
+  padding-left: 10px;
 }
 
 .doc-row .doc-title {

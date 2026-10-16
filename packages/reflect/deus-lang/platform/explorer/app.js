@@ -764,8 +764,12 @@ const entryLink = (entry, label = entry.name) =>
 
 const entryRow = (entry, label = entry.name) =>
   `<li class="entry-row">${icon(entry.kind)}${entryLink(entry, label)}${statusMark(entry.status)}` +
-  (entry.sig ? `<code class="row-sig">${typeHtml(typeOf(entry.sig), namespaceOf(entry.name))}</code>` : '') +
-  (entry.summary ? `<span class="row-summary">${inlineDoc(entry.summary, namespaceOf(entry.name))}</span>` : '') +
+  (entry.sig
+    ? `<code class="row-sig" title="${escape(entry.sig)}">${typeHtml(typeOf(entry.sig), namespaceOf(entry.name))}</code>`
+    : '') +
+  (entry.summary
+    ? `<span class="row-summary" title="${escape(entry.summary)}">${inlineDoc(entry.summary, namespaceOf(entry.name))}</span>`
+    : '') +
   '</li>';
 
 /** A ref (`{name, hash}`) as a row, enriched from the name index. */
@@ -2206,7 +2210,7 @@ const homeHtml = () => {
             .join('')}</ul>`,
         )
       : '') +
-    `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
+    `<div class="home-columns"><div>${section('Recent changes', meta.history.length >= HISTORY_CAP ? `${HISTORY_CAP}+` : meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
     `<div>${section(
       'Open tasks',
       open.length,
@@ -2274,20 +2278,28 @@ const taskCode = (task) => {
         .join('')}${names.length > 3 ? `<span class="muted">+${names.length - 3}</span>` : ''}</span>`;
 };
 
+/** Cards a closed column (done, canceled) shows before "Show all": the open work is what a visitor came for. */
+const CLOSED_SHOWN = 8;
+
 const renderTasks = () => {
   const columns = STATES.map((state) => {
     const tasks = index.tasks.filter((task) => task.state === state);
+    const cards = tasks.map(
+      (task) =>
+        `<a class="task-card ${escape(state)}" data-open="t:${escape(task.id)}"><span class="task-title" title="${escape(task.title)}">${escape(task.title)}</span>` +
+        `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
+          .map((label) => `<span class="chip">${escape(label)}</span>`)
+          .join('')}</span>${taskCode(task)}</a>`,
+    );
+    const closed = state === 'done' || state === 'canceled';
+    const shown = closed ? cards.slice(0, CLOSED_SHOWN) : cards;
+    const rest = closed ? cards.slice(CLOSED_SHOWN) : [];
     return (
       `<div class="column"><h3>${stateChip(state)}<span class="count">${tasks.length}</span></h3>` +
-      tasks
-        .map(
-          (task) =>
-            `<a class="task-card ${escape(state)}" data-open="t:${escape(task.id)}"><span class="task-title">${escape(task.title)}</span>` +
-            `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
-              .map((label) => `<span class="chip">${escape(label)}</span>`)
-              .join('')}</span>${taskCode(task)}</a>`,
-        )
-        .join('') +
+      shown.join('') +
+      (rest.length > 0
+        ? `<div class="more-cards" hidden>${rest.join('')}</div><button class="link-button" data-more>Show all ${tasks.length}</button>`
+        : '') +
       '</div>'
     );
   });
@@ -2315,22 +2327,42 @@ const changeMessage = (message) => {
   return `${escape(message || '(no message)')}${title ? `<span class="muted"> · ${escape(title)}</span>` : ''}`;
 };
 
+/** How many changes the site lists, newest first (the generator's cap). */
+const HISTORY_CAP = 1000;
+
+/** Whether a change only touched tasks (`task: …`), which History can hide to show the code's own changes. */
+const isTaskChange = (change) => (change.message ?? '').startsWith('task: ');
+
+/** Shows the History rows of one kind: `all`, `code` or `tasks`. */
+const filterHistory = (kind) => {
+  const view = element('history-view');
+  view.dataset.filter = kind;
+  for (const chip of view.querySelectorAll('[data-history]')) {
+    chip.classList.toggle('active', chip.dataset.history === kind);
+  }
+};
+
 const renderHistory = async () => {
   const history = index.meta.history;
   const view = element('history-view');
+  const tasks = history.filter(isTaskChange).length;
+  const chip = (kind, label, count) =>
+    `<button class="tag-chip${kind === (view.dataset.filter ?? 'all') ? ' active' : ''}" data-history="${kind}">${label} <span class="count">${count}</span></button>`;
   view.innerHTML =
-    `<h1 class="view-title">History <span class="muted">· ${escape(index.meta.branch)}</span></h1><ol class="timeline">` +
+    `<h1 class="view-title">History <span class="muted">· ${escape(index.meta.branch)}</span></h1>` +
+    `<div class="tag-chips history-filter">${chip('all', 'All', history.length)}${chip('code', 'Code', history.length - tasks)}${chip('tasks', 'Tasks', tasks)}</div>` +
+    '<ol class="timeline">' +
     history
       .map((change) =>
         change.imported
           ? `<li><span class="timeline-row imported" title="Imported from an export; this store has no record of its contents"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
             `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="chip">imported</span><span class="hash">${escape(short(change.causal))}</span></span></li>`
-          : `<li><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${changeMessage(change.message)}</span>` +
+          : `<li${isTaskChange(change) ? ' class="task-change"' : ''}><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${changeMessage(change.message)}</span>` +
             `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
       )
       .join('') +
     '</ol>' +
-    (history.length >= 1000 ? '<p class="muted">The 1000 most recent changes.</p>' : '');
+    (history.length >= HISTORY_CAP ? `<p class="muted">The ${HISTORY_CAP} most recent changes.</p>` : '');
   // Each row's counts come from its change page, which the Worker may draw on demand; fetching all of them at once
   // sent up to a thousand requests and kept the page busy for minutes, so a row loads its counts when it is seen.
   const pending = [];
@@ -2522,7 +2554,10 @@ const setFocus = (key, scroll = true) => {
   }
   const node = key && cardElements.get(key);
   if (node && scroll) {
-    node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // A card taller than the screen scrolled to `nearest` can land mid-card, so one whose top is out of view is
+    // brought in by its top.
+    const { top } = node.getBoundingClientRect();
+    node.scrollIntoView({ block: top < 0 || top > window.innerHeight * 0.6 ? 'start' : 'nearest', behavior: 'smooth' });
   }
   if (ui.view === 'graph') {
     drawGraph();
@@ -3442,7 +3477,7 @@ const setDialect = (dialect) => {
 
 const onClick = (event) => {
   const target = event.target.closest(
-    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag]',
+    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag], [data-history]',
   );
   if (!target) {
     const cardNode = event.target.closest('.card');
@@ -3451,11 +3486,17 @@ const onClick = (event) => {
     }
     return;
   }
+  // A modified click on a link opens it as the browser would (a new tab or window), from its `href`.
+  if (target.hasAttribute('href') && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) {
+    return;
+  }
   event.preventDefault();
   hideTooltip();
   const data = target.dataset;
   if (data.areaTag !== undefined) {
     filterAreas(target.closest('.home') ?? document, data.areaTag);
+  } else if (data.history !== undefined) {
+    filterHistory(data.history);
   } else if (data.index !== undefined) {
     choose(finder.results[Number(data.index)]);
   } else if (data.open) {
@@ -3808,6 +3849,21 @@ const openPathLink = () => {
   history.replaceState(null, '', `${match[1]}#${encodeURIComponent(key)}`);
 };
 
+/** The fragment that opens `key` alone: a link's `href`, so it can be focused, opened in a new tab and copied. */
+const keyHref = (key) => `#${key.replace(/[%#, ]/g, (c) => encodeURIComponent(c))}`;
+
+/** Gives the links under `root` that open a card or a view an `href`; clicks still go through `onClick`. */
+const addHrefs = (root) => {
+  const links = root.matches?.('a[data-open], a[data-view]') ? [root] : [];
+  for (const link of [...links, ...root.querySelectorAll('a[data-open]:not([href]), a[data-view]:not([href])')]) {
+    if (link.hasAttribute('href')) {
+      continue;
+    }
+    const { open: key, view } = link.dataset;
+    link.setAttribute('href', key ? keyHref(key) : view === 'code' ? '#' : `#v:${view}`);
+  }
+};
+
 const main = async () => {
   const [meta, names, tasks] = await Promise.all([load('meta.json'), load('names.json'), load('tasks.json')]);
   if (!meta || !names || !tasks) {
@@ -3877,6 +3933,16 @@ const main = async () => {
     }
   });
   window.addEventListener('hashchange', render);
+  addHrefs(document.body);
+  new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node instanceof Element) {
+          addHrefs(node);
+        }
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
   await render();
 };
 

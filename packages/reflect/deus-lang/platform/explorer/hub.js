@@ -30,13 +30,14 @@ const icon = (kind, glyph) => `<span class="icon k-${escape(kind)}" title="${esc
 
 const count = (value) => Number(value ?? 0).toLocaleString('en-US');
 
-/** A row of count tiles; each tile links where its count can be seen. */
+/** A row of count tiles; a tile links where its count can be seen, and is plain where no one page lists it. */
 const tiles = (counts, link) =>
   `<ul class="stats">${counts
-    .map(
-      ([kind, glyph, label, value]) =>
-        `<li><a href="${escape(link(kind))}">${glyph ? icon(kind, glyph) : ''}<b>${count(value)}</b><span>${escape(label)}</span></a></li>`,
-    )
+    .map(([kind, glyph, label, value]) => {
+      const body = `${glyph ? icon(kind, glyph) : ''}<b>${count(value)}</b><span>${escape(label)}</span>`;
+      const href = link(kind);
+      return href ? `<li><a href="${escape(href)}">${body}</a></li>` : `<li><div class="tile">${body}</div></li>`;
+    })
     .join('')}</ul>`;
 
 /** A project's counts as tiles: definitions by kind, then its open tasks. */
@@ -65,7 +66,8 @@ const renderTotals = (projects) => {
     `<header class="home-header"><h1>DEUS codebases</h1><p class="muted">${count(sum((project) => project.own ?? project.definitions))} definitions in ${projects.length} project${projects.length === 1 ? '' : 's'} on this host, each counted in the project that defines it.</p>` +
     // A first path for a visitor who has not met DEUS (the four-project probe, 2026-10-16).
     `<p class="hub-start">New here? DEUS keeps code in a codebase, not files: each definition stored by its hash beside its history, specs, tests and tasks. Start with <a href="/@dxos/toolchain/#n:Tour">the Tour</a>, then a spec document such as <a href="/@dxos/toolchain/#s:Compile.Spec">Compile.Spec</a>; <a href="/@dxos/toolchain/#k:glossary">the glossary</a> explains the terms and the glyphs. To see DEUS run in a browser, open <a href="/demo/todo/">the todo app</a>, written in DEUS with React (<a href="/@dxos/web/#n:TodoApp">its source</a>).</p></header>` +
-    tiles(counts, (kind) => (kind === 'namespace' ? '#hub-projects' : '#'));
+    // The totals add up every project, and only the project list shows them together.
+    tiles(counts, (kind) => (kind === 'namespace' ? '#hub-projects' : undefined));
 };
 
 /** A project's counts as one quiet line of small labelled numbers, each opening that list in its explorer. */
