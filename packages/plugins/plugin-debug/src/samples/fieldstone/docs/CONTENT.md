@@ -4,7 +4,7 @@ The team's shared documents: handbook, architecture, incident write-ups, plannin
 notes, with the sheets and drawings they embed. Every document links people and other content inline,
 so reading one leads to the next.
 
-- Code: this directory, not written yet
+- Code: this directory: `partial.ts`, `documents.ts`, `sheets.ts`, `drawings.ts`, `partial.test.ts`
 - Requires: [team](../team/CONTENT.md) (`orgs.fieldstone`, `people.*`)
 - Optional:
   - [inbox-crm](../inbox-crm/CONTENT.md): the customer notes, and the links to vendors, customers and
@@ -12,7 +12,9 @@ so reading one leads to the next.
   - [projects](../projects/CONTENT.md): the links to projects, tasks and project artifacts, and the
     roadmap's TaskSet embed.
 - Provides: `docs.<key>`, `sheets.<key>`, `drawings.<key>`
-- Clock: sync notes and the incident timeline use offsets from −60d to the reference date.
+- Clock: sync notes and the incident timeline use offsets from −60d to the reference date. The decision
+  log reaches back to −120d, the hiring sheet's open dates to −80d, the vendor spend sheet over the 12
+  months ending in the reference month, and the roadmap drawing over the reference date's quarter.
 - Used by: a Fieldstone Labs template, not written yet
 
 ## Contents
@@ -50,7 +52,9 @@ so reading one leads to the next.
     organization and its contacts, and lists open asks. With projects, the Meridian note links `soc2`.
 - Meetings:
   - `syncNotes` Team sync notes: one dated section for each of the last 4 team syncs, each linking the
-    people who own its action items. With inbox-crm, each section embeds its `teamSync` event.
+    people who own its action items. With inbox-crm, the sections are the last 4 `teamSync` events
+    that start before the reference date, and each embeds its event. Without it, they are dated to
+    the last 4 Mondays at 10:00.
 
 ### Sheets
 
@@ -58,12 +62,16 @@ so reading one leads to the next.
   - `pricing` Plans by tier and usage, 4 tiers × 6 columns, monthly price computed from usage
   - `vendorSpend` Monthly spend per vendor over 12 months, with row and column totals
   - `cloudCost` AWS and Cloudflare cost forecast for the next 6 months, growth by formula
-  - `incidentTimeline` The Okapi incident, 20 timestamped rows from detection to close
-  - `hiring` Open roles by stage, 5 roles, with days open computed from the open date
+  - `incidentTimeline` The Okapi incident, 20 timestamped rows from detection (−35d) to close (−25d),
+    hours since detection by formula
+  - `hiring` Open roles by stage, 5 roles, with days open computed from the open date: an "As of"
+    cell holds the reference date, and both dates are `DATE()` formulas so the sheet can subtract them
 
 ### Drawings
 
-- 5 `Drawing.Drawing` with a canvas, like the canvas architecture content:
+- 5 `Drawing.Drawing`, each a tldraw canvas (`Tldraw.TLDRAW_SCHEMA`) built with
+  `TldrawModel.RecordBuilder` from shapes and bound arrows. Canvas-renderer drawings, like the
+  architecture content, need plugin-canvas internals that are not exported:
   - `orgChart` Fieldstone's 10 people and who reports to whom
   - `architectureDiagram` Cairn's services and stores
   - `requestFlow` One cache request, client to storage and back

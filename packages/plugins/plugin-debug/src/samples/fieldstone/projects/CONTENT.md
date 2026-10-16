@@ -4,7 +4,8 @@ Fieldstone's work in flight, done mostly by agents. Agents hold most of the task
 them, and every agent task that has run has the chat and trace behind it. That history is what the
 project Gantt and the trace panel draw.
 
-- Code: this directory, not written yet
+- Code: this directory: `partial.ts`, `projects.ts`, `tasks.ts`, `history.ts`, `routines.ts`, `docs.ts`,
+  `util.ts`, tested by `partial.test.ts`
 - Requires: [team](../team/CONTENT.md) (`people.*`, `agents.*`)
 - Optional: [inbox-crm](../inbox-crm/CONTENT.md). When the template includes it, projects link the
   threads and customers listed under Links.
@@ -21,6 +22,8 @@ project Gantt and the trace panel draw.
   - `billing` Usage-based billing on Stripe, `active`, 12 tasks
   - `soc2` SOC 2 Type I readiness, `active`, 12 tasks, most drafted by Scribe
   - `offsite` Q4 offsite, `active`, 6 tasks, all human
+- 3 `Repo.Repo` under `fieldstone`: `cache` and `billing` share `cairn`; `soc2` has `policies`, `offsite`
+  has `handbook`.
 - Each TaskSet has 1 to 3 `Milestone`s, for example "Cache v2 in beta" and "1.8 shipped".
 
 ### Tasks
@@ -40,7 +43,14 @@ project Gantt and the trace panel draw.
 
 ### Execution history
 
-- 40 `Chat`s, one per agent run, from −60d to the reference date with at least one run every week.
+- 40 `Chat`s, one per agent session, from −60d to the reference date with at least one run every week.
+  11 are Triage sweeps that list the tasks they filed. The failed R2 task's chat holds two requests, the
+  run and its retry.
+- 12 `cache` chats (every Builder and Scribe session except the R2 integration run) hold a follow-up request
+  1 to 3 days after the first, in the same session: the first request moves the task to `started`, the
+  follow-up moves it on. The trace has 53 runs.
+- Each task is on at most one chat's checklist: the Gantt keys a task lane by task id, so a task on two
+  checklists would draw two lanes with one key.
 - Each chat is parented to its project with `Chat.linkCompanion({ chat, subject: project })`, which
   is how `useProjectChats` finds it. Each lists at least one task in `tasks`; a chat with no tasks
   gets no Gantt lane.
@@ -48,24 +58,33 @@ project Gantt and the trace panel draw.
 - Each chat's feed holds 8 to 30 `Message`s: the task brief, assistant turns, tool calls and their
   results (repository search, file edits, test runs, opening a pull request), and a closing summary.
 - One trace `Feed` with kind `dxos.org.feed.trace`, created the way `getOrCreateTraceFeed` creates
-  it. Each run appends `Trace.Message`s with `meta.pid`, `meta.processName` set to the agent's name,
-  and `meta.conversation` set to `Ref(chat.feed)`. Events, all on the reference clock:
+  it. Each run appends `Trace.Message`s with `meta.pid`, `meta.processName` set to the agent's name
+  (a tool call's message names its operation), and `meta.conversation` set to `Ref(chat.feed)`. Events, all on the reference clock:
   - `AgentRequestBegin` and `AgentRequestEnd` bracket the run
   - `OperationStart` and `OperationEnd` around each tool call
-  - `TaskStatusChanged` (`taskId`, `status`, `previousStatus`) at each status change the run makes
+  - `TaskStatusChanged` (`taskId`, `status`, `previousStatus`) at each status change the run makes,
+    inside its `update_tasks` call; a task Triage files has no `previousStatus`
   - `QuestionAsked` and `QuestionAnswered` on the two tasks with a question
   - `DelegationSpawned` and `DelegationCompleted` when a Builder run hands off to a Reviewer run,
     whose `meta.parentPid` is the Builder run's `pid`
 - Run lengths vary from 2 minutes to 3 hours. Runs overlap in time, so the Gantt has parallel lanes.
-- Every run is finished. The 8 `started` tasks are waiting on their next run.
+- Every run is finished. The 4 agent tasks in `started` are waiting on their next run; the other 4
+  `started` tasks belong to people.
+- A person's approval (`review` → `done`) is an edit, not a run, so it is in `history` and has no
+  `TaskStatusChanged` event. It comes after the request that moves the task to `review`.
 - The Gantt draws session lanes from `AgentRequestBegin`/`End` and task bars from
   `TaskStatusChanged`. It does not read `Task.history` for bars, and edit history carries the build
   time, so every status change that belongs on the Gantt is a `TaskStatusChanged` event. Tasks
   assigned to people have no runs; their bars come from edit history and no flow relies on them.
+- A task bar runs from its session's `started` event to the event that puts the task down. A bar spans
+  days only when the session's requests do: a single run is under a pixel on the 60-day axis.
+- Edit history records each task's status at build time, so the Gantt draws one status node per task at
+  the build time. Seed data cannot move it.
 
 ### Routines and documents
 
-- 1 `Routine` for Triage, a nightly inbox and issue sweep, with a disabled timer `Trigger`.
+- 1 `Routine` for Triage, a nightly inbox and issue sweep, owned by `cache`, with a disabled timer
+  `Trigger` wired to RunInstructions.
 - 5 `Markdown.Document` as artifacts:
   - `cacheDesign` "Remote cache v2 design" (`cache`)
   - `billingPlan` "Billing migration plan" (`billing`)
@@ -106,8 +125,9 @@ When the template includes inbox-crm:
 - 35 tasks are assigned to an agent.
 - 40 chats, with at least one run in every week from −60d to the reference date.
 - Every agent task in `started`, `review`, `done` or `failed` has at least one chat and one trace,
-  and one `TaskStatusChanged` event per status change.
+  and one `TaskStatusChanged` event per status change its runs make.
 - Every trace's `meta.conversation` resolves to a chat's feed in the space.
 - Every timestamp in a chat or trace falls between −60d and the reference date.
-- The Gantt for `cache` shows at least 3 parallel lanes.
+- The Gantt for `cache` shows at least 3 overlapping sessions, and every bar from `started` to `review`
+  spans at least a day, except the delegated review's.
 - The trigger is disabled.

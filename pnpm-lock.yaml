@@ -10433,6 +10433,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit
@@ -10490,6 +10493,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-canvas':
+        specifier: workspace:*
+        version: link:../plugin-canvas
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -10514,6 +10520,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
+      '@dxos/plugin-kanban':
+        specifier: workspace:*
+        version: link:../plugin-kanban
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -10562,6 +10571,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/react-ui-terminal':
         specifier: workspace:*
         version: link:../../ui/react-ui-terminal
@@ -10593,9 +10605,6 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../../core/compute/assistant
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol

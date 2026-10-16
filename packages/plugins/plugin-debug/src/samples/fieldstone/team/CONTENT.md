@@ -4,11 +4,11 @@ The people and agents of Fieldstone Labs, a fictional 10-person company that bui
 build cache for monorepos. Astrid Holm, engineering manager, is the main character. The other
 Fieldstone partials build on this one.
 
-- Code: this directory, not written yet
+- Code: `partial.ts`, with `organization.ts`, `people.ts` and `agents.ts`
 - Requires: nothing
 - Provides: `orgs.fieldstone`, `people.<key>`, `agents.<key>`
 - Clock: unused
-- Used by: a Fieldstone Labs template, not written yet
+- Used by: `FieldstoneSpace.makeTemplate`
 
 ## Contents
 
