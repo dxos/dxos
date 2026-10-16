@@ -20,4 +20,5 @@ export * from './route.ts';
 export * from './scenes.ts';
 export * from './shapes.ts';
 export * from './style.ts';
+export * from './surfaces.ts';
 export * from './undo.ts';
