@@ -300,9 +300,9 @@ const BASE_SINKS = 4;
 /** How far a source's molecules spread across a partitioned hub, in bucket widths. */
 const NEAR_BUCKETS = 1.5;
 
-/** How much faster sources in the focus supply (and apps in it write), and the share of traffic its sinks draw. */
+/** How much faster sources in the focus supply, and the share of traffic its sinks draw. */
 const FOCUS_BOOST = 2;
-const FOCUS_SHARE = 0.8;
+const FOCUS_SHARE = 0.5;
 
 /** The messages a conversation opens with. */
 const OPENING_MESSAGES = 2;
@@ -1195,17 +1195,17 @@ export class DataFlowSimulation {
 
   /**
    * Seconds between writes up from the sinks: one timer serves them all, so it runs faster as there are more of them
-   * (each keeps the pace the first four had), and faster again while the view is panning along a focus.
+   * (each keeps the pace the first four had). A focus does not speed it up: that would flood the few sinks in view.
    */
   #upInterval(): number {
     const sinks = Math.max(1, this.#layout.sinks.length / BASE_SINKS);
-    return this.#options.upInterval / sinks / (1 + (this.#focus?.boost ?? 0));
+    return this.#options.upInterval / sinks;
   }
 
   /**
-   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Sources in it supply, and the
-   * apps write, `boost` times faster than normal on top of their usual rate (twice by default), and its apps and agents
-   * get more of the traffic; unset, every block is treated alike.
+   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Sources in it supply `boost`
+   * times faster than normal on top of their usual rate (twice by default), and its apps and agents get a larger share of
+   * the traffic; unset, every block is treated alike.
    */
   focus(range: { left: number; right: number; boost?: number } | undefined): void {
     this.#focus = range && { ...range, boost: range.boost ?? FOCUS_BOOST };
