@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
@@ -239,8 +239,24 @@ export const Chapter3Echo: Story = chapter(2);
 /** The one ECHO space splits into three along the natural breaks in its lattice; molecules then land in the new spaces. */
 export const Chapter4Spaces: Story = chapter(3);
 
-/** ECHO extends past the view on both sides as new spaces, agents and sources fade in; nothing already there moves. */
-export const Chapter5Growth: Story = chapter(4);
+/** Opens on the chapter before's layout, then moves on to `spec` a moment later, so the change plays as it loads. */
+const GrowsIn = ({ spec, before, ...props }: DataFlowViewProps & { before: DataFlowSpec }) => {
+  const [grown, setGrown] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setGrown(true), LEAD_IN * 1000);
+    return () => clearTimeout(timer);
+  }, []);
+  return <DataFlowView {...props} spec={grown ? spec : before} continuous />;
+};
+
+/**
+ * ECHO extends past the view on both sides as new spaces, agents and sources fade in; nothing already there moves.
+ * It opens on chapter 4's three buckets and grows from there.
+ */
+export const Chapter5Growth: Story = {
+  ...chapter(4),
+  render: (args) => <GrowsIn {...args} before={CHAPTERS[3].spec} />,
+};
 
 /**
  * Chapters 1 and 2 on one stage: the silos run, then the monolithic agent fades in over them and the camera widens.
