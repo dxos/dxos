@@ -1,6 +1,6 @@
 # Showcase — Tasks
 
-_Resume: upload the Terra-views and Spacetime videos (approve the 1Password prompt) and link them; then the phase 3 issues. Uncommitted: none. Last: #14026 merged; follow-up #14027 opened._
+_Resume: #14027 under review (Auto-fix on); then the phase 3 issues. Uncommitted: none. Last: Terra-views and Spacetime videos uploaded and linked._
 
 ## Phase 1: GridZoom montage (PR #14026)
 
@@ -30,8 +30,7 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [x] **Spacetime flow** — `build-a-scene.mjs` (QA-2).
 - [x] **GridZoom empty tour** — falls back to the default tour.
 - [x] **Open the follow-up PR** — #14027.
-- [ ] **Upload the Terra views and Spacetime videos**; link them from `dx.config.ts` and DEMOS.md. Trimmed in
-      `temp/terra-views` and `temp/spacetime`; the 1Password authorization timed out twice.
+- [x] **Upload the Terra views and Spacetime videos** — linked from `dx.config.ts`, DEMOS.md and SHOWCASE.md.
 - [ ] **Re-record the showcase clips** with the Terra fixes and the markdown flow's list fix; name the mermaid document.
 
 ## Phase 3: Open issues
