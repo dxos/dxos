@@ -7,17 +7,21 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { Entity } from '@dxos/echo';
+import { Entity, Filter, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
 import { canvasViewAspect } from '../../containers/CanvasArticle/view-state.ts';
+import * as ArchitectureSpace from './ArchitectureSpace.ts';
 import {
   type DiagramSet,
   architectureDiagrams,
@@ -28,9 +32,29 @@ import {
 } from './index.ts';
 
 type StoryArgs = {
-  /** The drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
-  readonly: boolean;
+  /** The template document opened as the article. */
+  document?: 'Composer' | 'DXOS' | 'EDGE';
+  /** The diagram stories' drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
+  readonly?: boolean;
 };
+
+const template = ArchitectureSpace.makeTemplate();
+
+// The space is seeded by the template's own `apply`, exactly as Composer applies it when a space is created from it.
+const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
+  types: [...ArchitectureSpace.make().schemas],
+  plugins: [IllustratorPlugin.make(), CanvasPlugin(), MarkdownPlugin.make(), MermaidPlugin.make()],
+  onInit: async ({ client, space }) => {
+    await template.apply({ client, space });
+    await space.db.flush();
+    const documents = await space.db.query(Filter.type(Markdown.Document)).run();
+    const document = documents.find((document) => Obj.getLabel(document) === args.document);
+    if (!document) {
+      throw new Error(`The template seeded no ${args.document} document.`);
+    }
+    return [[Cell.article(document)]];
+  },
+}));
 
 type ReadonlyViewProps = PropsWithChildren<{ canvas: Promise<URI.URI>; readonly: boolean }>;
 
@@ -46,7 +70,7 @@ const ReadonlyView = ({ canvas, readonly, children }: ReadonlyViewProps) => {
 
 // One drawing per diagram of the set; the overview opens as the article and its drill-down boxes open the others.
 const withDiagrams = (set: DiagramSet) =>
-  createStoryDecorators(({ args }) => {
+  createStoryDecorators<StoryArgs>(({ args }) => {
     const canvas = Promise.withResolvers<URI.URI>();
     return {
       types: [Drawing.Drawing, Drawing.Canvas],
@@ -67,18 +91,38 @@ const withDiagrams = (set: DiagramSet) =>
   });
 
 const meta: Meta<StoryArgs> = {
-  title: 'plugins/plugin-canvas/samples/Architecture',
+  title: 'plugins/plugin-canvas/samples/Template',
   render: () => <ModuleContainer />,
-  args: { readonly: true },
-  parameters: {
-    layout: 'fullscreen',
-    translations,
-  },
+  parameters: { layout: 'fullscreen', translations },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const documentArgs: Pick<Story, 'decorators' | 'argTypes'> = {
+  decorators: withTemplate,
+  argTypes: { document: { control: 'inline-radio', options: ['Composer', 'DXOS', 'EDGE'] } },
+};
+
+/** The Composer document, which links DXOS and EDGE and embeds the Composer architecture. */
+export const Default: Story = {
+  ...documentArgs,
+  args: { document: 'Composer' },
+  // The editor draws headings as lines rather than heading elements, so the document is recognised by its text.
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 })).toBeVisible();
+    await waitFor(() => expect(canvasElement.textContent).toContain('A local-first workspace of plugins'), {
+      timeout: 10_000,
+    });
+  },
+};
+
+/** The DXOS document, embedding the data stack. */
+export const Dxos: Story = { ...documentArgs, args: { document: 'DXOS' } };
+
+/** The EDGE document, embedding the EDGE architecture. */
+export const Edge: Story = { ...documentArgs, args: { document: 'EDGE' } };
 
 /** Opens once the overview's drill-down boxes are frames onto their diagrams. */
 const play =
@@ -97,8 +141,12 @@ const play =
 const composer = architectureDiagrams(files);
 const edge = edgeDiagrams(diagramFiles(files, 'edge'));
 
-/** Composer: app layer, SDK and data, and EDGE; the framework, data, plugin, compute and EDGE boxes open a level each. */
-export const Composer: Story = { decorators: withDiagrams(composer), play: play(composer) };
+/** The Composer diagram alone: app layer, SDK and data, and EDGE; the framework, data, plugin, compute and EDGE boxes open a level each. */
+export const ComposerDiagram: Story = {
+  decorators: withDiagrams(composer),
+  args: { readonly: true },
+  play: play(composer),
+};
 
-/** EDGE: clients, the gateway and the services; the router, db, compute and hub boxes open a level each. */
-export const Edge: Story = { decorators: withDiagrams(edge), play: play(edge) };
+/** The EDGE diagram alone: clients, the gateway and the services; the router, db, compute and hub boxes open a level each. */
+export const EdgeDiagram: Story = { decorators: withDiagrams(edge), args: { readonly: true }, play: play(edge) };

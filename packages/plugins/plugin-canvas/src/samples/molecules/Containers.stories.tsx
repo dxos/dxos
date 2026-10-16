@@ -47,11 +47,6 @@ const HYPERGRAPH: DataFlowSpec = {
 
 const WARM = { warmup: 60 };
 
-/** The ECHO container on its own, holding the lattice a minute of data flow grows in it. */
-export const Echo: StoryObj<DataFlowViewProps> = {
-  args: { spec: HYPERGRAPH, options: WARM, molecules: true, running: false },
-};
-
 // Unlabelled, and laid out partitioned from the start, so the container keeps its height as it splits.
 const ONE_BUCKET: DataFlowSpec = { ...HYPERGRAPH, hub: { label: '', partitions: 1 } };
 
