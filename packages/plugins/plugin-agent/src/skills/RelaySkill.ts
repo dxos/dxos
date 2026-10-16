@@ -53,7 +53,7 @@ export const make = (): Skill.Skill =>
 
         Housekeeping:
         - To check what is outstanding (for example "did you tell Josiah?"), call ${tool(RelayOperation.ListRelays)}; tell the requester about overdue relays and ask whether to keep trying or drop them (status "expired").
-        - If the recipient tells you something durable about themselves while you talk, record it with ${tool(MemoryOperation.Remember)}.
+        - If the recipient tells you something durable about themselves while you talk, record it as facts with ${tool(MemoryOperation.Remember)}.
         - Do not narrate tool calls.
 
         When you pass something on (a relay, or a report back to the requester):

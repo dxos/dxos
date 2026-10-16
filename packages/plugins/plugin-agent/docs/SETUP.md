@@ -120,7 +120,7 @@ Then, in Composer at `http://localhost:5282`:
 2. Answer a few questions; confirm the goals it reads back.
 3. In Composer:
    - the agent's **Activity** companion lists that conversation under **Conversations**; click it to open the chat;
-   - your **Person** properties list your goals (proposed, then confirmed) and memories;
+   - your **Person** properties list your goals (proposed, then confirmed) and facts;
    - a profile document exists for you.
 4. In the agent's own Composer chat, ask what it knows about you; it reads the same objects.
 
