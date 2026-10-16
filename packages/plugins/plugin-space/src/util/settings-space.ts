@@ -176,7 +176,7 @@ export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: 
 
 /**
  * Copy everything a duplicate settings space holds into the survivor: every properties annotation
- * the survivor lacks (the survivor wins conflicts), the settings object, and the cross-space ordering.
+ * the survivor lacks (the survivor wins conflicts) and the cross-space ordering.
  *
  * @returns Whether the duplicate is now fully carried by the survivor and safe to delete. False
  * when it holds content this pass does not know how to salvage — deletion is irreversible, so
@@ -184,65 +184,27 @@ export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: 
  */
 const salvageSettingsContent = Effect.fnUntraced(function* (survivor: Space, duplicate: Space) {
   const objects = yield* Effect.promise(() => duplicate.db.query(Query.select(Filter.everything())).run());
-  const unknown = objects.filter(
-    (object) =>
-      !Obj.instanceOf(SpaceProperties, object) &&
-      !Obj.instanceOf(AppSettings.AppSettings, object) &&
-      !isSpacesOrder(object),
-  );
+  const unknown = objects.filter((object) => !Obj.instanceOf(SpaceProperties, object) && !isSpacesOrder(object));
   if (unknown.length > 0) {
     return false;
   }
 
   // Snapshot detaches the values from the duplicate's document; copied by raw key so annotations
   // this code has never heard of survive too (values were validated when written on the duplicate).
-  const survivorAnnotations = Obj.getMeta(survivor.properties).annotations;
-  const missing = Object.entries(Obj.getMeta(Obj.getSnapshot(duplicate.properties)).annotations)
-    // `Object.entries` erases the key brand; decoding restores it without a cast.
-    .map(([rawKey, value]) => [Schema.decodeSync(Annotation.Key)(rawKey), value] as const)
-    .filter(([key]) => !(key in survivorAnnotations) && key !== AppAnnotation.AppSettingsAnnotation.key);
-  // A reference is relative to its own space, so a copied one would name nothing in the survivor.
-  if (missing.some(([, value]) => holdsRef(value))) {
-    return false;
-  }
-
-  // The settings object moves instead. It is loaded by name because the query above misses one that
-  // has yet to replicate, and deleting the duplicate before it arrives would destroy it.
-  const settingsRef =
-    AppAnnotation.AppSettingsAnnotation.key in survivorAnnotations
-      ? undefined
-      : Annotation.get(duplicate.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined);
-  const settings = settingsRef ? yield* Database.load(settingsRef).pipe(Effect.option) : Option.none();
-  if (settingsRef && Option.isNone(settings)) {
-    return false;
-  }
-
-  const moved = settings.pipe(
-    Option.map((settings) => {
-      const moved = survivor.db.add(AppSettings.make());
-      Obj.update(moved, (moved) => {
-        moved.shared = structuredClone(Obj.getSnapshot(settings).shared);
-      });
-      return moved;
-    }),
-    Option.getOrUndefined,
-  );
-
+  const duplicateAnnotations = Obj.getMeta(Obj.getSnapshot(duplicate.properties)).annotations;
   Obj.update(survivor.properties, (properties) => {
     const annotations = Obj.getMeta(properties).annotations;
-    for (const [key, value] of missing) {
-      annotations[key] = value;
-    }
-    if (moved) {
-      Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(moved));
+    for (const [rawKey, value] of Object.entries(duplicateAnnotations)) {
+      // `Object.entries` erases the key brand; decoding restores it without a cast.
+      const key = Schema.decodeSync(Annotation.Key)(rawKey);
+      if (!(key in annotations)) {
+        annotations[key] = value;
+      }
     }
   });
 
   return yield* mergeSpacesOrder(survivor, duplicate);
 });
-
-const holdsRef = (value: unknown): boolean =>
-  Ref.isRef(value) || (typeof value === 'object' && value !== null && Object.values(value).some(holdsRef));
 
 /**
  * Log a failure and continue, but let interruption through: `catchCause` also traps interrupts,
