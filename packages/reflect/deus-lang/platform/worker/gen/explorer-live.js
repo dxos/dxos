@@ -7849,7 +7849,7 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
           rt.nomatch(pair);
         }
       }, "Ts.typeDecl/\u03bb"), lib$base$List$zip(fields, lib$base$List$drop(1, types)));
-        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$decorator(iri, name), "interface "), name), Ts$generics(names)), " {\n"), rt.ap(rt.prims["Text.join"], "\n", lines)), "\n}");
+        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta, "doc"))), Ts$decorator(iri, name)), "interface "), name), Ts$generics(names)), " {\n"), rt.ap(rt.prims["Text.join"], "\n", lines)), "\n}");
       } else {
         const ctorNames = lib$base$List$filterMap(rt.named((pair_1) => {
         m3: {
@@ -7896,7 +7896,7 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
         }
         return rt.ap(rt.prims["append"], t6, r7);
       }, "Ts.typeDecl/\u03bb"), ctors);
-        const t8 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$decorator(iri, name), "type "), name), Ts$generics(names)), " =");
+        const t8 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta, "doc"))), Ts$decorator(iri, name)), "type "), name), Ts$generics(names)), " =");
         let r9;
         if (lib$base$List$isEmpty(lines_1)) {
           r9 = " never;";
@@ -7968,7 +7968,7 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
         rt.nomatch(t3);
       }
     }, "Ts.abilityDecl/\u03bb"), ops);
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$decorator(iri, name), "ability "), name), Ts$generics(names)), " {\n"), rt.ap(rt.prims["Text.join"], "\n", lines)), "\n}");
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta, "doc"))), Ts$decorator(iri, name)), "ability "), name), Ts$generics(names)), " {\n"), rt.ap(rt.prims["Text.join"], "\n", lines)), "\n}");
     }
     if (true) {
       return lib$base$Sexp$print(obj);
@@ -9169,17 +9169,7 @@ function Cli$loadRuleWith(types, dir, ns, name) {
 rt.named(Cli$loadRuleWith, "Cli.loadRuleWith");
 
 function Cli$notationTypes(ns) {
-  const typeNamed = rt.named((name) => lib$base$Option$orElse(lib$base$Map$lookup(name, ns), rt.named((v) => lib$base$Option$map(lib$base$snd, lib$base$List$find(rt.named((pair) => {
-      if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
-        if (lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", name), lib$base$fst(pair))) {
-          return (lib$base$List$length(rt.ap(rt.prims["Text.split"], lib$base$fst(pair), ".")) === 4);
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }, "Cli.notationTypes/\u03bb"), lib$base$Map$toList(ns))), "Cli.notationTypes/\u03bb")), "Cli.notationTypes/\u03bb");
+  const typeNamed = rt.named((name) => Cli$ownOrMounted(ns, name), "Cli.notationTypes/\u03bb");
   const t0 = new rt.Con("#Pair", 0, [rt.ap(typeNamed, "Syntax.Notation"), rt.ap(typeNamed, "Syntax.Part")]);
   m1: {
     if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[0].fields[0].tag === 2 && t0.fields[1].tag === 1 && t0.fields[1].fields[0].tag === 2) {
@@ -9286,11 +9276,11 @@ function Print$splitSig(sig$, n$) {
 }
 rt.named(Print$splitSig, "Print.splitSig");
 
-function Ts$generics(args) {
-  if (lib$base$List$isEmpty(args)) {
+function Ts$generics(names) {
+  if (lib$base$List$isEmpty(names)) {
     return "";
   } else {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", args)), ">");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", names)), ">");
   }
 }
 rt.named(Ts$generics, "Ts.generics");
@@ -10800,6 +10790,22 @@ function Image$load(fetch, roots) {
   }
 }
 rt.named(Image$load, "Image.load");
+
+function Cli$ownOrMounted(ns, name) {
+  const depth = ((lib$base$List$length(rt.ap(rt.prims["Text.split"], name, ".")) + 2) | 0);
+  return lib$base$Option$orElse(lib$base$Map$lookup(name, ns), rt.named((v) => lib$base$Option$map(lib$base$snd, lib$base$List$find(rt.named((pair) => {
+    if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
+      if (lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", name), lib$base$fst(pair))) {
+        return rt.equal(lib$base$List$length(rt.ap(rt.prims["Text.split"], lib$base$fst(pair), ".")), depth);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }, "Cli.ownOrMounted/\u03bb"), lib$base$Map$toList(ns))), "Cli.ownOrMounted/\u03bb"));
+}
+rt.named(Cli$ownOrMounted, "Cli.ownOrMounted");
 
 function Ts$hasUses(result) {
   m0: {

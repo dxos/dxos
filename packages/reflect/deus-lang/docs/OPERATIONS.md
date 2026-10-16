@@ -107,7 +107,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-17 03:10 UTC, version 2dfebb3c (the todo demo with its Under the hood panel at `/demo/todo/`, address rules compiled from DEUS, sidebar tooltips).
+2026-10-17 UTC, version 5452c634 (D232: change pages queued ahead of definitions, lazy history diffstats, pack rules compiled from DEUS).
 `scripts/build-worker.mjs --live` also builds the demo and `gen/address.js`; run it after changing `examples/react`,
 `platform/js` or `deus/address.deus`, with `DEUS_CODEBASE` the toolchain codebase.
 
