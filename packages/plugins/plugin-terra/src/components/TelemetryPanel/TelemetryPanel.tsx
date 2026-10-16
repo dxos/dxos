@@ -52,7 +52,8 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
     classNames='w-fit max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'
   >
     <div className='px-3 pt-3 pb-2 text-sm font-medium'>Telemetry</div>
-    <ScrollArea.Root orientation='vertical' classNames='max-h-64'>
+    {/* `ScrollArea` contains its inline size, which gives this fit-content panel no width but the heading's; it only scrolls vertically, so it sizes to the table instead. */}
+    <ScrollArea.Root orientation='vertical' classNames='max-h-64 [container-type:normal]'>
       <ScrollArea.Viewport>
         <table className='w-full text-xs tabular-nums'>
           <thead>
