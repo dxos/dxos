@@ -42,7 +42,7 @@ remote="http://127.0.0.1:$port/v1/demo"
 # Without a key, a push is refused and says why.
 export DEUS_CODEBASE="$work/a"
 deus init >/dev/null
-deus add platform/web.deus examples/counter.deus >/dev/null
+deus add deus/time.deus platform/web.deus examples/counter.deus >/dev/null
 deus remote add origin "$remote" >/dev/null
 if deus push origin >"$work/refused.log" 2>&1; then echo "a push without a key went through"; exit 1; fi
 grep -q 'writes need an API key' "$work/refused.log" || { cat "$work/refused.log"; exit 1; }
@@ -87,11 +87,26 @@ deus merge origin.main >/dev/null
 deus push origin >/dev/null
 unset DEUS_API_KEY
 
-# The explorer of the project PREFIX is served at the Worker's root, from what the push wrote.
+# The Worker's root is the hub of its projects (D200), and each project's explorer is drawn live from its head (D192).
 page="$(curl -sf "http://127.0.0.1:$port/")"
-[[ "$page" == *"<html"* ]] || { echo "no explorer at /"; exit 1; }
-version="$(curl -sf "http://127.0.0.1:$port/v1/demo/files/site/HEAD")"
-[[ "$page" == *"<base href=\"/v/$version/\""* ]] || { echo "the page is not pinned to HEAD"; exit 1; }
-meta="$(curl -sf "http://127.0.0.1:$port/v/$version/meta.json")"
-node -e "JSON.parse(process.argv[1])" "$meta" || { echo "no meta.json"; exit 1; }
-echo "remote: push, pull and the explorer work through the Worker on workerd"
+[[ "$page" == *"hub.js"* ]] || { echo "no hub at /"; exit 1; }
+# `deus key` (task 87c565cf): an admin key mints, lists and revokes keys through /v1/keys.
+admin="$(node -e "
+  const { mintKey } = await import('./platform/worker/remote.mjs');
+  console.log(JSON.stringify(await mintKey()));
+" --input-type=module)"
+(cd platform/worker && "$wrangler" d1 execute deus-auth --local --persist-to "$state" --command \
+  "insert into api_keys (id, secret_hash, label, scopes, projects, created_at) values ('$(node -pe "JSON.parse(process.argv[1]).id" "$admin")', '$(node -pe "JSON.parse(process.argv[1]).secretHash" "$admin")', 'admin', '[\"admin\"]', '\"*\"', 0)" >/dev/null)
+export DEUS_API_KEY="$(node -pe "JSON.parse(process.argv[1]).key" "$admin")"
+minted="$(deus key new ci-reader --scopes push --projects @dxos/demo --days 1 --json)"
+minted_id="$(node -pe "JSON.parse(process.argv[1]).id" "$minted")"
+[[ "$(node -pe "JSON.parse(process.argv[1]).key" "$minted")" == deus_${minted_id}_* ]] || { echo "deus key new printed no key: $minted"; exit 1; }
+deus key list | grep -q "^$minted_id  active  ci-reader  \[push\]$" || { deus key list; echo "deus key list lacks the new key"; exit 1; }
+deus key revoke "$minted_id" >/dev/null
+deus key list | grep -q "^$minted_id  revoked  " || { echo "deus key revoke left the key active"; exit 1; }
+export DEUS_API_KEY="$(node -pe "JSON.parse(process.argv[1]).key" "$key")"
+if deus key list >"$work/denied.log" 2>&1; then echo "a push key listed the keys"; exit 1; fi
+grep -q 'lacks the admin scope' "$work/denied.log" || { cat "$work/denied.log"; exit 1; }
+unset DEUS_API_KEY
+
+echo "remote: push, pull, the explorer and deus key work through the Worker on workerd"

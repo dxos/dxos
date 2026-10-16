@@ -1203,6 +1203,63 @@ def explorerLinks (args : Args) : {IO, Throw Text} Unit :=
     (fun _ => Json.arr (List.map (fun row => Json.obj [("name", Json.str (fst row)), ("url", Json.str (snd row))]) rows))
     (fun _ => join "\n" (List.map snd rows))
 
+/-- The Worker's key API for remote `name`: `https://<host>/v1/keys`, from its `https://<host>/v1/<project>` URL. -/
+def keysUrl (dir : Text) (name : Text) : {IO, Throw Text} Text :=
+  let url := getOr (Option.orElse (Option.map trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))) (fun _ => defaultRemote dir name)) ""
+  let at := Text.indexOf url "/v1/" 0
+  if not (startsWith "https://" url || startsWith "http://" url) || at < 0 then Throw.throw ("remote " ++ name ++ " is not a DEUS Worker (https://<host>/v1/<project>), which keeps the keys")
+  else Text.take at url ++ "/v1/keys"
+
+/-- One request to the key API with `$DEUS_API_KEY`, which must be an `admin` key; the key travels in a private
+  curl config file, never on the command line. Returns the response body, or throws the Worker's error. -/
+def keyRequest (dir : Text) (arguments : List Text) : {IO, Throw Text} Text :=
+  let key :=
+    match IO.getEnv "DEUS_API_KEY" with
+    | Option.some k => trim k
+    | Option.none => Throw.throw "the key API needs an admin key in $DEUS_API_KEY"
+  let config := dir ++ "/cache/keys.curl"
+  IO.mkdirp (dir ++ "/cache")
+  IO.exec "install" ["-m", "600", "/dev/null", config]
+  IO.writeFile config ("header = \"authorization: Bearer " ++ key ++ "\"\n")
+  let (code, out, err) := IO.exec "curl" (["-sS", "--fail-with-body", "-K", config] ++ arguments)
+  IO.remove config
+  if code == 0 then out else Throw.throw ("the key API answered: " ++ trim (if Text.isEmpty (trim out) then err else out))
+
+/-- `deus key list|new|revoke [--remote r]`: the Worker's API keys (D164), wrapping its `/v1/keys` admin API.
+  `new <label> --scopes push,site [--projects @owner/project,…] [--days n]` prints the new key once; `revoke <id>`. -/
+def keyCommand (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let url := keysUrl dir (getOr (option args "remote") "origin")
+  let list := fun (text : Text) => fun (sep : Text) => List.filter (fun t => not (Text.isEmpty t)) (List.map trim (Text.split text sep))
+  match args.positional with
+  | ["list"] =>
+      let rows := match Json.parse (keyRequest dir [url]) with
+        | Result.ok j => Json.items j
+        | Result.err e => Throw.throw ("the key API answered with no list: " ++ e)
+      let state := fun row => if Json.get row "revoked_at" != Json.null then "revoked" else "active"
+      Cli.output args (fun _ => Json.arr rows) (fun _ => join "\n" (List.map (fun row =>
+        Json.text (Json.get row "id") ++ "  " ++ state row ++ "  " ++ Json.text (Json.get row "label") ++ "  [" ++
+          join ", " (List.map Json.text (Json.items (Json.get row "scopes"))) ++ "]") rows))
+  | ["new", label] =>
+      let scopes := list (getOr (option args "scopes") "") ","
+      if List.isEmpty scopes then Throw.throw "a key needs --scopes, some of push, compact, assets, inbox, site, events, admin" else ()
+      let projects := match option args "projects" with
+        | Option.some p => Json.arr (List.map Json.str (list p ","))
+        | Option.none => Json.str "*"
+      let days := match option args "days" with
+        | Option.some d => [("expiresInDays", Json.num (getOr (Int.fromText d) 0))]
+        | Option.none => []
+      let body := Json.render (Json.obj ([("label", Json.str label), ("scopes", Json.arr (List.map Json.str scopes)), ("projects", projects)] ++ days))
+      let made := match Json.parse (keyRequest dir ["-X", "POST", "-H", "content-type: application/json", "--data-binary", body, url]) with
+        | Result.ok j => j
+        | Result.err e => Throw.throw ("the key API answered with no key: " ++ e)
+      Cli.output args (fun _ => made) (fun _ => Json.text (Json.get made "key") ++ "\n(key " ++ Json.text (Json.get made "id") ++
+        "; shown once: keep it in a secret store)")
+  | ["revoke", id] =>
+      let _ := keyRequest dir ["-X", "DELETE", url ++ "/" ++ id]
+      Cli.output args (fun _ => Json.obj [("revoked", Json.str id)]) (fun _ => "Revoked key " ++ id ++ ".")
+  | _ => Throw.throw "usage: deus key list | new <label> --scopes s,… [--projects p,…] [--days n] | revoke <id>"
+
 /-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. When the
   remote moved since the last pull, the current branch pulls it, merges it (`deus merge`, by source)
   and pushes again, up to three times; `--no-merge` fails instead. A push of the current branch first
@@ -2623,6 +2680,8 @@ def usage : Text :=
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
     "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer",
+    "  key list|new|revoke [--remote r]     the Worker's API keys, with an admin key in $DEUS_API_KEY:",
+    "                                       new <label> --scopes push,site [--projects @o/p,…] [--days n]; revoke <id>",
     "",
     "running",
     "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",
@@ -2680,7 +2739,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then Cli.branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
-      else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)
+      else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "key" then keyCommand args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)
 
 def main (u : Unit) : {IO} Unit :=
   match try (fun _ => dispatch (IO.args ())) with

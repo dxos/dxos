@@ -255,5 +255,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 245 | 10-16 18:10 | 28m 00s | this commit | Explorer fixes from the four-project probe: failing rows no longer show a ✓, failing checks show why, D-numbers and repository paths link out, history rows lose machine paths, the hub counts each definition once |
 | 246 | 10-16 18:45 | 25m 00s | this commit | deus push keeps passing checks passing (D218, task a5c2b178); DataSafety.Spec R-9 |
 | 247 | 10-16 19:10 | 25m 00s | this commit | pyarrow, DuckDB and an Iceberg catalog read pushed events in a test (Analytics.Spec R-6, task 1ad89782 waits on CI) |
+| 248 | 10-16 19:40 | 30m 00s | this commit | deus key list/new/revoke wraps the Worker key API (task 87c565cf); remote-test runs again |
 
-Total from stage 1 to stage 247: 77h 40m.
+Total from stage 1 to stage 248: 78h 10m.
