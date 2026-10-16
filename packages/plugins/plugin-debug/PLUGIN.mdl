@@ -296,3 +296,38 @@ test QA-3: Walk the review-queue demo space
       expect: the workspace is the default space and no error is logged
       assert: return $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0
 ```
+
+```mdl
+test QA-4: Fieldstone — a customer asks for one more thing
+  desc: |
+    The first Fieldstone vignette, a working moment for Astrid Holm, engineering manager. Okapi had a
+    cache-corruption incident, and their engineering director has replied to the postmortem with one
+    more request. Astrid reads it, checks who is asking, and finds the follow-up meeting already on
+    the calendar. Recorded by autocue/fieldstone-customer-followup.mjs.
+  actors: human
+  status: passing           # 2026-10-16, recorded by autocue/fieldstone-customer-followup.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug is enabled (dev-only default)
+    - space: a space created from the "Fieldstone Labs" template, open, with the navtree expanded
+  steps:
+    - name: Find the thread
+      do: Open the Inbox and scroll back to "Okapi cache-corruption postmortem".
+      expect: the thread, five weeks old, with eight messages
+    - name: Open the conversation
+      do: Open the thread.
+      expect: the conversation view lists its messages, with the thread summary
+    - name: Read Nadia's reply
+      do: Open Nadia Petrov's message, "Read it twice. Clear and honest, thank you."
+      expect: her message expands; she asks for the hash-mismatch alert to reach Okapi too
+    - name: Check who is asking
+      do: Hover Nadia's avatar on that message.
+      expect: her card shows Okapi Payments, her email, recent messages and the upcoming follow-up
+    - name: Open her contact
+      do: Open her contact from the card's menu.
+      expect: her contact opens, with her related messages and events
+    - name: Find the follow-up
+      do: Open "Okapi alerting follow-up" from her upcoming events.
+      expect: the follow-up a week out, with Nadia, Sam, Omar and Astrid, on the Fieldstone calendar
+```
+

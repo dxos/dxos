@@ -94,3 +94,34 @@ test QA-2: Draw a nested architecture diagram of composer-app
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
 ```
+
+```mdl
+test QA-3: DXOS Architecture tour
+  desc: |
+    A walk through the DXOS Architecture template: the three reading guides and the nested drawings
+    they embed, drilling from Composer's overview down to EDGE's replication layer. Recorded as a demo by
+    autocue/architecture-tour.mjs.
+  actors: human
+  status: passing           # 2026-10-16, recorded by autocue/architecture-tour.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - plugin: Canvas is enabled in the plugin registry (the template is contributed only while it is)
+    - space: a space created from the "DXOS Architecture" template, open, with its Architecture collection expanded
+  steps:
+    - name: Read the Composer guide
+      do: Open the Composer document and scroll to its embedded drawing.
+      expect: the Composer overview renders read-only inside the document
+    - name: Open the Composer drawing
+      do: Open the Composer drawing from the Architecture collection.
+      expect: twelve boxes in three groups, five of them frames onto other diagrams
+    - name: Drill into EDGE
+      do: Open the EDGE frame, then db-service, then "Subduction repl.", each with its open control.
+      expect: each opens the diagram beneath it, four levels deep, and the breadcrumb reads EDGE › db-service › Subduction
+    - name: Come back up
+      do: Click Up until the Composer overview is back.
+      expect: the overview shows again
+    - name: Read the EDGE guide
+      do: Open the EDGE document.
+      expect: the EDGE drawing is embedded, with a sequence diagram of a device connecting below it
+```
+
