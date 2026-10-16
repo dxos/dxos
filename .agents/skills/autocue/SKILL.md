@@ -145,8 +145,8 @@ first step after the setup ones it plays a countdown in the page: a closed ring 
 3-2-1 inside the ring as it unwinds. In manual mode the ring waits for a click, so the user starts their
 recorder, clicks it, and the take begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays
 it without the click, and the `countdown` op plays one on demand. It is react-ui-experimental's `Countdown`
-(story `ui/react-ui-experimental/Countdown`): its DOM half, `play-countdown.ts`, has no imports, and the overlay
-transpiles and injects that same file rather than keeping a copy, so change the look there.
+(story `ui/react-ui-experimental/Countdown`): `scripts/inject.mjs` bundles its DOM half, `play-countdown.ts`, and
+injects that same file rather than keeping a copy, so change the look there.
 
 ### Browser logs
 
@@ -498,7 +498,9 @@ shadow root, so neither Playwright's actionability checks nor the app's hit test
 
 ## 3. Caption every step
 
-`caption` pins a banner to the bottom of the page, so the video explains itself with no editing:
+`caption` pins a banner to the bottom of the page, so the video explains itself with no editing. The banner is the
+caption band of `tools/autocue`'s `Frame` (story `tools/autocue/Frame`), injected in overlay mode, so change its look
+there:
 
 ```bash
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'

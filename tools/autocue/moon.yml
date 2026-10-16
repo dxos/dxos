@@ -1,0 +1,4 @@
+layer: tool
+language: typescript
+tags:
+  - typecheck

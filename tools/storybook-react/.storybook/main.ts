@@ -61,6 +61,8 @@ export const modules = [
   'stories/*/src/**',
   'ui/*/src/**',
   'ui/react-primitives/*/src/**',
+  // autocue's on-screen UI lives under `tools/` beside the skill scripts that inject it.
+  '../tools/autocue/src/**',
 ];
 
 /**

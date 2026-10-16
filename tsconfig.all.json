@@ -43,6 +43,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "tools/autocue/tsconfig.json"
+    },
+    {
       "path": "packages/common/av/tsconfig.json"
     },
     {

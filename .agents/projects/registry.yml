@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: autocue-ui
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-16
+    summary: 'Factor the on-screen UI of autocue (frame/title band, captions, action feed, cursor) into a private tools/autocue package: each piece a plain-DOM core the skill injects into recorded pages, plus a React wrapper with a storybook. tools/ident stays separate and shares tokens.'
+    tasks: .agents/projects/autocue-ui/TASKS.md
+    design: .agents/projects/autocue-ui/DESIGN.md
+    prs: []
+    resume: 'Phase 1: Frame (title band + content slot + caption band) built in tools/autocue; driver captions use it. NEXT: feed/cursor, stage.html, compose.mjs bands.'
   - name: canvas-animation
     status: active
     user: burdon

@@ -47,6 +47,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
+import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
@@ -292,33 +293,20 @@ const SPEED_ID = '__demo_speed__';
 /** `speed` ops in recording time, for the trimmer to play those stretches faster. */
 const speedChanges = [];
 
+/** The caption is the `tools/autocue` Frame's caption band, in overlay mode over the recorded page. */
 const showCaption = async (text, subtitle) => {
+  await injectModule(page, FRAME_MODULE, '__autocueFrame');
   await page.evaluate(
     ({ id, text, subtitle }) => {
-      document.getElementById(id)?.remove();
-      const banner = document.createElement('div');
-      banner.id = id;
-      banner.style.cssText = [
-        'position:fixed',
-        'left:0',
-        'right:0',
-        'bottom:0',
-        'z-index:2147483647',
-        'padding:16px 24px 18px',
-        'background:rgba(17,17,17,0.92)',
-        'color:#fff',
-        'font:600 20px/1.35 ui-sans-serif,system-ui,sans-serif',
-        'pointer-events:none',
-        'text-align:center',
-      ].join(';');
-      banner.textContent = text;
-      if (subtitle) {
-        const line = document.createElement('div');
-        line.style.cssText = 'opacity:0.7;font-weight:400;font-size:15px;margin-top:4px';
-        line.textContent = subtitle;
-        banner.appendChild(line);
+      let host = document.getElementById(id);
+      if (!host) {
+        host = document.createElement('div');
+        host.id = id;
+        host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
+        document.body.appendChild(host);
+        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
       }
-      document.body.appendChild(banner);
+      host.__frame.setCaption({ title: text, subtitle });
     },
     { id: CAPTION_ID, text, subtitle },
   );

@@ -15,30 +15,9 @@
  * checks and the app's own hit testing see straight through.
  */
 
-import { readFileSync } from 'node:fs';
+import { COUNTDOWN_MODULE, injectModule } from './inject.mjs';
 
 const HOST_ID = '__demo_overlay__';
-
-/** react-ui-experimental's countdown, the DOM half of its `Countdown` component, shared rather than copied. */
-const COUNTDOWN = new URL(
-  '../../../../packages/ui/react-ui-experimental/src/components/Countdown/play-countdown.ts',
-  import.meta.url,
-);
-
-/** Transpiled once, on first use: esbuild is the repo's own, and the module has no imports to resolve. */
-let countdownCode;
-const loadCountdown = async () => {
-  if (!countdownCode) {
-    const { transform } = await import('esbuild');
-    const { code } = await transform(readFileSync(COUNTDOWN, 'utf8'), {
-      loader: 'ts',
-      format: 'iife',
-      globalName: '__countdown',
-    });
-    countdownCode = code;
-  }
-  return countdownCode;
-};
 
 /**
  * Installed with `page.evaluate`, re-installed after every navigation, idempotent. Exposes
@@ -263,15 +242,10 @@ export const createOverlay = (page, { enabled, feed = true, feedMs = 3_500, posi
       safely(() => page.evaluate(([id, ok, note]) => window.__demoOverlay.resolve(id, ok, note), [id, ok, note])),
     click: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.click(x, y), point)),
     moveCursor: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.moveCursor(x, y), point)),
-    // Loaded inside `safely`: a failed transpile must not fail the take, and a disabled overlay skips it.
+    // Loaded inside `safely`: a failed bundle must not fail the take, and a disabled overlay skips it.
     countdown: (options) =>
       safely(async () => {
-        const code = await loadCountdown();
-        // An IIFE assigning `var __countdown`, run as a script through the protocol rather than `eval`,
-        // so an app's content security policy cannot refuse it.
-        if (!(await page.evaluate(() => Boolean(window.__countdown)))) {
-          await page.evaluate(code);
-        }
+        await injectModule(page, COUNTDOWN_MODULE, '__countdown');
         await page.evaluate((args) => window.__demoOverlay.countdown(args), options);
       }),
   };

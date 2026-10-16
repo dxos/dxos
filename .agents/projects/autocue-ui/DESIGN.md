@@ -1,0 +1,39 @@
+# autocue-ui — design
+
+## Goal
+
+One implementation of each piece of autocue's on-screen UI, with a storybook, used by the skill.
+
+## Decisions
+
+1. **Package.** `tools/autocue` (`@dxos/autocue`, private) holds the UI only. The skill's scripts stay in
+   `.agents/skills/autocue/scripts` and inject the UI from it.
+2. **DOM core + React wrapper.** The skill paints into arbitrary pages through `page.evaluate`, where there is no
+   React and no module resolution. So each component is a plain-DOM core (`create<Name>(root, options)`) that
+   renders into a shadow root, plus a React wrapper for the storybook. This is the pattern
+   `react-ui-experimental`'s `Countdown` already uses.
+3. **Injection.** `scripts/inject.mjs` bundles a core with esbuild (`bundle: true`, IIFE) and evaluates it in the
+   page once. Unlike the Countdown's `transform`, bundling lets cores import shared tokens.
+4. **Styling.** Plain CSS custom properties (`--autocue-*`) in the shadow root. The app's styles cannot reach the
+   shadow root, but custom properties inherit through it, so a React host can map them to theme tokens.
+5. **`tools/ident`** stays a separate Remotion package. It can consume the shared tokens later.
+6. **`FrameHeader`** (react-ui-canvas, published) stays as is. A published package cannot depend on a private one.
+   autocue's `Frame` matches its layout (centred title and caption) without the counter and controls.
+
+## Inventory
+
+| Piece                       | Current source                                       | Target                        |
+| --------------------------- | ---------------------------------------------------- | ----------------------------- |
+| Caption band                | `driver.mjs` `showCaption`; `compose.mjs` drawtext   | `Frame` caption               |
+| Title band                  | `terminal/stage.html` `#title`; `compose.mjs` labels | `Frame` header                |
+| Action feed, cursor, ripple | `overlay.mjs`                                        | `Feed`, `Cursor`              |
+| Countdown                   | `react-ui-experimental`                              | stays; loaded by `inject.mjs` |
+| Ident cards                 | `tools/ident` (Remotion)                             | stays; shares tokens          |
+
+## Frame
+
+- `mode: 'overlay'` — the bands are fixed over the page and the middle is empty (the recorded app shows
+  through). The driver uses this.
+- `mode: 'layout'` — a column: header, a `<slot>` for content, footer. The storybook and the terminal stage use
+  this.
+- A band with no text is not drawn.
