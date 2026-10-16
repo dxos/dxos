@@ -82,9 +82,16 @@ export default defineConfig({
           collapsed: false,
         },
       ],
-      // The validator cannot resolve links to custom pages under `src/pages` (`/blog`, `/privacy`,
-      // `/terms`) — they are not content-collection routes.
-      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**', '/privacy', '/terms'] })],
+      // The validator cannot resolve custom pages under `src/pages` (`/blog`, `/privacy`, `/terms`),
+      // so it sees neither links to them nor the headings that same-page links in blog posts target.
+      plugins: [
+        starlightLinksValidator({
+          exclude: ({ file, link }) =>
+            file.includes('/src/content/blog/') ||
+            ['/typedoc/', '/blog/'].some((prefix) => link.startsWith(prefix)) ||
+            ['/privacy', '/terms'].includes(link.split(/[?#]/)[0]),
+        }),
+      ],
       // PostHog snippet: https://posthog.com/docs/getting-started/install
       head:
         DX_POSTHOG_API_KEY && DX_POSTHOG_API_HOST
