@@ -479,11 +479,12 @@ component AgentActivityContainer
 component AgentList
   desc: |
     The agents the viewer administers (components/AgentList), laid out as the contacts book lays out people: per
-    agent, a robot avatar in the agent's hue, its name ("Unnamed agent" when it has none), its own space as a chip
-    that opens it, "Admins: …" with the viewer marked "(you)", and its DID with a copy button. A filter keeps the
-    agents whose name or DID contains it. With none, a line saying how to get one.
+    agent, a robot avatar in the agent's hue, its name ("Unnamed agent" when it has none), a chip per space the agent
+    is a member of that the viewer is too, its own space first, each opening that space, "Admins: …" with the viewer
+    marked "(you)", and its DID with a copy button. A filter keeps the agents whose name or DID contains it. With none,
+    a line saying how to get one.
   props:
-    agents: { spaceId: string, name: string, identityKey?: string, did?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
+    agents: { spaceId: string, spaces: { id: string, name?: string }[], name: string, identityKey?: string, did?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
     filter?: string
   emits:
     onOpen(spaceId: string)
@@ -638,7 +639,7 @@ feat F-7: An agent's own space
   req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
   req F-7.5: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is an admin of. It asks nothing of EDGE.
   req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead.
-  req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, right after Devices, lists the agents the identity administers (F-7.5): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
+  req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, right after Devices, lists the agents the identity administers (F-7.5): each one's name, its admins with the viewer marked, and a chip per space it is a member of that the viewer is too, its own space first, each switching to that space. It stays current as spaces and their members change.
   req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space.
 ```
 

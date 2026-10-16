@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { Fragment, useMemo } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
@@ -25,9 +25,14 @@ export type AgentListAdmin = {
   you?: boolean;
 };
 
+/** A space the agent is a member of. */
+export type AgentListSpace = { id: string; name?: string };
+
 export type AgentListEntry = {
   /** The agent's own space, whose members are its admins. */
   spaceId: string;
+  /** The spaces the agent is a member of that the viewer is too, its own space first. */
+  spaces: AgentListSpace[];
   name: string;
   /** Hex key of the agent's own identity. */
   identityKey?: string;
@@ -109,15 +114,22 @@ const AgentListItem = ({ agent, onOpen }: AgentListItemProps) => {
       </Listbox.ItemIcon>
       <Listbox.ItemText id={labelId}>{name}</Listbox.ItemText>
       <Listbox.ItemDescription>
-        <Button.Root
-          size='sm'
-          hue={getHashStyles(agent.spaceId).hue}
-          aria-label={t('agent-open-space.label', { name })}
-          onClick={() => onOpen?.(agent.spaceId)}
-          data-testid='agent-list.space'
-        >
-          {name}
-        </Button.Root>{' '}
+        {agent.spaces.map((space) => {
+          const spaceName = space.name || t('agent-space-unnamed.label');
+          return (
+            <Fragment key={space.id}>
+              <Button.Root
+                size='sm'
+                hue={getHashStyles(space.id).hue}
+                aria-label={t('agent-open-space.label', { name: spaceName })}
+                onClick={() => onOpen?.(space.id)}
+                data-testid='agent-list.space'
+              >
+                {spaceName}
+              </Button.Root>{' '}
+            </Fragment>
+          );
+        })}
         {t('agent-admins.label', { admins })}
       </Listbox.ItemDescription>
       {identifier && (

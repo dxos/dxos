@@ -59,22 +59,22 @@ export const AgentsPanel = () => {
   );
 };
 
-/** Re-read whenever the client's spaces, its identity, or the members of one of its agent spaces change. */
+/** Re-read whenever the client's spaces, its identity, or the members of one of its spaces change. */
 const useAdministeredAgents = (): AgentListEntry[] => {
   const client = Hooks.useCapability(ClientCapabilities.Client);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const changed = () => setRevision((value) => value + 1);
     const members = new Map<string, { unsubscribe: () => void }>();
+    // Every space, not only agent spaces: an agent's row lists the spaces it was added to.
     const spaces = client.spaces.subscribe((all) => {
-      const agentSpaces = all.filter(AgentSpace.isAgentSpace);
       for (const [spaceId, subscription] of members) {
-        if (!agentSpaces.some((space) => space.id === spaceId)) {
+        if (!all.some((space) => space.id === spaceId)) {
           subscription.unsubscribe();
           members.delete(spaceId);
         }
       }
-      for (const space of agentSpaces) {
+      for (const space of all) {
         if (!members.has(space.id)) {
           members.set(space.id, space.members.subscribe(changed));
         }
@@ -91,14 +91,27 @@ const useAdministeredAgents = (): AgentListEntry[] => {
 
   return useMemo(() => {
     const viewer = toPublicKey(client.halo.identity.get()?.identityKey);
-    return viewer ? AgentSpace.administeredBy(client.spaces.get(), viewer).map((space) => entryOf(space, viewer)) : [];
+    const all = client.spaces.get();
+    return viewer ? AgentSpace.administeredBy(all, viewer).map((space) => entryOf(space, all, viewer)) : [];
   }, [client, revision]);
 };
 
-const entryOf = (space: AgentSpace.Space & { readonly id: string }, viewer: PublicKey): AgentListEntry => {
+const entryOf = (space: AgentSpace.Space, all: readonly AgentSpace.Space[], viewer: PublicKey): AgentListEntry => {
   const agent = AgentSpace.agentOf(space);
+  const agentKey = toPublicKey(agent?.identity?.identityKey);
+  const joined = agentKey
+    ? all.filter(
+        (other) =>
+          other.id !== space.id &&
+          other.members.get().some((member) => toPublicKey(member.identity?.identityKey)?.equals(agentKey) ?? false),
+      )
+    : [];
   return {
     spaceId: space.id,
+    spaces: [space, ...joined].map((member) => ({
+      id: member.id,
+      name: member.isOpen ? member.properties?.name : undefined,
+    })),
     // EDGE names the agent's space after the agent, which stands in until the agent's profile reaches the client.
     name: agent?.identity?.profile?.displayName ?? (space.isOpen ? space.properties?.name : undefined) ?? '',
     identityKey: toPublicKey(agent?.identity?.identityKey)?.toHex(),
