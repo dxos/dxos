@@ -11,12 +11,26 @@ async function Worker$Names$entryAt(lookup, snapshot, name) {
 }, "Worker.Names.entryAt/\u03bb");
   const t0 = rt.resumed($stack, await _try$wait(rt.named(async (v) => {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await lib$toolchain$Codebase$lookupNameWith$wait(read, snapshot, name));
+  return rt.resumed($stack, await lib$toolchain$Codebase$lookupFormWith$wait(read, snapshot, name));
 }, "Worker.Names.entryAt/\u03bb")));
   m1: {
     if (t0.tag === 0 && t0.fields[0].tag === 1) {
-      const e = t0.fields[0].fields[0];
-      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [true, lib$base$Sexp$print(lib$toolchain$Entry$toSexp(e)), lib$toolchain$Entry$hash(e), ""]);
+      const form = t0.fields[0].fields[0];
+      let hash;
+      const t2 = lib$base$Sexp$args(form);
+      m3: {
+        if (t2.tag === 1 && t2.fields[0].tag === 2) {
+          const h_1 = t2.fields[0].fields[0];
+          hash = h_1;
+          break m3;
+        }
+        if (true) {
+          hash = "";
+          break m3;
+        }
+        rt.nomatch(t2);
+      }
+      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [true, lib$base$Sexp$print(form), hash, ""]);
     }
     if (t0.tag === 0 && t0.fields[0].tag === 0) {
       return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [false, "", "", ""]);
@@ -70,7 +84,7 @@ function _try(body) {
 }
 rt.named(_try, "try");
 
-function lib$toolchain$Codebase$lookupNameWith(read$, h$, name$) {
+function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
   for (;;) {
     const read = read$, h = h$, name = name$;
     const items = lib$toolchain$Codebase$nodeItemsWith(read, h);
@@ -80,7 +94,7 @@ function lib$toolchain$Codebase$lookupNameWith(read$, h$, name$) {
       const n = item.fields[0].fields[1].fields[0].fields[0];
       const e = item.fields[0].fields[1].fields[1].fields[0];
       if (rt.equal(n, name)) {
-        return new rt.Con("#Option", 1, [lib$toolchain$Entry$fromSexp(e)]);
+        return new rt.Con("#Option", 1, [e]);
       } else {
         return rt.con0("#Option", 0);
       }
@@ -90,7 +104,7 @@ function lib$toolchain$Codebase$lookupNameWith(read$, h$, name$) {
     }
     rt.nomatch(item);
   }
-}, "lib.toolchain.Codebase.lookupNameWith/\u03bb"), items));
+}, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
     const t1 = new rt.Con("#Pair", 0, [entry, lib$toolchain$Codebase$splitName(name)]);
     m2: {
       if (t1.tag === 0 && t1.fields[0].tag === 1) {
@@ -116,7 +130,7 @@ function lib$toolchain$Codebase$lookupNameWith(read$, h$, name$) {
         }
         rt.nomatch(item_1);
       }
-    }, "lib.toolchain.Codebase.lookupNameWith/\u03bb"), items));
+    }, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
         m5: {
           if (t4.tag === 1) {
             const child_1 = t4.fields[0];
@@ -138,97 +152,26 @@ function lib$toolchain$Codebase$lookupNameWith(read$, h$, name$) {
     }
   }
 }
-rt.named(lib$toolchain$Codebase$lookupNameWith, "lib.toolchain.Codebase.lookupNameWith");
+rt.named(lib$toolchain$Codebase$lookupFormWith, "lib.toolchain.Codebase.lookupFormWith");
+
+function lib$base$Sexp$args(s) {
+  m0: {
+    if (s.tag === 3 && s.fields[0].tag === 1) {
+      const rest = s.fields[0].fields[1];
+      return rest;
+    }
+    if (true) {
+      return rt.NIL;
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$args, "lib.base.Sexp.args");
 
 function lib$base$Sexp$print(s) {
   return rt.ap(rt.prims["Text.concat"], List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
 }
 rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
-
-function lib$toolchain$Entry$toSexp(v) {
-  m0: {
-    if (v.tag === 0) {
-      const h = v.fields[0];
-      return lib$base$Sexp$node("term", rt.cons(lib$base$Sexp$s(h), rt.NIL));
-    }
-    if (v.tag === 1) {
-      const t = v.fields[0];
-      const tag = v.fields[1];
-      const n = v.fields[2];
-      return lib$base$Sexp$node("ctor", rt.cons(lib$base$Sexp$s(t), rt.cons(lib$base$Sexp$i(tag), rt.cons(lib$base$Sexp$i(n), rt.NIL))));
-    }
-    if (v.tag === 2) {
-      const h_1 = v.fields[0];
-      const iri = v.fields[1];
-      const fields = v.fields[2];
-      return lib$base$Sexp$node("type", rt.cons(lib$base$Sexp$s(h_1), rt.cons(lib$base$Sexp$s(iri), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [List$map(lib$base$Sexp$s, fields)]), rt.NIL))));
-    }
-    if (v.tag === 3) {
-      const h_2 = v.fields[0];
-      const iri_1 = v.fields[1];
-      return lib$base$Sexp$node("ability", rt.cons(lib$base$Sexp$s(h_2), rt.cons(lib$base$Sexp$s(iri_1), rt.NIL)));
-    }
-    if (v.tag === 4) {
-      const a = v.fields[0];
-      const index = v.fields[1];
-      const n_1 = v.fields[2];
-      return lib$base$Sexp$node("op", rt.cons(lib$base$Sexp$s(a), rt.cons(lib$base$Sexp$i(index), rt.cons(lib$base$Sexp$i(n_1), rt.NIL))));
-    }
-    if (v.tag === 5) {
-      const h_3 = v.fields[0];
-      return lib$base$Sexp$node("test", rt.cons(lib$base$Sexp$s(h_3), rt.NIL));
-    }
-    if (v.tag === 6) {
-      const h_4 = v.fields[0];
-      return lib$base$Sexp$node("theorem", rt.cons(lib$base$Sexp$s(h_4), rt.NIL));
-    }
-    if (v.tag === 7) {
-      const h_5 = v.fields[0];
-      return lib$base$Sexp$node("spec", rt.cons(lib$base$Sexp$s(h_5), rt.NIL));
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(lib$toolchain$Entry$toSexp, "lib.toolchain.Entry.toSexp");
-
-function lib$toolchain$Entry$hash(v) {
-  m0: {
-    if (v.tag === 0) {
-      const h = v.fields[0];
-      return h;
-    }
-    if (v.tag === 1) {
-      const t = v.fields[0];
-      return t;
-    }
-    if (v.tag === 2) {
-      const h_1 = v.fields[0];
-      return h_1;
-    }
-    if (v.tag === 3) {
-      const h_2 = v.fields[0];
-      return h_2;
-    }
-    if (v.tag === 4) {
-      const a = v.fields[0];
-      return a;
-    }
-    if (v.tag === 5) {
-      const h_3 = v.fields[0];
-      return h_3;
-    }
-    if (v.tag === 6) {
-      const h_4 = v.fields[0];
-      return h_4;
-    }
-    if (v.tag === 7) {
-      const h_5 = v.fields[0];
-      return h_5;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(lib$toolchain$Entry$hash, "lib.toolchain.Entry.hash");
 
 function lib$base$Sexp$readAll(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -518,47 +461,6 @@ function List$filterMap(f, xs) {
 }
 rt.named(List$filterMap, "List.filterMap");
 
-function lib$toolchain$Entry$fromSexp(s) {
-  const a = lib$base$Sexp$args(s);
-  const txt = rt.named((k) => lib$base$Sexp$asText(Option$getOr(List$get$p(a, k), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))), "lib.toolchain.Entry.fromSexp/\u03bb");
-  const num = rt.named((k_1) => lib$base$Sexp$asInt(Option$getOr(List$get$p(a, k_1), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]))), "lib.toolchain.Entry.fromSexp/\u03bb");
-  const h = lib$base$Sexp$head(s);
-  if ((h === "term")) {
-    return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 0, [rt.ap(txt, 0)]);
-  } else {
-    if ((h === "ctor")) {
-      return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 1, [rt.ap(txt, 0), rt.ap(num, 1), rt.ap(num, 2)]);
-    } else {
-      if ((h === "type")) {
-        return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 2, [rt.ap(txt, 0), rt.ap(txt, 1), List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(Option$getOr(List$get$p(a, 2), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL]))))]);
-      } else {
-        if ((h === "ability")) {
-          return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 3, [rt.ap(txt, 0), rt.ap(txt, 1)]);
-        } else {
-          if ((h === "op")) {
-            return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 4, [rt.ap(txt, 0), rt.ap(num, 1), rt.ap(num, 2)]);
-          } else {
-            if ((h === "test")) {
-              return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 5, [rt.ap(txt, 0)]);
-            } else {
-              if ((h === "theorem")) {
-                return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 6, [rt.ap(txt, 0)]);
-              } else {
-                if ((h === "spec")) {
-                  return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 7, [rt.ap(txt, 0)]);
-                } else {
-                  return rt.ap(rt.prims["defect"], rt.ap(rt.prims["append"], "unknown entry ", lib$base$Sexp$print(s)));
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-rt.named(lib$toolchain$Entry$fromSexp, "lib.toolchain.Entry.fromSexp");
-
 function lib$toolchain$Codebase$splitName(name) {
   const i = rt.ap(rt.prims["Text.indexOf"], name, ".", 1);
   let r0;
@@ -649,45 +551,6 @@ function lib$base$Sexp$emit(s, acc) {
 }
 rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
 
-function lib$base$Sexp$node(head, items) {
-  return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, [head]), items)]);
-}
-rt.named(lib$base$Sexp$node, "lib.base.Sexp.node");
-
-function lib$base$Sexp$s(t) {
-  return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [t]);
-}
-rt.named(lib$base$Sexp$s, "lib.base.Sexp.s");
-
-function lib$base$Sexp$i(k) {
-  return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [k]);
-}
-rt.named(lib$base$Sexp$i, "lib.base.Sexp.i");
-
-function List$map(f, xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return List$reverse(acc);
-        }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          acc$ = rt.cons(rt.ap(f, y), acc);
-          ys$ = rest;
-          continue;
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, rt.NIL, xs);
-}
-rt.named(List$map, "List.map");
-
 function lib$base$Sexp$hexValue(c) {
   let r0;
   if ((c >= 48)) {
@@ -762,118 +625,6 @@ function List$concatMap(f, xs) {
 }
 rt.named(List$concatMap, "List.concatMap");
 
-function lib$base$Sexp$args(s) {
-  m0: {
-    if (s.tag === 3 && s.fields[0].tag === 1) {
-      const rest = s.fields[0].fields[1];
-      return rest;
-    }
-    if (true) {
-      return rt.NIL;
-    }
-    rt.nomatch(s);
-  }
-}
-rt.named(lib$base$Sexp$args, "lib.base.Sexp.args");
-
-function lib$base$Sexp$asText(s) {
-  m0: {
-    if (s.tag === 2) {
-      const value = s.fields[0];
-      return value;
-    }
-    if (s.tag === 1) {
-      const name = s.fields[0];
-      return name;
-    }
-    if (true) {
-      return rt.ap(rt.prims["defect"], rt.ap(rt.prims["append"], "sexp: expected text, got ", lib$base$Sexp$print(s)));
-    }
-    rt.nomatch(s);
-  }
-}
-rt.named(lib$base$Sexp$asText, "lib.base.Sexp.asText");
-
-function Option$getOr(o, fallback) {
-  m0: {
-    if (o.tag === 0) {
-      return fallback;
-    }
-    if (o.tag === 1) {
-      const x = o.fields[0];
-      return x;
-    }
-    rt.nomatch(o);
-  }
-}
-rt.named(Option$getOr, "Option.getOr");
-
-function List$get$p(xs$, i$) {
-  for (;;) {
-    const xs = xs$, i = i$;
-    m0: {
-      if (xs.tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      if (xs.tag === 1) {
-        const x = xs.fields[0];
-        const rest = xs.fields[1];
-        if ((i === 0)) {
-          return new rt.Con("#Option", 1, [x]);
-        } else {
-          xs$ = rest;
-          i$ = ((i - 1) | 0);
-          continue;
-        }
-      }
-      rt.nomatch(xs);
-    }
-  }
-}
-rt.named(List$get$p, "List.get?");
-
-function lib$base$Sexp$asInt(s) {
-  m0: {
-    if (s.tag === 0) {
-      const value = s.fields[0];
-      return value;
-    }
-    if (true) {
-      return rt.ap(rt.prims["defect"], rt.ap(rt.prims["append"], "sexp: expected int, got ", lib$base$Sexp$print(s)));
-    }
-    rt.nomatch(s);
-  }
-}
-rt.named(lib$base$Sexp$asInt, "lib.base.Sexp.asInt");
-
-function lib$base$Sexp$head(s) {
-  m0: {
-    if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1) {
-      const h = s.fields[0].fields[0].fields[0];
-      return h;
-    }
-    if (true) {
-      return "";
-    }
-    rt.nomatch(s);
-  }
-}
-rt.named(lib$base$Sexp$head, "lib.base.Sexp.head");
-
-function lib$base$Sexp$asList(s) {
-  m0: {
-    if (s.tag === 3) {
-      const xs = s.fields[0];
-      return xs;
-    }
-    if (true) {
-      return rt.NIL;
-    }
-    rt.nomatch(s);
-  }
-}
-rt.named(lib$base$Sexp$asList, "lib.base.Sexp.asList");
-
 function Text$take(n, t) {
   return rt.ap(rt.prims["Text.slice"], t, 0, n);
 }
@@ -934,6 +685,30 @@ function List$concat(xss) {
   return List$foldr(rt.named((xs, acc) => rt.ap(rt.prims["append"], xs, acc), "List.concat/\u03bb"), rt.NIL, xss);
 }
 rt.named(List$concat, "List.concat");
+
+function List$map(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(rt.ap(f, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$map, "List.map");
 
 function lib$base$Sexp$plain(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -1054,7 +829,7 @@ async function _try$wait(body) {
 }
 rt.named(_try$wait, "try");
 
-async function lib$toolchain$Codebase$lookupNameWith$wait(read$, h$, name$) {
+async function lib$toolchain$Codebase$lookupFormWith$wait(read$, h$, name$) {
   const $stack = rt.handlers();
   for (;;) {
     const read = read$, h = h$, name = name$;
@@ -1065,7 +840,7 @@ async function lib$toolchain$Codebase$lookupNameWith$wait(read$, h$, name$) {
       const n = item.fields[0].fields[1].fields[0].fields[0];
       const e = item.fields[0].fields[1].fields[1].fields[0];
       if (rt.equal(n, name)) {
-        return new rt.Con("#Option", 1, [lib$toolchain$Entry$fromSexp(e)]);
+        return new rt.Con("#Option", 1, [e]);
       } else {
         return rt.con0("#Option", 0);
       }
@@ -1075,7 +850,7 @@ async function lib$toolchain$Codebase$lookupNameWith$wait(read$, h$, name$) {
     }
     rt.nomatch(item);
   }
-}, "lib.toolchain.Codebase.lookupNameWith/\u03bb"), items));
+}, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
     const t1 = new rt.Con("#Pair", 0, [entry, lib$toolchain$Codebase$splitName(name)]);
     m2: {
       if (t1.tag === 0 && t1.fields[0].tag === 1) {
@@ -1101,7 +876,7 @@ async function lib$toolchain$Codebase$lookupNameWith$wait(read$, h$, name$) {
         }
         rt.nomatch(item_1);
       }
-    }, "lib.toolchain.Codebase.lookupNameWith/\u03bb"), items));
+    }, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
         m5: {
           if (t4.tag === 1) {
             const child_1 = t4.fields[0];
@@ -1123,7 +898,7 @@ async function lib$toolchain$Codebase$lookupNameWith$wait(read$, h$, name$) {
     }
   }
 }
-rt.named(lib$toolchain$Codebase$lookupNameWith$wait, "lib.toolchain.Codebase.lookupNameWith");
+rt.named(lib$toolchain$Codebase$lookupFormWith$wait, "lib.toolchain.Codebase.lookupFormWith");
 
 async function lib$toolchain$Codebase$nodeItemsWith$wait(read, h) {
   const $stack = rt.handlers();

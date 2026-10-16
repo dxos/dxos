@@ -359,10 +359,15 @@ def lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option E
 
 /-- `lookupName` with objects read by `read`, so the Worker resolves names by the same rule (task 41714c0d). -/
 def lookupNameWith (read : Text -> {e} Option Sexp) (h : Text) (name : Text) : {Throw Text | e} Option Entry :=
+  Option.map Entry.fromSexp (Codebase.lookupFormWith read h name)
+
+/-- The stored form of a name's entry (`(term "<hash>")`), as the snapshot holds it: a reader that does not know an
+  entry's kind, such as a Worker older than the CLI that pushed it, still finds it. -/
+def lookupFormWith (read : Text -> {e} Option Sexp) (h : Text) (name : Text) : {Throw Text | e} Option Sexp :=
   let items := Codebase.nodeItemsWith read h
   let entry := head? (filterMap (fun item =>
     match item with
-    | Sexp.list (Sexp.sym "n" :: Sexp.str n :: e :: []) => if n == name then Option.some (Entry.fromSexp e) else Option.none
+    | Sexp.list (Sexp.sym "n" :: Sexp.str n :: e :: []) => if n == name then Option.some e else Option.none
     | _ => Option.none) items)
   match (entry, splitName name) with
   | (Option.some e, _) => Option.some e
@@ -371,7 +376,7 @@ def lookupNameWith (read : Text -> {e} Option Sexp) (h : Text) (name : Text) : {
         match item with
         | Sexp.list (Sexp.sym "sub" :: Sexp.str s :: Sexp.str child :: []) => if s == seg then Option.some child else Option.none
         | _ => Option.none) items) with
-      | Option.some child => Codebase.lookupNameWith read child rest
+      | Option.some child => Codebase.lookupFormWith read child rest
       | Option.none => Option.none
   | (Option.none, Option.none) => Option.none
 

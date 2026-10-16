@@ -955,11 +955,35 @@ export const importValue = (module, path, desc, name) => lazy(name, () => fromJs
 
 /** A JavaScript function for an exported DEUS function. */
 export const exportFn = (fn, params, result) =>
-  fixed(params.length, (...args) => toJs(result, fn(...params.map((param, i) => fromJs(param, args[i])))));
+  fixed(params.length, (...args) =>
+    toJs(
+      result,
+      entered(() => fn(...params.map((param, i) => fromJs(param, args[i])))),
+    ),
+  );
+
+/**
+ * Runs `start` as a call from JavaScript: under no DEUS handlers, with the caller's handlers current again when it
+ * returns. An `async` function leaves its own handlers current while it waits, which a call that begins meanwhile (a
+ * new request) must not inherit.
+ */
+const entered = (start) => {
+  const saved = current;
+  current = null;
+  try {
+    return start();
+  } finally {
+    current = saved;
+  }
+};
 
 /** An exported `async` function (JsGen): its promise settles to the result through the result's codec. */
 export const exportAsync = (fn, params, result) =>
-  fixed(params.length, async (...args) => toJs(result, await fn(...params.map((param, i) => fromJs(param, args[i])))));
+  fixed(params.length, async (...args) => {
+    const value = await entered(() => fn(...params.map((param, i) => fromJs(param, args[i]))));
+    current = null;
+    return toJs(result, value);
+  });
 
 //
 // The `Js` library's own imports (platform/js/js.deus): module "deus:runtime".

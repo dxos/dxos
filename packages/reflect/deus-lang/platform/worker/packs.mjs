@@ -633,10 +633,10 @@ export const nameAt = async (bucket, project, causal, name) => {
               fresh.map((part) => [part, 1]),
             );
             for (const part of fresh) {
-              read.set(
-                part,
-                batch.then((texts) => texts.get(`1:${part}`) ?? lookup(bucket, project, part, 1)),
-              );
+              const text = batch.then((texts) => texts.get(`1:${part}`) ?? lookup(bucket, project, part, 1));
+              // A walk that stops early never awaits some parts; their failures are its failure, not unhandled ones.
+              text.catch(() => {});
+              read.set(part, text);
             }
           }
           return text;

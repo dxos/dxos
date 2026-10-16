@@ -188,7 +188,9 @@ const moveHead = async (request, env, project, logged) => {
   const { branch, head } = claim;
   const current = await readHead(env, project, branch);
   const required = current && current.causal !== head ? await requiredEpoch(env.BUCKET, project, current.causal) : 0;
-  const sent = Number(request.headers.get('x-deus-epoch') ?? '0') || 0;
+  // A DEUS `Int` is 32 bits, so a number past it would wrap; such an epoch counts as none.
+  const claimed = Number(request.headers.get('x-deus-epoch') ?? '0');
+  const sent = Number.isInteger(claimed) && claimed >= 0 && claimed < 2 ** 31 ? claimed : 0;
   const verdict = heads.verdict(current?.causal, claim, required, sent);
   if (verdict === 'same') {
     return undefined;
@@ -448,7 +450,10 @@ const keysApi = async (request, env, ctx, rest) => {
     const label = typeof body.label === 'string' ? body.label.trim().slice(0, 200) : '';
     const scopes = Array.isArray(body.scopes) ? body.scopes : [];
     const projects = body.projects === undefined ? '*' : body.projects;
-    const problem = keys.mintProblem(label, scopes, SCOPES);
+    // The DEUS rule reads scopes as text, which would turn `["push"]` into "push", so anything else is refused here.
+    const problem = scopes.every((scope) => typeof scope === 'string')
+      ? keys.mintProblem(label, scopes, SCOPES)
+      : `scopes are some of ${SCOPES.join(', ')}`;
     if (problem !== undefined) {
       throw new HttpError(400, problem);
     }

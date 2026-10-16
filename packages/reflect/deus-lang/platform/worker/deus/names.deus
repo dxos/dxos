@@ -1,7 +1,7 @@
 -- context: @dxos/worker/Worker
 /-
   Names at a head in DEUS (task 41714c0d): the Worker resolves a name in a pushed namespace by the toolchain's own
-  rule, `Codebase.lookupNameWith`, reading namespace nodes from the project's packs. platform/worker/packs.mjs reads
+  rule, `Codebase.lookupFormWith`, reading namespace nodes from the project's packs. platform/worker/packs.mjs reads
   the packs and answers `/names/<branch>/<Name>`.
 -/
 
@@ -19,8 +19,13 @@ structure Lookup @"urn:deus:worker:NameLookup" where
   of its text or `undefined`). -/
 def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} Lookup :=
   let read := fun h => Option.map (fun text => Sexp.read (Js.toText text)) (Js.toOption (Js.Async.await (lookup h)))
-  match try (fun _ => Codebase.lookupNameWith read snapshot name) with
-  | Result.ok (Option.some e) => Lookup.mk true (Sexp.print (Entry.toSexp e)) (Entry.hash e) ""
+  match try (fun _ => Codebase.lookupFormWith read snapshot name) with
+  | Result.ok (Option.some form) =>
+      let hash :=
+        match Sexp.args form with
+        | Sexp.str h :: _ => h
+        | _ => ""
+      Lookup.mk true (Sexp.print form) hash ""
   | Result.ok Option.none => Lookup.mk false "" "" ""
   | Result.err problem => Lookup.mk false "" "" problem
 

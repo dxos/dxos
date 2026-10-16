@@ -324,8 +324,8 @@ inductive JsTarget where
   | assign (name : Text)
   | drop
 
-/-- The function being compiled: lines (newest first), indentation, fresh names, the loop it may jump to, and
-  whether it is `async`. -/
+/-- The function being compiled: lines (newest first), indentation, fresh names, the loop it may jump to, whether
+  it is `async`, and the locals bound to functions that do not wait, whose calls need no `await`. -/
 structure JsCtx @"urn:deus:jsgen:JsCtx" where
   jxMod : JsModule
   jxLines : Ref (List Text)
@@ -336,6 +336,7 @@ structure JsCtx @"urn:deus:jsgen:JsCtx" where
   jxLooped : Ref Bool
   jxOwner : Text
   jxAsync : Bool
+  jxSync : MutMap Text Unit
 
 def emit (ctx : JsCtx) (line : Text) : Unit := Ref.set ctx.jxLines ((Text.repeat ctx.jxDepth "  " ++ line) :: Ref.get ctx.jxLines)
 
@@ -530,17 +531,44 @@ def reachesVariant (ctx : JsCtx) (e : Sexp) : Bool :=
 /-- Whether parameter `i` of definition `d` is a function, by its stored type. -/
 def paramIsFunction (d : JsDef) (i : Int) : Bool :=
   match List.get? (fst (JsGen.arrows d.jdType)) i with
-  | Option.some (Sexp.list (Sexp.sym "tfun" :: _)) => true
+  | Option.some t => holdsFunction t
+  | Option.none => false
+
+/-- Whether a type has a function anywhere in it: a callback can come inside a pair, a record or a list. -/
+def holdsFunction (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list (Sexp.sym "tfun" :: _) => true
+  | Sexp.list items => List.any holdsFunction items
+  | _ => false
+
+/-- Whether `e` holds, anywhere in it, a function that is known to wait: a lambda that may wait or an async
+  definition. -/
+def holdsWaiting (ctx : JsCtx) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "lam" :: _) => maybeWaits ctx e
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) =>
+      match Dict.lookup h ctx.jxMod.jmDefs with
+      | Option.some d => d.jdAsync
+      | Option.none => false
+  | Sexp.list items => List.any (JsGen.holdsWaiting ctx) items
+  | _ => false
+
+/-- Whether an argument may carry a function that waits: one known to (`holdsWaiting`), or a value the compiler
+  cannot see into (a variable, anywhere in it). -/
+def carriesWaiting (ctx : JsCtx) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "var" :: _) => true
+  | Sexp.list (Sexp.sym "lam" :: _) => maybeWaits ctx e
+  | Sexp.list items => JsGen.holdsWaiting ctx e || List.any (JsGen.carriesWaiting ctx) items
   | _ => false
 
 /-- Whether a call from `ctx` to the definition `d`, which does not wait, should call its waiting variant instead:
-  the caller is `async` and passes, for a function parameter, a lambda that may wait or a variable. -/
+  the caller is `async` and passes, where `d` takes a function (alone or inside data), a value that may carry one
+  that waits. -/
 def needsWaiting (ctx : JsCtx) (d : JsDef) (args : List Sexp) : Bool :=
   ctx.jxAsync && not d.jdAsync && List.any (fun pair =>
     let (i, arg) := pair
-    paramIsFunction d i && (maybeWaits ctx arg || (match arg with
-      | Sexp.list (Sexp.sym "var" :: _) => true
-      | _ => false))) (List.mapIndexed (fun i arg => (i, arg)) args)
+    paramIsFunction d i && carriesWaiting ctx arg) (List.mapIndexed (fun i arg => (i, arg)) args)
 
 /-- `code` awaited in an `async` function, with the caller's handlers put back after; as it is elsewhere. -/
 def awaited (ctx : JsCtx) (code : Text) : Text := if ctx.jxAsync then "rt.resumed($stack, await " ++ code ++ ")" else code
@@ -606,7 +634,10 @@ def stmt (ctx : JsCtx) (env : List Text) (e : Sexp) (target : JsTarget) : {Throw
   | Sexp.list (Sexp.sym "letrec" :: Sexp.list (_ :: names) :: Sexp.list fs :: b :: []) =>
       let jsNames := List.map (fun x => JsGen.local ctx (asText x)) names
       let env2 := reverse jsNames ++ env
-      forEach (zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair) (maybeWaits ctx (snd pair)))
+      forEach (zip jsNames fs) (fun pair =>
+        let wait := maybeWaits ctx (snd pair)
+        if wait then () else MutMap.set ctx.jxSync (fst pair) ()
+        function ctx env2 (fst pair) (fst pair) (snd pair) wait)
       JsGen.stmt ctx env2 b target
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
       match (target, calleeName ctx env f, ctx.jxSelf) with
@@ -633,6 +664,10 @@ else
   let code := JsGen.expr ctx env v
   let name := JsGen.local ctx x
   JsGen.emit ctx ("const " ++ name ++ " = " ++ code ++ ";")
+  -- A local bound to a lambda that does not wait is called without `await`, so a promise it returns stays a value.
+  match v with
+  | Sexp.list (Sexp.sym "lam" :: _) => if JsGen.maybeWaits ctx v then () else MutMap.set ctx.jxSync name ()
+  | _ => ()
   name
 
 def matchStmt (ctx : JsCtx) (env : List Text) (s : Sexp) (cases : List Sexp) (target : JsTarget) : {Throw Text} Unit :=
@@ -689,6 +724,7 @@ def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (l
     (Ref.new false)
     ctx.jxOwner
     wait
+    ctx.jxSync
   stmt inner (reverse names ++ env) body JsTarget.ret
   let lines := reverse (Ref.get inner.jxLines)
   let pad := repeat (ctx.jxDepth + 1) "  "
@@ -722,6 +758,7 @@ def arrow (ctx : JsCtx) (env : List Text) (names : List Text) (body : Sexp) (wai
     (Ref.new false)
     ctx.jxOwner
     wait
+    ctx.jxSync
   if wait then JsGen.emit inner stackLine else ()
   let head := (if wait then "async (" else "(") ++ join ", " names ++ ") =>"
   if needsStatements body then
@@ -798,7 +835,9 @@ def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw T
           let isImport := match d.jdKind with
             | JsKind.importFn _ _ _ => true
             | _ => false
-          if not waiting && not isImport && not d.jdAsync && List.any (waitingLambda ctx.jxMod) args then Throw.throw (ctx.jxOwner ++ " passes a lambda that waits to " ++
+          -- Applied in part, the variant could not be awaited when the rest arrives, so that is refused.
+          let partly := arity != n && ctx.jxAsync && List.any (fun pair => paramIsFunction d (fst pair) && carriesWaiting ctx (snd pair)) (List.mapIndexed (fun i arg => (i, arg)) args)
+          if not waiting && not isImport && not d.jdAsync && (partly || List.any (JsGen.holdsWaiting ctx) args) then Throw.throw (ctx.jxOwner ++ " passes a function that may wait to " ++
             d.jdName ++ ", which does not wait, other than as a whole call; the js target would hand it a promise") else ()
           if d.jdAsync && not ctx.jxAsync then Throw.throw (ctx.jxOwner ++ " calls " ++ d.jdName ++ ", which waits, but is not async itself") else ()
           let values := operands ctx env args
@@ -807,7 +846,9 @@ def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw T
             join ", " (List.drop arity values) ++ ")") else JsGen.awaited ctx ("rt.ap(" ++ refValue ctx h ++ ", " ++ join ", " values ++ ")")
   | _ =>
       match operands ctx env (f :: args) with
-      | callee :: values => JsGen.awaited ctx ("rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")")
+      | callee :: values =>
+          let call := "rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")"
+          if MutMap.has ctx.jxSync callee then call else JsGen.awaited ctx call
       | [] => Throw.throw "empty application"
 
 /-- `(handle b r? o…)` as `rt.handle(clauses, ret, body)`. A clause that resumes at once is called
@@ -927,7 +968,7 @@ def moduleName (mod : JsModule) (module : Text) : Text :=
 
 /-- One definition's code: its lines, outermost indentation. -/
 def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
-  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false (MutMap.new ())
   match d.jdKind with
   | JsKind.primitive _ => []
   | JsKind.importFn module path n =>
@@ -957,7 +998,7 @@ def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
 /-- The waiting variant of definition `d` (`f$wait`): its body compiled as an `async` function, every call it cannot
   see into awaited, for callers that pass it functions that may wait. -/
 def waitCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
-  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false (MutMap.new ())
   function ctx [] (d.jdJs ++ "$wait") d.jdName d.jdBody true
   reverse (Ref.get ctx.jxLines) ++ ["rt.named(" ++ d.jdJs ++ "$wait, " ++ JsGen.quote d.jdName ++ ");"]
 

@@ -191,7 +191,7 @@ async function Worker$Heads$logHead(bucket, project, branch, causal, previous, k
   const $stack = rt.handlers();
   const at = lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL);
   const orNull = rt.named((value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()), "Worker.Heads.logHead/\u03bb");
-  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.resumed($stack, await rt.ap(orNull, previous))]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.resumed($stack, await rt.ap(orNull, keyId))]), rt.NIL))))));
+  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.ap(orNull, previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.ap(orNull, keyId)]), rt.NIL))))));
   const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
   rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))), "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
   return undefined;

@@ -46,6 +46,22 @@ describe('Js.Async on the js target', () => {
       'def through (f : Int -> {Js.Async} Int) (xs : List Int) : {Js.Async} List Int := List.map f xs',
       'def viaVariable (xs : List Int) : {Js.Async} List Int := through (fun x => twice x + 1) xs',
       'def partial (u : Unit) : {Js.Async} (List Int -> List Int) := List.map (fun x => twice x)',
+      'def byName (xs : List Int) : {Js.Async} List Int := List.map twice xs',
+      'def applyFst (p : (Int -> {e} Int, Int)) : {e} Int := fst p (snd p)',
+      'def viaPair (n : Int) : {Js.Async} Int := applyFst (fun x => twice x, n) + 1',
+      'def both (n : Int) : {Js.Async} Int :=',
+      '  let get := fun m => later m',
+      '  let p := get n',
+      '  let q := get n',
+      '  Js.toInt (Js.Async.await p) + Js.toInt (Js.Async.await q)',
+      'def waitTwice (n : Int) : {Js.Async, Tag} Text :=',
+      '  let _ := Js.Async.await (later 5)',
+      '  let _ := Js.Async.await (later n)',
+      '  Tag.tag ()',
+      'def heldA (u : Unit) : {Js.Async} Text :=',
+      '  handle waitTwice 60 with',
+      '  | Tag.tag v -> k => k "secret-of-A"',
+      'def bareTag (u : Unit) : {Tag} Text := Tag.tag ()',
       'end Wait',
       '',
     ].join('\n');
@@ -61,6 +77,11 @@ describe('Js.Async on the js target', () => {
       'Wait.overApplied',
       'Wait.doubled',
       'Wait.viaVariable',
+      'Wait.byName',
+      'Wait.viaPair',
+      'Wait.both',
+      'Wait.heldA',
+      'Wait.bareTag',
       '-o',
       out,
       '--js',
@@ -84,10 +105,23 @@ describe('Js.Async on the js target', () => {
     expect(await wait.doubled([1, 2, 3])).toEqual([2, 4, 6]);
     expect(await wait.viaVariable([1, 2])).toEqual([3, 5]);
 
+    // An async definition passed by name, and a callback inside a pair, reach waiting variants too.
+    expect(await wait.byName([1, 2])).toEqual([2, 4]);
+    expect(await wait.viaPair(3)).toBe(7);
+    // A local bound to a lambda that does not wait is called without await, so its promises run side by side.
+    const started = Date.now();
+    expect(await wait.both(150)).toBe(300);
+    expect(Date.now() - started).toBeLessThan(280);
+    // A call from JavaScript starts under no handlers, even while another call waits under one.
+    const held = wait.heldA();
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    expect(() => wait.bareTag()).toThrow(/unhandled ability/);
+    expect(await held).toBe('secret-of-A');
+
     // Applied only in part, the variant would not be awaited, so that is refused.
     const refused = deus('build', 'Wait.partial', '-o', join(scratch, 'partial.mjs'), '--js', ...c);
     expect(refused.code).not.toBe(0);
-    expect(refused.stderr).toContain('passes a lambda that waits to List.map');
+    expect(refused.stderr).toContain('passes a function that may wait to List.map');
   });
 
   // Task 86d7b02a: with no checkout under $DEUS_HOME, the codebase's embedded copy of the runtime is written out.
