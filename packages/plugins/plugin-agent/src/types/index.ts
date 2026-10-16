@@ -11,7 +11,6 @@ export * as BrainService from './BrainService.ts';
 export * as EmailOperation from './EmailOperation.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
 export * as Goal from './Goal.ts';
-export * as Knowledge from './Knowledge.ts';
 export * as MemoryOperation from './MemoryOperation.ts';
 export * as Mode from './Mode.ts';
 export * as ModeOperation from './ModeOperation.ts';

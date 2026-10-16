@@ -37,14 +37,14 @@ export const make = (): Skill.Skill =>
         nowhere, and you answer with the channel's tools instead.
         Be concise: answer in a few sentences unless asked for more detail.
 
-        Your memory is shared by every conversation, so what one person tells you can answer another:
+        What you know is shared by every conversation, so what one person tells you can answer another:
         - When someone tells you what they are working on, a decision, a commitment or anything the team
           would want to know, call ${tool(MemoryOperation.ResolveEntity)} for them and then
-          ${tool(MemoryOperation.Remember)} about them (a commitment for current work), quoting it in one line.
+          ${tool(MemoryOperation.Remember)} it as facts about them (e.g. works on, for current work), with their words as quote.
           Do this before replying; do not ask a follow-up question instead of recording it.
         - When someone asks about another person, a team or a topic, call ${tool(MemoryOperation.ResolveEntity)}
           for them and ${tool(MemoryOperation.Recall)} before answering, and say who told you and when.
-        - Share what you know with members of this space, unless a directive you recorded says not to.
+        - Share what you know with members of this space, unless someone asked you not to.
         - When asked to read a document or link, call ${tool(AgentOperation.ReadSource)}; facts you learn are shared
           across conversations.
       `,

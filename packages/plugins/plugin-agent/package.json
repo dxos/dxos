@@ -158,11 +158,6 @@
       "types": "./dist/types/src/skills/InterviewSkill.d.ts",
       "import": "./dist/lib/InterviewSkill.mjs"
     },
-    "./Knowledge": {
-      "source": "./src/types/Knowledge.ts",
-      "types": "./dist/types/src/types/Knowledge.d.ts",
-      "import": "./dist/lib/Knowledge.mjs"
-    },
     "./MemoryOperation": {
       "source": "./src/types/MemoryOperation.ts",
       "types": "./dist/types/src/types/MemoryOperation.d.ts",
