@@ -1,5 +1,6 @@
 ---
 '@dxos/plugin-sheet': minor
+'@dxos/react-ui-grid': patch
 ---
 
-Sheets publish their selected range through the shared `Selection` view state, so companions can read and set it; a new `header` cell style gives header rows a muted look; and a new `ChartCompanion` component charts sheet ranges as bar, pie, or xy plots.
+Sheets publish their selected range through the shared `Selection` view state, so companions can read and set it; a new `header` cell style gives header rows a light green look in both themes; and a new `ChartCompanion` component charts sheet ranges as bar, pie, or xy plots. In every grid, the focus ring and the cell editor now line up with the grid lines on all four sides.
