@@ -34,7 +34,8 @@ and never use Mermaid for a diagram this skill can draw.
    report: `crossings` and `bends` should be low, and every warning names the boxes involved. Fix one
    defect at a time with the smallest hint (below), render again, and stop after about four rounds.
 6. **Hand it over.** Reference the SVG by path (`![Architecture](docs/architecture.dx.svg)`), and keep
-   the `.dx` next to it so the next change is an edit to text, not a redraw.
+   the `.dx` next to it so the next change is an edit to text, not a redraw. A `.dx.svg` carries its
+   source, so when only the picture is at hand, `drawing source diagram.dx.svg` prints the `.dx` to edit.
 
 ## The language
 

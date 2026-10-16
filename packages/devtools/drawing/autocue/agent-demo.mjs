@@ -4,12 +4,15 @@
 
 /**
  * drawing.sh, agent first: Claude Code with the drawing skill diagrams a sample repo, changes the diagram on
- * request, and imports it into a DXOS space. Every step is the real agent; nothing is replayed.
+ * request, and imports it into a DXOS space that a Composer in the browser has joined, where it opens as a
+ * live drawing. Every step is the real agent; nothing is replayed. The agent's working stretches play fast.
  *
  * @mdl packages/devtools/drawing/DRAWING.mdl test QA-1
- * @app the autocue terminal stage on :4180, running a shell in an empty scratch directory
+ * @app the autocue terminal stage on :4180, running a shell in an empty scratch directory, and the
+ *   `bundle-e2e` Composer (production EDGE, which the demo's CLI profile also uses) on :4173
  *
- *   moon run drawing:build cli:build
+ *   moon run drawing:build cli:build composer-app:bundle-e2e
+ *   (cd packages/apps/composer-app && pnpm exec vite preview --configLoader native --host 127.0.0.1 --port 4173) &
  *   mkdir -p /tmp/drawing-demo/work
  *   node .agents/skills/autocue/scripts/terminal/stage.mjs --port 4180 --cwd /tmp/drawing-demo/work \
  *     --init packages/devtools/drawing/autocue/agent-demo.sh
@@ -19,12 +22,37 @@
  * Cut:
  *
  *   node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/drawing-demo/session.webm \
- *     --out drawing-agent.webm --ident composer --mp4 --name drawing-sh --duration 60-120
+ *     --out drawing-agent.webm --ident composer --mp4 --name drawing-sh --duration off --max-static 2.5 --caption-hold 4
  *
  * Needs a signed-in `claude` on PATH. Step captions use the driver's banner, like every autocue demo.
  */
 
+import { execFileSync, spawn } from 'node:child_process';
+import { mkdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const TYPING = 28;
+
+/** How much faster the agent's working stretches play: the result is the demo, not the spinner. */
+const FAST = 12;
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
+const COMPOSER = 'http://127.0.0.1:4173';
+const PROFILE = 'autocue-drawing-sh';
+
+/** Diagrams already in the repo, each drawn by the same layout engine, for the closing montage. */
+const MONTAGE = [
+  'packages/plugins/plugin-canvas/docs/diagrams/composer.dx',
+  'packages/plugins/plugin-illustrator/src/components/testing/relations.dx',
+  'packages/plugins/plugin-agent/docs/diagrams/discord-agents.dx',
+  'packages/plugins/plugin-canvas/docs/diagrams/edge-router.dx',
+  'packages/plugins/plugin-illustrator/src/components/testing/process.dx',
+  'packages/plugins/plugin-canvas/docs/diagrams/composer-data.dx',
+  'packages/plugins/plugin-canvas/docs/diagrams/edge-hub.dx',
+  'packages/plugins/plugin-agent/docs/diagrams/brain-flows.dx',
+];
+const MONTAGE_DIR = '/tmp/drawing-demo-montage';
 
 /** The terminal's visible text: xterm renders rows as DOM, so this is what the viewer sees. */
 const screen = (page) =>
@@ -83,13 +111,19 @@ const agentIdle = async (page, { timeout = 360_000, quiet = 4_000 } = {}) => {
   throw new Error('Claude Code did not finish in time.');
 };
 
-/** Sends a message to Claude Code and waits for it to finish working. */
-const ask = async (page, message) => {
+/** Sends a message to Claude Code and waits for it to finish working, which plays fast in the cut. */
+const ask = async (page, demo, message) => {
   await focus(page);
   await page.keyboard.type(message, { delay: TYPING });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(600);
   await page.keyboard.press('Enter');
-  await agentIdle(page);
+  await page.waitForTimeout(1_500);
+  await demo.speed({ factor: FAST });
+  try {
+    await agentIdle(page, { quiet: 2_500 });
+  } finally {
+    await demo.speed({ factor: 1 });
+  }
 };
 
 /** Claude Code's input box is up and waiting: its footer shows the permission-mode hint. */
@@ -99,10 +133,24 @@ const previews = (page) => page.evaluate(() => window.stage.previews);
 
 export const steps = [
   {
-    name: 'Prep (off camera): pass Claude Code first-run screens, clear',
+    name: 'Prep (off camera): pass Claude Code first-run screens, join the space from Composer, clear',
     setup: true,
     run: async ({ demo, page }) => {
       await page.waitForFunction(() => window.stage.prompts > 0, undefined, { timeout: 240_000 });
+
+      // The montage's diagrams, rendered by this checkout's CLI.
+      mkdirSync(MONTAGE_DIR, { recursive: true });
+      for (const file of MONTAGE) {
+        const out = path.join(MONTAGE_DIR, `${path.basename(file, '.dx')}.svg`);
+        execFileSync(
+          process.execPath,
+          [path.join(ROOT, 'packages/devtools/drawing/bin/drawing.js'), 'render', '--plain', '-o', out, file],
+          { cwd: ROOT },
+        );
+      }
+
+      await joinFromComposer(page);
+
       await focus(page);
       await page.keyboard.type('claude\n');
       // First run asks for a theme, shows a security note and asks to trust the folder; each takes Enter.
@@ -138,56 +186,159 @@ export const steps = [
     },
   },
   {
-    name: 'Install the skill',
-    run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Install the skill', subtitle: 'npx skills add dxos/dxos --skill drawing' });
-      await sh(page, 'head -3 .claude/skills/drawing/SKILL.md', { beat: 3_000 });
-    },
-  },
-  {
     name: 'Ask the agent for a diagram',
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'Ask your agent for a diagram',
-        subtitle: 'It reads the code and writes a few lines of .dx; drawing lays them out',
+        subtitle: 'With the drawing skill installed: npx skills add dxos/dxos --skill drawing',
       });
       await focus(page);
       await page.keyboard.type('claude', { delay: TYPING });
       await page.keyboard.press('Enter');
       await until(page, ready, { timeout: 60_000 });
+      await page.waitForTimeout(1_000);
       const shown = await previews(page);
-      await ask(page, 'Draw the architecture of this repo with the drawing skill. Save it as arch.dx.');
+      await ask(page, demo, 'Draw the architecture of this repo with the drawing skill. Save it as arch.dx.');
       await page.waitForFunction((count) => window.stage.previews > count, shown, { timeout: 30_000 });
-      await page.waitForTimeout(5_000);
+      await demo.caption({
+        value: 'It reads the code, writes a few lines of .dx, and drawing lays them out',
+        subtitle: 'No coordinates, no SVG by hand: the report of crossings and bends tells it what to fix',
+      });
+      await page.waitForTimeout(7_000);
     },
   },
   {
-    name: 'Ask for a change; the layout re-flows',
-    run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Ask for a change', subtitle: 'The agent edits the text; the layout re-flows' });
-      const shown = await previews(page);
-      await ask(page, 'Group Stripe and Postmark as "External services" and render it again.');
-      await page.waitForFunction((count) => window.stage.previews > count, shown, { timeout: 30_000 });
-      await page.waitForTimeout(5_000);
-    },
-  },
-  {
-    name: 'Put it in a Composer space',
+    name: 'The source travels inside the SVG',
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'Put it in a Composer space',
-        subtitle: 'The .dx.svg carries its source; dx drawing import makes it a live drawing',
+        value: 'The SVG carries its source',
+        subtitle: 'An image anywhere, and the .dx text inside it: drawing source prints it back',
       });
-      await ask(page, 'Import arch.dx.svg into my DXOS space.');
-      await page.waitForTimeout(4_000);
+      const prompts = await page.evaluate(() => window.stage.prompts);
+      await focus(page);
+      await page.keyboard.type('/exit', { delay: TYPING });
+      await page.waitForTimeout(500);
+      await page.keyboard.press('Enter');
+      await page.waitForFunction((count) => window.stage.prompts > count, prompts, { timeout: 30_000 });
+      await sh(page, 'clear', { beat: 300 });
+      await sh(page, 'drawing source arch.dx.svg', { beat: 7_000 });
     },
   },
   {
-    name: 'Hold the result',
-    narration: 'The drawing lives in a local-first space, syncs through EDGE, and people and agents edit it together.',
+    name: 'Open it in Composer and move the boxes',
+    run: async ({ demo, page }) => {
+      await demo.caption({
+        value: 'Open it in Composer',
+        subtitle: 'dx drawing import adds it to a local-first space, synced through EDGE',
+      });
+      await sh(page, 'dx drawing import arch.dx.svg', { beat: 2_500 });
+      await openInComposer({ demo, page });
+    },
+  },
+  {
+    name: 'drawing.sh',
+    narration: 'Every one of these was written as a few lines of text and laid out by drawing.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'drawing.sh', subtitle: 'Diagrams your agent can draw' });
-      await page.waitForTimeout(8_000);
+      await montage(page);
     },
   },
 ];
+
+/**
+ * Joins the CLI profile's space from a Composer in this browser context, off camera: `dx space share` hosts
+ * the invitation, and the code and secret it prints go where a person would paste them.
+ */
+const joinFromComposer = async (page) => {
+  const share = spawn(path.join(ROOT, 'packages/devtools/cli/bin/dx'), ['space', 'share'], {
+    env: { ...process.env, DX_PROFILE: PROFILE, DX_LOCAL_DEV: '0' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let output = '';
+  share.stdout.on('data', (chunk) => (output += chunk));
+  share.stderr.on('data', (chunk) => (output += chunk));
+  const exited = new Promise((resolve) => share.on('exit', resolve));
+  try {
+    const deadline = Date.now() + 120_000;
+    while (!/Invitation:\s*\S+/.test(output) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    const invitation = /Invitation:\s*(\S+)/.exec(output)?.[1];
+    const secret = /Secret:\s*(\d+)/.exec(output)?.[1];
+    if (!invitation || !secret) {
+      throw new Error(`dx space share printed no invitation: ${output.slice(-400)}`);
+    }
+    const composer = await page.context().newPage();
+    await composer.goto(`${COMPOSER}/?spaceInvitationCode=${invitation}`);
+    const code = composer.getByTestId('space-auth-code-input').locator('input').first();
+    await code.waitFor({ timeout: 120_000 });
+    await code.click();
+    await composer.keyboard.type(secret, { delay: 60 });
+    await composer.getByTestId('space-invitation-authenticator-next').click();
+    const status = await Promise.race([
+      exited,
+      new Promise((resolve) => setTimeout(() => resolve('timeout'), 120_000)),
+    ]);
+    if (status !== 0) {
+      throw new Error(`dx space share ended with ${status}: ${output.slice(-400)}`);
+    }
+    await composer.getByTestId('spacePlugin.spaceHome').first().waitFor({ timeout: 120_000 });
+    await closeHelp(composer);
+    // Let the joined space settle in Composer before the page that holds it goes away.
+    await composer.waitForTimeout(5_000);
+    await composer.close();
+  } finally {
+    share.kill();
+  }
+};
+
+/** First run opens the Help companion beside every plank; it is not part of the story. */
+const closeHelp = async (page) => {
+  const close = page.getByTestId('plankHeading.closeCompanion').first();
+  if (await close.isVisible().catch(() => false)) {
+    await close.click({ timeout: 10_000 }).catch(() => {});
+  }
+};
+
+/** Switches the recording to Composer, where the imported drawing has synced into the joined space, and opens it. */
+const openInComposer = async ({ demo, page }) => {
+  // Composer's boot is a spinner, not content.
+  await demo.speed({ factor: FAST });
+  await page.goto(COMPOSER);
+  const recent = page.getByText('arch', { exact: true }).first();
+  await recent.waitFor({ timeout: 180_000 });
+  await demo.speed({ factor: 1 });
+  await page.waitForTimeout(1_500);
+  await demo.click({ text: 'arch', exact: true });
+  await page.locator('svg text', { hasText: 'Postgres' }).first().waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(1_500);
+  await demo.caption({
+    value: 'A drawing in a local-first space',
+    subtitle: 'Synced through EDGE: people and agents keep working on it together',
+  });
+  await page.waitForTimeout(6_000);
+};
+
+/** Flashes the montage, one diagram at a time, over the whole window. */
+const montage = async (page) => {
+  const svgs = MONTAGE.map((file) => readFileSync(path.join(MONTAGE_DIR, `${path.basename(file, '.dx')}.svg`), 'utf8'));
+  await page.evaluate(() => {
+    const stage = document.createElement('div');
+    stage.id = '__montage__';
+    stage.style.cssText =
+      'position:fixed;inset:0;z-index:2147483646;background:#fff;display:flex;align-items:center;justify-content:center;padding:48px 64px 120px';
+    document.body.appendChild(stage);
+  });
+  for (const svg of svgs) {
+    await page.evaluate((markup) => {
+      const stage = document.getElementById('__montage__');
+      stage.innerHTML = markup;
+      const element = stage.querySelector('svg');
+      element.removeAttribute('width');
+      element.removeAttribute('height');
+      element.style.cssText = 'width:100%;height:100%;color:#262626';
+    }, svg);
+    await page.waitForTimeout(1_300);
+  }
+  await page.waitForTimeout(1_500);
+};

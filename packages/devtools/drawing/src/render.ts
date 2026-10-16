@@ -76,3 +76,18 @@ export const render = (text: string, { name, plain = false }: RenderOptions): Pr
       };
     }),
   );
+
+/**
+ * The diagram source a `.dx.svg` carries, or undefined for a plain SVG or one exported without its source.
+ * Reads drawing.sh files and Composer exports alike, since both keep the source under `source.text`.
+ */
+export const source = (svg: string): string | undefined => {
+  const payload = DxSvg.extract(svg);
+  if (typeof payload !== 'object' || payload === null || !('source' in payload)) {
+    return undefined;
+  }
+  const { source } = payload;
+  return typeof source === 'object' && source !== null && 'text' in source && typeof source.text === 'string'
+    ? source.text
+    : undefined;
+};

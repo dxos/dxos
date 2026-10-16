@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DxSvg } from '@dxos/diagram';
 
-import { render } from './render.ts';
+import { render, source } from './render.ts';
 
 const SOURCE = `
 group web "Web app" {
@@ -39,5 +39,12 @@ describe('render', () => {
     expect(report.failed).toBe(true);
     expect(svg).toBe('');
     expect(report.notes.some(({ severity }) => severity === 'error')).toBe(true);
+  });
+
+  test('the source comes back out of the .dx.svg exactly', async ({ expect }) => {
+    const { svg } = await render(SOURCE, { name: 'arch' });
+    expect(source(svg)).toBe(SOURCE);
+    const { svg: plain } = await render(SOURCE, { name: 'arch', plain: true });
+    expect(source(plain)).toBeUndefined();
   });
 });

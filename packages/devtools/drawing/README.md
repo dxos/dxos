@@ -20,6 +20,7 @@ The skill is `skills/drawing/SKILL.md`: the workflow and the language reference.
 npx -y @dxos/drawing render arch.dx          # writes arch.dx.svg and prints the layout report
 npx -y @dxos/drawing render arch.dx --plain  # a bare arch.svg
 npx -y @dxos/drawing check arch.dx --json    # the report only
+npx -y @dxos/drawing source arch.dx.svg      # the .dx the SVG carries
 ```
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.

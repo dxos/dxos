@@ -6,13 +6,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { type Report, render } from './render.ts';
+import { type Report, render, source } from './render.ts';
 
 const USAGE = `Usage: drawing <command> [options] <file.dx>...
 
 Commands:
   render   Lay out each .dx file and write <name>.dx.svg beside it.
   check    Lay out each .dx file and print the report; write nothing.
+  source   Print the .dx source a .dx.svg carries, so the picture can be edited as text again.
 
 Options:
   -o, --out <path>  Output path (one input only); "-" writes the SVG to stdout.
@@ -40,6 +41,28 @@ const formatReport = (file: string, output: string | undefined, report: Report):
   ].join('\n');
 };
 
+/** Prints each file's embedded source; a file that carries none is an error, since the caller expected one. */
+const printSources = (files: readonly string[]): number => {
+  if (files.length === 0) {
+    console.error('No .dx.svg file given.');
+    return 1;
+  }
+  let missing = false;
+  for (const file of files) {
+    const text = source(readFileSync(file, 'utf8'));
+    if (text === undefined) {
+      console.error(`${file}: carries no diagram source (a plain SVG, or exported with --plain).`);
+      missing = true;
+      continue;
+    }
+    if (files.length > 1) {
+      console.log(`# ${file}`);
+    }
+    process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
+  }
+  return missing ? 1 : 0;
+};
+
 const main = async (): Promise<number> => {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
@@ -54,6 +77,9 @@ const main = async (): Promise<number> => {
   if (values.help || !command) {
     console.log(USAGE);
     return values.help ? 0 : 1;
+  }
+  if (command === 'source') {
+    return printSources(files);
   }
   if (command !== 'render' && command !== 'check') {
     console.error(`Unknown command: ${command}\n\n${USAGE}`);

@@ -19,6 +19,8 @@ export PATH="$DEMO_BIN:$PATH"
 # Started from inside an agent session, the take would otherwise inherit its child-session marker.
 unset CLAUDE_CODE_CHILD_SESSION
 export DX_PROFILE="${DEMO_DX_PROFILE:-autocue-drawing-sh}"
+# The production EDGE, which the `bundle-e2e` Composer the take opens at the end also syncs through.
+export DX_LOCAL_DEV=0
 
 # The CLI has no offline way to create an identity (`dx account signup` needs the hub), so the take provisions
 # one through the CLI's own test bootstrap.
