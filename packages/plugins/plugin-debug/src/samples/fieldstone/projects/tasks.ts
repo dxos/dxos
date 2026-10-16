@@ -395,12 +395,13 @@ export const TASK_SEEDS = [
     created: 'triage',
   },
   {
-    key: 'tenantQuotas',
+    key: 'dashboardPlugin',
     project: 'cache',
-    title: 'Per-tenant storage quotas',
+    title: 'Ship the Cairn dashboard as a Composer plugin',
     description:
-      'A soft quota that warns at 80% and a hard quota that rejects new PUTs, set per plan. Usage billing will ' +
-      'read the same counters.',
+      'Move the tokens, usage and hit-rate pages into a Composer plugin that reads the edge gateway with the ' +
+      'workspace API token, so the dashboard opens next to the team’s projects and agent traces. Retire the ' +
+      'standalone web app once the plugin covers its pages.',
     status: 'todo',
     priority: 'medium',
     estimate: 'm',

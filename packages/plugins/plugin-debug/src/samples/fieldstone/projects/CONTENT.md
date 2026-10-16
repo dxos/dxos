@@ -38,6 +38,8 @@ project Gantt and the trace panel draw.
   tasks give the Gantt real dependencies.
 - `history` records each status change with its date and actor. Two tasks carry a `question` from
   an agent and an `answer` from a person.
+- One `cache` todo for Builder, "Ship the Cairn dashboard as a Composer plugin", filed by Triage,
+  ties the project to the architecture document's "Cairn on DXOS" section.
 - One `failed` task shows a Builder run that broke on a flaky integration test, a retry that also
   failed, and Omar's note in `history`. Its dependent is `blocked`.
 

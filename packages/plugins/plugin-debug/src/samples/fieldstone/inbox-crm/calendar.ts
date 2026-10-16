@@ -64,7 +64,7 @@ const LAST = 182;
 
 type Timed = {
   readonly title: string;
-  readonly description: string;
+  readonly description?: string;
   readonly attendees: ReadonlyArray<Who>;
   readonly time: readonly [number, number];
   readonly minutes: number;
@@ -74,6 +74,59 @@ type Timed = {
  * Astrid's calendar for a year around the reference date. `Event` has no recurrence, so each series
  * is one Event per occurrence.
  */
+/** Agendas for the weekly team sync, in rotation. */
+const TEAM_SYNC_NOTES = [
+  'Cache v2 rollout status; Okapi follow-ups; who is on call next week.',
+  'Demo: size-aware eviction on the edge tier. Then blockers.',
+  'R2 backend: integration tests, beta tenants, rollback plan.',
+  'Billing migration: metered line live in staging? Invoices dry run.',
+  'SOC 2: evidence collection owners. Hiring loop updates.',
+  'Release train for 1.8: what is in, what slips.',
+  'Customer roundup: Northpine renewal, Meridian review, Brightwater trial.',
+  'Incident review: last week’s pages and the noisy alerts to fix.',
+];
+
+/** Planning notes for each sprint, in rotation. */
+const SPRINT_NOTES = [
+  'Top of the backlog: sharded index, signed URLs, CLI backoff.',
+  'Carry-over from last sprint plus the Okapi action items.',
+  'Billing: usage meter, Stripe prepay credits, invoice previews.',
+  'Edge tier: eviction metrics, R2 multipart, warm-cache command.',
+  'Hardening sprint: flaky tests, alert tuning, runbook updates.',
+];
+
+/** Retro themes, in rotation. */
+const RETRO_NOTES = [
+  'Went well: release notes drafted by Scribe. Change: review agent PRs within a day.',
+  'Went well: incident response. Change: name a secondary on every page.',
+  'Went well: pairing with Hana. Change: smaller tasks for Builder runs.',
+  'Went well: billing dry run. Change: freeze the migration plan before coding.',
+];
+
+/** Monthly product review topics, in rotation. */
+const PRODUCT_REVIEW_NOTES = [
+  'Usage: hit rate by plan, top tenants by storage, churn risks.',
+  'Roadmap: what moves into Q4, what waits for 1.9.',
+  'Pricing: storage overage, free-tier cap, enterprise commit.',
+  'Customer feedback from Northpine, Okapi and the Brightwater trial.',
+];
+
+/** Northpine sync topics, in rotation. */
+const NORTHPINE_NOTES = [
+  'SSO rollout, then their dedicated region request.',
+  'Seat count for renewal; build-time savings report.',
+  'Cache hit rate on their Bazel monorepo; next quarter’s plans.',
+];
+
+/** Notes for Hana's first five 1:1s. */
+const HANA_NOTES = [
+  'First week: laptop, accounts, the cache-engine walkthrough with Omar.',
+  'First month: the flaky-test task, on-call shadowing, questions so far.',
+  'Taking a Builder review on her own; first solo on-call week.',
+  'Owning the regression suite; what to pick up next quarter.',
+  'Six-month check-in: growth plan and the 1.9 work she wants.',
+];
+
 export const makeCalendar = (
   people: Directory,
 ): Make<{ readonly calendar: Calendar.Calendar; readonly events: Events }> =>
@@ -112,62 +165,58 @@ export const makeCalendar = (
 
     const series = (offsets: number[], event: Timed) => offsets.map((offset) => timed(offset, event));
 
+    /** A series whose occurrences take their descriptions from `notes` in turn, so no two weeks read alike. */
+    const rotating = (offsets: number[], event: Omit<Timed, 'description'>, notes: ReadonlyArray<string>) =>
+      offsets.map((offset, index) => timed(offset, { ...event, description: notes[index % notes.length] }));
+
     const events: Events = {
-      teamSync: series(weekly(clock, { weekday: 1, from: FIRST, count: 52 }), {
-        title: 'Team sync',
-        description: 'Weekly sync: what shipped, what is blocked, who needs help.',
-        attendees: FIELDSTONE,
-        time: [10, 0],
-        minutes: 30,
-      }),
-      sprintPlanning: series(weekly(clock, { weekday: 2, from: FIRST, count: 26, everyWeeks: 2 }), {
-        title: 'Sprint planning',
-        description: 'Pick the next two weeks of work from the top of the Cairn backlog.',
-        attendees: FIELDSTONE,
-        time: [14, 0],
-        minutes: 60,
-      }),
-      retro: series(weekly(clock, { weekday: 5, from: FIRST, count: 26, everyWeeks: 2 }), {
-        title: 'Retro',
-        description: 'What went well, what did not, one thing to change next sprint.',
-        attendees: FIELDSTONE,
-        time: [14, 0],
-        minutes: 45,
-      }),
+      teamSync: rotating(
+        weekly(clock, { weekday: 1, from: FIRST, count: 52 }),
+        { title: 'Team sync', attendees: FIELDSTONE, time: [10, 0], minutes: 30 },
+        TEAM_SYNC_NOTES,
+      ),
+      sprintPlanning: rotating(
+        weekly(clock, { weekday: 2, from: FIRST, count: 26, everyWeeks: 2 }),
+        { title: 'Sprint planning', attendees: FIELDSTONE, time: [14, 0], minutes: 60 },
+        SPRINT_NOTES,
+      ),
+      retro: rotating(
+        weekly(clock, { weekday: 5, from: FIRST, count: 26, everyWeeks: 2 }),
+        { title: 'Retro', attendees: FIELDSTONE, time: [14, 0], minutes: 45 },
+        RETRO_NOTES,
+      ),
       oncall: weekly(clock, { weekday: 5, from: FIRST, count: 52 }).map((offset, week) => {
         const incoming = ROTATION[week % ROTATION.length];
         return timed(offset, {
           title: 'On-call handoff',
-          description: `Anika hands the pager to ${people[incoming].fullName}: open incidents, noisy alerts, runbook changes.`,
           attendees: ['anika', incoming],
           time: [15, 0],
           minutes: 30,
         });
       }),
-      productReview: series(monthly(clock, { from: -170, count: 12 }), {
-        title: 'Product review',
-        description: 'Monthly review of Cairn usage, customer feedback and the roadmap.',
-        attendees: FIELDSTONE,
-        time: [15, 0],
-        minutes: 60,
-      }),
-      northpineSync: series(monthly(clock, { from: -165, count: 12 }), {
-        title: 'Northpine sync',
-        description: 'Monthly check-in with Northpine Robotics, our largest customer.',
-        attendees: ['grace', 'marcus', 'astrid', 'june'],
-        time: [16, 0],
-        minutes: 45,
-      }),
+      productReview: rotating(
+        monthly(clock, { from: -170, count: 12 }),
+        { title: 'Product review', attendees: FIELDSTONE, time: [15, 0], minutes: 60 },
+        PRODUCT_REVIEW_NOTES,
+      ),
+      northpineSync: rotating(
+        monthly(clock, { from: -165, count: 12 }),
+        { title: 'Northpine sync', attendees: ['grace', 'marcus', 'astrid', 'june'], time: [16, 0], minutes: 45 },
+        NORTHPINE_NOTES,
+      ),
       oneOnOne: REPORTS.flatMap(({ key, time }, index) => {
         const from = key === 'hana' ? -HANA_JOINED_DAYS_AGO : FIRST + 2 + index * 3;
         const count = key === 'hana' ? Math.floor((LAST - 3 - from) / 30) + 1 : 12;
-        return series(monthly(clock, { from, count }), {
-          title: `Astrid / ${people[key].fullName?.split(' ')[0]} 1:1`,
-          description: 'Monthly 1:1.',
-          attendees: ['astrid', key],
-          time,
-          minutes: 30,
-        });
+        // Only Hana's first months carry notes: a ramp-up plan worth writing down.
+        return monthly(clock, { from, count }).map((offset, index) =>
+          timed(offset, {
+            title: `Astrid / ${people[key].fullName?.split(' ')[0]} 1:1`,
+            description: key === 'hana' ? HANA_NOTES[index] : undefined,
+            attendees: ['astrid', key],
+            time,
+            minutes: 30,
+          }),
+        );
       }),
 
       release17: [

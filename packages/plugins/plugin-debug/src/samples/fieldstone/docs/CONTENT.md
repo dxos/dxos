@@ -11,6 +11,8 @@ so reading one leads to the next.
     contacts.
   - [projects](../projects/CONTENT.md): the links to projects, tasks and project artifacts, and the
     roadmap's TaskSet embed.
+  - Architecture, from plugin-canvas (`Architecture.Partial`): the links to its Composer and EDGE
+    guides and the embeds of its `composer-plugin` and `edge-compute` drawings in `architecture`.
 - Provides: `docs.<key>`, `sheets.<key>`, `drawings.<key>`
 - Clock: sync notes and the incident timeline use offsets from −60d to the reference date. The decision
   log reaches back to −120d, the hiring sheet's open dates to −80d, the vendor spend sheet over the 12
@@ -32,7 +34,11 @@ so reading one leads to the next.
   - `runbook` On-call runbook: links Anika; embeds `escalation` and `cloudCost`. With inbox-crm,
     links AWS and Cloudflare.
   - `architecture` Cairn architecture: links Omar and Felix; embeds `architectureDiagram` and
-    `requestFlow`; one mermaid sequence diagram of a cache lookup.
+    `requestFlow`; one mermaid sequence diagram of a cache lookup. A "Cairn on DXOS" section says
+    the dashboard is a Composer plugin and the agents run on EDGE compute, and that Cairn's edge
+    gateway is its own worker, not EDGE. With Architecture, its two subsections link the Composer and
+    EDGE guides inline and embed the `composer-plugin` (Plugin Anatomy) and `edge-compute` drawings.
+    Without it, the same text reads without the links and embeds.
   - `decisions` Decision log, 8 entries: each names its deciders and links the doc it changed. With
     projects, 2 entries link `artifacts.cacheDesign`.
 - Planning:
@@ -73,7 +79,7 @@ so reading one leads to the next.
   `TldrawModel.RecordBuilder` from shapes and bound arrows. Canvas-renderer drawings, like the
   architecture content, need plugin-canvas internals that are not exported:
   - `orgChart` Fieldstone's 10 people and who reports to whom
-  - `architectureDiagram` Cairn's services and stores
+  - `architectureDiagram` Cairn's services and stores; the dashboard box is the Composer plugin
   - `requestFlow` One cache request, client to storage and back
   - `roadmap` Q4 on a timeline, one lane per project
   - `escalation` The on-call escalation path
@@ -102,4 +108,6 @@ so reading one leads to the next.
 - Every sheet and drawing is embedded in at least one document. At least 12 embeds in all.
 - Every link and embed resolves to an object in the space.
 - No link targets content from a partial the template leaves out.
+- With Architecture, `architecture` links its Composer and EDGE guides and embeds its
+  `composer-plugin` and `edge-compute` drawings.
 - Every sheet with a derived column computes it by formula.

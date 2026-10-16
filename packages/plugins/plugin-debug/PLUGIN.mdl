@@ -312,9 +312,12 @@ test QA-4: Fieldstone — a customer asks for one more thing
     - space: a space created from the "Fieldstone Labs" template, open, with the navtree expanded
   steps:
     - name: Look at the week
-      do: Open the Fieldstone calendar, scroll the month grid through the coming months and back, then pick the reference date (Wednesday 14 October 2026).
-      expect: a year of days ringed for their events; the event list moves to that week's standups, one-on-ones and customer calls
+      do: Open the Fieldstone calendar, scroll the month grid a little ahead and back, then pick Monday 12 October, Wednesday 21 October and Wednesday 14 October in turn.
+      expect: days ringed for their events; each pick moves the event list to that day, with the Okapi follow-up on the 21st
       note: The grid's highlighted "today" is the wall clock's, not the template's reference date.
+    - name: Open an event
+      do: Open one of the 14 October events from the list.
+      expect: the event with its notes and up to three attendees, then "+N more"
     - name: Find the thread
       do: Open the Inbox and scroll back to "Okapi cache-corruption postmortem".
       expect: the thread, five weeks old, with eight messages
@@ -355,91 +358,91 @@ test QA-5: Fieldstone — what the agents did this week
       do: Open the pipeline.
       expect: one lane per Builder and Reviewer run, overlapping across the week, and bars for the tasks they worked
     - name: Look inside a run
-      do: Open the chat for "Fix cache-key collision on concurrent writes".
-      expect: the brief, the agent's tool calls (repository search, edits, test runs, a pull request) and its summary
+      do: Expand the project's Sessions in the navtree and open "Builder: Fix cache-key collision on concurrent writes".
+      expect: the brief, the agent's steps with their tool calls (Read file, Run tests, Open pull request, Update tasks) and its closing summary
     - name: Find where a person stepped in
       do: Open "Integration tests against R2".
       expect: failed after a run and a retry, with Omar's note in its history; "Switch beta tenants to the R2 backend" is blocked on it
 ```
 
 ```mdl
-test QA-6: Fieldstone — shipping 1.8
+test QA-6: Fieldstone — the customer pipeline
   desc: |
-    The third Fieldstone vignette. Scribe's draft of the 1.8 release notes arrives in the inbox; Astrid
-    reads it, opens the release task and checks what it still waits on. Recorded by
-    autocue/fieldstone-shipping-1-8.mjs.
+    The third Fieldstone vignette, Fieldstone's accounts as structured data: the CRM section's
+    organizations and people, the pricing sheet behind a quote, and a customer note whose links lead to
+    its contacts. Recorded by autocue/fieldstone-customer-pipeline.mjs.
   actors: human
   status: unverified
   given:
     - an identity exists, on a fresh profile
-    - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with Mailboxes and Projects expanded
+    - plugin-debug and plugin-crm are enabled (dev-only default for plugin-debug)
+    - space: a space created from the "Fieldstone Labs" template, open, with Collections, Planning and Customers expanded
   steps:
-    - name: The draft arrives
-      do: In the Inbox, open "Cairn 1.8 release notes draft".
-      expect: Scribe's draft and Astrid's reply asking to lead with the runner-image change
-    - name: Read the notes
-      do: Open "Cairn 1.8 release notes" from the project's artifacts.
-      expect: the highlights, the Okapi credit and the upgrade notes
-    - name: Open the release task
-      do: Open "Cut the Cairn 1.8 release" in the project's tasks.
-      expect: assigned to Builder, depending on eviction, signed URLs and the release notes
-    - name: The release day
-      do: Open the Fieldstone calendar.
-      expect: "Cairn 1.8 release" as an all-day event two days out
+    - name: The accounts
+      do: Open Organizations in the CRM section.
+      expect: a card per organization, customers and vendors, each listing its related contacts
+    - name: The people
+      do: Open People in the CRM section and switch to the Table view.
+      expect: all 25 people with job title, organization and email
+    - name: The price behind a quote
+      do: Open "Cairn plans" in the Planning collection.
+      expect: tiers by usage, with each monthly price computed by formula
+    - name: A customer note
+      do: Open "Meridian Health Data" in the Customers collection.
+      expect: the account note, with its contacts and the SOC 2 project linked inline
+    - name: Into a contact
+      do: Click the "Aisha Bello" link in the note, then Open from the preview card's menu.
+      expect: Aisha's contact opens, with Meridian Health Data as employer
 ```
 
 ```mdl
-test QA-7: Fieldstone — unblocking a deal
+test QA-7: Fieldstone — after the incident
   desc: |
-    The fourth Fieldstone vignette. Meridian's enterprise trial waits on a security review. Astrid
-    follows the questionnaire thread to the SOC 2 project and the policies Scribe drafted for it.
-    Recorded by autocue/fieldstone-unblocking-a-deal.mjs.
+    The fourth Fieldstone vignette, the documents an incident leaves behind: the postmortem with its
+    timeline sheet embedded, the runbook with its escalation drawing, and the decision log the fix fed.
+    Recorded by autocue/fieldstone-after-the-incident.mjs.
   actors: human
   status: unverified
   given:
     - an identity exists, on a fresh profile
     - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with Mailboxes and Projects expanded
+    - space: a space created from the "Fieldstone Labs" template, open, with Collections, Incidents and Handbook expanded
   steps:
-    - name: The blocker
-      do: In the Inbox, open "Meridian security questionnaire".
-      expect: nine messages between Meridian and Fieldstone, with the questionnaire attached and a summary
-    - name: Who decides
-      do: Hover Kenji Moreau's avatar on his message.
-      expect: his card shows Meridian Health Data and the security review on the calendar
-    - name: The work behind it
-      do: Open the "SOC 2 Type I readiness" project.
-      expect: tasks mostly drafted by Scribe, and instructions that name the Meridian thread
-    - name: The policies
-      do: Open "SOC 2 policy set" from the project's artifacts.
-      expect: the policies Scribe drafted, ready for review
+    - name: The postmortem
+      do: Open "Okapi cache-corruption postmortem" in the Incidents collection.
+      expect: root cause and action items, linking Omar, Anika and Okapi inline
+    - name: The timeline
+      do: Scroll to the embedded "Okapi incident timeline".
+      expect: twenty timestamped rows from detection to close, hours since detection by formula
+    - name: What on-call does now
+      do: Open "On-call runbook" in the Handbook collection.
+      expect: the runbook, with the on-call escalation drawing embedded
+    - name: What the team decided
+      do: Open "Decision log".
+      expect: entries with their deciders, including compare-and-set index commits after the incident
 ```
 
 ```mdl
-test QA-8: Fieldstone — Hana's first week
+test QA-8: Fieldstone — how Cairn plugs into DXOS
   desc: |
-    The fifth Fieldstone vignette. Hana joined two weeks ago. Her week runs through the welcome mail,
-    the onboarding guide, the handbook and Cairn's architecture. Recorded by
-    autocue/fieldstone-hanas-first-week.mjs.
+    The fifth Fieldstone vignette. Cairn's dashboard is a Composer plugin and its agents run on EDGE
+    compute, so the team's architecture doc leads into the DXOS diagrams: plugin anatomy for the
+    dashboard, EDGE's compute service for the agents. Recorded by autocue/fieldstone-cairn-on-dxos.mjs.
   actors: human
   status: unverified
   given:
     - an identity exists, on a fresh profile
     - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with Mailboxes and the Handbook collection expanded
+    - space: a space created from the "Fieldstone Labs" template, open, with Collections, Handbook and Architecture expanded
   steps:
-    - name: The welcome
-      do: In the Inbox, open "Welcome Hana".
-      expect: Astrid's welcome, with Omar's offer of a cache-engine walkthrough
-    - name: The guide
-      do: Open "Engineer onboarding" in the Handbook collection.
-      expect: the onboarding steps, linking people and the architecture guide inline
-    - name: Who is who
-      do: Open "Fieldstone handbook".
-      expect: the org chart embedded, with Hana in it
-    - name: How Cairn works
-      do: Open "Cairn architecture".
-      expect: the architecture guide with its diagram and request flow embedded
+    - name: Cairn's own architecture
+      do: Open "Cairn architecture" in the Handbook collection and scroll to how Cairn sits on DXOS.
+      expect: Cairn's services, then the dashboard as a Composer plugin and the agents on EDGE compute, with the DXOS diagrams embedded
+    - name: The dashboard is a plugin
+      do: Open the Composer drawing in the Architecture collection and open the Feature Plugins box.
+      expect: Plugin Anatomy, the diagram of what a plugin contributes
+    - name: The agents run on EDGE
+      do: Go up, open the EDGE box, then compute-service.
+      expect: EDGE's compute service, where Builder, Reviewer, Triage and Scribe run
 ```
 

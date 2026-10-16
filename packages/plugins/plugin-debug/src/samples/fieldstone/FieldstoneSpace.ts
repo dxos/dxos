@@ -30,6 +30,7 @@ export type Result = {
   readonly inboxCrm: InboxCrm.Provides;
   readonly projects: Projects.Provides;
   readonly docs: Docs.Provides;
+  readonly architecture: Architecture.Provides;
 };
 
 export const make = (): SampleSpace.Definition<typeof phases, Result> =>
@@ -42,9 +43,9 @@ export const make = (): SampleSpace.Definition<typeof phases, Result> =>
         const team = yield* phases.team();
         const inboxCrm = yield* phases.inboxCrm({ team });
         const projects = yield* phases.projects({ team, inboxCrm });
-        const docs = yield* phases.docs({ team, inboxCrm, projects });
-        yield* phases.architecture();
-        return { team, inboxCrm, projects, docs };
+        const architecture = yield* phases.architecture();
+        const docs = yield* phases.docs({ team, inboxCrm, projects, architecture });
+        return { team, inboxCrm, projects, docs, architecture };
       }),
   });
 

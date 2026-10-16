@@ -3,9 +3,10 @@
 //
 
 /**
- * Fieldstone vignette: unblocking a deal. Meridian's security questionnaire, the person who decides, the SOC 2 project and the policies Scribe drafted.
+ * Fieldstone vignette: the customer pipeline. The CRM section's organizations and people, the pricing sheet behind a quote, and a
+ * customer note that leads to one of its contacts.
  *
- * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-7
+ * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-6
  * @app composer-app bundled dev build, served by `vite preview` on :4187
  *
  * Built and served from `packages/apps/composer-app` (plugin-debug, which contributes the template, is on
@@ -29,7 +30,6 @@
  */
 
 const TEMPLATE = 'Fieldstone Labs';
-const PROJECT = 'SOC 2 Type I readiness';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -64,6 +64,19 @@ const collapse = async (page, label) => {
   const branch = page
     .locator(`[data-testid="deck.sidebar"] [role="treeitem"]:has(> [data-part="branch-control"] :text-is("${label}"))`)
     .first();
+  // A reveal lands a beat after the navigation that caused it, so wait for it before closing.
+  await page
+    .waitForFunction(
+      (label) =>
+        [...document.querySelectorAll('[data-testid="deck.sidebar"] [role="treeitem"]')].some(
+          (item) =>
+            item.querySelector(':scope > [data-part="branch-control"]')?.textContent?.trim() === label &&
+            item.getAttribute('aria-expanded') === 'true',
+        ),
+      label,
+      { timeout: 2_000 },
+    )
+    .catch(() => {});
   if ((await branch.count()) > 0 && (await branch.getAttribute('aria-expanded')) === 'true') {
     await branch.locator('[data-part="branch-indicator"]').first().click();
   }
@@ -110,7 +123,17 @@ const scrollToThread = async (page, subject) => {
 /** Opens a project and its Tasks tab. */
 const openProject = async (demo, page, name) => {
   await demo.click({ selector: node(name), label: name });
-  await page.locator('[data-testid="projectsPlugin.tab.tasks"]').first().waitFor({ timeout: 15_000 });
+  const tasks = page.locator('[data-testid="projectsPlugin.tab.tasks"]').first();
+  // With one of its artifacts open, the project's plank stays on the artifact; its breadcrumb goes back.
+  if (
+    !(await tasks.waitFor({ state: 'visible', timeout: 3_000 }).then(
+      () => true,
+      () => false,
+    ))
+  ) {
+    await demo.click({ selector: `[data-testid="deck.plank"] :text-is("${name}") >> nth=0`, label: name });
+  }
+  await tasks.waitFor({ timeout: 15_000 });
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
   await page.waitForTimeout(BEAT);
 };
@@ -126,6 +149,8 @@ const openArtifact = async (demo, page, name) => {
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.overview"] >> nth=0', label: 'Overview' });
   await demo.click({ selector: `[data-testid="projectsPlugin.artifacts"] :text("${name}") >> nth=0`, label: name });
   await page.locator('[data-testid="composer.markdownRoot"]').first().waitFor({ state: 'visible', timeout: 15_000 });
+  // Opening an artifact reveals it under Database in the navtree; the tour keeps Database shut.
+  await collapse(page, 'Database');
   await page.waitForTimeout(BEAT * 2);
 };
 
@@ -150,6 +175,29 @@ const hoverSender = async (page, sender) => {
   await popover.waitFor({ state: 'visible', timeout: 10_000 });
   await page.waitForTimeout(BEAT * 2);
   await page.keyboard.press('Escape');
+};
+
+/** Opens a navtree item and waits for its plank to show `text`. */
+const open = async (demo, page, label, text = label) => {
+  await demo.click({ selector: node(label), label });
+  await page.locator('[data-testid="deck.plank"]', { hasText: text }).first().waitFor({ timeout: 15_000 });
+  await page.waitForTimeout(BEAT * 2);
+};
+
+/** Scrolls the open document in visible steps until `text` is in the upper half of the plank. */
+const scrollToText = async (page, text) => {
+  const plank = page.locator('[data-testid="deck.plank"]').first();
+  const box = await plank.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const target = plank.getByText(text).first();
+  for (let step = 0; step < 60; step++) {
+    const at = (await target.isVisible().catch(() => false)) ? await target.boundingBox() : undefined;
+    if (at && at.y < box.y + box.height * 0.5) {
+      return;
+    }
+    await page.mouse.wheel(0, 160);
+    await page.waitForTimeout(70);
+  }
 };
 
 export const steps = [
@@ -180,7 +228,7 @@ export const steps = [
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', hud: false });
       await page.locator(node('Mailboxes')).waitFor({ state: 'visible', timeout: 60_000 });
       await closeCompanion(page);
-      for (const branch of ['Mailboxes', 'Projects']) {
+      for (const branch of ['Collections', 'Planning', 'Customers']) {
         await expand(page, branch);
       }
       await page.waitForTimeout(BEAT);
@@ -189,52 +237,73 @@ export const steps = [
     },
   },
   {
-    name: 'The blocker',
-    narration: "Meridian's trial waits on a security review.",
+    name: 'The accounts',
+    narration: 'Fieldstone keeps its customers and vendors in the CRM: each organization with its people.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Meridian’s trial waits on a security review');
-      await demo.click({ selector: node('Inbox'), label: 'Inbox' });
-      await page
-        .locator('[data-testid="inbox.conversation.row"]')
-        .first()
-        .waitFor({ state: 'visible', timeout: 15_000 });
-      await scrollToThread(page, 'Meridian security questionnaire');
+      await caption(demo, 'The CRM: every organization and its people');
       await demo.click({
-        selector: `[data-testid="inbox.conversation.row"]:has-text("${'Meridian security questionnaire'}") >> text=/${'Meridian security questionnaire'}/ >> nth=0`,
-        label: 'Meridian security questionnaire',
+        selector: '[data-testid="crmPlugin.typeNode.org.dxos.type.organization"]',
+        label: 'Organizations',
       });
       await page
-        .locator('[data-testid="conversation.summary"]')
+        .locator('[data-testid="deck.plank"]', { hasText: 'Brightwater Games' })
         .first()
-        .waitFor({ state: 'visible', timeout: 15_000 })
-        .catch(() => {});
+        .waitFor({ timeout: 15_000 });
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: 'Who decides',
-    narration: 'Kenji, their compliance officer, signs off.',
+    name: 'The people',
+    narration: 'And everyone they work with, as cards or as a table.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Who decides: Kenji at Meridian');
-      await hoverSender(page, 'Kenji Moreau');
-    },
-  },
-  {
-    name: 'The work behind it',
-    narration: 'The SOC 2 project, most of it drafted by Scribe.',
-    run: async ({ demo, page }) => {
-      await caption(demo, 'The SOC 2 work, mostly drafted by Scribe');
-      await openProject(demo, page, PROJECT);
+      await caption(demo, 'Everyone they work with');
+      await demo.click({ selector: '[data-testid="crmPlugin.typeNode.org.dxos.type.person"]', label: 'People' });
+      await page
+        .locator('[data-testid="deck.plank"]', { hasText: 'Nadia Petrov' })
+        .first()
+        .waitFor({ timeout: 15_000 });
       await page.waitForTimeout(BEAT);
+      await demo.click({ selector: '[data-testid="deck.plank"] button[aria-label="Table"] >> nth=0', label: 'Table' });
+      await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: 'The policies',
-    narration: "The policies, ready for Astrid's review.",
+    name: 'The price behind a quote',
+    narration: "Brightwater's quote comes from this sheet: tiers by usage, prices by formula.",
     run: async ({ demo, page }) => {
-      await caption(demo, 'The policies, ready for review');
-      await openArtifact(demo, page, 'SOC 2 policy set');
-      await page.waitForTimeout(BEAT * 2);
+      await caption(demo, 'The pricing sheet behind a quote');
+      await open(demo, page, 'Cairn plans');
+    },
+  },
+  {
+    name: 'A customer note',
+    narration: 'The note on Meridian: who to talk to, and what the deal waits on.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'A customer note, linked to its people');
+      await open(demo, page, 'Meridian Health Data', 'Open asks');
+    },
+  },
+  {
+    name: 'Into a contact',
+    narration: 'Every name in the note is a link: open Aisha, and her contact is one click away.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'Every name is a link to the contact');
+      const editor = '[data-testid="deck.plank"] [data-testid="composer.markdownRoot"]';
+      await demo.click({ selector: `${editor} dx-anchor:has-text("Aisha Bello") >> nth=0`, label: 'Aisha Bello' });
+      await page
+        .locator('[role="dialog"]', { hasText: 'Aisha Bello' })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(BEAT * 1.5);
+      await demo.click({ selector: '[role="dialog"] button[aria-label="Actions"] >> nth=0', label: 'Actions' });
+      await demo.click({ selector: 'role=menuitem[name="Open"]', label: 'Open' });
+      await page
+        .locator('[data-testid="deck.plank"]', { hasText: 'aisha.bello@' })
+        .first()
+        .waitFor({ timeout: 15_000 });
+      // Opening a contact reveals it under Database in the navtree; the tour keeps Database shut.
+      await collapse(page, 'Database');
+      await page.waitForTimeout(BEAT * 3);
     },
   },
 ];

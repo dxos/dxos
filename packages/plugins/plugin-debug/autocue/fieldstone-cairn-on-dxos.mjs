@@ -3,9 +3,9 @@
 //
 
 /**
- * Fieldstone vignette: shipping 1.8. Scribe's release-notes draft, the notes, the release task and release day on the calendar.
+ * Fieldstone vignette: how Cairn plugs into DXOS. The team's architecture doc leads into the DXOS diagrams: Plugin Anatomy for Cairn's dashboard, EDGE's compute service for its agents.
  *
- * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-6
+ * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-8
  * @app composer-app bundled dev build, served by `vite preview` on :4187
  *
  * Built and served from `packages/apps/composer-app` (plugin-debug, which contributes the template, is on
@@ -29,7 +29,6 @@
  */
 
 const TEMPLATE = 'Fieldstone Labs';
-const PROJECT = 'Cairn 1.8: remote cache v2';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -64,6 +63,19 @@ const collapse = async (page, label) => {
   const branch = page
     .locator(`[data-testid="deck.sidebar"] [role="treeitem"]:has(> [data-part="branch-control"] :text-is("${label}"))`)
     .first();
+  // A reveal lands a beat after the navigation that caused it, so wait for it before closing.
+  await page
+    .waitForFunction(
+      (label) =>
+        [...document.querySelectorAll('[data-testid="deck.sidebar"] [role="treeitem"]')].some(
+          (item) =>
+            item.querySelector(':scope > [data-part="branch-control"]')?.textContent?.trim() === label &&
+            item.getAttribute('aria-expanded') === 'true',
+        ),
+      label,
+      { timeout: 2_000 },
+    )
+    .catch(() => {});
   if ((await branch.count()) > 0 && (await branch.getAttribute('aria-expanded')) === 'true') {
     await branch.locator('[data-part="branch-indicator"]').first().click();
   }
@@ -110,7 +122,17 @@ const scrollToThread = async (page, subject) => {
 /** Opens a project and its Tasks tab. */
 const openProject = async (demo, page, name) => {
   await demo.click({ selector: node(name), label: name });
-  await page.locator('[data-testid="projectsPlugin.tab.tasks"]').first().waitFor({ timeout: 15_000 });
+  const tasks = page.locator('[data-testid="projectsPlugin.tab.tasks"]').first();
+  // With one of its artifacts open, the project's plank stays on the artifact; its breadcrumb goes back.
+  if (
+    !(await tasks.waitFor({ state: 'visible', timeout: 3_000 }).then(
+      () => true,
+      () => false,
+    ))
+  ) {
+    await demo.click({ selector: `[data-testid="deck.plank"] :text-is("${name}") >> nth=0`, label: name });
+  }
+  await tasks.waitFor({ timeout: 15_000 });
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
   await page.waitForTimeout(BEAT);
 };
@@ -126,6 +148,8 @@ const openArtifact = async (demo, page, name) => {
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.overview"] >> nth=0', label: 'Overview' });
   await demo.click({ selector: `[data-testid="projectsPlugin.artifacts"] :text("${name}") >> nth=0`, label: name });
   await page.locator('[data-testid="composer.markdownRoot"]').first().waitFor({ state: 'visible', timeout: 15_000 });
+  // Opening an artifact reveals it under Database in the navtree; the tour keeps Database shut.
+  await collapse(page, 'Database');
   await page.waitForTimeout(BEAT * 2);
 };
 
@@ -150,6 +174,41 @@ const hoverSender = async (page, sender) => {
   await popover.waitFor({ state: 'visible', timeout: 10_000 });
   await page.waitForTimeout(BEAT * 2);
   await page.keyboard.press('Escape');
+};
+
+/** The drawing plank's scene. */
+const SCENE = '[data-testid="deck.plank"] [data-testid="scene-view"]';
+
+/** Opens the frame box labelled `label` in the scene, drilling into the diagram beneath it. */
+const drill = async (demo, page, label) => {
+  const box = `${SCENE} [data-node-id]:has-text("${label}")`;
+  await page.locator(box).first().waitFor({ state: 'visible', timeout: 15_000 });
+  await page.locator(box).first().hover();
+  await demo.click({ selector: `${box} [data-testid="portal-open"] >> nth=0`, label });
+  await page.waitForTimeout(BEAT * 1.5);
+};
+
+/** Opens a navtree item and waits for its plank to show `text`. */
+const open = async (demo, page, label, text = label) => {
+  await demo.click({ selector: node(label), label });
+  await page.locator('[data-testid="deck.plank"]', { hasText: text }).first().waitFor({ timeout: 15_000 });
+  await page.waitForTimeout(BEAT * 2);
+};
+
+/** Scrolls the open document in visible steps until `text` is in the upper half of the plank. */
+const scrollToText = async (page, text) => {
+  const plank = page.locator('[data-testid="deck.plank"]').first();
+  const box = await plank.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const target = plank.getByText(text).first();
+  for (let step = 0; step < 60; step++) {
+    const at = (await target.isVisible().catch(() => false)) ? await target.boundingBox() : undefined;
+    if (at && at.y < box.y + box.height * 0.5) {
+      return;
+    }
+    await page.mouse.wheel(0, 160);
+    await page.waitForTimeout(70);
+  }
 };
 
 export const steps = [
@@ -180,7 +239,7 @@ export const steps = [
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', hud: false });
       await page.locator(node('Mailboxes')).waitFor({ state: 'visible', timeout: 60_000 });
       await closeCompanion(page);
-      for (const branch of ['Mailboxes', 'Calendars', 'Projects']) {
+      for (const branch of ['Collections', 'Handbook', 'Architecture']) {
         await expand(page, branch);
       }
       await page.waitForTimeout(BEAT);
@@ -189,53 +248,41 @@ export const steps = [
     },
   },
   {
-    name: 'The draft arrives',
-    narration: 'Scribe drafted the 1.8 release notes from what merged since 1.7.',
+    name: "Cairn's own architecture",
+    narration: 'Cairn is built on DXOS: its dashboard is a Composer plugin, and its agents run on EDGE.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Scribe drafted the release notes');
-      await demo.click({ selector: node('Inbox'), label: 'Inbox' });
-      await page
-        .locator('[data-testid="inbox.conversation.row"]')
-        .first()
-        .waitFor({ state: 'visible', timeout: 15_000 });
-      await scrollToThread(page, 'Cairn 1.8 release notes draft');
-      await demo.click({
-        selector: `[data-testid="inbox.conversation.row"]:has-text("${'Cairn 1.8 release notes draft'}") >> text=/${'Cairn 1.8 release notes draft'}/ >> nth=0`,
-        label: 'Cairn 1.8 release notes draft',
-      });
-      await page
-        .locator('[data-testid="conversation.summary"]')
-        .first()
-        .waitFor({ state: 'visible', timeout: 15_000 })
-        .catch(() => {});
+      await caption(demo, 'Cairn is built on DXOS');
+      await open(demo, page, 'Cairn architecture');
+      await scrollToText(page, 'Cairn on DXOS');
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: 'Read the notes',
-    narration: 'The notes, with Okapi credited for the report.',
+    name: 'The dashboard is a plugin',
+    narration: 'The dashboard is a plugin: here is what a Composer plugin contributes.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'The 1.8 release notes');
-      await openProject(demo, page, PROJECT);
-      await openArtifact(demo, page, 'Cairn 1.8 release notes');
+      await caption(demo, 'The dashboard is a Composer plugin');
+      // The second Composer under Architecture is the drawing; the first is the guide.
+      await demo.click({
+        selector: '[data-testid="deck.sidebar"] [data-part="item"]:has(:text-is("Composer")) >> nth=1',
+        label: 'Composer drawing',
+      });
+      await page.locator(SCENE).first().waitFor({ state: 'visible', timeout: 20_000 });
+      await page.waitForTimeout(BEAT);
+      await drill(demo, page, 'Feature Plugins');
+      await page.waitForTimeout(BEAT);
     },
   },
   {
-    name: 'Open the release task',
-    narration: 'The release task waits on three others.',
+    name: 'The agents run on EDGE',
+    narration:
+      'And the agents run on EDGE compute. Their chats and traces land in the same space as the team’s mail and documents.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'The release task and what it waits on');
-      await openProject(demo, page, PROJECT);
-      await openTask(demo, page, 'Cut the Cairn 1.8 release');
-    },
-  },
-  {
-    name: 'The release day',
-    narration: 'Release day is two days out, on the team calendar.',
-    run: async ({ demo, page }) => {
-      await caption(demo, 'Release day, on the calendar');
-      await demo.click({ selector: node('Fieldstone'), label: 'Fieldstone calendar' });
-      await page.getByText('Cairn 1.8 release').first().waitFor({ state: 'visible', timeout: 15_000 });
+      await caption(demo, 'The agents run on EDGE compute');
+      await demo.click({ selector: '[data-testid="deck.plank"] [data-testid="toolbar-up"] >> nth=0', label: 'Up' });
+      await page.waitForTimeout(BEAT);
+      await drill(demo, page, 'EDGE');
+      await drill(demo, page, 'compute-service');
       await page.waitForTimeout(BEAT * 3);
     },
   },

@@ -33,8 +33,10 @@ describe('Fieldstone template', () => {
     expect(Object.keys(result.docs.docs)).toHaveLength(15);
 
     // Links across partials resolve to an object or a feed entry in the same space.
-    const archive: { objects: Array<{ id: string }>; feeds?: Array<{ messages?: Array<{ id: string }> }> } =
-      JSON.parse(json);
+    const archive: {
+      objects: Array<{ id: string; content?: string | { '/': string } }>;
+      feeds?: Array<{ messages?: Array<{ id: string }> }>;
+    } = JSON.parse(json);
     const ids = new Set([
       ...archive.objects.map((object) => object.id),
       ...(archive.feeds ?? []).flatMap((feed) => (feed.messages ?? []).map((message) => message.id)),
@@ -42,6 +44,18 @@ describe('Fieldstone template', () => {
     const targets = [...json.matchAll(LINK)].map(([, id]) => id);
     expect(targets.length).toBeGreaterThan(0);
     expect(targets.filter((id) => !ids.has(id))).toEqual([]);
+
+    // The Cairn architecture document links the Architecture partial's guides and embeds two of its drawings.
+    const objects = new Map(archive.objects.map((object) => [object.id, object]));
+    const body = objects.get(result.docs.docs.architecture.id)?.content;
+    const text = String(typeof body === 'object' ? objects.get(body['/'].replace('echo:///', ''))?.content : body);
+    const { drawings, docs } = result.architecture;
+    for (const object of [docs.composer, docs.edge]) {
+      expect(text).toContain(`](echo:///${object.id})`);
+    }
+    for (const key of ['composer-plugin', 'edge-compute']) {
+      expect(text).toMatch(new RegExp(`!\\[[^\\]]*\\]\\(echo:///${drawings.get(key)?.id}\\)`));
+    }
 
     const subject = result.inboxCrm.threads.okapiIncident[0].properties?.subject;
     expect(result.projects.tasks.cacheKeyCollision.description).toContain(subject);

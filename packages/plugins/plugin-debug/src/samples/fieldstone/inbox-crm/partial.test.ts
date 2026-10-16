@@ -26,6 +26,7 @@ type Entry = {
   readonly 'attendees'?: ActorJson[];
   readonly 'startDate'?: string;
   readonly 'title'?: string;
+  readonly 'description'?: string;
   readonly 'jobTitle'?: string;
   readonly 'department'?: string;
   readonly 'emails'?: Array<{ readonly label?: string; readonly value: string }>;
@@ -90,6 +91,8 @@ describe('Fieldstone inbox and CRM', () => {
     // 300 events, at least one in every week from −182d to +182d.
     const events = ofType(feedEntries, 'type.event:');
     expect(countOf('type.event:')).toBe(300);
+    // Half carry notes: the one-offs, the team rituals and Hana's first 1:1s.
+    expect(events.filter((event) => event.description)).toHaveLength(150);
     const eventDays = events.map((event) => dayOf(event.startDate!));
     for (let week = -182; week < 182; week += 7) {
       expect(eventDays.some((day) => day >= week && day < week + 7)).toBe(true);

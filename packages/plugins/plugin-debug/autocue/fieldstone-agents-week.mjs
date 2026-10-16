@@ -64,6 +64,19 @@ const collapse = async (page, label) => {
   const branch = page
     .locator(`[data-testid="deck.sidebar"] [role="treeitem"]:has(> [data-part="branch-control"] :text-is("${label}"))`)
     .first();
+  // A reveal lands a beat after the navigation that caused it, so wait for it before closing.
+  await page
+    .waitForFunction(
+      (label) =>
+        [...document.querySelectorAll('[data-testid="deck.sidebar"] [role="treeitem"]')].some(
+          (item) =>
+            item.querySelector(':scope > [data-part="branch-control"]')?.textContent?.trim() === label &&
+            item.getAttribute('aria-expanded') === 'true',
+        ),
+      label,
+      { timeout: 2_000 },
+    )
+    .catch(() => {});
   if ((await branch.count()) > 0 && (await branch.getAttribute('aria-expanded')) === 'true') {
     await branch.locator('[data-part="branch-indicator"]').first().click();
   }
@@ -110,7 +123,17 @@ const scrollToThread = async (page, subject) => {
 /** Opens a project and its Tasks tab. */
 const openProject = async (demo, page, name) => {
   await demo.click({ selector: node(name), label: name });
-  await page.locator('[data-testid="projectsPlugin.tab.tasks"]').first().waitFor({ timeout: 15_000 });
+  const tasks = page.locator('[data-testid="projectsPlugin.tab.tasks"]').first();
+  // With one of its artifacts open, the project's plank stays on the artifact; its breadcrumb goes back.
+  if (
+    !(await tasks.waitFor({ state: 'visible', timeout: 3_000 }).then(
+      () => true,
+      () => false,
+    ))
+  ) {
+    await demo.click({ selector: `[data-testid="deck.plank"] :text-is("${name}") >> nth=0`, label: name });
+  }
+  await tasks.waitFor({ timeout: 15_000 });
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
   await page.waitForTimeout(BEAT);
 };
@@ -126,6 +149,8 @@ const openArtifact = async (demo, page, name) => {
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.overview"] >> nth=0', label: 'Overview' });
   await demo.click({ selector: `[data-testid="projectsPlugin.artifacts"] :text("${name}") >> nth=0`, label: name });
   await page.locator('[data-testid="composer.markdownRoot"]').first().waitFor({ state: 'visible', timeout: 15_000 });
+  // Opening an artifact reveals it under Database in the navtree; the tour keeps Database shut.
+  await collapse(page, 'Database');
   await page.waitForTimeout(BEAT * 2);
 };
 
@@ -209,10 +234,20 @@ export const steps = [
   },
   {
     name: 'Look inside a run',
-    narration: 'Open one run: the brief, the tool calls, and the pull request it opened.',
+    narration: 'Each run is a session: the brief, the files it read, the tests it ran and the pull request it opened.',
     run: async ({ demo, page }) => {
       await caption(demo, 'Inside a run: the brief, the tool calls, the pull request');
-      await openTask(demo, page, 'Fix cache-key collision on concurrent writes');
+      await expand(page, PROJECT);
+      await expand(page, 'Sessions');
+      await demo.click({
+        selector:
+          '[data-testid="deck.sidebar"] [data-part="item"]:has-text("Builder: Fix cache-key collision") >> nth=0',
+        label: 'Builder run',
+      });
+      await page.getByText('Open pull request').first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(BEAT * 2);
+      // The sessions list is long; fold it so the tree reads as it did.
+      await collapse(page, 'Sessions');
     },
   },
   {
@@ -220,6 +255,7 @@ export const steps = [
     narration: 'Where a run failed twice, Omar stepped in, and the rollout waits on it.',
     run: async ({ demo, page }) => {
       await caption(demo, 'Where a person stepped in');
+      await openProject(demo, page, PROJECT);
       await openTask(demo, page, 'Integration tests against R2');
       await page.waitForTimeout(BEAT * 2);
     },

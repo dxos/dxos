@@ -72,7 +72,7 @@ const makeArchitectureDiagram = () =>
       fill: 'semi',
     })
     .rectangle({ id: 'meter', x: 520, y: 0, w: 180, h: 80, text: 'Usage meter', color: 'green', fill: 'semi' })
-    .rectangle({ id: 'dashboard', x: 0, y: 0, w: 180, h: 80, text: 'Dashboard\nweb app', color: 'black' })
+    .rectangle({ id: 'dashboard', x: 0, y: 0, w: 180, h: 80, text: 'Dashboard\nComposer plugin', color: 'black' })
     .ellipse({ id: 'postgres', x: 780, y: 160, w: 170, h: 90, text: 'Postgres\nAWS RDS', color: 'blue' })
     .ellipse({ id: 'r2', x: 260, y: 340, w: 180, h: 90, text: 'R2\nhot blobs', color: 'orange' })
     .ellipse({ id: 's3', x: 520, y: 340, w: 180, h: 90, text: 'S3\norigin, cold blobs', color: 'yellow' })

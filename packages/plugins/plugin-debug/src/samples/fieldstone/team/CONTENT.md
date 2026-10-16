@@ -1,7 +1,9 @@
 # Fieldstone team
 
 The people and agents of Fieldstone Labs, a fictional 10-person company that builds Cairn, a hosted
-build cache for monorepos. Astrid Holm, engineering manager, is the main character. The other
+build cache for monorepos. Cairn is built on DXOS: its dashboard is a Composer plugin, and its
+Builder, Reviewer, Triage and Scribe agents run on EDGE compute, so their chats and traces are DXOS
+objects in the team's space. Astrid Holm, engineering manager, is the main character. The other
 Fieldstone partials build on this one.
 
 - Code: `partial.ts`, with `organization.ts`, `people.ts` and `agents.ts`
@@ -15,8 +17,8 @@ Fieldstone partials build on this one.
 ### Organization
 
 - 1 `Organization.Organization` `fieldstone`: Fieldstone Labs, status `active`, website
-  `https://fieldstone.dev`, description "Builds Cairn, a hosted build cache for monorepos. Remote
-  team, Lisbon and Toronto."
+  `https://fieldstone.dev`, description "Builds Cairn, a hosted build cache for monorepos, on DXOS:
+  the dashboard is a Composer plugin and the agents run on EDGE. Remote team, Lisbon and Toronto."
 
 ### People
 

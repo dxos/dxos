@@ -123,6 +123,11 @@ export const EventDetails = ({
           onContactCreate={onContactCreate}
         />
       ))}
+      {data.attendees.length > attendees.length && (
+        <Card.Row>
+          <Card.Text variant='muted'>{`+${data.attendees.length - attendees.length} more`}</Card.Text>
+        </Card.Row>
+      )}
     </>
   );
 };

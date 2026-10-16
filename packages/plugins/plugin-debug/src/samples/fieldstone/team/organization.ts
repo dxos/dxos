@@ -13,6 +13,7 @@ export const makeFieldstone = (): Make<Organization.Organization> =>
       name: 'Fieldstone Labs',
       status: 'active',
       website: 'https://fieldstone.dev',
-      description: 'Builds Cairn, a hosted build cache for monorepos. Remote team, Lisbon and Toronto.',
+      description:
+        'Builds Cairn, a hosted build cache for monorepos, on DXOS: the dashboard is a Composer plugin and the agents run on EDGE. Remote team, Lisbon and Toronto.',
     }),
   );

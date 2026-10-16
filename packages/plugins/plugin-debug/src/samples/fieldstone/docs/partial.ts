@@ -11,7 +11,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
 import { type Provides as TeamProvides } from '../team/index.ts';
-import { type InboxCrmLinks, type ProjectsLinks, makeDocuments } from './documents.ts';
+import { type ArchitectureLinks, type InboxCrmLinks, type ProjectsLinks, makeDocuments } from './documents.ts';
 import { type Drawings, makeDrawings } from './drawings.ts';
 import { type Sheets, makeSheets } from './sheets.ts';
 
@@ -25,16 +25,17 @@ export type Requires = {
   readonly team: TeamProvides;
   readonly inboxCrm?: InboxCrmLinks;
   readonly projects?: ProjectsLinks;
+  readonly architecture?: ArchitectureLinks;
 };
 
 /** Fieldstone's handbook, planning, incident, customer and meeting documents, with the sheets and drawings they embed. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.partial('fieldstoneDocs', {
   schemas: [Markdown.Document, Sheet.Sheet, Drawing.Drawing, Drawing.Canvas],
-  run: ({ team, inboxCrm, projects }) =>
+  run: ({ team, inboxCrm, projects, architecture }) =>
     Effect.gen(function* () {
       const sheets = yield* makeSheets();
       const drawings = yield* makeDrawings();
-      const docs = yield* makeDocuments({ people: team.people, sheets, drawings, inboxCrm, projects });
+      const docs = yield* makeDocuments({ people: team.people, sheets, drawings, inboxCrm, projects, architecture });
 
       const refs = (...objects: Array<Markdown.Document | Sheet.Sheet | Drawing.Drawing | undefined>) =>
         objects.flatMap((object) => (object ? [Ref.make(object)] : []));

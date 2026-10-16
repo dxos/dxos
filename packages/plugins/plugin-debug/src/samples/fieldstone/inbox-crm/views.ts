@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Filter, JsonSchema, Query, Ref, type Type } from '@dxos/echo';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Table } from '@dxos/react-ui-table/types';
@@ -40,7 +39,8 @@ const makeView = (schema: Type.AnyEntity, fields: string[], pivotFieldName?: str
 };
 
 /**
- * Tables and Kanbans over people and organizations, filed in a CRM collection. The Person Kanban is
+ * Tables and Kanbans over people and organizations, kept in the database rather than a collection:
+ * the CRM section (plugin-crm) is where people and organizations are browsed. The Person Kanban is
  * an items board pivoting on `department`: a view Kanban pivots only on a single-select field.
  */
 export const makeViews = (people: ReadonlyArray<Person.Person>) =>
@@ -74,13 +74,6 @@ export const makeViews = (people: ReadonlyArray<Person.Person>) =>
       'status',
     );
     const organizationKanban = yield* Database.add(Kanban.make({ name: 'Organizations by status', view: statusView }));
-
-    yield* SampleSpace.collection('CRM', [
-      Ref.make(personTable),
-      Ref.make(personKanban),
-      Ref.make(organizationTable),
-      Ref.make(organizationKanban),
-    ]);
 
     return { personTable, personKanban, organizationTable, organizationKanban } satisfies Views;
   });

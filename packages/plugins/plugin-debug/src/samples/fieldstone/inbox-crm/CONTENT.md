@@ -135,11 +135,15 @@ writes in also turns up on the calendar.
     call (+6d), AWS architecture review (+8d), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
     Omar, Astrid), team offsite at Saltmarsh Lodge
     (all-day, +34d to +36d, all of Fieldstone plus Wren, location set)
-- Event descriptions name the thread they came from.
+- 150 events have a description: every one-off names the thread it came from; team syncs, sprint
+  planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
+  occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the
+  other 1:1s have none.
 
 ### Collections
 
-- CRM: the Person and Organization views.
+- None. People and organizations are browsed in the navtree's CRM section, which plugin-crm builds
+  over every Person and Organization; the views above live in the database.
 
 ## Flows
 

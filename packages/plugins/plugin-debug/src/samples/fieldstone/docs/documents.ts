@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import type * as Project from '@dxos/compute/Project';
 import { Database, EID, type Obj } from '@dxos/echo';
+import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Event, type Message, type Organization, type Person, type Task, type TaskSet } from '@dxos/types';
 
@@ -53,6 +54,12 @@ export type ProjectsLinks = {
   readonly artifacts: Readonly<Record<'cacheDesign' | 'billingPlan', Markdown.Document>>;
 };
 
+/** What the documents link from the Architecture partial, when the template includes it. */
+export type ArchitectureLinks = {
+  readonly drawings: ReadonlyMap<string, Drawing.Drawing>;
+  readonly docs: Readonly<Record<'composer' | 'edge', Markdown.Document>>;
+};
+
 export type CustomerKey = 'northpine' | 'meridian' | 'okapi' | 'brightwater';
 
 export type DocKey =
@@ -75,6 +82,7 @@ export type DocumentsInput = {
   readonly drawings: Drawings;
   readonly inboxCrm?: InboxCrmLinks;
   readonly projects?: ProjectsLinks;
+  readonly architecture?: ArchitectureLinks;
 };
 
 // Space-relative, as the editor writes them; a feed item resolves by id the same way.
@@ -104,6 +112,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
   drawings,
   inboxCrm: crm,
   projects,
+  architecture: arch,
 }: DocumentsInput) {
   const clock = yield* SampleSpace.Clock;
   const docs: Record<string, Markdown.Document> = {};
@@ -113,6 +122,8 @@ export const makeDocuments = Effect.fnUntraced(function* ({
     return document;
   };
   const quarter = `Q${Math.floor(clock.now.getUTCMonth() / 3) + 1}`;
+  const pluginAnatomy = arch?.drawings.get('composer-plugin');
+  const edgeCompute = arch?.drawings.get('edge-compute');
 
   const architecture = doc(
     'architecture',
@@ -131,7 +142,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '- **Index service** maps an action key to a content digest, a size and an org. Postgres on AWS RDS. A commit is a compare-and-set on the digest: a second, different digest for a key is rejected.',
       '- **Blob store**: R2 holds hot blobs and serves them without egress fees. S3 is the origin and keeps every blob; R2 refills from it on a miss.',
       '- **Usage meter** counts GB-months stored and GB served per org and reports them to Stripe every hour.',
-      '- **Dashboard**, the web app: tokens, usage, hit rates per repository.',
+      '- **Dashboard**, a Composer plugin: tokens, usage, hit rates per repository.',
       '',
       '## A cache lookup',
       '',
@@ -167,6 +178,22 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '- Largest blob 5 GB; anything over 100 MB goes up as a multipart upload.',
       '- Index lookup p99 is 12 ms. A 50 MB hit is served in 180 ms at p99 from the nearest R2 location.',
       '- Keys expire 30 days after their last read. The blob stays in S3 for another 30.',
+      '',
+      '## Cairn on DXOS',
+      '',
+      "The cache path above runs on Cairn's own services on AWS and Cloudflare. The dashboard and the agents run on DXOS. The edge gateway is Cairn's own worker, not DXOS EDGE.",
+      '',
+      '### The dashboard is a Composer plugin',
+      '',
+      `The dashboard ships as a Composer plugin, so tokens, usage and hit rates open in the same workspace as the team's docs, projects and mail. The plugin reads them from the edge gateway with an API token, as the CLI does.${arch ? ` ${link('Composer', arch.docs.composer)} covers how Composer loads plugins and what one contributes.` : ''}`,
+      pluginAnatomy && '',
+      pluginAnatomy && embed('Plugin Anatomy', pluginAnatomy),
+      '',
+      '### The agents run on EDGE compute',
+      '',
+      `Builder, Reviewer, Triage and Scribe run as functions on EDGE's compute service, which hands each run the space's data and an AI service. Every session's chat and trace are DXOS objects in this space, so a task's Gantt bar and the trace behind it come from what the agent wrote.${arch ? ` ${link('EDGE', arch.docs.edge)} describes the services they run on.` : ''}`,
+      edgeCompute && '',
+      edgeCompute && embed('compute-service', edgeCompute),
     ),
   );
 

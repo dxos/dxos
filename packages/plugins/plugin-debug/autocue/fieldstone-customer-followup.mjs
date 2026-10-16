@@ -88,6 +88,19 @@ const collapse = async (page, label) => {
   const branch = page
     .locator(`[data-testid="deck.sidebar"] [role="treeitem"]:has(> [data-part="branch-control"] :text-is("${label}"))`)
     .first();
+  // A reveal lands a beat after the navigation that caused it, so wait for it before closing.
+  await page
+    .waitForFunction(
+      (label) =>
+        [...document.querySelectorAll('[data-testid="deck.sidebar"] [role="treeitem"]')].some(
+          (item) =>
+            item.querySelector(':scope > [data-part="branch-control"]')?.textContent?.trim() === label &&
+            item.getAttribute('aria-expanded') === 'true',
+        ),
+      label,
+      { timeout: 2_000 },
+    )
+    .catch(() => {});
   if ((await branch.count()) > 0 && (await branch.getAttribute('aria-expanded')) === 'true') {
     await branch.locator('[data-part="branch-indicator"]').first().click();
   }
@@ -154,28 +167,48 @@ export const steps = [
   {
     name: 'Look at the week',
     narration:
-      'Astrid runs engineering at Fieldstone. Her calendar holds the whole year: standups, one-on-ones, customers, an offsite.',
+      'Astrid runs engineering at Fieldstone. Her calendar: team rituals, one-on-ones, customers, and a follow-up with Okapi next week.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Astrid’s calendar: the whole year, then this week');
+      await caption(demo, 'Astrid’s calendar');
       await demo.click({ selector: node('Fieldstone'), label: 'Fieldstone calendar' });
       await page
         .locator('[data-testid="deck.plank"] [data-date]')
         .first()
         .waitFor({ state: 'visible', timeout: 15_000 });
-      const day = await daySelector(page, WEEK);
-      const grid = page.locator(day).first();
       await page.waitForTimeout(BEAT);
-      // Down through the coming months and back, so the viewer sees how far the calendar runs.
-      const box = await grid.boundingBox();
+      // A short look ahead in the grid and back, enough to show it runs on past this month.
+      const box = await page
+        .locator(await daySelector(page, WEEK))
+        .first()
+        .boundingBox();
       await page.mouse.move(box.x, box.y + 200, { steps: 8 });
-      for (const delta of [240, -240]) {
-        for (let step = 0; step < 14; step++) {
+      for (const delta of [180, -180]) {
+        for (let step = 0; step < 4; step++) {
           await page.mouse.wheel(0, delta);
-          await page.waitForTimeout(80);
+          await page.waitForTimeout(90);
         }
         await page.waitForTimeout(BEAT / 2);
       }
-      await demo.click({ selector: day, label: 'This week' });
+      // A few days in turn: the Monday team sync, next week's Okapi follow-up, then today.
+      for (const [day, label] of [
+        [[2026, 9, 12], 'Monday'],
+        [[2026, 9, 21], 'Next Wednesday'],
+        [WEEK, 'Today'],
+      ]) {
+        await demo.click({ selector: await daySelector(page, day), label });
+        await page.waitForTimeout(BEAT);
+      }
+      await page.waitForTimeout(BEAT / 2);
+    },
+  },
+  {
+    name: 'Open an event',
+    narration: 'Each event carries its notes and who is coming.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'An event: its notes and who is coming');
+      const card = '[data-testid="deck.plank"] [data-scope="card"][data-part="root"]:has-text("Oct 14, 2026")';
+      await page.locator(card).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.click({ selector: `${card} >> nth=0`, label: 'Event' });
       await page.waitForTimeout(BEAT * 2);
     },
   },
