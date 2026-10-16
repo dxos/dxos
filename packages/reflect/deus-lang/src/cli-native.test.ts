@@ -346,6 +346,32 @@ describe('deus CLI native back ends', () => {
   );
 
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
+    'frees what the native interpreter makes, through local recursion',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'churn')];
+      deus('init', '--empty', ...c);
+      // A local recursive loop builds and sums a 50-cell list 20,000 times: 4 million words if the lists stayed.
+      const core = [
+        '(def "build" (lam (if (app (prim "eq") (var 0) (int 0)) (con "#List" 0 0) (app (con "#List" 1 2) (var 0) (app (ref "build") (app (prim "Int.sub") (var 0) (int 1)))))))',
+        '(def "sum" (lam (match (var 0) (case (pcon "#List" 0) (int 0)) (case (pcon "#List" 1 (pvar) (pvar)) (app (prim "Int.add") (var 1) (app (ref "sum") (var 0)))))))',
+        '(def "churn" (letrec ((lam (lam (if (app (prim "eq") (var 1) (int 0)) (var 0) (app (var 2) (app (prim "Int.sub") (var 1) (int 1)) (app (prim "Int.add") (var 0) (app (ref "sum") (app (ref "build") (int 50))))))))) (app (var 0) (int 20000) (int 0))))',
+      ].join(' ');
+      const source = file(
+        'churn.deus',
+        `namespace Churn\n\ndef main (u : Unit) : {IO} Unit :=\n  let _ := Code.load ${JSON.stringify(core)}\n  IO.print (Int.toText (Code.run "churn"))\n`,
+      );
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), source, ...c);
+      const out = join(scratch, 'churn-native');
+      expect(deus('build', 'Churn.main', '-o', out, '--c', ...c).code).toBe(0);
+      const run = spawnSync(out, [], { encoding: 'utf8', env: { ...process.env, DEUS_HEAP_STATS: '1' } });
+      expect([run.status, run.stdout]).toEqual([0, String(20_000 * 1275)]);
+      const peak = Number(/(\d+) peak/.exec(run.stderr)?.[1]);
+      expect(peak).toBeLessThan(100_000);
+    },
+  );
+
+  test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
     'builds the compiler natively, and it writes the seed image',
     { timeout: 240_000 },
     ({ expect }) => {

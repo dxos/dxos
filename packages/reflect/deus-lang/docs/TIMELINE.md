@@ -246,5 +246,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 236 | 10-16 14:40 | 4m 00s | this commit | Base closed over Pair and Defect, every project upgraded; api signatures compared up to variable renaming; Explorer.Spec and WasmEquality.Spec name every public definition; three tasks closed |
 | 237 | 10-16 14:52 | 12m 00s | this commit | Overviews count their own project; JIT journals fewer Ref writes (D212); short history lines in the CLI |
 | 238 | 10-16 15:04 | 12m 00s | this commit | TypeScript bindings export polymorphic functions with codec parameters (task b6907aeb); Bindings.Spec says how |
+| 239 | 10-16 15:58 | 54m 00s | this commit | The native interpreter counts references (D213): `deus test` runs natively in 116 MB instead of 660 MB; task b73b475d done |
 
-Total from stage 1 to stage 238: 73h 44m.
+Total from stage 1 to stage 239: 74h 38m.
