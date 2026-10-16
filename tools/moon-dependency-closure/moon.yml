@@ -19,6 +19,9 @@ tasks:
       - rust-toolchain.toml
   check-wasm:
     command: bash scripts/check.sh
+    # Both make rustup install the wasm target `rust-toolchain.toml` lists, and two installs at once collide.
+    deps:
+      - cargo-test
     inputs:
       - src/**/*.rs
       - scripts/*.sh
