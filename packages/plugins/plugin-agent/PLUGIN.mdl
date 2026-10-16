@@ -248,7 +248,7 @@ op inviteAgent
   effects: [echo:read, echo:write, net:edge]
   requires: [Database.Service, Hypergraph.Service, Capability.Service]
   note: |
-    Runs in the target space; the members panel's contact picker invokes it (F-8.1). There the agent's home
+    Runs in the target space; capability AgentAdmission invokes it once the members panel admits the agent (F-8.1). There the agent's home
     returns the home agent, and any other space the presence keyed `AgentPresence.homeKey(<home agent URI>)`,
     created on first invitation with the home's name, DID and instructions (`makeAgent`, so its modes and
     first chat match op:createAgent). It writes no conversation. Customized skills stay home: a presence
@@ -471,16 +471,16 @@ node AccountAgents
 ## Components
 
 ```mdl
-component AgentInvitees
+component AgentAdmission
   desc: |
-    Capability (capabilities/invitee-source.ts), an `AppCapabilities.InviteeSource`: the agents the member
-    administers (`AgentSpace.administeredAgents`) in their other spaces, by name, for the
-    contact picker of a space's Members panel ("Add from contacts"), listed after the contacts. Agents already here
-    (home or presence) are left out. Adding one invokes op:inviteAgent in that space, which first registers the space
-    with EDGE (`POST /compute/brain/:agent/spaces`), refused to anyone but the agent's admins; the role select does not
-    apply to an agent.
+    Capability (capabilities/agent-admission.ts), no UI: it follows `SpaceOperation.AddMembers`. A space's Members
+    panel admits an agent's identity as it admits any contact's, and its picker offers only the agents the member
+    administers (`AppSpace.agentsNotAdministeredBy`). For each admitted agent this client's identity administers
+    (`AgentSpace.administeredAgents`) that is not yet in the space (home or presence), it invokes op:inviteAgent there,
+    which registers the space with EDGE (`POST /compute/brain/:agent/spaces`), refused to anyone but the agent's
+    admins, and makes the presence, retrying a few times; an agent EDGE refuses stays a member that does not answer.
   actions:
-    add(agent) → op:inviteAgent
+    admitted(agent) → op:inviteAgent
 ```
 
 ```mdl
@@ -697,7 +697,7 @@ feat F-7: An agent's own space
 ```mdl
 feat F-8: An agent in several spaces
 
-  req F-8.1: While the plugin's setting creates agents with identities (F-7.4), a space's Members panel offers, in its "Add from contacts" picker after the contacts, the agents the member administers that are not in the space yet, including those whose home space the member cannot reach; Add brings the agent into the space. An agent's identity, a contact to everyone in the agent's own space, is not offered as a contact (`AppSpace.agentIdentityKeys`), so the picker lists each agent once.
+  req F-8.1: While the plugin's setting creates agents with identities (F-7.4), an agent is added to a space like any contact: a space's Members panel offers, in its "Add from contacts" picker, the agents the member administers, as contacts, and leaves out the agents the member does not (`AppSpace.agentsNotAdministeredBy`); Add admits the agent's identity, and AgentAdmission then brings the agent into the space (op:inviteAgent), including one whose home space the member cannot reach.
   req F-8.2:
     when: op:inviteAgent runs for an agent already in the space (its home, or an earlier presence)
     then: that agent is returned and nothing is created
@@ -706,7 +706,7 @@ feat F-8: An agent in several spaces
     when: a member opens an agent invited from another space
     then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
   req F-8.5: Inviting writes no conversation: nothing is quoted from any chat into the space.
-  req F-8.6: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE first, which refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
+  req F-8.6: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE before it makes the presence, which EDGE refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
 ```
 
 ## Acceptance
@@ -1136,9 +1136,9 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       note: NO `invoke` — model-driven.
     - name: Bob adds Kai to his own space from its Members panel
       do: In Bob's window open Offsite team, then Settings › Members; under "Add from contacts" pick Kai and click Add.
-      invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other, as Bob
+      invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other, as Bob, after the admission
       expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Settings › Agents and among its members
-      note: Bob is not a member of Alice's space, where Kai lives; the picker finds Kai through Kai's own space, which records its home (F-7.8), and EDGE accepts the space because Bob is Kai's admin (F-8.6).
+      note: Bob is not a member of Alice's space, where Kai lives; Kai is Bob's contact through Kai's own space, which records its home (F-7.8), and EDGE accepts the space because Bob is Kai's admin (F-8.6).
     - name: Bob opens Kai in Offsite team
       do: Open Kai from Offsite team's Settings › Agents.
       expect: Bob's own chat with Kai opens, empty; Alice's conversation stays in her space

@@ -17,7 +17,7 @@ import { Database, Feed, Filter, Hypergraph, Obj, Query, Ref } from '@dxos/echo'
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EID, EntityId, IdentityDid, SpaceId } from '@dxos/keys';
+import { EID, EntityId, IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
 import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
@@ -26,7 +26,7 @@ import { AgentOperationHandlerSet } from '#operations';
 import { AgentPresence, type AgentSpace, BrainService, Goal, MemoryOperation, Mode, TriggerOperation } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
-import { invitees } from '../capabilities/invitee-source.ts';
+import { admittedInvitees, invitees } from '../capabilities/agent-admission.ts';
 import { baseInstructions } from '../instructions.ts';
 import { makeAgent } from './create-agent.ts';
 import { pushFacts } from './deliver.ts';
@@ -149,9 +149,7 @@ describe('Inviting an agent into another space', () => {
     expect(AgentPresence.brainId(presence)).toBe(did);
   });
 
-  test('the members panel offers the agents the member administers, only where they are not yet', async ({
-    expect,
-  }) => {
+  test('an admitted agent the member administers is put to work only where it is not yet', async ({ expect }) => {
     const home = await peer.createDatabase();
     const other = await peer.createDatabase();
     const did = IdentityDid.random();
@@ -170,6 +168,13 @@ describe('Inviting an agent into another space', () => {
     expect(invitees(administered, await all(), own)).toEqual([]);
     // A space minted before EDGE recorded the home: the home agent with the agent's DID stands in for the record.
     expect(invitees([{ spaceId: own, did }], await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
+
+    // Only an agent the space just admitted is put to work there.
+    const identityKey = PublicKey.random();
+    const withKey = [{ ...administered[0], identityKey }];
+    expect(admittedInvitees(withKey, [identityKey], await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
+    expect(admittedInvitees(withKey, [PublicKey.random()], await all(), other.spaceId)).toEqual([]);
+    expect(admittedInvitees(administered, [identityKey], await all(), other.spaceId)).toEqual([]);
 
     // Once it has a presence there, neither it nor the presence is offered again.
     await invite(other, agent);

@@ -11,13 +11,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import { translationKey } from '../../translations.ts';
 import { contactDisplayName, contactKeyHex, filterContacts } from '../ContactList/index.ts';
 
-/** Someone the space can add who is not a contact, e.g. an agent; keyed apart from identity keys. */
-export type ContactPickerInvitee = { key: string; label: string };
-
 export type ContactPickerProps = {
   contacts: Contact[];
-  /** Others the space can add, listed after the contacts. */
-  invitees?: readonly ContactPickerInvitee[];
   /** Identity-key hex of people who must not be offered (e.g. existing members). */
   excludeKeys?: string[];
   /** Selected identity-key hex, if any. */
@@ -26,14 +21,7 @@ export type ContactPickerProps = {
   disabled?: boolean;
 };
 
-export const ContactPicker = ({
-  contacts,
-  invitees = [],
-  excludeKeys = [],
-  value,
-  onChange,
-  disabled,
-}: ContactPickerProps) => {
+export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, disabled }: ContactPickerProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const [query, setQuery] = useState('');
   const candidates = useMemo(
@@ -44,15 +32,10 @@ export const ContactPicker = ({
       ),
     [contacts, excludeKeys, query],
   );
-  const items = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return [
-      ...candidates.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) })),
-      ...invitees
-        .filter(({ label }) => label.toLowerCase().includes(needle))
-        .map(({ key, label }) => ({ value: key, label })),
-    ];
-  }, [candidates, invitees, query]);
+  const items = useMemo(
+    () => candidates.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) })),
+    [candidates],
+  );
 
   return (
     <Combobox.Root
@@ -78,7 +61,7 @@ export const ContactPicker = ({
             <Combobox.Item key={item.value} item={item} data-testid='contact-picker.item' />
           ))}
         </Combobox.List>
-        {items.length === 0 && <Combobox.Empty>{t('contact-picker-empty.message')}</Combobox.Empty>}
+        {candidates.length === 0 && <Combobox.Empty>{t('contact-picker-empty.message')}</Combobox.Empty>}
       </Combobox.Content>
     </Combobox.Root>
   );

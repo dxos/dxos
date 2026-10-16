@@ -64,15 +64,26 @@ export const hasTag = (space: Space, tag: string): boolean => space.tags.include
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
 /**
- * The identities of the agents whose own spaces are among `spaces`: each agent space's owner. An agent joins other
- * spaces through its plugin's `AppCapabilities.InviteeSource`, not as an admitted member, so these are not contacts
- * to admit.
+ * The agents among `spaces` that `self` may not add elsewhere: the owners of agent spaces `self` cannot write to. Only
+ * an agent's admins, the members who may write to its space, may add it to another space, which EDGE enforces; the
+ * contact picker leaves the others out, though an agent whose space `self` is not in cannot be told from a person.
  */
-export const agentIdentityKeys = (
+export const agentsNotAdministeredBy = (
   spaces: readonly { readonly tags: readonly string[]; readonly members: { get(): SpaceMember[] } }[],
+  self: PublicKey,
 ): PublicKey[] =>
   spaces
     .filter((space) => space.tags.includes(AGENT_SPACE_TAG))
+    .filter(
+      (space) =>
+        !space.members
+          .get()
+          .some(
+            (member) =>
+              (member.role === SpaceMember_Role.ADMIN || member.role === SpaceMember_Role.EDITOR) &&
+              (toPublicKey(member.identity?.identityKey)?.equals(self) ?? false),
+          ),
+    )
     .flatMap((space) => space.members.get())
     .filter((member) => member.role === SpaceMember_Role.OWNER)
     .flatMap((member) => toPublicKey(member.identity?.identityKey) ?? []);
