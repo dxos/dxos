@@ -38,8 +38,10 @@ Every clip and every take of the composite follows these:
 4. **No captions or titles.** Run the driver with `--captions off`, so a flow's step captions never appear.
 5. **The navtree shows.** Record clips at 1920x1080 and keep the whole app frame, sidebar included; never crop to the
    plank.
-6. **Near-black between tiles.** The grid's ground and gutters are near black, in either theme.
-7. **Render the composite frame by frame.** `render.mjs` seeks the story's stepped mode and screenshots each frame at
+6. **Full resolution.** Record at `--scale 2` and encode every clip at 1920x1080, so a tour cell filling the frame is
+   shown 1:1 rather than upscaled.
+7. **Near-black between tiles.** The grid's ground and gutters are near black, in either theme.
+8. **Render the composite frame by frame.** `render.mjs` seeks the story's stepped mode and screenshots each frame at
    exactly 60 fps. A live screencast of the story delivers about 25 fps at 1080p, so camera moves judder.
 
 The composite is rendered from the story in isolation, stepped, with the controls hidden and the light theme:

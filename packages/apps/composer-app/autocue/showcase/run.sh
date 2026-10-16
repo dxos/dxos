@@ -8,7 +8,7 @@ OUT=$2
 PORT=${3:-7337}
 rm -rf "$OUT" && mkdir -p "$OUT"
 SHOWCASE_BATCH=${BATCH:-one,mermaid,two,three} node "$ROOT/.agents/skills/autocue/scripts/driver.mjs" --port "$PORT" --url http://localhost:4173 --out "$OUT" \
-  --width 1920 --height 1080 --scale 1 --overlay off --gpu on --theme light --fps 60 --captions off --ready-timeout 180000 > "$OUT/driver.log" 2>&1 &
+  --width 1920 --height 1080 --scale 2 --overlay off --gpu on --theme light --fps 60 --captions off --ready-timeout 180000 > "$OUT/driver.log" 2>&1 &
 DRIVER=$!
 until [ -f "$OUT/token" ]; do
   kill -0 "$DRIVER" 2>/dev/null || { echo "driver exited:"; tail -5 "$OUT/driver.log"; exit 1; }
