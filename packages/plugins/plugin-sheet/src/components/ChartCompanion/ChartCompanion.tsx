@@ -1,0 +1,221 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { PublicKey } from '@dxos/keys';
+import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Plot, type PlotValue, toPlotData } from '@dxos/react-ui-plot';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Typography from '@dxos/react-ui/Typography';
+
+import { meta } from '#meta';
+
+import { ChartSpec } from './types.ts';
+
+const DEFAULT_RANGE = 'A1:B5';
+
+export type ChartCompanionProps = {
+  /** Scopes the toolbar to the host plank's attention; without one it is always enabled. */
+  attendableId?: string;
+  charts: readonly ChartSpec[];
+  onChange: (charts: ChartSpec[]) => void;
+  /** Computed cell values for a range in A1 notation; a new function identity re-renders the chart. */
+  getValues: (range: string) => PlotValue[][] | undefined;
+  /** The sheet's current selection in A1 notation; new charts start from it. */
+  selection?: string;
+  /** Called with a chart's range when it is chosen, so the host can select it in the sheet. */
+  onSelectRange?: (range: string) => void;
+};
+
+/** Master-detail editor of a sheet's charts: the list of ranges above, the selected chart and its settings below. */
+export const ChartCompanion = ({
+  attendableId,
+  charts,
+  onChange,
+  getValues,
+  selection,
+  onSelectRange,
+}: ChartCompanionProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
+  const [tab, setTab] = useState('chart');
+  const current = charts.find((chart) => chart.id === selected);
+
+  const handleAdd = useCallback(() => {
+    const chart: ChartSpec = {
+      id: PublicKey.random().toHex(),
+      range: selection ?? DEFAULT_RANGE,
+      type: 'bar',
+      header: true,
+    };
+    onChange([...charts, chart]);
+    setSelected(chart.id);
+  }, [charts, selection, onChange]);
+
+  const handleDelete = useCallback(() => {
+    const index = charts.findIndex((chart) => chart.id === selected);
+    if (index >= 0) {
+      const next = charts.filter((chart) => chart.id !== selected);
+      onChange(next);
+      setSelected(next[Math.min(index, next.length - 1)]?.id);
+    }
+  }, [charts, selected, onChange]);
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      setSelected(id);
+      const chart = charts.find((chart) => chart.id === id);
+      if (chart) {
+        onSelectRange?.(chart.range);
+      }
+    },
+    [charts, onSelectRange],
+  );
+
+  const handleUpdate = useCallback(
+    (values: Partial<ChartSpec>) =>
+      onChange(charts.map((chart) => (chart.id === selected ? { ...chart, ...values, id: chart.id } : chart))),
+    [charts, selected, onChange],
+  );
+
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: ['chart-actions.label', { ns: meta.profile.key }] })
+        .action('add', { label: ['add-chart.label', { ns: meta.profile.key }], icon: 'ph--plus--regular' }, handleAdd)
+        .action(
+          'use-selection',
+          {
+            label: ['use-selection.label', { ns: meta.profile.key }],
+            icon: 'ph--selection-plus--regular',
+            disabled: !current || !selection || selection === current.range,
+          },
+          () => selection && handleUpdate({ range: selection }),
+        )
+        .action(
+          'delete',
+          {
+            label: ['delete-chart.label', { ns: meta.profile.key }],
+            icon: 'ph--trash--regular',
+            disabled: !current,
+          },
+          handleDelete,
+        )
+        .build(),
+    [current, selection, handleAdd, handleUpdate, handleDelete],
+  );
+
+  const items = useMemo(
+    () =>
+      charts.map((chart) => ({
+        value: chart.id,
+        label: chart.name || chart.range,
+        description: t('chart-description.label', { range: chart.range, type: t(`chart-type.${chart.type}.label`) }),
+      })),
+    [charts, t],
+  );
+
+  return (
+    <Panel.Root>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
+      </Panel.Header>
+      <Panel.Body asChild>
+        <Splitter.Root orientation='vertical' defaultSize={10} minSize={4} resizable>
+          <Splitter.Panel position='start'>
+            <Listbox.Root items={items} value={selected} onValueChange={handleSelect}>
+              <Listbox.Viewport>
+                <Listbox.Content aria-label={t('chart-list.label')} padBlock>
+                  {items.map((item) => (
+                    <Listbox.Item key={item.value} id={item.value} data-testid='chart-companion.item'>
+                      <Listbox.ItemIcon icon={chartIcon(charts.find((chart) => chart.id === item.value)?.type)} />
+                      <Listbox.ItemText />
+                      <Listbox.ItemDescription />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
+              <Listbox.Empty>{t('no-charts.message')}</Listbox.Empty>
+            </Listbox.Root>
+          </Splitter.Panel>
+          <Splitter.ResizeTrigger aria-label={t('resize-chart-list.label')} />
+          <Splitter.Panel position='end'>
+            {current ? (
+              <ChartDetail
+                key={current.id}
+                chart={current}
+                tab={tab}
+                onTabChange={setTab}
+                getValues={getValues}
+                onUpdate={handleUpdate}
+              />
+            ) : (
+              <Typography.Text classNames='p-2 text-fg-subtle'>{t('no-chart-selected.message')}</Typography.Text>
+            )}
+          </Splitter.Panel>
+        </Splitter.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
+ChartCompanion.displayName = 'ChartCompanion';
+
+type ChartDetailProps = Pick<ChartCompanionProps, 'getValues'> & {
+  chart: ChartSpec;
+  tab: string;
+  onTabChange: (tab: string) => void;
+  onUpdate: (values: Partial<ChartSpec>) => void;
+};
+
+const ChartDetail = ({ chart, tab, onTabChange, getValues, onUpdate }: ChartDetailProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const data = useMemo(() => {
+    const values = getValues(chart.range);
+    return values && toPlotData(values, { header: chart.header });
+  }, [getValues, chart.range, chart.header]);
+
+  return (
+    <Tabs.Root value={tab} onValueChange={onTabChange} classNames='h-full'>
+      <Tabs.List aria-label={t('chart-tabs.label')}>
+        <Tabs.Trigger value='chart' icon='ph--chart-bar--regular' label={t('chart-tab.label')} />
+        <Tabs.Trigger value='settings' icon='ph--sliders-horizontal--regular' label={t('settings-tab.label')} />
+      </Tabs.List>
+      <Tabs.Content value='chart' data-testid='chart-companion.chart'>
+        {data ? (
+          <Plot data={data} options={chart} classNames='p-2' />
+        ) : (
+          <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
+        )}
+      </Tabs.Content>
+      <Tabs.Content value='settings'>
+        <Form.Root schema={ChartSpec} values={chart} onValuesChanged={onUpdate}>
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.Fields />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Tabs.Content>
+    </Tabs.Root>
+  );
+};
+
+const chartIcon = (type?: ChartSpec['type']) => {
+  switch (type) {
+    case 'pie':
+      return 'ph--chart-pie--regular';
+    case 'xy':
+      return 'ph--chart-line--regular';
+    case 'bar':
+    default:
+      return 'ph--chart-bar--regular';
+  }
+};

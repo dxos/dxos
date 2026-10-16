@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Sheet } from '#types';
+import { Sheet, SheetRange } from '#types';
 
 export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.CellValue> => ({
   B1: { value: 'Qty2' },
@@ -31,3 +31,42 @@ export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.Ce
   F5: { value: '8%' },
   F6: { value: '$10000' },
 });
+
+/** Monthly sales by region (A1:C7), market share (E1:F5), and a sampled curve (H1:I11) for charts. */
+export const createChartTestCells = (): Record<string, Sheet.CellValue> => {
+  const cells: Record<string, Sheet.CellValue> = {};
+  const set = (address: string, value: Sheet.CellValue['value']) => (cells[address] = { value });
+
+  [
+    ['Month', 'North', 'South'],
+    ['Jan', 120, 80],
+    ['Feb', 180, 110],
+    ['Mar', 150, 160],
+    ['Apr', 220, 140],
+    ['May', 260, 190],
+    ['Jun', 240, 230],
+  ].forEach((row, index) => row.forEach((value, col) => set(`${'ABC'[col]}${index + 1}`, value)));
+
+  [
+    ['Region', 'Share'],
+    ['Americas', 42],
+    ['Europe', 31],
+    ['Asia', 21],
+    ['Other', 6],
+  ].forEach((row, index) => row.forEach((value, col) => set(`${'EF'[col]}${index + 1}`, value)));
+
+  set('H1', 'x');
+  set('I1', 'x²');
+  for (let x = 0; x <= 9; x++) {
+    set(`H${x + 2}`, x);
+    set(`I${x + 2}`, `=H${x + 2}*H${x + 2}`);
+  }
+
+  return cells;
+};
+
+/** Highlighted header rows, with the headers of numeric columns aligned to the end like their values. */
+export const createChartTestRanges = (): Sheet.Range[] => [
+  ...['A1:C1', 'E1:F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.styleKey, value: 'highlight' })),
+  ...['B1:C1', 'F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.alignKey, value: 'end' })),
+];
