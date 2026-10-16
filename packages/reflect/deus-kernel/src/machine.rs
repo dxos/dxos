@@ -180,6 +180,11 @@ pub struct Machine {
     measuring: u32,
     /// The run in progress, kept while it is suspended on the embedder.
     current: Option<Run>,
+    /// Per arity, the `APP` node an embedder's call reuses and its argument `CONST` nodes, so a long-lived
+    /// instance does not grow its node table with every call (task 7b7a26ad).
+    calls: HashMap<usize, (TermId, Vec<TermId>)>,
+    /// The `CONST` node `apply_value` puts the applied function in.
+    applied: Option<TermId>,
     /// IRIs of the user types and abilities an image uses, by hash (its `(type …)` and
     /// `(ability …)` forms), for embedders.
     pub iris: HashMap<String, String>,
@@ -249,6 +254,8 @@ impl Machine {
             profile: options.profile.then(|| (Vec::new(), HashMap::new())),
             defect_trace: Vec::new(),
             current: None,
+            calls: HashMap::new(),
+            applied: None,
             iris: HashMap::new(),
         }
     }
@@ -733,25 +740,51 @@ impl Machine {
 
     /// Evaluates the function value `func` (one an embedder held by handle) applied to `args`.
     pub fn apply_value(&mut self, func: Value, args: Vec<Value>) -> Result<Value, Fail> {
-        let callee = self.constant(func, NONE_ID);
+        let callee = match self.applied {
+            Some(id) => {
+                self.set_constant(id, func);
+                id
+            }
+            None => {
+                let id = self.constant(func, NONE_ID);
+                self.applied = Some(id);
+                id
+            }
+        };
         self.call_term(callee, args)
     }
 
+    fn set_constant(&mut self, id: TermId, value: Value) {
+        let index = self.nodes[id as usize].i as usize;
+        self.consts[index] = value;
+    }
+
+    /// Runs `callee` applied to `args` through this arity's reused call node: a run that is not suspended no
+    /// longer reads it, and `deus_apply` refuses a suspended instance.
     fn call_term(&mut self, callee: TermId, args: Vec<Value>) -> Result<Value, Fail> {
         if args.is_empty() {
             return self.run(callee, None);
         }
-        let operands: Vec<u32> = args
-            .into_iter()
-            .map(|value| self.constant(value, NONE_ID))
-            .collect();
-        let id = self.node(APP, NONE_ID);
-        let lo = self.kids.len() as u32;
-        self.kids.extend(&operands);
-        let node = &mut self.nodes[id as usize];
-        node.a = callee;
-        node.lo = lo;
-        node.len = operands.len() as u32;
+        let arity = args.len();
+        let (id, operands) = match self.calls.get(&arity) {
+            Some(call) => call.clone(),
+            None => {
+                let operands: Vec<u32> =
+                    (0..arity).map(|_| self.constant(unit(), NONE_ID)).collect();
+                let id = self.node(APP, NONE_ID);
+                let lo = self.kids.len() as u32;
+                self.kids.extend(&operands);
+                let node = &mut self.nodes[id as usize];
+                node.lo = lo;
+                node.len = arity as u32;
+                self.calls.insert(arity, (id, operands.clone()));
+                (id, operands)
+            }
+        };
+        for (operand, value) in operands.iter().zip(args) {
+            self.set_constant(*operand, value);
+        }
+        self.nodes[id as usize].a = callee;
         self.run(id, None)
     }
 
