@@ -99,8 +99,6 @@ export default Capability.makeModule(
           ),
         ),
         processManagerRuntime.runFork(
-          // Only while a monitor is open: the stream opens one, and the re-read exists to close it. Caught
-          // inside the loop so a transient read failure cannot kill reconciliation.
           Effect.suspend(() =>
             monitors.has(key)
               ? Database.getSyncState().pipe(

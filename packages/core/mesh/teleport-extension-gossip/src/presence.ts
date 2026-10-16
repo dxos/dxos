@@ -58,7 +58,6 @@ export class Presence extends Resource {
   private readonly _peerStates = new ComplexMap<PublicKey, PresenceRecord>(PublicKey.hash);
   private readonly _peersByIdentityKey = new ComplexMap<PublicKey, PresenceRecord[]>(PublicKey.hash);
 
-  /** Peers reported through `updated` and not yet aged out: what the offline sweep checks. */
   private readonly _reportedOnline = new ComplexSet<PublicKey>(PublicKey.hash);
 
   // remotePeerId -> PresenceExtension
@@ -85,7 +84,6 @@ export class Presence extends Resource {
       this._params.announceInterval,
     );
 
-    // Emit updated event when some peers went offline.
     scheduleTaskInterval(
       this._ctx,
       async () => {
