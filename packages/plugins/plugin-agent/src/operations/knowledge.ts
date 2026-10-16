@@ -9,7 +9,7 @@ import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService } from '#types';
+import { AgentPresence, BrainService } from '#types';
 
 import { AgentOperationError } from './errors.ts';
 import { personDid } from './members.ts';
@@ -80,7 +80,9 @@ export const knownIdentities = Effect.gen(function* () {
 export const spaceFacts = Effect.gen(function* () {
   const brain = yield* BrainService.BrainService;
   const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-  const facts = yield* Effect.forEach(agents, (agent) => brain.query(agent.id, {}));
+  // An agent invited from another space reads its home's brain, which holds what it learned in every space.
+  const brains = [...new Set(agents.map(AgentPresence.brainId))];
+  const facts = yield* Effect.forEach(brains, (id) => brain.query(id, {}));
   return [...new Map(facts.flat().map((fact) => [fact.id, fact])).values()];
 });
 

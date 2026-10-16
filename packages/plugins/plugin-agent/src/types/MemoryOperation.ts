@@ -138,7 +138,7 @@ export const RecalledFact = Schema.Struct({
 /** Reads back what the agent knows: the facts that still hold, newest first, and live goals. */
 export const Recall = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agent.retrieveMemories'),
+    key: DXN.make('org.dxos.operation.agent.retrieveFacts'),
     name: 'Recall',
     description:
       'Returns the facts about a subject (newest first), read from documents and conversations or recorded with Remember, and the goals it owns.',

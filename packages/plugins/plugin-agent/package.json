@@ -98,6 +98,11 @@
       "types": "./dist/types/src/types/AgentOperation.d.ts",
       "import": "./dist/lib/AgentOperation.mjs"
     },
+    "./AgentPresence": {
+      "source": "./src/types/AgentPresence.ts",
+      "types": "./dist/types/src/types/AgentPresence.d.ts",
+      "import": "./dist/lib/AgentPresence.mjs"
+    },
     "./AgentPlugin": {
       "source": "./src/AgentPlugin.ts",
       "types": "./dist/types/src/AgentPlugin.d.ts",

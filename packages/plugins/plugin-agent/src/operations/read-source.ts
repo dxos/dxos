@@ -17,7 +17,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { AgentOperation, BrainService, ChatParticipant } from '#types';
+import { AgentOperation, AgentPresence, BrainService, ChatParticipant } from '#types';
 
 import { pushFacts } from './deliver.ts';
 import { AgentOperationError } from './errors.ts';
@@ -321,7 +321,7 @@ export const readSource: (
   if (source && Obj.instanceOf(Chat.Chat, source) && text === undefined) {
     const brain = yield* BrainService.BrainService;
     const uri = Obj.getURI(source);
-    const cursor = yield* brain.readThrough(agent.id, uri);
+    const cursor = yield* brain.readThrough(AgentPresence.brainId(agent), uri);
     const members = yield* loadMembers;
     const { through, transcript, ...read } = yield* readChat(members, agent, source, cursor);
     if (through === undefined || through === cursor) {
@@ -363,7 +363,7 @@ const extract = (
     : extractDocFacts(
         { text: body.text, source: uri },
         {
-          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id)),
+          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(AgentPresence.brainId(agent))),
           entities: knownEntities(members, entities),
         },
       ).pipe(
