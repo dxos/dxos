@@ -196,8 +196,8 @@ def site (dir : Text) : {IO, Throw Text} Site :=
     let object := peekObject dir h
     let fromObject := getOr (Option.map namedHashes object) []
     let fromScheme := getOr (Option.map namedHashes (metaField meta "scheme")) []
-    let named := Option.map (Codebase.metaFor (fst pair)) meta
-    (h, dedup (sort (fromObject ++ fromScheme)), hintsOf (fst pair) (snd pair) object meta, (fst pair, (Explorer.signature named, summaryOf (Explorer.docOf named))))) entries
+    let named := Option.map (metaFor (fst pair)) meta
+    (h, dedup (sort (fromObject ++ fromScheme)), hintsOf (fst pair) (snd pair) object meta, fst pair, Explorer.signature named, summaryOf (Explorer.docOf named))) entries
   let depsOf := Map.fromList (List.map (fun f =>
     let (h, deps, _, _) := f
     (h, deps)) facts)
@@ -213,7 +213,20 @@ def site (dir : Text) : {IO, Throw Text} Site :=
   let info := Map.fromList (List.map (fun f =>
     let (_, _, _, named) := f
     named) facts)
-  Site.mk dir project (currentBranch dir) ns entries (nameIndex ns) (Codebase.namesByHash ns) info depsOf dependents printer tasks (Map.fromList (List.map (fun t => (Task.id t, t)) tasks))
+  Site.mk
+    dir
+    project
+    (currentBranch dir)
+    ns
+    entries
+    (nameIndex ns)
+    (Codebase.namesByHash ns)
+    info
+    depsOf
+    dependents
+    printer
+    tasks
+    (Map.fromList (List.map (fun t => (Task.id t, t)) tasks))
 
 /-- A name's metadata, as `Codebase.metaFor` reads it; read when a page needs it, since a site keeps none. -/
 def siteMeta (s : Site) (name : Text) (h : Text) : {IO} Option Sexp := Option.map (Codebase.metaFor name) (readMeta s.dir h)
@@ -300,7 +313,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     match IO.getEnv "DEUS_HOME" with
     | Option.some h => h
     | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
-  let s := site dir
+  let s := Explorer.site dir
   IO.mkdirp (out ++ "/def")
   forEach appFiles (fun f =>
     match IO.readFile (home ++ "/platform/explorer/" ++ f) with
@@ -310,12 +323,14 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   IO.writeFile (out ++ "/events.json") (Json.render (fst events))
   let featureMaps := featuresOfSite s
   IO.writeFile (out ++ "/features.json") (Json.render (fst featureMaps))
-  IO.writeFile (out ++ "/meta.json") (Json.render (metaJson s (IO.exists (out ++ "/console/info.json")) (snd events) (snd featureMaps)))
+  IO.writeFile
+    (out ++ "/meta.json")
+    (Json.render (metaJson s (IO.exists (out ++ "/console/info.json")) (snd events) (snd featureMaps)))
   IO.writeFile (out ++ "/names.json") (Json.render (namesJson s))
   let histories := histories dir 200
-  IO.writeFile
-    (out ++ "/tasks.json")
-    (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir s.ns (getOr (Map.lookup (Task.id t) histories) []) t) s.allTasks)))
+  IO.writeFile (out ++ "/tasks.json") (Json.render (Json.arr (List.map
+    (fun t => Explorer.taskJson dir (Site.ns s) (getOr (Map.lookup (Task.id t) histories) []) t)
+    s.allTasks)))
   IO.writeFile (out ++ "/comments.json") (Json.render (commentsJson s))
   IO.mkdirp (out ++ "/assets")
   forEach
@@ -331,12 +346,16 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     let path := out ++ "/change/" ++ c ++ ".json"
     -- A change never changes, so a page written once stays right.
     if IO.exists path then () else IO.writeFile path (Json.render (changePage dir c)))
-  forEach s.entries (fun pair =>
+  forEach (Site.entries s) (fun pair =>
     let (name, e) := pair
-    IO.writeFile (out ++ "/def/" ++ Explorer.pageOf (Entry.hash e) ++ ".json") (Json.render (defJson s name e)))
+    IO.writeFile
+      (out ++ "/def/" ++ Explorer.pageOf (Entry.hash e) ++ ".json")
+      (Json.render (defJson s name e)))
   IO.mkdirp (out ++ "/doc")
-  forEach (Export.specDocuments s.ns) (fun d => IO.writeFile (out ++ "/doc/" ++ d ++ ".json") (Json.render (docJson s d)))
-  List.length s.entries
+  forEach
+    (specDocuments (Site.ns s))
+    (fun d => IO.writeFile (out ++ "/doc/" ++ d ++ ".json") (Json.render (docJson s d)))
+  List.length (Site.entries s)
 
 /-- The DEUS Worker's explorer API (D192), compiled to JS: everything but definitions, as one document. -/
 def liveIndex (s : Site) : {IO, Throw Text} Text :=

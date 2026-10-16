@@ -84,7 +84,7 @@ test hashIgnoresLocalNames :=
       (fun _ => Option.none)
       "strict"
       [parseFile "t.deus" source]) with
-    | Result.ok b => List.lookup "f" b.entries
+    | Result.ok b => List.lookup "f" (Batch.entries b)
     | Result.err _ => Option.none
   let original := compileOne "def f x := x + 1\n"
   isSome original && original == compileOne "def f renamed := renamed + 1\n" && original != compileOne "def f x := x + 2\n"
@@ -93,7 +93,7 @@ test mutualRecursionHashesAsCycle :=
   let source := "def even n := if n == 0 then true else odd (n - 1)\ndef odd n := if n == 0 then false else even (n - 1)\n"
   match try (fun _ => batch Map.empty (fun _ => Option.none) (fun _ => Option.none) "strict" [parseFile "t.deus" source]) with
   | Result.ok b =>
-      match (List.lookup "even" b.entries, List.lookup "odd" b.entries) with
+      match (List.lookup "even" (Batch.entries b), List.lookup "odd" (Batch.entries b)) with
       | (Option.some (Entry.term e), Option.some (Entry.term o)) => Text.contains "." e && Text.take 64 e == Text.take 64 o
       | _ => false
   | Result.err _ => false

@@ -100,7 +100,7 @@ test indexDescribesTheCodebase :=
   let history := Json.items (Json.get meta "history")
   Json.text (Json.get meta "project") == "https://dxos.org/deus/toolchain" && Json.text (Json.get meta "branch") == "main" &&
     List.length names == Json.int (Json.get meta "definitions") && List.length names > 1000 &&
-    List.any (fun e => Json.text (Json.get e "name") == "List.map") names &&
+    List.any (fun e => Json.text (Json.get e "name") == "lib.base.List.map") names &&
     not (List.isEmpty (Json.items (Json.get index "tasks"))) &&
     Option.map (fun row => Json.text (Json.get row "causal")) (List.head? history) == some h
 
@@ -113,7 +113,7 @@ test definitionPagesLoad :=
   let base := liveApi ()
   let index := jsonAt (base ++ "/index.json")
   -- A plain term, a member of the CLI's recursive group, a type, and a test.
-  let picked := entriesNamed index ["List.map", "Cli.dispatch", "Explorer.Site", "Tests.seededRandomRepeats"]
+  let picked := entriesNamed index ["lib.base.List.map", "Cli.dispatch", "Explorer.Site", "Tests.seededRandomRepeats"]
   List.length picked == 4 && List.all (pageLoads base) picked
 
 @[integration]

@@ -28,12 +28,16 @@ namespace Print
 def suffixifyAtLeast (least : Int) (all : Dict Text (List Text)) (fqn : Text) : Text :=
   let segments := Text.split fqn "."
   let count := List.length segments
-  let rec go k :=
-    if k >= count then fqn
-    else
-      let candidate := Text.join "." (List.drop (count - k) segments)
-      let clashes := List.filter (fun other => other == candidate || Text.endsWith ("." ++ candidate) other) (Option.getOr (Dict.lookup (Names.lastSegment fqn) all) [])
-      if List.length clashes <= 1 then candidate else go (k + 1)
+  let mounted := startsWith "lib." fqn
+  -- A library's root name reads back by the resolver's root rule; any other suffix must be unique, so the source also compiles where the library is not mounted, as in deus/ (D206).
+  let resolves := fun candidate clashes => List.length clashes <= 1 || mounted && List.filter (fun other => atLibraryRoot other candidate) clashes == [fqn]
+  -- `base.snd` for `lib.base.snd` would name the mount, which deus/ and the library's other users do not have.
+  let rec go k := if k >= count || mounted && k == count - 1 then fqn else
+    let candidate := join "." (List.drop (count - k) segments)
+    let clashes := List.filter
+      (fun other => other == candidate || endsWith ("." ++ candidate) other)
+      (getOr (Dict.lookup (lastSegment fqn) all) [])
+    if resolves candidate clashes then candidate else go (k + 1)
   go least
 
 def suffixify (all : Dict Text (List Text)) (fqn : Text) : Text := suffixifyAtLeast 1 all fqn

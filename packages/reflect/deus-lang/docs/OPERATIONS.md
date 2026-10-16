@@ -129,9 +129,9 @@ about 6. Until the index is drawn, visitors see the head drawn last (D195; `live
 ## Open state (2026-10-15)
 
 - `@dxos/base` and `@dxos/examples` are published (2026-10-16, task 86743973): https://deus.dmytro-a80.workers.dev/@dxos/base/
-  and /@dxos/examples/. They were built from the toolchain's `deus export --terms` by growing a namespace set until it
-  compiles, with hashes identical to the toolchain's. The toolchain still holds those names; moving them out needs
-  the seed build to mount libraries (open problem in D189).
+  and /@dxos/examples/. The toolchain mounts base as `lib.base` and no longer holds those names itself (D206). Change a
+  base definition in a pull of `@dxos/base`, push it, then `deus lib install base <that codebase>` in `~/.deus`: the
+  upgrade propagates to the toolchain's dependents. `sync-deus.py` writes `lib.base.X` into deus/ as `X`.
 - Its handoff names git commit `dcc624f0`, which is not on `origin/dm/agent-13-oct-x8ehi8-0y35ai` (head
   `cd8ee7ce`, 13:32 UTC). Find where it went before relying on it.
 - The coordinator session is archived. It was waiting on: where the explorer is published on R2, a go-ahead

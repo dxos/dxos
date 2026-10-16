@@ -115,9 +115,13 @@ def groups (pairs : List (Text, Text)) : List (Text, List Text) :=
 def build (table : Map Text Entry) : Names :=
   let entries := Map.toList table
   let bySegment := groups (List.map (fun pair => (lastSegment (fst pair), fst pair)) entries)
-  let fieldOwners := groups (List.concatMap (fun pair =>
+  -- A mounted structure the project also has under its own name is the project's to name (D206).
+  let shadowed := fun fqn =>
+    let rest := Text.drop 4 fqn
+    startsWith "lib." fqn && Map.contains (Text.drop (indexOf rest "." 0 + 1) rest) table
+  let fieldOwners := groups (concatMap (fun pair =>
     match pair with
-    | (fqn, Entry.type _ _ fields) => List.map (fun f => (f, fqn)) fields
+    | (fqn, Entry.type _ _ fields) => if shadowed fqn then [] else List.map (fun f => (f, fqn)) fields
     | _ => []) entries)
   Names.mk table (Dict.fromList entries) (Dict.fromList bySegment) (Dict.fromList fieldOwners)
 
@@ -127,7 +131,7 @@ def joinName (prefix : List Text) (name : Text) : Text := Text.join "." (prefix 
   unique fully qualified name ending in `.name`, as Unison's suffix-based names; among several, the one
   at a library's root (`lib.<library>.name`) wins. -/
 def lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) (suffix : Bool) : {Throw Text} Option (Text, Entry) :=
-  let index := names.index
+  let index := Names.index names
   let probe := fun fqn =>
     match Dict.lookup fqn index with
     | Option.some e => if want e then Option.some (fqn, e) else Option.none
@@ -146,7 +150,7 @@ def lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) 
         match probe (o ++ "." ++ name) with
         | Option.some hit => Option.some hit
         | Option.none => viaOpens rest
-  match chain (reverse scope.ns) with
+  match chain (reverse (Scope.ns scope)) with
   | Option.some hit => Option.some hit
   | Option.none =>
       match viaOpens scope.opens with
@@ -156,14 +160,17 @@ def lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) 
           let matches := List.filter
             (fun fqn => (fqn == name || endsWith ("." ++ name) fqn) && isSome (probe fqn))
             candidates
-          -- A library's root namespace counts like the project's (D189): `fst` is `lib.base.fst`, not `lib.base.Pair.fst`.
+          -- A library's root namespace counts like the project's (D189): `fst` is `fst`, not `Pair.fst`.
           let rooted := List.filter (fun fqn => atLibraryRoot fqn name) matches
+          -- A library's root name, then the project's own names, before the rest of its libraries' (D206).
+          let own := List.filter (fun fqn => not (startsWith "lib." fqn)) matches
           match matches with
           | [] => Option.none
           | fqn :: [] => probe fqn
           | _ =>
-              match rooted with
-              | fqn :: [] => probe fqn
+              match (rooted, own) with
+              | (fqn :: [], _) => probe fqn
+              | ([], fqn :: []) => probe fqn
               | _ => Throw.throw ("ambiguous name " ++ name ++ ": " ++ join ", " (sort matches))
 
 /-- Whether `fqn` is `lib.<library>.<name>`: `name` at the root of a mounted library (D49, D189). -/
@@ -263,11 +270,11 @@ def arrowCount : Ty -> Int
 def tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty) : {Throw Text} Sexp :=
   let go := fun x => Resolve.tyCore names scope params x
   match t with
-  | Ty.unit => Compile.node "tref" [Sexp.s "#Unit"]
+  | Ty.unit => Compile.node "tref" [Compile.s "#Unit"]
   | Ty.effects row result => Compile.node "teff" [Compile.node "eff" (List.map go row), go result]
   | Ty.row items => Compile.node "trow" (List.map go items)
   | Ty.tuple items => foldl
-      (fun acc x => Compile.node "tapp" [Compile.node "tref" [Sexp.s "#Pair"], x, acc])
+      (fun acc x => Compile.node "tapp" [Compile.node "tref" [Compile.s "#Pair"], x, acc])
       (go (getOr (last? items) Ty.unit))
       (List.drop 1 (reverse (List.map go items)))
   | Ty.arrow a b effects =>
@@ -278,13 +285,13 @@ def tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty) : {Thro
       Compile.node "tfun" ([go a, go b] ++ effs)
   | Ty.named name args =>
       let index := findIndex (fun p => p == name) params
-      let head := if index >= 0 then Compile.node "tvar" [i index] else
+      let head := if index >= 0 then Compile.node "tvar" [Compile.n index] else
         match Names.lookup names name scope isTypeName true with
-        | Option.some (_, Entry.type _ iri _) => Compile.node "tref" [Sexp.s iri]
-        | Option.some (_, Entry.ability _ iri) => Compile.node "tref" [Sexp.s iri]
+        | Option.some (_, Entry.type _ iri _) => Compile.node "tref" [Compile.s iri]
+        | Option.some (_, Entry.ability _ iri) => Compile.node "tref" [Compile.s iri]
         | _ =>
             let c := code name 0
-            if c >= 'a' && c <= 'z' then Compile.node "tvar" [Sexp.s name] else Throw.throw ("unknown type " ++ name)
+            if c >= 'a' && c <= 'z' then Compile.node "tvar" [Compile.s name] else Throw.throw ("unknown type " ++ name)
       if List.isEmpty args then head else Compile.node "tapp" (head :: List.map go args)
 
 --
@@ -332,7 +339,7 @@ def fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) (nth : Int) : {Throw Te
 
 def valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
   let index := localIndex locals name
-  if index >= 0 then Compile.node "var" [i index] else
+  if index >= 0 then Compile.node "var" [Compile.n index] else
     let dot := indexOf name "." 0
     let headIndex := if dot > 0 then localIndex locals (Text.slice name 0 dot) else -1
     if headIndex >= 0 then
@@ -340,7 +347,7 @@ def valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) 
       let fields := Text.split (Text.drop (dot + 1) name) "."
       foldl
         (fun acc pair => Resolve.app (fieldAccessor ctx pos (snd pair) (fst pair)) [acc])
-        (Compile.node "var" [i headIndex])
+        (Compile.node "var" [Compile.n headIndex])
         (mapIndexed (fun i f => (i, f)) fields)
     else
       match Names.lookup ctx.names name ctx.scope isValue true with
@@ -365,28 +372,28 @@ def simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Text) :=
 def pat (ctx : Ctx) (p : Pat) (binds : List (Option Text)) : {Throw Text} (Sexp, List (Option Text)) :=
   match p with
   | Pat.wild => (Compile.node "pany" [], binds)
-  | Pat.int v => (Compile.node "pint" [i v], binds)
+  | Pat.int v => (Compile.node "pint" [Compile.n v], binds)
   | Pat.ann q t =>
       let (core, binds2) := Resolve.pat ctx q binds
       (Compile.node "ann" [tyCore ctx.names ctx.scope [] t, core], binds2)
   | Pat.spelled text q =>
       let (core, binds2) := Resolve.pat ctx q binds
-      (Compile.node "spelled" [Sexp.s text, core], binds2)
-  | Pat.text v => (Compile.node "ptext" [Sexp.s v], binds)
-  | Pat.bool v => (Compile.node "pcon" [Sexp.s "#Bool", i (if v then 1 else 0)], binds)
-  | Pat.unit => (Compile.node "pcon" [Sexp.s "#Unit", i 0], binds)
+      (Compile.node "spelled" [Compile.s text, core], binds2)
+  | Pat.text v => (Compile.node "ptext" [Compile.s v], binds)
+  | Pat.bool v => (Compile.node "pcon" [Compile.s "#Bool", Compile.n (if v then 1 else 0)], binds)
+  | Pat.unit => (Compile.node "pcon" [Compile.s "#Unit", Compile.n 0], binds)
   | Pat.as name inner =>
       let (core, b2) := Resolve.pat ctx inner (Option.some name :: binds)
-      (Compile.node "pas" [Sexp.s name, core], b2)
+      (Compile.node "pas" [Compile.s name, core], b2)
   | Pat.cons h t =>
       let (hc, b1) := Resolve.pat ctx h binds
       let (tc, b2) := Resolve.pat ctx t b1
-      (Compile.node "pcon" [Sexp.s "#List", i 1, hc, tc], b2)
+      (Compile.node "pcon" [Compile.s "#List", Compile.n 1, hc, tc], b2)
   | Pat.list items =>
       let (cores, b2) := Resolve.pats ctx items binds
       (List.foldr
-        (fun x acc => Compile.node "pcon" [Sexp.s "#List", i 1, x, acc])
-        (Compile.node "pcon" [Sexp.s "#List", i 0])
+        (fun x acc => Compile.node "pcon" [Compile.s "#List", Compile.n 1, x, acc])
+        (Compile.node "pcon" [Compile.s "#List", Compile.n 0])
         cores, b2)
   | Pat.tuple items =>
       let (cores, b2) := Resolve.pats ctx items binds
@@ -405,10 +412,10 @@ def pats (ctx : Ctx) (ps : List Pat) (binds : List (Option Text)) : {Throw Text}
 
 def ctorPat (ctx : Ctx) (name : Text) (args : List Pat) (pos : Pos) (qualified : Bool) (binds : List (Option Text)) : {Throw Text} (Sexp, List (Option Text)) :=
   match ctorOf ctx name qualified with
-  | Option.none => if qualified then failAt ctx pos ("unknown constructor " ++ name) else (Compile.node "pvar" [Sexp.s name], Option.some name :: binds)
+  | Option.none => if qualified then failAt ctx pos ("unknown constructor " ++ name) else (Compile.node "pvar" [Compile.s name], Option.some name :: binds)
   | Option.some (Entry.ctor t tag arity) => if arity != List.length args then failAt ctx pos ("constructor " ++ name ++ " takes " ++ Int.toText arity ++ " arguments") else
       let (cores, b2) := Resolve.pats ctx args binds
-      (Compile.node "pcon" ([Sexp.s t, i tag] ++ cores), b2)
+      (Compile.node "pcon" ([Compile.s t, Compile.n tag] ++ cores), b2)
   | Option.some _ => failAt ctx pos ("not a constructor: " ++ name)
 
 /-- `fun p1 p2 => body`: plain names bind directly; other patterns match on the argument. -/
@@ -424,12 +431,12 @@ def lambda (ctx : Ctx) (params : List Pat) (body : List (Option Text) -> {Throw 
             match first with
             | Pat.ann _ t => Compile.node "annlocal" [tyCore ctx.names ctx.scope [] t, inner]
             | _ => inner
-          Compile.node "lam" [Sexp.s (getOr name ""), checked]
+          Compile.node "lam" [Compile.s (getOr name ""), checked]
       | Option.none =>
           let (core, binds) := pat ctx first []
           Compile.node "lam" [Compile.node
             "match"
-            [Compile.node "var" [i 0], Compile.node
+            [Compile.node "var" [Compile.n 0], Compile.node
               "case"
               [core, Resolve.lambda ctx rest body (binds ++ Option.none :: locals)]]]
 
@@ -450,7 +457,7 @@ def equations (ctx : Ctx) (list : List Arm) (locals : List (Option Text)) : {Thr
     | arm :: _ => List.length arm.pats
     | [] => 0
   let inner := replicate count Option.none ++ locals
-  let scrut := if count == 1 then Compile.node "var" [i 0] else Resolve.tuple (List.map (fun i => Compile.node "var" [Sexp.i (count - 1 - i)]) (range 0 count))
+  let scrut := if count == 1 then Compile.node "var" [Compile.n 0] else Resolve.tuple (List.map (fun i => Compile.node "var" [Compile.n (count - 1 - i)]) (range 0 count))
   let rec wrap k body := if k == 0 then body else wrap (k - 1) (Compile.node "lam" [body])
   wrap count (Resolve.arms ctx scrut list inner)
 
@@ -474,11 +481,17 @@ def record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr)) (pos : 
   let fits := fun owner =>
     let have := structFields ctx owner
     List.all (fun g => List.contains g have) given && (isSome base || List.length have == List.length given)
-  match List.filter fits owners with
+  let fitting := List.filter fits owners
+  -- The project's structure before a library's, and one structure under two names is one (D206).
+  let chosen :=
+    match List.filter (fun o => not (startsWith "lib." o)) fitting with
+    | o :: [] => [o]
+    | _ => if List.all (fun o => structHash ctx o == structHash ctx (getOr (head? fitting) "")) fitting then List.take 1 fitting else fitting
+  match chosen with
   | owner :: [] =>
       let have := structFields ctx owner
       let count := List.length have
-      let mk := Compile.node "con" [Sexp.s (structHash ctx owner), i 0, i count]
+      let mk := Compile.node "con" [Compile.s (structHash ctx owner), Compile.n 0, Compile.n count]
       match base with
       | Option.none => Resolve.app
           mk
@@ -488,10 +501,11 @@ def record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr)) (pos : 
           let values := mapIndexed (fun i f =>
             match List.lookup f fields with
             | Option.some e => Resolve.expr ctx e inner
-            | Option.none => Compile.node "var" [Sexp.i (count - 1 - i)]) have
-          Compile.node "match" [Resolve.expr ctx b locals, Compile.node "case" [Compile.node
-            "pcon"
-            ([Sexp.s (structHash ctx owner), i 0] ++ replicate count (Compile.node "pvar" [])), Resolve.app mk values]]
+            | Option.none => Compile.node "var" [Compile.n (count - 1 - i)]) have
+          Compile.node "match" [Resolve.expr ctx b locals, Compile.node
+            "case"
+            [Compile.node "pcon" ([Compile.s (structHash ctx owner), Compile.n 0] ++
+              replicate count (Compile.node "pvar" [])), Resolve.app mk values]]
   | [] => failAt ctx pos ("no structure has fields " ++ join ", " given)
   | _ => failAt ctx pos ("ambiguous record " ++ join ", " given)
 
@@ -506,13 +520,13 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.var name pos => valueOf ctx name pos locals
   | Expr.dot name pos =>
       match ctorOf ctx name true with
-      | Option.some (Entry.ctor t tag arity) => Compile.node "con" [Sexp.s t, i tag, i arity]
+      | Option.some (Entry.ctor t tag arity) => Compile.node "con" [Compile.s t, Compile.n tag, Compile.n arity]
       | _ => failAt ctx pos ("unknown constructor ." ++ name)
-  | Expr.int v => Compile.node "int" [i v]
-  | Expr.text v => Compile.node "text" [Sexp.s v]
+  | Expr.int v => Compile.node "int" [Compile.n v]
+  | Expr.text v => Compile.node "text" [Compile.s v]
   | Expr.bool v => if v then trueCore else falseCore
   | Expr.unit => unitCore
-  | Expr.prim name => Compile.node "prim" [Sexp.s name]
+  | Expr.prim name => Compile.node "prim" [Compile.s name]
   | Expr.app f args => flattenApp (go f) (List.map go args)
   | Expr.lam params body => lambda ctx params (fun inner => Resolve.expr ctx body inner) locals
   | Expr.lamMatch list => equations ctx list locals
@@ -522,7 +536,9 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
       | Pat.wild => Compile.node "seq" [v, go body]
       | _ =>
           match simpleBinder ctx p with
-          | Option.some name => Compile.node "let" [Sexp.s (getOr name ""), v, Resolve.expr ctx body (name :: locals)]
+          | Option.some name => Compile.node
+              "let"
+              [Compile.s (getOr name ""), v, Resolve.expr ctx body (name :: locals)]
           | Option.none =>
               let (core, binds) := pat ctx p []
               Compile.node
@@ -532,10 +548,10 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
       let inner := Option.some name :: locals
       Compile.node
         "letrec"
-        [Compile.node "names" [Sexp.s name], Sexp.list [lambda ctx params (fun l => Resolve.expr ctx value l) inner], Resolve.expr ctx body inner]
+        [Compile.node "names" [Compile.s name], Sexp.list [lambda ctx params (fun l => Resolve.expr ctx value l) inner], Resolve.expr ctx body inner]
     else Compile.node
       "let"
-      [Sexp.s name, lambda ctx params (fun l => Resolve.expr ctx value l) locals, Resolve.expr ctx body (Option.some name :: locals)]
+      [Compile.s name, lambda ctx params (fun l => Resolve.expr ctx value l) locals, Resolve.expr ctx body (Option.some name :: locals)]
   | Expr.seq first rest => Compile.node "seq" [go first, go rest]
   | Expr.ite c yes no => Compile.node "if" [go c, go yes, go no]
   | Expr.matchOn scruts list =>
@@ -549,12 +565,14 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
         | Option.none => []
         | Option.some (p, rbody) =>
             match simpleBinder ctx p with
-            | Option.some name => [Compile.node "ret" [Sexp.s (getOr name ""), Resolve.expr ctx rbody (name :: locals)]]
+            | Option.some name => [Compile.node
+                "ret"
+                [Compile.s (getOr name ""), Resolve.expr ctx rbody (name :: locals)]]
             | Option.none =>
                 let (core, binds) := pat ctx p []
                 [Compile.node "ret" [Compile.node
                   "match"
-                  [Compile.node "var" [i 0], Compile.node
+                  [Compile.node "var" [Compile.n 0], Compile.node
                     "case"
                     [core, Resolve.expr ctx rbody (binds ++ Option.none :: locals)]]]]
       Compile.node
@@ -563,8 +581,8 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.binop op l r _ =>
       let lc := go l
       let rc := go r
-      if op == "&&" then Compile.node "if" [lc, rc, falseCore] else if op == "||" then Compile.node "if" [lc, trueCore, rc] else if op == "|>" then flattenApp rc [lc] else if op == "<|" then flattenApp lc [rc] else if op == "::" then Resolve.app consCon [lc, rc] else Resolve.app (Compile.node "prim" [Sexp.s (binopPrim op)]) [lc, rc]
-  | Expr.neg x => Resolve.app (Compile.node "prim" [Sexp.s "Int.neg"]) [go x]
+      if op == "&&" then Compile.node "if" [lc, rc, falseCore] else if op == "||" then Compile.node "if" [lc, trueCore, rc] else if op == "|>" then flattenApp rc [lc] else if op == "<|" then flattenApp lc [rc] else if op == "::" then Resolve.app consCon [lc, rc] else Resolve.app (Compile.node "prim" [Compile.s (binopPrim op)]) [lc, rc]
+  | Expr.neg x => Resolve.app (Compile.node "prim" [Compile.s "Int.neg"]) [go x]
   | Expr.not x => Compile.node "if" [go x, falseCore, trueCore]
   | Expr.tuple items => Resolve.tuple (List.map go items)
   | Expr.list items => List.foldr (fun x acc => Resolve.app consCon [go x, acc]) nilCon items
@@ -573,13 +591,13 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
       -- Checked (D95), then removed before hashing by `unnote`.
       Compile.node "ann" [tyCore ctx.names ctx.scope [] t, go x]
   | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field 0) [go x]
-  | Expr.note text x => Compile.node "note" [Sexp.s text, go x]
-  | Expr.spelled text x => Compile.node "spelled" [Sexp.s text, go x]
+  | Expr.note text x => Compile.node "note" [Compile.s text, go x]
+  | Expr.spelled text x => Compile.node "spelled" [Compile.s text, go x]
   | Expr.notation key template args =>
       -- The stored term is the expansion; the notation stays as a mark `unnote` keeps as metadata (Syntax.Spec R-2).
       let holes := List.map go args
       match Option.orElse template (fun _ => Map.lookup key ctx.templates) with
-      | Option.some t => Compile.node "notation" [Sexp.s key, expandWith t holes]
+      | Option.some t => Compile.node "notation" [Compile.s key, expandWith t holes]
       | Option.none => Resolve.fail ctx ("notation " ++ Text.drop 1 key ++ " has no expansion")
 
 /-- A handler clause: arguments in order, then the continuation, as Core's `on` expects. -/
@@ -601,9 +619,11 @@ def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text
             let depth := List.length l - (List.length locals + index1) - 1
             Compile.node
               "match"
-              [Compile.node "var" [i depth], Compile.node "case" [core, build more (binds ++ l)]]
-      let binderNames := List.map (fun o2 => Sexp.s (getOr o2 "")) (argNames ++ [o.resume])
-      Compile.node "on" [Sexp.s a, i index, i arity, Sexp.list binderNames, build complex inner]
+              [Compile.node "var" [Compile.n depth], Compile.node "case" [core, build more (binds ++ l)]]
+      let binderNames := List.map (fun o2 => Compile.s (getOr o2 "")) (argNames ++ [o.resume])
+      Compile.node
+        "on"
+        [Compile.s a, Compile.n index, Compile.n arity, Sexp.list binderNames, build complex inner]
   | _ => failAt ctx (OpArm.at o) ("unknown ability operation " ++ o.op)
 
 /-

@@ -97,6 +97,8 @@ const index = {
   tasks: [],
   byHash: new Map(),
   byName: new Map(),
+  /** The mounted libraries' prefixes (`lib.base.`): a name the project lacks is looked up under each (D206). */
+  mounts: [],
   tree: undefined,
   /** The feature map's areas (D196), which order the overview and the sidebar. */
   areas: [],
@@ -132,12 +134,22 @@ const nodeAt = (path) => {
 
 const sortedChildren = (node) => [...node.children.values()].sort((a, b) => a.segment.localeCompare(b.segment));
 
+/** The definition `name` names in the project, or else in exactly one mounted library (D206). */
+const named = (name) => {
+  const own = index.byName.get(name);
+  if (own) {
+    return own;
+  }
+  const mounted = index.mounts.map((mount) => index.byName.get(mount + name)).filter(Boolean);
+  return mounted.length === 1 ? mounted[0] : undefined;
+};
+
 /** Resolves a name as written inside `namespace`: the innermost enclosing namespace that binds it wins. */
 const resolve = (name, namespace) => {
   const parts = namespace ? namespace.split('.') : [];
   for (let i = parts.length; i >= 0; i--) {
     const candidate = [...parts.slice(0, i), name].join('.');
-    const entry = index.byName.get(candidate);
+    const entry = named(candidate);
     if (entry) {
       return entry;
     }
@@ -731,7 +743,7 @@ const codeRefHtml = (ref) => {
     (isHex && fragment.length >= 8 && fragment.length < 64
       ? index.names.find((other) => other.hash.startsWith(fragment))
       : undefined) ||
-    (!fragment && tail ? index.byName.get(tail) : undefined);
+    (!fragment && tail ? named(tail) : undefined);
   if (entry) {
     return defLink(entry.name, entry.hash);
   }
@@ -849,7 +861,7 @@ const featureLinks = (feature) => {
       : `<code>${escape(doc)}</code>`,
   );
   const defs = feature.defs.map((name) => {
-    const entry = index.byName.get(name);
+    const entry = named(name);
     return entry ? defLink(name, entry.hash) : `<code>${escape(name)}</code>`;
   });
   const tasks = feature.tasks.map((id) => {
@@ -3458,7 +3470,7 @@ const openPathLink = () => {
   if (!match || location.hash.length > 1) {
     return;
   }
-  const entry = index.byName.get(match[2]);
+  const entry = named(match[2]);
   const key = entry ? `d:${entry.hash}` : `n:${match[2]}`;
   history.replaceState(null, '', `${match[1]}#${encodeURIComponent(key)}`);
 };
@@ -3477,6 +3489,7 @@ const main = async () => {
       index.byHash.set(entry.hash, entry);
     }
   }
+  index.mounts = [...new Set(names.map((entry) => /^lib\.[^.]+\./.exec(entry.name)?.[0]).filter(Boolean))];
   index.tree = buildTree(names);
   element('project').textContent = addressOf(meta.project);
   element('project').title = meta.project;

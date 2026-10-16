@@ -219,7 +219,7 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
   let history := fullLog dir 100000
   IO.writeFile (out ++ "/history.sexp") (Text.concat (List.map (fun entry =>
     let (h, message, agent) := entry
-    Sexp.print (Sexp.node "entry" [Sexp.s h, Sexp.s message, Sexp.s agent]) ++ "\n") history))
+    Sexp.print (Sexp.node "entry" [Compile.s h, Compile.s message, Compile.s agent]) ++ "\n") history))
   IO.writeFile
     (out ++ "/HISTORY.md")
     ("# History of " ++ currentBranch dir ++ "\n\n" ++ Text.concat (List.map (fun entry =>

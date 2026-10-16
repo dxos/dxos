@@ -287,6 +287,22 @@ describe('deus CLI', () => {
     );
     expect(deus('eval', 'twice 2', ...app).stdout).toBe('24\n');
 
+    // Installing a newer release moves the project's code onto it, as `update` moves dependents (D206).
+    const area4 = 'def area (s : Shape) : Int := match s with\n  | Shape.circle r => 4 * r * r\n';
+    deus('update', file('shape2.deus', area4), ...std);
+    expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
+    expect(deus('eval', 'twice 2', ...app).stdout).toBe('32\n');
+
+    // The library's own source, updated into the project, stays the library's: deus/ holds both (D206).
+    expect(deus('update', file('shape3.deus', area4), ...app).code).toBe(0);
+    expect(JSON.parse(deus('project', '--json', ...app).stdout).owned).toBe(1);
+    // A suffix the project and a library share names the project's; a library's root name, the library's.
+    deus('update', file('size.deus', 'def Shape.size (s : Shape) : Int := 1\n'), ...std);
+    expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
+    deus('add', file('box.deus', 'def Box.size (n : Int) : Int := n\ndef Box.area (n : Int) : Int := n\n'), ...app);
+    expect(deus('eval', 'size 5', ...app).stdout).toBe('5\n');
+    expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
+
     const info = JSON.parse(deus('project', '--json', ...app).stdout);
     expect([info.authority, info.owned, info.libs[0].iri]).toEqual(['example.org', 1, 'https://dxos.org/deus/std']);
 

@@ -36,6 +36,10 @@ SEED = ROOT / 'seed' / 'deus.image'
 ITEM = re.compile(r'^(def|test|theorem|structure|inductive|ability|namespace|end|@\[|/--|/-|--)(\s|$|\[)')
 DECL = re.compile(r'^(def|test|theorem|structure|inductive|ability)\s+([^\s(:]+)')
 HEADER = re.compile(r'^-- (\S+ #[0-9a-f]+|: .*)$')
+# A library mounted in the codebase (`deus lib install`): `lib.<name>.` before its names.
+MOUNT = re.compile(r'(?<![\w.])lib\.[A-Za-z0-9_]+\.')
+# Each flat name the codebase has only under a mount, with its mounted name.
+MOUNTED = {}
 
 
 def deus(*args, codebase, seed=None, check=True):
@@ -86,15 +90,28 @@ def source_of(view, namespace):
     return text
 
 
+def flat(text):
+    """`text` with library mounts dropped: deus/ holds a library's definitions beside the toolchain's, unprefixed (D206)."""
+    return MOUNT.sub('', text)
+
+
 def views(names, codebase, seed=None):
     if not names:
         return {}
-    shown = json.loads(deus('view', *names, '--json', codebase=codebase, seed=seed).stdout)
-    return {entry['name']: entry['source'] for entry in shown}
+    shown = json.loads(deus('view', *(MOUNTED.get(name, name) for name in names), '--json', codebase=codebase, seed=seed).stdout)
+    return {flat(entry['name']): flat(entry['source']) for entry in shown}
 
 
 def hashes(codebase):
-    return {entry['name']: (entry['hash'], entry['kind']) for entry in json.loads(deus('ls', '--json', codebase=codebase).stdout)}
+    """Each name's (hash, kind), a mounted library's names under their flat name unless the project defines that name too."""
+    listed = json.loads(deus('ls', '--json', codebase=codebase).stdout)
+    own = {entry['name']: (entry['hash'], entry['kind']) for entry in listed if not MOUNT.match(entry['name'])}
+    for entry in listed:
+        name = flat(entry['name'])
+        if name != entry['name'] and name not in own:
+            own[name] = (entry['hash'], entry['kind'])
+            MOUNTED[name] = entry['name']
+    return own
 
 
 def compared(codebase):

@@ -348,7 +348,7 @@ def hypothesesOf (body : Sexp) : List Sexp :=
 
 /-- A lemma's verdict, checking (and caching) it first if needed. -/
 def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
-  match Check.cachedTheorem dir h with
+  match cachedTheorem dir h with
   | Option.some v => v
   | Option.none =>
       match readObject dir h with
@@ -419,7 +419,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let started := IO.time ()
     -- An integration test talks to the real world, so its result is never reused.
     let outcome :=
-      match if integration || fresh then Option.none else if wantTheorems then Check.cachedTheorem dir h else Check.cached dir h with
+      match if integration || fresh then Option.none else if wantTheorems then cachedTheorem dir h else Check.cached dir h with
       | Option.some v => (name, v, true)
       | Option.none =>
           Image.load (fetcher dir) [h]

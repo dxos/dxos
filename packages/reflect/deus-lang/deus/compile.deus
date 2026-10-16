@@ -76,16 +76,18 @@ def bodyScope (item : Item) : Scope :=
 /-- The type form that is hashed: IRI, arity, and constructor shapes with field types by IRI. -/
 def typeForm (names : Names) (item : Item) (iri : Text) (params : List Text) (ctors : List (List Ty)) : {Throw Text} Sexp :=
   let scope := bodyScope item
-  Compile.node "type" ([Sexp.s iri, i (List.length params)] ++ List.map (fun fields => Compile.node
-    "ctor"
-    (i (List.length fields) :: List.map (fun t => tyCore names scope params t) fields)) ctors)
+  Compile.node
+    "type"
+    ([Compile.s iri, Compile.n (List.length params)] ++ List.map (fun fields => Compile.node
+      "ctor"
+      (Compile.n (List.length fields) :: List.map (fun t => tyCore names scope params t) fields)) ctors)
 
 def accessorCore (hash : Text) (count : Int) (index : Int) : Sexp :=
   node "lam" [node "match" [node "var" [n 0], node "case" [node "pcon" ([s hash, n 0] ++ List.replicate count (node "pvar" [])), node "var" [n (count - 1 - index)]]]]
 
 /-- Signature of a definition: binder types then the result type. -/
 def signature (names : Names) (scope : Scope) (binders : List Binder) (result : Option Ty) : {Throw Text} Sexp :=
-  let unknown := Compile.node "tvar" [Sexp.s "?"]
+  let unknown := Compile.node "tvar" [Compile.s "?"]
   let resultCore :=
     match result with
     | Option.some t => tyCore names scope [] t
@@ -139,15 +141,15 @@ def proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Te
   let rec go rest inside generators acc :=
     match rest with
     | [] => reverse acc
-    | t :: more => if t == "[" then go more true generators (Sexp.s t :: acc) else if t == "]" then go more false generators (Sexp.s t :: acc) else if t == "using" then go more inside true (Sexp.s t :: acc) else if generators then
+    | t :: more => if t == "[" then go more true generators (Compile.s t :: acc) else if t == "]" then go more false generators (Compile.s t :: acc) else if t == "using" then go more inside true (Compile.s t :: acc) else if generators then
         match Names.lookup names t scope isTerm true with
-        | Option.some (_, e) => go more inside generators (Compile.node "ref" [Sexp.s (Entry.hash e)] :: acc)
+        | Option.some (_, e) => go more inside generators (Compile.node "ref" [Compile.s (Entry.hash e)] :: acc)
         | Option.none => Throw.throw ("unknown generator " ++ t)
       else if inside && t != "," then
         match Names.lookup names t scope isLemma true with
-        | Option.some (_, e) => go more inside generators (Compile.node "ref" [Sexp.s (Entry.hash e)] :: acc)
+        | Option.some (_, e) => go more inside generators (Compile.node "ref" [Compile.s (Entry.hash e)] :: acc)
         | Option.none => Throw.throw ("unknown lemma " ++ t)
-      else go more inside generators (Sexp.s t :: acc)
+      else go more inside generators (Compile.s t :: acc)
   go tokens false false []
 
 /-- Placeholder references `(ref "@Name")` in a form. -/
@@ -302,15 +304,15 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
   let addTypeMeta := fun h doc params fieldNames attrs lead =>
     let docPart :=
       match doc with
-      | Option.some d => [Compile.node "doc" [Sexp.s d]]
+      | Option.some d => [Compile.node "doc" [Compile.s d]]
       | Option.none => []
-    let paramsPart := if List.isEmpty params then [] else [Compile.node "params" (List.map Sexp.s params)]
+    let paramsPart := if List.isEmpty params then [] else [Compile.node "params" (List.map Compile.s params)]
     let fieldsPart := if List.all (fun names => List.all Text.isEmpty names) fieldNames then [] else [Compile.node
       "fields"
-      (List.map (fun names => Compile.node "c" (List.map Sexp.s names)) fieldNames)]
+      (List.map (fun names => Compile.node "c" (List.map Compile.s names)) fieldNames)]
     let attrsPart := if List.isEmpty attrs then [] else [Compile.node
       "attrs"
-      (List.map (fun a => Sexp.list (Sexp.s a.attr :: List.map Sexp.s a.values)) attrs)]
+      (List.map (fun a => Sexp.list (Compile.s a.attr :: List.map Compile.s a.values)) attrs)]
     match docPart ++ paramsPart ++ fieldsPart ++ attrsPart ++ commentMeta lead [] [] with
     | [] => ()
     | parts => Ref.set metas ((h, Compile.node "meta" parts) :: Ref.get metas)
@@ -355,8 +357,10 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
         claim fqn
         let i := iriFor fqn iri
         let scope := bodyScope item
-        let form := Compile.node "ability" ([Sexp.s i, Sexp.i (List.length params)] ++ List.map
-          (fun op => Compile.node "op" [Sexp.i (arrowCount (snd op)), tyCore typeNames scope params (snd op)])
+        let form := Compile.node "ability" ([Compile.s i, Compile.n (List.length params)] ++ List.map
+          (fun op => Compile.node
+            "op"
+            [Compile.n (arrowCount (snd op)), tyCore typeNames scope params (snd op)])
           ops)
         let h := hashFor i form
         Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
@@ -419,7 +423,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
         let types := List.map (fun b =>
           match b.annot with
           | Option.some t => tyCore names (bodyScope item) [] t
-          | Option.none => Compile.node "tvar" [Sexp.s "?"]) binders
+          | Option.none => Compile.node "tvar" [Compile.s "?"]) binders
         let (core, locals) := strip (lambda ctx params (fun locals => Resolve.expr ctx prop locals) [])
         let form := Compile.node
           "theorem"
@@ -458,7 +462,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
   -- A term's metadata names its owner, since names that share a body share the file (Codebase.metaFor).
   let finalMetas := List.map (fun pair => if startsWith "@" (fst pair) then (resolveHash (fst pair), rekeyNotations
     resolveHash
-    (Sexp.list (Sexp.asList (snd pair) ++ [Compile.node "owner" [Sexp.s (Text.drop 1 (fst pair))]]))) else pair) (Ref.get metas)
+    (Sexp.list (Sexp.asList (snd pair) ++ [Compile.node "owner" [Compile.s (Text.drop 1 (fst pair))]]))) else pair) (Ref.get metas)
   Batch.mk
     (reverse (Ref.get typeObjects) ++ termObjects)
     finalEntries

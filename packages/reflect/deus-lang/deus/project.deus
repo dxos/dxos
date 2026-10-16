@@ -116,4 +116,11 @@ def trespasses (p : Project) (entries : List (Text, Entry)) : List Text :=
     | some l => if isLibName (fst pair) then none else some (fst pair ++ " has IRI " ++ iri ++ ", which belongs to lib." ++ l.libName ++ " (" ++ l.libIri ++ ")")
     | none => none) entries
 
+/-- Whether `name` with entry `e` is a mounted library's own definition: the same hash under `lib.<library>.`. -/
+def mountedCopy (libs : List Lib) (ns : Map Text Entry) (name : Text) (e : Entry) : Bool :=
+  List.any (fun l =>
+    match Map.lookup ("lib." ++ l.libName ++ "." ++ name) ns with
+    | Option.some m => Entry.hash m == Entry.hash e
+    | Option.none => false) libs
+
 end Project

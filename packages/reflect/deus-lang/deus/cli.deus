@@ -163,6 +163,46 @@ else
 --
 -- Commands: compiling.
 --
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
 /-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
 def compile (args : Args) : {IO, Throw Text} Unit :=
   let result := batch
@@ -174,7 +214,7 @@ def compile (args : Args) : {IO, Throw Text} Unit :=
   Cli.warn result
   let main := getOr (option args "main") "main"
   let entry :=
-    match List.lookup main result.entries with
+    match List.lookup main (Batch.entries result) with
     | Option.some (Entry.term h) => h
     | _ => Throw.throw ("no definition named " ++ main)
   let objects := Map.fromList result.objects
@@ -392,7 +432,14 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     (fun _ => batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) parsed)
     (fun e => Throw.throw (nameCallee ns e))
   Cli.warn batch
-  let entries := batch.entries ++ specEntries dir args.positional
+  let libs :=
+    match Project.read dir with
+    | Option.some p => p.libs
+    | Option.none => []
+  -- A definition a mounted library already has, unchanged, stays the library's (D206).
+  let entries := List.filter
+    (fun pair => not (mountedCopy libs ns (fst pair) (snd pair)))
+    (Batch.entries batch ++ specEntries dir args.positional)
   let replaced := changes ns entries
   let crossings := layerCrossings dir batch
   let trespasses :=
@@ -401,13 +448,17 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     | Option.none => []
   let shared := sharedBindings
     dir
-    (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns batch.entries)
+    (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns (Batch.entries batch))
     batch
   if not (List.isEmpty crossings) then Throw.throw ("a layer may not depend on these:\n  " ++ join "\n  " crossings) else if not (List.isEmpty shared) then Throw.throw ("these bindings share one object, so they would share one codec; give each its own path or one type:\n  " ++
     join "\n  " shared) else if not (List.isEmpty trespasses) then Throw.throw ("only a library may mint types under its IRI:\n  " ++ join "\n  " trespasses) else if not isUpdate && not (List.isEmpty replaced) then Throw.throw ("these names already exist; use `deus update`:\n  " ++ join "\n  " (List.map (fun c =>
     let (name, _, _) := c
     name) replaced)) else
-    let retagged := metadataChanged ns batch.entries (fun h => readMeta dir h) (Map.fromList (Batch.metas batch))
+    let retagged := metadataChanged
+      ns
+      (Batch.entries batch)
+      (fun h => readMeta dir h)
+      (Map.fromList (Batch.metas batch))
     Codebase.store dir batch
     let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
     -- A dropped field, constructor or operation would keep a name that no source declares (R-18).
@@ -423,7 +474,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       dir
       ns2
       subst
-      (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) batch.entries))
+      (Set.fromList (List.map (fun pair => Entry.hash (snd pair)) (Batch.entries batch)))
       (checkTypes ())) (fun e => Throw.throw (join "\n" (List.map (nameCallee ns2) (Text.split e "\n"))))
     let ns3 := fst propagated
     let message := getOr
@@ -1034,8 +1085,19 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
         match Project.read dir with
         | Option.some p => p
         | Option.none => Throw.throw "this codebase has no project; run `deus project init <iri>`"
-      let installed := install dir (Codebase.current dir) name from (getOr (option args "branch") "main")
-      let (l, ns) := installed
+      let before := Codebase.current dir
+      let installed := install dir before name from (getOr (option args "branch") "main")
+      let (l, mounted) := installed
+      -- An upgrade moves the project's code onto the release's definitions, as `update` moves dependents (D206).
+      let mount := "lib." ++ name ++ "."
+      let subst := Map.fromList (filterMap (fun pair =>
+        match Map.lookup (fst pair) before with
+        | Option.some old => if startsWith mount (fst pair) && Entry.hash old != Entry.hash (snd pair) then Option.some (Entry.hash old, Entry.hash (snd pair)) else Option.none
+        | Option.none => Option.none) (Map.toList mounted))
+      let fresh := Set.fromList (filterMap
+        (fun pair => if startsWith mount (fst pair) then Option.some (Entry.hash (snd pair)) else Option.none)
+        (Map.toList mounted))
+      let ns := fst (propagate dir mounted subst fresh (checkTypes ()))
       Project.write dir (match p with
       | Project.mk x0 x1 => Project.mk x0 (l :: List.filter (fun other => other.libName != name) p.libs))
       let causal := commit dir ns ("lib install " ++ name ++ " " ++ l.libIri ++ " @ " ++ short l.release)
@@ -1164,23 +1226,27 @@ def explorerLinks (args : Args) : {IO, Throw Text} Unit :=
     match Project.read dir with
     | Option.none => Throw.throw "this codebase has no project; run `deus project init @owner/project`"
     | Option.some p =>
-        match Option.orElse (Address.parse p.projectIri) (fun _ => Address.ofIri p.projectIri) with
+        match Option.orElse (Address.parse p.projectIri) (fun _ => ofIri p.projectIri) with
         | Option.some a => Address.projectOf a
         | Option.none => Throw.throw ("the project " ++ p.projectIri ++ " has no @owner/project address")
   let remote := getOr (option args "remote") "origin"
   let host :=
     match Option.orElse (option args "host") (fun _ => workerHost dir remote) with
     | Option.some h => h
-    | Option.none => Throw.throw ("the remote " ++ remote ++ " is not a DEUS Worker (https://<host>/v1/<project>); pass --host <host>")
+    | Option.none => Throw.throw ("the remote " ++ remote ++
+        " is not a DEUS Worker (https://<host>/v1/<project>); pass --host <host>")
   -- A namespace has no entry of its own, so it is a name some entry lies under.
-  let isNamespace := fun name => List.any (fun pair => startsWith (name ++ ".") (fst pair)) (Map.toList ns)
-  let resolve := fun name =>
-    if Map.contains name ns || isNamespace name then name else fst (Cli.lookupName ns name)
-  let links := List.map (fun name => (name, Address.url host (Address.child place name))) (List.map resolve args.positional)
+  let isNamespace := fun name => any (fun pair => startsWith (name ++ ".") (fst pair)) (Map.toList ns)
+  let resolve := fun name => if Map.contains name ns || isNamespace name then name else fst (Cli.lookupName ns name)
+  let links := List.map
+    (fun name => (name, Address.url host (child place name)))
+    (List.map resolve args.positional)
   -- The project's page ends in `/`, so the app's relative files resolve inside the project.
   let rows := if List.isEmpty links then [(Address.print place, Address.url host place ++ "/")] else links
-  Cli.output args (fun _ => Json.arr (List.map (fun row => Json.obj [("name", Json.str (fst row)), ("url", Json.str (snd row))]) rows))
-    (fun _ => Text.join "\n" (List.map snd rows))
+  Cli.output
+    args
+    (fun _ => Json.arr (List.map (fun row => Json.obj [("name", Json.str (fst row)), ("url", Json.str (snd row))]) rows))
+    (fun _ => join "\n" (List.map snd rows))
 
 /-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. When the
   remote moved since the last pull, the current branch pulls it, merges it (`deus merge`, by source)
@@ -1457,7 +1523,7 @@ def compileTyped (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Throw
     (fun h => readMeta dir h)
     (checkTypes ())
     [parseFile "<eval>" ("def it := " ++ source)]
-  match List.lookup "it" batch.entries with
+  match List.lookup "it" (Batch.entries batch) with
   | Option.some (Entry.term h) =>
       let objects := Map.fromList batch.objects
       let fetch := fun x => Option.orElse (Map.lookup x objects) (fun _ => readObject dir x)
@@ -1551,14 +1617,14 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
 /-- What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
   source, and for a test or a theorem its verdict (checked now unless a result is cached). -/
 def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : Text) : {IO, Throw Text} List (Text, Text) :=
-  let printer := facts.printer
+  let printer := MdlFacts.printer facts
   match Map.lookup name ns with
   | Option.none => Throw.throw (name ++ " is not in the codebase")
   | Option.some e =>
       let h := Entry.hash e
       let meta := Option.map (metaFor name) (readMeta dir h)
       let typed :=
-        match ownScheme meta (List.length (getOr (Map.lookup h printer.namesByHash) [])) with
+        match ownScheme meta (List.length (getOr (Map.lookup h (Printer.namesByHash printer)) [])) with
         | Option.some scheme => [("type", displaySchemeNamed printer.declared scheme)]
         | Option.none => []
       let verdict :=
@@ -1578,7 +1644,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : T
               facts.fullTypes
               Map.empty
               base.declared
-              base.namesByHash
+              (Printer.namesByHash base)
               base.supply
               base.fresh
               Map.empty
@@ -1653,7 +1719,7 @@ def statementFact (dir : Text) (ns : Map Text Entry) (query : Text) : {IO} Resul
     let batch := batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) [parseFile
       "<statement>"
       ("theorem " ++ name ++ " " ++ replace " = " " == " header ++ " := sorry\n")]
-    match List.lookup name batch.entries with
+    match List.lookup name (Batch.entries batch) with
     | Option.some (Entry.theorem h) => Option.orElse (List.lookup h batch.objects) (fun _ => readObject dir h)
     | _ => Option.none))
   match (compiled, Map.lookup name ns) with
@@ -1864,7 +1930,7 @@ def checkMdl (args : Args) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   let byUri := extensions dir ns
   let found := mdlFacts ns
-  let facts := MdlFacts.mk found.printer found.fullTypes found.documents args.options
+  let facts := MdlFacts.mk (MdlFacts.printer found) found.fullTypes found.documents args.options
   let documents := List.filter (fun a => List.contains a facts.documents && not (IO.exists a)) args.positional
   let files := List.filter (fun a => not (List.contains a documents)) args.positional
   let paths := List.filter (fun p => endsWith ".mdl" p) (expandPaths files)
@@ -1987,7 +2053,7 @@ def siteImage (u : Unit) : {IO, Throw Text} Text :=
     (fun f => home ++ "/" ++ f)
     ["deus/builtins.deus", "deus/prelude.deus", "platform/web.deus", "platform/site.deus"]
   let result := batch Map.empty (fun _ => Option.none) (fun _ => Option.none) (checkTypes ()) (parseFiles files)
-  match List.lookup "Site.serve" result.entries with
+  match List.lookup "Site.serve" (Batch.entries result) with
   | Option.some (Entry.term h) =>
       let objects := Map.fromList result.objects
       Image.build (fun x => Map.lookup x objects) h
@@ -2183,7 +2249,7 @@ def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result T
       (fun h => readMeta dir h)
       (checkTypes ())
       [parseFile "<eval>" ("def it := " ++ source)]
-    match List.lookup "it" batch.entries with
+    match List.lookup "it" (Batch.entries batch) with
     | Option.some (Entry.term h) =>
         let objects := Map.fromList batch.objects
         let metas := Map.fromList (Batch.metas batch)
@@ -2642,7 +2708,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print Cli.usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
+      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then Cli.branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)
@@ -2680,7 +2746,7 @@ def sourceEdits (dir : Text) (base : Text) (ours : Text) (theirs : Text) : {IO, 
   -- A spec block only our side has is kept by the merge itself, so it needs no replay and cannot clash.
   let ownSpec := fun name =>
     match Map.lookup name oursNs with
-    | Option.some (Entry.spec _) => Option.isNone (Map.lookup name baseNs) && Option.isNone (Map.lookup name theirsNs)
+    | Option.some (Entry.spec _) => isNone (Map.lookup name baseNs) && isNone (Map.lookup name theirsNs)
     | _ => false
   let edits := List.filter
     (fun name => not (ownSpec name) && source po oursNs name != source pb baseNs name)
