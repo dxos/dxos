@@ -277,6 +277,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 267 | 10-17 10:40 | 30m 00s | 3a324aebf3 | D232 deployed (5452c634, LiveSite 15/15); the combined pack index is checked in DEUS before it is searched (D233); the push claim and API key rules are DEUS (D234, D235) |
 | 268 | 10-17 11:30 | 50m 00s | 7df4d4e37e | Explorer: `#d:<name>` links, task titles in History, History readable on a phone (D236); D235 deployed (a93b7eb3) |
 | 269 | 10-17 13:10 | 1h 30m | 16665bbc48 | The js target waits: `Js.Async` compiles to async functions with handlers kept across awaits (D237); the Worker moves heads in DEUS (D238) |
-| 270 | 10-17 14:30 | 50m 00s | this commit | Explorer: real links, card scrolling, code edge shadows, phone search, board and History filters, from a first-visitor audit (D239) |
+| 270 | 10-17 14:30 | 50m 00s | 1d78becb9c | Explorer: real links, card scrolling, code edge shadows, phone search, board and History filters, from a first-visitor audit (D239) |
+| 271 | 10-17 16:00 | 1h 00m | this commit | Waiting variants: async code passes callbacks to List.map and the like (D240); explorer loading card and overview columns (D239) |
 
-Total from stage 1 to stage 270: 95h 40m.
+Total from stage 1 to stage 271: 96h 40m.

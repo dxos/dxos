@@ -18,8 +18,10 @@
   A definition whose type has `Js.Async` in it is an `async` function (task 41714c0d): `Js.Async.await p` and its
   calls to other such definitions are `await`ed. Handlers live in one runtime-wide stack, which other requests change
   while a function waits, so each `async` function keeps the stack it was called under (`$stack`) and puts it back
-  after every `await`. A lambda that waits is `async` too and may be passed only to a definition that waits; a
-  handler clause may not wait, since the operation it answers is called without `await`.
+  after every `await`. A lambda that waits is `async` too. Passed to a definition that does not wait (`List.map`), it
+  gets that definition's waiting variant `f$wait`, compiled on demand with every unknown call awaited; so does a
+  variable passed for a function parameter, which may hold a lambda that waits. A handler clause may not wait, since
+  the operation it answers is called without `await`.
 -/
 
 namespace JsGen
@@ -170,14 +172,15 @@ structure JsDef @"urn:deus:jsgen:JsDef" where
   jdType : Sexp
   jdAsync : Bool
 
-/-- The whole program: its definitions by hash, the namespace, the JavaScript modules it imports, and the hash of
-  `Js.Async` ("" without one). -/
+/-- The whole program: its definitions by hash, the namespace, the JavaScript modules it imports, the hash of
+  `Js.Async` ("" without one), and the definitions whose waiting variants (`f$wait`) the code asked for. -/
 structure JsModule @"urn:deus:jsgen:JsModule" where
   jmDefs : Dict Text JsDef
   jmNs : Map Text Entry
   jmFetch : Text -> Option Sexp
   jmModules : List Text
   jmAsync : Text
+  jmWait : MutMap Text Unit
 
 /-- `(lam (lam … b))` as (parameter count, b). -/
 def unlam (core : Sexp) : (Int, Sexp) :=
@@ -485,6 +488,44 @@ def waitingLambda (mod : JsModule) (e : Sexp) : Bool :=
   | Sexp.list (Sexp.sym "lam" :: _) => awaits mod (snd (JsGen.unlam e))
   | _ => false
 
+/-- Whether `e` applies a function it does not know (a variable, a value it computed), not counting its lambdas. -/
+def appliesUnknown (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "lam" :: _) => false
+  | Sexp.list (Sexp.sym "app" :: f :: args) =>
+      (match f with
+       | Sexp.list (Sexp.sym "ref" :: _) => false
+       | Sexp.list (Sexp.sym "prim" :: _) => false
+       | Sexp.list (Sexp.sym "con" :: _) => false
+       | Sexp.list (Sexp.sym "op" :: _) => false
+       | _ => true) || List.any appliesUnknown (f :: args)
+  | Sexp.list items => List.any appliesUnknown items
+  | _ => false
+
+/-- Whether a lambda written in `ctx` may wait: it waits itself, or, in an `async` function, it calls a function it
+  does not know, which may be one that waits. -/
+def maybeWaits (ctx : JsCtx) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "lam" :: _) =>
+      let body := snd (JsGen.unlam e)
+      awaits ctx.jxMod body || (ctx.jxAsync && appliesUnknown body)
+  | _ => false
+
+/-- Whether parameter `i` of definition `d` is a function, by its stored type. -/
+def paramIsFunction (d : JsDef) (i : Int) : Bool :=
+  match List.get? (fst (JsGen.arrows d.jdType)) i with
+  | Option.some (Sexp.list (Sexp.sym "tfun" :: _)) => true
+  | _ => false
+
+/-- Whether a call from `ctx` to the definition `d`, which does not wait, should call its waiting variant instead:
+  the caller is `async` and passes, for a function parameter, a lambda that may wait or a variable. -/
+def needsWaiting (ctx : JsCtx) (d : JsDef) (args : List Sexp) : Bool :=
+  ctx.jxAsync && not d.jdAsync && List.any (fun pair =>
+    let (i, arg) := pair
+    paramIsFunction d i && (maybeWaits ctx arg || (match arg with
+      | Sexp.list (Sexp.sym "var" :: _) => true
+      | _ => false))) (List.mapIndexed (fun i arg => (i, arg)) args)
+
 /-- `code` awaited in an `async` function, with the caller's handlers put back after; as it is elsewhere. -/
 def awaited (ctx : JsCtx) (code : Text) : Text := if ctx.jxAsync then "rt.resumed($stack, await " ++ code ++ ")" else code
 
@@ -549,11 +590,12 @@ def stmt (ctx : JsCtx) (env : List Text) (e : Sexp) (target : JsTarget) : {Throw
   | Sexp.list (Sexp.sym "letrec" :: Sexp.list (_ :: names) :: Sexp.list fs :: b :: []) =>
       let jsNames := List.map (fun x => JsGen.local ctx (asText x)) names
       let env2 := reverse jsNames ++ env
-      forEach (zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair) (waitingLambda ctx.jxMod (snd pair)))
+      forEach (zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair) (maybeWaits ctx (snd pair)))
       JsGen.stmt ctx env2 b target
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
       match (target, calleeName ctx env f, ctx.jxSelf) with
-      | (JsTarget.ret, Option.some callee, Option.some (selfName, arity, slots)) => if callee == selfName && arity == List.length args then
+      -- A waiting variant (`f$wait`) calls itself by its definition's name, which is `f`.
+      | (JsTarget.ret, Option.some callee, Option.some (selfName, arity, slots)) => if (callee == selfName || callee ++ "$wait" == selfName) && arity == List.length args then
           let values := operands ctx env args
           -- The parameters are `const` copies of the slots, so closures made this round keep their values.
           forEach
@@ -697,7 +739,7 @@ def expr (ctx : JsCtx) (env : List Text) (e : Sexp) : {Throw Text} Text :=
   | Sexp.list (Sexp.sym "lam" :: _ :: _ :: []) =>
       let (n, _) := JsGen.unlam e
       let (xs, body) := JsGen.params n e
-      "rt.named(" ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body (awaits ctx.jxMod body) ++ ", " ++
+      "rt.named(" ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body (maybeWaits ctx e) ++ ", " ++
         JsGen.quote (ctx.jxOwner ++ "/λ") ++ ")"
   | Sexp.list (Sexp.sym "handle" :: body :: clauses) => JsGen.handleExpr ctx env body clauses
   | Sexp.list (Sexp.sym "app" :: f :: args) => JsGen.app ctx env f args
@@ -732,11 +774,20 @@ def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw T
       | JsKind.primitive p => JsGen.app ctx env (Sexp.list [Sexp.sym "prim", Sexp.str p]) args
       | _ =>
           let arity := refArity ctx h
-          if not d.jdAsync && List.any (waitingLambda ctx.jxMod) args then Throw.throw (ctx.jxOwner ++ " passes a lambda that waits to " ++
-            d.jdName ++ ", which does not wait; the js target would hand it a promise") else ()
+          let waiting := arity == n && (match d.jdKind with
+            | JsKind.fn _ => needsWaiting ctx d args
+            | _ => false)
+          if waiting then MutMap.set ctx.jxMod.jmWait h () else ()
+          -- A JavaScript import may take a callback that returns a promise; anything else would get promises back.
+          let isImport := match d.jdKind with
+            | JsKind.importFn _ _ _ => true
+            | _ => false
+          if not waiting && not isImport && not d.jdAsync && List.any (waitingLambda ctx.jxMod) args then Throw.throw (ctx.jxOwner ++ " passes a lambda that waits to " ++
+            d.jdName ++ ", which does not wait, other than as a whole call; the js target would hand it a promise") else ()
           if d.jdAsync && not ctx.jxAsync then Throw.throw (ctx.jxOwner ++ " calls " ++ d.jdName ++ ", which waits, but is not async itself") else ()
           let values := operands ctx env args
-          if arity == n then (if d.jdAsync then JsGen.awaited ctx (JsGen.call d.jdJs values) else JsGen.call d.jdJs values) else if arity > 0 && n > arity then JsGen.awaited ctx ("rt.ap(" ++ (if d.jdAsync then JsGen.awaited ctx (JsGen.call d.jdJs (List.take arity values)) else JsGen.call d.jdJs (List.take arity values)) ++ ", " ++
+          if waiting then JsGen.awaited ctx (JsGen.call (d.jdJs ++ "$wait") values)
+          else if arity == n then (if d.jdAsync then JsGen.awaited ctx (JsGen.call d.jdJs values) else JsGen.call d.jdJs values) else if arity > 0 && n > arity then JsGen.awaited ctx ("rt.ap(" ++ (if d.jdAsync then JsGen.awaited ctx (JsGen.call d.jdJs (List.take arity values)) else JsGen.call d.jdJs (List.take arity values)) ++ ", " ++
             join ", " (List.drop arity values) ++ ")") else JsGen.awaited ctx ("rt.ap(" ++ refValue ctx h ++ ", " ++ join ", " values ++ ")")
   | _ =>
       match operands ctx env (f :: args) with
@@ -886,6 +937,13 @@ def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
       reverse (Ref.get ctx.jxLines) ++
         ["rt.named(" ++ d.jdJs ++ ", " ++ JsGen.quote d.jdName ++ ");"]
 
+/-- The waiting variant of definition `d` (`f$wait`): its body compiled as an `async` function, every call it cannot
+  see into awaited, for callers that pass it functions that may wait. -/
+def waitCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false
+  function ctx [] (d.jdJs ++ "$wait") d.jdName d.jdBody true
+  reverse (Ref.get ctx.jxLines) ++ ["rt.named(" ++ d.jdJs ++ "$wait, " ++ JsGen.quote d.jdName ++ ");"]
+
 /-- The `rt.ability(…)` line for an ability: its IRI and operation names, for host handlers. -/
 def abilityLine (mod : JsModule) (a : Text) : Option Text :=
   if Text.startsWith "#" a then none
@@ -944,14 +1002,23 @@ def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Thro
     (fun h => Option.bind (Dict.lookup h objects) id)
     modules
     asyncHash
+    (MutMap.new ())
   let header := ["// Generated by `deus build --js` (D97). Edit the DEUS definitions, not this file.", "import * as rt from " ++ JsGen.quote runtime ++ ";"] ++
     mapIndexed
       (fun i m => "import * as m" ++ Int.toText i ++ " from " ++ JsGen.quote m ++ ";")
       modules ++
     filterMap (abilityLine mod) types
-  let bodies := List.filter
+  let plain := List.filter
     (fun d => not (List.isEmpty (snd d)))
     (mapIndexed (fun i d => (d, defCode mod d)) defs)
+  -- Waiting variants, compiled until none asks for another.
+  let rec variants done acc :=
+    match List.filter (fun h => not (List.contains h done)) (MutMap.keys mod.jmWait) with
+    | [] => reverse acc
+    | h :: _ =>
+        let d := getOr (Dict.lookup h mod.jmDefs) (JsDef.mk "" "" "undefined" JsKind.constant (Sexp.list []) (Sexp.list []) false)
+        variants (h :: done) ((d, waitCode mod d) :: acc)
+  let bodies := plain ++ variants [] []
   let footer := ["", "export const raw = {"] ++ List.map (fun pair =>
     let d := getOr
       (Dict.lookup (snd pair) mod.jmDefs)

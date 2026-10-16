@@ -41,7 +41,10 @@ describe('Js.Async on the js target', () => {
       '  let m := Js.toInt (Js.Async.await (later n))',
       '  fun x => x + m',
       'def overApplied (n : Int) : {Js.Async} Int := adder n 10',
-      'def pure (xs : List Int) : {Js.Async} List Int := List.map (fun x => x + twice 0) xs',
+      'def doubled (xs : List Int) : {Js.Async} List Int := List.map (fun x => twice x) xs',
+      'def through (f : Int -> {Js.Async} Int) (xs : List Int) : {Js.Async} List Int := List.map f xs',
+      'def viaVariable (xs : List Int) : {Js.Async} List Int := through (fun x => twice x + 1) xs',
+      'def partial (u : Unit) : {Js.Async} (List Int -> List Int) := List.map (fun x => twice x)',
       'end Wait',
       '',
     ].join('\n');
@@ -55,6 +58,8 @@ describe('Js.Async on the js target', () => {
       'Wait.tagged',
       'Wait.viaLambda',
       'Wait.overApplied',
+      'Wait.doubled',
+      'Wait.viaVariable',
       '-o',
       out,
       '--js',
@@ -73,8 +78,13 @@ describe('Js.Async on the js target', () => {
     // `adder n` waits and returns a function, which is applied to 10 once the wait is over.
     expect(await wait.overApplied(5)).toBe(15);
 
-    // A lambda that waits handed to a function that does not would get promises back, so it is refused.
-    const refused = deus('build', 'Wait.pure', '-o', join(scratch, 'pure.mjs'), '--js', ...c);
+    // A function that takes a callback (List.map) gets a waiting variant when the callback may wait: a lambda that
+    // waits, or a variable that may hold one.
+    expect(await wait.doubled([1, 2, 3])).toEqual([2, 4, 6]);
+    expect(await wait.viaVariable([1, 2])).toEqual([3, 5]);
+
+    // Applied only in part, the variant would not be awaited, so that is refused.
+    const refused = deus('build', 'Wait.partial', '-o', join(scratch, 'partial.mjs'), '--js', ...c);
     expect(refused.code).not.toBe(0);
     expect(refused.stderr).toContain('passes a lambda that waits to List.map');
   });
