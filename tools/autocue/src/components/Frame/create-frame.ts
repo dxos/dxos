@@ -32,13 +32,16 @@ export type FrameHandle = {
 
 export const FRAME_STYLES = `
   ${TOKENS}
-  .frame { box-sizing: border-box; font-family: var(--autocue-font); pointer-events: none; }
+  .frame { box-sizing: border-box; font-family: var(--autocue-font); }
+  /* Overlay leaves the host's own content laid out as if the frame were not there. */
+  .frame.overlay, .frame.overlay .content { display: contents; }
   .frame.layout { display: flex; flex-direction: column; width: 100%; height: 100%; }
   .frame.layout .content { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
   .frame.overlay .band { position: fixed; left: 0; right: 0; z-index: var(--autocue-layer); }
   .frame.overlay .header { top: 0; }
   .frame.overlay .caption { bottom: 0; }
-  .band { flex: none; box-sizing: border-box; text-align: center;
+  /* Only the bands ignore the pointer: inherited through the slot, it would disable the content too. */
+  .band { flex: none; box-sizing: border-box; text-align: center; pointer-events: none;
     background: var(--autocue-band-surface); color: var(--autocue-band-fg); }
   .band[hidden] { display: none; }
   .header { padding: 16px 24px; }
@@ -91,14 +94,11 @@ export const createFrame = (
   captionBand.className = 'band caption';
   captionBand.dataset.testid = 'autocue-frame-caption';
 
-  frame.appendChild(headerBand);
-  if (mode === 'layout') {
-    const content = document.createElement('div');
-    content.className = 'content';
-    content.appendChild(document.createElement('slot'));
-    frame.appendChild(content);
-  }
-  frame.appendChild(captionBand);
+  const content = document.createElement('div');
+  content.className = 'content';
+  content.appendChild(document.createElement('slot'));
+
+  frame.append(headerBand, content, captionBand);
 
   root.append(style, frame);
   renderBand(headerBand, header);
