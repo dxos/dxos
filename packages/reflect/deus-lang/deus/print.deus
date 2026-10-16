@@ -807,6 +807,16 @@ def spaced (pieces : List Text) : Text := foldl
 /-- A part as written: one piece, or a repetition's items joined by a space (`*`) or a comma (`,*`). -/
 def flatPiece (piece : List Text) : Text := join " " piece
 
+/-- Whether markup text `v` reads back as itself through a `raw` hole: lexed tokens, none ending the text or
+  quoted, single spaces between them. -/
+def rawReadsBack (v : Text) : Bool :=
+  match try (fun _ => Lexer.lex v) with
+  | Result.ok tokens =>
+      let words := List.filter (fun t => t.kind != Kind.eof) tokens
+      not (List.isEmpty words) && List.all (fun t => not (Parser.endsRaw t) && t.kind != Kind.text && t.kind != Kind.comment && t.kind != Kind.doc) words &&
+        trim v == v && not (Text.contains "  " v) && not (Text.contains "\n" v) && not (Text.contains "\t" v)
+  | Result.err _ => false
+
 /-- A hole's text, from its term, with `names` for the binders inside it. -/
 def holeText (p : Printer) (c : Text) (prec : Int) (core : Sexp) (names : List Text) (env : List Text) (ind : Int) : Option Text :=
   let saved := Ref.get p.supply
@@ -818,6 +828,10 @@ def holeText (p : Printer) (c : Text) (prec : Int) (core : Sexp) (names : List T
   else if c == "str" then
     match core with
     | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => Option.some (quoteText v)
+    | _ => Option.none
+  else if c == "raw" then
+    match core with
+    | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => if rawReadsBack v then Option.some v else Option.none
     | _ => Option.none
   else if c == "num" then
     match core with

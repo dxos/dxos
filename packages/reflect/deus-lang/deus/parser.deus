@@ -994,7 +994,7 @@ def mayStart (active : List Loaded) (parts : List Part) (t : Token) (depth : Int
       | Option.some first => sameToken first t
       | Option.none => false
   | Part.hole _ c _ repeat :: rest =>
-      let here := if c == "term" then t.kind != Kind.eof else if c == "name" || c == "ident" then t.kind == Kind.ident else if c == "str" then t.kind == Kind.text else if c == "num" then t.kind == Kind.int else depth > 0 && any (fun r => r.ruleCategory == c && Parser.mayStart active r.ruleParts t (depth - 1)) active
+      let here := if c == "term" then t.kind != Kind.eof else if c == "name" || c == "ident" then t.kind == Kind.ident else if c == "str" then t.kind == Kind.text else if c == "num" then t.kind == Kind.int else if c == "raw" then startsRaw t else depth > 0 && any (fun r => r.ruleCategory == c && Parser.mayStart active r.ruleParts t (depth - 1)) active
       -- A repetition may read nothing, so what follows it may start the notation too.
       here || repeat != "" && Parser.mayStart active rest t depth
   | _ => false
@@ -1048,9 +1048,31 @@ def holeValue (p : Parser) (c : Text) (prec : Int) (closer : Option Text) : {Thr
     skip p
     Expr.text t.value else if c == "num" then if t.kind != Kind.int then Parser.error p "expected a number" else
     skip p
-    intExpr t else
+    intExpr t else if c == "raw" then Parser.rawText p else
     let rules := candidates p c
     if List.isEmpty rules then Parser.error p ("expected " ++ c) else firstOf p rules
+
+/-- Whether `t` ends markup text: a symbol starting with `<`, `{` or `}`, or the end of the file. -/
+def endsRaw (t : Token) : Bool := t.kind == Kind.eof || t.kind == Kind.sym && (startsWith "<" t.value || startsWith "{" t.value || startsWith "}" t.value)
+
+/-- Whether markup text may start at `t`: a text literal is the `str` hole's (Syntax.Spec R-11). -/
+def startsRaw (t : Token) : Bool := not (endsRaw t) && t.kind != Kind.text
+
+/-- How `t` was written, near enough to rebuild the text between tokens. -/
+def written (t : Token) : Text := if t.kind == Kind.text then "\"" ++ t.value ++ "\"" else if t.spelling != "" then t.spelling else t.value
+
+/-- A `raw` hole: the markup text up to the next `<`, `{` or `}`, rebuilt from the tokens' places, with each run of
+  whitespace read as one space (Syntax.Spec R-11). -/
+def rawText (p : Parser) : {Throw Text} Expr := if not (startsRaw (peek p)) then Parser.error p "expected text" else
+  let rec go acc (prev : Token) :=
+    let t := peek p
+    if endsRaw t then acc else
+      skip p
+      let gap := t.line != prev.line || t.col > prev.col + Text.length (written prev)
+      go (acc ++ (if gap then " " else "") ++ written t) t
+  let first := peek p
+  skip p
+  Expr.text (go (written first) first)
 
 /-- Values of a repeated hole, until the literal after it (`closer`) comes or nothing of the category
   can start; with commas between them for `,*`. -/

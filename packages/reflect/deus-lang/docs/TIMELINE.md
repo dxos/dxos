@@ -261,5 +261,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 251 | 10-16 21:05 | 30m 00s | this commit | Explorer fixes from a deeper probe: linkable search, canceled duplicate subtasks, code-labelled links, history count legend, spec blocks; native build cache pruned |
 | 252 | 10-16 21:45 | 40m 00s | this commit | Adversarial review of D213–D219 fixed (D220): test --exact, sync record, deus key hardening, explorer links and hash parsing |
 | 253 | 10-16 22:30 | 45m 00s | this commit | Elaborators: `@[elab]` notations run a DEUS function at each use (D221, Syntax.Spec R-10, task 563a4049) |
+| 254 | 10-16 23:20 | 50m 00s | this commit | JSX text between tags through a `raw` hole (D222, task 544e13c1); notations active again in projects that mount the toolchain |
 
-Total from stage 1 to stage 253: 81h 00m.
+Total from stage 1 to stage 254: 81h 50m.

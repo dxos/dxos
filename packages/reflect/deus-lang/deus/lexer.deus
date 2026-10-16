@@ -32,7 +32,8 @@ def keywords : Dict Text Unit := dict ["def", "theorem", "test", "inductive", "s
 def twoCharSymbols : Dict Text Unit :=
   Set.dict [":=", "=>", "->", "<-", "::", "++", "==", "!=", "<=", ">=", "&&", "||", "|>", "<|", "@["]
 
-def oneCharSymbols : Dict Text Unit := dict ["(", ")", "[", "]", "{", "}", ",", ":", "|", "@", "+", "-", "*", "/", "%", "<", ">", "=", "!", "_", ";", "?"]
+-- `.` alone (no name after it) is a symbol, so prose a notation reads can end a sentence (Syntax.Spec R-11).
+def oneCharSymbols : Dict Text Unit := dict ["(", ")", "[", "]", "{", "}", ",", ":", "|", "@", "+", "-", "*", "/", "%", "<", ">", "=", "!", "_", ";", "?", "."]
 
 /-- Unicode spellings of ASCII symbols. -/
 def unicode (c : Int) : Text :=

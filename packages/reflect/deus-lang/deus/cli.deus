@@ -2843,9 +2843,14 @@ def notationTable (dir : Text) (ns : Map Text Entry) (namespaces : List Text) : 
     let home := documentOf r.ruleName
     Map.insert home (getOr (Map.lookup home t) [] ++ [r]) t) Map.empty rules
 
-/-- The type hashes of `Syntax.Notation` and `Syntax.Part`, which a stored notation is built from. -/
+/-- The type hashes of `Syntax.Notation` and `Syntax.Part`, which a stored notation is built from: the codebase's own,
+  or a library's (`lib.toolchain.Syntax.Notation`), as a project that mounts the toolchain has them. -/
 def notationTypes (ns : Map Text Entry) : Option (Text, Text) :=
-  match (Map.lookup "Syntax.Notation" ns, Map.lookup "Syntax.Part" ns) with
+  let typeNamed := fun (name : Text) => Option.orElse (Map.lookup name ns) (fun _ =>
+    Option.map snd (List.find
+      (fun pair => startsWith "lib." (fst pair) && endsWith ("." ++ name) (fst pair) && List.length (Text.split (fst pair) ".") == 4)
+      (Map.toList ns)))
+  match (typeNamed "Syntax.Notation", typeNamed "Syntax.Part") with
   | (Option.some (Entry.type n _ _), Option.some (Entry.type t _ _)) => Option.some (n, t)
   | _ => Option.none
 

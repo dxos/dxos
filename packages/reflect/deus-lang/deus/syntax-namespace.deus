@@ -86,7 +86,7 @@ def withPrecedences (category : Text) (prec : Int) (parts : List Part) : List Pa
 
 /-- What makes a notation unusable (Syntax.Spec R-7), if anything. -/
 def problemOf (category : Text) (parts : List Part) : Option Text :=
-  let builtin := fun c => c == "term" || c == "name" || c == "ident" || c == "str" || c == "num"
+  let builtin := fun c => c == "term" || c == "name" || c == "ident" || c == "str" || c == "num" || c == "raw"
   let againOk := List.all (fun part =>
     match part with
     | Part.again i => List.contains (holeCategory parts i) ["name", "ident", "str", "num"]
