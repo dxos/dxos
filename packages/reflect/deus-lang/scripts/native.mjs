@@ -6,7 +6,17 @@
 // the seed's hash, made in the background from `deus/`, which compiles to the seed.
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -70,6 +80,23 @@ export const startNativeBuild = ({ dir }) => {
   child.unref();
 };
 
+/** Earlier native builds kept beside the new one, so switching back to a recent seed needs no rebuild. */
+const KEPT_BUILDS = 3;
+
+/** Removes all but the newest build and the `KEPT_BUILDS` before it from `cache`, which otherwise grows by one folder per seed. */
+const prune = (cache) => {
+  const builds = readdirSync(cache, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => ({ path: join(cache, entry.name), at: statSync(join(cache, entry.name)).mtimeMs }))
+    .sort((left, right) => right.at - left.at);
+  for (const build of builds.slice(KEPT_BUILDS + 1)) {
+    // A build still holding its lock is running; it is never pruned.
+    if (!existsSync(join(build.path, 'lock'))) {
+      rmSync(build.path, { recursive: true, force: true });
+    }
+  }
+};
+
 /** Builds `Cli.main` with the C back end into `dir/deus` from `deus/`, or writes `dir/failed.log`. */
 const build = (dir) => {
   const codebase = join(mkdtempSync(join(tmpdir(), 'deus-native-')), 'codebase');
@@ -83,6 +110,7 @@ const build = (dir) => {
     deus('add', join(home, 'deus'));
     deus('build', 'Cli.main', '-o', join(dir, 'deus.tmp'), '--c');
     renameSync(join(dir, 'deus.tmp'), join(dir, 'deus'));
+    prune(dirname(dir));
   } catch (error) {
     // Kept until the seed changes, so the launcher warns instead of rebuilding on every command.
     writeFileSync(join(dir, 'failed.log'), `${error.message}\n${error.stderr ?? ''}`);
