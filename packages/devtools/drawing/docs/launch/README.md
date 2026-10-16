@@ -6,7 +6,7 @@ if they change:
 - Install: `npx skills add dxos/dxos --skill drawing` (the skill), `npx -y @dxos/drawing render file.dx`
   (the CLI). Both need `@dxos/drawing` published to npm before launch.
 - Site: https://drawing.sh
-- Demo video: the cut produced by `autocue/agent-demo.mjs` (link it once uploaded).
+- Demo video: https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/drawing-sh/2026-10-16/drawing-agent.mp4?v=10d29516 (77s; produced by `autocue/agent-demo.mjs`).
 
 | File                  | Venue                         | Length            |
 | --------------------- | ----------------------------- | ----------------- |
