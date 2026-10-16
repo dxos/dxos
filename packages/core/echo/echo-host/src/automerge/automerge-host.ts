@@ -10,6 +10,7 @@ import {
   equals as headsEquals,
   isAutomerge,
   save,
+  stats,
 } from '@automerge/automerge';
 import {
   type AnyDocumentId,
@@ -54,6 +55,12 @@ import {
   subsetRemoteToLocal,
 } from './collection-synchronizer.ts';
 import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
+import {
+  type DocumentSize,
+  OVERSIZED_DOCUMENT_CHANGES,
+  OVERSIZED_DOCUMENT_OPS,
+  oversizeLevel,
+} from './document-size.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
@@ -256,6 +263,9 @@ export class AutomergeHost extends Resource {
   /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
   public readonly documentQuarantined = new Event<QuarantineRecord>();
 
+  /** The oversize level last reported per document, so a growing document warns once per doubling. */
+  readonly #oversizeReported = new Map<DocumentId, number>();
+
   private _syncTask: DeferredTask | undefined = undefined;
   /**
    * Cache of collections that would be synced on next sync task run.
@@ -424,6 +434,9 @@ export class AutomergeHost extends Resource {
       this.#quarantined.set(record.documentId, record);
     }
     const denylist = [...this.#quarantined.keys()].map((documentId) => stringifyAutomergeUrl(documentId));
+    // Storage and Subduction each inflate a document independently, so the second must see the quarantine the
+    // first one's failure raised rather than spend another minute failing the same way.
+    const isLoadBlocked = (documentId: DocumentId) => this.#quarantined.has(documentId);
 
     // `Repo` unconditionally constructs a Subduction `SubductionSource` (with a fresh
     // `MemorySigner` when none is injected) regardless of whether we register any
@@ -442,6 +455,7 @@ export class AutomergeHost extends Resource {
         subductionPolicy: this._subductionPolicy,
         storage: this._storage,
         denylist,
+        isLoadBlocked,
         network: [],
         signer: this._signer,
         subductionAdapters: [
@@ -503,6 +517,7 @@ export class AutomergeHost extends Resource {
         shareConfig: this._shareConfig,
         storage: this._storage,
         denylist,
+        isLoadBlocked,
         network: [this._echoNetworkAdapter],
       });
     }
@@ -521,6 +536,16 @@ export class AutomergeHost extends Resource {
         );
       },
     );
+
+    // Every load from disk, whoever asked for it (the indexer leases documents rather than calling `loadDoc`).
+    if (this._repo.storageSubsystem) {
+      Event.wrap<{ documentId: DocumentId; numOps: number; numChanges: number }>(
+        this._repo.storageSubsystem,
+        'document-loaded',
+      ).on(this._ctx, ({ documentId, numOps, numChanges }) =>
+        this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps }),
+      );
+    }
 
     // Here, and awaited: the Repo constructs its engine without loading any tree, and nothing can
     // attach a document or start a sync round until `open()` returns, so a rewrite the migrations
@@ -1416,6 +1441,8 @@ export class AutomergeHost extends Resource {
     }
 
     const heads = getHeads(document);
+    const { numChanges, numOps } = stats(document);
+    this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps });
 
     // Persist heads to SQLite. Non-atomic with the chunk save but recoverable:
     // heads can be reconstructed from chunks via reIndexHeads on restart.
@@ -1425,6 +1452,25 @@ export class AutomergeHost extends Resource {
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
     this._onHeadsChangedTask.schedule();
     this.documentsSaved.emit();
+  }
+
+  /**
+   * Warns when a document passes {@link OVERSIZED_DOCUMENT_CHANGES} changes or {@link OVERSIZED_DOCUMENT_OPS} ops,
+   * and again at every doubling: a document that keeps growing eventually cannot be loaded at all.
+   */
+  #reportOversizedDocument(documentId: DocumentId, { changes, ops }: DocumentSize): void {
+    const level = oversizeLevel({ changes, ops });
+    if (level <= (this.#oversizeReported.get(documentId) ?? -1)) {
+      return;
+    }
+    this.#oversizeReported.set(documentId, level);
+    log.warn('oversized automerge document', {
+      documentId,
+      changes,
+      ops,
+      changesLimit: OVERSIZED_DOCUMENT_CHANGES,
+      opsLimit: OVERSIZED_DOCUMENT_OPS,
+    });
   }
 
   private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {

@@ -156,6 +156,35 @@ describe('AutomergeHost quarantine', () => {
     expect(host.isQuarantined(documentId)).toBe(false);
   });
 
+  test('a source never inflates a document quarantined while its read was in flight', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+
+    const before = await openHost(runtime);
+    const handle = await before.createDoc<{ title: string }>({ title: 'corrupt' });
+    await before.flush(Context.default());
+    const documentId = handle.documentId;
+    handle[Symbol.dispose]();
+    await before.close();
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const garbage = new Uint8Array([0x85, 0x6f, 0x4a, 0x83, 1, 2, 3, 4, 0, 9, 9, 9]);
+        yield* sql`UPDATE automerge_chunks SET data = ${garbage} WHERE key GLOB ${`${documentId}-*`}`;
+      }),
+    );
+
+    const host = await openHost(runtime);
+    await host.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
+    const failures: DocumentId[] = [];
+    host['_repo'].on('document-load-failed', ({ documentId }) => failures.push(documentId));
+
+    // Straight to the repo, past the host's own guard, as a load already in flight would be.
+    const progress = host['_repo'].findWithProgress(documentId);
+    await expect.poll(() => progress.peek().state).toBe('unavailable');
+    expect(failures).toEqual([]);
+  });
+
   test('never advertises a quarantined document to peers', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
