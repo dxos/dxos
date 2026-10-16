@@ -25,10 +25,9 @@ import { useComputeGraph } from '../ComputeGraph/index.ts';
 import { SheetContent } from '../SheetContent/index.ts';
 import { SheetRoot, useSheetContext } from '../SheetRoot/index.ts';
 import { ChartCompanion } from './ChartCompanion.tsx';
-import { type ChartSpec } from './types.ts';
 import { useRangeValues } from './useRangeValues.ts';
 
-const initialCharts: ChartSpec[] = [
+const initialCharts: Sheet.Chart[] = [
   { id: 'sales', name: 'Sales by region', range: 'A1:C7', type: 'bar', header: true, grid: true },
   { id: 'share', name: 'Market share', range: 'E1:F5', type: 'pie', header: true },
   { id: 'curve', name: 'Curve', range: 'H1:I11', type: 'xy', header: true, grid: true },
@@ -38,7 +37,7 @@ const initialCharts: ChartSpec[] = [
 const Companion = () => {
   const { model } = useSheetContext();
   const getValues = useRangeValues(model);
-  const [charts, setCharts] = useState<ChartSpec[]>(initialCharts);
+  const [charts, setCharts] = useState<Sheet.Chart[]>(initialCharts);
   const contextId = Obj.getURI(model.sheet);
   const selection = useSelection(contextId, 'range');
   const { range: setSelection } = useSelectionActions(contextId);

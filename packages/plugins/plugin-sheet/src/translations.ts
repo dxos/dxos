@@ -55,6 +55,7 @@ export const translations = [
         'align.label': 'Text align',
         'axis-dropped.label': 'Drop axis', // TODO(burdon): What does this mean?
 
+        'charts-companion.label': 'Charts',
         'chart-actions.label': 'Chart actions',
         'add-chart.label': 'Add chart',
         'delete-chart.label': 'Delete chart',

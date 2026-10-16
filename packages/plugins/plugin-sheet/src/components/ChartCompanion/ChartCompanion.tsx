@@ -17,8 +17,7 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
-
-import { ChartSpec } from './types.ts';
+import { Sheet } from '#types';
 
 const DEFAULT_RANGE = 'A1:B5';
 
@@ -29,8 +28,8 @@ const LIST_ROWS = 3;
 export type ChartCompanionProps = {
   /** Scopes the toolbar to the host plank's attention; without one it is always enabled. */
   attendableId?: string;
-  charts: readonly ChartSpec[];
-  onChange: (charts: ChartSpec[]) => void;
+  charts: readonly Sheet.Chart[];
+  onChange: (charts: Sheet.Chart[]) => void;
   /** Computed cell values for a range in A1 notation; a new function identity re-renders the chart. */
   getValues: (range: string) => PlotValue[][] | undefined;
   /** The sheet's current selection in A1 notation; new charts start from it. */
@@ -54,7 +53,7 @@ export const ChartCompanion = ({
   const current = charts.find((chart) => chart.id === selected);
 
   const handleAdd = useCallback(() => {
-    const chart: ChartSpec = {
+    const chart: Sheet.Chart = {
       id: PublicKey.random().toHex(),
       range: selection ?? DEFAULT_RANGE,
       type: 'bar',
@@ -86,7 +85,7 @@ export const ChartCompanion = ({
   );
 
   const handleUpdate = useCallback(
-    (values: Partial<ChartSpec>) =>
+    (values: Partial<Sheet.Chart>) =>
       onChange(charts.map((chart) => (chart.id === selected ? { ...chart, ...values, id: chart.id } : chart))),
     [charts, selected, onChange],
   );
@@ -196,9 +195,9 @@ export const ChartCompanion = ({
 ChartCompanion.displayName = 'ChartCompanion';
 
 type ChartDetailProps = Pick<ChartCompanionProps, 'getValues'> & {
-  chart: ChartSpec;
+  chart: Sheet.Chart;
   editing: boolean;
-  onUpdate: (values: Partial<ChartSpec>) => void;
+  onUpdate: (values: Partial<Sheet.Chart>) => void;
   onCancel: () => void;
 };
 
@@ -212,7 +211,7 @@ const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDet
 
   if (editing) {
     return (
-      <Form.Root schema={ChartSpec} values={chart} onSave={onUpdate} onCancel={onCancel}>
+      <Form.Root schema={Sheet.Chart} values={chart} onSave={onUpdate} onCancel={onCancel}>
         <Form.Viewport scroll>
           <Form.Content>
             <Form.Fields />
@@ -230,7 +229,7 @@ const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDet
   );
 };
 
-const chartIcon = (type?: ChartSpec['type']) => {
+const chartIcon = (type?: Sheet.ChartType) => {
   switch (type) {
     case 'pie':
       return 'ph--chart-pie--regular';

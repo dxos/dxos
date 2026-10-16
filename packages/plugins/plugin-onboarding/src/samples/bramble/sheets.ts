@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database } from '@dxos/echo';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetRange from '@dxos/plugin-sheet/SheetRange';
 
 //
 // Sheets
 //
 
-const makeSheets = (): { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet } => {
+const makeSheets = (): SheetsResult => {
   const greenInventory = Sheet.make({
     name: 'Green coffee inventory',
     rows: 12,
@@ -94,11 +95,58 @@ const makeSheets = (): { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet } =
     },
   });
 
-  return { greenInventory, priceList };
+  const salesReport = Sheet.make({
+    name: 'Sales report',
+    rows: 20,
+    columns: 10,
+    cells: {
+      ...table('A', [
+        ['Month', 'Linden', 'Field Notes', 'Late Shift'],
+        ['Jan', 320, 210, 140],
+        ['Feb', 290, 230, 150],
+        ['Mar', 340, 260, 170],
+        ['Apr', 380, 250, 190],
+        ['May', 410, 280, 200],
+        ['Jun', 450, 300, 230],
+      ]),
+      ...table('F', [
+        ['Channel', 'Revenue'],
+        ['Wholesale', 42_000],
+        ['Café', 33_000],
+        ['Online', 25_000],
+      ]),
+      ...table('I', [
+        ['Minute', 'Bean temp °C'],
+        ...[200, 110, 130, 148, 160, 172, 182, 191, 198, 204, 209, 213, 216].map((temp, minute) => [minute, temp]),
+      ]),
+    },
+    ranges: [
+      ...['A1:D1', 'F1:G1', 'I1:J1'].map((range) => ({ range, key: SheetRange.styleKey, value: 'header' })),
+      ...['B1:D1', 'G1', 'J1'].map((range) => ({ range, key: SheetRange.alignKey, value: 'end' })),
+    ],
+    charts: [
+      { id: 'bags-sold', name: 'Bags sold by blend', range: 'A1:D7', type: 'bar', header: true, grid: true },
+      { id: 'revenue-mix', name: 'Revenue by channel', range: 'F1:G4', type: 'pie', header: true },
+      { id: 'roast-curve', name: 'Roast curve — Linden', range: 'I1:J14', type: 'xy', header: true, grid: true },
+    ],
+  });
+
+  return { greenInventory, priceList, salesReport };
 };
 
-/** Green-coffee inventory and the wholesale price list, both with live formulas. */
-export type SheetsResult = { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet };
+/** Cells for a table of rows whose first column is `column`. */
+const table = (column: string, rows: (string | number)[][]): Record<string, Sheet.CellValue> =>
+  Object.fromEntries(
+    rows.flatMap((row, rowIndex) =>
+      row.map((value, columnIndex) => [
+        `${String.fromCharCode(column.charCodeAt(0) + columnIndex)}${rowIndex + 1}`,
+        { value },
+      ]),
+    ),
+  );
+
+/** Green-coffee inventory and the wholesale price list, both with live formulas, and a charted sales report. */
+export type SheetsResult = { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet; salesReport: Sheet.Sheet };
 
 export const Sheets: SampleSpace.Phase<SheetsResult> = SampleSpace.phase('sheets', {
   schemas: [Sheet.Sheet],
