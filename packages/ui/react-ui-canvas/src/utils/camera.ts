@@ -174,6 +174,22 @@ export const MAX_ANIMATION_MS = 800;
 /** How long a drill in or out takes, either way, so entering and leaving a scene feel the same. */
 export const DRILL_ANIMATION_MS = 1000;
 
+/** Quadratic ease-in-out over `[0, 1]`. */
+export const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+
+/**
+ * The camera at progress `t` (0–1, un-eased) along the smooth zoom-and-pan path between two cameras; pure, so a
+ * frame-by-frame renderer gets the same camera for the same frame. `duration` is the path's natural length in ms.
+ */
+export const interpolateCamera = (
+  from: Camera,
+  to: Camera,
+  viewport: Size,
+): ((t: number) => Camera) & { duration: number } => {
+  const interpolate = interpolateZoom(toView(from, viewport), toView(to, viewport));
+  return Object.assign((t: number) => fromView(interpolate(t), viewport), { duration: interpolate.duration });
+};
+
 /** Animate between cameras, over `fixedDuration` ms or a time fitted to the distance; returns a cancel function. */
 export const animateCamera = (
   from: Camera,
@@ -183,14 +199,13 @@ export const animateCamera = (
   done?: () => void,
   fixedDuration?: number,
 ): (() => void) => {
-  const interpolate = interpolateZoom(toView(from, viewport), toView(to, viewport));
+  const interpolate = interpolateCamera(from, to, viewport);
   const duration = fixedDuration ?? Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
   const start = performance.now();
   let frame = 0;
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / duration);
-    const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-    apply(fromView(interpolate(eased), viewport));
+    apply(interpolate(easeInOut(t)));
     if (t < 1) {
       frame = requestAnimationFrame(tick);
     } else {
