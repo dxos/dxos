@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, type UrlHeads, encodeHeads } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
 import {
@@ -18,6 +18,7 @@ import { type EntityMeta, type Referrer } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { isLinkConvergenceKey } from '../versions/index.ts';
 import { mergeCandidates } from './merge-core.ts';
 
 /**
@@ -28,8 +29,24 @@ export type MergeDocumentRef = {
   readonly documentId: DocumentId;
   doc(): A.Doc<DatabaseDirectory>;
   change(callback: A.ChangeFn<DatabaseDirectory>): void;
+
+  /** Forks at `heads`, applies the change, and merges the result back — the creation-heads replay's write. */
+  changeAt(
+    heads: UrlHeads,
+    callback: A.ChangeFn<DatabaseDirectory>,
+    options?: A.ChangeOptions<DatabaseDirectory>,
+  ): UrlHeads | undefined;
   [Symbol.dispose]?: () => void;
 };
+
+/** Whether `value` is a list or map, rather than a value written whole. */
+const isContainer = (value: unknown): boolean =>
+  Array.isArray(value) ||
+  (typeof value === 'object' &&
+    value !== null &&
+    !isEncodedReference(value) &&
+    !(value instanceof Uint8Array) &&
+    !(value instanceof A.RawString));
 
 /**
  * A referrer document is loaded on the index's say-so alone, so the rewrite path never waits on
@@ -129,10 +146,19 @@ export class ConvergenceKeyMerger {
       }
 
       const groups = new Map<string, { objectId: EntityId; documentId: string }[]>();
+      // Duplicates held at several schema versions are left pending: merge markers are not translated between
+      // versions, so no single version document can carry the merge.
+      const versioned = new Set<string>();
+      const typesOf = new Map<string, string>();
       for (const row of rows) {
         if (!row.convergenceKey || !row.documentId) {
           continue;
         }
+        const type = typesOf.get(row.convergenceKey);
+        if (type !== undefined && type !== String(row.typeDXN)) {
+          versioned.add(row.convergenceKey);
+        }
+        typesOf.set(row.convergenceKey, String(row.typeDXN));
         const group = groups.get(row.convergenceKey) ?? [];
         if (!group.some(({ objectId }) => objectId === row.objectId)) {
           group.push({ objectId: row.objectId, documentId: row.documentId });
@@ -143,6 +169,10 @@ export class ConvergenceKeyMerger {
       const servicedKeys = new Set<string>();
       serviced.set(spaceId, servicedKeys);
       for (const convergenceKey of keys) {
+        if (versioned.has(convergenceKey)) {
+          log.debug('convergence-key merge: duplicates are held at several versions; left pending', { convergenceKey });
+          continue;
+        }
         const group = groups.get(convergenceKey);
         if (group === undefined || group.length < 2) {
           // A lone row, or rows that no longer carry the key — nothing to merge.
@@ -297,7 +327,9 @@ export class ConvergenceKeyMerger {
       if (entity.data === undefined) {
         entity.data = {};
       }
-      for (const [field, value] of Object.entries(result.data)) {
+      // An extracted object's data converges by translation from every duplicate (`versions/version-links.ts`);
+      // a merge write would be an edit of its own, translated back into the parent.
+      for (const [field, value] of isLinkConvergenceKey(convergenceKey) ? [] : Object.entries(result.data)) {
         // Per-field writes, and only where the value differs, so a concurrent edit to a field the
         // merge never touched keeps its last-write-wins outcome.
         if (!_jsonEqual(entity.data[field], value)) {
@@ -335,6 +367,25 @@ export class ConvergenceKeyMerger {
     if (!applied) {
       // Tombstoning the losers without having folded their state would strand it.
       return false;
+    }
+
+    // The flat write above skips every field the winner already defines, so a loser's own edits are replayed;
+    // not for an extracted object, whose duplicates translation already keeps in step.
+    const winnerCreationHeads = isLinkConvergenceKey(convergenceKey)
+      ? []
+      : deriveCreationHeads(winner.handle.doc(), winner.objectId);
+    if (winnerCreationHeads === undefined) {
+      log.debug('winner creation heads not found; falling back to the flat merge result', {
+        convergenceKey,
+        winnerId: winner.objectId,
+      });
+    } else if (winnerCreationHeads.length > 0) {
+      for (const loserId of result.losers) {
+        const loser = byId.get(loserId);
+        if (loser) {
+          this.#replayLoserEdits(winner, loser, winnerCreationHeads, convergenceKey);
+        }
+      }
     }
 
     // Make the fold durable before any tombstone can be: a crash that persists a loser's
@@ -407,6 +458,87 @@ export class ConvergenceKeyMerger {
   }
 
   /**
+   * Replays `loser`'s edits since its own creation onto `winner` at the winner's creation heads, so each lands
+   * concurrent with the winner's own edits: a fast-forward where the winner never touched the field, a conflict
+   * where it did. Fields replay as whole values, since hosts merge independently and identical splices would
+   * insert text twice. The change message `merge-replay: <loserId>` marks a loser as replayed, so a retried pass
+   * writes nothing.
+   */
+  #replayLoserEdits(
+    winner: GroupMember,
+    loser: GroupMember,
+    winnerCreationHeads: string[],
+    convergenceKey: string,
+  ): void {
+    const message = _replayMessageFor(loser.objectId);
+    if (_hasReplayMarker(winner.handle.doc(), loser.objectId)) {
+      return;
+    }
+
+    const loserDoc = loser.handle.doc();
+    const loserCreationHeads = deriveCreationHeads(loserDoc, loser.objectId);
+    if (loserCreationHeads === undefined) {
+      log.debug('loser creation heads not found; keeping the flat merge result for this loser', {
+        convergenceKey,
+        loserId: loser.objectId,
+      });
+      return;
+    }
+    const loserCurrentHeads = A.getHeads(loserDoc);
+    if (_headsEqual(loserCreationHeads, loserCurrentHeads)) {
+      return; // The loser never edited anything after its own creation — nothing to replay.
+    }
+
+    const prefix = ['objects', loser.objectId, 'data'];
+    const editedFields = new Set<string>();
+    for (const patch of A.diff(loserDoc, loserCreationHeads, loserCurrentHeads)) {
+      if (patch.path.length <= prefix.length || !prefix.every((key, index) => patch.path[index] === key)) {
+        continue;
+      }
+      const field = String(patch.path[prefix.length]);
+      if (field === PROPERTY_ID) {
+        continue;
+      }
+      editedFields.add(field);
+    }
+    if (editedFields.size === 0) {
+      return;
+    }
+
+    // A whole-value write supersedes a list or map the winner edited in place, so those stay with the flat merge.
+    const loserData = loser.entity.data ?? {};
+    for (const field of editedFields) {
+      if (isContainer(loserData[field])) {
+        editedFields.delete(field);
+      }
+    }
+    if (editedFields.size === 0) {
+      return;
+    }
+    winner.handle.changeAt(
+      encodeHeads(winnerCreationHeads),
+      (doc: DatabaseDirectory) => {
+        const entity = doc.objects?.[winner.objectId];
+        if (!entity) {
+          return;
+        }
+        if (entity.data === undefined) {
+          entity.data = {};
+        }
+        for (const field of editedFields) {
+          const value = loserData[field];
+          if (value === undefined) {
+            delete entity.data[field];
+          } else {
+            entity.data[field] = _clone(value);
+          }
+        }
+      },
+      { message },
+    );
+  }
+
+  /**
    * Service an already-redirected entity: fold data edits made since its recorded watermark into
    * the surviving entity, and re-assert the tombstone.
    *
@@ -450,7 +582,8 @@ export class ConvergenceKeyMerger {
 
     const currentHeads = A.getHeads(doc);
     let changedFields: string[] = [];
-    if (mergedAtHeads !== undefined && winnerLive) {
+    // An extracted object's late edits reach the winner by translation, as in `#mergeCandidates`.
+    if (mergedAtHeads !== undefined && winnerLive && !isLinkConvergenceKey(convergenceKey)) {
       const prefix = ['objects', loserId, 'data'];
       const changed = new Set<string>();
       for (const patch of A.diff(doc, mergedAtHeads, currentHeads)) {
@@ -642,6 +775,40 @@ const _readEntity = (
   }
   return entity;
 };
+
+/** The change `message` a creation-heads replay writes and later looks for — see `#replayLoserEdits`. */
+const _replayMessageFor = (loserId: EntityId): string => `merge-replay: ${loserId}`;
+
+/**
+ * Whether `doc` already carries a replay for `loserId` — the idempotence check that lets a retried
+ * `#mergeCandidates` (the crash window between the replay's flush and the loser's tombstone) skip
+ * straight to re-tombstoning instead of writing a duplicate conflict alternative or splice.
+ */
+const _hasReplayMarker = (doc: A.Doc<DatabaseDirectory>, loserId: EntityId): boolean => {
+  const message = _replayMessageFor(loserId);
+  return A.getChangesMetaSince(doc, []).some((meta) => meta.message === message);
+};
+
+/**
+ * An entity's creation heads, from its own document's history: the frontier right after the earliest change
+ * that creates `objects.<objectId>`, or `undefined` when no change does.
+ */
+export const deriveCreationHeads = (doc: A.Doc<DatabaseDirectory>, objectId: EntityId): string[] | undefined => {
+  let frontier: string[] = [];
+  for (const meta of A.getChangesMetaSince(doc, [])) {
+    const previous = frontier;
+    frontier = [...previous.filter((hash) => !meta.deps.includes(hash)), meta.hash].sort();
+    const patches = A.diff(doc, previous, frontier);
+    if (patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objectId)) {
+      return frontier;
+    }
+  }
+  return undefined;
+};
+
+/** Set-equality of two head frontiers, order-independent — heads are unordered by construction. */
+const _headsEqual = (a: readonly string[], b: readonly string[]): boolean =>
+  [...a].sort().join(',') === [...b].sort().join(',');
 
 /**
  * The effective fold watermark: the stored `mergedAtHeads` unioned with every conflicting value

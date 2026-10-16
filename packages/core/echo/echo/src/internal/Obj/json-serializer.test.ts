@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { type EntityStructure } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, URI } from '@dxos/keys';
 
+import * as Lens from '../../Lens.ts';
 import * as Obj from '../../Obj.ts';
 import * as Relation from '../../Relation.ts';
 import { TestSchema } from '../../testing/index.ts';
@@ -414,5 +415,14 @@ describe('objectStructureFromJson', () => {
       data: { jsonSchema: {} },
     };
     expect(roundTrip(persistedType)).toEqual(persistedType);
+  });
+
+  test('infers a stored lens from its type', () => {
+    const storedLens: EntityStructure = {
+      system: { kind: EntityKind.Lens, type: { '/': Type.getURI(Lens.Stored) } },
+      meta: { keys: [] },
+      data: { from: 'com.example.type.test', to: 'com.example.type.test' },
+    };
+    expect(roundTrip(storedLens)).toEqual(storedLens);
   });
 });

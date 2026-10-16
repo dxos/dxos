@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Entity, Obj, Relation, Type } from '@dxos/echo';
+import { Entity, Lens, Obj, Relation, Type } from '@dxos/echo';
 import { ATTR_PARENT } from '@dxos/echo/internal';
 import { EID, type SpaceId } from '@dxos/keys';
 
@@ -72,7 +72,13 @@ export const toRecord = (entity: Entity.Unknown, spaceId: SpaceId): EntityRecord
   const isRelation = Relation.isRelation(entity);
   return {
     id: entity.id,
-    kind: Type.isType(entity) ? Entity.Kind.Type : isRelation ? Entity.Kind.Relation : Entity.Kind.Object,
+    kind: Type.isType(entity)
+      ? Entity.Kind.Type
+      : Lens.isStored(entity)
+        ? Entity.Kind.Lens
+        : isRelation
+          ? Entity.Kind.Relation
+          : Entity.Kind.Object,
     typeDxn: Entity.getTypeURI(entity) ?? '',
     deleted: Entity.isDeleted(entity),
     parentId: parent?.id ?? null,

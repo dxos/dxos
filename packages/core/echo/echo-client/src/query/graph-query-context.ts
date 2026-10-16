@@ -14,6 +14,11 @@ import { log } from '@dxos/log';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import {
+  declaredResultType,
+  peekDeclaredVersion,
+  toDeclaredVersion,
+} from '../proxy-db/version-documents/declared-version.ts';
+import {
   type MergePlan,
   compareWindowData,
   createMergePlan,
@@ -586,7 +591,15 @@ export class SpaceQuerySource implements QuerySource {
     await this._preloadQueryIds(query);
 
     const items = this._executeWithWorkingSet(query);
-    return items === null ? [] : this._mapItemsToResults(items);
+    if (items === null) {
+      return [];
+    }
+    return Promise.all(
+      this._mapItemsToResults(items).map(async (entry) => {
+        const result = entry.result && (await toDeclaredVersion(entry.result, query));
+        return Obj.isObject(result) ? { ...entry, result } : entry;
+      }),
+    );
   }
 
   /**
@@ -632,7 +645,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _computeResults(query: QueryAST.Query): SourceEntry<Obj.Unknown>[] {
     const items = this._executeWithWorkingSet(query);
-    return items === null ? [] : this._mapItemsToResults(items);
+    return items === null ? [] : this._peekDeclaredVersions(query, this._mapItemsToResults(items));
   }
 
   update(query: QueryAST.Query): void {
@@ -722,6 +735,34 @@ export class SpaceQuerySource implements QuerySource {
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
     return items.map((item) => this._mapItemToResult(item, groupCounts));
+  }
+
+  /**
+   * Each result at the version the query declares for it, as the index source returns it; a result whose
+   * version is not bound yet is left out until it is.
+   */
+  private _peekDeclaredVersions(
+    query: QueryAST.Query,
+    entries: SourceEntry<Obj.Unknown>[],
+  ): SourceEntry<Obj.Unknown>[] {
+    const type = declaredResultType(query, this._database.graph.registry);
+    return entries.flatMap((entry) => {
+      if (entry.result === undefined) {
+        return [entry];
+      }
+      // Undefined only while a version is being bound; a relation, or an object read as it is, comes back unchanged.
+      const result = peekDeclaredVersion(entry.result, type, () => this._invalidate());
+      return result === undefined
+        ? []
+        : Obj.isObject(result) && result !== entry.result
+          ? [{ ...entry, result }]
+          : [entry];
+    });
+  }
+
+  private _invalidate(): void {
+    this._results = undefined;
+    this.changed.emit();
   }
 
   private _mapItemToResult(item: WorkingSetItem, groupCounts?: Map<string, number>): SourceEntry<Obj.Unknown> {

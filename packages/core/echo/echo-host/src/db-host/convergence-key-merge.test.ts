@@ -11,7 +11,7 @@ import { DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { type EntityMeta } from '@dxos/index-core';
 import { EntityId, SpaceId, URI } from '@dxos/keys';
 
-import { ConvergenceKeyMerger, type ConvergenceKeyMergerDeps } from './convergence-key-merge.ts';
+import { ConvergenceKeyMerger, type ConvergenceKeyMergerDeps, deriveCreationHeads } from './convergence-key-merge.ts';
 
 const KEY = 'example.com/thing/main';
 const SPACE_ID = SpaceId.random();
@@ -85,6 +85,24 @@ const redirect = (fixture: Fixture, id: EntityId, winner: EntityId): void => {
       entity.system.mergedAtHeads = [...heads];
       entity.system.deleted = true;
     }
+  });
+};
+
+/** Splices a data field directly (bypassing `edit`, which only exposes the entity, not the doc). */
+const spliceText = (
+  fixture: Fixture,
+  id: EntityId,
+  field: string,
+  index: number,
+  del: number,
+  insert?: string,
+): void => {
+  const handle = fixture.handles.get(id);
+  if (!handle) {
+    throw new Error('fixture is missing the handle');
+  }
+  handle.change((doc) => {
+    A.splice(doc, ['objects', id, 'data', field], index, del, insert);
   });
 };
 
@@ -684,5 +702,322 @@ describe('ConvergenceKeyMerger.mergeDuplicates', () => {
     expect(result.serviced.get(spaceId)?.has(goodKey)).toBe(true);
     expect(result.serviced.get(spaceId)?.has(badKey)).toBe(false);
     expect(entityOf(good, ID_B)?.system?.mergedInto).toBe(ID_A);
+  });
+});
+
+describe('ConvergenceKeyMerger.mergeDuplicates over version documents', () => {
+  test('duplicates held at several versions are left pending rather than merged across versions', async ({
+    expect,
+  }) => {
+    const spaceId = SpaceId.random();
+    const V1 = URI.make('dxn:example.com/type/Test:0.1.0');
+    const V2 = URI.make('dxn:example.com/type/Test:0.2.0');
+    // Each duplicate is held twice, once per version, as version documents hold it.
+    const v1 = setup([
+      [ID_A, makeEntity(KEY, { title: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+    ]);
+    const v2 = setup([
+      [ID_A, makeEntity(KEY, { name: 'a' })],
+      [ID_B, makeEntity(KEY, { name: 'b' })],
+    ]);
+    const row = (objectId: EntityId, documentId: string, typeDXN: URI.URI): EntityMeta => ({
+      recordId: 0,
+      objectId,
+      queueId: '',
+      queueNamespace: '',
+      spaceId,
+      documentId,
+      entityKind: 'object',
+      typeDXN,
+      deleted: false,
+      source: null,
+      target: null,
+      parent: null,
+      convergenceKey: KEY,
+      annotations: null,
+      version: 0,
+      createdAt: null,
+      updatedAt: null,
+      queuePosition: null,
+    });
+    const documentOf = (fixture: Fixture, id: EntityId) => {
+      const handle = fixture.handles.get(id);
+      if (!handle) {
+        throw new Error('fixture is missing the handle');
+      }
+      return handle.documentId;
+    };
+    const rows = [
+      row(ID_A, documentOf(v1, ID_A), V1),
+      row(ID_A, documentOf(v2, ID_A), V2),
+      row(ID_B, documentOf(v2, ID_B), V2),
+      row(ID_B, documentOf(v1, ID_B), V1),
+    ];
+    const merger = new ConvergenceKeyMerger({
+      queryByConvergenceKeys: async () => rows,
+      loadDoc: async (ctx, documentId) =>
+        (await v1.context.loadDoc(ctx, documentId)) ?? (await v2.context.loadDoc(ctx, documentId)),
+      flushDoc: async () => {},
+      queryReferrers: async () => [],
+    });
+    const result = await merger.mergeDuplicates(Context.default(), new Map([[spaceId, new Set([KEY])]]));
+
+    // No version document can carry the merge alone, so nothing is written and the key stays pending.
+    expect(result.serviced.get(spaceId)?.has(KEY)).toBe(false);
+    for (const fixture of [v1, v2]) {
+      expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBeUndefined();
+      expect(entityOf(fixture, ID_A)?.data).not.toHaveProperty('name', 'b');
+    }
+  });
+});
+
+describe('ConvergenceKeyMerger.mergeDuplicates over one document each', () => {
+  test('duplicates each held at a different version are left pending rather than merged across versions', async ({
+    expect,
+  }) => {
+    const spaceId = SpaceId.random();
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { name: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+    ]);
+    const typeOf = (objectId: EntityId) =>
+      URI.make(objectId === ID_A ? 'dxn:example.com/type/Test:0.2.0' : 'dxn:example.com/type/Test:0.1.0');
+    const rows: EntityMeta[] = fixture.group.map(({ objectId, documentId }) => ({
+      recordId: 0,
+      objectId,
+      queueId: '',
+      queueNamespace: '',
+      spaceId,
+      documentId,
+      entityKind: 'object',
+      typeDXN: typeOf(objectId),
+      deleted: false,
+      source: null,
+      target: null,
+      parent: null,
+      convergenceKey: KEY,
+      annotations: null,
+      version: 0,
+      createdAt: null,
+      updatedAt: null,
+      queuePosition: null,
+    }));
+    const merger = new ConvergenceKeyMerger({ ...fixture.context, queryByConvergenceKeys: async () => rows });
+    const result = await merger.mergeDuplicates(Context.default(), new Map([[spaceId, new Set([KEY])]]));
+
+    expect(result.serviced.get(spaceId)?.has(KEY)).toBe(false);
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBeUndefined();
+    expect(entityOf(fixture, ID_A)?.data).not.toHaveProperty('title');
+  });
+});
+
+describe('ConvergenceKeyMerger creation-heads replay', () => {
+  test('deriveCreationHeads finds the frontier right after an entity is created, undefined for a foreign id', async ({
+    expect,
+  }) => {
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { title: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+    ]);
+    const doc = fixture.handles.get(ID_A)?.doc();
+    if (!doc) {
+      throw new Error('fixture is missing the winner doc');
+    }
+    const [firstChange] = A.getChangesMetaSince(doc, []);
+
+    expect(deriveCreationHeads(doc, ID_A)).toEqual([firstChange.hash]);
+
+    // A later edit does not move the creation frontier.
+    edit(fixture, ID_A, (entity) => {
+      entity.data.title = 'a2';
+    });
+    const docAfterEdit = fixture.handles.get(ID_A)?.doc();
+    if (!docAfterEdit) {
+      throw new Error('fixture is missing the winner doc');
+    }
+    expect(deriveCreationHeads(docAfterEdit, ID_A)).toEqual([firstChange.hash]);
+
+    // An id this document never held: the earliest-change scan runs out without a match, which is
+    // the trigger for `#replayLoserEdits`'s per-candidate fallback to the flat merge result.
+    expect(deriveCreationHeads(doc, EntityId.make('01J00000000000000000000099'))).toBeUndefined();
+  });
+
+  test('a loser-only edit the winner never touched survives via the creation-heads replay', async ({ expect }) => {
+    // Mirrors a migration's fan-out: both copies are created with every field set to the SAME
+    // baseline, so the flat merge's "smallest-id candidate that defines the field" rule sees the
+    // winner as trivially defining `note` and would otherwise drop the loser's edit (M0-REPORT.md
+    // item 4, reproduced against the real engine in `fan-out-engine.test.ts` E5a).
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { note: 'baseline', tag: 'baseline' })],
+      [ID_B, makeEntity(KEY, { note: 'baseline', tag: 'baseline' })],
+    ]);
+    edit(fixture, ID_B, (entity) => {
+      entity.data.note = 'loser edit';
+    });
+
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
+
+    expect(entityOf(fixture, ID_A)?.data.note).toBe('loser edit');
+    expect(entityOf(fixture, ID_A)?.data.tag).toBe('baseline'); // untouched field: unaffected.
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
+    // Losers are never erased: the edit stays readable on the tombstoned copy too.
+    expect(entityOf(fixture, ID_B)?.data.note).toBe('loser edit');
+  });
+
+  test("an extracted object's duplicates are redirected without a data write, which translation carries", async ({
+    expect,
+  }) => {
+    const key = `lens:${'0'.repeat(32)}:${ID_C}:address`;
+    const fixture = setup([
+      [ID_A, makeEntity(key, { city: 'London', title: 'winner' })],
+      [ID_B, makeEntity(key, { city: 'London' })],
+    ]);
+    edit(fixture, ID_B, (entity) => {
+      entity.data.city = 'Paris';
+      entity.data.extra = 'loser only';
+    });
+    const winner = fixture.handles.get(ID_A);
+    if (!winner) {
+      throw new Error('fixture is missing the handle');
+    }
+    const before = A.getHeads(winner.doc());
+
+    const merger = new ConvergenceKeyMerger(fixture.context);
+    expect(await merger.mergeGroup(Context.default(), SPACE_ID, key, fixture.group)).toBe(true);
+    expect(entityOf(fixture, ID_A)?.data).toEqual({ city: 'London', title: 'winner' });
+    expect(entityOf(fixture, ID_A)?.system?.mergedFrom).toEqual([ID_B]);
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
+    // The winner's only change records the merge: no replay change, no data fold.
+    expect(A.getChangesMetaSince(winner.doc(), before)).toHaveLength(1);
+
+    // A late edit to the redirected copy is not folded either.
+    edit(fixture, ID_B, (entity) => {
+      entity.data.city = 'Berlin';
+    });
+    await merger.mergeGroup(Context.default(), SPACE_ID, key, fixture.group);
+    expect(entityOf(fixture, ID_A)?.data.city).toBe('London');
+  });
+
+  test('a field both sides edited becomes a real Automerge conflict on the winner', async ({ expect }) => {
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { note: 'baseline' })],
+      [ID_B, makeEntity(KEY, { note: 'baseline' })],
+    ]);
+    edit(fixture, ID_A, (entity) => {
+      entity.data.note = 'winner value';
+    });
+    edit(fixture, ID_B, (entity) => {
+      entity.data.note = 'loser value';
+    });
+
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
+
+    const winner = entityOf(fixture, ID_A);
+    const conflicts = winner?.data && A.getConflicts(winner.data, 'note');
+    expect(conflicts).toBeDefined();
+    expect(Object.values(conflicts ?? {}).sort()).toEqual(['loser value', 'winner value']);
+    // The presented value is whichever the engine's own deterministic tie-break picks; both sides'
+    // edits are what matters here, not which one is on top.
+    expect(['winner value', 'loser value']).toContain(winner?.data.note);
+  });
+
+  test('an edit the winner made inside a list or map is never overwritten by a loser edit to the same field', async ({
+    expect,
+  }) => {
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { tags: ['a'], address: { street: 'Main' } })],
+      [ID_B, makeEntity(KEY, { tags: ['a'], address: { street: 'Main' } })],
+    ]);
+    edit(fixture, ID_A, (entity) => {
+      entity.data.tags.push('winner');
+      entity.data.address.street = 'Winner St';
+    });
+    edit(fixture, ID_B, (entity) => {
+      entity.data.tags.push('loser');
+      entity.data.address.street = 'Loser St';
+    });
+
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
+
+    // Lists and maps keep the flat merge's result, the winner's: the loser's edits to them stay on its tombstone.
+    const winner = entityOf(fixture, ID_A);
+    expect(winner?.data.tags).toEqual(['a', 'winner']);
+    expect(winner?.data.address.street).toBe('Winner St');
+  });
+
+  test('a text field both copies edited replays whole-value, never splicing the loser text in twice', async ({
+    expect,
+  }) => {
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { body: 'Hello world' })],
+      [ID_B, makeEntity(KEY, { body: 'Hello world' })],
+    ]);
+    spliceText(fixture, ID_B, 'body', 0, 0, '>>>');
+
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
+
+    expect(String(entityOf(fixture, ID_A)?.data.body)).toBe('>>>Hello world');
+  });
+
+  test('a retried merge (crash between the replay flush and the loser tombstone) does not replay twice', async ({
+    expect,
+  }) => {
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { note: 'baseline' })],
+      [ID_B, makeEntity(KEY, { note: 'baseline' })],
+    ]);
+    edit(fixture, ID_B, (entity) => {
+      entity.data.note = 'loser edit';
+    });
+
+    // Attempt #1: the winner's flush lands (so the replay is durable) but the winner is then found
+    // deleted, so `#mergeCandidates` returns without tombstoning the loser — the one window where
+    // the same live candidate pair can be merged a second time.
+    const crashOnce: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      flushDoc: async (ctx, documentId) => {
+        await fixture.context.flushDoc(ctx, documentId);
+        edit(fixture, ID_A, (entity) => {
+          if (entity.system) {
+            entity.system.deleted = true;
+          }
+        });
+      },
+    };
+    expect(await new ConvergenceKeyMerger(crashOnce).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group)).toBe(
+      true,
+    );
+    expect(entityOf(fixture, ID_A)?.data.note).toBe('loser edit'); // the replay landed durably.
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBeUndefined(); // not tombstoned yet.
+
+    // Restore the winner and retry with a normal `flushDoc` — the SAME live pair merges again.
+    edit(fixture, ID_A, (entity) => {
+      if (entity.system) {
+        entity.system.deleted = false;
+      }
+    });
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
+
+    expect(entityOf(fixture, ID_A)?.data.note).toBe('loser edit');
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
+
+    // The idempotence marker: exactly one replay change for this loser, not two.
+    const winnerDoc = fixture.handles.get(ID_A)?.doc();
+    if (!winnerDoc) {
+      throw new Error('fixture is missing the winner doc');
+    }
+    const replays = A.getChangesMetaSince(winnerDoc, []).filter((meta) => meta.message === `merge-replay: ${ID_B}`);
+    expect(replays.length).toBe(1);
   });
 });
