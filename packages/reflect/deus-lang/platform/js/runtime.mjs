@@ -176,7 +176,7 @@ const RESUME = 0;
 const ABORT = 1;
 export { ABORT, RESUME };
 
-let handlers = null;
+let current = null;
 
 class Abort {
   constructor(frame, clause, args) {
@@ -191,14 +191,14 @@ class Abort {
  * body's value, or is null.
  */
 export const handle = (clauses, ret, body) => {
-  const saved = handlers;
+  const saved = current;
   const frame = { clauses, next: saved };
-  handlers = frame;
+  current = frame;
   let value;
   try {
     value = body();
   } catch (err) {
-    handlers = saved;
+    current = saved;
     if (err instanceof Abort && err.frame === frame) {
       return err.clause[3](...err.args);
     }
@@ -210,7 +210,51 @@ export const handle = (clauses, ret, body) => {
     }
     throw err;
   } finally {
-    handlers = saved;
+    current = saved;
+  }
+  return ret === null ? value : ret(value);
+};
+
+/** The handler stack, which an `async` function keeps from its call to put back after each `await` (JsGen). */
+export const handlers = () => current;
+
+/** `value`, once the handlers an `async` function was called under are current again. */
+export const resumed = (saved, value) => {
+  current = saved;
+  return value;
+};
+
+/**
+ * `handle` for a body that waits. The frame is current only while the body runs: when it first waits the frame is
+ * popped, so nothing else that runs meanwhile sees it, and the body's own `await`s put it back as they resume.
+ */
+export const handleAsync = async (clauses, ret, body) => {
+  const saved = current;
+  const frame = { clauses, next: saved };
+  current = frame;
+  let promise;
+  try {
+    promise = body();
+  } finally {
+    current = saved;
+  }
+  let value;
+  try {
+    value = await promise;
+  } catch (err) {
+    current = saved;
+    if (err instanceof Abort && err.frame === frame) {
+      return err.clause[3](...err.args);
+    }
+    if (!(err instanceof Abort) && !(err instanceof DeusExit)) {
+      const clause = clauses.find((c) => c[0] === '#Defect' && c[1] === 0);
+      if (clause) {
+        return clause[3](defectMessage(err), undefined);
+      }
+    }
+    throw err;
+  } finally {
+    current = saved;
   }
   return ret === null ? value : ret(value);
 };
@@ -220,18 +264,18 @@ const defectMessage = (err) =>
 
 /** Performs operation `index` of `ability` with `args`. */
 export const perform = (ability, index, args) => {
-  for (let frame = handlers; frame !== null; frame = frame.next) {
+  for (let frame = current; frame !== null; frame = frame.next) {
     for (const clause of frame.clauses) {
       if (clause[1] === index && clause[0] === ability) {
         if (clause[2] === ABORT) {
           throw new Abort(frame, clause, args);
         }
-        const saved = handlers;
-        handlers = frame.next;
+        const saved = current;
+        current = frame.next;
         try {
           return clause[3](...args, undefined);
         } finally {
-          handlers = saved;
+          current = saved;
         }
       }
     }
@@ -912,6 +956,10 @@ export const importValue = (module, path, desc, name) => lazy(name, () => fromJs
 /** A JavaScript function for an exported DEUS function. */
 export const exportFn = (fn, params, result) =>
   fixed(params.length, (...args) => toJs(result, fn(...params.map((param, i) => fromJs(param, args[i])))));
+
+/** An exported `async` function (JsGen): its promise settles to the result through the result's codec. */
+export const exportAsync = (fn, params, result) =>
+  fixed(params.length, async (...args) => toJs(result, await fn(...params.map((param, i) => fromJs(param, args[i])))));
 
 //
 // The `Js` library's own imports (platform/js/js.deus): module "deus:runtime".

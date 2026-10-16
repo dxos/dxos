@@ -25,6 +25,15 @@ namespace Js
 -/
 def import (module : Text) (path : Text) : a := defect ("Js.import " ++ module ++ " " ++ path ++ ": JavaScript imports run only on the js target")
 
+/--
+  Waiting for a JavaScript promise (task 41714c0d). On the js target a definition whose type has `Async` in its row
+  is an `async` function, and `await p` is JavaScript's `await`: R2, D1, `fetch` and `crypto.subtle` answer with
+  promises. A lambda that waits may be passed only to a definition that waits too, and a handler clause may not
+  wait. A kernel runs no JavaScript, so `await` is a defect there.
+-/
+ability Async @"urn:deus:js:Async" where
+  await : Js -> Js
+
 def text : Text -> Js := import "deus:runtime" "js.as.text"
 
 def int : Int -> Js := import "deus:runtime" "js.as.int"

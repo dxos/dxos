@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "exact"]
+def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "js", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "exact"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=

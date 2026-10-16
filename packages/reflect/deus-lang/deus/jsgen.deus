@@ -14,6 +14,12 @@
 
   A definition `def f : T := Js.import "<module>" "<path>"` is a foreign import: values cross by
   codecs chosen from `T`. Exports cross by the same codecs.
+
+  A definition whose type has `Js.Async` in it is an `async` function (task 41714c0d): `Js.Async.await p` and its
+  calls to other such definitions are `await`ed. Handlers live in one runtime-wide stack, which other requests change
+  while a function waits, so each `async` function keeps the stack it was called under (`$stack`) and puts it back
+  after every `await`. A lambda that waits is `async` too and may be passed only to a definition that waits; a
+  handler clause may not wait, since the operation it answers is called without `await`.
 -/
 
 namespace JsGen
@@ -153,7 +159,8 @@ inductive JsKind where
   | importValue (module : Text) (path : Text)
   | primitive (name : Text)
 
-/-- A definition in the module: hash, DEUS name for traces, JavaScript name, kind, dressed body, stored type. -/
+/-- A definition in the module: hash, DEUS name for traces, JavaScript name, kind, dressed body, stored type, and
+  whether it is an `async` function. -/
 structure JsDef @"urn:deus:jsgen:JsDef" where
   jdHash : Text
   jdName : Text
@@ -161,13 +168,16 @@ structure JsDef @"urn:deus:jsgen:JsDef" where
   jdKind : JsKind
   jdBody : Sexp
   jdType : Sexp
+  jdAsync : Bool
 
-/-- The whole program: its definitions by hash, the namespace, and the JavaScript modules it imports. -/
+/-- The whole program: its definitions by hash, the namespace, the JavaScript modules it imports, and the hash of
+  `Js.Async` ("" without one). -/
 structure JsModule @"urn:deus:jsgen:JsModule" where
   jmDefs : Dict Text JsDef
   jmNs : Map Text Entry
   jmFetch : Text -> Option Sexp
   jmModules : List Text
+  jmAsync : Text
 
 /-- `(lam (lam … b))` as (parameter count, b). -/
 def unlam (core : Sexp) : (Int, Sexp) :=
@@ -222,6 +232,24 @@ def abilitiesOf (form : Sexp) : List Text :=
   | Sexp.list items => List.concatMap abilitiesOf items
   | _ => []
 
+/-- The IRI of `Js.Async`, which the js target compiles to JavaScript's `await`. -/
+def asyncIri : Text := "urn:deus:js:Async"
+
+/-- The hash of `Js.Async` in `ns`, or "" when the program cannot wait. -/
+def asyncOf (ns : Map Text Entry) : Text :=
+  Option.getOr (List.head? (List.filterMap (fun pair =>
+    match snd pair with
+    | Entry.ability h iri => if iri == asyncIri then Option.some h else Option.none
+    | _ => Option.none) (Map.toList ns))) ""
+
+/-- Whether `a` occurs anywhere in `t`: a type that names `Js.Async` (by its IRI, as types name abilities that have
+  one, or by hash) is an `async` function's. -/
+def mentions (a : Text) (t : Sexp) : Bool :=
+  match t with
+  | Sexp.str s => s == a
+  | Sexp.list items => List.any (mentions a) items
+  | _ => false
+
 /-- A definition's stored type: its signature, else its inferred scheme, else `()`. -/
 def storedType (meta : Option Sexp) : Sexp :=
   match Codebase.metaField meta "sig" with
@@ -239,7 +267,7 @@ def importOf (jsImport : Text) (core : Sexp) : Option (Text, Text) :=
 
 /-- Every definition the roots reach, by hash. `jsImport` is the hash of `Js.import`, or "" when
   the codebase has none. -/
-def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (ns : Map Text Entry) (jsImport : Text) (roots : List Text) : {Throw Text | r} List JsDef :=
+def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (ns : Map Text Entry) (jsImport : Text) (asyncHash : Text) (roots : List Text) : {Throw Text | r} List JsDef :=
   let names := JsGen.namesByHash ns
   let taken := MutMap.new ()
   let jsName := fun display =>
@@ -260,7 +288,7 @@ def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw
         let m := meta h
         let t := JsGen.storedType m
         match fetch h with
-        | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: [])) => go rest (JsDef.mk h display "" (JsKind.primitive p) (Sexp.list []) t :: acc)
+        | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: [])) => go rest (JsDef.mk h display "" (JsKind.primitive p) (Sexp.list []) t false :: acc)
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
             match importOf jsImport core with
             | Option.some (module, path) =>
@@ -268,18 +296,18 @@ def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw
                   match JsGen.arrows t with
                   | ([], _) => JsKind.importValue module path
                   | (ps, _) => JsKind.importFn module path (List.length ps)
-                go rest (JsDef.mk h display (jsName display) kind (Sexp.list []) t :: acc)
+                go rest (JsDef.mk h display (jsName display) kind (Sexp.list []) t false :: acc)
             | Option.none =>
                 if not (Text.isEmpty jsImport) && List.contains jsImport (Wasm.refsOf core) then Throw.throw (display ++
                   " uses Js.import inside an expression; a binding is a definition whose whole body is Js.import \"<module>\" \"<path>\"") else ()
                 let body := dress (Ref.new (locals m)) core
-                let kind :=
+                let (kind, waits) :=
                   match JsGen.unlam core with
-                  | (0, _) => JsKind.constant
-                  | (n, _) => JsKind.fn n
+                  | (0, _) => (JsKind.constant, false)
+                  | (n, _) => (JsKind.fn n, not (Text.isEmpty asyncHash) && (mentions asyncIri t || mentions asyncHash t))
                 go
                   (rest ++ Wasm.refsOf core)
-                  (JsDef.mk h display (jsName display) kind body t :: acc)
+                  (JsDef.mk h display (jsName display) kind body t waits :: acc)
         | _ => Throw.throw ("#" ++ Text.take 10 h ++ " is not a term the js target can compile")
   go roots []
 
@@ -293,7 +321,8 @@ inductive JsTarget where
   | assign (name : Text)
   | drop
 
-/-- The function being compiled: lines (newest first), indentation, fresh names, and the loop it may jump to. -/
+/-- The function being compiled: lines (newest first), indentation, fresh names, the loop it may jump to, and
+  whether it is `async`. -/
 structure JsCtx @"urn:deus:jsgen:JsCtx" where
   jxMod : JsModule
   jxLines : Ref (List Text)
@@ -303,6 +332,7 @@ structure JsCtx @"urn:deus:jsgen:JsCtx" where
   jxSelf : Option (Text, Int, List Text)
   jxLooped : Ref Bool
   jxOwner : Text
+  jxAsync : Bool
 
 def emit (ctx : JsCtx) (line : Text) : Unit := Ref.set ctx.jxLines ((Text.repeat ctx.jxDepth "  " ++ line) :: Ref.get ctx.jxLines)
 
@@ -436,6 +466,31 @@ def primValue (p : Text) : Text :=
 
 def call (callee : Text) (args : List Text) : Text := callee ++ "(" ++ Text.join ", " args ++ ")"
 
+/-- Whether `e` waits, not counting the lambdas in it, which wait on their own: it performs `Js.Async.await` or
+  reaches a definition that is `async`. -/
+def awaits (mod : JsModule) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "op" :: Sexp.str a :: _) => not (Text.isEmpty a) && a == mod.jmAsync
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) =>
+      match Dict.lookup h mod.jmDefs with
+      | Option.some d => d.jdAsync
+      | Option.none => false
+  | Sexp.list (Sexp.sym "lam" :: _) => false
+  | Sexp.list items => List.any (awaits mod) items
+  | _ => false
+
+/-- Whether `e` is a lambda that waits. -/
+def waitingLambda (mod : JsModule) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "lam" :: _) => awaits mod (snd (JsGen.unlam e))
+  | _ => false
+
+/-- `code` awaited in an `async` function, with the caller's handlers put back after; as it is elsewhere. -/
+def awaited (ctx : JsCtx) (code : Text) : Text := if ctx.jxAsync then "rt.resumed($stack, await " ++ code ++ ")" else code
+
+/-- The first line of an `async` function: the handlers it was called under, which `awaited` puts back. -/
+def stackLine : Text := "const $stack = rt.handlers();"
+
 def lookupDef (ctx : JsCtx) (h : Text) : {Throw Text} JsDef :=
   match Dict.lookup h ctx.jxMod.jmDefs with
   | some d => d
@@ -494,7 +549,7 @@ def stmt (ctx : JsCtx) (env : List Text) (e : Sexp) (target : JsTarget) : {Throw
   | Sexp.list (Sexp.sym "letrec" :: Sexp.list (_ :: names) :: Sexp.list fs :: b :: []) =>
       let jsNames := List.map (fun x => JsGen.local ctx (asText x)) names
       let env2 := reverse jsNames ++ env
-      forEach (zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair))
+      forEach (zip jsNames fs) (fun pair => function ctx env2 (fst pair) (fst pair) (snd pair) (waitingLambda ctx.jxMod (snd pair)))
       JsGen.stmt ctx env2 b target
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
       match (target, calleeName ctx env f, ctx.jxSelf) with
@@ -561,7 +616,7 @@ def operands (ctx : JsCtx) (env : List Text) (items : List Sexp) : {Throw Text} 
 
 /-- A function declaration for the dressed lambda chain `lam` (a `letrec` member, or a definition
   when `env` is empty): `function name(…) { … }`, with a loop when it calls itself in tail position. -/
-def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (lam : Sexp) : {Throw Text} Unit :=
+def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (lam : Sexp) (wait : Bool) : {Throw Text} Unit :=
   let (n, _) := JsGen.unlam lam
   let (xs, body) := JsGen.params n lam
   let names := List.map (fun x => JsGen.local ctx x) xs
@@ -575,11 +630,14 @@ def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (l
     (Option.some (jsName, n, slots))
     (Ref.new false)
     ctx.jxOwner
+    wait
   stmt inner (reverse names ++ env) body JsTarget.ret
   let lines := reverse (Ref.get inner.jxLines)
   let pad := repeat (ctx.jxDepth + 1) "  "
+  let keyword := if wait then "async function " else "function "
   if Ref.get inner.jxLooped then
-    JsGen.emit ctx ("function " ++ jsName ++ "(" ++ join ", " slots ++ ") {")
+    JsGen.emit ctx (keyword ++ jsName ++ "(" ++ join ", " slots ++ ") {")
+    if wait then JsGen.emit ctx ("  " ++ stackLine) else ()
     JsGen.emit ctx "  for (;;) {"
     JsGen.emit ctx ("    const " ++
       join ", " (List.map (fun pair => fst pair ++ " = " ++ snd pair) (zip names slots)) ++ ";")
@@ -587,13 +645,15 @@ def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (l
     JsGen.emit ctx "  }"
     JsGen.emit ctx "}"
   else
-    JsGen.emit ctx ("function " ++ jsName ++ "(" ++ join ", " names ++ ") {")
+    JsGen.emit ctx (keyword ++ jsName ++ "(" ++ join ", " names ++ ") {")
+    if wait then JsGen.emit ctx ("  " ++ stackLine) else ()
     forEach lines (fun line => JsGen.emit ctx ("  " ++ line))
     JsGen.emit ctx "}"
   if env == [] then () else JsGen.emit ctx ("rt.named(" ++ jsName ++ ", " ++ JsGen.quote display ++ ");")
 
-/-- An arrow function of `names` whose body is `body`, compiled in its own scope (no self loop). -/
-def arrow (ctx : JsCtx) (env : List Text) (names : List Text) (body : Sexp) : {Throw Text} Text :=
+/-- An arrow function of `names` whose body is `body`, compiled in its own scope (no self loop); `async` when it
+  waits. -/
+def arrow (ctx : JsCtx) (env : List Text) (names : List Text) (body : Sexp) (wait : Bool) : {Throw Text} Text :=
   let inner := JsCtx.mk
     ctx.jxMod
     (Ref.new [])
@@ -603,7 +663,9 @@ def arrow (ctx : JsCtx) (env : List Text) (names : List Text) (body : Sexp) : {T
     Option.none
     (Ref.new false)
     ctx.jxOwner
-  let head := "(" ++ join ", " names ++ ") =>"
+    wait
+  if wait then JsGen.emit inner stackLine else ()
+  let head := (if wait then "async (" else "(") ++ join ", " names ++ ") =>"
   if needsStatements body then
     stmt inner (reverse names ++ env) body JsTarget.ret
     head ++ " {\n" ++ join "\n" (reverse (Ref.get inner.jxLines)) ++ "\n" ++ repeat ctx.jxDepth "  " ++
@@ -635,7 +697,7 @@ def expr (ctx : JsCtx) (env : List Text) (e : Sexp) : {Throw Text} Text :=
   | Sexp.list (Sexp.sym "lam" :: _ :: _ :: []) =>
       let (n, _) := JsGen.unlam e
       let (xs, body) := JsGen.params n e
-      "rt.named(" ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body ++ ", " ++
+      "rt.named(" ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body (awaits ctx.jxMod body) ++ ", " ++
         JsGen.quote (ctx.jxOwner ++ "/λ") ++ ")"
   | Sexp.list (Sexp.sym "handle" :: body :: clauses) => JsGen.handleExpr ctx env body clauses
   | Sexp.list (Sexp.sym "app" :: f :: args) => JsGen.app ctx env f args
@@ -659,19 +721,26 @@ def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw T
       if k == n then if t == "#List" then "rt.cons(" ++ join ", " values ++ ")" else "new rt.Con(" ++ JsGen.quote t ++ ", " ++ Int.toText tag ++ ", [" ++ join ", " values ++ "])" else "rt.ap(" ++ JsGen.expr ctx env f ++ ", " ++ join ", " values ++ ")"
   | Sexp.list (Sexp.sym "op" :: Sexp.str a :: Sexp.int i :: Sexp.int k :: []) =>
       let values := operands ctx env args
-      if k == n then "rt.perform(" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", [" ++ join ", " values ++ "])" else "rt.ap(" ++ JsGen.expr ctx env f ++ ", " ++ join ", " values ++ ")"
+      if not (Text.isEmpty a) && a == ctx.jxMod.jmAsync then
+        if not ctx.jxAsync then Throw.throw (ctx.jxOwner ++ " waits (Js.Async.await) but its type has no Js.Async, so the js target cannot make it async")
+        else if k == n then JsGen.awaited ctx (join ", " values)
+        else Throw.throw (ctx.jxOwner ++ " passes Js.Async.await as a value; the js target needs it applied")
+      else if k == n then "rt.perform(" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", [" ++ join ", " values ++ "])" else "rt.ap(" ++ JsGen.expr ctx env f ++ ", " ++ join ", " values ++ ")"
   | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) =>
       let d := lookupDef ctx h
       match d.jdKind with
       | JsKind.primitive p => JsGen.app ctx env (Sexp.list [Sexp.sym "prim", Sexp.str p]) args
       | _ =>
           let arity := refArity ctx h
+          if not d.jdAsync && List.any (waitingLambda ctx.jxMod) args then Throw.throw (ctx.jxOwner ++ " passes a lambda that waits to " ++
+            d.jdName ++ ", which does not wait; the js target would hand it a promise") else ()
+          if d.jdAsync && not ctx.jxAsync then Throw.throw (ctx.jxOwner ++ " calls " ++ d.jdName ++ ", which waits, but is not async itself") else ()
           let values := operands ctx env args
-          if arity == n then JsGen.call d.jdJs values else if arity > 0 && n > arity then "rt.ap(" ++ JsGen.call d.jdJs (List.take arity values) ++ ", " ++
-            join ", " (List.drop arity values) ++ ")" else "rt.ap(" ++ refValue ctx h ++ ", " ++ join ", " values ++ ")"
+          if arity == n then (if d.jdAsync then JsGen.awaited ctx (JsGen.call d.jdJs values) else JsGen.call d.jdJs values) else if arity > 0 && n > arity then JsGen.awaited ctx ("rt.ap(" ++ (if d.jdAsync then JsGen.awaited ctx (JsGen.call d.jdJs (List.take arity values)) else JsGen.call d.jdJs (List.take arity values)) ++ ", " ++
+            join ", " (List.drop arity values) ++ ")") else JsGen.awaited ctx ("rt.ap(" ++ refValue ctx h ++ ", " ++ join ", " values ++ ")")
   | _ =>
       match operands ctx env (f :: args) with
-      | callee :: values => "rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")"
+      | callee :: values => JsGen.awaited ctx ("rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")")
       | [] => Throw.throw "empty application"
 
 /-- `(handle b r? o…)` as `rt.handle(clauses, ret, body)`. A clause that resumes at once is called
@@ -687,21 +756,29 @@ def handleExpr (ctx : JsCtx) (env : List Text) (body : Sexp) (clauses : List Sex
           match b with
           | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "var" :: Sexp.int 0 :: []) :: value :: []) => if JsGen.occurs 0 value then Option.none else Option.some value
           | _ => Option.none
+        if awaits ctx.jxMod b then Throw.throw ("the handler for " ++ opName ctx a i ++
+          " waits; the js target calls an operation without await, so a clause cannot wait") else ()
         match resumed with
         | Option.some value => "[" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", rt.RESUME, " ++
-            JsGen.arrow (deeper ctx) env locals value ++ "]"
+            JsGen.arrow (deeper ctx) env locals value false ++ "]"
         | Option.none => if JsGen.occurs 0 b then Throw.throw ("the handler for " ++ opName ctx a i ++
             " uses its continuation in a way the js target does not support (only `k e` with nothing after it, or not at all)") else "[" ++ JsGen.quote a ++ ", " ++ Int.toText i ++ ", rt.ABORT, " ++
-            JsGen.arrow (deeper ctx) env locals b ++ "]"
+            JsGen.arrow (deeper ctx) env locals b false ++ "]"
     | _ => Throw.throw "malformed handler clause") ons
   let retCode :=
     match ret with
-    | Option.some (Sexp.list (Sexp.sym "ret" :: Sexp.str x :: b :: [])) => JsGen.arrow ctx env [JsGen.local ctx x] b
+    | Option.some (Sexp.list (Sexp.sym "ret" :: Sexp.str x :: b :: [])) => JsGen.arrow ctx env [JsGen.local ctx x] b (awaits ctx.jxMod b)
     | _ => "null"
-  let thunk := JsGen.arrow ctx env [] body
+  -- A body that waits makes the handler async: `rt.handleAsync` keeps its frame until the body's promise settles.
+  let wait := awaits ctx.jxMod body || (match ret with
+    | Option.some r => awaits ctx.jxMod r
+    | Option.none => false)
+  if wait && not ctx.jxAsync then Throw.throw (ctx.jxOwner ++ " handles a body that waits, but its type has no Js.Async, so the js target cannot make it async") else ()
+  let thunk := JsGen.arrow ctx env [] body wait
   let pad := repeat (ctx.jxDepth + 1) "  "
-  "rt.handle([\n" ++ join ",\n" (List.map (fun c => pad ++ c) compiled) ++ "\n" ++
+  let code := (if wait then "rt.handleAsync([\n" else "rt.handle([\n") ++ join ",\n" (List.map (fun c => pad ++ c) compiled) ++ "\n" ++
     repeat ctx.jxDepth "  " ++ "], " ++ retCode ++ ", " ++ thunk ++ ")"
+  if wait then JsGen.awaited ctx code else code
 
 /-- An operation's name, for messages. -/
 def opName (ctx : JsCtx) (a : Text) (i : Int) : Text :=
@@ -782,7 +859,7 @@ def moduleName (mod : JsModule) (module : Text) : Text :=
 
 /-- One definition's code: its lines, outermost indentation. -/
 def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
-  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false
   match d.jdKind with
   | JsKind.primitive _ => []
   | JsKind.importFn module path n =>
@@ -802,10 +879,10 @@ def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
       JsGen.quote d.jdName ++
       ");"]
   | JsKind.constant =>
-      let body := JsGen.arrow ctx [] [] d.jdBody
+      let body := JsGen.arrow ctx [] [] d.jdBody false
       ["const " ++ d.jdJs ++ " = rt.lazy(" ++ JsGen.quote d.jdName ++ ", " ++ body ++ ");"]
   | JsKind.fn _ =>
-      function ctx [] d.jdJs d.jdName d.jdBody
+      function ctx [] d.jdJs d.jdName d.jdBody d.jdAsync
       reverse (Ref.get ctx.jxLines) ++
         ["rt.named(" ++ d.jdJs ++ ", " ++ JsGen.quote d.jdName ++ ");"]
 
@@ -832,7 +909,7 @@ def exportLine (mod : JsModule) (name : Text) (d : JsDef) : Text :=
       let known := List.length ps >= n
       let paramCodecs := if known then List.map (codec mod []) (List.take n ps) else List.replicate n "['raw']"
       let resultCodec := if known && List.length ps == n then codec mod [] r else "['raw']"
-      "export const " ++ name ++ " = rt.exportFn(" ++ d.jdJs ++ ", [" ++ Text.join ", " paramCodecs ++ "], " ++ resultCodec ++ ");"
+      "export const " ++ name ++ " = " ++ (if d.jdAsync then "rt.exportAsync(" else "rt.exportFn(") ++ d.jdJs ++ ", [" ++ Text.join ", " paramCodecs ++ "], " ++ resultCodec ++ ");"
   | JsKind.importFn _ _ _ => "export const " ++ name ++ " = " ++ d.jdJs ++ ";"
   | _ => "export const " ++ name ++ " = rt.toJs(" ++ codec mod [] d.jdType ++ ", " ++ d.jdJs ++ "());"
 
@@ -849,7 +926,8 @@ def mappings (sources : List (Option Int)) : Text :=
   names its source map `mapName`. `view` gives a definition's source text (hash, name) for the map.
   Returns the module text and the source map JSON. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (view : Text -> Text -> {Throw Text | r} Text) (ns : Map Text Entry) (jsImport : Text) (roots : List (Text, Text)) (runtime : Text) (mapName : Text) : {Throw Text | r} (Text, Text) :=
-  let defs := JsGen.gather fetch meta ns jsImport (List.map snd roots)
+  let asyncHash := asyncOf ns
+  let defs := JsGen.gather fetch meta ns jsImport asyncHash (List.map snd roots)
   let modules := dedup (filterMap (fun d =>
     match d.jdKind with
     | JsKind.importFn m _ _ => if m == "" || m == "deus:runtime" then Option.none else Option.some m
@@ -865,6 +943,7 @@ def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Thro
     ns
     (fun h => Option.bind (Dict.lookup h objects) id)
     modules
+    asyncHash
   let header := ["// Generated by `deus build --js` (D97). Edit the DEUS definitions, not this file.", "import * as rt from " ++ JsGen.quote runtime ++ ";"] ++
     mapIndexed
       (fun i m => "import * as m" ++ Int.toText i ++ " from " ++ JsGen.quote m ++ ";")
@@ -876,7 +955,7 @@ def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Thro
   let footer := ["", "export const raw = {"] ++ List.map (fun pair =>
     let d := getOr
       (Dict.lookup (snd pair) mod.jmDefs)
-      (JsDef.mk "" "" "undefined" JsKind.constant (Sexp.list []) (Sexp.list []))
+      (JsDef.mk "" "" "undefined" JsKind.constant (Sexp.list []) (Sexp.list []) false)
     match d.jdKind with
     | JsKind.fn _ => "  " ++ fst pair ++ ": " ++ d.jdJs ++ ","
     | JsKind.importFn _ _ _ => "  " ++ fst pair ++ ": " ++ d.jdJs ++ ","
