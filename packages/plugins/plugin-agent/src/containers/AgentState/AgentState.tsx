@@ -60,7 +60,10 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
         chats.forEach((chat) => get(Obj.atomProperty(chat, 'tasks')));
         tasks.forEach((task) => get(Obj.atomProperty(task, 'status')));
 
-        const statements = BrainService.currentFacts((facts ?? []).map(({ fact }) => fact));
+        const statements = BrainService.currentFacts(
+          (facts ?? []).map(({ fact }) => fact),
+          new Date().toISOString(),
+        );
 
         // The agent's own checklist: tasks its chats carry, matched by id so unloaded refs still count.
         const taskIds = new Set(

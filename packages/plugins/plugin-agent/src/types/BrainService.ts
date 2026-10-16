@@ -214,16 +214,16 @@ export const factText = (fact: RDF.Fact): string =>
   `${fact.factuality.polarity === '-' ? 'not: ' : ''}${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;
 
 /**
- * The facts that still hold: none another graph superseded or retracted, and, given `now`, none past its `validTo`.
+ * The facts that still hold at `now` (ISO): none another graph superseded or retracted, and none past its `validTo`.
  * A graph with a `kind` records a free-text memory rather than a fact, so it is left out.
  */
-export const currentFacts = (facts: readonly RDF.Fact[], now?: string): RDF.Fact[] => {
+export const currentFacts = (facts: readonly RDF.Fact[], now: string): RDF.Fact[] => {
   const statuses = RDF.Graph.status(facts);
   return facts.filter(
     (fact) =>
       fact.kind === undefined &&
       statuses.get(RDF.Mapping.graphOf(fact)) === 'active' &&
-      (now === undefined || !fact.assertion.validTo || fact.assertion.validTo > now),
+      (!fact.assertion.validTo || fact.assertion.validTo > now),
   );
 };
 

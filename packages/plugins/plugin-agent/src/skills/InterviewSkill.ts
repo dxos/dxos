@@ -57,7 +57,7 @@ export const make = (): Skill.Skill =>
           to an entity or a literal value (e.g. Rich, has role, "lead of the Composer team"; Rich, member of, the Composer team), with the answer's words as quote.
           Use origin "stated" for what they told you and "inferred" for your own conclusions.
           Pass yourself as the agent; resolve every person and team a fact names with ${tool(MemoryOperation.ResolveEntity)} first and pass them as subject or object.
-        - When something contradicts or corrects an earlier fact, record the new fact with supersedes set to the old fact's id (from ${tool(MemoryOperation.Recall)}).
+        - When something contradicts or corrects an earlier fact, record the new fact with supersedes set to a list of the ids of the facts it replaces, e.g. [oldFact.id] (from ${tool(MemoryOperation.Recall)}).
         - Call ${tool(MemoryOperation.ProposeGoal)} for each goal they describe, owned by the people or teams who hold it.
 
         End of the interview:

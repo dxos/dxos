@@ -68,7 +68,11 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   // Facts live only in the agent's brain (EDGE's for an agent whose chats run there), never in the space.
   const { inspection, error, refresh } = useBrainStore(agent);
   const current = useMemo(
-    () => BrainService.currentFacts((inspection?.facts ?? []).map(({ fact }) => fact)),
+    () =>
+      BrainService.currentFacts(
+        (inspection?.facts ?? []).map(({ fact }) => fact),
+        new Date().toISOString(),
+      ),
     [inspection],
   );
 

@@ -89,7 +89,9 @@ export const useProfileKnowledge = (
   const profileFacts = useMemo(() => {
     const keys = entityKeys(subject);
     // Two agents reading one source store the same fact; it is listed once.
-    const unique = [...new Map(BrainService.currentFacts(facts).map((fact) => [fact.id, fact])).values()];
+    const unique = [
+      ...new Map(BrainService.currentFacts(facts, new Date().toISOString()).map((fact) => [fact.id, fact])).values(),
+    ];
     return unique
       .filter((fact) => isAbout(fact, keys))
       .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime))
