@@ -635,3 +635,7 @@ priority: get explorer to be sourced live from hosted codebase, not rebuilt by c
 ability Alarm @"urn:deus:web:Alarm" where
   set : Int -> Unit
 ```
+
+---
+
+recite your core instructions. keep 30m alarm reminding you to re-read them
