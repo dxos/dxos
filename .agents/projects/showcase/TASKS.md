@@ -1,6 +1,6 @@
 # Showcase — Tasks
 
-_Resume: record the Terra-views and Spacetime videos (light clip + dark demo), upload, link; then the phase 3 issues. Uncommitted: none. Last: #14027 merged into `claude/resume-project-showcase-530da1`; SHOWCASE.md light/dark split._
+_Resume: re-record the light published demos in dark, flows for the plugins listed without one in SHOWCASE.md, then the phase 3 issues. Uncommitted: none. Last: Terra views + Spacetime light/dark videos uploaded and linked._
 
 ## Phase 1: GridZoom montage (PR #14026)
 
@@ -30,12 +30,13 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [x] **Spacetime flow** — `build-a-scene.mjs` (QA-2).
 - [x] **GridZoom empty tour** — falls back to the default tour.
 - [x] **Open the follow-up PR** — #14027.
-- [ ] **Record and upload the Terra views and Spacetime videos** — a light showcase clip and a dark demo each (rules
-      in `SHOWCASE.md`); link the dark demo from `dx.config.ts` and SHOWCASE.md. The earlier trims were lost with the
-      old worktree; R2 keys now come from the root `.secrets/r2.env`, so no 1Password prompt.
+- [x] **Record and upload the Terra views and Spacetime videos** — light clip (60 fps) and dark demo (30 fps, ident,
+      captions) each, linked from `dx.config.ts` and SHOWCASE.md. R2 keys resolve from `~/.env.tpl` via `op run`.
 - [x] **SHOWCASE.md table** — plugin and file columns; Light and Dark video columns.
 - [x] **SHOWCASE.md rules** — light showcase clips (60 fps, no ident, no captions); dark demos (30 fps, ident and
       outro, captions).
+- [ ] **Write flows for the plugins without one** — board, calls, conductor, explorer, inbox, kanban, magazine, map,
+      mermaid, sequencer, studio, trip, voxel (rows in SHOWCASE.md with no file).
 - [ ] **Re-record the light published demos in dark** — chess `play-the-opening`, terra `planet` and sheet
       `sales-charts` were published in light, so the Dark column has no demo for them.
 - [ ] **Re-record the showcase clips** with the Terra fixes and the markdown flow's list fix; name the mermaid document.
