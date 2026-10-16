@@ -14,6 +14,8 @@ DEMO_BIN="$(mktemp -d)"
 ln -s "$DEMO_ROOT/packages/devtools/drawing/bin/drawing.js" "$DEMO_BIN/drawing"
 ln -s "$DEMO_ROOT/packages/devtools/cli/bin/dx" "$DEMO_BIN/dx"
 export PATH="$DEMO_BIN:$PATH"
+# Started from inside an agent session, the take would otherwise inherit its child-session marker.
+unset CLAUDE_CODE_CHILD_SESSION
 export DX_PROFILE="${DEMO_DX_PROFILE:-autocue-drawing-sh}"
 
 # The CLI has no offline way to create an identity (`dx account signup` needs the hub), so the take provisions

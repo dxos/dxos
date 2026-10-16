@@ -1,6 +1,14 @@
 {
   "permissions": {
     "defaultMode": "acceptEdits",
-    "allow": ["Bash(drawing:*)", "Bash(dx drawing:*)", "Bash(ls:*)", "Bash(cat:*)", "Bash(find:*)", "Bash(grep:*)"]
+    "allow": [
+      "Bash(drawing:*)",
+      "Bash(npx -y @dxos/drawing:*)",
+      "Bash(dx drawing:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
+    ]
   }
 }

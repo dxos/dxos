@@ -15,13 +15,16 @@ and never use Mermaid for a diagram this skill can draw.
 2. **Cut it to what a reader needs.** At most about 14 boxes and 3 groups. Drop helpers, tests,
    constants and leaf utilities; when you drop a box that relays an arrow (`A → helper → C`), keep the
    arrow as `A → C`. Split a bigger system into two diagrams.
-3. **Write a `.dx` file** (language below). Start with no placement hints.
-4. **Render it:**
+3. **Write a `.dx` file** (language below) with your file-editing tool, not a shell heredoc. Start with no
+   placement hints.
+4. **Render it**, as a command of its own (no pipes or chains, so it runs without extra approval):
 
    ```bash
-   drawing render diagram.dx              # when `drawing` is installed
-   npx -y @dxos/drawing render diagram.dx # otherwise
+   drawing render diagram.dx
    ```
+
+   If that reports `command not found`, run `npx -y @dxos/drawing render diagram.dx` instead. Don't probe
+   for the command first; just run it.
 
    It prints a report and writes `diagram.dx.svg` beside the source. `--plain` writes a bare `.svg`;
    `-o path` picks the output; `--json` prints the report as JSON. Exit code 1 means the source has an

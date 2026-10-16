@@ -56,16 +56,21 @@ const until = async (page, predicate, { timeout = 60_000, every = 400 } = {}) =>
 
 /** Claude Code is working while it offers "esc to interrupt"; it is done once that has been gone a while. */
 const agentIdle = async (page, { timeout = 360_000, quiet = 4_000 } = {}) => {
-  await until(page, (text) => text.includes('esc to interrupt'), { timeout: 30_000 });
+  // A fast turn can finish before the indicator is ever seen; the idle check below still holds.
+  await until(page, (text) => text.includes('esc to interrupt'), { timeout: 30_000 }).catch(() => {});
   const deadline = Date.now() + timeout;
   let idleSince;
   while (Date.now() < deadline) {
     const text = await screen(page);
-    // A permission prompt would stall the take; the fixture's settings allow every command the skill runs.
+    // The fixture's settings allow the commands the skill asks for; if the agent runs anything else, answer the
+    // prompt as the person at the keyboard would ("1. Yes"), on camera.
     if (/Do you want to proceed\?/.test(text)) {
-      throw new Error('Claude Code asked for permission; allow the command in fixtures/shop/.claude/settings.json.');
+      await page.keyboard.press('1');
+      await page.waitForTimeout(800);
+      idleSince = undefined;
+      continue;
     }
-    if (text.includes('esc to interrupt')) {
+    if (text.includes('esc to interrupt') || !ready(text)) {
       idleSince = undefined;
     } else {
       idleSince ??= Date.now();
@@ -87,6 +92,9 @@ const ask = async (page, message) => {
   await agentIdle(page);
 };
 
+/** Claude Code's input box is up and waiting: its footer shows the permission-mode hint. */
+const ready = (text) => /shift\+tab to cycle|\? for shortcuts/.test(text);
+
 const previews = (page) => page.evaluate(() => window.stage.previews);
 
 export const steps = [
@@ -101,10 +109,16 @@ export const steps = [
       const deadline = Date.now() + 90_000;
       while (Date.now() < deadline) {
         const text = await screen(page);
-        if (text.includes('? for shortcuts') && !/trust|Press Enter|text style/i.test(text)) {
+        if (ready(text) && !/trust this folder|Press Enter|text style/i.test(text)) {
           break;
         }
-        if (/text style|Press Enter to continue|trust this folder|Yes, proceed|Yes, I trust/i.test(text)) {
+        if (text.includes('Yes, I trust this folder')) {
+          // The trust dialog defaults to "No, exit".
+          await page.keyboard.press('ArrowDown');
+          await page.waitForTimeout(300);
+          await page.keyboard.press('Enter');
+          await page.waitForTimeout(1_500);
+        } else if (/text style|Press Enter to continue/i.test(text)) {
           await page.keyboard.press('Enter');
           await page.waitForTimeout(1_500);
         } else {
@@ -135,7 +149,7 @@ export const steps = [
       await focus(page);
       await page.keyboard.type('claude', { delay: TYPING });
       await page.keyboard.press('Enter');
-      await until(page, (text) => text.includes('? for shortcuts'), { timeout: 60_000 });
+      await until(page, ready, { timeout: 60_000 });
       const shown = await previews(page);
       await ask(page, 'Draw the architecture of this repo with the drawing skill. Save it as arch.dx.');
       await page.waitForFunction((count) => window.stage.previews > count, shown, { timeout: 30_000 });

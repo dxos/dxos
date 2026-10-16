@@ -49,9 +49,6 @@ const heredoc = async (page, lines) => {
   }
 };
 
-const title = (page, heading, subtitle) =>
-  page.evaluate(([heading, subtitle]) => window.stage.title(heading, subtitle), [heading, subtitle]);
-
 /** The rendered SVG shown in the preview pane, by file name. */
 const previewing = (page, name) =>
   page.waitForFunction(
@@ -66,10 +63,13 @@ export const steps = [
   {
     name: 'Prep (off camera): wait for the shell, set the title',
     setup: true,
-    run: async ({ page }) => {
+    run: async ({ demo, page }) => {
       // `dx-drawing.sh` provisions the profile before the first prompt, which the stage clears from the screen.
       await page.waitForFunction(() => window.stage.prompts > 0, undefined, { timeout: 180_000 });
-      await title(page, 'Diagrams as *code*', 'dx drawing — the DXOS illustrator, from your terminal');
+      await demo.caption({
+        value: 'Diagrams as code',
+        subtitle: 'dx drawing: the DXOS illustrator, from your terminal',
+      });
       await page.waitForTimeout(600);
     },
   },
@@ -84,8 +84,11 @@ export const steps = [
     name: 'Render it',
     narration:
       'dx drawing render lays it out: it places the boxes, routes every arrow, and reports crossings and bends.',
-    run: async ({ page }) => {
-      await title(page, 'Laid out in *seconds*', 'placed, routed and scored by the semantic layout engine');
+    run: async ({ demo, page }) => {
+      await demo.caption({
+        value: 'Laid out in seconds',
+        subtitle: 'Placed, routed and scored by the semantic layout engine',
+      });
       await sh(page, 'clear && dx drawing render pipeline.dx', { beat: 0 });
       await previewing(page, 'pipeline.dx.svg');
       await page.waitForTimeout(3_500);
@@ -94,8 +97,8 @@ export const steps = [
   {
     name: 'Edit and re-render',
     narration: 'Add three lines and render again. The whole layout re-flows, still with zero crossings.',
-    run: async ({ page }) => {
-      await title(page, 'Edit the text, the layout *re-flows*', 'no dragging boxes around');
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Edit the text; the layout re-flows', subtitle: 'No dragging boxes around' });
       // Cleared first, on its own: a `clear` in the heredoc's command line runs after the typed lines and wipes them.
       await sh(page, 'clear', { beat: 200 });
       const before = await page.evaluate(() => window.stage.prompts);
@@ -120,8 +123,11 @@ export const steps = [
     name: 'Import it into the space',
     narration:
       'The SVG is still a picture anywhere, but it also carries the drawing. Import it, and it is an object in your space.',
-    run: async ({ page }) => {
-      await title(page, 'The SVG *is* the drawing', 'import it into an ECHO space, edit it in Composer');
+    run: async ({ demo, page }) => {
+      await demo.caption({
+        value: 'The SVG is the drawing',
+        subtitle: 'Import it into a space and edit it in Composer',
+      });
       await sh(page, 'clear && dx drawing import pipeline.dx.svg', { beat: 1_200 });
       await sh(page, 'dx drawing list', { beat: 1_000 });
     },
@@ -130,8 +136,8 @@ export const steps = [
     name: 'Hold the result',
     narration:
       'Local-first: the drawing lives in your space on this machine, syncs through EDGE, and people and agents edit the same object.',
-    run: async ({ page }) => {
-      await title(page, 'Local-first *diagrams*', 'dx drawing render · import · list · export');
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Local-first diagrams', subtitle: 'dx drawing render, import, list and export' });
       await page.waitForTimeout(9_000);
     },
   },
