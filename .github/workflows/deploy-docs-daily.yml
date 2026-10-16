@@ -4,6 +4,10 @@ name: Deploy Docs Daily
 # publish date. Dispatches Deploy Apps with inputs rather than adding a cron there: a scheduled run carries no
 # inputs, so the deploy would have to special-case the cron string, while a dispatch runs exactly like a
 # manual one (same inputs, same production concurrency group, same per-app tags).
+#
+# Skips the dispatch when the build would match what is live: `docs/` is unchanged since the `docs/production`
+# pointer tag and no published post is dated today. The tag only moves on a successful deploy, so a failed run
+# is retried the next day. Changes outside `docs/` (e.g. the typedoc packages) ship with the next docs change.
 
 on:
   schedule:
@@ -12,6 +16,7 @@ on:
 
 permissions:
   actions: write # `gh workflow run`; a dispatch is the one event a GITHUB_TOKEN may start a run with.
+  contents: read
 
 jobs:
   dispatch:
@@ -19,7 +24,42 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          filter: blob:none
+          sparse-checkout: docs/src/content/blog
+
+      - name: Check for unpublished docs changes
+        id: changes
+        run: |
+          if ! git fetch --depth=1 --filter=blob:none origin '+refs/tags/docs/production:refs/tags/docs/production'; then
+            echo "No docs/production tag; deploying."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! git diff-tree --quiet refs/tags/docs/production HEAD -- docs; then
+            echo "docs/ changed since $(git rev-parse --short refs/tags/docs/production)."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A post dated today (UTC) goes live on this build even if it merged before the last deploy.
+          today=$(date -u +%F)
+          for post in docs/src/content/blog/*.md*; do
+            if grep -qE "^date: ['\"]?${today}" "$post" && ! grep -qE '^draft: true' "$post"; then
+              echo "$post is dated today."
+              echo "deploy=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+
+          echo "docs/ unchanged and no post dated ${today}; skipping."
+          echo "deploy=false" >> "$GITHUB_OUTPUT"
+
       - name: Dispatch Deploy Apps (production, docs)
+        if: steps.changes.outputs.deploy == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy-apps.yml --repo "$GITHUB_REPOSITORY" --ref main -f environment=production -f app=docs
