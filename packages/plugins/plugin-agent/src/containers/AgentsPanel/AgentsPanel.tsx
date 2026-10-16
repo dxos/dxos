@@ -51,7 +51,7 @@ export const AgentsPanel = () => {
                 />
               </Field.Root>
             )}
-            <AgentList classNames='mt-3' agents={agents} filter={filter} onOpen={handleOpen} />
+            <AgentList agents={agents} filter={filter} onOpen={handleOpen} />
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
@@ -67,7 +67,14 @@ const useAdministeredAgents = (): AgentListEntry[] => {
     const changed = () => setRevision((value) => value + 1);
     const members = new Map<string, { unsubscribe: () => void }>();
     const spaces = client.spaces.subscribe((all) => {
-      for (const space of all.filter(AgentSpace.isAgentSpace)) {
+      const agentSpaces = all.filter(AgentSpace.isAgentSpace);
+      for (const [spaceId, subscription] of members) {
+        if (!agentSpaces.some((space) => space.id === spaceId)) {
+          subscription.unsubscribe();
+          members.delete(spaceId);
+        }
+      }
+      for (const space of agentSpaces) {
         if (!members.has(space.id)) {
           members.set(space.id, space.members.subscribe(changed));
         }

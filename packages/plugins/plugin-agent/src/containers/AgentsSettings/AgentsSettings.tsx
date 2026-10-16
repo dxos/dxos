@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -56,14 +56,24 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
   const create = Hooks.useSpaceCallback(space?.db.spaceId, [], (db: Database.Database, agentName: string) =>
     createAgent(db, { name: agentName }),
   );
+  // Set before the first await, since creation can wait up to 15 s on EDGE and a second click would add a second agent.
+  const adding = useRef(false);
+  const [pending, setPending] = useState(false);
   const handleAdd = useCallback(async () => {
-    if (!space) {
+    if (!space || adding.current) {
       return;
     }
-    const agent = await create(space.db, name.trim()).catch((error) => log.error('agent not created', { error }));
-    if (agent) {
-      setName('');
-      open(agent.id);
+    adding.current = true;
+    setPending(true);
+    try {
+      const agent = await create(space.db, name.trim()).catch((error) => log.error('agent not created', { error }));
+      if (agent) {
+        setName('');
+        open(agent.id);
+      }
+    } finally {
+      adding.current = false;
+      setPending(false);
     }
   }, [space, create, name, open]);
 
@@ -90,7 +100,7 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
                   onKeyDown={(event) => event.key === 'Enter' && void handleAdd()}
                   data-testid='agentPlugin.addAgentName'
                 />
-                <Button.Root onClick={() => void handleAdd()} data-testid='agentPlugin.addAgent'>
+                <Button.Root onClick={() => void handleAdd()} disabled={pending} data-testid='agentPlugin.addAgent'>
                   {t('add-agent.button')}
                 </Button.Root>
               </Layout.Flex>

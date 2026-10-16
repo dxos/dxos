@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
-import type * as Util from '@dxos/react-ui/Util';
+import * as Typography from '@dxos/react-ui/Typography';
 import { getHashStyles } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
@@ -46,36 +46,32 @@ export const filterAgents = (agents: readonly AgentListEntry[], filter: string):
     : [...agents];
 };
 
-export type AgentListProps = Util.ThemedClassName<{
+export type AgentListProps = {
   agents: AgentListEntry[];
   filter?: string;
   onOpen?: (spaceId: string) => void;
-}>;
+};
 
 /** The agents the viewer administers, laid out as the contacts book lays out people. */
-export const AgentList = ({ classNames, agents, filter = '', onOpen }: AgentListProps) => {
+export const AgentList = ({ agents, filter = '', onOpen }: AgentListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const visible = useMemo(
-    () => filterAgents(agents, filter).sort((left, right) => left.name.localeCompare(right.name)),
+    () => filterAgents(agents, filter).toSorted((left, right) => left.name.localeCompare(right.name)),
     [agents, filter],
   );
 
   if (visible.length === 0) {
     return (
-      <p className='text-fg-muted text-center my-2'>
+      <Typography.Text tone='muted'>
         {t(agents.length === 0 ? 'agents-panel-empty.message' : 'agents-panel-no-match.message')}
-      </p>
+      </Typography.Text>
     );
   }
 
   return (
     <Listbox.Root items={visible.map((agent) => ({ value: agent.spaceId, label: agent.name }))}>
       <Listbox.Viewport>
-        <Listbox.Content
-          classNames={[classNames, 'flex flex-col gap-2']}
-          aria-label={t('agents-panel.label')}
-          data-testid='agent-list'
-        >
+        <Listbox.Content aria-label={t('agents-panel.label')} data-testid='agent-list'>
           {visible.map((agent) => (
             <AgentListItem key={agent.spaceId} agent={agent} onOpen={onOpen} />
           ))}
@@ -102,7 +98,7 @@ const AgentListItem = ({ agent, onOpen }: AgentListItemProps) => {
   const identifier = agent.did ?? agent.identityKey;
 
   return (
-    <Listbox.Item classNames='p-2 rounded-sm' id={agent.spaceId} data-testid='agent-list.item'>
+    <Listbox.Item id={agent.spaceId} data-testid='agent-list.item'>
       <Listbox.ItemIcon>
         <Avatar.Root
           aria-labelledby={labelId}
@@ -112,21 +108,24 @@ const AgentListItem = ({ agent, onOpen }: AgentListItemProps) => {
         />
       </Listbox.ItemIcon>
       <Listbox.ItemText id={labelId}>{name}</Listbox.ItemText>
-      <Listbox.ItemDescription classNames='flex flex-wrap items-center gap-2 pt-2'>
+      <Listbox.ItemDescription>
         <Button.Root
           size='sm'
           hue={getHashStyles(agent.spaceId).hue}
+          aria-label={t('agent-open-space.label', { name })}
           onClick={() => onOpen?.(agent.spaceId)}
           data-testid='agent-list.space'
         >
           {name}
-        </Button.Root>
-        <span className='text-sm text-fg-muted'>{t('agent-admins.label', { admins })}</span>
+        </Button.Root>{' '}
+        {t('agent-admins.label', { admins })}
       </Listbox.ItemDescription>
       {identifier && (
-        <Layout.Flex align='center' gap='xs' classNames='text-sm text-fg-muted'>
+        <Layout.Flex align='center' gap='xs'>
           <Tooltip.Trigger asChild content={t(agent.did ? 'agent-did.label' : 'agent-key.label')}>
-            <span className='font-mono truncate max-w-48'>{identifier}</span>
+            <Typography.Text mono truncate tone='muted'>
+              {identifier}
+            </Typography.Text>
           </Tooltip.Trigger>
           <SystemButton.Clipboard
             iconOnly

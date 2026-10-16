@@ -88,6 +88,7 @@ export const translations = [
         'agents-search.placeholder': 'Search agents',
         'agent-admins.label': 'Admins: {{admins}}',
         'agent-admin-you.label': '{{name}} (you)',
+        'agent-open-space.label': "Open {{name}}'s space",
         'agent-did.label': "The agent's identity (DID)",
         'agent-key.label': "The agent's identity key",
         'agent-copy-did.label': 'Copy DID',

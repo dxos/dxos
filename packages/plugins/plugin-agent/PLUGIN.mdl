@@ -559,7 +559,7 @@ surface AccountAgents
 ```mdl
 feat F-1: Agents
 
-  req F-1.1: The space's AI group lists every Agent in an Agents section; + creates an autonomous agent.
+  req F-1.1: A space's Settings › Agents lists every Agent in the space; Add agent creates an autonomous agent.
   req F-1.2:
     when: op:createAgent runs
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
@@ -786,7 +786,7 @@ invocable operation, an agent binding (`invoke`). Report failures by test and st
 ```mdl
 test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
   desc: |
-    The primary journey: an agent from the Agents section, a Discord-backed channel picked as one of
+    The primary journey: an agent from Settings › Agents, a Discord-backed channel picked as one of
     its channels, and the bot control round-trip to EDGE through plugin-thread's generic channel
     operations. Run against a local EDGE with a deliberately invalid bot token, so the gateway cannot
     connect and the status must carry the gateway's error — a "Connected" banner here is a defect.
@@ -814,11 +814,11 @@ test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
   steps:
     - name: Create the agent
       do: |
-        In the navtree, open the space's AI group, click + on the Agents section ("Add agent"), and
-        rename the new "New agent" to "QA: Interlocutor $runId".
+        Open the space's Settings › Agents, type "QA: Interlocutor $runId" beside Add agent, and click
+        Add agent.
       invoke: [op:createAgent] { name: "QA: Interlocutor $runId" }
       capture: agent
-      expect: the agent appears under Agents with that name
+      expect: the agent appears in Settings › Agents with that name
     - name: Give the agent the channel
       do: Open the agent's Activity companion and pick "QA: discord $runId" under Channels.
       expect: |
@@ -870,10 +870,10 @@ test QA-2: Interview a person and confirm their goals
       no invocation to `capture` it from
   before:
     - name: Create the interviewer
-      do: Click + on the Agents section and rename the new agent "QA: Interviewer $runId".
+      do: In Settings › Agents, type "QA: Interviewer $runId" beside Add agent and click Add agent.
       invoke: [op:createAgent] { name: "QA: Interviewer $runId" }
       capture: agent
-      expect: the agent appears under Agents
+      expect: the agent appears in Settings › Agents
   steps:
     - name: Open the agent's chat
       do: Click "QA: Interviewer $runId", then open its chat in the Assistant companion.
@@ -956,10 +956,10 @@ test QA-3: Two people, one agent — a watch fires across private chats
       and serves a live model — ABORT without one
   steps:
     - name: Alice creates a space and an agent
-      do: Alice creates a space "Launch room", then clicks + on the AI group's Agents section.
+      do: Alice creates a space "Launch room", then clicks Add agent in its Settings › Agents.
       invoke: [op:createAgent] { name: "" }
       capture: agent
-      expect: the agent appears under Agents and its article opens Alice's private chat
+      expect: the agent appears in Settings › Agents and its article opens Alice's private chat
     - name: Alice invites Bob; Bob joins
       do: Alice opens Members, creates a single-use invitation; Bob joins with the code and the auth code.
       expect: Bob's navtree shows "Launch room" with the same agent under Agents
