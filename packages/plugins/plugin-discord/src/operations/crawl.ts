@@ -13,6 +13,7 @@ import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
 import { FactStore } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
 import * as BrainService from '@dxos/plugin-agent/BrainService';
 
@@ -67,7 +68,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         }).pipe(
           Effect.provide(sourceLayer),
           Effect.provideService(AiService.AiService, ai),
-          Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.id)),
+          Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent))),
         );
 
         const summary = yield* Effect.tryPromise({

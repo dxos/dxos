@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
 import * as BrainService from '@dxos/plugin-agent/BrainService';
 import { trim } from '@dxos/util';
@@ -23,7 +24,7 @@ export default BrainOperation.SummarizeSubject.pipe(
       const agent = yield* BrainFacts.resolveAgent(agentRef);
       const brain = yield* BrainService.BrainService;
       return yield* summarizeSubject(input).pipe(
-        Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.id)),
+        Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent))),
       );
     }),
   ),

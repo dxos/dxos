@@ -12,6 +12,7 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
 import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -37,7 +38,9 @@ const handler: Operation.WithHandler<typeof BrainOperation.GenerateReply> = Brai
       // Degrade to an empty draft on generation failure so the toolbar action always yields a draft.
       return yield* (
         Option.isSome(agent)
-          ? draft.pipe(Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.value.id)))
+          ? draft.pipe(
+              Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent.value))),
+            )
           : draft
       ).pipe(Effect.catchTag('GenerateReplyError', () => Effect.succeed({ subject: '', body: '' })));
     }),

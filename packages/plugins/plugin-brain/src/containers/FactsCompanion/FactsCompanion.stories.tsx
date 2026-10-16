@@ -15,6 +15,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { type RDF } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -82,7 +83,9 @@ const meta = {
               const agent = defaultSpace.db.add(
                 Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ text: '' })) }),
               );
-              yield* BrainMemory.make(undefined, { state }).service.push(agent.id, FACTS).pipe(Effect.orDie);
+              yield* BrainMemory.make(undefined, { state })
+                .service.push(AgentPresence.brainId(agent), FACTS)
+                .pipe(Effect.orDie);
             }),
         }),
         StoryBrainPlugin(),

@@ -19,6 +19,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
 import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
@@ -123,7 +124,7 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
       const holder = yield* Database.add(
         Obj.make(Agent.Agent, { name: 'Brain', instructions: Ref.make(Instructions.make({ text: '' })) }),
       );
-      yield* brain.push(holder.id, config.facts, { storeOnly: true }).pipe(Effect.orDie);
+      yield* brain.push(AgentPresence.brainId(holder), config.facts, { storeOnly: true }).pipe(Effect.orDie);
     }
 
     const agent = yield* AgentService.createSession({ skills });

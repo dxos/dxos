@@ -24,7 +24,7 @@ import {
   curie,
   toEntityCards,
 } from '#components';
-import { BrainService, Goal, Profile } from '#types';
+import { AgentPresence, BrainService, Goal, Profile } from '#types';
 
 import { useBrainStore } from './useBrainStore.ts';
 import { useTriggers } from './useTriggers.ts';
@@ -162,9 +162,10 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
 
   // The brain starts with the seed vocabulary; the predicates its extractor minted are read off the facts that use
   // them, which carry the definition the brain stored.
+  const brainId = AgentPresence.brainId(agent);
   const { predicates, ontology } = useMemo(() => {
     const all = (inspection?.facts ?? []).map(({ fact }) => fact);
-    const seeded = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id));
+    const seeded = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(brainId));
     const known = seeded.include(RDF.Graph.mintedPredicates(all, seeded));
     const counts = new Map<string, number>();
     for (const fact of all) {
@@ -187,7 +188,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
       })
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
     return { predicates: items, ontology: RDF.Graph.ontologyToTriG(known) };
-  }, [inspection, agent.id]);
+  }, [inspection, brainId]);
 
   // A failed re-read keeps the last snapshot on screen, so an error stands in only before anything was read.
   const brain = useMemo(

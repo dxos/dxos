@@ -26,6 +26,7 @@ import * as KvsStore from '@dxos/effect/KvsStore';
 import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -188,7 +189,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         id: 'reset-facts',
         label: 'Facts',
         run: async () => {
-          await EffectEx.runPromise(storyBrain.reset(agent.id).pipe(Effect.orElseSucceed(() => undefined)));
+          await EffectEx.runPromise(
+            storyBrain.reset(AgentPresence.brainId(agent)).pipe(Effect.orElseSucceed(() => undefined)),
+          );
           setFacts(0);
           return { reset: 'facts' };
         },
@@ -353,7 +356,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         run: async () => {
           const refresh = async () => {
             const stored = await EffectEx.runPromise(
-              storyBrain.query(agent.id, {}).pipe(Effect.orElseSucceed(() => [])),
+              storyBrain.query(AgentPresence.brainId(agent), {}).pipe(Effect.orElseSucceed(() => [])),
             );
             setFacts(stored.length);
           };

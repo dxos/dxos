@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
 import * as BrainService from '@dxos/plugin-agent/BrainService';
 
@@ -19,7 +20,7 @@ export default BrainOperation.QueryFacts.pipe(
       const agent = yield* BrainFacts.resolveAgent(agentRef);
       const brain = yield* BrainService.BrainService;
       const facts = yield* queryCompactFacts(input).pipe(
-        Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.id)),
+        Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent))),
       );
       return { facts };
     }),

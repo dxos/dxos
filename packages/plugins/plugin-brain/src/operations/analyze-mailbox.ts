@@ -12,6 +12,7 @@ import { Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
 import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
 import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
@@ -85,7 +86,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
         pageSize,
         extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
-      }).pipe(Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.id)));
+      }).pipe(Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent))));
       reportStatus({ message: Progress.STATUS_COMPLETE });
       return result;
     }),

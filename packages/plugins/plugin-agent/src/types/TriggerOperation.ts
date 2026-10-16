@@ -116,9 +116,9 @@ export const CancelTrigger = Operation.make({
 });
 
 /**
- * Runs the agent's time-driven rules (`elapsed`, `every`, `due`) now and delivers what they woke; the
- * host calls it when the brain says the clock next matters (`nextDueAt`), as EDGE's Durable Object
- * alarm does for EDGE's brain.
+ * Runs the agent's time-driven rules (`elapsed`, `every`, `due`) now and delivers what the watches set in this
+ * space have queued; the host calls it when the brain says the clock next matters (`nextDueAt`). EDGE's Durable
+ * Object alarm calls it in each space whose watches have something queued, as the agent there.
  */
 export const RunDue = Operation.make({
   meta: {
