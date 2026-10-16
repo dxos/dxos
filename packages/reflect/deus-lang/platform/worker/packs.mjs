@@ -230,6 +230,28 @@ const search = (records, first, last, key, kind) => {
   return -1;
 };
 
+/**
+ * Of the records equal to the one at `at` (several packs can hold one key), the one from the pack merged
+ * last. Metadata is rewritten in place (a doc comment, a spec block's prose), so only the newest copy is
+ * current; an object's copies are all the same, so objects keep the first match.
+ */
+const newestAt = (records, at, first, last, key, kind) => {
+  if (kind !== 2) {
+    return at;
+  }
+  const view = new DataView(records.buffer, records.byteOffset);
+  const same = (offset) => compareKey(records, offset, key) === 0 && records[offset + 44] === kind;
+  let best = at;
+  for (const step of [-RECORD, RECORD]) {
+    for (let offset = at + step; offset >= first * RECORD && offset <= last * RECORD && same(offset); offset += step) {
+      if (view.getUint32(offset + 32) > view.getUint32(best + 32)) {
+        best = offset;
+      }
+    }
+  }
+  return best;
+};
+
 /** How many lines an isolate keeps; namespace nodes near the root are read by nearly every lookup. */
 const LINE_CACHE = 4096;
 
@@ -394,8 +416,11 @@ export const lookup = async (bucket, project, id, kind) => {
   const [index, listed] = await Promise.all([combined(bucket, project), packed(bucket, project)]);
   if (index) {
     const low = key[0] === 0 ? 0 : index.fanout.getUint32((key[0] - 1) * 4);
-    const at = search(index.records, low, index.fanout.getUint32(key[0] * 4) - 1, key, kind);
-    if (at >= 0) {
+    const high = index.fanout.getUint32(key[0] * 4) - 1;
+    const match = search(index.records, low, high, key, kind);
+    // Metadata in a pack the index does not hold yet is newer than any it holds, so that is looked at first.
+    if (match >= 0 && (kind !== 2 || listed.every((bundle) => index.names.includes(bundle)))) {
+      const at = newestAt(index.records, match, low, high, key, kind);
       const view = new DataView(index.records.buffer, index.records.byteOffset + at, RECORD);
       return lineAt(bucket, project, index.names[view.getUint32(32)], view.getUint32(36), view.getUint32(40));
     }
@@ -422,7 +447,22 @@ export const lookup = async (bucket, project, id, kind) => {
         return lineAt(bucket, project, bundle, view.getUint32(32) * 2 ** 32 + view.getUint32(36), view.getUint32(40));
       }),
   );
-  return found.find((text) => text !== undefined);
+  const fresh = found.find((text) => text !== undefined);
+  if (fresh !== undefined || !index) {
+    return fresh;
+  }
+  const low = key[0] === 0 ? 0 : index.fanout.getUint32((key[0] - 1) * 4);
+  const high = index.fanout.getUint32(key[0] * 4) - 1;
+  const match = search(index.records, low, high, key, kind);
+  if (match < 0) {
+    return undefined;
+  }
+  const view = new DataView(
+    index.records.buffer,
+    index.records.byteOffset + newestAt(index.records, match, low, high, key, kind),
+    RECORD,
+  );
+  return lineAt(bucket, project, index.names[view.getUint32(32)], view.getUint32(36), view.getUint32(40));
 };
 
 /** Lines of one pack closer than this are read with one ranged read, the bytes between them discarded. */
@@ -446,7 +486,9 @@ export const lookupMany = async (bucket, project, wanted) => {
     let at = -1;
     if (index) {
       const low = key[0] === 0 ? 0 : index.fanout.getUint32((key[0] - 1) * 4);
-      at = search(index.records, low, index.fanout.getUint32(key[0] * 4) - 1, key, kind);
+      const high = index.fanout.getUint32(key[0] * 4) - 1;
+      at = search(index.records, low, high, key, kind);
+      at = at < 0 ? at : newestAt(index.records, at, low, high, key, kind);
     }
     if (at < 0) {
       rest.push([id, kind]);

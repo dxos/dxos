@@ -527,6 +527,28 @@ describe('replication API', () => {
     expect(ranged.status).toBe(206);
     expect(ranged.headers.get('content-range')).toBe(`bytes 0-6/${pack.text.length}`);
     expect(await ranged.text()).toBe('DEUSLN1');
+
+    // Metadata is rewritten in place, so a later pack's copy is the one served (D196).
+    const later = await bundleOf('(bundle later)');
+    const next = hash('7');
+    const laterPack = await packOf([
+      `branch main ${next}`,
+      `obj ${next} (causal (ns "${root}") (parents "${causal}") (msg "doc"))`,
+      `meta ${term} (meta (doc "newer"))`,
+    ]);
+    expect(
+      (
+        await call(`/v1/toolchain/bundles/${later.name}`, {
+          method: 'PUT',
+          body: later.body,
+          key,
+          headers: claim(next, causal),
+        })
+      ).status,
+    ).toBe(201);
+    expect((await put(`files/packs/${later.name}`, laterPack.text)).status).toBe(201);
+    expect((await put(`packs/${later.name}.idx`, laterPack.index)).status).toBe(201);
+    expect(await (await call(`/v1/toolchain/meta/${term}`)).text()).toBe('(meta (doc "newer"))');
   });
 
   test('projects are addressed as @owner/project, with the toolchain at its old URLs too (D184)', async ({

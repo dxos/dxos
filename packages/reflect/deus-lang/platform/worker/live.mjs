@@ -346,11 +346,23 @@ const filesByProject = new Map();
 
 const filesAt = (bucket, project, causal) => {
   const known = filesByProject.get(project);
-  // Objects never change, so a new causal of the same project keeps everything read for the last one.
+  // Objects never change, so a new causal of the same project keeps everything read for the last one;
+  // metadata is rewritten in place (doc comments, a spec block's prose), so it is read again.
   const texts = known?.texts ?? new Map();
+  if (known && known.causal !== causal) {
+    dropMetadata(texts);
+  }
   const files = { bucket, project, causal, texts, missing: new Set() };
   filesByProject.set(project, files);
   return files;
+};
+
+const dropMetadata = (texts) => {
+  for (const key of [...texts.keys()]) {
+    if (key.startsWith('m')) {
+      texts.delete(key);
+    }
+  }
 };
 
 /** The pack key a codebase path reads, or undefined for a path that is not an object or metadata. */
@@ -571,18 +583,24 @@ const warm = async (files) => {
   const text = await new Response(
     new Blob([await new Response(object.body).arrayBuffer()]).stream().pipeThrough(new DecompressionStream('gzip')),
   ).text();
-  for (const [key, value] of JSON.parse(text)) {
-    if (!files.texts.has(key)) {
+  // `{ causal, entries }`; a bare list predates metadata being kept apart, and counts as another causal.
+  const snapshot = JSON.parse(text);
+  const { causal, entries } = Array.isArray(snapshot) ? { causal: undefined, entries: snapshot } : snapshot;
+  for (const [key, value] of entries) {
+    if (!files.texts.has(key) && (causal === files.causal || !key.startsWith('m'))) {
       files.texts.set(key, value);
     }
   }
 };
 
-/** Writes what the isolate has read for the project: objects never change, so a snapshot is never wrong, only short. */
+/**
+ * Writes what the isolate has read for the project: objects never change, so they are never wrong, only
+ * short; metadata is kept with the causal it was read at and used only for that one.
+ */
 const saveSnapshot = async (files) => {
   const entries = [...files.texts].filter(([, value]) => value !== null);
   const body = await new Response(
-    new Blob([JSON.stringify(entries)]).stream().pipeThrough(new CompressionStream('gzip')),
+    new Blob([JSON.stringify({ causal: files.causal, entries })]).stream().pipeThrough(new CompressionStream('gzip')),
   ).arrayBuffer();
   await files.bucket.put(snapshotKey(files.project), body, { httpMetadata: { contentType: 'application/gzip' } });
 };
