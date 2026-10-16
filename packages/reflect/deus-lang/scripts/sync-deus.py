@@ -179,17 +179,35 @@ def declarations(lines, found):
     return {name: '\n'.join(lines[first:end]) for name, first, end, _ in found}
 
 
-def unsynced(names):
-    """The declarations of `names` in deus/ edited since git's HEAD: the codebase lacks those edits, or their hashes would agree."""
-    edited = []
+def record_path(codebase):
+    """Where a sync records the declarations it left in deus/, so the next sync compares against those and not git's HEAD."""
+    return codebase / 'cache' / 'sync-deus.json'
+
+
+def record(codebase):
+    """Records every declaration deus/ holds now, which agrees with the codebase."""
+    texts = {}
     for path in sorted(SOURCES.glob('*.deus')):
-        now = declarations(*blocks(path))
-        if not any(name in now for name in names):
-            continue
+        texts.update(declarations(*blocks(path)))
+    record_path(codebase).parent.mkdir(parents=True, exist_ok=True)
+    record_path(codebase).write_text(json.dumps(texts))
+
+
+def unsynced(names, codebase):
+    """The declarations of `names` in deus/ that match neither what the last sync left nor git's HEAD: edits the codebase lacks, or their hashes would agree."""
+    try:
+        recorded = json.loads(record_path(codebase).read_text())
+    except (OSError, ValueError):
+        recorded = {}
+    current, committed = {}, {}
+    for path in sorted(SOURCES.glob('*.deus')):
+        current.update({name: (text, path.name) for name, text in declarations(*blocks(path)).items()})
         shown = subprocess.run(['git', 'show', f'HEAD:./{path.relative_to(ROOT)}'], cwd=ROOT, capture_output=True, text=True)
-        before = declarations(*parse(shown.stdout)) if shown.returncode == 0 else {}
-        edited += [f'{name} ({path.name})' for name in names if name in now and now[name] != before.get(name)]
-    return edited
+        if shown.returncode == 0:
+            committed.update(declarations(*parse(shown.stdout)))
+    # By name across files, so a declaration that moved between files is not an edit.
+    return [f'{name} ({current[name][1]})' for name in sorted(names)
+            if name in current and current[name][0] not in (recorded.get(name), committed.get(name))]
 
 
 def drop(names):
@@ -300,7 +318,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
     parser.add_argument('names', nargs='*', help='the definitions to write into deus/; without names, every one whose hash differs')
-    parser.add_argument('--overwrite', action='store_true', help='replace declarations edited in deus/ since the last commit, losing those edits')
+    parser.add_argument('--overwrite', action='store_true', help='replace declarations edited in deus/ since the last sync or commit, losing those edits')
     args = parser.parse_args()
     codebase = Path(args.codebase)
     if args.names:
@@ -309,13 +327,14 @@ def main():
         names, deleted = compared(codebase)
     if not names and not deleted:
         # deus/ can match the codebase while the seed predates it (deus/ edited, then `deus update` from it).
+        record(codebase)
         if rebuild_seed(codebase):
             print('deus/ already compiles to the codebase\'s definitions; the seed was behind it and is rebuilt.')
         else:
             print('deus/ already compiles to the codebase\'s definitions, and the seed is its fixpoint; nothing to write.')
         return 0
 
-    edited = [] if args.overwrite else unsynced(set(names) | set(deleted))
+    edited = [] if args.overwrite else unsynced(set(names) | set(deleted), codebase)
     if edited:
         sys.exit(f'deus/ has edits the codebase lacks in {len(edited)} declarations, among them {", ".join(edited[:5])}: '
                  'run `deus update` on those files first, or pass --overwrite to discard the edits')
@@ -362,6 +381,7 @@ def main():
         sys.exit(f'deus/ still differs from the codebase in {len(left)} definitions, among them {", ".join(left[:5])}')
     if extra and not args.names:
         sys.exit(f'deus/ still defines {len(extra)} names the codebase lacks, among them {", ".join(extra[:5])}')
+    record(codebase)
     print(f'Wrote {len(names)} definitions into deus/, removed {len(deleted)} the codebase deleted, and rebuilt the seed; '
           'it compiles itself to itself and to the codebase\'s hashes.')
     return 0

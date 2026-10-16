@@ -110,7 +110,8 @@ def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text 
   | Sexp.list (Sexp.sym "tvar" :: Sexp.str v :: []) => if List.contains (generic v) vars then generic v else Throw.throw ("polymorphic in " ++ v ++ " where no codec for it is passed")
   | Sexp.list (Sexp.sym "tfun" :: _) =>
       match Bindings.arrows t with
-      | (a :: [], b, _) => "(value: " ++ Bindings.tsType cx vars a ++ ") => " ++ Bindings.tsType cx vars b ++ " | Promise<" ++ Bindings.tsType cx vars b ++ ">"
+      -- Parenthesized, so `Option (a -> b)` reads as an optional function and not as one that may return undefined.
+      | (a :: [], b, _) => "((value: " ++ Bindings.tsType cx vars a ++ ") => " ++ Bindings.tsType cx vars b ++ " | Promise<" ++ Bindings.tsType cx vars b ++ ">)"
       | _ => Throw.throw "takes a function of more than one parameter"
   | _ =>
       match applied t with

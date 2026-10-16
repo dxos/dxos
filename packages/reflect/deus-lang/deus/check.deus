@@ -410,7 +410,7 @@ def confirmed (dir : Text) (name : Text) (integration : Bool) (v : Verdict) : {I
   match (v, IO.getEnv "DEUS_KERNEL", IO.getEnv "DEUS_HOME") with
   | (Verdict.fail _, Option.some "native", Option.some home) =>
       if integration then v else
-        let (_, out, _) := IO.exec "env" ["DEUS_NATIVE=0", "DEUS_KERNEL=node", "node", home ++ "/bin/deus.mjs", "test", name, "--fresh", "--json", "--codebase", dir]
+        let (_, out, _) := IO.exec "env" ["DEUS_NATIVE=0", "DEUS_KERNEL=node", "node", home ++ "/bin/deus.mjs", "test", name, "--exact", "--fresh", "--json", "--codebase", dir]
         match Json.parse out with
         | Result.ok rows =>
             match List.find (fun r => Json.text (Json.get r "name") == name) (Json.items rows) with
@@ -424,11 +424,13 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let prefix := getOr (head? args.positional) ""
+  -- `--exact` runs the one test named, not every test whose name it starts.
+  let exact := Cli.flag args "exact"
   let runIntegration := Cli.flag args "integration"
   -- A kept verdict is keyed by the theorem alone, so after a checker change it may be stale (Prove.Spec R-8).
   let fresh := Cli.flag args "fresh"
   let selected := List.filter
-    (fun pair => startsWith prefix (fst pair) && (if wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration") then
+    (fun pair => (if exact then fst pair == prefix else startsWith prefix (fst pair)) && (if wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration") then
       match snd pair with
       | Entry.test _ => not wantTheorems
       | Entry.theorem _ => wantTheorems

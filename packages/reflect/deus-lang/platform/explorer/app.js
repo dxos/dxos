@@ -30,8 +30,11 @@ const element = (id) => document.getElementById(id);
 
 const short = (hash) => (hash.startsWith('#') ? hash : `#${hash.slice(0, 8)}`);
 
+/** The git ref the toolchain's files are read at: the PR branch until PR 13952 merges, then `main` (task ccf9b182). */
+const REPO_REF = 'dm/agent-13-oct-x8ehi8-0y35ai';
+
 /** The toolchain's files in git, which spec documents link to by relative path. */
-const REPO_URL = 'https://github.com/dxos/dxos/blob/dm/agent-13-oct-x8ehi8-0y35ai/packages/reflect/deus-lang/';
+const REPO_URL = `https://github.com/dxos/dxos/blob/${REPO_REF}/packages/reflect/deus-lang/`;
 
 /** The project's decision log, where D96 and the other decision numbers are recorded. */
 const DECISIONS_URL = `${REPO_URL}docs/DECISIONS.md`;
@@ -45,20 +48,20 @@ const repoUrl = (target) => {
 /** A file in git named in prose (`examples/react/index.html`), which the site does not serve but GitHub does. */
 const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/;
 
-/** HTML with each decision number (D96) outside a link made a link to the decision log. */
+/** HTML with each decision number (D96) outside a link or code made a link to the decision log; one digit is too short to tell from Cloudflare's D1. */
 const decisionLinks = (html) => {
-  let inLink = 0;
+  let inside = 0;
   return html
     .split(/(<[^>]*>)/)
     .map((part) => {
       if (part.startsWith('<')) {
-        inLink += /^<a[\s>]/.test(part) ? 1 : part === '</a>' ? -1 : 0;
+        inside += /^<(?:a|code)[\s>]/.test(part) ? 1 : part === '</a>' || part === '</code>' ? -1 : 0;
         return part;
       }
-      return inLink > 0
+      return inside > 0
         ? part
         : part.replace(
-            /\bD(\d{1,4})\b/g,
+            /\bD(\d{2,4})\b/g,
             `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
           );
     })
@@ -594,8 +597,17 @@ try {
   ui.dialect = localStorage.getItem(DIALECT_KEY) === 'ts' ? 'ts' : 'deus';
 } catch {}
 
+/** Percent-decoded text, or the text as it is when it is not valid percent-encoding (`#n:100%`). */
+const decoded = (text) => {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+};
+
 const parseFragment = () => {
-  const keys = decodeURIComponent(location.hash.slice(1))
+  const keys = decoded(location.hash.slice(1))
     .split(',')
     .filter((key) => /^[dtcnvks]:./.test(key));
   const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
@@ -604,7 +616,7 @@ const parseFragment = () => {
 
 const writeFragment = (view, keys) => {
   const next = [...(view === 'code' ? [] : [`v:${view}`]), ...keys].join(',');
-  if (decodeURIComponent(location.hash.slice(1)) !== next) {
+  if (decoded(location.hash.slice(1)) !== next) {
     location.hash = next;
   } else {
     void render();
@@ -2435,17 +2447,15 @@ const render = () => {
 
 /** `#q:<text>` opens the finder on that query, once: a link can share a search (`/#q:List.map`). */
 const openQuery = () => {
-  const fragment = decodeURIComponent(location.hash.slice(1));
-  const query = /(?:^|,)q:([^,]*)/.exec(fragment)?.[1];
+  // Split before decoding, so a comma written `%2C` stays in the query and the other keys stay encoded.
+  const raw = location.hash.slice(1).split(',');
+  const query = raw.find((key) => key.startsWith('q:'));
   if (query === undefined) {
     return;
   }
-  const rest = fragment
-    .split(',')
-    .filter((key) => !key.startsWith('q:'))
-    .join(',');
+  const rest = raw.filter((key) => !key.startsWith('q:')).join(',');
   history.replaceState(null, '', rest ? `#${rest}` : location.pathname + location.search);
-  element('finder-input').value = query;
+  element('finder-input').value = decoded(query.slice(2));
   openFinder();
 };
 
@@ -3677,7 +3687,7 @@ const addressOf = (iri) => {
 
 /** A path link `/@owner/project/Name` (Address.Spec R-8) becomes a fragment at `/@owner/project/`, `#d:<hash>` for a definition and `#n:Name` for a namespace, so cards keep working by fragment. */
 const openPathLink = () => {
-  const match = /^(\/@[a-z0-9-]+\/[a-z0-9-]+\/)(.+)$/.exec(decodeURIComponent(location.pathname));
+  const match = /^(\/@[a-z0-9-]+\/[a-z0-9-]+\/)(.+)$/.exec(decoded(location.pathname));
   if (!match || location.hash.length > 1) {
     return;
   }

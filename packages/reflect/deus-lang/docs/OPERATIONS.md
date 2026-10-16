@@ -12,7 +12,7 @@ Update it when a fact changes. Never write a credential's value here, only where
 3. Track tasks in the codebase (`deus task …`) and keep them current. Most development happens through the
    codebase; specs are recorded in the codebase, not in git.
 4. All sessions merge their changes into PR #13952 (branch `dm/agent-13-oct-x8ehi8-0y35ai`). Close extra PRs.
-   Keep #13952 a draft.
+   Keep #13952 a draft. When it merges, the explorer's repo links move to `main` (task ccf9b182).
 5. Flows that prevent data loss are core (D188).
 6. Deploying to the DEUS Cloudflare account (the one the Worker runs on) is allowed.
 

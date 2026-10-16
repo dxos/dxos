@@ -259,5 +259,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 249 | 10-16 20:00 | 20m 00s | this commit | The hub tells a newcomer where to start; Rust kernel measured at 2x node (task 0fc41dc1 lowered) |
 | 250 | 10-16 20:35 | 35m 00s | this commit | A native test failure is confirmed on node before it is kept (D219, task d0d2915a); @dxos/web checks 19/19 |
 | 251 | 10-16 21:05 | 30m 00s | this commit | Explorer fixes from a deeper probe: linkable search, canceled duplicate subtasks, code-labelled links, history count legend, spec blocks; native build cache pruned |
+| 252 | 10-16 21:45 | 40m 00s | this commit | Adversarial review of D213–D219 fixed (D220): test --exact, sync record, deus key hardening, explorer links and hash parsing |
 
-Total from stage 1 to stage 251: 79h 35m.
+Total from stage 1 to stage 252: 80h 15m.

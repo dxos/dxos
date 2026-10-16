@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
+def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "exact"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -1217,13 +1217,17 @@ def keyRequest (dir : Text) (arguments : List Text) : {IO, Throw Text} Text :=
     match IO.getEnv "DEUS_API_KEY" with
     | Option.some k => trim k
     | Option.none => Throw.throw "the key API needs an admin key in $DEUS_API_KEY"
-  let config := dir ++ "/cache/keys.curl"
   IO.mkdirp (dir ++ "/cache")
-  IO.exec "install" ["-m", "600", "/dev/null", config]
+  -- `mktemp` makes a file only this run uses, readable by its owner alone, before the key is written to it.
+  let (made, path, _) := IO.exec "mktemp" [dir ++ "/cache/keys.XXXXXXXX"]
+  let config := trim path
+  if made != 0 || Text.isEmpty config then Throw.throw "could not make a private file for the key under the codebase's cache" else ()
   IO.writeFile config ("header = \"authorization: Bearer " ++ key ++ "\"\n")
-  let (code, out, err) := IO.exec "curl" (["-sS", "--fail-with-body", "-K", config] ++ arguments)
+  let answer := try (fun _ => IO.exec "curl" (["-sS", "--fail-with-body", "-K", config] ++ arguments))
   IO.remove config
-  if code == 0 then out else Throw.throw ("the key API answered: " ++ trim (if Text.isEmpty (trim out) then err else out))
+  match answer with
+  | Result.err e => Throw.throw ("curl failed: " ++ e)
+  | Result.ok (code, out, err) => if code == 0 then out else Throw.throw ("the key API answered: " ++ trim (if Text.isEmpty (trim out) then err else out))
 
 /-- `deus key list|new|revoke [--remote r]`: the Worker's API keys (D164), wrapping its `/v1/keys` admin API.
   `new <label> --scopes push,site [--projects @owner/project,…] [--days n]` prints the new key once; `revoke <id>`. -/
@@ -1247,7 +1251,10 @@ def keyCommand (args : Args) : {IO, Throw Text} Unit :=
         | Option.some p => Json.arr (List.map Json.str (list p ","))
         | Option.none => Json.str "*"
       let days := match option args "days" with
-        | Option.some d => [("expiresInDays", Json.num (getOr (Int.fromText d) 0))]
+        | Option.some d =>
+            match Int.fromText d with
+            | Option.some n => if n > 0 then [("expiresInDays", Json.num n)] else Throw.throw "--days takes a positive number of days"
+            | Option.none => Throw.throw "--days takes a positive number of days"
         | Option.none => []
       let body := Json.render (Json.obj ([("label", Json.str label), ("scopes", Json.arr (List.map Json.str scopes)), ("projects", projects)] ++ days))
       let made := match Json.parse (keyRequest dir ["-X", "POST", "-H", "content-type: application/json", "--data-binary", body, url]) with
@@ -1256,6 +1263,8 @@ def keyCommand (args : Args) : {IO, Throw Text} Unit :=
       Cli.output args (fun _ => made) (fun _ => Json.text (Json.get made "key") ++ "\n(key " ++ Json.text (Json.get made "id") ++
         "; shown once: keep it in a secret store)")
   | ["revoke", id] =>
+      -- The id goes into the URL path, so it may not hold `/` or `.` to reach another route.
+      if Text.isEmpty id || any (fun c => not (Text.isAlpha c || Text.isDigit c || c == '-' || c == '_')) (Text.utf8 id) then Throw.throw ("not a key id: " ++ id) else ()
       let _ := keyRequest dir ["-X", "DELETE", url ++ "/" ++ id]
       Cli.output args (fun _ => Json.obj [("revoked", Json.str id)]) (fun _ => "Revoked key " ++ id ++ ".")
   | _ => Throw.throw "usage: deus key list | new <label> --scopes s,… [--projects p,…] [--days n] | revoke <id>"
@@ -2699,6 +2708,7 @@ def usage : Text :=
     "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D118)",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",
+    "                                       --exact: only the test named; --fresh: ignore kept verdicts",
     "  check [prefix] [--fresh]             check theorems and report their evidence (--fresh: ignore kept verdicts)",
     "  image <name> -o <file>               write a kernel image",
     "  build <name> -o <file> [--native]    write a standalone executable that runs name ()",
