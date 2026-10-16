@@ -737,8 +737,10 @@ on `changed`, so making the event synchronous made the whole chain synchronous.
 **The engine is `GraphQueryContext`, evolved rather than renamed.** `QuerySource` gained `kind`,
 `isServing`, `answers` and `isFailed`; no `RemoteQuerySource` split. `getResults` and `run` both merge
 through one `#merge`: in-process entries first, then remote entries `keepRemoteEntry` does not overrule,
-using the plan from `merge-plan.ts`. A single type or wildcard selection with no order of its own is then
-sorted by id, the natural order the planner gives it and both sources answer in. Without that sort an
+using the plan from `merge-plan.ts`. When the plan sets `natural`, the merged entries are then sorted by
+id, the natural order the planner gives the query and both sources answer in. `natural` covers one
+space-scoped type or wildcard selection with no order, limit, skip, traversal, aggregate, feed scope or
+registry scope; every other query keeps the merge order. Without that sort an
 object's position would depend on which source held it, so a write that loaded an index-backed object
 moved it ahead of the objects it had not touched.
 
