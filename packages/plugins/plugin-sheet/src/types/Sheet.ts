@@ -84,7 +84,7 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
     ranges: Schema.Array(Range).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // Charts of ranges, shown in the charts companion.
-    charts: Schema.optional(Schema.Array(Chart)).pipe(Annotation.FormInputAnnotation.set(false)),
+    charts: Schema.optional(Schema.Array(Chart).pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
