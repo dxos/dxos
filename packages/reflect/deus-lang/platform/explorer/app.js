@@ -1100,7 +1100,7 @@ const definitionCard = (key, def, events) => {
       subjectThread(`def:${def.name}`) +
       eventsSection(events, def.hash) +
       `<div class="relations">${section('Depends on', def.deps.length, rowList(def.deps.map(refRow), 'Nothing in this codebase.'), def.deps.length <= LIST_LIMIT)}` +
-      `${section('Used by', def.users.length, rowList(def.users.map(refRow), 'Nothing yet.'), def.users.length <= LIST_LIMIT)}</div>` +
+      `${section('Used by', def.users.length, rowList(def.users.map(refRow), 'No definition uses it.'), def.users.length <= LIST_LIMIT)}</div>` +
       (entry ? '' : '<p class="muted">This hash no longer has a name on this branch.</p>'),
   });
 };
@@ -1468,19 +1468,40 @@ const diffStat = (change) =>
       : ''
   }${change.removed.length > 0 ? `<span class="minus" title="${change.removed.length} definitions removed">−${change.removed.length}</span>` : ''}</span>`;
 
-const missingCard = (key, message) =>
+const missingCard = (key, message, suggestions = []) =>
   card(key, {
     iconHtml: '<span class="icon">?</span>',
     title: escape(message),
-    body: '<p class="muted">The site has no page for it.</p>',
+    body:
+      '<p class="muted">The site has no page for it.</p>' +
+      (suggestions.length > 0
+        ? `<p class="muted">Did you mean:</p><ul class="rows">${suggestions.map((entry) => entryRow(entry)).join('')}</ul>`
+        : ''),
   });
+
+/**
+ * Up to five definitions a link to a name the project lacks probably meant: names in the same namespace that start
+ * as its last part does (a typo usually comes late), then what the finder offers for that part.
+ */
+const closeNames = (name) => {
+  const last = lastSegment(name);
+  const namespace = namespaceOf(name);
+  const start = last.slice(0, 3).toLowerCase();
+  const near = index.names.filter(
+    (entry) => namespaceOf(entry.name) === namespace && lastSegment(entry.name).toLowerCase().startsWith(start),
+  );
+  const found = search(last)
+    .filter((hit) => hit.entry)
+    .map((hit) => hit.entry);
+  return [...new Map([...near, ...found].map((entry) => [entry.hash, entry])).values()].slice(0, 5);
+};
 
 const buildCard = async (key) => {
   const value = key.slice(2);
   switch (key[0]) {
     case 'd': {
       if (!DEFINITION_HASH.test(value)) {
-        return missingCard(key, `No definition named ${value}`);
+        return missingCard(key, `No definition named ${value}`, closeNames(value));
       }
       const [def, events] = await Promise.all([load(pagePath(value)), loadEvents()]);
       if (def?.ts !== undefined) {
@@ -2537,7 +2558,10 @@ const reveal = (key) => {
     (key.startsWith('n:') && self ? tree.querySelector(`[data-tree-key="d:${CSS.escape(self.hash)}"]`) : null);
   if (row) {
     row.classList.add('active');
-    row.scrollIntoView({ block: 'nearest' });
+    // Centered when out of view, so a deep link shows the row with its parents above it rather than at an edge.
+    const box = element('sidebar').getBoundingClientRect();
+    const { top, bottom } = row.getBoundingClientRect();
+    row.scrollIntoView({ block: top < box.top || bottom > box.bottom ? 'center' : 'nearest' });
   }
 };
 
@@ -3477,7 +3501,7 @@ const setDialect = (dialect) => {
 
 const onClick = (event) => {
   const target = event.target.closest(
-    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag], [data-history]',
+    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag], [data-history], [data-close-overlay]',
   );
   if (!target) {
     const cardNode = event.target.closest('.card');
@@ -3497,6 +3521,8 @@ const onClick = (event) => {
     filterAreas(target.closest('.home') ?? document, data.areaTag);
   } else if (data.history !== undefined) {
     filterHistory(data.history);
+  } else if (data.closeOverlay !== undefined) {
+    closeOverlays();
   } else if (data.index !== undefined) {
     choose(finder.results[Number(data.index)]);
   } else if (data.open) {
@@ -3933,6 +3959,13 @@ const main = async () => {
     }
   });
   window.addEventListener('hashchange', render);
+  // The finder opens on ⌘K or Ctrl+K; the help names the one this keyboard has.
+  if (!/Mac|iPhone|iPad/.test(navigator.platform)) {
+    for (const label of document.querySelectorAll('.mod-k')) {
+      label.textContent = 'Ctrl K';
+    }
+    element('find').title = 'Find a definition (/ or Ctrl K)';
+  }
   addHrefs(document.body);
   new MutationObserver((records) => {
     for (const record of records) {
