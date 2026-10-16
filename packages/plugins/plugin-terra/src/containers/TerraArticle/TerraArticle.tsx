@@ -338,7 +338,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           },
           () => handleAddRandomObject(),
         )
-        .separator()
+        // Pushes the gizmo toggle to the end, beside the view tabs.
+        .separator('gap')
         .action(
           'toggle-gizmos',
           {
@@ -359,7 +360,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     <Panel.Root role={role}>
       <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
-          <div className='grow' />
           {view === 'camera' && (
             <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
           )}
