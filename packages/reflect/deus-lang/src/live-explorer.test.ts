@@ -117,7 +117,7 @@ describe('live explorer (D192)', () => {
       // Who made a change travels as its history node's metadata (task ea772a6e), so the pages agree on it too.
       const site = (path: string) => JSON.parse(readFileSync(join(scratch, 'site', path), 'utf8'));
 
-      const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
+      const env: Env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' };
       const get = async (path: string) => {
         const pending: Promise<unknown>[] = [];
         const response = await worker.fetch(new Request(`https://deus.test${path}`), env, {
@@ -190,14 +190,14 @@ describe('live explorer (D192)', () => {
       const head = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
       rmSync(join(bucket, 'toolchain', 'live', head), { recursive: true, force: true });
       const sent: { body: { project: string; causal?: string } }[] = [];
-      const env = {
+      const env: Env = {
         BUCKET: directoryBucket(bucket),
         PREFIX: 'toolchain',
         LIVE_QUEUE: {
           send: async (body: { project: string }) => void sent.push({ body }),
           sendBatch: async (messages: { body: { project: string; causal: string } }[]) => void sent.push(...messages),
         },
-      } as Env;
+      };
       const deliver = async (body: object) => {
         const pending: Promise<unknown>[] = [];
         let acked = false;
@@ -231,7 +231,7 @@ describe('live explorer (D192)', () => {
       expect(deus('push', ...c).code).toBe(0);
       const head = readFileSync(join(scratch, 'codebase', 'branches', 'main'), 'utf8').trim();
       writeFileSync(join(bucket, 'toolchain', 'heads', 'main'), head);
-      const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
+      const env: Env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' };
       const fetchPage = async (causal: string, hash: string) => {
         const pending: Promise<unknown>[] = [];
         const response = await worker.fetch(
@@ -301,7 +301,7 @@ describe('live explorer (D192)', () => {
   test('KV keeps the shown head for a minute and drawn pages for a week', { timeout: 120_000 }, async ({ expect }) => {
     const bucket = join(scratch, 'bucket');
     const kept = new Map<string, { value: string; ttl?: number }>();
-    const env = {
+    const env: Env = {
       BUCKET: directoryBucket(bucket),
       PREFIX: 'toolchain',
       CACHE: {
@@ -309,7 +309,7 @@ describe('live explorer (D192)', () => {
         put: async (key: string, value: string, options?: { expirationTtl?: number }) =>
           void kept.set(key, { value, ttl: options?.expirationTtl }),
       },
-    } as Env;
+    };
     const get = async (path: string) => {
       const pending: Promise<unknown>[] = [];
       const response = await worker.fetch(new Request(`https://deus.test${path}`), env, {
@@ -360,7 +360,7 @@ describe('live explorer (D192)', () => {
     { timeout: 120_000 },
     async ({ expect }) => {
       const bucket = join(scratch, 'bucket');
-      const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
+      const env: Env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' };
       const head = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
       // Drawing the head's index keeps its first-parent chain beside it, which gives its ancestors.
       const pending: Promise<unknown>[] = [];
