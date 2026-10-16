@@ -135,7 +135,7 @@ export const Scripted: Story = {
     const skills = await canvas.findByRole('group', { name: 'Skills' }, { timeout: 30_000 });
     await within(skills).findByText('Community support', {}, { timeout: 30_000 });
     // Setup recorded each team member's expertise, which the skill reads to choose who to offer.
-    await canvas.findByText(/Dmytro Maretskyi \(DXOS\) is the one to ask about ECHO/, {}, { timeout: 30_000 });
+    await canvas.findByText(/Dmytro knows about ECHO/, {}, { timeout: 30_000 });
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Connect channels' }, { timeout: 30_000 }));
     await findEntry(monitor, 'running · connecting');

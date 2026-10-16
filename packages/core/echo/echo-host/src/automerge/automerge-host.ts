@@ -99,6 +99,8 @@ export type AutomergeHostProps = {
     evictionDelay?: number;
     /** How many released documents stay resident regardless of age. */
     minResidentDocuments?: number;
+    /** How many released documents may wait out the delay before the oldest are evicted at once. */
+    maxIdleDocuments?: number;
   };
 };
 
@@ -215,6 +217,8 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
  * the next one loaded.
  */
 const EVICT_IDLE_DELAY = 30_000;
+
+const MAX_IDLE_DOCUMENTS = 50;
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -359,6 +363,7 @@ export class AutomergeHost extends Resource {
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
       evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
       minResidentDocuments: residency?.minResidentDocuments,
+      maxIdleDocuments: residency?.maxIdleDocuments ?? MAX_IDLE_DOCUMENTS,
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;

@@ -5,6 +5,7 @@
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
+import * as Effect from 'effect/Effect';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
@@ -16,6 +17,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Database } from '../internal/sql-storage.ts';
 import { openMemory } from '../internal/wa-sqlite-storage.ts';
 import * as NodeSqlStorage from './sql-storage-node.ts';
+import * as WorkerdSqlStorage from './sql-storage-workerd.ts';
 
 const require = createRequire(import.meta.url);
 
@@ -87,5 +89,15 @@ describe('SqlStorage.makeFile (node:sqlite)', () => {
     const second = await EffectEx.runPromise(NodeSqlStorage.makeFile(path));
     expect(second.exec('SELECT name FROM item').toArray()).toEqual([{ name: 'persisted' }]);
     second.close();
+  });
+});
+
+describe('SqlStorage (workerd)', () => {
+  test('refuses to open a database, naming the Durable Object storage to use instead', async ({ expect }) => {
+    for (const open of [WorkerdSqlStorage.makeMemory(), WorkerdSqlStorage.makeFile('facts.db')]) {
+      const error = await EffectEx.runPromise(Effect.flip(open));
+      expect(error._tag).toBe('SqlError');
+      expect(String(error.reason.cause)).toContain('ctx.storage.sql');
+    }
   });
 });
