@@ -2330,6 +2330,7 @@ ul.features {
 /* Guide (D196): the overview's areas, spec documents as pages, and the sidebar's groups. */
 
 .home-intro {
+  margin-top: 20px;
   max-width: 72ch;
   font-size: 15px;
   line-height: 1.6;
@@ -2341,7 +2342,7 @@ ul.features {
 
 .legend {
   font-size: 12px;
-  margin: 18px 0 8px;
+  margin: 12px 0 0;
 }
 
 .legend .icon {
