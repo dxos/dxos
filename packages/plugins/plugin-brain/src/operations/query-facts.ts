@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
+import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 
 import { BrainOperation } from '#types';
 
@@ -13,22 +15,26 @@ import { toCompactFact } from './facts.ts';
 
 export default BrainOperation.QueryFacts.pipe(
   Operation.withHandler(
-    Effect.fn(function* (input) {
-      const facts = yield* queryCompactFacts(input);
+    Effect.fn(function* ({ agent: agentRef, ...input }) {
+      const agent = yield* BrainFacts.resolveAgent(agentRef);
+      const brain = yield* BrainService.BrainService;
+      const facts = yield* queryCompactFacts(input).pipe(
+        Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.id)),
+      );
       return { facts };
     }),
   ),
 );
 
 /**
- * Runs the structured query against the space FactStore and projects the matches onto the compact
+ * Runs the structured query against a FactStore (the agent's brain) and projects the matches onto the compact
  * LLM-facing shape, bounded by `limit`. Named export so the read path is unit-testable without the
  * operation runtime.
  */
 export const queryCompactFacts = ({
   limit,
   ...query
-}: typeof BrainOperation.QueryFacts.input.Type): Effect.Effect<
+}: Omit<typeof BrainOperation.QueryFacts.input.Type, 'agent'>): Effect.Effect<
   BrainOperation.CompactFact[],
   SemanticIndexError,
   FactStore

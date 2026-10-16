@@ -8,33 +8,22 @@ import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { FactPipeline } from '@dxos/pipeline-rdf';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as DiscordSource from '@dxos/plugin-discord/DiscordSource';
-import { type Space } from '@dxos/react-client/echo';
 
 import { type CrawlAction, type CrawlOptions, CrawlPanel, initialOptions } from '../components/index.ts';
-import { CrawlerStores } from '../testing/index.ts';
+import { CrawlerStores, StoryBrain } from '../testing/index.ts';
 import { useFactsStory } from './context.ts';
 
 /**
  * LEFT (top): the crawl controls. Runs the Discord pipeline over the {@link CrawlerStores} runtime,
- * providing Brain's per-space `FactStore` so extracted facts land in the same store the viewer reads.
+ * providing the story agent's brain as its `FactStore` so extracted facts land where the viewer reads.
  */
 export const CrawlModule = () => {
-  const space = ToolkitHooks.useActiveSpace();
-  if (!space) {
-    return null;
-  }
-  return <CrawlModuleContainer space={space} />;
-};
-
-const CrawlModuleContainer = ({ space }: { space: Space }) => {
-  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const { store, layer } = Hooks.useCapability(StoryBrain);
   const crawler = Hooks.useCapability(CrawlerStores);
   const { setFacts, setSelected } = useFactsStory();
 
@@ -66,8 +55,8 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
     });
   }, [guard, options.token]);
 
-  // Crawl the selected channel; extracted facts land in Brain's per-space `FactStore` (provided as a
-  // layer), the crawler-only stores come from the runtime. `Layer.fresh` on AI gives it a direct fetch
+  // Crawl the selected channel; extracted facts land in the agent's brain (provided as `FactStore`),
+  // the crawler-only stores come from the runtime. `Layer.fresh` on AI gives it a direct fetch
   // (not the Discord source's CORS-proxy client, which would 404 LLM calls).
   const handleCrawl = useCallback(() => {
     if (!options.channel) {
@@ -88,14 +77,14 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
         }).pipe(
           Effect.provide(
             Layer.mergeAll(
-              registry.layerFor(space.id),
+              layer,
               DiscordSource.layer(options.token),
               Layer.fresh(AiServiceTestingPreset('edge-remote')),
             ),
           ),
         ),
       );
-      const facts = await EffectEx.runPromise(registry.forSpace(space.id).query({}));
+      const facts = await EffectEx.runPromise(store.query({}));
       setFacts(facts);
       const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
@@ -104,9 +93,9 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
           : `Crawled ${result.messages} messages · ${result.stored} stored · ${facts.length} facts${skipped}`,
       );
     });
-  }, [guard, crawler, registry, space.id, options, setFacts]);
+  }, [guard, crawler, store, layer, options, setFacts]);
 
-  // Process a loaded text/markdown file through the fact pipeline into Brain's `FactStore`.
+  // Process a loaded text/markdown file through the fact pipeline into the agent's brain.
   const handleLoadFile = useCallback(
     (name: string, text: string) => {
       guard('file', async () => {
@@ -116,28 +105,26 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
         }
         await EffectEx.runPromise(
           FactPipeline.run([{ text, source: `file:${name}` }]).pipe(
-            Effect.provide(
-              Layer.provideMerge(registry.layerFor(space.id), Layer.fresh(AiServiceTestingPreset('edge-remote'))),
-            ),
+            Effect.provide(Layer.provideMerge(layer, Layer.fresh(AiServiceTestingPreset('edge-remote')))),
           ),
         );
-        const facts = await EffectEx.runPromise(registry.forSpace(space.id).query({}));
+        const facts = await EffectEx.runPromise(store.query({}));
         setFacts(facts);
         setStatus(`Processed ${name} · ${facts.length} facts`);
       });
     },
-    [guard, registry, space.id, setFacts],
+    [guard, store, layer, setFacts],
   );
 
-  // Clear the space's `FactStore` and the current selection.
+  // Clear the agent's brain and the current selection.
   const handleReset = useCallback(() => {
     guard('reset', async () => {
-      await EffectEx.runPromise(registry.forSpace(space.id).clear());
+      await EffectEx.runPromise(store.clear());
       setFacts([]);
       setSelected(undefined);
       setStatus('Cleared facts.');
     });
-  }, [guard, registry, space.id, setFacts, setSelected]);
+  }, [guard, store, setFacts, setSelected]);
 
   return (
     <CrawlPanel

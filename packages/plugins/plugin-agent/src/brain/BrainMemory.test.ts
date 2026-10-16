@@ -78,6 +78,20 @@ describe('BrainMemory', () => {
     }),
   );
 
+  it.effect('a store-only push stores facts but queues nothing', ({ expect }) =>
+    Effect.gen(function* () {
+      const { service: brain } = BrainMemory.make(agents, { now });
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }, { ongoing: true }));
+
+      expect(yield* brain.push(AGENT, [fact('f1')], { storeOnly: true })).toBe(0);
+      expect(yield* brain.take('dima')).toEqual([]);
+      expect((yield* brain.query(AGENT, {})).map(({ id }) => id)).toEqual(['f1']);
+
+      // Later facts still wake as before.
+      expect(yield* brain.push(AGENT, [fact('f2', { quote: 'The migration is half done.' })])).toBe(1);
+    }),
+  );
+
   it.effect('reset forgets facts, cursors and queued events but keeps subscriptions', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents, { now });

@@ -7,6 +7,7 @@ export * as AgentCompanion from './AgentCompanion.ts';
 export * as AgentEmail from './AgentEmail.ts';
 export * as AgentMailbox from './AgentMailbox.ts';
 export * as AgentOperation from './AgentOperation.ts';
+export * as BrainFacts from './BrainFacts.ts';
 export * as BrainService from './BrainService.ts';
 export * as EmailOperation from './EmailOperation.ts';
 export * as ChatParticipant from './ChatParticipant.ts';

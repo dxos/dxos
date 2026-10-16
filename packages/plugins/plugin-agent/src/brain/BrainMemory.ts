@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Evaluator from '@dxos/brain/Evaluator';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type FactStoreApi, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { BrainService, Trigger } from '#types';
@@ -83,10 +84,11 @@ const toError = (cause: unknown) =>
  * A brain held in process memory: pipeline-rdf's in-memory RDF store per agent, the trigger registry as
  * its subscriptions, a `@dxos/brain` evaluator per agent deciding which subscriptions wake, and an outbox
  * per subscription. Nothing survives a reload. Waking a chat submits the prompt to its session through
- * `agents`, which runs the turn locally or on EDGE as the session was opened.
+ * `agents`, which runs the turn locally or on EDGE as the session was opened; a brain made without them
+ * (a story's fact store) refuses to wake.
  */
 export const make = (
-  agents: AgentService.Service,
+  agents: AgentService.Service | undefined,
   { state = makeState(), now = Date.now }: MakeOptions = {},
 ): BrainMemory => {
   const { triggers, stores, evaluators, outboxes, queued } = state;
@@ -139,7 +141,11 @@ export const make = (
       if (options?.read) {
         yield* store.setCursor(options.read.source, options.read.through).pipe(Effect.mapError(toError));
       }
-      return entries.length === 0 ? 0 : enqueue(evaluator(agent).push(entries, { at: now(), quiet: options?.quiet }));
+      if (entries.length === 0) {
+        return 0;
+      }
+      const events = evaluator(agent).push(entries, { at: now(), quiet: options?.quiet });
+      return options?.storeOnly ? 0 : enqueue(events);
     }),
     tick: (agent) => Effect.sync(() => enqueue(evaluator(agent).tick(now()))),
     nextDueAt: (agent) =>
@@ -206,13 +212,15 @@ export const make = (
       }),
     wake: ({ chat, prompt, sender }) =>
       agents
-        // The chat's own location, else an agent chat on EDGE would wake a second, local session.
-        .getSession(chat, { location: Agent.chatLocation(chat) })
-        .pipe(
-          Effect.flatMap((session) =>
-            session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),
-          ),
-        ),
+        ? agents
+            // The chat's own location, else an agent chat on EDGE would wake a second, local session.
+            .getSession(chat, { location: Agent.chatLocation(chat) })
+            .pipe(
+              Effect.flatMap((session) =>
+                session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),
+              ),
+            )
+        : Effect.fail(new BrainService.BrainError({ message: 'This brain has no agent sessions to wake.' })),
   };
 
   return { service, triggers, facts };
@@ -223,3 +231,12 @@ export const layer: Layer.Layer<BrainService.BrainService, never, AgentService.A
   BrainService.BrainService,
   AgentService.AgentService.pipe(Effect.map((agents) => make(agents).service)),
 );
+
+/**
+ * A brain over `state` that wakes no chats, as an application layer spec: for hosts (stories) that ingest and read facts
+ * without agent sessions.
+ */
+export const factsLayerSpec = (state: State): LayerSpec.LayerSpec =>
+  LayerSpec.make({ affinity: 'application', requires: [], provides: [BrainService.BrainService] }, () =>
+    Layer.succeed(BrainService.BrainService, make(undefined, { state }).service),
+  );

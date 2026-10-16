@@ -40,6 +40,9 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../plugins/plugin-agent"
     },
     {
       "path": "../../plugins/plugin-assistant"

@@ -6,11 +6,14 @@ import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { DraftMessage, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -27,10 +30,16 @@ const handler: Operation.WithHandler<typeof BrainOperation.GenerateReply> = Brai
       if (!Mailbox.instanceOf(mailbox) || !Obj.instanceOf(Message.Message, message)) {
         return { subject: '', body: '' };
       }
+      // The space's only agent grounds the draft; with none (or several) it is drafted from the thread alone.
+      const agent = yield* BrainFacts.resolveAgent(undefined).pipe(Effect.option);
+      const brain = yield* BrainService.BrainService;
+      const draft = generateReply({ mailbox, message });
       // Degrade to an empty draft on generation failure so the toolbar action always yields a draft.
-      return yield* generateReply({ mailbox, message }).pipe(
-        Effect.catchTag('GenerateReplyError', () => Effect.succeed({ subject: '', body: '' })),
-      );
+      return yield* (
+        Option.isSome(agent)
+          ? draft.pipe(Effect.provideService(FactStore, BrainFacts.factStore(brain, agent.value.id)))
+          : draft
+      ).pipe(Effect.catchTag('GenerateReplyError', () => Effect.succeed({ subject: '', body: '' })));
     }),
   ),
 );
@@ -74,20 +83,16 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
 
 /**
  * Drafts a grounded reply: gathers the message's thread (same normalized subject) from the mailbox
- * feed, looks up facts about the participants in the space fact store, and prompts the LLM for a
- * reply body. Accepts either the message to reply to or a reply draft (resolved via `inReplyTo`).
- * Fact lookup degrades to none on store failure — a reply can always be drafted; LLM failure surfaces
+ * feed, looks up facts about the participants in the {@link FactStore} when one is provided, and prompts
+ * the LLM for a reply body. Accepts either the message to reply to or a reply draft (resolved via
+ * `inReplyTo`). Fact lookup degrades to none without a store or on its failure — a reply can always be drafted; LLM failure surfaces
  * as a typed {@link GenerateReplyError} so callers can recover (e.g. fall back to an empty draft).
  * Named export so the flow is unit-testable without the operation runtime.
  */
 export const generateReply = (options: {
   readonly mailbox: Mailbox.Mailbox;
   readonly message: Message.Message;
-}): Effect.Effect<
-  { subject: string; body: string },
-  GenerateReplyError,
-  FactStore | AiService.AiService | Database.Service
-> =>
+}): Effect.Effect<{ subject: string; body: string }, GenerateReplyError, AiService.AiService | Database.Service> =>
   Effect.gen(function* () {
     const { mailbox } = options;
 
@@ -121,15 +126,17 @@ export const generateReply = (options: {
 
     // Facts about the participants (sender + thread senders), deduped, bounded. Advisory: a failing
     // store must not block drafting.
-    const store = yield* FactStore;
+    const store = yield* Effect.serviceOption(FactStore);
     const participants = [
       ...new Set([senderLabel(message), ...thread.map(senderLabel)].filter((label) => label !== undefined)),
     ];
     const factsById = new Map<string, RDF.Fact>();
     for (const participant of participants) {
-      const facts = yield* store
-        .query({ entity: normalizeEntityId(participant) })
-        .pipe(Effect.orElseSucceed((): RDF.Fact[] => []));
+      const facts = Option.isSome(store)
+        ? yield* store.value
+            .query({ entity: normalizeEntityId(participant) })
+            .pipe(Effect.orElseSucceed((): RDF.Fact[] => []))
+        : [];
       for (const fact of facts) {
         factsById.set(fact.id, fact);
       }

@@ -24,6 +24,8 @@ export default defineConfig({
     AgentOperation: 'src/types/AgentOperation.ts',
     EmailOperation: 'src/types/EmailOperation.ts',
     AgentCompanion: 'src/types/AgentCompanion.ts',
+    BrainFacts: 'src/types/BrainFacts.ts',
+    BrainMemory: 'src/brain/BrainMemory.ts',
     BrainService: 'src/types/BrainService.ts',
     BrainSkill: 'src/skills/BrainSkill.ts',
     ChatParticipant: 'src/types/ChatParticipant.ts',

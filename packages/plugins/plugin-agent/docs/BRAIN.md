@@ -498,8 +498,9 @@ spike code was throwaway, its scenarios now live in `@dxos/brain/testing`).
 
 1. **Private threads** ([THREADS.md](./THREADS.md)): approve the child-feed design for M0, or extend
    Feeds' soft fork into real branches.
-2. **plugin-brain:** whether its per-space fact store and the agent's brain merge, or the brain stays
-   per agent and reads the same feeds (settle in M2).
+2. **plugin-brain:** settled — its per-space fact store is gone; mailbox analysis and the Discord crawl push into
+   the named agent's brain (store-only) and plugin-brain's tools read it. Open: routing those writes to EDGE's
+   brain for an EDGE-hosted agent.
 3. **Directives in ONTOLOGY.md:** whether `Instruction` and `Preference` (§4) become constraint and
    condition goals, or stay separate types.
 4. **Index loading:** in-memory relations loaded from SQLite on start (current plan) versus querying

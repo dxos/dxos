@@ -12,7 +12,7 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as AgentService from '@dxos/compute/AgentService';
 import type { Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import { RDF } from '@dxos/pipeline-rdf';
+import * as RDF from '@dxos/pipeline-rdf/types';
 import { ContentBlock } from '@dxos/types';
 
 import * as Trigger from './Trigger.ts';
@@ -29,6 +29,8 @@ export const FactQuery = Schema.Struct({
   predicate: Schema.optional(Schema.String),
   /** DXN of the message (or other source) the facts were read from. */
   source: Schema.optional(Schema.String),
+  /** Lower bound (inclusive) on factuality confidence. */
+  minConfidence: Schema.optional(Schema.Number),
 });
 
 export interface FactQuery extends Schema.Schema.Type<typeof FactQuery> {}
@@ -78,6 +80,11 @@ export type PushOptions = {
    * loses its facts (the in-memory one, on reload) also forgets what it read, and the source is read again.
    */
   readonly read?: ReadCursor;
+  /**
+   * Stores the facts and lets the rules read them, but queues no event they cause: bulk ingestion (a mailbox or a
+   * crawl) must not wake the agent's subscriptions. EDGE's brain ignores it.
+   */
+  readonly storeOnly?: boolean;
 };
 
 /**

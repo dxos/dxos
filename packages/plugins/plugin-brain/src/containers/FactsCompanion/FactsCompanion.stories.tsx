@@ -6,24 +6,28 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Instructions from '@dxos/compute/Instructions';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { type RDF } from '@dxos/pipeline-rdf';
+import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { BrainCapabilities } from '#types';
+import { BrainOperationHandlerSet } from '#operations';
 
-import { makeFactStoreRegistry } from '../../capabilities/fact-store.ts';
 import { FactsCompanion } from './FactsCompanion.tsx';
 
-// A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
-// space, so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.
-const registry = makeFactStoreRegistry();
+// The brain the story's agent holds its facts in, seeded (below) once the agent exists.
+const state = BrainMemory.makeState();
 
 /** Minimal RDF fact fixture (subject —predicate→ object) for the viewer. */
 const fact = (id: string, subject: string, predicate: string, object: string): RDF.Fact => ({
@@ -42,6 +46,25 @@ const fact = (id: string, subject: string, predicate: string, object: string): R
 
 const FACTS: RDF.Fact[] = [fact('f1', 'Alice', 'worksAt', 'Acme'), fact('f2', 'Alice', 'knows', 'Bob')];
 
+// The brain and the `ListFacts` handler the companion polls, without the rest of plugin-agent.
+const StoryBrainPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.brain.story.brain'), name: 'Story Brain' }),
+).pipe(
+  Plugin.addModule<void>(
+    Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, BrainOperationHandlerSet.handlers)]),
+    ),
+  ),
+  Plugin.addModule({
+    id: 'brain',
+    // The process manager snapshots LayerSpecs once at boot.
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.LayerSpec, BrainMemory.factsLayerSpec(state))]),
+  }),
+  Plugin.make,
+);
+
 const meta = {
   title: 'plugins/plugin-brain/containers/FactsCompanion',
   render: () => <FactsCompanion />,
@@ -49,17 +72,20 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      // Contribute the seeded registry directly so the companion resolves it without the full FactStore module.
-      capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
+          types: [Agent.Agent, Instructions.Instructions],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
+              const agent = defaultSpace.db.add(
+                Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ text: '' })) }),
+              );
+              yield* BrainMemory.make(undefined, { state }).service.push(agent.id, FACTS).pipe(Effect.orDie);
             }),
         }),
+        StoryBrainPlugin(),
         StorybookPlugin.make({}),
       ],
     }),
@@ -75,7 +101,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Renders the space's extracted facts via the `FactViewer`. */
+/** Renders the facts in the space agent's brain via the `FactViewer`. */
 export const Default: Story = {};
 
 // NOTE: no interactive `play` test — the seeded-space facts don't resolve in the headless storybook test

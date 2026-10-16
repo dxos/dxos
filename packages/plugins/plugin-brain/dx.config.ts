@@ -11,8 +11,8 @@ export default Config2.make({
     name: 'Brain',
     author: 'DXOS',
     description: trim`
-      A per-space semantic index of facts extracted from your content.
-      Provides fact storage, assistant tools for querying and summarizing facts, and a fact viewer.
+      Facts extracted from your content into your agent's brain.
+      Provides assistant tools for querying and summarizing facts, and a fact viewer.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-brain',
     icon: { key: 'ph--brain--regular', hue: 'purple' },

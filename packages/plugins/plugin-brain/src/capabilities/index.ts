@@ -25,14 +25,6 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
-// No `export * from './fact-store.ts'` here: that barrel re-export made the module a static import of
-// the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
-// pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
-// `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-export const FactStore = AppCapability.layerSpec(() => import('./fact-store.ts'), {
-  name: 'FactStore',
-  provides: [BrainCapabilities.FactStoreRegistry],
-});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.plugin.brain.surface.facts'],
 });
