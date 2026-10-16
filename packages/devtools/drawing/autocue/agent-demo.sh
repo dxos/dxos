@@ -21,6 +21,8 @@ unset CLAUDE_CODE_CHILD_SESSION
 export DX_PROFILE="${DEMO_DX_PROFILE:-autocue-drawing-sh}"
 # The production EDGE, which the `bundle-e2e` Composer the take opens at the end also syncs through.
 export DX_LOCAL_DEV=0
+# Error logs go to the terminal on camera; a reloaded `dx space share` invitation logs a stack on every `dx` start.
+export LOG_PROCESSOR=noop
 
 # Clears only a directory this script set up before (marked), or an empty one: never a checkout by mistake.
 # Checked before the profile reset below, so a wrong --cwd changes nothing.

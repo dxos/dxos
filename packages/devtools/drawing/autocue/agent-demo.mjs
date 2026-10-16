@@ -251,6 +251,20 @@ export const steps = [
  * the invitation, and the code and secret it prints go where a person would paste them.
  */
 const joinFromComposer = async (page) => {
+  // A space created moments ago can take a while to reach EDGE, so the first join may find nothing.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await joinOnce(page);
+    } catch (error) {
+      if (attempt >= 3) {
+        throw error;
+      }
+      await page.waitForTimeout(20_000);
+    }
+  }
+};
+
+const joinOnce = async (page) => {
   const share = spawn(path.join(ROOT, 'packages/devtools/cli/bin/dx'), ['space', 'share'], {
     env: { ...process.env, DX_PROFILE: PROFILE, DX_LOCAL_DEV: '0' },
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -259,6 +273,7 @@ const joinFromComposer = async (page) => {
   share.stdout.on('data', (chunk) => (output += chunk));
   share.stderr.on('data', (chunk) => (output += chunk));
   const exited = new Promise((resolve) => share.on('exit', resolve));
+  let composer;
   try {
     const deadline = Date.now() + 120_000;
     while (!/Invitation:\s*\S+/.test(output) && share.exitCode === null && Date.now() < deadline) {
@@ -269,7 +284,7 @@ const joinFromComposer = async (page) => {
     if (!invitation || !secret) {
       throw new Error(`dx space share printed no invitation: ${output.slice(-400)}`);
     }
-    const composer = await page.context().newPage();
+    composer = await page.context().newPage();
     await composer.goto(`${COMPOSER}/?spaceInvitationCode=${invitation}`);
     const code = composer.getByTestId('space-auth-code-input').locator('input').first();
     await code.waitFor({ timeout: 120_000 });
@@ -284,11 +299,19 @@ const joinFromComposer = async (page) => {
       throw new Error(`dx space share ended with ${status}: ${output.slice(-400)}`);
     }
     await composer.getByTestId('spacePlugin.spaceHome').first().waitFor({ timeout: 120_000 });
+    if (
+      await composer
+        .getByText('Not Found', { exact: true })
+        .isVisible()
+        .catch(() => false)
+    ) {
+      throw new Error('the joined space has not reached Composer yet');
+    }
     await closeHelp(composer);
     // Let the joined space settle in Composer before the page that holds it goes away.
     await composer.waitForTimeout(5_000);
-    await composer.close();
   } finally {
+    await composer?.close();
     share.kill();
   }
 };
@@ -301,23 +324,61 @@ const closeHelp = async (page) => {
   }
 };
 
-/** Switches the recording to Composer, where the imported drawing has synced into the joined space, and opens it. */
+/**
+ * Switches the recording to Composer, where the imported drawing has synced into the joined space, opens it,
+ * turns it into an editable Canvas drawing, and moves two boxes: the arrows stay attached.
+ */
 const openInComposer = async ({ demo, page }) => {
   // Composer's boot is a spinner, not content.
   await demo.speed({ factor: FAST });
   await page.goto(COMPOSER);
-  const recent = page.getByText('arch', { exact: true }).first();
-  await recent.waitFor({ timeout: 180_000 });
+  // Composer reopens the space with no plank; its home lists what was added recently.
+  await page.getByTestId('spacePlugin.spaceHome').first().waitFor({ timeout: 180_000 });
+  await page.getByTestId('spacePlugin.spaceHome').first().click();
+  await page.getByText('arch', { exact: true }).first().waitFor({ timeout: 180_000 });
+  await closeHelp(page);
   await demo.speed({ factor: 1 });
   await page.waitForTimeout(1_500);
   await demo.click({ text: 'arch', exact: true });
-  await page.locator('svg text', { hasText: 'Postgres' }).first().waitFor({ timeout: 60_000 });
-  await page.waitForTimeout(1_500);
+  await page.locator('[data-testid="deck.plank"] svg text').first().waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(3_000);
+
   await demo.caption({
-    value: 'A drawing in a local-first space',
-    subtitle: 'Synced through EDGE: people and agents keep working on it together',
+    value: 'Edit it on a Canvas',
+    subtitle: 'The picture becomes boxes and links you can move; the arrows stay attached',
   });
-  await page.waitForTimeout(6_000);
+  await demo.click({ selector: '[data-testid="deck.plank"] >> role=button[name="arch"] >> nth=0' });
+  await page.waitForTimeout(900);
+  await demo.click({ selector: '[data-testid="illustratorPlugin.convert.canvas"]' });
+  await page.locator('[data-node-id]').first().waitFor({ timeout: 60_000 });
+  // The inspectors dock beside the canvas; floated, the drawing gets the whole plank.
+  await page
+    .getByTestId('dock-close')
+    .click({ timeout: 10_000 })
+    .catch(() => {});
+  await page.waitForTimeout(2_500);
+
+  // The two smallest labelled nodes are boxes rather than group frames; move one down and one up.
+  const boxes = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-node-id]')]
+      .map((node) => {
+        const { x, y, width, height } = node.getBoundingClientRect();
+        return { x: x + width / 2, y: y + height / 2, area: width * height, text: node.textContent?.trim() ?? '' };
+      })
+      .filter(({ text, area }) => text.length > 0 && area > 0)
+      .sort((left, right) => left.area - right.area),
+  );
+  for (const [index, box] of boxes.slice(0, 2).entries()) {
+    const offset = index === 0 ? { x: -60, y: 140 } : { x: 90, y: -110 };
+    await demo.drag({ fromXY: box, toXY: { x: box.x + offset.x, y: box.y + offset.y }, steps: 45, stepDelay: 22 });
+    await page.waitForTimeout(1_800);
+  }
+  await page.mouse.click(page.viewportSize().width - 400, 120);
+  await demo.caption({
+    value: 'A live drawing in a local-first space',
+    subtitle: 'Synced through EDGE, so people and agents keep working on it together',
+  });
+  await page.waitForTimeout(5_000);
 };
 
 /** Flashes the montage, one diagram at a time, over the whole window. */
