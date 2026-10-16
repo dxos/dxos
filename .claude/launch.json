@@ -15,6 +15,15 @@
       "autoPort": true
     },
     {
+      "name": "composer-autocue",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_PWA=false moon run composer-app:serve -- --port 4173 --strictPort"
+      ],
+      "port": 4173
+    },
+    {
       "name": "composer-agent-debug",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
