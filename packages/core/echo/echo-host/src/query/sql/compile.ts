@@ -5,10 +5,15 @@
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as Statement from 'effect/sql/Statement';
 
-import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import {
+  EncodedReference,
+  EscapedPropPath,
+  QueryAST,
+  isEncodedReference,
+  referenceIndexKey,
+} from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
 import {
-  EscapedPropPath,
   type QueueRef,
   type QueueWindow,
   buildFtsCondition,
@@ -16,7 +21,6 @@ import {
   buildSourceCondition,
   buildTypeDxnCondition,
   normalizePropPath,
-  referenceIndexKey,
 } from '@dxos/index-core';
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
@@ -62,7 +66,6 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** JSON text of the body; present for feed rows only, since the client re-loads documents. */
   documentJson: string | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
@@ -73,6 +76,7 @@ export type CompiledRow = {
    * serialized key rather than an object.
    */
   aggregates: string | null;
+  heads: string | null;
 };
 
 /**
@@ -923,6 +927,22 @@ export class SqlPlanCompiler {
         // Only scalars order; anything else sorts with the nulls, last.
         return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.snapshot, ${at}) END ${direction} NULLS LAST`;
       }
+      case 'annotation': {
+        // The key and each path segment are matched with `json_each`, as the annotation filter does,
+        // since a JSON path cannot address every key; a non-object level yields no row, so NULL.
+        const objectOrEmpty = (level: string) =>
+          sql`json_each(CASE WHEN ${sql.literal(level)}.type = 'object' THEN ${sql.literal(level)}.value ELSE '{}' END)`;
+        const path = order.path ?? [];
+        const joins = path.map(
+          (segment, index) =>
+            sql`JOIN ${objectOrEmpty(index === 0 ? 'a' : `p${index - 1}`)} ${sql.literal(`p${index}`)} ON ${sql.literal(`p${index}`)}.key = ${segment}`,
+        );
+        const leaf = sql.literal(path.length === 0 ? 'a' : `p${path.length - 1}`);
+        // Only scalars order; anything else sorts with the nulls, last.
+        return sql`(SELECT CASE WHEN ${leaf}.type IN ('text', 'integer', 'real', 'true', 'false') THEN ${leaf}.value END
+          FROM json_each(COALESCE(m.annotations, '{}')) a ${sql.join(' ', false)(joins)}
+          WHERE a.key = ${order.key}) ${direction} NULLS LAST`;
+      }
       default:
         return sql`w.ord`;
     }
@@ -1135,7 +1155,7 @@ export class SqlPlanCompiler {
       ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount, ${aggregates} AS aggregates`
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
-      m.createdAt, m.updatedAt,
+      m.createdAt, m.updatedAt, d.heads AS heads,
       CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
@@ -1184,21 +1204,6 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
     }
   });
 
-/**
- * Whether any filter in the plan reads `@meta` — foreign keys, a registry key/version, or tags.
- *
- * `objectSnapshot` strips `@meta` from document rows (it exists there only so the entity-meta index
- * can lift the convergence key out), so those predicates cannot be evaluated in SQL and the plan
- * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
- * sees both, so this declines the plan wholesale rather than by scope.
- */
-/**
- * Whether the compiler declines this plan, leaving it for the in-memory executor.
- *
- * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
- * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
- * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
- */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
   planSelectsChanges(plan) ||
   planReadsObjectMeta(plan, planSubquery) ||

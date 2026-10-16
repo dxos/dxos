@@ -120,7 +120,7 @@ export const Outline = ({
   // component is used both in a sized grid cell and floating over a document, where nothing
   // constrains it and its natural height is the right one.
   const [available, setAvailable] = useState(0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const parent = containerRef.current?.parentElement;
     if (!parent) {
       return;

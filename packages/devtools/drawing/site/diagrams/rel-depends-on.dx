@@ -1,0 +1,3 @@
+node A "App"
+node B "Logger" right-of A
+edge A depends-on B

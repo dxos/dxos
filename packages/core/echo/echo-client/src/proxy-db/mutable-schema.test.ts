@@ -171,6 +171,33 @@ describe('EchoSchema', () => {
     expect(getTypeIdentifierAnnotation(Type.getSchema(schema))).to.match(/^echo:\//);
   });
 
+  test('a relation type built from JSON Schema is stored as a relation', async () => {
+    const { db } = await setupTest();
+    const type = await db.addType(
+      Type.makeRelationFromJsonSchema({
+        typename: 'com.example.relation.described',
+        version: '0.1.0',
+        jsonSchema: { type: 'object', properties: { note: { type: 'string' } } },
+        source: Obj.Unknown,
+        target: Obj.Unknown,
+      }),
+    );
+
+    expect(Type.isRelation(type)).to.be.true;
+    expect(type.jsonSchema.relationSource?.$ref).to.match(/^dxn:org\.dxos\.schema\.anyObject/);
+  });
+
+  test('a static relation type can be stored', async () => {
+    const { db } = await setupTest();
+    const StaticRelation = Type.makeRelation(DXN.make('com.example.relation.static', '0.1.0'))({
+      source: Obj.Unknown,
+      target: Obj.Unknown,
+    })(Schema.Struct({ id: Obj.ID }));
+
+    const type = await db.addType(StaticRelation);
+    expect(Type.isRelation(type)).to.be.true;
+  });
+
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([TestWithRefs]);

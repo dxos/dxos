@@ -224,9 +224,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   async setConfig(config: IndexConfig): Promise<void> {
     // TODO(dmaretskyi): Set global timeout instead.
-    await runServiceCall(this._runtime, this._serviceProvider.rpc['QueryService.setConfig'](config), {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc, 'QueryService.setConfig', config, {
       timeout: 20_000,
-      label: 'QueryService.setConfig',
     });
   }
 
@@ -278,11 +277,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log('creating space');
     const space = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.createSpace']({
+      this._serviceProvider.rpc,
+      'SpacesService.createSpace',
+      {
         tags: options?.tags ?? [],
         membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.createSpace' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
 
     await this._spaceCreated.waitForCondition(() => {
@@ -307,8 +308,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.importSpace']({ archive, tags: options?.tags }),
-      { timeout: IMPORT_SPACE_TIMEOUT, label: 'SpacesService.importSpace' },
+      this._serviceProvider.rpc,
+      'SpacesService.importSpace',
+      { archive, tags: options?.tags },
+      { timeout: IMPORT_SPACE_TIMEOUT },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
@@ -335,11 +338,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
-    const response = await runServiceCall(
-      this._runtime,
-      this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
-      { label: 'SpacesService.joinBySpaceKey' },
-    );
+    const response = await runServiceCall(this._runtime, this._serviceProvider.rpc, 'SpacesService.joinBySpaceKey', {
+      spaceKey,
+    });
     const space = response.space ?? failedInvariant();
     // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
     // same wait `createSpace` and `import` do before resolving their proxy.

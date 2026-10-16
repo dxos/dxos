@@ -4,9 +4,10 @@
 
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import {
   Aggregate,
   Annotation,
@@ -26,9 +27,9 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { BACKED_OBJECT_LIMIT, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
@@ -2184,6 +2185,7 @@ describe('Query', () => {
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId);
       invariant(object, 'object missing after reload');
+      getObjectCore(object).getDoc();
       const objectDocHandle = getObjectCore(object).docHandle;
       invariant(objectDocHandle, 'docHandle missing');
       expect(objectDocHandle.url).to.eq(assertion.documentUrl);
@@ -4326,6 +4328,160 @@ describe('Query', () => {
       Obj.update(plain, (plain) => Annotation.set(plain, StatusAnnotation, 'done'));
       await db.flush({ indexes: true, updates: true });
       await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
+  describe('Lazy queries', () => {
+    const openReloaded = async (populate: (db: EchoDatabase) => { id: string }[] | Promise<{ id: string }[]>) => {
+      const reloadBuilder = new EchoTestBuilder();
+      onTestFinished(async () => {
+        await reloadBuilder.close();
+      });
+      const { peer, db: initialDb } = await reloadBuilder.createDatabase();
+      invariant(initialDb instanceof DatabaseImpl);
+      const ids = (await populate(initialDb)).map((object) => object.id);
+      await initialDb.flush({ secondaryIndexes: true });
+      const documentIds = new Map(
+        ids.map((id) => [id, initialDb.getObjectCoreById(id, { load: false })?.docHandle?.documentId]),
+      );
+      await peer.reload();
+      const db = await peer.openLastDatabase();
+      invariant(db instanceof DatabaseImpl);
+
+      const changeOnHost = async (id: string, change: (data: Record<string, any>) => void) => {
+        const documentId = documentIds.get(id);
+        invariant(documentId);
+        using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+        invariant(lease);
+        lease.change((doc) => change(doc.objects![id].data));
+        await peer.host.automergeHost.flush(Context.default());
+        return A.getHeads(lease.doc());
+      };
+      return { db, ids, peer, documentIds, changeOnHost };
+    };
+
+    const hasDocument = (db: DatabaseImpl, id: string) =>
+      db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
+
+    test('query results are live, index-backed, and load no document', async () => {
+      const { db, ids } = await openReloaded((db) => {
+        const tagged = Obj.make(TestSchema.Expando, { value: 1, blob: new Uint8Array([1, 2, 3]) });
+        Obj.update(tagged, (tagged) => Obj.getMeta(tagged).keys.push({ id: 'key-1', source: 'test' }));
+        return [db.add(tagged), db.add(createTestObject({ value: 2 }))];
+      });
+
+      const results = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(results.map((object) => object.id).sort()).toEqual([...ids].sort());
+      expect(results.map((object) => object.value).sort()).toEqual([1, 2]);
+      for (const object of results) {
+        expect(Obj.isSnapshot(object)).toBe(false);
+        expect(hasDocument(db, object.id)).toBe(false);
+        expect(db.getObjectById(object.id)).toBe(object);
+        expect(Obj.version(object).automergeHeads?.length).toBeGreaterThan(0);
+        expect(Obj.getMeta(object).createdAt).toBeTypeOf('number');
+      }
+      const tagged = results.find((object) => object.value === 1);
+      invariant(tagged);
+      expect(Obj.getMeta(tagged).keys.map((key) => ({ ...key }))).toEqual([{ id: 'key-1', source: 'test' }]);
+      expect(tagged.blob).toEqual(new Uint8Array([1, 2, 3]));
+    });
+
+    test('a query over objects the tab holds reads none of their stored changes', async () => {
+      const { db, peer } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush({ indexes: true });
+      const reads = vi.spyOn(peer.host.automergeHost, 'readStoredChanges');
+
+      expect(await db.query(Query.select(Filter.type(TestSchema.Expando))).run()).toHaveLength(1);
+      expect(reads).not.toHaveBeenCalled();
+    });
+
+    test('a parent that follows its child in the results is backed by the index too', async () => {
+      const { db, ids } = await openReloaded((db) => {
+        const parent = db.add(createTestObject({ value: 2 }));
+        const child = db.add(createTestObject({ value: 1 }));
+        Obj.setParent(child, parent);
+        return [parent, child];
+      });
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.property('value', 'asc')))
+        .run();
+      expect(results.map((object) => object.id)).toEqual([...ids].reverse());
+      for (const id of ids) {
+        expect(hasDocument(db, id)).toBe(false);
+      }
+    });
+
+    test('a write loads the document at once and reaches the host', async () => {
+      const { db, peer, ids, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const shownAt = Obj.version(object).automergeHeads;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(Obj.version(object).automergeHeads).not.toEqual(shownAt);
+
+      await db.flush();
+      const documentId = documentIds.get(ids[0]);
+      invariant(documentId);
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      await waitForCondition({ condition: () => lease.doc().objects![object.id].data.value === 2, timeout: 5_000 });
+    });
+
+    test('reading the document loads it from the stored changes', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+
+      const shownAt = Obj.version(object).automergeHeads;
+
+      const doc = getObjectCore(object).getDocAccessor(['value']).handle.doc();
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(A.getHeads(doc)).toEqual(shownAt);
+      expect(object.value).toBe(1);
+    });
+
+    test('an index-backed object takes host changes through its passive subscription', async () => {
+      const { db, changeOnHost } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      let ones: Entity.Any[] = [];
+      onTestFinished(
+        db.query(Query.select(Filter.type(TestSchema.Expando, { value: 1 }))).subscribe((query) => {
+          ones = query.results;
+        }),
+      );
+      await waitForCondition({ condition: () => ones.length === 1, timeout: 5_000 });
+
+      const hostHeads = await changeOnHost(object.id, (data) => {
+        data.value = 2;
+      });
+      await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
+      await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(false);
+      expect(Obj.version(object).automergeHeads).toEqual(hostHeads);
+      Obj.update(object, (object) => {
+        object.value = object.value + 1;
+      });
+      expect(object.value).toBe(3);
+    });
+
+    test('a host change the JSON cannot show loads the document', async () => {
+      const { db, changeOnHost } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+
+      await changeOnHost(object.id, (data) => {
+        data.body = 'x'.repeat(BACKED_OBJECT_LIMIT + 1);
+      });
+      await waitForCondition({ condition: () => object.body?.length === BACKED_OBJECT_LIMIT + 1, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(true);
+    });
+
+    test('the schema query a database runs while it opens is backed by the index', async () => {
+      const { db, ids } = await openReloaded(async (db) => [await db.addType(TestSchema.Person)]);
+      expect(db.getObjectCoreById(ids[0], { load: false })?.snapshot).toBeDefined();
     });
   });
 

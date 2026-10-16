@@ -19,7 +19,13 @@ import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
 import { SCENE_OVERLAY_ATTRIBUTE, useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
-import { type Drag, type PanelMode, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
+import {
+  type Drag,
+  type InspectorMode,
+  type SceneViewAtoms,
+  createSceneViewAtoms,
+  isMoving,
+} from '../../model/atoms.ts';
 import { keyAction } from '../../model/keys.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
@@ -91,7 +97,8 @@ import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
-import { Dock, DockProvider, type DockSection, useDockSection } from './Dock.tsx';
+import { Dock, DockProvider } from './Dock.tsx';
+import { INSPECTOR_CLASSES, type InspectorDef, useInspector } from './Inspector.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
@@ -114,9 +121,6 @@ const LINK_HOVER_GRACE_MS = 150;
 
 /** How long a move's pointer rests before the shapes snap to where they will land. */
 const SETTLE_MS = 200;
-
-/** Where the properties and layers panels float: the top right, one at a time (properties with a selection). */
-const PANEL_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)]';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -158,8 +162,15 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * whatever the projection would allow.
    */
   readonly?: boolean;
-  /** Where the properties and layers panels sit: docked in a column beside the canvas, or floating over it. */
-  panels?: PanelMode;
+  /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
+  onReadonlyChange?: (readonly: boolean) => void;
+  /** Where the inspectors (properties, layers, about) sit: docked in a column beside the canvas, or floating over it. */
+  inspectors?: InspectorMode;
+  /**
+   * Called when the dock is closed or an inspector's menu docks or floats them; the dock's close button and the menu
+   * item show only when given, as the host owns `inspectors`.
+   */
+  onInspectorsChange?: (mode: InspectorMode) => void;
   children?: ReactNode;
 }>;
 
@@ -179,7 +190,9 @@ const SceneViewRoot = ({
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
-  panels = 'docked',
+  onReadonlyChange,
+  inspectors = 'docked',
+  onInspectorsChange,
   children,
 }: SceneViewRootProps) => {
   const registry = useRegistry();
@@ -487,12 +500,16 @@ const SceneViewRoot = ({
     snapMinor,
   });
 
-  // A gesture begun before the view turned read-only is dropped, not committed on release.
+  // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way
+  // to select, since read-only offers only select and pan.
   useEffect(() => {
     if (readonly) {
       cancelDrag();
+      if (registry.get(atoms.tool).kind !== 'hand') {
+        setTool({ kind: 'select' });
+      }
     }
-  }, [readonly, cancelDrag]);
+  }, [readonly, cancelDrag, registry, atoms.tool, setTool]);
 
   //
   // Clipboard.
@@ -952,6 +969,7 @@ const SceneViewRoot = ({
       projection={projection}
       capabilities={capabilities}
       readonly={readonly}
+      onReadonlyChange={onReadonlyChange}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
       scene={scene}
@@ -978,8 +996,9 @@ const SceneViewRoot = ({
       drag={drag}
       tool={tool}
       debug={debug}
-      // Read-only, nothing is edited, so the panels float rather than taking room from the canvas.
-      panels={readonly ? 'floating' : panels}
+      // Read-only, nothing is edited, so there is no dock taking room from the canvas and no inspector floats over it.
+      inspectors={readonly ? 'floating' : inspectors}
+      onInspectorsChange={onInspectorsChange}
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
@@ -1014,15 +1033,15 @@ const SceneViewRoot = ({
       rootRef={rootRef}
     >
       <DockProvider>
-        {/* The canvas beside the dock, which docked panels move into; with none docked, it takes no space.
+        {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-        <div className={mx('flex dx-fill overflow-clip', classNames)}>
+        <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
           <div
             ref={rootRef}
             tabIndex={0}
             className={mx(
-              'relative grow h-full overflow-clip bg-base-surface outline-none touch-none select-none',
+              'relative grow h-full overflow-clip outline-none touch-none select-none',
               tool.kind === 'hand' && 'cursor-grab',
               tool.kind === 'node' && 'cursor-crosshair',
             )}
@@ -1040,7 +1059,7 @@ const SceneViewRoot = ({
           >
             {children}
           </div>
-          <Dock />
+          <Dock onClose={onInspectorsChange && (() => onInspectorsChange('floating'))} />
         </div>
       </DockProvider>
     </SceneViewProvider>
@@ -1119,8 +1138,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
-          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. */}
-      {snapEnabled && !readonly && (
+          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
+          cells, not the lines, so its cells are its grid. */}
+      {snapEnabled && !readonly && !(latticeOn && projection.lattice) && (
         <GridComponent
           size={grid}
           scale={camera.zoom}
@@ -1287,7 +1307,8 @@ const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }:
     return null;
   }
   return (
-    <div className={mx(barFrame, classNames)}>
+    // Centred, it keeps clear of the camera bar (about 15rem with its inset) on both sides, scrolling beyond that.
+    <div className={mx(barFrame, 'max-w-[calc(100%-30rem)]', classNames)}>
       <ActionToolbar actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
     </div>
   );
@@ -1313,7 +1334,8 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 
 /** The tool rail: what the next gesture will draw. */
 const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
-  const { tool, nodeRegistry, linkRegistry, capabilities, setTool } = useSceneViewContext('SceneView.Palette');
+  const { tool, nodeRegistry, linkRegistry, capabilities, readonly, onReadonlyChange, setTool } =
+    useSceneViewContext('SceneView.Palette');
   return (
     // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
     <div className={mx('pointer-events-none', classNames)}>
@@ -1322,6 +1344,8 @@ const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: S
         nodes={nodeRegistry}
         links={linkRegistry}
         capabilities={capabilities}
+        readonly={readonly}
+        onReadonlyChange={onReadonlyChange}
         onToolChange={setTool}
       />
     </div>
@@ -1341,18 +1365,17 @@ export type SceneViewPropertiesProps = Util.ThemedClassName<
   }
 >;
 
-/** The selected element's properties as a floating panel; absent while nothing is selected. */
+/** The selected element's properties: an inspector that floats only while something is selected. */
 const SceneViewProperties = ({
-  classNames = PANEL_CLASSES,
+  classNames = INSPECTOR_CLASSES,
   fields,
   db,
   getOptions,
   overrides,
   sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, readonly, selection, store, path, panels } =
+  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
     useSceneViewContext('SceneView.Properties');
-  const docked = panels === 'docked' && !readonly;
   const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -1381,46 +1404,62 @@ const SceneViewProperties = ({
     registry.set(atoms.point, undefined);
   }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
-  const panel = (
-    <Properties
-      classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
-      docked={docked}
-      projection={projection}
-      atoms={atoms}
-      nodes={nodeRegistry}
-      fields={fields}
-      db={db}
-      getOptions={getOptions}
-      overrides={overrides}
-      sceneOptions={options}
-      styles={store.styles}
-      onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
-      readonly={!capabilities.update}
-    />
+  // Docked, the panel stays in its section whatever is selected (it says when nothing is).
+  return useInspector(
+    PROPERTIES_INSPECTOR,
+    ({ docked, classNames: chrome, onDockedChange }) => (
+      <Properties
+        classNames={chrome}
+        docked={docked}
+        onDockedChange={onDockedChange}
+        projection={projection}
+        atoms={atoms}
+        nodes={nodeRegistry}
+        fields={fields}
+        db={db}
+        getOptions={getOptions}
+        overrides={overrides}
+        sceneOptions={options}
+        styles={store.styles}
+        onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
+        readonly={!capabilities.update}
+      />
+    ),
+    classNames,
   );
-  // Docked, the panel stays in its section whatever is selected (it says when nothing is); floating, it shows only
-  // with a selection.
-  const dockedPanel = useDockSection(PROPERTIES_SECTION, docked, panel);
-  if (docked || readonly) {
-    return dockedPanel;
-  }
-  return selection.size > 0 ? panel : null;
 };
 
 SceneViewProperties.displayName = 'SceneView.Properties';
 
 //
-// Dock
+// Inspectors
 //
 
-const PROPERTIES_SECTION: DockSection = {
+const PROPERTIES_INSPECTOR: InspectorDef = {
   id: 'properties',
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
+  float: 'selection',
 };
 
-const LAYERS_SECTION: DockSection = { id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 1 };
+// Floating, the layers take the properties' place while nothing is selected.
+const LAYERS_INSPECTOR: InspectorDef = {
+  id: 'layers',
+  title: 'Layers',
+  icon: 'ph--stack--regular',
+  order: 1,
+  float: 'empty',
+};
+
+// The counts are a dock section only, so a floating or read-only view shows none.
+const ABOUT_INSPECTOR: InspectorDef = {
+  id: 'about',
+  title: 'About',
+  icon: 'ph--info--regular',
+  order: 2,
+  float: 'never',
+};
 
 //
 // Layers
@@ -1429,19 +1468,11 @@ const LAYERS_SECTION: DockSection = { id: 'layers', title: 'Layers', icon: 'ph--
 export type SceneViewLayersProps = Util.ThemedClassName<{}>;
 
 /**
- * The current scene's layers as a floating panel where the properties panel goes, shown while nothing is selected
- * (the two take turns). Each edit is one intent, so one undo step.
+ * The current scene's layers: an inspector that floats where the properties go while nothing is selected (the two take
+ * turns). Each edit is one intent, so one undo step.
  */
-const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
-  const {
-    projection,
-    atoms,
-    capabilities,
-    readonly: viewReadonly,
-    selection,
-    panels,
-  } = useSceneViewContext('SceneView.Layers');
-  const docked = panels === 'docked' && !viewReadonly;
+const SceneViewLayers = ({ classNames = INSPECTOR_CLASSES }: SceneViewLayersProps) => {
+  const { projection, atoms, capabilities } = useSceneViewContext('SceneView.Layers');
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -1464,55 +1495,54 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
     },
     [layers, registry, atoms],
   );
-  const panel = (
-    <LayersPanel
-      classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
-      docked={docked}
-      layers={layers}
-      selected={selected}
-      readonly={readonly}
-      onSelectedChange={select}
-      onToggle={(id) => {
-        const layer = byId(id);
-        layer && setLayer({ ...layer, hidden: !layer.hidden });
-      }}
-      onRename={(id, name) => {
-        const layer = byId(id);
-        layer && setLayer({ ...layer, name });
-      }}
-      onMove={(id, index) => {
-        const layer = moveLayer(scene, id, index);
-        layer && setLayer(layer);
-      }}
-      onCreate={() => {
-        const layer = createLayer(scene, createId('layer'));
-        setLayer(layer);
-        select([layer.id]);
-        return layer.id;
-      }}
-      onDelete={
-        capabilities.delete
-          ? (ids) => {
-              projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
-              setPicked([]);
-            }
-          : undefined
-      }
-      onMerge={(ids, into) => {
-        const merge = mergeLayersIntent(scene, ids, into);
-        if (merge) {
-          projection.apply(merge);
-          select([into]);
+  return useInspector(
+    LAYERS_INSPECTOR,
+    ({ docked, classNames: chrome, onDockedChange }) => (
+      <LayersPanel
+        classNames={chrome}
+        docked={docked}
+        onDockedChange={onDockedChange}
+        layers={layers}
+        selected={selected}
+        readonly={readonly}
+        onSelectedChange={select}
+        onToggle={(id) => {
+          const layer = byId(id);
+          layer && setLayer({ ...layer, hidden: !layer.hidden });
+        }}
+        onRename={(id, name) => {
+          const layer = byId(id);
+          layer && setLayer({ ...layer, name });
+        }}
+        onMove={(id, index) => {
+          const layer = moveLayer(scene, id, index);
+          layer && setLayer(layer);
+        }}
+        onCreate={() => {
+          const layer = createLayer(scene, createId('layer'));
+          setLayer(layer);
+          select([layer.id]);
+          return layer.id;
+        }}
+        onDelete={
+          capabilities.delete
+            ? (ids) => {
+                projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+                setPicked([]);
+              }
+            : undefined
         }
-      }}
-    />
+        onMerge={(ids, into) => {
+          const merge = mergeLayersIntent(scene, ids, into);
+          if (merge) {
+            projection.apply(merge);
+            select([into]);
+          }
+        }}
+      />
+    ),
+    classNames,
   );
-  const dockedPanel = useDockSection(LAYERS_SECTION, docked, panel);
-  if (docked || viewReadonly) {
-    return dockedPanel;
-  }
-  // Floating, the layers take the properties panel's place while nothing is selected.
-  return selection.size > 0 ? null : panel;
 };
 
 SceneViewLayers.displayName = 'SceneView.Layers';
@@ -1521,18 +1551,10 @@ SceneViewLayers.displayName = 'SceneView.Layers';
 // About
 //
 
-const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--info--regular', order: 2 };
-
-export type SceneViewAboutProps = Util.ThemedClassName<{}>;
-
-/**
- * Counts of the scene's objects and the drawing's scenes: a dock section, or floating over the canvas when read-only,
- * where it is the only panel left.
- */
-const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => {
-  const { scene, store, panels, readonly } = useSceneViewContext('SceneView.About');
+/** Counts of the scene's objects and the drawing's scenes: an inspector that never floats. */
+const SceneViewAbout = () => {
+  const { scene, store } = useSceneViewContext('SceneView.About');
   const scenes = useAtomValue(store.scenes);
-  const docked = panels === 'docked';
   const stats = useMemo<AboutStat[]>(
     () => [
       { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
@@ -1542,14 +1564,9 @@ const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => 
     ],
     [scene, scenes],
   );
-  const dockedPanel = useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
-  if (docked) {
-    return dockedPanel;
-  }
-  // Floating beside an editable view, the properties and layers panels take this corner, so About shows only read-only.
-  return readonly ? (
-    <About classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)} stats={stats} />
-  ) : null;
+  return useInspector(ABOUT_INSPECTOR, ({ classNames, onDockedChange }) => (
+    <About classNames={classNames} stats={stats} onDockedChange={onDockedChange} />
+  ));
 };
 
 SceneViewAbout.displayName = 'SceneView.About';

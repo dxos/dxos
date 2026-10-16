@@ -46,6 +46,9 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -82,7 +85,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -100,6 +109,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -107,6 +119,9 @@
     },
     {
       "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-agent"
     },
     {
       "path": "../plugin-client"

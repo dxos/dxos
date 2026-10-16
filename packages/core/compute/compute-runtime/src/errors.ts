@@ -6,7 +6,11 @@ import { BaseError } from '@dxos/errors';
 
 export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvailableError') {}
 
-export class ProcessNotFoundError extends BaseError.extend('ProcessNotFoundError') {}
+/**
+ * A remote host no longer hosts the process (it never ran, or its state is gone), so nothing addressed to it can
+ * apply; the process has ended for good and a caller starts another.
+ */
+export class ProcessNotFoundError extends BaseError.extend('ProcessNotFoundError', 'The process is not hosted.') {}
 
 export class LayerDependencyCycleError extends BaseError.extend('LayerDependencyCycleError') {}
 

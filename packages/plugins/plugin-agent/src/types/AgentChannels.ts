@@ -14,10 +14,13 @@ import { Channel } from '@dxos/types';
 
 /** The user-editable part: which channels the agent converses in. */
 export const Properties = Schema.Struct({
-  channels: Schema.Array(Ref.Ref(Channel.Channel)).annotate({
-    title: 'Channels',
-    description: 'Channels the agent converses in (Discord, freeq, a local feed, …).',
-  }),
+  // Owned, so the agent's channels stay out of the space's channel list and are deleted with the agent.
+  channels: Schema.Array(Ref.Ref(Channel.Channel))
+    .annotate({
+      title: 'Channels',
+      description: 'Channels the agent converses in (Discord, freeq, a local feed, …).',
+    })
+    .pipe(Annotation.SetParent.set()),
 });
 
 export type Properties = Schema.Schema.Type<typeof Properties>;
@@ -52,12 +55,30 @@ export const loadForAgent = (agent: Agent.Agent): Effect.Effect<AgentChannels | 
     Effect.orDie,
   );
 
+/** Adds a channel to the agent's channel list, creating the list on first use. */
+export const addChannel = Effect.fnUntraced(function* (agent: Agent.Agent, channel: Channel.Channel) {
+  const list = yield* loadForAgent(agent);
+  if (list) {
+    Obj.update(list, (list) => {
+      list.channels = [...list.channels, Ref.make(channel)];
+    });
+  } else {
+    yield* Database.add(make({ agent, channels: [channel] }));
+  }
+});
+
 /** The agent's channels, loaded. */
 export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel[], never, Database.Service> =
   Effect.fnUntraced(function* (agent) {
     const list = yield* loadForAgent(agent);
     return yield* Effect.forEach(list?.channels ?? [], (ref) => Database.load(ref).pipe(Effect.orDie));
   });
+
+/**
+ * `Message.properties` flag on a message queued for a mirrored channel's host to post (EDGE's Discord bot). The host
+ * posts only these: the agent's own text in a channel conversation is not sent, it speaks through its channel skills.
+ */
+export const OUTBOUND_PROPERTY = 'outbound';
 
 /** `Obj.Meta` key source of a chat that mirrors one conversation (a channel, or a thread inside one). */
 export const CHAT_SOURCE = 'org.dxos.agent/channel';
@@ -70,6 +91,15 @@ export const chatKey = (channelId: string, thread?: string) => ({
   source: CHAT_SOURCE,
   id: thread === undefined ? channelId : `${channelId}/${thread}`,
 });
+
+/**
+ * `Obj.Meta` key source of a chat for a direct conversation the agent opened on a mirrored channel; the id is the
+ * channel's entity id, so the channel's host can find the conversations it still has to open.
+ */
+export const DIRECT_SOURCE = 'org.dxos.agent/direct';
+
+/** Second foreign key of a direct conversation's chat on a mirrored channel; see {@link DIRECT_SOURCE}. */
+export const directKey = (channelId: string) => ({ source: DIRECT_SOURCE, id: channelId });
 
 /** The channel (and thread) a chat mirrors, read back from its {@link chatKey}. */
 export const conversationOf = (chat: Chat.Chat): { channelId: string; thread?: string } | undefined => {

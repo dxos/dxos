@@ -22,14 +22,14 @@ const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 10_000;
 
-/** Whether the local replica of a document contains the change with the given hash; `false` marks it `different`. */
+/** Whether the local replica of a document contains the change with the given hash; `false` marks it `advertised`. */
 export type HasLocalChange = (documentId: DocumentId, changeHash: string) => boolean;
 
 export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
-  /** Tells an ancestor head from a missing change. */
+  /** Tells an ancestor head from a change worth a sync round. */
   hasLocalChange?: HasLocalChange;
 };
 
@@ -205,6 +205,7 @@ export class CollectionSynchronizer extends Resource {
       perCollectionState.interestedPeers.delete(peerId);
       perCollectionState.lastQueried.delete(peerId);
       perCollectionState.lastBroadcast.delete(peerId);
+      perCollectionState.syncedVerdicts.delete(peerId);
     }
   }
 
@@ -262,14 +263,24 @@ export class CollectionSynchronizer extends Resource {
     if (!remoteState) {
       return false;
     }
+    const verdict = perCollectionState.syncedVerdicts.get(peerId);
+    if (verdict && verdict.local === perCollectionState.localState && verdict.remote === remoteState) {
+      return verdict.synced;
+    }
 
     const localState = perCollectionState.localState ?? { documents: {} };
-    return isDiffEmpty(
+    const synced = isDiffEmpty(
       diffCollectionStateForPeer(localState, remoteState, {
         isEdgePeer: isEdgePeerId(peerId),
         hasLocalChange: this._hasLocalChange,
       }),
     );
+    perCollectionState.syncedVerdicts.set(peerId, {
+      local: perCollectionState.localState,
+      remote: remoteState,
+      synced,
+    });
+    return synced;
   }
 
   private _diffCollectionState(collectionId: string, peerId: PeerId, trigger: SyncSpanTrigger) {
@@ -300,6 +311,7 @@ export class CollectionSynchronizer extends Resource {
       missingOnLocal: diff.missingOnLocal,
       missingOnRemote: diff.missingOnRemote,
       different: diff.different,
+      advertised: diff.advertised,
     });
     log('emit peer collection state update');
     this.peerCollectionStateUpdated.emit({
@@ -419,6 +431,7 @@ export class CollectionSynchronizer extends Resource {
       interestedPeers: new Set(),
       lastQueried: new Map(),
       lastBroadcast: new Map(),
+      syncedVerdicts: new Map(),
     }));
   }
 
@@ -478,19 +491,25 @@ type PerCollectionState = {
   interestedPeers: Set<PeerId>;
   lastQueried: Map<PeerId, number>;
   lastBroadcast: Map<PeerId, number>;
+  syncedVerdicts: Map<PeerId, { local: CollectionState | undefined; remote: CollectionState; synced: boolean }>;
 };
 
 export type CollectionState = {
   /**
    * DocumentId -> Heads.
    */
-  documents: Record<DocumentId, Heads>;
+  readonly documents: Readonly<Record<DocumentId, Heads>>;
 };
 
 export type CollectionStateDiff = {
   missingOnRemote: DocumentId[];
   missingOnLocal: DocumentId[];
   different: DocumentId[];
+  /**
+   * In sync, since the heads overlap, but the remote advertises a change the local replica lacks: worth one sync
+   * round in case it is new, never a divergence.
+   */
+  advertised: DocumentId[];
 };
 
 /** One collection's sync span with EDGE, across however many connections the catch-up takes. */
@@ -513,12 +532,30 @@ type SyncSpanTrigger = 'initial' | 'remote' | 'local';
  */
 type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 
+/** In sync: a document that is only {@link CollectionStateDiff.advertised} does not count. */
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
-/** Same documents and heads, as sets; exact because a head added beside a shared one is a change. */
-export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean =>
-  isDiffEmpty(diffCollectionState(left, right, { exact: true }));
+export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean => {
+  let unmatched = 0;
+  for (const documentId in left.documents) {
+    const heads = left.documents[documentId as DocumentId];
+    if (heads.length === 0) {
+      continue;
+    }
+    const other = right.documents[documentId as DocumentId];
+    if (!other || !headsEqual(heads, other)) {
+      return false;
+    }
+    unmatched++;
+  }
+  for (const documentId in right.documents) {
+    if (right.documents[documentId as DocumentId].length > 0) {
+      unmatched--;
+    }
+  }
+  return unmatched === 0;
+};
 
 /**
  * Strip entries whose heads array is empty before sending a CollectionState
@@ -583,25 +620,28 @@ export const diffCollectionState = (
   const missingOnRemote: DocumentId[] = [];
   const missingOnLocal: DocumentId[] = [];
   const different: DocumentId[] = [];
+  const advertised: DocumentId[] = [];
   for (const documentId of allDocuments) {
     if (!localDocuments[documentId]) {
       missingOnLocal.push(documentId);
     } else if (!remoteDocuments[documentId]) {
       missingOnRemote.push(documentId);
-    } else if (
-      exact
-        ? !headsEqual(local.documents[documentId], remote.documents[documentId])
-        : !headsOverlap(local.documents[documentId], remote.documents[documentId]) ||
-          advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
-    ) {
+    } else if (exact) {
+      if (!headsEqual(local.documents[documentId], remote.documents[documentId])) {
+        different.push(documentId);
+      }
+    } else if (!headsOverlap(local.documents[documentId], remote.documents[documentId])) {
       // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
       // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
       // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
       // it has no notion of fragments — so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
-      // sync as long as both sides agree on at least one head and the remote advertises no change
-      // the local replica lacks.
+      // sync as long as both sides agree on at least one head.
       different.push(documentId);
+    } else if (
+      advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
+    ) {
+      advertised.push(documentId);
     }
   }
 
@@ -609,6 +649,7 @@ export const diffCollectionState = (
     missingOnRemote,
     missingOnLocal,
     different,
+    advertised,
   };
 };
 
@@ -631,6 +672,9 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
 };
 
 const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
+  if (a.length === b.length && a.every((head, index) => head === b[index])) {
+    return true;
+  }
   const aset = new Set(a);
   const bset = new Set(b);
   return aset.size === bset.size && [...bset].every((head) => aset.has(head));
@@ -650,14 +694,19 @@ const advertisesMissingChange = (
 };
 
 const validateCollectionState = (state: CollectionState) => {
-  Object.entries(state.documents).forEach(([documentId, heads]) => {
+  for (const documentId in state.documents) {
     if (!isValidDocumentId(documentId as DocumentId)) {
       throw new Error(`Invalid documentId: ${documentId}`);
     }
-    if (Array.isArray(heads) && heads.some((head) => typeof head !== 'string')) {
-      throw new Error(`Invalid heads: ${heads}`);
+    const heads = state.documents[documentId as DocumentId];
+    if (Array.isArray(heads)) {
+      for (const head of heads) {
+        if (typeof head !== 'string') {
+          throw new Error(`Invalid heads: ${heads}`);
+        }
+      }
     }
-  });
+  }
 };
 
 const isValidDocumentId = (documentId: DocumentId) => {

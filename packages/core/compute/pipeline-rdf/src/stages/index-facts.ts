@@ -10,7 +10,7 @@ import { Stage } from '@dxos/pipeline';
 import { type SemanticIndexError } from '../errors.ts';
 import { hashText } from '../internal/stages/reconcile.ts';
 import { FactStore } from '../store/index.ts';
-import { type ExtractDocument, type ExtractOptions } from '../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, Ontology } from '../types/index.ts';
 import { type DocumentFacts, extractDocFacts } from './extract-facts.ts';
 
 /**
@@ -32,7 +32,9 @@ export const indexFactsStage = (
         // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
         return undefined;
       }
-      const facts = yield* extractDocFacts(doc, options);
+      // The predicates the store has learned are shown to the extractor, so each document reuses earlier ones.
+      const ontology = (options?.ontology ?? Ontology.DEFAULT).include(yield* store.predicates());
+      const facts = yield* extractDocFacts(doc, { ...options, ontology });
       yield* store.putFacts(facts);
       yield* store.setCursor(doc.source, hash);
       return { doc, facts };

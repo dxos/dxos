@@ -12,7 +12,7 @@ import * as HomeSection from '@dxos/app-toolkit/HomeSection';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Aggregate, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useLabel, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as Card from '@dxos/react-ui/Card';
@@ -123,8 +123,9 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
+  const objectLabel = useLabel(data);
   const label = Theme.toLocalizedString(
-    Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
+    objectLabel ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );
   const iconAnnotation = Obj.getIcon(data);

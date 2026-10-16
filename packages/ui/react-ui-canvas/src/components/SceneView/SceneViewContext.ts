@@ -11,7 +11,7 @@ import {
   type ControlPointRef,
   type Drag,
   type EditingPart,
-  type PanelMode,
+  type InspectorMode,
   type SceneViewAtoms,
 } from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -49,6 +49,8 @@ export type SceneViewContextValue = {
   capabilities: Capabilities;
   /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
   readonly: boolean;
+  /** Toggles `readonly`; absent when the host does not offer the toggle. */
+  onReadonlyChange?: (readonly: boolean) => void;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
 
@@ -89,8 +91,10 @@ export type SceneViewContextValue = {
   drag: Drag | undefined;
   tool: Tool;
   debug: boolean;
-  /** Where the properties and layers panels sit. */
-  panels: PanelMode;
+  /** Where the inspectors sit. */
+  inspectors: InspectorMode;
+  /** Docks or floats the inspectors; absent when the host does not offer the choice. */
+  onInspectorsChange?: (mode: InspectorMode) => void;
 
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;

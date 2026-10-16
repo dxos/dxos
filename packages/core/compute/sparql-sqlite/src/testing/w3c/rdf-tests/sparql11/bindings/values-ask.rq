@@ -1,0 +1,6 @@
+PREFIX : <http://example.org/>
+
+ASK {
+  ?s :p ?o
+}
+VALUES ?o { 42 }

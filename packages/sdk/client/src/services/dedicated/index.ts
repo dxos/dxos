@@ -8,6 +8,6 @@
 export {
   DedicatedWorkerClientServices,
   type DedicatedWorkerClientServicesOptions,
-  LEADER_LOCK_KEY,
   type LeaderTimeoutOptions,
 } from './dedicated-worker-client-services.ts';
+export { LEADER_LOCK_KEY } from '../../lock-key.ts';

@@ -151,6 +151,9 @@
       "path": "packages/common/display-name/tsconfig.json"
     },
     {
+      "path": "packages/devtools/drawing/tsconfig.json"
+    },
+    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
@@ -487,6 +490,9 @@
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-handpan/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
     },
     {
@@ -542,6 +548,9 @@
     },
     {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-meeting-recorder/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
@@ -901,7 +910,13 @@
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/sparql-sqlite/tsconfig.json"
+    },
+    {
       "path": "packages/common/sql-sqlite/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-agent/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"

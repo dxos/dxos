@@ -4,7 +4,7 @@ name: Deploy Apps
 # per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
 # derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
 # preview → all preview-enabled apps (auto, daily); dev → composer; staging → composer + docs;
-# production → all. Fully decoupled from npm publishing.
+# production → all (docs alone daily too, dispatched by deploy-docs-daily.yml). Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
 # composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other

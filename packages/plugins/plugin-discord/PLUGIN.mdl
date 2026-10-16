@@ -161,7 +161,7 @@ service DiscordChannelBackend
     send(channel, message)              # REST post into the first configured Discord channel
     threads.send(channel, thread, msg)  # REST post into a thread or DM channel id
     openDirect(channel, person)         # DM channel from the person's `discord` identity
-    connection.start/stop/status        # PUT/DELETE/GET /compute/discord/bots/:applicationId on EDGE
+    connection.start/stop/status        # PUT/DELETE/GET /discord/bots/:applicationId on EDGE
   note: >
     Posts use plain fetch (no proxy) so they also run on EDGE; text past 2000 characters is split,
     and mentions are never echoed. The receipt carries `properties.discord.messageId`, which EDGE's

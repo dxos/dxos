@@ -9,6 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -54,9 +55,9 @@ const BrainStore = ({ role, inspection, error, defaultView = 'facts' }: BrainSto
           </Toolbar.Root>
         </Panel.Header>
         {error ? (
-          <Status>{t('brain-debug-error.message', { error })}</Status>
+          <StatusBody>{t('brain-debug-error.message', { error })}</StatusBody>
         ) : !inspection ? (
-          <Status>{t('brain-debug-loading.message')}</Status>
+          <StatusBody>{t('brain-debug-loading.message')}</StatusBody>
         ) : (
           <Panel.Body asChild>
             <ScrollArea.Root orientation='vertical'>
@@ -213,11 +214,9 @@ const Outbox = ({
 // Parts
 //
 
-const Status = ({ children }: { children: ReactNode }) => (
+const StatusBody = ({ children }: { children: ReactNode }) => (
   <Panel.Body>
-    <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-      {children}
-    </Layout.Flex>
+    <Status.Empty>{children}</Status.Empty>
   </Panel.Body>
 );
 

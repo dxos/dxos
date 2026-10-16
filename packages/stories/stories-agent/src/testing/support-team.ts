@@ -1,0 +1,248 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Agent from '@dxos/assistant/Agent';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
+import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
+import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
+import * as Profile from '@dxos/plugin-agent/Profile';
+import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
+import { Organization, Person } from '@dxos/types';
+
+//
+// The DXOS team the community-support skill escalates to: who they are and what each one knows best, recorded as
+// the agent's facts so the skill finds them with Recall rather than from its own (team-agnostic) instructions.
+//
+
+export const SUPPORT_TEAM_NAME = 'DXOS';
+
+/** How long a brain call on EDGE is retried: EDGE cannot open a space created moments ago until it replicates. */
+const EDGE_RETRY_MS = 60_000;
+const EDGE_RETRY_INTERVAL_MS = 2_000;
+
+/** Repeats an operation call on EDGE while it fails, until {@link EDGE_RETRY_MS}; a local call runs once. */
+const untilOnEdge = async <T extends { error?: unknown }>(remote: boolean, call: () => Promise<T>): Promise<T> => {
+  const deadline = Date.now() + EDGE_RETRY_MS;
+  for (;;) {
+    const result = await call();
+    if (!result.error || !remote || Date.now() > deadline) {
+      return result;
+    }
+    await new Promise((resolve) => setTimeout(resolve, EDGE_RETRY_INTERVAL_MS));
+  }
+};
+
+export type SupportTeamMember = {
+  fullName: string;
+  preferredName: string;
+  jobTitle: string;
+  /** What to send them; each is one fact, so a topic query finds the right person. */
+  expertise: readonly string[];
+  /** Their Discord user id, which lets a relay open a DM with them. */
+  discordId: string;
+  /** Their Discord username, which is how people name them in a channel. */
+  discordUsername: string;
+};
+
+/** The `Person.identities` label plugin-discord reads a person's Discord user id from. */
+const DISCORD_IDENTITY = 'discord';
+
+/** From the areas each person has changed most in the dxos and edge repositories. */
+export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
+  {
+    fullName: 'Rich Burdon',
+    discordUsername: 'richburdon',
+    discordId: '242308925523755008',
+    preferredName: 'Rich',
+    jobTitle: 'Founder; product and UI',
+    expertise: [
+      'the react-ui design system: components, theming, forms (react-ui-form), the editor and the canvas',
+      'Composer plugins such as inbox, assistant, markdown, deck and space, and the devtools',
+      'product direction, roadmap, funding',
+    ],
+  },
+  {
+    fullName: 'Josiah Witt',
+    discordUsername: 'wittjosiah',
+    discordId: '332330209858813952',
+    preferredName: 'Josiah',
+    jobTitle: 'Engineer; Composer app and integrations',
+    expertise: [
+      'the Composer app shell and its plugins: spaces, deck, the client plugin and the app toolkit',
+      'integrations and connectors: mail and calendar (plugin-inbox), Discord, scripts, MCP',
+      'EDGE account services: the hub, MCP, KMS (stored credentials) and the plugin registry',
+    ],
+  },
+  {
+    fullName: 'Dmytro Maretskyi',
+    discordUsername: 'dmaretskyi',
+    discordId: '389106806086959104',
+    preferredName: 'Dmytro',
+    jobTitle: 'Engineer; ECHO, compute and agents',
+    expertise: [
+      'ECHO: objects, schema, queries, references and the client/host database',
+      'the assistant, agents, tools and operations (assistant-toolkit, compute, plugin-assistant)',
+      'EDGE data and compute services: db-service, compute-service and functions',
+    ],
+  },
+  {
+    fullName: 'Mykola Veremchuk',
+    discordUsername: 'mykola_vrmchk',
+    discordId: '985848421195862056',
+    preferredName: 'Mykola',
+    jobTitle: 'Engineer; sync, networking and storage',
+    expertise: [
+      'replication and sync: the ECHO pipeline, indexing and the client services',
+      'networking: the EDGE client, messaging and websockets, and the EDGE router',
+      'performance, storage and data recovery, and the replication end-to-end tests',
+    ],
+  },
+];
+
+/**
+ * Adds the team, its members and their expertise, unless a previous run already did; gives each member a chat with
+ * the agent so an escalation delivers somewhere visible in the story. The facts go to the agent's brain, which is
+ * EDGE's when its chats run there.
+ */
+export const seedSupportTeam = async ({
+  db,
+  invoker,
+  agent,
+  remote = false,
+}: {
+  db: Database.Database;
+  invoker: Capabilities.OperationInvoker;
+  agent: Agent.Agent;
+  remote?: boolean;
+}): Promise<void> => {
+  const existingTeam = (await db.query(Filter.type(Organization.Organization)).run()).find(
+    ({ name }) => name === SUPPORT_TEAM_NAME,
+  );
+  const team = existingTeam ?? db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
+  await db.flush({ indexes: true });
+  // The brain, not the team object, says what is already recorded: a load whose seed failed is retried by the next.
+  const brainOptions = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
+  const { data: recalled } = await untilOnEdge(remote, () =>
+    invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions),
+  );
+  const existing = new Set((recalled?.facts ?? []).map(({ fact }) => fact));
+  /** Records the facts Recall does not already return, matched by the text Recall renders them as. */
+  const remember = async (
+    facts: { subject: Obj.Unknown; predicate: string; object?: Obj.Unknown; value?: string }[],
+  ) => {
+    const missing = facts.filter(
+      ({ subject, predicate, object, value }) =>
+        !existing.has(
+          `${Profile.displayName(subject)} ${MemoryOperation.PREDICATES.resolve(predicate).label} ${object ? Profile.displayName(object) : value}`,
+        ),
+    );
+    if (missing.length === 0) {
+      return;
+    }
+    const { error } = await untilOnEdge(remote, () =>
+      invoker.invokePromise(
+        MemoryOperation.Remember,
+        {
+          agent: Ref.make(agent),
+          facts: missing.map(({ subject, predicate, object, value }) => ({
+            subject: Ref.make(subject),
+            predicate,
+            ...(object ? { object: Ref.make(object) } : {}),
+            ...(value !== undefined ? { value } : {}),
+            origin: 'stated' as const,
+          })),
+        },
+        brainOptions,
+      ),
+    );
+    if (error) {
+      throw error;
+    }
+  };
+
+  await remember([{ subject: team, predicate: 'is_a', value: 'support team for the community channel' }]);
+  const people = await db.query(Filter.type(Person.Person)).run();
+  for (const { fullName, preferredName, jobTitle, expertise, discordId } of SUPPORT_TEAM) {
+    const identity = { label: DISCORD_IDENTITY, value: discordId };
+    const existing = people.find((person) => person.fullName === fullName);
+    const person =
+      existing ??
+      db.add(Person.make({ fullName, preferredName, jobTitle, organization: Ref.make(team), identities: [identity] }));
+    // A space seeded before the team had Discord ids gets them now.
+    if (existing && !existing.identities?.some(({ label }) => label === DISCORD_IDENTITY)) {
+      Obj.update(existing, (existing) => {
+        (existing.identities ??= []).push(identity);
+      });
+    }
+    await remember([
+      { subject: person, predicate: 'member_of', object: team },
+      ...expertise.map((area) => ({ subject: person, predicate: 'knows_about', value: area })),
+    ]);
+    const { error } = await invoker.invokePromise(
+      AgentOperation.EnsureParticipantChat,
+      { agent: Ref.make(agent), person: Ref.make<Obj.Unknown>(person) },
+      { spaceId: db.spaceId },
+    );
+    if (error) {
+      throw error;
+    }
+  }
+  await db.flush({ indexes: true });
+};
+
+/** Where the roster the facts are read from claims to come from; facts are attributed to it. */
+const ROSTER_URL = 'https://dxos.org/team';
+
+/** The team as prose, for the agent to read into facts: who each member is, their Discord account and what they know. */
+const rosterText = (): string =>
+  [
+    `${SUPPORT_TEAM_NAME} is the support team for the community channel. Its members:`,
+    ...SUPPORT_TEAM.map(
+      ({ fullName, preferredName, jobTitle, expertise, discordUsername, discordId }) =>
+        `${fullName} (${preferredName}) is on the ${SUPPORT_TEAM_NAME} team as ${jobTitle}. ` +
+        `On Discord, ${preferredName} is @${discordUsername} (user id ${discordId}). ` +
+        `${preferredName} knows ${expertise.join('; ')}.`,
+    ),
+  ].join('\n\n');
+
+/**
+ * Reads the team roster into the agent's brain, so its facts hold the team's Discord usernames too; skipped once the
+ * brain holds a fact read from the roster. A model call on the brain where the agent's chats run, so the caller does
+ * not wait for it, and a failure is only logged.
+ */
+export const seedSupportFacts = async ({
+  db,
+  invoker,
+  agent,
+  remote,
+}: {
+  db: Database.Database;
+  invoker: Capabilities.OperationInvoker;
+  agent: Agent.Agent;
+  remote: boolean;
+}): Promise<void> => {
+  const options = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
+  const { data: brain, error: inspectError } = await untilOnEdge(remote, () =>
+    invoker.invokePromise(TriggerOperation.InspectBrain, { agent: Ref.make(agent) }, options),
+  );
+  if (inspectError) {
+    log.warn('reading the brain before seeding the support facts failed', { error: inspectError });
+    return;
+  }
+  if ((brain?.facts ?? []).some((fact) => fact.attribution.source === ROSTER_URL)) {
+    return;
+  }
+  const { data, error } = await invoker.invokePromise(
+    AgentOperation.ReadSource,
+    { agent: Ref.make(agent), url: ROSTER_URL, text: rosterText() },
+    options,
+  );
+  if (error) {
+    log.warn('seeding the support facts failed', { error });
+    return;
+  }
+  log.info('seeded the support facts', { facts: data?.facts });
+};

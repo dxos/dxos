@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
 
+import { SessionConfig } from '@dxos/ai';
 import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -145,13 +146,14 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
         return { kind: 'edge', space: spaceId };
       };
 
-      // The agent's model and steering instructions are bound to its process at spawn time, so the
-      // cache tracks what each session was created with. A chat repointed at a different model or
-      // instructions ref tears down the old process and spawns a fresh one (see below).
+      // The agent's model, harness and steering instructions are bound to its process at spawn time, so
+      // the cache tracks what each session was created with. A chat repointed at a different model,
+      // harness or instructions ref tears down the old process and spawns a fresh one (see below).
       const sessionCache = new Map<
         string,
         {
           model: string | undefined;
+          harness: string;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
           location: AgentService.AgentLocation;
@@ -249,6 +251,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 // Read off the chat rather than passed in: the process is bound to the chat, so its
                 // model and steering are whatever the chat points at when the process is spawned.
                 const model = chat.session?.model;
+                const harness = SessionConfig.harnessOf(chat.session);
                 const instructions = chat.instructions?.uri;
                 const location: AgentService.AgentLocation = options?.location ?? 'local';
                 const executable = executableFor(chat, provider);
@@ -262,6 +265,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 if (cached) {
                   if (
                     cached.model === model &&
+                    cached.harness === harness &&
                     cached.provider === provider &&
                     cached.instructions === instructions &&
                     cached.location === location &&
@@ -272,7 +276,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                   }
 
                   if (!Process.isTerminal(cached.handle.status.state)) {
-                    // Model, provider, steering instructions, location or process changed (e.g. the user
+                    // Model, harness, provider, steering instructions, location or process changed (e.g. the user
                     // toggled online/offline, or moved the chat to the cloud): terminate the
                     // existing process so the conversation continues on a fresh process bound to the new
                     // configuration. Conversation history is preserved via the feed, which the new
@@ -363,6 +367,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
                 sessionCache.set(chat.id, {
                   model,
+                  harness,
                   provider,
                   instructions,
                   location,

@@ -47,6 +47,8 @@ export type EnsureChannelChatProps = {
   channel: Channel.Channel;
   thread?: string;
   title?: string;
+  /** A direct conversation the channel's host has yet to open; the chat also carries {@link AgentChannels.directKey}. */
+  direct?: boolean;
 };
 
 /**
@@ -58,12 +60,20 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   channel,
   thread,
   title,
+  direct,
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
   // The same conversation may be bridged to more than one agent.
   const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
   const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
   if (match) {
+    // A chat first made without `direct` (e.g. by `EnsureChannelChat`) still needs the key the host finds pending DMs by.
+    if (direct && !Obj.getMeta(match).keys.some(({ source }) => source === AgentChannels.DIRECT_SOURCE)) {
+      Obj.update(match, (match) => {
+        Obj.getMeta(match).keys.push(AgentChannels.directKey(channel.id));
+      });
+    }
+    yield* bindChannelSkills(match, channel);
     return match;
   }
 
@@ -73,7 +83,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
     Chat.make({
-      [Obj.Meta]: { keys: [key] },
+      [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },
       [Obj.Parent]: agent,
       name: title,
       feed: Ref.make(feed),
@@ -84,9 +94,37 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const runtime = yield* Effect.context<Database.Service>();
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-  yield* Effect.promise(() => binder.bind({ skills: bindings.skills, objects: [...bindings.objects, Ref.make(chat)] }));
+  const declared = yield* channelSkills(channel);
+  yield* Effect.promise(() =>
+    binder.bind({
+      skills: [...bindings.skills, ...declared],
+      objects: [...bindings.objects, Ref.make(chat)],
+    }),
+  );
   return chat;
 }, Effect.scoped);
+
+/**
+ * The skills the channel's backend declares on its config type ({@link Skill.SkillsAnnotation}): how the agent
+ * answers there (posting, reacting, mailing) is the backend's to provide, so the agent core names no channel.
+ */
+const channelSkills = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const config = yield* Database.load(channel.backend.config).pipe(Effect.orElseSucceed(() => undefined));
+  return config ? Skill.annotatedSkillRefs(config) : [];
+});
+
+/** Binds the channel's skills to a chat made before the channel declared them; a skill already bound is skipped. */
+const bindChannelSkills = Effect.fnUntraced(function* (chat: Chat.Chat, channel: Channel.Channel) {
+  const skills = yield* channelSkills(channel);
+  if (skills.length === 0) {
+    return;
+  }
+  const feed = yield* Database.load(chat.feed);
+  const runtime = yield* Effect.context<Database.Service>();
+  const AiContext = yield* Effect.promise(aiContextRuntime);
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  yield* Effect.promise(() => binder.bind({ skills }));
+});
 
 const handler: Operation.WithHandler<typeof AgentOperation.EnsureChannelChat> = AgentOperation.EnsureChannelChat.pipe(
   Operation.withHandler(

@@ -86,7 +86,7 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--screenshot]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
   );
   process.exit(1);
 }
@@ -451,6 +451,14 @@ for (const caption of captions) {
   }
 }
 
+// The driver's `speed` ops, as source frame ranges: inside one only every `factor`-th frame survives.
+const speedRanges = (timeline.speed ?? []).map((change, index, all) => ({
+  from: Math.round((change.ms / 1000) * options.fps),
+  to: all[index + 1] ? Math.round((all[index + 1].ms / 1000) * options.fps) : Infinity,
+  factor: change.factor,
+}));
+const speedAt = (frame) => speedRanges.find(({ from, to }) => frame >= from && frame < to);
+
 // Source frame -> output frame, so the caption times can be remapped onto the trimmed timeline.
 const outputFrameOf = new Map();
 
@@ -468,7 +476,9 @@ for await (const chunk of decoder.stdout) {
     const cap = readingWindow.has(index) ? Math.max(captionHoldFrames, holdFrames) : holdFrames;
     // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
     // frame fewer than it promised, so the estimate could never be trusted for tuning.
-    if (staticRun <= cap) {
+    const range = speedAt(index);
+    const skipped = range !== undefined && range.factor > 1 && (index - range.from) % range.factor !== 0;
+    if (staticRun <= cap && !skipped) {
       if (!encoder.stdin.write(frame)) {
         await once(encoder.stdin, 'drain');
       }
@@ -717,13 +727,14 @@ const voiceover = async () => {
 const voiced = options.voiceover ? await voiceover() : undefined;
 
 /**
- * The Composer media bucket, served from its custom domain: demos land under `demos/<yyyy-mm-dd>-<name>.<ext>`,
- * named after the package the flow exercises (`plugin-markdown`) unless `--name` says otherwise.
+ * The Composer media bucket, served from its custom domain: demos land under `<folder>/<yyyy-mm-dd>-<name>.<ext>`,
+ * in `demos/` unless `--folder` says otherwise (blog videos use `blog/`), named after the package the flow
+ * exercises (`plugin-markdown`) unless `--name` says otherwise.
  */
 const MEDIA = {
   bucket: process.env.AUTOCUE_R2_BUCKET || 'composer',
   publicBase: 'https://assets.composer.space',
-  folder: 'demos',
+  folder: typeof options.folder === 'string' ? options.folder.replace(/^\/+|\/+$/g, '') : 'demos',
 };
 
 /** The package a flow lives in, from its path (`packages/plugins/plugin-markdown/autocue/…`). */

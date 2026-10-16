@@ -18,8 +18,9 @@ import { Stream as PbStream } from '@dxos/async';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { makeInProcessClient, normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
+import { makeInProcessClient, normalizeHandlers, runServiceEffect, toServiceError } from '@dxos/protocols';
 import {
+  BlobStoreService,
   ContactsService,
   DataService,
   DevicesService,
@@ -72,6 +73,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   InboxService.Rpcs,
   EdgeAgentService.Rpcs,
   SqlService.Rpcs,
+  BlobStoreService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
 
@@ -97,6 +99,7 @@ export type ClientServicesHandlers = {
   InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   SqlService: SqlService.Handlers;
+  BlobStoreService: BlobStoreService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
 
@@ -354,6 +357,7 @@ export interface ClientServicesRpc
     InboxService.Client,
     EdgeAgentService.Client,
     SqlService.Client,
+    BlobStoreService.Client,
     DevtoolsHost.Client {}
 
 /**
@@ -426,7 +430,7 @@ export const makeServicesFromRpc = (
         streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>, tag);
     } else {
       service[methodName] = (request?: unknown, options?: RequestOptions) =>
-        runServiceCall(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
+        runServiceEffect(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
           timeout: options?.timeout,
           label: tag,
         });

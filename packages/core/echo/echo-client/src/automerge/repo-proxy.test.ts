@@ -15,9 +15,10 @@ import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
@@ -26,7 +27,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
-import { RepoProxy } from './repo-proxy.ts';
+import { RepoProxy, type SaveStateChangedEvent } from './repo-proxy.ts';
 
 /** True once the handle's current heads have been written to the host's on-disk heads store. */
 const documentHeadsPersisted = async <T>(host: AutomergeHost, handle: DocHandleProxy<T>): Promise<boolean> => {
@@ -95,6 +96,116 @@ describe('RepoProxy', () => {
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
+  });
+
+  test('a passive handle loads the bytes it holds on first use and catches up from their heads', async () => {
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const hostHandle = await host.createDoc<{ text: string; extra?: number }>({ text: 'held' });
+    const bytes = A.save(hostHandle.doc()!);
+    const heads = A.getHeads(hostHandle.doc()!);
+    hostHandle.change((doc) => {
+      doc.text = 'after';
+    });
+    await host.flush(Context.default());
+
+    const handle = clientRepo.find<{ text: string; extra?: number }>(hostHandle.documentId, {
+      passive: { bytes, heads },
+    });
+    expect(handle.state).toBe('passive');
+    expect(clientRepo.handles[hostHandle.documentId]).toBeUndefined();
+
+    expect(handle.doc().text).toBe('held');
+    expect(handle.isLoaded()).toBe(true);
+    expect(clientRepo.handles[hostHandle.documentId]).toBe(handle);
+    await asyncTimeout(handle.whenReady(), 1_000);
+    expect(handle.doc().text).toBe('after');
+
+    handle.change((doc: { text: string; extra?: number }) => {
+      doc.extra = 1;
+    });
+    await clientRepo.flush();
+    await waitForCondition({ condition: () => hostHandle.doc()?.extra === 1, timeout: 1_000 });
+  });
+
+  test("a passive handle takes a host change with its object's JSON, and keeps it with its stored changes", async () => {
+    const { host, clientRepo, service } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+
+    const handle = clientRepo.find<DatabaseDirectory>(hostHandle.documentId, { passive: { bytes, heads } });
+    const shown: string[] = [];
+    handle.on('passive', ({ json }) => json && shown.push(JSON.parse(json).title));
+    await expect
+      .poll(() => service.requests.flatMap(({ add }) => add ?? []))
+      .toContainEqual({ id: hostHandle.documentId, heads, passive: true });
+
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    await expect.poll(() => shown).toEqual(['edited']);
+    expect(handle.state).toBe('passive');
+    expect(handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
+    expect(handle.doc().objects![objectId].data.title).toBe('edited');
+  });
+
+  test("find with other heads replaces a passive handle's stored changes", async () => {
+    const { host, clientRepo } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+    const handle = clientRepo.find<DatabaseDirectory>(hostHandle.documentId, { passive: { bytes, heads } });
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+
+    const edited = { bytes: A.save(hostHandle.doc()!), heads: A.getHeads(hostHandle.doc()!) };
+    expect(clientRepo.find(hostHandle.documentId, { passive: edited })).toBe(handle);
+    expect(handle.passiveHeads).toEqual(edited.heads);
+    expect(handle.doc().objects![objectId].data.title).toBe('edited');
+  });
+
+  test('releasing a passive handle unsubscribes it, and a new subscription adds those still held', async () => {
+    const { host, clientRepo, service } = await setupRecording();
+    const kept = await createDirectory(host, 'kept');
+    const released = await createDirectory(host, 'released');
+    clientRepo.find(kept.hostHandle.documentId, { passive: { bytes: kept.bytes, heads: kept.heads } });
+    clientRepo.find(released.hostHandle.documentId, { passive: { bytes: released.bytes, heads: released.heads } });
+    await expect.poll(() => service.requests.flatMap(({ add }) => add ?? []).length).toBe(2);
+
+    expect(clientRepo.release(released.hostHandle.documentId)).toBe(true);
+    await expect
+      .poll(() => service.requests.flatMap(({ removeIds }) => removeIds ?? []))
+      .toEqual([released.hostHandle.documentId]);
+
+    const before = service.requests.length;
+    service.dropSubscription.wake();
+    await expect
+      .poll(() => service.requests.slice(before).flatMap(({ add }) => add ?? []))
+      .toEqual([{ id: kept.hostHandle.documentId, heads: kept.heads, passive: true }]);
+  });
+
+  test('a remove that fails is not sent again for a document held again meanwhile', async () => {
+    const { host, clientRepo, service } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+    const documentId = hostHandle.documentId;
+    clientRepo.find(documentId, { passive: { bytes, heads } });
+    await expect.poll(() => service.requests.flatMap(({ add }) => add ?? []).length).toBe(1);
+
+    const failing = new Trigger();
+    service.failNext = failing;
+    clientRepo.release(documentId);
+    await expect.poll(() => service.inFlightFailure).toBe(true);
+    const handle = clientRepo.find<DatabaseDirectory>(documentId, { passive: { bytes, heads } });
+    failing.wake();
+    await expect.poll(() => service.requests.at(-1)?.add?.map(({ id }) => id)).toEqual([documentId]);
+    expect(service.requests.at(-1)?.removeIds).toEqual([]);
+
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    await expect.poll(() => handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
   });
 
   test('two peers exchange document', async () => {
@@ -330,19 +441,25 @@ describe('RepoProxy', () => {
     await expect(handle.whenReady()).rejects.toThrow('document creation refused');
   });
 
-  test('a document the host failed to create is created by the next flush', { timeout: 5_000 }, async () => {
+  test('a document the host failed to create is requested again without a flush', { timeout: 5_000 }, async () => {
     let refusing: RefusingDataService | undefined;
     const { dataService, host } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
     invariant(refusing);
+    const service = refusing;
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
 
     const handle = clientRepo.create<{ text: string }>({ text: 'retried' });
-    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+    await expect.poll(() => states.at(-1)?.failing).toBe(true);
 
-    refusing.refuse = false;
-    await clientRepo.flush();
+    service.refuse = false;
     await handle.whenReady();
+    await expect.poll(() => clientRepo.hasUnsavedChanges()).toBe(false);
+    expect(states.at(-1)?.failing).toBe(false);
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
     invariant(hostHandle);
     expect(hostHandle.doc()?.text).toEqual('retried');
@@ -774,6 +891,122 @@ describe('RepoProxy', () => {
     await expect.poll(hostText, { timeout: 4_000 }).toEqual('retried');
     await next.whenReady();
   });
+
+  test('a change the old host never took reaches the host that replaces it', { timeout: 5_000 }, async () => {
+    const storage = createTestSqliteRuntime();
+    onTestFinished(() => storage.dispose());
+    let stuck: FailingUpdateDataService | undefined;
+    const first = await setup(storage.runtime, (props) => (stuck = new FailingUpdateDataService(props)));
+    invariant(stuck);
+    const service = stuck;
+    const [clientRepo] = createProxyRepos(first.dataService);
+    await openAndClose(clientRepo);
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+
+    const hold = new Trigger();
+    service.hold = hold;
+    onTestFinished(() => {
+      hold.wake();
+    });
+    handle.change((doc: { text: string }) => {
+      doc.text = 'kept';
+    });
+    await expect.poll(() => service.held).toBe(1);
+
+    // A restarted worker opens the same storage and serves a fresh subscription.
+    const second = await setup(storage.runtime);
+    clientRepo._updateDataService(second.dataService);
+    await clientRepo._onReconnect();
+
+    const hostHandle = await second.host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    expect(hostHandle.doc()?.text).toEqual('kept');
+    expect(clientRepo.hasUnsavedChanges()).toBe(false);
+  });
+
+  test('a failed pass that carried no changes is not reported as failing', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
+
+    service.failSubscription = true;
+    invariant(handle.documentId);
+    clientRepo.release(handle.documentId);
+    await expect.poll(() => service.subscriptionFailures).toBeGreaterThan(0);
+    expect(states.some((state) => state.failing)).toBe(false);
+    expect(clientRepo.hasUnsavedChanges()).toBe(false);
+  });
+
+  test('a closed proxy has nothing unsaved', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+
+    service.fail = true;
+    handle.change((doc: { text: string }) => {
+      doc.text = 'never sent';
+    });
+    await expect.poll(() => service.failures).toBeGreaterThan(0);
+    expect(clientRepo.hasUnsavedChanges()).toBe(true);
+
+    await clientRepo.close();
+    expect(clientRepo.hasUnsavedChanges()).toBe(false);
+  });
+
+  test('a change the host has not taken stays unsaved, and a failed send is reported', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
+
+    const hold = new Trigger();
+    service.hold = hold;
+    handle.change((doc: { text: string }) => {
+      doc.text = 'unsaved';
+    });
+    await expect.poll(() => service.held).toBe(1);
+    // In flight: the batch has left the pending set, but the host has not acknowledged it.
+    expect(clientRepo.hasUnsavedChanges()).toBe(true);
+    expect(states.at(-1)).toEqual({ unsavedDocuments: [handle.documentId], pendingCreations: 0, failing: false });
+
+    service.hold = undefined;
+    service.fail = true;
+    hold.wake();
+    await expect.poll(() => states.at(-1)?.failing).toBe(true);
+    expect(clientRepo.hasUnsavedChanges()).toBe(true);
+
+    service.fail = false;
+    await expect.poll(() => clientRepo.hasUnsavedChanges(), { timeout: 4_000 }).toBe(false);
+    expect(states.at(-1)).toEqual({ unsavedDocuments: [], pendingCreations: 0, failing: false });
+  });
 });
 
 /**
@@ -810,12 +1043,39 @@ class RefusingDataService extends DataServiceImpl {
   }
 }
 
-/** Fails every update batch while {@link fail} is set, as a host that times out the call does. */
+/**
+ * Fails every update batch while {@link fail} is set, as a host that times out the call does; while
+ * {@link hold} is set, an update waits on it first, as one whose write cannot reach disk does.
+ * {@link failSubscription} fails subscription changes the same way.
+ */
 class FailingUpdateDataService extends DataServiceImpl {
   'fail' = false;
   'failures' = 0;
+  'hold': Trigger | undefined = undefined;
+  'held' = 0;
+  'failSubscription' = false;
+  'subscriptionFailures' = 0;
+
+  override ['DataService.updateSubscription'](
+    request: DataService.UpdateSubscriptionRequest,
+  ): Effect.Effect<void, Error> {
+    if (this.failSubscription) {
+      this.subscriptionFailures++;
+      return Effect.fail(new EchoClientError({ message: 'subscription update timed out' }));
+    }
+    return super['DataService.updateSubscription'](request);
+  }
 
   override ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
+    const hold = this.hold;
+    if (hold) {
+      this.held++;
+      return Effect.promise(() => hold.wait()).pipe(Effect.andThen(() => this.#update(request)));
+    }
+    return this.#update(request);
+  }
+
+  #update(request: DataService.UpdateRequest): Effect.Effect<void, Error> {
     if (this.fail) {
       this.failures++;
       return Effect.fail(new EchoClientError({ message: 'update timed out' }));
@@ -823,6 +1083,59 @@ class FailingUpdateDataService extends DataServiceImpl {
     return super['DataService.update'](request);
   }
 }
+
+class RecordingDataService extends DataServiceImpl {
+  readonly 'requests': DataService.UpdateSubscriptionRequest[] = [];
+  readonly 'dropSubscription' = new Trigger();
+  'failNext': Trigger | undefined = undefined;
+  'inFlightFailure' = false;
+  #subscribeCount = 0;
+
+  override ['DataService.subscribe'](request: DataService.SubscribeRequest) {
+    const stream = super['DataService.subscribe'](request);
+    return this.#subscribeCount++ === 0
+      ? stream.pipe(EffectStream.interruptWhen(Effect.promise(() => this.dropSubscription.wait())))
+      : stream;
+  }
+
+  override ['DataService.updateSubscription'](
+    request: DataService.UpdateSubscriptionRequest,
+  ): Effect.Effect<void, Error> {
+    const fail = this.failNext;
+    if (fail) {
+      this.failNext = undefined;
+      this.inFlightFailure = true;
+      return Effect.promise(() => fail.wait()).pipe(
+        Effect.andThen(Effect.fail(new EchoClientError({ message: 'update timed out' }))),
+      );
+    }
+    this.requests.push(request);
+    return super['DataService.updateSubscription'](request);
+  }
+}
+
+const setupRecording = async () => {
+  let recording: RecordingDataService | undefined;
+  const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
+  invariant(recording);
+  const [clientRepo] = createProxyRepos(dataService);
+  await openAndClose(clientRepo);
+  return { host, clientRepo, service: recording };
+};
+
+const createDirectory = async (host: AutomergeHost, title: string) => {
+  const objectId = EntityId.random();
+  const hostHandle = await host.createDoc<DatabaseDirectory>({
+    version: SpaceDocVersion.CURRENT,
+    access: { spaceId: SpaceId.random() },
+    objects: {
+      [objectId]: EntityStructure.makeObject({ type: DXN.make('com.example.type.test', '0.1.0'), data: { title } }),
+    },
+    links: {},
+  });
+  await host.flush(Context.default());
+  return { hostHandle, objectId, bytes: A.save(hostHandle.doc()!), heads: A.getHeads(hostHandle.doc()!) };
+};
 
 /** Records the documents each disk flush asks the host to save. */
 class FlushRecordingDataService extends DataServiceImpl {
@@ -857,10 +1170,10 @@ class UnavailableDataService extends DataServiceImpl {
   }
 
   override ['DataService.updateSubscription']({
-    addIds,
+    add,
   }: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
     return Effect.sync(() => {
-      this.#emit?.({ updates: (addIds ?? []).map((documentId) => ({ documentId, unavailable: true })) });
+      this.#emit?.({ updates: (add ?? []).map(({ id }) => ({ documentId: id, unavailable: true })) });
     });
   }
 }

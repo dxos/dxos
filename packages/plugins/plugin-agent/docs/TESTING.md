@@ -2,7 +2,7 @@
 
 How to change what an agent does and know whether it got better. Three loops, from fastest to most
 rigorous; each one catches what the one before it cannot. Setup for the end-to-end Discord run is in
-[SETUP.md](./SETUP.md); the memory model the behaviour writes is in [MEMORY.md](./MEMORY.md).
+[SETUP.md](./SETUP.md); the facts the behaviour writes are described in [FACTS.md](./FACTS.md).
 
 | Loop                 | Use it to                                    | Cost                        |
 | -------------------- | -------------------------------------------- | --------------------------- |
@@ -28,7 +28,7 @@ identity, so no key reaches the browser.
 ## 1. Live story
 
 `stories-assistant` → **Interview › Live** (`stories-stories-assistant-interview--live`): a chat with
-an agent that has the interview skill, beside a panel showing the person's goals and memories as the
+an agent that has the interview skill, beside a panel showing the person's goals and facts as the
 agent records them. Edit the skill's instructions
 (`packages/plugins/plugin-agent/src/skills/InterviewSkill.ts`), let the story hot-reload, and talk to
 it. Tagged `!test`, so CI never runs it.
@@ -49,11 +49,19 @@ watch, both listed in the knowledge panel's Goals tab. As Dima, "still working o
 Rich), then "the indexer PR is up" — the end-of-turn read records the fact, the watch fires, Rich is
 told and the goal is achieved. Tagged `!test`.
 
+**Agent on Discord** (`stories-stories-assistant-agentdiscord--live`): Kai bound to a Discord-backed
+channel whose bot runs on a local EDGE stack (`:8787`, [SETUP.md](./SETUP.md)); EDGE substitutes
+`DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. The ids default to Kai's bot and the DXOS
+`#test-bot` channel (change them in Controls); press **Start bot** in the Activity panel and
+mention the bot in Discord: the conversation appears under Conversations and in the chat panel, and the
+Discord bot panel logs each gateway transition. Needs dxos/edge#1279. Tagged `!test`. **AgentDiscord › Scripted** runs the same panels against a fake EDGE bot host and checks
+Start → connecting → ready → Stop in CI.
+
 ## 2. Tests and stories (CI)
 
 - **Operations** — deterministic, no model: `moon run plugin-agent:test`. `interview.test.ts` drives
-  the memory operations in the order an interview would and asserts the resulting graph (one
-  `Person` by handle, goals proposed then confirmed, a superseded memory not recalled, the profile
+  the fact and goal operations in the order an interview would and asserts the resulting graph (one
+  `Person` by handle, goals proposed then confirmed, a superseded fact not recalled, the profile
   document); `ensure-thread-chat.test.ts` covers the Discord thread → chat mapping;
   `discord-bot.test.ts` covers the bot operations against a stubbed EDGE.
 - **Scripted interview** — `stories-assistant` → **Interview › TestInterviewScripted**: a scripted
@@ -90,15 +98,15 @@ Run from `packages/core/compute/assistant-evals`. Skipped when the key is absent
   engineer). Each carries ground truth: goals, facts, and a Discord handle.
 - **Simulated user** — Flash answers as the persona, from its fixture only, one reply per turn.
 - **Deterministic scorers** read the ECHO graph after the run: goal recall and precision, every goal
-  confirmed, memories atomic and carrying a source, one question per turn, the interview within its
+  confirmed, the persona's facts recalled and carrying quotes, one question per turn, the interview within its
   turn budget, a single `Person` resolved by handle, a profile mentioning the confirmed goals.
 - **Judge** — Flash scores probing depth, reflecting back and tone, with a rationale. A
   bad-transcript case checks the judge itself.
 
-Baseline (2026-10-03, after two rounds of instruction tuning): means **rich 0.89, priya 0.92,
-sam 0.71**. Known gaps: memory provenance scores 0 (the model never sees message refs —
-`recordMemory` should default `source` to the session's chat), and the terse persona can run out of
-turns before confirming goals.
+No baseline is recorded yet for the fact scorers (`fact-recall`, `fact-quotes`); record one with the
+next instruction change. Known gaps: `recordFacts` leaves `source` to the model, which never sees
+message refs (it should default to the session's chat), and the terse persona can run out of turns
+before confirming goals.
 
 ## The loop in practice
 

@@ -420,7 +420,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `speed` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
@@ -466,6 +466,7 @@ encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only sme
 | `--action-timeout` | `5000`          | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
 | `--cadence`        | `600`           | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
 | `--log`            | `<out>/app.log` | NDJSON of the app's `@dxos/log` output (page and dedicated workers); `off` to skip                                                |
+| `--chromium-args`  | none            | extra Chromium flags, comma-separated — e.g. a fake microphone playing a voice file (see `plugin-meeting-recorder/autocue`)       |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
@@ -540,6 +541,11 @@ Two caps, because the hold budget should be spent where information appears: `--
 pause that begins just after a step caption went up (the one the viewer has to read), `--max-static`
 for every other pause. Uniform capping buys length without readability.
 
+Motion with no content in it, such as an agent's spinner and scrolling tool calls, is not still, so
+the cap cannot remove it. Wrap it in `await demo.speed({ factor: 10 })` … `await demo.speed({ factor: 1 })`:
+the trimmer keeps every tenth frame of that stretch, and a `⏩ 10×` badge is shown while it plays, so
+the viewer knows time was skipped.
+
 ### Tuning the motion metric
 
 Frames are compared on a strided sample of the Y plane, counting samples that changed by more than
@@ -602,8 +608,9 @@ node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm 
 The finished video (the narrated MP4 when there is one) is uploaded to the Composer media bucket as
 `demos/<yyyy-mm-dd>-<name>.<ext>` and served from `https://assets.composer.space` (the bucket's dev URL is
 `https://pub-343732155ecd4a85bba38961213b0515.r2.dev`). `<name>` is the package the flow lives in, e.g.
-`plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it and
-`--upload off` skips the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
+`plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it,
+`--folder` replaces `demos` (blog post videos use `--folder blog --name <post-slug>`), and `--upload off` skips
+the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
 `hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys. Generate a gitignored `.env` once with
 `op inject -i .env.tpl -o .env` (never commit it): the upload and the HeyGen voice-over both read their keys
 from it, in the worktree or the primary checkout. `.secrets/r2.env` also works. The URL it prints has been verified

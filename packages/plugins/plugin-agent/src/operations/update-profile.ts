@@ -8,23 +8,26 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { HasSubject, ProfileOf } from '@dxos/types';
+import { ProfileOf } from '@dxos/types';
 
-import { Goal, Memory, MemoryOperation, Profile } from '#types';
+import { BrainService, Goal, MemoryOperation, Profile } from '#types';
+
+import { entityKeys, isAbout, spaceFacts } from './knowledge.ts';
 
 const handler: Operation.WithHandler<typeof MemoryOperation.UpdateProfile> = MemoryOperation.UpdateProfile.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject: subjectRef }) {
       const subject = yield* Database.load(subjectRef);
-      const memories = (yield* Database.query(Query.select(Filter.id(subject.id)).targetOf(HasSubject.HasSubject)).run)
-        .map((relation) => Relation.getSource(relation))
-        .filter(Obj.instanceOf(Memory.Memory));
+      const keys = entityKeys(subject);
+      const facts = BrainService.currentFacts(yield* spaceFacts, new Date().toISOString()).filter((fact) =>
+        isAbout(fact, keys),
+      );
       const goals = (yield* Database.query(Filter.type(Goal.Goal)).run).filter(
         (goal) => Profile.isLiveGoal(goal) && goal.owners.some((owner) => Profile.refersTo(owner, subject.id)),
       );
 
       const name = Profile.displayName(subject);
-      const content = Profile.render({ name, goals, memories });
+      const content = Profile.render({ name, goals, facts, keys });
       const now = new Date().toISOString();
 
       const relation = (yield* Database.query(Query.select(Filter.id(subject.id)).targetOf(ProfileOf.ProfileOf))
