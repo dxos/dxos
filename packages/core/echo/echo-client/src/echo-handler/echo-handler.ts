@@ -27,6 +27,7 @@ import {
   SelfURIId,
   assertMutable,
   assertObjectModel,
+  containsRawStringAnnotation,
   createArrayMethodError,
   createProxy,
   createTextMethodError,
@@ -37,13 +38,16 @@ import {
   getRefSavedTarget,
   getSchemaURI,
   getTypeAnnotation,
+  hasRawStringAnnotation,
   isInChangeContext,
+  isPlainRecord,
   isProxy,
   isReactiveRecord,
   normalizeSpliceRange,
   queueNotification,
   setProxyHandler,
 } from '@dxos/echo/internal';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -385,7 +389,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (validatedValue === undefined) {
         core.delete(fullPath);
       } else {
-        core.setDecoded(fullPath, this._handleLinksAssignment(target, validatedValue));
+        core.setDecoded(
+          fullPath,
+          applyRawStringFields(
+            target,
+            [...target[symbolPath], prop],
+            this._handleLinksAssignment(target, validatedValue),
+          ),
+        );
       }
     });
 
@@ -1035,7 +1046,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
     delete target[PROPERTY_ID];
   }
 
-  core.initNewObject(linkAllNestedProperties(target));
+  core.initNewObject(applyRawStringFields(target, [], linkAllNestedProperties(target)));
 
   // Handle parent reference set via [Obj.Parent] in Obj.make.
   const parentValue = (target as any)[ParentId];
@@ -1162,6 +1173,66 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
 
     return recurse(value);
   });
+};
+
+/** Replaces every string in `value` with an immutable Automerge string, leaving encoded references intact. */
+const toRawStrings = (value: DecodedAutomergePrimaryValue): DecodedAutomergePrimaryValue => {
+  if (typeof value === 'string') {
+    return new A.ImmutableString(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(toRawStrings);
+  }
+  if (isPlainRecord(value) && !isEncodedReference(value)) {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, toRawStrings(item)]));
+  }
+  return value;
+};
+
+/** Converts the strings of every field under `ast` that carries `RawStringAnnotation`. */
+const rawStringsForAst = (ast: SchemaAST.AST, value: DecodedAutomergePrimaryValue): DecodedAutomergePrimaryValue => {
+  if (hasRawStringAnnotation(ast)) {
+    return toRawStrings(value);
+  }
+  if (!containsRawStringAnnotation(ast)) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item, index) => {
+      const elementAst = SchemaValidator.getIndexedElementAst(ast, index);
+      return elementAst ? rawStringsForAst(elementAst, item) : item;
+    });
+  }
+  if (isPlainRecord(value) && !isEncodedReference(value)) {
+    const schema = Schema.make<Schema.Top>(ast);
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => {
+        const [propertyAst] = SchemaValidator.getPropertyAstChain(schema, [key], (path) => getDeep(value, path));
+        return [key, propertyAst ? rawStringsForAst(propertyAst, item) : item];
+      }),
+    );
+  }
+  return value;
+};
+
+/**
+ * Stores the strings of `RawStringAnnotation` fields as immutable Automerge strings: as text they cost one
+ * op per character on every write, and machine-written state rewritten each sync grows without bound.
+ * `value` is what is about to be written at `path` (data namespace); a no-op for types without the annotation.
+ */
+const applyRawStringFields = (
+  target: ProxyTarget,
+  path: Doc.KeyPath,
+  value: DecodedAutomergePrimaryValue,
+): DecodedAutomergePrimaryValue => {
+  const schema = target[symbolNamespace] === META_NAMESPACE ? undefined : getSchema(target);
+  if (schema == null || !containsRawStringAnnotation(schema.ast)) {
+    return value;
+  }
+  const chain = SchemaValidator.getPropertyAstChain(schema, path, (propertyPath) =>
+    target[symbolInternals].getDecoded([getNamespace(target), ...propertyPath]),
+  );
+  return chain.some(hasRawStringAnnotation) ? toRawStrings(value) : rawStringsForAst(chain.at(-1) ?? schema.ast, value);
 };
 
 /**
