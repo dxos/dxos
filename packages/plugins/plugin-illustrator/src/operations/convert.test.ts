@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
-import { Database, Filter, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -97,6 +97,33 @@ describe('convert', () => {
     const error = await EffectEx.runPromise(Effect.flip(run(drawing, 'unknown.example/1')));
     expect(error).toBeInstanceOf(UnknownDrawingVariantError);
     expect(drawing.canvas.target).toBe(canvas);
+  });
+
+  test('refuses to drop shapes drawn outside the scene and leaves the drawing untouched', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const canvas = await drawing.canvas.load();
+    Obj.update(canvas, (canvas) => {
+      canvas.content['hand-drawn'] = { kind: 'freehand' };
+    });
+    const error = await EffectEx.runPromise(Effect.flip(run(drawing, FAKE_SCHEMA)));
+    expect(IllustratorError.UnmanagedShapes.is(error)).toBe(true);
+    expect(drawing.canvas.target).toBe(canvas);
+    const canvases = await db.query(Filter.type(Drawing.Canvas)).run();
+    expect(canvases.map(({ id }) => id)).toEqual([canvas.id]);
+  });
+
+  test('keeps the old canvas while another drawing still references it', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const shared = await drawing.canvas.load();
+    const other = db.add(Drawing.make({ name: 'Other', canvas: shared }));
+
+    await EffectEx.runPromise(run(drawing, FAKE_SCHEMA));
+
+    const converted = await drawing.canvas.load();
+    expect(converted.id).not.toBe(shared.id);
+    expect((await other.canvas.load()).id).toBe(shared.id);
+    const canvases = await db.query(Filter.type(Drawing.Canvas)).run();
+    expect(canvases.map(({ id }) => id).sort()).toEqual([shared.id, converted.id].sort());
   });
 
   test('binds each laid-out arrow end to the box it touches', async ({ expect }) => {

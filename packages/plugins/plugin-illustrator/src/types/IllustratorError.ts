@@ -12,4 +12,10 @@ export class LayoutFailed extends BaseError.extend('IllustratorLayoutFailed', 'D
 /** A drawing was asked to convert to the variant it already uses. */
 export class SameVariant extends BaseError.extend('IllustratorSameVariant', 'Drawing already uses this variant') {}
 
-export type IllustratorError = LayoutFailed | SameVariant;
+/** Conversion would drop shapes drawn outside the scene, since only the scene is replayed onto the target. */
+export class UnmanagedShapes extends BaseError.extend(
+  'IllustratorUnmanagedShapes',
+  'Drawing has shapes the conversion cannot carry over',
+) {}
+
+export type IllustratorError = LayoutFailed | SameVariant | UnmanagedShapes;

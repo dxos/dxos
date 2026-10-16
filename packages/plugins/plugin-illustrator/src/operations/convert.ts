@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Scene } from '@dxos/diagram';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 
 import { Drawing, DrawingOperation, IllustratorCapabilities, IllustratorError } from '#types';
 
@@ -81,7 +81,12 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
 
       // The scene is the renderer-neutral form, so replaying it onto the target's builder is the
       // whole conversion; each builder re-derives its own records (and arrow bindings) from it.
-      const { scene } = from.builder.read(source);
+      const { scene, unmanaged: dropped } = from.builder.read(source);
+      if (dropped > 0) {
+        return yield* Effect.fail(
+          new IllustratorError.UnmanagedShapes({ context: { variant: variantId, count: dropped } }),
+        );
+      }
       const target = yield* Database.add(
         to.createCanvas ? yield* to.createCanvas() : Drawing.makeCanvas({ schema: to.id }),
       );
@@ -92,8 +97,11 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
       Obj.update(drawing, (drawing) => {
         drawing.canvas = Ref.make(target);
       });
-      // The canvas is hidden and reachable only through this drawing, so keeping it would orphan it.
-      yield* Database.remove(source);
+      // A hidden canvas no drawing references is orphaned; one another drawing still uses must stay.
+      const sharing = yield* Database.query(Filter.type(Drawing.Drawing, { canvas: Ref.make(source) })).run;
+      if (sharing.length === 0) {
+        yield* Database.remove(source);
+      }
 
       const { scene: converted, unmanaged } = to.builder.read(target);
       return { scene: converted, unmanaged, upserted };
