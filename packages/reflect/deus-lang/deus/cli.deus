@@ -380,12 +380,16 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let sources := List.map (fun path => (path, Text.sha256 (readSource path))) (expandPaths args.positional)
   let known := if isUpdate && not (Cli.flag args "fresh") then recordedSources dir else Option.none
   let skipped := unchangedSources known sources
-  let parsed := parseIn dir ns (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources))
+  let parsed := parseDialect dir ns (List.filter (fun path => not (Set.contains path skipped)) (List.map fst sources)) (getOr (option args "dialect") "deus")
   let misplaced := contextProblems dir parsed
   if not (List.isEmpty misplaced) then Throw.throw ("these files do not match their context header (Address.Spec R-5):\n  " ++ join "\n  " misplaced) else ()
-  let batch := catch
+  let compiled := catch
     (fun _ => batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) parsed)
     (fun e => Throw.throw (nameCallee ns e))
+  -- The TypeScript-like dialect prints no comments, number spellings or notations, so a definition it leaves
+  -- unchanged keeps what the codebase knows of how it was written.
+  let batch := if getOr (option args "dialect") "deus" == "deus" then compiled else
+    Batch.mk (Batch.objects compiled) (Batch.entries compiled) (List.filter (fun pair => isNone (readMeta dir (fst pair))) (Batch.metas compiled)) (Batch.warnings compiled)
   Cli.warn batch
   let libs :=
     match Project.read dir with
@@ -2645,6 +2649,7 @@ def usage : Text :=
     "                                       (both take --message <why> for the history, and",
     "                                       --by <agent> [--prompt <file>] to record provenance);",
     "                                       files unchanged since the last update are skipped (--fresh: none)",
+    "                                       --dialect ts reads what `view --dialect ts` prints",
     "  ls [prefix]                          list names",
     "  find <text>                          names containing text",
     "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
@@ -2798,10 +2803,21 @@ def sourceEdits (dir : Text) (base : Text) (ours : Text) (theirs : Text) : {IO, 
   if any clash edits then Option.none else Option.some (edits, join "\n\n" (List.map (fun name => getOr (source po oursNs name) "") edits) ++ "\n")
 
 /-- Files parsed with the codebase's notations in the namespaces they open or declare (Syntax.Spec R-3). -/
-def parseIn (dir : Text) (ns : Map Text Entry) (paths : List Text) : {IO, Throw Text} List (Text, List Decl) :=
-  let files := List.map (fun path => (path, readSource path)) (expandPaths paths)
-  let wanted := dedup (concatMap (fun f => namespacesNamed (snd f)) files)
-  Compile.parseAll (notationTable dir ns wanted) files
+def parseIn (dir : Text) (ns : Map Text Entry) (paths : List Text) : {IO, Throw Text} List (Text, List Decl) := parseDialect dir ns paths "deus"
+
+/-- `parseIn` for files written in `dialect`: `deus`, or `ts`, the TypeScript-like dialect `deus view --dialect ts`
+  prints (`TsParse`, task be4c4645). -/
+def parseDialect (dir : Text) (ns : Map Text Entry) (paths : List Text) (dialect : Text) : {IO, Throw Text} List (Text, List Decl) :=
+  let fromTs := fun path =>
+    match try (fun _ => TsParse.file (readSource path)) with
+    | Result.ok decls => (path, decls)
+    | Result.err e => Throw.throw (path ++ ":" ++ e)
+  if dialect == "ts" then List.map fromTs (expandPaths paths)
+  else if dialect != "deus" then Throw.throw ("no dialect " ++ dialect ++ ": deus or ts")
+  else
+    let files := List.map (fun path => (path, readSource path)) (expandPaths paths)
+    let wanted := dedup (concatMap (fun f => namespacesNamed (snd f)) files)
+    Compile.parseAll (notationTable dir ns wanted) files
 
 /-- The notation stored as `name`, keyed by its hash, if `name` is one. -/
 def loadRule (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} Option Loaded := loadRuleWith (notationTypes ns) dir ns name

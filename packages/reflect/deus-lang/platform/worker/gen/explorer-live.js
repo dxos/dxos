@@ -9286,11 +9286,11 @@ function Print$splitSig(sig$, n$) {
 }
 rt.named(Print$splitSig, "Print.splitSig");
 
-function Ts$generics(args) {
-  if (lib$base$List$isEmpty(args)) {
+function Ts$generics(names) {
+  if (lib$base$List$isEmpty(names)) {
     return "";
   } else {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", args)), ">");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", names)), ">");
   }
 }
 rt.named(Ts$generics, "Ts.generics");
@@ -10933,11 +10933,7 @@ function Ts$application(p, f, args, env, ind, prec) {
 rt.named(Ts$application, "Ts.application");
 
 function Ts$infixOf(name) {
-  if ((name === "append")) {
-    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, ["+", 65])]);
-  } else {
-    return Print$infixOf(name);
-  }
+  return Print$infixOf(name);
 }
 rt.named(Ts$infixOf, "Ts.infixOf");
 

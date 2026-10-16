@@ -20,9 +20,9 @@ def isStatement (t : Sexp) : Bool :=
 
 def conName (p : Printer) (t : Text) (tag : Int) : Text := if t == "#Unit" then "undefined" else Print.conName p t tag
 
-/-- An infix operator: DEUS's, except that text and list append read as `+`. -/
-def infixOf (name : Text) : Option (Text, Int) :=
-  if name == "append" then some ("+", 65) else Print.infixOf name
+/-- An infix operator, as DEUS writes it: append stays `++`, so `+` is only `Int.add` and the dialect parses back
+  (`TsParse`). -/
+def infixOf (name : Text) : Option (Text, Int) := Print.infixOf name
 
 /-- Statements at indentation `ind`; the last returns its value when `ret`, else ends with `;`. -/
 def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (ret : Bool) : Text :=

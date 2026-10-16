@@ -7,7 +7,9 @@ second view of the same definitions, for readers who know JavaScript or TypeScri
 
 - **Writer:** `deus view --dialect ts` ([`deus/ts.deus`](../../deus/ts.deus)), and `deus explore`,
   which stores it as the `ts` field of each definition page ([EXPLORER.md](./EXPLORER.md)).
-- **Reader:** people. Nothing parses it yet; it is not valid TypeScript.
+- **Reader:** people, and `deus add` / `deus update --dialect ts` ([`deus/ts-parse.deus`](../../deus/ts-parse.deus)),
+  which read `function`, `const` and `test` declarations back to the same hashes. It is not valid TypeScript.
+  A definition the dialect leaves unchanged keeps its comments and number spellings, which the dialect does not print.
 
 ## Names
 
@@ -59,7 +61,7 @@ value and does not `return`.
 | field accessor `p.x`                         | `p.x`                                    |
 | `if c then a else b`                         | `c ? a : b`                              |
 | `a && b`, `a \|\| b`, `-a`, `==`, `<`, `*` … | unchanged                                |
-| `a ++ b` (text or list append)               | `a + b`                                  |
+| `a ++ b` (text or list append)               | `a ++ b`, so `+` is only `Int.add`       |
 | list `[a, b]`, cons `h :: t`                 | `[a, b]`, `[h, ...t]`                    |
 | tuple `(a, b)`                               | `#[a, b]` (the TC39 tuple syntax)        |
 | `()`                                         | `undefined`                              |
@@ -89,5 +91,5 @@ not TypeScript's.
 
 ## Not covered
 
-- Parsing the dialect back into Core (codebase task "Parse the TypeScript-like dialect back into Core").
+- Reading types, abilities and theorems back: `--dialect ts` reads `function`, `const` and `test`.
 - `--core` output and `.mdl` spec entries print as in DEUS.
