@@ -133,8 +133,8 @@ record, each cursor sits with what it tracks instead, and clearing the index rep
 than re-running the LLM over every source.
 
 - **Two cursors, two owners.** The extraction cursor (source → facts) is the extract trigger's feed
-  cursor; the ingest cursor (facts → index) is the index's, per fact feed. A cleared index re-reads the
-  fact feeds; a reset extract trigger re-reads the source.
+  cursor; the ingest cursor (facts → index) is the brain's, per registered fact feed, in its own
+  `FactStore`. A cleared index re-reads the fact feeds; a reset extract trigger re-reads the source.
 - **Owned and external fact feeds.** The agent's extract triggers write its own fact feeds; any other
   feed of `RDF.Fact` items — another agent's, an import, a person's corrections — is indexed the same
   way. The index records the feed each fact came from, so rules and judgment can weigh it
@@ -165,6 +165,27 @@ Delivery is at-least-once and in feed order: a batch whose invocation fails is n
 cursor moves only past a batch that completed. Fact ids derive from the graph and the triple, so a
 replayed batch whose output is unchanged indexes nothing new; a re-run that extracts differently is a
 new pass, and the index retracts the old pass by its id.
+
+### Indexing fact feeds
+
+Fact feeds reach the index through the brain itself, not through triggers. The brain Durable Object
+keeps a registry of the fact feeds it indexes, named by ECHO EID (`registerFactFeed(eid)`,
+`unregisterFactFeed(eid)`, `factFeeds()`), and drains them in its alarm: for each registered feed it
+reads the items past its cursor, stores the `RDF.Fact`s (`FactStore.putFacts`), moves the cursor
+(`FactStore.setCursor`, keyed by the feed's EID) and evaluates the rules, as `push` does today.
+
+Why not a feed trigger: a trigger runs an operation from the space's `Scheduler`, which would then have
+to call into the brain Durable Object to write the facts. Reading the feeds from the brain keeps the
+ingest cursor in the same SQLite as the facts it covers, so the two are always written together, and
+it needs no runnable, no trigger object and no second dispatcher per fact feed.
+
+| Concern     | Where it lives                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| Which feeds | The brain's registry, by EID: the agent's own fact feeds and any external ones it is pointed at |
+| Cursor      | `FactStore` cursor per feed EID, in the brain's SQLite                                          |
+| When        | The brain's alarm; a bounded number of facts per alarm, re-armed while any feed has more        |
+| Rebuild     | `reset` clears facts and cursors, so the next alarms read every registered feed from the start  |
+| Unregister  | Drops the feed and its cursor; its facts are retracted from the index by source                 |
 
 ### pipeline-rdf is the common type
 
