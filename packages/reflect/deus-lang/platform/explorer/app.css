@@ -2738,3 +2738,22 @@ pre.block-value {
   font-size: 13px;
   color: var(--fail);
 }
+
+.task-code {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.task-code code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--code);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}

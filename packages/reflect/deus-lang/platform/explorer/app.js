@@ -2016,6 +2016,17 @@ const fillHome = async (root) => {
   );
 };
 
+/** The definitions a task links, on its card, so the board shows where each task is in the code (task 5bd0ec5d). */
+const taskCode = (task) => {
+  const names = [...new Set((task.links ?? []).map((link) => link.definition).filter(Boolean))];
+  return names.length === 0
+    ? ''
+    : `<span class="task-code">${names
+        .slice(0, 3)
+        .map((name) => `<code>${escape(name)}</code>`)
+        .join('')}${names.length > 3 ? `<span class="muted">+${names.length - 3}</span>` : ''}</span>`;
+};
+
 const renderTasks = () => {
   const columns = STATES.map((state) => {
     const tasks = index.tasks.filter((task) => task.state === state);
@@ -2027,7 +2038,7 @@ const renderTasks = () => {
             `<a class="task-card ${escape(state)}" data-open="t:${escape(task.id)}"><span class="task-title">${escape(task.title)}</span>` +
             `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
               .map((label) => `<span class="chip">${escape(label)}</span>`)
-              .join('')}</span></a>`,
+              .join('')}</span>${taskCode(task)}</a>`,
         )
         .join('') +
       '</div>'
