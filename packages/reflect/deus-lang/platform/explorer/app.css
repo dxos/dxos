@@ -2722,6 +2722,13 @@ pre.block-value {
   font-size: 13px;
 }
 
+.hub-start {
+  margin: 8px 0 0;
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .hub-description {
   margin: 0;
   color: var(--muted);
