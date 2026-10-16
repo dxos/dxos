@@ -23,8 +23,11 @@ type GridZoomProps = {
   rows: number;
   /** Scene-unit gap between tiles. */
   gap: number;
-  /** Tiles the camera visits in turn, each filling the view; unset is the centre tile and the two to its right. */
-  tour?: number[];
+  /**
+   * Cells (`[col, row]`) the camera visits in turn, each filling the view and playing `tour-<n>.mp4`; a cell outside
+   * the grid (a negative column) is added to it. Unset is three cells of row 3 ending in the bottom-left quadrant.
+   */
+  tour?: [number, number][];
   /** Time held on each toured tile, in ms. */
   hold: number;
   /** Time to pan from one toured tile to the next, in ms. */
@@ -34,29 +37,45 @@ type GridZoomProps = {
 };
 
 /** One leg of the camera's path: held on a tile (`focus`), or moving between two cameras. */
-type Shot = { ms: number; focus?: number; move?: (t: number) => Camera; camera?: Camera };
+type Shot = { ms: number; focus?: string; move?: (t: number) => Camera; camera?: Camera };
+
+/** Three cells of row 3, the last in the bottom-left quadrant of a 6x6 grid. */
+const DEFAULT_TOUR: [number, number][] = [
+  [0, 3],
+  [1, 3],
+  [2, 3],
+];
+
+/** A straight slide between two cameras at the same zoom, so a pan never zooms out and back in. */
+const slide =
+  (from: Camera, to: Camera) =>
+  (t: number): Camera => ({
+    zoom: from.zoom + (to.zoom - from.zoom) * t,
+    x: from.x + (to.x - from.x) * t,
+    y: from.y + (to.y - from.y) * t,
+  });
 
 type TileProps = {
-  index: number;
+  /** The clip's file name, without extension. */
+  clip: string;
+  /** Shown when the clip is missing. */
+  label: string;
   bounds: Bounds;
   /** Called with the clip once its length is known, or with nothing if it has no clip. */
   onLoad?: (video?: HTMLVideoElement) => void;
 };
 
-const Tile = ({ index, bounds, onLoad }: TileProps) => {
+const Tile = ({ clip, label, bounds, onLoad }: TileProps) => {
   const [failed, setFailed] = useState(false);
   // A non-literal URL so Vite resolves it at runtime instead of bundling a file that only exists locally.
-  const src = useMemo(
-    () => new URL(`${CLIPS_DIR}clip-${String(index).padStart(2, '0')}.mp4`, import.meta.url).href,
-    [index],
-  );
+  const src = useMemo(() => new URL(`${CLIPS_DIR}${clip}.mp4`, import.meta.url).href, [clip]);
   return (
     <div
       className='absolute overflow-hidden rounded-sm bg-neutral-800'
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
     >
       {failed ? (
-        <div className='grid dx-fill place-items-center text-[120px] text-neutral-500'>{index + 1}</div>
+        <div className='grid dx-fill place-items-center text-[120px] text-neutral-500'>{label}</div>
       ) : (
         <video
           className='dx-fill object-cover'
@@ -79,51 +98,69 @@ const Tile = ({ index, bounds, onLoad }: TileProps) => {
 };
 
 /**
- * A grid of looping clips under one camera: it opens on a tile filling the view, holds while its clip plays, pans to
- * each further tile of the tour in turn, then zooms out along `interpolateCamera`'s path until the whole grid fits.
+ * A grid of looping clips under one camera: it opens on the tour's first cell filling the view, holds while its clip
+ * plays, slides right to each further cell at the same zoom, then zooms out along `interpolateCamera`'s path until the
+ * whole grid (and any tour cell outside it) fits.
  */
 const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: GridZoomProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
   const [elapsed, setElapsed] = useState(0);
   const [run, setRun] = useState(0);
-  const videos = useRef(new Map<number, HTMLVideoElement>());
+  const videos = useRef(new Map<string, HTMLVideoElement>());
   // The tour starts once its first tile has loaded (or turned out to have no clip).
   const [ready, setReady] = useState(false);
-  const centre = Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2);
-  const tour = useMemo(() => tourProp ?? [centre, centre + 1, centre + 2], [tourProp, centre]);
+  const tour = useMemo(() => tourProp ?? DEFAULT_TOUR, [tourProp]);
 
-  const tiles = useMemo(
-    () =>
-      Array.from({ length: cols * rows }, (_, index) => ({
-        x: (index % cols) * (TILE.width + gap),
-        y: Math.floor(index / cols) * (TILE.height + gap),
-        ...TILE,
-      })),
-    [cols, rows, gap],
-  );
+  /** Every cell drawn: the grid's, then any tour cell outside it; a tour cell plays its own clip. */
+  const cells = useMemo(() => {
+    const key = ([col, row]: [number, number]) => `${col},${row}`;
+    const steps = new Map(tour.map((cell, step) => [key(cell), step]));
+    const grid = Array.from({ length: cols * rows }, (_, index): [number, number] => [
+      index % cols,
+      Math.floor(index / cols),
+    ]);
+    const outside = tour.filter(([col, row]) => col < 0 || col >= cols || row < 0 || row >= rows);
+    return [...grid, ...outside].map((cell) => {
+      const [col, row] = cell;
+      const step = steps.get(key(cell));
+      return {
+        id: key(cell),
+        clip: step === undefined ? `clip-${String(row * cols + col).padStart(2, '0')}` : `tour-${step + 1}`,
+        label: step === undefined ? String(row * cols + col + 1) : `Demo ${step + 1}`,
+        bounds: { x: col * (TILE.width + gap), y: row * (TILE.height + gap), ...TILE },
+      };
+    });
+  }, [tour, cols, rows, gap]);
 
   const shots = useMemo((): Shot[] => {
     if (viewport.width === 0) {
       return [];
     }
-    const grid = {
-      x: 0,
-      y: 0,
-      width: cols * TILE.width + (cols - 1) * gap,
-      height: rows * TILE.height + (rows - 1) * gap,
+    const all = cells.map((cell) => cell.bounds);
+    const x = Math.min(...all.map((bounds) => bounds.x));
+    const y = Math.min(...all.map((bounds) => bounds.y));
+    const extent = {
+      x,
+      y,
+      width: Math.max(...all.map((bounds) => bounds.x + bounds.width)) - x,
+      height: Math.max(...all.map((bounds) => bounds.y + bounds.height)) - y,
     };
-    const cameras = tour.filter((index) => tiles[index]).map((index) => fitBounds(tiles[index], viewport));
-    return tour.flatMap((focus, step): Shot[] => {
+    const cameras = tour.map(([col, row]) =>
+      fitBounds({ x: col * (TILE.width + gap), y: row * (TILE.height + gap), ...TILE }, viewport),
+    );
+    return tour.flatMap(([col, row], step): Shot[] => {
       const from = cameras[step];
       const last = step === cameras.length - 1;
-      const to = last ? fitBounds(grid, viewport, gap) : cameras[step + 1];
+      const focus = `${col},${row}`;
       return [
         { ms: hold, focus, camera: from },
-        { ms: last ? duration : pan, move: interpolateCamera(from, to, viewport) },
+        last
+          ? { ms: duration, move: interpolateCamera(from, fitBounds(extent, viewport, gap), viewport) }
+          : { ms: pan, move: slide(from, cameras[step + 1]) },
       ];
     });
-  }, [tiles, tour, viewport, cols, rows, gap, hold, pan, duration]);
+  }, [cells, tour, viewport, gap, hold, pan, duration]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
 
   useEffect(() => {
@@ -131,7 +168,7 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: 
       return;
     }
     let frame = 0;
-    let focused: number | undefined;
+    let focused: string | undefined;
     const start = performance.now();
     const tick = (now: number) => {
       const time = Math.min(total, now - start);
@@ -161,16 +198,17 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: 
     <div ref={ref} className='relative dx-fill overflow-hidden bg-black'>
       {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
       {camera &&
-        tiles.map((bounds, index) => (
+        cells.map((cell) => (
           <Tile
-            key={index}
-            index={index}
-            bounds={screenBounds(camera, bounds)}
+            key={cell.id}
+            clip={cell.clip}
+            label={cell.label}
+            bounds={screenBounds(camera, cell.bounds)}
             onLoad={(video) => {
               if (video) {
-                videos.current.set(index, video);
+                videos.current.set(cell.id, video);
               }
-              if (index === tour[0]) {
+              if (cell.id === `${tour[0][0]},${tour[0][1]}`) {
                 setReady(true);
               }
             }}
