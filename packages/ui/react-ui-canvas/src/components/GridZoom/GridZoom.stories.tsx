@@ -143,5 +143,5 @@ export default meta;
 type Story = StoryObj<GridZoomProps>;
 
 export const Default: Story = {
-  args: { cols: 6, rows: 4, gap: 32, duration: 6_000, hold: 1_500 },
+  args: { cols: 6, rows: 5, gap: 32, duration: 6_000, hold: 1_500 },
 };
