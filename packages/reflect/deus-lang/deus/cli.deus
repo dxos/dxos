@@ -2808,7 +2808,14 @@ def loadRule (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} Option Load
   match (notationTypes ns, Map.lookup name ns) with
   | (Option.some (n, t), Option.some (Entry.term h)) =>
       match readObject dir h with
-      | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => decodeRule n t h name core
+      | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
+          match decodeRule n t h name core with
+          | Option.some rule => if not (Check.hasAttr dir h "elab") then Option.some rule else
+              -- An elaborator runs while its users compile, so its function and what it calls are loaded now (Syntax.Spec R-10).
+              match try (fun _ => Image.load (fun x => readObject dir x) [h]) with
+              | Result.ok _ => Option.some { rule with ruleTemplate := Option.map (fun f => Sexp.node "elaborate" [f]) rule.ruleTemplate }
+              | Result.err _ => Option.none
+          | Option.none => Option.none
       | _ => Option.none
   | _ => Option.none
 

@@ -628,8 +628,23 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
       -- The stored term is the expansion; the notation stays as a mark `unnote` keeps as metadata (Syntax.Spec R-2).
       let holes := List.map go args
       match Option.orElse template (fun _ => Map.lookup key ctx.templates) with
+      | Option.some (Sexp.list (Sexp.sym "elaborate" :: [])) => Resolve.fail ctx ("elaborator " ++ Text.drop 1 key ++ " runs only from the codebase: add it before the code that uses it")
+      | Option.some (Sexp.list (Sexp.sym "elaborate" :: f :: [])) => Resolve.elaborated ctx f (List.map Resolve.unmark holes)
       | Option.some t => Compile.node "notation" [Compile.s key, expandWith t holes]
       | Option.none => Resolve.fail ctx ("notation " ++ Text.drop 1 key ++ " has no expansion")
+
+/-- The term an elaborator's function `f` (loaded with its dependencies) makes of one use's hole terms, run now
+  (Syntax.Spec R-10). Each `(name "N")` in it becomes the global `N` names where the notation is used. -/
+def elaborated (ctx : Ctx) (f : Sexp) (holes : List Sexp) : {Throw Text} Sexp :=
+  match Check.evalCore (Resolve.app f (List.map (fun h => Sexp.read (Code.quote h)) holes)) with
+  | Result.ok term => Resolve.named ctx term
+  | Result.err message => Resolve.fail ctx ("elaborator failed: " ++ message)
+
+def named (ctx : Ctx) (term : Sexp) : {Throw Text} Sexp :=
+  match term with
+  | Sexp.list (Sexp.sym "name" :: Sexp.str n :: []) => valueOf ctx n (Pos.mk 0 0) []
+  | Sexp.list items => Sexp.list (List.map (fun x => Resolve.named ctx x) items)
+  | _ => term
 
 /-- A handler clause: arguments in order, then the continuation, as Core's `on` expects. -/
 def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text} Sexp :=

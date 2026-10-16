@@ -570,7 +570,7 @@ def parseAll (table : Map Text (List Loaded)) (files : List (Text, Text)) : {Thr
   checking that it uses every hole (Syntax.Spec R-7). -/
 def templateOf (names : Names) (item : Item) : {Throw Text} List (Text, Sexp) :=
   match item.decl with
-  | Decl.defn _ _ _ (Option.some (Expr.app _ args)) _ _ attributes _ => if not (any (fun a => a.attr == "syntax") attributes) then [] else
+  | Decl.defn _ _ _ (Option.some (Expr.app _ args)) _ _ attributes _ => if not (any (fun a => a.attr == "syntax") attributes) then [] else if any (fun a => a.attr == "elab") attributes then [("@" ++ item.fqn, Sexp.node "elaborate" [])] else
       match last? args with
       | Option.none => []
       | Option.some expansion =>
