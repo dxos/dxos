@@ -164,7 +164,11 @@ export const createPrims = ({ sha256, stderr }: Platform): Map<string, Prim> => 
   });
   def('Text.utf8', 1, ([s]) => listFrom(Array.from(Buffer.from(text(s), 'utf8'))));
 
-  def('Ref.new', 1, ([v]) => new Cell(v));
+  def('Ref.new', 1, ([v], machine) => {
+    const cell = new Cell(v);
+    cell.born = machine.jitDepth > 0 ? machine.jitFrame : 0;
+    return cell;
+  });
   def('Ref.get', 1, ([cell]) => {
     if (!(cell instanceof Cell)) {
       throw new DeusDefect(`expected Ref, got ${show(cell)}`);
@@ -175,8 +179,9 @@ export const createPrims = ({ sha256, stderr }: Platform): Map<string, Prim> => 
     if (!(cell instanceof Cell)) {
       throw new DeusDefect(`expected Ref, got ${show(cell)}`);
     }
-    if (machine.jitDepth > 0) {
-      // Compiled code may be replayed by the machine, which must see the cell as it was.
+    // Compiled code may be replayed by the machine, which must see the cell as it was; a cell the
+    // replayed call made itself is made anew by the replay, so its writes need no undoing.
+    if (machine.jitDepth > 0 && cell.born !== machine.jitFrame) {
       const old = cell.value;
       machine.journal.push(() => {
         cell.value = old;

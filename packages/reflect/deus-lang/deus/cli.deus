@@ -2300,7 +2300,12 @@ def taskLine (t : Task) : Text :=
 def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json := Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
   getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [])
 
-def changeLine (dir : Text) (pair : (Text, Causal)) : {IO} Text := "  " ++ short (fst pair) ++ "  " ++ (snd pair).message ++
+/-- A change's message on one line of a listing: its first line, cut at 140 characters (a long `delete` names hundreds). -/
+def shortMessage (message : Text) : Text :=
+  let line := getOr (head? (Text.lines message)) ""
+  if Text.length line > 140 then Text.take 137 line ++ "…" else line
+
+def changeLine (dir : Text) (pair : (Text, Causal)) : {IO} Text := "  " ++ short (fst pair) ++ "  " ++ shortMessage (snd pair).message ++
   getOr (Option.map (fun agent => "  (" ++ agent ++ ")") (producedBy dir (fst pair))) ""
 
 /-- A linked definition: its name, the hash it was linked at, its current hash, and the changes that rebound it. -/

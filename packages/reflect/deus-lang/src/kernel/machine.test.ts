@@ -100,6 +100,21 @@ describe('kernel', () => {
     expect(stdout).toBe('51');
   });
 
+  test('a replay makes its own cells anew, and undoes writes to cells an outer call made', ({ expect }) => {
+    // `fresh` writes a cell it made: its writes need no undoing, since the replay makes the cell again.
+    // `outer` makes a cell that `inner` writes before it deoptimizes: that write is undone, then made once.
+    const { stdout } = run(`
+      (def "fresh" (lam (let (app (prim "Ref.new") (int 0))
+        (seq (app (prim "Ref.set") (var 0) (int 7)) (seq (app (op "Ask" 0 1) (con "#Unit" 0 0)) (app (prim "Ref.get") (var 0)))))))
+      (def "inner" (lam (seq (app (prim "Ref.set") (var 0) (app (prim "Int.add") (app (prim "Ref.get") (var 0)) (int 1))) (app (op "Ask" 0 1) (con "#Unit" 0 0)))))
+      (def "outer" (lam (let (app (prim "Ref.new") (int 0)) (seq (app (ref "inner") (var 0)) (app (prim "Ref.get") (var 0))))))
+      (def "main" (lam
+        (seq ${print('(handle (app (ref "fresh") (con "#Unit" 0 0)) (on "Ask" 0 1 (app (var 0) (int 5))))')}
+             ${print('(handle (app (ref "outer") (con "#Unit" 0 0)) (on "Ask" 0 1 (app (var 0) (int 5))))')})))
+      (main "main")`);
+    expect(stdout).toBe('71');
+  });
+
   test('a rethrow through many nested handlers costs linear, not exponential, replays', ({ expect }) => {
     // Each level's handler rethrows; compiled code at every level deoptimizes on the way out.
     const { stdout, code } = run(

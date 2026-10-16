@@ -93,6 +93,8 @@ export class Pap {
 /** A mutable cell (`Ref.new`); compared by identity. */
 export class Cell {
   value: Value;
+  /** The compiled call that made it (`Machine.jitFrame`), or 0 outside compiled code. */
+  born = 0;
 
   constructor(value: Value) {
     this.value = value;
@@ -752,6 +754,9 @@ export class Machine {
   compiler: Compiler | undefined = undefined;
   /** How many compiled calls are running, and undo actions for the mutations they made. */
   jitDepth = 0;
+  /** The innermost compiled call running, numbered from 1; a deoptimization replays it from its start. */
+  jitFrame = 0;
+  private jitFrames = 0;
   readonly journal: (() => void)[] = [];
   /** Set once the deoptimization in flight is counted against the innermost lambda it left. */
   charged = false;
@@ -895,6 +900,8 @@ export class Machine {
       }
     }
     const mark = this.journal.length;
+    const outerFrame = this.jitFrame;
+    this.jitFrame = ++this.jitFrames;
     this.jitDepth++;
     try {
       const result = jit(fn.env, args);
@@ -917,6 +924,7 @@ export class Machine {
       }
       throw err;
     } finally {
+      this.jitFrame = outerFrame;
       if (--this.jitDepth === 0) {
         this.journal.length = 0;
       }
