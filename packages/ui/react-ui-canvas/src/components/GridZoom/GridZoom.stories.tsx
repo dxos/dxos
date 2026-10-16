@@ -25,11 +25,18 @@ type GridZoomProps = {
   gap: number;
   /** Zoom-out time, in ms. */
   duration: number;
-  /** Time held on the first tile before zooming out, in ms. */
-  hold: number;
+  /** Time held on the first tile before zooming out, in ms; unset holds for the length of the first tile's clip. */
+  hold?: number;
 };
 
-const Tile = ({ index, bounds }: { index: number; bounds: Bounds }) => {
+type TileProps = {
+  index: number;
+  bounds: Bounds;
+  /** Called with the clip once its length is known, or with nothing if it has no clip. */
+  onLoad?: (video?: HTMLVideoElement) => void;
+};
+
+const Tile = ({ index, bounds, onLoad }: TileProps) => {
   const [failed, setFailed] = useState(false);
   // A non-literal URL so Vite resolves it at runtime instead of bundling a file that only exists locally.
   const src = useMemo(
@@ -53,7 +60,11 @@ const Tile = ({ index, bounds }: { index: number; bounds: Bounds }) => {
           playsInline
           // Chrome pauses muted autoplay video while it is off-screen and does not reliably resume it.
           onPause={(event) => void event.currentTarget.play().catch(() => {})}
-          onError={() => setFailed(true)}
+          onLoadedMetadata={(event) => onLoad?.(event.currentTarget)}
+          onError={() => {
+            setFailed(true);
+            onLoad?.();
+          }}
         />
       )}
     </div>
@@ -61,14 +72,17 @@ const Tile = ({ index, bounds }: { index: number; bounds: Bounds }) => {
 };
 
 /**
- * A grid of looping clips under one camera: it opens on the centre tile filling the view, holds, then zooms out
- * along `interpolateCamera`'s path until the whole grid fits.
+ * A grid of looping clips under one camera: it opens on the centre tile filling the view, plays that tile's clip once
+ * through, then zooms out along `interpolateCamera`'s path until the whole grid fits.
  */
 const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
   const [progress, setProgress] = useState(0);
   const [run, setRun] = useState(0);
+  // The first tile's clip, once loaded; `null` when that tile has no clip.
+  const [first, setFirst] = useState<HTMLVideoElement | null>();
+  const firstIndex = Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2);
 
   const tiles = useMemo(
     () =>
@@ -84,7 +98,7 @@ const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
     if (viewport.width === 0) {
       return undefined;
     }
-    const centre = tiles[Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2)];
+    const centre = tiles[firstIndex];
     const grid = {
       x: 0,
       y: 0,
@@ -92,13 +106,22 @@ const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
       height: rows * TILE.height + (rows - 1) * gap,
     };
     return interpolateCamera(fitBounds(centre, viewport), fitBounds(grid, viewport, gap), viewport);
-  }, [tiles, viewport, cols, rows, gap]);
+  }, [tiles, viewport, firstIndex, cols, rows, gap]);
 
   useEffect(() => {
+    if (hold === undefined && first === undefined) {
+      return;
+    }
+    // Restart the first clip so the hold shows it from its beginning to its end.
+    if (first) {
+      first.currentTime = 0;
+      void first.play().catch(() => {});
+    }
+    const holdMs = hold ?? (first ? first.duration * 1_000 : 0);
     let frame = 0;
     const start = performance.now();
     const tick = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start - hold) / duration));
+      const t = Math.min(1, Math.max(0, (now - start - holdMs) / duration));
       setProgress(t);
       if (t < 1) {
         frame = requestAnimationFrame(tick);
@@ -106,14 +129,22 @@ const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run, duration, hold]);
+  }, [run, duration, hold, first]);
 
   const camera = interpolate?.(easeInOut(progress));
 
   return (
     <div ref={ref} className='relative dx-fill overflow-hidden bg-black'>
       {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
-      {camera && tiles.map((bounds, index) => <Tile key={index} index={index} bounds={screenBounds(camera, bounds)} />)}
+      {camera &&
+        tiles.map((bounds, index) => (
+          <Tile
+            key={index}
+            index={index}
+            bounds={screenBounds(camera, bounds)}
+            onLoad={index === firstIndex ? (video) => setFirst((current) => current ?? video ?? null) : undefined}
+          />
+        ))}
       <div className='absolute top-2 left-2 w-fit'>
         <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
           <Button.Root
@@ -143,5 +174,5 @@ export default meta;
 type Story = StoryObj<GridZoomProps>;
 
 export const Default: Story = {
-  args: { cols: 6, rows: 5, gap: 32, duration: 6_000, hold: 1_500 },
+  args: { cols: 6, rows: 6, gap: 32, duration: 12_000 },
 };
