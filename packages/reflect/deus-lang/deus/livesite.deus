@@ -65,9 +65,13 @@ def isCausal (t : Text) : Bool := Text.length t == 64 && List.all (fun i => Text
 test headIsACausal := isCausal (liveHead ())
 
 @[integration]
-test rootServesTheLiveApp :=
-  let reply := fetchPath "/" []
-  reply.httpStatus == 200 && Text.contains "<base href=\"/\" />" reply.httpBody && Text.contains ("globalThis.DEUS_LIVE = \"" ++ liveApi () ++ "\"") reply.httpBody
+test rootServesTheHub :=
+  -- D200: the host's front page lists its projects; each project's explorer is at its own path.
+  let page := fetchPath "/" []
+  let projects := Json.items (jsonAt "/v1/_projects")
+  page.httpStatus == 200 && Text.contains "hub.js" page.httpBody &&
+    List.any (fun p => Json.text (Json.get p "address") == projectAddress && Json.int (Json.get p "definitions") > 1000) projects &&
+    List.any (fun p => Json.text (Json.get p "address") == "@dxos/base") projects
 
 @[integration]
 test projectPathServesTheLiveApp :=

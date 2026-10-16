@@ -25,10 +25,12 @@ export type Bucket = {
     options?: { httpMetadata?: { contentType?: string }; onlyIf?: Headers | { etagMatches?: string } },
   ): Promise<unknown>;
   delete(key: string): Promise<unknown>;
+  /** With `delimiter`, keys past it are grouped into `delimitedPrefixes`, as folders. */
   list(options: {
     prefix: string;
     cursor?: string;
-  }): Promise<{ objects: { key: string }[]; truncated?: boolean; cursor?: string }>;
+    delimiter?: string;
+  }): Promise<{ objects: { key: string }[]; delimitedPrefixes?: string[]; truncated?: boolean; cursor?: string }>;
 };
 
 /** The part of the D1 binding the worker uses. */

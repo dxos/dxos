@@ -19,7 +19,7 @@ import { addressOfFolder } from './address.mjs';
 import * as runtime from './gen/deus-runtime.mjs';
 import * as explorer from './gen/explorer-live.js';
 import { lookupMany, parseSexp } from './packs.mjs';
-import { HttpError, json, listAll, readHead } from './remote.mjs';
+import { HttpError, json, listAll, listFolders, readHead } from './remote.mjs';
 
 const ROOT = '/codebase';
 const HASH = /^[0-9a-f]{64}$/;
@@ -91,6 +91,80 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
     }
   }
   return page(await rendering);
+};
+
+//
+// The hub (`/`): every project on this host with its counts, read from each head's summary.
+//
+
+const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
+
+/** What the hub shows of a head: its counts by kind and its tasks, from its index (a few hundred bytes, not megabytes). */
+const summaryOfIndex = (index) => {
+  const kinds = {};
+  for (const entry of index.names ?? []) {
+    kinds[entry.kind] = (kinds[entry.kind] ?? 0) + 1;
+  }
+  const meta = index.meta ?? {};
+  return {
+    branch: meta.branch,
+    definitions: meta.definitions,
+    tasks: meta.tasks,
+    open: meta.open,
+    features: meta.features ?? 0,
+    kinds,
+  };
+};
+
+/** The project folders in the bucket: a folder with a main head, or an owner folder's subfolders with one. */
+const projectFolders = async (bucket) => {
+  const folders = [];
+  for (const top of await listFolders(bucket, '')) {
+    if (await bucket.head(`${top}heads/main`)) {
+      folders.push(top.slice(0, -1));
+      continue;
+    }
+    for (const inner of await listFolders(bucket, top)) {
+      if (await bucket.head(`${inner}heads/main`)) {
+        folders.push(inner.slice(0, -1));
+      }
+    }
+  }
+  return folders;
+};
+
+const PROJECTS_KEY = 'projects';
+
+/** Every project with its shown head's summary, drawing a summary the first time a head is listed; cached for a minute. */
+export const projectSummaries = async (env, ctx) => {
+  const cached = await env.CACHE?.get(PROJECTS_KEY);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+  const projects = await Promise.all(
+    (await projectFolders(env.BUCKET)).map(async (folder) => {
+      const shown = await liveHead(env, ctx, folder, 'main');
+      if (!shown) {
+        return undefined;
+      }
+      let summary = await storedPage(env, ctx, summaryKey(folder, shown.causal));
+      if (summary === undefined) {
+        // A head drawn before summaries were kept: read its index once and keep the summary.
+        const index = await storedPage(env, ctx, `${folder}/live/${shown.causal}/index.json`);
+        if (index === undefined) {
+          return { address: addressOfFolder(folder) ?? folder, causal: shown.causal, drawing: true };
+        }
+        summary = JSON.stringify(summaryOfIndex(JSON.parse(index)));
+        await env.BUCKET.put(summaryKey(folder, shown.causal), summary, {
+          httpMetadata: { contentType: 'application/json' },
+        });
+      }
+      return { address: addressOfFolder(folder) ?? folder, causal: shown.causal, ...JSON.parse(summary) };
+    }),
+  );
+  const listed = projects.filter(Boolean).sort((left, right) => left.address.localeCompare(right.address));
+  remember(env, ctx, PROJECTS_KEY, JSON.stringify(listed), HEAD_TTL);
+  return listed;
 };
 
 /** Seconds KV keeps a branch's shown head: D195 already shows a head up to a minute behind, and 60 s is KV's shortest TTL. */
@@ -302,6 +376,9 @@ const draw = async (env, files, project, causal, path) => {
       httpMetadata: { contentType: 'application/json' },
     });
     await recordDrawn(env.BUCKET, project, causal);
+    await env.BUCKET.put(summaryKey(project, causal), JSON.stringify(summaryOfIndex(JSON.parse(text))), {
+      httpMetadata: { contentType: 'application/json' },
+    });
     return text;
   }
   if (path[0] === 'doc') {

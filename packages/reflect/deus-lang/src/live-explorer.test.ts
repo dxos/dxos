@@ -6,7 +6,7 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync }
 import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { appFiles } from '../platform/worker/gen/explorer-app.mjs';
+import { appFiles, hubFiles } from '../platform/worker/gen/explorer-app.mjs';
 import worker, { type Bucket, type Env } from '../platform/worker/worker.mjs';
 import { cliHarness } from './cli-harness.ts';
 
@@ -43,12 +43,17 @@ const directoryBucket = (folder: string): Bucket => {
       writeFileSync(join(folder, key), value instanceof ArrayBuffer ? new Uint8Array(value) : value);
     },
     delete: async () => {},
-    list: async ({ prefix }) => {
+    list: async ({ prefix, delimiter }) => {
       let names: string[] = [];
       try {
         names = readdirSync(join(folder, prefix));
       } catch {}
-      return { objects: names.map((name) => ({ key: `${prefix}${name}` })) };
+      // With a delimiter, folders come back as prefixes, as R2 groups keys past it.
+      const folders = delimiter ? names.filter((name) => statSync(join(folder, prefix, name)).isDirectory()) : [];
+      return {
+        objects: names.filter((name) => !folders.includes(name)).map((name) => ({ key: `${prefix}${name}` })),
+        delimitedPrefixes: folders.map((name) => `${prefix}${name}${delimiter}`),
+      };
     },
   };
 };
@@ -170,6 +175,7 @@ describe('live explorer (D192)', () => {
         'def',
         'doc',
         'index.json',
+        'summary.json',
       ]);
       // What the Worker read is kept as one snapshot, so a cold isolate starts from it.
       expect(readdirSync(join(bucket, 'toolchain', 'live'))).toContain('files.json.gz');
@@ -246,7 +252,7 @@ describe('live explorer (D192)', () => {
       // Until the queue draws the new head's index, the explorer shows the head it drew last.
       expect(await liveHead()).toEqual({ branch: 'main', causal: before, drawing: head });
       const appPage = async () =>
-        (await worker.fetch(new Request('https://deus.test/'), env, { waitUntil: () => {} })).text();
+        (await worker.fetch(new Request('https://deus.test/index.html'), env, { waitUntil: () => {} })).text();
       expect(await appPage()).toContain(`/live/${before}"`);
       const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', before, 'index.json'), 'utf8'));
       const area = index.names.find((entry: { name: string }) => entry.name === 'area');
@@ -325,12 +331,37 @@ describe('live explorer (D192)', () => {
     expect(await get(`/v1/toolchain/live/${shown.causal}/index.json`)).toBe('{"kept":true}');
     // The app's files are served without looking up a head.
     expect(await get('/app.js')).toContain('DEUS_LIVE');
+
+    // The front page lists the projects with their counts, from a summary of each shown head (D200).
+    kept.delete('head:toolchain:main');
+    expect(await get('/')).toContain('hub.js');
+    const projects = JSON.parse(await get('/v1/_projects'));
+    // KV holds a stand-in for this index (above), so the drawn one is read from the bucket.
+    const drawnIndex = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', shown.causal, 'index.json'), 'utf8'));
+    expect(projects).toEqual([
+      {
+        address: '@dxos/toolchain',
+        causal: shown.causal,
+        branch: 'main',
+        definitions: drawnIndex.meta.definitions,
+        tasks: drawnIndex.meta.tasks,
+        open: drawnIndex.meta.open,
+        features: drawnIndex.meta.features ?? 0,
+        kinds: expect.objectContaining({
+          term: drawnIndex.names.filter((entry: { kind: string }) => entry.kind === 'term').length,
+        }),
+      },
+    ]);
+    expect(kept.get('projects')?.ttl).toBe(60);
   });
 
   test('the Worker ships the explorer app as platform/explorer has it', ({ expect }) => {
     // `node scripts/build-worker.mjs` rewrites the module after the app changes.
     for (const name of ['index.html', 'app.js', 'app.css'] as const) {
       expect(appFiles[name], name).toBe(readFileSync(join(root, 'platform/explorer', name), 'utf8'));
+    }
+    for (const name of ['hub.html', 'hub.js'] as const) {
+      expect(hubFiles[name], name).toBe(readFileSync(join(root, 'platform/explorer', name), 'utf8'));
     }
   });
 });

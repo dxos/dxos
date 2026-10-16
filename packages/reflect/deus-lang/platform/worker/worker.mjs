@@ -14,7 +14,7 @@
 // settings the explorer stays read-only.
 
 import { addressOfFolder, projectAt } from './address.mjs';
-import { appFiles } from './gen/explorer-app.mjs';
+import { appFiles, hubFiles } from './gen/explorer-app.mjs';
 import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
 
@@ -95,6 +95,13 @@ const site = async (env, ctx, url, version, base, request) => {
   }
   const topLevel = path.lastIndexOf('/') === 0;
   if (topLevel && !version) {
+    // The host's front page lists every project (D200); a project's explorer is at its own path.
+    if (!base && url.pathname === '/') {
+      return hubPage('hub.html');
+    }
+    if (!base && path === '/hub.js') {
+      return hubPage('hub.js');
+    }
     // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish;
     // its files name no head, so they are served before the head is looked up.
     if (APP_ASSETS[path.slice(1)]) {
@@ -209,6 +216,14 @@ const livePage = (api, base) =>
 const APP_ASSETS = { 'app.js': 'text/javascript; charset=utf-8', 'app.css': 'text/css; charset=utf-8' };
 
 /** One of the app's files; it changes with a deploy, so it is cached only briefly. */
+const hubPage = (name) =>
+  new Response(hubFiles[name], {
+    headers: {
+      'content-type': name.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8',
+      'cache-control': name.endsWith('.js') ? 'public, max-age=60' : 'no-cache',
+    },
+  });
+
 const appAsset = (name) =>
   new Response(appFiles[name], {
     headers: { 'content-type': APP_ASSETS[name], 'cache-control': 'public, max-age=60' },

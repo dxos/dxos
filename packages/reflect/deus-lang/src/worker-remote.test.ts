@@ -401,8 +401,8 @@ describe('replication API', () => {
     expect((await call('/v1/toolchain/files/assets/shot', { method: 'DELETE', key: assets })).status).toBe(200);
     expect((await call('/v1/toolchain/files/assets/shot')).status).toBe(404);
     expect(await (await bucket.get('toolchain/trash/assets/shot'))?.text()).toBe('png');
-    // The explorer of PREFIX reads the same files.
-    const page = await call('/');
+    // The explorer of PREFIX reads the same files; `/` itself is the host's front page (D200).
+    const page = await call('/index.html');
     expect(await page.text()).toBe('index.html');
     expect(page.headers.get('content-type')).toBe('text/plain');
   });
@@ -416,7 +416,7 @@ describe('replication API', () => {
     await put('v/0000000000000002/meta.json', 'meta two');
     await put('HEAD', '0000000000000001\n');
 
-    const page = await call('/');
+    const page = await call('/index.html');
     expect(await page.text()).toBe('<html><head><base href="/v/0000000000000001/" /></head>one</html>');
     // A push that moves HEAD meanwhile changes nothing for a page that has already loaded.
     await put('HEAD', '0000000000000002');
@@ -639,7 +639,9 @@ describe('replication API', () => {
     expect((await call('/@acme/nothing/')).status).toBe(404);
     expect((await call('/@Acme/demo/')).status).toBe(404);
     expect(await livePage('/@dxos/toolchain/', '/@dxos/toolchain')).toMatch(/^\/v1\/@dxos\/toolchain\/live\//);
-    expect(await livePage('/', '')).toMatch(/^\/v1\/@dxos\/toolchain\/live\//);
+    expect(await livePage('/index.html', '')).toMatch(/^\/v1\/@dxos\/toolchain\/live\//);
+    // The root is the front page, which lists every project rather than drawing one (D200).
+    expect(await (await call('/')).text()).toContain('hub.js');
     // A project with a published site but no codebase head keeps the published page.
     await bucket.put('acme/static/site/v/0000000000000003/index.html', '<html><head></head>static</html>');
     await bucket.put('acme/static/site/HEAD', '0000000000000003');

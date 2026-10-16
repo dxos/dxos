@@ -8,7 +8,7 @@
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
 import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
-import { live } from './live.mjs';
+import { live, projectSummaries } from './live.mjs';
 import { nameAt, names, objects, packs } from './packs.mjs';
 
 /** `<level>-<sha256>`, the name of an immutable bundle (D50, D91). */
@@ -43,6 +43,13 @@ export const remoteApi = async (request, env, ctx, url) => {
   }
   if (parts[0] === 'keys') {
     return keysApi(request, env, ctx, parts.slice(1));
+  }
+  // `_` starts no project folder or owner, so the listing cannot shadow a project.
+  if (parts[0] === '_projects' && parts.length === 1) {
+    if (request.method !== 'GET') {
+      throw new HttpError(405, 'method not allowed');
+    }
+    return json(env.BUCKET ? await projectSummaries(env, ctx) : []);
   }
   const target = projectAt(parts);
   if (!target) {
@@ -349,6 +356,18 @@ export const toTrash = async (bucket, project, folder, name) => {
     },
   );
   await bucket.delete(key);
+};
+
+/** The folders directly under `prefix` (`toolchain/`, `dxos/`), following R2's pages. */
+export const listFolders = async (bucket, prefix) => {
+  const folders = [];
+  let cursor;
+  do {
+    const page = await bucket.list({ prefix, cursor, delimiter: '/' });
+    folders.push(...(page.delimitedPrefixes ?? []));
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return folders.sort();
 };
 
 /** Every key under `prefix`, without it, following R2's pages. */
