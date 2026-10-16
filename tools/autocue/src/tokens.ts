@@ -16,5 +16,8 @@ export const TOKENS = `
     --autocue-layer: 2147483647;
     /* Fits a title and a subtitle line with the padding the driver's banner always had. */
     --autocue-caption-height: 88px;
+    --autocue-panel-inset: 24px;
+    --autocue-panel-radius: 12px;
+    --autocue-letterbox: #000;
   }
 `;

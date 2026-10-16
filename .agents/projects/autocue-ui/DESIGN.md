@@ -32,8 +32,13 @@ One implementation of each piece of autocue's on-screen UI, with a storybook, us
 
 ## Frame
 
-- `mode: 'overlay'` — the bands are fixed over the page and the middle is empty (the recorded app shows
-  through). The driver uses this.
-- `mode: 'layout'` — a column: header, a `<slot>` for content, footer. The storybook and the terminal stage use
-  this.
-- A band with no text is not drawn.
+- `mode: 'overlay'` — the header and caption are fixed over the page and the recorded app shows through. The driver
+  uses this.
+- `mode: 'layout'` — the header and caption sit around a `<slot>` for content. The storybook and the terminal stage
+  use this.
+- `headerStyle` / `captionStyle`: `band` spans the width at the edge (and in layout takes space from the content);
+  `panel` floats over the content, centred and as wide as its text. Defaults: header `band`, caption `panel`.
+- The caption has a fixed height (`--autocue-caption-height`), so a step with or without a subtitle never moves it.
+- `size` (layout only) lays the frame out at the recording's pixel size and scales it to fit the host, letterboxed,
+  so text wraps where it will in the video. The story offers 16:10 (1280×800, the driver default), 16:9
+  (1920×1080) and fill.

@@ -9,7 +9,7 @@ import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { type FrameText } from './create-frame.ts';
+import { type FrameSize, type FrameText } from './create-frame.ts';
 import { Frame, type FrameProps } from './Frame.tsx';
 
 /** One take's script, as a flow would issue it: each step is a `caption` op; the last clears it. */
@@ -59,13 +59,22 @@ const MockApp = ({ step }: { step: number }) => (
 /** The bar react-ui-canvas's toolbars sit in, so the story's controls match them. */
 const PANEL = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
 
-type StoryProps = Pick<FrameProps, 'mode'> & {
+/** The recording sizes a take is rendered at: the driver's default viewport, and the ident's 1080p. */
+const SIZES = {
+  '16:10': { width: 1280, height: 800 },
+  '16:9': { width: 1920, height: 1080 },
+  'fill': undefined,
+} satisfies Record<string, FrameSize | undefined>;
+
+type StoryProps = Pick<FrameProps, 'mode' | 'headerStyle' | 'captionStyle'> & {
+  /** Layout only: the recording's aspect ratio, or fill the viewport. */
+  size?: keyof typeof SIZES;
   /** Milliseconds each caption holds while playing. */
   interval?: number;
 };
 
 /** Plays the script on a loop, as a recording would, with controls to stop and step it. */
-const TakeStory = ({ mode, interval = 2_500 }: StoryProps) => {
+const TakeStory = ({ mode, size = '16:10', headerStyle, captionStyle, interval = 2_500 }: StoryProps) => {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(true);
   useEffect(() => {
@@ -78,10 +87,19 @@ const TakeStory = ({ mode, interval = 2_500 }: StoryProps) => {
   }, [playing, interval]);
 
   return (
-    <Frame mode={mode} header={HEADER} caption={STEPS[step]}>
-      <MockApp step={step} />
-      {/* Floats above the caption band so the frame keeps the whole viewport, as it does in a recording. */}
-      <div className='fixed left-3 bottom-[100px] z-10'>
+    <>
+      <Frame
+        mode={mode}
+        header={HEADER}
+        caption={STEPS[step]}
+        size={SIZES[size]}
+        headerStyle={headerStyle}
+        captionStyle={captionStyle}
+      >
+        <MockApp step={step} />
+      </Frame>
+      {/* Outside the frame: story chrome, not part of the recording, so it is neither scaled nor letterboxed. */}
+      <div className='fixed left-3 bottom-3 z-10'>
         <Toolbar.Root classNames={PANEL}>
           <Button.Root
             variant='ghost'
@@ -103,7 +121,7 @@ const TakeStory = ({ mode, interval = 2_500 }: StoryProps) => {
           </span>
         </Toolbar.Root>
       </div>
-    </Frame>
+    </>
   );
 };
 
@@ -113,11 +131,19 @@ const TakeStory = ({ mode, interval = 2_500 }: StoryProps) => {
  * Test:
  * 1. The caption changes every 2.5s and is gone on the last step; the title band stays.
  * 2. The floating panel (bottom left): pause stops the script; next steps it by hand.
- * 3. Overlay pins both bands to the window edges over the app, as the driver paints them into a recorded page.
+ * 3. Size 16:10 and 16:9 keep that aspect ratio at any viewport, letterboxed; fill takes the whole viewport.
+ * 4. By default the header is a full-width band and the caption a floating panel as wide as its text, at a fixed
+ *    height. Panels: both float, and the app fills the frame beneath them. Bands: both span the width.
+ * 6. Overlay pins both bands to the window edges over the app, as the driver paints them into a recorded page.
  */
 const meta: Meta<typeof TakeStory> = {
   title: 'tools/autocue/Frame',
   render: (args) => <TakeStory {...args} />,
+  argTypes: {
+    size: { control: 'select', options: Object.keys(SIZES) },
+    headerStyle: { control: 'inline-radio', options: ['band', 'panel'] },
+    captionStyle: { control: 'inline-radio', options: ['band', 'panel'] },
+  },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
@@ -129,7 +155,15 @@ export default meta;
 type Story = StoryObj<typeof TakeStory>;
 
 export const Default: Story = {
-  args: { mode: 'layout' },
+  args: { mode: 'layout', size: '16:10' },
+};
+
+export const Panels: Story = {
+  args: { mode: 'layout', size: '16:10', headerStyle: 'panel', captionStyle: 'panel' },
+};
+
+export const Bands: Story = {
+  args: { mode: 'layout', size: '16:10', headerStyle: 'band', captionStyle: 'band' },
 };
 
 export const Overlay: Story = {

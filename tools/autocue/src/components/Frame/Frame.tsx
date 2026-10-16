@@ -4,12 +4,25 @@
 
 import React, { type CSSProperties, type PropsWithChildren, useEffect, useLayoutEffect, useRef } from 'react';
 
-import { type FrameHandle, type FrameMode, type FrameText, createFrame } from './create-frame.ts';
+import {
+  type BandStyle,
+  type FrameHandle,
+  type FrameMode,
+  type FrameSize,
+  type FrameText,
+  createFrame,
+} from './create-frame.ts';
 
 export type FrameProps = PropsWithChildren<{
   mode?: FrameMode;
   header?: FrameText;
   caption?: FrameText;
+  /** Layout only: the recording's size; the frame keeps its aspect ratio and scales to fit. */
+  size?: FrameSize;
+  /** Full-width `band` (default) or floating `panel`. */
+  headerStyle?: BandStyle;
+  /** Floating `panel` (default) or full-width `band`. */
+  captionStyle?: BandStyle;
   /** Overrides for the `--autocue-*` custom properties, which reach into the shadow root. */
   style?: CSSProperties;
 }>;
@@ -18,7 +31,16 @@ export type FrameProps = PropsWithChildren<{
  * The title and caption bands around a recording. The DOM and styles live in `create-frame.ts` so autocue's driver
  * can inject the same frame into pages without React; children are projected into its content slot.
  */
-export const Frame = ({ mode = 'layout', header, caption, style, children }: FrameProps) => {
+export const Frame = ({
+  mode = 'layout',
+  header,
+  caption,
+  size,
+  headerStyle = 'band',
+  captionStyle = 'panel',
+  style,
+  children,
+}: FrameProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const handle = useRef<FrameHandle | null>(null);
 
@@ -38,8 +60,19 @@ export const Frame = ({ mode = 'layout', header, caption, style, children }: Fra
     };
   }, [mode]);
 
-  useEffect(() => handle.current?.setHeader(header), [mode, header?.title, header?.subtitle]);
-  useEffect(() => handle.current?.setCaption(caption), [mode, caption?.title, caption?.subtitle]);
+  // Block bodies: a handle method's return value must not reach React as an effect cleanup.
+  useEffect(() => {
+    handle.current?.setHeader(header);
+  }, [mode, header?.title, header?.subtitle]);
+  useEffect(() => {
+    handle.current?.setCaption(caption);
+  }, [mode, caption?.title, caption?.subtitle]);
+  useEffect(() => {
+    handle.current?.setSize(size);
+  }, [mode, size?.width, size?.height]);
+  useEffect(() => {
+    handle.current?.setStyles({ header: headerStyle, caption: captionStyle });
+  }, [mode, headerStyle, captionStyle]);
 
   return (
     <div ref={ref} className='flex flex-col dx-fill' style={style}>
