@@ -14,7 +14,6 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Select from '@dxos/react-ui/Select';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 
@@ -360,9 +359,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     <Panel.Root role={role}>
       <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
-          {view === 'camera' && (
-            <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
-          )}
           <Tabs.Root
             orientation='horizontal'
             value={view}
@@ -411,32 +407,3 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 };
 
 TerraArticle.displayName = 'TerraArticle';
-
-type CameraTargetSelectProps = {
-  definitions: readonly TerraObject.TerraObject[];
-  value?: string;
-  onChange: (id: string) => void;
-};
-
-/** Picks which object the chase camera rides. */
-const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  return (
-    <Select.Root
-      value={value ? [value] : []}
-      onValueChange={({ value: [value] }) => value && onChange(value)}
-      items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
-    >
-      <Select.Trigger
-        placeholder={t('camera-target.placeholder')}
-        data-testid='terra.toolbar.camera-target'
-        classNames='min-w-32'
-      />
-      <Select.Content>
-        {definitions.map((definition) => (
-          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
-        ))}
-      </Select.Content>
-    </Select.Root>
-  );
-};
