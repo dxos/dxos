@@ -37,8 +37,8 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 
 ### Tasks
 
-- [ ] **Spacetime story fails** — `SceneArticle` story has no `withTheme` (raw translation keys) and seeds an empty
-      scene; it also fails to render.
+- [x] **Spacetime story fixed** — `withTheme` for translations; the story adds its cube; the canvas's first build waits
+      for scene refs to load, so a reopened scene no longer shows empty.
 - [ ] **Spacetime places new objects at the origin** — added objects overlap the default cube.
 - [ ] **Reading-list flow fails at "Add rows"** — every run; the table clip is cut from the column step instead.
 - [ ] **`ScrollArea` collapses fit-content parents** — its `container-type: inline-size` gives no intrinsic width.
