@@ -383,4 +383,21 @@ describe('deus CLI replication', () => {
       expect(existsSync(join(scratch, 'records', 'remotes', 'origin', 'packed'))).toBe(false);
     },
   );
+
+  test('who made a change reaches every store that pulls it (task ea772a6e)', { timeout: 120_000 }, ({ expect }) => {
+    const a = ['--codebase', join(scratch, 'authors-a')];
+    const b = ['--codebase', join(scratch, 'authors-b')];
+    const remote = join(scratch, 'authors-remote');
+    for (const c of [a, b]) {
+      deus('init', '--empty', ...c);
+      deus('remote', 'add', 'origin', remote, ...c);
+    }
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...a);
+    deus('add', file('authored.deus', 'def authored : Int := 1\n'), '--by', 'tester', '--message', 'authored', ...a);
+    expect(deus('push', ...a).code).toBe(0);
+    deus('pull', ...b);
+    deus('merge', 'origin.main', ...b);
+    const logged = JSON.parse(deus('log', '--json', ...b).stdout);
+    expect(logged.find((entry: { message: string }) => entry.message === 'authored')).toMatchObject({ by: 'tester' });
+  });
 });

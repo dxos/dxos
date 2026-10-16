@@ -598,8 +598,9 @@ const provider = (files) => ({
       return `(project (iri ${JSON.stringify(projectIri(files.project))}))\n`;
     }
     const meta = files.metas ? /^\/codebase\/meta\/([^/]+)$/.exec(path) : null;
-    if (meta) {
-      // A definition the snapshot does not name has no metadata at this causal.
+    // A history node's metadata (who made the change) is in no snapshot but never changes, so it is read
+    // from the packs; a definition the snapshot does not name has no metadata at this causal.
+    if (meta && (files.metas.has(meta[1]) || !files.texts.get(`o${meta[1]}`)?.startsWith('(causal'))) {
       return files.metas.get(meta[1]);
     }
     const key = keyOf(path);

@@ -242,12 +242,14 @@ def recordProvenance (dir : Text) (args : Args) (causal : Text) (objects : List 
         "provenance"
         ([Sexp.node "by" [Sexp.str agent], Sexp.node "at" [Sexp.str (IO.wallClock ())]] ++ prompt ++
           [Sexp.node "objects" (List.map Sexp.str objects)])
-      IO.writeFile (dir ++ "/provenance/" ++ causal) (Sexp.print form ++ "\n")
+      Codebase.writeProvenance dir causal form
 
-/-- Who produced a causal node, from its provenance record. -/
-def producedBy (dir : Text) (causal : Text) : {IO} Option Text := Option.bind
-  (IO.readFile (dir ++ "/provenance/" ++ causal))
-  (fun text => Option.map asText (metaField (Option.some (Sexp.read text)) "by"))
+/-- Who produced a causal node: this store's provenance record, else the node's metadata, which a pull brings. -/
+def producedBy (dir : Text) (causal : Text) : {IO} Option Text := Option.orElse
+  (Option.bind
+    (IO.readFile (dir ++ "/provenance/" ++ causal))
+    (fun text => Option.map asText (metaField (Option.some (Sexp.read text)) "by")))
+  (fun _ => Option.map asText (metaField (readMeta dir causal) "by"))
 
 /-- When a change was made, in seconds since the Unix epoch: its history node's `at` (D165), or
   else the time this store's provenance recorded (nanoseconds) for a change made here. -/

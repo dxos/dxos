@@ -2941,7 +2941,7 @@ function Explorer$sourceOf(printer, dir, ns, name, e) {
 rt.named(Explorer$sourceOf, "Explorer.sourceOf");
 
 function Cli$producedBy(dir, causal) {
-  return Option$bind(rt.perform("#IO", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/provenance/"), causal)]), rt.named((text) => Option$map(Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [Sexp$read(text)]), "by")), "Cli.producedBy/\u03bb"));
+  return Option$orElse(Option$bind(rt.perform("#IO", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/provenance/"), causal)]), rt.named((text) => Option$map(Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [Sexp$read(text)]), "by")), "Cli.producedBy/\u03bb")), rt.named((v) => Option$map(Sexp$asText, Codebase$metaField(Codebase$readMeta(dir, causal), "by")), "Cli.producedBy/\u03bb"));
 }
 rt.named(Cli$producedBy, "Cli.producedBy");
 

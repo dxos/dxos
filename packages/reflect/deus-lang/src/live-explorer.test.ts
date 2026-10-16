@@ -114,11 +114,8 @@ describe('live explorer (D192)', () => {
       writeFileSync(join(bucket, 'toolchain', 'heads', 'main'), head);
       process.env.DEUS_HOME = root;
       expect(deus('explore', '--out', join(scratch, 'site'), ...c)).toMatchObject({ stderr: '', code: 0 });
-      // Who made a change is this store's provenance, which bundles do not carry yet (task 778cdac2).
-      const site = (path: string) =>
-        JSON.parse(readFileSync(join(scratch, 'site', path), 'utf8'), (key, value) =>
-          key === 'by' ? undefined : value,
-        );
+      // Who made a change travels as its history node's metadata (task ea772a6e), so the pages agree on it too.
+      const site = (path: string) => JSON.parse(readFileSync(join(scratch, 'site', path), 'utf8'));
 
       const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
       const get = async (path: string) => {

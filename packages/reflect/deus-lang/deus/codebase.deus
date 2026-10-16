@@ -70,6 +70,16 @@ def writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
   writeMetaFile dir h form
   IO.appendFile (dir ++ "/metas.dirty") (h ++ "\n")
 
+/--
+  Records who made a change: `provenance/<causal>` for this store, and the history node's metadata (its `by`
+  and `prompt`), which a push sends with the node, so a store that pulls the change knows its author too.
+-/
+def writeProvenance (dir : Text) (causal : Text) (form : Sexp) : {IO} Unit :=
+  IO.mkdirp (dir ++ "/provenance")
+  IO.writeFile (dir ++ "/provenance/" ++ causal) (Sexp.print form ++ "\n")
+  let kept := List.filter (fun item => Sexp.head item == "by" || Sexp.head item == "prompt") (Sexp.args form)
+  if List.isEmpty kept then () else writeMetaFile dir causal (Sexp.node "meta" kept)
+
 def writeMetaFile (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
 
 /-- The metadata snapshot after `previous`: the hashes written since the last commit, with their

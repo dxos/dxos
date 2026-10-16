@@ -168,10 +168,9 @@ def field (form : Sexp) (key : Text) : Text := getOr (Option.map asText (metaFie
 
 /-- Who made a change, as `deus … --by` records it. -/
 def recordBy (dir : Text) (causal : Text) (author : Text) (at : Text) : {IO} Unit :=
-  IO.mkdirp (dir ++ "/provenance")
-  IO.writeFile (dir ++ "/provenance/" ++ causal) (Sexp.print (Sexp.node
+  Codebase.writeProvenance dir causal (Sexp.node
     "provenance"
-    [Sexp.node "by" [Sexp.str author], Sexp.node "at" [Sexp.str at], Sexp.node "objects" []]) ++ "\n")
+    [Sexp.node "by" [Sexp.str author], Sexp.node "at" [Sexp.str at], Sexp.node "objects" []])
 
 /-- Applies one request; returns a line saying what it did. A request that names nothing it can apply to throws. -/
 def applyOne (dir : Text) (form : Sexp) : {IO, Throw Text} Text :=
