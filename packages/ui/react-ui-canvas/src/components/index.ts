@@ -6,6 +6,7 @@ export * from './About/index.ts';
 export * from './Background/index.ts';
 export * from './Breadcrumbs/index.ts';
 export * from './ControlFrame/index.ts';
+export * from './FrameHeader/index.ts';
 export * from './Grid/index.ts';
 export * from './InspectorMenu/index.ts';
 export * from './LatticeGrid/index.ts';

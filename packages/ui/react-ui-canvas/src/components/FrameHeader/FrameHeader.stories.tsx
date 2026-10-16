@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SequenceHeader, type SequenceHeaderProps } from './SequenceHeader.tsx';
+import { FrameHeader, type FrameHeaderProps } from './FrameHeader.tsx';
 
 const SCENES = [
   { title: 'The Silo Problem', caption: 'Each application keeps its own data, fed only by its own source.' },
@@ -16,11 +16,11 @@ const SCENES = [
 ];
 
 /** Steps through a few scenes' titles, so previous, next and play can be tried. */
-const Stepping = (props: Partial<SequenceHeaderProps>) => {
+const Stepping = (props: Partial<FrameHeaderProps>) => {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   return (
-    <SequenceHeader
+    <FrameHeader
       {...SCENES[index]}
       index={index}
       count={SCENES.length}
@@ -41,7 +41,7 @@ const Stepping = (props: Partial<SequenceHeaderProps>) => {
  * 2. Play turns to pause and back.
  */
 const meta: Meta<typeof Stepping> = {
-  title: 'plugins/plugin-canvas/components/SequenceHeader',
+  title: 'ui/react-ui-canvas/FrameHeader',
   render: (args) => <Stepping {...args} />,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };

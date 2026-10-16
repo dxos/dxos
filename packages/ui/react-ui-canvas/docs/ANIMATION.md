@@ -34,7 +34,7 @@ each piece to the general mechanism that replaces it.
 | Built for the sample                                                                 | Problem it solved                                                   | General mechanism                                     |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------- |
 | `DataFlowSpec`, `layout.ts` (sources, hub, buckets, sinks as code)                   | Lay out the diagram                                                 | Ordinary nodes, links and composite objects (§4)      |
-| `CHAPTERS`, `DataFlowSequence`, `SequenceHeader`                                     | Titles, captions, chapter order, prev/next                          | Timeline markers (§5.6)                               |
+| `CHAPTERS`, `DataFlowSequence`, `SequenceHeader` (now `FrameHeader`)                 | Titles, captions, chapter order, prev/next                          | Timeline markers (§5.6)                               |
 | `refitKey`, `refitDuration`, `drift`, `DRIFT` speed ramp                             | Move the camera                                                     | A camera track (§5.5)                                 |
 | `useTween`, `useRun` (`tween.ts`)                                                    | Fade and ease properties                                            | Tracks with keyframes and easing (§5.2)               |
 | `DataFlowSimulation` (`simulation.ts`): spawn, route, settle, hand-off, `agentReads` | Molecules that leave sources, travel channels and pack into buckets | One agent-written flow generator (§6.3)               |
@@ -229,7 +229,7 @@ physics if needed.
 `Marker = { t, label, caption? }` names a point on the timeline. Markers replace the sample's chapters:
 
 - The timeline bar draws them as ticks; prev and next jump between them.
-- An optional caption overlay (`SceneView.Caption`, the `SequenceHeader` component moved into the engine) shows the
+- An optional caption overlay (`SceneView.Caption`, built on `FrameHeader`, the sample's `SequenceHeader` now in the engine) shows the
   current marker's label and caption, and its counter (`2 / 5`).
 - Playback can pause at each marker ("presentation mode"), which is how the sample's sequence stepped chapter by
   chapter.
