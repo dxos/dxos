@@ -616,8 +616,36 @@ export const nameAt = async (bucket, project, causal, name) => {
   if (!snapshot) {
     return undefined;
   }
-  // The walk is the toolchain's own `Codebase.lookupNameWith`, compiled from DEUS (`Worker.Names.entryAt`).
-  const found = await nameRules.entryAt((hash) => lookup(bucket, project, hash, 1), snapshot, name);
+  // The walk is the toolchain's own `Codebase.lookupNameWith`, compiled from DEUS (`Worker.Names.entryAt`). It reads
+  // a node's parts one by one, so the reader fetches them all in one batch as soon as their node arrives.
+  const read = new Map();
+  const reader = (hash) => {
+    if (!read.has(hash)) {
+      read.set(
+        hash,
+        lookup(bucket, project, hash, 1).then((text) => {
+          const parts = [...(text ?? '').matchAll(/\(part "([0-9a-f]{64})"\)/g)].map((match) => match[1]);
+          const fresh = parts.filter((part) => !read.has(part));
+          if (fresh.length > 0) {
+            const batch = lookupMany(
+              bucket,
+              project,
+              fresh.map((part) => [part, 1]),
+            );
+            for (const part of fresh) {
+              read.set(
+                part,
+                batch.then((texts) => texts.get(`1:${part}`) ?? lookup(bucket, project, part, 1)),
+              );
+            }
+          }
+          return text;
+        }),
+      );
+    }
+    return read.get(hash);
+  };
+  const found = await nameRules.entryAt(reader, snapshot, name);
   if (found.missing) {
     throw new HttpError(404, found.missing);
   }
