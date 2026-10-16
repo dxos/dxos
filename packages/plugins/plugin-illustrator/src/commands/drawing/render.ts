@@ -76,7 +76,7 @@ export const handler = Effect.fn(function* ({ file, out, plain }: RenderArgs) {
       FormBuilder.set('crossings', crossings),
       FormBuilder.set('bends', bends),
       FormBuilder.set('file', path.relative(process.cwd(), target) || target),
-      FormBuilder.set('size', formatBytes(svg.length)),
+      FormBuilder.set('size', formatBytes(new TextEncoder().encode(svg).byteLength)),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
     for (const note of notes) {

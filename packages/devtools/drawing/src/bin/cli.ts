@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { type Report, render, source } from './render.ts';
+import { type Report, render, source } from '../render.ts';
 
 const USAGE = `Usage: drawing <command> [options] <file.dx>...
 
@@ -116,7 +116,10 @@ const main = async (): Promise<number> => {
     }
   }
   if (values.json) {
-    console.log(JSON.stringify(reports.length === 1 ? reports[0] : reports, null, 2));
+    // As with the text report: with the SVG on stdout, the JSON goes to stderr.
+    (values.out === '-' ? console.error : console.log)(
+      JSON.stringify(reports.length === 1 ? reports[0] : reports, null, 2),
+    );
   }
   return failed ? 1 : 0;
 };

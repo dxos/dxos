@@ -22,16 +22,18 @@ export DX_PROFILE="${DEMO_DX_PROFILE:-autocue-drawing-sh}"
 # The production EDGE, which the `bundle-e2e` Composer the take opens at the end also syncs through.
 export DX_LOCAL_DEV=0
 
+# Clears only a directory this script set up before (marked), or an empty one: never a checkout by mistake.
+# Checked before the profile reset below, so a wrong --cwd changes nothing.
+if [ -n "$(ls -A)" ] && [ ! -f .drawing-demo ]; then
+  echo "agent-demo.sh: $PWD is not empty and was not set up by this script; give the stage an empty --cwd." >&2
+  return 1
+fi
+
 # The CLI has no offline way to create an identity (`dx account signup` needs the hub), so the take provisions
 # one through the CLI's own test bootstrap.
 dx reset --hard >/dev/null 2>&1
 (cd "$DEMO_ROOT/packages/devtools/cli" && bun run src/testing/bootstrap-profile.ts >/dev/null 2>&1)
 
-# Clears only a directory this script set up before (marked), or an empty one: never a checkout by mistake.
-if [ -n "$(ls -A)" ] && [ ! -f .drawing-demo ]; then
-  echo "agent-demo.sh: $PWD is not empty and was not set up by this script; give the stage an empty --cwd." >&2
-  return 1
-fi
 rm -rf ./* ./.claude ./.git
 touch .drawing-demo
 cp -r "$DEMO_HERE/fixtures/shop/." .

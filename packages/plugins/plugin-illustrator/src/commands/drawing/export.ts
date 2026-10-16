@@ -47,7 +47,7 @@ export const handler = Effect.fn(function* ({ id, out }: ExportArgs) {
   } else {
     const builder = FormBuilder.make({ title: drawing.name ?? 'Drawing' }).pipe(
       FormBuilder.set('file', target),
-      FormBuilder.set('size', formatBytes(svg.length)),
+      FormBuilder.set('size', formatBytes(new TextEncoder().encode(svg).byteLength)),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

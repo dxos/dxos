@@ -84,10 +84,10 @@ const until = async (page, predicate, { timeout = 60_000, every = 400 } = {}) =>
 
 /** Claude Code is working while it offers "esc to interrupt"; it is done once that has been gone a while. */
 const agentIdle = async (page, { timeout = 360_000, quiet = 4_000 } = {}) => {
-  // A fast turn can finish before the indicator is ever seen; the idle check below still holds.
-  await until(page, (text) => text.includes('esc to interrupt'), { timeout: 30_000 }).catch(() => {});
   const deadline = Date.now() + timeout;
   let idleSince;
+  // Until the turn is seen working, idle may only mean it has not started, so it must stay idle longer.
+  let worked = false;
   while (Date.now() < deadline) {
     const text = await screen(page);
     // The fixture's settings allow the commands the skill asks for; if the agent runs anything else, answer the
@@ -99,10 +99,11 @@ const agentIdle = async (page, { timeout = 360_000, quiet = 4_000 } = {}) => {
       continue;
     }
     if (text.includes('esc to interrupt') || !ready(text)) {
+      worked = true;
       idleSince = undefined;
     } else {
       idleSince ??= Date.now();
-      if (Date.now() - idleSince > quiet) {
+      if (Date.now() - idleSince > (worked ? quiet : quiet * 4)) {
         return;
       }
     }

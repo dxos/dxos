@@ -4,4 +4,4 @@
 // Copyright 2026 DXOS.org
 //
 
-void import('../dist/src/cli.js');
+void import('../dist/src/bin/cli.js');
