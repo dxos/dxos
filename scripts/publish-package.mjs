@@ -10,7 +10,7 @@
 //   1. If the package is not on the registry yet: build it, stamp `version` to 0.0.0 (the
 //      bootstrap slot — the real version is left for `publish-all.yml`), `pnpm publish`, restore
 //      the version. `pnpm` (not npm) rewrites `workspace:`/`catalog:` specifiers to concrete versions.
-//   2. With `--trust`: create the trusted publisher with `npm trust github` (npm >= 11.10). npm asks
+//   2. With `--trust`: create the trusted publisher with `npm trust github` (npm >= 11.15). npm asks
 //      for a browser 2FA confirmation, so run this in an interactive terminal. Without `--trust` the
 //      script prints the manual settings and opens the package's npm access page.
 // Already-published packages skip step 1, so re-running for a package that only lacks a trusted
@@ -38,8 +38,8 @@ const BOOTSTRAP_VERSION = '0.0.0';
 const TRUST_REPOSITORY = 'dxos/dxos';
 const TRUST_WORKFLOW = 'publish-all.yml';
 
-// First npm release with the `trust` command.
-const NPM_TRUST_MIN_VERSION = [11, 10, 0];
+// First npm release whose `trust github` accepts `--allow-publish` (11.10–11.14 have `trust` without it).
+const NPM_TRUST_MIN_VERSION = [11, 15, 0];
 
 const USAGE =
   'Usage: node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--dry-run] [--no-build] [--no-open]';
@@ -196,13 +196,15 @@ const configureTrust = (name, dryRun) => {
     TRUST_WORKFLOW,
     '--allow-publish',
     '--yes',
+    // npm's spinner otherwise hides the 2FA URL and its ENTER prompt.
+    '--no-progress',
   ];
   // Printed rather than run with npm's own --dry-run, which still demands a 2FA confirmation.
   if (dryRun) {
     console.log(`\nWould run: ${command} ${args.join(' ')}`);
     return;
   }
-  console.log('\nnpm asks for a browser 2FA confirmation for this step.');
+  console.log('\nnpm prints a URL and waits ~5 minutes: press ENTER (or open the URL) and approve in the browser.');
   run(command, args);
 };
 

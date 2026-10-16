@@ -37,7 +37,7 @@ restores the version in `package.json`; `already published` means only the trust
 
 ### 3. Ask the user how to configure the trusted publisher
 
-1. **Automatic (recommended)** — the script runs `npm trust github` (npm ≥ 11.10, fetched with `npx` when the
+1. **Automatic (recommended)** — the script runs `npm trust github` (npm ≥ 11.15, fetched with `npx` when the
    local npm is older). The user must authenticate: npm prints a URL and waits for a browser 2FA confirmation.
 2. **Guided** — the script publishes (if needed), prints the settings and opens the package's npm access page;
    the user enters them by hand.
@@ -46,7 +46,8 @@ restores the version in `package.json`; `already published` means only the trust
 
 The real run is interactive (`npm login` and the 2FA confirmation read from a TTY), so do not run it with the
 Bash tool. Run it in the user's Terminal panel with `mcp__terminal__run_in_terminal`, or give the user the
-command:
+command. npm needs ~40s before it prints the 2FA URL, then waits ~5 minutes: tell the user to press ENTER in
+that tab as soon as the URL appears (an expired window ends in `E404 … /-/v1/done`; just re-run):
 
 ```bash
 node scripts/publish-package.mjs @dxos/<name> --trust
@@ -95,12 +96,13 @@ or use the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-pub
 
 ## Troubleshooting
 
-| Symptom                                                  | Cause / fix                                                                                   |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `EOTP` / "requires a one-time password"                  | Expected on `trust` and some publishes; complete the browser confirmation at the printed URL. |
-| `Unknown command: "trust"`                               | npm < 11.10 called directly; the script uses `npx npm@11.10.0` — run it through the script.   |
-| `ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL`             | Missing `node_modules`; run `pnpm install`.                                                   |
-| `publish-all.yml` fails with 404/ENEEDAUTH for a package | No trusted publisher for it yet; run the script with `--trust`.                               |
+| Symptom                                                  | Cause / fix                                                                                                                                                                            |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EOTP` / "requires a one-time password"                  | Expected on `trust` and some publishes; complete the browser confirmation at the printed URL.                                                                                          |
+| `trust` reports `permissions: publish, stage publish`    | npm adds stage publish even when only `--allow-publish` is passed (seen with npm 11.15.0). Harmless for `publish-all.yml`; to match the guide, untick it on the package's access page. |
+| `Unknown command: "trust"`                               | npm < 11.15 called directly; the script uses `npx npm@11.15.0` — run it through the script.                                                                                            |
+| `ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL`             | Missing `node_modules`; run `pnpm install`.                                                                                                                                            |
+| `publish-all.yml` fails with 404/ENEEDAUTH for a package | No trusted publisher for it yet; run the script with `--trust`.                                                                                                                        |
 
 ## Rules
 
