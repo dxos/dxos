@@ -15,6 +15,7 @@ import { IllustratorCapabilities, IllustratorEvents } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['browser', 'node', 'tauri'],
 });
+export const Commands = AppCapability.commands(() => import('./commands.ts'));
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: IllustratorEvents.Start,
 });

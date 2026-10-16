@@ -451,6 +451,14 @@ for (const caption of captions) {
   }
 }
 
+// The driver's `speed` ops, as source frame ranges: inside one only every `factor`-th frame survives.
+const speedRanges = (timeline.speed ?? []).map((change, index, all) => ({
+  from: Math.round((change.ms / 1000) * options.fps),
+  to: all[index + 1] ? Math.round((all[index + 1].ms / 1000) * options.fps) : Infinity,
+  factor: change.factor,
+}));
+const speedAt = (frame) => speedRanges.find(({ from, to }) => frame >= from && frame < to);
+
 // Source frame -> output frame, so the caption times can be remapped onto the trimmed timeline.
 const outputFrameOf = new Map();
 
@@ -468,7 +476,9 @@ for await (const chunk of decoder.stdout) {
     const cap = readingWindow.has(index) ? Math.max(captionHoldFrames, holdFrames) : holdFrames;
     // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
     // frame fewer than it promised, so the estimate could never be trusted for tuning.
-    if (staticRun <= cap) {
+    const range = speedAt(index);
+    const skipped = range !== undefined && range.factor > 1 && (index - range.from) % range.factor !== 0;
+    if (staticRun <= cap && !skipped) {
       if (!encoder.stdin.write(frame)) {
         await once(encoder.stdin, 'drain');
       }

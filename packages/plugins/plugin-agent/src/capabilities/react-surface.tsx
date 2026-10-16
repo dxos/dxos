@@ -17,6 +17,7 @@ import {
   AgentEmailSetup,
   AgentKnowledge,
   AgentPrivateChat,
+  AgentsPanel,
   AgentsSettings,
   BrainStore,
   EmailChannelProperties,
@@ -25,6 +26,7 @@ import {
 import { AgentCompanion, AgentEmail } from '#types';
 
 import { AGENTS_SECTION_TYPE } from '../constants.ts';
+import { AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -83,6 +85,11 @@ export default Capability.makeModule(() =>
         ),
         component: BrainStore,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      Surface.create({
+        id: 'accountAgents',
+        filter: AppSurface.literal(AppSurface.Article, AGENTS_PANEL_PATH),
+        component: AgentsPanel,
       }),
       // An email channel's address and sender allowlist, wherever its properties show (the agent's channel list too).
       Surface.create({
