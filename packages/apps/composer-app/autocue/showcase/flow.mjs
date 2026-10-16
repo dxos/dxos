@@ -267,7 +267,8 @@ const BATCHES = {
       await page.locator('.cm-content').last().click();
       await type(
         page,
-        '# Field notes\n\nLocal-first apps keep **your data** on your device.\n\n- Works offline\n- Syncs peer to peer\n',
+        // The editor continues a list on Enter, so only the first item types its own marker.
+        '# Field notes\n\nLocal-first apps keep **your data** on your device.\n\n- Works offline\nSyncs peer to peer',
         28,
       );
     }),
