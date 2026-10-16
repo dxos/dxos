@@ -1,0 +1,3 @@
+node A "Car"
+node B "Engine" right-of A
+edge A composes B

@@ -1,0 +1,43 @@
+---
+id: org.dxos.drawing
+name: drawing.sh
+version: 0.1.0
+---
+
+drawing.sh: diagrams a coding agent can draw. A skill teaches the agent the semantic diagram language; the
+`drawing` CLI lays a `.dx` file out with `@dxos/diagram` and writes an SVG that embeds its source.
+
+## Extensions
+
+| Term   | URI                     |
+|--------|-------------------------|
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## QA
+
+```mdl
+test QA-1: An agent with the skill draws a repo, changes the drawing, and imports it into a space
+  desc: |
+    The agent-first path end to end, recorded by `autocue/agent-demo.mjs`.
+  actors: human
+  covers: []
+  status: unverified
+  given:
+    - agent: Claude Code signed in, in a copy of `autocue/fixtures/shop` with the drawing skill installed
+    - drawing and dx on PATH; dx has an identity and a space
+  steps:
+    - name: Install the skill
+      do: Run `npx skills add dxos/dxos --skill drawing` in the repo.
+      expect: .claude/skills/drawing/SKILL.md exists
+    - name: Ask the agent for a diagram
+      do: Ask "Draw the architecture of this repo with the drawing skill. Save it as arch.dx."
+      expect: |
+        the agent reads the code, writes arch.dx and runs `drawing render arch.dx`; arch.dx.svg is written and
+        shows the web client, the API, the worker and their stores with every arrow routed
+    - name: Ask for a change
+      do: Ask "Group Stripe and Postmark as "External services" and render it again."
+      expect: arch.dx gains the group; the re-rendered SVG shows it and the report still has no errors
+    - name: Put it in a Composer space
+      do: Ask "Import arch.dx.svg into my DXOS space."
+      expect: the agent runs `dx drawing import arch.dx.svg`; a Drawing named "arch" is in the space
+```
