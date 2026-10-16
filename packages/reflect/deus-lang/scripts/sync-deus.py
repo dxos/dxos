@@ -44,6 +44,13 @@ MOUNT = re.compile(r'(?<![\w.])lib\.[A-Za-z0-9_]+\.')
 STRING = re.compile(r'"(?:\\.|[^"\\])*"')
 # Each flat name the codebase has only under a mount, with its mounted name.
 MOUNTED = {}
+# Files the toolchain writes out that the codebase embeds (`deus embed`), so it builds them without git (task 86d7b02a).
+EMBEDDED = [
+    ('platform/js/runtime.mjs', 'JsGen.runtimeText'),
+    ('platform/explorer/index.html', 'Explorer.App.html'),
+    ('platform/explorer/app.js', 'Explorer.App.js'),
+    ('platform/explorer/app.css', 'Explorer.App.css'),
+]
 
 
 def deus(*args, codebase, seed=None, check=True):
@@ -314,6 +321,17 @@ def rebuild_seed(codebase):
         return True
 
 
+def embed_files(codebase):
+    """Embeds each of EMBEDDED whose text changed since the codebase last embedded it."""
+    import hashlib
+    for file, name in EMBEDDED:
+        sha = hashlib.sha256((ROOT / file).read_bytes()).hexdigest()
+        shown = deus('view', name, codebase=codebase, check=False)
+        if sha not in shown.stdout:
+            deus('embed', file, '--as', name, '--quiet', codebase=codebase)
+            print(f'  embedded {file} as {name}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
@@ -321,6 +339,7 @@ def main():
     parser.add_argument('--overwrite', action='store_true', help='replace declarations edited in deus/ since the last sync or commit, losing those edits')
     args = parser.parse_args()
     codebase = Path(args.codebase)
+    embed_files(codebase)
     if args.names:
         names, deleted = list(args.names), []
     else:

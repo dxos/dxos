@@ -436,6 +436,28 @@ def namespaceOf (dir : Text) (branch : Text) : {IO, Throw Text} Map Text Entry :
 /-- The current branch's namespace. -/
 def current (dir : Text) : {IO, Throw Text} Map Text Entry := Codebase.namespaceOf dir (currentBranch dir)
 
+/-- The text of a file the toolchain writes out, such as the js target's runtime or the explorer app: `path` under
+  `$DEUS_HOME` when there is a checkout there, else the copy the codebase embeds under `name` (`deus embed <file>
+  --as <name>`, which scripts/sync-deus.py keeps current). A checkout wins, so an edit there is never shadowed by an
+  older copy; a codebase alone still builds them (task 86d7b02a). -/
+def platformText (dir : Text) (name : Text) (path : Text) : {IO, Throw Text} Text :=
+  let checkout := Option.bind (IO.getEnv "DEUS_HOME") (fun home => IO.readFile (home ++ "/" ++ path))
+  match checkout with
+  | Option.some text => text
+  | Option.none =>
+      let ns := Codebase.current dir
+      let embedded :=
+        match (Map.lookup name ns, Map.lookup "Embed.text" ns) with
+        | (Option.some (Entry.term h), Option.some (Entry.term embedText)) =>
+            match readObject dir h with
+            | Option.some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "ref", Sexp.str callee], Sexp.list [Sexp.sym "text", Sexp.str sha]]]) =>
+                if callee == embedText then IO.readFile (Assets.path dir sha) else Option.none
+            | _ => Option.none
+        | _ => Option.none
+      match embedded with
+      | Option.some text => text
+      | Option.none => throw ("no " ++ path ++ " under $DEUS_HOME, and the codebase embeds no " ++ name)
+
 /-- Records a new snapshot on the current branch, keeping its tasks. Returns the new causal hash. -/
 def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text} Text :=
   let branch := currentBranch dir

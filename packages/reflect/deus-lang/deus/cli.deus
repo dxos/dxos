@@ -2258,14 +2258,7 @@ def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp
   let parts := Text.split out "/"
   let folder := if List.length parts < 2 then "." else join "/" (List.take (List.length parts - 1) parts)
   let base := getOr (last? parts) out
-  let home :=
-    match IO.getEnv "DEUS_HOME" with
-    | Option.some h => h
-    | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
-  let runtime :=
-    match IO.readFile (home ++ "/platform/js/runtime.mjs") with
-    | Option.some text => text
-    | Option.none => Throw.throw ("cannot read " ++ home ++ "/platform/js/runtime.mjs")
+  let runtime := Codebase.platformText dir "JsGen.runtimeText" "platform/js/runtime.mjs"
   -- Wrapped: a closed-row function where `{Throw Text | r}` is expected hangs the checker (task in TASKS.md).
   let (code, map) := JsGen.compile
     (fun h => fetch h)

@@ -328,18 +328,15 @@ def defByHash (s : Site) (h : Text) : {IO} Json :=
   | Option.some (name, e) => defJson s name e
   | Option.none => Json.null
 
+/-- The name the codebase embeds an app file under (`deus embed platform/explorer/app.js --as Explorer.App.js`). -/
+def appName (file : Text) : Text :=
+  if file == "index.html" then "Explorer.App.html" else if file == "app.js" then "Explorer.App.js" else "Explorer.App.css"
+
 /-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
 def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
-  let home :=
-    match IO.getEnv "DEUS_HOME" with
-    | Option.some h => h
-    | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
   let s := Explorer.site dir
   IO.mkdirp (out ++ "/def")
-  forEach appFiles (fun f =>
-    match IO.readFile (home ++ "/platform/explorer/" ++ f) with
-    | Option.some text => IO.writeFile (out ++ "/" ++ f) text
-    | Option.none => Throw.throw ("missing " ++ home ++ "/platform/explorer/" ++ f))
+  forEach appFiles (fun f => IO.writeFile (out ++ "/" ++ f) (Codebase.platformText dir (Explorer.appName f) ("platform/explorer/" ++ f)))
   let events := eventsOf s
   IO.writeFile (out ++ "/events.json") (Json.render (fst events))
   let featureMaps := featuresOfSite s

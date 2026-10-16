@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, test } from 'vitest';
@@ -87,5 +88,26 @@ describe('Js.Async on the js target', () => {
     const refused = deus('build', 'Wait.partial', '-o', join(scratch, 'partial.mjs'), '--js', ...c);
     expect(refused.code).not.toBe(0);
     expect(refused.stderr).toContain('passes a lambda that waits to List.map');
+  });
+
+  // Task 86d7b02a: with no checkout under $DEUS_HOME, the codebase's embedded copy of the runtime is written out.
+  test('builds from the codebase alone, with the runtime it embeds', { timeout: 240_000 }, ({ expect }) => {
+    process.env.DEUS_HOME = root;
+    const c = ['--codebase', join(scratch, 'alone')];
+    expect(deus('init', ...c).code).toBe(0);
+    expect(deus('add', file('one.deus', 'def one (u : Unit) : Int := 1\n'), ...c).code).toBe(0);
+    expect(
+      deus('embed', file('runtime.mjs', '// the embedded runtime\n'), '--as', 'JsGen.runtimeText', ...c).code,
+    ).toBe(0);
+    const home = process.env.DEUS_HOME;
+    process.env.DEUS_HOME = join(scratch, 'no-checkout');
+    try {
+      const out = join(scratch, 'alone-out', 'one.mjs');
+      const built = deus('build', 'one', '-o', out, '--js', ...c);
+      expect(built.stderr).toBe('');
+      expect(readFileSync(join(scratch, 'alone-out', 'deus-runtime.mjs'), 'utf8')).toBe('// the embedded runtime\n');
+    } finally {
+      process.env.DEUS_HOME = home;
+    }
   });
 });
