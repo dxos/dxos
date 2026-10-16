@@ -1,0 +1,24 @@
+# The moon toolchain plugin `.moon/toolchains.yml` loads, committed as `dependency-closure.wasm`. A Rust
+# crate with no package.json; CI's setup action installs the toolchain `rust-toolchain.toml` pins.
+layer: tool
+language: rust
+
+tasks:
+  # Rebuilds the committed plugin; run it after changing the crate (README.md).
+  cargo-build:
+    command: bash scripts/build.sh
+    options:
+      cache: false
+      runInCI: false
+  cargo-test:
+    command: cargo test
+    inputs:
+      - src/**/*.rs
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+  # What CI's `:test` sweep selects.
+  test:
+    command: noop
+    deps:
+      - cargo-test

@@ -235,6 +235,22 @@ describe('synchronous query propagation', () => {
       expect(ids(query.results)).toEqual([alice.id]);
     });
 
+    test('objects enter an unordered query in id order, not the order they were added', async () => {
+      const db = await openDatabase();
+      const [lower, higher] = [EntityId.random(), EntityId.random()];
+      const query = db.query(Filter.type(TestSchema.Person));
+      recordUpdates(query);
+
+      db.add(Obj.make(TestSchema.Person, { id: higher, name: 'higher' }));
+      db.add(Obj.make(TestSchema.Person, { id: lower, name: 'lower' }));
+      expect(ids(query.results)).toEqual([lower, higher]);
+
+      // An equivalent query computed from scratch agrees, as does the live one once the index answers.
+      expect(ids(await db.query(Filter.and(Filter.type(TestSchema.Person))).run())).toEqual([lower, higher]);
+      await waitForIndexAnswer(db, query);
+      expect(ids(query.results)).toEqual([lower, higher]);
+    });
+
     test('a by-id query is complete and current without waiting for the index', async () => {
       const db = await openDatabase();
       const ada = db.add(person({ name: 'ada' }));

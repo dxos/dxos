@@ -304,7 +304,11 @@ describe('Relay', () => {
             ['assistant', 'Rich asked me to ask you to review the PR.'],
             ['assistant', 'Thanks!'],
           ]);
-          expect(messages.map((message) => message.properties)).toEqual([undefined, undefined]);
+          // Marked for the host to post: the only messages it posts for the agent.
+          expect(messages.map((message) => message.properties)).toEqual([
+            { [AgentChannels.OUTBOUND_PROPERTY]: true },
+            { [AgentChannels.OUTBOUND_PROPERTY]: true },
+          ]);
         }
 
         const reported = yield* Operation.invoke(RelayOperation.SendMessage, {

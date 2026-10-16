@@ -76,6 +76,25 @@ export const Edit = Operation.make({
   services: [Capability.Service, Database.Service],
 });
 
+export const Convert = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.convert'),
+    name: 'Convert Drawing',
+    description:
+      'Moves a drawing onto another variant (renderer) by re-applying its scene to a fresh canvas of that variant, e.g. to make a read-only SVG drawing editable in Excalidraw. Shapes not managed by the scene DSL are not carried over.',
+    icon: 'ph--swap--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to convert.' }),
+    variant: Schema.String.annotate({ description: 'Target variant id (canvas typename), e.g. `excalidraw.com/2`.' }),
+  }),
+  output: Schema.Struct({
+    ...SceneOutput,
+    upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids written to the new canvas.' }),
+  }),
+  services: [Capability.Service, Database.Service],
+});
+
 export const Draw = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.draw'),

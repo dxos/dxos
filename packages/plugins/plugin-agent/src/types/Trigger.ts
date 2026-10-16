@@ -91,6 +91,11 @@ export const Trigger = Schema.Struct({
    */
   rules: Schema.optional(Schema.String),
   createdAt: Format.DateTime,
+  /**
+   * URI of the agent the watch was set through, naming its space: the space its goal and recipient live in, which
+   * delivers what it wakes (`AgentPresence.delivers`). Absent on triggers stored before watches recorded it.
+   */
+  origin: Schema.optional(Schema.String),
 });
 
 export interface Trigger extends Schema.Schema.Type<typeof Trigger> {}

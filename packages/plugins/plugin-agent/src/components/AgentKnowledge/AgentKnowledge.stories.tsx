@@ -197,17 +197,9 @@ const PROFILE_FACTS: RDF.Fact[] = [
   rdfFact('p-4', [entity('david', 'David'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-5', [entity('emma', 'Emma'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-6', [entity('bob', 'Bob'), 'works at', entity('acme', 'Acme')], PROFILE),
-  // A memory's claims are text, not entities: the card counts them and the browser opens them as statements.
-  rdfFact(
-    'p-7',
-    [entity('alice', 'Alice Chen'), 'claim', { kind: 'literal', literal: 'Alice leads the indexing team.' }],
-    PROFILE,
-  ),
-  rdfFact(
-    'p-8',
-    [entity('alice', 'Alice Chen'), 'claim', { kind: 'literal', literal: 'Alice prefers async reviews.' }],
-    PROFILE,
-  ),
+  // Literal objects are not entities: the card counts them and the browser opens them as statements.
+  rdfFact('p-7', [entity('alice', 'Alice Chen'), 'has role', { kind: 'literal', literal: 'indexing lead' }], PROFILE),
+  rdfFact('p-8', [entity('alice', 'Alice Chen'), 'prefers', { kind: 'literal', literal: 'async reviews' }], PROFILE),
 ];
 
 const CARD_OPTIONS = {
@@ -308,7 +300,6 @@ const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
   const { nodes, edges } = useMemo(() => toGraph(knowledge), [knowledge]);
   return (
     <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
-      <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
       <AgentKnowledge.Entities cards={scenario === 'empty' ? [] : ENTITY_CARDS} />
       <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />

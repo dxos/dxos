@@ -151,6 +151,9 @@
       "path": "packages/common/display-name/tsconfig.json"
     },
     {
+      "path": "packages/devtools/drawing/tsconfig.json"
+    },
+    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {

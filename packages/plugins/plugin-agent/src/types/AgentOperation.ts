@@ -7,11 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { Channel } from '@dxos/types';
 
@@ -234,6 +235,66 @@ export const OpenPrivateChat = Operation.make({
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),
     person: Ref.Ref(Obj.Unknown),
+  }),
+});
+
+/**
+ * Gives a new agent its own identity on EDGE: a brain with a self-owned HALO identity and a default space it owns,
+ * which the caller joins; the members of that space are the agent's admins, and its creator is the owner. The agent
+ * takes the brain's DID as soon as EDGE answers. Only `mint` provisions an agent without a DID, since the DID renames
+ * its brain; for an agent with one, it finishes the join its creator's first call left undone. A client without an
+ * EDGE client changes nothing; a refusal fails, and is safe to retry, since EDGE answers its creator's repeated
+ * request with the same identity.
+ */
+export const EnsureIdentity = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureIdentity'),
+    name: 'Ensure agent identity',
+    description: "Gives the agent its own identity and space on EDGE and puts the caller in the agent's space.",
+    icon: 'ph--identification-card--regular',
+    // Out of reach of models and MCP clients: provisioning an agent that has already talked would rename its brain.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent, in the space the operation runs in.' }),
+    mint: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Provisions an agent without a DID; only for one created a moment ago, whose brain is empty.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    provisioned: Schema.Boolean.annotate({ description: 'True when EDGE minted an identity for the agent now.' }),
+    identityDid: Schema.optional(Schema.String.annotate({ description: "The agent's DID, when it has one." })),
+  }),
+});
+
+/**
+ * Brings an agent into the space the operation runs in, as a presence of itself: its name, DID and instructions,
+ * linked to its home by `AgentPresence.homeKey`, so it reads and writes its home's brain. Idempotent: the
+ * agent's existing presence in the space (or the agent itself, in its home) is returned.
+ */
+export const InviteAgent = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.invite'),
+    name: 'Invite agent',
+    description:
+      "Invites an agent from another space into this one; it keeps one brain across the spaces it is in. Only the agent's admins may, which EDGE enforces.",
+    icon: 'ph--user-plus--regular',
+    // Invoked by AgentAdmission after the members panel admits the agent, never by a model.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Hypergraph.Service, Capability.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({
+      description:
+        "The agent to invite, in any space it is in; one whose home the caller cannot reach is read from the agent's own space.",
+    }),
+  }),
+  output: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent in this space.' }),
+    created: Schema.Boolean.annotate({ description: 'False when the agent was already in this space.' }),
   }),
 });
 

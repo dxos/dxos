@@ -25,12 +25,18 @@ Usage: node .depot/actions/affected/resolve-affected.mjs [options]
   --shell         Print \`export KEY=value\` lines, for eval.
   --help          Print this.
 
-Writes KEY=value to stdout and appends it to $GITHUB_ENV when set; a full run writes nothing at all.
+Writes KEY=value to stdout and appends it to $GITHUB_ENV when set; a full run writes nothing, except
+MOON_FORCE=true on a scheduled run.
 Everything else goes to stderr, so --shell output stays evaluable.`;
 
 const DEFAULT_BRANCH_PATTERN = /^\s*defaultBranch:\s*['"]?([^'"\s#]+)/m;
 
 const FULL_RUN = Symbol('full run');
+
+// Every task keys on its project's dependency closure, which the `dependency-closure` toolchain computes
+// from the lockfile and touched-file detection cannot see. A change to either runs everything and lets the
+// cache pick what executes.
+const CLOSURE_SOURCES = ['pnpm-lock.yaml', 'tools/moon-dependency-closure/dependency-closure.wasm'];
 
 const main = () => {
   const args = parseArgs(process.argv.slice(2));
@@ -38,9 +44,14 @@ const main = () => {
   const event = args.event ?? process.env.GITHUB_EVENT_NAME ?? 'local';
   const branch = readBranch();
 
-  const { base, reason } = resolve({ args, event, branch, defaultBranch });
+  const { base, reason, force } = resolve({ args, event, branch, defaultBranch });
   if (base === FULL_RUN) {
     note(`Full run — ${reason}. Leaving MOON_AFFECTED unset.`);
+    if (force) {
+      // Catches an input that some task's key misses, which a cached run would keep passing.
+      note('Forced — bypassing the cache.');
+      emit(args, { MOON_FORCE: 'true' });
+    }
     return;
   }
 
@@ -51,10 +62,24 @@ const main = () => {
   // itself (2.5.2), so this is behaviour-neutral, and the logged range is the range moon diffs even
   // when the base branch has advanced past the fork.
   const fork = tryGit('merge-base', base, head) ?? base;
-  const changed =
-    tryGit('diff', '--name-only', fork, ...(args.head ? [head] : []))
-      ?.split('\n')
-      .filter(Boolean) ?? [];
+  let changed;
+  try {
+    changed = execFileSync('git', ['diff', '--name-only', fork, ...(args.head ? [head] : [])], {
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split('\n')
+      .filter(Boolean);
+  } catch {
+    note(`Full run — could not list the files changed since ${fork.slice(0, 8)}. Leaving MOON_AFFECTED unset.`);
+    return;
+  }
+  const source = CLOSURE_SOURCES.find((file) => changed.includes(file));
+  if (source) {
+    note(`Full run — ${source} changed (${reason}). Leaving MOON_AFFECTED unset.`);
+    return;
+  }
   note(
     `Affected run — ${reason} (${fork.slice(0, 8)}..${args.head ? head.slice(0, 8) : 'HEAD'}, ${changed.length} changed files).`,
   );
@@ -80,7 +105,7 @@ const resolve = ({ args, event, branch, defaultBranch }) => {
       return fromRevision(payload.merge_group?.base_sha, 'merge queue base', defaultBranch);
 
     case 'schedule':
-      return { base: FULL_RUN, reason: 'scheduled run' };
+      return { base: FULL_RUN, reason: 'scheduled run', force: true };
 
     default:
       if (branch === defaultBranch) {
