@@ -1,0 +1,185 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef } from 'react';
+
+import * as Button from '@dxos/react-ui/Button';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
+import { mx } from '@dxos/ui-theme';
+
+export type TimelineBarProps = Util.ThemedClassName<{
+  /** Seconds. */
+  time: number;
+  duration: number;
+  playing: boolean;
+  fps: number;
+  /** Times of the selection's keys, drawn as diamonds on the track. */
+  keys?: readonly number[];
+  autoKey?: boolean;
+  readonly?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
+  onTimeChange?: (time: number) => void;
+  onAutoKeyChange?: (autoKey: boolean) => void;
+  /** Keys the selection's animatable properties at the playhead; offered while something is selected. */
+  onAddKey?: () => void;
+}>;
+
+/** `t` as `s.ff`, seconds and frames, as an editor's timecode reads. */
+export const formatTime = (t: number, fps: number): string => {
+  const frame = Math.round(t * fps);
+  const seconds = Math.floor(frame / fps);
+  return `${seconds}.${String(frame % fps).padStart(2, '0')}`;
+};
+
+/**
+ * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
+ * keys on it, the time, and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the playhead to it.
+ */
+export const TimelineBar = ({
+  classNames,
+  time,
+  duration,
+  playing,
+  fps,
+  keys = [],
+  autoKey,
+  readonly,
+  onPlayingChange,
+  onTimeChange,
+  onAutoKeyChange,
+  onAddKey,
+}: TimelineBarProps) => {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const timeAt = useCallback(
+    (clientX: number) => {
+      const track = trackRef.current?.getBoundingClientRect();
+      if (!track || track.width === 0 || duration <= 0) {
+        return 0;
+      }
+      // On the frame grid, so a scrub lands where frame stepping and export would.
+      const raw = ((clientX - track.left) / track.width) * duration;
+      return Math.min(duration, Math.max(0, Math.round(raw * fps) / fps));
+    },
+    [duration, fps],
+  );
+  const onPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      onPlayingChange?.(false);
+      onTimeChange?.(timeAt(event.clientX));
+    },
+    [onPlayingChange, onTimeChange, timeAt],
+  );
+  const onPointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        onTimeChange?.(timeAt(event.clientX));
+      }
+    },
+    [onTimeChange, timeAt],
+  );
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const step = event.shiftKey ? 1 : 1 / fps;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        event.stopPropagation();
+        const next = time + (event.key === 'ArrowLeft' ? -step : step);
+        onTimeChange?.(Math.min(duration, Math.max(0, next)));
+      }
+    },
+    [time, duration, fps, onTimeChange],
+  );
+  const at = (t: number) => `${duration > 0 ? (t / duration) * 100 : 0}%`;
+  return (
+    <Toolbar.Root classNames={mx('min-w-[24rem]', classNames)} data-testid='timeline'>
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+        label={playing ? 'Pause' : 'Play'}
+        data-testid='timeline-play'
+        onClick={() => {
+          // Played from the end, the timeline starts over.
+          if (!playing && time >= duration) {
+            onTimeChange?.(0);
+          }
+          onPlayingChange?.(!playing);
+        }}
+      />
+      <div
+        ref={trackRef}
+        role='slider'
+        tabIndex={0}
+        aria-label='Playhead'
+        aria-valuemin={0}
+        aria-valuemax={duration}
+        aria-valuenow={time}
+        aria-valuetext={`${formatTime(time, fps)} s`}
+        className='relative grow h-6 mx-2 cursor-pointer touch-none dx-focus-ring rounded-xs'
+        data-testid='timeline-track'
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onKeyDown={onKeyDown}
+      >
+        <div className='absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-separator rounded-full' />
+        <div
+          className='absolute left-0 top-1/2 h-0.5 -translate-y-1/2 bg-accent-bg rounded-full'
+          style={{ width: at(time) }}
+        />
+        {keys.map((key) => (
+          <button
+            key={key}
+            type='button'
+            aria-label={`Key at ${formatTime(key, fps)} s`}
+            className='absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-amber-500 border border-separator'
+            style={{ left: at(key) }}
+            data-testid='timeline-key'
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              onPlayingChange?.(false);
+              onTimeChange?.(key);
+            }}
+          />
+        ))}
+        <div
+          className='absolute top-0 bottom-0 w-0.5 -translate-x-1/2 bg-accent-bg pointer-events-none'
+          style={{ left: at(time) }}
+          data-testid='timeline-playhead'
+        />
+      </div>
+      <span
+        className='shrink-0 text-end text-sm whitespace-nowrap tabular-nums text-fg-muted'
+        data-testid='timeline-time'
+      >
+        {formatTime(time, fps)} / {formatTime(duration, fps)}
+      </span>
+      {!readonly && (
+        <>
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--diamond--regular'
+            label='Add key (K)'
+            disabled={!onAddKey}
+            data-testid='timeline-add-key'
+            onClick={onAddKey}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon={autoKey ? 'ph--record--fill' : 'ph--record--regular'}
+            label={autoKey ? 'Auto-key on' : 'Auto-key off'}
+            classNames={autoKey ? 'text-error-text' : undefined}
+            aria-pressed={autoKey}
+            data-testid='timeline-auto-key'
+            onClick={() => onAutoKeyChange?.(!autoKey)}
+          />
+        </>
+      )}
+    </Toolbar.Root>
+  );
+};

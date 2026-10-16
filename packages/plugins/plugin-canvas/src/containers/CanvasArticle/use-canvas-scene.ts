@@ -5,8 +5,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { type Database, Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
+  type GeneratorSource,
   type Node,
   type NodeRegistry,
   createNodeRegistry,
@@ -16,7 +19,7 @@ import {
 } from '@dxos/react-ui-canvas/scene';
 
 import { type BoundCanvasStore, CanvasFrameNode, bindCanvasStore } from '#model';
-import { CanvasCapabilities } from '#types';
+import { CanvasCapabilities, Generator } from '#types';
 
 import { CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
 
@@ -57,3 +60,22 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
     [contributed, hostOpen],
   );
 };
+
+/** The space's generators by the reference a generator node stores, as the view loads them; a revision updates it. */
+export const useCanvasGenerators = (db: Database.Database | undefined): Readonly<Record<string, GeneratorSource>> => {
+  const generators = useQuery(db, Filter.type(Generator.Generator));
+  const revision = generators.map((generator) => `${generator.id}@${generator.version}`).join(' ');
+  return useMemo(
+    () =>
+      Object.fromEntries(
+        generators.map((generator) => [Generator.referenceOf(generator), Generator.toSource(generator)]),
+      ),
+    // Keyed on the revisions, which a source edit always bumps, rather than on the result's identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [revision],
+  );
+};
+
+/** The generator worker: agent-written code runs there, away from the page. */
+export const createGeneratorWorker = (): Worker =>
+  new Worker(new URL('@dxos/react-ui-canvas/generator-worker', import.meta.url), { type: 'module' });

@@ -3,6 +3,8 @@
 //
 
 export * from './useChanging.ts';
+export * from './useClock.ts';
+export * from './useGeneratorFrames.ts';
 export * from './useRegistry.ts';
 export * from './useSceneLook.ts';
 export * from './useSceneProjection.ts';

@@ -6,7 +6,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
+    'index': 'src/index.ts',
+    'motion': 'src/generator/motion.ts',
+    'generator-worker': 'src/generator/worker.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

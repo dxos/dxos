@@ -12,6 +12,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { type Clipboard } from '../utils/clipboard.ts';
 import { type PartKey } from '../utils/parts.ts';
 import { type UndoState, emptyUndo } from '../utils/undo.ts';
+import { type Clock, createClock } from './clock.ts';
 import {
   type Bounds,
   type Camera,
@@ -72,6 +73,12 @@ export const isMoving = (drag: Drag | undefined): boolean =>
 
 export type HistoryEntry = { path: SceneId[]; camera: Camera };
 
+/**
+ * A composite open on its own (ANIMATION.md §4.3): the view shows its definition scene on a plain background, and
+ * `back` is the scene path and camera to return to.
+ */
+export type Isolation = { composite: SceneId; back: HistoryEntry };
+
 export type ControlPointRef = { link: LinkId; index: number };
 
 /** The text part being edited in place (`parts.ts`). */
@@ -114,6 +121,12 @@ export type SceneViewAtoms = {
   active: Atom.Writable<NodeId | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
+  /** The time the view shows and whether it plays (ANIMATION.md §5.1). */
+  clock: Clock;
+  /** Edits away from t = 0 key the properties they change (ANIMATION.md §5.4). */
+  autoKey: Atom.Writable<boolean>;
+  /** The composite open in isolation, if any. */
+  isolation: Atom.Writable<Isolation | undefined>;
 };
 
 /**
@@ -140,4 +153,7 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
   active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
+  clock: createClock(),
+  autoKey: Atom.keepAlive(Atom.make<boolean>(true)),
+  isolation: Atom.keepAlive(Atom.make<Isolation | undefined>(undefined)),
 });

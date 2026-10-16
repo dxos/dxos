@@ -15,6 +15,7 @@ import { NOMINAL_ZOOM, fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { toolForKey } from '../Palette/Palette.tsx';
+import { type TimelineKeys } from './SceneViewContext.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneClipboard } from './useSceneClipboard.ts';
@@ -45,6 +46,7 @@ export type UseSceneKeysOptions = {
   onFit: () => void;
   /** The user moved the camera, which ends fit mode. */
   onExitFit: () => void;
+  timeline?: TimelineKeys;
 } & Pick<SceneCamera, 'animateTo'> &
   Pick<SceneNavigation, 'drillIn' | 'drillOut' | 'goHistory'> &
   Pick<SceneSnap, 'major'> &
@@ -87,6 +89,7 @@ export const useSceneKeys = ({
   cancelDrag,
   removePoint,
   setTool,
+  timeline,
 }: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
   return useCallback(
     (event: KeyboardEvent) => {
@@ -94,6 +97,32 @@ export const useSceneKeys = ({
       const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
       const point = registry.get(atoms.point);
       const action = keyAction(event);
+      // The timeline's keys act only while the scene has one; otherwise `K` is still a tool's.
+      if (timeline?.active) {
+        switch (action) {
+          case 'play':
+            timeline.togglePlay();
+            event.preventDefault();
+            return;
+          case 'stepBack':
+            timeline.step(-1);
+            return;
+          case 'stepForward':
+            timeline.step(1);
+            return;
+          case 'previousKey':
+            timeline.jumpKey(-1);
+            return;
+          case 'nextKey':
+            timeline.jumpKey(1);
+            return;
+          case 'addKey':
+            if (selected.length > 0) {
+              timeline.addKey();
+            }
+            return;
+        }
+      }
       switch (action) {
         case 'cancel':
           if (registry.get(atoms.drag)) {
@@ -195,6 +224,12 @@ export const useSceneKeys = ({
         case 'debug':
           toggleDebug();
           break;
+        case 'play':
+        case 'stepBack':
+        case 'stepForward':
+        case 'previousKey':
+        case 'nextKey':
+        case 'addKey':
         case undefined:
           if (isToolKey(event)) {
             const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
@@ -239,6 +274,7 @@ export const useSceneKeys = ({
       copy,
       cut,
       paste,
+      timeline,
     ],
   );
 };

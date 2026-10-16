@@ -22,9 +22,11 @@ import {
   NodeBase,
   type Scene,
   type SceneId,
+  SceneKind,
   type SceneMap,
   StyleClass,
   type StyleMap,
+  Timeline,
   elementLayer,
   isFrameNode,
   sortByZ,
@@ -71,6 +73,10 @@ export const SceneRecord = Schema.Struct({
   name: Schema.optional(Schema.String),
   /** The scene's layers, kept with it since they are few and change together. */
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
+  /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
+  sceneKind: Schema.optional(SceneKind),
+  /** The scene's animation, kept whole with it: keys are edited as a set and few. */
+  timeline: Schema.optional(Timeline),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -437,6 +443,8 @@ export const readScenes = (content: ContentMap): SceneMap => {
       nodes: nodes[header.id],
       links: links[header.id],
       ...(header.layers ? { layers: clone(header.layers) } : {}),
+      ...(header.sceneKind ? { kind: header.sceneKind } : {}),
+      ...(header.timeline ? { timeline: clone(header.timeline) } : {}),
     };
   }
   return scenes;
@@ -458,6 +466,8 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
       id: scene.id,
       ...(scene.name ? { name: scene.name } : {}),
       ...(scene.layers ? { layers: clone(scene.layers) } : {}),
+      ...(scene.kind && scene.kind !== 'scene' ? { sceneKind: scene.kind } : {}),
+      ...(scene.timeline ? { timeline: clone(scene.timeline) } : {}),
     };
     if (!same(content[key], record)) {
       content[key] = record;
@@ -502,4 +512,25 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
     }
   }
   return changed;
+};
+
+/** The scene record `id`, when the content has one. */
+export const sceneRecordOf = (content: ContentMap, id: SceneId): SceneRecord | undefined => {
+  const record: unknown = content[sceneKey(id)];
+  return isSceneRecord(record) ? record : undefined;
+};
+
+/** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
+export const putNodeRecord = (content: ContentMap, scene: SceneId, node: Node): void => {
+  content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
+};
+
+/** Replaces scene `scene`'s timeline in place; the scene must exist. */
+export const putTimeline = (content: ContentMap, scene: SceneId, timeline: Timeline): boolean => {
+  const record = sceneRecordOf(content, scene);
+  if (!record) {
+    return false;
+  }
+  content[sceneKey(scene)] = { ...clone(record), timeline: clone(timeline) } satisfies SceneRecord;
+  return true;
 };

@@ -784,7 +784,8 @@ export const WASH_TEXT: Record<StyleHue, string> = {
 };
 
 /** The canvas fill a background's surface draws, screen-wide under the scene; the base surface draws none. */
-export const BACKGROUND_FILLS: Record<'base' | 'paper', string> = {
+export const BACKGROUND_FILLS: Record<'base' | 'paper' | 'film', string> = {
   base: '',
   paper: 'bg-[#f4f0e6]',
+  film: 'bg-[#050505]',
 };

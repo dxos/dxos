@@ -252,14 +252,16 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         </Menu.Trigger>
         {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
         <Menu.Content>
-          {Object.values(nodes).map((def) => (
-            <Menu.Item
-              key={def.type}
-              data-testid={`create-${def.type}`}
-              onSelect={() => actions.create(def.type)}
-              item={{ value: def.type, label: def.name }}
-            />
-          ))}
+          {Object.values(nodes)
+            .filter((def) => def.palette !== false)
+            .map((def) => (
+              <Menu.Item
+                key={def.type}
+                data-testid={`create-${def.type}`}
+                onSelect={() => actions.create(def.type)}
+                item={{ value: def.type, label: def.name }}
+              />
+            ))}
         </Menu.Content>
       </Menu.Root>
       <Button.Root

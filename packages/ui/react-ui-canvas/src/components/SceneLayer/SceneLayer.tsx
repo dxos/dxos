@@ -24,7 +24,10 @@ import React, {
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
+import { type GeneratorFrames } from '../../generator/host.ts';
+import { type GeneratorStatus, type Shape } from '../../generator/types.ts';
 import { useSceneLook } from '../../hooks/useSceneLook.ts';
+import { frameTimeAttribute } from '../../model/clock.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
 import { NO_STYLES, type SceneStore } from '../../model/store.ts';
@@ -41,11 +44,15 @@ import {
   type Scene,
   type StyleMap,
   isFrameNode,
+  isGeneratorNode,
+  isInstanceNode,
   isNoteNode,
+  isPathNode,
   linkMarkers,
   showsContents,
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
+import { compositeBounds, instanceScene, instanceTransform } from '../../utils/compose.ts';
 import { contentBounds } from '../../utils/hit.ts';
 import { type LatticeSpec } from '../../utils/lattice.ts';
 import { elementLayer, sceneLayers, visibleScene } from '../../utils/layers.ts';
@@ -123,6 +130,8 @@ export type SceneLayerProps = {
   lattice?: LatticeSpec;
   /** Scene px of one nominal unit (the drawing's major grid cell); a nested layer inherits its parent's. */
   cell?: number;
+  /** What the scene's generator nodes drew, and when; drawn in a generator layer per scene layer (ANIMATION.md §7.1). */
+  generated?: GeneratorFrames;
 };
 
 export const SceneLayer = memo(
@@ -146,8 +155,10 @@ export const SceneLayer = memo(
     handlers,
     lattice: latticeProp,
     cell: cellProp,
+    generated,
   }: SceneLayerProps) => {
     const inherited = useContext(CellContext);
+    const inheritedGenerated = useContext(GeneratedContext);
     const cell = cellProp ?? inherited;
     // A nested scene (a frame's contents, a drill-in in flight) routes on its parent's lattice, so its links do not
     // jump onto the gutters when it settles as the root.
@@ -199,112 +210,259 @@ export const SceneLayer = memo(
 
     return (
       <CellContext.Provider value={cell}>
-        <LatticeContext.Provider value={lattice}>
-          <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-            <defs>
-              {lineHues.map((hue) => (
-                <Markers
-                  key={hue ?? 'default'}
-                  id={`${markerId}-${hue ?? 'default'}`}
-                  cell={cell}
-                  hue={hue}
-                  width={markerWidth}
-                  canvasFill={canvasFill}
-                />
-              ))}
-            </defs>
-          </svg>
-          {groups.map((group) => (
-            <Fragment key={group.layer.id}>
-              <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-                {group.links.map(({ link, path }) => (
-                  <g key={link.id}>
-                    {/* A wide transparent twin makes the thin stroke easy to press. */}
-                    {handlers && (
-                      <path
-                        d={path}
-                        className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
-                        style={{ pointerEvents: 'stroke' }}
-                        strokeWidth={12 * unit}
-                        onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                        onPointerEnter={() => handlers.onLinkHover?.(link.id)}
-                        onPointerLeave={() => handlers.onLinkHover?.(undefined)}
-                        onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
-                        onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
-                      />
-                    )}
-                    <LinkStroke
-                      id={`${markerId}-${link.id}`}
-                      kind={look.styleSet.link.kind}
-                      path={path}
-                      stroke={
-                        plain
-                          ? lineClasses(lines.get(link.id)?.hue).stroke
-                          : selected?.has(link.id)
-                            ? 'stroke-focus'
-                            : hoveredLink === link.id
-                              ? 'stroke-focus/50'
-                              : lineClasses(lines.get(link.id)?.hue).stroke
-                      }
-                      width={linkWidth}
-                      lineStyle={lines.get(link.id)?.lineStyle}
-                      linkId={link.id}
-                    />
-                    {link.text && (
-                      <LinkText
-                        path={path}
-                        text={link.text}
-                        backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
-                        textClass={CAPTION_TEXT[look.tone]}
-                      />
-                    )}
-                  </g>
-                ))}
-              </svg>
-              {group.nodes.map((node) => (
-                <NodeFrame
-                  key={node.id}
-                  store={store}
-                  scene={scene}
-                  registry={registry}
-                  node={node}
-                  styles={styles}
-                  zoom={zoom}
-                  depth={depth}
-                  liveDepth={liveDepth}
-                  selected={!plain && (selected?.has(node.id) ?? false)}
-                  hovered={hover === node.id}
-                  opening={opening === node.id}
-                  fade={focus && focus.id !== node.id ? fadeStyle : undefined}
-                  chromeFade={focus?.id === node.id ? fadeStyle : undefined}
-                  editingPart={editing?.id === node.id ? editing.part : undefined}
-                  active={active === node.id}
-                  ghost={ghost === node.id}
-                  debug={debug}
-                  handlers={handlers}
-                />
-              ))}
-              {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
-              <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-                {group.links.map(({ link, path }) => (
-                  <path
-                    key={link.id}
-                    d={path}
-                    className='fill-none stroke-none'
-                    markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
-                    markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+        <GeneratedContext.Provider value={generated ?? inheritedGenerated}>
+          <LatticeContext.Provider value={lattice}>
+            <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+              <defs>
+                {lineHues.map((hue) => (
+                  <Markers
+                    key={hue ?? 'default'}
+                    id={`${markerId}-${hue ?? 'default'}`}
+                    cell={cell}
+                    hue={hue}
+                    width={markerWidth}
+                    canvasFill={canvasFill}
                   />
                 ))}
-              </svg>
-            </Fragment>
-          ))}
-        </LatticeContext.Provider>
+              </defs>
+            </svg>
+            {groups.map((group) => (
+              <Fragment key={group.layer.id}>
+                <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+                  {group.links.map(({ link, path }) => (
+                    <g key={link.id}>
+                      {/* A wide transparent twin makes the thin stroke easy to press. */}
+                      {handlers && (
+                        <path
+                          d={path}
+                          className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
+                          style={{ pointerEvents: 'stroke' }}
+                          strokeWidth={12 * unit}
+                          onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                          onPointerEnter={() => handlers.onLinkHover?.(link.id)}
+                          onPointerLeave={() => handlers.onLinkHover?.(undefined)}
+                          onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                          onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                        />
+                      )}
+                      <LinkStroke
+                        id={`${markerId}-${link.id}`}
+                        kind={look.styleSet.link.kind}
+                        path={path}
+                        stroke={
+                          plain
+                            ? lineClasses(lines.get(link.id)?.hue).stroke
+                            : selected?.has(link.id)
+                              ? 'stroke-focus'
+                              : hoveredLink === link.id
+                                ? 'stroke-focus/50'
+                                : lineClasses(lines.get(link.id)?.hue).stroke
+                        }
+                        width={linkWidth}
+                        lineStyle={lines.get(link.id)?.lineStyle}
+                        linkId={link.id}
+                      />
+                      {link.text && (
+                        <LinkText
+                          path={path}
+                          text={link.text}
+                          backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
+                          textClass={CAPTION_TEXT[look.tone]}
+                        />
+                      )}
+                    </g>
+                  ))}
+                </svg>
+                {/* Above the layer's links, below its nodes; marked with the time it drew, which export waits on. */}
+                {generated && group.nodes.some(isGeneratorNode) && (
+                  <GeneratedShapes
+                    store={store}
+                    registry={registry}
+                    zoom={zoom}
+                    depth={depth}
+                    t={generated.t}
+                    shapes={group.nodes.flatMap((node) => generated.frames[node.id]?.shapes ?? [])}
+                    style={fadeStyle}
+                  />
+                )}
+                {group.nodes.map((node) => (
+                  <NodeFrame
+                    key={node.id}
+                    store={store}
+                    scene={scene}
+                    registry={registry}
+                    node={node}
+                    styles={styles}
+                    zoom={zoom}
+                    depth={depth}
+                    liveDepth={liveDepth}
+                    selected={!plain && (selected?.has(node.id) ?? false)}
+                    hovered={hover === node.id}
+                    opening={opening === node.id}
+                    fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+                    chromeFade={focus?.id === node.id ? fadeStyle : undefined}
+                    editingPart={editing?.id === node.id ? editing.part : undefined}
+                    active={active === node.id}
+                    ghost={ghost === node.id}
+                    debug={debug}
+                    handlers={handlers}
+                  />
+                ))}
+                {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
+                <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+                  {group.links.map(({ link, path }) => (
+                    <path
+                      key={link.id}
+                      d={path}
+                      className='fill-none stroke-none'
+                      markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+                      markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                    />
+                  ))}
+                </svg>
+              </Fragment>
+            ))}
+          </LatticeContext.Provider>
+        </GeneratedContext.Provider>
       </CellContext.Provider>
     );
   },
 );
 
 SceneLayer.displayName = 'SceneLayer';
+
+/** The generator frames of the root layer, for the generator nodes' own views (their status). */
+const GeneratedContext = createContext<GeneratorFrames | undefined>(undefined);
+
+type GeneratedShapesProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+  t: number;
+  shapes: readonly Shape[];
+  style?: CSSProperties;
+};
+
+/** A shape's paint: its CSS colour, else its theme hue, else the text colour. */
+const paint = (shape: { hue?: string; color?: string }, kind: 'fill' | 'stroke') =>
+  shape.color
+    ? { [kind]: shape.color }
+    : {
+        className: shape.hue ? lineClasses(shape.hue)[kind] : undefined,
+        [kind]: shape.hue ? undefined : 'currentColor',
+      };
+
+/** A generator layer: the shapes the layer's generators returned, in scene coordinates. */
+const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
+  <>
+    <svg
+      className='absolute overflow-visible pointer-events-none'
+      style={style}
+      width={1}
+      height={1}
+      data-frame-time={frameTimeAttribute(t)}
+      data-testid='generator-layer'
+    >
+      {shapes.map((shape, index) => {
+        switch (shape.kind) {
+          case 'circle':
+            return (
+              <circle
+                key={index}
+                cx={shape.center.x}
+                cy={shape.center.y}
+                r={shape.radius}
+                opacity={shape.opacity}
+                {...paint(shape, 'fill')}
+              />
+            );
+          case 'rect':
+            return (
+              <rect key={index} {...shape.bounds} rx={shape.radius} opacity={shape.opacity} {...paint(shape, 'fill')} />
+            );
+          case 'path':
+            return (
+              <path
+                key={index}
+                d={shape.d}
+                fill='none'
+                strokeWidth={shape.width ?? 2}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                opacity={shape.opacity}
+                {...(shape.reveal !== undefined
+                  ? { pathLength: 1, strokeDasharray: `${Math.max(0, shape.reveal)} 1` }
+                  : {})}
+                {...paint({ hue: shape.hue, color: shape.color ?? shape.stroke }, 'stroke')}
+              />
+            );
+          case 'instance':
+            return null;
+        }
+      })}
+    </svg>
+    {shapes.map((shape, index) =>
+      shape.kind === 'instance' ? (
+        <InstanceShape
+          key={index}
+          store={store}
+          registry={registry}
+          zoom={zoom}
+          depth={depth}
+          composite={shape.composite}
+          center={shape.center}
+          scale={shape.scale ?? 1}
+          opacity={shape.opacity}
+        />
+      ) : null,
+    )}
+  </>
+);
+
+type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+  composite: string;
+  center: { x: number; y: number };
+  scale: number;
+  opacity?: number;
+};
+
+/** A composite a generator placed: drawn about `center`, scaled, read-only. */
+const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
+  const scene = useAtomValue(store.scene(composite));
+  const content = useMemo(() => (scene ? compositeBounds(scene) : undefined), [scene]);
+  if (!scene || !content) {
+    return null;
+  }
+  const x = center.x - (content.x + content.width / 2) * scale;
+  const y = center.y - (content.y + content.height / 2) * scale;
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0', opacity }}
+    >
+      <SceneLayer store={store} scene={scene} registry={registry} zoom={zoom * scale} depth={depth + 1} liveDepth={0} />
+    </div>
+  );
+};
+
+/** A paused generator's reason, shown over its frame. */
+const GeneratorWarning = ({ status }: { status: Extract<GeneratorStatus, { state: 'paused' }> }) => (
+  <div
+    className='absolute top-1 left-1 right-1 flex items-start gap-1 p-1 rounded-sm text-xs bg-modal-surface text-error-text pointer-events-none'
+    data-testid='generator-paused'
+    title={status.message}
+  >
+    <span className='shrink-0'>{status.reason === 'budget' ? 'Over budget:' : 'Error:'}</span>
+    <span className='line-clamp-3'>{status.message}</span>
+  </div>
+);
+
+/**
+ * A generator node draws nothing of its own: its shapes are in the layer's generator layer. A paused generator shows
+ * why over its frame.
+ */
+export const GeneratorNodeView = ({ node }: NodeViewProps) => {
+  const generated = useContext(GeneratedContext);
+  const status = generated?.frames[node.id]?.status;
+  return status?.state === 'paused' ? <GeneratorWarning status={status} /> : null;
+};
 
 /** The width of a node frame's border, which a nested scene drawn inside it steps out over. */
 const FRAME_BORDER = '--scene-frame-border' as const;
@@ -621,11 +779,11 @@ const NodeFrame = memo(
   ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, ...props }: NodeFrameProps) => {
     const { node, registry, selected } = props;
     const cell = useContext(CellContext);
-    const drawn = useMemo(() => classedNode(node, styles), [node, styles]);
-    const bounds = nodeBounds(node);
-    const interactive = handlers !== undefined && !ghost;
     // A type the registry does not know is drawn as the core base: a box with its label.
     const def = nodeDef(registry, node);
+    const drawn = useMemo(() => bareNode(classedNode(node, styles), def?.bare), [node, styles, def?.bare]);
+    const bounds = nodeBounds(node);
+    const interactive = handlers !== undefined && !ghost;
     const Component = def?.component ?? BoxNodeView;
     const Toolbar = interactive ? def?.toolbar : undefined;
     const editing = useMemo<PartEditing | undefined>(
@@ -663,6 +821,7 @@ const NodeFrame = memo(
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...fade,
+      ...nodeOpacity(node, fade),
     };
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
@@ -729,6 +888,7 @@ const NodeFrame = memo(
               transform: `translate(-100%, -100%) scale(${1 / Math.max(props.zoom, 0.05)})`,
               transformOrigin: 'bottom right',
               ...fade,
+              ...nodeOpacity(node, fade),
             }}
             data-testid='node-toolbar'
             onPointerDown={(event) => event.stopPropagation()}
@@ -743,6 +903,19 @@ const NodeFrame = memo(
 );
 
 NodeFrame.displayName = 'NodeFrame';
+
+/** The node's own opacity under any fade the layer applies, or nothing when it is fully opaque. */
+const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
+  if (node.opacity === undefined || node.opacity >= 1) {
+    return undefined;
+  }
+  const faded = typeof fade?.opacity === 'number' ? fade.opacity : 1;
+  return { opacity: Math.max(0, node.opacity) * faded };
+};
+
+/** A node of a `bare` type: no fill or border unless its style sets them. */
+const bareNode = (node: Node, bare: boolean | undefined): Node =>
+  bare ? { ...node, style: { fill: false, border: false, ...node.style } } : node;
 
 /**
  * A part's own size class, or nothing when the node overrides `fontSize`: a Tailwind size wins over the
@@ -786,7 +959,7 @@ export const BoxNodeView = LabelNodeView;
 export const EllipseNodeView = LabelNodeView;
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
-export const UnknownNodeView = ({ node }: NodeViewProps) => (
+export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (
   <div className='dx-cover flex items-center justify-center text-xs text-fg-muted'>{node.type}</div>
 );
 
@@ -873,6 +1046,73 @@ export const FrameNodeView = (props: NodeViewProps) => {
       )}
       {!opening && onOpen && <OpenControl onOpen={onOpen} />}
     </div>
+  );
+};
+
+/**
+ * A composite object's instance: the composite scene, with the instance's overrides, scaled into the frame
+ * (ANIMATION.md §4.1). The nested layer is read-only; the instance is selected and moved as one node.
+ */
+export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
+  const composite = useAtomValue(store.scene(isInstanceNode(node) ? node.composite : ''));
+  const drawn = useMemo(
+    () => (composite && isInstanceNode(node) ? instanceScene(node, composite) : undefined),
+    [node, composite],
+  );
+  const bounds = nodeBounds(node);
+  const transform = useMemo(
+    () => (drawn && isInstanceNode(node) ? instanceTransform(bounds, compositeBounds(drawn), node.fit) : undefined),
+    // Keyed on the geometry rather than the bounds object, which is new on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [drawn, node, bounds.x, bounds.y, bounds.width, bounds.height],
+  );
+  if (!drawn || !transform) {
+    return <UnknownNodeView node={node} />;
+  }
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{
+        // Out by the frame's border, so the composite's coordinates map onto the node's corner (as a portal's do).
+        top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        transform: `translate(${transform.offset.x - bounds.x}px, ${transform.offset.y - bounds.y}px) scale(${transform.scale})`,
+        transformOrigin: '0 0',
+      }}
+      data-instance={node.id}
+    >
+      <SceneLayer
+        store={store}
+        scene={drawn}
+        registry={registry}
+        zoom={zoom * transform.scale}
+        depth={depth + 1}
+        liveDepth={liveDepth}
+      />
+    </div>
+  );
+};
+
+/** Vector art: the node's path, scaled from its `viewBox` to the frame and filled with its text colour. */
+export const PathNodeView = ({ node }: NodeViewProps) => {
+  if (!isPathNode(node)) {
+    return null;
+  }
+  const { x, y, width, height } = node.viewBox;
+  return (
+    <svg
+      className='absolute overflow-visible pointer-events-none'
+      style={{
+        top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+      }}
+      width={node.size.width}
+      height={node.size.height}
+      viewBox={`${x} ${y} ${width} ${height}`}
+      preserveAspectRatio='none'
+    >
+      <path d={node.d} fill={node.fill ?? 'currentColor'} fillRule='evenodd' />
+    </svg>
   );
 };
 
