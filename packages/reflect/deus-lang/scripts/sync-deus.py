@@ -10,6 +10,8 @@ For each name, this replaces its declaration in the deus/ file that holds it wit
 prints from the codebase (a new name goes at the end of its namespace's file, a new namespace gets a
 file), deletes what the codebase no longer has, adds what those definitions use that deus/ lacks, then compiles deus/ into seed/deus.image and
 checks that the new seed compiles itself to itself and that deus/ compiles to the codebase's hashes (D183).
+It stops before writing when a declaration it would replace or delete was edited in deus/ since git's HEAD,
+since the codebase lacks that edit (D215); `--overwrite` discards such edits.
 
     python3 scripts/sync-deus.py                # every definition whose hash differs (codebase at $DEUS_CODEBASE)
     python3 scripts/sync-deus.py Cli.push       # only these
@@ -56,7 +58,12 @@ def deus(*args, codebase, seed=None, check=True):
 
 def blocks(path):
     """(qualified name, first line, end line, namespace) for each declaration in a file; lines are 0-based, end exclusive."""
-    lines = path.read_text().split('\n')
+    return parse(path.read_text())
+
+
+def parse(text):
+    """`blocks` of a file's text."""
+    lines = text.split('\n')
     found, stack = [], []
     starts = [i for i, line in enumerate(lines) if ITEM.match(line)] + [len(lines)]
     for index, start in enumerate(starts[:-1]):
@@ -168,6 +175,23 @@ def changed(codebase):
     return compared(codebase)[0]
 
 
+def declarations(lines, found):
+    return {name: '\n'.join(lines[first:end]) for name, first, end, _ in found}
+
+
+def unsynced(names):
+    """The declarations of `names` in deus/ edited since git's HEAD: the codebase lacks those edits, or their hashes would agree."""
+    edited = []
+    for path in sorted(SOURCES.glob('*.deus')):
+        now = declarations(*blocks(path))
+        if not any(name in now for name in names):
+            continue
+        shown = subprocess.run(['git', 'show', f'HEAD:./{path.relative_to(ROOT)}'], cwd=ROOT, capture_output=True, text=True)
+        before = declarations(*parse(shown.stdout)) if shown.returncode == 0 else {}
+        edited += [f'{name} ({path.name})' for name in names if name in now and now[name] != before.get(name)]
+    return edited
+
+
 def drop(names):
     """Deletes the declarations of `names` from deus/, so a later whole-file `deus update` cannot bring back what the codebase deleted (DataSafety.Spec)."""
     for path in sorted(SOURCES.glob('*.deus')):
@@ -276,6 +300,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
     parser.add_argument('names', nargs='*', help='the definitions to write into deus/; without names, every one whose hash differs')
+    parser.add_argument('--overwrite', action='store_true', help='replace declarations edited in deus/ since the last commit, losing those edits')
     args = parser.parse_args()
     codebase = Path(args.codebase)
     if args.names:
@@ -290,6 +315,10 @@ def main():
             print('deus/ already compiles to the codebase\'s definitions, and the seed is its fixpoint; nothing to write.')
         return 0
 
+    edited = [] if args.overwrite else unsynced(set(names) | set(deleted))
+    if edited:
+        sys.exit(f'deus/ has edits the codebase lacks in {len(edited)} declarations, among them {", ".join(edited[:5])}: '
+                 'run `deus update` on those files first, or pass --overwrite to discard the edits')
     drop(set(deleted))
     write(names, codebase)
     theirs = hashes(codebase)

@@ -248,5 +248,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 238 | 10-16 15:04 | 12m 00s | this commit | TypeScript bindings export polymorphic functions with codec parameters (task b6907aeb); Bindings.Spec says how |
 | 239 | 10-16 15:58 | 54m 00s | this commit | The native interpreter counts references (D213): `deus test` runs natively in 116 MB instead of 660 MB; task b73b475d done |
 | 240 | 10-16 16:06 | 8m 00s | this commit | Host IO drops its arguments in the native interpreter; counted wasm is the C back end (D214), task cf0e3937 closed with sort measurements |
+| 241 | 10-16 16:20 | 14m 00s | this commit | sync-deus.py stops before overwriting deus/ edits the codebase lacks (D215) |
 
-Total from stage 1 to stage 240: 74h 46m.
+Total from stage 1 to stage 241: 75h 00m.
