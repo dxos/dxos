@@ -42,6 +42,11 @@ export const steps = [
     done: ({ page }) =>
       page.evaluate(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.chess' && plugin.active)),
     run: async ({ page }) => {
+      // A cold first load can outlast the driver's navigation; operations only resolve once the space has booted.
+      await page
+        .locator('[data-testid="spacePlugin.createObject"]')
+        .first()
+        .waitFor({ state: 'visible', timeout: 120_000 });
       const notice = page.locator('[data-testid="toast.close"]');
       if (await visible(notice, 8_000)) {
         await notice.first().click();
