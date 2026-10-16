@@ -36,9 +36,10 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 // `@ts-expect-error` must be needed, so the declarations are as tight as they claim.
 const consumer = `
 import {
-  area, configure, DeusDefect, DeusThrow, greet, insert, load, lookup, mean, move, paint, ratio,
+  area, configure, DeusDefect, DeusThrow, firstOf, greet, insert, load, lookup, mean, move, paint, ratio,
   Shape, Shapes, sorted, stats, total, Tree, type Point,
 } from './geometry.js';
+import { int, text } from './deus-runtime.js';
 
 export const run = async (logged: string[], printed: string[]) => {
   // No setup: the first call loads deus_kernel.wasm next to the module.
@@ -105,6 +106,11 @@ export const run = async (logged: string[], printed: string[]) => {
     scaled: await Shapes.scale(3, Shape.rect(1, 2)),
     mean: await mean([1, 2, 6]),
     defect,
+    // A polymorphic function takes the codec of each type variable first, as a generic type does.
+    first: await firstOf(int, [7, 8]),
+    none: await firstOf(text, []),
+    // @ts-expect-error a list of numbers is no list of text.
+    wrong: await firstOf(text, [1]).catch(() => 'refused'),
   };
 };
 `;
@@ -118,12 +124,10 @@ describe('deus bindings', () => {
     expect(deus('add', join(root, 'examples/geometry.deus'), ...c).code).toBe(0);
     const out = join(scratch, 'out');
     const generated = deus('bindings', 'Geometry', '-o', out, '--json', ...c);
-    expect(generated.stderr).toBe(
-      'warning: not exported: Geometry.firstOf: polymorphic in t2; only monomorphic functions are exported\n',
-    );
+    expect(generated.stderr).toBe('');
     expect(generated.code).toBe(0);
     const report = JSON.parse(generated.stdout);
-    expect(report.exported).toHaveLength(12);
+    expect(report.exported).toHaveLength(13);
     expect(report.types).toBe(join(out, 'geometry.d.ts'));
     expect(readFileSync(join(out, 'geometry.d.ts'), 'utf8')).toContain(
       'export declare function area(s: Shape): Promise<number>;',
@@ -188,6 +192,9 @@ describe('deus bindings', () => {
       scaled: { $tag: 'rect', w: 3, h: 6 },
       mean: 3,
       defect: true,
+      first: 7,
+      none: undefined,
+      wrong: expect.anything(),
     });
     expect(logged).toEqual(['summing 2 shapes', 'summing 0 shapes']);
     expect(printed).toEqual(['hello from DEUS\n']);

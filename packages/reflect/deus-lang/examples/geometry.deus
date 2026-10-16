@@ -2,8 +2,8 @@
   TypeScript interop (D81, D87): `deus bindings Geometry -o <dir>` writes a JavaScript module and
   its `.d.ts` whose functions call these on the wasm kernel. TypeScript answers the `Log` ability;
   the `Throw Text` that `ratio` performs rejects with `DeusThrow` unless TypeScript answers it too.
-  `Shapes.scale` is `Shapes.scale` in TypeScript; `firstOf` is polymorphic, so it is reported and
-  left out.
+  `Shapes.scale` is `Shapes.scale` in TypeScript; `firstOf` is polymorphic, so it takes the codec of its
+  element type first: `firstOf(int, [7, 8])`.
   src/bindings/bindings.test.ts drives it.
 -/
 
