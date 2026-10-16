@@ -105,9 +105,10 @@ deus` shows a `live … pass N: K missing` line for every pass that read somethi
 
 ## Open state (2026-10-15)
 
-- The meta-structure thread stopped at 18:00. Its handoff says the next step is publishing `@dxos/base` and
-  `@dxos/examples`, blocked on the API key lacking those projects (403 "this API key cannot write to
-  @dxos/base"). The plan is D189.
+- `@dxos/base` and `@dxos/examples` are published (2026-10-16, task 86743973): https://deus.dmytro-a80.workers.dev/@dxos/base/
+  and /@dxos/examples/. They were built from the toolchain's `deus export --terms` by growing a namespace set until it
+  compiles, with hashes identical to the toolchain's. The toolchain still holds those names; moving them out needs
+  the seed build to mount libraries (open problem in D189).
 - Its handoff names git commit `dcc624f0`, which is not on `origin/dm/agent-13-oct-x8ehi8-0y35ai` (head
   `cd8ee7ce`, 13:32 UTC). Find where it went before relying on it.
 - The coordinator session is archived. It was waiting on: where the explorer is published on R2, a go-ahead
