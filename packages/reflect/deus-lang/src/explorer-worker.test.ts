@@ -120,6 +120,16 @@ describe('explorer worker', () => {
       body: typeof body === 'string' ? body : body instanceof Uint8Array ? new Uint8Array(body) : JSON.stringify(body),
     });
 
+  test('serves the todo app built from examples/react', async ({ expect }) => {
+    expect((await call('/demo/todo')).headers.get('location')).toBe('/demo/todo/');
+    const page = await call('/demo/todo/');
+    expect(await page.text()).toContain('<script type="module" src="bundle.js">');
+    const bundle = await call('/demo/todo/bundle.js');
+    expect(bundle.headers.get('content-type')).toContain('javascript');
+    expect(await bundle.text()).toContain('TodoApp');
+    expect((await call('/demo/todo/secret.txt')).status).toBe(404);
+  });
+
   test('is read-only without sign-in settings', async ({ expect }) => {
     delete env.GITHUB_CLIENT_ID;
     expect(await (await call('/api/me')).json()).toMatchObject({ signIn: false, login: null, member: false });

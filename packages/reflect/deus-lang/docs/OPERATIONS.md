@@ -107,7 +107,9 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-16 21:00 UTC, version 355e58ec (linkable search, deep-probe fixes).
+2026-10-17 02:30 UTC, version ae4c0b11 (the todo demo at `/demo/todo/`, address rules compiled from DEUS, sidebar tooltips).
+`scripts/build-worker.mjs --live` also builds the demo and `gen/address.js`; run it after changing `examples/react`,
+`platform/js` or `deus/address.deus`.
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in
 about 6. Until the index is drawn, visitors see the head drawn last (D195; `live/shown/<branch>`, `live/drawn.json`).
@@ -126,7 +128,7 @@ about 6. Until the index is drawn, visitors see the head drawn last (D195; `live
 - Drill: `curl -X POST -H "cf-webhook-auth: $WEBHOOK_SECRET" "https://deus-guard.dmytro-a80.workers.dev/drill?script=<a canary>"`;
   `GET /status` with the same header lists every Worker and whether its route is on. Never drill `deus`.
 
-## Open state (2026-10-16 20:45 UTC)
+## Open state (2026-10-17 02:30 UTC)
 
 - Projects on the Worker: `@dxos/base`, `@dxos/toolchain` (mounts base), `@dxos/examples` (mounts base) and `@dxos/web` (mounts base
   and toolchain; D206, D211). The toolchain is developed in `~/.deus`. To change a library: pull it into a scratch codebase, change it,

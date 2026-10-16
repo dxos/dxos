@@ -657,6 +657,11 @@ const sha256 = (s) => {
 
 const prim = (arity, fn) => fixed(arity, fn);
 
+/** A primitive JavaScript cannot run (`Code.run` needs a Core machine): a function that fails when called. */
+export const unavailable = (name) => () => {
+  throw new DeusDefect(`${name} is not available in JavaScript`);
+};
+
 /** Every primitive by its Core name, as a function of its arity. */
 export const prims = {
   'Int.add': prim(2, (a, b) => (int(a) + int(b)) | 0),

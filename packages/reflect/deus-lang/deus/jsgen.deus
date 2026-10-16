@@ -428,8 +428,10 @@ def inlinePrim (p : Text) (args : List Text) : Option Text :=
     else none
   | _ => none
 
-def primValue (p : Text) : {Throw Text} Text :=
-  if Text.startsWith "Code." p then throw ("the primitive " ++ p ++ " is outside the js target")
+/-- A primitive as a value. JavaScript has no Core machine, so a `Code` primitive (loading and running Core, as the
+  compiler's elaborators do) is a function that fails if called: code that only reaches one still builds. -/
+def primValue (p : Text) : Text :=
+  if Text.startsWith "Code." p then "rt.unavailable(" ++ quote p ++ ")"
   else "rt.prims[" ++ quote p ++ "]"
 
 def call (callee : Text) (args : List Text) : Text := callee ++ "(" ++ Text.join ", " args ++ ")"

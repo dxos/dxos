@@ -14,6 +14,7 @@
 // settings the explorer stays read-only.
 
 import { addressOfFolder, projectAt } from './address.mjs';
+import { demoFiles } from './gen/demo-todo.mjs';
 import { appFiles, hubFiles } from './gen/explorer-app.mjs';
 import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
@@ -92,6 +93,10 @@ const site = async (env, ctx, url, version, base, request) => {
   const path = url.pathname === '/' ? '/index.html' : url.pathname;
   if (path.includes('..') || !env.BUCKET) {
     return notFound();
+  }
+  // The todo app, built from examples/react, runs here so a visitor can see DEUS components work.
+  if (!base && !version && path.startsWith('/demo/todo')) {
+    return demoPage(path);
   }
   const topLevel = path.lastIndexOf('/') === 0;
   if (topLevel && !version) {
@@ -223,6 +228,26 @@ const hubPage = (name) =>
       'cache-control': name.endsWith('.js') ? 'public, max-age=60' : 'no-cache',
     },
   });
+
+const DEMO_TYPES = {
+  'index.html': 'text/html; charset=utf-8',
+  'app.css': 'text/css; charset=utf-8',
+  'bundle.js': 'text/javascript; charset=utf-8',
+};
+
+/** A file of the todo demo; `/demo/todo` itself redirects so the page's relative links resolve. */
+const demoPage = (path) => {
+  if (path === '/demo/todo') {
+    return new Response(null, { status: 301, headers: { location: '/demo/todo/' } });
+  }
+  const name = path === '/demo/todo/' ? 'index.html' : path.slice('/demo/todo/'.length);
+  if (!DEMO_TYPES[name]) {
+    return notFound();
+  }
+  return new Response(demoFiles[name], {
+    headers: { 'content-type': DEMO_TYPES[name], 'cache-control': 'public, max-age=300' },
+  });
+};
 
 const appAsset = (name) =>
   new Response(appFiles[name], {

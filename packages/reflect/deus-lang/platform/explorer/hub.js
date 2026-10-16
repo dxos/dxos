@@ -64,7 +64,7 @@ const renderTotals = (projects) => {
   element('hub-totals').innerHTML =
     `<header class="home-header"><h1>DEUS codebases</h1><p class="muted">${count(sum((project) => project.own ?? project.definitions))} definitions in ${projects.length} project${projects.length === 1 ? '' : 's'} on this host, each counted in the project that defines it.</p>` +
     // A first path for a visitor who has not met DEUS (the four-project probe, 2026-10-16).
-    `<p class="hub-start">New here? DEUS keeps code in a codebase, not files: each definition stored by its hash beside its history, specs, tests and tasks. Start with <a href="/@dxos/toolchain/#n:Tour">the Tour</a>, then a spec document such as <a href="/@dxos/toolchain/#s:Compile.Spec">Compile.Spec</a>; <a href="/@dxos/toolchain/#k:glossary">the glossary</a> explains the terms and the glyphs.</p></header>` +
+    `<p class="hub-start">New here? DEUS keeps code in a codebase, not files: each definition stored by its hash beside its history, specs, tests and tasks. Start with <a href="/@dxos/toolchain/#n:Tour">the Tour</a>, then a spec document such as <a href="/@dxos/toolchain/#s:Compile.Spec">Compile.Spec</a>; <a href="/@dxos/toolchain/#k:glossary">the glossary</a> explains the terms and the glyphs. To see DEUS run in a browser, open <a href="/demo/todo/">the todo app</a>, written in DEUS with React (<a href="/@dxos/web/#n:TodoApp">its source</a>).</p></header>` +
     tiles(counts, (kind) => (kind === 'namespace' ? '#hub-projects' : '#'));
 };
 

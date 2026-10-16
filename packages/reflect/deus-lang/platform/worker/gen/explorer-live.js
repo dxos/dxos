@@ -7622,29 +7622,7 @@ function Print$notationsOf(meta) {
 rt.named(Print$notationsOf, "Print.notationsOf");
 
 function Cli$loadRule(dir, ns, name) {
-  const t0 = new rt.Con("#Pair", 0, [Cli$notationTypes(ns), lib$base$Map$lookup(name, ns)]);
-  m1: {
-    if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[0].fields[0].tag === 0 && t0.fields[1].tag === 1 && t0.fields[1].fields[0].tag === 0) {
-      const n = t0.fields[0].fields[0].fields[0];
-      const t = t0.fields[0].fields[0].fields[1];
-      const h = t0.fields[1].fields[0].fields[0];
-      const t2 = Codebase$readObject(dir, h);
-      m3: {
-        if (t2.tag === 1 && t2.fields[0].tag === 3 && t2.fields[0].fields[0].tag === 1 && t2.fields[0].fields[0].fields[0].tag === 1 && t2.fields[0].fields[0].fields[0].fields[0] === "term" && t2.fields[0].fields[0].fields[1].tag === 1 && t2.fields[0].fields[0].fields[1].fields[1].tag === 0) {
-          const core = t2.fields[0].fields[0].fields[1].fields[0];
-          return Syntax$decodeRule(n, t, h, name, core);
-        }
-        if (true) {
-          return rt.con0("#Option", 0);
-        }
-        rt.nomatch(t2);
-      }
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(t0);
-  }
+  return Cli$loadRuleWith(Cli$notationTypes(ns), dir, ns, name);
 }
 rt.named(Cli$loadRule, "Cli.loadRule");
 
@@ -9098,8 +9076,111 @@ function Print$indexedOf(meta, field) {
 }
 rt.named(Print$indexedOf, "Print.indexedOf");
 
+function Cli$loadRuleWith(types, dir, ns, name) {
+  const t0 = new rt.Con("#Pair", 0, [types, lib$base$Map$lookup(name, ns)]);
+  m1: {
+    if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[0].fields[0].tag === 0 && t0.fields[1].tag === 1 && t0.fields[1].fields[0].tag === 0) {
+      const n = t0.fields[0].fields[0].fields[0];
+      const t = t0.fields[0].fields[0].fields[1];
+      const h = t0.fields[1].fields[0].fields[0];
+      const t2 = Codebase$readObject(dir, h);
+      m3: {
+        if (t2.tag === 1 && t2.fields[0].tag === 3 && t2.fields[0].fields[0].tag === 1 && t2.fields[0].fields[0].fields[0].tag === 1 && t2.fields[0].fields[0].fields[0].fields[0] === "term" && t2.fields[0].fields[0].fields[1].tag === 1 && t2.fields[0].fields[0].fields[1].fields[1].tag === 0) {
+          const core = t2.fields[0].fields[0].fields[1].fields[0];
+          const t4 = Syntax$decodeRule(n, t, h, name, core);
+          m5: {
+            if (t4.tag === 1) {
+              const rule = t4.fields[0];
+              if (lib$base$not(Check$hasAttr(dir, h, "elab"))) {
+                return new rt.Con("#Option", 1, [rule]);
+              } else {
+                const refused = rt.named((why) => {
+                let r6;
+                m7: {
+                  if (rule.tag === 0) {
+                    const v = rule.fields[0];
+                    const v_1 = rule.fields[1];
+                    const v_2 = rule.fields[2];
+                    const v_3 = rule.fields[3];
+                    const v_4 = rule.fields[4];
+                    const v_5 = rule.fields[5];
+                    r6 = new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [v, v_1, v_2, v_3, v_4, new rt.Con("#Option", 1, [lib$base$Sexp$node("refused", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "elaborator ", name), " "), why)]), rt.NIL))])]);
+                    break m7;
+                  }
+                  rt.nomatch(rule);
+                }
+                return new rt.Con("#Option", 1, [r6]);
+              }, "Cli.loadRuleWith/\u03bb");
+                const t8 = lib$base$Option$bind(Codebase$metaField(Codebase$readMeta(dir, h), "scheme"), rt.named((s) => Syntax$elaboratorProblem(s, Syntax$holeCount(Syntax$Loaded$ruleParts(rule))), "Cli.loadRuleWith/\u03bb"));
+                m9: {
+                  if (t8.tag === 1) {
+                    const problem = t8.fields[0];
+                    return rt.ap(refused, problem);
+                  }
+                  if (t8.tag === 0) {
+                    const t10 = lib$base$try(rt.named((v_6) => Image$load(rt.named((x) => Codebase$readObject(dir, x), "Cli.loadRuleWith/\u03bb"), rt.cons(h, rt.NIL)), "Cli.loadRuleWith/\u03bb"));
+                    m11: {
+                      if (t10.tag === 0) {
+                        let r12;
+                        m13: {
+                          if (rule.tag === 0) {
+                            const v_7 = rule.fields[0];
+                            const v_8 = rule.fields[1];
+                            const v_9 = rule.fields[2];
+                            const v_10 = rule.fields[3];
+                            const v_11 = rule.fields[4];
+                            const v_12 = rule.fields[5];
+                            r12 = new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [v_7, v_8, v_9, v_10, v_11, lib$base$Option$map(rt.named((f) => lib$base$Sexp$node("elaborate", rt.cons(f, rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [name]), rt.NIL))), "Cli.loadRuleWith/\u03bb"), Syntax$Loaded$ruleTemplate(rule))]);
+                            break m13;
+                          }
+                          rt.nomatch(rule);
+                        }
+                        return new rt.Con("#Option", 1, [r12]);
+                      }
+                      if (t10.tag === 1) {
+                        const e = t10.fields[0];
+                        return rt.ap(refused, rt.ap(rt.prims["append"], "could not be loaded: ", e));
+                      }
+                      rt.nomatch(t10);
+                    }
+                  }
+                  rt.nomatch(t8);
+                }
+              }
+            }
+            if (t4.tag === 0) {
+              return rt.con0("#Option", 0);
+            }
+            rt.nomatch(t4);
+          }
+        }
+        if (true) {
+          return rt.con0("#Option", 0);
+        }
+        rt.nomatch(t2);
+      }
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Cli$loadRuleWith, "Cli.loadRuleWith");
+
 function Cli$notationTypes(ns) {
-  const t0 = new rt.Con("#Pair", 0, [lib$base$Map$lookup("Syntax.Notation", ns), lib$base$Map$lookup("Syntax.Part", ns)]);
+  const typeNamed = rt.named((name) => lib$base$Option$orElse(lib$base$Map$lookup(name, ns), rt.named((v) => lib$base$Option$map(lib$base$snd, lib$base$List$find(rt.named((pair) => {
+      if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
+        if (lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", name), lib$base$fst(pair))) {
+          return (lib$base$List$length(rt.ap(rt.prims["Text.split"], lib$base$fst(pair), ".")) === 4);
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }, "Cli.notationTypes/\u03bb"), lib$base$Map$toList(ns))), "Cli.notationTypes/\u03bb")), "Cli.notationTypes/\u03bb");
+  const t0 = new rt.Con("#Pair", 0, [rt.ap(typeNamed, "Syntax.Notation"), rt.ap(typeNamed, "Syntax.Part")]);
   m1: {
     if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[0].fields[0].tag === 2 && t0.fields[1].tag === 1 && t0.fields[1].fields[0].tag === 2) {
       const n = t0.fields[0].fields[0].fields[0];
@@ -9113,120 +9194,6 @@ function Cli$notationTypes(ns) {
   }
 }
 rt.named(Cli$notationTypes, "Cli.notationTypes");
-
-function Syntax$decodeRule(notationType, partType, key, fqn, core) {
-  const text = rt.named((s) => {
-  m0: {
-    if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "text" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
-      const v = s.fields[0].fields[1].fields[0].fields[0];
-      return new rt.Con("#Option", 1, [v]);
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(s);
-  }
-}, "Syntax.decodeRule/\u03bb");
-  const number = rt.named((s_1) => {
-  m1: {
-    if (s_1.tag === 3 && s_1.fields[0].tag === 1 && s_1.fields[0].fields[0].tag === 1 && s_1.fields[0].fields[0].fields[0] === "int" && s_1.fields[0].fields[1].tag === 1 && s_1.fields[0].fields[1].fields[0].tag === 0 && s_1.fields[0].fields[1].fields[1].tag === 0) {
-      const v_1 = s_1.fields[0].fields[1].fields[0].fields[0];
-      return new rt.Con("#Option", 1, [v_1]);
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(s_1);
-  }
-}, "Syntax.decodeRule/\u03bb");
-  const part = rt.named((s_2) => {
-  m2: {
-    if (s_2.tag === 3 && s_2.fields[0].tag === 1 && s_2.fields[0].fields[0].tag === 1 && s_2.fields[0].fields[0].fields[0] === "app" && s_2.fields[0].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].tag === 3 && s_2.fields[0].fields[1].fields[0].fields[0].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0) {
-      const t = s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
-      const tag = s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0];
-      const args = s_2.fields[0].fields[1].fields[1];
-      if (!rt.equal(t, partType)) {
-        return rt.con0("#Option", 0);
-      } else {
-        if ((tag === 0)) {
-          return lib$base$Option$map(rt.conFn("0a36c3324bcbe7fc435823ff0a9cfb819c2d0c64361669a7466332c24d666bfe", 0, 1), lib$base$Option$bind(lib$base$List$head$p(args), text));
-        } else {
-          if ((tag === 2)) {
-            return lib$base$Option$map(rt.conFn("0a36c3324bcbe7fc435823ff0a9cfb819c2d0c64361669a7466332c24d666bfe", 2, 1), lib$base$Option$bind(lib$base$List$head$p(args), number));
-          } else {
-            m3: {
-              if (args.tag === 1 && args.fields[1].tag === 1 && args.fields[1].fields[1].tag === 1 && args.fields[1].fields[1].fields[1].tag === 1 && args.fields[1].fields[1].fields[1].fields[1].tag === 0) {
-                const i = args.fields[0];
-                const c = args.fields[1].fields[0];
-                const p = args.fields[1].fields[1].fields[0];
-                const r = args.fields[1].fields[1].fields[1].fields[0];
-                const t4 = new rt.Con("#Pair", 0, [rt.ap(number, i), new rt.Con("#Pair", 0, [rt.ap(text, c), new rt.Con("#Pair", 0, [rt.ap(number, p), rt.ap(text, r)])])]);
-                m5: {
-                  if (t4.tag === 0 && t4.fields[0].tag === 1 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1 && t4.fields[1].fields[1].tag === 0 && t4.fields[1].fields[1].fields[0].tag === 1 && t4.fields[1].fields[1].fields[1].tag === 1) {
-                    const index = t4.fields[0].fields[0];
-                    const category = t4.fields[1].fields[0].fields[0];
-                    const prec = t4.fields[1].fields[1].fields[0].fields[0];
-                    const repeat = t4.fields[1].fields[1].fields[1].fields[0];
-                    return new rt.Con("#Option", 1, [new rt.Con("0a36c3324bcbe7fc435823ff0a9cfb819c2d0c64361669a7466332c24d666bfe", 1, [index, category, prec, repeat])]);
-                  }
-                  if (true) {
-                    return rt.con0("#Option", 0);
-                  }
-                  rt.nomatch(t4);
-                }
-              }
-              if (true) {
-                return rt.con0("#Option", 0);
-              }
-              rt.nomatch(args);
-            }
-          }
-        }
-      }
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(s_2);
-  }
-}, "Syntax.decodeRule/\u03bb");
-  m6: {
-    if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "app" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 3 && core.fields[0].fields[1].fields[0].fields[0].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && core.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && core.fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 0) {
-      const t_1 = core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
-      const category_1 = core.fields[0].fields[1].fields[1].fields[0];
-      const prec_1 = core.fields[0].fields[1].fields[1].fields[1].fields[0];
-      const parts = core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[0];
-      const template = core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].fields[0];
-      if (!rt.equal(t_1, notationType)) {
-        return rt.con0("#Option", 0);
-      } else {
-        const t7 = new rt.Con("#Pair", 0, [rt.ap(text, category_1), new rt.Con("#Pair", 0, [rt.ap(number, prec_1), Print$listItems(parts)])]);
-        m8: {
-          if (t7.tag === 0 && t7.fields[0].tag === 1 && t7.fields[1].tag === 0 && t7.fields[1].fields[0].tag === 1 && t7.fields[1].fields[1].tag === 1) {
-            const c_1 = t7.fields[0].fields[0];
-            const n = t7.fields[1].fields[0].fields[0];
-            const items = t7.fields[1].fields[1].fields[0];
-            const decoded = lib$base$List$map(part, items);
-            if (lib$base$List$all(lib$base$Option$isSome, decoded)) {
-              return new rt.Con("#Option", 1, [new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [key, fqn, c_1, n, lib$base$List$filterMap(rt.named((x) => x, "Syntax.decodeRule/\u03bb"), decoded), new rt.Con("#Option", 1, [template])])]);
-            } else {
-              return rt.con0("#Option", 0);
-            }
-          }
-          if (true) {
-            return rt.con0("#Option", 0);
-          }
-          rt.nomatch(t7);
-        }
-      }
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(core);
-  }
-}
-rt.named(Syntax$decodeRule, "Syntax.decodeRule");
 
 function Printer$hints(v) {
   m0: {
@@ -10610,23 +10577,229 @@ function Types$signatureType(u, s, vars, rowVars) {
 }
 rt.named(Types$signatureType, "Types.signatureType");
 
-function Print$listItems(t) {
+function Syntax$decodeRule(notationType, partType, key, fqn, core) {
+  const text = rt.named((s) => {
   m0: {
-    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0] === "#List" && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
-      return new rt.Con("#Option", 1, [rt.NIL]);
-    }
-    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "app" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#List" && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
-      const h = t.fields[0].fields[1].fields[1].fields[0];
-      const rest = t.fields[0].fields[1].fields[1].fields[1].fields[0];
-      return lib$base$Option$map(rt.named((items) => rt.cons(h, items), "Print.listItems/\u03bb"), Print$listItems(rest));
+    if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "text" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
+      const v = s.fields[0].fields[1].fields[0].fields[0];
+      return new rt.Con("#Option", 1, [v]);
     }
     if (true) {
       return rt.con0("#Option", 0);
     }
-    rt.nomatch(t);
+    rt.nomatch(s);
+  }
+}, "Syntax.decodeRule/\u03bb");
+  const number = rt.named((s_1) => {
+  m1: {
+    if (s_1.tag === 3 && s_1.fields[0].tag === 1 && s_1.fields[0].fields[0].tag === 1 && s_1.fields[0].fields[0].fields[0] === "int" && s_1.fields[0].fields[1].tag === 1 && s_1.fields[0].fields[1].fields[0].tag === 0 && s_1.fields[0].fields[1].fields[1].tag === 0) {
+      const v_1 = s_1.fields[0].fields[1].fields[0].fields[0];
+      return new rt.Con("#Option", 1, [v_1]);
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(s_1);
+  }
+}, "Syntax.decodeRule/\u03bb");
+  const part = rt.named((s_2) => {
+  m2: {
+    if (s_2.tag === 3 && s_2.fields[0].tag === 1 && s_2.fields[0].fields[0].tag === 1 && s_2.fields[0].fields[0].fields[0] === "app" && s_2.fields[0].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].tag === 3 && s_2.fields[0].fields[1].fields[0].fields[0].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0) {
+      const t = s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
+      const tag = s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0];
+      const args = s_2.fields[0].fields[1].fields[1];
+      if (!rt.equal(t, partType)) {
+        return rt.con0("#Option", 0);
+      } else {
+        if ((tag === 0)) {
+          return lib$base$Option$map(rt.conFn("0a36c3324bcbe7fc435823ff0a9cfb819c2d0c64361669a7466332c24d666bfe", 0, 1), lib$base$Option$bind(lib$base$List$head$p(args), text));
+        } else {
+          if ((tag === 2)) {
+            return lib$base$Option$map(rt.conFn("0a36c3324bcbe7fc435823ff0a9cfb819c2d0c64361669a7466332c24d666bfe", 2, 1), lib$base$Option$bind(lib$base$List$head$p(args), number));
+          } else {
+            m3: {
+              if (args.tag === 1 && args.fields[1].tag === 1 && args.fields[1].fields[1].tag === 1 && args.fields[1].fields[1].fields[1].tag === 1 && args.fields[1].fields[1].fields[1].fields[1].tag === 0) {
+                const i = args.fields[0];
+                const c = args.fields[1].fields[0];
+                const p = args.fields[1].fields[1].fields[0];
+                const r = args.fields[1].fields[1].fields[1].fields[0];
+                const t4 = new rt.Con("#Pair", 0, [rt.ap(number, i), new rt.Con("#Pair", 0, [rt.ap(text, c), new rt.Con("#Pair", 0, [rt.ap(number, p), rt.ap(text, r)])])]);
+                m5: {
+                  if (t4.tag === 0 && t4.fields[0].tag === 1 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1 && t4.fields[1].fields[1].tag === 0 && t4.fields[1].fields[1].fields[0].tag === 1 && t4.fields[1].fields[1].fields[1].tag === 1) {
+                    const index = t4.fields[0].fields[0];
+                    const category = t4.fields[1].fields[0].fields[0];
+                    const prec = t4.fields[1].fields[1].fields[0].fields[0];
+                    const repeat = t4.fields[1].fields[1].fields[1].fields[0];
+                    return new rt.Con("#Option", 1, [new rt.Con("0a36c3324bcbe7fc435823ff0a9cfb819c2d0c64361669a7466332c24d666bfe", 1, [index, category, prec, repeat])]);
+                  }
+                  if (true) {
+                    return rt.con0("#Option", 0);
+                  }
+                  rt.nomatch(t4);
+                }
+              }
+              if (true) {
+                return rt.con0("#Option", 0);
+              }
+              rt.nomatch(args);
+            }
+          }
+        }
+      }
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(s_2);
+  }
+}, "Syntax.decodeRule/\u03bb");
+  m6: {
+    if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "app" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 3 && core.fields[0].fields[1].fields[0].fields[0].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && core.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && core.fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+      const t_1 = core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
+      const category_1 = core.fields[0].fields[1].fields[1].fields[0];
+      const prec_1 = core.fields[0].fields[1].fields[1].fields[1].fields[0];
+      const parts = core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[0];
+      const template = core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].fields[0];
+      if (!rt.equal(t_1, notationType)) {
+        return rt.con0("#Option", 0);
+      } else {
+        const t7 = new rt.Con("#Pair", 0, [rt.ap(text, category_1), new rt.Con("#Pair", 0, [rt.ap(number, prec_1), Print$listItems(parts)])]);
+        m8: {
+          if (t7.tag === 0 && t7.fields[0].tag === 1 && t7.fields[1].tag === 0 && t7.fields[1].fields[0].tag === 1 && t7.fields[1].fields[1].tag === 1) {
+            const c_1 = t7.fields[0].fields[0];
+            const n = t7.fields[1].fields[0].fields[0];
+            const items = t7.fields[1].fields[1].fields[0];
+            const decoded = lib$base$List$map(part, items);
+            if (lib$base$List$all(lib$base$Option$isSome, decoded)) {
+              return new rt.Con("#Option", 1, [new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [key, fqn, c_1, n, lib$base$List$filterMap(rt.named((x) => x, "Syntax.decodeRule/\u03bb"), decoded), new rt.Con("#Option", 1, [template])])]);
+            } else {
+              return rt.con0("#Option", 0);
+            }
+          }
+          if (true) {
+            return rt.con0("#Option", 0);
+          }
+          rt.nomatch(t7);
+        }
+      }
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(core);
   }
 }
-rt.named(Print$listItems, "Print.listItems");
+rt.named(Syntax$decodeRule, "Syntax.decodeRule");
+
+function Check$hasAttr(dir, h, name) {
+  return lib$base$List$any(rt.named((a) => {
+  if (rt.equal(lib$base$Sexp$head(a), name)) {
+    return true;
+  } else {
+    m0: {
+      if (a.tag === 3 && a.fields[0].tag === 1 && a.fields[0].fields[0].tag === 2) {
+        const n = a.fields[0].fields[0].fields[0];
+        return rt.equal(n, name);
+      }
+      if (true) {
+        return false;
+      }
+      rt.nomatch(a);
+    }
+  }
+}, "Check.hasAttr/\u03bb"), Codebase$metaList(Codebase$readMeta(dir, h), "attrs"));
+}
+rt.named(Check$hasAttr, "Check.hasAttr");
+
+function Syntax$elaboratorProblem(scheme, holes) {
+  const sexp = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tref"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["urn:deus:Sexp"]), rt.NIL))]);
+  const throws = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tapp"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tref"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["urn:deus:Throw"]), rt.NIL))]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tref"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["#Text"]), rt.NIL))]), rt.NIL)))]);
+  const allowed = rt.named((e) => {
+  m0: {
+    if (e.tag === 3 && e.fields[0].tag === 1 && e.fields[0].fields[0].tag === 1 && e.fields[0].fields[0].fields[0] === "tvar" && e.fields[0].fields[1].tag === 1 && e.fields[0].fields[1].fields[1].tag === 0) {
+      return true;
+    }
+    if (true) {
+      return rt.equal(e, throws);
+    }
+    rt.nomatch(e);
+  }
+}, "Syntax.elaboratorProblem/\u03bb");
+  function walk(t$, n$) {
+    for (;;) {
+      const t = t$, n = n$;
+      m1: {
+        if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tfun" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1) {
+          const a = t.fields[0].fields[1].fields[0];
+          const r = t.fields[0].fields[1].fields[1].fields[0];
+          const rest = t.fields[0].fields[1].fields[1].fields[1];
+          let r2;
+          if (!rt.equal(a, sexp)) {
+            r2 = (lib$base$Sexp$head(a) !== "tvar");
+          } else {
+            r2 = false;
+          }
+          if (r2) {
+            return new rt.Con("#Option", 1, ["takes a hole that is not a Sexp"]);
+          } else {
+            m3: {
+              if (rest.tag === 1 && rest.fields[0].tag === 3 && rest.fields[0].fields[0].tag === 1 && rest.fields[0].fields[0].fields[0].tag === 1 && rest.fields[0].fields[0].fields[0].fields[0] === "eff" && rest.fields[1].tag === 0) {
+                const effs = rest.fields[0].fields[0].fields[1];
+                if (lib$base$List$all(allowed, effs)) {
+                  t$ = r;
+                  n$ = ((n + 1) | 0);
+                  continue;
+                } else {
+                  return new rt.Con("#Option", 1, ["performs an effect other than Throw Text"]);
+                }
+              }
+              if (true) {
+                t$ = r;
+                n$ = ((n + 1) | 0);
+                continue;
+              }
+              rt.nomatch(rest);
+            }
+          }
+        }
+        if (true) {
+          if (!rt.equal(t, sexp)) {
+            return new rt.Con("#Option", 1, ["does not return a Sexp"]);
+          } else {
+            if (!rt.equal(n, holes)) {
+              return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "takes ", rt.ap(rt.prims["Int.toText"], n)), " holes, not "), rt.ap(rt.prims["Int.toText"], holes))]);
+            } else {
+              return rt.con0("#Option", 0);
+            }
+          }
+        }
+        rt.nomatch(t);
+      }
+    }
+  }
+  rt.named(walk, "walk");
+  m4: {
+    if (scheme.tag === 3 && scheme.fields[0].tag === 1 && scheme.fields[0].fields[0].tag === 1 && scheme.fields[0].fields[0].fields[0] === "tapp" && scheme.fields[0].fields[1].tag === 1 && scheme.fields[0].fields[1].fields[1].tag === 1 && scheme.fields[0].fields[1].fields[1].fields[1].tag === 0) {
+      const expansion = scheme.fields[0].fields[1].fields[1].fields[0];
+      return rt.ap(walk, expansion, 0);
+    }
+    if (true) {
+      return new rt.Con("#Option", 1, ["has no Notation type"]);
+    }
+    rt.nomatch(scheme);
+  }
+}
+rt.named(Syntax$elaboratorProblem, "Syntax.elaboratorProblem");
+
+function Image$load(fetch, roots) {
+  const pending = lib$base$List$filter(rt.named((pair) => lib$base$not(rt.ap(rt.unavailable("Code.has"), lib$base$fst(pair))), "Image.load/\u03bb"), Image$closure(fetch, roots));
+  if (lib$base$List$isEmpty(pending)) {
+    return undefined;
+  } else {
+    return rt.ap(rt.unavailable("Code.load"), rt.ap(rt.prims["Text.join"], "\n", lib$base$List$map(Image$defForm, pending)));
+  }
+}
+rt.named(Image$load, "Image.load");
 
 function Ts$hasUses(result) {
   m0: {
@@ -10802,6 +10975,24 @@ function Print$tupleItems(t) {
   }
 }
 rt.named(Print$tupleItems, "Print.tupleItems");
+
+function Print$listItems(t) {
+  m0: {
+    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0] === "#List" && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+      return new rt.Con("#Option", 1, [rt.NIL]);
+    }
+    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "app" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#List" && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+      const h = t.fields[0].fields[1].fields[1].fields[0];
+      const rest = t.fields[0].fields[1].fields[1].fields[1].fields[0];
+      return lib$base$Option$map(rt.named((items) => rt.cons(h, items), "Print.listItems/\u03bb"), Print$listItems(rest));
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(t);
+  }
+}
+rt.named(Print$listItems, "Print.listItems");
 
 function Print$unhinted(text$) {
   for (;;) {
@@ -11614,6 +11805,60 @@ function Types$signatureRow(u, effs, vars, rowVars) {
 }
 rt.named(Types$signatureRow, "Types.signatureRow");
 
+function Image$closure(fetch, roots) {
+  function go(work$, seen$, acc$) {
+    for (;;) {
+      const work = work$, seen = seen$, acc = acc$;
+      m0: {
+        if (work.tag === 0) {
+          return acc;
+        }
+        if (work.tag === 1) {
+          const h = work.fields[0];
+          const rest = work.fields[1];
+          if (lib$base$Set$contains(h, seen)) {
+            work$ = rest;
+            seen$ = seen;
+            acc$ = acc;
+            continue;
+          } else {
+            const t1 = lib$base$Option$bind(rt.ap(fetch, h), Image$coreOf);
+            m2: {
+              if (t1.tag === 1) {
+                const core = t1.fields[0];
+                work$ = Image$refs(core, rest);
+                seen$ = lib$base$Set$insert(h, seen);
+                acc$ = rt.cons(new rt.Con("#Pair", 0, [h, core]), acc);
+                continue;
+              }
+              if (t1.tag === 0) {
+                return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing definition #", h)]);
+              }
+              rt.nomatch(t1);
+            }
+          }
+        }
+        rt.nomatch(work);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return lib$base$List$sortBy(rt.named((a, b) => rt.ap(rt.prims["compare"], lib$base$fst(a), lib$base$fst(b)), "Image.closure/\u03bb"), rt.ap(go, roots, lib$base$Set$empty(), rt.NIL));
+}
+rt.named(Image$closure, "Image.closure");
+
+function Image$defForm(pair) {
+  m0: {
+    if (pair.tag === 0) {
+      const h = pair.fields[0];
+      const core = pair.fields[1];
+      return lib$base$Sexp$print(lib$base$Sexp$node("def", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [h]), rt.cons(core, rt.NIL))));
+    }
+    rt.nomatch(pair);
+  }
+}
+rt.named(Image$defForm, "Image.defForm");
+
 function Print$hintNames(p, f, args) {
   let key;
   m0: {
@@ -12250,6 +12495,46 @@ function Types$rowToSexp(r) {
 }
 rt.named(Types$rowToSexp, "Types.rowToSexp");
 
+function Image$coreOf(obj) {
+  m0: {
+    if (obj.tag === 3 && obj.fields[0].tag === 1 && obj.fields[0].fields[0].tag === 1 && obj.fields[0].fields[0].fields[0] === "term" && obj.fields[0].fields[1].tag === 1 && obj.fields[0].fields[1].fields[1].tag === 0) {
+      const core = obj.fields[0].fields[1].fields[0];
+      return new rt.Con("#Option", 1, [core]);
+    }
+    if (obj.tag === 3 && obj.fields[0].tag === 1 && obj.fields[0].fields[0].tag === 1 && obj.fields[0].fields[0].fields[0] === "test" && obj.fields[0].fields[1].tag === 1 && obj.fields[0].fields[1].fields[1].tag === 0) {
+      const core_1 = obj.fields[0].fields[1].fields[0];
+      return new rt.Con("#Option", 1, [core_1]);
+    }
+    if (obj.tag === 3 && obj.fields[0].tag === 1 && obj.fields[0].fields[0].tag === 1 && obj.fields[0].fields[0].fields[0] === "theorem" && obj.fields[0].fields[1].tag === 1 && obj.fields[0].fields[1].fields[1].tag === 1) {
+      const core_2 = obj.fields[0].fields[1].fields[1].fields[0];
+      return new rt.Con("#Option", 1, [core_2]);
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(obj);
+  }
+}
+rt.named(Image$coreOf, "Image.coreOf");
+
+function Image$refs(form, acc) {
+  m0: {
+    if (form.tag === 3 && form.fields[0].tag === 1 && form.fields[0].fields[0].tag === 1 && form.fields[0].fields[0].fields[0] === "ref" && form.fields[0].fields[1].tag === 1 && form.fields[0].fields[1].fields[0].tag === 2 && form.fields[0].fields[1].fields[1].tag === 0) {
+      const h = form.fields[0].fields[1].fields[0].fields[0];
+      return rt.cons(h, acc);
+    }
+    if (form.tag === 3) {
+      const items = form.fields[0];
+      return lib$base$List$foldl(rt.named((a, x) => Image$refs(x, a), "Image.refs/\u03bb"), acc, items);
+    }
+    if (true) {
+      return acc;
+    }
+    rt.nomatch(form);
+  }
+}
+rt.named(Image$refs, "Image.refs");
+
 function Print$isLiteral(t) {
   m0: {
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "int" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 0) {
@@ -12668,12 +12953,12 @@ function Print$holeText(p, c, prec, core, names, env, ind) {
           rt.nomatch(core);
         }
       } else {
-        if ((c === "num")) {
+        if ((c === "raw")) {
           m2: {
-            if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "int" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[1].tag === 0) {
+            if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "text" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[1].tag === 0) {
               const v_2 = core.fields[0].fields[1].fields[0].fields[0];
-              if ((v_2 >= 0)) {
-                text = new rt.Con("#Option", 1, [rt.ap(rt.prims["Int.toText"], v_2)]);
+              if (Print$rawReadsBack(v_2)) {
+                text = new rt.Con("#Option", 1, [v_2]);
               } else {
                 text = rt.con0("#Option", 0);
               }
@@ -12686,16 +12971,15 @@ function Print$holeText(p, c, prec, core, names, env, ind) {
             rt.nomatch(core);
           }
         } else {
-          if ((c === "ident")) {
+          if ((c === "num")) {
             m3: {
-              if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "var" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[1].tag === 0) {
-                const k = core.fields[0].fields[1].fields[0].fields[0];
-                text = lib$base$List$get$p(env, k);
-                break m3;
-              }
-              if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "ref" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[1].tag === 0) {
-                const h = core.fields[0].fields[1].fields[0].fields[0];
-                text = new rt.Con("#Option", 1, [Print$refName(p, h, env)]);
+              if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "int" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[1].tag === 0) {
+                const v_3 = core.fields[0].fields[1].fields[0].fields[0];
+                if ((v_3 >= 0)) {
+                  text = new rt.Con("#Option", 1, [rt.ap(rt.prims["Int.toText"], v_3)]);
+                } else {
+                  text = rt.con0("#Option", 0);
+                }
                 break m3;
               }
               if (true) {
@@ -12705,34 +12989,54 @@ function Print$holeText(p, c, prec, core, names, env, ind) {
               rt.nomatch(core);
             }
           } else {
-            m4: {
-              if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "notation" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].tag === 0) {
-                const key = core.fields[0].fields[1].fields[0].fields[0];
-                const inner = core.fields[0].fields[1].fields[1].fields[0];
-                const t5 = lib$base$Map$lookup(key, Printer$rules(p));
-                m6: {
-                  if (t5.tag === 1) {
-                    const rule = t5.fields[0];
-                    if (rt.equal(Syntax$Loaded$ruleCategory(rule), c)) {
-                      text = lib$base$Option$map(lib$base$fst, Print$throughNotation(p, key, inner, env, ind));
-                    } else {
-                      text = rt.con0("#Option", 0);
-                    }
-                    break m6;
-                  }
-                  if (t5.tag === 0) {
-                    text = rt.con0("#Option", 0);
-                    break m6;
-                  }
-                  rt.nomatch(t5);
+            if ((c === "ident")) {
+              m4: {
+                if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "var" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[1].tag === 0) {
+                  const k = core.fields[0].fields[1].fields[0].fields[0];
+                  text = lib$base$List$get$p(env, k);
+                  break m4;
                 }
-                break m4;
+                if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "ref" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[1].tag === 0) {
+                  const h = core.fields[0].fields[1].fields[0].fields[0];
+                  text = new rt.Con("#Option", 1, [Print$refName(p, h, env)]);
+                  break m4;
+                }
+                if (true) {
+                  text = rt.con0("#Option", 0);
+                  break m4;
+                }
+                rt.nomatch(core);
               }
-              if (true) {
-                text = rt.con0("#Option", 0);
-                break m4;
+            } else {
+              m5: {
+                if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "notation" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].tag === 0) {
+                  const key = core.fields[0].fields[1].fields[0].fields[0];
+                  const inner = core.fields[0].fields[1].fields[1].fields[0];
+                  const t6 = lib$base$Map$lookup(key, Printer$rules(p));
+                  m7: {
+                    if (t6.tag === 1) {
+                      const rule = t6.fields[0];
+                      if (rt.equal(Syntax$Loaded$ruleCategory(rule), c)) {
+                        text = lib$base$Option$map(lib$base$fst, Print$throughNotation(p, key, inner, env, ind));
+                      } else {
+                        text = rt.con0("#Option", 0);
+                      }
+                      break m7;
+                    }
+                    if (t6.tag === 0) {
+                      text = rt.con0("#Option", 0);
+                      break m7;
+                    }
+                    rt.nomatch(t6);
+                  }
+                  break m5;
+                }
+                if (true) {
+                  text = rt.con0("#Option", 0);
+                  break m5;
+                }
+                rt.nomatch(core);
               }
-              rt.nomatch(core);
             }
           }
         }
@@ -12822,6 +13126,56 @@ function Syntax$isWord(v) {
 }
 rt.named(Syntax$isWord, "Syntax.isWord");
 
+function Print$rawReadsBack(v) {
+  const t0 = lib$base$try(rt.named((v_1) => Lexer$lex(v), "Print.rawReadsBack/\u03bb"));
+  m1: {
+    if (t0.tag === 0) {
+      const tokens = t0.fields[0];
+      const words = lib$base$List$filter(rt.named((t) => !rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8)), "Print.rawReadsBack/\u03bb"), tokens);
+      if (lib$base$not(lib$base$List$isEmpty(words))) {
+        if (lib$base$List$all(rt.named((t_1) => {
+        if (lib$base$not(Parser$endsRaw(t_1))) {
+          if (!rt.equal(Token$kind(t_1), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 4))) {
+            if (!rt.equal(Token$kind(t_1), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 9))) {
+              return !rt.equal(Token$kind(t_1), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 7));
+            } else {
+              return false;
+            }
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }, "Print.rawReadsBack/\u03bb"), words)) {
+          if (rt.equal(rt.ap(rt.prims["Text.trim"], v), v)) {
+            if (lib$base$not(lib$base$Text$contains("  ", v))) {
+              if (lib$base$not(lib$base$Text$contains("\n", v))) {
+                return lib$base$not(lib$base$Text$contains("\u0009", v));
+              } else {
+                return false;
+              }
+            } else {
+              return false;
+            }
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    if (t0.tag === 1) {
+      return false;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Print$rawReadsBack, "Print.rawReadsBack");
+
 const Lexer$twoCharSymbols = rt.lazy("Lexer.twoCharSymbols", () => lib$base$Set$dict(rt.cons(":=", rt.cons("=>", rt.cons("->", rt.cons("<-", rt.cons("::", rt.cons("++", rt.cons("==", rt.cons("!=", rt.cons("<=", rt.cons(">=", rt.cons("&&", rt.cons("||", rt.cons("|>", rt.cons("<|", rt.cons("@[", rt.NIL)))))))))))))))));
 
 function Syntax$tokensOf(text) {
@@ -12870,11 +13224,6 @@ function Token$value(v) {
   }
 }
 rt.named(Token$value, "Token.value");
-
-function lib$base$Set$dict(xs) {
-  return rt.ap(rt.prims["Dict.fromList"], lib$base$List$map(rt.named((x) => new rt.Con("#Pair", 0, [x, undefined]), "lib.base.Set.dict/\u03bb"), xs));
-}
-rt.named(lib$base$Set$dict, "lib.base.Set.dict");
 
 function Lexer$lex(source) {
   const n = rt.ap(rt.prims["Text.length"], source);
@@ -13031,7 +13380,7 @@ function Lexer$lex(source) {
               r6 = false;
             }
             if (r6) {
-              function digitsEnd_1(j$) {
+              function digitsEnd1(j$) {
                 for (;;) {
                   const j = j$;
                   if (Lexer$isHex(rt.ap(at, j))) {
@@ -13042,8 +13391,8 @@ function Lexer$lex(source) {
                   }
                 }
               }
-              rt.named(digitsEnd_1, "digitsEnd_1");
-              const close = rt.ap(digitsEnd_1, ((i_6 + 3) | 0));
+              rt.named(digitsEnd1, "digitsEnd1");
+              const close = rt.ap(digitsEnd1, ((i_6 + 3) | 0));
               let r7;
               if (rt.equal(close, ((i_6 + 3) | 0))) {
                 r7 = true;
@@ -13346,15 +13695,25 @@ function Lexer$lex(source) {
                               continue;
                             } else {
                               const one = rt.ap(rt.prims["Text.slice"], source, i_7, ((i_7 + 1) | 0));
-                              if (rt.ap(rt.prims["Dict.contains"], one, Lexer$oneCharSymbols())) {
-                                i_7$ = ((i_7 + 1) | 0);
-                                line_2$ = line_2;
-                                lineStart_2$ = lineStart_2;
-                                bol$ = false;
-                                acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), one, i_7);
-                                continue;
+                              let r23;
+                              if ((one === ".")) {
+                                r23 = lib$base$Text$isDigit(rt.ap(at, ((i_7 + 1) | 0)));
                               } else {
-                                return Lexer$fail(line_2, col, rt.ap(rt.prims["append"], "unexpected character ", one));
+                                r23 = false;
+                              }
+                              if (r23) {
+                                return Lexer$fail(line_2, col, "a number has no fraction: Int is a whole number");
+                              } else {
+                                if (rt.ap(rt.prims["Dict.contains"], one, Lexer$oneCharSymbols())) {
+                                  i_7$ = ((i_7 + 1) | 0);
+                                  line_2$ = line_2;
+                                  lineStart_2$ = lineStart_2;
+                                  bol$ = false;
+                                  acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), one, i_7);
+                                  continue;
+                                } else {
+                                  return Lexer$fail(line_2, col, rt.ap(rt.prims["append"], "unexpected character ", one));
+                                }
                               }
                             }
                           }
@@ -13374,6 +13733,32 @@ function Lexer$lex(source) {
   return rt.ap(go, 0, 1, 0, true, rt.NIL);
 }
 rt.named(Lexer$lex, "Lexer.lex");
+
+function Parser$endsRaw(t) {
+  if (rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8))) {
+    return true;
+  } else {
+    if (rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5))) {
+      if ((Token$value(t) === "<")) {
+        return true;
+      } else {
+        if ((Token$value(t) === "{")) {
+          return true;
+        } else {
+          return (Token$value(t) === "}");
+        }
+      }
+    } else {
+      return false;
+    }
+  }
+}
+rt.named(Parser$endsRaw, "Parser.endsRaw");
+
+function lib$base$Set$dict(xs) {
+  return rt.ap(rt.prims["Dict.fromList"], lib$base$List$map(rt.named((x) => new rt.Con("#Pair", 0, [x, undefined]), "lib.base.Set.dict/\u03bb"), xs));
+}
+rt.named(lib$base$Set$dict, "lib.base.Set.dict");
 
 function Lexer$isIdentPart(c) {
   if (Lexer$isIdentStart(c)) {
@@ -13516,7 +13901,7 @@ function Lexer$unicode(c) {
 }
 rt.named(Lexer$unicode, "Lexer.unicode");
 
-const Lexer$oneCharSymbols = rt.lazy("Lexer.oneCharSymbols", () => lib$base$Set$dict(rt.cons("(", rt.cons(")", rt.cons("[", rt.cons("]", rt.cons("{", rt.cons("}", rt.cons(",", rt.cons(":", rt.cons("|", rt.cons("@", rt.cons("+", rt.cons("-", rt.cons("*", rt.cons("/", rt.cons("%", rt.cons("<", rt.cons(">", rt.cons("=", rt.cons("!", rt.cons("_", rt.cons(";", rt.cons("?", rt.NIL))))))))))))))))))))))));
+const Lexer$oneCharSymbols = rt.lazy("Lexer.oneCharSymbols", () => lib$base$Set$dict(rt.cons("(", rt.cons(")", rt.cons("[", rt.cons("]", rt.cons("{", rt.cons("}", rt.cons(",", rt.cons(":", rt.cons("|", rt.cons("@", rt.cons("+", rt.cons("-", rt.cons("*", rt.cons("/", rt.cons("%", rt.cons("<", rt.cons(">", rt.cons("=", rt.cons("!", rt.cons("_", rt.cons(";", rt.cons("?", rt.cons(".", rt.NIL)))))))))))))))))))))))));
 
 export const raw = {
   site: Explorer$site,
