@@ -883,6 +883,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                   Array.takeWhile((invocation) => Exit.isSuccess(invocation.result)),
                   Array.last,
                 );
+                // A reset that landed while the batch ran wins: advancing past it would skip the replay.
+                if (readFeedCursor(trigger) !== cursor) {
+                  break;
+                }
                 if (Option.isSome(lastSuccessfulInvocation)) {
                   const advanced = Feed.Cursor.make(lastSuccessfulInvocation.value.feedCursor ?? failedInvariant());
                   cursor = advanced;

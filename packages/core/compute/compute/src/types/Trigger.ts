@@ -64,10 +64,16 @@ export const specFeed = (feed: Feed.Feed, options: { batchSize?: number } = {}):
   ...(options.batchSize !== undefined && { batchSize: options.batchSize }),
 });
 
+/** Upper bound on {@link FeedSpec.batchSize}: the batch is read in one query and held in one invocation's input. */
+export const MAX_FEED_BATCH_SIZE = 100;
+
 /**
- * Feed items per invocation for a feed trigger: its `batchSize`, at least one.
+ * Feed items per invocation for a feed trigger: its `batchSize`, clamped to `[1, MAX_FEED_BATCH_SIZE]`.
  */
-export const feedBatchSize = (spec: FeedSpec): number => Math.max(1, Math.floor(spec.batchSize ?? 1));
+export const feedBatchSize = (spec: FeedSpec): number => {
+  const size = Math.floor(spec.batchSize ?? 1);
+  return Number.isFinite(size) ? Math.min(MAX_FEED_BATCH_SIZE, Math.max(1, size)) : 1;
+};
 
 /**
  * Subscription.
