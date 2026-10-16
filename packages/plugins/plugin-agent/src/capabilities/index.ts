@@ -3,8 +3,10 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
@@ -30,6 +32,16 @@ export const AgentMailbox = AppCapability.layerSpec(() => import('./agent-mailbo
   name: 'AgentMailbox',
   environments: ['browser', 'node', 'tauri'],
 });
+// Follows the members panel's admissions, which only the app makes; a headless host adds no members.
+export const AgentAdmission = Capability.lazyModule(
+  'AgentAdmission',
+  {
+    requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
+    provides: [],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./agent-admission.ts'),
+);
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

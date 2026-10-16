@@ -8038,6 +8038,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../../core/compute/edge-compute

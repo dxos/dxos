@@ -369,6 +369,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
