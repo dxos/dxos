@@ -17,9 +17,10 @@ root=$(cd "$pkg/../../.." && pwd)
 # NODE_PATH lets esbuild find React from an output folder outside the repository.
 # DEUS_REACT_ENV=production builds React's production bundle, minified, as the hosted demo serves it.
 mode=${DEUS_REACT_ENV:-development}
-extra=()
-[ "$mode" = production ] && extra=(--minify)
-NODE_PATH="$root/node_modules" "$root/node_modules/.bin/esbuild" "$out/entry.js" --bundle --format=esm --sourcemap \
-  --define:process.env.NODE_ENV="\"$mode\"" "${extra[@]}" --outfile="$out/bundle.js" --log-level=warning
+# A plain string, not an array: bash before 4.4 calls an empty array unbound under `set -u`.
+extra=--sourcemap
+[ "$mode" = production ] && extra=--minify
+NODE_PATH="$root/node_modules" "$root/node_modules/.bin/esbuild" "$out/entry.js" --bundle --format=esm "$extra" \
+  --define:process.env.NODE_ENV="\"$mode\"" --outfile="$out/bundle.js" --log-level=warning
 cp "$here/index.html" "$here/app.css" "$out/"
 echo "Built $out (open index.html through a static server)."

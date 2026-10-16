@@ -71,7 +71,10 @@ def errorAt (t : Token) (message : Text) : {Throw Text} a :=
   | Token.mk kind value line col _ _ =>
     throw (Int.toText line ++ ":" ++ Int.toText col ++ ": " ++ message ++ " (at " ++ kindName kind ++ " " ++ show value ++ ")")
 
-def error (p : Parser) (message : Text) : {Throw Text} a := errorAt (peek p) message
+/-- A parse error at the next token. A `.` there is most often a decimal, which DEUS's raw text reads but its code does not. -/
+def error (p : Parser) (message : Text) : {Throw Text} a :=
+  let t := peek p
+  errorAt t (if isTok t "." then message ++ "; a `.` alone is no DEUS syntax, and an Int has no fraction" else message)
 
 def isKind (t : Token) (k : Kind) : Bool := t.kind == k
 

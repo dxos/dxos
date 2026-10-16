@@ -101,7 +101,13 @@ def userName (cx : Cx) (iri : Text) : {Throw Text} Text :=
   | none => throw ("type " ++ iri ++ " has no name in the codebase")
 
 /-- The TypeScript type of a DEUS type; `vars` names the enclosing declaration's parameters. -/
-def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text :=
+def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text := Bindings.tsTypeAt cx vars false t
+
+/-- `tsType` for a value DEUS hands to TypeScript (`out`) or TypeScript hands to DEUS. A function DEUS hands out runs
+  on the kernel, so its result is a `Promise`; one TypeScript passes in may answer either way. Its parameter flows the
+  other way. -/
+def tsTypeAt (cx : Bindings.Cx) (vars : List Text) (out : Bool) (t : Sexp) : {Throw Text} Text :=
+  let same := fun x => Bindings.tsTypeAt cx vars out x
   match t with
   | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) =>
       match get? vars i with
@@ -111,7 +117,9 @@ def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text 
   | Sexp.list (Sexp.sym "tfun" :: _) =>
       match Bindings.arrows t with
       -- Parenthesized, so `Option (a -> b)` reads as an optional function and not as one that may return undefined.
-      | (a :: [], b, _) => "((value: " ++ Bindings.tsType cx vars a ++ ") => " ++ Bindings.tsType cx vars b ++ " | Promise<" ++ Bindings.tsType cx vars b ++ ">)"
+      | (a :: [], b, _) =>
+          let result := same b
+          "((value: " ++ Bindings.tsTypeAt cx vars (not out) a ++ ") => " ++ (if out then "Promise<" ++ result ++ ">" else result ++ " | Promise<" ++ result ++ ">") ++ ")"
       | _ => Throw.throw "takes a function of more than one parameter"
   | _ =>
       match applied t with
@@ -119,11 +127,11 @@ def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text 
       | Option.some ("#Text", []) => "string"
       | Option.some ("#Bool", []) => "boolean"
       | Option.some ("#Unit", []) => "void"
-      | Option.some ("#List", x :: []) => "ReadonlyArray<" ++ Bindings.tsType cx vars x ++ ">"
-      | Option.some ("#Option", x :: []) => if undefinable x then Throw.throw "an Option of Unit or Option has no unambiguous TypeScript form" else Bindings.tsType cx vars x ++ " | undefined"
-      | Option.some ("#Pair", a :: b :: []) => "readonly [" ++ join ", " (List.map (Bindings.tsType cx vars) (Bindings.tupleItems a b)) ++
+      | Option.some ("#List", x :: []) => "ReadonlyArray<" ++ same x ++ ">"
+      | Option.some ("#Option", x :: []) => if undefinable x then Throw.throw "an Option of Unit or Option has no unambiguous TypeScript form" else same x ++ " | undefined"
+      | Option.some ("#Pair", a :: b :: []) => "readonly [" ++ join ", " (List.map same (Bindings.tupleItems a b)) ++
           "]"
-      | Option.some (iri, args) => if isBuiltin iri then Throw.throw ("no TypeScript form for " ++ iri) else userName cx iri ++ Ts.generics (List.map (Bindings.tsType cx vars) args)
+      | Option.some (iri, args) => if isBuiltin iri then Throw.throw ("no TypeScript form for " ++ iri) else userName cx iri ++ Ts.generics (List.map same args)
       | Option.none => Throw.throw ("no TypeScript form for " ++ Sexp.print t)
 
 /-- `(a, (b, c))` flattens to three items, as DEUS writes `(a, b, c)`; longer tuples nest in the last. -/
@@ -383,7 +391,7 @@ def handlerParts (cx : Bindings.Cx) (fetch : Text -> {IO} Option Sexp) (effect :
     let (params, result, _) := Bindings.arrows t
     let shown := List.filter (fun p => not (isTref "#Unit" p)) params
     let paramText := join ", " (List.map
-      (fun pair => fst pair ++ ": " ++ tsType cx [] (snd pair))
+      (fun pair => fst pair ++ ": " ++ tsTypeAt cx [] true (snd pair))
       (zip (distinct (List.map (opParamName cx) shown)) shown))
     let never :=
       match result with
@@ -495,7 +503,7 @@ def propertyDts (cx : Bindings.Cx) (indent : Text) (e : Export) : {Throw Text} T
     "(" ++
     params ++
     ") => Promise<" ++
-    tsType cx vars e.exResult ++
+    tsTypeAt cx vars true e.exResult ++
     ">;"
 
 /-- An export's top-level declaration. -/
@@ -503,7 +511,7 @@ def functionDts (cx : Bindings.Cx) (e : Export) : {Throw Text} Text :=
   let vars := exVars e
   let params := join ", " (List.map (fun p => fst p ++ ": " ++ snd p) (codecParams vars) ++ List.map (fun p => fst p ++ ": " ++ tsType cx vars (snd p)) (shownParams e))
   Bindings.docComment "" (Text.lines e.exDoc ++ ["`" ++ e.exName ++ " : " ++ e.exShown ++ "`"]) ++
-    "export declare function " ++ e.exIdent ++ Ts.generics vars ++ "(" ++ params ++ "): Promise<" ++ tsType cx vars e.exResult ++ ">;\n"
+    "export declare function " ++ e.exIdent ++ Ts.generics vars ++ "(" ++ params ++ "): Promise<" ++ tsTypeAt cx vars true e.exResult ++ ">;\n"
 
 /-- How a loaded instance calls an export on the kernel. -/
 def boundJs (cx : Bindings.Cx) (indent : Text) (e : Export) : {Throw Text} Text :=

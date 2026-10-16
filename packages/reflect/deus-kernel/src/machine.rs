@@ -1347,6 +1347,11 @@ impl Machine {
         self.drive()
     }
 
+    /// Whether a run waits for the embedder's answer, which another call would overwrite.
+    pub fn is_suspended(&self) -> bool {
+        self.current.is_some()
+    }
+
     /// Continues a suspended run with the embedder's answer to its pending operation.
     pub fn resume(&mut self, value: Value) -> Result<Value, Fail> {
         match &mut self.current {

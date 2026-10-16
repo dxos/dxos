@@ -198,10 +198,13 @@ The kernel's JSON reader is lenient where a reader of its output never needs it 
 - `{"$fn":n}` is the function the instance handed out under `n` (task f8c5aa01): the embedding kernel keeps
   each function it writes until `deus_release(n)`, and reads `{"$fn":n}` back as that same value; a handle
   it does not keep is a panic. `deus_apply(n, argument, length)` calls it on the idle instance and returns
-  as `deus_start`, suspensions included. Handles belong to one instance and live until it loads another
+  as `deus_start`, suspensions included; on an instance whose run waits for an answer it is a panic, since it
+  would drop that run. Only functions become handles; a `Ref` cell, a table or an array leaves as `{"$fn":true}`. Handles belong to one instance and live until it loads another
   image. `deus bindings` returns such a function to TypeScript as an asynchronous function, keeps the
   instance out of its pool while one is reachable (a `FinalizationRegistry` releases each), and runs a call
-  that passes one back on that instance.
+  that passes one back on that instance. A function in an operation's arguments reaches a TypeScript callback
+  the same way, but that run waits for the callback, so calling the function there fails at once ("waiting for
+  a callback of its own run"); kept, it runs after. A function from one instance passed to another is refused.
 - `{"$host":n}` is a function of one argument that the embedder keeps under the number `n`. The program
   calls it as any function; each call performs operation 0 of `urn:deus:builtin:Host` (`#Host`) with the
   arguments `[n, x]`, which no program handles, so the run suspends and the embedder answers with the

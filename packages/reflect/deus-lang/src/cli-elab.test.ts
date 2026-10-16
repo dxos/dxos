@@ -121,6 +121,7 @@ end Bad
     expect(said("Hello,   world!\n  it's ok.")).toBe('"Hello, world! it\'s ok."');
     expect(said('built on .NET and (this).value')).toBe('"built on .NET and (this).value"');
     expect(said('a <= b')).toBe('"a <= b"');
+    expect(said('costs 3.50 in v1.2')).toBe('"costs 3.50 in v1.2"');
     expect(said('he said -- nothing')).toContain('cannot hold `--`');
   });
 });

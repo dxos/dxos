@@ -91,12 +91,12 @@ const PROJECT_PATH = /^\/(@[^/]+)\/([^/]+)(\/.*)?$/;
 
 const site = async (env, ctx, url, version, base, request) => {
   const path = url.pathname === '/' ? '/index.html' : url.pathname;
-  if (path.includes('..') || !env.BUCKET) {
-    return notFound();
-  }
   // The todo app, built from examples/react, runs here so a visitor can see DEUS components work.
   if (!base && !version && path.startsWith('/demo/todo')) {
     return demoPage(path);
+  }
+  if (path.includes('..') || !env.BUCKET) {
+    return notFound();
   }
   const topLevel = path.lastIndexOf('/') === 0;
   if (topLevel && !version) {

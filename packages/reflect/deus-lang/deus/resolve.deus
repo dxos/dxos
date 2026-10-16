@@ -645,6 +645,17 @@ def elaborated (ctx : Ctx) (rule : Text) (f : Sexp) (holes : List Sexp) (depth :
       | Option.none => Resolve.named ctx term
   | Result.err message => Resolve.fail ctx ("elaborator " ++ rule ++ ": " ++ (if startsWith "threw " message then Text.drop 6 message else message))
 
+/-- Why `p` is not a Core pattern (docs/spec/CORE.md), if it is not. -/
+def patternProblem (p : Sexp) : Option Text :=
+  match p with
+  | Sexp.list [Sexp.sym "pany"] => Option.none
+  | Sexp.list [Sexp.sym "pvar"] => Option.none
+  | Sexp.list [Sexp.sym "pint", Sexp.int _] => Option.none
+  | Sexp.list [Sexp.sym "ptext", Sexp.str _] => Option.none
+  | Sexp.list [Sexp.sym "pas", inner] => Resolve.patternProblem inner
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str _ :: Sexp.int _ :: subs) => List.foldl (fun found x => Option.orElse found (fun _ => Resolve.patternProblem x)) Option.none subs
+  | _ => Option.some ("not a Core pattern: " ++ Text.take 80 (Sexp.print p))
+
 /-- Why `t` is not a Core term under `depth` binders (docs/spec/CORE.md), if it is not; `(name "N")` stands
   for a global. -/
 def coreProblem (t : Sexp) (depth : Int) : Option Text :=
@@ -667,8 +678,8 @@ def coreProblem (t : Sexp) (depth : Int) : Option Text :=
   | Sexp.list [Sexp.sym "if", c, y, n] => all [c, y, n] depth
   | Sexp.list [Sexp.sym "letrec", Sexp.list fns, b] => all (b :: fns) (depth + List.length fns)
   | Sexp.list (Sexp.sym "match" :: s :: cases) => Option.orElse (Resolve.coreProblem s depth) (fun _ => all cases depth)
-  | Sexp.list [Sexp.sym "case", p, body] => Resolve.coreProblem body (depth + patternBinders p)
-  | Sexp.list [Sexp.sym "gcase", p, g, body] => all [g, body] (depth + patternBinders p)
+  | Sexp.list [Sexp.sym "case", p, body] => Option.orElse (Resolve.patternProblem p) (fun _ => Resolve.coreProblem body (depth + patternBinders p))
+  | Sexp.list [Sexp.sym "gcase", p, g, body] => Option.orElse (Resolve.patternProblem p) (fun _ => all [g, body] (depth + patternBinders p))
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) => all (b :: clauses) depth
   | Sexp.list [Sexp.sym "ret", body] => Resolve.coreProblem body (depth + 1)
   | Sexp.list [Sexp.sym "on", Sexp.str _, Sexp.int _, Sexp.int k, body] => Resolve.coreProblem body (depth + k + 1)

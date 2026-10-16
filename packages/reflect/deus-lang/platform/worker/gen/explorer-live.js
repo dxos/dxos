@@ -9286,11 +9286,11 @@ function Print$splitSig(sig$, n$) {
 }
 rt.named(Print$splitSig, "Print.splitSig");
 
-function Ts$generics(names) {
-  if (lib$base$List$isEmpty(names)) {
+function Ts$generics(args) {
+  if (lib$base$List$isEmpty(args)) {
     return "";
   } else {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", names)), ">");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", args)), ">");
   }
 }
 rt.named(Ts$generics, "Ts.generics");
@@ -13691,25 +13691,15 @@ function Lexer$lex(source) {
                               continue;
                             } else {
                               const one = rt.ap(rt.prims["Text.slice"], source, i_7, ((i_7 + 1) | 0));
-                              let r23;
-                              if ((one === ".")) {
-                                r23 = lib$base$Text$isDigit(rt.ap(at, ((i_7 + 1) | 0)));
+                              if (rt.ap(rt.prims["Dict.contains"], one, Lexer$oneCharSymbols())) {
+                                i_7$ = ((i_7 + 1) | 0);
+                                line_2$ = line_2;
+                                lineStart_2$ = lineStart_2;
+                                bol$ = false;
+                                acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), one, i_7);
+                                continue;
                               } else {
-                                r23 = false;
-                              }
-                              if (r23) {
-                                return Lexer$fail(line_2, col, "a number has no fraction: Int is a whole number");
-                              } else {
-                                if (rt.ap(rt.prims["Dict.contains"], one, Lexer$oneCharSymbols())) {
-                                  i_7$ = ((i_7 + 1) | 0);
-                                  line_2$ = line_2;
-                                  lineStart_2$ = lineStart_2;
-                                  bol$ = false;
-                                  acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), one, i_7);
-                                  continue;
-                                } else {
-                                  return Lexer$fail(line_2, col, rt.ap(rt.prims["append"], "unexpected character ", one));
-                                }
+                                return Lexer$fail(line_2, col, rt.ap(rt.prims["append"], "unexpected character ", one));
                               }
                             }
                           }

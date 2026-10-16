@@ -127,10 +127,16 @@ fn write(
             }
             out.push_str("]}");
         }
-        _ => match handles {
-            Some(handles) => out.push_str(&format!("{{\"$fn\":{}}}", handles.keep(value.clone()))),
-            None => out.push_str("{\"$fn\":true}"),
-        },
+        // Only a function is kept as a handle; a `Ref` cell, a table or an array leaves as an opaque value.
+        Value::Closure(_) | Value::Prim(_) | Value::ConFn(_) | Value::OpFn(_) | Value::Pap(_) => {
+            match handles {
+                Some(handles) => {
+                    out.push_str(&format!("{{\"$fn\":{}}}", handles.keep(value.clone())))
+                }
+                None => out.push_str("{\"$fn\":true}"),
+            }
+        }
+        _ => out.push_str("{\"$fn\":true}"),
     }
 }
 

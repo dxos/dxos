@@ -126,6 +126,7 @@ let nextCallback = 0;
 const DEUS_FN = Symbol('DEUS function');
 /** The instance a call must run on, set on an argument that passes a DEUS function back. */
 const OWNER = Symbol('DEUS instance');
+const KEEP = Symbol('DEUS function kept');
 /**
  * A function of one parameter. A TypeScript function crosses as `{"$host": n}`, and each call DEUS makes of it
  * comes back as a `Host` request that the run answers with its result. A DEUS function crosses as `{"$fn": n}`
@@ -137,6 +138,8 @@ export const fn = (param, result) => ({
     if (held) {
       const json = { $fn: held.handle };
       Object.defineProperty(json, OWNER, { value: held.owner });
+      // The encoded form keeps the function alive, so its handle is not released while a call carries it.
+      Object.defineProperty(json, KEEP, { value: held.raw });
       return json;
     }
     const handle = nextCallback++;
@@ -281,8 +284,11 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
   };
   const io$ = answerIo(io, Date.now());
 
-  /** Answers each operation the run leaves unhandled until it ends; its value, or the failure thrown. */
-  const drive = async (kernel, first) => {
+  /**
+   * Answers each operation `owner`'s run leaves unhandled until it ends; its value, or the failure thrown. The
+   * functions an operation passes out are bound to `owner` as its results are.
+   */
+  const drive = async (owner, first) => {
     let result = first;
     while (result.state === 'suspend') {
       const answer =
@@ -294,7 +300,17 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
       if (!answer) {
         throw new Error(`no handler for ${result.ability} operation ${result.op}`);
       }
-      result = kernel.resume(await answer(result.op, result.args));
+      // While TypeScript answers, the instance can take no other call: one queued behind the run could be the very
+      // call the answer waits on, so it fails at once rather than hanging (`exclusive`). IO runs no user code.
+      owner.suspended = result.ability !== IO;
+      let value;
+      try {
+        value = await answer(result.op, bindFunctions(owner, result.args));
+      } finally {
+        owner.suspended = false;
+      }
+      sameOwner(owner, value);
+      result = owner.kernel.resume(value);
     }
     switch (result.state) {
       case 'done':
@@ -309,18 +325,18 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
   };
 
   // An instance whose functions TypeScript holds stays out of the pool, runs one call at a time, and returns
-  // to the pool once every such function is collected.
+  // to the pool once every such function is collected and no call is waiting for it.
   const owners = new Map();
   const ownerOf = (kernel) => {
     let owner = owners.get(kernel);
     if (!owner) {
-      owner = { kernel, live: 0, queue: Promise.resolve() };
+      owner = { kernel, live: 0, pending: 0, queue: Promise.resolve() };
       owners.set(kernel, owner);
     }
     return owner;
   };
   const settle = (owner) => {
-    if (owner.live === 0 && !owner.busy) {
+    if (owner.live === 0 && owner.pending === 0) {
       owners.delete(owner.kernel);
       idle.push(owner.kernel);
     }
@@ -330,6 +346,13 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
     owner.live--;
     settle(owner);
   });
+  /** Refuses `json` when it passes back a function another instance made: handles are numbered per instance. */
+  const sameOwner = (owner, json) => {
+    const other = ownerIn(json);
+    if (other && other !== owner) {
+      throw new Error('a DEUS function cannot cross to another instance than the one that made it');
+    }
+  };
   /** `json` with each `{"$fn": n}` made a function that applies handle `n` on `owner`. */
   const bindFunctions = (owner, json) => {
     if (Array.isArray(json)) {
@@ -340,8 +363,15 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
     }
     if (typeof json.$fn === 'number') {
       const handle = json.$fn;
-      const raw = (argument) => exclusive(owner, () => drive(owner.kernel, owner.kernel.apply(handle, argument)));
-      raw[DEUS_FN] = { owner, handle };
+      const raw = async (argument) => {
+        try {
+          sameOwner(owner, argument);
+          return await exclusive(owner, () => drive(owner, owner.kernel.apply(handle, argument)));
+        } finally {
+          handlesIn(argument).forEach((callback) => callbacks.delete(callback));
+        }
+      };
+      raw[DEUS_FN] = { owner, handle, raw };
       owner.live++;
       collected.register(raw, { owner, handle });
       return raw;
@@ -350,12 +380,17 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
   };
   /** Runs `body` on `owner`'s instance after its earlier calls, binding the functions its value holds. */
   const exclusive = (owner, body) => {
+    if (owner.suspended) {
+      return Promise.reject(
+        new Error('this DEUS instance is waiting for a callback of its own run, so it cannot take another call yet'),
+      );
+    }
+    owner.pending++;
     const turn = owner.queue.then(async () => {
-      owner.busy = true;
       try {
         return bindFunctions(owner, await body());
       } finally {
-        owner.busy = false;
+        owner.pending--;
         settle(owner);
       }
     });
@@ -365,15 +400,14 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
 
   return {
     call: async (entry, argument) => {
-      const owner = ownerIn(argument);
       try {
+        const owner = ownerIn(argument);
         if (owner) {
-          return await exclusive(owner, () => drive(owner.kernel, owner.kernel.start(image, entry, argument)));
+          return await exclusive(owner, () => drive(owner, owner.kernel.start(image, entry, argument)));
         }
-        const kernel = await take();
-        const fresh = ownerOf(kernel);
         // The instance stays out of the pool until the call ends and its functions are collected.
-        return await exclusive(fresh, () => drive(kernel, kernel.start(image, entry, argument)));
+        const fresh = ownerOf(await take());
+        return await exclusive(fresh, () => drive(fresh, fresh.kernel.start(image, entry, argument)));
       } finally {
         // A run's TypeScript functions cannot outlive it.
         handlesIn(argument).forEach((handle) => callbacks.delete(handle));

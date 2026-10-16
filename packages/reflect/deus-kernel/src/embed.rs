@@ -321,6 +321,10 @@ pub unsafe extern "C" fn deus_apply(
         };
         let func = HANDLES.with(|handles| handles.borrow().get(handle));
         let result = match func {
+            // Applying now would drop the run that waits for an answer.
+            Some(_) if machine.is_suspended() => Err(Fail::Panic(
+                "the instance is suspended; answer its run first".into(),
+            )),
             Some(func) => decode(&argument, machine)
                 .map_err(Fail::Panic)
                 .and_then(|value| machine.apply_value(func, vec![value])),

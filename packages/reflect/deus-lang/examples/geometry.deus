@@ -92,6 +92,15 @@ def times (k : Int) (x : Int) : Int := x * k
 /-- A function that multiplies by `k`: one parameter, since its body is not a lambda. -/
 def scaler (k : Int) : Int -> Int := times k
 
+/-- What `k` makes of a DEUS function: a callback that receives one. -/
+def handOut (k : (Int -> Int) -> Int) : Int := k (times 2)
+
+/-- `f` applied to `x`. -/
+def applyTo (x : Int) (f : Int -> Int) : Int := f x
+
+/-- A function that applies its argument to `x`. -/
+def applier (x : Int) : (Int -> Int) -> Int := applyTo x
+
 namespace Shapes
 
 /-- Scales a shape by `k`. -/

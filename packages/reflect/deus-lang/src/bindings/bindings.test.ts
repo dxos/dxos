@@ -37,7 +37,7 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 const consumer = `
 import {
   area, configure, DeusDefect, DeusThrow, firstOf, greet, insert, load, lookup, mean, move, paint, ratio,
-  scaledAreas, scaler, Shape, Shapes, sorted, stats, total, Tree, type Point,
+  applier, handOut, scaledAreas, scaler, Shape, Shapes, sorted, stats, total, Tree, type Point,
 } from './geometry.js';
 import { int, text } from './deus-runtime.js';
 
@@ -121,6 +121,19 @@ export const run = async (logged: string[], printed: string[]) => {
     // A DEUS function comes out as an asynchronous function, and passed back it is the same function again.
     tripled: await (await scaler(3))(5),
     scaledByDeus: await scaledAreas(await scaler(2), shapes),
+    // A callback receives a DEUS function. Its run waits for the callback, so calling it there fails at once
+    // instead of hanging; kept, it runs once the run is over.
+    reentrant: await handOut(async (f) => f(21)).catch((error: Error) => error.message),
+    handedOut: await (async () => {
+      let kept: ((value: number) => Promise<number>) | undefined;
+      await handOut((f) => {
+        kept = f;
+        return 0;
+      });
+      return kept?.(21);
+    })(),
+    // Functions are numbered per instance, so one from another instance is refused, not confused.
+    crossed: await (await applier(7))(await scaler(100)).catch((error: Error) => error.message),
   };
 };
 `;
@@ -137,7 +150,7 @@ describe('deus bindings', () => {
     expect(generated.stderr).toBe('');
     expect(generated.code).toBe(0);
     const report = JSON.parse(generated.stdout);
-    expect(report.exported).toHaveLength(16);
+    expect(report.exported).toHaveLength(19);
     expect(report.types).toBe(join(out, 'geometry.d.ts'));
     expect(readFileSync(join(out, 'geometry.d.ts'), 'utf8')).toContain(
       'export declare function area(s: Shape): Promise<number>;',
@@ -209,6 +222,9 @@ describe('deus bindings', () => {
       wrongCallback: expect.anything(),
       tripled: 15,
       scaledByDeus: [24, 24],
+      handedOut: 42,
+      reentrant: expect.stringContaining('waiting for a callback of its own run'),
+      crossed: expect.stringContaining('another instance'),
     });
     expect(logged).toEqual(['summing 2 shapes', 'summing 0 shapes']);
     expect(printed).toEqual(['hello from DEUS\n']);
