@@ -420,8 +420,7 @@ node AgentsSection
 node AccountAgents
   desc: |
     The account's Agents panel (`dxos:account/agents`, URL key `agents`), one of the account's panels beside
-    plugin-client's. Its `position` lies between Devices' and Contacts' in plugin-client's `Account.position`,
-    so the panel is listed right after Devices.
+    plugin-client's. Its `position` is `Position.last`, so the panel is listed after them.
   source: dxos:account
   properties:
     label: Agents

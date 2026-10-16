@@ -16,12 +16,13 @@ import { isSpace } from '@dxos/client/echo';
 import { Filter, Order, Query } from '@dxos/echo';
 import * as Account from '@dxos/plugin-client/Account';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { AgentCapabilities, AgentCompanion } from '#types';
 
 import { AGENTS_SECTION_ID, AGENTS_SECTION_TYPE } from '../constants.ts';
-import { AGENTS_PANEL, AGENTS_PANEL_PATH, AGENTS_PANEL_POSITION } from './agents-panel.ts';
+import { AGENTS_PANEL, AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -104,8 +105,8 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      // The agents the identity administers, among the account's panels beside its devices, while the plugin's setting
-      // creates agents with identities.
+      // The agents the identity administers, after the account's other panels, while the plugin's setting creates agents
+      // with identities.
       AppGraphBuilder.createExtension({
         id: 'accountAgents',
         url: { key: AGENTS_PANEL, kind: 'singleton', path: [] },
@@ -121,7 +122,7 @@ export default Capability.makeModule(
               data: AGENTS_PANEL_PATH,
               type: meta.profile.key,
               properties: {
-                position: AGENTS_PANEL_POSITION,
+                position: Position.last,
                 label: ['agents-panel.label', { ns: meta.profile.key }],
                 icon: 'ph--robot--regular',
                 testId: 'agentPlugin.agents',
