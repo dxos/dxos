@@ -41,17 +41,23 @@ describe('space tags', () => {
 });
 
 describe('agent identities', () => {
-  test("an agent space's owner is an agent, which the contact picker leaves to its invitee source", ({ expect }) => {
-    const agent = PublicKey.random();
-    const admin = PublicKey.random();
+  test("only an agent's admins may add it elsewhere", ({ expect }) => {
+    const [kai, ada, admin, editor, reader] = [...Array(5)].map(() => PublicKey.random());
     const member = (key: PublicKey, role: SpaceMember_Role) =>
       createBuf(SpaceMemberSchema, { identity: { identityKey: fromPublicKey(key) }, role });
-    const kai = {
+    const agentSpace = (agent: PublicKey, ...members: ReturnType<typeof member>[]) => ({
       tags: [AppSpace.AGENT_SPACE_TAG],
-      members: { get: () => [member(agent, SpaceMember_Role.OWNER), member(admin, SpaceMember_Role.ADMIN)] },
-    };
-    const team = { tags: [], members: { get: () => [member(admin, SpaceMember_Role.OWNER)] } };
-    expect(AppSpace.agentIdentityKeys([kai, team]).map((key) => key.toHex())).toEqual([agent.toHex()]);
+      members: { get: () => [member(agent, SpaceMember_Role.OWNER), ...members] },
+    });
+    const spaces = [
+      agentSpace(kai, member(admin, SpaceMember_Role.ADMIN), member(reader, SpaceMember_Role.READER)),
+      agentSpace(ada, member(editor, SpaceMember_Role.EDITOR)),
+      { tags: [], members: { get: () => [member(reader, SpaceMember_Role.OWNER)] } },
+    ];
+    const hexes = (self: PublicKey) => AppSpace.agentsNotAdministeredBy(spaces, self).map((key) => key.toHex());
+    expect(hexes(admin)).toEqual([ada.toHex()]);
+    expect(hexes(editor)).toEqual([kai.toHex()]);
+    expect(hexes(reader)).toEqual([kai.toHex(), ada.toHex()]);
   });
 });
 

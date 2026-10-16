@@ -213,6 +213,26 @@ export const termText = (term: RDF.Term): string =>
 export const factText = (fact: RDF.Fact): string =>
   `${fact.factuality.polarity === '-' ? 'not: ' : ''}${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;
 
+/**
+ * The facts that still hold at `now` (ISO): none another graph superseded or retracted, and none past its `validTo`.
+ * A graph with a `kind` records a free-text memory rather than a fact, so it is left out.
+ */
+export const currentFacts = (facts: readonly RDF.Fact[], now: string): RDF.Fact[] => {
+  const statuses = RDF.Graph.status(facts);
+  return facts.filter(
+    (fact) =>
+      fact.kind === undefined &&
+      statuses.get(RDF.Mapping.graphOf(fact)) === 'active' &&
+      holdsAt(fact.assertion.validTo, Date.parse(now)),
+  );
+};
+
+/** Compared as instants, since extracted `validTo`s vary in offset, precision and granularity; one that does not parse is kept. */
+const holdsAt = (validTo: string | undefined, now: number): boolean => {
+  const until = validTo === undefined ? Number.NaN : Date.parse(validTo);
+  return Number.isNaN(until) || until > now;
+};
+
 /** An event as plain JSON, for brains across a wire. */
 export const encodeEvent = Schema.encodeSync(Event);
 

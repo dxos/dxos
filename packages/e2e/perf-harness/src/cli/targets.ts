@@ -5,7 +5,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { isProductionEdgeHost } from '../partition.ts';
+import { OFFLINE_EDGE_URL, isProductionEdgeHost } from '../partition.ts';
 import { type Budget, parseBudgets } from '../score/score.ts';
 import { HarnessError } from './workspace.ts';
 
@@ -66,9 +66,6 @@ export type Conditions = {
 
 /** Not a real project's key: whatever the SDK sends with it goes only to the loopback sink. */
 const SINK_POSTHOG_KEY = 'phc_perf_loopback_sink';
-
-/** Nothing listens on the discard port, so an offline bundle's EDGE connections fail at once, locally. */
-const OFFLINE_EDGE_URL = 'http://127.0.0.1:9/';
 
 export const TARGETS: Readonly<Record<string, Target>> = {
   composer: {

@@ -17,6 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
@@ -31,7 +32,7 @@ import {
   RelaySkill,
   SupportSkill,
 } from '#skills';
-import { AgentOperation, ChatParticipant, Goal, Knowledge, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
+import { AgentOperation, ChatParticipant, Goal, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 
@@ -161,24 +162,43 @@ describe('Modes', () => {
   );
 
   it.effect(
-    'records a note with a markdown body attached to its subject',
+    'records notes as facts stated by the agent about their subject',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const rich = yield* Database.add(Person.make({ fullName: 'Rich Burdon' }));
-        const body = '- The migration must take the write lock first.\n- Dima owns the fix.';
-        const { memory: id } = yield* Operation.invoke(MemoryOperation.Remember, {
+        const dima = yield* Database.add(Person.make({ fullName: 'Dima' }));
+        const {
+          facts: [lock, owner],
+        } = yield* Operation.invoke(MemoryOperation.Remember, {
           agent,
-          content: 'Notes on the indexer migration race.',
-          kind: 'note',
-          subjects: [Ref.make<Obj.Unknown>(rich)],
-          body,
+          facts: [
+            {
+              subject: Ref.make<Obj.Unknown>(rich),
+              predicate: 'proposes',
+              value: 'the migration takes the write lock first',
+              quote: 'The migration must take the write lock first.',
+            },
+            {
+              subject: Ref.make<Obj.Unknown>(dima),
+              predicate: 'works on',
+              value: 'the indexer migration fix',
+              quote: 'Dima owns the fix.',
+            },
+          ],
         });
-        const { memories } = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(rich) });
-        expect(memories).toEqual([expect.objectContaining({ memory: id, kind: 'note' })]);
+        const { facts: recalled } = yield* Operation.invoke(MemoryOperation.Recall, {
+          subject: Ref.make<Obj.Unknown>(rich),
+        });
+        expect(recalled).toEqual([
+          expect.objectContaining({ id: lock, fact: 'Rich Burdon proposes the migration takes the write lock first' }),
+        ]);
         const store = brain.facts((yield* Database.load(agent)).id);
-        const facts = store ? yield* store.query({}) : [];
-        expect(Knowledge.fromFacts(facts).find((memory) => memory.id === id)?.body).toBe(body);
+        const stored = store ? yield* store.query({}) : [];
+        const fact = stored.find((fact) => fact.graph === owner);
+        expect(fact?.assertion.predicateIri).toBe(RDF.Ontology.DEFAULT.resolve('works on').iri);
+        expect(fact?.attribution.agentLabel).toBe('Kai');
+        expect(fact?.kind).toBeUndefined();
       },
       Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,

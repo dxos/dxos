@@ -125,6 +125,30 @@ rule state-owned-once: Track state on the record that owns it, not in a side-tab
 ```
 
 ```mdl
+rule store-events-not-projections: Store what happened, and compute what follows from it when it is read
+  Keep each piece of state once, as the original fact: what happened and the
+  inputs it carried (a pause received at 12:00:03 asking for 1,500 ms, a frame
+  counted, a reply seen). Compute anything that follows from it, such as a
+  deadline, an expiry, a remaining time or a running level, when it is read.
+  Flag a field that holds a value computed from other stored data or from the
+  clock, such as `pausedUntil = Date.now() + retryAfterMs`, `expiresAt`, or a
+  duration grown in place (`ms *= 2`) where the number of events that grew it
+  is the fact, so the rule that turns the fact into the value lives in one
+  read path instead of being frozen into state at write time. Do not flag a
+  value received as-is from outside (a deadline a peer sends), or a cache that
+  exists to avoid an expensive read and is reset from its source. Fix: store
+  the event's own data and compute the projection in a getter.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  unit: file
+  context: diff, siblings
+  system-one: on
+  severity: warn
+```
+
+```mdl
 rule no-pointless-indirection: Don't wrap, name, or generalize a value that doesn't need it
   Don't introduce an intermediate variable, wrapper function, explicit
   generic argument, or cache for something already trivial, used once, or
