@@ -440,6 +440,20 @@ body.no-sidebar #sidebar {
 
 /* Cards. */
 
+.card-loading {
+  padding: 14px 16px;
+  animation: loading-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes loading-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .card {
   margin-bottom: 14px;
   border: 1px solid var(--line);

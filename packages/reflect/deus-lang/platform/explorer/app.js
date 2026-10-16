@@ -2660,7 +2660,19 @@ const renderNow = async () => {
       cardElements.delete(key);
     }
   }
+  // A card whose page is drawn on demand can take seconds after a push; past a moment the reader sees that it loads.
+  const loading = keys.some((key) => !cardElements.has(key))
+    ? setTimeout(() => {
+        const note = document.createElement('div');
+        note.className = 'card card-loading';
+        note.innerHTML = '<p class="muted">Loading…</p>';
+        const home = workspace.querySelector('.home');
+        home ? home.before(note) : workspace.append(note);
+      }, 300)
+    : undefined;
   const built = await Promise.all(keys.map(async (key) => [key, cardElements.get(key) ?? (await buildCard(key))]));
+  clearTimeout(loading);
+  workspace.querySelector('.card-loading')?.remove();
   workspace.querySelector('.home')?.remove();
   for (const [key, value] of built) {
     let node = value;
