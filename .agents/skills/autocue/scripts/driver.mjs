@@ -96,6 +96,8 @@ const parseArgs = () => {
     ),
     'driver-port': 4444,
     'headed': 'off',
+    // `on` launches full Chromium's headless mode, which has the GPU, instead of the software-rendered headless shell.
+    'gpu': 'off',
     // Tauri on macOS: `on` deletes the test build's profile before launch, for a first-run take.
     'fresh': 'off',
     // Extra Chromium flags, comma-separated, e.g. a fake microphone fed from a voice file:
@@ -147,6 +149,9 @@ const scale = hires ? options.scale : 1;
 
 const launchOptions = {
   headless: !manual,
+  // The default headless shell renders WebGL in software (SwiftShader), so a 3D plugin records at a few frames a
+  // second and starves the page; full Chromium's headless mode (`--gpu on`) uses the GPU.
+  ...(options.gpu === 'on' && !sandbox ? { channel: 'chromium' } : {}),
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
     // The page follows the window, so a person can resize it for their capture without a fixed viewport

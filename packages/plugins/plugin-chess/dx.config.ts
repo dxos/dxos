@@ -18,7 +18,10 @@ export default Config2.make({
     icon: { key: 'ph--shield-chevron--regular', hue: 'amber' },
     spec: 'PLUGIN.mdl',
     tags: ['alpha', 'game'],
-    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-chess-dark.png' }],
+    screenshots: [
+      { dark: 'https://media.dxos.network/plugin-details-chess-dark.png' },
+      { light: 'https://assets.composer.space/demos/2026-10-16-plugin-chess.mp4?v=036db780' },
+    ],
     dependsOn: ['org.dxos.plugin.game'],
   },
 });

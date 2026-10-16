@@ -96,7 +96,8 @@ run, edit the script when the user steers, and read the result.
 
 Check for a committed flow first: one that has already run end to end lives in an `autocue/` folder at the
 root of the package it exercises (`packages/apps/composer-app/autocue/`, or a plugin's own), and running it
-in place beats rewriting it.
+in place beats rewriting it. [DEMOS.md](DEMOS.md) lists every committed flow and its published video; add a
+row when you commit one.
 
 **Otherwise the `.mdl` test comes first, and the script second.** A flow binds a spec; it is not one. The
 test carries the intent a reviewer checks — `given`, each step's `do:`/`expect:`, and every product fact the
