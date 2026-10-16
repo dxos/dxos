@@ -71,8 +71,8 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   play: [{ key: ' ' }],
   stepBack: [{ key: ',' }],
   stepForward: [{ key: '.' }],
-  previousKey: [{ key: '[' }],
-  nextKey: [{ key: ']' }],
+  previousKey: [{ key: '[' }, { key: 'ArrowLeft', meta: true }],
+  nextKey: [{ key: ']' }, { key: 'ArrowRight', meta: true }],
   addKey: [{ key: 'k', shift: false }],
 };
 

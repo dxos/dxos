@@ -54,6 +54,8 @@ export type TimelineKeys = {
   /** Moves the playhead to the selection's next or previous key. */
   jumpKey: (direction: 1 | -1) => void;
   addKey: () => void;
+  /** Removes the selection's keys at the playhead. */
+  removeKey: () => void;
 };
 
 /** The composite-object actions (ANIMATION.md §4.2); each is one undo step. */

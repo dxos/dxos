@@ -24,7 +24,13 @@ export type TimelineBarProps = Util.ThemedClassName<{
   onAutoKeyChange?: (autoKey: boolean) => void;
   /** Keys the selection's animatable properties at the playhead; offered while something is selected. */
   onAddKey?: () => void;
+  /** Removes the selection's keys at the playhead; offered while the playhead is on one. */
+  onRemoveKey?: () => void;
 }>;
+
+/** The key at time `t`, if one is within half a frame of it. */
+export const keyAt = (keys: readonly number[], t: number, fps: number): number | undefined =>
+  keys.find((key) => Math.abs(key - t) < 0.5 / fps);
 
 /** `t` as `s.ff`, seconds and frames, as an editor's timecode reads. */
 export const formatTime = (t: number, fps: number): string => {
@@ -35,7 +41,9 @@ export const formatTime = (t: number, fps: number): string => {
 
 /**
  * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
- * keys on it, the time, and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the playhead to it.
+ * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
+ * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
+ * previous or next key, and Delete removes the key under the playhead.
  */
 export const TimelineBar = ({
   classNames,
@@ -50,7 +58,9 @@ export const TimelineBar = ({
   onTimeChange,
   onAutoKeyChange,
   onAddKey,
+  onRemoveKey,
 }: TimelineBarProps) => {
+  const current = keyAt(keys, time, fps);
   const trackRef = useRef<HTMLDivElement>(null);
   const timeAt = useCallback(
     (clientX: number) => {
@@ -83,15 +93,28 @@ export const TimelineBar = ({
   );
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      const step = event.shiftKey ? 1 : 1 / fps;
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         event.preventDefault();
         event.stopPropagation();
-        const next = time + (event.key === 'ArrowLeft' ? -step : step);
-        onTimeChange?.(Math.min(duration, Math.max(0, next)));
+        const back = event.key === 'ArrowLeft';
+        if (event.metaKey || event.ctrlKey) {
+          const target = back
+            ? [...keys].reverse().find((key) => key < time - 0.5 / fps)
+            : keys.find((key) => key > time + 0.5 / fps);
+          if (target !== undefined) {
+            onTimeChange?.(target);
+          }
+          return;
+        }
+        const step = event.shiftKey ? 1 : 1 / fps;
+        onTimeChange?.(Math.min(duration, Math.max(0, time + (back ? -step : step))));
+      } else if ((event.key === 'Delete' || event.key === 'Backspace') && current !== undefined && onRemoveKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        onRemoveKey();
       }
     },
-    [time, duration, fps, onTimeChange],
+    [time, duration, fps, keys, current, onTimeChange, onRemoveKey],
   );
   const at = (t: number) => `${duration > 0 ? (t / duration) * 100 : 0}%`;
   return (
@@ -135,7 +158,10 @@ export const TimelineBar = ({
             key={key}
             type='button'
             aria-label={`Key at ${formatTime(key, fps)} s`}
-            className='absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-amber-500 border border-separator'
+            className={mx(
+              'absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-separator',
+              key === current ? 'bg-amber-300 ring-1 ring-amber-300' : 'bg-amber-500',
+            )}
             style={{ left: at(key) }}
             data-testid='timeline-key'
             onPointerDown={(event) => {
@@ -159,23 +185,26 @@ export const TimelineBar = ({
       </span>
       {!readonly && (
         <>
+          {/* One control: on a key it removes the key, elsewhere it adds one. */}
           <Button.Root
             variant='ghost'
             iconOnly
-            icon='ph--diamond--regular'
-            label='Add key (K)'
-            disabled={!onAddKey}
-            data-testid='timeline-add-key'
-            onClick={onAddKey}
+            icon={current !== undefined ? 'ph--diamond--fill' : 'ph--diamond--regular'}
+            label={current !== undefined ? 'Remove key (Delete)' : 'Add key (K)'}
+            disabled={current !== undefined ? !onRemoveKey : !onAddKey}
+            data-testid='timeline-toggle-key'
+            data-state={current !== undefined ? 'on' : 'off'}
+            onClick={current !== undefined ? onRemoveKey : onAddKey}
           />
+          {/* The record dot says whether it is on; a pressed button's fill would shout over the bar. */}
           <Button.Root
             variant='ghost'
             iconOnly
             icon={autoKey ? 'ph--record--fill' : 'ph--record--regular'}
-            label={autoKey ? 'Auto-key on' : 'Auto-key off'}
-            classNames={autoKey ? 'text-error-text' : undefined}
-            aria-pressed={autoKey}
+            label={autoKey ? 'Auto-key on: edits away from the start make keys' : 'Auto-key off'}
+            classNames={autoKey ? 'text-error-text' : 'text-fg-muted'}
             data-testid='timeline-auto-key'
+            data-state={autoKey ? 'on' : 'off'}
             onClick={() => onAutoKeyChange?.(!autoKey)}
           />
         </>

@@ -80,6 +80,7 @@ import {
   clampTime,
   createTimeline,
   keyTimes,
+  removeKey,
   sampleCamera,
   setKey,
   timelineFps,
@@ -783,6 +784,27 @@ const SceneViewRoot = ({
     }
     baseProjection.apply({ kind: 'timeline', timeline: next });
   }, [registry, atoms, projection, baseProjection, nodeRegistry]);
+  /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
+  const removeSelectedKeys = useCallback(() => {
+    const current = registry.get(baseProjection.scene).timeline;
+    if (!current) {
+      return;
+    }
+    const t = registry.get(atoms.clock.time);
+    const ids = registry.get(atoms.selection);
+    const tolerance = 0.5 / timelineFps(current);
+    let next = current;
+    for (const track of Object.values(current.tracks)) {
+      if (ids.has(track.target)) {
+        for (const key of track.keys.filter((key) => Math.abs(key.t - t) < tolerance)) {
+          next = removeKey(next, track.target, track.property, key.t);
+        }
+      }
+    }
+    if (next !== current) {
+      baseProjection.apply({ kind: 'timeline', timeline: next });
+    }
+  }, [registry, atoms, baseProjection]);
   /** Stores the current camera at the playhead. */
   const keyCamera = useCallback(() => {
     const t = registry.get(atoms.clock.time);
@@ -813,8 +835,9 @@ const SceneViewRoot = ({
         }
       },
       addKey,
+      removeKey: removeSelectedKeys,
     }),
-    [timeline, registry, atoms, fps, seek, addKey],
+    [timeline, registry, atoms, fps, seek, addKey, removeSelectedKeys],
   );
 
   //
@@ -2370,6 +2393,7 @@ const SceneViewTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' 
         onTimeChange={seek}
         onAutoKeyChange={(next) => registry.set(atoms.autoKey, next)}
         onAddKey={selection.size > 0 ? timelineKeys.addKey : undefined}
+        onRemoveKey={selection.size > 0 ? timelineKeys.removeKey : undefined}
       />
     </div>
   );

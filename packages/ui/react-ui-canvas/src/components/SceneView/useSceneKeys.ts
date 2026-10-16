@@ -110,11 +110,14 @@ export const useSceneKeys = ({
           case 'stepForward':
             timeline.step(1);
             return;
+          // ⌘← and ⌘→ also go back and forward in the browser's history, which a jump must not do.
           case 'previousKey':
             timeline.jumpKey(-1);
+            event.preventDefault();
             return;
           case 'nextKey':
             timeline.jumpKey(1);
+            event.preventDefault();
             return;
           case 'addKey':
             if (selected.length > 0) {

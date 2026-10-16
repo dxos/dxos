@@ -12,7 +12,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useClock, useRegistry } from '../../hooks/index.ts';
 import { createClock } from '../../model/clock.ts';
-import { TimelineBar } from './Timeline.tsx';
+import { TimelineBar, keyAt } from './Timeline.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };
 
@@ -38,6 +38,7 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
       onTimeChange={(next) => registry.set(clock.time, next)}
       onAutoKeyChange={setAutoKey}
       onAddKey={() => setKeys((keys) => [...new Set([...keys, time])].sort((left, right) => left - right))}
+      onRemoveKey={() => setKeys((keys) => keys.filter((key) => key !== keyAt(keys, time, fps)))}
     />
   );
 };
@@ -62,8 +63,9 @@ type Story = StoryObj<typeof meta>;
  * Test:
  * 1. The bar shows the time against the duration and a diamond per key.
  * 2. Pressing the middle of the track moves the playhead there, on the frame grid.
- * 3. Add key puts a diamond at the playhead.
- * 4. Play advances the clock; pressing it again pauses.
+ * 3. Add key puts a diamond at the playhead; on a key the same button removes it.
+ * 4. ⌘← and ⌘→ jump between keys; Delete removes the key under the playhead.
+ * 5. Play advances the clock; pressing it again pauses.
  */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
@@ -78,11 +80,26 @@ export const Default: Story = {
     await fireEvent.pointerDown(track, { clientX: rect.left + rect.width / 2, clientY: rect.top + 4, pointerId: 1 });
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('2.00 / 4.00'));
 
-    // 3. A key at the playhead.
-    await userEvent.click(canvas.getByTestId('timeline-add-key'));
+    // 3. A key at the playhead, removed and added back by the same control.
+    const toggle = canvas.getByTestId('timeline-toggle-key');
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(3));
+    await expect(toggle).toHaveAttribute('data-state', 'on');
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(2));
+    await userEvent.click(toggle);
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(3));
 
-    // 4. Play, then pause.
+    // 4. Jump between keys from the track, and delete one.
+    track.focus();
+    await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('1.15 / 4.00'));
+    await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('2.00 / 4.00'));
+    await userEvent.keyboard('{Delete}');
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(2));
+
+    // 5. Play, then pause.
     await userEvent.click(canvas.getByTestId('timeline-play'));
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).not.toHaveTextContent(/^2\.00/), {
       timeout: 5_000,
@@ -98,7 +115,7 @@ export const Readonly: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('timeline-play')).toBeInTheDocument();
-    await expect(canvas.queryByTestId('timeline-add-key')).toBeNull();
+    await expect(canvas.queryByTestId('timeline-toggle-key')).toBeNull();
     await expect(canvas.queryByTestId('timeline-auto-key')).toBeNull();
   },
 };
