@@ -31,10 +31,23 @@ function Explorer$site(dir) {
   const fromObject = lib$base$Option$getOr(lib$base$Option$map(Explorer$namedHashes, object), rt.NIL);
   const fromScheme = lib$base$Option$getOr(lib$base$Option$map(Explorer$namedHashes, Codebase$metaField(meta, "scheme")), rt.NIL);
   const named = lib$base$Option$map(rt.ap(Codebase$metaFor, lib$base$fst(pair)), meta);
-  return new rt.Con("#Pair", 0, [h, new rt.Con("#Pair", 0, [lib$base$List$dedup(lib$base$List$sort(rt.ap(rt.prims["append"], fromObject, fromScheme))), new rt.Con("#Pair", 0, [Explorer$hintsOf(lib$base$fst(pair), lib$base$snd(pair), object, meta), new rt.Con("#Pair", 0, [lib$base$fst(pair), new rt.Con("#Pair", 0, [Explorer$signature(named), Explorer$summaryOf(Explorer$docOf(named))])])])])]);
+  let sig;
+  const t2 = lib$base$snd(pair);
+  m3: {
+    if (t2.tag === 6) {
+      sig = "";
+      break m3;
+    }
+    if (true) {
+      sig = Explorer$signature(named);
+      break m3;
+    }
+    rt.nomatch(t2);
+  }
+  return new rt.Con("#Pair", 0, [h, new rt.Con("#Pair", 0, [lib$base$List$dedup(lib$base$List$sort(rt.ap(rt.prims["append"], fromObject, fromScheme))), new rt.Con("#Pair", 0, [Explorer$hintsOf(lib$base$fst(pair), lib$base$snd(pair), object, meta), new rt.Con("#Pair", 0, [lib$base$fst(pair), new rt.Con("#Pair", 0, [sig, Explorer$summaryOf(Explorer$docOf(named))])])])])]);
 }, "Explorer.site/\u03bb"), entries);
   const depsOf = lib$base$Map$fromList(lib$base$List$map(rt.named((f) => {
-  m2: {
+  m4: {
     if (f.tag === 0 && f.fields[1].tag === 0 && f.fields[1].fields[1].tag === 0) {
       const h_1 = f.fields[0];
       const deps = f.fields[1].fields[0];
@@ -44,7 +57,7 @@ function Explorer$site(dir) {
   }
 }, "Explorer.site/\u03bb"), facts));
   const printer = Print$withHints(Print$printer(ns, rt.NIL), lib$base$Map$fromList(lib$base$List$concatMap(rt.named((f_1) => {
-  m3: {
+  m5: {
     if (f_1.tag === 0 && f_1.fields[1].tag === 0 && f_1.fields[1].fields[1].tag === 0) {
       const hs = f_1.fields[1].fields[1].fields[0];
       return hs;
@@ -52,10 +65,10 @@ function Explorer$site(dir) {
     rt.nomatch(f_1);
   }
 }, "Explorer.site/\u03bb"), facts)));
-  const dependents = lib$base$Map$foldr(rt.named((h_2, ds, m) => lib$base$List$foldl(rt.named((m2_1, d) => lib$base$Map$insert(d, rt.cons(h_2, lib$base$Option$getOr(lib$base$Map$lookup(d, m2_1), rt.NIL)), m2_1), "Explorer.site/\u03bb"), m, ds), "Explorer.site/\u03bb"), lib$base$Set$empty(), depsOf);
+  const dependents = lib$base$Map$foldr(rt.named((h_2, ds, m) => lib$base$List$foldl(rt.named((m2, d) => lib$base$Map$insert(d, rt.cons(h_2, lib$base$Option$getOr(lib$base$Map$lookup(d, m2), rt.NIL)), m2), "Explorer.site/\u03bb"), m, ds), "Explorer.site/\u03bb"), lib$base$Set$empty(), depsOf);
   const tasks = lib$base$List$sortBy(Tasks$order, lib$base$Map$values(Tasks$current(dir)));
   const info = lib$base$Map$fromList(lib$base$List$map(rt.named((f_2) => {
-  m4: {
+  m6: {
     if (f_2.tag === 0 && f_2.fields[1].tag === 0 && f_2.fields[1].fields[1].tag === 0) {
       const named_1 = f_2.fields[1].fields[1].fields[1];
       return named_1;
@@ -380,6 +393,11 @@ function lib$base$fst(p) {
 }
 rt.named(lib$base$fst, "lib.base.fst");
 
+function Explorer$signature(meta) {
+  return lib$base$Option$getOr(lib$base$Option$map(rt.named((s) => Types$displayScheme(s), "Explorer.signature/\u03bb"), Codebase$metaField(meta, "scheme")), "");
+}
+rt.named(Explorer$signature, "Explorer.signature");
+
 function lib$base$List$dedup(v$) {
   for (;;) {
     const v = v$;
@@ -446,11 +464,6 @@ function Explorer$hintsOf(name, e, object, meta) {
   }
 }
 rt.named(Explorer$hintsOf, "Explorer.hintsOf");
-
-function Explorer$signature(meta) {
-  return lib$base$Option$getOr(lib$base$Option$map(rt.named((s) => Types$displayScheme(s), "Explorer.signature/\u03bb"), Codebase$metaField(meta, "scheme")), "");
-}
-rt.named(Explorer$signature, "Explorer.signature");
 
 function Explorer$summaryOf(doc) {
   const text = rt.ap(rt.prims["Text.join"], " ", lib$base$List$filter(rt.named((line) => lib$base$not(lib$base$Text$isEmpty(line)), "Explorer.summaryOf/\u03bb"), lib$base$List$map(rt.prims["Text.trim"], lib$base$Text$lines(lib$base$Option$getOr(doc, "")))));
@@ -1349,6 +1362,11 @@ function lib$base$List$drop(n$, xs$) {
 }
 rt.named(lib$base$List$drop, "lib.base.List.drop");
 
+function Types$displayScheme(scheme) {
+  return Types$displaySchemeNamed(lib$base$Set$empty(), scheme);
+}
+rt.named(Types$displayScheme, "Types.displayScheme");
+
 function Explorer$arity(core) {
   m0: {
     if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "lam" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].tag === 0) {
@@ -1469,11 +1487,6 @@ function lib$base$List$isEmpty(v) {
   }
 }
 rt.named(lib$base$List$isEmpty, "lib.base.List.isEmpty");
-
-function Types$displayScheme(scheme) {
-  return Types$displaySchemeNamed(lib$base$Set$empty(), scheme);
-}
-rt.named(Types$displayScheme, "Types.displayScheme");
 
 function lib$base$not(b) {
   if (b) {
@@ -2875,20 +2888,30 @@ function Explorer$defJson(s, name, e) {
   const t6 = new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [h])]);
   const t7 = new rt.Con("#Pair", 0, ["aliases", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), lib$base$List$filter(rt.named((other) => !rt.equal(other, name), "Explorer.defJson/\u03bb"), lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$namesByHash(s)), rt.NIL)))])]);
   let r8;
-  if (lib$base$Text$isEmpty(sig)) {
-    r8 = "";
-  } else {
-    r8 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Explorer$lastOf(name), " : "), sig);
+  m9: {
+    if (e.tag === 6) {
+      r8 = Explorer$statementOf(source, name);
+      break m9;
+    }
+    if (true) {
+      if (lib$base$Text$isEmpty(sig)) {
+        r8 = "";
+      } else {
+        r8 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Explorer$lastOf(name), " : "), sig);
+      }
+      break m9;
+    }
+    rt.nomatch(e);
   }
-  const t9 = new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [r8]);
-  const t10 = new rt.Con("#Pair", 0, ["signature", t9]);
-  const t11 = rt.cons(new rt.Con("#Pair", 0, ["doc", lib$base$Option$getOr(lib$base$Option$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Explorer$docOf(meta)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.cons(new rt.Con("#Pair", 0, ["html", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinked(links, source)])]), rt.cons(new rt.Con("#Pair", 0, ["ts", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinkedIn("ts", links, tsSource)])]), rt.cons(new rt.Con("#Pair", 0, ["deps", rt.ap(named, deps)]), rt.cons(new rt.Con("#Pair", 0, ["users", rt.ap(named, users)]), rt.cons(new rt.Con("#Pair", 0, ["verdict", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$verdictOf(Explorer$Site$dir(s), h)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((t) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.NIL)))]), "Explorer.defJson/\u03bb"), Tasks$about(Explorer$Site$taskMap(s), name, h))])]), rt.NIL)))))));
-  const t12 = rt.cons(t10, t11);
-  const t13 = rt.cons(t7, t12);
-  const t14 = rt.cons(t6, t13);
-  const t15 = rt.cons(t5, t14);
-  const t16 = rt.cons(t4, t15);
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [t16]);
+  const t10 = new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [r8]);
+  const t11 = new rt.Con("#Pair", 0, ["signature", t10]);
+  const t12 = rt.cons(new rt.Con("#Pair", 0, ["doc", lib$base$Option$getOr(lib$base$Option$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Explorer$docOf(meta)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.cons(new rt.Con("#Pair", 0, ["html", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinked(links, source)])]), rt.cons(new rt.Con("#Pair", 0, ["ts", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinkedIn("ts", links, tsSource)])]), rt.cons(new rt.Con("#Pair", 0, ["deps", rt.ap(named, deps)]), rt.cons(new rt.Con("#Pair", 0, ["users", rt.ap(named, users)]), rt.cons(new rt.Con("#Pair", 0, ["verdict", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$verdictOf(Explorer$Site$dir(s), h)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((t) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.NIL)))]), "Explorer.defJson/\u03bb"), Tasks$about(Explorer$Site$taskMap(s), name, h))])]), rt.NIL)))))));
+  const t13 = rt.cons(t11, t12);
+  const t14 = rt.cons(t7, t13);
+  const t15 = rt.cons(t6, t14);
+  const t16 = rt.cons(t5, t15);
+  const t17 = rt.cons(t4, t16);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [t17]);
 }
 rt.named(Explorer$defJson, "Explorer.defJson");
 
@@ -3715,11 +3738,6 @@ function lib$base$Option$isSome(v) {
 }
 rt.named(lib$base$Option$isSome, "lib.base.Option.isSome");
 
-function lib$base$Sexp$print(s) {
-  return rt.ap(rt.prims["Text.concat"], lib$base$List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
-}
-rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
-
 function Types$displaySchemeNamed(names, scheme) {
   const u = Types$newUnifier(undefined);
   const t = Types$zonk(u, Types$fromSexp(u, scheme, rt.ap(rt.prims["Ref.new"], lib$base$Set$empty()), rt.ap(rt.prims["Ref.new"], lib$base$Set$empty()), rt.NIL, false));
@@ -3727,6 +3745,11 @@ function Types$displaySchemeNamed(names, scheme) {
   return Types$showTypeWith(names, t, rt.ap(rt.prims["Ref.new"], lib$base$Set$empty()), 0, lib$base$Set$fromList(lib$base$List$map(lib$base$fst, shared)));
 }
 rt.named(Types$displaySchemeNamed, "Types.displaySchemeNamed");
+
+function lib$base$Sexp$print(s) {
+  return rt.ap(rt.prims["Text.concat"], lib$base$List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
+}
+rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
 
 function lib$base$Map$mk(l, key, value, r) {
   return new rt.Con("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 1, [((1 + lib$base$max(lib$base$Map$height(l), lib$base$Map$height(r))) | 0), l, key, value, r]);
@@ -5077,6 +5100,30 @@ function Explorer$Site$namesByHash(v) {
 }
 rt.named(Explorer$Site$namesByHash, "Explorer.Site.namesByHash");
 
+function Explorer$statementOf(source, name) {
+  const start = rt.ap(rt.prims["Text.indexOf"], source, rt.ap(rt.prims["append"], "theorem ", name), 0);
+  if ((start < 0)) {
+    return "";
+  } else {
+    const rest = lib$base$Text$drop(((((start + rt.ap(rt.prims["Text.length"], "theorem ")) | 0) + rt.ap(rt.prims["Text.length"], name)) | 0), source);
+    const stop = rt.ap(rt.prims["Text.indexOf"], rest, " :=", 0);
+    const t0 = rt.ap(rt.prims["append"], Explorer$lastOf(name), " ");
+    const t1 = rt.prims["Text.trim"];
+    let r2;
+    if ((stop < 0)) {
+      r2 = rest;
+    } else {
+      r2 = lib$base$Text$take(stop, rest);
+    }
+    const t3 = lib$base$Text$lines(r2);
+    const t4 = lib$base$List$map(t1, t3);
+    const t5 = rt.ap(rt.prims["Text.join"], " ", t4);
+    const t6 = rt.ap(rt.prims["Text.trim"], t5);
+    return rt.ap(rt.prims["append"], t0, t6);
+  }
+}
+rt.named(Explorer$statementOf, "Explorer.statementOf");
+
 function Explorer$lastOf(name) {
   return lib$base$Option$getOr(lib$base$List$last$p(rt.ap(rt.prims["Text.split"], name, ".")), name);
 }
@@ -5554,56 +5601,6 @@ function lib$base$Sexp$push(form, stack, done) {
 }
 rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
 
-function lib$base$Sexp$emit(s, acc) {
-  m0: {
-    if (s.tag === 0) {
-      const n = s.fields[0];
-      return rt.cons(rt.ap(rt.prims["Int.toText"], n), acc);
-    }
-    if (s.tag === 1) {
-      const name = s.fields[0];
-      return rt.cons(name, acc);
-    }
-    if (s.tag === 2) {
-      const value = s.fields[0];
-      return rt.cons(lib$base$Sexp$quote(value), acc);
-    }
-    if (s.tag === 3) {
-      const items = s.fields[0];
-      function go(first$, rest$, acc2$) {
-        for (;;) {
-          const first = first$, rest = rest$, acc2 = acc2$;
-          m1: {
-            if (rest.tag === 0) {
-              return rt.cons(")", acc2);
-            }
-            if (rest.tag === 1) {
-              const x = rest.fields[0];
-              const xs = rest.fields[1];
-              let r2;
-              if (first) {
-                r2 = acc2;
-              } else {
-                r2 = rt.cons(" ", acc2);
-              }
-              const t3 = lib$base$Sexp$emit(x, r2);
-              first$ = false;
-              rest$ = xs;
-              acc2$ = t3;
-              continue;
-            }
-            rt.nomatch(rest);
-          }
-        }
-      }
-      rt.named(go, "go");
-      return rt.ap(go, true, items, rt.cons("(", acc));
-    }
-    rt.nomatch(s);
-  }
-}
-rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
-
 function Types$newUnifier(u) {
   return new rt.Con("832925ce40579dd890765ef88c8af15820aabe0bdfb911cba5551778bfe50554", 0, [rt.ap(rt.prims["MutMap.new"], undefined), rt.ap(rt.prims["MutMap.new"], undefined), rt.ap(rt.prims["Ref.new"], 0)]);
 }
@@ -5788,6 +5785,56 @@ function Types$showTypeWith(names, t, seen, prec, shared) {
   }
 }
 rt.named(Types$showTypeWith, "Types.showTypeWith");
+
+function lib$base$Sexp$emit(s, acc) {
+  m0: {
+    if (s.tag === 0) {
+      const n = s.fields[0];
+      return rt.cons(rt.ap(rt.prims["Int.toText"], n), acc);
+    }
+    if (s.tag === 1) {
+      const name = s.fields[0];
+      return rt.cons(name, acc);
+    }
+    if (s.tag === 2) {
+      const value = s.fields[0];
+      return rt.cons(lib$base$Sexp$quote(value), acc);
+    }
+    if (s.tag === 3) {
+      const items = s.fields[0];
+      function go(first$, rest$, acc2$) {
+        for (;;) {
+          const first = first$, rest = rest$, acc2 = acc2$;
+          m1: {
+            if (rest.tag === 0) {
+              return rt.cons(")", acc2);
+            }
+            if (rest.tag === 1) {
+              const x = rest.fields[0];
+              const xs = rest.fields[1];
+              let r2;
+              if (first) {
+                r2 = acc2;
+              } else {
+                r2 = rt.cons(" ", acc2);
+              }
+              const t3 = lib$base$Sexp$emit(x, r2);
+              first$ = false;
+              rest$ = xs;
+              acc2$ = t3;
+              continue;
+            }
+            rt.nomatch(rest);
+          }
+        }
+      }
+      rt.named(go, "go");
+      return rt.ap(go, true, items, rt.cons("(", acc));
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
 
 function lib$base$max(a, b) {
   if (rt.ap(rt.prims["lt"], a, b)) {
@@ -6971,52 +7018,6 @@ function Mdl$unquote(t) {
 }
 rt.named(Mdl$unquote, "Mdl.unquote");
 
-function lib$base$Sexp$quote(t) {
-  if (lib$base$Sexp$plain(t)) {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", t), "\"");
-  } else {
-    const n = rt.ap(rt.prims["Text.length"], t);
-    function go(start$, i$, acc$) {
-      for (;;) {
-        const start = start$, i = i$, acc = acc$;
-        if (rt.ap(rt.prims["ge"], i, n)) {
-          return rt.cons(rt.ap(rt.prims["Text.slice"], t, start, n), acc);
-        } else {
-          const c = rt.ap(rt.prims["Text.code"], t, i);
-          let r0;
-          if ((c === 34)) {
-            r0 = true;
-          } else {
-            if ((c === 92)) {
-              r0 = true;
-            } else {
-              if ((c < 32)) {
-                r0 = true;
-              } else {
-                r0 = (c === 127);
-              }
-            }
-          }
-          if (r0) {
-            start$ = ((i + 1) | 0);
-            i$ = ((i + 1) | 0);
-            acc$ = rt.cons(lib$base$Sexp$quoteCode(c), rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc));
-            continue;
-          } else {
-            start$ = start;
-            i$ = ((i + 1) | 0);
-            acc$ = acc;
-            continue;
-          }
-        }
-      }
-    }
-    rt.named(go, "go");
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], lib$base$List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
-  }
-}
-rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
-
 function Types$resolve(u, t) {
   m0: {
     if (t.tag === 2) {
@@ -7340,6 +7341,52 @@ function Types$resolveTail(r$) {
   }
 }
 rt.named(Types$resolveTail, "Types.resolveTail");
+
+function lib$base$Sexp$quote(t) {
+  if (lib$base$Sexp$plain(t)) {
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", t), "\"");
+  } else {
+    const n = rt.ap(rt.prims["Text.length"], t);
+    function go(start$, i$, acc$) {
+      for (;;) {
+        const start = start$, i = i$, acc = acc$;
+        if (rt.ap(rt.prims["ge"], i, n)) {
+          return rt.cons(rt.ap(rt.prims["Text.slice"], t, start, n), acc);
+        } else {
+          const c = rt.ap(rt.prims["Text.code"], t, i);
+          let r0;
+          if ((c === 34)) {
+            r0 = true;
+          } else {
+            if ((c === 92)) {
+              r0 = true;
+            } else {
+              if ((c < 32)) {
+                r0 = true;
+              } else {
+                r0 = (c === 127);
+              }
+            }
+          }
+          if (r0) {
+            start$ = ((i + 1) | 0);
+            i$ = ((i + 1) | 0);
+            acc$ = rt.cons(lib$base$Sexp$quoteCode(c), rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc));
+            continue;
+          } else {
+            start$ = start;
+            i$ = ((i + 1) | 0);
+            acc$ = acc;
+            continue;
+          }
+        }
+      }
+    }
+    rt.named(go, "go");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], lib$base$List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
+  }
+}
+rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
 
 function Tasks$assetFromSexp(form) {
   const t0 = lib$base$Sexp$args(form);
@@ -8732,78 +8779,6 @@ function Mdl$continueWith(acc, t) {
 }
 rt.named(Mdl$continueWith, "Mdl.continueWith");
 
-function lib$base$Sexp$plain(t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
-  function go(i$) {
-    for (;;) {
-      const i = i$;
-      if (rt.ap(rt.prims["ge"], i, n)) {
-        return true;
-      } else {
-        const c = rt.ap(rt.prims["Text.code"], t, i);
-        let r0;
-        if ((c === 34)) {
-          r0 = true;
-        } else {
-          if ((c === 92)) {
-            r0 = true;
-          } else {
-            if ((c < 32)) {
-              r0 = true;
-            } else {
-              r0 = (c === 127);
-            }
-          }
-        }
-        if (r0) {
-          return false;
-        } else {
-          i$ = ((i + 1) | 0);
-          continue;
-        }
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, 0);
-}
-rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
-
-function lib$base$Sexp$quoteCode(c) {
-  if ((c === 34)) {
-    return "\\\"";
-  } else {
-    if ((c === 92)) {
-      return "\\\\";
-    } else {
-      if ((c === 10)) {
-        return "\\n";
-      } else {
-        if ((c === 9)) {
-          return "\\t";
-        } else {
-          if ((c === 13)) {
-            return "\\r";
-          } else {
-            let r0;
-            if ((c < 32)) {
-              r0 = true;
-            } else {
-              r0 = (c === 127);
-            }
-            if (r0) {
-              return rt.ap(rt.prims["append"], "\\u", lib$base$Sexp$hex4(c));
-            } else {
-              return rt.ap(rt.prims["Text.fromCode"], c);
-            }
-          }
-        }
-      }
-    }
-  }
-}
-rt.named(lib$base$Sexp$quoteCode, "lib.base.Sexp.quoteCode");
-
 function Unifier$types(v) {
   m0: {
     if (v.tag === 0) {
@@ -8934,6 +8909,78 @@ function Types$showType(t, seen, prec) {
   }
 }
 rt.named(Types$showType, "Types.showType");
+
+function lib$base$Sexp$plain(t) {
+  const n = rt.ap(rt.prims["Text.length"], t);
+  function go(i$) {
+    for (;;) {
+      const i = i$;
+      if (rt.ap(rt.prims["ge"], i, n)) {
+        return true;
+      } else {
+        const c = rt.ap(rt.prims["Text.code"], t, i);
+        let r0;
+        if ((c === 34)) {
+          r0 = true;
+        } else {
+          if ((c === 92)) {
+            r0 = true;
+          } else {
+            if ((c < 32)) {
+              r0 = true;
+            } else {
+              r0 = (c === 127);
+            }
+          }
+        }
+        if (r0) {
+          return false;
+        } else {
+          i$ = ((i + 1) | 0);
+          continue;
+        }
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, 0);
+}
+rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
+
+function lib$base$Sexp$quoteCode(c) {
+  if ((c === 34)) {
+    return "\\\"";
+  } else {
+    if ((c === 92)) {
+      return "\\\\";
+    } else {
+      if ((c === 10)) {
+        return "\\n";
+      } else {
+        if ((c === 9)) {
+          return "\\t";
+        } else {
+          if ((c === 13)) {
+            return "\\r";
+          } else {
+            let r0;
+            if ((c < 32)) {
+              r0 = true;
+            } else {
+              r0 = (c === 127);
+            }
+            if (r0) {
+              return rt.ap(rt.prims["append"], "\\u", lib$base$Sexp$hex4(c));
+            } else {
+              return rt.ap(rt.prims["Text.fromCode"], c);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+rt.named(lib$base$Sexp$quoteCode, "lib.base.Sexp.quoteCode");
 
 function Analytics$parts(ref) {
   function lastHash(i$) {
