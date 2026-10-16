@@ -811,9 +811,10 @@ const NodeFrame = memo(
     const nominal = styleVariant(look.styleSet, drawn.style?.tone).borderWidth;
     const border = nominal * lineWeight(props.depth, props.zoom);
     const thick = border !== nominal;
-    // A bare type with no border of its own has no border width either: the frame clips to its padding box, so a
-    // transparent border would shave its drawing (a 4px rule drew 2px).
-    const borderless = def?.bare === true && drawn.style?.border === false && !chromeFade;
+    // A bare type drawing no fill or border has no frame at all: the frame clips its contents, so a transparent border
+    // would shave the drawing (a 4px rule drew 2px) and a rounded corner would cut a glyph's sharp corners.
+    const borderless =
+      def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade;
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
@@ -823,7 +824,7 @@ const NodeFrame = memo(
       [FRAME_BORDER]: chromeFade || borderless ? '0px' : `${border}px`,
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
-      ...(borderless ? { borderWidth: 0 } : {}),
+      ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       ...fade,
       ...nodeOpacity(node, fade),
     };

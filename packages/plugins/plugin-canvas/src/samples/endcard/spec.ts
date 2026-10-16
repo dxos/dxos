@@ -68,6 +68,8 @@ const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
     size: { width: box.width * ARTWORK_SCALE, height: box.height * ARTWORK_SCALE },
     d,
     viewBox: box,
+    // `COLORS.main`: the mark is pure white, brighter than the theme's text.
+    fill: '#FFFFFF',
   };
 };
 
