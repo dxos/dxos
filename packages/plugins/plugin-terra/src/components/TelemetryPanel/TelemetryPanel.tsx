@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent } from 'react';
+import React, { useMemo } from 'react';
 
+import { Listbox } from '@dxos/react-ui-list';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { TerraObject } from '#types';
 
@@ -39,6 +39,9 @@ export type TelemetryPanelProps = {
 
 const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
 
+/** Name, kind, then five numeric columns; shared by the header and every row so the cells align. */
+const COLUMNS = 'minmax(0, 1fr) 3.5rem 3.5rem 4rem 3.5rem 3.5rem 4rem';
+
 /**
  * Live per-object telemetry (lat/lng, height, heading, speed), one row per simulated object.
  * Mirrors `TerraForm`'s floating panel chrome (semi-transparent surface, theme tokens) so the two
@@ -46,66 +49,60 @@ const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
  * passes the result in as `rows`; this component only re-renders when that array changes, never on
  * every sim frame.
  */
-export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelProps) => (
-  <Layout.Flex
-    column
-    classNames='w-[30rem] max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'
-  >
-    <div className='px-3 pt-3 pb-2 text-sm font-medium'>Telemetry</div>
-    <ScrollArea.Root orientation='vertical' classNames='max-h-64'>
-      <ScrollArea.Viewport>
-        <table className='w-full text-xs tabular-nums'>
-          <thead>
-            <tr className='text-left text-fg-muted'>
-              <th className='px-3 pb-1 font-normal'>Object</th>
-              <th className='px-3 pb-1 font-normal'>Type</th>
-              <th className='px-2 pb-1 font-normal text-right'>Lat</th>
-              <th className='px-2 pb-1 font-normal text-right'>Lng</th>
-              <th className='px-2 pb-1 font-normal text-right'>Height</th>
-              <th className='px-2 pb-1 font-normal text-right'>Heading</th>
-              <th className='px-3 pb-1 font-normal text-right'>Speed</th>
-            </tr>
-          </thead>
-          <tbody>
+export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelProps) => {
+  const items = useMemo(() => rows.map((row) => ({ value: row.id, label: row.name })), [rows]);
+
+  return (
+    <Layout.Flex
+      column
+      classNames='w-[30rem] max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'
+    >
+      <div className='px-3 pt-3 pb-2 text-sm font-medium'>Telemetry</div>
+      <Listbox.Root
+        items={items}
+        columns={COLUMNS}
+        size='sm'
+        value={onSelect ? (selectedId ?? '') : undefined}
+        onValueChange={onSelect}
+        // Arrow keys move zag's highlight, not its selection; following it makes Up/Down retarget the camera.
+        onHighlightChange={onSelect && ((id) => id && id !== selectedId && onSelect(id))}
+        classNames='max-h-64 tabular-nums'
+      >
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Telemetry'>
+            <div
+              role='presentation'
+              className='grid grid-cols-subgrid col-[content] gap-x-2 px-2 text-xs text-fg-muted [&>*:nth-child(n+3)]:text-end'
+            >
+              <span>Object</span>
+              <span>Type</span>
+              <span>Lat</span>
+              <span>Lng</span>
+              <span>Height</span>
+              <span>Heading</span>
+              <span>Speed</span>
+            </div>
+            {/* `content-center`: the row's min-height leaves slack below its single auto track. */}
             {rows.map((row) => (
-              <tr
+              <Listbox.Item
                 key={row.id}
-                className={
-                  row.id === selectedId
-                    ? 'border-t border-separator bg-current-surface text-accent-text'
-                    : onSelect
-                      ? 'border-t border-separator cursor-pointer'
-                      : 'border-t border-separator'
-                }
-                // Selectable rows are reachable by keyboard, not the pointer alone. `aria-selected`
-                // rather than `role='option'`: the row stays a row, which is what the table it
-                // belongs to needs it to be.
-                {...(onSelect && {
-                  'tabIndex': 0,
-                  'aria-selected': row.id === selectedId,
-                  'onKeyDown': (event: KeyboardEvent<HTMLTableRowElement>) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      onSelect(row.id);
-                    }
-                  },
-                })}
-                onClick={() => onSelect?.(row.id)}
+                id={row.id}
+                classNames='content-center gap-x-2 px-2 text-xs [&>*:nth-child(n+3)]:text-end'
               >
-                <td className='px-3 py-1 max-w-24 truncate'>{row.name}</td>
-                <td className='px-3 py-1 max-w-24 truncate'>{row.kind}</td>
-                <td className='px-2 py-1 text-right'>{formatDegrees(row.lat)}</td>
-                <td className='px-2 py-1 text-right'>{formatDegrees(row.lng)}</td>
-                <td className='px-2 py-1 text-right'>{row.heightPercent.toFixed(1)}%</td>
-                <td className='px-2 py-1 text-right'>{formatDegrees(row.heading)}</td>
-                <td className='px-3 py-1 text-right'>{row.speedDegPerSec.toFixed(2)}°/s</td>
-              </tr>
+                <span className='truncate'>{row.name}</span>
+                <span className='truncate'>{row.kind}</span>
+                <span>{formatDegrees(row.lat)}</span>
+                <span>{formatDegrees(row.lng)}</span>
+                <span>{row.heightPercent.toFixed(1)}%</span>
+                <span>{formatDegrees(row.heading)}</span>
+                <span>{row.speedDegPerSec.toFixed(2)}°/s</span>
+              </Listbox.Item>
             ))}
-          </tbody>
-        </table>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  </Layout.Flex>
-);
+          </Listbox.Content>
+        </Listbox.Viewport>
+      </Listbox.Root>
+    </Layout.Flex>
+  );
+};
 
 TelemetryPanel.displayName = 'TelemetryPanel';
