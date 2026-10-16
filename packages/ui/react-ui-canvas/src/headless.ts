@@ -1,0 +1,14 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// React-free entry: plugin operations run in node and workerd, where the scene barrel's components cannot load.
+export * from './generator/check.ts';
+export * from './generator/compile.ts';
+export * from './generator/types.ts';
+export * from './model/store.ts';
+export * from './model/style-set.ts';
+export * from './model/timeline.ts';
+export * from './model/types.ts';
+export * from './utils/layers.ts';
+export * from './utils/order.ts';

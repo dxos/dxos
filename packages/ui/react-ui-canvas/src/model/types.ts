@@ -14,6 +14,13 @@ import * as Schema from 'effect/Schema';
 import { Annotation } from '@dxos/echo';
 import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
+/**
+ * Marks a node property the timeline may key (ANIMATION.md §5.2): its value kind, which picks the interpolator. A host
+ * type annotates its own fields the same way.
+ */
+export const AnimatableAnnotationId = '@dxos/react-ui-canvas/annotation/Animatable';
+export type AnimatableKind = 'number' | 'point' | 'size' | 'discrete';
+
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Point = Schema.Schema.Type<typeof Point>;
 
@@ -37,12 +44,12 @@ const pairLayout = (first: string, second: string) =>
 const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnotationId]: DEFAULT_GRID });
 
 /** `Point` and `Size` for a node's own frame, laid out as one row each in the properties form. */
-const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') }).pipe(
-  Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }),
-);
-const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') }).pipe(
-  Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }),
-);
+const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') })
+  .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }))
+  .annotate({ [AnimatableAnnotationId]: 'point' });
+const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') })
+  .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }))
+  .annotate({ [AnimatableAnnotationId]: 'size' });
 
 export const Bounds = Schema.Struct({
   x: Schema.Number,
@@ -166,6 +173,15 @@ export const nodeBase = {
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(NodeStyle),
+  /** How opaque the whole node draws, 0 to 1; unset is 1. */
+  opacity: Schema.optional(
+    Schema.Number.annotate({ title: 'Opacity', [StepAnnotationId]: 0.1, [AnimatableAnnotationId]: 'number' }),
+  ),
+  /**
+   * Inside a composite, the node offers a port on every instance's frame where it meets it, so links from outside the
+   * instance attach to it (ANIMATION.md §4.1).
+   */
+  exposed: Schema.optional(Schema.Boolean.annotate({ title: 'Exposed' })),
 };
 
 /** Any node as the engine sees it: the shared fields and a type name; the registry knows the rest. */
@@ -219,11 +235,74 @@ export const FrameNode = Schema.Struct({
 });
 export type FrameNode = Schema.Schema.Type<typeof FrameNode>;
 
+/** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
+export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
+export type InstanceFit = (typeof INSTANCE_FITS)[number];
+
+/**
+ * A composite object placed in a scene (ANIMATION.md §4.1): it draws the composite scene `composite` scaled into its
+ * frame. Every instance shares the definition; `overrides` set values of the definition's nodes for this instance
+ * alone, shallow per field.
+ */
+export const InstanceNode = Schema.Struct({
+  type: Schema.Literal('instance'),
+  ...nodeBase,
+  composite: Schema.String,
+  overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
+  fit: Schema.optional(Schema.Literals(INSTANCE_FITS).annotate({ title: 'Fit' })),
+});
+export type InstanceNode = Schema.Schema.Type<typeof InstanceNode>;
+
+/**
+ * A vector shape: SVG path data in its own coordinates (`viewBox`), scaled to fill the frame and filled with the
+ * node's hue. How a logo or a glyph becomes canvas nodes.
+ */
+export const PathNode = Schema.Struct({
+  type: Schema.Literal('path'),
+  ...nodeBase,
+  d: Schema.String,
+  viewBox: Bounds,
+  /** An exact CSS colour, for artwork with brand colours; unset, the path takes its hue's text colour. */
+  fill: Schema.optional(Schema.String.annotate({ title: 'Fill colour' })),
+});
+export type PathNode = Schema.Schema.Type<typeof PathNode>;
+
+/**
+ * A node whose content an agent-written generator computes from its parameters and the time (ANIMATION.md §6): the
+ * generator is a `Generator` object the host resolves by `generator` (a reference string), and `params` are its
+ * parameters, which the timeline may key (`params.<name>`).
+ */
+export const GeneratorNode = Schema.Struct({
+  type: Schema.Literal('generator'),
+  ...nodeBase,
+  generator: Schema.String,
+  params: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  /** Seeds the generator's random numbers; derived from the node's id when unset. */
+  seed: Schema.optional(Schema.Number),
+});
+export type GeneratorNode = Schema.Schema.Type<typeof GeneratorNode>;
+
 /** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
-export const BuiltinNode = Schema.Union([RectNode, EllipseNode, NoteNode, FrameNode]);
+export const BuiltinNode = Schema.Union([
+  RectNode,
+  EllipseNode,
+  NoteNode,
+  FrameNode,
+  InstanceNode,
+  PathNode,
+  GeneratorNode,
+]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
-export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'note', 'frame'];
+export const NODE_TYPES: readonly BuiltinNodeType[] = [
+  'rect',
+  'ellipse',
+  'note',
+  'frame',
+  'instance',
+  'path',
+  'generator',
+];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
 export type Node = NodeBase;
@@ -235,6 +314,9 @@ export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'r
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isFrameNode = (node: NodeBase): node is FrameNode => node.type === 'frame';
+export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
+export const isPathNode = (node: NodeBase): node is PathNode => node.type === 'path';
+export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.type === 'generator';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
 export const isBoxNode = (node: NodeBase): node is RectNode | FrameNode => isRectNode(node) || isFrameNode(node);
 /** Whether a frame draws its child scene: as set, else while it has no label to show instead. */
@@ -362,6 +444,54 @@ export const Layer = Schema.Struct({
 });
 export type Layer = Schema.Schema.Type<typeof Layer>;
 
+//
+// Timeline (ANIMATION.md §5.2)
+//
+
+/** How the span that ends at a key is shaped; the named curves are cubic, `bezier` a CSS cubic-bezier. */
+export const Easing = Schema.Union([
+  Schema.Literals(['linear', 'step', 'ease-in', 'ease-out', 'ease-in-out']),
+  Schema.Struct({ bezier: Schema.Tuple([Schema.Number, Schema.Number, Schema.Number, Schema.Number]) }),
+]);
+export type Easing = Schema.Schema.Type<typeof Easing>;
+
+/** A property's value at a time; `easing` shapes the span from the previous key to this one. */
+export const Keyframe = Schema.Struct({
+  t: Schema.Number,
+  value: Schema.Unknown,
+  easing: Schema.optional(Easing),
+});
+export type Keyframe = Schema.Schema.Type<typeof Keyframe>;
+
+/** The target of the camera's tracks; a node track names the node's id. */
+export const CAMERA_TARGET = 'camera';
+
+/**
+ * One property of one target over time, keys sorted by `t`. `property` is a dot path into the node (`center`,
+ * `params.rate`); the camera's are `x` and `y` (the scene point at the view's centre) and `zoom`.
+ */
+export const Track = Schema.Struct({
+  target: Schema.String,
+  property: Schema.String,
+  keys: Schema.Array(Keyframe),
+});
+export type Track = Schema.Schema.Type<typeof Track>;
+
+/** A scene's animation: its length, and its tracks by id (`<target>:<property>`). */
+export const Timeline = Schema.Struct({
+  /** Seconds. */
+  duration: Schema.Number,
+  loop: Schema.optional(Schema.Boolean),
+  /** Frames per second that frame stepping and export use; 30 when unset. */
+  fps: Schema.optional(Schema.Number),
+  tracks: Schema.Record(Schema.String, Track),
+});
+export type Timeline = Schema.Schema.Type<typeof Timeline>;
+
+/** A plain scene, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
+export const SceneKind = Schema.Literals(['scene', 'composite']);
+export type SceneKind = Schema.Schema.Type<typeof SceneKind>;
+
 /**
  * The scene schema over a set of node schemas: a host composes it from its registry's types, so the
  * schema stays exact for every type while the engine only ever sees `NodeBase`.
@@ -373,10 +503,20 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
     nodes: Schema.Record(Schema.String, Schema.Union(nodes)),
     links: Schema.Record(Schema.String, Link),
     layers: Schema.optional(Schema.Record(Schema.String, Layer)),
+    kind: Schema.optional(SceneKind),
+    timeline: Schema.optional(Timeline),
   });
 
 /** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([RectNode, EllipseNode, NoteNode, FrameNode]);
+export const Scene = createSceneSchema([
+  RectNode,
+  EllipseNode,
+  NoteNode,
+  FrameNode,
+  InstanceNode,
+  PathNode,
+  GeneratorNode,
+]);
 
 /** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
 export const OpenScene = createSceneSchema([NodeBase]);
@@ -386,6 +526,8 @@ export type Scene = {
   readonly nodes: Readonly<Record<NodeId, Node>>;
   readonly links: Readonly<Record<LinkId, Link>>;
   readonly layers?: Readonly<Record<LayerId, Layer>>;
+  readonly kind?: SceneKind;
+  readonly timeline?: Timeline;
 };
 
 /** A node or link of the scene by id. */
@@ -419,6 +561,8 @@ export type Intent =
   | { kind: 'layer'; layer: Layer }
   /** Removes a layer and every element on it; the last layer of a scene stays. */
   | { kind: 'removeLayer'; id: LayerId }
+  /** Replaces the scene's timeline, or removes it; how the animated projection writes keys (ANIMATION.md §5.4). */
+  | { kind: 'timeline'; timeline: Timeline | undefined }
   /** Several intents applied as one model change (one undo step), e.g. a paste. */
   | { kind: 'batch'; intents: Intent[] };
 

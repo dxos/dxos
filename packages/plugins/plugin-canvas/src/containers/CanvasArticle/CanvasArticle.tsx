@@ -17,6 +17,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
+  type BackgroundGrid,
   type Camera,
   type Element,
   type InspectorMode,
@@ -33,11 +34,20 @@ import {
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
+import {
+  canvasRecordOf,
+  generatorCompiler,
+  isCanvasDrawing,
+  objectRef,
+  objectUri,
+  parseLinkedSceneId,
+  resolveDrawingLook,
+  updateCanvasRecord,
+} from '#model';
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
-import { useBoundCanvasStore, useCanvasNodes } from './use-canvas-scene.ts';
+import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -65,11 +75,23 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
-  const [snapshot] = useObject(canvas);
+  const [snapshot, updateCanvas] = useObject(canvas);
   const record = canvasRecordOf(snapshot.content);
   const lattice = record?.lattice === true;
+  // The drawing's look is shared with collaborators, so it wins over the viewer's own default.
+  const look = resolveDrawingLook(record, settings);
+  const handleThemeChange = useCallback(
+    (theme: string | undefined) => updateCanvas((canvas) => updateCanvasRecord(canvas.content, { theme })),
+    [updateCanvas],
+  );
+  const handleBackgroundGridChange = useCallback(
+    (backgroundGrid: BackgroundGrid | undefined) =>
+      updateCanvas((canvas) => updateCanvasRecord(canvas.content, { backgroundGrid })),
+    [updateCanvas],
+  );
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
@@ -163,6 +185,13 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               nodes={nodes}
               createProjection={lattice ? createLatticeProjection : undefined}
               grid={record?.grid}
+              theme={look.theme}
+              defaultTheme={look.defaultTheme}
+              styleSet={look.styleSet}
+              background={look.background}
+              backgroundGrid={look.backgroundGrid}
+              onThemeChange={section ? undefined : handleThemeChange}
+              onBackgroundGridChange={section ? undefined : handleBackgroundGridChange}
               readonly={readonly}
               onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
@@ -171,6 +200,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               onDisplayChange={handleDisplayChange}
               inspectors={floating ? 'floating' : 'docked'}
               onInspectorsChange={handleInspectorsChange}
+              generators={generators}
+              compileGenerator={generatorCompiler}
+              createGeneratorWorker={createGeneratorWorker}
             >
               <SceneView.Canvas liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
@@ -179,6 +211,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   <SceneView.Navigation />
                   <SceneView.Actions />
                   <SceneView.Debug />
+                  {!section && <SceneView.Theme />}
                 </>
               )}
               {!section && (
@@ -190,7 +223,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                     overrides={overrides}
                     sceneFilter={isLocalScene}
                   />
+                  <SceneView.Timeline />
                   <SceneView.Layers />
+                  <SceneView.Objects />
                   <SceneView.About />
                 </>
               )}

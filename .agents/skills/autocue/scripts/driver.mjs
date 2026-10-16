@@ -96,6 +96,8 @@ const parseArgs = () => {
     ),
     'driver-port': 4444,
     'headed': 'off',
+    // `on` launches full Chromium's headless mode, which has the GPU, instead of the software-rendered headless shell.
+    'gpu': 'off',
     // Tauri on macOS: `on` deletes the test build's profile before launch, for a first-run take.
     'fresh': 'off',
     // Extra Chromium flags, comma-separated, e.g. a fake microphone fed from a voice file:
@@ -147,6 +149,9 @@ const scale = hires ? options.scale : 1;
 
 const launchOptions = {
   headless: !manual,
+  // The default headless shell renders WebGL in software (SwiftShader), so a 3D plugin records at a few frames a
+  // second and starves the page; full Chromium's headless mode (`--gpu on`) uses the GPU.
+  ...(options.gpu === 'on' && !sandbox ? { channel: 'chromium' } : {}),
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
     // The page follows the window, so a person can resize it for their capture without a fixed viewport
@@ -283,6 +288,9 @@ const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
 const CAPTION_ID = '__demo_caption__';
+const SPEED_ID = '__demo_speed__';
+/** `speed` ops in recording time, for the trimmer to play those stretches faster. */
+const speedChanges = [];
 
 const showCaption = async (text, subtitle) => {
   await page.evaluate(
@@ -296,17 +304,17 @@ const showCaption = async (text, subtitle) => {
         'right:0',
         'bottom:0',
         'z-index:2147483647',
-        'padding:14px 20px',
+        'padding:16px 24px 18px',
         'background:rgba(17,17,17,0.92)',
         'color:#fff',
-        'font:600 16px/1.4 ui-sans-serif,system-ui,sans-serif',
+        'font:600 20px/1.35 ui-sans-serif,system-ui,sans-serif',
         'pointer-events:none',
         'text-align:center',
       ].join(';');
       banner.textContent = text;
       if (subtitle) {
         const line = document.createElement('div');
-        line.style.cssText = 'opacity:0.65;font-weight:400;font-size:13px;margin-top:4px';
+        line.style.cssText = 'opacity:0.7;font-weight:400;font-size:15px;margin-top:4px';
         line.textContent = subtitle;
         banner.appendChild(line);
       }
@@ -461,6 +469,7 @@ const cut = async () => {
   await page.waitForTimeout(150);
   started = recorder.cut();
   timeline.length = 0;
+  speedChanges.length = 0;
   return { cut: true };
 };
 
@@ -894,6 +903,42 @@ const handlers = {
     await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
     return {};
   },
+  /**
+   * Plays what follows at `factor` times speed in the cut (`factor: 1` returns to normal), for stretches
+   * that are motion without content, like an agent working. A badge marks them, so the jump is not a lie.
+   */
+  speed: async (command) => {
+    // A factor that is not a number would record as null and silently play at 1x under a broken badge.
+    const requested = Math.round(Number(command.factor ?? 1));
+    const factor = Number.isFinite(requested) ? Math.max(1, requested) : 1;
+    speedChanges.push({ ms: Date.now() - started, factor });
+    await page.evaluate(
+      ({ id, factor }) => {
+        document.getElementById(id)?.remove();
+        if (factor === 1) {
+          return;
+        }
+        const badge = document.createElement('div');
+        badge.id = id;
+        badge.style.cssText = [
+          'position:fixed',
+          'top:16px',
+          'right:16px',
+          'z-index:2147483647',
+          'padding:6px 12px',
+          'border-radius:999px',
+          'background:rgba(17,17,17,0.85)',
+          'color:#fff',
+          'font:600 15px/1.2 ui-sans-serif,system-ui,sans-serif',
+          'pointer-events:none',
+        ].join(';');
+        badge.textContent = `\u23e9 ${factor}\u00d7`;
+        document.body.appendChild(badge);
+      },
+      { id: SPEED_ID, factor },
+    );
+    return { factor };
+  },
   sleep: async (command) => {
     await page.waitForTimeout(command.ms ?? 1_000);
     return {};
@@ -910,7 +955,10 @@ const handlers = {
     }
     const timelineFile = path.join(options.out, 'timeline.json');
     // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
-    writeFileSync(timelineFile, JSON.stringify({ started, flow: flow.file, steps: timeline }, null, 2));
+    writeFileSync(
+      timelineFile,
+      JSON.stringify({ started, flow: flow.file, steps: timeline, speed: speedChanges }, null, 2),
+    );
     let recorded;
     try {
       recorded = await recorder?.stop();

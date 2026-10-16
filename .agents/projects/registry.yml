@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: canvas-animation
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-15
+    summary: 'Canvas animation phases 1-2 (react-ui-canvas ANIMATION.md): composite objects (instance nodes, ObjectsPanel, isolation), a per-view clock, Scene.timeline with sampleScene and an animated projection that keys edits, a timeline bar, export by seeking the clock; then agent-written generators run in a sandboxed worker with plugin-canvas operations and a skill. Demo: the DXOS end card rebuilt as a canvas document.'
+    tasks: .agents/projects/canvas-animation/TASKS.md
+    design: packages/ui/react-ui-canvas/docs/ANIMATION.md
+    prs: [14007]
+    resume: 'Draft PR #14007 (stacked on #13992): phases 1-2 built, end card exported and compared (temp/anim). NEXT: review; follow-ups in TASKS.md (overrides UI, palette Objects group, bare-type style toggles in Properties, pinned-bundle export); phase 3.'
   - name: plugin-messenger
     status: active
     user: burdon

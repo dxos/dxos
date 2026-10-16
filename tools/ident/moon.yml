@@ -25,6 +25,10 @@ tasks:
     extends: render
     args: --first-run
 
+  render-all:
+    extends: render
+    args: --exclude TRAIL
+
   sounds:
     command: python3 scripts/make-sounds.py
     options:

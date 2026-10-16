@@ -61,21 +61,22 @@ the main character.
   protocol (embeds the Spring Blend TaskSet), wholesale terms, Olive & Vine welcome packet. Notes link
   people and orgs inline.
 - 2 `Drawing` (tldraw): roastery floor plan, spring blend flavor wheel.
-- 2 `Sheet` with formulas: green coffee inventory, wholesale price list.
+- 3 `Sheet` with formulas: green coffee inventory, wholesale price list, and a sales report with two
+  charts (bags sold by blend, revenue by channel).
 - Custom schema `example.type.roastLog` ("Roast Log"), stored in the space: 8 rows (3 approved, 1
   cupped, 2 roasted, 2 planned), `RoastLog → Person (roaster)`, Table and Kanban views.
 
 ### Collections
 
 - The root collection holds 3 collections: Welcome (Space Tour, About), Reference (wholesale terms,
-  cupping notes, two sheets), Roastery Handbook (floor plan, tasting protocol). The test's count of 4
+  cupping notes, three sheets), Roastery Handbook (floor plan, tasting protocol). The test's count of 4
   includes the root.
 
 ## Checks
 
-- 128 objects. Per type: organization 6, person 9, view 5, table 2, kanban 2, map 1, mailbox 1,
+- 129 objects. Per type: organization 6, person 9, view 5, table 2, kanban 2, map 1, mailbox 1,
   message 41, calendar 1, event 9, feed 3, project 4, instructions 5, routine 1, trigger 1, taskSet 4,
-  task 23, milestone 5, document 7, drawing 2, sheet 2, collection 4.
+  task 23, milestone 5, document 7, drawing 2, sheet 3, collection 4.
 - Wholesale terms' parent is the Reference collection; Olive & Vine lists it as an artifact.
 - The floor plan's parent is Roastery Ops; Roastery Handbook lists it.
 - Every trigger is disabled.

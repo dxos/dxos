@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AgentAdmission,
   AgentMailbox,
   AppGraphBuilder,
   Brain,
@@ -22,6 +23,7 @@ export const AgentPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(Brain),
   Plugin.addModule(Settings),
+  Plugin.addModule(AgentAdmission),
   Plugin.addModule(AgentMailbox),
   Plugin.addModule(EmailChannelBackend),
   Plugin.addModule(OperationHandler),

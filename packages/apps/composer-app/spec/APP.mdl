@@ -753,6 +753,59 @@ test QA-11: Composer basics tour
     - the default space holds the commented README, "About Composer", the drawing, the table and its type, the sheet and the map
 ```
 
+```mdl
+test QA-13: Plugin showcase
+  desc: |
+    One short, wordless beat per visually distinct plugin, recorded for the GridZoom montage (react-ui-canvas
+    SHOWCASE.md): each plugin creates its object off camera, then performs one characteristic gesture for about
+    five seconds. Its value is that every plugin it touches still creates and renders from a fresh profile.
+  actors: human
+  status: unverified        # 2026-10-16, driven end to end by autocue/showcase/flow.mjs
+  given:
+    - a fresh identity whose default space is open
+    - the showcase plugins enabled (the flow enables them with org.dxos.operation.registry.enablePlugins)
+  before:
+    - name: Dismiss the privacy notice
+      do: If the "Privacy Notice" toast shows, close it.
+      expect: no privacy toast remains
+    - name: Close the companion panel
+      do: If the right-hand companion panel is open, close it.
+      expect: the main content takes the width
+  steps:
+    - name: Pan a map
+      do: Create a Map, zoom into Europe and drag across it.
+      expect: map tiles render and follow the drag
+    - name: Spin a planet, a scene and a voxel world
+      do: Create a Terra world, a Spacetime scene and a Voxel world in turn, dragging across each.
+      expect: each renders in 3D and the view orbits with the drag
+    - name: Fill a sheet
+      do: Create a sheet and type three rows of a label, a number and a formula doubling it.
+      expect: the formula cells show the doubled values
+    - name: Grow a diagram
+      do: Create a document with a mermaid block, then add edges one at a time with the cursor outside the block.
+      expect: the rendered diagram gains a node or edge with each line
+    - name: Write, present and outline
+      do: Type a short note into a document; present a document split on `---` and page through it; type an outline.
+      expect: the note formats live, the slides advance, and the outline indents
+    - name: Draw in each drawing variant
+      do: Create tldraw, Excalidraw and Canvas drawings and draw a rectangle, an ellipse and a stroke in each.
+      expect: the shapes appear in each variant
+    - name: Browse the plugin registry
+      do: Open the plugin registry and scroll through it.
+      expect: the plugin cards scroll smoothly
+    - name: Replay a chess game
+      do: Create a Chess game from the Opera Game PGN and step through it with the arrow keys.
+      expect: the board advances one move per key
+    - name: Play a handpan
+      do: Create a Handpan instrument and click around its ring of notes.
+      expect: each clicked note highlights
+    - name: Open a template project
+      do: Create a project from the Composer Plugin template and open its Tasks tab.
+      expect: the template's tasks are listed
+  then:
+    - the default space holds one object of each plugin above
+```
+
 ## Suites
 
 ```mdl

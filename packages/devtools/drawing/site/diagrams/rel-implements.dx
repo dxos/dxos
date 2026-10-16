@@ -1,0 +1,3 @@
+node A "Store"
+node B "Readable" right-of A
+edge A implements B

@@ -18,6 +18,7 @@ import { SheetCapabilities, SheetEvents } from '#types';
 
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
   requires: [AppCapabilities.AppGraph],
   activatesOn: SheetEvents.Start,

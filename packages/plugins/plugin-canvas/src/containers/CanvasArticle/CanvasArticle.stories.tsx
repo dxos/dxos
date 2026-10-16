@@ -14,7 +14,7 @@ import { random } from '@dxos/random';
 import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { createCanvas, nodeKey, rootOf } from '#model';
+import { createCanvas, linkKey, nodeKey, rootOf } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
@@ -48,8 +48,53 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// A -> B -> C: three boxes in a row joined by smart lines, enough of a drawing to see the shapes, links and theme.
+const seedBasic = (_db: Database.Database, canvas: Drawing.Canvas) => {
+  const scene = rootOf(canvas.content);
+  const box = (id: string, x: number, z: string) => ({
+    kind: 'node',
+    scene,
+    node: {
+      id,
+      type: 'rect',
+      z,
+      label: id.toUpperCase(),
+      center: { x, y: 0 },
+      size: { width: 4 * DEFAULT_CELL, height: 2 * DEFAULT_CELL },
+    },
+  });
+  const link = (source: string, target: string, z: string) => ({
+    kind: 'link',
+    scene,
+    link: {
+      id: `${source}-${target}`,
+      type: 'smart',
+      z,
+      source: { node: source },
+      target: { node: target },
+      ends: { end: 'arrow' },
+    },
+  });
+  Obj.update(canvas, (canvas) => {
+    canvas.content[nodeKey('a')] = box('a', -384, 'a1');
+    canvas.content[nodeKey('b')] = box('b', 0, 'a2');
+    canvas.content[nodeKey('c')] = box('c', 384, 'a3');
+    canvas.content[linkKey('a-b')] = link('a', 'b', 'a4');
+    canvas.content[linkKey('b-c')] = link('b', 'c', 'a5');
+  });
+};
+
 export const Default: Story = {
-  decorators: withDrawing(),
+  decorators: withDrawing(seedBasic),
+};
+
+/**
+ * Test:
+ * 1. The scene view mounts through the illustrator's article surface.
+ * 2. The navigation, action and debug toolbars and the palette all show.
+ */
+export const Test: Story = {
+  decorators: withDrawing(seedBasic),
   play: async ({ canvasElement }) => {
     // The scene view mounts only once the illustrator has resolved the canvas variant's article.
     await expect(
@@ -115,5 +160,42 @@ export const ObjectFrame: Story = {
     }
     // The section embeds the document's editor.
     await waitFor(() => expect(surfaceOf('section')?.querySelector('.cm-editor')).not.toBeNull(), { timeout: 10_000 });
+  },
+};
+
+/**
+ * Image shapes, linked by URL in their properties.
+ *
+ * Test:
+ * 1. The palette offers the image tool (I).
+ * 2. An image with no URL, or one that is not a web link, shows the placeholder rather than following the link.
+ */
+export const Image: Story = {
+  decorators: withDrawing((_db, canvas) => {
+    const image = (id: string, x: number, src?: string) => ({
+      kind: 'node',
+      scene: rootOf(canvas.content),
+      node: {
+        id,
+        type: 'image',
+        z: `a${x}`,
+        center: { x, y: 0 },
+        size: { width: 4 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
+        ...(src ? { src } : {}),
+      },
+    });
+    Obj.update(canvas, (canvas) => {
+      canvas.content[nodeKey('empty')] = image('empty', -320);
+      canvas.content[nodeKey('unsafe')] = image('unsafe', 320, 'javascript:alert(1)');
+    });
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
+    // 1. The tool.
+    await expect(await canvas.findByTestId('palette-I')).toBeInTheDocument();
+    // 2. Placeholders, no image element.
+    await waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="image-placeholder"]')).toHaveLength(2));
+    await expect(canvasElement.querySelector('[data-testid="image-node"]')).toBeNull();
   },
 };

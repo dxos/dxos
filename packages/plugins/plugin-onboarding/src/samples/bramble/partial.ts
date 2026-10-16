@@ -81,6 +81,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('bramb
         Ref.make(notes.cuppingNotes),
         Ref.make(sheets.greenInventory),
         Ref.make(sheets.priceList),
+        Ref.make(sheets.salesReport),
       ]);
       const projects = yield* phases.projects({ taskSets, notes, drawings, about: docs.about, mailbox, organizations });
       yield* SampleSpace.collection('Roastery Handbook', [

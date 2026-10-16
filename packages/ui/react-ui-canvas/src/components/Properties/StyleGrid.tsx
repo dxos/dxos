@@ -8,8 +8,11 @@ import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
+import { useSceneLook } from '../../hooks/useSceneLook.ts';
+import { CLASSIC_LOOK, type SceneLook, styleVariant } from '../../model/style-set.ts';
 import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '../../model/types.ts';
-import { DEFAULT_TONE, TONE_NAMES, TONES, hueClasses } from '../../utils/style.ts';
+import { TONES, variantClasses } from '../../utils/style.ts';
+import { BORDER_CLASSES } from '../../utils/surfaces.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
 
@@ -30,29 +33,39 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 const ITEM_CLASSES = 'min-w-0 px-0 aria-checked:bg-transparent aria-checked:hover:bg-hover-surface';
 
 export type StyleGridProps = {
+  /** The look whose style set's variants the rows show; the enclosing view's by default. */
+  look?: SceneLook;
   hue?: string;
-  /** Unset is the default tone, as the frame draws it. */
+  /** Unset is the style set's default variant, as the frame draws it. */
   tone?: NodeTone;
   /** Several nodes disagree: no swatch is selected until one is picked. */
   indeterminate?: boolean;
   readonly?: boolean;
-  /** The rows offered; all tones by default, or one row (e.g. a line's outline colour only). */
+  /** The rows offered; every variant of the style set by default, or one row (e.g. a line's outline colour only). */
   tones?: readonly NodeTone[];
   onValueChange: (choice: StyleChoice) => void;
 };
 
 /**
- * Each offered hue in a column and its tones down the rows, every swatch drawn with the classes the node
- * itself would take, so a pick is a preview. A hue the grid does not offer, or none, selects nothing.
+ * Each offered hue in a column and the style set's variants down the rows (a node's tone picks its variant), every
+ * swatch drawn with the classes the node itself would take, so a pick is a preview. A hue the grid does not offer, or
+ * none, selects nothing.
  */
 export const StyleGrid = ({
+  look: lookProp,
   hue,
-  tone = DEFAULT_TONE,
+  tone: toneProp,
   indeterminate,
   readonly,
-  tones = TONES,
+  tones: tonesProp,
   onValueChange,
 }: StyleGridProps) => {
+  const contextLook = useSceneLook();
+  const look = lookProp ?? contextLook;
+  const { styleSet } = look;
+  const tones = tonesProp ?? TONES.slice(0, styleSet.variants.length);
+  // A tone past the set's last variant draws as the last, so it selects that row.
+  const tone = Math.min(toneProp ?? styleSet.defaultVariant, styleSet.variants.length - 1);
   const selected = indeterminate || !hue ? '' : `${hue}${SEPARATOR}${tone}`;
   return (
     <ToggleGroup.Root
@@ -72,7 +85,8 @@ export const StyleGrid = ({
       {tones.flatMap((rowTone) =>
         STYLE_HUES.map((columnHue) => {
           const key = choiceKey({ hue: columnHue, tone: rowTone });
-          const classes = hueClasses(columnHue, rowTone);
+          const variant = styleVariant(styleSet, rowTone);
+          const classes = variantClasses(columnHue, variant, look.tone);
           return (
             <ToggleGroup.Item
               key={key}
@@ -84,9 +98,11 @@ export const StyleGrid = ({
             >
               <span
                 role='img'
-                aria-label={`${capitalize(columnHue)}, ${TONE_NAMES[rowTone]}`}
+                aria-label={`${capitalize(columnHue)}, ${variant.name}`}
                 className={mx(
-                  'size-5 rounded-xs border-2',
+                  'size-5 rounded-xs',
+                  BORDER_CLASSES[variant.borderWidth].border,
+                  variant.borderStyle === 'dashed' && 'border-dashed',
                   classes.surface,
                   classes.border,
                   selected === key && 'outline-2 outline-offset-2 outline-primary-500',
@@ -122,9 +138,11 @@ export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRendere
     return (
       <Form.Field path={jsonPath} label={label} readonly={readonly}>
         <StyleGrid
+          // A link's colour is its hue's border whatever the set, so its row is the canvas's own outline.
+          look={fills ? undefined : CLASSIC_LOOK}
           hue={getValue()}
           tone={fills ? style.tone : 0}
-          tones={fills ? TONES : OUTLINE_TONES}
+          tones={fills ? undefined : OUTLINE_TONES}
           indeterminate={indeterminate}
           readonly={!!readonly}
           onValueChange={({ hue, tone }) => {
