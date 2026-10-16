@@ -380,12 +380,13 @@ def mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=
         ()
   | Option.none => ()
 
-/-- Merges tasks from an export's `tasks.sexp` as one change (D79); returns how many the file has. -/
+/-- Merges tasks from an export's `tasks.sexp` as one change (D79), named by the file's name alone, since the history is
+  shared and a local path means nothing to others; returns how many the file has. -/
 def importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
   | Option.none => Throw.throw ("cannot read " ++ path)
   | Option.some text =>
-      let (n, conflicts) := mergeTasksFile dir (directoryOf path) text ("task: import from " ++ path)
+      let (n, conflicts) := mergeTasksFile dir (directoryOf path) text ("task: import from " ++ getOr (last? (Text.split path "/")) path)
       forEach
         conflicts
         (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
