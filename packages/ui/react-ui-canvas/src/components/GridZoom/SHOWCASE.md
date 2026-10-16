@@ -7,7 +7,21 @@ fits, with the last tour cell in the bottom-left quadrant.
 Clips are read from the gitignored `temp/grid-zoom/` at the repo root: `tour-<n>.mp4` for the tour cells and
 `clip-<NN>.mp4` (row-major index) for every other cell.
 
-The three tour demos are 10s cuts from the busiest step of these flows:
+## Recording it
+
+[`composer-app/autocue/showcase`](../../../../../apps/composer-app/autocue/showcase) holds the showcase flow and the
+scripts that turn it into the montage. With Composer on :4173 and this story's storybook on :9015
+(`DX_STORIES=ui/react-ui-canvas`), one command re-records everything:
+
+```bash
+packages/apps/composer-app/autocue/showcase/pipeline.sh
+```
+
+It records the showcase flow (`flow.mjs`, one 5s clip per plugin) and the committed flows (`committed.sh`), cuts the
+clips into `temp/showcase/clips`, lays out `temp/grid-zoom`, and records the composite to `temp/composite/composite.mp4`.
+
+The three tour demos are 10s cuts from the busiest step of these flows (the markdown cut starts 2s in, so it opens on
+text):
 
 1. plugin-markdown `write-and-link`: "Write in markdown".
 2. plugin-canvas `draw-and-nest`: "Draw and label shapes".
