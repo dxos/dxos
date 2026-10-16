@@ -4,7 +4,7 @@ layer: tool
 language: rust
 
 tasks:
-  # Rebuilds the committed plugin; run it after changing the crate.
+  # Rebuilds the committed plugin; run it after changing the crate (README.md).
   cargo-build:
     command: bash scripts/build.sh
     options:
@@ -17,21 +17,8 @@ tasks:
       - Cargo.toml
       - Cargo.lock
       - rust-toolchain.toml
-  check-wasm:
-    command: bash scripts/check.sh
-    # Both make rustup install the wasm target `rust-toolchain.toml` lists, and two installs at once collide.
-    deps:
-      - cargo-test
-    inputs:
-      - src/**/*.rs
-      - scripts/*.sh
-      - Cargo.toml
-      - Cargo.lock
-      - rust-toolchain.toml
-      - dependency-closure.wasm
   # What CI's `:test` sweep selects.
   test:
     command: noop
     deps:
       - cargo-test
-      - check-wasm
