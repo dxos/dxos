@@ -6,6 +6,10 @@ import { describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { PublicKey } from '@dxos/keys';
+import { createBuf, fromPublicKey } from '@dxos/protocols/buf';
+import { SpaceMemberSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Expando } from '@dxos/schema';
 
 import * as AppSpace from './AppSpace.ts';
@@ -33,6 +37,27 @@ describe('space tags', () => {
   test('isLegacyDefaultSpace matches the deprecated personal tag', ({ expect }) => {
     expect(AppSpace.isLegacyDefaultSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
     expect(AppSpace.isLegacyDefaultSpace(makeSpace([]))).toBe(false);
+  });
+});
+
+describe('agent identities', () => {
+  test("only an agent's admins may add it elsewhere", ({ expect }) => {
+    const [kai, ada, admin, editor, reader] = [...Array(5)].map(() => PublicKey.random());
+    const member = (key: PublicKey, role: SpaceMember_Role) =>
+      createBuf(SpaceMemberSchema, { identity: { identityKey: fromPublicKey(key) }, role });
+    const agentSpace = (agent: PublicKey, ...members: ReturnType<typeof member>[]) => ({
+      tags: [AppSpace.AGENT_SPACE_TAG],
+      members: { get: () => [member(agent, SpaceMember_Role.OWNER), ...members] },
+    });
+    const spaces = [
+      agentSpace(kai, member(admin, SpaceMember_Role.ADMIN), member(reader, SpaceMember_Role.READER)),
+      agentSpace(ada, member(editor, SpaceMember_Role.EDITOR)),
+      { tags: [], members: { get: () => [member(reader, SpaceMember_Role.OWNER)] } },
+    ];
+    const hexes = (self: PublicKey) => AppSpace.agentsNotAdministeredBy(spaces, self).map((key) => key.toHex());
+    expect(hexes(admin)).toEqual([ada.toHex()]);
+    expect(hexes(editor)).toEqual([kai.toHex()]);
+    expect(hexes(reader)).toEqual([kai.toHex(), ada.toHex()]);
   });
 });
 
