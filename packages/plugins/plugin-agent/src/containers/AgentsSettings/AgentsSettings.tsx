@@ -66,9 +66,13 @@ export const AgentsSettings = (_props: AgentsSettingsProps) => {
     adding.current = true;
     setPending(true);
     try {
-      const agent = await create(space.db, name.trim()).catch((error) => log.error('agent not created', { error }));
+      const submitted = name;
+      const agent = await create(space.db, submitted.trim()).catch((error) =>
+        log.error('agent not created', { error }),
+      );
       if (agent) {
-        setName('');
+        // Keeps a name typed for the next agent while this one was being created.
+        setName((current) => (current === submitted ? '' : current));
         open(agent.id);
       }
     } finally {
