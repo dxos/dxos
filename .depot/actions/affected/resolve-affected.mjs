@@ -33,9 +33,10 @@ const DEFAULT_BRANCH_PATTERN = /^\s*defaultBranch:\s*['"]?([^'"\s#]+)/m;
 
 const FULL_RUN = Symbol('full run');
 
-// Every task keys on its project's `.dependency-closure`, which the install derives from these and
-// touched-file detection cannot see. A change to either runs everything and lets the cache pick what executes.
-const CLOSURE_SOURCES = ['pnpm-lock.yaml', 'scripts/dependency-closure.mjs'];
+// Every task keys on its project's dependency closure, which the `dependency-closure` toolchain computes
+// from the lockfile and touched-file detection cannot see. A change to either runs everything and lets the
+// cache pick what executes.
+const CLOSURE_SOURCES = ['pnpm-lock.yaml', 'tools/moon-dependency-closure/dependency-closure.wasm'];
 
 const main = () => {
   const args = parseArgs(process.argv.slice(2));

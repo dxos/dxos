@@ -27,7 +27,7 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 | `schedule` | all, bypassing the cache | none |
 | no event payload | affected | merge-base with `origin/main` |
 | `all: true` on the action | all | none |
-| a scoped trigger above, when the change touches `pnpm-lock.yaml` or `scripts/dependency-closure.mjs`, or the diff cannot be read | all | none |
+| a scoped trigger above, when the change touches `pnpm-lock.yaml` or `tools/moon-dependency-closure/dependency-closure.wasm`, or the diff cannot be read | all | none |
 
 `e2e` passes `all: true` on a `workflow_dispatch`, because a dispatch exists to run the whole suite.
 
@@ -35,9 +35,9 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 
 ## Dependency changes
 
-Only tasks that load other projects' code outside the dependency graph list `pnpm-lock.yaml`: the `check-module-structure` import checks and `storybook-react:bundle`, which finds every package's stories by glob. Every other task lists its project's `node_modules/.dependency-closure` (`.moon/tasks/all.yml`), which [`scripts/dependency-closure.mjs`](../../../scripts/dependency-closure.mjs) writes after every install: a hash of each installed third-party package the project can load, through its own dependencies, its workspace links, and the toolchain projects (the workspace root and the Storybook configs). A dependency change reruns the projects whose closure it changes. Of the 173 lockfile changes on `main` from 2026-09-15 to 2026-10-15, the average one changed 29% of closures, and 92 changed none.
+Only tasks that load other projects' code outside the dependency graph list `pnpm-lock.yaml`: the `check-module-structure` import checks and `storybook-react:bundle`, which finds every package's stories by glob. Every other task carries the `dependency-closure` toolchain, a moon plugin built from [`tools/moon-dependency-closure`](../../../tools/moon-dependency-closure) that adds a hash of the project's dependency closure to the task's hash. The closure is every third-party package the project can load, through its own dependencies, its workspace links, and the toolchain projects (the workspace root and the Storybook configs), each with what it resolves its own dependencies to. A dependency change reruns the projects whose closure it changes. `scripts/check-dependency-closure.mjs` fails Check when a cached task in a JavaScript project lacks the toolchain. Of the 173 lockfile changes on `main` from 2026-09-15 to 2026-10-15, the average one changed 29% of closures, and 92 changed none.
 
-Touched-file detection cannot see a closure: scoped to the files a PR touched, a lockfile-only change would select no build or test. A change to `pnpm-lock.yaml` or to the generator therefore runs everything, and the cache decides what executes. `node scripts/dependency-closure.mjs --print <project>` prints what a project's closure hashes.
+Touched-file detection cannot see a closure: scoped to the files a PR touched, a lockfile-only change would select no build or test. A change to `pnpm-lock.yaml` or to the committed plugin therefore runs everything, and the cache decides what executes. `moon run <target> --log debug` prints what each project's closure hashes.
 
 On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache.
 

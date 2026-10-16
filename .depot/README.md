@@ -30,7 +30,7 @@ Depot CI runs [steps concurrently](https://depot.dev/docs/ci/how-to-guides/paral
 
 | Job | Block | Why |
 | :-- | :-- | :-- |
-| `check` | the nine no-build gates | Independent node scripts, 1 to 6 s each. `fail-fast: false`, so a PR with two problems learns both in one run instead of one per cycle. |
+| `check` | the ten no-build gates | Independent node scripts, 1 to 6 s each. `fail-fast: false`, so a PR with two problems learns both in one run instead of one per cycle. |
 | `check` | knip alongside `check-plugin-set` + `docs:bundle` | About 2m30s against 1m and 1m. The two moon checks share one invocation because they overlap in `^:build`, so moon schedules that graph once instead of two processes contending for the same task locks. `fail-fast: false` replaces the old `continue-on-error` and gate-step pair. |
 | `test`, `e2e` | per-cell preparation | The browser download dominates, and the `find` and the `moon query` ride along with it. Step `id`s and outputs survive the block, since Depot merges each unit's state back when they join. |
 

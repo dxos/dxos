@@ -45,7 +45,7 @@
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pkg-lint": "node scripts/pkg-lint.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
-    "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true; effect-tsgo patch --typescript --oxlint && node scripts/dependency-closure.mjs",
+    "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true; effect-tsgo patch --typescript --oxlint",
     "publish-package": "node scripts/publish-package.mjs",
     "publish-unpublished-packages": "node scripts/publish-unpublished-packages.mjs",
     "query-logs": "node scripts/query-logs.mjs",

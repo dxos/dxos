@@ -36,7 +36,7 @@ unconditional — no `--affected` flag, no `if:`. The previous shape carried an 
 Stage boundaries are the dependency edges. Within a stage, independent steps run concurrently
 (Depot CI `parallel:` blocks), so a stage costs its slowest member rather than the sum:
 
-1. **No-build gates** — nine independent node scripts at 1–6 s each, one `parallel:` block with
+1. **No-build gates** — ten independent node scripts at 1–6 s each, one `parallel:` block with
    `fail-fast: false`. They used to be a cheap-first sequence, which bought time-to-red-signal at
    the price of reporting one failure per run; concurrent + report-all gets both, and a PR with an
    unformatted file _and_ a bad publish config learns both in one cycle. The peer-dependency check
