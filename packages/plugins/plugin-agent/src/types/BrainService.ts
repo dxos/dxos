@@ -223,8 +223,14 @@ export const currentFacts = (facts: readonly RDF.Fact[], now: string): RDF.Fact[
     (fact) =>
       fact.kind === undefined &&
       statuses.get(RDF.Mapping.graphOf(fact)) === 'active' &&
-      (!fact.assertion.validTo || fact.assertion.validTo > now),
+      holdsAt(fact.assertion.validTo, Date.parse(now)),
   );
+};
+
+/** Compared as instants, since extracted `validTo`s vary in offset, precision and granularity; one that does not parse is kept. */
+const holdsAt = (validTo: string | undefined, now: number): boolean => {
+  const until = validTo === undefined ? Number.NaN : Date.parse(validTo);
+  return Number.isNaN(until) || until > now;
 };
 
 /** An event as plain JSON, for brains across a wire. */
