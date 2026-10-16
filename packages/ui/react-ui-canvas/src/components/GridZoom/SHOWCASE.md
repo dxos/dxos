@@ -7,6 +7,12 @@ fits, with the last tour cell in the bottom-left quadrant.
 Clips are read from the gitignored `temp/grid-zoom/` at the repo root: `tour-<n>.mp4` for the tour cells and
 `clip-<NN>.mp4` (row-major index) for every other cell.
 
+The three tour demos are 10s cuts from the busiest step of these flows:
+
+1. plugin-markdown `write-and-link`: "Write in markdown".
+2. plugin-canvas `draw-and-nest`: "Draw and label shapes".
+3. plugin-projects `plan-a-project`: "Break the work into tasks".
+
 ## Recording rules
 
 Every clip and every take of the composite follows these:
