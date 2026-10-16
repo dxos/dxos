@@ -19,10 +19,10 @@ export type FrameProps = PropsWithChildren<{
   caption?: FrameText;
   /** Layout only: the recording's size; the frame keeps its aspect ratio and scales to fit. */
   size?: FrameSize;
-  /** Full-width `band` (default) or floating `panel`. */
-  headerStyle?: BandStyle;
   /** Floating `panel` (default) or full-width `band`. */
   captionStyle?: BandStyle;
+  /** Milliseconds to hold the header as a centred panel on mount; remount (a new `key`) to replay it. */
+  intro?: number;
   /** Overrides for the `--autocue-*` custom properties, which reach into the shadow root. */
   style?: CSSProperties;
 }>;
@@ -36,8 +36,8 @@ export const Frame = ({
   header,
   caption,
   size,
-  headerStyle = 'band',
   captionStyle = 'panel',
+  intro,
   style,
   children,
 }: FrameProps) => {
@@ -71,8 +71,14 @@ export const Frame = ({
     handle.current?.setSize(size);
   }, [mode, size?.width, size?.height]);
   useEffect(() => {
-    handle.current?.setStyles({ header: headerStyle, caption: captionStyle });
-  }, [mode, headerStyle, captionStyle]);
+    handle.current?.setCaptionStyle(captionStyle);
+  }, [mode, captionStyle]);
+  // After the header effect, so the intro shows the current title.
+  useEffect(() => {
+    if (intro) {
+      void handle.current?.playIntro(intro);
+    }
+  }, [mode, intro]);
 
   return (
     <div ref={ref} className='flex flex-col dx-fill' style={style}>

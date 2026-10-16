@@ -20,13 +20,19 @@ export const TOKENS = `
     --autocue-panel-inset: 24px;
     --autocue-panel-radius: 12px;
     --autocue-letterbox: #000;
+    /* Read by script as milliseconds, so keep the unit. */
+    --autocue-intro-fade: 600ms;
+    --autocue-caption-fade: 300ms;
     --autocue-panel-surface: rgba(17, 17, 17, 0.92);
+    /* The caption panel lets the app show through a little, since it sits over the content for the whole take. */
+    --autocue-caption-surface: rgba(17, 17, 17, 0.78);
     --autocue-panel-fg: #fff;
     --autocue-panel-muted: rgba(255, 255, 255, 0.7);
     --autocue-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
   :host-context(.dark) {
     --autocue-panel-surface: rgba(250, 250, 250, 0.95);
+    --autocue-caption-surface: rgba(250, 250, 250, 0.8);
     --autocue-panel-fg: #111;
     --autocue-panel-muted: rgba(17, 17, 17, 0.65);
     --autocue-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);

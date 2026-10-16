@@ -36,10 +36,15 @@ One implementation of each piece of autocue's on-screen UI, with a storybook, us
   uses this.
 - `mode: 'layout'` — the header and caption sit around a `<slot>` for content. The storybook and the terminal stage
   use this.
-- `headerStyle` / `captionStyle`: `band` spans the width at the edge (and in layout takes space from the content);
-  `panel` floats over the content, centred and as wide as its text. Defaults: header `band`, caption `panel`.
+- The header is always a full-width band; its only floating form is the intro.
+- `captionStyle`: `band` spans the width at the bottom (in layout it takes space from the content); `panel`
+  (default) floats over the content, centred and as wide as its text.
 - Panels invert the page theme (`:host-context(.dark)`; Composer marks dark mode with `html.dark`): dark in a light
   theme, light in a dark one, so they stand out from the content. Bands stay the driver's dark band.
+- `playIntro(ms)` (option `intro`, driver op `title`) shows the header's text alone, as a large centred panel; the
+  header and caption stay hidden, then fade in as it fades out: an opening title for the take.
+- Captions fade: the old one out, then the new one in (`--autocue-caption-fade`); a clear fades out.
+- The caption panel is slightly transparent with a backdrop blur (`--autocue-caption-surface`).
 - The caption has a fixed height (`--autocue-caption-height`), so a step with or without a subtitle never moves it.
 - `size` (layout only) lays the frame out at the recording's pixel size and scales it to fit the host, letterboxed,
   so text wraps where it will in the video. The story offers 16:10 (1280×800, the driver default), 16:9

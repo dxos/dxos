@@ -293,11 +293,15 @@ const SPEED_ID = '__demo_speed__';
 /** `speed` ops in recording time, for the trimmer to play those stretches faster. */
 const speedChanges = [];
 
-/** The caption is the `tools/autocue` Frame's caption band, in overlay mode over the recorded page. */
-const showCaption = async (text, subtitle) => {
+/**
+ * The caption and title are the `tools/autocue` Frame, in overlay mode over the recorded page. `update` names only
+ * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `intro` (ms to
+ * hold the title as a centred panel before it moves to the header).
+ */
+const updateFrame = async (update) => {
   await injectModule(page, FRAME_MODULE, '__autocueFrame');
   await page.evaluate(
-    ({ id, text, subtitle }) => {
+    ({ id, update }) => {
       let host = document.getElementById(id);
       if (!host) {
         host = document.createElement('div');
@@ -306,9 +310,18 @@ const showCaption = async (text, subtitle) => {
         document.body.appendChild(host);
         host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
       }
-      host.__frame.setCaption({ title: text, subtitle });
+      const frame = host.__frame;
+      if ('header' in update) {
+        frame.setHeader(update.header ?? undefined);
+      }
+      if ('caption' in update) {
+        frame.setCaption(update.caption ?? undefined);
+      }
+      if (update.intro) {
+        void frame.playIntro(update.intro);
+      }
     },
-    { id: CAPTION_ID, text, subtitle },
+    { id: CAPTION_ID, update },
   );
 };
 
@@ -566,7 +579,7 @@ const runFlow = async (command) => {
         .filter(([op]) => !['run', 'abort', 'steps', 'status', 'stop'].includes(op))
         .map(([op, handler]) => [
           op,
-          quiet && op === 'caption'
+          quiet && (op === 'caption' || op === 'title')
             ? async () => ({})
             : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
         ]),
@@ -822,7 +835,7 @@ const handlers = {
   },
   caption: async (command) => {
     if (options.captions !== 'off') {
-      await showCaption(command.value, command.subtitle);
+      await updateFrame({ caption: { title: command.value, subtitle: command.subtitle } });
     }
     timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
     if (command.hold) {
@@ -888,8 +901,26 @@ const handlers = {
     };
   },
   clearCaption: async () => {
-    await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
+    await updateFrame({ caption: null });
     return {};
+  },
+  /**
+   * The take's title in the Frame's header band: `value` / `subtitle`, and `intro`
+   * milliseconds (default 3000, 0 for none) to hold it as a centred panel first, as an opening title. `hold` waits
+   * out the intro before returning. An empty `value` clears it.
+   */
+  title: async (command) => {
+    const intro = command.intro ?? 3_000;
+    if (options.captions !== 'off') {
+      await updateFrame({
+        header: command.value ? { title: command.value, subtitle: command.subtitle } : null,
+        intro: command.value ? intro : 0,
+      });
+    }
+    if (command.hold) {
+      await page.waitForTimeout(command.hold);
+    }
+    return { at: (Date.now() - started) / 1000 };
   },
   /**
    * Plays what follows at `factor` times speed in the cut (`factor: 1` returns to normal), for stretches

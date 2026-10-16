@@ -421,7 +421,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `speed` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `title` `speed` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
@@ -508,6 +508,15 @@ C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subt
 
 When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
+
+`title` puts the take's name in the Frame's header. By default it opens as a large panel centred on the page for 3s,
+then cross-fades into a full-width band at the top for the rest of the take (`"intro": 0` skips the opening,
+`"hold": 3600` waits out the opening before the next op). The caption stays hidden during the opening and fades in
+with the header. A `cut` clears both, like any caption shown before it, so issue `title` after the last `cut`:
+
+```bash
+C '{"op":"title","value":"Projects","subtitle":"Track work across spaces","hold":3600}'
+```
 
 ## 4. Trim the dead air
 

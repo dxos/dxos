@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -66,7 +66,7 @@ const SIZES = {
   'fill': undefined,
 } satisfies Record<string, FrameSize | undefined>;
 
-type StoryProps = Pick<FrameProps, 'mode' | 'headerStyle' | 'captionStyle'> & {
+type StoryProps = Pick<FrameProps, 'mode' | 'captionStyle' | 'intro'> & {
   /** Layout only: the recording's aspect ratio, or fill the viewport. */
   size?: keyof typeof SIZES;
   /** Milliseconds each caption holds while playing. */
@@ -74,8 +74,17 @@ type StoryProps = Pick<FrameProps, 'mode' | 'headerStyle' | 'captionStyle'> & {
 };
 
 /** Plays the script on a loop, as a recording would, with controls to stop and step it. */
-const TakeStory = ({ mode, size = '16:10', headerStyle, captionStyle, interval = 2_500 }: StoryProps) => {
+const TakeStory = ({ mode, size = '16:10', captionStyle, intro, interval = 2_500 }: StoryProps) => {
   const [step, setStep] = useState(0);
+  // Each pass through the script is a new take, so the frame remounts and replays its intro.
+  const [take, setTake] = useState(0);
+  const previous = useRef(step);
+  useEffect(() => {
+    if (step === 0 && previous.current !== 0) {
+      setTake((take) => take + 1);
+    }
+    previous.current = step;
+  }, [step]);
   const [playing, setPlaying] = useState(true);
   useEffect(() => {
     if (!playing) {
@@ -89,12 +98,13 @@ const TakeStory = ({ mode, size = '16:10', headerStyle, captionStyle, interval =
   return (
     <>
       <Frame
+        key={take}
         mode={mode}
         header={HEADER}
         caption={STEPS[step]}
         size={SIZES[size]}
-        headerStyle={headerStyle}
         captionStyle={captionStyle}
+        intro={intro}
       >
         <MockApp step={step} />
       </Frame>
@@ -132,16 +142,17 @@ const TakeStory = ({ mode, size = '16:10', headerStyle, captionStyle, interval =
  * 1. The caption changes every 2.5s and is gone on the last step; the title band stays.
  * 2. The floating panel (bottom left): pause stops the script; next steps it by hand.
  * 3. Size 16:10 and 16:9 keep that aspect ratio at any viewport, letterboxed; fill takes the whole viewport.
- * 4. By default the header is a full-width band and the caption a floating panel as wide as its text, at a fixed
- *    height. Panels: both float, and the app fills the frame beneath them. Bands: both span the width.
- * 6. Overlay pins both bands to the window edges over the app, as the driver paints them into a recorded page.
+ * 4. The header is a full-width band. The caption is a floating panel as wide as its text, at a fixed height;
+ *    Bands makes it span the width too.
+ * 5. Intro shows the title as a large centred panel for 3s at the start of each take, then cross-fades to the
+ *    header band.
+ * 6. Overlay pins the header band and floats the caption over the app, as the driver paints them into a recorded page.
  */
 const meta: Meta<typeof TakeStory> = {
   title: 'tools/autocue/Frame',
   render: (args) => <TakeStory {...args} />,
   argTypes: {
     size: { control: 'select', options: Object.keys(SIZES) },
-    headerStyle: { control: 'inline-radio', options: ['band', 'panel'] },
     captionStyle: { control: 'inline-radio', options: ['band', 'panel'] },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
@@ -158,12 +169,12 @@ export const Default: Story = {
   args: { mode: 'layout', size: '16:10' },
 };
 
-export const Panels: Story = {
-  args: { mode: 'layout', size: '16:10', headerStyle: 'panel', captionStyle: 'panel' },
+export const Bands: Story = {
+  args: { mode: 'layout', size: '16:10', captionStyle: 'band' },
 };
 
-export const Bands: Story = {
-  args: { mode: 'layout', size: '16:10', headerStyle: 'band', captionStyle: 'band' },
+export const Intro: Story = {
+  args: { mode: 'layout', size: '16:10', intro: 3_000, interval: 4_000 },
 };
 
 export const Overlay: Story = {

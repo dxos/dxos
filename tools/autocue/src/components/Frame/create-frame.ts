@@ -14,14 +14,17 @@ export type FrameText = {
 
 export type FrameMode = 'overlay' | 'layout';
 
-/** `band` spans the frame's width at its edge; `panel` floats over the content, centred and as wide as its text. */
+/**
+ * The caption's style: `band` spans the frame's width at its edge; `panel` floats over the content, centred and as
+ * wide as its text. The header is always a band; its only floating form is the intro.
+ */
 export type BandStyle = 'band' | 'panel';
 
 export type FrameOptions = {
   /**
    * `overlay` fixes the header and caption over the page, so the recorded app shows through.
-   * `layout` stacks a `band` header and caption around the content (the host's children, through a `<slot>`); a
-   * `panel` floats over the content instead, which then fills that side of the frame.
+   * `layout` stacks the header band and a `band` caption around the content (the host's children, through a
+   * `<slot>`); a `panel` caption floats over the content instead, which then fills the bottom of the frame.
    */
   mode?: FrameMode;
   header?: FrameText;
@@ -32,10 +35,10 @@ export type FrameOptions = {
    * Unset, the frame fills the host.
    */
   size?: FrameSize;
-  /** Defaults to `band`. */
-  headerStyle?: BandStyle;
-  /** Defaults to `panel`. */
+  /** The caption's style; defaults to `panel`. */
   captionStyle?: BandStyle;
+  /** Milliseconds to hold the header as a centred panel when the frame opens (see `playIntro`); 0 or unset skips it. */
+  intro?: number;
 };
 
 export type FrameSize = {
@@ -47,7 +50,12 @@ export type FrameHandle = {
   setHeader: (text?: FrameText) => void;
   setCaption: (text?: FrameText) => void;
   setSize: (size?: FrameSize) => void;
-  setStyles: (styles: { header?: BandStyle; caption?: BandStyle }) => void;
+  setCaptionStyle: (style: BandStyle) => void;
+  /**
+   * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
+   * caption fade in. Resolves once the hand-off is done; a later call or `dispose` cuts it short.
+   */
+  playIntro: (ms?: number) => Promise<void>;
   dispose: () => void;
 };
 
@@ -78,17 +86,26 @@ export const FRAME_STYLES = `
     --autocue-band-muted: var(--autocue-panel-muted); }
   .frame.overlay .panel { position: fixed; z-index: var(--autocue-layer); }
   .header { padding: 16px 24px; }
-  .header.panel { top: var(--autocue-panel-inset); padding: 12px 28px; }
   .header .title { font: 600 30px/1.2 var(--autocue-font); }
   .header .subtitle { font: 400 18px/1.35 var(--autocue-font); margin-top: 4px; color: var(--autocue-band-muted); }
   /* A fixed height, so a caption with or without a subtitle never moves. */
   .caption { height: var(--autocue-caption-height); padding: 0 24px; display: flex; flex-direction: column;
     justify-content: center; }
-  .caption.panel { bottom: var(--autocue-panel-inset); padding: 0 28px; }
+  .caption.panel { bottom: var(--autocue-panel-inset); padding: 0 28px;
+    --autocue-band-surface: var(--autocue-caption-surface); backdrop-filter: blur(6px); }
   .caption .title, .caption .subtitle, .panel .title, .panel .subtitle { white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; }
   .caption .title { font: 600 20px/1.35 var(--autocue-font); }
   .caption .subtitle { font: 400 15px/1.35 var(--autocue-font); margin-top: 4px; color: var(--autocue-band-muted); }
+  /* The opening title: the header's text, larger, centred in the frame, alone; the header and caption fade in as it
+     fades out. */
+  .header, .intro { transition: opacity var(--autocue-intro-fade) ease; }
+  /* Each caption fades out before the next fades in, so a step change reads as a cut between lines. */
+  .caption { transition: opacity var(--autocue-caption-fade) ease; }
+  .held, .fading, .intro.out { opacity: 0; }
+  .header.panel.intro { top: 50%; transform: translate(-50%, -50%); padding: 24px 48px; }
+  .intro .title { font-size: 48px; }
+  .intro .subtitle { font-size: 24px; margin-top: 8px; }
 `;
 
 const renderBand = (band: HTMLElement, text?: FrameText) => {
@@ -116,7 +133,7 @@ const renderBand = (band: HTMLElement, text?: FrameText) => {
  */
 export const createFrame = (
   root: ShadowRoot,
-  { mode = 'overlay', header, caption, size, headerStyle = 'band', captionStyle = 'panel' }: FrameOptions = {},
+  { mode = 'overlay', header, caption, size, captionStyle = 'panel', intro }: FrameOptions = {},
 ): FrameHandle => {
   const style = document.createElement('style');
   style.textContent = FRAME_STYLES;
@@ -137,15 +154,55 @@ export const createFrame = (
   content.className = 'content';
   content.appendChild(document.createElement('slot'));
 
-  frame.append(headerBand, content, captionBand);
+  const introBand = document.createElement('div');
+  introBand.className = 'band header panel intro';
+  introBand.dataset.testid = 'autocue-frame-intro';
+  introBand.hidden = true;
+
+  frame.append(headerBand, content, captionBand, introBand);
 
   const stage = document.createElement('div');
   stage.className = `stage ${mode}`;
   stage.appendChild(frame);
 
   root.append(style, stage);
-  renderBand(headerBand, header);
-  renderBand(captionBand, caption);
+  let headerText = header;
+  const setHeader = (text?: FrameText) => {
+    headerText = text;
+    renderBand(headerBand, text);
+  };
+  setHeader(header);
+
+  /** Milliseconds from a `--autocue-*` duration token, read when used so a host's override applies. */
+  const duration = (token: string) => parseFloat(getComputedStyle(frame).getPropertyValue(token)) || 0;
+
+  let captionText: FrameText | undefined;
+  let captionTimer: ReturnType<typeof setTimeout> | undefined;
+  const setCaption = (text?: FrameText) => {
+    if (text?.title === captionText?.title && text?.subtitle === captionText?.subtitle) {
+      return;
+    }
+
+    clearTimeout(captionTimer);
+    const showing = Boolean(captionText?.title);
+    captionText = text;
+    const show = () => {
+      renderBand(captionBand, text);
+      if (text?.title) {
+        // Commit the transparent start state, then fade in.
+        captionBand.classList.add('fading');
+        void captionBand.offsetHeight;
+        captionBand.classList.remove('fading');
+      }
+    };
+    if (showing) {
+      captionBand.classList.add('fading');
+      captionTimer = setTimeout(show, duration('--autocue-caption-fade'));
+    } else {
+      show();
+    }
+  };
+  setCaption(caption);
 
   let current: FrameSize | undefined;
   const fit = () => {
@@ -173,22 +230,69 @@ export const createFrame = (
   };
   setSize(size);
 
-  const setStyles: FrameHandle['setStyles'] = ({ header, caption }) => {
-    if (header) {
-      headerBand.classList.toggle('panel', header === 'panel');
-    }
-    if (caption) {
-      captionBand.classList.toggle('panel', caption === 'panel');
-    }
+  const setCaptionStyle = (style: BandStyle) => {
+    captionBand.classList.toggle('panel', style === 'panel');
   };
-  setStyles({ header: headerStyle, caption: captionStyle });
+  setCaptionStyle(captionStyle);
+
+  let cancelIntro = () => {};
+  // The title opens alone: the header and caption wait for it.
+  const held = [headerBand, captionBand];
+  const release = () => held.forEach((band) => band.classList.remove('held'));
+  const playIntro = (ms = 3_000) => {
+    cancelIntro();
+    if (!headerText?.title) {
+      return Promise.resolve();
+    }
+
+    const fade = duration('--autocue-intro-fade');
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const finish = () => {
+      timers.forEach(clearTimeout);
+      introBand.hidden = true;
+      introBand.classList.remove('out');
+      release();
+    };
+
+    // The header leaves at once and the intro fades in from transparent: the reflow commits each start state.
+    renderBand(introBand, headerText);
+    introBand.classList.add('out');
+    for (const band of held) {
+      band.style.transition = 'none';
+      band.classList.add('held');
+    }
+    void frame.offsetHeight;
+    for (const band of held) {
+      band.style.transition = '';
+    }
+    introBand.classList.remove('out');
+    return new Promise<void>((resolve) => {
+      cancelIntro = () => {
+        finish();
+        resolve();
+      };
+      timers.push(
+        setTimeout(() => {
+          introBand.classList.add('out');
+          release();
+        }, ms),
+        setTimeout(() => cancelIntro(), ms + fade),
+      );
+    });
+  };
+  if (intro) {
+    void playIntro(intro);
+  }
 
   return {
-    setHeader: (text) => renderBand(headerBand, text),
-    setCaption: (text) => renderBand(captionBand, text),
+    setHeader,
+    setCaption,
     setSize,
-    setStyles,
+    setCaptionStyle,
+    playIntro,
     dispose: () => {
+      clearTimeout(captionTimer);
+      cancelIntro();
       observer.disconnect();
       style.remove();
       stage.remove();
