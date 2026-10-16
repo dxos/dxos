@@ -8,6 +8,7 @@
  * `pipeline.sh` records it with the committed flows, lays out the grid and records the composite; the recording rules
  * are in packages/ui/react-ui-canvas/src/components/GridZoom/SHOWCASE.md.
  *
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  */
 
