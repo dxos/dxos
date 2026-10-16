@@ -34,6 +34,8 @@ type GridZoomProps = {
   pan: number;
   /** Final zoom-out time, in ms. */
   duration: number;
+  /** Shows the replay button and timing readout; off for a recording, which must carry no overlay. */
+  controls?: boolean;
 };
 
 /** One leg of the camera's path: held on a tile (`focus`), or moving between two cameras. */
@@ -71,7 +73,7 @@ const Tile = ({ clip, label, bounds, onLoad }: TileProps) => {
   const src = useMemo(() => new URL(`${CLIPS_DIR}${clip}.mp4`, import.meta.url).href, [clip]);
   return (
     <div
-      className='absolute overflow-hidden rounded-sm bg-neutral-800'
+      className='absolute overflow-hidden rounded-sm bg-base-surface'
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
     >
       {failed ? (
@@ -102,7 +104,7 @@ const Tile = ({ clip, label, bounds, onLoad }: TileProps) => {
  * plays, slides right to each further cell at the same zoom, then zooms out along `interpolateCamera`'s path until the
  * whole grid (and any tour cell outside it) fits.
  */
-const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: GridZoomProps) => {
+const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration, controls = true }: GridZoomProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
   const [elapsed, setElapsed] = useState(0);
@@ -195,7 +197,7 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: 
   const camera = shot?.camera ?? shot?.move?.(easeInOut(t));
 
   return (
-    <div ref={ref} className='relative dx-fill overflow-hidden bg-black'>
+    <div ref={ref} className='relative dx-fill overflow-hidden bg-group-surface'>
       {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
       {camera &&
         cells.map((cell) => (
@@ -214,7 +216,7 @@ const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: 
             }}
           />
         ))}
-      <div className='absolute top-2 left-2 w-fit'>
+      <div className={controls ? 'absolute top-2 left-2 w-fit' : 'hidden'}>
         <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
           <Button.Root
             variant='ghost'
@@ -256,5 +258,5 @@ export default meta;
 type Story = StoryObj<GridZoomProps>;
 
 export const Default: Story = {
-  args: { cols: 6, rows: 6, gap: 32, hold: 10_000, pan: 1_500, duration: 12_000 },
+  args: { cols: 6, rows: 6, gap: 32, hold: 10_000, pan: 1_500, duration: 12_000, controls: true },
 };

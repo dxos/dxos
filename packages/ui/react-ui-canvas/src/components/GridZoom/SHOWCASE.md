@@ -23,6 +23,9 @@ Every clip and every take of the composite follows these:
    title and no end card.
 4. **No captions or titles.** Run the driver with `--captions off`, so a flow's step captions never appear.
 
+The composite is recorded from the story in isolation with the controls hidden and the light theme:
+`/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story&args=controls:!false&globals=theme:light`.
+
 Clips are recorded headless with `--gpu on`, so 3D plugins render on the GPU, and without the action feed
 (`--overlay off`) or captions.
 
