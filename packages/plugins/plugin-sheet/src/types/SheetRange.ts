@@ -39,7 +39,7 @@ export const cellClassNameForRange = ({ key, value }: Sheet.Sheet['ranges'][numb
     case styleKey:
       switch (value) {
         case 'header':
-          return 'bg-group-surface! text-fg-muted! font-medium';
+          return 'bg-grid-header! text-grid-header-fg! font-medium';
         case 'highlight':
           return 'bg-grid-highlight!';
         case 'softwrap':
