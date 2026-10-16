@@ -3,9 +3,11 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
@@ -14,61 +16,148 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceProperties, SpaceState } from '@dxos/client/echo';
 import { Annotation, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
+import { MigrationVersionAnnotation } from '@dxos/migrations';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space.ts';
+import {
+  isSpacesOrder,
+  mergeSpacesOrder,
+  readSpacesOrder,
+  removeFromSpacesOrder,
+} from '../migrations/settings-space.ts';
+
+/** How long a merged settings space is kept, so a device that was offline can land its writes there. */
+export const MERGED_SPACE_GRACE = Duration.days(7);
+
+const EDGE_SYNC_TIMEOUT = 60_000;
 
 /**
- * Resolve the settings space, creating one only for legacy profiles that predate it.
+ * Resolve the settings space to read now, waiting until one is visible.
  *
- * On every other path a tagged settings space is guaranteed to arrive — genesis creates it for
- * fresh profiles, replication delivers it for existing profiles on a new device — so this waits
- * for it rather than creating: an eager create here races {@link AppSpace.setupIdentitySpaces}
- * (which publishes the default space before the settings space) and loses, leaving the profile
- * with a duplicate settings space.
- *
- * A visible legacy space is not proof the profile predates it (the immutable legacy tag outlives
- * migration, and replication delivers the legacy space first), so the create can still duplicate;
- * {@link runSettingsSpaceHealing} converges the profile rather than this guarding harder.
+ * Never creates one: {@link runSettingsSpaceConvergence} does that, and only once the HALO is in sync
+ * with EDGE. The space list and the credential stream both replay on subscribe, so the current state
+ * is checked with no gap in which an arriving space or credential could be missed.
  */
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
-  // The space list replays on subscribe, so the current state is checked with no gap in which an
-  // arriving settings space could be missed.
-  const existing = yield* Effect.callback<Space | undefined>((resume) => {
-    const sub = client.spaces.subscribe(() => {
+  const space = yield* Effect.callback<Space>((resume) => {
+    const check = () => {
       const settingsSpace = AppSpace.getSettingsSpace(client);
       if (settingsSpace) {
         resume(Effect.succeed(settingsSpace));
-      } else if (AppSpace.resolveLegacyDefaultSpace(client)) {
-        resume(Effect.succeed(undefined));
       }
+    };
+    const spaces = client.spaces.subscribe(check);
+    const credentials = client.halo.credentials.subscribe(check);
+    return Effect.sync(() => {
+      spaces.unsubscribe();
+      credentials.unsubscribe();
     });
-    return Effect.sync(() => sub.unsubscribe());
   });
-  if (!existing) {
-    return yield* ensureSettingsSpace(client);
-  }
 
-  yield* Effect.promise(() => existing.waitUntilReady());
-  return existing;
+  yield* Effect.promise(() => space.waitUntilReady());
+  return space;
 });
 
 /**
- * Find the settings space, creating it if the profile does not have one yet.
- *
- * Profiles created through {@link AppSpace.setupIdentitySpaces} already have one; this covers the
- * profiles that predate the settings space, whose first sight of it is the migration. Callers that
- * cannot prove the profile is legacy use {@link resolveSettingsSpace} instead.
+ * The settings object the settings space names. Named at genesis; a space that predates the name is
+ * given one here, and so is one whose name dangles, since nothing else would ever repoint it.
  */
-export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) {
-  const existing = AppSpace.getSettingsSpace(client);
-  if (existing) {
-    yield* Effect.promise(() => existing.waitUntilReady());
-    return existing;
-  }
+export const resolveAppSettings = Effect.fnUntraced(function* (space: Space) {
+  return yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+    Option.match({
+      onSome: (ref) =>
+        Database.load(ref).pipe(
+          Effect.catchTag('EntityNotFoundError', () => {
+            log.warn('settings object not found; naming a fresh one', { uri: ref.uri });
+            return Effect.sync(() => nameSettings(space));
+          }),
+        ),
+      onNone: () => Effect.sync(() => nameSettings(space)),
+    }),
+  );
+});
 
+/** Add an empty settings object to the space and name it on its properties. */
+const nameSettings = (space: Space): AppSettings.AppSettings => {
+  const settings = space.db.add(AppSettings.make());
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+  });
+  return settings;
+};
+
+//
+// Canonicalization.
+//
+
+/**
+ * Settle the profile on one settings space and converge the others into it: wait for the HALO to
+ * sync with EDGE (retrying while offline), make sure a credential names the canonical space, then
+ * heal. Runs for the life of the plugin; interruption stops it.
+ */
+export const runSettingsSpaceConvergence = Effect.fnUntraced(function* (client: Client) {
+  yield* Effect.tryPromise(() => client.halo.syncToEdge()).pipe(
+    Effect.tapError((cause) => Effect.sync(() => log('HALO not in sync with EDGE; retrying', { cause }))),
+    Effect.retry(Schedule.min([Schedule.exponential('1 second'), Schedule.spaced('1 minute')])),
+  );
+  yield* canonicalizeSettingsSpace(client);
+  yield* runSettingsSpaceHealing(client);
+});
+
+/**
+ * Make sure a `SettingsSpace` credential names the canonical settings space. The caller must have
+ * synced the HALO with EDGE: every synced device then sees the same settings spaces in its HALO and
+ * names the same one, the lowest id.
+ *
+ * Creates a settings space only for a legacy profile that predates it. On any other profile with none,
+ * identity genesis is still creating it and will name it, so this waits rather than racing it.
+ */
+export const canonicalizeSettingsSpace = Effect.fnUntraced(function* (client: Client) {
+  while (!AppSpace.getCanonicalSettingsSpaceId(client)) {
+    const [lowest] = yield* listSettingsSpacesInHalo(client);
+    if (lowest) {
+      yield* Effect.promise(() => AppSpace.writeSettingsSpaceCredential(client, lowest));
+      log.info('named the canonical settings space', { spaceId: lowest.id });
+    } else if (AppSpace.resolveLegacyDefaultSpace(client)) {
+      const space = yield* createSettingsSpace(client);
+      yield* Effect.promise(() => AppSpace.writeSettingsSpaceCredential(client, space));
+      log.info('created the settings space for a legacy profile', { spaceId: space.id });
+    } else {
+      yield* awaitHaloOrSpaceChange(client);
+      continue;
+    }
+
+    // Every write appends to the HALO, so wait for this one rather than writing again.
+    yield* awaitCanonicalCredential(client);
+  }
+});
+
+const awaitCanonicalCredential = (client: Client): Effect.Effect<void> =>
+  Effect.callback<void>((resume) => {
+    const check = () => AppSpace.getCanonicalSettingsSpaceId(client) !== undefined && resume(Effect.void);
+    const credentials = client.halo.credentials.subscribe(check);
+    check();
+    return Effect.sync(() => credentials.unsubscribe());
+  });
+
+/**
+ * Every settings space this identity's HALO records a membership for, lowest id first, leaving out any
+ * a `SpaceDeleted` credential tombstoned. Read from credentials rather than the space list, so a space
+ * still opening on this device counts too.
+ */
+const listSettingsSpacesInHalo = Effect.fnUntraced(function* (client: Client) {
+  const spaces = yield* Effect.promise(() =>
+    Promise.all(
+      AppSpace.getSettingsSpaceKeysInHalo(client).map(async (key) => ({ id: await createIdFromSpaceKey(key), key })),
+    ),
+  );
+  return spaces.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+});
+
+const createSettingsSpace = Effect.fnUntraced(function* (client: Client) {
   const space = yield* Effect.promise(() =>
     client.spaces.create(
       {},
@@ -80,52 +169,51 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
   return space;
 });
 
-/**
- * The settings object the settings space names. Named at genesis; a space that predates the name is
- * given one here, and so is one whose name dangles, since nothing else would ever repoint it.
- */
-export const resolveAppSettings = Effect.fnUntraced(function* (space: Space) {
-  const nameFresh = Effect.sync(() => {
-    const settings = space.db.add(AppSettings.make());
-    Obj.update(space.properties, (properties) => {
-      Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+/** The next change to the space list or the HALO credentials; the replays on subscribe are skipped. */
+const awaitHaloOrSpaceChange = (client: Client): Effect.Effect<void> =>
+  Effect.callback<void>((resume) => {
+    let armed = false;
+    const wake = () => armed && resume(Effect.void);
+    const spaces = client.spaces.subscribe(wake);
+    const credentials = client.halo.credentials.subscribe(wake);
+    armed = true;
+    return Effect.sync(() => {
+      spaces.unsubscribe();
+      credentials.unsubscribe();
     });
-    return settings;
   });
 
-  return yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
-    Option.match({
-      onSome: (ref) =>
-        Database.load(ref).pipe(
-          Effect.catchTag('EntityNotFoundError', () => {
-            log.warn('settings object not found; naming a fresh one', { uri: ref.uri });
-            return nameFresh;
-          }),
-        ),
-      onNone: () => nameFresh,
-    }),
-  );
-});
+//
+// Healing.
+//
 
 /**
- * Converge duplicate settings spaces. Passes are driven by a sliding(1) queue subscribed before
- * the first pass, so a list change landing mid-pass is consumed by the next pass rather than lost
- * to a re-subscribe window. Exits once every known space has settled — duplicates only surface
- * while spaces are opening or replicating in, and one that arrives after that is healed next boot.
+ * Converge duplicate settings spaces into the canonical one. Passes are driven by a sliding(1) queue
+ * subscribed before the first pass, so a change landing mid-pass is consumed by the next pass rather
+ * than lost to a re-subscribe window. Exits once every known space has settled; anything that reaches
+ * a duplicate after that is merged on the next boot.
  */
 export const runSettingsSpaceHealing = Effect.fnUntraced(function* (client: Client) {
   const wake = yield* Queue.sliding<void>(1);
-  const sub = client.spaces.subscribe(() => void Queue.offerUnsafe(wake, undefined));
+  const spaces = client.spaces.subscribe(() => void Queue.offerUnsafe(wake, undefined));
+  const credentials = client.halo.credentials.subscribe(() => void Queue.offerUnsafe(wake, undefined));
   return yield* Effect.gen(function* () {
     while (true) {
       yield* Queue.take(wake);
       yield* healDuplicateSettingsSpaces(client).pipe(catchNonInterrupt('settings space healing pass failed'));
-      const spaces = client.spaces.get();
-      if (spaces.length > 0 && spaces.every((space) => isSettledSpaceState(space.state.get()))) {
+      const all = client.spaces.get();
+      if (all.length > 0 && all.every((space) => isSettledSpaceState(space.state.get()))) {
         return;
       }
     }
-  }).pipe(Effect.ensuring(Effect.sync(() => sub.unsubscribe())));
+  }).pipe(
+    Effect.ensuring(
+      Effect.sync(() => {
+        spaces.unsubscribe();
+        credentials.unsubscribe();
+      }),
+    ),
+  );
 });
 
 /** States a space rests in, as opposed to the transitional states of a space still opening. */
@@ -135,75 +223,220 @@ const isSettledSpaceState = (state: SpaceState): boolean =>
   state !== SpaceState.SPACE_CONTROL_ONLY;
 
 /**
- * One healing pass: salvage every ready duplicate's content into the survivor, then tombstone it.
- * The survivor is the lowest-id tagged space — a pure function of replicated state, so the global
- * minimum survives every partial view; device-local readiness and designation must not influence
- * the pick, or two mid-sync devices would tombstone each other's.
+ * One healing pass: merge every other ready settings space into the canonical one, and delete those
+ * {@link isSafeToDelete} clears. Does nothing until a credential names the canonical space, so no
+ * device-local view ever picks the survivor.
  */
-export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: Client) {
-  const [survivor, ...duplicates] = AppSpace.getSettingsSpaces(client);
-  // Salvage writes into the survivor, so nothing can be removed until it is readable.
-  if (!survivor || duplicates.length === 0 || survivor.state.get() !== SpaceState.SPACE_READY) {
+export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (
+  client: Client,
+  { now = Date.now() }: { now?: number } = {},
+) {
+  const canonicalId = AppSpace.getCanonicalSettingsSpaceId(client);
+  const canonical = canonicalId ? client.spaces.get().find((space) => space.id === canonicalId) : undefined;
+  if (!canonical || canonical.state.get() !== SpaceState.SPACE_READY) {
     return;
   }
 
-  for (const duplicate of duplicates) {
-    // An unopened duplicate cannot be salvaged; a later pass picks it up as it opens.
-    if (duplicate.state.get() !== SpaceState.SPACE_READY) {
-      continue;
-    }
-
-    // A failure on one duplicate (e.g. it is closing) must not strand the rest; it stays tagged
-    // and a later pass retries it.
+  const sources = AppSpace.getSettingsSpaces(client).filter(
+    (space) => space !== canonical && space.state.get() === SpaceState.SPACE_READY,
+  );
+  for (const source of sources) {
+    // A failure on one source (e.g. it is closing) must not strand the rest; a later pass retries it.
     yield* Effect.gen(function* () {
-      const salvaged = yield* salvageSettingsContent(survivor, duplicate);
-      if (!salvaged) {
-        log.warn('keeping duplicate settings space: content could not be salvaged', {
-          duplicate: duplicate.id,
-          survivor: survivor.id,
-        });
+      if (!(yield* mergeSettingsSpace(client, canonical, source))) {
         return;
       }
 
-      // The tombstone persists immediately while `delete()` flushes only the duplicate's own db,
-      // so the salvaged content must be durable first — after the delete the source is gone.
-      yield* Effect.promise(() => survivor.db.flush());
-      yield* Effect.promise(() => duplicate.delete());
-      log.info('removed duplicate settings space', { duplicate: duplicate.id, survivor: survivor.id });
-    }).pipe(catchNonInterrupt('failed to remove duplicate settings space', () => ({ duplicate: duplicate.id })));
+      if (yield* isSafeToDelete(client, source, now)) {
+        yield* Effect.promise(() => source.delete());
+        log.info('removed merged settings space', { source: source.id, canonical: canonical.id });
+      }
+    }).pipe(catchNonInterrupt('failed to merge settings space', () => ({ source: source.id })));
   }
 });
 
 /**
- * Copy everything a duplicate settings space holds into the survivor: every properties annotation
- * the survivor lacks (the survivor wins conflicts) and the cross-space ordering.
+ * Merge everything `source` holds into `canonical` and move it out of `source`: each settings key, each
+ * properties annotation and each ordering entry the canonical space lacks is added (canonical wins
+ * conflicts), then removed from the source. A value that changed in the source meanwhile stays, so the
+ * next pass merges the newer one; a key the user later clears in canonical is never brought back.
  *
- * @returns Whether the duplicate is now fully carried by the survivor and safe to delete. False
- * when it holds content this pass does not know how to salvage — deletion is irreversible, so
- * unknown content keeps the duplicate alive rather than being silently destroyed.
+ * Both spaces are synced with EDGE first. ECHO's convergence merge keeps the oldest settings object in
+ * a space whole, so merging into one made while the original was still replicating would lose the keys.
+ *
+ * @returns Whether the source is merged. False when a sync fails or the canonical object cannot load.
  */
-const salvageSettingsContent = Effect.fnUntraced(function* (survivor: Space, duplicate: Space) {
-  const objects = yield* Effect.promise(() => duplicate.db.query(Query.select(Filter.everything())).run());
-  const unknown = objects.filter((object) => !Obj.instanceOf(SpaceProperties, object) && !isSpacesOrder(object));
-  if (unknown.length > 0) {
+const mergeSettingsSpace = Effect.fnUntraced(function* (client: Client, canonical: Space, source: Space) {
+  if (!(yield* syncWithEdge(client, canonical)) || !(yield* syncWithEdge(client, source))) {
     return false;
   }
 
-  // Snapshot detaches the values from the duplicate's document; copied by raw key so annotations
-  // this code has never heard of survive too (values were validated when written on the duplicate).
-  const duplicateAnnotations = Obj.getMeta(Obj.getSnapshot(duplicate.properties)).annotations;
-  Obj.update(survivor.properties, (properties) => {
-    const annotations = Obj.getMeta(properties).annotations;
-    for (const [rawKey, value] of Object.entries(duplicateAnnotations)) {
-      // `Object.entries` erases the key brand; decoding restores it without a cast.
-      const key = Schema.decodeSync(Annotation.Key)(rawKey);
-      if (!(key in annotations)) {
-        annotations[key] = value;
-      }
-    }
-  });
+  const target = yield* Annotation.get(canonical.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+    Option.match({
+      onSome: (ref) => Database.load(ref).pipe(Effect.option, Effect.map(Option.getOrUndefined)),
+      onNone: () => Effect.succeed(nameSettings(canonical)),
+    }),
+  );
+  if (!target) {
+    log.warn('canonical settings object not loadable; merging later', { canonical: canonical.id });
+    return false;
+  }
 
-  return yield* mergeSpacesOrder(survivor, duplicate);
+  const sourceSettings = yield* Effect.promise(() => source.db.query(Filter.type(AppSettings.AppSettings)).run());
+  const snapshots = sourceSettings
+    .map((settings) => [settings, Obj.getSnapshot(settings).shared] as const)
+    .filter(([, shared]) => Object.keys(shared).length > 0);
+  for (const [, shared] of snapshots) {
+    Obj.update(target, (target) => {
+      for (const [namespace, values] of Object.entries(shared)) {
+        target.shared[namespace] ??= {};
+        const into = target.shared[namespace];
+        for (const [key, value] of Object.entries(values)) {
+          if (!(key in into)) {
+            into[key] = structuredClone(value);
+          }
+        }
+      }
+    });
+  }
+
+  const sourceAnnotations = Obj.getMeta(Obj.getSnapshot(source.properties)).annotations;
+  const moved = Object.entries(sourceAnnotations)
+    // `Object.entries` erases the key brand; decoding restores it without a cast.
+    .map(([rawKey, value]) => [Schema.decodeSync(Annotation.Key)(rawKey), value] as const)
+    .filter(([key, value]) => isProfileAnnotation(key, value));
+  if (moved.length > 0) {
+    Obj.update(canonical.properties, (properties) => {
+      const annotations = Obj.getMeta(properties).annotations;
+      for (const [key, value] of moved) {
+        if (!(key in annotations)) {
+          annotations[key] = value;
+        }
+      }
+    });
+  }
+
+  const order = yield* readSpacesOrder(source);
+  if (!(yield* mergeSpacesOrder(canonical, source))) {
+    return false;
+  }
+
+  // Durable in canonical before anything leaves the source.
+  yield* Effect.promise(() => canonical.db.flush());
+
+  // Canonical now holds every snapshotted key, its own value or the one just copied; a key whose
+  // source value changed since the snapshot is newer than both and stays for the next pass.
+  for (const [settings, shared] of snapshots) {
+    Obj.update(settings, (settings) => {
+      for (const [namespace, values] of Object.entries(shared)) {
+        const from = settings.shared[namespace];
+        for (const [key, value] of Object.entries(values)) {
+          if (from && isEqual(from[key], value)) {
+            delete from[key];
+          }
+        }
+        if (from && Object.keys(from).length === 0) {
+          delete settings.shared[namespace];
+        }
+      }
+    });
+  }
+
+  const marked = Option.isSome(Annotation.get(source.properties, AppAnnotation.MergedIntoAnnotation));
+  if (moved.length > 0 || !marked) {
+    Obj.update(source.properties, (properties) => {
+      const annotations = Obj.getMeta(properties).annotations;
+      for (const [key, value] of moved) {
+        if (isEqual(annotations[key], value)) {
+          delete annotations[key];
+        }
+      }
+      if (!marked) {
+        Annotation.set(properties, AppAnnotation.MergedIntoAnnotation, { spaceId: canonical.id, mergedAt: Date.now() });
+      }
+    });
+  }
+  if (!marked) {
+    log.info('merged settings space', { source: source.id, canonical: canonical.id });
+  }
+
+  yield* removeFromSpacesOrder(source, order);
+  yield* Effect.promise(() => source.db.flush());
+  return true;
+});
+
+/**
+ * Whether a merged source may be deleted: no credential names it, it was first merged at least
+ * {@link MERGED_SPACE_GRACE} ago, and after syncing with EDGE it holds nothing a pass would merge. The
+ * checks after the sync do not wait, so a write that landed during it keeps the space.
+ */
+const isSafeToDelete = Effect.fnUntraced(function* (client: Client, source: Space, now: number) {
+  const mark = Annotation.get(source.properties, AppAnnotation.MergedIntoAnnotation).pipe(Option.getOrUndefined);
+  if (!mark || now - mark.mergedAt < Duration.toMillis(MERGED_SPACE_GRACE)) {
+    return false;
+  }
+  if (!(yield* syncWithEdge(client, source))) {
+    return false;
+  }
+
+  const objects = source.db.query(Query.select(Filter.everything())).runSync();
+  const holdsNothing = objects.every(
+    (object) =>
+      Obj.instanceOf(SpaceProperties, object) ||
+      (Obj.instanceOf(AppSettings.AppSettings, object) && Object.keys(object.shared).length === 0) ||
+      (isSpacesOrder(object) && Array.isArray(object.order) && object.order.length === 0),
+  );
+  // Merging moved every other annotation out, so one left is new or holds a reference it cannot move.
+  const annotations = Object.keys(Obj.getMeta(source.properties).annotations);
+  return (
+    holdsNothing &&
+    annotations.every((key) => SPACE_ANNOTATIONS.has(key)) &&
+    !AppSpace.getCredentialedSettingsSpaceIds(client).includes(source.id)
+  );
+});
+
+/**
+ * Annotations that describe the profile and move to the canonical space. The rest describe the source
+ * space itself, and a reference is relative to its own space, so a copied one would name nothing.
+ */
+const isProfileAnnotation = (key: string, value: unknown): boolean => !SPACE_ANNOTATIONS.has(key) && !holdsRef(value);
+
+const SPACE_ANNOTATIONS = new Set<string>([
+  AppAnnotation.AppSettingsAnnotation.key,
+  AppAnnotation.MergedIntoAnnotation.key,
+  AppAnnotation.RootCollectionAnnotation.key,
+  AppAnnotation.SpaceTemplateAnnotation.key,
+  MigrationVersionAnnotation.key,
+]);
+
+const holdsRef = (value: unknown): boolean =>
+  Ref.isRef(value) || (typeof value === 'object' && value !== null && Object.values(value).some(holdsRef));
+
+const isEqual = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Sync a space with EDGE, so this device holds everything EDGE has for it. A client with no EDGE has no
+ * remote to be behind; a space that does not replicate to EDGE cannot be shown complete.
+ */
+const syncWithEdge = Effect.fnUntraced(function* (client: Client, space: Space) {
+  if (!client.config.values.runtime?.services?.edge?.url) {
+    return true;
+  }
+  if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
+    return false;
+  }
+
+  return yield* Effect.tryPromise(() =>
+    space.internal.syncToEdge({ timeout: EDGE_SYNC_TIMEOUT, onProgress: () => {} }),
+  ).pipe(
+    Effect.as(true),
+    Effect.catch((cause) =>
+      Effect.sync(() => {
+        log('settings space not in sync with EDGE', { space: space.id, cause });
+        return false;
+      }),
+    ),
+  );
 });
 
 /**

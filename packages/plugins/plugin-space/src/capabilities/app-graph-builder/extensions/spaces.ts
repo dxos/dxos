@@ -233,6 +233,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
+        // The credential naming the settings space can arrive after the space list settles.
+        get(CreateAtom.fromObservable(client.halo.credentials));
         const settingsSpace = AppSpace.getSettingsSpace(client);
         const settingsSpaceState = settingsSpace ? get(CreateAtom.fromObservable(settingsSpace.state)) : undefined;
         const orderingSpace = settingsSpaceState === SpaceState.SPACE_READY ? settingsSpace : undefined;
