@@ -393,20 +393,13 @@ pnpm secrets remote dev --item "some other item"
 
 New packages are created with `"private": true` in their `package.json` (see [New Packages](./AGENTS.md#new-packages)). Publishing a package to npm for the first time requires an initial manual publish, since npm's OIDC trusted publishing (used by [`publish-all.yml`](https://github.com/dxos/dxos/blob/main/.github/workflows/publish-all.yml)) can only be configured for a package that already exists on the registry:
 
-1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
-2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. Run `pnpm login`, then either:
-   - one package: `pnpm publish-package @dxos/<PACKAGE>`
-   - all packages failing the published-package gate: `pnpm publish-unpublished-packages --yes`
-4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
-   - Repository: `dxos/dxos`
-   - Workflow file: `publish-all.yml`
-   - Environment: leave blank unless the workflow specifies one.
-   - Allowed actions: `npm publish` only — do not enable `npm stage publish` (staged/review release flow that `publish-all.yml` does not use).
-   - Click "Setup Connection"
-5. Revert the package's `version` back to align with the rest of the packages in the monorepo, now that the trusted publisher is configured and `publish-all.yml` will handle future releases.
+1. Remove `"private": true` from the package's `package.json` — a private package cannot be published.
+2. Run `node scripts/publish-package.mjs @dxos/<PACKAGE> --trust`. It builds the package, publishes it at `0.0.0` (restoring the monorepo version afterward), then creates the trusted publisher with `npm trust github` (repository `dxos/dxos`, workflow `publish-all.yml`, `npm publish` only). npm asks for `npm login` and a browser 2FA confirmation, so run it in an interactive terminal. Without `--trust` it prints those settings and opens the package's npm access page to enter them by hand. A package already on npm skips the publish.
+3. To bootstrap-publish every package failing the published-package gate at once: `pnpm publish-unpublished-packages --yes`, then configure each trusted publisher as above.
 
-For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates step 4 across many packages. Below that threshold, doing it manually per package is faster.
+Agents follow the [`npm-publishing`](./.agents/skills/npm-publishing/SKILL.md) skill.
+
+For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates the trusted-publisher setup across many packages. Below that threshold, doing it manually per package is faster.
 
 ## Dependencies
 
