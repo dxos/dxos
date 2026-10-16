@@ -240,5 +240,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 230 | 10-16 10:50 | 25m 00s | this commit | React app driven in Chromium (task b2404fd2); task cards show their code; QA flows in a browser (D205) |
 | 231 | 10-16 12:21 | 90m 00s | this commit | The toolchain mounts @dxos/base as lib.base (D206): flat deus/, mount-aware resolution, printing, spec checks and explorer; the Worker's read cache bounded to one head after the snapshot grew past the memory limit (D207) |
 | 232 | 10-16 12:56 | 35m 00s | this commit | Libraries group in the explorer; spec pages drawn with the index; @dxos/examples on the refreshed base; review fixes (D208): namespace-aware printing of library names, sync keeps literals and comments, 129 duplicated comment lines removed |
+| 233 | 10-16 13:33 | 37m 00s | this commit | Results travel with a push and the hosted explorer and hub show pass/fail, kept current without a redraw (D209); @[refuted] soundness probes (D210); task links follow names into libraries; Rust kernel task re-scoped |
 
-Total from stage 1 to stage 232: 71h 36m.
+Total from stage 1 to stage 233: 72h 13m.
