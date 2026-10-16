@@ -198,6 +198,7 @@ export const animateCamera = (
   apply: (camera: Camera) => void,
   done?: () => void,
   fixedDuration?: number,
+  continuing = false,
 ): (() => void) => {
   const interpolate = interpolateCamera(from, to, viewport);
   const duration = fixedDuration ?? Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
@@ -205,7 +206,9 @@ export const animateCamera = (
   let frame = 0;
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / duration);
-    apply(interpolate(easeInOut(t)));
+    // Continuing a move already under way, it sets off at speed and only eases into the new target: easing in again
+    // would stall the camera at every retarget, so rapid steps read as separate jumps.
+    apply(interpolate(continuing ? 1 - (1 - t) ** 3 : easeInOut(t)));
     if (t < 1) {
       frame = requestAnimationFrame(tick);
     } else {

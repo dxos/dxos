@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ProfileGoal, ProfileGraph, type ProfileMemory } from './ProfileGraph.tsx';
+import { type ProfileFact, type ProfileGoal, ProfileGraph } from './ProfileGraph.tsx';
 
 const goals: ProfileGoal[] = [
   { id: 'goal-1', title: 'Launch autonomous agents', horizon: 'quarter', status: 'confirmed' },
@@ -16,27 +16,27 @@ const goals: ProfileGoal[] = [
   { id: 'goal-3', title: 'Ship the Composer beta', horizon: 'now', status: 'achieved' },
 ];
 
-const memories: ProfileMemory[] = [
+const facts: ProfileFact[] = [
   {
-    id: 'memory-1',
-    content: 'Rich prefers daily standups over written updates.',
-    kind: 'preference',
+    id: 'fact-1',
+    text: 'Rich prefers daily standups',
+    predicate: 'prefers',
     origin: 'stated',
-    observedAt: '2026-10-02T10:30:00.000Z',
+    saidAt: '2026-10-02T10:30:00.000Z',
   },
   {
-    id: 'memory-2',
-    content: 'Rich leads the Composer team.',
-    kind: 'relationship',
+    id: 'fact-2',
+    text: 'Rich member of Composer team',
+    predicate: 'member of',
     origin: 'stated',
-    observedAt: '2026-10-02T10:20:00.000Z',
+    saidAt: '2026-10-02T10:20:00.000Z',
   },
   {
-    id: 'memory-3',
-    content: 'Rich is based in New York.',
-    kind: 'fact',
+    id: 'fact-3',
+    text: 'Rich located in New York',
+    predicate: 'located in',
     origin: 'inferred',
-    observedAt: '2026-10-01T09:00:00.000Z',
+    saidAt: '2026-10-01T09:00:00.000Z',
   },
 ];
 
@@ -55,9 +55,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { goals, memories },
+  args: { goals, facts },
 };
 
 export const Empty: Story = {
-  args: { goals: [], memories: [] },
+  args: { goals: [], facts: [] },
 };

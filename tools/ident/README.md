@@ -22,13 +22,15 @@ then the DXOS end card. Only the words change.
 | Render the opening title only, all formats | `moon run ident:render -- --id OPEN` |
 | Render the DXOS trail only, all formats | `moon run ident:render -- --id TRAIL` |
 | Render the end card only, all formats | `moon run ident:render -- --id END` |
+| Render the idents only (OPEN, COMPOSER, END), all formats | `moon run ident:render -- --id OPEN,COMPOSER,END` |
+| Render everything except the TRAIL stub | `moon run ident:render-all` |
 | Render everything | `moon run ident:render` |
 | Bump the file version | add `--version 2` |
 
 Output goes to `out/<ID>/DXOS_SI_<ID>_<length>_<ratio>_v<NN>.mp4`, e.g.
 `out/P03/DXOS_SI_P03_10s_9x16_v01.mp4`. Drop those into Final Cut.
 
-Formats: `16x9` (1920x1080), `9x16` (1080x1920), `1x1` (1080x1080), `4x5` (1080x1350).
+Formats: `16x9` (1920x1080), `16x10` (2560x1600, MacBook displays), `9x16` (1080x1920), `1x1` (1080x1080), `4x5` (1080x1350).
 Lengths: `10s`, `30s`.
 
 ## Where to change things

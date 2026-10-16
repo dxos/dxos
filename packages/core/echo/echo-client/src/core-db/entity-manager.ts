@@ -509,11 +509,6 @@ export class EntityManager implements IDatabaseBinding {
     return this.#unindexedWrites.keys();
   }
 
-  /** Where the object falls in {@link allObjectCores} order, comparable across ids; undefined when absent. */
-  objectSequence(id: string): number | undefined {
-    return this._objects.sequenceOf(id);
-  }
-
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     // A closed database has an empty working set, and every caller of this synchronous read already
     // treats an absent core as unresolved — whereas throwing reaches the fire-and-forget query

@@ -266,7 +266,7 @@ const Remove = composable<HTMLButtonElement, SystemButtonProps>(
 
 Remove.displayName = 'SystemButton.Remove';
 
-const Edit = createStaticPreset('SystemButton.Edit', 'ph--pen--regular', 'system-button.edit.label');
+const Edit = createStaticPreset('SystemButton.Edit', 'ph--pencil-simple--regular', 'system-button.edit.label');
 
 //
 // Clipboard

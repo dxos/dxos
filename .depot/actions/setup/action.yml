@@ -22,8 +22,8 @@ inputs:
     default: 'true'
   rust:
     description: >
-      Set "true" to install the Rust toolchain and restore the cargo registry. Only `code-index:test`, in the
-      node test cells, compiles Rust; every other job skips the ~12 s install.
+      Set "true" to install the Rust toolchain and restore the cargo registry. Only the Rust crates' tests, in
+      the node test cells, compile Rust; every other job skips the ~12 s install.
     default: 'false'
 
 runs:

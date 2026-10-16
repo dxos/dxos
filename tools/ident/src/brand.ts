@@ -48,10 +48,12 @@ export const TIMING = {
   },
 };
 
-export type FormatId = '16x9' | '9x16' | '1x1' | '4x5';
+export type FormatId = '16x9' | '16x10' | '9x16' | '1x1' | '4x5';
 
 export const FORMATS: Record<FormatId, { width: number; height: number }> = {
   '16x9': { width: 1920, height: 1080 },
+  // MacBook displays are 16:10; 2560x1600 is the 13" native resolution.
+  '16x10': { width: 2560, height: 1600 },
   '9x16': { width: 1080, height: 1920 },
   '1x1': { width: 1080, height: 1080 },
   '4x5': { width: 1080, height: 1350 },

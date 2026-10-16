@@ -151,6 +151,9 @@
       "path": "packages/common/display-name/tsconfig.json"
     },
     {
+      "path": "packages/devtools/drawing/tsconfig.json"
+    },
+    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
@@ -851,6 +854,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-plot/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-query/tsconfig.json"

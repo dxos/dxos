@@ -25,8 +25,9 @@ fileGroups:
     - src/playwright/**/*
     - src/**/*.spec.ts
 
+# Not `/pnpm-lock.yaml`, which would rerun every task on any dependency change: the `dependency-closure`
+# toolchain (`tools/moon-dependency-closure`) hashes only the packages each project can load.
 implicitInputs:
   - package.json
   - /.pnpmfile.cjs
-  - /pnpm-lock.yaml
   - /patches/*

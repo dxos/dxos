@@ -11,8 +11,6 @@ import type * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
-import * as Knowledge from './Knowledge.ts';
-
 /**
  * A reusable bundle of skills the agent works in — interviewer, note-taker, relay (docs/ONTOLOGY.md
  * §3 "Mode"). Owned by the agent; a chat's current mode is recorded on the chat (see {@link getCurrent}).
@@ -25,9 +23,6 @@ export class Mode extends Type.makeObject<Mode>(DXN.make('org.dxos.type.agent.mo
       title: 'Skills',
       description: 'The skills bound to a conversation while it is in this mode.',
     }),
-    records: Schema.optional(
-      Schema.Array(Knowledge.Kind).annotate({ title: 'Records', description: 'The kinds of memory this mode writes.' }),
-    ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--sliders-horizontal--regular', hue: 'sky' }),

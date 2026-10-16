@@ -19,7 +19,7 @@ describe('Bramble template', () => {
         .filter(([type]) => type.includes(typename))
         .reduce((total, [, count]) => total + count, 0);
 
-    expect(objectCount).toBe(128);
+    expect(objectCount).toBe(129);
 
     expect(countOf('type.organization')).toBe(6);
     expect(countOf('type.person')).toBe(9);
@@ -44,7 +44,7 @@ describe('Bramble template', () => {
     expect(countOf('type.milestone')).toBe(5);
     expect(countOf('type.document')).toBe(7);
     expect(countOf('type.drawing')).toBe(2);
-    expect(countOf('type.sheet')).toBe(2);
+    expect(countOf('type.sheet')).toBe(3);
     expect(countOf('type.collection')).toBe(4);
   });
 

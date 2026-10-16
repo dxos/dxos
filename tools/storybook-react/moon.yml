@@ -25,6 +25,8 @@ tasks:
       - /tools/storybook-react/.storybook/main.ts
       - static/*
       - $NODE_OPTIONS
+      # Finds every package's stories by glob, not through a dependency, so no closure covers them.
+      - /pnpm-lock.yaml
     outputs:
       - out/storybook-react/
   # Static build of only the stories the chat perf flow loads (`assistant-e2e:e2e-perf`), which serves

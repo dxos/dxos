@@ -421,7 +421,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `speed` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
@@ -541,6 +541,11 @@ node .agents/skills/autocue/scripts/trim-static.mjs \
 Two caps, because the hold budget should be spent where information appears: `--caption-hold` for a
 pause that begins just after a step caption went up (the one the viewer has to read), `--max-static`
 for every other pause. Uniform capping buys length without readability.
+
+Motion with no content in it, such as an agent's spinner and scrolling tool calls, is not still, so
+the cap cannot remove it. Wrap it in `await demo.speed({ factor: 10 })` … `await demo.speed({ factor: 1 })`:
+the trimmer keeps every tenth frame of that stretch, and a `⏩ 10×` badge is shown while it plays, so
+the viewer knows time was skipped.
 
 ### Tuning the motion metric
 

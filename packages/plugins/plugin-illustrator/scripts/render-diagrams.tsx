@@ -21,12 +21,11 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 
-import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene } from '@dxos/diagram';
+import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene, SvgFile } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { DrawingFile } from '#model';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { type Reply } from './emit-worker.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
@@ -48,7 +47,7 @@ const toDxSvg = (
   objects: readonly Scene.WorldObject[],
 ) => {
   const { drawing, canvas } = DrawingFile.makeDrawing({ name, commands, source });
-  return DrawingFile.toDxSvg(toSvgFile(objects), DrawingFile.toPayload({ drawing, canvas, source }));
+  return DrawingFile.toDxSvg(SvgFile.toSvgFile(objects), DrawingFile.toPayload({ drawing, canvas, source }));
 };
 
 /**
@@ -186,7 +185,7 @@ if (process.argv.includes('--scoreboard')) {
     const { commands, problems } = await compileSource(entry);
     const objects = objectsOf(commands);
     const report = Diagnostics.analyze(objects);
-    const svg = PLAIN ? toSvgFile(objects) : toDxSvg(name, { language, text: source }, commands, objects);
+    const svg = PLAIN ? SvgFile.toSvgFile(objects) : toDxSvg(name, { language, text: source }, commands, objects);
     writeFileSync(svgPath, svg);
     rendered.push({ svg, path: svgPath.replace(/(\.dx)?\.svg$/, '.png') });
     const { crossings, bends, nodes, connectors } = report.metrics;

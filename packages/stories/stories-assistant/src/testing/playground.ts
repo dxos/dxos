@@ -507,10 +507,14 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
       return {
         parts: [
           toolCall(tool(MemoryOperation.Remember), {
-            content: 'The indexer migration must take the write lock before the worker starts.',
-            kind: 'note',
-            subjects: [refs.Rich],
-            body: '- The migration takes the index write lock.\n- The worker waits for it before starting.',
+            facts: [
+              { subject: refs.Rich, predicate: 'proposes', value: 'the indexer migration takes the index write lock' },
+              {
+                subject: refs.Rich,
+                predicate: 'proposes',
+                value: 'the worker waits for the write lock before starting',
+              },
+            ],
           }),
         ],
       };
