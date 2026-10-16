@@ -128,6 +128,11 @@
       "types": "./dist/types/src/types/AgentCompanion.d.ts",
       "import": "./dist/lib/AgentCompanion.mjs"
     },
+    "./AgentSpace": {
+      "source": "./src/types/AgentSpace.ts",
+      "types": "./dist/types/src/types/AgentSpace.d.ts",
+      "import": "./dist/lib/AgentSpace.mjs"
+    },
     "./BrainService": {
       "source": "./src/types/BrainService.ts",
       "types": "./dist/types/src/types/BrainService.d.ts",
@@ -364,6 +369,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

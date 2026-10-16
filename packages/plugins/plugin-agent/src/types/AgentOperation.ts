@@ -12,7 +12,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { Channel } from '@dxos/types';
 
@@ -267,6 +267,34 @@ export const EnsureIdentity = Operation.make({
   output: Schema.Struct({
     provisioned: Schema.Boolean.annotate({ description: 'True when EDGE minted an identity for the agent now.' }),
     identityDid: Schema.optional(Schema.String.annotate({ description: "The agent's DID, when it has one." })),
+  }),
+});
+
+/**
+ * Brings an agent into the space the operation runs in, as a presence of itself: its name, DID and instructions,
+ * linked to its home by `AgentPresence.homeKey`, so it reads and writes its home's brain. Idempotent: the
+ * agent's existing presence in the space (or the agent itself, in its home) is returned.
+ */
+export const InviteAgent = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.invite'),
+    name: 'Invite agent',
+    description:
+      "Invites an agent from another space into this one; it keeps one brain across the spaces it is in. Only the agent's admins may, which EDGE enforces.",
+    icon: 'ph--user-plus--regular',
+    // Invoked by AgentAdmission after the members panel admits the agent, never by a model.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Hypergraph.Service, Capability.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({
+      description:
+        "The agent to invite, in any space it is in; one whose home the caller cannot reach is read from the agent's own space.",
+    }),
+  }),
+  output: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent in this space.' }),
+    created: Schema.Boolean.annotate({ description: 'False when the agent was already in this space.' }),
   }),
 });
 

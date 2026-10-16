@@ -2,4 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export { AgentKnowledge as default } from './AgentKnowledge.tsx';
+import { withSessionAgent } from '../withSessionAgent.tsx';
+import { AgentKnowledge } from './AgentKnowledge.tsx';
+
+export default withSessionAgent(AgentKnowledge);
