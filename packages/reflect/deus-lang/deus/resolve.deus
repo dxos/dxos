@@ -629,20 +629,59 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
       let holes := List.map go args
       match Option.orElse template (fun _ => Map.lookup key ctx.templates) with
       | Option.some (Sexp.list (Sexp.sym "elaborate" :: [])) => Resolve.fail ctx ("elaborator " ++ Text.drop 1 key ++ " runs only from the codebase: add it before the code that uses it")
-      | Option.some (Sexp.list (Sexp.sym "elaborate" :: f :: [])) => Resolve.elaborated ctx f (List.map Resolve.unmark holes)
+      | Option.some (Sexp.list (Sexp.sym "elaborate" :: f :: Sexp.str name :: [])) => Resolve.elaborated ctx name f (List.map Resolve.unmark holes) (List.length locals)
+      | Option.some (Sexp.list (Sexp.sym "refused" :: Sexp.str why :: [])) => Resolve.fail ctx why
       | Option.some t => Compile.node "notation" [Compile.s key, expandWith t holes]
       | Option.none => Resolve.fail ctx ("notation " ++ Text.drop 1 key ++ " has no expansion")
 
 /-- The term an elaborator's function `f` (loaded with its dependencies) makes of one use's hole terms, run now
   (Syntax.Spec R-10). Each `(name "N")` in it becomes the global `N` names where the notation is used. -/
-def elaborated (ctx : Ctx) (f : Sexp) (holes : List Sexp) : {Throw Text} Sexp :=
+def elaborated (ctx : Ctx) (rule : Text) (f : Sexp) (holes : List Sexp) (depth : Int) : {Throw Text} Sexp :=
   match Check.evalCore (Resolve.app f (List.map (fun h => Sexp.read (Code.quote h)) holes)) with
-  | Result.ok term => Resolve.named ctx term
-  | Result.err message => Resolve.fail ctx ("elaborator failed: " ++ message)
+  | Result.ok term =>
+      -- Its result is stored as it is, so it must be a term the checker and the kernels read.
+      match coreProblem term depth with
+      | Option.some problem => Resolve.fail ctx ("elaborator " ++ rule ++ " made no Core term: " ++ problem)
+      | Option.none => Resolve.named ctx term
+  | Result.err message => Resolve.fail ctx ("elaborator " ++ rule ++ ": " ++ (if startsWith "threw " message then Text.drop 6 message else message))
+
+/-- Why `t` is not a Core term under `depth` binders (docs/spec/CORE.md), if it is not; `(name "N")` stands
+  for a global. -/
+def coreProblem (t : Sexp) (depth : Int) : Option Text :=
+  let all := fun (items : List Sexp) (d : Int) => List.foldl (fun found x => Option.orElse found (fun _ => Resolve.coreProblem x d)) Option.none items
+  let unknown := fun _ => Option.some ("not a Core form: " ++ Text.take 80 (Sexp.print t))
+  match t with
+  | Sexp.list [Sexp.sym "var", Sexp.int k] => if k >= 0 && k < depth then Option.none else Option.some ("(var " ++ Int.toText k ++ ") has no binder")
+  | Sexp.list [Sexp.sym "ref", Sexp.str _] => Option.none
+  | Sexp.list [Sexp.sym "name", Sexp.str _] => Option.none
+  | Sexp.list [Sexp.sym "int", Sexp.int _] => Option.none
+  | Sexp.list [Sexp.sym "text", Sexp.str _] => Option.none
+  | Sexp.list [Sexp.sym "prim", Sexp.str _] => Option.none
+  | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int _, Sexp.int _] => Option.none
+  | Sexp.list [Sexp.sym "op", Sexp.str _, Sexp.int _, Sexp.int _] => Option.none
+  | Sexp.list [Sexp.sym "lam", b] => Resolve.coreProblem b (depth + 1)
+  | Sexp.list [Sexp.sym "lam", Sexp.str _, b] => Resolve.coreProblem b (depth + 1)
+  | Sexp.list (Sexp.sym "app" :: f :: args) => if List.isEmpty args then unknown () else all (f :: args) depth
+  | Sexp.list [Sexp.sym "let", v, b] => Option.orElse (Resolve.coreProblem v depth) (fun _ => Resolve.coreProblem b (depth + 1))
+  | Sexp.list [Sexp.sym "seq", a, b] => all [a, b] depth
+  | Sexp.list [Sexp.sym "if", c, y, n] => all [c, y, n] depth
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fns, b] => all (b :: fns) (depth + List.length fns)
+  | Sexp.list (Sexp.sym "match" :: s :: cases) => Option.orElse (Resolve.coreProblem s depth) (fun _ => all cases depth)
+  | Sexp.list [Sexp.sym "case", p, body] => Resolve.coreProblem body (depth + patternBinders p)
+  | Sexp.list [Sexp.sym "gcase", p, g, body] => all [g, body] (depth + patternBinders p)
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) => all (b :: clauses) depth
+  | Sexp.list [Sexp.sym "ret", body] => Resolve.coreProblem body (depth + 1)
+  | Sexp.list [Sexp.sym "on", Sexp.str _, Sexp.int _, Sexp.int k, body] => Resolve.coreProblem body (depth + k + 1)
+  | Sexp.list [Sexp.sym "ann", _, e] => Resolve.coreProblem e depth
+  | _ => unknown ()
 
 def named (ctx : Ctx) (term : Sexp) : {Throw Text} Sexp :=
   match term with
   | Sexp.list (Sexp.sym "name" :: Sexp.str n :: []) => valueOf ctx n (Pos.mk 0 0) []
+  -- A name is resolved only where a term stands, not inside a pattern or a type.
+  | Sexp.list (Sexp.sym "case" :: p :: rest) => Sexp.list (Sexp.sym "case" :: p :: List.map (fun x => Resolve.named ctx x) rest)
+  | Sexp.list (Sexp.sym "gcase" :: p :: rest) => Sexp.list (Sexp.sym "gcase" :: p :: List.map (fun x => Resolve.named ctx x) rest)
+  | Sexp.list [Sexp.sym "ann", ty, e] => Sexp.list [Sexp.sym "ann", ty, Resolve.named ctx e]
   | Sexp.list items => Sexp.list (List.map (fun x => Resolve.named ctx x) items)
   | _ => term
 

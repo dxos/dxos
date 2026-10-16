@@ -264,5 +264,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 254 | 10-16 23:20 | 50m 00s | this commit | JSX text between tags through a `raw` hole (D222, task 544e13c1); notations active again in projects that mount the toolchain |
 | 255 | 10-17 00:00 | 40m 00s | this commit | The Worker's address rules run as compiled DEUS (D223, task 41714c0d step 6, first module) |
 | 256 | 10-17 00:50 | 50m 00s | this commit | DEUS functions cross to TypeScript as callable handles and back (D224, task f8c5aa01) |
+| 257 | 10-17 01:40 | 50m 00s | this commit | Adversarial review of D221–D223 fixed (D225); a usability probe of `@dxos/web` |
 
-Total from stage 1 to stage 256: 83h 20m.
+Total from stage 1 to stage 257: 84h 10m.

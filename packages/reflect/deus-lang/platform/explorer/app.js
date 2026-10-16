@@ -2350,16 +2350,16 @@ const rowsOf = (children, depth) =>
           `<div class="tree-node" data-path="${escape(child.path)}"><div class="tree-row folder" ${pad}>` +
           `<button class="caret${expanded ? ' open' : ''}" data-toggle="${escape(child.path)}" aria-label="Expand">▸</button>` +
           (child.entry
-            ? `<a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}">${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a>`
-            : `<a data-open="n:${escape(child.path)}" data-tree-key="n:${escape(child.path)}">${folderIcon}<span class="label">${escape(child.segment)}</span></a>`) +
+            ? `<a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}" title="${escape(child.entry.name)}">${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a>`
+            : `<a data-open="n:${escape(child.path)}" data-tree-key="n:${escape(child.path)}" title="${escape(child.path)}">${folderIcon}<span class="label">${escape(child.segment)}</span></a>`) +
           `<span class="count">${child.count}</span></div>` +
           `<div class="tree-children">${expanded ? treeRows(child, depth + 1) : ''}</div></div>`
         );
       }
       return child.entry.kind === 'spec'
-        ? `<div class="tree-row leaf" ${pad}><a data-open="s:${escape(namespaceOf(child.entry.name))}" data-anchor="${escape(child.segment)}">` +
+        ? `<div class="tree-row leaf" ${pad}><a data-open="s:${escape(namespaceOf(child.entry.name))}" data-anchor="${escape(child.segment)}" title="${escape(child.entry.name)}">` +
             `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a></div>`
-        : `<div class="tree-row leaf" ${pad}><a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}">` +
+        : `<div class="tree-row leaf" ${pad}><a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}" title="${escape(child.entry.name)}">` +
             `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span>${statusMark(child.entry.status)}</a></div>`;
     })
     .join('');

@@ -59,6 +59,27 @@ def decodeRule (notationType : Text) (partType : Text) (key : Text) (fqn : Text)
       | _ => Option.none
   | _ => Option.none
 
+/-- Why the stored scheme of an elaborator with `holes` holes is not `Notation (Sexp -> … -> Sexp)` with no
+  effect but `Throw Text`, if it is not: it runs inside the compiler, so it may not perform IO (Syntax.Spec R-10). -/
+def elaboratorProblem (scheme : Sexp) (holes : Int) : Option Text :=
+  let sexp := Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:Sexp"]
+  let throws := Sexp.list [Sexp.sym "tapp", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:Throw"], Sexp.list [Sexp.sym "tref", Sexp.str "#Text"]]
+  let allowed := fun e =>
+    match e with
+    | Sexp.list [Sexp.sym "tvar", _] => true
+    | _ => e == throws
+  let rec walk t n :=
+    match t with
+    -- A hole the elaborator ignores has a type of its own (a type variable).
+    | Sexp.list (Sexp.sym "tfun" :: a :: r :: rest) => if a != sexp && Sexp.head a != "tvar" then Option.some "takes a hole that is not a Sexp" else
+        match rest with
+        | [Sexp.list (Sexp.sym "eff" :: effs)] => if List.all allowed effs then walk r (n + 1) else Option.some "performs an effect other than Throw Text"
+        | _ => walk r (n + 1)
+    | _ => if t != sexp then Option.some "does not return a Sexp" else if n != holes then Option.some ("takes " ++ Int.toText n ++ " holes, not " ++ Int.toText holes) else Option.none
+  match scheme with
+  | Sexp.list [Sexp.sym "tapp", _, expansion] => walk expansion 0
+  | _ => Option.some "has no Notation type"
+
 /-- The holes the expansion never uses, which no printed use could read back (R-7). -/
 def unusedHoles (template : Sexp) (count : Int) : List Int :=
   let body := templateBody template count

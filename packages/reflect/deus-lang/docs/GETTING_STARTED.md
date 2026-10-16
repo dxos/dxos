@@ -179,13 +179,20 @@ deus check Sort
   ✓ Sort.insertCount  proved (proof)
   ✓ Sort.isortSorted  proved (proof)
   …
+  ✓ Sort.wrongClaim  refused, as it must be
+8 passed, 0 failed
+```
+
+`wrongClaim` is false on purpose and marked `@[refuted]`, so its check passes while the prover refuses it.
+Delete that line and check again to see what a failure looks like: the goal the prover could not close.
+
+```text
   ✗ Sort.wrongClaim  8 goal(s) left; first:
       h0 : if x <= xs0 then false else true
       ⊢ xs0 :: x :: [] == x :: xs0 :: []
-7 passed, 1 failed
 ```
 
-`wrongClaim` is false on purpose, and the prover shows the goal it could not close. The tactics
+The tactics
 are `induction`, `simp [lemmas]`, `auto` and `decide`. `by test n` checks a claim on n generated
 inputs instead of proving it, and the report says which kind of evidence each theorem has.
 `by test n using g` draws each input as `g` applied to a random `Int`, for laws whose interesting

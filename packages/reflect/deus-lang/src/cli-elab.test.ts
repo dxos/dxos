@@ -82,5 +82,45 @@ end Unroll
     );
     expect(refused.code).not.toBe(0);
     expect(refused.stderr).toContain('times! unrolls at most 100 calls');
+
+    // An elaborator's result must be Core, and its type Sexp in and out with no effect but Throw Text.
+    const bad = `namespace Bad
+@[elab]
+notation garbage := "garbage!(" x ")" => Sexp.sym "garbage"
+@[elab]
+notation unbound := "unbound!(" x ")" => Sexp.list [Sexp.sym "var", Sexp.int 3]
+@[elab]
+notation number := "number!(" x ")" => 42
+@[elab]
+notation writes := "writes!(" x ")" =>
+  IO.writeFile "/dev/null" ""
+  x
+end Bad
+`;
+    expect(deus('add', file('bad.deus', bad), ...c).code).toBe(0);
+    const refusedFor = (use: string) =>
+      deus('add', file('use.deus', `namespace Bad\ndef v : Int := ${use}\nend Bad\n`), ...c).stderr;
+    expect(refusedFor('garbage!(1)')).toContain('elaborator Bad.garbage made no Core term: not a Core form');
+    expect(refusedFor('unbound!(1)')).toContain('(var 3) has no binder');
+    expect(refusedFor('number!(1)')).toContain('elaborator Bad.number does not return a Sexp');
+    expect(refusedFor('writes!(1)')).toContain('elaborator Bad.writes performs an effect other than Throw Text');
+  });
+
+  // Syntax.Spec R-11: a `raw` hole reads markup text up to `<`, `{` or `}`, as JSX text between tags.
+  test('a raw hole reads text as written', { timeout: 120_000 }, ({ expect }) => {
+    process.env.DEUS_HOME = root;
+    const c = ['--codebase', join(scratch, 'raw')];
+    expect(deus('init', ...c).code).toBe(0);
+    expect(deus('add', file('notation-raw.deus', notationTypes), ...c).code).toBe(0);
+    const rule = 'namespace M\nnotation say := "<say>" w:raw "</say>" => w\n';
+    expect(deus('add', file('say.deus', `${rule}end M\n`), ...c).code).toBe(0);
+    const said = (text: string) => {
+      const added = deus('update', file('said.deus', `namespace M\ndef v : Text := <say>${text}</say>\nend M\n`), ...c);
+      return added.code === 0 ? deus('eval', 'M.v', ...c).stdout.trim() : added.stderr;
+    };
+    expect(said("Hello,   world!\n  it's ok.")).toBe('"Hello, world! it\'s ok."');
+    expect(said('built on .NET and (this).value')).toBe('"built on .NET and (this).value"');
+    expect(said('a <= b')).toBe('"a <= b"');
+    expect(said('he said -- nothing')).toContain('cannot hold `--`');
   });
 });

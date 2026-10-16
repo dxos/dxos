@@ -2804,17 +2804,25 @@ def parseIn (dir : Text) (ns : Map Text Entry) (paths : List Text) : {IO, Throw 
   Compile.parseAll (notationTable dir ns wanted) files
 
 /-- The notation stored as `name`, keyed by its hash, if `name` is one. -/
-def loadRule (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} Option Loaded :=
-  match (notationTypes ns, Map.lookup name ns) with
+def loadRule (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} Option Loaded := loadRuleWith (notationTypes ns) dir ns name
+
+/-- `loadRule` with the notation types already found, as `notationTable` finds them once for every rule. -/
+def loadRuleWith (types : Option (Text, Text)) (dir : Text) (ns : Map Text Entry) (name : Text) : {IO} Option Loaded :=
+  match (types, Map.lookup name ns) with
   | (Option.some (n, t), Option.some (Entry.term h)) =>
       match readObject dir h with
       | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) =>
           match decodeRule n t h name core with
           | Option.some rule => if not (Check.hasAttr dir h "elab") then Option.some rule else
-              -- An elaborator runs while its users compile, so its function and what it calls are loaded now (Syntax.Spec R-10).
-              match try (fun _ => Image.load (fun x => readObject dir x) [h]) with
-              | Result.ok _ => Option.some { rule with ruleTemplate := Option.map (fun f => Sexp.node "elaborate" [f]) rule.ruleTemplate }
-              | Result.err _ => Option.none
+              -- A use of a refused elaborator fails with the reason, rather than the notation going missing.
+              let refused := fun why => Option.some { rule with ruleTemplate := Option.some (Sexp.node "refused" [Sexp.str ("elaborator " ++ name ++ " " ++ why)]) }
+              match Option.bind (metaField (Codebase.readMeta dir h) "scheme") (fun s => elaboratorProblem s (holeCount rule.ruleParts)) with
+              | Option.some problem => refused problem
+              | Option.none =>
+                  -- An elaborator runs while its users compile, so its function and what it calls are loaded now (Syntax.Spec R-10).
+                  match try (fun _ => Image.load (fun x => readObject dir x) [h]) with
+                  | Result.ok _ => Option.some { rule with ruleTemplate := Option.map (fun f => Sexp.node "elaborate" [f, Sexp.str name]) rule.ruleTemplate }
+                  | Result.err e => refused ("could not be loaded: " ++ e)
           | Option.none => Option.none
       | _ => Option.none
   | _ => Option.none
@@ -2833,11 +2841,12 @@ def touchedSpecs (dir : Text) (name : Text) (branch : Text) : {IO, Throw Text} L
     (mdlFacts (Codebase.current dir)).documents
 
 /-- The notations declared directly in each of `namespaces`. -/
-def notationTable (dir : Text) (ns : Map Text Entry) (namespaces : List Text) : {IO} Map Text (List Loaded) := if List.isEmpty namespaces || not (isSome (notationTypes ns)) then Map.empty else
+def notationTable (dir : Text) (ns : Map Text Entry) (namespaces : List Text) : {IO} Map Text (List Loaded) := if List.isEmpty namespaces then Map.empty else
   let homes := Set.fromList namespaces
+  let types := notationTypes ns
   let rules := filterMap (fun pair =>
     match snd pair with
-    | Entry.term _ => if Set.contains (documentOf (fst pair)) homes then loadRule dir ns (fst pair) else Option.none
+    | Entry.term _ => if Set.contains (documentOf (fst pair)) homes then loadRuleWith types dir ns (fst pair) else Option.none
     | _ => Option.none) (Map.toList ns)
   foldl (fun t r =>
     let home := documentOf r.ruleName

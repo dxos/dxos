@@ -26,7 +26,8 @@ describe('deus CLI', () => {
       expect(verdicts[`Sort.${name}`]).toMatchObject({ status: 'pass', evidence: 'proof' });
     }
     expect(verdicts['Sort.agreesWithMergeSort']).toMatchObject({ status: 'pass', evidence: 'test' });
-    expect(verdicts['Sort.wrongClaim'].status).toBe('fail');
+    // A wrong claim marked @[refuted] passes only because the prover refuses it.
+    expect(verdicts['Sort.wrongClaim']).toMatchObject({ status: 'pass', evidence: 'refused' });
 
     const probes = JSON.parse(deus('check', 'Unsound', '--json', ...c).stdout);
     for (const row of probes) {

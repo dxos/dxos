@@ -1052,14 +1052,14 @@ def holeValue (p : Parser) (c : Text) (prec : Int) (closer : Option Text) : {Thr
     let rules := candidates p c
     if List.isEmpty rules then Parser.error p ("expected " ++ c) else firstOf p rules
 
-/-- Whether `t` ends markup text: a symbol starting with `<`, `{` or `}`, or the end of the file. -/
-def endsRaw (t : Token) : Bool := t.kind == Kind.eof || t.kind == Kind.sym && (startsWith "<" t.value || startsWith "{" t.value || startsWith "}" t.value)
+/-- Whether `t` ends markup text: `<`, `{`, `}` or the end of the file (`a <= b` stays text). -/
+def endsRaw (t : Token) : Bool := t.kind == Kind.eof || t.kind == Kind.sym && (t.value == "<" || t.value == "{" || t.value == "}")
 
 /-- Whether markup text may start at `t`: a text literal is the `str` hole's (Syntax.Spec R-11). -/
 def startsRaw (t : Token) : Bool := not (endsRaw t) && t.kind != Kind.text
 
 /-- How `t` was written, near enough to rebuild the text between tokens. -/
-def written (t : Token) : Text := if t.kind == Kind.text then "\"" ++ t.value ++ "\"" else if t.spelling != "" then t.spelling else t.value
+def written (t : Token) : Text := if t.kind == Kind.text then Print.quoteText t.value else if t.kind == Kind.dot || t.kind == Kind.proj then "." ++ t.value else if t.spelling != "" then t.spelling else t.value
 
 /-- A `raw` hole: the markup text up to the next `<`, `{` or `}`, rebuilt from the tokens' places, with each run of
   whitespace read as one space (Syntax.Spec R-11). -/
@@ -1072,7 +1072,12 @@ def rawText (p : Parser) : {Throw Text} Expr := if not (startsRaw (peek p)) then
       go (acc ++ (if gap then " " else "") ++ written t) t
   let first := peek p
   skip p
-  Expr.text (go (written first) first)
+  let text := go (written first) first
+  let last := peek p
+  -- The lexer took `--` or `/-` as a comment, which would drop the rest of the line from the text.
+  let before := fun (a : Token) (b : Token) => a.line < b.line || a.line == b.line && a.col < b.col
+  if any (fun c => before first c && (last.kind == Kind.eof || before c last)) (Ref.get p.notes) then errorAt first "text between tags cannot hold `--` or `/-`, which start a comment: write that text as a text literal" else
+    Expr.text text
 
 /-- Values of a repeated hole, until the literal after it (`closer`) comes or nothing of the category
   can start; with commas between them for `,*`. -/

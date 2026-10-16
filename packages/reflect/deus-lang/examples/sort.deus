@@ -59,7 +59,9 @@ theorem isortLength (xs : List Int) : len (isort xs) = len xs := by
 /-- Agreement with the prelude's merge sort, which is not structurally recursive, so only tested. -/
 theorem agreesWithMergeSort (xs : List Int) : isort xs = List.sort xs := by test 200
 
-/-- A wrong claim, to show what failure looks like: the prover leaves a goal open. -/
+/-- A wrong claim, to show what failure looks like: the prover leaves a goal open, and `@[refuted]` makes that
+  the expected outcome, so the check passes only while the prover refuses it. -/
+@[refuted]
 theorem wrongClaim (x : Int) (xs : List Int) : insert x xs = x :: xs := by
   induction xs; auto
 

@@ -158,7 +158,7 @@ def lex (source : Text) : {Throw Text} List Token :=
           let two := Text.slice source i (i + 2)
           if Dict.contains two twoCharSymbols then go (i + 2) line lineStart false (tok Kind.sym two i) else
             let one := Text.slice source i (i + 1)
-            if Dict.contains one oneCharSymbols then go (i + 1) line lineStart false (tok Kind.sym one i) else Lexer.fail line col ("unexpected character " ++ one)
+            if one == "." && Text.isDigit (at (i + 1)) then Lexer.fail line col "a number has no fraction: Int is a whole number" else if Dict.contains one oneCharSymbols then go (i + 1) line lineStart false (tok Kind.sym one i) else Lexer.fail line col ("unexpected character " ++ one)
   go 0 1 0 true []
 
 end Lexer
