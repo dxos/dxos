@@ -105,4 +105,64 @@ def withoutHeader (mdl : Bool) (source : Text) : Text :=
       let newline := Text.indexOf source "\n" 0
       if newline < 0 then "" else Text.drop (if mdl then newline + 1 else newline) source
 
+--
+-- The Worker's use of addresses (task 41714c0d): platform/worker/address.mjs calls these, compiled to JavaScript
+-- by `node scripts/build-worker.mjs --live`, so the Worker and the CLI read addresses by one definition.
+--
+
+/-- A folder from before addresses, still answered at `/v1/<folder>`: `[a-z0-9]`, then up to 62 of `[a-z0-9-]`. -/
+def isLegacy (t : Text) : Bool :=
+  let n := Text.length t
+  let ok := fun i =>
+    let c := Text.code t i
+    c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' && i > 0
+  n > 0 && n <= 63 && List.all ok (List.range 0 n)
+
+/-- The address of a legacy folder, if a project kept it. -/
+def legacyAddress (folder : Text) : Option Text :=
+  Option.map fst (List.find (fun pair => snd pair == folder) legacyFolders)
+
+/-- The project a request path names, and how many of its segments did: `address` is none for a legacy folder no
+  project claims. -/
+structure Located @"urn:deus:address:Located" where
+  address : Option Text
+  folder : Text
+  used : Int
+
+/-- The project a path names from its leading segments (`@owner`, `project`, or a legacy folder), if any. -/
+def projectAt (segments : List Text) : Option Located :=
+  let first := getOr (head? segments) ""
+  let second := getOr (head? (List.drop 1 segments)) ""
+  if startsWith "@" first then
+    let owner := Text.drop 1 first
+    if not (isOwner owner && isProject second) then Option.none else
+      let address := "@" ++ owner ++ "/" ++ second
+      Option.some (Located.mk (Option.some address) (getOr (List.lookup address legacyFolders) (owner ++ "/" ++ second)) 2)
+  else if isLegacy first then Option.some (Located.mk (legacyAddress first) first 1) else Option.none
+
+/-- The project whose folder is `folder`, so a key granted either name may write to it. -/
+def addressOfFolder (folder : Text) : Option Text :=
+  Option.orElse (legacyAddress folder) (fun _ => if Text.contains "/" folder then Option.some ("@" ++ folder) else Option.none)
+
+/-- Whether `segments` name a project by address: `@owner` and `project`. -/
+def namesAddress (segments : List Text) : Bool :=
+  match projectAt segments with
+  | Option.some here => here.used == 2
+  | Option.none => false
+
+/-- A project a key may be granted: an address, every project of an owner (`@owner/*`), or a legacy folder name. -/
+def isGrantable (project : Text) : Bool :=
+  let segments := Text.split project "/"
+  match segments with
+  | [owner, "*"] => namesAddress [owner, "x"]
+  | _ => isLegacy project || startsWith "@" project && List.length segments == 2 && namesAddress segments
+
+/-- Whether a key granted `projects` (each an address, `@owner/*` or a folder) may write to the project in `folder`. -/
+def grants (projects : List Text) (folder : Text) : Bool :=
+  let address := addressOfFolder folder
+  any (fun granted => granted == folder || Option.some granted == address || endsWith "/*" granted &&
+    (match address with
+    | Option.some a => startsWith (Text.take (Text.length granted - 1) granted) a
+    | Option.none => false)) projects
+
 end Address

@@ -4,7 +4,7 @@
 //
 
 // Writes the DEUS Worker's generated modules (D192): `gen/explorer-app.mjs`, the explorer app's files as
-// strings, and with `--live` also `gen/explorer-live.js`, the explorer's DEUS code compiled to JS from
+// strings, and with `--live` also `gen/explorer-live.js` and `gen/address.js`, the explorer's and the address rules' DEUS code compiled to JS from
 // the codebase (`deus build --js`). Run it before `wrangler deploy`; `src/live-explorer.test.ts` fails
 // when the app module is behind `platform/explorer/`.
 
@@ -50,6 +50,21 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         'Explorer.liveDoc',
         '-o',
         join(gen, 'explorer-live.js'),
+        '--js',
+      ],
+      { stdio: 'inherit' },
+    );
+    execFileSync(
+      'node',
+      [
+        join(root, 'bin/deus.mjs'),
+        'build',
+        'Address.projectAt',
+        'Address.addressOfFolder',
+        'Address.isGrantable',
+        'Address.grants',
+        '-o',
+        join(gen, 'address.js'),
         '--js',
       ],
       { stdio: 'inherit' },

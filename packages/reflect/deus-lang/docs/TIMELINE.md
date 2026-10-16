@@ -262,5 +262,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 252 | 10-16 21:45 | 40m 00s | this commit | Adversarial review of D213–D219 fixed (D220): test --exact, sync record, deus key hardening, explorer links and hash parsing |
 | 253 | 10-16 22:30 | 45m 00s | this commit | Elaborators: `@[elab]` notations run a DEUS function at each use (D221, Syntax.Spec R-10, task 563a4049) |
 | 254 | 10-16 23:20 | 50m 00s | this commit | JSX text between tags through a `raw` hole (D222, task 544e13c1); notations active again in projects that mount the toolchain |
+| 255 | 10-17 00:00 | 40m 00s | this commit | The Worker's address rules run as compiled DEUS (D223, task 41714c0d step 6, first module) |
 
-Total from stage 1 to stage 254: 81h 50m.
+Total from stage 1 to stage 255: 82h 30m.
