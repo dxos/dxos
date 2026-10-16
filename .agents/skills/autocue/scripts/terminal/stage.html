@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dx — terminal stage</title>
+    <link rel="stylesheet" href="/xterm.css" />
+    <style>
+      @font-face {
+        font-family: 'Stage Mono';
+        src: url('/mono.woff2') format('woff2');
+        font-weight: 100 800;
+      }
+      @font-face {
+        font-family: 'Stage Sans';
+        src: url('/sans.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+      :root {
+        --paper: #f7f7f5;
+        --dot: #d6d6d0;
+        --ink: #1d1d1f;
+        --accent: #6e56cf;
+        --window: #18181b;
+        --chrome: #232327;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--paper);
+        background-image: radial-gradient(var(--dot) 1.2px, transparent 1.2px);
+        background-size: 22px 22px;
+        font-family: 'Stage Sans', ui-sans-serif, system-ui, sans-serif;
+        color: var(--ink);
+        overflow: hidden;
+      }
+      #title {
+        height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: opacity 300ms;
+      }
+      #title h1 {
+        margin: 0;
+        font-size: 52px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      #title h1 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+      #title p {
+        margin: 0;
+        font-size: 22px;
+        color: #6b6b70;
+      }
+      #stage {
+        display: flex;
+        gap: 28px;
+        padding: 0 40px 40px;
+        height: calc(100% - 150px);
+      }
+      .window {
+        background: var(--window);
+        border-radius: 14px;
+        box-shadow:
+          0 30px 60px -20px rgba(40, 30, 90, 0.35),
+          0 0 0 1px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .window header {
+        height: 40px;
+        background: var(--chrome);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 8px;
+        color: #8e8e96;
+        font:
+          14px 'Stage Mono',
+          ui-monospace,
+          monospace;
+      }
+      .window header i {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .window header span {
+        flex: 1;
+        text-align: center;
+        margin-right: 60px;
+      }
+      #terminal-window {
+        flex: 1 1 0;
+        min-width: 0;
+        transition: flex 500ms ease;
+      }
+      #terminal {
+        flex: 1;
+        padding: 14px 18px;
+      }
+      #preview-window {
+        flex: 0 0 0;
+        min-width: 0;
+        opacity: 0;
+        background: #fff;
+        transition:
+          flex 500ms ease,
+          opacity 400ms;
+      }
+      body.previewing #preview-window {
+        flex: 1 1 0;
+        opacity: 1;
+      }
+      #preview-window header {
+        background: #ececec;
+        color: #707070;
+      }
+      #preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        min-height: 0;
+      }
+      #preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      #preview img.flash {
+        animation: flash 600ms ease;
+      }
+      @keyframes flash {
+        from {
+          opacity: 0.2;
+          transform: scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="title">
+      <h1></h1>
+      <p></p>
+    </div>
+    <div id="stage">
+      <section class="window" id="terminal-window">
+        <header>
+          <i style="background: #ff5f57"></i><i style="background: #febc2e"></i><i style="background: #28c840"></i>
+          <span>dev — ~/demo — bash</span>
+        </header>
+        <div id="terminal" data-testid="stage.terminal"></div>
+      </section>
+      <section class="window" id="preview-window" data-testid="stage.preview">
+        <header>
+          <i style="background: #ff5f57"></i><i style="background: #febc2e"></i><i style="background: #28c840"></i>
+          <span id="preview-name">preview</span>
+        </header>
+        <div id="preview"></div>
+      </section>
+    </div>
+    <script src="/xterm.js"></script>
+    <script>
+      const term = new Terminal({
+        fontFamily: "'Stage Mono', ui-monospace, monospace",
+        fontSize: 19,
+        lineHeight: 1.3,
+        cursorBlink: false,
+        cursorStyle: 'block',
+        theme: {
+          background: '#18181b',
+          foreground: '#e4e4e7',
+          cursor: '#a78bfa',
+          selectionBackground: '#3f3f46',
+          brightBlack: '#71717a',
+          magenta: '#c4b5fd',
+          brightMagenta: '#ddd6fe',
+          cyan: '#7dd3fc',
+          green: '#86efac',
+          yellow: '#fde68a',
+        },
+      });
+
+      // Fit columns and rows to the window from the font's cell size, so the PTY wraps where the screen does.
+      const fit = () => {
+        const core = term._core._renderService.dimensions.css.cell;
+        const host = document.getElementById('terminal');
+        const cols = Math.max(40, Math.floor((host.clientWidth - 36) / core.width));
+        const rows = Math.max(10, Math.floor((host.clientHeight - 28) / core.height));
+        if (cols !== term.cols || rows !== term.rows) {
+          term.resize(cols, rows);
+          fetch('/resize', { method: 'POST', body: JSON.stringify({ cols, rows }) });
+        }
+      };
+
+      document.fonts.load("19px 'Stage Mono'").then(() => {
+        term.parser.registerOscHandler(777, (data) => {
+          if (data === 'prompt') {
+            stage.prompts += 1;
+          }
+          return true;
+        });
+        term.open(document.getElementById('terminal'));
+        fit();
+        term.focus();
+        // One request at a time: concurrent POSTs can land out of order and scramble typed text.
+        let sending = Promise.resolve();
+        term.onData((data) => {
+          sending = sending.then(() => fetch('/input', { method: 'POST', body: data }));
+        });
+        const events = new EventSource('/events');
+        events.addEventListener('output', (event) => term.write(JSON.parse(event.data)));
+        events.addEventListener('preview', (event) => stage.preview(JSON.parse(event.data)));
+        document.body.dataset.ready = 'true';
+      });
+
+      /** Driven by the flow script through `page.evaluate`. */
+      window.stage = {
+        title: (heading, subtitle = '') => {
+          const element = document.getElementById('title');
+          element.style.opacity = 0;
+          setTimeout(() => {
+            // `*word*` marks the accented word.
+            element.querySelector('h1').innerHTML = heading
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            element.querySelector('p').textContent = subtitle;
+            element.style.opacity = 1;
+          }, 250);
+        },
+        preview: ({ name, svg }) => {
+          stage.previews += 1;
+          const image = new Image();
+          image.src = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+          image.className = 'flash';
+          image.dataset.testid = 'stage.preview.image';
+          const host = document.getElementById('preview');
+          host.replaceChildren(image);
+          document.getElementById('preview-name').textContent = name;
+          document.body.classList.add('previewing');
+          setTimeout(fit, 550);
+        },
+        hidePreview: () => {
+          document.body.classList.remove('previewing');
+          setTimeout(fit, 550);
+        },
+        cols: () => term.cols,
+        /** Prompts printed so far; a command has finished when this passes the count taken before it ran. */
+        prompts: 0,
+        /** SVGs shown so far, so a flow can wait for a re-render to land. */
+        previews: 0,
+      };
+    </script>
+  </body>
+</html>

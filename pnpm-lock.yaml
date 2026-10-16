@@ -7098,6 +7098,9 @@ importers:
       '@dxos/plugin-google':
         specifier: workspace:*
         version: link:../../plugins/plugin-google
+      '@dxos/plugin-illustrator':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-illustrator
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -12424,6 +12427,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/cli-util':
+        specifier: workspace:*
+        version: link:../../devtools/cli-util
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -12500,6 +12506,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0

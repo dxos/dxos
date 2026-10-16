@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Dsl } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from './SceneSvgFile.tsx';
+import { toSvgFile } from './svg-markup.ts';
 
 /** The marker ids an SVG element references, by attribute, with the per-instance prefix dropped. */
 const markerRefs = (svg: string, element: string, attribute: 'marker-start' | 'marker-end') =>
