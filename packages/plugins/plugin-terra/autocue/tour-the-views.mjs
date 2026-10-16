@@ -42,12 +42,14 @@ const spin = async (page, { dx = 700, ms = 4_000, steps = 80, zoom = 0 } = {}) =
   await page.mouse.down();
   for (let i = 1; i <= steps; i++) {
     await page.mouse.move(x + (dx * i) / steps, y);
-    if (zoom !== 0) {
-      await page.mouse.wheel(0, (zoom * 40) / steps);
-    }
     await page.waitForTimeout(ms / steps);
   }
   await page.mouse.up();
+  // A few separate notches: a wheel event per drag step resolves slowly and stretches the drag several-fold.
+  for (let i = 0; i < Math.abs(zoom); i++) {
+    await page.mouse.wheel(0, Math.sign(zoom) * 120);
+    await page.waitForTimeout(150);
+  }
 };
 
 /** Switches the article to a view by its tab. */
@@ -121,9 +123,9 @@ export const steps = [
     name: 'Slowly rotate and zoom in',
     narration: 'Turn the globe and move in to follow them.',
     run: async ({ page }) => {
-      await spin(page, { dx: 600, ms: 6_000, steps: 120, zoom: -12 });
+      await spin(page, { dx: 600, ms: 6_000, steps: 120, zoom: -1 });
       await page.waitForTimeout(BEAT);
-      await spin(page, { dx: 400, ms: 5_000, steps: 100, zoom: -6 });
+      await spin(page, { dx: 400, ms: 5_000, steps: 100, zoom: -1 });
       await page.waitForTimeout(BEAT);
     },
   },
