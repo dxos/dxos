@@ -228,14 +228,15 @@ const instance = (kernel) => {
   const call = (fn, inputs) => {
     const written = inputs.map((input) => {
       const bytes = encoder.encode(input);
-      const pointer = kernel.deus_alloc(bytes.length);
+      // wasm32 returns addresses as signed i32, which read negative past 2 GB.
+      const pointer = kernel.deus_alloc(bytes.length) >>> 0;
       new Uint8Array(kernel.memory.buffer, pointer, bytes.length).set(bytes);
       return [pointer, bytes.length];
     });
     try {
       const length = fn(...written.flat());
       // Memory may grow during a call, so the view is taken afresh.
-      return JSON.parse(decoder.decode(new Uint8Array(kernel.memory.buffer, kernel.deus_output(), length)));
+      return JSON.parse(decoder.decode(new Uint8Array(kernel.memory.buffer, kernel.deus_output() >>> 0, length >>> 0)));
     } finally {
       written.forEach(([pointer, length]) => kernel.deus_free(pointer, length));
     }

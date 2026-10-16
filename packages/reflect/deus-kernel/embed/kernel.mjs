@@ -19,12 +19,13 @@ export const createKernel = async (module) => {
 
   const write = (text) => {
     const bytes = encoder.encode(text);
-    const pointer = exports.deus_alloc(bytes.length);
+    // wasm32 returns addresses as signed i32, which read negative past 2 GB.
+    const pointer = exports.deus_alloc(bytes.length) >>> 0;
     new Uint8Array(exports.memory.buffer, pointer, bytes.length).set(bytes);
     return [pointer, bytes.length];
   };
   const read = (length) =>
-    JSON.parse(decoder.decode(new Uint8Array(exports.memory.buffer, exports.deus_output(), length)));
+    JSON.parse(decoder.decode(new Uint8Array(exports.memory.buffer, exports.deus_output() >>> 0, length >>> 0)));
   const call = (fn, inputs) => {
     const written = inputs.map(write);
     try {
