@@ -9,10 +9,10 @@ import * as Schema from 'effect/Schema';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { RDF, predicateSection } from '@dxos/pipeline-rdf';
 
 import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
-import * as Knowledge from './Knowledge.ts';
 
 /** A handle on an external identity, e.g. `{ label: 'discord', value: '1234' }` or `{ label: 'did', value: 'did:halo:…' }`. */
 export const Handle = Schema.Struct({
@@ -48,13 +48,60 @@ export const ResolveEntity = Operation.make({
   }),
 });
 
-/** Records one atomic claim about one or more entities, as a named graph in the agent's brain. */
+/** Whether the person said it (`stated`) or the agent concluded it (`inferred`). */
+export const Origin = Schema.Literals(['stated', 'inferred']);
+export type Origin = Schema.Schema.Type<typeof Origin>;
+
+/** Free-text predicates that hold prose rather than relate two things, so an agent never records a fact with them. */
+const PROSE_PREDICATES = new Set(['claim', 'has_note']);
+
+/** The predicates an agent records facts with: the seed vocabulary extraction uses, less its prose predicates. */
+export const PREDICATES: RDF.Ontology.Ontology = RDF.Ontology.make(
+  RDF.Ontology.DEFAULT.entries.filter(({ name }) => !PROSE_PREDICATES.has(name)),
+);
+
+/** Whether a surface form names one of the seed vocabulary's prose predicates. */
+export const isProsePredicate = (predicate: string): boolean => {
+  const entry = RDF.Ontology.DEFAULT.find(predicate);
+  return entry !== undefined && PROSE_PREDICATES.has(entry.name);
+};
+
+/** One structured fact for {@link Remember}: subject, predicate and object, as extraction states facts. */
+export const RecordedFact = Schema.Struct({
+  subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The person, organization or object the fact is about.' }),
+  predicate: Schema.String.annotate({ description: predicateSection(PREDICATES) }),
+  predicateDescription: Schema.optional(
+    Schema.String.annotate({ description: 'One sentence saying what a new predicate relates; only for a new one.' }),
+  ),
+  object: Schema.optional(
+    Ref.Ref(Obj.Unknown).annotate({ description: 'The entity the subject is related to; omit when value is given.' }),
+  ),
+  value: Schema.optional(
+    Schema.String.annotate({
+      description:
+        'A literal object (a place, a date, a short phrase) when it is not an entity; omit when object is given.',
+    }),
+  ),
+  quote: Schema.optional(Schema.String.annotate({ description: 'The words the fact was stated in, verbatim.' })),
+  origin: Schema.optional(Origin.annotate({ description: 'stated if the person said it; inferred otherwise.' })),
+  confidence: Schema.optional(Schema.Number.annotate({ description: 'Confidence from 0 to 1.' })),
+  supersedes: Schema.optional(
+    Schema.Array(Schema.String).annotate({
+      description:
+        'The ids of facts this one corrects, as Recall returned them; a fact read from a source shares its id with the other facts read from the same words, and all of them are replaced.',
+    }),
+  ),
+});
+
+export interface RecordedFact extends Schema.Schema.Type<typeof RecordedFact> {}
+
+/** Records structured facts in the agent's brain, each stated by the agent. */
 export const Remember = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agent.recordMemory'),
+    key: DXN.make('org.dxos.operation.agent.recordFacts'),
     name: 'Remember',
     description:
-      'Records one atomic third-person claim about the given subjects. To correct an earlier memory, pass its id as supersedes.',
+      'Records facts: each relates a subject (resolved with ResolveEntity) by a predicate to an entity or a literal value. To correct a fact, record the correction with supersedes.',
     icon: 'ph--brain--regular',
   },
   services: [Database.Service, BrainService.BrainService],
@@ -62,62 +109,12 @@ export const Remember = Operation.make({
     agent: Schema.optional(
       Ref.Ref(Agent.Agent).annotate({ description: "The agent you run as; defaults to the space's only agent." }),
     ),
-    content: Schema.String.annotate({
-      description: 'One atomic third-person claim, e.g. "Rich prefers async updates."',
-    }),
-    kind: Knowledge.Kind,
-    origin: Schema.optional(
-      Knowledge.Origin.annotate({ description: 'stated if the person said it; inferred otherwise.' }),
-    ),
-    subjects: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
-      description: 'The entities the claim is about (at least one).',
-    }),
-    confidence: Schema.optional(Schema.Number.annotate({ description: 'Confidence from 0 to 1.' })),
-    source: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The message or chat it came from.' })),
-    supersedes: Schema.optional(
-      Schema.String.annotate({ description: 'The id of the memory this one corrects, as Recall returned it.' }),
-    ),
-    body: Schema.optional(
-      Schema.String.annotate({
-        description: 'Markdown body, for kind "note": the full notes, with content as their one-line summary.',
-      }),
-    ),
+    facts: Schema.Array(RecordedFact).annotate({ description: 'The facts to record (at least one).' }),
+    source: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The message or chat they came from.' })),
   }),
   output: Schema.Struct({
-    memory: Schema.String.annotate({ description: "The memory's id." }),
+    facts: Schema.Array(Schema.String).annotate({ description: 'The ids of the recorded facts, in order.' }),
   }),
-});
-
-/** Withdraws memories: a mistake, or everything the agent remembers when its knowledge is reset. */
-export const Forget = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.agent.revokeMemories'),
-    name: 'Forget',
-    description:
-      'Withdraws memories that were wrong, by the ids Recall returned. To correct a memory instead, Remember the correction with supersedes.',
-    icon: 'ph--eraser--regular',
-  },
-  services: [Database.Service, BrainService.BrainService],
-  input: Schema.Struct({
-    agent: Schema.optional(
-      Ref.Ref(Agent.Agent).annotate({ description: "The agent you run as; defaults to the space's only agent." }),
-    ),
-    memories: Schema.optional(
-      Schema.Array(Schema.String).annotate({ description: 'The ids of the memories to withdraw; all if omitted.' }),
-    ),
-  }),
-  output: Schema.Struct({
-    forgotten: Schema.Number,
-  }),
-});
-
-export const RecalledMemory = Schema.Struct({
-  memory: Schema.String.annotate({ description: "The memory's id, to pass as supersedes when correcting it." }),
-  content: Schema.String,
-  kind: Knowledge.Kind,
-  origin: Knowledge.Origin,
-  observedAt: Schema.String,
-  source: Schema.optional(Schema.String.annotate({ description: 'URI of the message or chat it came from.' })),
 });
 
 export const RecalledGoal = Schema.Struct({
@@ -127,8 +124,9 @@ export const RecalledGoal = Schema.Struct({
   status: Goal.Status,
 });
 
-/** A fact the agent read in a source's annotation feed. */
+/** A fact in the agent's brain: one it read in a source or one it recorded. */
 export const RecalledFact = Schema.Struct({
+  id: Schema.String.annotate({ description: "The fact's id, to pass as supersedes when correcting it." }),
   fact: Schema.String.annotate({ description: 'Subject, predicate and object.' }),
   quote: Schema.optional(Schema.String),
   speaker: Schema.optional(Schema.String.annotate({ description: 'Who stated it, when known.' })),
@@ -137,25 +135,23 @@ export const RecalledFact = Schema.Struct({
   saidAt: Schema.String.annotate({ description: 'When it was said.' }),
 });
 
-/** Reads back what the agent knows: active memories, newest first, facts it read, and live goals. */
+/** Reads back what the agent knows: the facts that still hold, newest first, and live goals. */
 export const Recall = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agent.retrieveMemories'),
+    key: DXN.make('org.dxos.operation.agent.retrieveFacts'),
     name: 'Recall',
     description:
-      'Returns the active memories and the facts read from documents and conversations about a subject (newest first), and the goals it owns.',
+      'Returns the facts about a subject (newest first), read from documents and conversations or recorded with Remember, and the goals it owns.',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     subject: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The entity to recall; all if omitted.' })),
-    query: Schema.optional(
-      Schema.String.annotate({ description: 'Only memories and facts containing every word of this text.' }),
-    ),
+    query: Schema.optional(Schema.String.annotate({ description: 'Only facts containing every word of this text.' })),
     // Models often pass a number as a string; refusing it fails the whole call with a schema error.
     limit: Schema.optional(
       Schema.Union([Schema.Number, Schema.NumberFromString]).annotate({
-        description: 'Maximum number of memories, and of facts.',
+        description: 'Maximum number of facts.',
       }),
     ),
   }),
@@ -165,7 +161,6 @@ export const Recall = Operation.make({
         description: 'False when the query matched nothing and everything about the subject is returned instead.',
       }),
     ),
-    memories: Schema.Array(RecalledMemory),
     facts: Schema.Array(RecalledFact),
     goals: Schema.Array(RecalledGoal),
   }),
@@ -214,12 +209,12 @@ export const ConfirmGoal = Operation.make({
   }),
 });
 
-/** Regenerates the subject's profile document from its goals and active memories. */
+/** Regenerates the subject's profile document from its goals and the facts about it. */
 export const UpdateProfile = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.updateProfile'),
     name: 'Update profile',
-    description: "Rewrites the subject's profile document from its goals and active memories.",
+    description: "Rewrites the subject's profile document from its goals and the facts about it.",
     icon: 'ph--identification-card--regular',
   },
   services: [Database.Service, BrainService.BrainService],

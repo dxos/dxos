@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof DiscordAdminOperation.UnbindChannel>
           }
         }
 
-        // A `Channel` left with no Discord channel names nothing, so it leaves the agents' lists; its conversations stay.
+        // A `Channel` left with no Discord channel names nothing, so it is deleted; its conversations are the agent's and stay.
         const channels = yield* Database.query(Filter.type(Channel.Channel)).run.pipe(Effect.orDie);
         const orphans = channels.filter((channel) => emptied.has(entityIdOf(channel.backend.config.uri) ?? ''));
         if (orphans.length > 0) {
@@ -54,6 +54,7 @@ const handler: Operation.WithHandler<typeof DiscordAdminOperation.UnbindChannel>
               });
             }
           }
+          yield* Effect.forEach(orphans, (channel) => Database.remove(channel));
         }
         return {};
       }),

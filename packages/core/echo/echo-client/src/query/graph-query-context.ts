@@ -301,8 +301,9 @@ export class GraphQueryContext implements QueryContext {
   }
 
   /**
-   * In-process entries first, then every remote entry local evidence does not overrule. A property-ordered
-   * window also admits local matches that sort within the remote window, re-sorted and cut to its limit.
+   * In-process entries, then every remote entry local evidence does not overrule, in natural order when the
+   * query has no order of its own. A property-ordered window also admits local matches that sort within the
+   * remote window, re-sorted and cut to its limit.
    */
   #merge(
     query: QueryAST.Query,
@@ -313,7 +314,9 @@ export class GraphQueryContext implements QueryContext {
   ): SourceEntry[] {
     const kept = remote.filter((entry) => keepRemoteEntry(plan, entry));
     if (!plan.window) {
-      return [...local, ...kept];
+      const merged = [...local, ...kept];
+      // Stable, so an in-process entry stays ahead of the remote duplicate that presentation drops.
+      return plan.natural ? merged.sort((left, right) => compareIds(left.id, right.id)) : merged;
     }
     // A window is the remote's to define; before it answers there is nothing to admit into. An empty answer is an
     // answer, so local writes the index has not seen still enter it.
@@ -414,6 +417,9 @@ type WindowCandidate = { id: string; data: EntityStructure['data'] | undefined }
 );
 
 const isInProcess = (source: QuerySource): boolean => source.kind === 'local' || source.kind === 'registry';
+
+/** Natural order: code units, as the host and the working-set executor sort ids. */
+const compareIds = (left: string, right: string): number => (left < right ? -1 : left > right ? 1 : 0);
 
 /**
  * Queries objects from the local working set.
@@ -653,9 +659,8 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   /**
-   * Applies written objects to the cached results, in the order a full recompute would produce, so a
-   * synchronous notification per write costs the write rather than a working-set scan. Falls back to a
-   * full recompute when an object's position is unknown.
+   * Applies written objects to the cached results, in the natural (id) order a full recompute produces, so a
+   * synchronous notification per write costs the write rather than a working-set scan.
    *
    * @returns whether membership changed.
    */
@@ -673,12 +678,7 @@ export class SpaceQuerySource implements QuerySource {
       if (index >= 0 && !matches) {
         next = next.toSpliced(index, 1);
       } else if (index < 0 && matches) {
-        const sequence = entityManager.objectSequence(id);
-        if (sequence === undefined) {
-          this._results = undefined;
-          return true;
-        }
-        const position = next.findIndex((entry) => (entityManager.objectSequence(entry.id) ?? Infinity) > sequence);
+        const position = next.findIndex((entry) => compareIds(entry.id, id) > 0);
         next = next.toSpliced(position < 0 ? next.length : position, 0, {
           id,
           result: this._database.getObjectById<Obj.Any>(id, { deleted: true }),

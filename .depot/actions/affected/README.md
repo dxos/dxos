@@ -12,7 +12,7 @@ Call it after `setup`, which is what puts node on PATH:
   uses: ./.depot/actions/affected
 ```
 
-It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing at all for a full run. `moon run` and `moon exec` both read those two (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
+It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing for a full run, except `MOON_FORCE=true` on the scheduled run. `moon run` and `moon exec` both read all three (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
 
 ## Base per trigger
 
@@ -24,13 +24,22 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 | `merge_group` | affected | `merge_group.base_sha` |
 | `push` to `main` | all | none |
 | `push` to any other branch, `workflow_dispatch` | affected | merge-base with `origin/main` |
-| `schedule` | all | none |
+| `schedule` | all, bypassing the cache | none |
 | no event payload | affected | merge-base with `origin/main` |
 | `all: true` on the action | all | none |
+| a scoped trigger above, when the change touches `pnpm-lock.yaml` or `tools/moon-dependency-closure/dependency-closure.wasm`, or the diff cannot be read | all | none |
 
 `e2e` passes `all: true` on a `workflow_dispatch`, because a dispatch exists to run the whole suite.
 
 **A base that will not resolve means a full run, never an empty one.** `moon` exits 0 having run nothing when the affected set comes back empty, so a base that quietly fails to resolve would turn every gate in the workflow green. Same silent-degradation class as a dropped remote cache, which the CI project's [`DESIGN.md`](../../../.agents/projects/ci/DESIGN.md) covers.
+
+## Dependency changes
+
+Only tasks that load other projects' code outside the dependency graph list `pnpm-lock.yaml`: the `check-module-structure` import checks and `storybook-react:bundle`, which finds every package's stories by glob. Every other task carries the `dependency-closure` toolchain, a moon plugin built from [`tools/moon-dependency-closure`](../../../tools/moon-dependency-closure) that adds a hash of the project's dependency closure to the task's hash. The closure is every third-party package the project can load, through its own dependencies, its workspace links, and the toolchain projects (the workspace root and the Storybook configs), each with what it resolves its own dependencies to. moon adds the toolchain to every task that uses `javascript`, `node` or `typescript`. A dependency change reruns the projects whose closure it changes. Of the 173 lockfile changes on `main` from 2026-09-15 to 2026-10-15, the average one changed 29% of closures, and 92 changed none.
+
+Touched-file detection cannot see a closure: scoped to the files a PR touched, a lockfile-only change would select no build or test. A change to `pnpm-lock.yaml` or to the committed plugin therefore runs everything, and the cache decides what executes. `moon run <target> --log debug` prints what each project's closure hashes.
+
+On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache.
 
 ## Opting a step out
 

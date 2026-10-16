@@ -8,12 +8,13 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
+import * as Profile from '@dxos/plugin-agent/Profile';
 import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import { Organization, Person } from '@dxos/types';
 
 //
 // The DXOS team the community-support skill escalates to: who they are and what each one knows best, recorded as
-// the agent's memories so the skill finds them with Recall rather than from its own (team-agnostic) instructions.
+// the agent's facts so the skill finds them with Recall rather than from its own (team-agnostic) instructions.
 //
 
 export const SUPPORT_TEAM_NAME = 'DXOS';
@@ -38,7 +39,7 @@ export type SupportTeamMember = {
   fullName: string;
   preferredName: string;
   jobTitle: string;
-  /** What to send them; together they make one memory, so a topic query finds the right person. */
+  /** What to send them; each is one fact, so a topic query finds the right person. */
   expertise: readonly string[];
   /** Their Discord user id, which lets a relay open a DM with them. */
   discordId: string;
@@ -103,7 +104,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
 
 /**
  * Adds the team, its members and their expertise, unless a previous run already did; gives each member a chat with
- * the agent so an escalation delivers somewhere visible in the story. The memories go to the agent's brain, which is
+ * the agent so an escalation delivers somewhere visible in the story. The facts go to the agent's brain, which is
  * EDGE's when its chats run there.
  */
 export const seedSupportTeam = async ({
@@ -122,20 +123,38 @@ export const seedSupportTeam = async ({
   );
   const team = existingTeam ?? db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
   await db.flush({ indexes: true });
-  // The brain, not the team object, says what is already remembered: a load whose seed failed is retried by the next.
+  // The brain, not the team object, says what is already recorded: a load whose seed failed is retried by the next.
   const brainOptions = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
   const { data: recalled } = await untilOnEdge(remote, () =>
     invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions),
   );
-  const existing = new Set((recalled?.memories ?? []).map(({ content }) => content));
-  const remember = async (content: string, subjects: Ref.Ref<Obj.Unknown>[]) => {
-    if (existing.has(content)) {
+  const existing = new Set((recalled?.facts ?? []).map(({ fact }) => fact));
+  /** Records the facts Recall does not already return, matched by the text Recall renders them as. */
+  const remember = async (
+    facts: { subject: Obj.Unknown; predicate: string; object?: Obj.Unknown; value?: string }[],
+  ) => {
+    const missing = facts.filter(
+      ({ subject, predicate, object, value }) =>
+        !existing.has(
+          `${Profile.displayName(subject)} ${MemoryOperation.PREDICATES.resolve(predicate).label} ${object ? Profile.displayName(object) : value}`,
+        ),
+    );
+    if (missing.length === 0) {
       return;
     }
     const { error } = await untilOnEdge(remote, () =>
       invoker.invokePromise(
         MemoryOperation.Remember,
-        { agent: Ref.make(agent), content, kind: 'fact', origin: 'stated', subjects },
+        {
+          agent: Ref.make(agent),
+          facts: missing.map(({ subject, predicate, object, value }) => ({
+            subject: Ref.make(subject),
+            predicate,
+            ...(object ? { object: Ref.make(object) } : {}),
+            ...(value !== undefined ? { value } : {}),
+            origin: 'stated' as const,
+          })),
+        },
         brainOptions,
       ),
     );
@@ -144,7 +163,7 @@ export const seedSupportTeam = async ({
     }
   };
 
-  await remember(`${SUPPORT_TEAM_NAME} is the support team for the community channel.`, [Ref.make<Obj.Unknown>(team)]);
+  await remember([{ subject: team, predicate: 'is_a', value: 'support team for the community channel' }]);
   const people = await db.query(Filter.type(Person.Person)).run();
   for (const { fullName, preferredName, jobTitle, expertise, discordId } of SUPPORT_TEAM) {
     const identity = { label: DISCORD_IDENTITY, value: discordId };
@@ -158,10 +177,9 @@ export const seedSupportTeam = async ({
         (existing.identities ??= []).push(identity);
       });
     }
-    // One memory per person, so the list shows each member once with every area they cover.
-    await remember(`${fullName} (${SUPPORT_TEAM_NAME}) is the one to ask about ${expertise.join('; ')}.`, [
-      Ref.make<Obj.Unknown>(person),
-      Ref.make<Obj.Unknown>(team),
+    await remember([
+      { subject: person, predicate: 'member_of', object: team },
+      ...expertise.map((area) => ({ subject: person, predicate: 'knows_about', value: area })),
     ]);
     const { error } = await invoker.invokePromise(
       AgentOperation.EnsureParticipantChat,
@@ -191,9 +209,9 @@ const rosterText = (): string =>
   ].join('\n\n');
 
 /**
- * Reads the team roster into the agent's brain, so its Facts hold the team (with Discord usernames) as well as its
- * memories; skipped once the brain holds any fact other than a memory. A model call on the brain where the agent's chats run, so the
- * caller does not wait for it, and a failure is only logged.
+ * Reads the team roster into the agent's brain, so its facts hold the team's Discord usernames too; skipped once the
+ * brain holds a fact read from the roster. A model call on the brain where the agent's chats run, so the caller does
+ * not wait for it, and a failure is only logged.
  */
 export const seedSupportFacts = async ({
   db,
@@ -214,7 +232,7 @@ export const seedSupportFacts = async ({
     log.warn('reading the brain before seeding the support facts failed', { error: inspectError });
     return;
   }
-  if ((brain?.facts ?? []).some((fact) => fact.kind === undefined)) {
+  if ((brain?.facts ?? []).some((fact) => fact.attribution.source === ROSTER_URL)) {
     return;
   }
   const { data, error } = await invoker.invokePromise(

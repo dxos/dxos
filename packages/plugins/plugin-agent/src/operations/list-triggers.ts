@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { BrainService, Trigger, TriggerOperation } from '#types';
+import { AgentPresence, BrainService, Trigger, TriggerOperation } from '#types';
 
 import { labelOf, loadMembers } from './members.ts';
 
@@ -18,14 +18,16 @@ const handler: Operation.WithHandler<typeof TriggerOperation.ListTriggers> = Tri
       const brain = yield* BrainService.BrainService;
       const label = labelOf(yield* loadMembers);
       return {
-        triggers: (yield* brain.subscriptions(agent.id)).map(({ id, goal, when, then, createdAt }) => ({
-          trigger: id,
-          ...(goal ? { goal } : {}),
-          when: Trigger.describePattern(when, label),
-          recipient: then.recipient,
-          message: then.message,
-          createdAt,
-        })),
+        triggers: (yield* brain.subscriptions(AgentPresence.brainId(agent))).map(
+          ({ id, goal, when, then, createdAt }) => ({
+            trigger: id,
+            ...(goal ? { goal } : {}),
+            when: Trigger.describePattern(when, label),
+            recipient: then.recipient,
+            message: then.message,
+            createdAt,
+          }),
+        ),
       };
     }),
   ),

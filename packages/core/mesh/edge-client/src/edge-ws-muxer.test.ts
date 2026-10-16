@@ -5,6 +5,11 @@
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { InvariantViolation } from '@dxos/invariant';
+import {
+  EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES,
+  EDGE_FLOW_CONTROL_MAX_MESSAGES,
+  EDGE_FLOW_CONTROL_WINDOWS,
+} from '@dxos/protocols';
 import { buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { concatUint8Arrays, isNonNullable } from '@dxos/util';
@@ -12,9 +17,13 @@ import { concatUint8Arrays, isNonNullable } from '@dxos/util';
 import { protocol } from './defs.ts';
 import {
   CLOUDFLARE_MESSAGE_MAX_BYTES,
+  EDGE_FLOW_CONTROL,
+  type FlowControlConfig,
   MAX_INBOUND_CHUNK_COUNT,
   MAX_INBOUND_MESSAGE_BYTES,
   MessageTooLargeError,
+  type OverdraftHandler,
+  type ReceivedFrame,
   SegmentedMessageLimitError,
   WebSocketClosedError,
   WebSocketMuxer,
@@ -25,8 +34,14 @@ const SEGMENTED_CONTENT = 'A'.repeat(4 * MAX_CHUNK_LENGTH);
 
 // Wire format, restated so a change to the muxer's own constants cannot pass unnoticed.
 const CHANNEL_ID = 1;
-const FLAG_SEGMENT_SEQ = 1;
-const FLAG_SEGMENT_SEQ_TERMINATED = 2;
+const FrameFlag = {
+  SEGMENT_SEQ: 1,
+  SEGMENT_SEQ_TERMINATED: 2,
+  FLOW_CONTROL: 4,
+  SYNC: 8,
+  SYNC_REQUEST: 16,
+  PAUSE: 32,
+} as const;
 const WIRE_SEGMENT_BYTES = 16_384;
 
 const WS_CONNECTING = 0;
@@ -36,6 +51,12 @@ const WS_CLOSED = 3;
 
 // The muxer waits once the socket buffers this much.
 const SOCKET_BUFFER_FULL = 1_000_000;
+
+/** Two chunks is the floor the muxer enforces, so this is a small window that can still make progress. */
+const WINDOW = MAX_CHUNK_LENGTH * 4;
+const MAX_MESSAGES = 4;
+/** Comfortably above a minimal message's protobuf overhead, so "short" means one frame. */
+const SHORT_MESSAGE_CHUNK = 256;
 
 describe('WebSocketMuxerTest', () => {
   test('basic message reassembly', async ({ expect }) => {
@@ -108,9 +129,9 @@ describe('WebSocketMuxerTest', () => {
     expect(socket.frames).toHaveLength(4);
     const [first, second, last, unsegmented] = socket.frames;
     expect([first[0], second[0], last[0]]).toEqual([
-      FLAG_SEGMENT_SEQ,
-      FLAG_SEGMENT_SEQ,
-      FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED,
+      FrameFlag.SEGMENT_SEQ,
+      FrameFlag.SEGMENT_SEQ,
+      FrameFlag.SEGMENT_SEQ | FrameFlag.SEGMENT_SEQ_TERMINATED,
     ]);
     expect([first[1], second[1], last[1]]).toEqual([CHANNEL_ID, CHANNEL_ID, CHANNEL_ID]);
     expect([first.byteLength, second.byteLength]).toEqual([2 + WIRE_SEGMENT_BYTES, 2 + WIRE_SEGMENT_BYTES]);
@@ -495,6 +516,419 @@ describe('WebSocketMuxerTest', () => {
       expect(received.map(textOf)).toEqual([SEGMENTED_CONTENT]);
     });
   });
+
+  describe('flow control', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    test('a muxer asks its peer for a sync as it opens', ({ expect }) => {
+      const socket = new TestSocket();
+      new WebSocketMuxer(socket, { flowControl: flowControl() });
+
+      expect(socket.frames).toEqual([new Uint8Array([FrameFlag.FLOW_CONTROL | FrameFlag.SYNC_REQUEST])]);
+    });
+
+    test('every message is segment-framed so it can be accounted', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: SHORT_MESSAGE_CHUNK, flowControl: flowControl() });
+      await muxer.send(textMessage('hi'));
+
+      const [frame, ...rest] = dataFrames(socket.frames);
+      expect(rest).toHaveLength(0);
+      // Segment + terminator, never the unsegmented shape.
+      expect(frame[0]).toBe(FrameFlag.SEGMENT_SEQ | FrameFlag.SEGMENT_SEQ_TERMINATED);
+      expect(muxer.inFlight(CHANNEL_ID)).toEqual({ bytes: frame.byteLength - 2, messages: 1 });
+    });
+
+    test('a message with no service id rides the reserved channel 0', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: SHORT_MESSAGE_CHUNK, flowControl: flowControl() });
+      await muxer.send(unsegmentedMessage('hi'));
+      muxer.sendSync(unsegmentedMessage('hi'));
+
+      expect(dataFrames(socket.frames).map((frame) => frame[1])).toEqual([0, 0]);
+      expect(muxer.inFlight(0).messages).toBe(2);
+    });
+
+    test('the sender stalls at the byte window and a grant resumes it', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH, flowControl: flowControl() });
+      // Comfortably more than the window, so the stall is not an artefact of message size.
+      const sent = muxer.send(textMessage('A'.repeat(WINDOW * 4)));
+      await settle();
+
+      const sentBytes = payloadBytes(socket.frames);
+      expect(sentBytes).toBeLessThanOrEqual(WINDOW);
+      expect(sentBytes).toBeGreaterThan(WINDOW - MAX_CHUNK_LENGTH);
+      expect(muxer.inFlight(CHANNEL_ID).bytes).toBe(sentBytes);
+      expect(muxer.pendingBytes).toBeGreaterThan(0);
+
+      const before = socket.frames.length;
+      muxer.receiveFrame(grant(CHANNEL_ID, sentBytes, 0));
+      await settle();
+
+      expect(socket.frames.length).toBeGreaterThan(before);
+      expect(payloadBytes(socket.frames) - sentBytes).toBeLessThanOrEqual(WINDOW);
+
+      muxer.destroy();
+      await expect(sent).rejects.toBeInstanceOf(WebSocketClosedError);
+    });
+
+    test('the sender stalls at the message bound and a grant resumes it', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, {
+        maxChunkLength: SHORT_MESSAGE_CHUNK,
+        flowControl: flowControl({ windowFor: () => SHORT_MESSAGE_CHUNK * 64 }),
+      });
+      // Small enough that the byte window alone would admit every one of them.
+      const sends = Array.from({ length: MAX_MESSAGES * 2 }, (_, index) => muxer.send(textMessage(`m${index}`)));
+      await settle();
+
+      expect(dataFrames(socket.frames)).toHaveLength(MAX_MESSAGES);
+      expect(muxer.inFlight(CHANNEL_ID).messages).toBe(MAX_MESSAGES);
+
+      muxer.receiveFrame(grant(CHANNEL_ID, payloadBytes(socket.frames), MAX_MESSAGES));
+      await settle();
+      await Promise.all(sends);
+
+      const receiver = new WebSocketMuxer(new TestSocket());
+      const received = dataFrames(socket.frames)
+        .map((frame) => receiver.receiveData(frame))
+        .filter(isNonNullable);
+      expect(received.map(textOf)).toEqual(Array.from({ length: MAX_MESSAGES * 2 }, (_, index) => `m${index}`));
+    });
+
+    test('a stalled channel does not block another', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH, flowControl: flowControl() });
+      const stalled = muxer.send(textMessage('A'.repeat(WINDOW * 4), 'service-a'));
+      await settle();
+      expect(payloadBytes(socket.frames)).toBeLessThanOrEqual(WINDOW);
+
+      // The second service gets its own channel and its own window, so it flows while the first is stalled: the whole
+      // point of per-channel credit over a per-socket watermark.
+      const flowing = muxer.send(textMessage('B'.repeat(WINDOW * 4), 'service-b'));
+      await settle();
+      const channelB = dataFrames(socket.frames).filter((frame) => frame[1] === CHANNEL_ID + 1);
+      expect(payloadBytes(channelB)).toBeGreaterThan(WINDOW - MAX_CHUNK_LENGTH);
+
+      muxer.destroy();
+      await expect(stalled).rejects.toBeInstanceOf(WebSocketClosedError);
+      await expect(flowing).rejects.toBeInstanceOf(WebSocketClosedError);
+    });
+
+    test('grants are withheld until the peer has synced', ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH, flowControl: flowControl() });
+      const message = terminatorChunk(buf.toBinary(MessageSchema, textMessage('A'.repeat(WINDOW))));
+      muxer.consumed(muxer.receiveFrame(message));
+      expect(grants(socket.frames)).toHaveLength(0);
+
+      // A sync from a peer that sent nothing else: what was consumed is announced at once.
+      muxer.receiveFrame(sync([[CHANNEL_ID, message.byteLength - 2, 1]]));
+      expect(grants(socket.frames)).toEqual([[{ channelId: CHANNEL_ID, bytes: message.byteLength - 2, messages: 1 }]]);
+    });
+
+    test('a grant frame carries cumulative bytes and messages', ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = syncedMuxer(socket);
+      const binary = buf.toBinary(MessageSchema, textMessage('A'.repeat(WINDOW)));
+
+      // Consumption below both thresholds is not announced; grants are cumulative, so skipping one is free.
+      muxer.consumed(muxer.receiveFrame(segmentChunk(binary.subarray(0, 1))));
+      expect(grants(socket.frames)).toHaveLength(0);
+
+      muxer.consumed(muxer.receiveFrame(terminatorChunk(binary.subarray(1))));
+      expect(grants(socket.frames)).toEqual([[{ channelId: CHANNEL_ID, bytes: binary.byteLength, messages: 1 }]]);
+    });
+
+    test('enough consumed messages are announced however small they are', ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = syncedMuxer(socket, { grantThreshold: { bytes: WINDOW * 1_000, messages: MAX_MESSAGES / 2 } });
+      const message = terminatorChunk(buf.toBinary(MessageSchema, textMessage('x')));
+      muxer.consumed(muxer.receiveFrame(message));
+      expect(grants(socket.frames)).toHaveLength(0);
+
+      muxer.consumed(muxer.receiveFrame(message));
+      expect(grants(socket.frames)).toEqual([
+        [{ channelId: CHANNEL_ID, bytes: 2 * (message.byteLength - 2), messages: 2 }],
+      ]);
+    });
+
+    test('a frame the muxer drops on the reassembly limit is credited', ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = syncedMuxer(socket);
+      const oversized = segmentChunk(new Uint8Array(MAX_INBOUND_MESSAGE_BYTES + 1));
+
+      expect(() => muxer.receiveFrame(oversized)).toThrow(SegmentedMessageLimitError);
+      expect(grants(socket.frames)).toEqual([
+        [{ channelId: CHANNEL_ID, bytes: MAX_INBOUND_MESSAGE_BYTES + 1, messages: 0 }],
+      ]);
+    });
+
+    test('a peer that ignores grants trips the overdraft bound', ({ expect }) => {
+      const overdrafts: number[] = [];
+      const muxer = new WebSocketMuxer(new TestSocket(), {
+        maxChunkLength: MAX_CHUNK_LENGTH,
+        flowControl: flowControl(),
+        onOverdraft: ({ channelId }) => overdrafts.push(channelId),
+      });
+      const chunk = segmentChunk(new Uint8Array(MAX_CHUNK_LENGTH));
+
+      // The bound is 1.5 windows, so a full window alone must not trip it.
+      for (let sent = 0; sent < WINDOW; sent += MAX_CHUNK_LENGTH) {
+        muxer.receiveFrame(chunk);
+      }
+      expect(overdrafts).toHaveLength(0);
+
+      for (let sent = 0; sent < WINDOW; sent += MAX_CHUNK_LENGTH) {
+        muxer.receiveFrame(chunk);
+      }
+      expect(overdrafts).toContain(CHANNEL_ID);
+    });
+
+    test('consuming inbound frames clears the overdraft', ({ expect }) => {
+      const overdrafts: number[] = [];
+      const muxer = syncedMuxer(new TestSocket(), { onOverdraft: ({ channelId }) => overdrafts.push(channelId) });
+      const chunk = segmentChunk(new Uint8Array(MAX_CHUNK_LENGTH));
+      for (let sent = 0; sent < WINDOW * 4; sent += MAX_CHUNK_LENGTH) {
+        muxer.consumed(muxer.receiveFrame(chunk));
+      }
+
+      expect(overdrafts).toHaveLength(0);
+    });
+
+    test('the sender holds the connection to its bound across channels', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, {
+        maxChunkLength: SHORT_MESSAGE_CHUNK,
+        flowControl: flowControl({ maxConnectionMessages: 8, connectionGrantThreshold: 2 }),
+      });
+      // One message on each of 20 channels: no channel is near its own bound, the connection is.
+      const sends = Array.from({ length: 20 }, (_, index) => muxer.send(textMessage(`m${index}`, `service-${index}`)));
+      await settle();
+
+      expect(dataFrames(socket.frames)).toHaveLength(8);
+      expect(muxer.unacknowledgedMessages).toBe(8);
+
+      // Acknowledging two channels frees exactly two slots, taken in the order the messages were sent.
+      const [first, second] = dataFrames(socket.frames);
+      muxer.receiveFrame(grant(first[1], first.byteLength - 2, 1));
+      muxer.receiveFrame(grant(second[1], second.byteLength - 2, 1));
+      await settle();
+
+      const written = dataFrames(socket.frames);
+      expect(written).toHaveLength(10);
+      expect(written.slice(8).map((frame) => frame[1])).toEqual([written[7][1] + 1, written[7][1] + 2]);
+
+      muxer.destroy();
+      await Promise.allSettled(sends);
+    });
+
+    test('consumption spread across channels is announced at the connection threshold', ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = syncedMuxer(socket, {
+        grantThreshold: { bytes: WINDOW * 1_000, messages: MAX_MESSAGES },
+        connectionGrantThreshold: 3,
+      });
+      const onChannel = (channelId: number) => {
+        const data = terminatorChunk(buf.toBinary(MessageSchema, textMessage('x')));
+        data[1] = channelId;
+        return data;
+      };
+
+      muxer.consumed(muxer.receiveFrame(onChannel(1)));
+      muxer.consumed(muxer.receiveFrame(onChannel(2)));
+      expect(grants(socket.frames)).toHaveLength(0);
+
+      // No channel is near its own threshold, but three messages across the connection are.
+      muxer.consumed(muxer.receiveFrame(onChannel(3)));
+      expect(grants(socket.frames)).toHaveLength(1);
+      expect(grants(socket.frames)[0].map(({ channelId, messages }) => [channelId, messages])).toEqual([
+        [1, 1],
+        [2, 1],
+        [3, 1],
+      ]);
+    });
+
+    test('a peer that ignores the connection bound trips the overdraft', ({ expect }) => {
+      const overdrafts: number[] = [];
+      const muxer = syncedMuxer(new TestSocket(), {
+        overdraftLimit: { bytes: WINDOW * 1_000, messages: MAX_MESSAGES * 1.5 },
+        connectionOverdraftLimit: 4,
+        onOverdraft: ({ outstanding }) => overdrafts.push(outstanding.messages),
+      });
+      for (let channelId = 1; channelId <= 5; channelId++) {
+        const data = terminatorChunk(buf.toBinary(MessageSchema, textMessage('x')));
+        data[1] = channelId;
+        muxer.receiveFrame(data);
+      }
+
+      expect(overdrafts).toEqual([5]);
+    });
+
+    test('a paused channel starts no new message until its pause ends, and the others keep flowing', async ({
+      expect,
+    }) => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: SHORT_MESSAGE_CHUNK, flowControl: flowControl() });
+      await muxer.send(textMessage('a0', 'service-a'));
+      muxer.receiveFrame(pause(CHANNEL_ID, 6_000));
+      expect(muxer.pausedUntil(CHANNEL_ID)).toBe(Date.now() + 6_000);
+
+      const held = muxer.send(textMessage('a1', 'service-a'));
+      const flowing = muxer.send(textMessage('b0', 'service-b'));
+      await settle();
+      await flowing;
+      expect(dataFrames(socket.frames).map((frame) => frame[1])).toEqual([CHANNEL_ID, CHANNEL_ID + 1]);
+
+      // Paused, not out of credit: no stall probe restates totals while it waits.
+      await vi.advanceTimersByTimeAsync(5_500);
+      expect(socket.frames.filter((frame) => frame[0] === (FrameFlag.FLOW_CONTROL | FrameFlag.SYNC))).toHaveLength(0);
+
+      await vi.advanceTimersByTimeAsync(500);
+      await held;
+      expect(dataFrames(socket.frames).map((frame) => frame[1])).toEqual([CHANNEL_ID, CHANNEL_ID + 1, CHANNEL_ID]);
+      expect(muxer.pausedUntil(CHANNEL_ID)).toBeUndefined();
+    });
+
+    test('a resume timer firing before the clock reaches the end of the pause waits out the rest', async ({
+      expect,
+    }) => {
+      const clock = vi.spyOn(Date, 'now').mockReturnValue(0);
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: SHORT_MESSAGE_CHUNK, flowControl: flowControl() });
+      muxer.receiveFrame(pause(CHANNEL_ID, 1_000));
+      const held = muxer.send(textMessage('a0', 'service-a'));
+
+      clock.mockReturnValue(999);
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(dataFrames(socket.frames)).toHaveLength(0);
+
+      clock.mockReturnValue(1_000);
+      await settle();
+      await held;
+      expect(dataFrames(socket.frames)).toHaveLength(1);
+    });
+
+    test('a message already under way finishes on a paused channel', async ({ expect }) => {
+      const socket = new TestSocket();
+      const window = MAX_CHUNK_LENGTH * 2;
+      const muxer = new WebSocketMuxer(socket, {
+        maxChunkLength: MAX_CHUNK_LENGTH,
+        flowControl: flowControl({ windowFor: () => window }),
+      });
+      const sent = muxer.send(textMessage('A'.repeat(MAX_CHUNK_LENGTH * 4)));
+      await settle();
+      expect(payloadBytes(socket.frames)).toBe(window);
+
+      muxer.receiveFrame(pause(CHANNEL_ID, 60_000));
+      muxer.receiveFrame(grant(CHANNEL_ID, window, 0));
+      await settle();
+      expect(payloadBytes(socket.frames)).toBe(window * 2);
+
+      muxer.destroy();
+      await expect(sent).rejects.toBeInstanceOf(WebSocketClosedError);
+    });
+
+    test('a pause frame names the channel and how long to stay silent', ({ expect }) => {
+      const socket = new TestSocket();
+      syncedMuxer(socket).pause(3, 1_500);
+      expect(socket.frames.at(-1)).toEqual(
+        new Uint8Array([FrameFlag.FLOW_CONTROL | FrameFlag.PAUSE, 3, 0, 0, 0x05, 0xdc]),
+      );
+
+      // Without flow control the peer would read the frame as a message, so nothing is sent.
+      const plain = new TestSocket();
+      new WebSocketMuxer(plain).pause(3, 1_500);
+      expect(plain.frames).toHaveLength(0);
+    });
+
+    // The cases below run the protocol's own windows end to end, since each is a property of how they relate.
+    test('a swarm channel keeps flowing past its window', async ({ expect }) => {
+      const pair = connectedPair();
+      const count = 600; // ~600 KB: more than twice the 256 KiB swarm window.
+      const sends = Array.from({ length: count }, () => pair.sender.send(textMessage('S'.repeat(1_000), 'swarm')));
+      await settle();
+      await Promise.all(sends);
+
+      expect(pair.delivered).toHaveLength(count);
+      expect(pair.sender.pendingBytes).toBe(0);
+    });
+
+    test('a replicator channel at its full window stays inside the receiver overdraft bound', async ({ expect }) => {
+      const overdrafts: number[] = [];
+      // The receiver never consumes, as a router whose replicator has stopped returning.
+      const pair = connectedPair({ consume: false, onOverdraft: ({ channelId }) => overdrafts.push(channelId) });
+      const sends = Array.from({ length: 8 }, () => pair.sender.send(textMessage('R'.repeat(1_000_000), REPLICATOR)));
+      await settle();
+
+      expect(payloadBytes(pair.socket.frames)).toBeGreaterThan(3 * 1024 * 1024);
+      expect(pair.sender.pendingBytes).toBeGreaterThan(0);
+      expect(overdrafts).toHaveLength(0);
+
+      pair.sender.destroy();
+      const rejected = (await Promise.allSettled(sends)).filter((result) => result.status === 'rejected');
+      expect(rejected.length).toBeGreaterThan(0);
+      expect(rejected.every((result) => result.reason instanceof WebSocketClosedError)).toBe(true);
+    });
+
+    test('a burst across many spaces drains at the connection bound without stalling', async ({ expect }) => {
+      const pair = connectedPair();
+      let peak = 0;
+      pair.socket.onFrame = ((deliver) => (data: Uint8Array) => {
+        peak = Math.max(peak, pair.sender.unacknowledgedMessages);
+        deliver?.(data);
+      })(pair.socket.onFrame);
+      // One `get-metadata`-sized message per feed for 60 spaces of 40 feeds, as a reconnect sends them.
+      const sends = Array.from({ length: 60 * 40 }, (_, index) =>
+        pair.sender.send(textMessage(`feed-${index}`, `feed-replicator:space-${index % 60}`)),
+      );
+      await settle();
+      await Promise.all(sends);
+
+      expect(pair.delivered).toHaveLength(60 * 40);
+      expect(peak).toBeLessThanOrEqual(EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES);
+    });
+
+    test('a receiver rebuilt mid-connection rebases onto the sync it asks for', async ({ expect }) => {
+      const pair = connectedPair();
+      const message = textMessage('R'.repeat(100_000), REPLICATOR);
+      // Twice the replicator window, so the sender's totals are far past anything a fresh receiver could count.
+      await sendAll(pair.sender, message, 90);
+
+      // As the router after hibernation: a new muxer on the same socket, with none of the old one's totals.
+      pair.attachReceiver();
+      await sendAll(pair.sender, message, 90);
+
+      expect(pair.delivered).toHaveLength(180);
+      expect(pair.sender.unacknowledgedBytes).toBeLessThan(EDGE_FLOW_CONTROL_WINDOWS.replicator);
+    });
+
+    test('a stalled sender restates its totals to a receiver reset while it was stalled', async ({ expect }) => {
+      const pair = connectedPair({ consume: false });
+      // One frame each, so the reset falls between messages, and more of them than the message bound admits.
+      const message = textMessage('R'.repeat(10_000), REPLICATOR);
+      const stalled = Array.from({ length: EDGE_FLOW_CONTROL_MAX_MESSAGES * 2 }, () => pair.sender.send(message));
+      await settle();
+      expect(pair.sender.pendingBytes).toBeGreaterThan(0);
+
+      // The reset loses everything in flight, and the new receiver's sync request is lost with the old object, so
+      // nothing reaches it until the sender's stall probe.
+      pair.attachReceiver({ consume: true, requestSync: false });
+      await vi.advanceTimersByTimeAsync(10_000);
+      await Promise.all(stalled);
+
+      expect(pair.sender.pendingBytes).toBe(0);
+    });
+  });
 });
 
 /** The socket side of the muxer; `send` throws `sendError` while it is set and runs `onFrame` after each frame. */
@@ -504,24 +938,155 @@ class TestSocket {
   /** Left unset, as workerd's is. */
   bufferedAmount?: number;
   sendError?: Error;
-  onFrame?: () => void;
+  onFrame?: (frame: Uint8Array) => void;
 
   send(frame: Uint8Array): void {
     if (this.sendError) {
       throw this.sendError;
     }
     this.frames.push(frame);
-    this.onFrame?.();
+    this.onFrame?.(frame);
   }
 }
+
+/** The terminating chunk of a segmented sequence on {@link CHANNEL_ID}. */
+const terminatorChunk = (payload: Uint8Array) => {
+  const data = segmentChunk(payload);
+  data[0] |= FrameFlag.SEGMENT_SEQ_TERMINATED;
+  return data;
+};
 
 /** A non-terminating chunk of a segmented sequence on {@link CHANNEL_ID}. */
 const segmentChunk = (payload: Uint8Array) => {
   const data = new Uint8Array(2 + payload.byteLength);
-  data[0] = FLAG_SEGMENT_SEQ;
+  data[0] = FrameFlag.SEGMENT_SEQ;
   data[1] = CHANNEL_ID;
   data.set(payload, 2);
   return data;
+};
+
+const flowControl = (overrides?: Partial<FlowControlConfig>): FlowControlConfig => ({
+  windowFor: () => WINDOW,
+  maxMessages: MAX_MESSAGES,
+  // Far above the per-channel bound, so only the cases that test the connection bound reach it.
+  maxConnectionMessages: MAX_MESSAGES * 100,
+  grantThreshold: { bytes: WINDOW / 2, messages: MAX_MESSAGES / 2 },
+  connectionGrantThreshold: MAX_MESSAGES * 25,
+  overdraftLimit: { bytes: WINDOW * 1.5, messages: MAX_MESSAGES * 1.5 },
+  connectionOverdraftLimit: MAX_MESSAGES * 150,
+  ...overrides,
+});
+
+/** Runs the send task without reaching the stall probe, which would re-arm for as long as a channel is stalled. */
+const settle = () => vi.advanceTimersByTimeAsync(100);
+
+/** A flow-controlled muxer whose peer has synced, so it grants. */
+const syncedMuxer = (
+  socket: TestSocket,
+  { onOverdraft, ...overrides }: Partial<FlowControlConfig> & { onOverdraft?: OverdraftHandler } = {},
+) => {
+  const muxer = new WebSocketMuxer(socket, {
+    maxChunkLength: MAX_CHUNK_LENGTH,
+    flowControl: flowControl(overrides),
+    onOverdraft,
+  });
+  muxer.receiveFrame(sync([]));
+  return muxer;
+};
+
+const dataFrames = (frames: Uint8Array[]) => frames.filter((frame) => (frame[0] & FrameFlag.FLOW_CONTROL) === 0);
+
+/** Payload bytes across data frames, excluding the 2-byte framing header and any flow-control frames. */
+const payloadBytes = (frames: Uint8Array[]) =>
+  dataFrames(frames).reduce((total, frame) => total + frame.byteLength - 2, 0);
+
+const encodeFlowControl = (flags: number, entries: [number, number, number][]): Uint8Array => {
+  const frame = new Uint8Array(1 + entries.length * 9);
+  const view = new DataView(frame.buffer);
+  frame[0] = flags;
+  entries.forEach(([channelId, bytes, messages], index) => {
+    frame[1 + index * 9] = channelId;
+    view.setUint32(2 + index * 9, bytes);
+    view.setUint32(6 + index * 9, messages);
+  });
+  return frame;
+};
+
+const grant = (channelId: number, bytes: number, messages: number) =>
+  encodeFlowControl(FrameFlag.FLOW_CONTROL, [[channelId, bytes, messages]]);
+
+const sync = (entries: [number, number, number][]) =>
+  encodeFlowControl(FrameFlag.FLOW_CONTROL | FrameFlag.SYNC, entries);
+
+const pause = (channelId: number, retryAfterMs: number) => {
+  const frame = new Uint8Array(6);
+  frame[0] = FrameFlag.FLOW_CONTROL | FrameFlag.PAUSE;
+  frame[1] = channelId;
+  new DataView(frame.buffer).setUint32(2, retryAfterMs);
+  return frame;
+};
+
+/** The grant frames among `frames`, decoded. */
+const grants = (frames: Uint8Array[]) =>
+  frames
+    .filter((frame) => frame[0] === FrameFlag.FLOW_CONTROL)
+    .map((frame) => {
+      const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
+      return Array.from({ length: (frame.byteLength - 1) / 9 }, (_, index) => ({
+        channelId: frame[1 + index * 9],
+        bytes: view.getUint32(2 + index * 9),
+        messages: view.getUint32(6 + index * 9),
+      }));
+    });
+
+const REPLICATOR = `subduction-replicator:${'0'.repeat(33)}`;
+
+const sendAll = async (muxer: WebSocketMuxer, message: Message, count: number) => {
+  const sends = Array.from({ length: count }, () => muxer.send(message));
+  await settle();
+  await Promise.all(sends);
+};
+
+/**
+ * A sender and a receiver with the protocol's default flow control, each socket delivering into the other muxer. The
+ * receiver consumes every message as it arrives unless `consume` is false; `attachReceiver` swaps in a fresh one, as
+ * the router rebuilds its muxer after hibernation or a reset.
+ */
+const connectedPair = ({ consume = true, onOverdraft }: { consume?: boolean; onOverdraft?: OverdraftHandler } = {}) => {
+  const delivered: Message[] = [];
+  const socket = new TestSocket();
+  const reverse = new TestSocket();
+  const sender = new WebSocketMuxer(socket, { flowControl: EDGE_FLOW_CONTROL });
+  let receiver: WebSocketMuxer | undefined;
+  let consuming = consume;
+  socket.onFrame = (data) => {
+    if (!receiver) {
+      return;
+    }
+    const frame: ReceivedFrame = receiver.receiveFrame(data);
+    if (frame.message) {
+      delivered.push(frame.message);
+    }
+    if (consuming) {
+      receiver.consumed(frame);
+    }
+  };
+  const attachReceiver = (options: { consume?: boolean; requestSync?: boolean } = {}): WebSocketMuxer => {
+    consuming = options.consume ?? consuming;
+    reverse.onFrame = undefined;
+    const sent = reverse.frames.length;
+    const attached = new WebSocketMuxer(reverse, { flowControl: EDGE_FLOW_CONTROL, onOverdraft });
+    receiver = attached;
+    reverse.onFrame = (data) => sender.receiveFrame(data);
+    if (options.requestSync ?? true) {
+      reverse.frames.slice(sent).forEach((frame) => sender.receiveFrame(frame));
+    }
+    return attached;
+  };
+  const first = attachReceiver();
+  // The sender's sync request went out before the receiver existed.
+  [...socket.frames].forEach((frame) => first.receiveFrame(frame));
+  return { sender, socket, delivered, attachReceiver };
 };
 
 const textMessage = (message: string, serviceId = 'test-service') =>

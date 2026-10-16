@@ -46,12 +46,13 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    (`risk: …` always, plus any `breaking:`/`api:`/`tests:`/`revert:`/`perf:`).
    If this work builds on another open PR (or the user asked for a stack), see
    **Stacked PRs** below instead of `gh pr create`.
-9. **Mark it ready.** Run `moon run :lint :build :test-types` locally, then
-   `gh pr ready`, which starts CI. Every push after this runs the full
-   suite, so batch fixes into one push rather than pushing each one, and merge
+9. **Mark it ready.** Run `moon run :lint :build :test-types` locally, and the browser and
+   storybook tests of the projects you changed:
+   `MOON_BASE=origin/main moon run :test-browser :test-storybook --affected`. CI runs those only
+   in the merge queue, which drops the PR when they fail. Then `gh pr ready`, which starts CI.
+   Every push after this runs Check, so batch fixes into one push rather than pushing each one, and merge
    `main` in only to resolve a conflict. To keep iterating, convert it back to a
-   draft first (`gh pr ready --undo`). To get CI on a draft without marking it
-   ready, add the `ci` label; the next push runs it.
+   draft first (`gh pr ready --undo`). Drafts never run CI.
 10. **Monitor CI every 5 minutes:**
     `gh run list --branch <branch> --limit 3 --workflow "Check"` and
     `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
