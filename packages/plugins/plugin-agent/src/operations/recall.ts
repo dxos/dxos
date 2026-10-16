@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 
-import { BrainService, Goal, Knowledge, MemoryOperation, Profile } from '#types';
+import { BrainService, Goal, MemoryOperation, Profile } from '#types';
 
 import { canonicalKey, expandKeys, identityGroups } from './identity.ts';
 import { entityKeys, knownIdentities, spaceFacts, strongEntityKeys } from './knowledge.ts';
@@ -55,15 +55,9 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
       const ids =
         entity && ownKeys ? new Set([...ownKeys, ...expandKeys(strongEntityKeys(entity), groups)]) : undefined;
       const isSubjectKey = (key: string): boolean => ids !== undefined && (ids.has(key) || ids.has(canonicalKey(key)));
-      const activeMemories = Knowledge.fromFacts(allFacts)
-        .filter((memory) => memory.status === 'active' && (!ids || Knowledge.isAbout(memory, ids)))
-        .sort(Knowledge.byNewest);
 
-      // Expired facts stay in the brain as history; recall leaves them out. Memories are listed as memories.
-      const now = new Date().toISOString();
-      const subjectFacts = allFacts
-        .filter((fact) => fact.kind === undefined)
-        .filter((fact) => !fact.assertion.validTo || fact.assertion.validTo > now)
+      // Superseded, retracted and expired facts stay in the brain as history; recall leaves them out.
+      const subjectFacts = BrainService.currentFacts(allFacts, new Date().toISOString())
         .filter((fact) => {
           if (!ids) {
             return true;
@@ -75,14 +69,12 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
         .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime));
 
       const queryWords = words(query);
-      const matchedMemories = activeMemories.filter((memory) => matches(memory.content, queryWords));
       const matchedFacts = subjectFacts.filter((fact) =>
         matches(`${BrainService.factText(fact)} ${fact.assertion.quote ?? ''}`, queryWords),
       );
       // A query rarely uses the words a fact was stored with ("location" for "is in Bangkok"): when it matches
       // nothing, everything about the subject is the better answer than none.
-      const queryMatched = queryWords.length === 0 || matchedMemories.length > 0 || matchedFacts.length > 0;
-      const memories = (queryMatched ? matchedMemories : activeMemories).slice(0, limit ?? undefined);
+      const queryMatched = queryWords.length === 0 || matchedFacts.length > 0;
       const facts = (queryMatched ? matchedFacts : subjectFacts).slice(0, limit ?? undefined);
       const names = yield* sourceNames(facts);
 
@@ -92,15 +84,8 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
 
       return {
         ...(queryMatched ? {} : { queryMatched: false }),
-        memories: memories.map((memory) => ({
-          memory: memory.id,
-          content: memory.content,
-          kind: memory.kind,
-          origin: memory.origin,
-          observedAt: memory.observedAt,
-          ...(memory.source ? { source: memory.source } : {}),
-        })),
         facts: facts.map((fact) => ({
+          id: RDF.Mapping.graphOf(fact),
           fact: BrainService.factText(fact),
           ...(fact.assertion.quote ? { quote: fact.assertion.quote } : {}),
           ...((fact.attribution.agentLabel ?? fact.attribution.agent)

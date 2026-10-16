@@ -196,9 +196,10 @@ Decided 2026-10-13 (formerly QUESTIONS.md 1 and 2):
 - **Entities are IRIs where one is known**: a member by DID, a person or organization in the space by
   its object URI (`echo://<spaceId>/<objectId>`), an email by `mailto:`, a page by its URL; otherwise
   a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
-- **Memories are facts.** A memory is a graph of `<subject> dx:claim "content"` statements whose
-  provenance carries its kind and origin (`Knowledge` in this package); a correction is a graph that
-  `supersedes` it and a mistake one that `retracts` it. Facts stay in the brain store, not ECHO feeds.
+- **Agents record facts too.** `recordFacts` writes the same structured facts extraction does, as the
+  agent's own words; a correction is a graph that `supersedes` it. The seed vocabulary keeps the prose
+  predicates `claim` and `has_note` only so older graphs parse. Facts stay in the brain store, not
+  ECHO feeds.
 - Not yet built: linking an entity read before its object existed to that object (`owl:sameAs`), and
   predicates proposed by the extractor with their own descriptions (they are minted from the surface
   form).

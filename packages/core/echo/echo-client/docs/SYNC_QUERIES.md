@@ -737,7 +737,12 @@ on `changed`, so making the event synchronous made the whole chain synchronous.
 **The engine is `GraphQueryContext`, evolved rather than renamed.** `QuerySource` gained `kind`,
 `isServing`, `answers` and `isFailed`; no `RemoteQuerySource` split. `getResults` and `run` both merge
 through one `#merge`: in-process entries first, then remote entries `keepRemoteEntry` does not overrule,
-using the plan from `merge-plan.ts`.
+using the plan from `merge-plan.ts`. When the plan sets `natural`, the merged entries are then sorted by
+id, the natural order the planner gives the query and both sources answer in. `natural` covers one
+space-scoped type or wildcard selection with no order, limit, skip, traversal, aggregate, feed scope or
+registry scope; every other query keeps the merge order. Without that sort an
+object's position would depend on which source held it, so a write that loaded an index-backed object
+moved it ahead of the objects it had not touched.
 
 **Revalidation** applies to single-branch flat queries (`select`, `filter`, `options`, `from` scope,
 `order`, `limit`, `skip`) whose characteristics say `entry`. A remote entry whose object is loaded with a
@@ -770,8 +775,8 @@ watermark of §3.9 is the fix.
 **Per-write cost.** A notification per write means the recompute must cost the write, not a scan. For a
 single flat type or wildcard selection, `SpaceQuerySource` applies each written object to its cached
 results as a delta: removed when it no longer matches, inserted where a full recompute would place it.
-That position comes from an insertion sequence `ObjectCoreRegistry` now keeps, which is the working
-set's iteration order. Other shapes still recompute through the executor. `_collapseDuplicates` skips
+That position is the object's id order, since the planner orders a query without an order step
+naturally (by id). Other shapes still recompute through the executor. `_collapseDuplicates` skips
 working-set entries, which the executor already filtered for tombstones. Measured on the sandbox (4
 cores), a synchronous loop of 1000 `db.add` calls with a subscribed type query:
 
