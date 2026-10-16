@@ -5,17 +5,26 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { TestLayer } from '@dxos/cli-util/testing';
 import { type Client, ClientService } from '@dxos/client';
-import { Filter, Obj } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Annotation, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
 import { SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace, readSpacesOrder } from '../migrations/settings-space.ts';
-import { healDuplicateSettingsSpaces, resolveSettingsSpace, runSettingsSpaceHealing } from './settings-space.ts';
+import {
+  healDuplicateSettingsSpaces,
+  resolveAppSettings,
+  resolveSettingsSpace,
+  runSettingsSpaceHealing,
+} from './settings-space.ts';
 
 describe('resolveSettingsSpace', () => {
   it.effect('waits out identity genesis instead of racing it into a duplicate', () =>
@@ -87,6 +96,24 @@ describe('resolveSettingsSpace', () => {
   );
 });
 
+describe('resolveAppSettings', () => {
+  it.effect('names a fresh settings object when the named one is missing', () =>
+    Effect.gen(function* () {
+      const client = yield* ClientService;
+      yield* Effect.tryPromise(() => client.halo.createIdentity());
+      yield* Effect.tryPromise(() => client.addTypes([AppSettings.AppSettings]));
+      const space = yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
+      const missing = nameSettings(space, { theme: { mode: 'dark' } });
+      space.db.remove(missing);
+
+      const settings = yield* resolveAppSettings(space);
+
+      expect(settings.id).not.toBe(missing.id);
+      expect(yield* loadNamedSettings(space)).toBe(settings);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
 describe('settings space healing', () => {
   it.effect('the lowest-id space survives when both duplicates are designated, keeping its own designation', () =>
     Effect.gen(function* () {
@@ -143,6 +170,35 @@ describe('settings space healing', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('the settings object moves to a survivor that lacks one', () =>
+    Effect.gen(function* () {
+      const { client, survivor, loser } = yield* setupDuplicates;
+      nameSettings(loser, { theme: { mode: 'dark' } });
+      yield* Effect.promise(() => loser.db.flush());
+
+      yield* healDuplicateSettingsSpaces(client);
+      yield* awaitCondition(client, () => AppSpace.getSettingsSpaces(client).length === 1);
+
+      // The name is relative to the survivor, so it resolves only if the object moved with it.
+      const settings = yield* loadNamedSettings(survivor);
+      expect(settings.shared).toEqual({ theme: { mode: 'dark' } });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a duplicate whose settings object cannot be loaded is kept', () =>
+    Effect.gen(function* () {
+      const { client, survivor, loser } = yield* setupDuplicates;
+      loser.db.remove(nameSettings(loser, {}));
+      yield* Effect.promise(() => loser.db.flush());
+
+      yield* healDuplicateSettingsSpaces(client);
+
+      // Nothing was salvaged: the survivor never takes a name that resolves to nothing.
+      expect(Annotation.get(survivor.properties, AppAnnotation.AppSettingsAnnotation)).toEqual(Option.none());
+      expect(AppSpace.getSettingsSpaces(client)).toHaveLength(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('the healing loop heals the settled boot snapshot and then exits on its own', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
@@ -174,7 +230,7 @@ describe('settings space healing', () => {
 const setupDuplicates = Effect.gen(function* () {
   const client = yield* ClientService;
   yield* Effect.tryPromise(() => client.halo.createIdentity());
-  yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
+  yield* Effect.tryPromise(() => client.addTypes([Expando.Expando, AppSettings.AppSettings]));
   yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
   yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
   const [survivor, loser] = AppSpace.getSettingsSpaces(client);
@@ -190,6 +246,21 @@ const createSpace = Effect.fnUntraced(function* (
   yield* Effect.promise(() => space.waitUntilReady());
   return space;
 });
+
+/** Add a settings object to the space and name it on its properties. */
+const nameSettings = (space: Space, shared: AppSettings.Namespaces): AppSettings.AppSettings => {
+  const settings = space.db.add(AppSettings.make());
+  Obj.update(settings, (settings) => {
+    settings.shared = shared;
+  });
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+  });
+  return settings;
+};
+
+const loadNamedSettings = (space: Space) =>
+  Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrThrow, Database.load);
 
 /** The space list replays on subscribe, so the current state is checked before any wait. */
 const awaitCondition = (client: Client, predicate: () => boolean): Effect.Effect<void> =>
