@@ -13,6 +13,7 @@
 //   GET /v1/<project>/live/<causal>/index.json    meta, names, tasks, comments, events and features
 //   GET /v1/<project>/live/<causal>/def/<page>.json   a definition's page (`_Bool` for `#Bool`)
 //   GET /v1/<project>/live/<causal>/change/<causal>.json   a change's page
+//   GET /v1/<project>/live/<causal>/doc/<Doc>.json   a spec document's page (`Address.Spec`, D196)
 
 import { addressOfFolder } from './address.mjs';
 import * as runtime from './gen/deus-runtime.mjs';
@@ -25,6 +26,8 @@ const HASH = /^[0-9a-f]{64}$/;
 const BUILTIN = /^#[A-Za-z][A-Za-z0-9_.]{0,99}$/;
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
 const PAGE = /^(_[A-Za-z][A-Za-z0-9_.]{0,99}|[0-9a-f]{64}(\.[0-9]{1,6})?)\.json$/;
+/** A spec document is named like a namespace: `Address.Spec`, `Toolchain.Features`. */
+const DOC = /^[A-Za-z][A-Za-z0-9_]{0,99}(\.[A-Za-z][A-Za-z0-9_]{0,99}){0,9}\.json$/;
 /** A member of a recursive group: its group's hash and its position. */
 const MEMBER = /^[0-9a-f]{64}\.[0-9]{1,6}$/;
 /** Passes a run may take before it gives up: each one fetches everything the last one missed. */
@@ -41,24 +44,25 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
     if (!BRANCH.test(branch)) {
       throw new HttpError(404, 'a live explorer is /live/<branch> or /live/<causal>/…');
     }
-    const head = await readHead(env, project, branch);
-    if (!head) {
+    const shown = await liveHead(env, ctx, project, branch);
+    if (!shown) {
       throw new HttpError(404, `no branch ${branch}`);
     }
-    return json(await shownHead(env, project, branch, head));
+    return json(shown);
   }
   const causal = first;
   const path = more.join('/');
   if (
     path !== 'index.json' &&
-    !(more.length === 2 && (more[0] === 'def' || more[0] === 'change') && PAGE.test(more[1]))
+    !(more.length === 2 && (more[0] === 'def' || more[0] === 'change') && PAGE.test(more[1])) &&
+    !(more.length === 2 && more[0] === 'doc' && DOC.test(more[1]))
   ) {
     throw new HttpError(404, 'not found');
   }
   const key = `${project}/live/${causal}/${path}`;
-  const stored = await env.BUCKET.get(key);
-  if (stored) {
-    return page(stored.body);
+  const stored = await storedPage(env, ctx, key);
+  if (stored !== undefined) {
+    return page(stored);
   }
   // One render per page at a time; a request for a page being drawn waits for it, and the request that
   // starts it stores it.
@@ -87,6 +91,52 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
     }
   }
   return page(await rendering);
+};
+
+/** Seconds KV keeps a branch's shown head: D195 already shows a head up to a minute behind, and 60 s is KV's shortest TTL. */
+const HEAD_TTL = 60;
+/** Seconds KV keeps a drawn page: a page never changes, so the TTL only bounds what KV holds. */
+const PAGE_TTL = 7 * 24 * 3600;
+
+const headCacheKey = (project, branch) => `head:${project}:${branch}`;
+
+/** Writes to the `CACHE` KV namespace when the Worker has one; a failed write only costs a later miss. */
+const remember = (env, ctx, key, value, ttl) => {
+  if (env.CACHE) {
+    ctx.waitUntil(
+      env.CACHE.put(key, value, { expirationTtl: ttl }).catch((error) => console.error(`caching ${key} failed`, error)),
+    );
+  }
+};
+
+/** `{ branch, causal, drawing? }` for the head a visitor of `branch` is shown, or undefined without the branch; cached in KV. */
+export const liveHead = async (env, ctx, project, branch) => {
+  const cached = await env.CACHE?.get(headCacheKey(project, branch));
+  if (cached) {
+    return JSON.parse(cached);
+  }
+  const head = await readHead(env, project, branch);
+  if (!head) {
+    return undefined;
+  }
+  const shown = await shownHead(env, project, branch, head);
+  remember(env, ctx, headCacheKey(project, branch), JSON.stringify(shown), HEAD_TTL);
+  return shown;
+};
+
+/** A drawn page's text from KV, else from the bucket (and then kept in KV), or undefined when it is not drawn. */
+const storedPage = async (env, ctx, key) => {
+  const cached = await env.CACHE?.get(key);
+  if (cached !== null && cached !== undefined) {
+    return cached;
+  }
+  const stored = await env.BUCKET.get(key);
+  if (!stored) {
+    return undefined;
+  }
+  const text = await stored.text();
+  remember(env, ctx, key, text, PAGE_TTL);
+  return text;
 };
 
 /** The head the queue last drew for each branch, under `<project>/live/shown/<branch>`. */
@@ -152,6 +202,14 @@ export const warmLive = async (env, ctx, project) => {
       drawn: true,
     });
     await env.BUCKET.put(shownKey(project, 'main'), head.causal, { httpMetadata: { contentType: 'text/plain' } });
+    // Visitors move to the new head now rather than when the cached one expires.
+    remember(
+      env,
+      ctx,
+      headCacheKey(project, 'main'),
+      JSON.stringify({ branch: 'main', causal: head.causal }),
+      HEAD_TTL,
+    );
     // The overview links its head's change first.
     await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'change', `${head.causal}.json`]);
     // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
@@ -244,6 +302,13 @@ const draw = async (env, files, project, causal, path) => {
     });
     await recordDrawn(env.BUCKET, project, causal);
     return text;
+  }
+  if (path[0] === 'doc') {
+    const doc = await run(files, () => explorer.raw.liveDoc(site, path[1].slice(0, -'.json'.length)));
+    if (doc === '') {
+      throw new HttpError(404, 'no such spec document');
+    }
+    return doc;
   }
   const name = path[1].slice(0, -'.json'.length);
   const hash = name.startsWith('_') ? `#${name.slice(1)}` : name;

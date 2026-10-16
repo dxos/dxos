@@ -40,6 +40,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         'Explorer.liveIndex',
         'Explorer.liveDef',
         'Explorer.liveChange',
+        'Explorer.liveDoc',
         '-o',
         join(gen, 'explorer-live.js'),
         '--js',

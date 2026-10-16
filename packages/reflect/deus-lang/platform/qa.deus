@@ -25,7 +25,9 @@
   - `actor:` the object the step's request goes to (default `qa`), for handlers with `Actors`.
 
   `deus mdl` runs the steps in order in `Web.simulateMany`, so a flow is deterministic and needs
-  no server; the first step that fails is reported with what it got.
+  no server; the first step that fails is reported with what it got. `deus mdl --base <url>` sends
+  the same steps to a running server instead (`deus serve`, a built `--server`, or a deployed
+  Worker), each to its actor's object as `?actor=<name>`.
 -/
 
 namespace Qa
@@ -101,6 +103,28 @@ def simulate (handler : Request -> {Storage, Http, Actors, Alarm | r} Response) 
         else label ++ " failed: " ++ req.verb ++ " " ++ req.url ++ " answered " ++ Int.toText response.status ++ " " ++ excerpt response.content
     judge (List.zip steps responses)
 
+/-- `req` sent to the server at `base` for the object `actor`, as curl got it; status 0 when it could not connect. -/
+def send (base : Text) (actor : Text) (req : Request) : {IO} Response :=
+  let separator := if Text.contains "?" req.url then "&" else "?"
+  let url := base ++ req.url ++ separator ++ "actor=" ++ actor
+  let payload := if req.verb == "GET" || req.verb == "HEAD" then [] else ["--data-binary", req.payload]
+  let (_, out, err) := IO.exec "curl" (["-sS", "--max-time", "60", "-X", req.verb, "-w", "\n%{http_code}"] ++ payload ++ [url])
+  let lines := Text.lines out
+  let status := Option.getOr (Option.bind (List.last? lines) Int.fromText) 0
+  Response.mk status (if status == 0 then err else Text.join "\n" (List.take (List.length lines - 1) lines)) []
+
+/-- Runs `steps` in order against the server at `base` and returns the first failure, or "" when every step holds. -/
+def live (base : Text) (steps : List (Text, Text, Request, Int -> Text -> Response -> Bool)) : {IO} Text :=
+  let rec go rest :=
+    match rest with
+    | [] => ""
+    | (label, actor, req, holds) :: more =>
+      let response := send base actor req
+      -- Status 0 is no answer at all, which no step's default `status < 400` should accept.
+      if response.status != 0 && holds response.status response.content response then go more
+      else label ++ " failed: " ++ req.verb ++ " " ++ req.url ++ " answered " ++ Int.toText response.status ++ " " ++ excerpt response.content
+  go steps
+
 /-- The `qa` block type. -/
 @[ext "org.dxos.deus.qa@1.0"]
 def check (b : Block) : {MdlHost} List Text :=
@@ -117,7 +141,10 @@ def check (b : Block) : {MdlHost} List Text :=
       let runnable := List.filterMap (fun p => stepSource (fst p) (snd p)) places
       if List.isEmpty runnable then []
       else
-        match MdlHost.run ("Qa.simulate " ++ handler ++ " [" ++ Text.join ", " runnable ++ "]") with
+        let runner := match MdlHost.setting "base" with
+          | some base => "Qa.live " ++ literal base
+          | none => "Qa.simulate " ++ handler
+        match MdlHost.run (runner ++ " [" ++ Text.join ", " runnable ++ "]") with
         | Result.err message => [message]
         | Result.ok "" => []
         | Result.ok failure => [failure]

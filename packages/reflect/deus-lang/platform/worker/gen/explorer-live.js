@@ -84,6 +84,15 @@ function Explorer$liveChange(dir, causal) {
 }
 rt.named(Explorer$liveChange, "Explorer.liveChange");
 
+function Explorer$liveDoc(s, d) {
+  if (List$contains(d, Export$specDocuments(Explorer$Site$ns(s)))) {
+    return Json$render(Explorer$docJson(s, d));
+  } else {
+    return "";
+  }
+}
+rt.named(Explorer$liveDoc, "Explorer.liveDoc");
+
 function Codebase$current(dir) {
   return Codebase$namespaceOf(dir, Codebase$currentBranch(dir));
 }
@@ -1034,6 +1043,57 @@ function Explorer$changePage(dir, causal) {
 }
 rt.named(Explorer$changePage, "Explorer.changePage");
 
+function List$contains(x, xs) {
+  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+}
+rt.named(List$contains, "List.contains");
+
+function Export$specDocuments(ns) {
+  return List$dedup(List$sort(List$filterMap(rt.named((pair) => {
+  m0: {
+    if (pair.tag === 0 && pair.fields[1].tag === 7) {
+      const name = pair.fields[0];
+      return new rt.Con("#Option", 1, [Export$documentOf(name)]);
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(pair);
+  }
+}, "Export.specDocuments/\u03bb"), Map$toList(ns))));
+}
+rt.named(Export$specDocuments, "Export.specDocuments");
+
+function Explorer$Site$ns(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      const v_9 = v.fields[8];
+      const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
+      const v_12 = v.fields[11];
+      const v_13 = v.fields[12];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Explorer$Site$ns, "Explorer.Site.ns");
+
+function Explorer$docJson(s, d) {
+  const text = Export$document(Explorer$Site$dir(s), Explorer$Site$ns(s), d);
+  const blockJson = rt.named((b) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["type", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Block$blockType(b)])]), rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Block$blockId(b)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Block$blockTitle(b)])]), rt.cons(new rt.Con("#Pair", 0, ["line", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [Block$lineNo(b)])]), rt.cons(new rt.Con("#Pair", 0, ["props", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [List$map(rt.named((p) => new rt.Con("#Pair", 0, [fst(p), new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [snd(p)])]), "Explorer.docJson/\u03bb"), Block$props(b))])]), rt.NIL)))))]), "Explorer.docJson/\u03bb");
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [d])]), rt.cons(new rt.Con("#Pair", 0, ["text", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [text])]), rt.cons(new rt.Con("#Pair", 0, ["blocks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(blockJson, Doc$blocks(Mdl$parse(text)))])]), rt.NIL)))]);
+}
+rt.named(Explorer$docJson, "Explorer.docJson");
+
 function Codebase$namespaceOf(dir, branch) {
   return Codebase$readNamespace(dir, Codebase$Causal$snapshot(Codebase$readCausal(dir, Codebase$headOf(dir, branch))));
 }
@@ -1954,29 +2014,6 @@ function Explorer$Site$dir(v) {
   }
 }
 rt.named(Explorer$Site$dir, "Explorer.Site.dir");
-
-function Explorer$Site$ns(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      const v_4 = v.fields[3];
-      const v_5 = v.fields[4];
-      const v_6 = v.fields[5];
-      const v_7 = v.fields[6];
-      const v_8 = v.fields[7];
-      const v_9 = v.fields[8];
-      const v_10 = v.fields[9];
-      const v_11 = v.fields[10];
-      const v_12 = v.fields[11];
-      const v_13 = v.fields[12];
-      return v_4;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Explorer$Site$ns, "Explorer.Site.ns");
 
 function Analytics$siteJson(dir, project, ns, limit) {
   const ts = Analytics$types(dir, ns);
@@ -2923,6 +2960,373 @@ function Explorer$atJson(dir, causal) {
 }
 rt.named(Explorer$atJson, "Explorer.atJson");
 
+function List$any(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return false;
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return true;
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$any, "List.any");
+
+function Export$documentOf(name) {
+  const parts = rt.ap(rt.prims["Text.split"], name, ".");
+  return rt.ap(rt.prims["Text.join"], ".", List$take(((List$length(parts) - 1) | 0), parts));
+}
+rt.named(Export$documentOf, "Export.documentOf");
+
+function Export$document(dir, ns, d) {
+  const blocks = List$filterMap(rt.named((pair) => {
+  m0: {
+    if (pair.tag === 0 && pair.fields[1].tag === 7) {
+      const name = pair.fields[0];
+      const h = pair.fields[1].fields[0];
+      if (rt.equal(Export$documentOf(name), d)) {
+        return Option$map(rt.named((obj) => {
+          const meta = Codebase$readMeta(dir, h);
+          let order;
+          const t1 = Codebase$metaField(meta, "order");
+          m2: {
+            if (t1.tag === 1 && t1.fields[0].tag === 0) {
+              const k = t1.fields[0].fields[0];
+              order = k;
+              break m2;
+            }
+            if (true) {
+              order = 1000000;
+              break m2;
+            }
+            rt.nomatch(t1);
+          }
+          return new rt.Con("#Pair", 0, [order, new rt.Con("#Pair", 0, [name, new rt.Con("#Pair", 0, [Mdl$fromSexp(obj), meta])])]);
+        }, "Export.document/\u03bb"), Codebase$readObject(dir, h));
+      } else {
+        return rt.con0("#Option", 0);
+      }
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(pair);
+  }
+}, "Export.document/\u03bb"), Map$toList(ns));
+  const sorted = List$sortBy(rt.named((a, b) => {
+  const t3 = new rt.Con("#Pair", 0, [a, b]);
+  m4: {
+    if (t3.tag === 0 && t3.fields[0].tag === 0 && t3.fields[0].fields[1].tag === 0 && t3.fields[0].fields[1].fields[1].tag === 0 && t3.fields[1].tag === 0 && t3.fields[1].fields[1].tag === 0 && t3.fields[1].fields[1].fields[1].tag === 0) {
+      const oa = t3.fields[0].fields[0];
+      const na = t3.fields[0].fields[1].fields[0];
+      const ob = t3.fields[1].fields[0];
+      const nb = t3.fields[1].fields[1].fields[0];
+      if (rt.equal(oa, ob)) {
+        return rt.ap(rt.prims["compare"], na, nb);
+      } else {
+        return rt.ap(rt.prims["compare"], oa, ob);
+      }
+    }
+    rt.nomatch(t3);
+  }
+}, "Export.document/\u03bb"), blocks);
+  const text = rt.named((meta_1, key) => Option$getOr(Option$map(Sexp$asText, Codebase$metaField(meta_1, key)), ""), "Export.document/\u03bb");
+  let front;
+  m5: {
+    if (sorted.tag === 1 && sorted.fields[0].tag === 0 && sorted.fields[0].fields[1].tag === 0 && sorted.fields[0].fields[1].fields[1].tag === 0) {
+      const meta_2 = sorted.fields[0].fields[1].fields[1].fields[1];
+      front = List$filterMap(rt.named((kv) => {
+      m6: {
+        if (kv.tag === 3 && kv.fields[0].tag === 1 && kv.fields[0].fields[1].tag === 1 && kv.fields[0].fields[1].fields[1].tag === 0) {
+          const k_1 = kv.fields[0].fields[0];
+          const v = kv.fields[0].fields[1].fields[0];
+          return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Sexp$asText(k_1), Sexp$asText(v)])]);
+        }
+        if (true) {
+          return rt.con0("#Option", 0);
+        }
+        rt.nomatch(kv);
+      }
+    }, "Export.document/\u03bb"), Codebase$metaList(meta_2, "front"));
+      break m5;
+    }
+    if (sorted.tag === 0) {
+      front = rt.NIL;
+      break m5;
+    }
+    rt.nomatch(sorted);
+  }
+  let frontLines;
+  if (List$any(rt.named((kv_1) => (fst(kv_1) === "name"), "Export.document/\u03bb"), front)) {
+    frontLines = front;
+  } else {
+    frontLines = rt.cons(new rt.Con("#Pair", 0, ["name", d]), List$filter(rt.named((kv_2) => (fst(kv_2) !== "name"), "Export.document/\u03bb"), front));
+  }
+  const terms = List$dedup(List$sort(List$map(rt.named((x) => {
+  m7: {
+    if (x.tag === 0 && x.fields[1].tag === 0 && x.fields[1].fields[1].tag === 0 && x.fields[1].fields[1].fields[0].tag === 0) {
+      const uri = x.fields[1].fields[1].fields[0].fields[0];
+      const b_1 = x.fields[1].fields[1].fields[0].fields[1];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "| `", Block$blockType(b_1)), "` | `"), uri), "` |");
+    }
+    rt.nomatch(x);
+  }
+}, "Export.document/\u03bb"), sorted)));
+  const table = rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.cons("| Term | URI |", rt.cons("| --- | --- |", rt.NIL)), terms));
+  const pieces = List$concatMap(rt.named((x_1) => {
+  m8: {
+    if (x_1.tag === 0 && x_1.fields[1].tag === 0 && x_1.fields[1].fields[1].tag === 0 && x_1.fields[1].fields[1].fields[0].tag === 0) {
+      const b_2 = x_1.fields[1].fields[1].fields[0].fields[1];
+      const meta_3 = x_1.fields[1].fields[1].fields[1];
+      return List$filter(rt.named((t) => not(Text$isEmpty(t)), "Export.document/\u03bb"), rt.cons(rt.ap(text, meta_3, "lead"), rt.cons(Mdl$render(b_2), rt.NIL)));
+    }
+    rt.nomatch(x_1);
+  }
+}, "Export.document/\u03bb"), sorted);
+  let tail;
+  const t9 = List$last$p(sorted);
+  m10: {
+    if (t9.tag === 1 && t9.fields[0].tag === 0 && t9.fields[0].fields[1].tag === 0 && t9.fields[0].fields[1].fields[1].tag === 0) {
+      const meta_4 = t9.fields[0].fields[1].fields[1].fields[1];
+      tail = rt.ap(text, meta_4, "tail");
+      break m10;
+    }
+    if (t9.tag === 0) {
+      tail = "";
+      break m10;
+    }
+    rt.nomatch(t9);
+  }
+  let bodyLines;
+  let r11;
+  if (Text$isEmpty(tail)) {
+    r11 = rt.NIL;
+  } else {
+    r11 = rt.cons(tail, rt.NIL);
+  }
+  const t12 = rt.ap(rt.prims["append"], pieces, r11);
+  const t13 = rt.ap(rt.prims["Text.join"], "\n\n", t12);
+  bodyLines = Text$lines(t13);
+  const isExtensions = rt.named((l) => {
+  if (Text$startsWith("#", rt.ap(rt.prims["Text.trim"], l))) {
+    return (Mdl$headingOf(rt.ap(rt.prims["Text.trim"], l)) === "Extensions");
+  } else {
+    return false;
+  }
+}, "Export.document/\u03bb");
+  let body;
+  if (List$any(isExtensions, bodyLines)) {
+    const at = List$findIndex(isExtensions, bodyLines);
+    body = rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], List$take(((at + 1) | 0), bodyLines), rt.cons("", rt.cons(table, rt.NIL))), List$drop(((at + 1) | 0), bodyLines)));
+  } else {
+    body = rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.cons("## Extensions", rt.cons("", rt.cons(table, rt.cons("", rt.NIL)))), bodyLines));
+  }
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons("---", rt.NIL), List$map(rt.named((kv_3) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], fst(kv_3), ": "), snd(kv_3)), "Export.document/\u03bb"), frontLines)), rt.cons("---", rt.cons("", rt.cons(body, rt.NIL))))), "\n");
+}
+rt.named(Export$document, "Export.document");
+
+function Block$blockType(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Block$blockType, "Block.blockType");
+
+function Block$blockId(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Block$blockId, "Block.blockId");
+
+function Block$blockTitle(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Block$blockTitle, "Block.blockTitle");
+
+function Block$lineNo(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_5;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Block$lineNo, "Block.lineNo");
+
+function Block$props(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Block$props, "Block.props");
+
+function Doc$blocks(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Doc$blocks, "Doc.blocks");
+
+function Mdl$parse(doc) {
+  const t0 = Mdl$frontmatter(List$mapIndexed(rt.named((i, l) => new rt.Con("#Pair", 0, [((i + 1) | 0), l]), "Mdl.parse/\u03bb"), Text$lines(doc)));
+  m1: {
+    if (t0.tag === 0) {
+      const front = t0.fields[0];
+      const lines = t0.fields[1];
+      function go(rest$, section$, fence$, terms$, blocks$) {
+        for (;;) {
+          const rest = rest$, section = section$, fence = fence$, terms = terms$, blocks = blocks$;
+          m2: {
+            if (rest.tag === 0) {
+              return new rt.Con("94c1d753b3f73fad63298db3874de68b5ec46b570c0c426e86d0983cc14f8c54", 0, [front, List$reverse(terms), List$reverse(blocks)]);
+            }
+            if (rest.tag === 1 && rest.fields[0].tag === 0) {
+              const n = rest.fields[0].fields[0];
+              const line = rest.fields[0].fields[1];
+              const more = rest.fields[1];
+              const t = rt.ap(rt.prims["Text.trim"], line);
+              m3: {
+                if (fence.tag === 1 && fence.fields[0].tag === 0 && fence.fields[0].fields[1].tag === 0) {
+                  const start = fence.fields[0].fields[0];
+                  const isMdl = fence.fields[0].fields[1].fields[0];
+                  const acc = fence.fields[0].fields[1].fields[1];
+                  if ((t === "```")) {
+                    const t4 = rt.con0("#Option", 0);
+                    let r5;
+                    if (isMdl) {
+                      r5 = rt.cons(Mdl$block(start, List$reverse(acc)), blocks);
+                    } else {
+                      r5 = blocks;
+                    }
+                    rest$ = more;
+                    section$ = section;
+                    fence$ = t4;
+                    terms$ = terms;
+                    blocks$ = r5;
+                    continue;
+                  } else {
+                    rest$ = more;
+                    section$ = section;
+                    fence$ = new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [start, new rt.Con("#Pair", 0, [isMdl, rt.cons(line, acc)])])]);
+                    terms$ = terms;
+                    blocks$ = blocks;
+                    continue;
+                  }
+                }
+                if (fence.tag === 0) {
+                  if (Text$startsWith("```", t)) {
+                    rest$ = more;
+                    section$ = section;
+                    fence$ = new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [((n + 1) | 0), new rt.Con("#Pair", 0, [(t === "```mdl"), rt.NIL])])]);
+                    terms$ = terms;
+                    blocks$ = blocks;
+                    continue;
+                  } else {
+                    if (Text$startsWith("#", t)) {
+                      rest$ = more;
+                      section$ = Mdl$headingOf(t);
+                      fence$ = rt.con0("#Option", 0);
+                      terms$ = terms;
+                      blocks$ = blocks;
+                      continue;
+                    } else {
+                      let r6;
+                      if ((section === "Extensions")) {
+                        r6 = Text$startsWith("|", t);
+                      } else {
+                        r6 = false;
+                      }
+                      if (r6) {
+                        rest$ = more;
+                        section$ = section;
+                        fence$ = rt.con0("#Option", 0);
+                        terms$ = Option$getOr(Option$map(rt.named((row) => rt.cons(row, terms), "Mdl.parse/\u03bb"), Mdl$termRow(t)), terms);
+                        blocks$ = blocks;
+                        continue;
+                      } else {
+                        rest$ = more;
+                        section$ = section;
+                        fence$ = rt.con0("#Option", 0);
+                        terms$ = terms;
+                        blocks$ = blocks;
+                        continue;
+                      }
+                    }
+                  }
+                }
+                rt.nomatch(fence);
+              }
+            }
+            rt.nomatch(rest);
+          }
+        }
+      }
+      rt.named(go, "go");
+      return rt.ap(go, lines, "", rt.con0("#Option", 0), rt.NIL, rt.NIL);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Mdl$parse, "Mdl.parse");
+
 function Sexp$readAll(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
   function readString(i$, start$, acc$) {
@@ -3551,22 +3955,6 @@ function Analytics$rows(dir, t) {
 }
 rt.named(Analytics$rows, "Analytics.rows");
 
-function Export$specDocuments(ns) {
-  return List$dedup(List$sort(List$filterMap(rt.named((pair) => {
-  m0: {
-    if (pair.tag === 0 && pair.fields[1].tag === 7) {
-      const name = pair.fields[0];
-      return new rt.Con("#Option", 1, [Export$documentOf(name)]);
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(pair);
-  }
-}, "Export.specDocuments/\u03bb"), Map$toList(ns))));
-}
-rt.named(Export$specDocuments, "Export.specDocuments");
-
 function Cli$featureFacts(dir, ns) {
   const tasks = rt.ap(rt.prims["Ref.new"], rt.con0("#Option", 0));
   const documents = Export$specDocuments(ns);
@@ -3907,12 +4295,6 @@ function Cli$featureNotes(facts, fs, bad) {
 }
 rt.named(Cli$featureNotes, "Cli.featureNotes");
 
-function Export$documentOf(name) {
-  const parts = rt.ap(rt.prims["Text.split"], name, ".");
-  return rt.ap(rt.prims["Text.join"], ".", List$take(((List$length(parts) - 1) | 0), parts));
-}
-rt.named(Export$documentOf, "Export.documentOf");
-
 function Mdl$fromSexp(form) {
   const t0 = Sexp$args(form);
   m1: {
@@ -3944,21 +4326,6 @@ function Mdl$fromSexp(form) {
 }
 rt.named(Mdl$fromSexp, "Mdl.fromSexp");
 
-function Block$blockType(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      const v_4 = v.fields[3];
-      const v_5 = v.fields[4];
-      return v_1;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Block$blockType, "Block.blockType");
-
 function Features$fromBlock(b) {
   const status = Features$prop(b, "status");
   if (Text$isEmpty(status)) {
@@ -3972,21 +4339,6 @@ function Features$fromBlock(b) {
   }
 }
 rt.named(Features$fromBlock, "Features.fromBlock");
-
-function Block$blockId(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      const v_4 = v.fields[3];
-      const v_5 = v.fields[4];
-      return v_2;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Block$blockId, "Block.blockId");
 
 function Sexp$hex4(c) {
   return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Sexp$hexDigit(((c >> 12) & 15)), Sexp$hexDigit(((c >> 8) & 15))), Sexp$hexDigit(((c >> 4) & 15))), Sexp$hexDigit((c & 15)));
@@ -4754,6 +5106,189 @@ function Cli$madeAt(dir, causal) {
 }
 rt.named(Cli$madeAt, "Cli.madeAt");
 
+function Mdl$render(b) {
+  let head;
+  const t0 = Block$blockType(b);
+  let r1;
+  if (Text$isEmpty(Block$blockId(b))) {
+    r1 = "";
+  } else {
+    r1 = rt.ap(rt.prims["append"], " ", Block$blockId(b));
+  }
+  const t2 = rt.ap(rt.prims["append"], t0, r1);
+  let r3;
+  if (Text$isEmpty(Block$blockTitle(b))) {
+    r3 = "";
+  } else {
+    r3 = rt.ap(rt.prims["append"], ": ", Block$blockTitle(b));
+  }
+  head = rt.ap(rt.prims["append"], t2, r3);
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "```mdl\n", head), rt.ap(rt.prims["Text.concat"], List$map(rt.named((kv) => {
+  const t4 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n  ", fst(kv)), ":");
+  let r5;
+  if (Text$contains("\n", snd(kv))) {
+    r5 = rt.ap(rt.prims["Text.concat"], List$map(rt.named((l) => {
+      if (Text$startsWith("  ", l)) {
+        return rt.ap(rt.prims["append"], "\n    ", rt.ap(rt.prims["Text.trim"], l));
+      } else {
+        return rt.ap(rt.prims["append"], "\n  - ", l);
+      }
+    }, "Mdl.render/\u03bb"), Text$lines(snd(kv))));
+  } else {
+    r5 = rt.ap(rt.prims["append"], " ", snd(kv));
+  }
+  return rt.ap(rt.prims["append"], t4, r5);
+}, "Mdl.render/\u03bb"), Block$props(b)))), "\n```");
+}
+rt.named(Mdl$render, "Mdl.render");
+
+function Mdl$headingOf(t) {
+  function go(i$) {
+    for (;;) {
+      const i = i$;
+      let r0;
+      if (rt.ap(rt.prims["lt"], i, rt.ap(rt.prims["Text.length"], t))) {
+        r0 = (rt.ap(rt.prims["Text.code"], t, i) === 35);
+      } else {
+        r0 = false;
+      }
+      if (r0) {
+        i$ = ((i + 1) | 0);
+        continue;
+      } else {
+        return i;
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(rt.prims["Text.trim"], Text$drop(rt.ap(go, 0), t));
+}
+rt.named(Mdl$headingOf, "Mdl.headingOf");
+
+function List$findIndex(p, xs) {
+  function go(i$, ys$) {
+    for (;;) {
+      const i = i$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return (-1);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          if (rt.ap(p, y)) {
+            return i;
+          } else {
+            i$ = ((i + 1) | 0);
+            ys$ = rest;
+            continue;
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, 0, xs);
+}
+rt.named(List$findIndex, "List.findIndex");
+
+function Mdl$frontmatter(lines) {
+  m0: {
+    if (lines.tag === 0) {
+      return new rt.Con("#Pair", 0, [rt.NIL, rt.NIL]);
+    }
+    if (lines.tag === 1 && lines.fields[0].tag === 0) {
+      const first = lines.fields[0].fields[1];
+      const rest = lines.fields[1];
+      if ((rt.ap(rt.prims["Text.trim"], first) === "---")) {
+        const n = List$findIndex(rt.named((p) => (rt.ap(rt.prims["Text.trim"], snd(p)) === "---"), "Mdl.frontmatter/\u03bb"), rest);
+        if ((n < 0)) {
+          return new rt.Con("#Pair", 0, [rt.NIL, lines]);
+        } else {
+          return new rt.Con("#Pair", 0, [List$filterMap(rt.named((p_1) => Mdl$keyValue(snd(p_1)), "Mdl.frontmatter/\u03bb"), List$take(n, rest)), List$drop(((n + 1) | 0), rest)]);
+        }
+      } else {
+        return new rt.Con("#Pair", 0, [rt.NIL, lines]);
+      }
+    }
+    rt.nomatch(lines);
+  }
+}
+rt.named(Mdl$frontmatter, "Mdl.frontmatter");
+
+function List$mapIndexed(f, xs) {
+  function go(i$, acc$, ys$) {
+    for (;;) {
+      const i = i$, acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          i$ = ((i + 1) | 0);
+          acc$ = rt.cons(rt.ap(f, i, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, 0, rt.NIL, xs);
+}
+rt.named(List$mapIndexed, "List.mapIndexed");
+
+function Mdl$block(start, lines) {
+  const t0 = List$filter(rt.named((l) => not(Text$isEmpty(rt.ap(rt.prims["Text.trim"], l))), "Mdl.block/\u03bb"), lines);
+  m1: {
+    if (t0.tag === 0) {
+      return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, ["", "", "", rt.NIL, start]);
+    }
+    if (t0.tag === 1) {
+      const first = t0.fields[0];
+      const rest = t0.fields[1];
+      const t2 = Mdl$header(rt.ap(rt.prims["Text.trim"], first), start);
+      m3: {
+        if (t2.tag === 0) {
+          const v = t2.fields[0];
+          const v_1 = t2.fields[1];
+          const v_2 = t2.fields[2];
+          const v_3 = t2.fields[3];
+          const v_4 = t2.fields[4];
+          return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, [v, v_1, v_2, Mdl$body(rest), v_4]);
+        }
+        rt.nomatch(t2);
+      }
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Mdl$block, "Mdl.block");
+
+function Mdl$termRow(line) {
+  const t0 = List$map(rt.prims["Text.trim"], rt.ap(rt.prims["Text.split"], line, "|"));
+  m1: {
+    if (t0.tag === 1 && t0.fields[0] === "" && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 1) {
+      const term = t0.fields[1].fields[0];
+      const uri = t0.fields[1].fields[1].fields[0];
+      if (Text$startsWith("`", term)) {
+        return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Mdl$unquote(term), Mdl$unquote(uri)])]);
+      } else {
+        return rt.con0("#Option", 0);
+      }
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Mdl$termRow, "Mdl.termRow");
+
 function Sexp$hexValue(c) {
   let r0;
   if ((c >= 48)) {
@@ -5146,30 +5681,6 @@ function Tasks$commentFromSexp(c) {
 }
 rt.named(Tasks$commentFromSexp, "Tasks.commentFromSexp");
 
-function List$any(p$, v$) {
-  for (;;) {
-    const p = p$, v = v$;
-    m0: {
-      if (v.tag === 0) {
-        return false;
-      }
-      if (v.tag === 1) {
-        const x = v.fields[0];
-        const rest = v.fields[1];
-        if (rt.ap(p, x)) {
-          return true;
-        } else {
-          p$ = p;
-          v$ = rest;
-          continue;
-        }
-      }
-      rt.nomatch(v);
-    }
-  }
-}
-rt.named(List$any, "List.any");
-
 function Analytics$columnTypeOf(t) {
   m0: {
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tref" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[1].tag === 0) {
@@ -5526,11 +6037,6 @@ function Resolve$isStub(core$) {
 }
 rt.named(Resolve$isStub, "Resolve.isStub");
 
-function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
-}
-rt.named(List$contains, "List.contains");
-
 function Features$orphans(features) {
   const ids = List$map(rt.named((f) => Feature$featureId(f), "Features.orphans/\u03bb"), features);
   return List$filterMap(rt.named((f_1) => {
@@ -5555,21 +6061,6 @@ function Features$prop(b, key) {
 rt.named(Features$prop, "Features.prop");
 
 const Features$statuses = rt.lazy("Features.statuses", () => rt.cons("planned", rt.cons("building", rt.cons("shipped", rt.cons("dropped", rt.NIL)))));
-
-function Block$blockTitle(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      const v_4 = v.fields[3];
-      const v_5 = v.fields[4];
-      return v_3;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Block$blockTitle, "Block.blockTitle");
 
 function Features$items(t) {
   const unbullet = rt.named((w) => {
@@ -6136,6 +6627,129 @@ function Codebase$Causal$at(v) {
   }
 }
 rt.named(Codebase$Causal$at, "Codebase.Causal.at");
+
+function Mdl$keyValue(line) {
+  const i = rt.ap(rt.prims["Text.indexOf"], line, ":", 0);
+  if ((i <= 0)) {
+    return rt.con0("#Option", 0);
+  } else {
+    const key = rt.ap(rt.prims["Text.trim"], Text$take(i, line));
+    if (List$all(rt.named((j) => Mdl$isKeyChar(rt.ap(rt.prims["Text.code"], key, j)), "Mdl.keyValue/\u03bb"), List$range(0, rt.ap(rt.prims["Text.length"], key)))) {
+      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [key, Mdl$uncomment(rt.ap(rt.prims["Text.trim"], Text$drop(((i + 1) | 0), line)))])]);
+    } else {
+      return rt.con0("#Option", 0);
+    }
+  }
+}
+rt.named(Mdl$keyValue, "Mdl.keyValue");
+
+function Mdl$header(line, at) {
+  const colon = rt.ap(rt.prims["Text.indexOf"], line, ":", 0);
+  let head;
+  if ((colon < 0)) {
+    head = line;
+  } else {
+    head = Text$take(colon, line);
+  }
+  let title;
+  if ((colon < 0)) {
+    title = "";
+  } else {
+    title = rt.ap(rt.prims["Text.trim"], Text$drop(((colon + 1) | 0), line));
+  }
+  const t0 = List$filter(rt.named((w) => not(Text$isEmpty(w)), "Mdl.header/\u03bb"), rt.ap(rt.prims["Text.split"], rt.ap(rt.prims["Text.trim"], head), " "));
+  m1: {
+    if (t0.tag === 0) {
+      return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, ["", "", title, rt.NIL, at]);
+    }
+    if (t0.tag === 1 && t0.fields[1].tag === 0) {
+      const kind = t0.fields[0];
+      return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, [kind, "", title, rt.NIL, at]);
+    }
+    if (t0.tag === 1 && t0.fields[1].tag === 1) {
+      const kind_1 = t0.fields[0];
+      const ident = t0.fields[1].fields[0];
+      return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, [kind_1, ident, title, rt.NIL, at]);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Mdl$header, "Mdl.header");
+
+function Mdl$body(lines) {
+  let base;
+  const t0 = List$filter(rt.named((l) => not(Text$isEmpty(rt.ap(rt.prims["Text.trim"], l))), "Mdl.body/\u03bb"), lines);
+  m1: {
+    if (t0.tag === 0) {
+      base = 0;
+      break m1;
+    }
+    if (t0.tag === 1) {
+      const first = t0.fields[0];
+      base = Mdl$indentOf(first);
+      break m1;
+    }
+    rt.nomatch(t0);
+  }
+  return List$reverse(List$foldl(rt.named((acc, line) => {
+  const t = rt.ap(rt.prims["Text.trim"], line);
+  let r2;
+  if (Text$isEmpty(t)) {
+    r2 = true;
+  } else {
+    r2 = Text$startsWith("#", t);
+  }
+  if (r2) {
+    return acc;
+  } else {
+    if (Text$startsWith("- ", t)) {
+      return Mdl$continueWith(acc, Text$drop(2, t));
+    } else {
+      const t3 = Mdl$keyValue(t);
+      m4: {
+        if (t3.tag === 1) {
+          const kv = t3.fields[0];
+          let r5;
+          if (rt.ap(rt.prims["gt"], Mdl$indentOf(line), base)) {
+            r5 = not(List$isEmpty(acc));
+          } else {
+            r5 = false;
+          }
+          if (r5) {
+            return Mdl$continueWith(acc, rt.ap(rt.prims["append"], "  ", t));
+          } else {
+            return rt.cons(kv, acc);
+          }
+        }
+        if (t3.tag === 0) {
+          return Mdl$continueWith(acc, t);
+        }
+        rt.nomatch(t3);
+      }
+    }
+  }
+}, "Mdl.body/\u03bb"), rt.NIL, lines));
+}
+rt.named(Mdl$body, "Mdl.body");
+
+function Mdl$unquote(t) {
+  let r0;
+  if ((rt.ap(rt.prims["Text.length"], t) >= 2)) {
+    if (Text$startsWith("`", t)) {
+      r0 = Text$endsWith("`", t);
+    } else {
+      r0 = false;
+    }
+  } else {
+    r0 = false;
+  }
+  if (r0) {
+    return rt.ap(rt.prims["Text.slice"], t, 1, ((rt.ap(rt.prims["Text.length"], t) - 1) | 0));
+  } else {
+    return t;
+  }
+}
+rt.named(Mdl$unquote, "Mdl.unquote");
 
 function Sexp$quote(t) {
   if (Sexp$plain(t)) {
@@ -6708,21 +7322,6 @@ function Resolve$stubOf(body) {
 }
 rt.named(Resolve$stubOf, "Resolve.stubOf");
 
-function Block$props(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      const v_4 = v.fields[3];
-      const v_5 = v.fields[4];
-      return v_4;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Block$props, "Block.props");
-
 function Text$replace(old, _new, t) {
   return rt.ap(rt.prims["Text.join"], _new, rt.ap(rt.prims["Text.split"], t, old));
 }
@@ -7112,42 +7711,6 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
   }
 }
 rt.named(Ts$abilityDecl, "Ts.abilityDecl");
-
-function Mdl$render(b) {
-  let head;
-  const t0 = Block$blockType(b);
-  let r1;
-  if (Text$isEmpty(Block$blockId(b))) {
-    r1 = "";
-  } else {
-    r1 = rt.ap(rt.prims["append"], " ", Block$blockId(b));
-  }
-  const t2 = rt.ap(rt.prims["append"], t0, r1);
-  let r3;
-  if (Text$isEmpty(Block$blockTitle(b))) {
-    r3 = "";
-  } else {
-    r3 = rt.ap(rt.prims["append"], ": ", Block$blockTitle(b));
-  }
-  head = rt.ap(rt.prims["append"], t2, r3);
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "```mdl\n", head), rt.ap(rt.prims["Text.concat"], List$map(rt.named((kv) => {
-  const t4 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n  ", fst(kv)), ":");
-  let r5;
-  if (Text$contains("\n", snd(kv))) {
-    r5 = rt.ap(rt.prims["Text.concat"], List$map(rt.named((l) => {
-      if (Text$startsWith("  ", l)) {
-        return rt.ap(rt.prims["append"], "\n    ", rt.ap(rt.prims["Text.trim"], l));
-      } else {
-        return rt.ap(rt.prims["append"], "\n  - ", l);
-      }
-    }, "Mdl.render/\u03bb"), Text$lines(snd(kv))));
-  } else {
-    r5 = rt.ap(rt.prims["append"], " ", snd(kv));
-  }
-  return rt.ap(rt.prims["append"], t4, r5);
-}, "Mdl.render/\u03bb"), Block$props(b)))), "\n```");
-}
-rt.named(Mdl$render, "Mdl.render");
 
 function Print$commentLines(text, ind) {
   return rt.ap(rt.prims["Text.concat"], List$map(rt.named((l) => {
@@ -7833,6 +8396,107 @@ rt.named(Highlight$isWordChar, "Highlight.isWordChar");
 const Highlight$tsKeywords = rt.lazy("Highlight.tsKeywords", () => Set$fromList(rt.cons("function", rt.cons("const", rt.cons("return", rt.cons("switch", rt.cons("case", rt.cons("if", rt.cons("else", rt.cons("try", rt.cons("handle", rt.cons("do", rt.cons("uses", rt.cons("type", rt.cons("interface", rt.cons("ability", rt.cons("test", rt.cons("theorem", rt.cons("by", rt.cons("prim", rt.cons("sorry", rt.cons("undefined", rt.cons("true", rt.cons("false", rt.NIL))))))))))))))))))))))));
 
 const Highlight$keywords = rt.lazy("Highlight.keywords", () => Set$fromList(rt.cons("def", rt.cons("theorem", rt.cons("test", rt.cons("inductive", rt.cons("structure", rt.cons("ability", rt.cons("namespace", rt.cons("end", rt.cons("match", rt.cons("with", rt.cons("fun", rt.cons("let", rt.cons("rec", rt.cons("if", rt.cons("then", rt.cons("else", rt.cons("handle", rt.cons("return", rt.cons("by", rt.cons("where", rt.cons("prim", rt.cons("sorry", rt.NIL))))))))))))))))))))))));
+
+function List$all(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return true;
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          p$ = p;
+          v$ = rest;
+          continue;
+        } else {
+          return false;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$all, "List.all");
+
+function Mdl$isKeyChar(c) {
+  if (Text$isAlpha(c)) {
+    return true;
+  } else {
+    if (Text$isDigit(c)) {
+      return true;
+    } else {
+      if ((c === 45)) {
+        return true;
+      } else {
+        if ((c === 95)) {
+          return true;
+        } else {
+          return (c === 63);
+        }
+      }
+    }
+  }
+}
+rt.named(Mdl$isKeyChar, "Mdl.isKeyChar");
+
+function Mdl$uncomment(t) {
+  const i = rt.ap(rt.prims["Text.indexOf"], t, " # ", 0);
+  if ((i < 0)) {
+    return t;
+  } else {
+    return rt.ap(rt.prims["Text.trim"], Text$take(i, t));
+  }
+}
+rt.named(Mdl$uncomment, "Mdl.uncomment");
+
+function Mdl$indentOf(line) {
+  function go(i$) {
+    for (;;) {
+      const i = i$;
+      let r0;
+      if (rt.ap(rt.prims["lt"], i, rt.ap(rt.prims["Text.length"], line))) {
+        r0 = (rt.ap(rt.prims["Text.code"], line, i) === 32);
+      } else {
+        r0 = false;
+      }
+      if (r0) {
+        i$ = ((i + 1) | 0);
+        continue;
+      } else {
+        return i;
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, 0);
+}
+rt.named(Mdl$indentOf, "Mdl.indentOf");
+
+function Mdl$continueWith(acc, t) {
+  m0: {
+    if (acc.tag === 0) {
+      return rt.cons(new rt.Con("#Pair", 0, ["prose", t]), rt.NIL);
+    }
+    if (acc.tag === 1 && acc.fields[0].tag === 0) {
+      const key = acc.fields[0].fields[0];
+      const value = acc.fields[0].fields[1];
+      const rest = acc.fields[1];
+      let r1;
+      if (Text$isEmpty(value)) {
+        r1 = t;
+      } else {
+        r1 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], value, "\n"), t);
+      }
+      const t2 = new rt.Con("#Pair", 0, [key, r1]);
+      return rt.cons(t2, rest);
+    }
+    rt.nomatch(acc);
+  }
+}
+rt.named(Mdl$continueWith, "Mdl.continueWith");
 
 function Sexp$plain(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -8766,31 +9430,6 @@ function Ts$decorator(iri, name) {
 }
 rt.named(Ts$decorator, "Ts.decorator");
 
-function List$mapIndexed(f, xs) {
-  function go(i$, acc$, ys$) {
-    for (;;) {
-      const i = i$, acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return List$reverse(acc);
-        }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          i$ = ((i + 1) | 0);
-          acc$ = rt.cons(rt.ap(f, i, y), acc);
-          ys$ = rest;
-          continue;
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, 0, rt.NIL, xs);
-}
-rt.named(List$mapIndexed, "List.mapIndexed");
-
 function Ts$arrows(t) {
   m0: {
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tfun" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 0) {
@@ -8987,30 +9626,6 @@ function Syntax$Loaded$rulePrec(v) {
   }
 }
 rt.named(Syntax$Loaded$rulePrec, "Syntax.Loaded.rulePrec");
-
-function List$all(p$, v$) {
-  for (;;) {
-    const p = p$, v = v$;
-    m0: {
-      if (v.tag === 0) {
-        return true;
-      }
-      if (v.tag === 1) {
-        const x = v.fields[0];
-        const rest = v.fields[1];
-        if (rt.ap(p, x)) {
-          p$ = p;
-          v$ = rest;
-          continue;
-        } else {
-          return false;
-        }
-      }
-      rt.nomatch(v);
-    }
-  }
-}
-rt.named(List$all, "List.all");
 
 function Print$equationScrutinee(scrut, count) {
   if ((count === 1)) {
@@ -12619,9 +13234,11 @@ export const raw = {
   liveIndex: Explorer$liveIndex,
   liveDef: Explorer$liveDef,
   liveChange: Explorer$liveChange,
+  liveDoc: Explorer$liveDoc,
 };
 export const site = rt.exportFn(Explorer$site, [['text']], ['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]);
 export const liveIndex = rt.exportFn(Explorer$liveIndex, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]], ['text']);
 export const liveDef = rt.exportFn(Explorer$liveDef, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
 export const liveChange = rt.exportFn(Explorer$liveChange, [['text'], ['text']], ['text']);
+export const liveDoc = rt.exportFn(Explorer$liveDoc, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
 //# sourceMappingURL=explorer-live.js.map

@@ -15,7 +15,7 @@
 
 import { addressOfFolder, projectAt } from './address.mjs';
 import { appFiles } from './gen/explorer-app.mjs';
-import { shownHead, warmLive, warmPages } from './live.mjs';
+import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
@@ -95,11 +95,12 @@ const site = async (env, ctx, url, version, base, request) => {
   }
   const topLevel = path.lastIndexOf('/') === 0;
   if (topLevel && !version) {
-    // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish.
-    const api = await liveApi(env);
-    if (api && APP_ASSETS[path.slice(1)]) {
+    // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish;
+    // its files name no head, so they are served before the head is looked up.
+    if (APP_ASSETS[path.slice(1)]) {
       return appAsset(path.slice(1));
     }
+    const api = await liveApi(env, ctx);
     if (api && path === '/index.html') {
       return livePage(api, base);
     }
@@ -125,7 +126,7 @@ const site = async (env, ctx, url, version, base, request) => {
     if (!topLevel || !(navigation || !FILE.test(path))) {
       return notFound();
     }
-    const api = await liveApi(env);
+    const api = await liveApi(env, ctx);
     if (api) {
       return livePage(api, base);
     }
@@ -190,13 +191,9 @@ const page = async (env, version, base) => {
 };
 
 /** The live explorer API of the project's main branch at its head (D192), or undefined before its first push. */
-const liveApi = async (env) => {
-  const head = await readBranchHead(env, prefix(env), 'main');
-  if (!head) {
-    return undefined;
-  }
-  const { causal } = await shownHead(env, prefix(env), 'main', head);
-  return `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${causal}`;
+const liveApi = async (env, ctx) => {
+  const shown = await liveHead(env, ctx, prefix(env), 'main');
+  return shown && `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${shown.causal}`;
 };
 
 /** The app's page, reading the codebase through `api`; its files are the Worker's own. */

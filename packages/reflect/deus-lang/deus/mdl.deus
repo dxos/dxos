@@ -30,7 +30,8 @@ structure Doc @"urn:deus:mdl:Doc" where
   evaluate, `holds` whether a `Bool` expression is true, and `run` the value of a `Text`
   expression. `describe` takes a name and returns what the codebase knows about it as properties
   (`kind`, `type`, `view`, and for tests and theorems `verdict` and `evidence`). A compile error,
-  a missing name or a defect is an `err`.
+  a missing name or a defect is an `err`. `setting` is an option of the `deus mdl` run
+  (`--base <url>` is `setting "base"`), so a block can be checked another way on request.
 -/
 ability MdlHost @"urn:deus:mdl:Host" where
   cost : Text -> Result Text Int
@@ -38,6 +39,7 @@ ability MdlHost @"urn:deus:mdl:Host" where
   run : Text -> Result Text Text
   describe : Text -> Result Text (List (Text, Text))
   js : Text -> Result Text (Text, Text)
+  setting : Text -> Option Text
 
 namespace Mdl
 

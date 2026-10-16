@@ -334,6 +334,8 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   forEach s.entries (fun pair =>
     let (name, e) := pair
     IO.writeFile (out ++ "/def/" ++ Explorer.pageOf (Entry.hash e) ++ ".json") (Json.render (defJson s name e)))
+  IO.mkdirp (out ++ "/doc")
+  forEach (Export.specDocuments s.ns) (fun d => IO.writeFile (out ++ "/doc/" ++ d ++ ".json") (Json.render (docJson s d)))
   List.length s.entries
 
 /-- The DEUS Worker's explorer API (D192), compiled to JS: everything but definitions, as one document. -/
@@ -341,6 +343,19 @@ def liveIndex (s : Site) : {IO, Throw Text} Text :=
   let events := eventsOf s
   let featureMaps := featuresOfSite s
   Json.render (Json.obj [("meta", metaJson s false (snd events) (snd featureMaps)), ("names", namesJson s), ("tasks", tasksJson s), ("comments", commentsJson s), ("events", fst events), ("features", fst featureMaps)])
+
+/--
+  A spec document's page (D196): its `.mdl` text and its blocks in reading order, so the explorer can
+  show the document itself, with each requirement, api and law linked to what proves or implements it.
+-/
+def docJson (s : Site) (d : Text) : {IO} Json :=
+  let text := Export.document s.dir s.ns d
+  let blockJson := fun (b : Block) => Json.obj [("type", Json.str b.blockType), ("id", Json.str b.blockId), ("title", Json.str b.blockTitle), ("line", Json.num b.lineNo),
+    ("props", Json.obj (List.map (fun p => (fst p, Json.str (snd p))) b.props))]
+  Json.obj [("name", Json.str d), ("text", Json.str text), ("blocks", Json.arr (List.map blockJson (Mdl.parse text).blocks))]
+
+/-- The DEUS Worker's page of a spec document (D196), or "" when the codebase has no such document. -/
+def liveDoc (s : Site) (d : Text) : {IO} Text := if List.contains d (Export.specDocuments s.ns) then Json.render (docJson s d) else ""
 
 /-- The DEUS Worker's page of the definition a hash names (D192). -/
 def liveDef (s : Site) (h : Text) : {IO} Text := Json.render (defByHash s h)

@@ -25,6 +25,12 @@ GITHUB_ORG = "dxos"
 binding = "BUCKET"
 bucket_name = "deus-codebases"
 
+# A cache in front of the bucket for what visitors read most: each branch's shown head (60 s) and drawn
+# explorer pages (7 days), read through on demand so a push writes nothing to it.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "084c8df5e4bd4e8ab9b79e25b6d240fc"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "deus-auth"

@@ -80,6 +80,26 @@ describe('live explorer (D192)', () => {
         'area',
         ...c,
       );
+      deus(
+        'update',
+        file(
+          'Area.Spec.mdl',
+          [
+            '---',
+            'name: Area.Spec',
+            '---',
+            '',
+            '# Areas',
+            '',
+            '```mdl',
+            'req R-1: a square of side two covers four',
+            '  by: area',
+            '```',
+            '',
+          ].join('\n'),
+        ),
+        ...c,
+      );
       deus('task', 'new', 'Squares', '--link', 'area', '--by', 'tester', ...c);
       expect(deus('push', ...c).code).toBe(0);
       // A directory remote keeps its head in its bundles; the bucket keeps it beside them (D181).
@@ -123,8 +143,34 @@ describe('live explorer (D192)', () => {
       expect(bool.html).toContain('Bool');
       const map = index.names.find((entry: { name: string }) => entry.name === 'List.map');
       expect(await get(`/v1/toolchain/live/${head}/def/${map.hash}.json`)).toEqual(site(`def/${map.hash}.json`));
+      // A spec document's page is the document and its blocks (D196); a name that is no document is not found.
+      const doc = await get(`/v1/toolchain/live/${head}/doc/Area.Spec.json`);
+      // Read as written: `site` drops `by` keys, which here are the requirement's own `by:`.
+      expect(doc).toEqual(JSON.parse(readFileSync(join(scratch, 'site', 'doc', 'Area.Spec.json'), 'utf8')));
+      expect(doc.blocks).toEqual([
+        {
+          type: 'req',
+          id: 'R-1',
+          title: 'a square of side two covers four',
+          line: expect.any(Number),
+          props: { by: 'area' },
+        },
+      ]);
+      const unknown = await worker.fetch(
+        new Request(`https://deus.test/v1/toolchain/live/${head}/doc/Nothing.Spec.json`),
+        env,
+        {
+          waitUntil: () => {},
+        },
+      );
+      expect(unknown.status).toBe(404);
       // What a causal shows never changes, so it is kept in the bucket after the first request.
-      expect(readdirSync(join(bucket, 'toolchain', 'live', head)).sort()).toEqual(['chain.json', 'def', 'index.json']);
+      expect(readdirSync(join(bucket, 'toolchain', 'live', head)).sort()).toEqual([
+        'chain.json',
+        'def',
+        'doc',
+        'index.json',
+      ]);
       // What the Worker read is kept as one snapshot, so a cold isolate starts from it.
       expect(readdirSync(join(bucket, 'toolchain', 'live'))).toContain('files.json.gz');
       const change = await get(`/v1/toolchain/live/${head}/change/${head}.json`);
@@ -227,6 +273,39 @@ describe('live explorer (D192)', () => {
       expect(await appPage()).toContain(`/live/${head}"`);
     },
   );
+
+  test('KV keeps the shown head for a minute and drawn pages for a week', { timeout: 120_000 }, async ({ expect }) => {
+    const bucket = join(scratch, 'bucket');
+    const kept = new Map<string, { value: string; ttl?: number }>();
+    const env = {
+      BUCKET: directoryBucket(bucket),
+      PREFIX: 'toolchain',
+      CACHE: {
+        get: async (key: string) => kept.get(key)?.value ?? null,
+        put: async (key: string, value: string, options?: { expirationTtl?: number }) =>
+          void kept.set(key, { value, ttl: options?.expirationTtl }),
+      },
+    } as Env;
+    const get = async (path: string) => {
+      const pending: Promise<unknown>[] = [];
+      const response = await worker.fetch(new Request(`https://deus.test${path}`), env, {
+        waitUntil: (promise: Promise<unknown>) => pending.push(promise),
+      });
+      await Promise.all(pending);
+      return response.text();
+    };
+    const shown = JSON.parse(await get('/v1/toolchain/live/main'));
+    expect(kept.get('head:toolchain:main')).toEqual({ value: JSON.stringify(shown), ttl: 60 });
+    const index = await get(`/v1/toolchain/live/${shown.causal}/index.json`);
+    expect(kept.get(`toolchain/live/${shown.causal}/index.json`)).toEqual({ value: index, ttl: 604_800 });
+    // Once kept, both are answered from KV.
+    kept.set('head:toolchain:main', { value: JSON.stringify({ branch: 'main', causal: 'kept' }) });
+    expect(JSON.parse(await get('/v1/toolchain/live/main')).causal).toBe('kept');
+    kept.set(`toolchain/live/${shown.causal}/index.json`, { value: '{"kept":true}' });
+    expect(await get(`/v1/toolchain/live/${shown.causal}/index.json`)).toBe('{"kept":true}');
+    // The app's files are served without looking up a head.
+    expect(await get('/app.js')).toContain('DEUS_LIVE');
+  });
 
   test('the Worker ships the explorer app as platform/explorer has it', ({ expect }) => {
     // `node scripts/build-worker.mjs` rewrites the module after the app changes.

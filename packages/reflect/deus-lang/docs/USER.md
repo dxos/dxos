@@ -667,3 +667,20 @@ definition of done -> work until you run out of tasks, and then work on perf
 ---
 
 and dx
+
+---
+
+idea: use workers-kv for caching with expiration ttl
+
+---
+
+first-time expirience is harsh:
+
+1. everything is a big pile, no namespaces
+2. I expect a tree structure where I can go from docs > spec > api > tests > definition. The ui guides me naturally
+
+(with a screenshot of https://deus.dmytro-a80.workers.dev/@dxos/toolchain/: the overview lists 135 namespaces as a flat grid and the sidebar lists them alphabetically)
+
+---
+
+3. idea for testing: having small subagent like haiku explore the site without prompting and then you see how well it understood and how straightwforward the path was

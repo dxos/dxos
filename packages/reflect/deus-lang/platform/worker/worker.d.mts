@@ -57,6 +57,11 @@ export type Env = {
   GITHUB_API_URL?: string;
   BUCKET?: Bucket;
   DB?: Database;
+  /** KV in front of the bucket: shown heads for a minute, drawn explorer pages for a week. */
+  CACHE?: {
+    get(key: string): Promise<string | null>;
+    put(key: string, value: string, options?: { expirationTtl?: number }): Promise<unknown>;
+  };
   /** `deus-live`: projects whose pushed head the queue consumer draws (D192). */
   LIVE_QUEUE?: {
     send(body: { project: string }): Promise<void>;

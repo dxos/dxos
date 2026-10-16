@@ -1597,6 +1597,7 @@ structure MdlFacts where
   printer : Printer
   fullTypes : Map Text Text
   documents : List Text
+  settings : Map Text Text
 
 def mdlFacts (ns : Map Text Entry) : MdlFacts :=
   let fullTypes := Map.fromList (filterMap (fun pair =>
@@ -1604,7 +1605,7 @@ def mdlFacts (ns : Map Text Entry) : MdlFacts :=
     | (n, Entry.type _ iri _) => Option.some (iri, n)
     | (n, Entry.ability _ iri) => Option.some (iri, n)
     | _ => Option.none) (Map.toList ns))
-  MdlFacts.mk (Print.printer ns []) fullTypes (specDocuments ns)
+  MdlFacts.mk (Print.printer ns []) fullTypes (specDocuments ns) Map.empty
 
 /-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
   `facts` are `ns`'s, built once per run: its name tables cost more than describing a name. -/
@@ -1622,6 +1623,7 @@ def withHost (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (body : Unit 
     | Result.ok h => guardDefect (fun _ => Code.run h)
     | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
+  | MdlHost.setting key -> k => k (Map.lookup key facts.settings)
   | MdlHost.describe name -> k => k (if startsWith "statement:" name then statementFact dir ns (Text.drop 10 name) else
       match featureFact dir facts.documents tasks name with
       | Option.some answer => answer
@@ -1855,7 +1857,8 @@ def checkMdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
-  let facts := mdlFacts ns
+  let found := mdlFacts ns
+  let facts := MdlFacts.mk found.printer found.fullTypes found.documents args.options
   let documents := List.filter (fun a => List.contains a facts.documents && not (IO.exists a)) args.positional
   let files := List.filter (fun a => not (List.contains a documents)) args.positional
   let paths := List.filter (fun p => endsWith ".mdl" p) (expandPaths files)
@@ -2590,6 +2593,7 @@ def usage : Text :=
     "                                       --bytes, its bytes): an @[artifact] that names only the file's SHA-256",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
+    "  mdl <files> --base <url>             run qa flows against a running server instead of in simulation",
     "  mdl --coverage [documents…]          what specs leave unstated: laws no block cites, public definitions no api names (D125)",
     "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D118)",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",

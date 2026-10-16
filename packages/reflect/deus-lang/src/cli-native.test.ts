@@ -412,7 +412,10 @@ describe('deus CLI native back ends', () => {
         'deus/builtins.deus',
         'deus/prelude.deus',
         'deus/time.deus',
+        'deus/sexp.deus',
+        'deus/mdl.deus',
         'platform/web.deus',
+        'platform/qa.deus',
         'examples/notes.deus',
         'examples/tally.deus',
       ];
@@ -460,6 +463,12 @@ describe('deus CLI native back ends', () => {
         '<!doctype html><title>Notes</title><h1>Notes</h1><ul><li><a href="/notes/greet">greet</a></li></ul>',
         'text/html; charset=utf-8',
       ]);
+      // The QA flows `deus mdl` runs in simulation hold against the real server too.
+      const flows = deus('mdl', join(root, 'examples/notes.mdl'), '--base', notes, '--json', ...c);
+      expect(JSON.parse(flows.stdout).map((row: { status: string }) => row.status)).toEqual(['ok', 'ok']);
+      const unreachable = deus('mdl', join(root, 'examples/notes.mdl'), '--base', 'http://127.0.0.1:9', '--json', ...c);
+      expect(unreachable.code).not.toBe(0);
+      expect(JSON.parse(unreachable.stdout)[0].problems[0]).toContain('QA-1.1');
 
       // Objects call each other by name, and an alarm arrives later as a request.
       const { url: tally, logged } = await start('Tally.serve');
