@@ -1922,7 +1922,9 @@ const homeHtml = () => {
   const checked = index.names.filter((entry) => entry.status);
   const failing = checked.filter((entry) => entry.status === 'fail');
   const top = sortedChildren(index.tree);
-  const namespaces = top.filter((node) => node.children.size > 0);
+  const namespaces = top.filter((node) => node.children.size > 0 && node.path !== 'lib');
+  const libs = libraries();
+  const mounted = libs.reduce((sum, node) => sum + node.count, 0);
   const roots = top.filter((node) => node.entry && node.children.size === 0).map((node) => node.entry);
   const open = index.tasks.filter((task) => task.state === 'todo' || task.state === 'doing');
   const areas = index.areas ?? [];
@@ -1948,7 +1950,7 @@ const homeHtml = () => {
     '<article class="home">' +
     `<header class="home-header"><h1>${escape(addressOf(meta.project))}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
-    } · ${meta.definitions} definitions · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    } · ${meta.definitions} definitions${mounted > 0 ? ` (${mounted} from libraries)` : ''} · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
     `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
       ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
@@ -1972,6 +1974,18 @@ const homeHtml = () => {
         )
       : '') +
     section('Namespaces', namespaces.length, grouped) +
+    (libs.length > 0
+      ? section(
+          'Libraries',
+          libs.length,
+          `<ul class="rows library-list">${libs
+            .map(
+              (node) =>
+                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${node.count} definitions, mounted as <code>${escape(node.path)}</code></span><a class="more-link" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
+            )
+            .join('')}</ul>`,
+        )
+      : '') +
     `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
     `<div>${section(
       'Open tasks',
@@ -2108,11 +2122,22 @@ const renderHistory = async () => {
 
 const treeRows = (node, depth) => rowsOf(sortedChildren(node), depth);
 
-/** The tree's top level, grouped under the areas of the feature map (D196); the rest after them. */
+/** The mounted libraries (D206): the children of the tree's `lib` node, `lib.base` and the like. */
+const libraries = () => (index.tree.children.get('lib') ? sortedChildren(index.tree.children.get('lib')) : []);
+
+/** Where a library's own explorer is: its project under this project's owner, as `@dxos/base` beside `@dxos/toolchain`. */
+const libraryHref = (node) => `/${addressOf(index.meta.project).split('/')[0]}/${node.segment}/`;
+
+/** The sidebar's libraries, after the project's own namespaces. */
+const libraryRows = () =>
+  libraries().length > 0 ? '<div class="tree-group">Libraries</div>' + rowsOf(libraries(), 0) : '';
+
+/** The tree's top level, grouped under the areas of the feature map (D196); the rest after them, then the libraries. */
 const topRows = () => {
   const areas = (index.areas ?? []).filter((area) => area.namespaces.length > 0);
+  const own = sortedChildren(index.tree).filter((child) => child.path !== 'lib');
   if (areas.length === 0) {
-    return treeRows(index.tree, 0);
+    return rowsOf(own, 0) + libraryRows();
   }
   const placed = new Set(areas.flatMap((area) => area.namespaces));
   return (
@@ -2128,9 +2153,10 @@ const topRows = () => {
       .join('') +
     '<div class="tree-group">Everything else</div>' +
     rowsOf(
-      sortedChildren(index.tree).filter((child) => !placed.has(child.path)),
+      own.filter((child) => !placed.has(child.path)),
       0,
-    )
+    ) +
+    libraryRows()
   );
 };
 

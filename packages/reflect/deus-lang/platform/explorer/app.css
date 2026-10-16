@@ -832,6 +832,25 @@ ul.rows {
   padding: 0;
 }
 
+/* A mounted library (D206): its folder, what it holds, and its own explorer. */
+.library-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 4px 6px;
+}
+
+.library-list li > a:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.library-list .more-link {
+  margin-left: auto;
+}
+
 .entry-row {
   display: flex;
   align-items: center;
