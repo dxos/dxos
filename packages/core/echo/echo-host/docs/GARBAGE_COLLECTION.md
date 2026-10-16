@@ -339,6 +339,35 @@ handles it without reading it:
 The `retired` map is append-only and stays in the directory, so a peer that
 syncs late, or restarts mid-wipe, still finishes the wipe.
 
+### Documents whose history outgrew their state
+
+A document can still load and yet be mostly history: the unfixed
+`Cursor.writeSnapshot` re-inserted its whole snapshot map on every write, so a
+cursor with 660 KB of state reached 45.7M ops. Such a document is retired the
+same way, before it stops loading:
+
+- Every load from disk reports the document's op count (`documentLoaded`).
+  One with at least `HISTORY_BLOAT_MIN_OPS` ops becomes a candidate.
+- The next retirement pass rebuilds a candidate from its own current state, so
+  no change is lost, but only if it holds just the objects linked to it, every
+  one of a type in `HISTORY_RETIREMENT_TYPES` (sync cursors: machine-written
+  state), and its ops are at least `HISTORY_BLOAT_RATIO` times the size of that
+  state. Otherwise the candidate is dropped.
+
+### Peers retiring at once
+
+- **Same replacement.** The replacement's id is derived from the original, and
+  its single change uses an actor derived from its content and a fixed
+  timestamp. Peers that rebuild the same state write byte-identical changes,
+  which merge into one; peers whose index state differs write distinct changes,
+  and Automerge keeps one value per key, the same on every peer.
+- **Replacement already delivered.** A peer that already holds the replacement
+  reuses it rather than importing a second history over it.
+- **Lost entries.** Two peers that each create the `retired` map concurrently
+  leave only one map in the merge. Every quarantine record of a retirement keeps
+  its space and replacement, and each retirement pass writes back any entry the
+  directory lacks.
+
 ## Safety & invariants
 
 - **Attribution before deletion.** A document is only wiped when its

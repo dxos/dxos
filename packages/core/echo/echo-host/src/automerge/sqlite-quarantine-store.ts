@@ -21,6 +21,10 @@ export type QuarantineRecord = {
   /** The load error, for a document quarantined because it could not be loaded. */
   error?: string;
   quarantinedAt: number;
+  /** The space whose directory retired the document. */
+  spaceId?: string;
+  /** Url of the document that replaced a retired one. */
+  replacedBy?: string;
 };
 
 const isQuarantineReason = (value: string): value is QuarantineReason => value === 'load-failed' || value === 'retired';
@@ -47,8 +51,15 @@ export class SqliteQuarantineStore {
   list(): Effect.Effect<QuarantineRecord[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ document_id: string; reason: string; error: string | null; quarantined_at: number }>`
-        SELECT document_id, reason, error, quarantined_at FROM automerge_quarantine
+      const rows = yield* sql<{
+        document_id: string;
+        reason: string;
+        error: string | null;
+        quarantined_at: number;
+        space_id: string | null;
+        replaced_by: string | null;
+      }>`
+        SELECT document_id, reason, error, quarantined_at, space_id, replaced_by FROM automerge_quarantine
       `;
       return rows.flatMap((row): QuarantineRecord[] =>
         isValidDocumentId(row.document_id)
@@ -58,6 +69,8 @@ export class SqliteQuarantineStore {
                 reason: isQuarantineReason(row.reason) ? row.reason : 'load-failed',
                 error: row.error ?? undefined,
                 quarantinedAt: row.quarantined_at,
+                spaceId: row.space_id ?? undefined,
+                replacedBy: row.replaced_by ?? undefined,
               },
             ]
           : [],
@@ -65,14 +78,24 @@ export class SqliteQuarantineStore {
     }).pipe(Effect.withSpan('SqliteQuarantineStore.list'));
   }
 
-  /** Records a quarantined document; a later record only replaces the reason, and only with `retired`. */
+  /**
+   * Records a quarantined document. A later record only applies once it says `retired`, and then fills in the
+   * reason and the retirement's space and replacement.
+   */
   add(record: QuarantineRecord): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* sql`
-        INSERT INTO automerge_quarantine (document_id, reason, error, quarantined_at)
-        VALUES (${record.documentId}, ${record.reason}, ${record.error ?? null}, ${record.quarantinedAt})
-        ON CONFLICT(document_id) DO UPDATE SET reason = excluded.reason WHERE excluded.reason = 'retired'
+        INSERT INTO automerge_quarantine (document_id, reason, error, quarantined_at, space_id, replaced_by)
+        VALUES (
+          ${record.documentId}, ${record.reason}, ${record.error ?? null}, ${record.quarantinedAt},
+          ${record.spaceId ?? null}, ${record.replacedBy ?? null}
+        )
+        ON CONFLICT(document_id) DO UPDATE SET
+          reason = excluded.reason,
+          space_id = COALESCE(excluded.space_id, space_id),
+          replaced_by = COALESCE(excluded.replaced_by, replaced_by)
+        WHERE excluded.reason = 'retired'
       `;
     }).pipe(Effect.withSpan('SqliteQuarantineStore.add'));
   }

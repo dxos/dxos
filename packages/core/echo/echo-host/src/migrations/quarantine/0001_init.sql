@@ -8,5 +8,8 @@ CREATE TABLE IF NOT EXISTS automerge_quarantine (
   document_id TEXT PRIMARY KEY,
   reason TEXT NOT NULL,
   error TEXT,
-  quarantined_at INTEGER NOT NULL
+  quarantined_at INTEGER NOT NULL,
+  -- For a retired document: the space whose directory retired it and the url of its replacement.
+  space_id TEXT,
+  replaced_by TEXT
 );

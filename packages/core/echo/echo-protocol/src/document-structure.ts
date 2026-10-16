@@ -235,9 +235,14 @@ export const DatabaseDirectory = Object.freeze({
   },
 
   /**
-   * @returns Ids of the documents this space retired; see {@link DatabaseDirectory.retired}.
+   * @returns The documents this space retired, each with the url of its replacement; see
+   * {@link DatabaseDirectory.retired}.
    */
-  getRetiredDocumentIds: (doc: DatabaseDirectory): string[] => Object.keys(doc.retired ?? {}),
+  getRetiredDocuments: (doc: DatabaseDirectory): { documentId: string; replacedBy: string }[] =>
+    Object.entries(doc.retired ?? {}).map(([documentId, { replacedBy }]) => ({
+      documentId,
+      replacedBy: String(replacedBy),
+    })),
 
   /**
    * @returns All branch document urls referenced anywhere in the registry. Used by the host to

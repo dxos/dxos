@@ -266,6 +266,9 @@ export class AutomergeHost extends Resource {
   /** The oversize level last reported per document, so a growing document warns once per doubling. */
   readonly #oversizeReported = new Map<DocumentId, number>();
 
+  /** Fired for every document loaded from disk, with its size, so the space can retire one whose history bloated. */
+  public readonly documentLoaded = new Event<{ documentId: DocumentId } & DocumentSize>();
+
   private _syncTask: DeferredTask | undefined = undefined;
   /**
    * Cache of collections that would be synced on next sync task run.
@@ -542,9 +545,10 @@ export class AutomergeHost extends Resource {
       Event.wrap<{ documentId: DocumentId; numOps: number; numChanges: number }>(
         this._repo.storageSubsystem,
         'document-loaded',
-      ).on(this._ctx, ({ documentId, numOps, numChanges }) =>
-        this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps }),
-      );
+      ).on(this._ctx, ({ documentId, numOps, numChanges }) => {
+        this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps });
+        this.documentLoaded.emit({ documentId, changes: numChanges, ops: numOps });
+      });
     }
 
     // Here, and awaited: the Repo constructs its engine without loading any tree, and nothing can
@@ -867,13 +871,23 @@ export class AutomergeHost extends Resource {
    */
   async quarantineDocument(
     documentId: DocumentId,
-    { reason, error }: { reason: QuarantineReason; error?: unknown },
+    {
+      reason,
+      error,
+      spaceId,
+      replacedBy,
+    }: { reason: QuarantineReason; error?: unknown; spaceId?: string; replacedBy?: string },
   ): Promise<void> {
     const existing = this.#quarantined.get(documentId);
     if (existing) {
       // Retirement is terminal, so it supersedes the load failure that led to it.
-      if (reason === 'retired' && existing.reason !== 'retired') {
-        const record: QuarantineRecord = { ...existing, reason };
+      if (reason === 'retired' && (existing.reason !== 'retired' || (replacedBy && !existing.replacedBy))) {
+        const record: QuarantineRecord = {
+          ...existing,
+          reason,
+          spaceId: existing.spaceId ?? spaceId,
+          replacedBy: existing.replacedBy ?? replacedBy,
+        };
         this.#quarantined.set(documentId, record);
         await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.add(record));
       }
@@ -884,6 +898,8 @@ export class AutomergeHost extends Resource {
       reason,
       error: error === undefined ? undefined : String(error),
       quarantinedAt: Date.now(),
+      spaceId,
+      replacedBy,
     };
     // Registered before the write, so a load arriving meanwhile is already refused.
     this.#quarantined.set(documentId, record);
