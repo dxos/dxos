@@ -16,6 +16,8 @@ structure Feature @"urn:deus:feature:Feature" where
   specDocs : List Text
   definitions : List Text
   taskIds : List Text
+  -- Labels to organize features by, which the explorer filters on (D199); `home` puts a feature on its overview.
+  featureTags : List Text
 
 namespace Features
 
@@ -34,7 +36,7 @@ def fromBlock (b : Block) : Result (List Text) Feature :=
   let status := prop b "status"
   if Text.isEmpty status then Result.err ["status: missing (planned, building, shipped or dropped)"]
   else if not (List.contains status statuses) then Result.err ["status: " ++ status ++ " is not one of " ++ Text.join ", " statuses]
-  else Result.ok (Feature.mk b.blockId b.blockTitle status (prop b "parent") (items (prop b "specs")) (items (prop b "defs")) (items (prop b "tasks")))
+  else Result.ok (Feature.mk b.blockId b.blockTitle status (prop b "parent") (items (prop b "specs")) (items (prop b "defs")) (items (prop b "tasks")) (items (prop b "tags")))
 
 def fact (facts : List (Text, Text)) (key : Text) : Text := Option.getOr (List.lookup key facts) ""
 

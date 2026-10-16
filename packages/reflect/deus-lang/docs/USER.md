@@ -690,3 +690,38 @@ first-time expirience is harsh:
 I liked this being very top to convey the scale
 
 (with a screenshot of the overview's count tiles — types, abilities, terms, tests, theorems, specs, features, open tasks — and the kind legend, which D196 had moved below the namespaces)
+
+---
+
+grouping that would make sense to me:
+
+- Core language
+- Codebase (+ analytics together)
+- Backends (one feature card for each)
+- Cloudflare Backend
+- JS + React UI writing
+- Composer plugin
+- Codebase explorer + sync server infra
+- Theorem prooving
+- ...maybe some more
+
+have tags to organize them ... homepage displays limited set (fitlered by tag) with prompt to view all
+
+---
+
+explorer home page should should show counters + project list + search global bar
+
+@dxos/base
+Branch main · 346 definitions · 0 tasks
+
+- T21types
+- A11abilities
+- ƒ279terms
+- ✓11tests
+- ∀10theorems
+- S14specs
+- ◎0open tasks
+
+---
+
+counters global

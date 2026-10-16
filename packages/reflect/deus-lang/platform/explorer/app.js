@@ -1830,15 +1830,15 @@ const namespaceTile = (node) =>
   `<li><a data-open="n:${escape(node.path)}">${folderIcon}<span>${escape(node.segment)}</span><span class="count">${node.count}</span></a></li>`;
 
 /** One area of the guide: its features, the spec documents that describe them, and its namespaces. */
-const areaHtml = (area) => {
+const areaHtml = (area, hidden = false) => {
   const docs = (feature) =>
     feature.specs
       .filter(isDocument)
       .map((doc) => docLink(doc))
       .join('');
   return (
-    `<section class="area"><header>${featureStatus(area.feature.status)}<h4>${withDecisions(area.feature.title)}</h4>${docs(area.feature)}</header>` +
-    `<p class="area-about muted" data-area-about="${escape(area.feature.title)}"></p>` +
+    `<section class="area"${hidden ? ' hidden' : ''} data-tags="${escape((area.feature.tags ?? []).join(' '))}"><header>${featureStatus(area.feature.status)}<h4>${withDecisions(area.feature.title)}</h4>${docs(area.feature)}</header>` +
+    `<p class="area-about muted" data-area-about="${escape(area.feature.id)}"></p>` +
     (area.features.length > 0
       ? `<ul class="area-features">${area.features
           .map(
@@ -1854,6 +1854,39 @@ const areaHtml = (area) => {
       : '') +
     '</section>'
   );
+};
+
+/** The tag of the main areas, which the overview opens on when any area has it (D199). */
+const AREA_DEFAULT = 'home';
+
+/** The areas with tag chips to filter them by; the overview opens on the main ones, with a way to see all. */
+const areasBody = (areas) => {
+  const tagsOf = (area) => area.feature.tags ?? [];
+  const tagged = (tag) => areas.filter((area) => tagsOf(area).includes(tag)).length;
+  const tags = [...new Set(areas.flatMap(tagsOf))].filter((tag) => tag !== AREA_DEFAULT).sort();
+  const start = tagged(AREA_DEFAULT) > 0 ? AREA_DEFAULT : '';
+  const chip = (tag, label, count) =>
+    `<button class="tag-chip${tag === start ? ' active' : ''}" data-area-tag="${escape(tag)}">${escape(label)} <span class="count">${count}</span></button>`;
+  return (
+    `<div class="tag-chips">${start ? chip(AREA_DEFAULT, 'Main', tagged(AREA_DEFAULT)) : ''}${chip('', 'All', areas.length)}${tags
+      .map((tag) => chip(tag, tag, tagged(tag)))
+      .join('')}</div>` +
+    `<div class="areas">${areas
+      .map((area) => areaHtml(area, Boolean(start) && !tagsOf(area).includes(start)))
+      .join('')}</div>` +
+    (start ? `<button class="link-button area-all" data-area-tag="">View all ${areas.length} areas →</button>` : '')
+  );
+};
+
+/** Shows the areas tagged `tag` (every area for ""), and marks its chip. */
+const filterAreas = (root, tag) => {
+  for (const area of root.querySelectorAll('.areas .area')) {
+    area.hidden = tag !== '' && !(area.dataset.tags ?? '').split(' ').includes(tag);
+  }
+  for (const chip of root.querySelectorAll('.tag-chip')) {
+    chip.classList.toggle('active', chip.dataset.areaTag === tag);
+  }
+  root.querySelector('.area-all')?.toggleAttribute('hidden', tag === '');
 };
 
 /** A spec document's row; its title arrives with its page (`fillHome`). */
@@ -1916,9 +1949,7 @@ const homeHtml = () => {
     `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
     legendHtml() +
     '<div class="home-intro" data-home-intro></div>' +
-    (areas.length > 0
-      ? section('Start here', areas.length, `<div class="areas">${areas.map(areaHtml).join('')}</div>`)
-      : '') +
+    (areas.length > 0 ? section('Start here', areas.length, areasBody(areas)) : '') +
     (docs.length > 0
       ? section(
           'Spec documents',
@@ -1964,9 +1995,11 @@ const fillHome = async (root) => {
   if (slot && intro) {
     slot.innerHTML = mdHtml(intro, map);
   }
-  // An area's section in the map opens with a sentence on what the area is for.
-  for (const [, title, about] of readableText(text).matchAll(/^## (.+)\n\n((?:[^#`\n].*\n?)+)/gm)) {
-    const cell = root.querySelector(`[data-area-about="${CSS.escape(title.trim())}"]`);
+  // An area's section in the map opens with a sentence on what the area is for, before its first feature.
+  for (const section of readableText(text).split(/^## /m).slice(1)) {
+    const about = /^.*\n\n((?:[^#`\n].*\n?)+)/.exec(section)?.[1];
+    const id = /^feature (\S+):/m.exec(section)?.[1];
+    const cell = id && about ? root.querySelector(`[data-area-about="${CSS.escape(id)}"]`) : null;
     if (cell) {
       cell.innerHTML = inlineMd(about.trim().replace(/\n/g, ' '), map);
     }
@@ -3052,7 +3085,7 @@ const setDialect = (dialect) => {
 
 const onClick = (event) => {
   const target = event.target.closest(
-    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run]',
+    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag]',
   );
   if (!target) {
     const cardNode = event.target.closest('.card');
@@ -3064,7 +3097,9 @@ const onClick = (event) => {
   event.preventDefault();
   hideTooltip();
   const data = target.dataset;
-  if (data.index !== undefined) {
+  if (data.areaTag !== undefined) {
+    filterAreas(target.closest('.home') ?? document, data.areaTag);
+  } else if (data.index !== undefined) {
     choose(finder.results[Number(data.index)]);
   } else if (data.open) {
     const from = target.closest('.card');

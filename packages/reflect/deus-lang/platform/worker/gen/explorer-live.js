@@ -2097,7 +2097,7 @@ function Cli$featuresJson(dir, ns, docs) {
                 rt.nomatch(t3);
               }
             }, "Cli.featuresJson/\u03bb"), Feature$taskIds(f));
-            return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureId(f)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureTitle(f)])]), rt.cons(new rt.Con("#Pair", 0, ["status", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureStatus(f)])]), rt.cons(new rt.Con("#Pair", 0, ["parent", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$parentId(f)])]), rt.cons(new rt.Con("#Pair", 0, ["depth", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [depth])]), rt.cons(new rt.Con("#Pair", 0, ["specs", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$specDocs(f))])]), rt.cons(new rt.Con("#Pair", 0, ["defs", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$definitions(f))])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$taskIds(f))])]), rt.cons(new rt.Con("#Pair", 0, ["openTasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), opened)])]), rt.cons(new rt.Con("#Pair", 0, ["problems", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Features$problems(f, facts))])]), rt.NIL))))))))))]);
+            return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureId(f)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureTitle(f)])]), rt.cons(new rt.Con("#Pair", 0, ["status", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureStatus(f)])]), rt.cons(new rt.Con("#Pair", 0, ["parent", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$parentId(f)])]), rt.cons(new rt.Con("#Pair", 0, ["depth", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [depth])]), rt.cons(new rt.Con("#Pair", 0, ["specs", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$specDocs(f))])]), rt.cons(new rt.Con("#Pair", 0, ["defs", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$definitions(f))])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$taskIds(f))])]), rt.cons(new rt.Con("#Pair", 0, ["tags", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$featureTags(f))])]), rt.cons(new rt.Con("#Pair", 0, ["openTasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), opened)])]), rt.cons(new rt.Con("#Pair", 0, ["problems", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Features$problems(f, facts))])]), rt.NIL)))))))))))]);
           }
           rt.nomatch(pair);
         }
@@ -4030,6 +4030,7 @@ function Feature$taskIds(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_7;
     }
     rt.nomatch(v);
@@ -4047,6 +4048,7 @@ function Feature$featureId(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_1;
     }
     rt.nomatch(v);
@@ -4064,6 +4066,7 @@ function Feature$featureTitle(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_2;
     }
     rt.nomatch(v);
@@ -4081,6 +4084,7 @@ function Feature$featureStatus(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_3;
     }
     rt.nomatch(v);
@@ -4098,6 +4102,7 @@ function Feature$parentId(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_4;
     }
     rt.nomatch(v);
@@ -4115,6 +4120,7 @@ function Feature$specDocs(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_5;
     }
     rt.nomatch(v);
@@ -4132,12 +4138,31 @@ function Feature$definitions(v) {
       const v_5 = v.fields[4];
       const v_6 = v.fields[5];
       const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
       return v_6;
     }
     rt.nomatch(v);
   }
 }
 rt.named(Feature$definitions, "Feature.definitions");
+
+function Feature$featureTags(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      return v_8;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Feature$featureTags, "Feature.featureTags");
 
 function Features$problems(f, facts) {
   const shipped = (Feature$featureStatus(f) === "shipped");
@@ -4334,7 +4359,7 @@ function Features$fromBlock(b) {
     if (not(List$contains(status, Features$statuses()))) {
       return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.cons(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "status: ", status), " is not one of "), rt.ap(rt.prims["Text.join"], ", ", Features$statuses())), rt.NIL)]);
     } else {
-      return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [new rt.Con("8286849d3e6ff3056764309531e7d7fca27274a08ab49a8bc586d5085d6cb3d6", 0, [Block$blockId(b), Block$blockTitle(b), status, Features$prop(b, "parent"), Features$items(Features$prop(b, "specs")), Features$items(Features$prop(b, "defs")), Features$items(Features$prop(b, "tasks"))])]);
+      return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [new rt.Con("e8372fd22fdd82bc64bd259a2306cd433b1eb62b3c91bd1ca3918203fc323c92", 0, [Block$blockId(b), Block$blockTitle(b), status, Features$prop(b, "parent"), Features$items(Features$prop(b, "specs")), Features$items(Features$prop(b, "defs")), Features$items(Features$prop(b, "tasks")), Features$items(Features$prop(b, "tags"))])]);
     }
   }
 }

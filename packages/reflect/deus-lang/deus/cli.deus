@@ -1829,7 +1829,7 @@ def featuresJson (dir : Text) (ns : Map Text Entry) (docs : List Text) : {IO, Th
         match facts ("task:" ++ id) with
         | Result.ok known => isOpenState (prop0 known "state")
         | Result.err _ => false) f.taskIds
-      Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId), ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)), ("tasks", Json.arr (List.map Json.str f.taskIds)), ("openTasks", Json.arr (List.map Json.str opened)), ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))), ("notes", Json.arr (List.map Json.str (featureNotes facts fs bad)))]) docs)
+      Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId), ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)), ("tasks", Json.arr (List.map Json.str f.taskIds)), ("tags", Json.arr (List.map Json.str f.featureTags)), ("openTasks", Json.arr (List.map Json.str opened)), ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))), ("notes", Json.arr (List.map Json.str (featureNotes facts fs bad)))]) docs)
 
 /-- `deus features [documents…]`: the feature maps (D118), each a tree of features with their status
   and open tasks, then what is wrong or missing. With no arguments, every document with a
