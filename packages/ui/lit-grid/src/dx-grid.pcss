@@ -203,9 +203,22 @@
              * border) exceeds the cell track size by even a fraction of a
              * pixel, pushing the focus ring's bottom edge below the grid line.
              */
-            min-inline-size: 100%;
+            min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
             inline-size: min-content;
             max-inline-size: min(60ch, 90vw);
+
+            /*
+             * A cell draws only its right/bottom lines; its left/top lines belong to its neighbours.
+             * Reaching back over them puts all four ring edges on grid lines; the extra start padding
+             * keeps the text where it sits unfocused.
+             */
+            inset-inline-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            inset-block-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            block-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            padding-inline-start: calc(
+              var(--dx-grid-cell-content-padding-inline) + var(--dx-grid-focus-indicator-width)
+            );
+            padding-block-start: calc(var(--dx-grid-cell-content-padding-block) + var(--dx-grid-focus-indicator-width));
 
             overflow: auto;
             scrollbar-width: thin;
@@ -238,6 +251,9 @@
     background: var(--dx-grid-base, var(--color-base-surface));
     border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
     border-radius: 2px;
+    /* Matches the focused cell: the box reaches over the neighbours' lines, the text stays put. */
+    padding-inline-start: var(--dx-grid-focus-indicator-width);
+    padding-block-start: var(--dx-grid-focus-indicator-width);
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
     --dx-grid-cell-editor-max-inline-size: min(60ch, 90vw);
