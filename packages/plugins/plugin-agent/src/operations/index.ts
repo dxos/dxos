@@ -6,7 +6,14 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { BrainSkill } from '#skills';
-import { AgentOperation, MemoryOperation, ModeOperation, RelayOperation, TriggerOperation } from '#types';
+import {
+  AgentOperation,
+  EmailOperation,
+  MemoryOperation,
+  ModeOperation,
+  RelayOperation,
+  TriggerOperation,
+} from '#types';
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
@@ -23,7 +30,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   ModeOperation.SwitchMode.pipe(Operation.lazyHandler(() => import('./switch-mode.ts'))),
   MemoryOperation.ResolveEntity.pipe(Operation.lazyHandler(() => import('./resolve-entity.ts'))),
   MemoryOperation.Remember.pipe(Operation.lazyHandler(() => import('./remember.ts'))),
-  MemoryOperation.Forget.pipe(Operation.lazyHandler(() => import('./forget.ts'))),
   MemoryOperation.Recall.pipe(Operation.lazyHandler(() => import('./recall.ts'))),
   MemoryOperation.ProposeGoal.pipe(Operation.lazyHandler(() => import('./propose-goal.ts'))),
   MemoryOperation.ConfirmGoal.pipe(Operation.lazyHandler(() => import('./confirm-goal.ts'))),
@@ -40,4 +46,5 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.InspectBrain.pipe(Operation.lazyHandler(() => import('./inspect-brain.ts'))),
   TriggerOperation.ResetBrain.pipe(Operation.lazyHandler(() => import('./reset-brain.ts'))),
   BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
+  EmailOperation.Send.pipe(Operation.lazyHandler(() => import('./send-email.ts'))),
 ]);

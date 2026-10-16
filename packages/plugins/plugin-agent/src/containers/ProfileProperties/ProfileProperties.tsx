@@ -13,10 +13,10 @@ import { useProfileKnowledge } from '../useProfileKnowledge.ts';
 
 export type ProfilePropertiesProps = AppSurface.ObjectPropertiesProps<Person.Person | Organization.Organization>;
 
-/** The goals and active memories autonomous agents hold about a person or organization. */
+/** The goals and the facts autonomous agents hold about a person or organization. */
 export const ProfileProperties = ({ subject }: ProfilePropertiesProps) => {
-  const { goals, memories } = useProfileKnowledge(subject);
-  return <ProfileGraph goals={goals} memories={memories} />;
+  const { goals, facts } = useProfileKnowledge(subject);
+  return <ProfileGraph goals={goals} facts={facts} />;
 };
 
 ProfileProperties.displayName = 'ProfileProperties';
