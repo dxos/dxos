@@ -20,6 +20,9 @@ const SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,199}$/;
 /** The folders beside the bundles, each written under the scope of the same name. */
 export const FOLDERS = ['assets', 'inbox', 'site', 'events'];
 
+/** The folder a push writes its test and theorem results to (task b160627d); writing it takes the `push` scope. */
+export const RESULTS = 'results';
+
 /** Every scope a key can hold; `admin` implies the others and also manages keys. */
 export const SCOPES = ['push', 'compact', ...FOLDERS, 'admin'];
 
@@ -83,7 +86,7 @@ export const remoteApi = async (request, env, ctx, url) => {
     // `Remote.keys`, `download` and `upload` reach packs through the files API the CLI already speaks.
     return packs(request, env, ctx, project, rest.slice(1));
   }
-  if (area === 'files' && FOLDERS.includes(rest[0])) {
+  if (area === 'files' && (FOLDERS.includes(rest[0]) || rest[0] === RESULTS)) {
     return files(request, env, ctx, project, rest[0], rest.slice(1));
   }
   throw new HttpError(404, 'not found');
@@ -319,13 +322,13 @@ const files = async (request, env, ctx, project, folder, rest) => {
     });
   }
   if (request.method === 'PUT') {
-    const logged = await authorize(request, env, ctx, folder, project);
+    const logged = await authorize(request, env, ctx, folder === RESULTS ? 'push' : folder, project);
     const type = request.headers.get('content-type') ?? 'application/octet-stream';
     await env.BUCKET.put(key, new Uint8Array(await request.arrayBuffer()), { httpMetadata: { contentType: type } });
     return logged(json({ key: rest.join('/'), stored: true }, 201));
   }
   if (request.method === 'DELETE') {
-    const logged = await authorize(request, env, ctx, folder, project);
+    const logged = await authorize(request, env, ctx, folder === RESULTS ? 'push' : folder, project);
     // Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.
     if (folder === 'site') {
       await env.BUCKET.delete(key);

@@ -80,6 +80,7 @@ describe('live explorer (D192)', () => {
             'def area (side : Int) : Int := side * side',
             'def isEven (n : Int) : Bool := if n == 0 then true else isOdd (n - 1)',
             'def isOdd (n : Int) : Bool := if n == 0 then false else isEven (n - 1)',
+            'test twoIsEven := isEven 2',
             '',
           ].join('\n'),
         ),
@@ -108,6 +109,8 @@ describe('live explorer (D192)', () => {
         ...c,
       );
       deus('task', 'new', 'Squares', '--link', 'area', '--by', 'tester', ...c);
+      // A push carries the results of the tests run before it, so the hosted explorer shows them (task b160627d).
+      expect(deus('test', ...c).code).toBe(0);
       expect(deus('push', ...c).code).toBe(0);
       // A directory remote keeps its head in its bundles; the bucket keeps it beside them (D181).
       const head = readFileSync(join(scratch, 'codebase', 'branches', 'main'), 'utf8').trim();
@@ -133,6 +136,7 @@ describe('live explorer (D192)', () => {
       for (const part of ['names', 'tasks', 'comments', 'events', 'features']) {
         expect(index[part], part).toEqual(site(`${part}.json`));
       }
+      expect(index.names.find((entry: { name: string }) => entry.name === 'twoIsEven').status).toBe('pass');
       // `origin.main` tracks the remote in the pushing store; the bucket's branches are its heads.
       expect(index.meta).toEqual({ ...site('meta.json'), branches: ['main'] });
 

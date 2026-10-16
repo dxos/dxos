@@ -380,10 +380,31 @@ const page = (body) =>
     headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=31536000, immutable' },
   });
 
+/** Each project's pushed results (`results/all`, task b160627d) by hash, kept a minute: a push rewrites them in place. */
+const resultsByProject = new Map();
+const RESULTS_TTL = 60_000;
+
+const resultsOf = async (bucket, project) => {
+  const known = resultsByProject.get(project);
+  if (known && Date.now() - known.at < RESULTS_TTL) {
+    return known.results;
+  }
+  const object = await bucket.get(`${project}/results/all`);
+  const results = new Map();
+  for (const line of object ? (await object.text()).split('\n') : []) {
+    if (line.length > 65 && line[64] === ' ') {
+      results.set(line.slice(0, 64), line.slice(65));
+    }
+  }
+  resultsByProject.set(project, { at: Date.now(), results });
+  return results;
+};
+
 const render = async (env, ctx, project, causal, path) => {
   const files = filesAt(env.BUCKET, project, causal);
   await warm(files);
   files.metas = await metasAt(files);
+  files.results = await resultsOf(env.BUCKET, project);
   const before = files.texts.size;
   try {
     return await draw(env, files, project, causal, path);
@@ -604,6 +625,10 @@ const keyOf = (path) => {
 /** The codebase directory the compiled explorer reads; anything not here (results, provenance) is absent. */
 const provider = (files) => ({
   read: (path) => {
+    const result = /^\/codebase\/results\/([0-9a-f]{64})$/.exec(path);
+    if (result) {
+      return files.results?.get(result[1]);
+    }
     if (path === `${ROOT}/HEAD`) {
       return 'main\n';
     }

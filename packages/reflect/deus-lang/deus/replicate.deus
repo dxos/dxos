@@ -330,6 +330,34 @@ def pushAssets (dir : Text) (remote : Text) : {Remote, IO, Throw Text} Int :=
     writeKnown dir remote "assets" (List.foldl (fun m h => Set.insert h m) there local)
     List.length missing
 
+/-- One `<hash> <verdict>` line per result, the form `results/all` takes on a remote. -/
+def resultLines (pairs : List (Text, Text)) : Text := Text.concat (List.map (fun p => fst p ++ " " ++ snd p ++ "\n") pairs)
+
+/-- The `<hash> <verdict>` lines of `text`, skipping any that is not one. -/
+def readResultLines (text : Text) : List (Text, Text) :=
+  List.filterMap (fun line => if Text.length line > 65 && Text.code line 64 == 32 && Assets.isHash (Text.take 64 line) then Option.some (Text.take 64 line, Text.drop 65 line) else Option.none) (Text.lines text)
+
+/-- Uploads the store's test and theorem results (`results/<hash>`), merged over the remote's, as the one file
+  `results/all` that the hosted explorer reads its verdicts from (task b160627d); returns how many the remote
+  lacked or had otherwise. Nothing is read or written when the results are as they were at the last push. -/
+def pushResults (dir : Text) (remote : Text) : {Remote, IO, Throw Text} Int :=
+  let folder := dir ++ "/results"
+  let local := if IO.isDir folder then List.filterMap (fun h =>
+      match IO.readFile (folder ++ "/" ++ h) with
+      | Option.some text => if Text.isEmpty (Text.trim text) || Text.contains "\n" (Text.trim text) then Option.none else Option.some (h, Text.trim text)
+      | Option.none => Option.none) (List.filter Assets.isHash (IO.listDir folder)) else []
+  let digest := Text.sha256 (resultLines local)
+  if List.isEmpty local || Map.contains digest (readKnown dir remote "results") then 0 else
+    let staged := dir ++ "/results.remote"
+    let there := Map.fromList (if Remote.download "results/all" staged then readResultLines (getOr (IO.readFile staged) "") else [])
+    let changed := List.filter (fun pair => Map.lookup (fst pair) there != Option.some (snd pair)) local
+    if List.isEmpty changed then () else
+      IO.writeFile staged (resultLines (Map.toList (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) there changed)))
+      Remote.upload "results/all" staged "text/plain; charset=utf-8"
+    IO.exec "rm" ["-f", staged]
+    writeKnown dir remote "results" (Set.fromList [digest])
+    List.length changed
+
 /-- Downloads the remote's assets the store lacks; returns how many. -/
 def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
   let missing := List.filter (fun h => Assets.isHash h && not (Assets.has dir h)) (Remote.keys "assets")

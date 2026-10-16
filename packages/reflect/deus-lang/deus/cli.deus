@@ -1195,6 +1195,8 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let name := remoteName args
   let branch := getOr (option args "branch") (currentBranch dir)
   let attempt := fun _ => withRemote dir name (fun _ =>
+    -- Results go first, so the explorer the pushed head is drawn into already has its verdicts.
+    pushResults dir name
     let bundle := Replicate.push dir name branch (Cli.flag args "allow-drop")
     pushAssets dir name
     bundle)

@@ -401,6 +401,10 @@ describe('replication API', () => {
     expect((await call('/v1/toolchain/files/assets/shot', { method: 'DELETE', key: assets })).status).toBe(200);
     expect((await call('/v1/toolchain/files/assets/shot')).status).toBe(404);
     expect(await (await bucket.get('toolchain/trash/assets/shot'))?.text()).toBe('png');
+    // Test results travel with a push, so writing them takes the push scope (task b160627d).
+    expect((await call('/v1/toolchain/files/results/all', { method: 'PUT', body: 'x', key: site })).status).toBe(403);
+    const pusher = await insertKey(db, ['push']);
+    expect((await call('/v1/toolchain/files/results/all', { method: 'PUT', body: 'x', key: pusher })).status).toBe(201);
     // The explorer of PREFIX reads the same files; `/` itself is the host's front page (D200).
     const page = await call('/index.html');
     expect(await page.text()).toBe('index.html');
