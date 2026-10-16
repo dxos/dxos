@@ -222,7 +222,7 @@ describe('live explorer (D192)', () => {
       const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', head, 'index.json'), 'utf8'));
       // The overview opens every spec document, so their pages are drawn with the index.
       expect(readdirSync(join(bucket, 'toolchain', 'live', head, 'doc'))).toEqual(['Area.Spec.json']);
-      const chunks = sent.filter((message) => message.body.causal === head);
+      const chunks = sent.filter((message) => message.body.causal === head && message.body.from !== undefined);
       expect(chunks.length).toBe(Math.ceil(index.names.length / 200));
       for (const chunk of chunks) {
         await deliver(chunk.body);
@@ -230,6 +230,15 @@ describe('live explorer (D192)', () => {
       const drawn = readdirSync(join(bucket, 'toolchain', 'live', head, 'def'));
       const pages = new Set(index.names.map((entry: { hash: string }) => `${entry.hash.replace(/^#/, '_')}.json`));
       expect(new Set(drawn)).toEqual(pages);
+      // The latest changes before the head are drawn too, for History.
+      const earlier = index.meta.history
+        .filter((change: { causal: string; imported?: boolean }) => !change.imported && change.causal !== head)
+        .map((change: { causal: string }) => change.causal);
+      for (const chunk of sent.filter((message) => message.body.causal === head && message.body.changes)) {
+        await deliver(chunk.body);
+      }
+      const changes = readdirSync(join(bucket, 'toolchain', 'live', head, 'change'));
+      expect(changes).toEqual(expect.arrayContaining(earlier.slice(0, 30).map((causal: string) => `${causal}.json`)));
     },
   );
 

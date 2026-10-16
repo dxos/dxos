@@ -48,7 +48,10 @@ const repoUrl = (target) => {
 /** A file in git named in prose (`examples/react/index.html`), which the site does not serve but GitHub does. */
 const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/;
 
-/** HTML with each decision number (D96) outside a link or code made a link to the decision log; one digit is too short to tell from Cloudflare's D1. */
+/** The task with id `id` in the loaded codebase, if any. */
+const taskById = (id) => index.tasks?.find((task) => task.id === id);
+
+/** HTML with each decision number (D96) and task id outside a link or code made a link; a one-digit decision is too short to tell from Cloudflare's D1. */
 const decisionLinks = (html) => {
   let inside = 0;
   return html
@@ -60,10 +63,18 @@ const decisionLinks = (html) => {
       }
       return inside > 0
         ? part
-        : part.replace(
-            /\bD(\d{2,4})\b/g,
-            `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
-          );
+        : part
+            .replace(
+              /\bD(\d{2,4})\b/g,
+              `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
+            )
+            // A task id in prose ("depends on b09507db") opens the task; a definition's short hash stays text.
+            .replace(/\b[0-9a-f]{8}\b/g, (id) => {
+              const task = taskById(id);
+              return task
+                ? `<a class="task-link" data-open="t:${id}" title="${escape(task.title)} (${escape(task.state)})">${id}</a>`
+                : id;
+            });
     })
     .join('');
 };
@@ -2263,17 +2274,36 @@ const renderHistory = async () => {
       .join('') +
     '</ol>' +
     (history.length >= 1000 ? '<p class="muted">The 1000 most recent changes.</p>' : '');
-  await Promise.all(
-    history
-      .filter((change) => !change.imported)
-      .map(async (change) => {
-        const page = await load(`change/${change.causal}.json`);
-        const slot = view.querySelector(`[data-stat="${CSS.escape(change.causal)}"]`);
-        if (page && slot) {
-          slot.outerHTML = diffStat(page);
-        }
-      }),
-  );
+  // Each row's counts come from its change page, which the Worker may draw on demand; fetching all of them at once
+  // sent up to a thousand requests and kept the page busy for minutes, so a row loads its counts when it is seen.
+  const pending = [];
+  let running = 0;
+  const pump = () => {
+    while (running < 4 && pending.length > 0) {
+      const slot = pending.shift();
+      running++;
+      void load(`change/${slot.dataset.stat}.json`)
+        .then((page) => {
+          if (page && slot.isConnected) {
+            slot.outerHTML = diffStat(page);
+          }
+        })
+        .finally(() => {
+          running--;
+          pump();
+        });
+    }
+  };
+  const seen = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        seen.unobserve(entry.target);
+        pending.push(entry.target);
+      }
+    }
+    pump();
+  });
+  view.querySelectorAll('[data-stat]').forEach((slot) => seen.observe(slot));
 };
 
 //

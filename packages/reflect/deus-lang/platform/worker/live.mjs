@@ -336,7 +336,8 @@ export const warmLive = async (env, ctx, project) => {
     // The overview links its head's change first.
     await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'change', `${head.causal}.json`]);
     await checkHistory(env, project, 'main', head.causal);
-    const names = JSON.parse(await response.text()).names ?? [];
+    const drawnIndex = JSON.parse(await response.text());
+    const names = drawnIndex.names ?? [];
     // The overview asks for every spec document at once, so those pages are drawn before anyone opens it.
     const documents = [
       ...new Set(
@@ -353,6 +354,14 @@ export const warmLive = async (env, ctx, project) => {
     for (let from = 0; from < names.length; from += PAGES_PER_CHUNK) {
       chunks.push({ body: { project, causal: head.causal, from, count: PAGES_PER_CHUNK } });
     }
+    // The latest changes too, which a reviewer opens from History first; drawing one on demand takes seconds.
+    const recent = (drawnIndex.meta?.history ?? [])
+      .filter((change) => !change.imported && change.causal !== head.causal)
+      .slice(0, RECENT_CHANGES)
+      .map((change) => change.causal);
+    for (let at = 0; at < recent.length; at += CHANGES_PER_CHUNK) {
+      chunks.push({ body: { project, causal: head.causal, changes: recent.slice(at, at + CHANGES_PER_CHUNK) } });
+    }
     if (env.LIVE_QUEUE?.sendBatch && chunks.length > 0) {
       for (let at = 0; at < chunks.length; at += 100) {
         await env.LIVE_QUEUE.sendBatch(chunks.slice(at, at + 100));
@@ -366,9 +375,19 @@ export const warmLive = async (env, ctx, project) => {
 /** Definition pages one queue message draws: well inside a consumer's CPU time once the site is built. */
 const PAGES_PER_CHUNK = 200;
 
+/** How many of the latest changes a push draws, and how many one queue message does. */
+const RECENT_CHANGES = 30;
+const CHANGES_PER_CHUNK = 5;
+
 /** Draws the definition pages `from` to `from + count` of a causal's index, skipping those already stored. */
-export const warmPages = async (env, ctx, { project, causal, from, count }) => {
+export const warmPages = async (env, ctx, { project, causal, from, count, changes }) => {
   try {
+    if (changes) {
+      for (const change of changes) {
+        await live(new Request('https://warm.invalid/'), env, ctx, project, [causal, 'change', `${change}.json`]);
+      }
+      return;
+    }
     const index = await env.BUCKET.get(`${project}/live/${causal}/index.json`);
     if (!index) {
       return;

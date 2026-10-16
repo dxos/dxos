@@ -269,5 +269,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 259 | 10-17 03:10 | 40m 00s | this commit | The todo demo's Under the hood panel proves every hook, JS components and the codecs in Chromium; `@dxos/web` features shipped (task bfe80272) |
 | 260 | 10-17 04:20 | 1h 10m | this commit | The TypeScript-like dialect parses back to the same hashes (D227, task be4c4645) |
 | 261 | 10-17 05:20 | 1h 00m | this commit | Adversarial review of D224–D226 fixed (D228) |
+| 262 | 10-17 06:10 | 50m 00s | this commit | History loads lazily and recent changes are pre-drawn; task ids link; the dialect reads types back (D229) |
 
-Total from stage 1 to stage 261: 87h 50m.
+Total from stage 1 to stage 262: 88h 40m.

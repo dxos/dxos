@@ -392,11 +392,76 @@ def arrowFn (p : Parser) : {Throw Text} Option Expr :=
 -- Declarations.
 --
 
+/-- `<a, b>` after a declared name, if any. -/
+def typeParams (p : Parser) : {Throw Text} List Text := if at p "<" then
+  skip p
+  commaList p ">" (fun _ => Parser.ident p)
+else []
+
+/-- `f: T` or `T` in a constructor's parentheses; an unnamed field is `""`, as DEUS's parser gives it. -/
+def field (p : Parser) : {Throw Text} (Text, Ty) := if (peek p).kind == Kind.ident && isTok (peekAt p 1) ":" then
+  let name := Parser.ident p
+  skip p
+  (name, TsParse.ty p)
+else ("", TsParse.ty p)
+
 def decl (p : Parser) : {Throw Text} Decl :=
   let doc := if (peek p).kind == Kind.doc then Option.some (Text.trim (Parser.next p).value) else Option.none
+  -- `@iri("…")` on the line before names an IRI other than the default.
+  let iri := if at p "@" && (peekAt p 1).value == "iri" then
+    skip p
+    skip p
+    word p "("
+    let value := (Parser.next p).value
+    word p ")"
+    Option.some value
+  else Option.none
   let t := peek p
   let pos := posOf t
-  if at p "function" then
+  if at p "type" then
+    skip p
+    let name := Parser.ident p
+    let params := typeParams p
+    word p "="
+    let rec ctors acc := if at p "|" then
+      skip p
+      let ctor := (Parser.next p).value
+      let fields := if at p "(" then
+        skip p
+        commaList p ")" (fun _ => TsParse.field p)
+      else []
+      ctors ((ctor, fields) :: acc)
+    else
+      if at p "never" then skip p else ()
+      word p ";"
+      reverse acc
+    Decl.data name params iri (ctors []) doc [] pos
+  else if at p "interface" || at p "ability" then
+    let isRecord := at p "interface"
+    skip p
+    let name := Parser.ident p
+    let params := typeParams p
+    word p "{"
+    let rec members acc := if at p "}" then
+      skip p
+      reverse acc
+    else
+      let member := (Parser.next p).value
+      -- An operation `op(A, B): R` is `A -> B -> R`; a field or an argument-less operation is `name: T`.
+      let type := if not isRecord && at p "(" then
+        skip p
+        let args := commaList p ")" (fun _ => TsParse.ty p)
+        word p ":"
+        let result := TsParse.ty p
+        List.foldr (fun a r => Ty.arrow a r Option.none) result args
+      else
+        word p ":"
+        TsParse.ty p
+      word p ";"
+      members ((member, type) :: acc)
+    let ms := members []
+    if isRecord then Decl.record name params iri ms doc [] pos else Decl.effect name params iri ms doc [] pos
+  else if at p "function" then
     skip p
     let name := Parser.ident p
     -- Type parameters are implicit in DEUS.
@@ -441,7 +506,7 @@ def decl (p : Parser) : {Throw Text} Decl :=
     word p ")"
     word p ";"
     Decl.check name body doc [] pos
-  else Parser.error p "expected function, const or test"
+  else Parser.error p "expected function, const, test, type, interface or ability"
 
 /-- Every declaration of a file in the dialect. -/
 def file (source : Text) : {Throw Text} List Decl :=
