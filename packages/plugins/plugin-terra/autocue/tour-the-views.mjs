@@ -63,6 +63,11 @@ export const steps = [
     done: ({ page }) =>
       page.evaluate(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.terra' && plugin.active)),
     run: async ({ page }) => {
+      // A cold first load can outlast the driver's navigation; operations only resolve once the space has booted.
+      await page
+        .locator('[data-testid="spacePlugin.createObject"]')
+        .first()
+        .waitFor({ state: 'visible', timeout: 120_000 });
       const notice = page.locator('[data-testid="toast.close"]');
       if (await visible(notice, 8_000)) {
         await notice.first().click();
@@ -104,10 +109,14 @@ export const steps = [
         await demo.click({ selector: '[data-testid="terra.toolbar.add-random-object"] >> nth=0', label: 'Add object' });
         await page.waitForTimeout(900);
       }
-      // Judged by the telemetry panel, which lists one row per object.
-      await page.waitForFunction(() => document.querySelectorAll('table tbody tr').length >= 5, undefined, {
-        timeout: 10_000,
-      });
+      // Judged by the telemetry panel, which lists one option per object.
+      await page.waitForFunction(
+        () => document.querySelectorAll('[role="listbox"] [role="option"]').length >= 5,
+        undefined,
+        {
+          timeout: 10_000,
+        },
+      );
       await page.waitForTimeout(BEAT * 2);
     },
   },
