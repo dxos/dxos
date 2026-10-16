@@ -320,7 +320,8 @@ over names and tasks. Each definition or task you open becomes a card in one wor
 can be read side by side, and the open cards stay in the URL. A definition card shows its
 signature and highlighted source, where each reference opens the definition it names. It also
 lists the definition's dependencies, dependents and tasks. The Tasks view is a board with a
-column per state.
+column per state. A link can name what it opens: `#d:Cli.main` opens that definition, `#n:Cli` that
+namespace, `#q:List.map` the search, and several join with commas (`#d:Option,d:List.map`).
 
 ```bash
 deus explore                        # serves it on http://127.0.0.1:8080

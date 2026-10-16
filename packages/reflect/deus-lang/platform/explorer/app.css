@@ -1473,6 +1473,38 @@ ul.rows {
   flex: none;
 }
 
+/* A phone has no room for the message beside the counts, date and hash, so they go on a line below it. */
+@media (max-width: 760px) {
+  .timeline-row {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    column-gap: 10px;
+    font-size: 13px;
+  }
+
+  .timeline-row .dot {
+    top: 13px;
+  }
+
+  .timeline-row .message {
+    flex: 1 0 100%;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    font-size: 14px;
+  }
+
+  .timeline-row .diffstat,
+  .timeline-row.imported .chip {
+    margin-left: 0;
+  }
+
+  .timeline-row .diffstat:empty {
+    display: none;
+  }
+}
+
 /* Home. */
 
 .home-header {

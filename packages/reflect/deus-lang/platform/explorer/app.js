@@ -1475,6 +1475,9 @@ const buildCard = async (key) => {
   const value = key.slice(2);
   switch (key[0]) {
     case 'd': {
+      if (!DEFINITION_HASH.test(value)) {
+        return missingCard(key, `No definition named ${value}`);
+      }
       const [def, events] = await Promise.all([load(pagePath(value)), loadEvents()]);
       if (def?.ts !== undefined) {
         element('dialects').hidden = false;
@@ -2305,6 +2308,13 @@ const renderTasks = () => {
     `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${waiting}<div class="board">${columns.join('')}</div>`;
 };
 
+/** A change's message, with the title of the task a `task: comment on <id>` or `task: set <id> state` change names. */
+const changeMessage = (message) => {
+  const task = /^task: (?:comment on|set) ([0-9a-f]{8})\b/.exec(message ?? '');
+  const title = task && taskById(task[1])?.title;
+  return `${escape(message || '(no message)')}${title ? `<span class="muted"> · ${escape(title)}</span>` : ''}`;
+};
+
 const renderHistory = async () => {
   const history = index.meta.history;
   const view = element('history-view');
@@ -2315,7 +2325,7 @@ const renderHistory = async () => {
         change.imported
           ? `<li><span class="timeline-row imported" title="Imported from an export; this store has no record of its contents"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
             `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="chip">imported</span><span class="hash">${escape(short(change.causal))}</span></span></li>`
-          : `<li><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
+          : `<li><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${changeMessage(change.message)}</span>` +
             `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
       )
       .join('') +
@@ -2541,8 +2551,28 @@ const openQuery = () => {
   openFinder();
 };
 
+/** A definition key names a hash, a member of one (`<hash>.<n>`) or a builtin (`#Int`); anything else is a name. */
+const DEFINITION_HASH = /^([0-9a-f]{64}(\.[0-9]+)?|#.+)$/;
+
+/** `#d:<name>` opens the definition of that name, so a link can be written by hand (`/#d:Cli.main`); the fragment
+ * is rewritten to the hash, which every other link uses. A name the project lacks is left for the card to report. */
+const canonicalNames = () => {
+  const raw = location.hash.slice(1).split(',');
+  let changed = false;
+  const keys = raw.map((key) => {
+    const value = decoded(key.slice(2));
+    const entry = key.startsWith('d:') && !DEFINITION_HASH.test(value) ? named(value) : undefined;
+    changed ||= entry !== undefined;
+    return entry ? `d:${entry.hash}` : key;
+  });
+  if (changed) {
+    history.replaceState(null, '', `#${keys.join(',')}`);
+  }
+};
+
 const renderNow = async () => {
   openQuery();
+  canonicalNames();
   const { view, keys } = parseFragment();
   ui.view = view;
   for (const link of document.querySelectorAll('#views [data-view]')) {
