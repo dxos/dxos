@@ -3,12 +3,13 @@
 The Composer and EDGE architectures as nested canvas drawings, with three reading guides that embed
 and link them.
 
-- Code: this directory, applied by `ArchitectureSpace.ts`. Diagram sources are `plugin-canvas/docs/diagrams/*.dx`,
+- Code: `partial.ts`, exported as `Architecture.Partial` from `@dxos/plugin-canvas/samples`. Diagram sources are `plugin-canvas/docs/diagrams/*.dx`,
   precompiled to `compiled.json`.
 - Requires: nothing
 - Provides: `drawings.<id>` for each diagram below, `docs.composer`, `docs.dxos`, `docs.edge`
 - Clock: unused
-- Used by: `ArchitectureSpace.makeTemplate` (`org.dxos.plugin.canvas.template.architecture`)
+- Used by: `ArchitectureSpace.makeTemplate` (`org.dxos.plugin.canvas.template.architecture`) and
+  `FieldstoneSpace.makeTemplate` (plugin-debug)
 
 ## Contents
 

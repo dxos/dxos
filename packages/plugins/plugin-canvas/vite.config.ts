@@ -12,6 +12,7 @@ export default defineConfig({
     Settings: 'src/types/Settings.ts',
     CanvasPlugin: 'src/CanvasPlugin.ts',
     plugin: 'src/plugin.tsx',
+    samples: 'src/samples/index.ts',
     capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',

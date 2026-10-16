@@ -3,7 +3,7 @@
 A small Oakland coffee roastery in the middle of a spring blend launch. Kai Chen, head roaster, is
 the main character.
 
-- Code: this directory, applied by `BrambleSpace.ts`. World facts are in `ABOUT.md`, the space tour
+- Code: `partial.ts`, built from the phase files beside it. World facts are in `ABOUT.md`, the space tour
   in `README.md`.
 - Requires: nothing
 - Provides: `orgs.*`, `people.*`, `taskSets.*`, `projects.*` (keys below)
@@ -16,11 +16,11 @@ the main character.
 
 - 6 `Organization.Organization`, each with description, status, website and location:
   - `bramble` Bramble Coffee Roasters (active, Oakland)
-  - `esperanza` Finca Esperanza (active, Huila, Colombia)
-  - `sidamo` Sidamo Cooperative (active, Ethiopia)
+  - `fincaEsperanza` Finca Esperanza (active, Huila, Colombia)
+  - `sidamoCoop` Sidamo Cooperative (active, Ethiopia)
   - `northStar` North Star Café (active, Portland)
   - `hatch` Hatch Bakery (qualified, Brooklyn)
-  - `oliveVine` Olive & Vine (prospect, Austin)
+  - `oliveAndVine` Olive & Vine (prospect, Austin)
 - 9 `Person.Person`, each with a work email and `Person → Organization (organization)`:
   - Bramble: `kai` Kai Chen (Head Roaster), `diego` Diego Alvarez (Sourcing), `sam` Sam Okafor
     (Wholesale Lead), `riley` Riley Tanaka (Operations)
@@ -51,7 +51,7 @@ the main character.
 - 4 `Project.Project`, each with `Instructions` and its TaskSet:
   - `springBlend` Spring Blend Launch (active)
   - `sourcingTrip` Q2 Sourcing Trip (active)
-  - `oliveVine` Olive & Vine Onboarding (active)
+  - `oliveAndVine` Olive & Vine Onboarding (active)
   - `roasteryOps` Roastery Ops (blocked), with a disabled weekly-report routine (`0 8 * * 1`)
 - Projects list their artifacts (notes, drawings, sheets) by Ref.
 
