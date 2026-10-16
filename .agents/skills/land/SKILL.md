@@ -150,7 +150,17 @@ stays as it is. Rules for the body and bump level:
 
 ## Step 8 — Enable auto-merge (merge queue)
 
-Once all required checks pass and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
+Browser and storybook tests run only in the merge queue: the PR enters it with them skipped, and a
+failure there drops it again. Before queueing, run them for the projects the PR changed:
+
+```bash
+MOON_BASE=origin/main moon run :test-browser :test-storybook --affected
+```
+
+When the PR changes a shared UI package, whose dependents' stories that command leaves out, run every
+suite on the branch once in CI instead: `depot ci dispatch --workflow check.yml --ref <headRefName>`.
+
+Once all required checks pass, these tests pass, and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
 
 ```
 mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })

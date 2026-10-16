@@ -15,6 +15,9 @@ env:
   # Agents' branches and the Changesets Version PR's.
   DRAFT_PREFIXES: claude/ dm/ changeset-release/
 
+concurrency:
+  group: draft-on-open-${{ github.event.pull_request.number }}
+
 permissions:
   contents: read
 

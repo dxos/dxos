@@ -84,7 +84,8 @@ jobs:
     runs-on:
       size: 4x16
       image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
-    timeout-minutes: 30
+    # The scheduled run bypasses the cache and compiles everything here, in about 24 minutes.
+    timeout-minutes: 40
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -151,8 +152,8 @@ jobs:
           - name: Check e2e tests are bound to QA flows
             run: node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
 
-      # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
-      # declares an implicit input to every task, and neither restores it on a hard cancellation.
+      # Neither of the next two can join the block above: each rewrites a moon task input (`pnpm-lock.yaml`,
+      # `package.json`), and neither restores it on a hard cancellation.
       #
       # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
       # surfaces an unsatisfiable peer. `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`.
@@ -416,7 +417,8 @@ jobs:
     runs-on:
       size: 4x16
       image: *ci-image
-    timeout-minutes: 30
+    # The scheduled run bypasses the cache and rebuilds every dependency per shard, in about 28 minutes.
+    timeout-minutes: 45
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -478,7 +480,7 @@ jobs:
     name: test (browser, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' &&
+      ${{ !cancelled() && inputs.only != 'e2e' && github.event_name != 'pull_request' &&
       (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.browser == 'true')) }}
     strategy:
       fail-fast: false

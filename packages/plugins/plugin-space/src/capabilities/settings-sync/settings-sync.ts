@@ -13,12 +13,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { Annotation, Database, Obj, Ref } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { catchNonInterrupt, resolveSettingsSpace } from '../../util/index.ts';
+import { catchNonInterrupt, resolveAppSettings, resolveSettingsSpace } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
 import { type Store } from './reconciler.ts';
 import { Sync } from './sync.ts';
@@ -78,20 +78,7 @@ export default Capability.makeModule(
 
     const bind = Effect.gen(function* () {
       const space = yield* resolveSettingsSpace(client);
-      // Named at genesis; a settings space that predates the name is given one here.
-      let settings = yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
-        Option.match({
-          onSome: (ref) => Database.load(ref),
-          onNone: () =>
-            Effect.sync(() => {
-              const settings = space.db.add(AppSettings.make());
-              Obj.update(space.properties, (properties) => {
-                Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
-              });
-              return settings;
-            }),
-        }),
-      );
+      let settings = yield* resolveAppSettings(space);
       const store = makeStore(() => settings, device, registry);
       const sync = new Sync(store);
 
