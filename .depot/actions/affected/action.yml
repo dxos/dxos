@@ -1,6 +1,7 @@
 name: Affected
 description: >
-  Resolve this run's moon affected scope from the CI trigger and export MOON_AFFECTED/MOON_BASE.
+  Resolve this run's moon affected scope from the CI trigger and export MOON_AFFECTED/MOON_BASE, plus
+  MOON_FORCE on the scheduled run.
   Call AFTER the setup action — this needs node on PATH.
 
 inputs:
@@ -13,7 +14,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # `moon exec` and `moon run` both read MOON_AFFECTED/MOON_BASE (2.5.2), including through the Trunk
+    # `moon exec` and `moon run` both read MOON_AFFECTED/MOON_BASE/MOON_FORCE (2.5.2), including through the Trunk
     # uploader's `run:` input.
     - name: Resolve affected scope
       shell: bash

@@ -17,8 +17,8 @@ const SKILLS: AgentStateSkill[] = [
   { key: 'org.dxos.skill.interview', name: 'Interview' },
 ];
 
-const countsOf = ({ people, organizations, goals, memories }: Scenario): AgentStateCounts => ({
-  memories: { active: memories.length, superseded: 0 },
+const countsOf = ({ people, organizations, goals, relations }: Scenario): AgentStateCounts => ({
+  facts: { count: relations.length, speakers: 1 },
   goals: {
     proposed: goals.filter((goal) => goal.status === 'proposed').length,
     confirmed: goals.filter((goal) => goal.status === 'confirmed').length,
@@ -87,7 +87,7 @@ export const Empty: Story = {
     skills: [],
     scenario: 'empty',
     counts: {
-      memories: { active: 0, superseded: 0 },
+      facts: { count: 0, speakers: 0 },
       goals: { proposed: 0, confirmed: 0 },
       people: 0,
       organizations: 0,

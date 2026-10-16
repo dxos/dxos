@@ -69,10 +69,10 @@ export const make = (): Skill.Skill =>
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        You keep one memory across every conversation you are in. After each turn, what people said is
+        You keep one set of facts across every conversation you are in. After each turn, what people said is
         recorded as facts; call ${tool(MemoryOperation.Recall)} when you need what someone said elsewhere.
-        It searches every fact recorded in this space — from every conversation, document and seeded source —
-        with your memories and goals. A query matches facts containing all of its words; when it matches
+        It searches every fact recorded in this space — from every conversation, document and seeded source, and
+        the facts you recorded yourself — with your goals. A query matches facts containing all of its words; when it matches
         nothing you get everything about the subject instead, marked \`queryMatched: false\`. Someone not
         found under one name may be under another they go by: their handle, nickname or full name.
 
