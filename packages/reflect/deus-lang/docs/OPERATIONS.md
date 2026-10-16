@@ -60,6 +60,7 @@ with it.
   and drawn explorer pages (their bucket key, 7 days), read through (D197).
 - **Queue `deus-live`**: a pack index upload sends `{ project }`; the Worker's `queue` handler draws that project's
   head explorer (D192).
+- **Hub** (D200): `/` lists every project with global counts and a search; `GET /v1/_projects` is its data.
 - **Explorer**: `/@owner/project/` serves it (D196: overview by area, spec documents as `#s:<Doc>` pages); `/@dxos/toolchain/Cli.dispatch` opens that definition (D184).
 - **Toolchain codebase remote**: `deus remote add origin https://deus.dmytro-a80.workers.dev/v1/toolchain`.
 
@@ -106,7 +107,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-16 10:05 UTC, version 958f8a31 (D196: guided explorer; metadata from each head's snapshot).
+2026-10-16 09:40 UTC, version db942bd4 (D200: the hub at `/`).
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in
 about 6. Until the index is drawn, visitors see the head drawn last (D195; `live/shown/<branch>`, `live/drawn.json`).

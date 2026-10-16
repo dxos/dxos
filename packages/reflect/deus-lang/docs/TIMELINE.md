@@ -233,5 +233,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 223 | 10-16 08:55 | 30m 00s | this commit | First visit after a push is fast (D195): the last drawn head and its pages stand in until the pushed head is drawn (overview 31 s → 1.3 s, definition 7.8 s → 0.9 s); the smoke script waits for the real overview; package tsc clean |
 | 224 | 10-16 09:20 | 40m 00s | this commit | QA flows run against a live server (`deus mdl --base`); Workers KV caches heads (60 s) and pages (7 days), every live request now at the 0.2 s round trip (D197); usability probe with a Haiku visitor |
 | 225 | 10-16 10:00 | 45m 00s | this commit | Guided explorer (D196): areas from the feature map, spec documents as pages with requirement evidence, namespaces grouped by area; metadata read from each head's snapshot, so prose edits reach the hosted explorer |
+| 226 | 10-16 09:15 | 25m 00s | this commit | Feature areas regrouped as Dmytro reads them, with tags and a filtered overview (D199); glossary; compile-order-independent field picks (D198) |
+| 227 | 10-16 09:40 | 25m 00s | this commit | Hub at `/` (D200): global counters, the project list with each project's counts, search across every project |
 
-Total from stage 1 to stage 225: 67h 31m.
+Total from stage 1 to stage 227: 68h 21m.
