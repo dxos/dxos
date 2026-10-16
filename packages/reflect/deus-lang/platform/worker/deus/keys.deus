@@ -1,0 +1,57 @@
+-- context: @dxos/worker/Worker
+/-
+  The Worker's API key rules in DEUS (task 41714c0d, D164): how a write names its key and what a key's
+  scopes let it do. platform/worker/remote.mjs reads the key's row, hashes the secret and logs the write.
+-/
+
+namespace Worker.Keys
+
+/-- The key a request names: `Authorization: Bearer deus_<id>_<secret>`, a 16-digit id and a 64-digit secret. -/
+structure Named @"urn:deus:worker:NamedKey" where
+  id : Text
+  secret : Text
+
+/-- `t` is `count` lower-case hex digits. -/
+def isHex (count : Int) (t : Text) : Bool :=
+  Text.length t == count && List.all (fun c => isDigit c || (c >= 'a' && c <= 'f')) (Text.utf8 t)
+
+/-- The key an `Authorization` header names; none for anything else. -/
+def parseKey (header : Text) : Option Named :=
+  if not (startsWith "Bearer deus_" header) then Option.none else
+    match Text.split (Text.drop 12 header) "_" with
+    | [id, secret] => if isHex 16 id && isHex 64 secret then Option.some (Named.mk id secret) else Option.none
+    | _ => Option.none
+
+/-- Whether a key holding `held` may act in `scope`: it holds that scope or `admin`, which implies every other. -/
+def allows (held : List Text) (scope : Text) : Bool := List.contains scope held || List.contains "admin" held
+
+/-- What is wrong with a key an admin asks to mint, if anything: it needs a label and some of the `known`
+  scopes. -/
+def mintProblem (label : Text) (scopes : List Text) (known : List Text) : Option Text :=
+  if Text.isEmpty label then Option.some "a key needs a label"
+  else if List.isEmpty scopes || not (List.all (fun scope => List.contains scope known) scopes) then
+    Option.some ("scopes are some of " ++ Text.join ", " known)
+  else Option.none
+
+/-- A sample key secret for the tests. -/
+def secretA : Text := Text.repeat 64 "a"
+
+test keysParse :=
+  parseKey ("Bearer deus_0123456789abcdef_" ++ secretA) == Option.some (Named.mk "0123456789abcdef" secretA)
+
+test badKeysAreRefused :=
+  List.all (fun header => parseKey header == Option.none)
+    ["", "Bearer deus_0123456789abcdef", "Bearer deus_0123456789abcde_" ++ secretA,
+     "bearer deus_0123456789abcdef_" ++ secretA, "Bearer deus_0123456789ABCDEF_" ++ secretA,
+     "Bearer deus_0123456789abcdef_" ++ secretA ++ "_", "Bearer deus_0123456789abcdef_" ++ secretA ++ "a"]
+
+test adminAllowsEverything :=
+  allows ["push"] "push" && not (allows ["push"] "compact") && allows ["admin"] "compact" && not (allows [] "push")
+
+test mintingNeedsALabelAndKnownScopes :=
+  mintProblem "" ["push"] ["push"] == Option.some "a key needs a label"
+    && mintProblem "ci" [] ["push", "admin"] == Option.some "scopes are some of push, admin"
+    && mintProblem "ci" ["push", "root"] ["push"] == Option.some "scopes are some of push"
+    && mintProblem "ci" ["push"] ["push"] == Option.none
+
+end Worker.Keys

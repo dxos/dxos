@@ -9,6 +9,7 @@
 
 import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
 import * as heads from './gen/heads.js';
+import * as keys from './gen/keys.js';
 import { live, projectSummaries } from './live.mjs';
 import { nameAt, names, objects, packs } from './packs.mjs';
 
@@ -26,8 +27,6 @@ export const RESULTS = 'results';
 
 /** Every scope a key can hold; `admin` implies the others and also manages keys. */
 export const SCOPES = ['push', 'compact', ...FOLDERS, 'admin'];
-
-const KEY = /^Bearer deus_([0-9a-f]{16})_([0-9a-f]{64})$/;
 
 export class HttpError extends Error {
   constructor(status, message) {
@@ -397,14 +396,15 @@ export const auditKey = (at, keyId) =>
  * response through so the write is recorded in the audit table with the status it got.
  */
 export const authorize = async (request, env, ctx, scope, project) => {
-  const match = KEY.exec(request.headers.get('authorization') ?? '');
-  if (!match) {
+  // How a key is named and what its scopes allow are `Worker.Keys`, in DEUS (platform/worker/deus/keys.deus).
+  const named = keys.parseKey(request.headers.get('authorization') ?? '');
+  if (!named) {
     throw new HttpError(401, 'writes need an API key: Authorization: Bearer deus_<id>_<secret>');
   }
   if (!env.DB) {
     throw new HttpError(503, 'this worker has no key database');
   }
-  const [, id, secret] = match;
+  const { id, secret } = named;
   const row = await env.DB.prepare('select * from api_keys where id = ?').bind(id).first();
   if (!row || !sameText(row.secret_hash, await sha256(new TextEncoder().encode(secret)))) {
     throw new HttpError(401, 'unknown API key');
@@ -417,7 +417,7 @@ export const authorize = async (request, env, ctx, scope, project) => {
     throw new HttpError(401, 'this API key has expired');
   }
   const scopes = JSON.parse(row.scopes);
-  if (!scopes.includes(scope) && !scopes.includes('admin')) {
+  if (!keys.allows(scopes, scope)) {
     throw new HttpError(403, `this API key lacks the ${scope} scope`);
   }
   const projects = JSON.parse(row.projects);
@@ -465,11 +465,9 @@ const keysApi = async (request, env, ctx, rest) => {
     const label = typeof body.label === 'string' ? body.label.trim().slice(0, 200) : '';
     const scopes = Array.isArray(body.scopes) ? body.scopes : [];
     const projects = body.projects === undefined ? '*' : body.projects;
-    if (!label) {
-      throw new HttpError(400, 'a key needs a label');
-    }
-    if (scopes.length === 0 || !scopes.every((scope) => SCOPES.includes(scope))) {
-      throw new HttpError(400, `scopes are some of ${SCOPES.join(', ')}`);
+    const problem = keys.mintProblem(label, scopes, SCOPES);
+    if (problem !== undefined) {
+      throw new HttpError(400, problem);
     }
     if (projects !== '*' && !(Array.isArray(projects) && projects.every(isGrantable))) {
       throw new HttpError(400, 'projects is "*" or a list of project addresses (@owner/project or @owner/*)');

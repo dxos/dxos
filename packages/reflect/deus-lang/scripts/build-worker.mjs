@@ -108,9 +108,23 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         ],
         { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
       );
+      execFileSync(
+        'node',
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
+          'Worker.Keys.parseKey',
+          'Worker.Keys.allows',
+          'Worker.Keys.mintProblem',
+          '-o',
+          join(gen, 'keys.js'),
+          '--js',
+        ],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
     } else {
       console.warn(
-        `no @dxos/worker codebase at ${workerCodebase}, so gen/packs.js and gen/heads.js are left as they are`,
+        `no @dxos/worker codebase at ${workerCodebase}, so gen/packs.js, heads.js and keys.js are left as they are`,
       );
     }
     // The todo app (examples/react), built as `examples/react/build.sh` builds it and served at /demo/todo/,

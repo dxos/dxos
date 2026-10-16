@@ -274,6 +274,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 264 | 10-17 07:30 | 50m 00s | this commit | `@dxos/worker`: the Worker's pack checks run as compiled DEUS (D230, task 41714c0d) |
 | 265 | 10-17 08:20 | 50m 00s | this commit | The pack index search runs as compiled DEUS at 0.013 ms a lookup; faster js-target imports (D231) |
 | 266 | 10-17 09:30 | 1h 10m | d4e2c13fe3 | `deus init` makes notations usable everywhere; recipe 6; adversarial review of D227–D231 fixed (D232) |
-| 267 | 10-17 10:40 | 30m 00s | this commit | D232 deployed (5452c634, LiveSite 15/15); the combined pack index is checked in DEUS before it is searched (D233); the push claim rule is DEUS (D234) |
+| 267 | 10-17 10:40 | 30m 00s | this commit | D232 deployed (5452c634, LiveSite 15/15); the combined pack index is checked in DEUS before it is searched (D233); the push claim and API key rules are DEUS (D234, D235) |
 
 Total from stage 1 to stage 267: 92h 30m.
