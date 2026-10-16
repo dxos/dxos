@@ -101,7 +101,7 @@ export const steps = [
   {
     name: 'Prep (off camera): pass Claude Code first-run screens, clear',
     setup: true,
-    run: async ({ page }) => {
+    run: async ({ demo, page }) => {
       await page.waitForFunction(() => window.stage.prompts > 0, undefined, { timeout: 240_000 });
       await focus(page);
       await page.keyboard.type('claude\n');
@@ -133,6 +133,8 @@ export const steps = [
       await page.waitForFunction((count) => window.stage.prompts > count, prompts, { timeout: 30_000 });
       await page.waitForTimeout(1_500);
       await sh(page, 'clear', { beat: 500 });
+      // Setup runs while the recorder is on; drop it so the take opens on the clean prompt.
+      await demo.cut();
     },
   },
   {
