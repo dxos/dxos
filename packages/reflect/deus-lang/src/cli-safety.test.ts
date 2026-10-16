@@ -3,7 +3,7 @@
 //
 
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
@@ -14,6 +14,8 @@ const { root, scratch, file, deus } = cliHarness('cli-safety-');
 /** Stores `text` as an object of the codebase at `dir`, as `Codebase.put` does, and returns its hash. */
 const putObject = (dir: string, text: string) => {
   const hash = createHash('sha256').update(text).digest('hex');
+  // The text names hashes that vary by run (history nodes carry their time), so its two-hex directory may not exist yet.
+  mkdirSync(join(dir, 'objects', hash.slice(0, 2)), { recursive: true });
   writeFileSync(join(dir, 'objects', hash.slice(0, 2), hash), `${text}\n`);
   return hash;
 };

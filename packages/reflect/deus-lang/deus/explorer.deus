@@ -264,7 +264,10 @@ def defJson (s : Site) (name : Text) (e : Entry) : {IO} Json :=
   let h := Entry.hash e
   let source :=
     match try (fun _ => viewEntryWith s.printer s.dir s.ns name e false) with
-    | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
+    | Result.ok text =>
+      let body := join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
+      -- A field accessor is only its header's note (`-- a field of structure …`), which is then what the page shows.
+      if Text.isEmpty (Text.trim body) then getOr (List.last? (Text.lines text)) "" else body
     | Result.err message => "-- " ++ message
   -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
   let tsSource :=

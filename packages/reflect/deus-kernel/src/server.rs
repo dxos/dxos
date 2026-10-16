@@ -146,10 +146,18 @@ impl Server {
                 Ok(response_value(machine, status, &content, &headers))
             }
             (ALARM, 0) => {
-                let delay = match args[0] {
-                    Value::Int(ms) => ms.max(0) as u64,
-                    _ => 0,
-                };
+                // A `Duration` (whole seconds, then milliseconds), or bare milliseconds from images built before it.
+                let delay = match &args[0] {
+                    Value::Int(ms) => i64::from(*ms),
+                    Value::Con(con) => match (con.fields.first(), con.fields.get(1)) {
+                        (Some(Value::Int(seconds)), Some(Value::Int(millis))) => {
+                            i64::from(*seconds) * 1000 + i64::from(*millis)
+                        }
+                        _ => return Err("Alarm.set expects a Duration".into()),
+                    },
+                    _ => return Err("Alarm.set expects a Duration".into()),
+                }
+                .max(0) as u64;
                 self.alarms.insert(
                     object.to_string(),
                     Instant::now() + Duration::from_millis(delay),

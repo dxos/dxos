@@ -18,7 +18,7 @@ def serve (request : Request) : {Storage, Actors, Alarm} Response :=
     Web.ok ("count " ++ Int.toText mine ++ ", " ++ total.content)
   else if request.url == "/add-total" then Web.ok ("total " ++ Int.toText (bump "count"))
   else if request.url == "/remind" then
-    Alarm.set 1000
+    Alarm.set (Duration.seconds 1)
     Web.ok "reminder set"
   else if request.url == "/reminded" then Web.ok (Option.getOr (Storage.get "reminded") "no")
   else if request.verb == "ALARM" then

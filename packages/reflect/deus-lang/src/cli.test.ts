@@ -198,6 +198,7 @@ describe('deus CLI', () => {
         join(root, 'deus/prelude.deus'),
         join(root, 'deus/sexp.deus'),
         join(root, 'deus/mdl.deus'),
+        join(root, 'deus/time.deus'),
         join(root, 'platform/web.deus'),
         join(root, 'platform/qa.deus'),
         join(root, 'examples/notes.deus'),
@@ -382,13 +383,18 @@ describe('deus CLI', () => {
     const sources = [
       'deus/builtins.deus',
       'deus/prelude.deus',
+      'deus/time.deus',
       'platform/web.deus',
       'examples/counter.deus',
       'examples/tally.deus',
     ];
     expect(deus('add', ...sources.map((path) => join(root, path)), ...c).code).toBe(0);
     const tests = deus('test', '--json', ...c);
-    expect(JSON.parse(tests.stdout).map((row: { name: string; status: string }) => [row.name, row.status])).toEqual([
+    const rows: { name: string; status: string }[] = JSON.parse(tests.stdout);
+    // `deus/time.deus` brings its own tests, which are not this one's subject.
+    const examples = rows.filter((row) => /^(Counter|Tally)\./.test(row.name));
+    expect(rows.every((row) => row.status === 'pass')).toBe(true);
+    expect(examples.map((row) => [row.name, row.status])).toEqual([
       ['Counter.countsAcrossRequests', 'pass'],
       ['Tally.alarmsFireInOrder', 'pass'],
       ['Tally.objectsCallEachOther', 'pass'],

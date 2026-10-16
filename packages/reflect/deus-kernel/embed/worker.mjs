@@ -88,7 +88,9 @@ export class DeusActor {
       return { $: RESPONSE, tag: 0, fields: [response.status, await response.text(), []] };
     }
     if (ability === ALARM && op === 0) {
-      await this.ctx.storage.setAlarm(Date.now() + args[0]);
+      // A `Duration` (whole seconds, then milliseconds), or bare milliseconds from images built before it.
+      const delay = typeof args[0] === 'number' ? args[0] : args[0].fields[0] * 1000 + args[0].fields[1];
+      await this.ctx.storage.setAlarm(Date.now() + Math.max(0, delay));
       return null;
     }
     if (ability === IO && (op === 0 || op === 1)) {

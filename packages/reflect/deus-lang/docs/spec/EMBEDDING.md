@@ -242,7 +242,7 @@ becomes a 500 response whose body is the result's JSON. It answers these request
 | `urn:deus:web:Storage` | 2        | `delete key`                   | boolean: whether the key existed               |
 | `urn:deus:web:Http`    | 0        | `fetch request`                | a `urn:deus:web:Response` (headers left empty) |
 | `urn:deus:web:Actors`  | 0        | `call name request`            | the named object's `urn:deus:web:Response`     |
-| `urn:deus:web:Alarm`   | 0        | `set milliseconds`             | `null`; later the actor gets `ALARM /alarm`    |
+| `urn:deus:web:Alarm`   | 0        | `set duration`                 | `null`; later the actor gets `ALARM /alarm`    |
 | `#IO`                  | 0, 1, 15 | `print`, `eprint`, `wallClock` | as in the IO table                             |
 
 ## The browser host

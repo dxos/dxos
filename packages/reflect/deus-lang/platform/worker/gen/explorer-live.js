@@ -2559,7 +2559,12 @@ function Explorer$defJson(s, name, e) {
   m1: {
     if (t0.tag === 0) {
       const text = t0.fields[0];
-      source = rt.ap(rt.prims["Text.join"], "\n", List$filter(rt.named((l) => not(Text$startsWith("-- ", l)), "Explorer.defJson/\u03bb"), Text$lines(text)));
+      const body = rt.ap(rt.prims["Text.join"], "\n", List$filter(rt.named((l) => not(Text$startsWith("-- ", l)), "Explorer.defJson/\u03bb"), Text$lines(text)));
+      if (Text$isEmpty(rt.ap(rt.prims["Text.trim"], body))) {
+        source = Option$getOr(List$last$p(Text$lines(text)), "");
+      } else {
+        source = body;
+      }
       break m1;
     }
     if (t0.tag === 1) {
@@ -4387,6 +4392,28 @@ function Explorer$Site$printer(v) {
 }
 rt.named(Explorer$Site$printer, "Explorer.Site.printer");
 
+function List$last$p(v$) {
+  for (;;) {
+    const v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (v.tag === 1 && v.fields[1].tag === 0) {
+        const x = v.fields[0];
+        return new rt.Con("#Option", 1, [x]);
+      }
+      if (v.tag === 1) {
+        const rest = v.fields[1];
+        v$ = rest;
+        continue;
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$last$p, "List.last?");
+
 function Cli$viewEntryIn(base, dir, ns, name, e, dialect) {
   const t0 = Cli$viewParts(base, dir, ns, name, e, dialect);
   m1: {
@@ -5870,28 +5897,6 @@ function Cli$viewParts(base, dir, ns, name, e, dialect) {
   }
 }
 rt.named(Cli$viewParts, "Cli.viewParts");
-
-function List$last$p(v$) {
-  for (;;) {
-    const v = v$;
-    m0: {
-      if (v.tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      if (v.tag === 1 && v.fields[1].tag === 0) {
-        const x = v.fields[0];
-        return new rt.Con("#Option", 1, [x]);
-      }
-      if (v.tag === 1) {
-        const rest = v.fields[1];
-        v$ = rest;
-        continue;
-      }
-      rt.nomatch(v);
-    }
-  }
-}
-rt.named(List$last$p, "List.last?");
 
 function Highlight$escape(t) {
   return Text$replace(">", "&gt;", Text$replace("<", "&lt;", Text$replace("&", "&amp;", t)));

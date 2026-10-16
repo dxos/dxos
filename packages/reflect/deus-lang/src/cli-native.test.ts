@@ -411,6 +411,7 @@ describe('deus CLI native back ends', () => {
       const sources = [
         'deus/builtins.deus',
         'deus/prelude.deus',
+        'deus/time.deus',
         'platform/web.deus',
         'examples/notes.deus',
         'examples/tally.deus',

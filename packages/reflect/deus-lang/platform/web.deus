@@ -38,9 +38,9 @@ ability Http @"urn:deus:web:Http" where
 ability Actors @"urn:deus:web:Actors" where
   call : Text -> Request -> Response
 
-/-- The object's alarm: `set` schedules one `ALARM /alarm` request after the given milliseconds, replacing any earlier one. -/
+/-- The object's alarm: `set` schedules one `ALARM /alarm` request after the given duration, replacing any earlier one. -/
 ability Alarm @"urn:deus:web:Alarm" where
-  set : Int -> Unit
+  set : Duration -> Unit
 
 namespace Web
 
@@ -81,7 +81,7 @@ def alarmRequest : Request := Request.mk "ALARM" "/alarm" ""
   Serves `(object, request)` pairs on named objects of one class, each with its own storage.
   `Actors.call` is served at once on the named object; `Alarm.set` schedules on a logical clock,
   and once the requests are served, due alarms run in time order (ties by name). Returns the
-  responses to `requests`, every object's storage, and the alarms that ran as (object, time).
+  responses to `requests`, every object's storage, and the alarms that ran as (object, milliseconds on that clock).
 -/
 def simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Response) (requests : List (Text, Request)) : {r} (List Response, Map Text (Map Text Text), List (Text, Int)) :=
   let stores := Ref.new Map.empty
@@ -102,7 +102,7 @@ def simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Response
     | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation" [])
     | Actors.call other inner -> k => k (serve other inner)
     | Alarm.set delay -> k =>
-      Ref.set alarms (Map.insert name (Ref.get clock + delay) (Ref.get alarms))
+      Ref.set alarms (Map.insert name (Ref.get clock + Duration.toMillis delay) (Ref.get alarms))
       k ()
   let responses := List.map (fun pair => serve (fst pair) (snd pair)) requests
   -- An alarm may set another; a bound keeps a self-rescheduling actor from running forever.
