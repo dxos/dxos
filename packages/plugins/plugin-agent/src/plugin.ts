@@ -12,6 +12,7 @@ import {
   OperationHandler,
   ReactSurface,
   Schema,
+  Settings,
   SkillDefinition,
   Translations,
 } from '#capabilities';
@@ -20,6 +21,7 @@ import { meta } from '#meta';
 export const AgentPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(Brain),
+  Plugin.addModule(Settings),
   Plugin.addModule(AgentMailbox),
   Plugin.addModule(EmailChannelBackend),
   Plugin.addModule(OperationHandler),

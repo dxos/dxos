@@ -148,7 +148,9 @@ op createAgent
   requires: [Database.Service]
   note: |
     `Agent.makeInitialized` with the Interview skill in the agent's Instructions skill set and the
-    Agent conversation skill bound to the first chat. The Agents section's + action invokes it with name ''.
+    Agent conversation skill bound to the first chat. Settings › Agents › Add agent invokes it with the name typed
+    beside it ('' shows the placeholder "New agent") and, while the plugin's "Create identities for agents" setting is
+    on, follows it with op:ensureIdentity and `mint: true` (F-7.4).
 ```
 
 ```mdl
@@ -172,7 +174,7 @@ op ensureIdentity
     `org.dxos.agent/space`). Then, in the background and retried for about two minutes, the caller's `SpaceMember`
     credential is written to their HALO (which is what makes the client join the space) and the agent's identity is
     admitted to `homeSpaceId`; if every retry fails this is only logged, and the agent keeps its DID. Invoked again
-    for an agent with a DID, it finishes for the agent's creator whichever of those two
+    for an agent with a DID, as opening the agent does, it finishes for the agent's creator whichever of those two
     steps did not happen (`missingJoin`): it asks EDGE again, which answers its creator with the same identity and
     membership, and runs only the missing steps. When nothing is missing, or the caller is not the creator, it asks
     EDGE nothing and changes nothing. An agent without a DID is provisioned only with `mint`, for an agent created a
@@ -401,13 +403,17 @@ Instructions. The Support skill is bound by the built-in Support mode.
 ```mdl
 node AgentsSection
   desc: |
-    A type section for `Agent` under the space's AI group (`root/<spaceId>/ai/org.dxos.type.agent`),
-    contributed here because plugin-assistant renders Agent articles but lists no section. One child
-    node per Agent in the space (URL key `agent`); the section header's + ("Add agent") invokes
-    op:createAgent with name '', so the new agent shows the placeholder "New agent".
+    Settings › Agents, under the space's settings beside Members and Connections: the space's agents, each opening
+    its article, and Add agent, which creates one with the name typed beside it ('' shows the placeholder "New agent")
+    through `containers/AgentsSettings/create-agent.ts` and opens it. `Agent` is not a user type, so agents are not listed with the
+    space's content and "Add to space" does not offer them.
   source: node:SpaceRoot
   subject: type:Agent
   actions: [op:createAgent]
+  note: |
+    Add agent gives the new agent its identity (op:ensureIdentity) only while the plugin's "Create identities for
+    agents" setting is on (F-7.4). The name is asked for before the agent exists because EDGE names the agent's
+    identity and its own space when it mints them.
 ```
 
 ## Components
@@ -513,6 +519,7 @@ feat F-1: Agents
     when: op:createAgent runs
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
   req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
+  req F-1.4: A space's agents are added, opened and deleted in Settings › Agents; "Add to space" does not offer them.
 ```
 
 ```mdl
@@ -582,6 +589,8 @@ feat F-7: An agent's own space
 
   req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member who may write to it (an admin or an editor, not a reader) is one of the agent's admins, as EDGE decides it.
   req F-7.2: An agent with an identity is a member of the shared space it is created in: op:ensureIdentity admits its identity there as an editor named after the agent. Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership.
+  req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. EDGE names the identity and the agent's space after the agent's name at that moment, and renaming the agent later renames neither. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
+  req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
 ```
 
 ## Acceptance
@@ -674,7 +683,7 @@ scenario T-9: A watch is delivered where it was set   # triggers.test.ts
 
 ```mdl
 scenario T-10: An agent is admitted to a space as a member   # admit-agent.test.ts
-  # covers [F-7.2]
+  # covers [F-7.2, F-7.3]
   given: a space owned by someone else
   then:
     - the agent's identity is admitted as an editor, named after the agent
@@ -683,6 +692,16 @@ scenario T-10: An agent is admitted to a space as a member   # admit-agent.test.
     - a space that refuses the admission fails it with AdmitAgentError
     - for the agent's creator, missingJoin names the step a failed join left undone: the membership, the admission, or both; nothing when both happened
     - missingJoin names nothing for anyone but the creator, for an agent without a DID or its records, for an agent an admin removed, or where the creator may not admit it, as in a locked space
+```
+
+```mdl
+scenario T-11: Agent identities follow the setting   # create-agent.test.ts
+  # covers [F-7.4]
+  given: the plugin's setting off, as by default, and an EDGE that answers provisioning
+  when: an agent is created, then another with the setting on
+  then:
+    - the first has no DID and EDGE was asked nothing
+    - the second takes the DID EDGE answered with, from one provisioning request
 ```
 
 ## Not built
