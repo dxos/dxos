@@ -274,6 +274,13 @@ describe('deus CLI', () => {
     expect(layers.results).toBeGreaterThan(0);
     const log = JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout);
     expect(log[0].by).toBe('agent-x');
+    // Prose is kept in the blocks' metadata, so an edit to it alone changes no hash but is reported.
+    const perf = readFileSync(join(root, 'examples/perf.mdl'), 'utf8');
+    expect(deus('update', file('perf.mdl', perf), ...c).stdout).toBe('Nothing changed.\n');
+    expect(
+      deus('update', file('perf.mdl', perf.replace('checked by `deus mdl`', 'checked by `deus mdl` alone')), ...c)
+        .stdout,
+    ).toBe('  * Sort.Perf.P-1 (prose)\n');
   });
 
   test('projects pin libraries, infer their subgraph, and guard library IRIs', { timeout: 120_000 }, ({ expect }) => {

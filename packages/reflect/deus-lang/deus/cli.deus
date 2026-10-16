@@ -257,8 +257,9 @@ def baseName (path : Text) : Text :=
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
   The document's prose is kept in each block's metadata (D99): its order, the text before it,
   and on the first block the frontmatter and on the last the text after it, so the codebase holds
-  the whole document and the export writes it back. -/
-def specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) := concatMap (fun path => if not (endsWith ".mdl" path) then [] else
+  the whole document and the export writes it back. A block whose prose changed is added to
+  `reworded`, since its hash, and so its entry, stays the same. -/
+def specEntries (dir : Text) (paths : List Text) (reworded : Ref (List Text)) : {IO, Throw Text} List (Text, Entry) := concatMap (fun path => if not (endsWith ".mdl" path) then [] else
   let text := readSource path
   let doc := Mdl.parse text
   let prefix := getOr (List.lookup "name" doc.front) (Cli.baseName path)
@@ -273,12 +274,16 @@ def specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, 
       "front"
       (List.map (fun kv => Sexp.list [Sexp.str (fst kv), Sexp.str (snd kv)]) doc.front)] else []
     let after := if i == last && not (Text.isEmpty tail) then [Sexp.node "tail" [Sexp.str tail]] else []
-    writeMeta dir h (Sexp.node
+    let meta := Sexp.node
       "meta"
       ([Sexp.node "document" [Sexp.str prefix], Sexp.node "order" [Sexp.int i], Sexp.node "lead" [Sexp.str (getOr (get? leads i) "")]] ++
         front ++
-        after))
-    (prefix ++ "." ++ b.blockId, Entry.spec h)) blocks) (expandPaths paths)
+        after)
+    let name := prefix ++ "." ++ b.blockId
+    let before := readMeta dir h
+    if Option.isSome before && before != Option.some meta then Ref.set reworded (Ref.get reworded ++ [name]) else ()
+    writeMeta dir h meta
+    (name, Entry.spec h)) blocks) (expandPaths paths)
 
 /-- A type error's `(calling #<hash prefix>)` with the definition's name, since the checker sees only hashes. -/
 def nameCallee (ns : Map Text Entry) (message : Text) : Text :=
@@ -387,9 +392,10 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     | Option.some p => p.libs
     | Option.none => []
   -- A definition a mounted library already has, unchanged, stays the library's (D206).
+  let reworded := Ref.new []
   let entries := List.filter
     (fun pair => not (mountedCopy libs ns (fst pair) (snd pair)))
-    (Batch.entries batch ++ specEntries dir args.positional)
+    (Batch.entries batch ++ specEntries dir args.positional reworded)
   let replaced := changes ns entries
   let crossings := layerCrossings dir batch
   let trespasses :=
@@ -457,7 +463,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         let (name, _, new) := c
-        entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("removed", Json.arr (List.map Json.str orphaned)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
+        entryJson name new) replaced)), ("metadata", Json.arr (List.map Json.str retagged)), ("prose", Json.arr (List.map Json.str (Ref.get reworded))), ("removed", Json.arr (List.map Json.str orphaned)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
       (fun _ =>
         let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
         let updatedLines := List.map (fun c =>
@@ -465,8 +471,9 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
           "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
         let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
         let metadataLines := List.map (fun name => "  * " ++ name ++ " (metadata)") retagged
+        let proseLines := List.map (fun name => "  * " ++ name ++ " (prose)") (Ref.get reworded)
         let removedLines := List.map (fun name => "  - " ++ name ++ " (no longer declared)") orphaned
-        let lines := addedLines ++ updatedLines ++ removedLines ++ metadataLines ++ propagatedLines
+        let lines := addedLines ++ updatedLines ++ removedLines ++ metadataLines ++ proseLines ++ propagatedLines
         if List.isEmpty lines then "Nothing changed." else join "\n" lines)
 
 --

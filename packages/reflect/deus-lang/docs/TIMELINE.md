@@ -249,5 +249,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 239 | 10-16 15:58 | 54m 00s | this commit | The native interpreter counts references (D213): `deus test` runs natively in 116 MB instead of 660 MB; task b73b475d done |
 | 240 | 10-16 16:06 | 8m 00s | this commit | Host IO drops its arguments in the native interpreter; counted wasm is the C back end (D214), task cf0e3937 closed with sort measurements |
 | 241 | 10-16 16:20 | 14m 00s | this commit | sync-deus.py stops before overwriting deus/ edits the codebase lacks (D215) |
+| 242 | 10-16 16:44 | 24m 00s | this commit | deus update reports prose-only spec edits (task 51a62879); CGen.Spec checks the C back end, so every subsystem has a checked spec (task 1ab6c044) |
 
-Total from stage 1 to stage 241: 75h 00m.
+Total from stage 1 to stage 242: 75h 24m.
