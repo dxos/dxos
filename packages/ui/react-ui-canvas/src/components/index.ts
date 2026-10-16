@@ -3,6 +3,7 @@
 //
 
 export * from './About/index.ts';
+export * from './Background/index.ts';
 export * from './Breadcrumbs/index.ts';
 export * from './ControlFrame/index.ts';
 export * from './Grid/index.ts';
@@ -14,4 +15,5 @@ export * from './PartEditor/index.ts';
 export * from './Properties/index.ts';
 export * from './SceneLayer/index.ts';
 export * from './SceneView/index.ts';
+export * from './ThemeBar/index.ts';
 export * from './Toolbar/index.ts';

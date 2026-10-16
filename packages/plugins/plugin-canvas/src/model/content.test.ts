@@ -16,6 +16,7 @@ import {
   migrateContent,
   migrateLayers,
   readScenes,
+  resolveDrawingLook,
   rootOf,
   seedContent,
   styleClassUses,
@@ -107,6 +108,23 @@ describe('content', () => {
     // An unset value removes its key rather than storing `undefined`.
     updateCanvasRecord(content, { grid: undefined });
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
+  });
+
+  test("a drawing's theme wins over the user's default, and its overrides over the theme's parts", ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    updateCanvasRecord(content, { theme: 'paper', styleSet: 'flat' });
+    const record = canvasRecordOf(content);
+    expect(resolveDrawingLook(record, { theme: 'glass-night' })).toEqual({
+      theme: 'paper',
+      defaultTheme: 'glass-night',
+      styleSet: 'flat',
+      background: undefined,
+      backgroundGrid: undefined,
+    });
+    expect(resolveDrawingLook(undefined, {}).theme).toBeUndefined();
+    updateCanvasRecord(content, { theme: undefined, styleSet: undefined });
+    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID });
   });
 
   test('a link saved with a line reads it as its style', ({ expect }) => {

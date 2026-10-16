@@ -17,6 +17,7 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
+import { canvasViewAspect } from '../../containers/CanvasArticle/view-state.ts';
 import {
   type DiagramSet,
   architectureDiagrams,
@@ -24,8 +25,7 @@ import {
   edgeDiagrams,
   DIAGRAM_COMMANDS as files,
   loadDiagramSet,
-} from '../../samples/architecture/index.ts';
-import { canvasViewAspect } from './view-state.ts';
+} from './index.ts';
 
 type StoryArgs = {
   /** The drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
@@ -67,7 +67,7 @@ const withDiagrams = (set: DiagramSet) =>
   });
 
 const meta: Meta<StoryArgs> = {
-  title: 'plugins/plugin-canvas/containers/Architecture',
+  title: 'plugins/plugin-canvas/samples/Architecture',
   render: () => <ModuleContainer />,
   args: { readonly: true },
   parameters: {

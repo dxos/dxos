@@ -11,14 +11,31 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
 import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
-import { SCENE_OVERLAY_ATTRIBUTE, useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
+import {
+  SCENE_OVERLAY_ATTRIBUTE,
+  SceneLookContext,
+  useChanging,
+  useRegistry,
+  useSceneProjection,
+  useViewport,
+  useWheel,
+} from '../../hooks/index.ts';
 import {
   type Drag,
   type InspectorMode,
@@ -41,6 +58,13 @@ import {
   defaultNodeRegistry,
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
+import {
+  type BackgroundGrid,
+  type ThemeRegistry,
+  defaultThemeRegistry,
+  resolveBackground,
+  resolveLook,
+} from '../../model/style-set.ts';
 import {
   type Bounds,
   type Camera,
@@ -89,6 +113,14 @@ import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { recordScenes, redo, undo } from '../../utils/undo.ts';
 import { About, type AboutStat } from '../About/About.tsx';
+import {
+  BackgroundField,
+  BackgroundFill,
+  GrainOverlay,
+  backgroundField,
+  drawsField,
+} from '../Background/Background.tsx';
+import { WashCanvas, supportsWashCanvas } from '../Background/WashCanvas.tsx';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -96,6 +128,7 @@ import { LayersPanel } from '../Layers/Layers.tsx';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
+import { ThemeBar } from '../ThemeBar/ThemeBar.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { Dock, DockProvider } from './Dock.tsx';
 import { INSPECTOR_CLASSES, type InspectorDef, useInspector } from './Inspector.tsx';
@@ -106,6 +139,12 @@ import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
+
+/** The longest step a drifting view takes in one frame, in seconds, however long the frame was in coming. */
+const MAX_DRIFT_STEP = 0.1;
+
+/** Milliseconds the camera's zoom must hold still before the background grid fades back in. */
+const ZOOM_SETTLE = 250;
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 2;
@@ -121,6 +160,23 @@ const LINK_HOVER_GRACE_MS = 150;
 
 /** How long a move's pointer rests before the shapes snap to where they will land. */
 const SETTLE_MS = 200;
+
+/**
+ * The light scheme scoped on the canvas under a dark app: the theme's tokens resolve with `light-dark()` against the
+ * element's colour scheme, and the variables the `.dark` class sets go back to the root's light values.
+ */
+const LIGHT_MODE: CSSProperties & Record<`--${string}`, string> = {
+  'colorScheme': 'light',
+  'color': 'var(--color-fg)',
+  '--surface-bg': 'var(--color-base-surface)',
+  '--foreground': 'var(--color-fg)',
+  '--description-text': 'var(--color-fg-muted)',
+  '--dx-lift': '-1',
+  '--dx-attenuate-state': '0.5',
+  '--dx-attenuate-well': '0.5',
+  '--dx-attenuate-separator': '0.75',
+  '--dx-attenuate-separator-line': '0.45',
+};
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -171,6 +227,36 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * item show only when given, as the host owns `inspectors`.
    */
   onInspectorsChange?: (mode: InspectorMode) => void;
+  /** The themes offered, and the style sets and backgrounds they name; the built-ins by default. */
+  themes?: ThemeRegistry;
+  /**
+   * Changing it asks fit mode to animate to the scene's frame as it now stands: an edit never refits by itself, so a
+   * host that grows or reveals content on purpose says so with a new value.
+   */
+  refitKey?: string | number;
+  /** Milliseconds a refit asked for by `refitKey` takes, so it can keep time with the host's own reveal. */
+  refitDuration?: number;
+  /**
+   * While set, the view travels across the scene at this velocity (scene units per second, positive rightward and
+   * downward), taking the camera out of fit mode: a slow pan a host can start and stop, as in a presentation.
+   */
+  drift?: Point;
+  /** Called with the stretch of the scene in view (scene coordinates) whenever the camera or the view's size changes. */
+  onViewChange?: (view: Bounds) => void;
+  /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
+  theme?: string;
+  /** The theme drawn when `theme` is unset; flat when this is unset too or unknown. */
+  defaultTheme?: string;
+  /** Overrides the theme's style set. */
+  styleSet?: string;
+  /** Overrides the theme's background. */
+  background?: string;
+  /** Overrides the background's grid; the theme bar picks it. */
+  backgroundGrid?: BackgroundGrid;
+  /** Called when the theme bar picks a theme, or `undefined` to take the default; the picker shows only when given. */
+  onThemeChange?: (theme: string | undefined) => void;
+  /** Called when the theme bar picks a grid, or `undefined` to take the background's own. */
+  onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
   children?: ReactNode;
 }>;
 
@@ -193,8 +279,31 @@ const SceneViewRoot = ({
   onReadonlyChange,
   inspectors = 'docked',
   onInspectorsChange,
+  themes = defaultThemeRegistry,
+  theme,
+  defaultTheme,
+  styleSet,
+  background,
+  backgroundGrid,
+  refitKey,
+  refitDuration,
+  drift,
+  onViewChange,
+  onThemeChange,
+  onBackgroundGridChange,
   children,
 }: SceneViewRootProps) => {
+  const look = useMemo(() => {
+    const resolved = resolveLook(themes, { theme: theme ?? defaultTheme, styleSet, background });
+    return backgroundGrid && backgroundGrid !== resolved.background.grid
+      ? { ...resolved, background: { ...resolved.background, grid: backgroundGrid } }
+      : resolved;
+  }, [themes, theme, defaultTheme, styleSet, background, backgroundGrid]);
+  // The grid the theme's own background draws, so the bar can tell an override from it.
+  const themeGrid = useMemo(
+    () => resolveBackground(themes, background ?? look.theme.background).grid,
+    [themes, background, look.theme.background],
+  );
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -277,6 +386,7 @@ const SceneViewRoot = ({
     navigating,
     isNavigating,
     isAnimating,
+    cameraTarget,
     setNavigation,
     touchNavigation,
     opening,
@@ -335,14 +445,18 @@ const SceneViewRoot = ({
   // animates to the new fit once the view has stopped changing size for `FIT_DEBOUNCE_MS`.
   // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
   // camera holds still under someone editing.
-  const fitKey = `${viewport.width}x${viewport.height}`;
+  const fitKey = `${viewport.width}x${viewport.height}:${refitKey ?? ''}`;
   const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
   useLayoutEffect(() => {
     if (fitting && measured && !fittedRef.current) {
-      fittedRef.current = { scene: sceneId, key: fitKey };
-      setCamera(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM));
+      // Measured now, not from the observed size: a docked inspector mounting in the same frame narrows the canvas
+      // before the observer reports it, and fitting the stale size would animate a refit straight after load.
+      const element = rootRef.current;
+      const size = element ? { width: element.clientWidth, height: element.clientHeight } : viewport;
+      fittedRef.current = { scene: sceneId, key: `${size.width}x${size.height}:${refitKey ?? ''}` };
+      setCamera(fitBounds(fitTarget, size, inset, NOMINAL_ZOOM));
     }
-  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, fitKey]);
+  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, refitKey]);
   // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
   // would restart the debounce before it fires. The latest helpers and frame are read when it does.
   const fitLatestRef = useRef({
@@ -368,17 +482,54 @@ const SceneViewRoot = ({
     // A resize refits once it settles; an animation in flight (a drill) finishes first, since `animateTo` would cancel
     // it before it lands.
     let timeout: ReturnType<typeof setTimeout>;
+    // A refit the host asked for starts at once and takes its time; a resize waits for the size to settle.
+    const asked = fitted.key.slice(fitted.key.indexOf(':') + 1) !== String(refitKey ?? '');
     const fit = () => {
       if (fitLatestRef.current.isAnimating()) {
         timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
         return;
       }
       fittedRef.current = { scene: sceneId, key: fitKey };
-      fitLatestRef.current.animateTo(fitLatestRef.current.frame());
+      fitLatestRef.current.animateTo(fitLatestRef.current.frame(), undefined, asked ? refitDuration : undefined);
     };
-    timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
+    timeout = setTimeout(fit, asked ? 0 : FIT_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
-  }, [fitting, measured, sceneId, fitKey]);
+  }, [fitting, measured, sceneId, fitKey, refitDuration]);
+  useEffect(() => {
+    if (onViewChange && viewport.width > 0) {
+      onViewChange({
+        x: -camera.x,
+        y: -camera.y,
+        width: viewport.width / camera.zoom,
+        height: viewport.height / camera.zoom,
+      });
+    }
+  }, [onViewChange, camera, viewport]);
+  // The loop reads the velocity from a ref and restarts only as the pan starts or stops: a restart's first step is
+  // empty, so restarting on every change of speed would stall the view for a frame each time.
+  const driftRef = useRef<Point>({ x: 0, y: 0 });
+  driftRef.current = { x: drift?.x ?? 0, y: drift?.y ?? 0 };
+  const drifting = driftRef.current.x !== 0 || driftRef.current.y !== 0;
+  useEffect(() => {
+    if (!drifting) {
+      return;
+    }
+    exitFit();
+    // Timed from one frame's callback to the next, read from the clock rather than the frame's timestamp, which a
+    // scheduler may round (a fake clock's frames fall on a 16 ms grid). Long gaps (a throttled background tab) are
+    // capped, so the view never leaps.
+    let last: number | undefined;
+    let frame = requestAnimationFrame(function step() {
+      const now = performance.now();
+      const seconds = last === undefined ? 0 : Math.min(MAX_DRIFT_STEP, Math.max(0, (now - last) / 1000));
+      last = now;
+      // The camera offsets the content, so the view moves right as it moves left.
+      const { x, y } = driftRef.current;
+      setCamera((camera) => panBy(camera, { x: -x * seconds, y: -y * seconds }));
+      frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [drifting, exitFit, setCamera]);
   // Dragging the canvas takes the camera over.
   useEffect(() => {
     if (drag?.kind === 'pan') {
@@ -831,14 +982,13 @@ const SceneViewRoot = ({
       interactedRef.current = true;
       exitFit();
       const centre = { x: viewport.width / 2, y: viewport.height / 2 };
-      animateTo(zoomAt(registry.get(atoms.camera), centre, zoom));
+      // From where the camera is headed, so a click during an animation retargets it rather than stepping from midway.
+      animateTo(zoomAt(cameraTarget(), centre, zoom));
     },
-    [viewport, animateTo, registry, atoms.camera, exitFit],
+    [viewport, animateTo, cameraTarget, exitFit],
   );
-  const zoomBy = useCallback(
-    (factor: number) => zoomTo(registry.get(atoms.camera).zoom * factor),
-    [zoomTo, registry, atoms.camera],
-  );
+  // Steps from the in-flight target: clicks in quick succession compound into one move instead of several jumps.
+  const zoomBy = useCallback((factor: number) => zoomTo(cameraTarget().zoom * factor), [zoomTo, cameraTarget]);
 
   const deleteSelection = useCallback(() => {
     const ids = [...registry.get(atoms.selection)];
@@ -1031,37 +1181,48 @@ const SceneViewRoot = ({
       onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
       rootRef={rootRef}
+      look={look}
+      themes={themes}
+      themeOverride={theme}
+      themeGrid={themeGrid}
+      onThemeChange={onThemeChange}
+      onBackgroundGridChange={onBackgroundGridChange}
     >
-      <DockProvider>
-        {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
+      <SceneLookContext.Provider value={look}>
+        <DockProvider>
+          {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-        <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
-          <div
-            ref={rootRef}
-            tabIndex={0}
-            className={mx(
-              'relative grow h-full overflow-clip outline-none touch-none select-none',
-              tool.kind === 'hand' && 'cursor-grab',
-              tool.kind === 'node' && 'cursor-crosshair',
-            )}
-            style={{ contain: 'strict' }}
-            data-testid='scene-view'
-            onPointerDown={onBackgroundPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-            onPointerCancel={cancelDrag}
-            onPointerLeave={() => updateHover(undefined)}
-            onDoubleClick={onDoubleClick}
-            onContextMenu={onContextMenu}
-            onKeyDown={onKeyDown}
-          >
-            {children}
+          <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
+            <div
+              ref={rootRef}
+              tabIndex={0}
+              className={mx(
+                'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                // A theme with a mode takes it over the app's, for everything over the canvas.
+                look.tone === 'dark' && 'dark',
+                tool.kind === 'hand' && 'cursor-grab',
+                tool.kind === 'node' && 'cursor-crosshair',
+              )}
+              style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
+              data-testid='scene-view'
+              data-mode={look.tone === 'theme' ? undefined : look.tone}
+              onPointerDown={onBackgroundPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+              onPointerCancel={cancelDrag}
+              onPointerLeave={() => updateHover(undefined)}
+              onDoubleClick={onDoubleClick}
+              onContextMenu={onContextMenu}
+              onKeyDown={onKeyDown}
+            >
+              {children}
+            </div>
+            <Dock onClose={onInspectorsChange && (() => onInspectorsChange('floating'))} />
           </div>
-          <Dock onClose={onInspectorsChange && (() => onInspectorsChange('floating'))} />
-        </div>
-      </DockProvider>
+        </DockProvider>
+      </SceneLookContext.Provider>
     </SceneViewProvider>
   );
 };
@@ -1077,10 +1238,12 @@ export type SceneViewCanvasProps = {
   liveDepth?: number;
   /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
   overlay?: ReactNode;
+  /** What the background's field covers before its padding, in scene coordinates; the scene's bounds by default. */
+  backgroundBounds?: Bounds;
 };
 
 /** The scene itself under the camera: the grid, the layer, the control frame and the menu a gesture opens. */
-const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanvasProps) => {
+const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds }: SceneViewCanvasProps) => {
   const {
     registry,
     atoms,
@@ -1129,18 +1292,58 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     menu,
     closeMenu,
     menuAnchorRef,
+    look,
   } = useSceneViewContext('SceneView.Canvas');
 
   // Handles and ports belong to what is drawn: a hidden layer's elements show none.
   const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
 
+  const field = useMemo(
+    () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
+    [look.background, backgroundBounds, bounds, latticeBounds],
+  );
+  const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
+  // While editing, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws no lines too.
+  const snapLines = !readonly && look.background.grid === 'lines';
+  // With WebGL, the surface and washes are drawn per pixel on the GPU (smooth, with no grain needed); the SVG field then
+  // draws only the grid. Without it (a test DOM), the SVG draws the washes as before.
+  const gpuWashes = look.background.washes.length > 0 && supportsWashCanvas();
+  const fieldBackground = useMemo(
+    () => ({
+      ...look.background,
+      ...(snapLines && { grid: 'none' as const }),
+      ...(gpuWashes && { washes: [] }),
+    }),
+    [snapLines, gpuWashes, look.background],
+  );
+
   return (
     <>
+      {gpuWashes ? (
+        <WashCanvas background={look.background} field={field} camera={camera} />
+      ) : (
+        <BackgroundFill background={look.background} />
+      )}
+      {/* Under the snap grid, in its own camera layer, so the grid a gesture lands on stays on top. */}
+      {measured && drawsField(fieldBackground) && (
+        <div
+          className='absolute pointer-events-none'
+          style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
+        >
+          <BackgroundField
+            background={fieldBackground}
+            tone={look.tone}
+            field={field}
+            grid={grid}
+            gridHidden={zooming}
+          />
+        </div>
+      )}
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
           small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
-          cells, not the lines, so its cells are its grid. */}
-      {snapEnabled && !readonly && !(latticeOn && projection.lattice) && (
+          cells, not the lines, so its cells are its grid. The theme bar's grid choice decides whether they show. */}
+      {snapEnabled && snapLines && !(latticeOn && projection.lattice) && (
         <GridComponent
           size={grid}
           scale={camera.zoom}
@@ -1209,6 +1412,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         )}
         {overlay}
       </div>
+      <GrainOverlay background={look.background} offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }} />
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
       {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span
@@ -1327,6 +1531,31 @@ const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) =
 };
 
 SceneViewDebug.displayName = 'SceneView.Debug';
+
+//
+// Theme
+//
+
+/** The theme picker and the grid over its background, at the bottom right. */
+const SceneViewTheme = ({ classNames = 'bottom-2 right-2' }: SceneViewBarProps) => {
+  const { look, themes, themeOverride, themeGrid, onThemeChange, onBackgroundGridChange } =
+    useSceneViewContext('SceneView.Theme');
+  return (
+    <div className={mx(barFrame, classNames)}>
+      <ThemeBar
+        registry={themes}
+        theme={look.theme}
+        override={themeOverride}
+        grid={look.background.grid}
+        themeGrid={themeGrid}
+        onThemeChange={onThemeChange}
+        onGridChange={onBackgroundGridChange}
+      />
+    </div>
+  );
+};
+
+SceneViewTheme.displayName = 'SceneView.Theme';
 
 //
 // Palette
@@ -1577,6 +1806,7 @@ export const SceneView = {
   Navigation: SceneViewNavigation,
   Actions: SceneViewActions,
   Debug: SceneViewDebug,
+  Theme: SceneViewTheme,
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
   Layers: SceneViewLayers,

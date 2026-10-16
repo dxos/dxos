@@ -67,8 +67,10 @@ const LayerName = ({ layer, readonly, editing, onEditingChange, onRename }: Laye
       }
     }}
   >
-    <Editable.Preview data-testid={`layer-name-${layer.id}`} />
+    {/* Flush with the drag handle: the control's inline padding would indent the name from the row. */}
+    <Editable.Preview classNames='px-0 cursor-pointer' data-testid={`layer-name-${layer.id}`} />
     <Editable.Input
+      classNames='px-0'
       aria-label='Layer name'
       data-testid={`layer-input-${layer.id}`}
       // While a name is typed, the list's keys (typeahead, arrows, selection) must not take its keys; otherwise the
@@ -174,7 +176,12 @@ export const LayersPanel = ({
                 }}
               >
                 {items.map((layer) => (
-                  <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
+                  <OrderedList.Item
+                    key={layer.id}
+                    id={layer.id}
+                    classNames='cursor-pointer'
+                    data-testid={`layer-${layer.id}`}
+                  >
                     <OrderedList.DragHandle />
                     <LayerName
                       layer={layer}

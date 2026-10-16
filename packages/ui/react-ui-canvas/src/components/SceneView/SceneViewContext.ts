@@ -17,6 +17,7 @@ import {
 import { type Projection } from '../../model/projection.ts';
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
+import { type BackgroundGrid, type SceneLook, type ThemeRegistry } from '../../model/style-set.ts';
 import {
   type Bounds,
   type Camera,
@@ -53,6 +54,15 @@ export type SceneViewContextValue = {
   onReadonlyChange?: (readonly: boolean) => void;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
+  /** The theme, style set and background the view draws with. */
+  look: SceneLook;
+  themes: ThemeRegistry;
+  /** The theme chosen for the drawing over the default, if any. */
+  themeOverride?: string;
+  /** The grid the theme's own background draws. */
+  themeGrid: BackgroundGrid;
+  onThemeChange?: (theme: string | undefined) => void;
+  onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
 
   /** The scene as stored, and as it is drawn while a gesture is in flight. */
   scene: Scene;
