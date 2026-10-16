@@ -2243,7 +2243,7 @@ def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Tex
 def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (roots : List (Text, Text)) (out : Text) : {IO, Throw Text} Unit :=
   let printer := Print.printer ns []
   let jsImport :=
-    match Map.lookup "Js.import" ns with
+    match ownOrMounted ns "Js.import" with
     | Option.some (Entry.term h) => h
     | _ => ""
   let parts := Text.split out "/"
@@ -2868,13 +2868,17 @@ def notationTable (dir : Text) (ns : Map Text Entry) (namespaces : List Text) : 
     let home := documentOf r.ruleName
     Map.insert home (getOr (Map.lookup home t) [] ++ [r]) t) Map.empty rules
 
-/-- The type hashes of `Syntax.Notation` and `Syntax.Part`, which a stored notation is built from: the codebase's own,
-  or a library's (`lib.toolchain.Syntax.Notation`), as a project that mounts the toolchain has them. -/
+/-- `name`'s entry: the codebase's own, or else a library's (`lib.toolchain.Syntax.Notation`), as a project that mounts
+  the toolchain or `@dxos/web` has the names the toolchain looks for. -/
+def ownOrMounted (ns : Map Text Entry) (name : Text) : Option Entry :=
+  let depth := List.length (Text.split name ".") + 2
+  Option.orElse (Map.lookup name ns) (fun _ => Option.map snd (List.find
+    (fun pair => startsWith "lib." (fst pair) && endsWith ("." ++ name) (fst pair) && List.length (Text.split (fst pair) ".") == depth)
+    (Map.toList ns)))
+
+/-- The type hashes of `Syntax.Notation` and `Syntax.Part`, which a stored notation is built from. -/
 def notationTypes (ns : Map Text Entry) : Option (Text, Text) :=
-  let typeNamed := fun (name : Text) => Option.orElse (Map.lookup name ns) (fun _ =>
-    Option.map snd (List.find
-      (fun pair => startsWith "lib." (fst pair) && endsWith ("." ++ name) (fst pair) && List.length (Text.split (fst pair) ".") == 4)
-      (Map.toList ns)))
+  let typeNamed := fun (name : Text) => ownOrMounted ns name
   match (typeNamed "Syntax.Notation", typeNamed "Syntax.Part") with
   | (Option.some (Entry.type n _ _), Option.some (Entry.type t _ _)) => Option.some (n, t)
   | _ => Option.none

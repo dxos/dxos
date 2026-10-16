@@ -7,6 +7,7 @@
 // index into one combined index (`packindex`), which an isolate keeps in memory, so a lookup is a
 // binary search and one ranged read of the line, however large the codebase.
 
+import * as deus from './gen/packs.js';
 import { warmLive } from './live.mjs';
 import { HttpError, authorize, json, listAll, readHead } from './remote.mjs';
 
@@ -98,33 +99,18 @@ export const packs = async (request, env, ctx, project, rest) => {
   throw new HttpError(405, 'method not allowed');
 };
 
-/** Rejects an index whose fanout is not a non-decreasing count of its records. */
+/** Rejects an index whose fanout is not a non-decreasing count of its records (`Worker.Packs.checkIndex`, in DEUS). */
 const checkIndex = (bytes) => {
-  if (bytes.length < FANOUT || (bytes.length - FANOUT) % RECORD !== 0) {
-    throw new HttpError(400, 'an index is 1024 fanout bytes and 48-byte records');
-  }
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let previous = 0;
-  for (let byte = 0; byte < 256; byte++) {
-    const count = view.getUint32(byte * 4);
-    if (count < previous) {
-      throw new HttpError(400, 'the fanout decreases');
-    }
-    previous = count;
-  }
-  if (previous !== (bytes.length - FANOUT) / RECORD) {
-    throw new HttpError(400, 'the fanout does not count the records');
+  const problem = deus.checkIndex(bytes);
+  if (problem !== undefined) {
+    throw new HttpError(400, problem);
   }
 };
 
-/** Parses `bytes=<first>-[<last>]`; other forms (suffixes, several ranges) read the whole file. */
+/** Parses `bytes=<first>-[<last>]`; other forms read the whole file (`Worker.Packs.parseRange`, in DEUS). */
 const parseRange = (header) => {
-  const match = /^bytes=(\d+)-(\d*)$/.exec(header ?? '');
-  if (!match) {
-    return undefined;
-  }
-  const offset = Number(match[1]);
-  return match[2] === '' ? { offset } : { offset, length: Number(match[2]) - offset + 1 };
+  const range = deus.parseRange(header ?? '');
+  return range && (range.length === undefined ? { offset: range.offset } : range);
 };
 
 const read = async (bucket, key, rangeHeader) => {

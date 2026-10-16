@@ -271,5 +271,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 261 | 10-17 05:20 | 1h 00m | this commit | Adversarial review of D224–D226 fixed (D228) |
 | 262 | 10-17 06:10 | 50m 00s | this commit | History loads lazily and recent changes are pre-drawn; task ids link; the dialect reads types back (D229) |
 | 263 | 10-17 06:40 | 30m 00s | this commit | The checks card shows what the count covers: requirements by codebase checks, the vitest suite, or nothing yet (task ae6b7fff) |
+| 264 | 10-17 07:30 | 50m 00s | this commit | `@dxos/worker`: the Worker's pack checks run as compiled DEUS (D230, task 41714c0d) |
 
-Total from stage 1 to stage 263: 89h 10m.
+Total from stage 1 to stage 264: 90h 00m.

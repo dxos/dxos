@@ -4,13 +4,13 @@
 //
 
 // Writes the DEUS Worker's generated modules (D192): `gen/explorer-app.mjs`, the explorer app's files as
-// strings, and with `--live` also `gen/explorer-live.js` and `gen/address.js`, the explorer's and the address rules' DEUS code compiled to JS from
+// strings, and with `--live` also `gen/explorer-live.js`, `gen/address.js` and `gen/packs.js`, DEUS code compiled to JS from
 // the codebase (`deus build --js`). Run it before `wrangler deploy`; `src/live-explorer.test.ts` fails
 // when the app module is behind `platform/explorer/`.
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
@@ -73,6 +73,26 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
       ],
       { stdio: 'inherit' },
     );
+    // The Worker's own DEUS code (`platform/worker/deus/`), from the `@dxos/worker` codebase, which mounts the
+    // toolchain and `@dxos/web` (for `Js`); `deus pull` it into `$DEUS_WORKER_CODEBASE` (default ~/.deus-worker).
+    const workerCodebase = process.env.DEUS_WORKER_CODEBASE ?? join(homedir(), '.deus-worker');
+    if (existsSync(workerCodebase)) {
+      execFileSync(
+        'node',
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
+          'Worker.Packs.parseRange',
+          'Worker.Packs.checkIndex',
+          '-o',
+          join(gen, 'packs.js'),
+          '--js',
+        ],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
+    } else {
+      console.warn(`no @dxos/worker codebase at ${workerCodebase}, so gen/packs.js is left as it is`);
+    }
     // The todo app (examples/react), built as `examples/react/build.sh` builds it and served at /demo/todo/,
     // so a visitor sees DEUS components running beside their source.
     const out = mkdtempSync(join(tmpdir(), 'deus-demo-'));

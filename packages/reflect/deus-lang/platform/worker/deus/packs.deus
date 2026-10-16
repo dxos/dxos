@@ -1,0 +1,59 @@
+-- context: @dxos/worker/Worker
+/-
+  The Worker's pack rules in DEUS (task 41714c0d): what platform/worker/packs.mjs checks of a request and of a pack
+  index, compiled to JavaScript by `scripts/build-worker.mjs --live` from the `@dxos/worker` codebase. Bytes are
+  JavaScript `Uint8Array`s, read through the `Js` library of `@dxos/web`.
+-/
+
+namespace Worker.Bytes
+
+/-- How many bytes `bytes` holds. -/
+def length (bytes : Js) : Int := Js.toInt (Js.get bytes "length")
+
+/-- The big-endian unsigned 32-bit number at `at`, as an `Int` (counts and offsets stay below 2³¹). -/
+def u32 (bytes : Js) (at : Int) : Int :=
+  let view := Js.construct (Js.global "DataView") [Js.get bytes "buffer", Js.get bytes "byteOffset", Js.get bytes "byteLength"]
+  Js.toInt (Js.method view "getUint32" [Js.int at])
+
+end Worker.Bytes
+
+namespace Worker.Packs
+
+/-- An index's fanout: 256 big-endian counts of the records whose key starts with each byte. -/
+def fanout : Int := 1024
+
+/-- One index record: a 32-byte key, a 32-bit kind, 32-bit offset, 32-bit length and 32-bit flags. -/
+def record : Int := 48
+
+/-- A byte range a request asks for: `bytes=<first>-[<last>]`; no length reads to the end. -/
+structure Range @"urn:deus:worker:Range" where
+  offset : Int
+  length : Option Int
+
+/-- Digits only, as a number; none when `t` is empty or holds anything else. -/
+def digits (t : Text) : Option Int := if not (Text.isEmpty t) && List.all (fun c => Text.isDigit c) (Text.utf8 t) then Int.fromText t else Option.none
+
+/-- `bytes=<first>-[<last>]` as a range; other forms (suffixes, several ranges) read the whole file. -/
+def parseRange (header : Text) : Option Range := if not (startsWith "bytes=" header) then Option.none else
+  match Text.split (Text.drop 6 header) "-" with
+  | [first, last] =>
+      match (digits first, if Text.isEmpty last then Option.some Option.none else Option.map Option.some (digits last)) with
+      | (Option.some offset, Option.some (Option.some final)) => Option.some (Range.mk offset (Option.some (final - offset + 1)))
+      | (Option.some offset, Option.some Option.none) => Option.some (Range.mk offset Option.none)
+      | _ => Option.none
+  | _ => Option.none
+
+/-- What is wrong with a pack index, if anything: it is 1024 fanout bytes and 48-byte records, and the fanout is a
+  non-decreasing count that ends at the number of records. -/
+def checkIndex (bytes : Js) : Option Text :=
+  let size := Worker.Bytes.length bytes
+  if size < fanout || (size - fanout) % record != 0 then Option.some "an index is 1024 fanout bytes and 48-byte records" else
+    let rec walk byte previous :=
+      if byte == 256 then
+        if previous != (size - fanout) / record then Option.some "the fanout does not count the records" else Option.none
+      else
+        let count := Worker.Bytes.u32 bytes (byte * 4)
+        if count < previous then Option.some "the fanout decreases" else walk (byte + 1) count
+    walk 0 0
+
+end Worker.Packs
