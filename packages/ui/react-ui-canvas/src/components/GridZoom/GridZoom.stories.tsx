@@ -252,8 +252,15 @@ const DefaultStory = ({
             if (Math.abs(video.currentTime - time) < 0.001) {
               return undefined;
             }
+            // A decode error or an unseekable source never fires `seeked`, so a stalled seek gives up after a second.
             return new Promise<void>((resolve) => {
-              video.addEventListener('seeked', () => resolve(), { once: true });
+              const timeout = setTimeout(resolve, 1_000);
+              const done = () => {
+                clearTimeout(timeout);
+                resolve();
+              };
+              video.addEventListener('seeked', done, { once: true });
+              video.addEventListener('error', done, { once: true });
               video.currentTime = time;
             });
           }),

@@ -60,19 +60,34 @@ const ffmpeg = spawn(
   { stdio: ['pipe', 'inherit', 'inherit'] },
 );
 
-const started = Date.now();
-for (let frame = 0; frame < frames; frame++) {
-  await page.evaluate((ms) => window.gridZoom.seek(ms), (frame * 1_000) / fps);
-  const jpeg = await page.screenshot({ type: 'jpeg', quality: 92 });
-  if (!ffmpeg.stdin.write(jpeg)) {
-    await once(ffmpeg.stdin, 'drain');
+// A missing ffmpeg, or one that exits early (EPIPE on stdin), ends the render with its error rather than a crash.
+let failure;
+ffmpeg.on('error', (err) => (failure ??= err));
+ffmpeg.stdin.on('error', (err) => (failure ??= err));
+
+let code = 1;
+try {
+  const started = Date.now();
+  for (let frame = 0; frame < frames; frame++) {
+    if (failure) {
+      throw failure;
+    }
+    await page.evaluate((ms) => window.gridZoom.seek(ms), (frame * 1_000) / fps);
+    const jpeg = await page.screenshot({ type: 'jpeg', quality: 92 });
+    if (!ffmpeg.stdin.write(jpeg)) {
+      await once(ffmpeg.stdin, 'drain');
+    }
+    if (frame % (fps * 5) === 0) {
+      console.log(`${(frame / fps).toFixed(0)}s rendered, ${((Date.now() - started) / 1_000).toFixed(0)}s elapsed`);
+    }
   }
-  if (frame % (fps * 5) === 0) {
-    console.log(`${(frame / fps).toFixed(0)}s rendered, ${((Date.now() - started) / 1_000).toFixed(0)}s elapsed`);
-  }
+  ffmpeg.stdin.end();
+  [code] = await once(ffmpeg, 'close');
+  console.log(code === 0 ? `wrote ${values.out}` : `ffmpeg exited with ${code}`);
+} catch (err) {
+  console.error(`render failed: ${err.message}`);
+  ffmpeg.kill();
+} finally {
+  await browser.close();
 }
-ffmpeg.stdin.end();
-const [code] = await once(ffmpeg, 'close');
-await browser.close();
-console.log(code === 0 ? `wrote ${values.out}` : `ffmpeg exited with ${code}`);
 process.exit(code ?? 1);

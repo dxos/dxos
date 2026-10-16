@@ -404,6 +404,12 @@ export const steps = [
 
   ...(process.env.SHOWCASE_BATCH ?? 'one,mermaid,two,three')
     .split(',')
-    .flatMap((name) => BATCHES[name])
+    .flatMap((name) => {
+      const batch = BATCHES[name.trim()];
+      if (!batch) {
+        throw new Error(`unknown SHOWCASE_BATCH "${name}"; expected one of ${Object.keys(BATCHES).join(', ')}`);
+      }
+      return batch;
+    })
     .map(guard),
 ];

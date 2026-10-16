@@ -81,13 +81,12 @@ export const steps = [
     narration: 'Drag a piece to move it.',
     run: async ({ demo, page }) => {
       await play(demo, 'e2', 'e4', 'e4');
+      // Judged by the move list, as QA-1's expect says; a drag that did nothing fails here.
       await page
-        .waitForFunction(
-          (selector) => document.querySelector(selector)?.innerText.includes('e4'),
-          '[data-testid="deck.plank"]:last-of-type',
-          { timeout: 10_000 },
-        )
-        .catch(() => {});
+        .locator('[data-testid="deck.plank"]')
+        .last()
+        .filter({ hasText: 'e4' })
+        .waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT);
     },
   },

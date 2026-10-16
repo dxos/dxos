@@ -10,6 +10,8 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 SHOWCASE_BATCH=${BATCH:-one,mermaid,two,three} node "$ROOT/.agents/skills/autocue/scripts/driver.mjs" --port "$PORT" --url http://localhost:4173 --out "$OUT" \
   --width 1920 --height 1080 --scale 2 --overlay off --gpu on --theme light --fps 60 --captions off --ready-timeout 180000 > "$OUT/driver.log" 2>&1 &
 DRIVER=$!
+# A driver left running holds its port, and every later take on that port fails.
+trap 'kill "$DRIVER" 2>/dev/null || true' EXIT
 until [ -f "$OUT/token" ]; do
   kill -0 "$DRIVER" 2>/dev/null || { echo "driver exited:"; tail -5 "$OUT/driver.log"; exit 1; }
   sleep 1
@@ -26,4 +28,4 @@ for s in d.get('steps', []):
 if d.get('error'): print('error:', d['error'][:300])
 "
 cmd '{"op":"stop"}' | cut -c1-160
-grep '\[showcase\]' "$OUT/driver.log" | cut -c1-240
+grep '\[showcase\]' "$OUT/driver.log" | cut -c1-240 || true
