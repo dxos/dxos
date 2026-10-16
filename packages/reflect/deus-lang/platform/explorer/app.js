@@ -70,7 +70,7 @@ const fromLive = async (path) => {
     if (index) {
       return index[LIVE_INDEX[path]];
     }
-  } else if (path.startsWith('def/') || path.startsWith('change/')) {
+  } else if (path.startsWith('def/') || path.startsWith('change/') || path.startsWith('doc/')) {
     const page = await fetchJson(`${live}/${path}`);
     if (page !== undefined) {
       return page;
@@ -98,6 +98,8 @@ const index = {
   byHash: new Map(),
   byName: new Map(),
   tree: undefined,
+  /** The feature map's areas (D196), which order the overview and the sidebar. */
+  areas: [],
 };
 
 /** The namespace tree: a node per name segment; a node may also be a definition (`List` and `List.map`). */
@@ -514,7 +516,7 @@ try {
 const parseFragment = () => {
   const keys = decodeURIComponent(location.hash.slice(1))
     .split(',')
-    .filter((key) => /^[dtcnvk]:./.test(key));
+    .filter((key) => /^[dtcnvks]:./.test(key));
   const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
   return { view, keys: keys.filter((key) => !key.startsWith('v:')) };
 };
@@ -597,10 +599,15 @@ const typeOf = (sig) => (sig.includes(' : ') ? sig.slice(sig.indexOf(' : ') + 3)
 
 /** Inline doc markup: `code` spans, linked when they name a definition. */
 const inlineDoc = (text, namespace) =>
-  escape(text).replace(/`([^`]+)`/g, (_, code) => {
-    const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
-    return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${code}</code>`;
-  });
+  escape(text)
+    .replace(/`([^`]+)`/g, (_, code) => {
+      const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
+      return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${code}</code>`;
+    })
+    // `Syntax.Spec R-3` in a comment is the requirement it implements, so it links there.
+    .replace(/\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))(?:\s((?:R|A|L|F|QA)-\d+))?\b/g, (whole, doc, id) =>
+      isDocument(doc) ? docLink(doc, whole, id ?? '') : whole,
+    );
 
 /** A doc comment as HTML: paragraphs, bullet lists and indented code blocks. */
 const docHtml = (doc, namespace) => {
@@ -638,8 +645,14 @@ const docHtml = (doc, namespace) => {
 };
 
 /** A row in a listing: icon, linked name, signature and summary. */
+/** A definition's link; a spec block's opens its document at that block, where it reads in context. */
+const entryLink = (entry, label = entry.name) =>
+  entry.kind === 'spec'
+    ? docLink(namespaceOf(entry.name), label, lastSegment(entry.name))
+    : defLink(entry.name, entry.hash, label);
+
 const entryRow = (entry, label = entry.name) =>
-  `<li class="entry-row">${icon(entry.kind)}${defLink(entry.name, entry.hash, label)}${statusMark(entry.status)}` +
+  `<li class="entry-row">${icon(entry.kind)}${entryLink(entry, label)}${statusMark(entry.status)}` +
   (entry.sig ? `<code class="row-sig">${typeHtml(typeOf(entry.sig), namespaceOf(entry.name))}</code>` : '') +
   (entry.summary ? `<span class="row-summary">${inlineDoc(entry.summary, namespaceOf(entry.name))}</span>` : '') +
   '</li>';
@@ -986,6 +999,12 @@ const namespaceCard = (key, path) => {
     tag: '<span class="tag">namespace</span>',
     meta: `<span class="muted">${node.count} definitions</span>`,
     body:
+      (isDocument(path)
+        ? `<p class="self"><span class="icon k-spec">S</span><span><code>${escape(path)}</code> is a spec document:</span> ${docLink(path, 'read it')}</p>`
+        : '') +
+      (isDocument(`${path}.Spec`)
+        ? `<p class="self"><span class="icon k-spec">S</span><span>What <code>${escape(path)}</code> does is specified in</span> ${docLink(`${path}.Spec`)}</p>`
+        : '') +
       (self
         ? `<p class="self">${icon(self.kind)}<span><code>${escape(path)}</code> is also a ${escape(self.kind)}:</span> ${defLink(self.name, self.hash, 'open it')}</p>`
         : '') +
@@ -1277,6 +1296,8 @@ const buildCard = async (key) => {
     }
     case 'n':
       return namespaceCard(key, value);
+    case 's':
+      return docCard(key, value);
     case 't': {
       const task = index.tasks.find((other) => other.id === value);
       return task ? taskCard(key, task) : missingCard(key, `No task ${value}`);
@@ -1321,8 +1342,421 @@ const linkSource = (root) => {
 };
 
 //
+// Guide (D196): the project as a reader meets it, top down. The feature map says what the project is
+// and how it divides into areas and features; each feature names the spec documents that say what it
+// does; a spec document's requirements name the tests that prove them, and its api blocks the
+// definitions that implement them.
+//
+
+/** Spec documents, by the name their blocks share: `Address.Spec` for `Address.Spec.R-1`. */
+const specDocuments = () =>
+  [...new Set(index.names.filter((entry) => entry.kind === 'spec').map((entry) => namespaceOf(entry.name)))].sort();
+
+const isDocument = (name) => index.names.some((entry) => entry.kind === 'spec' && namespaceOf(entry.name) === name);
+
+/** A spec document's link; `anchor` names one of its blocks (`R-3`). */
+const docLink = (name, label = name, anchor = '') =>
+  `<a class="ref doc-ref" data-open="s:${escape(name)}"${anchor ? ` data-anchor="${escape(anchor)}"` : ''}>${escape(label)}</a>`;
+
+/** A spec document's page, `doc/<Doc>.json`. */
+const loadDoc = (name) => load(`doc/${name}.json`);
+
+/** The first `# ` heading of a document's text, which is its title. */
+const docTitle = (text) => /^# (.+)$/m.exec(text ?? '')?.[1] ?? '';
+
+/** A document's text without its frontmatter and its Extensions table, which are for the checker, not the reader. */
+const readableText = (text) => {
+  const lines = (text ?? '').split('\n');
+  let start = 0;
+  if (lines[0]?.trim() === '---') {
+    const end = lines.indexOf('---', 1);
+    start = end < 0 ? 0 : end + 1;
+  }
+  const out = [];
+  let skipping = false;
+  for (const line of lines.slice(start)) {
+    if (/^#{1,6} /.test(line)) {
+      skipping = /^#{1,6} Extensions\s*$/.test(line);
+    }
+    if (!skipping) {
+      out.push(line);
+    }
+  }
+  return out.join('\n');
+};
+
+/** The text without its title, which the card's header shows. */
+const withoutTitle = (text) => (text ?? '').replace(/^# .+\n?/m, '');
+
+/** The intro of a document: the paragraphs between its title and its first section. */
+const docIntro = (text) => {
+  const body = readableText(text).split('\n');
+  const title = body.findIndex((line) => /^# /.test(line));
+  const rest = body.slice(title + 1);
+  const next = rest.findIndex((line) => /^#{1,6} /.test(line) || line.startsWith('```'));
+  return (next < 0 ? rest : rest.slice(0, next)).join('\n').trim();
+};
+
+/**
+ * The areas of the project: each top-level feature of its feature maps (`*.Features` documents, else
+ * every map), with its features and the top-level namespaces they name. A namespace goes to the first
+ * area that names it, so each appears once.
+ */
+const areasOf = (maps) => {
+  const own = (maps ?? []).filter((map) => map.document.endsWith('.Features'));
+  const chosen = own.length > 0 ? own : (maps ?? []);
+  const areas = [];
+  for (const map of chosen) {
+    const byId = new Map(map.features.map((feature) => [feature.id, feature]));
+    const rootOf = (feature) => {
+      let current = feature;
+      for (let hops = 0; current.parent && byId.has(current.parent) && hops < 16; hops++) {
+        current = byId.get(current.parent);
+      }
+      return current;
+    };
+    const byRoot = new Map();
+    for (const feature of map.features) {
+      const root = rootOf(feature);
+      if (!byRoot.has(root.id)) {
+        const area = { document: map.document, feature: root, features: [], names: [], namespaces: [] };
+        byRoot.set(root.id, area);
+        areas.push(area);
+      }
+      const area = byRoot.get(root.id);
+      if (feature !== root) {
+        area.features.push(feature);
+      }
+      area.names.push(...feature.specs, ...feature.defs);
+    }
+  }
+  const placed = new Set();
+  for (const area of areas) {
+    for (const name of area.names) {
+      const top = name.split('.')[0];
+      if (!placed.has(top) && (nodeAt(top)?.children.size ?? 0) > 0) {
+        placed.add(top);
+        area.namespaces.push(top);
+      }
+    }
+  }
+  return areas;
+};
+
+/** The legend of the kind icons, so a first visitor can read the lists. */
+const legendHtml = () =>
+  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task</p>`;
+
+//
+// Markdown, enough for spec documents: headings, paragraphs, lists, tables, quotes and code.
+//
+
+/** Inline markdown: `code` (linked when it names a definition), **bold**, *emphasis*, links, and requirement references. */
+const inlineMd = (text, namespace) =>
+  String(text)
+    .split(/(`[^`]+`)/)
+    .map((piece) => {
+      if (/^`[^`]+`$/.test(piece)) {
+        const code = piece.slice(1, -1);
+        if (isDocument(code)) {
+          return `<code>${docLink(code)}</code>`;
+        }
+        const entry = /^[\w.?-]+$/.test(code) ? resolve(code, namespace) : undefined;
+        if (!entry && (nodeAt(code)?.children.size ?? 0) > 0) {
+          return `<code><a class="ref" data-open="n:${escape(code)}">${escape(code)}</a></code>`;
+        }
+        return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${escape(code)}</code>`;
+      }
+      return escape(piece)
+        .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
+          const doc = /^(?:.*\/)?([A-Z][\w.]*)\.mdl$/.exec(target)?.[1];
+          if (doc && isDocument(doc)) {
+            return docLink(doc, label);
+          }
+          return /^https?:/.test(target) ? `<a href="${target}" target="_blank" rel="noopener">${label}</a>` : label;
+        })
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+        .replace(/\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))\s((?:R|A|L|F|QA)-\d+)/g, (whole, doc, id) =>
+          isDocument(doc) ? docLink(doc, `${doc} ${id}`, id) : whole,
+        );
+    })
+    .join('');
+
+const tableHtml = (rows, namespace) => {
+  const cells = (row) =>
+    row
+      .trim()
+      .replace(/^\||\|$/g, '')
+      .split('|')
+      .map((cell) => cell.trim());
+  const [head, , ...body] = rows;
+  return (
+    `<table class="md-table"><thead><tr>${cells(head)
+      .map((cell) => `<th>${inlineMd(cell, namespace)}</th>`)
+      .join('')}</tr></thead>` +
+    `<tbody>${body
+      .map(
+        (row) =>
+          `<tr>${cells(row)
+            .map((cell) => `<td>${inlineMd(cell, namespace)}</td>`)
+            .join('')}</tr>`,
+      )
+      .join('')}</tbody></table>`
+  );
+};
+
+/** Markdown as HTML; `block(lines)` renders each ```mdl fence. */
+const mdHtml = (text, namespace, block = (lines) => `<pre class="doc-code">${escape(lines.join('\n'))}</pre>`) => {
+  const lines = text.split('\n');
+  const out = [];
+  let paragraph = [];
+  const flush = () => {
+    if (paragraph.length > 0) {
+      out.push(`<p>${inlineMd(paragraph.join(' '), namespace)}</p>`);
+      paragraph = [];
+    }
+  };
+  for (let at = 0; at < lines.length;) {
+    const line = lines[at];
+    const fence = /^```(\w*)/.exec(line);
+    if (fence) {
+      flush();
+      const end = lines.findIndex((other, i) => i > at && other.startsWith('```'));
+      const body = lines.slice(at + 1, end < 0 ? lines.length : end);
+      out.push(fence[1] === 'mdl' ? block(body) : `<pre class="doc-code">${escape(body.join('\n'))}</pre>`);
+      at = end < 0 ? lines.length : end + 1;
+      continue;
+    }
+    const heading = /^(#{1,6}) (.*)$/.exec(line);
+    if (heading) {
+      flush();
+      const level = Math.min(heading[1].length + 2, 6);
+      out.push(`<h${level} class="md-h">${inlineMd(heading[2], namespace)}</h${level}>`);
+      at++;
+      continue;
+    }
+    if (line.startsWith('|')) {
+      flush();
+      const rows = [];
+      while (at < lines.length && lines[at].startsWith('|')) {
+        rows.push(lines[at++]);
+      }
+      out.push(rows.length >= 2 ? tableHtml(rows, namespace) : `<p>${inlineMd(rows.join(' '), namespace)}</p>`);
+      continue;
+    }
+    const item = /^\s*(?:[-*]|\d+\.) /;
+    if (item.test(line)) {
+      flush();
+      const ordered = /^\s*\d+\. /.test(line);
+      const items = [];
+      while (at < lines.length && (item.test(lines[at]) || (/^\s{2,}\S/.test(lines[at]) && items.length > 0))) {
+        if (item.test(lines[at])) {
+          items.push(lines[at].replace(item, ''));
+        } else {
+          items[items.length - 1] += ` ${lines[at].trim()}`;
+        }
+        at++;
+      }
+      const tag = ordered ? 'ol' : 'ul';
+      out.push(`<${tag}>${items.map((text) => `<li>${inlineMd(text, namespace)}</li>`).join('')}</${tag}>`);
+      continue;
+    }
+    if (line.startsWith('>')) {
+      flush();
+      const quoted = [];
+      while (at < lines.length && lines[at].startsWith('>')) {
+        quoted.push(lines[at++].replace(/^>\s?/, ''));
+      }
+      out.push(`<blockquote>${inlineMd(quoted.join(' '), namespace)}</blockquote>`);
+      continue;
+    }
+    if (line.trim() === '') {
+      flush();
+    } else {
+      paragraph.push(line.trim());
+    }
+    at++;
+  }
+  flush();
+  return out.join('');
+};
+
+//
+// Spec documents (D196): the document as prose, each block shown with what it links.
+//
+
+const BLOCK_LABELS = {
+  req: 'Requirement',
+  api: 'API',
+  law: 'Law',
+  feature: 'Feature',
+  qa: 'QA flow',
+  example: 'Example',
+};
+
+/** Names in a block property: `A | B`, `A, B` or one per `- ` line. */
+const namesIn = (value) =>
+  value
+    .split(/[|,\n]/)
+    .map((part) => part.replace(/^\s*-\s*/, '').trim())
+    .filter((part) => /^[\w.?-]+$/.test(part));
+
+/** A property's value with every definition it names linked. */
+const valueHtml = (value, namespace) =>
+  escape(value).replace(/\b([A-Za-z_][\w?]*(?:\.[A-Za-z_][\w?-]*)+)\b/g, (word) => {
+    const entry = resolve(word, namespace);
+    return entry ? defLink(entry.name, entry.hash, word) : word;
+  });
+
+/** The definitions a block's `by:` names, with whether each passes: the evidence for a requirement. */
+const evidenceHtml = (names, namespace) =>
+  names
+    .map((name) => {
+      const entry = resolve(name, namespace) ?? resolve(lastSegment(name), namespace);
+      return entry
+        ? `<span class="evidence">${icon(entry.kind)}${defLink(entry.name, entry.hash, name)}${statusMark(entry.status)}</span>`
+        : `<span class="evidence missing" title="No definition by this name">${escape(name)}</span>`;
+    })
+    .join('');
+
+const blockHtml = (doc, block) => {
+  const namespace = doc.name;
+  const entry = index.byName.get(`${doc.name}.${block.id}`);
+  const props = Object.entries(block.props ?? {});
+  const by = block.props?.by;
+  const rows = props
+    .filter(([key]) => key !== 'by')
+    .map(
+      ([key, value]) =>
+        `<div class="block-prop"><span class="block-key">${escape(key)}</span>` +
+        (value.includes('\n')
+          ? `<pre class="block-value">${valueHtml(value.replace(/^\n/, ''), namespace)}</pre>`
+          : `<span class="block-value">${valueHtml(value, namespace)}</span>`) +
+        '</div>',
+    )
+    .join('');
+  const evidence =
+    by !== undefined
+      ? `<div class="block-prop"><span class="block-key">proved by</span><span class="block-value">${
+          namesIn(by).length > 0 ? evidenceHtml(namesIn(by), namespace) : valueHtml(by, namespace)
+        }</span></div>`
+      : block.type === 'req'
+        ? '<div class="block-prop"><span class="block-key">proved by</span><span class="block-value muted">nothing yet</span></div>'
+        : '';
+  return (
+    `<section class="block block-${escape(block.type)}" data-block="${escape(block.id)}">` +
+    `<div class="block-head"><span class="block-type">${escape(BLOCK_LABELS[block.type] ?? block.type)}</span>` +
+    `${entry ? defLink(entry.name, entry.hash, block.id) : `<span class="block-id">${escape(block.id)}</span>`}` +
+    `<span class="block-title">${inlineMd(block.title, namespace)}</span></div>${evidence}${rows}</section>`
+  );
+};
+
+/** A document's text as the reader sees it, each ```mdl fence replaced by its block. */
+const documentHtml = (doc) => {
+  const byId = new Map((doc.blocks ?? []).map((block) => [block.id, block]));
+  return mdHtml(readableText(doc.text), doc.name, (lines) => {
+    const id = /^\s*\w+\s+([^:\s]+)/.exec(lines[0] ?? '')?.[1];
+    const block = id ? byId.get(id) : undefined;
+    return block ? blockHtml(doc, block) : `<pre class="doc-code">${escape(lines.join('\n'))}</pre>`;
+  });
+};
+
+const docCard = async (key, name) => {
+  const doc = await loadDoc(name);
+  if (!doc) {
+    return missingCard(key, `No spec document ${name}`);
+  }
+  const blocks = doc.blocks ?? [];
+  const counted = (type) => blocks.filter((block) => block.type === type).length;
+  const requirements = blocks.filter((block) => block.type === 'req');
+  const proved = requirements.filter((block) => block.props?.by).length;
+  const tests = index.names.filter((entry) => namespaceOf(entry.name) === name && entry.kind === 'test');
+  const meta = [
+    requirements.length > 0 ? `${proved} of ${requirements.length} requirements proved` : '',
+    counted('api') > 0 ? `${counted('api')} api` : '',
+    tests.length > 0 ? `${tests.length} tests` : '',
+  ]
+    .filter(Boolean)
+    .map((text) => `<span class="count">${text}</span>`)
+    .join(' ');
+  return card(key, {
+    iconHtml: '<span class="icon k-spec" title="spec document">S</span>',
+    title: escape(docTitle(doc.text) || name),
+    tag: `<span class="tag">${escape(name)}</span>`,
+    meta,
+    body:
+      `<div class="doc-page">${documentHtml({ ...doc, text: withoutTitle(doc.text) })}</div>` +
+      `<p class="muted doc-foot">Every definition of this document, its tests included: <a class="ref" data-open="n:${escape(name)}">${escape(name)}</a>` +
+      (nodeAt(name.split('.')[0])
+        ? ` · the code it describes: <a class="ref" data-open="n:${escape(name.split('.')[0])}">${escape(name.split('.')[0])}</a>`
+        : '') +
+      '</p>',
+  });
+};
+
+/** Scrolls the open document to the block a link named, and marks it. */
+const showAnchor = () => {
+  if (!ui.anchor) {
+    return;
+  }
+  const target = document.querySelector(
+    `.card[data-key="${CSS.escape(ui.anchor.key)}"] [data-block="${CSS.escape(ui.anchor.block)}"]`,
+  );
+  if (target) {
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    target.classList.add('flash');
+    setTimeout(() => target.classList.remove('flash'), 1600);
+  }
+  ui.anchor = undefined;
+};
+
+//
 // Home, tasks and history views.
 //
+
+/** A namespace as a tile of the overview's grid. */
+const namespaceTile = (node) =>
+  `<li><a data-open="n:${escape(node.path)}">${folderIcon}<span>${escape(node.segment)}</span><span class="count">${node.count}</span></a></li>`;
+
+/** One area of the guide: its features, the spec documents that describe them, and its namespaces. */
+const areaHtml = (area) => {
+  const docs = (feature) =>
+    feature.specs
+      .filter(isDocument)
+      .map((doc) => docLink(doc))
+      .join('');
+  return (
+    `<section class="area"><header>${featureStatus(area.feature.status)}<h4>${escape(area.feature.title)}</h4>${docs(area.feature)}</header>` +
+    `<p class="area-about muted" data-area-about="${escape(area.feature.title)}"></p>` +
+    (area.features.length > 0
+      ? `<ul class="area-features">${area.features
+          .map(
+            (feature) =>
+              `<li>${featureStatus(feature.status)}<span class="feature-title">${escape(feature.title)}</span>${docs(feature)}</li>`,
+          )
+          .join('')}</ul>`
+      : '') +
+    (area.namespaces.length > 0
+      ? `<p class="area-code"><span class="muted">Code:</span> ${area.namespaces
+          .map((name) => `<a class="ref" data-open="n:${escape(name)}">${escape(name)}</a>`)
+          .join(' ')}</p>`
+      : '') +
+    '</section>'
+  );
+};
+
+/** A spec document's row; its title arrives with its page (`fillHome`). */
+const docRow = (name) => {
+  const requirements = index.names.filter(
+    (entry) => entry.kind === 'spec' && namespaceOf(entry.name) === name && /\.R-\d+$/.test(entry.name),
+  ).length;
+  const tests = index.names.filter((entry) => entry.kind === 'test' && namespaceOf(entry.name) === name).length;
+  return (
+    `<li class="doc-row"><span class="icon k-spec">S</span>${docLink(name)}<span class="doc-title muted" data-doc-title="${escape(name)}"></span>` +
+    `<span class="count">${[requirements > 0 ? `${requirements} requirements` : '', tests > 0 ? `${tests} tests` : ''].filter(Boolean).join(' · ')}</span></li>`
+  );
+};
 
 const homeHtml = () => {
   const meta = index.meta;
@@ -1335,11 +1769,44 @@ const homeHtml = () => {
   const namespaces = top.filter((node) => node.children.size > 0);
   const roots = top.filter((node) => node.entry && node.children.size === 0).map((node) => node.entry);
   const open = index.tasks.filter((task) => task.state === 'todo' || task.state === 'doing');
+  const areas = index.areas ?? [];
+  const docs = specDocuments();
+  const placed = new Set(areas.flatMap((area) => area.namespaces));
+  const unplaced = namespaces.filter((node) => !placed.has(node.path));
+  const grouped =
+    areas.length > 0
+      ? areas
+          .filter((area) => area.namespaces.length > 0)
+          .map(
+            (area) =>
+              `<h4 class="group-title">${escape(area.feature.title)}</h4><ul class="namespace-grid">${area.namespaces
+                .map((name) => namespaceTile(nodeAt(name)))
+                .join('')}</ul>`,
+          )
+          .join('') +
+        (unplaced.length > 0
+          ? `<h4 class="group-title">Everything else</h4><ul class="namespace-grid">${unplaced.map(namespaceTile).join('')}</ul>`
+          : '')
+      : `<ul class="namespace-grid">${namespaces.map(namespaceTile).join('')}</ul>`;
   return (
     '<article class="home">' +
-    `<header class="home-header"><h1>${escape(meta.project)}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
+    `<header class="home-header"><h1>${escape(addressOf(meta.project))}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
     } · ${meta.definitions} definitions · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    '<div class="home-intro" data-home-intro></div>' +
+    (areas.length > 0
+      ? section('Start here', areas.length, `<div class="areas">${areas.map(areaHtml).join('')}</div>`)
+      : '') +
+    (docs.length > 0
+      ? section(
+          'Spec documents',
+          docs.length,
+          `<ul class="rows doc-list">${docs.map(docRow).join('')}</ul>`,
+          areas.length === 0,
+        )
+      : '') +
+    section('Namespaces', namespaces.length, grouped) +
+    legendHtml() +
     `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
       ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
@@ -1372,19 +1839,36 @@ const homeHtml = () => {
           `<ul class="rows">${failing.map((entry) => entryRow(entry)).join('')}</ul>`,
         )
       : '') +
-    section(
-      'Namespaces',
-      namespaces.length,
-      `<ul class="namespace-grid">${namespaces
-        .map(
-          (node) =>
-            `<li><a data-open="n:${escape(node.path)}">${folderIcon}<span>${escape(node.segment)}</span><span class="count">${node.count}</span></a></li>`,
-        )
-        .join('')}</ul>`,
-    ) +
     section('Top-level definitions', roots.length, rowList(roots.map((entry) => entryRow(entry))), false) +
-    '<p class="hint muted">Press <kbd>/</kbd> to find a definition by name or by type, or browse the namespaces on the left.</p>' +
+    '<p class="hint muted">Press <kbd>/</kbd> to find a definition by name or by type.</p>' +
     '</article>'
+  );
+};
+
+/** What the overview shows once pages arrive: the feature map's introduction, and each spec document's title. */
+const fillHome = async (root) => {
+  const map = (index.areas ?? [])[0]?.document;
+  const text = map ? ((await loadDoc(map))?.text ?? '') : '';
+  const intro = docIntro(text);
+  const slot = root.querySelector('[data-home-intro]');
+  if (slot && intro) {
+    slot.innerHTML = mdHtml(intro, map);
+  }
+  // An area's section in the map opens with a sentence on what the area is for.
+  for (const [, title, about] of readableText(text).matchAll(/^## (.+)\n\n((?:[^#`\n].*\n?)+)/gm)) {
+    const cell = root.querySelector(`[data-area-about="${CSS.escape(title.trim())}"]`);
+    if (cell) {
+      cell.innerHTML = inlineMd(about.trim().replace(/\n/g, ' '), map);
+    }
+  }
+  await Promise.all(
+    specDocuments().map(async (name) => {
+      const title = docTitle((await loadDoc(name))?.text);
+      const cell = root.querySelector(`[data-doc-title="${CSS.escape(name)}"]`);
+      if (cell && title) {
+        cell.textContent = title;
+      }
+    }),
   );
 };
 
@@ -1455,8 +1939,36 @@ const renderHistory = async () => {
 // Namespace tree.
 //
 
-const treeRows = (node, depth) =>
-  sortedChildren(node)
+const treeRows = (node, depth) => rowsOf(sortedChildren(node), depth);
+
+/** The tree's top level, grouped under the areas of the feature map (D196); the rest after them. */
+const topRows = () => {
+  const areas = (index.areas ?? []).filter((area) => area.namespaces.length > 0);
+  if (areas.length === 0) {
+    return treeRows(index.tree, 0);
+  }
+  const placed = new Set(areas.flatMap((area) => area.namespaces));
+  return (
+    areas
+      .map(
+        (area) =>
+          `<div class="tree-group">${escape(area.feature.title)}</div>` +
+          rowsOf(
+            area.namespaces.map((name) => nodeAt(name)),
+            0,
+          ),
+      )
+      .join('') +
+    '<div class="tree-group">Everything else</div>' +
+    rowsOf(
+      sortedChildren(index.tree).filter((child) => !placed.has(child.path)),
+      0,
+    )
+  );
+};
+
+const rowsOf = (children, depth) =>
+  children
     .map((child) => {
       const pad = `style="--depth:${depth}"`;
       if (child.children.size > 0) {
@@ -1471,15 +1983,16 @@ const treeRows = (node, depth) =>
           `<div class="tree-children">${expanded ? treeRows(child, depth + 1) : ''}</div></div>`
         );
       }
-      return (
-        `<div class="tree-row leaf" ${pad}><a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}">` +
-        `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span>${statusMark(child.entry.status)}</a></div>`
-      );
+      return child.entry.kind === 'spec'
+        ? `<div class="tree-row leaf" ${pad}><a data-open="s:${escape(namespaceOf(child.entry.name))}" data-anchor="${escape(child.segment)}">` +
+            `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a></div>`
+        : `<div class="tree-row leaf" ${pad}><a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}">` +
+            `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span>${statusMark(child.entry.status)}</a></div>`;
     })
     .join('');
 
 const renderTree = () => {
-  element('tree').innerHTML = treeRows(index.tree, 0);
+  element('tree').innerHTML = topRows();
 };
 
 const toggleFolder = (path, expand) => {
@@ -1603,9 +2116,11 @@ const renderNow = async () => {
   }
   if (keys.length === 0) {
     workspace.innerHTML = homeHtml();
+    void fillHome(workspace);
   }
   const focus = keys.includes(ui.focus) ? ui.focus : keys[0];
   setFocus(focus, view === 'code' && focus !== undefined);
+  showAnchor();
   document.title = focus ? `${titleOf(focus)} · ${index.meta.project}` : index.meta.project;
 };
 
@@ -1616,6 +2131,9 @@ const titleOf = (key) => {
   }
   if (key.startsWith('t:')) {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
+  }
+  if (key.startsWith('s:')) {
+    return value;
   }
   if (key.startsWith('k:')) {
     return value === 'checks'
@@ -2443,6 +2961,8 @@ const onClick = (event) => {
     if (window.matchMedia('(max-width: 760px)').matches && target.closest('#sidebar')) {
       document.body.classList.add('no-sidebar');
     }
+    // A link to a block of a document (`R-3`) opens the document there.
+    ui.anchor = data.anchor ? { key: data.open, block: data.anchor } : undefined;
     open(data.open);
   } else if (data.close) {
     close(data.close);
@@ -2811,6 +3331,7 @@ const main = async () => {
   if (window.matchMedia('(max-width: 760px)').matches) {
     document.body.classList.add('no-sidebar');
   }
+  index.areas = areasOf(await loadFeatures());
   renderTree();
   showDialect();
   await loadWriting();

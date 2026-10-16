@@ -8,7 +8,7 @@
 // URL in headless Chromium, clicks each `--click <text>` in turn, and prints the address, the
 // visible text and the links and buttons there are to follow.
 //
-//   node scripts/visit.mjs <url> [--click <text>]… [--shot <file.png>]
+//   node scripts/visit.mjs <url> [--click <text>]… [--shot <file.png>] [--full] [--scroll <css selector>]
 
 import { chromium } from '@playwright/test';
 
@@ -16,12 +16,18 @@ const args = process.argv.slice(2);
 const url = args.shift();
 const clicks = [];
 let shot;
+let full = false;
+let scroll;
 while (args.length > 0) {
   const flag = args.shift();
   if (flag === '--click') {
     clicks.push(args.shift());
   } else if (flag === '--shot') {
     shot = args.shift();
+  } else if (flag === '--full') {
+    full = true;
+  } else if (flag === '--scroll') {
+    scroll = args.shift();
   }
 }
 if (!url) {
@@ -46,8 +52,11 @@ try {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
   }
+  if (scroll) {
+    await page.locator(scroll).first().scrollIntoViewIfNeeded();
+  }
   if (shot) {
-    await page.screenshot({ path: shot });
+    await page.screenshot({ path: shot, fullPage: full });
   }
   const seen = await page.evaluate(() => ({
     title: document.title,

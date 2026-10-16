@@ -2326,3 +2326,244 @@ ul.features {
   letter-spacing: 0;
   text-transform: none;
 }
+
+/* Guide (D196): the overview's areas, spec documents as pages, and the sidebar's groups. */
+
+.home-intro {
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.home-intro p {
+  margin: 0 0 10px;
+}
+
+.legend {
+  font-size: 12px;
+  margin: 18px 0 8px;
+}
+
+.legend .icon {
+  vertical-align: middle;
+}
+
+.areas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.area {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+
+.area header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.area h4 {
+  margin: 0;
+  font-size: 14px;
+  flex: 1 1 auto;
+}
+
+.area-features {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.area-features li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.area .doc-ref {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--k-spec) 12%, transparent);
+  color: var(--k-spec);
+  text-decoration: none;
+}
+
+.area-code {
+  margin: 10px 0 0;
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.group-title {
+  margin: 14px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.doc-row .doc-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-page {
+  max-width: 80ch;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.doc-page .md-h {
+  margin: 20px 0 8px;
+}
+
+.doc-page p,
+.doc-page ul,
+.doc-page ol,
+.doc-page blockquote {
+  margin: 0 0 10px;
+}
+
+.doc-page blockquote {
+  padding-left: 12px;
+  border-left: 3px solid var(--line);
+  color: var(--muted);
+}
+
+.md-table {
+  border-collapse: collapse;
+  margin: 0 0 12px;
+  font-size: 13px;
+  display: block;
+  overflow-x: auto;
+}
+
+.md-table th,
+.md-table td {
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.block {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--k-spec);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+  background: var(--code);
+  transition: box-shadow 0.3s;
+}
+
+.block-api {
+  border-left-color: var(--k-term);
+}
+
+.block-law {
+  border-left-color: var(--k-theorem);
+}
+
+.block.flash {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.block-type {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.block-id {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.block-prop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.block-key {
+  color: var(--muted);
+  min-width: 72px;
+}
+
+.block-value {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+pre.block-value {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 10px;
+}
+
+.evidence.missing {
+  color: var(--fail);
+}
+
+.doc-foot {
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.tree-group {
+  margin: 12px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.area-about {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+.area-about:empty {
+  display: none;
+}
