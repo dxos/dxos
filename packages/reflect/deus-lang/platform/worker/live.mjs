@@ -45,7 +45,7 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
     if (!head) {
       throw new HttpError(404, `no branch ${branch}`);
     }
-    return json({ branch, causal: head.causal });
+    return json(await shownHead(env, project, branch, head));
   }
   const causal = first;
   const path = more.join('/');
@@ -89,6 +89,27 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
   return page(await rendering);
 };
 
+/** The head the queue last drew for each branch, under `<project>/live/shown/<branch>`. */
+const shownKey = (project, branch) => `${project}/live/shown/${branch}`;
+/** How long after a push the last drawn head stands in for it; past that the head is drawn on request. */
+const SHOWN_GRACE_MS = 5 * 60_000;
+
+/**
+ * The head a visitor is shown: the branch's head once its index is drawn, and until then, for a few minutes
+ * after the push, the head drawn last, since drawing a new index in a cold isolate takes half a minute.
+ */
+const shownHead = async (env, project, branch, head) => {
+  if (await env.BUCKET.head(`${project}/live/${head.causal}/index.json`)) {
+    return { branch, causal: head.causal };
+  }
+  const fresh = head.uploaded && Date.now() - head.uploaded.getTime() < SHOWN_GRACE_MS;
+  const shown = fresh ? await env.BUCKET.get(shownKey(project, branch)) : null;
+  if (!shown) {
+    return { branch, causal: head.causal };
+  }
+  return { branch, causal: (await shown.text()).trim(), drawing: head.causal };
+};
+
 /** The heads whose index was drawn, newest first, so a page missing at one head can come from the last. */
 const drawnKey = (project) => `${project}/live/drawn.json`;
 const DRAWN_KEPT = 8;
@@ -127,7 +148,10 @@ export const warmLive = async (env, ctx, project) => {
     if (!head) {
       return;
     }
-    const response = await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'index.json']);
+    const response = await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'index.json'], {
+      drawn: true,
+    });
+    await env.BUCKET.put(shownKey(project, 'main'), head.causal, { httpMetadata: { contentType: 'text/plain' } });
     // The overview links its head's change first.
     await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'change', `${head.causal}.json`]);
     // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.

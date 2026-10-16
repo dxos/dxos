@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
@@ -29,7 +29,13 @@ const directoryBucket = (folder: string): Bucket => {
       }
       const offset = options?.range?.offset ?? 0;
       const bytes = new Uint8Array(whole.subarray(offset, offset + (options?.range?.length ?? whole.length - offset)));
-      return { body: bytes, size: whole.length, httpMetadata: {}, text: async () => new TextDecoder().decode(bytes) };
+      return {
+        body: bytes,
+        size: whole.length,
+        httpMetadata: {},
+        uploaded: statSync(join(folder, key)).mtime,
+        text: async () => new TextDecoder().decode(bytes),
+      };
     },
     head: async (key) => (read(key) ? {} : null),
     put: async (key, value) => {
@@ -187,6 +193,12 @@ describe('live explorer (D192)', () => {
         );
         return { response, settled: Promise.all(pending) };
       };
+      const liveHead = async () =>
+        (
+          await worker.fetch(new Request('https://deus.test/v1/toolchain/live/main'), env, { waitUntil: () => {} })
+        ).json();
+      // Until the queue draws the new head's index, the explorer shows the head it drew last.
+      expect(await liveHead()).toEqual({ branch: 'main', causal: before, drawing: head });
       const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', before, 'index.json'), 'utf8'));
       const area = index.names.find((entry: { name: string }) => entry.name === 'area');
       const earlier = readFileSync(join(bucket, 'toolchain', 'live', before, 'def', `${area.hash}.json`), 'utf8');
@@ -202,6 +214,13 @@ describe('live explorer (D192)', () => {
       const second = await fetchPage(head, area.hash);
       expect(second.response.headers.get('x-deus-drawn-at')).toBeNull();
       expect(await second.response.json()).toEqual(own);
+      const stored: Promise<unknown>[] = [];
+      const drawn = await worker.fetch(new Request(`https://deus.test/v1/toolchain/live/${head}/index.json`), env, {
+        waitUntil: (promise: Promise<unknown>) => stored.push(promise),
+      });
+      expect(drawn.status).toBe(200);
+      await Promise.all(stored);
+      expect(await liveHead()).toEqual({ branch: 'main', causal: head });
     },
   );
 

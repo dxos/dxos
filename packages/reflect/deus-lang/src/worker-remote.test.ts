@@ -370,9 +370,9 @@ describe('replication API', () => {
     // A deleted bundle moves to the trash, out of every listing, so a compaction bug never loses history.
     expect(unlogged()).toEqual(['toolchain/heads/main', `toolchain/trash/bundles/${bundle.name}`]);
     expect(await (await call('/v1/toolchain/bundles/')).text()).toBe('');
-    expect(
-      gunzipSync((await bucket.get(`toolchain/trash/bundles/${bundle.name}`))?.body ?? new Uint8Array()).toString(),
-    ).toBe('(bundle a)');
+    const trashed = (await bucket.get(`toolchain/trash/bundles/${bundle.name}`))?.body;
+    expect(trashed).toBeInstanceOf(Uint8Array);
+    expect(trashed instanceof Uint8Array && gunzipSync(trashed).toString()).toBe('(bundle a)');
     // Compaction leaves the head log, so every head the branch had stays named.
     expect(bucket.keys().filter((key) => key.includes('/headlog/main/'))).toHaveLength(1);
   });
@@ -471,7 +471,8 @@ describe('replication API', () => {
       `obj ${top}.1 (term 2)`,
       `meta ${term} (meta (doc "ünï"))`,
     ]);
-    const put = (path: string, body: Uint8Array) => call(`/v1/toolchain/${path}`, { method: 'PUT', body, key });
+    const put = (path: string, body: Uint8Array<ArrayBuffer>) =>
+      call(`/v1/toolchain/${path}`, { method: 'PUT', body, key });
     // A pack only describes a bundle the remote holds, and its index goes up last.
     expect((await put(`packs/${bundle.name}`, pack.text)).status).toBe(409);
     expect((await put(`bundles/${bundle.name}`, bundle.body)).status).toBe(428);
@@ -531,7 +532,12 @@ describe('replication API', () => {
   test('projects are addressed as @owner/project, with the toolchain at its old URLs too (D184)', async ({
     expect,
   }) => {
-    const put = (path: string, bundle: { name: string; body: Uint8Array }, key: string, ...bases: string[]) =>
+    const put = (
+      path: string,
+      bundle: { name: string; body: Uint8Array<ArrayBuffer> },
+      key: string,
+      ...bases: string[]
+    ) =>
       call(`/v1/${path}/bundles/${bundle.name}`, {
         method: 'PUT',
         body: bundle.body,

@@ -150,7 +150,7 @@ const headKey = (project, branch) => `${project}/heads/${branch}`;
 export const readHead = async (env, project, branch) => {
   const object = await env.BUCKET.get(headKey(project, branch));
   if (object) {
-    return { causal: (await object.text()).trim(), etag: object.etag };
+    return { causal: (await object.text()).trim(), etag: object.etag, uploaded: object.uploaded };
   }
   const row = await env.DB?.prepare('select causal from heads where project = ? and branch = ?')
     .bind(project, branch)

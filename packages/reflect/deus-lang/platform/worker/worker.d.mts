@@ -9,6 +9,8 @@ export type BucketObject = {
   /** The stored size, and for a ranged read the bytes returned (packs, D180). */
   size?: number;
   range?: { offset: number; length: number };
+  /** When it was written: a branch head's age decides whether the explorer still shows the last drawn head. */
+  uploaded?: Date;
   text(): Promise<string>;
 };
 
@@ -16,7 +18,12 @@ export type BucketObject = {
 export type Bucket = {
   get(key: string, options?: { range?: { offset: number; length?: number } }): Promise<BucketObject | null>;
   head(key: string): Promise<object | null>;
-  put(key: string, value: Uint8Array | string, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
+  /** `onlyIf` makes the write conditional as R2 does: `If-None-Match: *` creates only, `etagMatches` replaces only that version. */
+  put(
+    key: string,
+    value: Uint8Array | string,
+    options?: { httpMetadata?: { contentType?: string }; onlyIf?: Headers | { etagMatches?: string } },
+  ): Promise<unknown>;
   delete(key: string): Promise<unknown>;
   list(options: {
     prefix: string;
