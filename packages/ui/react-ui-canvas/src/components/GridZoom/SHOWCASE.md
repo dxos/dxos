@@ -29,12 +29,17 @@ text):
 
 ## Recording rules
 
-Every clip and every take of the composite follows these:
+Each flow is recorded two ways: in light mode as a showcase clip (the Light column below), and in dark mode as a
+standalone demo video (the Dark column).
+
+### Showcase clips (light)
+
+Every showcase clip and every take of the composite follows these:
 
 1. **Light mode.** Run the autocue driver with `--theme light`.
 2. **60 fps.** Run the driver with `--fps 60`, and encode the cut clips and the composite at 60 fps.
-3. **The sequence only.** Run `trim-static.mjs` (if at all) without `--ident`, `--intro` or `--outro`: no opening
-   title and no end card.
+3. **No ident.** Run `trim-static.mjs` (if at all) without `--ident`, `--intro` or `--outro`: no opening title and no
+   end card.
 4. **No captions or titles.** Run the driver with `--captions off`, so a flow's step captions never appear.
 5. **The navtree shows.** Record clips at 1920x1080 and keep the whole app frame, sidebar included; never crop to the
    plank.
@@ -43,6 +48,18 @@ Every clip and every take of the composite follows these:
 7. **Near-black between tiles.** The grid's ground and gutters are near black, in either theme.
 8. **Render the composite frame by frame.** `render.mjs` seeks the story's stepped mode and screenshots each frame at
    exactly 60 fps. A live screencast of the story delivers about 25 fps at 1080p, so camera moves judder.
+
+### Demo videos (dark)
+
+Every standalone demo video follows these:
+
+1. **Dark mode.** Run the autocue driver with `--theme dark`.
+2. **30 fps.** Run the driver with `--fps 30`, and encode the MP4 at 30 fps.
+3. **Ident and outro.** Trim with `trim-static.mjs --ident composer`, which opens on the Composer title and closes on
+   the end card.
+4. **Captions.** Run the driver with `--captions on`, so each step's caption shows.
+5. **Uploaded.** The trimmer uploads the MP4 to `assets.composer.space`; link it from the plugin's `dx.config.ts` and
+   the Dark column below.
 
 The composite is rendered from the story in isolation, stepped, with the controls hidden and the light theme:
 `/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story&args=controls:!false;stepped:!true&globals=theme:light`.
