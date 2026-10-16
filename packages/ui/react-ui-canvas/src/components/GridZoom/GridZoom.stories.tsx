@@ -136,7 +136,8 @@ const DefaultStory = ({
   const videos = useRef(new Map<string, HTMLVideoElement>());
   // The tour starts once its first tile has loaded (or turned out to have no clip).
   const [ready, setReady] = useState(false);
-  const tour = useMemo(() => tourProp ?? DEFAULT_TOUR, [tourProp]);
+  // An empty tour would generate no shots, so no tile renders; it falls back to the default like an unset one.
+  const tour = useMemo(() => (tourProp?.length ? tourProp : DEFAULT_TOUR), [tourProp]);
 
   /** Every cell drawn: the grid's, then any tour cell outside it; a tour cell plays its own clip. */
   const cells = useMemo(() => {
