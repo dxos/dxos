@@ -41,6 +41,11 @@ export type MergePlan = {
   typenames?: ReadonlySet<string>;
   /** Whether a remote answer can go stale on a local write: local evidence does not decide membership alone. */
   staleOnLocalWrite: boolean;
+  /**
+   * Whether the merged entries sort by id: a single space-scoped type or wildcard selection with no order of
+   * its own takes the planner's natural order, which every source answers in.
+   */
+  natural: boolean;
 };
 
 export const createMergePlan = (query: QueryAST.Query): MergePlan => {
@@ -72,6 +77,16 @@ export const createMergePlan = (query: QueryAST.Query): MergePlan => {
       : undefined;
 
   const windowed = single !== undefined && single.window.order !== 'none';
+  const natural =
+    single !== undefined &&
+    (single.selection === 'type' || single.selection === 'wildcard') &&
+    single.traversal === 0 &&
+    single.aggregate === 'none' &&
+    !single.scope.feeds &&
+    single.scope.registry === 'none' &&
+    single.window.order === 'none' &&
+    single.window.limit === undefined &&
+    single.window.skip === undefined;
   return {
     characteristics,
     revalidate,
@@ -79,6 +94,7 @@ export const createMergePlan = (query: QueryAST.Query): MergePlan => {
     ids,
     typenames: flat ? typenamesOf(flat.filters) : undefined,
     staleOnLocalWrite: !revalidate || windowed || flat?.limit !== undefined || flat?.skip !== undefined,
+    natural,
   };
 };
 

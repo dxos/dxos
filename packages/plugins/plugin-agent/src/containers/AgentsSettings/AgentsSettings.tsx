@@ -23,8 +23,8 @@ import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
-import { createAgent } from '../../capabilities/create-agent.ts';
 import { agentDeckSubject } from '../../constants.ts';
+import { createAgent } from './create-agent.ts';
 
 // The add-agent action uses Form's `settings` variant for its labeled-row chrome; there are no fields to bind.
 const ACTIONS_SCHEMA = Schema.Struct({});

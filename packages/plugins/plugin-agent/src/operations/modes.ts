@@ -19,7 +19,7 @@ import {
   RelaySkill,
   SupportSkill,
 } from '#skills';
-import { Knowledge, Mode } from '#types';
+import { Mode } from '#types';
 
 import { loadCopies, openBinder } from './agent-skills.ts';
 import { AgentOperationError } from './errors.ts';
@@ -33,34 +33,30 @@ export const BASE_SKILL_KEYS: readonly string[] = [
   BrainSkill.key,
 ];
 
-type BuiltinMode = { name: string; description: string; skills: readonly string[]; records?: Knowledge.Kind[] };
+type BuiltinMode = { name: string; description: string; skills: readonly string[] };
 
 /** The modes every agent starts with; people can add their own `Mode` objects beside them. */
 export const BUILTIN_MODES: readonly BuiltinMode[] = [
   { name: Mode.DEFAULT, description: 'Answers and helps in the conversation.', skills: [] },
   {
     name: 'Note-taker',
-    description: 'Records what is said or dictated as markdown notes attached to its subject.',
+    description: 'Records what is said or dictated as facts about its subject.',
     skills: [NoteTakerSkill.key],
-    records: ['note'],
   },
   {
     name: 'Interviewer',
     description: 'Interviews the person to learn their role, goals, team and preferences.',
     skills: [InterviewSkill.key],
-    records: ['fact', 'goal', 'preference', 'relationship'],
   },
   {
     name: 'Relay',
     description: 'Carries messages between people and reports back what they said.',
     skills: [RelaySkill.key],
-    records: ['commitment'],
   },
   {
     name: 'Support',
     description: 'Answers community questions, gathers bug reports and hands what it cannot solve to the team.',
     skills: [SupportSkill.key],
-    records: ['event', 'note'],
   },
 ];
 
@@ -101,13 +97,12 @@ export const ensureModes = (agent: Agent.Agent): Effect.Effect<Mode.Mode[], neve
       (object): object is Mode.Mode => Obj.instanceOf(Mode.Mode, object),
     );
     const missing = BUILTIN_MODES.filter(({ name }) => !existing.some((mode) => mode.name === name));
-    const created = yield* Effect.forEach(missing, ({ name, description, skills, records }) =>
+    const created = yield* Effect.forEach(missing, ({ name, description, skills }) =>
       Database.add(
         Obj.make(Mode.Mode, {
           name,
           description,
           skills: skills.map((key) => Ref.fromURI(Skill.registryURI(key))),
-          ...(records ? { records: [...records] } : {}),
           [Obj.Parent]: agent,
         }),
       ),
