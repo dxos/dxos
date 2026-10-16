@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { type SpaceId } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';
@@ -20,7 +21,7 @@ export const POLL_MS = 3_000;
  * The facts the space's agents know, re-read every {@link POLL_MS} while mounted. Each read schedules the next once it
  * settles, so a slow read never overlaps a newer one; a failed read keeps the last facts shown.
  */
-export const useFacts = (spaceId: string | undefined): RDF.Fact[] => {
+export const useFacts = (spaceId: SpaceId | undefined): RDF.Fact[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   useEffect(() => {

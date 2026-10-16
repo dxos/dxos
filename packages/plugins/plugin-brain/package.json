@@ -152,6 +152,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",

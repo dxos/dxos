@@ -176,8 +176,7 @@ describe('runFactPipeline', () => {
     const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
     const { service: brain } = BrainMemory.makeDetached();
     const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
-      Effect.provide(Layer.succeed(FactStore, BrainFactStore.make(brain, 'kai'))),
-      Effect.provide(Database.layer(db)),
+      Effect.provide(Layer.merge(Layer.succeed(FactStore, BrainFactStore.make(brain, 'kai')), Database.layer(db))),
       EffectEx.runAndForwardErrors,
     );
 

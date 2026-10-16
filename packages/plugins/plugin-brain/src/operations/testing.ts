@@ -16,13 +16,17 @@ import * as BrainService from '@dxos/plugin-agent/BrainService';
 export const AGENT_TYPES = [Agent.Agent, Instructions.Instructions];
 
 /** An agent added to the space with the given facts in its in-memory brain. */
-export const addAgent = Effect.fnUntraced(function* (brain: BrainService.Service, facts: readonly RDF.Fact[] = []) {
-  const agent = yield* Database.add(
-    Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ name: 'Kai', text: '' })) }),
-  );
-  yield* brain.push(agent.id, facts).pipe(Effect.orDie);
-  return agent;
-});
+export const addAgent = (
+  brain: BrainService.Service,
+  facts: readonly RDF.Fact[] = [],
+): Effect.Effect<Agent.Agent, never, Database.Service> =>
+  Effect.gen(function* () {
+    const agent = yield* Database.add(
+      Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ name: 'Kai', text: '' })) }),
+    );
+    yield* brain.push(agent.id, facts).pipe(Effect.orDie);
+    return agent;
+  });
 
 /** An in-memory brain over the test database, whose one agent knows the facts. */
 export const brainWithFacts = (
