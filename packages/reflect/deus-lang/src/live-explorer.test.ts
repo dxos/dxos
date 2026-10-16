@@ -348,6 +348,7 @@ describe('live explorer (D192)', () => {
         open: drawnIndex.meta.open,
         features: drawnIndex.meta.features ?? 0,
         namespaces: expect.any(Array),
+        summaryVersion: 2,
         kinds: expect.objectContaining({
           term: drawnIndex.names.filter((entry: { kind: string }) => entry.kind === 'term').length,
         }),

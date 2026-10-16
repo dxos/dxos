@@ -97,6 +97,9 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
 // The hub (`/`): every project on this host with its counts, read from each head's summary.
 //
 
+/** Raised when a summary gains or changes a field, so summaries drawn before are drawn again once. */
+const SUMMARY_VERSION = 2;
+
 const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
 
 /** What the hub shows of a head: its counts by kind and its tasks, from its index (a few hundred bytes, not megabytes). */
@@ -110,7 +113,8 @@ const summaryOfIndex = (index) => {
   const sizes = {};
   for (const entry of index.names ?? []) {
     const top = entry.name.includes('.') ? entry.name.slice(0, entry.name.indexOf('.')) : '';
-    if (top && !/\.(Spec|Features|QA)$/.test(entry.name.split('.').slice(0, 2).join('.'))) {
+    // `lib.<name>` is a mounted library, not the project's own code (D49).
+    if (top && top !== 'lib' && !/\.(Spec|Features|QA)$/.test(entry.name.split('.').slice(0, 2).join('.'))) {
       sizes[top] = (sizes[top] ?? 0) + 1;
     }
   }
@@ -127,6 +131,7 @@ const summaryOfIndex = (index) => {
     features: meta.features ?? 0,
     kinds,
     namespaces,
+    summaryVersion: SUMMARY_VERSION,
     ...(map ? { featureMap: map } : {}),
   };
 };
@@ -164,7 +169,7 @@ export const projectSummaries = async (env, ctx) => {
       }
       let summary = await storedPage(env, ctx, summaryKey(folder, shown.causal));
       // A summary from before it named namespaces is drawn again from the index.
-      if (summary !== undefined && !('namespaces' in JSON.parse(summary))) {
+      if (summary !== undefined && JSON.parse(summary).summaryVersion !== SUMMARY_VERSION) {
         summary = undefined;
       }
       if (summary === undefined) {
