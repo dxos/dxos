@@ -1092,14 +1092,20 @@ const stateChip = (state) => `<span class="state ${escape(state)}">${escape(stat
 const priorityChip = (priority) =>
   priority > 0 ? `<span class="priority p${priority}">${escape(PRIORITIES[priority])}</span>` : '';
 
+/** A change's message as a row shows it: one line, and a long list of names cut to its start (the full text is the title). */
+const rowMessage = (message) => {
+  const line = String(message).split('\n')[0];
+  return line.length > 140 ? `${line.slice(0, 137)}…` : line;
+};
+
 const changeRows = (changes) =>
   changes.length === 0
     ? '<p class="muted">None.</p>'
     : `<ul class="rows">${changes
         .map((change) =>
           change.imported
-            ? `<li class="entry-row"><span class="hash">${escape(short(change.causal))}</span><span class="change-message">${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`
-            : `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`,
+            ? `<li class="entry-row"><span class="hash">${escape(short(change.causal))}</span><span class="change-message" title="${escape(change.message)}">${escape(rowMessage(change.message))}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`
+            : `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}" title="${escape(change.message)}">${escape(rowMessage(change.message))}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`,
         )
         .join('')}</ul>`;
 
@@ -1584,7 +1590,7 @@ const GLOSSARY = [
   ],
   [
     'D96 and other D-numbers',
-    "D followed by a number is an entry in the project's decision log (docs/DECISIONS.md in the repository), which records each choice and why.",
+    "D followed by a number is an entry in the project's decision log, which records each choice and why: [docs/DECISIONS.md](https://github.com/dxos/dxos/blob/dm/agent-13-oct-x8ehi8-0y35ai/packages/reflect/deus-lang/docs/DECISIONS.md).",
   ],
 ];
 
@@ -1999,6 +2005,13 @@ const homeHtml = () => {
       ? `<li><a data-open="k:events" title="What the analytics store recorded"><span class="icon k-event">◆</span><b>${meta.events}</b><span>events</span></a></li>`
       : '') +
     `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
+    // A failing check is the first thing a visitor wants named, not only counted.
+    (failing.length > 0
+      ? `<p class="failing-checks"><span class="icon k-fail">✗</span> Failing: ${failing
+          .slice(0, 6)
+          .map((entry) => defLink(entry.name, entry.hash))
+          .join(', ')}${failing.length > 6 ? ` and <a data-open="k:checks">${failing.length - 6} more</a>` : ''}</p>`
+      : '') +
     legendHtml() +
     '<div class="home-intro" data-home-intro></div>' +
     (areas.length > 0 ? section('Start here', areas.length, areasBody(areas)) : '') +

@@ -50,8 +50,13 @@ def namedHashes (form : Sexp) : List Text :=
 /-- A definition's page file: builtin hashes are IRIs such as `#Bool`, and `#` cannot appear in a URL path. -/
 def pageOf (h : Text) : Text := if Text.startsWith "#" h then "_" ++ Text.drop 1 h else h
 
-/-- The first line of a doc comment, for listings. -/
-def summaryOf (doc : Option Text) : Text := Text.trim (Option.getOr (Option.bind doc (fun d => List.head? (Text.lines (Text.trim d)))) "")
+/-- The first sentence of a doc comment, for listings. -/
+def summaryOf (doc : Option Text) : Text :=
+  -- The first sentence, across the lines a doc comment wraps at: its first line alone stops mid-sentence.
+  let text := Text.join " " (List.filter (fun line => not (Text.isEmpty line)) (List.map Text.trim (Text.lines (Option.getOr doc ""))))
+  let stop := indexOf text ". " 0
+  let sentence := if stop < 0 then text else Text.take (stop + 1) text
+  if Text.length sentence > 240 then Text.take 237 sentence ++ "…" else sentence
 
 /-- Whether a definition has a verdict: tests and theorems are checked, other kinds never are. -/
 def checked (e : Entry) : Bool := Entry.kind e == "test" || Entry.kind e == "theorem"

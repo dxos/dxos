@@ -453,7 +453,19 @@ function Explorer$signature(meta) {
 rt.named(Explorer$signature, "Explorer.signature");
 
 function Explorer$summaryOf(doc) {
-  return rt.ap(rt.prims["Text.trim"], lib$base$Option$getOr(lib$base$Option$bind(doc, rt.named((d) => lib$base$List$head$p(lib$base$Text$lines(rt.ap(rt.prims["Text.trim"], d))), "Explorer.summaryOf/\u03bb")), ""));
+  const text = rt.ap(rt.prims["Text.join"], " ", lib$base$List$filter(rt.named((line) => lib$base$not(lib$base$Text$isEmpty(line)), "Explorer.summaryOf/\u03bb"), lib$base$List$map(rt.prims["Text.trim"], lib$base$Text$lines(lib$base$Option$getOr(doc, "")))));
+  const stop = rt.ap(rt.prims["Text.indexOf"], text, ". ", 0);
+  let sentence;
+  if ((stop < 0)) {
+    sentence = text;
+  } else {
+    sentence = lib$base$Text$take(((stop + 1) | 0), text);
+  }
+  if ((rt.ap(rt.prims["Text.length"], sentence) > 240)) {
+    return rt.ap(rt.prims["append"], lib$base$Text$take(237, sentence), "\u2026");
+  } else {
+    return sentence;
+  }
 }
 rt.named(Explorer$summaryOf, "Explorer.summaryOf");
 
@@ -1463,10 +1475,29 @@ function Types$displayScheme(scheme) {
 }
 rt.named(Types$displayScheme, "Types.displayScheme");
 
+function lib$base$not(b) {
+  if (b) {
+    return false;
+  } else {
+    return true;
+  }
+}
+rt.named(lib$base$not, "lib.base.not");
+
+function lib$base$Text$isEmpty(t) {
+  return (rt.ap(rt.prims["Text.length"], t) === 0);
+}
+rt.named(lib$base$Text$isEmpty, "lib.base.Text.isEmpty");
+
 function lib$base$Text$lines(t) {
   return rt.ap(rt.prims["Text.split"], t, "\n");
 }
 rt.named(lib$base$Text$lines, "lib.base.Text.lines");
+
+function lib$base$Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(lib$base$Text$take, "lib.base.Text.take");
 
 function lib$base$Map$ascending(pairs$) {
   for (;;) {
@@ -1882,15 +1913,6 @@ function Names$fieldOwners(v) {
 }
 rt.named(Names$fieldOwners, "Names.fieldOwners");
 
-function lib$base$not(b) {
-  if (b) {
-    return false;
-  } else {
-    return true;
-  }
-}
-rt.named(lib$base$not, "lib.base.not");
-
 function lib$base$Text$startsWith(prefix, t) {
   if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
     return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
@@ -1946,11 +1968,6 @@ function lib$base$Text$endsWith(suffix, t) {
   }
 }
 rt.named(lib$base$Text$endsWith, "lib.base.Text.endsWith");
-
-function lib$base$Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
-}
-rt.named(lib$base$Text$take, "lib.base.Text.take");
 
 function Names$lastSegment(name) {
   function go(i$) {
@@ -3006,11 +3023,6 @@ function Codebase$Causal$snapshot(v) {
   }
 }
 rt.named(Codebase$Causal$snapshot, "Codebase.Causal.snapshot");
-
-function lib$base$Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
-}
-rt.named(lib$base$Text$isEmpty, "lib.base.Text.isEmpty");
 
 function Codebase$readNamespace(dir, h) {
   function go(prefix, node, acc) {

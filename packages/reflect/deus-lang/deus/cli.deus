@@ -361,6 +361,13 @@ def rememberSources (dir : Text) (sources : List (Text, Text)) : {IO, Throw Text
     (dir ++ "/cache/update-sources")
     (join "\n" (sourcesKey dir :: List.map (fun pair => snd pair ++ " " ++ fst pair) sources) ++ "\n")
 
+/-- A path as a change's default message names it: relative to the working directory when under it, else by its
+  file name, so a scratch or home directory never reaches the shared history. -/
+def messagePath (path : Text) : {IO} Text :=
+  let cwd := getOr (IO.getEnv "PWD") ""
+  if not (Text.isEmpty cwd) && startsWith (cwd ++ "/") path then Text.drop (Text.length cwd + 1) path
+  else if startsWith "/" path then Assets.baseName path else path
+
 /-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
 def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -422,7 +429,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let ns3 := fst propagated
     let message := getOr
       (option args "message")
-      ((if isUpdate then "update " else "add ") ++ join " " args.positional)
+      ((if isUpdate then "update " else "add ") ++ join " " (List.map messagePath args.positional))
     let causal := commit dir ns3 message
     if isUpdate then rememberSources dir sources else ()
     recordProvenance dir args causal (List.map fst batch.objects ++ List.map
@@ -683,7 +690,10 @@ def rm (args : Args) : {IO, Throw Text} Unit :=
     (fun m name => if Map.contains name m then Map.remove name m else Throw.throw ("unknown name " ++ name))
     ns
     args.positional
-  commit dir ns2 ("delete " ++ join " " args.positional)
+  let names := args.positional
+  -- A long list says how many and names a few; the change's diff keeps every name.
+  let listed := if List.length names <= 8 then join " " names else Int.toText (List.length names) ++ " names: " ++ join " " (List.take 5 names) ++ " …"
+  commit dir ns2 (getOr (option args "message") ("delete " ++ listed))
   Cli.output
     args
     (fun _ => Json.arr (List.map Json.str args.positional))

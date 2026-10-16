@@ -826,6 +826,17 @@ a.ref .ty {
   transform: rotate(90deg);
 }
 
+/* The overview names its failing checks, below the counts that only number them. */
+.failing-checks {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--fail);
+}
+
+.failing-checks a {
+  font-family: var(--mono);
+}
+
 ul.rows {
   list-style: none;
   margin: 2px 0 0;
