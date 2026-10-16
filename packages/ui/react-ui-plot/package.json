@@ -42,7 +42,6 @@
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
