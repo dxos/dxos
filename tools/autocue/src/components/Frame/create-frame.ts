@@ -73,7 +73,9 @@ export const FRAME_STYLES = `
   .frame.layout .caption:not(.panel)[hidden] { display: flex; }
   /* Raised: the content is positioned too, and would otherwise paint over a panel that precedes it. */
   .panel { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: max-content; max-width: 80%;
-    border-radius: var(--autocue-panel-radius); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+    border-radius: var(--autocue-panel-radius); box-shadow: var(--autocue-panel-shadow);
+    --autocue-band-surface: var(--autocue-panel-surface); --autocue-band-fg: var(--autocue-panel-fg);
+    --autocue-band-muted: var(--autocue-panel-muted); }
   .frame.overlay .panel { position: fixed; z-index: var(--autocue-layer); }
   .header { padding: 16px 24px; }
   .header.panel { top: var(--autocue-panel-inset); padding: 12px 28px; }

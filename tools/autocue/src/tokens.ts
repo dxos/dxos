@@ -5,7 +5,8 @@
 /**
  * Custom properties every autocue component reads. They are declared on `:host` so a host page (or a React
  * wrapper) can override them from outside the shadow root, which is the one thing that crosses it.
- * The defaults are the dark band the driver has always drawn over recordings.
+ * Bands are always the dark band the driver has drawn over recordings; panels invert the page's theme, which
+ * Composer marks with `html.dark`, so a floating panel stands out from the content beneath it.
  */
 export const TOKENS = `
   :host {
@@ -19,5 +20,15 @@ export const TOKENS = `
     --autocue-panel-inset: 24px;
     --autocue-panel-radius: 12px;
     --autocue-letterbox: #000;
+    --autocue-panel-surface: rgba(17, 17, 17, 0.92);
+    --autocue-panel-fg: #fff;
+    --autocue-panel-muted: rgba(255, 255, 255, 0.7);
+    --autocue-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  :host-context(.dark) {
+    --autocue-panel-surface: rgba(250, 250, 250, 0.95);
+    --autocue-panel-fg: #111;
+    --autocue-panel-muted: rgba(17, 17, 17, 0.65);
+    --autocue-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   }
 `;
