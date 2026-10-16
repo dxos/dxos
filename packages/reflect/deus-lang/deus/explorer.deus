@@ -89,7 +89,7 @@ def refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.str name)
 def taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, Causal)) (t : Task) : {IO, Throw Text} Json :=
   let link := fun a =>
     match a with
-    | Attachment.definition name linked => Json.obj [("definition", Json.str name), ("hash", Json.str linked), ("current", getOr (Option.map (fun e => Json.str (Entry.hash e)) (Map.lookup name ns)) Json.null)]
+    | Attachment.definition name linked => Json.obj [("definition", Json.str name), ("hash", Json.str linked), ("current", getOr (Option.map (fun e => Json.str (Entry.hash e)) (lookupMounted ns name)) Json.null)]
     | Attachment.change h =>
         let message :=
           match readObject dir h with

@@ -2766,7 +2766,7 @@ function Explorer$taskJson(dir, ns, history, t) {
     if (a.tag === 0) {
       const name = a.fields[0];
       const linked = a.fields[1];
-      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["definition", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [name])]), rt.cons(new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [linked])]), rt.cons(new rt.Con("#Pair", 0, ["current", lib$base$Option$getOr(lib$base$Option$map(rt.named((e) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$hash(e)]), "Explorer.taskJson/\u03bb"), lib$base$Map$lookup(name, ns)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.NIL)))]);
+      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["definition", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [name])]), rt.cons(new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [linked])]), rt.cons(new rt.Con("#Pair", 0, ["current", lib$base$Option$getOr(lib$base$Option$map(rt.named((e) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$hash(e)]), "Explorer.taskJson/\u03bb"), Names$lookupMounted(ns, name)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.NIL)))]);
     }
     if (a.tag === 1) {
       const h = a.fields[0];
@@ -4585,6 +4585,25 @@ function Codebase$Causal$prior(v) {
   }
 }
 rt.named(Codebase$Causal$prior, "Codebase.Causal.prior");
+
+function Names$lookupMounted(ns, name) {
+  const t0 = lib$base$Map$lookup(name, ns);
+  m1: {
+    if (t0.tag === 1) {
+      const e = t0.fields[0];
+      return new rt.Con("#Option", 1, [e]);
+    }
+    if (t0.tag === 0) {
+      if (lib$base$Text$startsWith("lib.", name)) {
+        return rt.con0("#Option", 0);
+      } else {
+        return lib$base$Map$lookup(name, Names$unmounted(ns));
+      }
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Names$lookupMounted, "Names.lookupMounted");
 
 function Tasks$stateText(s) {
   m0: {

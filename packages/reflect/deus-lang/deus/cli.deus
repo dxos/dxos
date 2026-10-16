@@ -2299,7 +2299,8 @@ def linkReport (dir : Text) (ns : Map Text Entry) (a : Attachment) : {IO, Throw 
         | Option.none => "(not in this store)"
       (Json.obj [("change", Json.str h), ("message", Json.str message)], ["  change " ++ short h ++ "  " ++ message])
   | Attachment.definition name h =>
-      let now := Option.map Entry.hash (Map.lookup name ns)
+      -- A name moved into a mounted library is still that definition (D206).
+      let now := Option.map Entry.hash (lookupMounted ns name)
       let changes := historyOfName dir name 200
       let state :=
         match now with
