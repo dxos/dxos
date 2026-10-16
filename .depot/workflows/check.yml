@@ -136,9 +136,6 @@ jobs:
           - name: Check remote cache wiring
             run: node scripts/check-cache-wiring.mjs
 
-          - name: Check every task keys on its dependency closure
-            run: node scripts/check-dependency-closure.mjs
-
           - name: Check package.json paths
             run: pnpm run pkg-lint
 

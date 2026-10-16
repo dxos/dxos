@@ -2,8 +2,6 @@ $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   lint:
     command: pnpm exec oxlint --config .oxlintrc.json $projectSource
-    # The tasks below inherit only `typescript`, which brings in neither `javascript` nor the closure.
-    toolchains: [dependency-closure, typescript]
     inputs:
       - /.oxlintrc.json
       - /package.json
@@ -16,7 +14,6 @@ tasks:
 
   lint-fix:
     script: 'pnpm exec oxlint --config .oxlintrc.json --fix $projectSource && pnpm exec oxlint --config .oxlintrc.json --fix $projectSource'
-    toolchains: [dependency-closure, typescript]
     inputs:
       - /.oxlintrc.json
       - /package.json

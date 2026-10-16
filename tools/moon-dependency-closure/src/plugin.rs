@@ -26,13 +26,14 @@ pub fn register_toolchain(
     }))
 }
 
-// moon adds a toolchain to every task that uses one it requires.
+// moon adds a toolchain, and everything it requires, to every task that uses one it requires. `lint`
+// inherits only `typescript`, whose plugin does nothing per task, so requiring it costs other tasks nothing.
 #[plugin_fn]
 pub fn define_requirements(
     Json(_): Json<DefineRequirementsInput>,
 ) -> FnResult<Json<DefineRequirementsOutput>> {
     Ok(Json(DefineRequirementsOutput {
-        requires: vec!["javascript".into(), "node".into()],
+        requires: vec!["javascript".into(), "node".into(), "typescript".into()],
         ..Default::default()
     }))
 }
