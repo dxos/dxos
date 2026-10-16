@@ -465,8 +465,6 @@ describe('AutomergeHost', () => {
     expect(await differentDocuments()).toEqual(0);
   });
 
-  // Confirmations live in memory, so after a restart only storage can vouch for a head a remote lists beside
-  // ours, as EDGE lists fragment heads beside commit tips.
   test('after a restart a remote head is confirmed without a load only when storage holds its whole history', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -492,7 +490,6 @@ describe('AutomergeHost', () => {
     handle.change((doc: any) => {
       doc.value = 2;
     });
-    // Subduction stores a change it receives before its parent arrives, and the document cannot apply it.
     const orphanParent = A.change(A.clone(handle.doc()), (doc: any) => {
       doc.value = 3;
     });

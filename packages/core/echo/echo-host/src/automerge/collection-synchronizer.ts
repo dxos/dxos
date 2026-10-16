@@ -263,7 +263,6 @@ export class CollectionSynchronizer extends Resource {
     if (!remoteState) {
       return false;
     }
-    // Both states are replaced, never mutated, so a verdict holds until either object changes.
     const verdict = perCollectionState.syncedVerdicts.get(peerId);
     if (verdict && verdict.local === perCollectionState.localState && verdict.remote === remoteState) {
       return verdict.synced;
@@ -276,7 +275,11 @@ export class CollectionSynchronizer extends Resource {
         hasLocalChange: this._hasLocalChange,
       }),
     );
-    perCollectionState.syncedVerdicts.set(peerId, { local: perCollectionState.localState, remote: remoteState, synced });
+    perCollectionState.syncedVerdicts.set(peerId, {
+      local: perCollectionState.localState,
+      remote: remoteState,
+      synced,
+    });
     return synced;
   }
 
@@ -488,7 +491,6 @@ type PerCollectionState = {
   interestedPeers: Set<PeerId>;
   lastQueried: Map<PeerId, number>;
   lastBroadcast: Map<PeerId, number>;
-  /** The last {@link CollectionSynchronizer._isSyncedWithPeer} answer per peer, and the two states it compared. */
   syncedVerdicts: Map<PeerId, { local: CollectionState | undefined; remote: CollectionState; synced: boolean }>;
 };
 
@@ -496,7 +498,7 @@ export type CollectionState = {
   /**
    * DocumentId -> Heads.
    */
-  documents: Record<DocumentId, Heads>;
+  readonly documents: Readonly<Record<DocumentId, Heads>>;
 };
 
 export type CollectionStateDiff = {
@@ -534,10 +536,6 @@ type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
-/**
- * Same documents and heads, as sets; exact because a head added beside a shared one is a change. Runs on
- * every collection state a peer sends, so it copies nothing.
- */
 export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean => {
   let unmatched = 0;
   for (const documentId in left.documents) {
@@ -546,7 +544,7 @@ export const isCollectionStateEqual = (left: CollectionState, right: CollectionS
       continue;
     }
     const other = right.documents[documentId as DocumentId];
-    if (!other || !sameHeads(heads, other)) {
+    if (!other || !headsEqual(heads, other)) {
       return false;
     }
     unmatched++;
@@ -557,20 +555,6 @@ export const isCollectionStateEqual = (left: CollectionState, right: CollectionS
     }
   }
   return unmatched === 0;
-};
-
-/** {@link headsEqual}, without building sets when both lists hold the same heads in the same order. */
-const sameHeads = (a: readonly string[], b: readonly string[]): boolean => {
-  if (a.length === b.length) {
-    let index = 0;
-    while (index < a.length && a[index] === b[index]) {
-      index++;
-    }
-    if (index === a.length) {
-      return true;
-    }
-  }
-  return headsEqual(a, b);
 };
 
 /**
@@ -688,6 +672,9 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
 };
 
 const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
+  if (a.length === b.length && a.every((head, index) => head === b[index])) {
+    return true;
+  }
   const aset = new Set(a);
   const bset = new Set(b);
   return aset.size === bset.size && [...bset].every((head) => aset.has(head));

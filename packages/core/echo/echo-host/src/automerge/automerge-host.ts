@@ -1578,11 +1578,7 @@ export class AutomergeHost extends Resource {
     return true;
   }
 
-  /**
-   * The advertised documents storage cannot vouch for. A head beyond ours is confirmed only when storage holds it and
-   * everything beneath it, down to a head of ours or the first change, which is what loading the document would apply.
-   */
-  private async _unconfirmedInStorage(
+  private async _confirmFromStorage(
     documentIds: DocumentId[],
     localState: CollectionState,
     remoteState: CollectionState,
@@ -1596,7 +1592,7 @@ export class AutomergeHost extends Resource {
       if (beyond.length === 0) {
         continue;
       }
-      const isStored = await this._storedHistory(documentId, local);
+      const isStored = await this._storedHistoryCheck(documentId, local);
       if (beyond.every(isStored)) {
         for (const head of beyond) {
           this._confirmChange(documentId, head);
@@ -1608,8 +1604,10 @@ export class AutomergeHost extends Resource {
     return unconfirmed;
   }
 
-  /** Whether storage holds a change and its whole history, read from the document's Subduction records. */
-  private async _storedHistory(documentId: DocumentId, heads: readonly string[]): Promise<(hash: string) => boolean> {
+  private async _storedHistoryCheck(
+    documentId: DocumentId,
+    heads: readonly string[],
+  ): Promise<(hash: string) => boolean> {
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     const families = ['commits', 'fragments'] as const;
     const records = await Promise.all(
@@ -1730,10 +1728,8 @@ export class AutomergeHost extends Resource {
       hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
     });
     const { different, missingOnLocal, missingOnRemote } = diff;
-    // Nothing is confirmed in memory after a restart, and EDGE lists fragment heads beside commit tips, so an
-    // in-sync document would otherwise be loaded and synced on every boot to learn what storage already holds.
     const advertised = this._useSubduction
-      ? await this._unconfirmedInStorage(diff.advertised, localState, remoteState)
+      ? await this._confirmFromStorage(diff.advertised, localState, remoteState)
       : diff.advertised;
     if (ctx.disposed) {
       return;
@@ -1943,7 +1939,7 @@ export class AutomergeHost extends Resource {
       if (!state) {
         continue;
       }
-      let newState: CollectionState | undefined;
+      let documents: Record<DocumentId, Heads> | undefined;
 
       for (const [documentId, heads] of docHeads) {
         const current = state.documents[documentId];
@@ -1960,14 +1956,12 @@ export class AutomergeHost extends Resource {
         if (headsEquals(current, heads)) {
           continue;
         }
-        if (!newState) {
-          newState = structuredClone(state);
-        }
-        newState.documents[documentId] = heads;
+        documents ??= { ...state.documents };
+        documents[documentId] = heads;
       }
 
-      if (newState) {
-        this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+      if (documents) {
+        this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
         collectionsChanged.add(collectionId as CollectionId);
       }
     }
@@ -2014,7 +2008,6 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
   });
 };
 
-/** What a stored Subduction record's change rests on: a loose commit's parents, or a fragment's boundary. */
 const recordDependencies = (family: 'commits' | 'fragments', data: Uint8Array): string[] => {
   const toHex = (ids: CommitId[]) =>
     ids.map((id) => {

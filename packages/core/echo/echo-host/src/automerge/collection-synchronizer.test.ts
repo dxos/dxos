@@ -207,7 +207,7 @@ describe('CollectionSynchronizer', () => {
     expect(updates).to.deep.equal([peerId, peerId, peerId]);
   });
 
-  test('dedupes an unchanged state once the peer is in sync', async ({ expect }) => {
+  test('dedupes an unchanged state once the peer is in sync, until the local state changes', async ({ expect }) => {
     // The complement of the regression above: repeating an already-converged state must stay
     // silent, or every healthy peer re-triggers replication on each poll.
     const peerId = 'peer1' as PeerId;
@@ -240,7 +240,6 @@ describe('CollectionSynchronizer', () => {
     peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
     expect(updates).to.deep.equal([peerId]);
 
-    // A local change leaves the same remote state behind, so its next repeat is diffed again.
     peer.setLocalCollectionState(collectionId, STATE_2);
     updates.length = 0;
     peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
