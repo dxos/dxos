@@ -1,8 +1,8 @@
 -- context: @dxos/worker/Worker
 /-
-  The Worker's head rules in DEUS (task 41714c0d, D167, DataSafety.Spec): what a push claims with its
-  `x-deus-claim` header and whether that claim may move the branch head. platform/worker/remote.mjs does the
-  reads and the conditional write; these decide.
+  The Worker's branch heads in DEUS (task 41714c0d, D167, DataSafety.Spec): what a push claims with its
+  `x-deus-claim` header, whether that claim may move the branch head, and the R2 reads and conditional writes that
+  move it (through `Js.Async`, D237). platform/worker/remote.mjs answers the request around them.
 -/
 
 namespace Worker.Heads
@@ -48,6 +48,34 @@ def verdict (current : Option Text) (claim : Claim) (required : Int) (sent : Int
       else if List.contains head claim.bases then "write"
       else "moved"
   | Option.none => if sent < required then "epoch" else "write"
+
+/-- Where a branch's head lives: one small object, moved by conditional writes (D181). -/
+def headKey (project : Text) (branch : Text) : Text := project ++ "/heads/" ++ branch
+
+/-- A head as the bucket holds it: the history node, the etag a conditional write moves it from, and when it was
+  written (a JavaScript `Date`). -/
+structure Stored @"urn:deus:worker:StoredHead" where
+  causal : Text
+  etag : Text
+  uploaded : Js
+
+/-- The head of `branch` in the R2 `bucket`, or none; a head moved before D181 is a D1 row, which remote.mjs reads. -/
+def readStored (bucket : Js) (project : Text) (branch : Text) : {Js.Async} Option Stored :=
+  match Js.toOption (Js.Async.await (Js.method bucket "get" [Js.text (headKey project branch)])) with
+  | Option.none => Option.none
+  | Option.some object =>
+      let text := Js.toText (Js.Async.await (Js.method object "text" []))
+      Option.some (Stored.mk (Text.trim text) (Js.toText (Js.get object "etag")) (Js.get object "uploaded"))
+
+/-- Moves the head of `branch` to `causal` by a conditional write: from the head whose etag is `etag`, or only where
+  there is none. False when another push moved it first, so no two pushes both win (D167). -/
+def writeHead (bucket : Js) (project : Text) (branch : Text) (causal : Text) (etag : Option Text) : {Js.Async} Bool :=
+  let onlyIf :=
+    match etag with
+    | Option.some tag => Js.obj [("etagMatches", Js.text tag)]
+    | Option.none => Js.construct (Js.global "Headers") [Js.obj [("if-none-match", Js.text "*")]]
+  let options := Js.obj [("onlyIf", onlyIf), ("httpMetadata", Js.obj [("contentType", Js.text "text/plain")])]
+  not (Js.isNull (Js.Async.await (Js.method bucket "put" [Js.text (headKey project branch), Js.text causal, options])))
 
 /-- A sample head for the tests. -/
 def headA : Text := Text.repeat 64 "a"

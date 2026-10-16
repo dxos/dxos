@@ -147,17 +147,14 @@ const bundles = async (request, env, ctx, project, rest) => {
   throw new HttpError(405, 'method not allowed');
 };
 
-/** Where a branch's head lives: one small object, moved by conditional writes (D181). */
-const headKey = (project, branch) => `${project}/heads/${branch}`;
-
 /**
- * A branch's head and the etag that moves it. Heads moved before D181 are D1 rows: reading one
- * costs no write, and the first push after D181 copies it to the bucket.
+ * A branch's head and the etag that moves it, from the bucket (`Worker.Heads.readStored`, in DEUS). Heads moved
+ * before D181 are D1 rows: reading one costs no write, and the first push after D181 copies it to the bucket.
  */
 export const readHead = async (env, project, branch) => {
-  const object = await env.BUCKET.get(headKey(project, branch));
-  if (object) {
-    return { causal: (await object.text()).trim(), etag: object.etag, uploaded: object.uploaded };
+  const stored = await heads.readStored(env.BUCKET, project, branch);
+  if (stored) {
+    return stored;
   }
   const row = await env.DB?.prepare('select causal from heads where project = ? and branch = ?')
     .bind(project, branch)
@@ -165,15 +162,9 @@ export const readHead = async (env, project, branch) => {
   return row ? { causal: row.causal } : undefined;
 };
 
-/** Moves the head from `current` (or creates it), or returns false when another push moved it first. */
-const writeHead = async (env, project, branch, causal, current) => {
-  const onlyIf = current?.etag ? { etagMatches: current.etag } : new Headers({ 'if-none-match': '*' });
-  const written = await env.BUCKET.put(headKey(project, branch), causal, {
-    onlyIf,
-    httpMetadata: { contentType: 'text/plain' },
-  });
-  return written !== null;
-};
+/** Moves the head from `current` (or creates it), or returns false when another push moved it first (`Worker.Heads.writeHead`). */
+const writeHead = (env, project, branch, causal, current) =>
+  heads.writeHead(env.BUCKET, project, branch, causal, current?.etag);
 
 /**
  * Moves the branch head a push claims, or answers why not (D167). The bundle is stored only after

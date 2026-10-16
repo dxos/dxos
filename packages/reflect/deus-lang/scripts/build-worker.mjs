@@ -102,6 +102,8 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'Worker.Heads.parseClaim',
           'Worker.Heads.isBranch',
           'Worker.Heads.verdict',
+          'Worker.Heads.readStored',
+          'Worker.Heads.writeHead',
           '-o',
           join(gen, 'heads.js'),
           '--js',
