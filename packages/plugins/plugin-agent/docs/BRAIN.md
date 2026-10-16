@@ -229,7 +229,7 @@ Decided 2026-10-13 (formerly QUESTIONS.md 1 and 2):
   its object URI (`echo://<spaceId>/<objectId>`), an email by `mailto:`, a page by its URL; otherwise
   a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
 - **Memories are facts.** A memory is a graph of `<subject> dx:claim "content"` statements whose
-  provenance carries its kind and origin (`Knowledge` in this package); a correction is a graph that
+  provenance carries its kind and origin (`MemoryOperation.Remember`); a correction is a graph that
   `supersedes` it and a mistake one that `retracts` it. Memories reach the brain like any other fact.
 - Not yet built: linking an entity read before its object existed to that object (`owl:sameAs`), and
   predicates proposed by the extractor with their own descriptions (they are minted from the surface
