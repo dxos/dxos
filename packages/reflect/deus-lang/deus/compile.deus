@@ -540,7 +540,7 @@ def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -
       | none => ()))
   Ref.get schemes
 
-/-- Parses sources (`.deus`, or the ```deus fences of an `.mdl` document). -/
+/-- Parses sources: a `.deus` file, or the deus code blocks of an `.mdl` document. -/
 def parseFile (path : Text) (source : Text) : {Throw Text} (Text, List Decl) :=
   let text := if endsWith ".mdl" path then deusSource source else source
   match try (fun _ => Parser.parse text) with
