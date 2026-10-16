@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./CrawlState": {
+      "source": "./src/CrawlState.ts",
+      "types": "./dist/types/src/CrawlState.d.ts",
+      "import": "./dist/lib/CrawlState.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -31,12 +36,14 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",

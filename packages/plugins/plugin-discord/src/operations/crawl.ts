@@ -2,68 +2,97 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
+import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as EffectRef from 'effect/Ref';
 
-import { AiService } from '@dxos/ai';
-import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
-import { CrawlError } from '@dxos/crawler';
-import { Database, Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
+import { AgentRegistry, Crawler, CrawlState, StateStore, extractFactsStage } from '@dxos/crawler';
+import { Database } from '@dxos/echo';
+import { Pipeline } from '@dxos/pipeline';
 
 import { DiscordOperation } from '#types';
 
-import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services/index.ts';
+import { discordSourceLayerFromConnection, factFeedStoreLayer } from '../services/index.ts';
 
 /**
- * Runs the crawl on the session crawl runtime (which owns the SQLite-backed stores) so state
- * persists across invocations; the ambient AiService and the per-run Discord source are provided
- * into that runtime explicitly.
+ * Runs one bounded slice of the crawl with every store taken from ECHO for this invocation: the frontier and fact
+ * hashes in the `CrawlState`, facts appended to the fact feed. Authors resolve in a per-run registry: an author's
+ * canonical id is their Discord user id, so it is the same in every run without a store.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannels> =
   DiscordOperation.CrawlDiscordChannels.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ connection, channels, descendThreads, maxDays, maxSteps, questions }) {
-        const connectionTarget = connection.target;
-        const db = connectionTarget ? Obj.getDatabase(connectionTarget) : undefined;
-        invariant(db, 'No database for connection ref — invoker did not provide Database.layer.');
+      Effect.fn(function* ({
+        connection,
+        channels,
+        descendThreads,
+        maxDays,
+        maxDepth,
+        maxSteps,
+        state: stateRef,
+        facts: factsRef,
+      }) {
+        const state = yield* Database.load(stateRef);
+        const feed = yield* Database.load(factsRef);
+        CrawlState.reconcileChannels(state, channels);
+        CrawlState.setRunStatus(state, 'running');
 
-        const ai = yield* AiService.AiService;
-        // Captured here because the program runs on the crawl runtime, which lacks the operation's services.
-        const credentials = yield* Credential.CredentialsService;
-        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(
-          Layer.provide(Database.layer(db)),
-          Layer.provide(Layer.succeed(Credential.CredentialsService, credentials)),
+        const steps = yield* EffectRef.make(0);
+        let messages = 0;
+        const run = Crawler.stream(
+          {
+            channels,
+            descendThreads: descendThreads ?? true,
+            ...(maxDepth !== undefined ? { maxDepth } : {}),
+            ...(maxDays !== undefined ? { seed: { maxDays } } : {}),
+          },
+          { maxSteps: maxSteps ?? DiscordOperation.DEFAULT_BACK_INDEX_STEPS, steps },
+        ).pipe(
+          extractFactsStage({ batchSize: DiscordOperation.BACK_INDEX_PAGE_SIZE }),
+          Pipeline.run({
+            sink: (event) =>
+              Crawler.commit(event).pipe(
+                Effect.tap(() =>
+                  Effect.sync(() => {
+                    if (event._tag === 'Message') {
+                      messages++;
+                    }
+                  }),
+                ),
+              ),
+          }),
+          Effect.andThen(Crawler.summarize()),
+          Effect.provide(
+            Layer.mergeAll(
+              discordSourceLayerFromConnection(connection, { pageLimit: DiscordOperation.BACK_INDEX_PAGE_SIZE }),
+              StateStore.layerEcho(state),
+              AgentRegistry.layerMemory,
+              factFeedStoreLayer({ feed, state }),
+            ),
+          ),
         );
 
-        const program = Effect.gen(function* () {
-          const known = new Set((yield* QuestionStore.list()).map((question) => question.text));
-          for (const text of questions ?? []) {
-            if (!known.has(text)) {
-              yield* QuestionStore.add(text);
-              // Track within this batch too, so a repeated text in `questions` is added once.
-              known.add(text);
-            }
-          }
-
-          return yield* DiscordPipeline.run(
-            {
-              channels: [...channels],
-              descendThreads: descendThreads ?? true,
-              ...(maxDays !== undefined ? { seed: { maxDays } } : {}),
-            },
-            maxSteps !== undefined ? { maxSteps } : {},
-          );
-        }).pipe(Effect.provide(sourceLayer), Effect.provideService(AiService.AiService, ai));
-
-        const summary = yield* Effect.tryPromise({
-          try: () => getCrawlRuntime().runPromise(program),
-          catch: (cause) => new CrawlError({ message: 'Discord crawl failed', cause }),
-        });
-
-        return { done: summary.done, errored: summary.errored, steps: summary.steps };
+        // Recorded rather than raised: a failed invocation's ECHO writes are not kept, so the error would be lost.
+        const exit = yield* Effect.exit(run);
+        const failure = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined;
+        const error = failure === undefined ? undefined : failure instanceof Error ? failure.message : String(failure);
+        const summary = Exit.isSuccess(exit)
+          ? exit.value
+          : yield* Crawler.summarize().pipe(Effect.provide(StateStore.layerEcho(state)));
+        const result = {
+          done: summary.done,
+          errored: summary.errored,
+          steps: yield* EffectRef.get(steps),
+          messages,
+          ...(error !== undefined ? { error } : {}),
+        };
+        CrawlState.recordRun(state, { at: new Date(yield* Clock.currentTimeMillis).toISOString(), ...result });
+        CrawlState.setRunStatus(state, error !== undefined ? 'error' : summary.done ? 'done' : 'running');
+        return result;
       }),
     ),
   );

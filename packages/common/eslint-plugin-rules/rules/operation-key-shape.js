@@ -135,7 +135,6 @@ const VERBS = new Set([
   'resolve',
   'respond',
   'restore',
-  'resume',
   'retry',
   'retrieve',
   'revert',

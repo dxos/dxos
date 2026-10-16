@@ -7,6 +7,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    CrawlState: 'src/CrawlState.ts',
     testing: 'src/testing/index.ts',
   },
   test: { node: true },

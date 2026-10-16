@@ -7,5 +7,5 @@ import { BaseError } from '@dxos/errors';
 /** Rejects input the agent can correct, e.g. a memory with no subject. */
 export class AgentOperationError extends BaseError.extend('AgentOperationError', 'Agent operation failed.') {}
 
-/** EDGE refused or failed a back-index (crawl) request. */
-export class CrawlError extends BaseError.extend('CrawlError', 'Brain crawl request failed.') {}
+/** EDGE refused or failed a fact feed request to an agent's brain. */
+export class FactFeedError extends BaseError.extend('FactFeedError', 'Brain fact feed request failed.') {}

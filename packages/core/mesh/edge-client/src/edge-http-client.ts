@@ -16,7 +16,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { BrainCrawlProtocol, type ProcessProtocol } from '@dxos/protocols';
+import { type ProcessProtocol } from '@dxos/protocols';
 import {
   type CompleteOAuthRegistrationRequest,
   type CompleteOAuthRegistrationResponse,
@@ -152,6 +152,10 @@ export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
 /** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
 export type FinalizedUpload = { key: string; size: number; contentType?: string };
+
+/** What EDGE answers every brain fact feed route with: the EIDs of the fact feeds the brain indexes. */
+export const BrainFactFeeds = Schema.Struct({ feeds: Schema.Array(Schema.String) });
+export type BrainFactFeeds = Schema.Schema.Type<typeof BrainFactFeeds>;
 
 /**
  * Validates the finalize response rather than asserting its shape.
@@ -717,74 +721,57 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   //
-  // Brain back-index (crawl)
+  // Brain fact feeds
   //
 
   /**
-   * Sets or replaces the agent's back-index of Discord channels and starts or continues it. `agentId` is the ECHO
-   * `Agent` object's id, which names its brain on EDGE; the caller must be a member of `spaceId`.
+   * Has an agent's brain index a fact feed (its EID) from now on; answers the feeds it indexes. `agent` names the
+   * brain (see plugin-agent's `AgentPresence.brainId`); the caller must be a member of `spaceId`, a space it serves.
    */
-  public async putCrawl(
+  public async addBrainFactFeed(
     ctx: Context,
     spaceId: SpaceId,
-    agentId: string,
-    body: BrainCrawlProtocol.PutCrawlRequest,
+    agent: string,
+    feed: string,
     args?: EdgeHttpCallArgs,
-  ): Promise<BrainCrawlProtocol.CrawlStatus> {
-    return this.#crawlCall(ctx, spaceId, agentId, '', { ...args, method: 'PUT', body });
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'POST', body: { feed } });
   }
 
-  /** The agent's back-index config and progress. */
-  public async getCrawlStatus(
+  /** Stops an agent's brain indexing a fact feed; the facts it read stay. Answers the feeds it still indexes. */
+  public async removeBrainFactFeed(
     ctx: Context,
     spaceId: SpaceId,
-    agentId: string,
+    agent: string,
+    feed: string,
     args?: EdgeHttpCallArgs,
-  ): Promise<BrainCrawlProtocol.CrawlStatus> {
-    return this.#crawlCall(ctx, spaceId, agentId, '', { ...args, method: 'GET' });
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'DELETE' }, { feed });
   }
 
-  /** Stops stepping the back-index; its cursors are kept. */
-  public async pauseCrawl(
+  /** The fact feeds an agent's brain indexes. */
+  public async listBrainFactFeeds(
     ctx: Context,
     spaceId: SpaceId,
-    agentId: string,
+    agent: string,
     args?: EdgeHttpCallArgs,
-  ): Promise<BrainCrawlProtocol.CrawlStatus> {
-    return this.#crawlCall(ctx, spaceId, agentId, '/pause', { ...args, method: 'POST' });
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'GET' });
   }
 
-  /** Steps the back-index again from where it paused. */
-  public async resumeCrawl(
+  async #factFeedsCall(
     ctx: Context,
     spaceId: SpaceId,
-    agentId: string,
-    args?: EdgeHttpCallArgs,
-  ): Promise<BrainCrawlProtocol.CrawlStatus> {
-    return this.#crawlCall(ctx, spaceId, agentId, '/resume', { ...args, method: 'POST' });
-  }
-
-  /** Crawls the named targets (every target when none are named) again from the start. */
-  public async resetCrawl(
-    ctx: Context,
-    spaceId: SpaceId,
-    agentId: string,
-    body: BrainCrawlProtocol.ResetCrawlRequest = {},
-    args?: EdgeHttpCallArgs,
-  ): Promise<BrainCrawlProtocol.CrawlStatus> {
-    return this.#crawlCall(ctx, spaceId, agentId, '/reset', { ...args, method: 'POST', body });
-  }
-
-  async #crawlCall(
-    ctx: Context,
-    spaceId: SpaceId,
-    agentId: string,
-    route: string,
+    agent: string,
     args: EdgeHttpCallArgs & { method: string; body?: unknown },
-  ): Promise<BrainCrawlProtocol.CrawlStatus> {
-    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agentId)}/crawl${route}`, this.baseUrl);
+    query: Record<string, string> = {},
+  ): Promise<BrainFactFeeds> {
+    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agent)}/fact-feeds`, this.baseUrl);
+    for (const [key, value] of Object.entries(query)) {
+      url.searchParams.set(key, value);
+    }
     const response = await this._call(ctx, url, { ...args, auth: true });
-    return Schema.decodeUnknownSync(BrainCrawlProtocol.CrawlStatus)(response);
+    return Schema.decodeUnknownSync(BrainFactFeeds)(response);
   }
 
   //

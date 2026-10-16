@@ -5029,6 +5029,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
@@ -5042,6 +5045,9 @@ importers:
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)
@@ -20932,12 +20938,21 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/crawler':
+        specifier: workspace:*
+        version: link:../../core/compute/crawler
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -20971,9 +20986,6 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@effect/atom-react':
-        specifier: 'catalog:'
-        version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
       effect:
         specifier: 4.0.4
         version: 4.0.4

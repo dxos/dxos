@@ -6,8 +6,12 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { expect } from 'vitest';
+import { afterEach, beforeEach, expect } from 'vitest';
 
+import { Filter } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+
+import * as CrawlState from './CrawlState.ts';
 import * as StateStore from './StateStore.ts';
 import type * as Type from './types.ts';
 
@@ -122,6 +126,8 @@ const suite = (name: string, layer: Layer.Layer<StateStore.StateStore>) =>
 
 describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
+  // A fresh object per test, as the other suites get a fresh store.
+  suite('echo', Layer.unwrap(Effect.sync(() => StateStore.layerEcho(CrawlState.make()))));
   suite(
     'sql',
     StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
@@ -154,4 +160,65 @@ describe('StateStore', () => {
       );
     }),
   );
+
+  describe('echo database', () => {
+    let builder: EchoTestBuilder;
+
+    beforeEach(async () => {
+      builder = await new EchoTestBuilder().open();
+    });
+
+    afterEach(async () => {
+      await builder.close();
+    });
+
+    it.effect(
+      'a stored crawl state is the frontier of a later store over the same object',
+      Effect.fnUntraced(function* () {
+        const peer = yield* Effect.promise(() => builder.createPeer({ types: [CrawlState.CrawlState] }));
+        const db = yield* Effect.promise(() => peer.createDatabase());
+        const state = db.add(CrawlState.make({ name: 'crawl' }));
+
+        yield* Effect.gen(function* () {
+          const store = yield* StateStore.StateStore;
+          yield* store.pushTargets([target('chan-1'), target('chan-2'), target('chan-3')]);
+          yield* store.setCursor('chan-1', '42');
+          yield* store.setStatus('chan-2', 'error', 'boom');
+          yield* store.removeTargets(['chan-3']);
+          yield* store.resetTargets(['chan-2']);
+        }).pipe(Effect.provide(StateStore.layerEcho(state)));
+        yield* Effect.promise(() => db.flush());
+
+        const [loaded] = yield* Effect.promise(() => db.query(Filter.type(CrawlState.CrawlState)).run());
+        const targets = yield* StateStore.listTargets().pipe(Effect.provide(StateStore.layerEcho(loaded)));
+        expect(targets.map(({ id }) => id)).toEqual(['chan-1', 'chan-2']);
+        expect(targets[0].cursor).toBe('42');
+        expect(targets[1]).toEqual(target('chan-2'));
+      }),
+    );
+
+    it('reconcileChannels drops removed channels, adds new ones and reopens finished ones', ({ expect }) => {
+      const state = CrawlState.make();
+      CrawlState.pushTargets(state, [target('chan-1'), target('chan-2'), target('thread-1', { depth: 1 })]);
+      CrawlState.setStatus(state, 'chan-1', 'done');
+      CrawlState.setCursor(state, 'chan-1', '7', '2026-01-01T00:00:00.000Z');
+      CrawlState.setStatus(state, 'thread-1', 'done');
+      CrawlState.reconcileChannels(state, ['chan-1', 'chan-3']);
+      expect(CrawlState.listTargets(state)).toEqual([
+        { ...target('chan-1'), cursor: '7', lastRunAt: '2026-01-01T00:00:00.000Z' },
+        target('thread-1', { depth: 1, status: 'done' }),
+        target('chan-3'),
+      ]);
+    });
+
+    it('keeps source hashes across a reset', ({ expect }) => {
+      const state = CrawlState.make();
+      CrawlState.pushTargets(state, [target('chan-1')]);
+      CrawlState.setSourceHash(state, 'discord:1', 'abc');
+      CrawlState.resetTargets(state);
+      expect(CrawlState.sourceHash(state, 'discord:1')).toBe('abc');
+      CrawlState.clearSourceHashes(state);
+      expect(CrawlState.sourceHash(state, 'discord:1')).toBeUndefined();
+    });
+  });
 });

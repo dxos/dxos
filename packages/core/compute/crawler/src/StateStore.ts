@@ -10,7 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
+import type * as CrawlState from './CrawlState.ts';
 import { type StateError } from './errors.ts';
+import { makeEcho } from './internal/state-store-echo.ts';
 import { makeSql, migrate } from './internal/state-store-sql.ts';
 import type * as Type from './types.ts';
 
@@ -19,8 +21,9 @@ export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 /**
  * Durable crawl state: the frontier stack, per-target cursors, and run status. Resumability comes
  * entirely from here — the crawl loop holds no in-memory continuation, so a stop/eviction is safe.
- * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerMemory` serves
- * tests and throwaway runs.
+ * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerEcho` keeps it in a
+ * {@link CrawlState.CrawlState} object, so a crawl run by a trigger resumes wherever the space is open; `layerMemory`
+ * serves tests and throwaway runs.
  */
 export interface Service {
   /** Push targets onto the frontier (LIFO ⇒ depth-first). Ids already present are ignored. */
@@ -61,6 +64,13 @@ export const layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient> = Lay
     return makeSql(sql);
   }),
 );
+
+/**
+ * Frontier kept in a {@link CrawlState.CrawlState} ECHO object (one per crawl). Writes land on the object as they are
+ * made, so the commit-after-stages semantics hold: only `Crawler.commit` moves a cursor.
+ */
+export const layerEcho = (state: CrawlState.CrawlState): Layer.Layer<StateStore> =>
+  Layer.sync(StateStore, () => makeEcho(state));
 
 export const pushTargets = (...args: Parameters<Service['pushTargets']>) =>
   StateStore.use((store) => store.pushTargets(...args));

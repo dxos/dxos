@@ -19,10 +19,11 @@ asked.
   feed item per fact (so a fact can be forgotten on its own), each extraction pass closed by a marker;
   append-only apart from forgetting, with no second fact shape; the feeds are the record and the
   brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
-- **Back-indexing is the crawler, on the brain:** a channel's history is read live by `@dxos/crawler`'s
-  `Crawler` inside the brain Durable Object, its extract stage writes the facts into the brain's
-  `FactStore`, and that store is teed into the agent's fact feed, the exportable record. Source messages
-  are not copied into ECHO; the crawler's cursors are the resume point.
+- **Back-indexing is a trigger-run operation outside the brain; the brain only consumes fact feeds:**
+  a remote timer trigger runs plugin-discord's `CrawlDiscordChannels`, which reads a channel's history
+  live with `@dxos/crawler` (the Discord token comes from the space, where the Discord OAuth sign-in
+  stored it), keeps its progress in a `CrawlState` ECHO object and appends the facts it extracts to a
+  fact feed. The brain is told only which fact feeds to index.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
   group or agent), hierarchical (steps are sub-goals), carrying priority, a budget and optional
   instructions; a goal creates a concrete `Task` only for substantive, assignable work.
@@ -53,18 +54,18 @@ Source: [diagrams/brain-flows.dx](./diagrams/brain-flows.dx), rendered with plug
 | -------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1. Facts       | `@dxos/pipeline-rdf`           | `RDF.Fact` = `Assertion` (subject/object `Term`, predicate, validity, quote) + `Factuality` + `Illocution` + `Attribution`; `RDF.Entity`                                                         |
 | 2. RDF form    | `@dxos/pipeline-rdf`           | The vocabulary (`sx:` = `https://dxos.org/semantic#`, `prov:`, entity and fact IRIs) and the `Fact` ↔ triples mapping; `FactStore` (SQLite: `triples`, `entities`, per-source `cursors`; SPARQL) |
-| 3. Brain store | plugin-agent                   | `BrainService`: the agent's `RDF.Fact`s in pipeline-rdf's `FactStore`; crawled facts are also appended to the agent's fact feed in ECHO, the exportable record                                   |
+| 3. Brain store | plugin-agent                   | `BrainService`: the agent's `RDF.Fact`s in pipeline-rdf's `FactStore`, including those read from the fact feeds registered with it                                                               |
 | 4. Rules       | `@dxos/datalog`, `@dxos/brain` | Relations `fact(F, S, P, O)` + metadata keyed by `F`; canonical `Vocabulary`; built-ins `about`, `concerns`, `elapsed`, …; compiled programs                                                     |
 | 5. Goals       | `@dxos/brain`, plugin-agent    | `Goal` directive (text, owner `Actor`, status, priority, budget, situation, drivers, compiled rules) with its own fact feed; sub-goals; `Task`s for concrete work                                |
 
 **Facts flow (ingest).**
 
 1. A source is read by an extractor — a chat turn or a document by `ReadSource`, a channel's history by
-   the crawler (see "Back-indexing a channel"): pipeline-rdf's extraction stages turn it into
+   a back-index operation (see "Back-indexing a channel"): pipeline-rdf's extraction stages turn it into
    `RDF.Fact`s, attributed to the speaker, message and time, with predicates normalized
    (`RDF.Predicate.normalize`) in the same step.
-2. The `Fact`s are stored in the brain; crawled facts are appended to the agent's fact feed first —
-   the record; corrections are new facts.
+2. The `Fact`s are stored in the brain; a back-index appends its facts to a fact feed — the record —
+   and the brain reads the fact feeds registered with it into its index; corrections are new facts.
 3. The brain writes the facts to its index (pipeline-rdf's SQLite schema: triples, entities for
    `concerns`, full-text for `about`) and encodes them as Datalog relations (`Encoding`), mapping
    surface predicates onto the canonical `Vocabulary`.
@@ -130,42 +131,41 @@ Decided 2026-10-16, reversing 2026-10-09 ("facts live only in the agent's brain"
 the read cursor in the fact store so that losing the facts lost the cursor too. With the feeds as the
 record, each cursor sits with what it tracks instead.
 
-- **Cursors sit with what they track.** The crawl cursor (source → facts) is the crawler's
-  `StateStore`, per channel and thread, in the brain's SQLite; `FactStore`'s per-source content hash
-  makes a message read again extract nothing. There is no ingest cursor on the fact feed: the brain
-  writes the feed and the index in the same step, so it never reads its own feed back.
-- **External fact feeds are not indexed yet.** A fact feed the brain did not write (another agent's,
-  an import, a person's corrections) needs a reader of its own. The prototype that drained registered
-  fact feeds in the brain's alarm was dropped with the move to the crawler; a reader would come back as
-  a `Source` over the feed rather than a second ingest path.
-- **Every source wakes watches.** Crawled facts are evaluated as a push's are, after each crawl step;
-  only the agent's own words are quiet.
+- **Cursors sit with what they track.** The crawl cursor (source → messages) is per channel and thread
+  in the back-index's `CrawlState`, with the content hash of every message already extracted, so a
+  message read again unchanged costs no model call. The brain keeps one read cursor per registered
+  fact feed, in its `FactStore`, so a feed registered again is not read twice.
+- **Any fact feed can be indexed.** The brain reads every fact feed registered with it the same way,
+  whoever wrote it: a back-index, another agent, an import, a person's corrections.
+- **Every source wakes watches.** Facts read from a fact feed are evaluated as a push's are; only the
+  agent's own words are quiet.
 
 ### Back-indexing a channel
 
-Decided 2026-10-16. The EDGE back-index of a channel is `@dxos/crawler`'s `Crawler` running in the
-agent's brain Durable Object over a live `Source`, with the crawler's `StateStore` cursors on the
-Durable Object's SQLite, the crawler's extract stage, and the brain's `FactStore` teed into the agent's
-fact feed.
+Decided 2026-10-16, replacing the crawl in the brain Durable Object decided earlier the same day.
+Crawling is configured and scheduled entirely outside the brain: a back-index is a remote timer
+trigger that runs plugin-discord's `CrawlDiscordChannels` operation on EDGE, a bounded slice per
+invocation; its output is a fact feed. The brain consumes fact feeds and knows nothing of Discord.
 
-| Concern    | Where it lives                                                                                                                          |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Runner     | `Crawler.stream(config, { maxSteps })` drained by `Pipeline.run({ sink: Crawler.commit })`, a few steps per alarm, re-armed until done  |
-| Source     | `Source`, served live by discord-service (`DiscordAgentEntrypoint.fetchMessages` / `listChannels`), which holds the bot token           |
-| Mapping    | plugin-discord's `DiscordMessage` (`mapDiscordMessage`, `threadRefsOf`): Discord REST messages to crawler messages, mentions resolved   |
-| Cursors    | `StateStore.layerSql` on the brain's SQLite; moved only by `Crawler.commit`, once an event cleared every stage                          |
-| Identities | `AgentRegistry.layerSql`, same SQLite: an author is keyed by their Discord user id, not their name                                      |
-| Extraction | `extractFactsStage`: per message, `FactPipeline.run` into the brain's `FactStore`; a fact's `source` is `discord:<message id>`          |
-| Record     | A `FactStore` decorator appends each persisted fact to the agent's fact feed as a `FactFeed.FactItem`, then indexes it                  |
-| Time range | `Config.seed.maxDays`: the lookback for a channel without a cursor; unset reads the whole history                                       |
-| API        | Dev-only admin route on compute-service: `POST /brain/:space/:agent/crawl` starts or continues; `GET` reads the targets and the summary |
+| Concern    | Where it lives                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schedule   | A remote `Trigger` with a timer spec (every 2 minutes by default) and `CrawlDiscordChannels` as its runnable; pause and resume switch `trigger.enabled`                     |
+| Config     | The trigger's input: the Discord `Connection`, the channels, `descendThreads`, `maxDays`, `maxDepth`, `maxSteps`, and refs to the `CrawlState` and the fact feed            |
+| Setup      | `DiscordOperation.ConfigureBackIndex` creates or updates the `CrawlState`, the fact feed and the trigger together                                                           |
+| Token      | The space's: the Discord OAuth sign-in stores an `AccessToken` on a `Connection`, which EDGE resolves through `CredentialsService` (a user token travels as `Bearer`)       |
+| Runner     | `Crawler.stream(config, { maxSteps })` drained by `Pipeline.run({ sink: Crawler.commit })`; two steps (a page of 25 messages each) per invocation by default                |
+| Cursors    | `StateStore.layerEcho` over the `CrawlState`; moved only by `Crawler.commit`, once an event cleared every stage. Reset rewinds targets there; each run reopens the channels |
+| Identities | `AgentRegistry.layerMemory` per invocation: an author's canonical id is their Discord user id, so it is stable across runs without a store                                  |
+| Extraction | `extractFactsStage`: a page of messages per model request; a fact's `source` is `discord:<message id>`                                                                      |
+| Record     | A write-only `FactStore` that appends each fact to the fact feed as a `FactFeed.FactItem`; its content hashes live in the `CrawlState`                                      |
+| Brain      | `POST/DELETE/GET /compute/brain/:space/:agent/fact-feeds` (space members): the brain's alarm reads registered feeds from its cursor, every 30 s while any is registered     |
 
-Why not a feed trigger and an extract operation, as the 2026-10-16 prototype did: it copied every
-message into an ECHO feed first, then ran an `ExtractFacts` operation over batches that recorded
-`ExtractionPass` coverage markers, then had the brain poll the fact feed back into its index. Each of
-those had a counterpart already: the crawler reads the source live and keeps the resume point, the
-per-message content hash in `FactStore` makes a re-read free, and `FactPipeline` is the extractor. It
-also split extraction (operation-service) from indexing (the brain), with a cursor between them.
+Why not the crawl in the brain Durable Object: the brain then owned scheduling, the Discord source
+(over discord-service's bot), the crawl state (in its SQLite, invisible to the space) and controls
+(pause, resume, reset routes). As an operation the crawl is configured, observed and controlled in
+ECHO like any other trigger, its state travels with the space, and the brain has one input — fact
+feeds — whoever produces them. The cost is one hop: facts reach the brain on its next poll of the feed
+rather than in the same step.
 
 ### pipeline-rdf is the common type
 
@@ -231,7 +231,7 @@ Decided 2026-10-13 (formerly QUESTIONS.md 1 and 2):
 - **Agents record facts too.** `recordFacts` writes the same structured facts extraction does, as the
   agent's own words; a correction is a graph that `supersedes` it. The seed vocabulary keeps the prose
   predicates `claim` and `has_note` only so older graphs parse. Recorded facts stay in the brain store
-  for now; only crawled facts are teed into the agent's fact feed.
+  for now; only a back-index writes a fact feed.
 - Not yet built: linking an entity read before its object existed to that object (`owl:sameAs`), and
   predicates proposed by the extractor with their own descriptions (they are minted from the surface
   form).
@@ -257,8 +257,8 @@ non-canonical or misspelled predicate is a compile error rather than a silent mi
 | Fact text (`about`)                    | SQLite FTS5; vectors later for meaning                                |
 
 On start the Durable Object loads base facts from SQLite into the engine, then evaluates incrementally
-as facts arrive. Clearing the index clears its content hashes too; the fact feed keeps the crawled facts,
-but replaying a fact feed into the index is not built yet.
+as facts arrive. Clearing the index clears its read cursors too, so the registered fact feeds are read
+into it again from the start.
 
 ## Goals
 

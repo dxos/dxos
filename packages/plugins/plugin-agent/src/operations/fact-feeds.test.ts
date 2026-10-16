@@ -19,7 +19,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { AgentOperation, Mode } from '#types';
+import { AgentOperation, AgentPresence, Mode } from '#types';
 
 const EDGE_URL = 'https://edge.test';
 
@@ -30,18 +30,10 @@ const TestLayer = AssistantTestLayer({
   extraServices: Layer.succeed(EdgeHttpClientService, new EdgeHttpClient(EDGE_URL)),
 });
 
-const status = {
-  runStatus: 'running',
-  summary: { done: false, errored: 0 },
-  targets: [{ id: 'channel:c1', channelId: 'c1', depth: 0, status: 'active' }],
-  facts: 0,
-  messages: 0,
-};
+type Call = { method?: string; path: string; body?: unknown };
 
-type Call = { method?: string; pathname: string; body?: unknown };
-
-/** Answers every crawl route with {@link status} and records what was sent. */
-const stubEdge = (): Call[] => {
+/** Answers every fact feed route with `feeds` and records what was sent. */
+const stubEdge = (feeds: string[]): Call[] => {
   const calls: Call[] = [];
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -50,59 +42,44 @@ const stubEdge = (): Call[] => {
     }
     calls.push({
       method: init?.method,
-      pathname: url.pathname,
+      path: `${url.pathname}${url.search}`,
       body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
     });
-    return new Response(JSON.stringify({ success: true, data: status }), {
+    return new Response(JSON.stringify({ success: true, data: { feeds } }), {
       headers: { 'Content-Type': 'application/json' },
     });
   });
   return calls;
 };
 
-describe('crawl operations', () => {
+describe('fact feed operations', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
   it.effect(
-    "address the agent's brain in its space and send the fact feed by its EID",
+    "address the agent's brain in its space and send the feed by its EID",
     Effect.fnUntraced(
       function* ({ expect }) {
-        const calls = stubEdge();
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
         const feed = yield* Database.add(Feed.make({ name: 'Facts' }));
+        const uri = String(Obj.getURI(feed));
+        const calls = stubEdge([uri]);
         const spaceId = yield* Database.spaceId;
-        const base = `/compute/brain/${spaceId}/${agent.id}/crawl`;
+        const base = `/compute/brain/${spaceId}/${encodeURIComponent(AgentPresence.brainId(agent))}/fact-feeds`;
 
-        const configured = yield* Operation.invoke(AgentOperation.ConfigureCrawl, {
-          agent: agentRef,
-          applicationId: 'app-1',
-          channels: ['c1'],
-          maxDays: 30,
-          factFeed: Ref.make(feed),
-        });
-        expect(configured.runStatus).toBe('running');
-        yield* Operation.invoke(AgentOperation.GetCrawlStatus, { agent: agentRef });
-        yield* Operation.invoke(AgentOperation.PauseCrawl, { agent: agentRef });
-        yield* Operation.invoke(AgentOperation.ResumeCrawl, { agent: agentRef });
-        yield* Operation.invoke(AgentOperation.ResetCrawl, { agent: agentRef, targets: ['channel:c1'] });
+        const added = yield* Operation.invoke(AgentOperation.AddFactFeed, { agent: agentRef, feed: Ref.make(feed) });
+        expect(added.feeds).toEqual([uri]);
+        yield* Operation.invoke(AgentOperation.ListFactFeeds, { agent: agentRef });
+        yield* Operation.invoke(AgentOperation.RemoveFactFeed, { agent: agentRef, feed: Ref.make(feed) });
 
-        expect(calls.map(({ method, pathname }) => `${method} ${pathname}`)).toEqual([
-          `PUT ${base}`,
+        expect(calls.map(({ method, path }) => `${method} ${path}`)).toEqual([
+          `POST ${base}`,
           `GET ${base}`,
-          `POST ${base}/pause`,
-          `POST ${base}/resume`,
-          `POST ${base}/reset`,
+          `DELETE ${base}?${new URLSearchParams({ feed: uri })}`,
         ]);
-        expect(calls[0].body).toEqual({
-          applicationId: 'app-1',
-          channels: ['c1'],
-          maxDays: 30,
-          factFeed: Obj.getURI(feed),
-        });
-        expect(calls[4].body).toEqual({ targets: ['channel:c1'] });
+        expect(calls[0].body).toEqual({ feed: uri });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

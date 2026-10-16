@@ -13,7 +13,6 @@ export * from './profile-archive.ts';
 export * from './space-archive.ts';
 export * from './storage.ts';
 export type * from './types.ts';
-export * as BrainCrawlProtocol from './BrainCrawlProtocol.ts';
 export * as Config2 from './Config2.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
 export type * as ProcessProtocol from './ProcessProtocol.ts';
