@@ -272,5 +272,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 262 | 10-17 06:10 | 50m 00s | this commit | History loads lazily and recent changes are pre-drawn; task ids link; the dialect reads types back (D229) |
 | 263 | 10-17 06:40 | 30m 00s | this commit | The checks card shows what the count covers: requirements by codebase checks, the vitest suite, or nothing yet (task ae6b7fff) |
 | 264 | 10-17 07:30 | 50m 00s | this commit | `@dxos/worker`: the Worker's pack checks run as compiled DEUS (D230, task 41714c0d) |
+| 265 | 10-17 08:20 | 50m 00s | this commit | The pack index search runs as compiled DEUS at 0.013 ms a lookup; faster js-target imports (D231) |
 
-Total from stage 1 to stage 264: 90h 00m.
+Total from stage 1 to stage 265: 90h 50m.

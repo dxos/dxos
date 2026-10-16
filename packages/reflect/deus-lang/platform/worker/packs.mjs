@@ -199,44 +199,17 @@ const keyOf = async (id) => {
   return Uint8Array.from({ length: 32 }, (_, index) => parseInt(hexKey.slice(index * 2, index * 2 + 2), 16));
 };
 
-/** The record for (`key`, `kind`) among `count` sorted records in `records`, as its byte offset there, or -1. */
-const search = (records, first, last, key, kind) => {
-  while (first <= last) {
-    const middle = (first + last) >> 1;
-    const at = middle * RECORD;
-    const order = compareKey(records, at, key) || records[at + 44] - kind;
-    if (order < 0) {
-      first = middle + 1;
-    } else if (order > 0) {
-      last = middle - 1;
-    } else {
-      return at;
-    }
-  }
-  return -1;
-};
+/**
+ * The record for (`key`, `kind`) among the sorted records `first` to `last` of `records`, as its byte offset there, or
+ * -1 (`Worker.Packs.search`, in DEUS).
+ */
+const search = (records, first, last, key, kind) => deus.search(records, first, last, key, kind);
 
 /**
- * Of the records equal to the one at `at` (several packs can hold one key), the one from the pack merged
- * last. Metadata is rewritten in place (a doc comment, a spec block's prose), so only the newest copy is
- * current; an object's copies are all the same, so objects keep the first match.
+ * Of the records equal to the one at `at`, the one from the pack merged last; metadata is rewritten in place, so only
+ * its newest copy is current (`Worker.Packs.newestAt`, in DEUS).
  */
-const newestAt = (records, at, first, last, key, kind) => {
-  if (kind !== 2) {
-    return at;
-  }
-  const view = new DataView(records.buffer, records.byteOffset);
-  const same = (offset) => compareKey(records, offset, key) === 0 && records[offset + 44] === kind;
-  let best = at;
-  for (const step of [-RECORD, RECORD]) {
-    for (let offset = at + step; offset >= first * RECORD && offset <= last * RECORD && same(offset); offset += step) {
-      if (view.getUint32(offset + 32) > view.getUint32(best + 32)) {
-        best = offset;
-      }
-    }
-  }
-  return best;
-};
+const newestAt = (records, at, first, last, key, kind) => deus.newestAt(records, at, first, last, key, kind);
 
 /** How many lines an isolate keeps; namespace nodes near the root are read by nearly every lookup. */
 const LINE_CACHE = 4096;

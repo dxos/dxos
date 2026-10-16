@@ -81,6 +81,90 @@ function Worker$Packs$checkIndex(bytes) {
 }
 rt.named(Worker$Packs$checkIndex, "Worker.Packs.checkIndex");
 
+function Worker$Packs$search(records, first, last, key, kind) {
+  function go(low$, high$) {
+    for (;;) {
+      const low = low$, high = high$;
+      if (rt.ap(rt.prims["gt"], low, high)) {
+        return (-1);
+      } else {
+        const middle = (((low + high) | 0) >> 1);
+        const at = Math.imul(middle, Worker$Packs$record());
+        const byKey = Worker$Packs$compareKey(records, at, key);
+        let order;
+        if ((byKey !== 0)) {
+          order = byKey;
+        } else {
+          order = ((Worker$Bytes$u8(records, ((at + 44) | 0)) - kind) | 0);
+        }
+        if ((order < 0)) {
+          low$ = ((middle + 1) | 0);
+          high$ = high;
+          continue;
+        } else {
+          if ((order > 0)) {
+            low$ = low;
+            high$ = ((middle - 1) | 0);
+            continue;
+          } else {
+            return at;
+          }
+        }
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, first, last);
+}
+rt.named(Worker$Packs$search, "Worker.Packs.search");
+
+function Worker$Packs$newestAt(records, at, first, last, key, kind) {
+  if ((kind !== 2)) {
+    return at;
+  } else {
+    const same = rt.named((offset) => {
+    if ((Worker$Packs$compareKey(records, offset, key) === 0)) {
+      return rt.equal(Worker$Bytes$u8(records, ((offset + 44) | 0)), kind);
+    } else {
+      return false;
+    }
+  }, "Worker.Packs.newestAt/\u03bb");
+    function walk(offset_1$, step$, best$) {
+      for (;;) {
+        const offset_1 = offset_1$, step = step$, best = best$;
+        let r0;
+        if (rt.ap(rt.prims["lt"], offset_1, Math.imul(first, Worker$Packs$record()))) {
+          r0 = true;
+        } else {
+          if (rt.ap(rt.prims["gt"], offset_1, Math.imul(last, Worker$Packs$record()))) {
+            r0 = true;
+          } else {
+            r0 = not(rt.ap(same, offset_1));
+          }
+        }
+        if (r0) {
+          return best;
+        } else {
+          const t1 = ((offset_1 + step) | 0);
+          let r2;
+          if (rt.ap(rt.prims["gt"], Worker$Bytes$u32(records, ((offset_1 + 32) | 0)), Worker$Bytes$u32(records, ((best + 32) | 0)))) {
+            r2 = offset_1;
+          } else {
+            r2 = best;
+          }
+          offset_1$ = t1;
+          step$ = step;
+          best$ = r2;
+          continue;
+        }
+      }
+    }
+    rt.named(walk, "walk");
+    return rt.ap(walk, ((at + Worker$Packs$record()) | 0), Worker$Packs$record(), rt.ap(walk, ((at - Worker$Packs$record()) | 0), ((0 - Worker$Packs$record()) | 0), at));
+  }
+}
+rt.named(Worker$Packs$newestAt, "Worker.Packs.newestAt");
+
 function not(b) {
   if (b) {
     return false;
@@ -147,11 +231,14 @@ const Worker$Packs$fanout = rt.lazy("Worker.Packs.fanout", () => 1024);
 
 const Worker$Packs$record = rt.lazy("Worker.Packs.record", () => 48);
 
-function Worker$Bytes$u32(bytes, at) {
-  const view = lib$web$Js$construct(lib$web$Js$global("DataView"), rt.cons(lib$web$Js$get(bytes, "buffer"), rt.cons(lib$web$Js$get(bytes, "byteOffset"), rt.cons(lib$web$Js$get(bytes, "byteLength"), rt.NIL))));
-  return lib$web$Js$toInt(lib$web$Js$method(view, "getUint32", rt.cons(lib$web$Js$int(at), rt.NIL)));
+const Worker$Bytes$u32 = rt.importFn(rt, "js.u32At", [['raw'], ['int']], ['int'], "Worker.Bytes.u32");
+
+function Worker$Packs$compareKey(records, at, key) {
+  return Worker$Bytes$compare(records, at, key, 0, 32);
 }
-rt.named(Worker$Bytes$u32, "Worker.Bytes.u32");
+rt.named(Worker$Packs$compareKey, "Worker.Packs.compareKey");
+
+const Worker$Bytes$u8 = rt.importFn(rt, "js.byteAt", [['raw'], ['int']], ['int'], "Worker.Bytes.u8");
 
 function List$all(p$, v$) {
   for (;;) {
@@ -190,23 +277,16 @@ const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib
 
 const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
 
-const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
-
-function lib$web$Js$global(name) {
-  return lib$web$Js$get(lib$web$Js$globalThis(), name);
-}
-rt.named(lib$web$Js$global, "lib.web.Js.global");
-
-const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
-
-const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
-
-const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
+const Worker$Bytes$compare = rt.importFn(rt, "js.compareBytes", [['raw'], ['int'], ['raw'], ['int'], ['int']], ['int'], "Worker.Bytes.compare");
 
 export const raw = {
   parseRange: Worker$Packs$parseRange,
   checkIndex: Worker$Packs$checkIndex,
+  search: Worker$Packs$search,
+  newestAt: Worker$Packs$newestAt,
 };
 export const parseRange = rt.exportFn(Worker$Packs$parseRange, [['text']], ['option', ['struct', "0db43407430129facb6ea96aab1aa9c7c9cf43de3aa011a110164cad13eacbf0", ["offset", "length"], [['int'], ['option', ['int']]]]]);
 export const checkIndex = rt.exportFn(Worker$Packs$checkIndex, [['raw']], ['option', ['text']]);
+export const search = rt.exportFn(Worker$Packs$search, [['raw'], ['int'], ['int'], ['raw'], ['int']], ['int']);
+export const newestAt = rt.exportFn(Worker$Packs$newestAt, [['raw'], ['int'], ['int'], ['int'], ['raw'], ['int']], ['int']);
 //# sourceMappingURL=packs.js.map

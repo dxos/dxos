@@ -864,23 +864,47 @@ const resolve = (module, path) => {
 };
 
 /** A DEUS function of `params.length` arguments that calls `module.path` through codecs. */
-export const importFn = (module, path, params, result, name) =>
-  named(
-    fixed(params.length, (...args) => {
-      const { owner, value } = resolve(module, path);
-      if (typeof value !== 'function') {
-        throw new DeusDefect(`${path} is not a JavaScript function`);
-      }
-      return fromJs(
-        result,
-        value.apply(
-          owner,
-          params.map((param, i) => toJs(param, args[i])),
-        ),
-      );
-    }),
+export const importFn = (module, path, params, result, name) => {
+  // A module's export never changes, so it is found once; a global is found on each call, since tests replace globals.
+  let found;
+  const target = () => {
+    if (found) {
+      return found;
+    }
+    const resolved = resolve(module, path);
+    if (typeof resolved.value !== 'function') {
+      throw new DeusDefect(`${path} is not a JavaScript function`);
+    }
+    if (module !== globalThis) {
+      found = resolved;
+    }
+    return resolved;
+  };
+  // Ints, booleans and raw values cross unchanged, so a binding that takes only those skips the codecs (a binary
+  // search calls one per byte).
+  const plain = params.every((param) => param[0] === 'int' || param[0] === 'bool' || param[0] === 'raw');
+  return named(
+    fixed(
+      params.length,
+      plain
+        ? (...args) => {
+            const { owner, value } = target();
+            return fromJs(result, value.apply(owner, args));
+          }
+        : (...args) => {
+            const { owner, value } = target();
+            return fromJs(
+              result,
+              value.apply(
+                owner,
+                params.map((param, i) => toJs(param, args[i])),
+              ),
+            );
+          },
+    ),
     name,
   );
+};
 
 /** The value at `module.path`, read once through its codec. */
 export const importValue = (module, path, desc, name) => lazy(name, () => fromJs(desc, resolve(module, path).value));
@@ -894,6 +918,18 @@ export const exportFn = (fn, params, result) =>
 //
 
 export const js = {
+  // Typed-array reads for binary formats (the Worker's pack indexes): one call per read instead of a property lookup by text.
+  byteAt: (bytes, at) => bytes[at],
+  u32At: (bytes, at) => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(at),
+  compareBytes: (a, aAt, b, bAt, length) => {
+    for (let i = 0; i < length; i++) {
+      const diff = a[aAt + i] - b[bAt + i];
+      if (diff !== 0) {
+        return diff;
+      }
+    }
+    return 0;
+  },
   get: (object, key) => object?.[key],
   set: (object, key, value) => {
     object[key] = value;

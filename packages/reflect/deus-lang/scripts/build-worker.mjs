@@ -84,6 +84,8 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'build',
           'Worker.Packs.parseRange',
           'Worker.Packs.checkIndex',
+          'Worker.Packs.search',
+          'Worker.Packs.newestAt',
           '-o',
           join(gen, 'packs.js'),
           '--js',

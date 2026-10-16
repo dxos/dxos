@@ -11,9 +11,13 @@ namespace Worker.Bytes
 def length (bytes : Js) : Int := Js.toInt (Js.get bytes "length")
 
 /-- The big-endian unsigned 32-bit number at `at`, as an `Int` (counts and offsets stay below 2³¹). -/
-def u32 (bytes : Js) (at : Int) : Int :=
-  let view := Js.construct (Js.global "DataView") [Js.get bytes "buffer", Js.get bytes "byteOffset", Js.get bytes "byteLength"]
-  Js.toInt (Js.method view "getUint32" [Js.int at])
+def u32 : Js -> Int -> Int := Js.import "deus:runtime" "js.u32At"
+
+/-- The byte at `at`: a direct read, since a binary search reads bytes by the hundred. -/
+def u8 : Js -> Int -> Int := Js.import "deus:runtime" "js.byteAt"
+
+/-- How `length` bytes of `a` from `aAt` order against those of `b` from `bAt`: negative, zero or positive. -/
+def compare : Js -> Int -> Js -> Int -> Int -> Int := Js.import "deus:runtime" "js.compareBytes"
 
 end Worker.Bytes
 
@@ -55,5 +59,29 @@ def checkIndex (bytes : Js) : Option Text :=
         let count := Worker.Bytes.u32 bytes (byte * 4)
         if count < previous then Option.some "the fanout decreases" else walk (byte + 1) count
     walk 0 0
+
+/-- How the 32-byte key of the record at byte `at` of `records` orders against `key`: negative, zero or positive. -/
+def compareKey (records : Js) (at : Int) (key : Js) : Int := Worker.Bytes.compare records at key 0 32
+
+/-- The record for (`key`, `kind`) among the sorted records `first` to `last` of `records`, as its byte offset there,
+  or -1: a binary search by key, then kind (byte 44). -/
+def search (records : Js) (first : Int) (last : Int) (key : Js) (kind : Int) : Int :=
+  let rec go low high := if low > high then -1 else
+    let middle := Int.shr (low + high) 1
+    let at := middle * record
+    let byKey := compareKey records at key
+    let order := if byKey != 0 then byKey else Worker.Bytes.u8 records (at + 44) - kind
+    if order < 0 then go (middle + 1) high else if order > 0 then go low (middle - 1) else at
+  go first last
+
+/-- Of the records equal to the one at `at` (several packs can hold one key), the one from the pack merged last
+  (the larger number at byte 32). Metadata is rewritten in place, so only its newest copy is current; an object's
+  copies are all the same, so objects (kind 1) keep the first match. -/
+def newestAt (records : Js) (at : Int) (first : Int) (last : Int) (key : Js) (kind : Int) : Int := if kind != 2 then at else
+  let same := fun offset => compareKey records offset key == 0 && Worker.Bytes.u8 records (offset + 44) == kind
+  let rec walk offset step best :=
+    if offset < first * record || offset > last * record || not (same offset) then best
+    else walk (offset + step) step (if Worker.Bytes.u32 records (offset + 32) > Worker.Bytes.u32 records (best + 32) then offset else best)
+  walk (at + record) record (walk (at - record) (0 - record) at)
 
 end Worker.Packs
