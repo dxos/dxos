@@ -158,6 +158,46 @@ async function Worker$Heads$writeHead(bucket, project, branch, causal, etag) {
 }
 rt.named(Worker$Heads$writeHead, "Worker.Heads.writeHead");
 
+function Worker$Heads$headLogKey(project, branch) {
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/headlog/"), branch), "/");
+}
+rt.named(Worker$Heads$headLogKey, "Worker.Heads.headLogKey");
+
+function Worker$Heads$isLogged(name) {
+  const t0 = rt.ap(rt.prims["Text.split"], name, "-");
+  m1: {
+    if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
+      const at = t0.fields[0];
+      const head = t0.fields[1].fields[0];
+      if ((rt.ap(rt.prims["Text.length"], at) === 13)) {
+        if (List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], at))) {
+          return Worker$Heads$isHash(head);
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    if (true) {
+      return false;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$isLogged, "Worker.Heads.isLogged");
+
+async function Worker$Heads$logHead(bucket, project, branch, causal, previous, keyId) {
+  const $stack = rt.handlers();
+  const at = lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL);
+  const orNull = rt.named((value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()), "Worker.Heads.logHead/\u03bb");
+  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.resumed($stack, await rt.ap(orNull, previous))]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.resumed($stack, await rt.ap(orNull, keyId))]), rt.NIL))))));
+  const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
+  rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))), "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
+  return undefined;
+}
+rt.named(Worker$Heads$logHead, "Worker.Heads.logHead");
+
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
     return List$all(rt.named((c) => {
@@ -318,6 +358,52 @@ rt.named(not, "not");
 
 const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib.web.Js.isNull");
 
+const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
+
+function lib$web$Js$path(o, keys) {
+  return List$foldl(lib$web$Js$get, o, keys);
+}
+rt.named(lib$web$Js$path, "lib.web.Js.path");
+
+const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
+
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$getOr, "Option.getOr");
+
+function Option$map(f, v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Option$map, "Option.map");
+
+const lib$web$Js$null = rt.importValue(rt, "js.null", ['raw'], "lib.web.Js.null");
+
+const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
+
+function Worker$Heads$padded(width, t) {
+  return rt.ap(rt.prims["append"], Text$repeat(((width - rt.ap(rt.prims["Text.length"], t)) | 0), "0"), t);
+}
+rt.named(Worker$Heads$padded, "Worker.Heads.padded");
+
 function List$any(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -342,7 +428,49 @@ function List$any(p$, v$) {
 }
 rt.named(List$any, "List.any");
 
-const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
+function List$foldl(f$, init$, xs$) {
+  for (;;) {
+    const f = f$, init = init$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return init;
+      }
+      if (xs.tag === 1) {
+        const x = xs.fields[0];
+        const rest = xs.fields[1];
+        f$ = f;
+        init$ = rt.ap(f, init, x);
+        xs$ = rest;
+        continue;
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$foldl, "List.foldl");
+
+function Text$repeat(n, t) {
+  return rt.ap(rt.prims["Text.concat"], List$replicate(n, t));
+}
+rt.named(Text$repeat, "Text.repeat");
+
+function List$replicate(n, x) {
+  function go(acc$, k$) {
+    for (;;) {
+      const acc = acc$, k = k$;
+      if ((k <= 0)) {
+        return acc;
+      } else {
+        acc$ = rt.cons(x, acc);
+        k$ = ((k - 1) | 0);
+        continue;
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, n);
+}
+rt.named(List$replicate, "List.replicate");
 
 export const raw = {
   parseClaim: Worker$Heads$parseClaim,
@@ -350,10 +478,16 @@ export const raw = {
   verdict: Worker$Heads$verdict,
   readStored: Worker$Heads$readStored,
   writeHead: Worker$Heads$writeHead,
+  headLogKey: Worker$Heads$headLogKey,
+  isLogged: Worker$Heads$isLogged,
+  logHead: Worker$Heads$logHead,
 };
 export const parseClaim = rt.exportFn(Worker$Heads$parseClaim, [['text']], ['option', ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]]]);
 export const isBranch = rt.exportFn(Worker$Heads$isBranch, [['text']], ['bool']);
 export const verdict = rt.exportFn(Worker$Heads$verdict, [['option', ['text']], ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]], ['int'], ['int']], ['text']);
 export const readStored = rt.exportAsync(Worker$Heads$readStored, [['raw'], ['text'], ['text']], ['option', ['struct', "caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", ["causal", "etag", "uploaded"], [['text'], ['text'], ['raw']]]]);
 export const writeHead = rt.exportAsync(Worker$Heads$writeHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']]], ['bool']);
+export const headLogKey = rt.exportFn(Worker$Heads$headLogKey, [['text'], ['text']], ['text']);
+export const isLogged = rt.exportFn(Worker$Heads$isLogged, [['text']], ['bool']);
+export const logHead = rt.exportAsync(Worker$Heads$logHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']], ['option', ['text']]], ['unit']);
 //# sourceMappingURL=heads.js.map

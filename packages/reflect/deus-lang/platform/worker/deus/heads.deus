@@ -77,6 +77,32 @@ def writeHead (bucket : Js) (project : Text) (branch : Text) (causal : Text) (et
   let options := Js.obj [("onlyIf", onlyIf), ("httpMetadata", Js.obj [("contentType", Js.text "text/plain")])]
   not (Js.isNull (Js.Async.await (Js.method bucket "put" [Js.text (headKey project branch), Js.text causal, options])))
 
+/-- The folder of a branch's head log: one object per head the branch had (DataSafety.Spec). -/
+def headLogKey (project : Text) (branch : Text) : Text := project ++ "/headlog/" ++ branch ++ "/"
+
+/-- A head log entry's name: 13 digits of milliseconds, `-`, the head's hash; anything else in the folder is not one. -/
+def isLogged (name : Text) : Bool :=
+  match Text.split name "-" with
+  | [at, head] => Text.length at == 13 && List.all isDigit (Text.utf8 at) && isHash head
+  | _ => false
+
+/-- `t` with zeros before it, up to `width` characters. -/
+def padded (width : Int) (t : Text) : Text := Text.repeat (width - Text.length t) "0" ++ t
+
+/-- Records that `branch` moved to `causal` from `previous` by the key `keyId`, under the time it moved. The time is a
+  JavaScript number: milliseconds pass the 32-bit `Int`. -/
+def logHead (bucket : Js) (project : Text) (branch : Text) (causal : Text) (previous : Option Text) (keyId : Option Text) : {Js.Async} Unit :=
+  let at := Js.call (Js.path Js.globalThis ["Date", "now"]) []
+  let orNull := fun value => Option.getOr (Option.map Js.text value) Js.null
+  let entry := Js.stringify (Js.obj [("causal", Js.text causal), ("previous", orNull previous), ("at", at), ("key", orNull keyId)])
+  let options := Js.obj [("httpMetadata", Js.obj [("contentType", Js.text "application/json")])]
+  let _ := Js.Async.await (Js.method bucket "put" [Js.text (headLogKey project branch ++ padded 13 (Js.toText at) ++ "-" ++ causal), Js.text entry, options])
+  ()
+
+test logEntriesAreNamed :=
+  isLogged ("1760000000000-" ++ headA) && not (isLogged ("176000000000-" ++ headA)) && not (isLogged "1760000000000-x")
+    && not (isLogged ("1760000000000-" ++ headA ++ "-" ++ headA)) && padded 13 "42" == "0000000000042"
+
 /-- A sample head for the tests. -/
 def headA : Text := Text.repeat 64 "a"
 

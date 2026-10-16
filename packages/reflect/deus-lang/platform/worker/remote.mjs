@@ -251,20 +251,12 @@ export const requiredEpoch = async (bucket, project, causal) => {
   return epoch;
 };
 
-/** Where the log of a branch's heads lives: one immutable object per move, named by time and head. */
-export const headLogKey = (project, branch) => `${project}/headlog/${branch}/`;
-
-const LOGGED = /^[0-9]{13}-[0-9a-f]{64}$/;
+/** Where the log of a branch's heads lives: one immutable object per move, named by time and head (`Worker.Heads`). */
+export const headLogKey = (project, branch) => heads.headLogKey(project, branch);
 
 /** Records that `branch` moved to `causal`, so every head it ever had stays findable even after compaction. */
-const logHead = async (env, project, branch, causal, previous, keyId) => {
-  const at = Date.now();
-  await env.BUCKET.put(
-    `${headLogKey(project, branch)}${String(at).padStart(13, '0')}-${causal}`,
-    JSON.stringify({ causal, previous: previous ?? null, at, key: keyId ?? null }),
-    { httpMetadata: { contentType: 'application/json' } },
-  );
-};
+const logHead = (env, project, branch, causal, previous, keyId) =>
+  heads.logHead(env.BUCKET, project, branch, causal, previous, keyId);
 
 /** `/v1/<project>/headlog/<branch>`: every head the branch had, oldest first, one `<ms>-<causal>` per line; never written by clients. */
 const headLog = async (request, env, project, rest) => {
@@ -278,7 +270,7 @@ const headLog = async (request, env, project, rest) => {
   if (!heads.isBranch(branch)) {
     throw new HttpError(404, 'the head log is read as /headlog/<branch>');
   }
-  return lines((await listAll(env.BUCKET, headLogKey(project, branch))).filter((name) => LOGGED.test(name)));
+  return lines((await listAll(env.BUCKET, headLogKey(project, branch))).filter((name) => heads.isLogged(name)));
 };
 
 //

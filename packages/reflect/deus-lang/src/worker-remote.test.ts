@@ -326,6 +326,13 @@ describe('replication API', () => {
       {
         causal: hash('2'),
         previous: first,
+        at: expect.any(Number),
+        key: expect.any(String),
+      },
+    );
+    expect(JSON.parse((await (await bucket.get(`toolchain/headlog/main/${logged[0]}`))?.text()) ?? '{}')).toMatchObject(
+      {
+        previous: null,
       },
     );
     expect(
