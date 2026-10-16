@@ -977,6 +977,9 @@ const verdictHtml = (def) => {
   }
   // A theorem's verdict may name its checker after the case count (task 79f72c44).
   const pass = def.verdict.match(/^\(pass "([^"]*)"\s*(\d+)?/);
+  if (pass && pass[1] === 'refused') {
+    return '<p class="verdict pass">✓ Refused, as it must be <span class="muted">a <code>@[refuted]</code> probe of the prover: the claim is false</span></p>';
+  }
   if (pass) {
     const cases = pass[2] ? ` · ${pass[2]} case${pass[2] === '1' ? '' : 's'}` : '';
     return `<p class="verdict pass">✓ ${def.kind === 'theorem' ? 'Proved' : 'Passes'} <span class="muted">${escape(pass[1])}${cases}</span></p>`;

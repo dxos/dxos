@@ -30,8 +30,21 @@ describe('deus CLI', () => {
 
     const probes = JSON.parse(deus('check', 'Unsound', '--json', ...c).stdout);
     for (const row of probes) {
-      expect([row.name, row.status]).toEqual([row.name, row.name.startsWith('Unsound.right') ? 'pass' : 'fail']);
+      // A `wrong` probe is `@[refuted]`: it passes because the prover refuses it.
+      expect([row.name, row.status, row.evidence]).toEqual([
+        row.name,
+        'pass',
+        row.name.startsWith('Unsound.wrong') ? 'refused' : row.evidence,
+      ]);
     }
+    // Its kept verdict is a pass, but a proof may never stand on a claim the prover refused.
+    deus(
+      'add',
+      file('leans.deus', 'theorem Unsound.leansOnWrong (xs : List Int) : xs = [] := by simp [Unsound.wrongAllEmpty]\n'),
+      ...c,
+    );
+    const leaning = JSON.parse(deus('check', 'Unsound.leansOnWrong', '--json', ...c).stdout);
+    expect(leaning[0].status).toBe('fail');
   });
 
   test(
