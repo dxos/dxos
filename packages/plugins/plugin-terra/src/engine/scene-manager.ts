@@ -106,8 +106,38 @@ export class SceneManager {
   #scatterBases: Mesh[] = [];
   #waterSheen = false;
   #panning = false;
+  #turnFrame = 0;
   #lastPointerX = 0;
   #lastPointerY = 0;
+
+  /**
+   * Turns the orbit camera to face a point on the planet (a unit vector in the terrain's y-up frame), easing over
+   * `durationMs` and keeping the zoom; any pan is re-centred, since the turn orbits the planet's centre.
+   */
+  lookAt(unit: Vec3, durationMs = 900): void {
+    cancelAnimationFrame(this.#turnFrame);
+    const camera = this.#camera;
+    const fromAlpha = camera.alpha;
+    const fromBeta = camera.beta;
+    const fromTarget = camera.target.clone();
+    // The ArcRotateCamera places itself at (cos α sin β, cos β, sin α sin β); solve that for the point's direction.
+    const toBeta = Math.acos(Math.min(1, Math.max(-1, unit[1])));
+    const rawAlpha = Math.atan2(unit[2], unit[0]);
+    // The shortest way round, so a turn never spins the long way past the far side.
+    const toAlpha = fromAlpha + ((((rawAlpha - fromAlpha) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      camera.alpha = fromAlpha + (toAlpha - fromAlpha) * eased;
+      camera.beta = fromBeta + (toBeta - fromBeta) * eased;
+      camera.target = Vector3.Lerp(fromTarget, Vector3.Zero(), eased);
+      if (t < 1) {
+        this.#turnFrame = requestAnimationFrame(step);
+      }
+    };
+    this.#turnFrame = requestAnimationFrame(step);
+  }
 
   /** Matches the scene's backdrop to the app's theme. */
   setThemeMode(mode: 'light' | 'dark'): void {
@@ -192,6 +222,7 @@ export class SceneManager {
   }
 
   dispose(): void {
+    cancelAnimationFrame(this.#turnFrame);
     this.#canvas.removeEventListener('pointerdown', this.#handlePointerDown);
     window.removeEventListener('pointerup', this.#handlePointerUp);
     window.removeEventListener('pointermove', this.#handlePointerMove);

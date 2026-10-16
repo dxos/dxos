@@ -239,6 +239,17 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     managerRef.current?.setThemeMode(themeMode);
   }, [themeMode]);
 
+  // Selecting an object (in the telemetry list or on the map) turns the globe to it while the 3D view shows.
+  useEffect(() => {
+    if (view !== 'scene' || !selectedId) {
+      return;
+    }
+    const object = simEngineRef.current?.objects.find(({ definition }) => definition.id === selectedId);
+    if (object) {
+      managerRef.current?.lookAt(object.state.unit);
+    }
+  }, [selectedId, view]);
+
   useEffect(() => {
     // Debounced like the terrain regen above, but kept in its own effect so adding an object (which
     // only changes `definitions`) rebuilds the sim engine without re-rendering the planet mesh.
