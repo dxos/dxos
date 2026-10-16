@@ -251,5 +251,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 241 | 10-16 16:20 | 14m 00s | this commit | sync-deus.py stops before overwriting deus/ edits the codebase lacks (D215) |
 | 242 | 10-16 16:44 | 24m 00s | this commit | deus update reports prose-only spec edits (task 51a62879); CGen.Spec checks the C back end, so every subsystem has a checked spec (task 1ab6c044) |
 | 243 | 10-16 17:20 | 36m 00s | this commit | TypeScript callbacks cross into DEUS through the Host ability (D216); Bindings.Spec R-12 |
+| 244 | 10-16 17:42 | 22m 00s | this commit | The Worker audit log moves to R2 objects (D217, task e9d9a541); usability probe of the four projects |
 
-Total from stage 1 to stage 243: 76h 00m.
+Total from stage 1 to stage 244: 76h 22m.

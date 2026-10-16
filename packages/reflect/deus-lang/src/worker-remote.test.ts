@@ -8,7 +8,7 @@ import { gunzipSync, gzipSync } from 'node:zlib';
 import { beforeEach, describe, test } from 'vitest';
 
 import { appFiles } from '../platform/worker/gen/explorer-app.mjs';
-import { mintKey, sha256 } from '../platform/worker/remote.mjs';
+import { listAll, mintKey, sha256 } from '../platform/worker/remote.mjs';
 import worker, { type Bucket, type Database, type Env, type Statement } from '../platform/worker/worker.mjs';
 
 /** An R2 binding in memory; `list` pages by two, so callers must follow the cursor. */
@@ -209,10 +209,18 @@ describe('replication API', () => {
     expect(fetched.headers.get('cache-control')).toContain('immutable');
     expect(new Uint8Array(await fetched.arrayBuffer())).toEqual(new Uint8Array(bundle.body));
 
-    // Every authorized write leaves an audit row and marks its key used.
-    const audit = db.sqlite.prepare('select method, path from audit').all();
+    // Every authorized write leaves an audit object in the bucket, not a row in the key database (D217).
+    const audit = await Promise.all(
+      (await listAll(bucket, '_audit/')).map(async (key) =>
+        JSON.parse((await (await bucket.get(`_audit/${key}`))?.text()) ?? '{}'),
+      ),
+    );
     expect(audit).toHaveLength(2);
-    expect(audit[0]).toEqual({ method: 'PUT', path: `/v1/toolchain/bundles/${bundle.name}` });
+    expect(audit.map(({ method, path, status }) => [method, path, status])).toEqual([
+      ['PUT', `/v1/toolchain/bundles/${bundle.name}`, 201],
+      ['PUT', `/v1/toolchain/bundles/${bundle.name}`, 200],
+    ]);
+    expect(db.sqlite.prepare('select count(*) as rows from audit').get()).toEqual({ rows: 0 });
   });
 
   test('a bundle must hash to its name', async ({ expect }) => {
@@ -364,7 +372,7 @@ describe('replication API', () => {
     });
     const remove = (key: string) => call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'DELETE', key });
     expect((await remove(await insertKey(db, ['push']))).status).toBe(403);
-    const unlogged = () => bucket.keys().filter((key) => !key.includes('/headlog/'));
+    const unlogged = () => bucket.keys().filter((key) => !key.includes('/headlog/') && !key.startsWith('_audit/'));
     expect(unlogged()).toEqual([`toolchain/bundles/${bundle.name}`, 'toolchain/heads/main']);
     expect((await remove(await insertKey(db, ['compact']))).status).toBe(200);
     // A deleted bundle moves to the trash, out of every listing, so a compaction bug never loses history.

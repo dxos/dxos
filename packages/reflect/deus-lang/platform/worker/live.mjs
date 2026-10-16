@@ -144,6 +144,10 @@ const summaryOfIndex = (index) => {
 const projectFolders = async (bucket) => {
   const folders = [];
   for (const top of await listFolders(bucket, '')) {
+    // `_` starts no project or owner folder (`_audit/`).
+    if (top.startsWith('_')) {
+      continue;
+    }
     if (await bucket.head(`${top}heads/main`)) {
       folders.push(top.slice(0, -1));
       continue;

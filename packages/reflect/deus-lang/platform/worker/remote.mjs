@@ -389,6 +389,10 @@ export const listAll = async (bucket, prefix) => {
 // API keys (D1).
 //
 
+/** Where an authorized write's audit entry goes: one object per write, by day, under a folder no project can have. */
+export const auditKey = (at, keyId) =>
+  `_audit/${new Date(at).toISOString().slice(0, 10)}/${at}-${keyId}-${crypto.randomUUID().slice(0, 8)}.json`;
+
 /**
  * Checks the request's key for `scope` on `project`. Returns `logged`, which the caller passes its
  * response through so the write is recorded in the audit table with the status it got.
@@ -423,27 +427,25 @@ export const authorize = async (request, env, ctx, scope, project) => {
     throw new HttpError(403, `this API key cannot write to ${addressOfFolder(project) ?? project}`);
   }
   const url = new URL(request.url);
-  // The row is written after the response, so logging never slows or fails a write. Explorer files
-  // are not audited and `last_used_at` moves at most hourly: a push uploads hundreds of site files,
-  // and D1's Free plan allows 100,000 row writes a day (D181).
+  // Written after the response, so logging never slows or fails a write. The audit log is objects in
+  // the bucket, not D1 rows, so it cannot use up the key database's writes (D217); explorer files are
+  // not audited, and `last_used_at` moves at most hourly.
   const logged = (response) => {
-    const writes = [];
-    if (scope !== 'site') {
-      writes.push(
-        env.DB.prepare('insert into audit (at, key_id, method, path, status) values (?, ?, ?, ?, ?)').bind(
-          now,
-          id,
-          request.method,
-          url.pathname,
-          response.status,
-        ),
+    if (scope !== 'site' && env.BUCKET) {
+      const entry = { at: now, key: id, method: request.method, path: url.pathname, status: response.status };
+      ctx.waitUntil(
+        env.BUCKET.put(auditKey(now, id), JSON.stringify(entry), {
+          httpMetadata: { contentType: 'application/json' },
+        }).catch((error) => console.error(error)),
       );
     }
     if (!row.last_used_at || row.last_used_at < now - 3600 * 1000) {
-      writes.push(env.DB.prepare('update api_keys set last_used_at = ? where id = ?').bind(now, id));
-    }
-    if (writes.length > 0) {
-      ctx.waitUntil(env.DB.batch(writes).catch((error) => console.error(error)));
+      ctx.waitUntil(
+        env.DB.prepare('update api_keys set last_used_at = ? where id = ?')
+          .bind(now, id)
+          .run()
+          .catch((error) => console.error(error)),
+      );
     }
     return response;
   };

@@ -90,7 +90,7 @@ agent given only that and the URL is the usability probe (Dmytro's idea); report
   inbox, events; projects `toolchain` and `@dxos/*` (granted 2026-10-15, task b6503c12).
 - The account is on Workers Paid since 2026-10-15 18:15 UTC. Before that, D1's free 100,000 row writes a day ran out
   (52k site-file audit rows between 08:00 and 12:00, before D181 stopped them) and key changes failed with code 7500.
-  Moving the audit log off the key database is task e9d9a541 (low).
+  Since D217 the audit log is objects under `_audit/` in the bucket, so it no longer writes to D1.
 
 ## Deploying the Worker
 
@@ -107,7 +107,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-16 15:00 UTC, version ff07b04b (library source shown as the library wrote it).
+2026-10-16 17:40 UTC, version 3e35f3b8 (audit log in R2, D217).
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in
 about 6. Until the index is drawn, visitors see the head drawn last (D195; `live/shown/<branch>`, `live/drawn.json`).
