@@ -67,6 +67,37 @@ const suite = (name: string, layer: Layer.Layer<StateStore.StateStore>) =>
     );
 
     it.effect(
+      'resetTargets rewinds the named targets, or all of them',
+      Effect.fnUntraced(function* () {
+        const store = yield* StateStore.StateStore;
+        yield* store.pushTargets([target('chan-1'), target('chan-2'), target('chan-3')]);
+        for (const id of ['chan-1', 'chan-2', 'chan-3']) {
+          yield* store.setCursor(id, '1000');
+          yield* store.setStatus(id, 'error', 'boom');
+        }
+        yield* store.resetTargets(['chan-1']);
+        const reset = (yield* store.listTargets()).find((entry) => entry.id === 'chan-1');
+        expect(reset).toEqual(target('chan-1'));
+        expect((yield* store.listTargets()).find((entry) => entry.id === 'chan-2')?.cursor).toBe('1000');
+        yield* store.resetTargets();
+        expect(yield* store.listTargets()).toEqual([target('chan-1'), target('chan-2'), target('chan-3')]);
+      }, Effect.provide(layer)),
+    );
+
+    it.effect(
+      'removeTargets drops targets, and a later push adds them afresh',
+      Effect.fnUntraced(function* () {
+        const store = yield* StateStore.StateStore;
+        yield* store.pushTargets([target('chan-1'), target('chan-2')]);
+        yield* store.setCursor('chan-1', '1000');
+        yield* store.removeTargets(['chan-1']);
+        expect((yield* store.listTargets()).map((entry) => entry.id)).toEqual(['chan-2']);
+        yield* store.pushTargets([target('chan-1')]);
+        expect((yield* store.listTargets()).find((entry) => entry.id === 'chan-1')).toEqual(target('chan-1'));
+      }, Effect.provide(layer)),
+    );
+
+    it.effect(
       'hasActionable reflects pending/active only',
       Effect.fnUntraced(function* () {
         const store = yield* StateStore.StateStore;

@@ -1,5 +1,6 @@
 ---
 '@dxos/compute': minor
+'@dxos/crawler': minor
 '@dxos/client': minor
 '@dxos/protocols': minor
 '@dxos/plugin-agent': minor
@@ -13,6 +14,7 @@ Feed triggers can deliver several items per invocation and can be rewound to the
 - `@dxos/compute-runtime`: the local dispatcher honours `batchSize` and a reset cursor; `RemoteTriggerManager.Manager` gains `resetTrigger`.
 - `@dxos/edge-compute` / `@dxos/edge-client`: a remote feed trigger is reset on EDGE (`EdgeHttpClient.resetTrigger`).
 - `@dxos/plugin-agent`: `FactFeed.FactItem` (`org.dxos.type.agent.fact`) is one `RDF.Fact` as a fact feed item, the exportable record of what an agent's brain extracted; EDGE's back-index appends to it.
+- `@dxos/crawler`: `StateStore.resetTargets(ids?)` rewinds targets to `pending` with no cursor, and `StateStore.removeTargets(ids)` drops them, so a crawl's owner can re-read or stop crawling a channel. Every `StateStore.Service` implementation must now provide both.
 - `@dxos/plugin-discord`: `@dxos/plugin-discord/DiscordMessage` exports the Discord-to-crawler message mapping (`mapDiscordMessage`, `threadRefsOf`, `snowflakeForTimestamp`) with no runtime dependency on `dfx`, so a worker can serve `@dxos/crawler`'s `Source`.
 - `@dxos/client` / `@dxos/protocols`: `space.internal.export({ feedIds })` writes a JSON archive holding only those feeds and their items; `client.spaces.import(archive, { into })` merges a JSON archive into an existing space, skipping objects and feed items it already holds.
 - `@dxos/plugin-space`: `dx space export --feed <id>` and `dx space import --into <space>`.

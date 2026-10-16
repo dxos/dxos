@@ -33,6 +33,13 @@ export interface Service {
   readonly setCursor: (targetId: string, cursor: string) => Effect.Effect<void, StateError>;
   /** Update a target's lifecycle status (recording `lastError` on failure). */
   readonly setStatus: (targetId: string, status: Type.TargetStatus, error?: string) => Effect.Effect<void, StateError>;
+  /**
+   * Rewinds targets (every target when `targetIds` is omitted) to `pending` with no cursor, last run or error, so the
+   * next crawl reads them from the seed window again.
+   */
+  readonly resetTargets: (targetIds?: readonly string[]) => Effect.Effect<void, StateError>;
+  /** Drops targets from the frontier, cursor and all; a later push adds them afresh. */
+  readonly removeTargets: (targetIds: readonly string[]) => Effect.Effect<void, StateError>;
   /** All targets, in frontier order (for introspection / demos). */
   readonly listTargets: () => Effect.Effect<Type.Target[], StateError>;
   readonly setRunStatus: (status: RunStatus) => Effect.Effect<void, StateError>;
@@ -65,6 +72,10 @@ export const setCursor = (...args: Parameters<Service['setCursor']>) =>
   StateStore.use((store) => store.setCursor(...args));
 export const setStatus = (...args: Parameters<Service['setStatus']>) =>
   StateStore.use((store) => store.setStatus(...args));
+export const resetTargets = (...args: Parameters<Service['resetTargets']>) =>
+  StateStore.use((store) => store.resetTargets(...args));
+export const removeTargets = (...args: Parameters<Service['removeTargets']>) =>
+  StateStore.use((store) => store.removeTargets(...args));
 export const listTargets = (...args: Parameters<Service['listTargets']>) =>
   StateStore.use((store) => store.listTargets(...args));
 export const setRunStatus = (...args: Parameters<Service['setRunStatus']>) =>
@@ -126,6 +137,31 @@ const makeMemory = (): Service => {
         const target = byId.get(targetId);
         if (target) {
           replace({ ...target, status, ...(error !== undefined ? { lastError: error } : {}) });
+        }
+      }),
+    resetTargets: (targetIds) =>
+      Effect.sync(() => {
+        for (const target of [...frontier]) {
+          if (targetIds === undefined || targetIds.includes(target.id)) {
+            replace({
+              id: target.id,
+              channelId: target.channelId,
+              ...(target.threadId !== undefined ? { threadId: target.threadId } : {}),
+              ...(target.parentMessageId !== undefined ? { parentMessageId: target.parentMessageId } : {}),
+              depth: target.depth,
+              status: 'pending',
+            });
+          }
+        }
+      }),
+    removeTargets: (targetIds) =>
+      Effect.sync(() => {
+        for (const id of targetIds) {
+          byId.delete(id);
+          const index = frontier.findIndex((candidate) => candidate.id === id);
+          if (index >= 0) {
+            frontier.splice(index, 1);
+          }
         }
       }),
     listTargets: () => Effect.sync(() => [...frontier]),
