@@ -99,4 +99,22 @@ describe('deus CLI data safety', () => {
     expect(refused.code).not.toBe(0);
     expect(refused.stderr).toContain('asks for 1000 (Safety.epoch)');
   });
+
+  test('a push refuses to make a passing check fail', { timeout: 240_000 }, ({ expect }) => {
+    const remote = join(scratch, 'checked-remote');
+    const c = ['--codebase', join(scratch, 'checked')];
+    deus('init', '--empty', ...c);
+    deus('remote', 'add', 'origin', remote, ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), '--message', 'prelude', ...c);
+    deus('add', file('sum.deus', 'def Sum.two : Int := 1 + 1\ntest Sum.twoIsTwo := Sum.two == 2\n'), ...c);
+    expect(deus('test', ...c).stdout).toMatch(/ passed, 0 failed/);
+    expect(deus('push', ...c).code).toBe(0);
+
+    deus('update', file('sum.deus', 'def Sum.two : Int := 1 + 1\ntest Sum.twoIsTwo := Sum.two == 3\n'), ...c);
+    expect(deus('test', ...c).stdout).toMatch(/ passed, 1 failed/);
+    const refused = deus('push', ...c);
+    expect(refused.code).not.toBe(0);
+    expect(refused.stderr).toContain('this push would make checks fail that pass on origin.main: Sum.twoIsTwo');
+    expect(deus('push', '--allow-failing', ...c).code).toBe(0);
+  });
 });

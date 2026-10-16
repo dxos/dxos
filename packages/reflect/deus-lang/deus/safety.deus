@@ -79,6 +79,28 @@ def unrecordedDrops (dir : Text) (bases : List Text) (head : Text) : {IO, Throw 
     let between := newNodes dir bases head
     List.filter (fun n => not (List.any (fun c => deletes dir c n) between)) dropped
 
+/-- Whether this store's verdict on check `h` is a pass (`some true`), a fail (`some false`), or missing. -/
+def verdictOf (dir : Text) (h : Text) : {IO} Option Bool :=
+  Option.map (fun text => Text.startsWith "(pass" (Text.trim text)) (IO.readFile (dir ++ "/results/" ++ h))
+
+/-- The project's own tests and theorems in namespace node `snapshot`, by name. -/
+def checksOf (dir : Text) (snapshot : Text) : {IO, Throw Text} List (Text, Entry) :=
+  List.filter
+    (fun pair => (Entry.kind (snd pair) == "test" || Entry.kind (snd pair) == "theorem") && not (Text.startsWith "lib." (fst pair)))
+    (Map.toList (Codebase.readNamespace dir snapshot))
+
+/-- The checks a push of `head` over `bases` would turn from passing to failing, by this store's verdicts
+  (task a5c2b178), sorted: a check whose definition changed, passed at a base and fails at `head`. A check
+  without a verdict on either side, or one that failed before, is not counted. -/
+def regressions (dir : Text) (bases : List Text) (head : Text) : {IO, Throw Text} List Text :=
+  let ours := Codebase.readNamespace dir (Codebase.readCausal dir head).snapshot
+  dedup (sort (List.concatMap (fun b => if not (IO.exists (Codebase.objectPath dir b)) then [] else
+    List.filterMap (fun pair =>
+      match Map.lookup (fst pair) ours with
+      | Option.some e => if Entry.hash e != Entry.hash (snd pair) && verdictOf dir (Entry.hash (snd pair)) == Option.some true &&
+          verdictOf dir (Entry.hash e) == Option.some false then Option.some (fst pair) else Option.none
+      | Option.none => Option.none) (checksOf dir (Codebase.readCausal dir b).snapshot)) bases))
+
 /-- The data-safety epoch the namespace node `snapshot` asks for: its `Safety.epoch`, or 0 without one. -/
 def epochOf (dir : Text) (snapshot : Text) : {IO, Throw Text} Int :=
   match Codebase.lookupName dir snapshot "Safety.epoch" with

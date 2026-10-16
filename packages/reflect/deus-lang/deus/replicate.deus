@@ -281,7 +281,7 @@ def pull (dir : Text) (remote : Text) : {Remote, IO, Throw Text} List (Text, Lis
 
 /-- Uploads what `branch` reaches and the remote lacks, with a claim for its head, and its pack; none if up to date.
   Refuses a head that lacks names the remote's heads have and no pushed node deleted, unless `allowDrop` (DataSafety.Spec). -/
-def push (dir : Text) (remote : Text) (branch : Text) (allowDrop : Bool) : {Remote, IO, Throw Text} Option Text :=
+def push (dir : Text) (remote : Text) (branch : Text) (allowDrop : Bool) (allowFailing : Bool) : {Remote, IO, Throw Text} Option Text :=
   let seen := Replicate.sync dir remote
   let head := headOf dir branch
   let claimed := any (fun s => any (fun c => c == (branch, head)) s.claims) seen
@@ -301,6 +301,9 @@ def push (dir : Text) (remote : Text) (branch : Text) (allowDrop : Bool) : {Remo
     if List.isEmpty dropped then () else Throw.throw ("this push would remove names from " ++ remote ++ "." ++ branch ++
       " that no change in it deleted: " ++ Safety.listed dropped ++ "; bring them back with `deus restore " ++ remote ++ "." ++ branch ++
       "`, delete them on purpose with `deus rm`, or push with --allow-drop")
+    let regressed := if allowFailing then [] else Safety.regressions dir bases head
+    if List.isEmpty regressed then () else Throw.throw ("this push would make checks fail that pass on " ++ remote ++ "." ++ branch ++
+      ": " ++ Safety.listed regressed ++ "; fix them and run `deus test` or `deus check` again, or push with --allow-failing")
     let known := Set.fromList (concatMap (fun s => s.hashes) seen)
     let missing := missingFrom dir [head] known
     let text := basedBundle dir [(branch, head)] (List.map (fun b => (branch, b)) bases) missing

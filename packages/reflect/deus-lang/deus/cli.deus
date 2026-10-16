@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
+def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -1214,7 +1214,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let attempt := fun _ => withRemote dir name (fun _ =>
     -- Results go first, so the explorer the pushed head is drawn into already has its verdicts.
     pushResults dir name
-    let bundle := Replicate.push dir name branch (Cli.flag args "allow-drop")
+    let bundle := Replicate.push dir name branch (Cli.flag args "allow-drop") (Cli.flag args "allow-failing")
     pushAssets dir name
     bundle)
   let rec pushing tries :=
@@ -2618,6 +2618,7 @@ def usage : Text :=
     "  link [name…] [--remote r|--host h]   explorer links for definitions and namespaces on the remote's Worker",
     "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks; refuses to drop",
     "                                       names no change deleted unless --allow-drop",
+    "                                       or makes passing checks fail unless --allow-failing",
     "  heads [remote] [--branch b]          every head the remote claimed for the branch, newest first",
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",

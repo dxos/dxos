@@ -253,5 +253,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 243 | 10-16 17:20 | 36m 00s | this commit | TypeScript callbacks cross into DEUS through the Host ability (D216); Bindings.Spec R-12 |
 | 244 | 10-16 17:42 | 22m 00s | this commit | The Worker audit log moves to R2 objects (D217, task e9d9a541); usability probe of the four projects |
 | 245 | 10-16 18:10 | 28m 00s | this commit | Explorer fixes from the four-project probe: failing rows no longer show a ✓, failing checks show why, D-numbers and repository paths link out, history rows lose machine paths, the hub counts each definition once |
+| 246 | 10-16 18:45 | 25m 00s | this commit | deus push keeps passing checks passing (D218, task a5c2b178); DataSafety.Spec R-9 |
 
-Total from stage 1 to stage 245: 76h 50m.
+Total from stage 1 to stage 246: 77h 15m.
