@@ -21,6 +21,7 @@ Every clip and every take of the composite follows these:
 2. **60 fps.** Run the driver with `--fps 60`, and encode the cut clips and the composite at 60 fps.
 3. **The sequence only.** Run `trim-static.mjs` (if at all) without `--ident`, `--intro` or `--outro`: no opening
    title and no end card.
+4. **No captions or titles.** Run the driver with `--captions off`, so a flow's step captions never appear.
 
 Clips are recorded headless with `--gpu on`, so 3D plugins render on the GPU, and without the action feed
 (`--overlay off`) or captions.
