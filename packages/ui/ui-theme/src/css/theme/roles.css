@@ -93,7 +93,8 @@
     oklch(from var(--color-blue-500) l c h / 0.12),
     oklch(from var(--color-blue-400) l c h / 0.18)
   );
-  --color-grid-selection-border: light-dark(var(--color-blue-600), var(--color-blue-400));
+  /* The focused cell's ring and the selected range's outline, so one never reads lighter than the other. */
+  --color-grid-focus-ring: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-grid-selection-fg: var(--color-grid-fg);
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(

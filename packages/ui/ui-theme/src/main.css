@@ -67,7 +67,7 @@
  * Force-emit tokens consumed by web components / .pcss files outside the
  * Tailwind source-scan graph (e.g. lit-grid's dx-grid.pcss uses var(--color-grid-line)).
  */
-@source inline('bg-grid-{surface,fg,line,highlight,header,header-fg,comment,comment-active,selection-surface,selection-border,selection-fg}');
+@source inline('bg-grid-{surface,fg,line,highlight,header,header-fg,comment,comment-active,selection-surface,selection-fg,focus-ring}');
 /* 
  * Sidebar surfaces alias each other (e.g. header-surface -> l0-surface); force-emit so the vars
  * exist in apps that use the alias but not the underlying utility (e.g. devtools). 
