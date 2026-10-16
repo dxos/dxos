@@ -12,7 +12,9 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Space } from '@dxos/halo';
+import { BrainCrawlProtocol } from '@dxos/protocols';
 import { Channel } from '@dxos/types';
 
 import * as AgentEmail from './AgentEmail.ts';
@@ -268,4 +270,105 @@ export const ReadSource = Operation.make({
     fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the triggers that fired.' }),
     undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired notification was not delivered.' }),
   }),
+});
+
+//
+// Back-index: EDGE crawls the agent's Discord channels into its brain (`/compute/brain/:spaceId/:agentId/crawl`).
+//
+
+const CrawlAgent = Ref.Ref(Agent.Agent).annotate({
+  description: 'The agent whose brain the channels are crawled into.',
+});
+
+/** Starts the back-index of Discord channels into the agent's brain, or replaces its config and continues it. */
+export const ConfigureCrawl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.configureCrawl'),
+    name: 'Configure crawl',
+    description:
+      "Starts back-indexing Discord channels into the agent's brain on EDGE, or replaces the channels and limits of a running one.",
+    icon: 'ph--spider--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: CrawlAgent,
+    applicationId: Schema.String.annotate({ description: 'The Discord application (bot) bound to the channels.' }),
+    channels: Schema.Array(Schema.String)
+      .check(Schema.isMinLength(1))
+      .annotate({ description: 'Top-level Discord channel ids to crawl.' }),
+    descendThreads: Schema.optional(
+      Schema.Boolean.annotate({ description: 'Whether threads in the channels are crawled too; defaults to true.' }),
+    ),
+    maxDepth: Schema.optional(
+      Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)).annotate({
+        description: 'How deep threads are descended; unbounded when absent.',
+      }),
+    ),
+    maxDays: Schema.optional(
+      Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)).annotate({
+        description: 'Lookback in days for a channel crawled for the first time; its whole history when absent.',
+      }),
+    ),
+    factFeed: Schema.optional(
+      Ref.Ref(Feed.Feed).annotate({ description: 'The feed every extracted fact is also appended to.' }),
+    ),
+  }),
+  output: BrainCrawlProtocol.CrawlStatus,
+});
+
+/** Reads the back-index's config and progress. */
+export const GetCrawlStatus = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.getCrawlStatus'),
+    name: 'Get crawl status',
+    description: "Reads the config and progress of the agent's Discord back-index on EDGE.",
+    icon: 'ph--spider--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({ agent: CrawlAgent }),
+  output: BrainCrawlProtocol.CrawlStatus,
+});
+
+/** Stops stepping the back-index; its cursors are kept. */
+export const PauseCrawl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.pauseCrawl'),
+    name: 'Pause crawl',
+    description: "Pauses the agent's Discord back-index; it keeps its place.",
+    icon: 'ph--pause--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({ agent: CrawlAgent }),
+  output: BrainCrawlProtocol.CrawlStatus,
+});
+
+/** Steps the back-index again from where it paused. */
+export const ResumeCrawl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.resumeCrawl'),
+    name: 'Resume crawl',
+    description: "Resumes the agent's Discord back-index from where it paused.",
+    icon: 'ph--play--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({ agent: CrawlAgent }),
+  output: BrainCrawlProtocol.CrawlStatus,
+});
+
+/** Crawls the named targets, or every target, again from the start. */
+export const ResetCrawl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.resetCrawl'),
+    name: 'Reset crawl',
+    description: "Re-reads channels or threads of the agent's Discord back-index from the start.",
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: CrawlAgent,
+    targets: Schema.optional(
+      Schema.Array(Schema.String).annotate({ description: 'The target ids to reset; every target when absent.' }),
+    ),
+  }),
+  output: BrainCrawlProtocol.CrawlStatus,
 });

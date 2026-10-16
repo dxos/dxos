@@ -92,6 +92,23 @@ In the **Setup** story:
 5. Mention `@Kai` in that channel. Kai replies in a thread once its turn ends, and the conversation appears under
    **Activity → Conversations**.
 
+In the **PipelineDiscord → Setup** story (`?path=/story/stories-stories-agent-pipelinediscord--setup`), EDGE's agent
+brain back-indexes the bound channels' history into facts with `@dxos/crawler`. It needs an EDGE that serves the
+`/compute/brain/:spaceId/:agentId/crawl` routes: the edge branch `dm/elegant-euler-at56gd`, either checked out in
+`<edge>` and started with `node scripts/stack.mjs start` (section 2), or deployed to the EDGE the toolbar picks.
+
+1. **Discord** panel: sign in, install Kai and **Connect** a channel, as steps 1–3 above.
+2. **Discord pipeline** panel: the channel appears under **Channels**, checked. Set **Max days** (e.g. 30), leave
+   **Descend threads** on, and pick a **Fact feed** or create one with **New feed**.
+3. **Start**: the run status goes running, the channel and then its threads appear under **Targets** with their
+   cursors, and **Messages read** and **Facts in brain** climb; the **Timeline** records each step.
+4. The **brain** companion lists the facts as the crawl extracts them.
+5. **Pause** and **Resume**; a row's reset button re-reads that channel or thread from the start, and **Reset all**
+   re-reads every target.
+
+The **PipelineDiscord → Scripted** story runs the same panel against a fake EDGE crawl host (`installFakeCrawl`), with
+no Discord or EDGE at all.
+
 ### 5. Check the bot
 
 With Kai Local's bot token in your shell

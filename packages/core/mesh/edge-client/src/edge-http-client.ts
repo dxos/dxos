@@ -16,7 +16,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ProcessProtocol } from '@dxos/protocols';
+import { BrainCrawlProtocol, type ProcessProtocol } from '@dxos/protocols';
 import {
   type CompleteOAuthRegistrationRequest,
   type CompleteOAuthRegistrationResponse,
@@ -714,6 +714,77 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'GET',
       auth: true,
     });
+  }
+
+  //
+  // Brain back-index (crawl)
+  //
+
+  /**
+   * Sets or replaces the agent's back-index of Discord channels and starts or continues it. `agentId` is the ECHO
+   * `Agent` object's id, which names its brain on EDGE; the caller must be a member of `spaceId`.
+   */
+  public async putCrawl(
+    ctx: Context,
+    spaceId: SpaceId,
+    agentId: string,
+    body: BrainCrawlProtocol.PutCrawlRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainCrawlProtocol.CrawlStatus> {
+    return this.#crawlCall(ctx, spaceId, agentId, '', { ...args, method: 'PUT', body });
+  }
+
+  /** The agent's back-index config and progress. */
+  public async getCrawlStatus(
+    ctx: Context,
+    spaceId: SpaceId,
+    agentId: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainCrawlProtocol.CrawlStatus> {
+    return this.#crawlCall(ctx, spaceId, agentId, '', { ...args, method: 'GET' });
+  }
+
+  /** Stops stepping the back-index; its cursors are kept. */
+  public async pauseCrawl(
+    ctx: Context,
+    spaceId: SpaceId,
+    agentId: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainCrawlProtocol.CrawlStatus> {
+    return this.#crawlCall(ctx, spaceId, agentId, '/pause', { ...args, method: 'POST' });
+  }
+
+  /** Steps the back-index again from where it paused. */
+  public async resumeCrawl(
+    ctx: Context,
+    spaceId: SpaceId,
+    agentId: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainCrawlProtocol.CrawlStatus> {
+    return this.#crawlCall(ctx, spaceId, agentId, '/resume', { ...args, method: 'POST' });
+  }
+
+  /** Crawls the named targets (every target when none are named) again from the start. */
+  public async resetCrawl(
+    ctx: Context,
+    spaceId: SpaceId,
+    agentId: string,
+    body: BrainCrawlProtocol.ResetCrawlRequest = {},
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainCrawlProtocol.CrawlStatus> {
+    return this.#crawlCall(ctx, spaceId, agentId, '/reset', { ...args, method: 'POST', body });
+  }
+
+  async #crawlCall(
+    ctx: Context,
+    spaceId: SpaceId,
+    agentId: string,
+    route: string,
+    args: EdgeHttpCallArgs & { method: string; body?: unknown },
+  ): Promise<BrainCrawlProtocol.CrawlStatus> {
+    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agentId)}/crawl${route}`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, auth: true });
+    return Schema.decodeUnknownSync(BrainCrawlProtocol.CrawlStatus)(response);
   }
 
   //

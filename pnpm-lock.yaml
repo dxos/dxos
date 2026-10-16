@@ -20971,6 +20971,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
       effect:
         specifier: 4.0.4
         version: 4.0.4

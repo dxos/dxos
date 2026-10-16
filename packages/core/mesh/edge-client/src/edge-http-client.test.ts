@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { SpaceId } from '@dxos/keys';
 import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -732,5 +733,77 @@ describe('EdgeHttpClient inbox', () => {
     );
     const client = new EdgeHttpClient('https://edge.example.com');
     await expect(client.listInbox(Context.default())).rejects.toThrow();
+  });
+});
+
+describe('EdgeHttpClient crawl', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const SPACE_ID = SpaceId.random();
+
+  const status = {
+    runStatus: 'running',
+    summary: { done: false, errored: 0 },
+    targets: [{ id: 't1', channelId: 'c1', depth: 0, status: 'active' }],
+    facts: 3,
+    messages: 12,
+  };
+
+  test('calls the five crawl routes and decodes their status', async ({ expect }) => {
+    const calls: { method?: string; pathname: string; body?: unknown }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: any, init?: RequestInit) => {
+        const url = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+        if (url.pathname === '/auth') {
+          return new Response(null, { status: 200 });
+        }
+        calls.push({
+          method: init?.method,
+          pathname: url.pathname,
+          body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+        });
+        return new Response(JSON.stringify({ success: true, data: status }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    const ctx = Context.default();
+    const base = `/compute/brain/${SPACE_ID}/agent-1/crawl`;
+
+    expect(await client.putCrawl(ctx, SPACE_ID, 'agent-1', { applicationId: 'app', channels: ['c1'] })).toEqual(status);
+    expect(await client.getCrawlStatus(ctx, SPACE_ID, 'agent-1')).toEqual(status);
+    await client.pauseCrawl(ctx, SPACE_ID, 'agent-1');
+    await client.resumeCrawl(ctx, SPACE_ID, 'agent-1');
+    await client.resetCrawl(ctx, SPACE_ID, 'agent-1', { targets: ['t1'] });
+
+    expect(calls.map(({ method, pathname }) => `${method} ${pathname}`)).toEqual([
+      `PUT ${base}`,
+      `GET ${base}`,
+      `POST ${base}/pause`,
+      `POST ${base}/resume`,
+      `POST ${base}/reset`,
+    ]);
+    expect(calls[0].body).toEqual({ applicationId: 'app', channels: ['c1'] });
+    expect(calls[4].body).toEqual({ targets: ['t1'] });
+  });
+
+  test('rejects a malformed status', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ success: true, data: { runStatus: 'sleeping' } }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+      ),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(client.getCrawlStatus(Context.default(), SPACE_ID, 'agent-1')).rejects.toThrow();
   });
 });
