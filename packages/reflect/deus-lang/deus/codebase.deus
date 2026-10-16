@@ -332,13 +332,17 @@ def peekCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   | Option.none => Throw.throw ("missing history node #" ++ h)
 
 /-- A namespace node's items, with its parts expanded: `(n name entry)` and `(sub segment hash)` forms. -/
-def nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp :=
-  match readObject dir h with
+def nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp := Codebase.nodeItemsWith (fun x => readObject dir x) h
+
+/-- A namespace node's items, its parts expanded, with objects read by `read`: the store here, a remote's packs in the
+  Worker (task 41714c0d). -/
+def nodeItemsWith (read : Text -> {e} Option Sexp) (h : Text) : {Throw Text | e} List Sexp :=
+  match read h with
   | none => throw ("missing namespace #" ++ h)
   | some form =>
     List.concatMap (fun item =>
       match item with
-      | Sexp.list [Sexp.sym "part", Sexp.str child] => nodeItems dir child
+      | Sexp.list [Sexp.sym "part", Sexp.str child] => Codebase.nodeItemsWith read child
       | _ => [item]) (Sexp.args form)
 
 /-- The names under a namespace node, flat (`List.map`); reads tree nodes and older flat snapshots alike. -/
@@ -351,8 +355,11 @@ def readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
   go "" h Map.empty
 
 /-- One name's entry in a snapshot, reading only the nodes on its path. -/
-def lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option Entry :=
-  let items := nodeItems dir h
+def lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option Entry := Codebase.lookupNameWith (fun x => readObject dir x) h name
+
+/-- `lookupName` with objects read by `read`, so the Worker resolves names by the same rule (task 41714c0d). -/
+def lookupNameWith (read : Text -> {e} Option Sexp) (h : Text) (name : Text) : {Throw Text | e} Option Entry :=
+  let items := Codebase.nodeItemsWith read h
   let entry := head? (filterMap (fun item =>
     match item with
     | Sexp.list (Sexp.sym "n" :: Sexp.str n :: e :: []) => if n == name then Option.some (Entry.fromSexp e) else Option.none
@@ -364,7 +371,7 @@ def lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option E
         match item with
         | Sexp.list (Sexp.sym "sub" :: Sexp.str s :: Sexp.str child :: []) => if s == seg then Option.some child else Option.none
         | _ => Option.none) items) with
-      | Option.some child => Codebase.lookupName dir child rest
+      | Option.some child => Codebase.lookupNameWith read child rest
       | Option.none => Option.none
   | (Option.none, Option.none) => Option.none
 

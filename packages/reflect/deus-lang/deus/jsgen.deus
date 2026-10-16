@@ -502,13 +502,29 @@ def appliesUnknown (e : Sexp) : Bool :=
   | Sexp.list items => List.any appliesUnknown items
   | _ => false
 
-/-- Whether a lambda written in `ctx` may wait: it waits itself, or, in an `async` function, it calls a function it
-  does not know, which may be one that waits. -/
+/-- Whether a lambda written in `ctx` may wait: its body may (`mayWait`). -/
 def maybeWaits (ctx : JsCtx) (e : Sexp) : Bool :=
   match e with
-  | Sexp.list (Sexp.sym "lam" :: _) =>
-      let body := snd (JsGen.unlam e)
-      awaits ctx.jxMod body || (ctx.jxAsync && appliesUnknown body)
+  | Sexp.list (Sexp.sym "lam" :: _) => JsGen.mayWait ctx (snd (JsGen.unlam e))
+  | _ => false
+
+/-- Whether code written in `ctx` may wait: it waits itself, or, in an `async` function, it calls a function it does
+  not know or calls a definition's waiting variant, either of which may wait. -/
+def mayWait (ctx : JsCtx) (body : Sexp) : Bool :=
+  awaits ctx.jxMod body || (ctx.jxAsync && (appliesUnknown body || JsGen.reachesVariant ctx body))
+
+/-- Whether `e` calls a definition that `needsWaiting` sends to its waiting variant, not counting its lambdas. -/
+def reachesVariant (ctx : JsCtx) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "lam" :: _) => false
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: args) =>
+      (match Dict.lookup h ctx.jxMod.jmDefs with
+       | Option.some d =>
+           (match d.jdKind with
+            | JsKind.fn arity => arity == List.length args && JsGen.needsWaiting ctx d args
+            | _ => false)
+       | Option.none => false) || List.any (JsGen.reachesVariant ctx) args
+  | Sexp.list items => List.any (JsGen.reachesVariant ctx) items
   | _ => false
 
 /-- Whether parameter `i` of definition `d` is a function, by its stored type. -/
@@ -821,7 +837,8 @@ def handleExpr (ctx : JsCtx) (env : List Text) (body : Sexp) (clauses : List Sex
     | Option.some (Sexp.list (Sexp.sym "ret" :: Sexp.str x :: b :: [])) => JsGen.arrow ctx env [JsGen.local ctx x] b (awaits ctx.jxMod b)
     | _ => "null"
   -- A body that waits makes the handler async: `rt.handleAsync` keeps its frame until the body's promise settles.
-  let wait := awaits ctx.jxMod body || (match ret with
+  -- In an `async` function a body that calls an unknown function (`try`'s thunk) may wait too.
+  let wait := JsGen.mayWait ctx body || (match ret with
     | Option.some r => awaits ctx.jxMod r
     | Option.none => false)
   if wait && not ctx.jxAsync then Throw.throw (ctx.jxOwner ++ " handles a body that waits, but its type has no Js.Async, so the js target cannot make it async") else ()

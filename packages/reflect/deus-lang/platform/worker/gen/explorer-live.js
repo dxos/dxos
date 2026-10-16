@@ -5226,28 +5226,7 @@ function Explorer$Site$taskMap(v) {
 rt.named(Explorer$Site$taskMap, "Explorer.Site.taskMap");
 
 function Codebase$nodeItems(dir, h) {
-  const t0 = Codebase$readObject(dir, h);
-  m1: {
-    if (t0.tag === 0) {
-      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing namespace #", h)]);
-    }
-    if (t0.tag === 1) {
-      const form = t0.fields[0];
-      return lib$base$List$concatMap(rt.named((item) => {
-      m2: {
-        if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
-          const child = item.fields[0].fields[1].fields[0].fields[0];
-          return Codebase$nodeItems(dir, child);
-        }
-        if (true) {
-          return rt.cons(item, rt.NIL);
-        }
-        rt.nomatch(item);
-      }
-    }, "Codebase.nodeItems/\u03bb"), lib$base$Sexp$args(form));
-    }
-    rt.nomatch(t0);
-  }
+  return Codebase$nodeItemsWith(rt.named((x) => Codebase$readObject(dir, x), "Codebase.nodeItems/\u03bb"), h);
 }
 rt.named(Codebase$nodeItems, "Codebase.nodeItems");
 
@@ -6869,6 +6848,32 @@ function Highlight$keywordsFor(dialect) {
   }
 }
 rt.named(Highlight$keywordsFor, "Highlight.keywordsFor");
+
+function Codebase$nodeItemsWith(read, h) {
+  const t0 = rt.ap(read, h);
+  m1: {
+    if (t0.tag === 0) {
+      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing namespace #", h)]);
+    }
+    if (t0.tag === 1) {
+      const form = t0.fields[0];
+      return lib$base$List$concatMap(rt.named((item) => {
+      m2: {
+        if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
+          const child = item.fields[0].fields[1].fields[0].fields[0];
+          return Codebase$nodeItemsWith(read, child);
+        }
+        if (true) {
+          return rt.cons(item, rt.NIL);
+        }
+        rt.nomatch(item);
+      }
+    }, "Codebase.nodeItemsWith/\u03bb"), lib$base$Sexp$args(form));
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Codebase$nodeItemsWith, "Codebase.nodeItemsWith");
 
 function lib$base$Sexp$asList(s) {
   m0: {

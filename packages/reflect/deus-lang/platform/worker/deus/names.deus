@@ -1,0 +1,27 @@
+-- context: @dxos/worker/Worker
+/-
+  Names at a head in DEUS (task 41714c0d): the Worker resolves a name in a pushed namespace by the toolchain's own
+  rule, `Codebase.lookupNameWith`, reading namespace nodes from the project's packs. platform/worker/packs.mjs reads
+  the packs and answers `/names/<branch>/<Name>`.
+-/
+
+namespace Worker.Names
+
+/-- A name looked up in a snapshot: whether it is bound, its entry's canonical text and the hash it names, or the
+  namespace node that is missing from the packs (otherwise ""). -/
+structure Lookup @"urn:deus:worker:NameLookup" where
+  bound : Bool
+  entry : Text
+  hash : Text
+  missing : Text
+
+/-- `name` in the namespace snapshot `snapshot`, reading objects through `lookup` (in JavaScript, a hash to a promise
+  of its text or `undefined`). -/
+def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} Lookup :=
+  let read := fun h => Option.map (fun text => Sexp.read (Js.toText text)) (Js.toOption (Js.Async.await (lookup h)))
+  match try (fun _ => Codebase.lookupNameWith read snapshot name) with
+  | Result.ok (Option.some e) => Lookup.mk true (Sexp.print (Entry.toSexp e)) (Entry.hash e) ""
+  | Result.ok Option.none => Lookup.mk false "" "" ""
+  | Result.err problem => Lookup.mk false "" "" problem
+
+end Worker.Names

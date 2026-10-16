@@ -7,6 +7,7 @@
 // index into one combined index (`packindex`), which an isolate keeps in memory, so a lookup is a
 // binary search and one ranged read of the line, however large the codebase.
 
+import * as nameRules from './gen/names.js';
 import * as deus from './gen/packs.js';
 import { warmLive } from './live.mjs';
 import { HttpError, authorize, json, listAll, readHead } from './remote.mjs';
@@ -582,39 +583,6 @@ export const parseSexp = (text) => {
 
 const fieldOf = (form, name) => form.find((item) => Array.isArray(item) && item[0] === name);
 
-/** A namespace node's items with its parts expanded, as `Codebase.nodeItems` reads them. */
-const nodeItems = async (bucket, project, hash) => {
-  const text = await lookup(bucket, project, hash, 1);
-  if (text === undefined) {
-    throw new HttpError(404, `missing namespace node ${hash}`);
-  }
-  // Parts are read all at once: one after another, a large node costs a round trip per part.
-  const expanded = await Promise.all(
-    parseSexp(text)
-      .slice(1)
-      .map((item) => (Array.isArray(item) && item[0] === 'part' ? nodeItems(bucket, project, item[1].s) : [item])),
-  );
-  return expanded.flat();
-};
-
-/** A full name's entry under namespace node `hash`, reading only the nodes on its path (`Codebase.lookupName`). */
-const entryOf = async (bucket, project, hash, name) => {
-  const items = await nodeItems(bucket, project, hash);
-  const entry = items.find((item) => item[0] === 'n' && item[1]?.s === name);
-  if (entry) {
-    return entry[2];
-  }
-  // Split as `Codebase.splitName` does: at the first dot after the first character, with a rest.
-  const dot = name.indexOf('.', 1);
-  const child =
-    dot >= 1 && dot + 1 < name.length && items.find((item) => item[0] === 'sub' && item[1]?.s === name.slice(0, dot));
-  return child ? entryOf(bucket, project, child[2].s, name.slice(dot + 1)) : undefined;
-};
-
-/** Prints an entry back as canonical text, as the snapshot holds it. */
-const printSexp = (form) =>
-  Array.isArray(form) ? `(${form.map(printSexp).join(' ')})` : typeof form === 'object' ? JSON.stringify(form.s) : form;
-
 /** `/v1/<project>/names/<branch>/<Name>`: the entry, hash and text of a name at the branch's head. */
 export const names = async (request, env, project, rest) => {
   if (request.method !== 'GET') {
@@ -645,14 +613,20 @@ export const nameAt = async (bucket, project, causal, name) => {
     throw new HttpError(404, `the head ${causal} is in no pack yet`);
   }
   const snapshot = fieldOf(parseSexp(node).slice(1), 'ns')?.[1]?.s;
-  const entry = snapshot && (await entryOf(bucket, project, snapshot, name));
-  if (!entry) {
+  if (!snapshot) {
     return undefined;
   }
-  const hash = entry[1]?.s;
+  // The walk is the toolchain's own `Codebase.lookupNameWith`, compiled from DEUS (`Worker.Names.entryAt`).
+  const found = await nameRules.entryAt((hash) => lookup(bucket, project, hash, 1), snapshot, name);
+  if (found.missing) {
+    throw new HttpError(404, found.missing);
+  }
+  if (!found.bound) {
+    return undefined;
+  }
   return {
-    entry: printSexp(entry),
-    hash,
-    text: hash ? ((await lookup(bucket, project, hash, 1)) ?? null) : null,
+    entry: found.entry,
+    hash: found.hash,
+    text: found.hash ? ((await lookup(bucket, project, found.hash, 1)) ?? null) : null,
   };
 };
