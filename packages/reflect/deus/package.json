@@ -23,6 +23,11 @@
       "source": "./src/extension/index.ts",
       "types": "./dist/types/src/extension/index.d.ts",
       "import": "./dist/lib/extension.mjs"
+    },
+    "./parser": {
+      "source": "./src/parser/index.ts",
+      "types": "./dist/types/src/parser/index.d.ts",
+      "import": "./dist/lib/parser.mjs"
     }
   },
   "files": [

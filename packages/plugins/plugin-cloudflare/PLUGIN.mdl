@@ -25,7 +25,6 @@ Worker and bind its storage without the user touching the dashboard.
 | ------ | ----------------------- |
 | `feat` | `org.dxos.mdl.feat@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
-| `flow` | `org.dxos.mdl.flow@1.0` |
 
 ## Connector
 
@@ -107,7 +106,7 @@ test T-3: A rejected token fails the connection test
 ## QA
 
 ```mdl
-flow QA-1: Connect a Cloudflare account
+test QA-1: Connect a Cloudflare account
   desc: |
     Headless — the whole plugin is one Connector entry, so the flow is the
     generic connector UI end to end. There is no plugin-local operation to
@@ -120,7 +119,7 @@ flow QA-1: Connect a Cloudflare account
     - a space is open
     - a Cloudflare account the user can sign in to
     - no Cloudflare connection already exists
-  test:
+  steps:
     - name: Start the OAuth flow
       do: Open Settings -> Connectors -> Cloudflare and click Connect.
       expect: a popup opens on dash.cloudflare.com asking to authorize the listed scopes

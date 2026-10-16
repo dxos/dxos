@@ -1,0 +1,69 @@
+---
+id: org.dxos.spec.animation
+name: DSL.Animation
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The animation dialect. A `flow` scripts a camera journey over a network of devices: where the
+camera looks, what appears, which properties change, and which packets move. `@dxos/animation`
+compiles a flow into a timeline whose state is a pure function of time.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `flow` | `org.dxos.mdl.flow@1.0` |
+
+```mdl
+ext flow
+  uri: org.dxos.mdl.flow@1.0
+  desc: |
+    A scripted animation. Steps run one after another; a step lasts as long as its camera move
+    (`over`) or its `hold`, whichever is longer.
+  fields:
+    desc?:  Prose
+    seed?:  Number                 # fixes layout and packets; default 0
+    steps:  FlowStepList
+    tags?:  TagList
+  nesting: none
+
+ext flow-step
+  uri: org.dxos.mdl.flow-step@1.0
+  desc: |
+    One step of a flow. Selectors are path ids (`home/phone`), `*` for one segment, `**` for any
+    depth, and commas for alternatives (`home, local-*`). A `#` starts a comment only at the start
+    of a line or after two spaces, so `color: #5f8fae` and `caption: We are #1` keep their text.
+  fields:
+    name:       Prose
+    with?:      previous               # start together with the previous step
+    at?:        Duration               # pin the start, e.g. 1m20s
+    hold?:      Duration
+    camera?:    Camera                 # { view, focus | fit, zoom, follow, path, over, ease }
+    show?:      Reveal | RevealList    # selector or { target, transition, stagger, exact }
+    hide?:      Reveal | RevealList
+    set?:       PropertyMap            # { <selector>.<prop>: value }
+    send?:      Send | SendList        # { from, to, rate | count, color, until, speed }
+    traffic?:   Traffic | TrafficList  # { scope, rate, until, speed }
+    caption?:   Prose
+    narration?: Prose
+    mark?:      Prose                  # a chapter
+```
+
+## Example
+
+```mdl
+flow F-1: From phone to cloud
+  seed: 7
+  steps:
+    - name: Close up
+      camera: { view: iso, focus: home/phone, zoom: 2.5, over: 0s }
+      set: { home/phone.app: chat }
+      caption: A message is typed on the phone
+      hold: 8s
+    - name: The home network
+      show: { target: home, exact: true }
+      camera: { fit: home, over: 2s }
+      hold: 6s
+```

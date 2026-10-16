@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     extension: 'src/extension/index.ts',
+    parser: 'src/parser/index.ts',
   },
   test: { node: true },
 });

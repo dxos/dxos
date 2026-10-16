@@ -16,6 +16,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/common/animation/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
@@ -914,6 +917,9 @@
     },
     {
       "path": "packages/stories/stories-agent/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-animation/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"

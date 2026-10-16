@@ -1,0 +1,223 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { buildGraph } from './build.ts';
+import { type Graph, NODE_RADIUS, getNetwork, getNode } from './graph.ts';
+import { type NetworkTemplate } from './template.ts';
+
+const TEMPLATE: NetworkTemplate = {
+  networks: [
+    {
+      id: 'cloud',
+      kind: 'cloud',
+      layout: { at: [0, 0] },
+      generate: { nodes: { type: 'server', count: [6, 6] }, networks: { template: 'region', count: [3, 3], depth: 2 } },
+    },
+    {
+      id: 'home',
+      kind: 'devices',
+      layout: { near: 'cloud' },
+      nodes: [
+        { id: 'phone', type: 'phone' },
+        { id: 'laptop', type: 'laptop' },
+      ],
+    },
+    ...Array.from({ length: 6 }, (_, index) => ({
+      id: `site-${index + 1}`,
+      kind: 'devices' as const,
+      generate: { nodes: { type: 'phone' as const, count: [1, 3] as const } },
+    })),
+  ],
+  templates: { region: { id: 'region', kind: 'servers', generate: { nodes: { type: 'server', count: [2, 3] } } } },
+  links: [
+    { rule: 'nearby', k: 1, scope: 'site-*' },
+    { rule: 'cloud', scope: '*', ratio: 1 },
+    { from: 'home', to: 'site-1' },
+  ],
+};
+
+const distance = (a: readonly [number, number], b: readonly [number, number]): number =>
+  Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+const circlesOf = (graph: Graph, path: string) => {
+  const network = getNetwork(graph, path);
+  return [
+    ...network.nodes.map((node) => ({
+      center: getNode(graph, node).position,
+      radius: NODE_RADIUS[getNode(graph, node).type],
+    })),
+    ...network.networks.map((child) => ({
+      center: getNetwork(graph, child).center,
+      radius: getNetwork(graph, child).radius,
+    })),
+  ];
+};
+
+describe('layout', () => {
+  test('children fit inside their parent and never overlap', ({ expect }) => {
+    const graph = buildGraph(TEMPLATE, 3);
+    expect(graph).toEqual(buildGraph(TEMPLATE, 3));
+    for (const network of Object.values(graph.networks)) {
+      const circles = circlesOf(graph, network.path);
+      for (const circle of circles) {
+        expect(distance(circle.center, network.center) + circle.radius).toBeLessThanOrEqual(network.radius + 1e-6);
+      }
+      circles.forEach((a, i) =>
+        circles
+          .slice(i + 1)
+          .forEach((b) => expect(distance(a.center, b.center)).toBeGreaterThanOrEqual(a.radius + b.radius)),
+      );
+    }
+    const roots = graph.roots.map((path) => getNetwork(graph, path));
+    roots.forEach((a, i) =>
+      roots
+        .slice(i + 1)
+        .forEach((b) => expect(distance(a.center, b.center)).toBeGreaterThanOrEqual(a.radius + b.radius)),
+    );
+  });
+
+  test('pins and "near" placement', ({ expect }) => {
+    const graph = buildGraph(TEMPLATE, 3);
+    const cloud = getNetwork(graph, 'cloud');
+    const home = getNetwork(graph, 'home');
+    expect(cloud.center).toEqual([0, 0]);
+    expect(distance(home.center, cloud.center)).toBeLessThan(cloud.radius + home.radius + 200);
+  });
+
+  test('links', ({ expect }) => {
+    const graph = buildGraph(TEMPLATE, 3);
+    const keys = graph.links.map((link) => `${link.from}|${link.to}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const root of graph.roots.filter((path) => path !== 'cloud')) {
+      expect(
+        graph.links.some(
+          (link) => (link.from === root && link.to === 'cloud') || (link.to === root && link.from === 'cloud'),
+        ),
+      ).toBe(true);
+    }
+    expect(keys).toContain('home|site-1');
+    expect(
+      graph.links.filter((link) => link.from.startsWith('site-') && link.to.startsWith('site-')).length,
+    ).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('density and spread', () => {
+  const servers = (kind: 'servers' | 'devices'): NetworkTemplate => ({
+    networks: [{ id: 'n', kind, generate: { nodes: { type: 'server', count: [40, 40] } } }],
+  });
+
+  test('server networks pack tighter than device networks', ({ expect }) => {
+    const dense = getNetwork(buildGraph(servers('servers'), 1), 'n').radius;
+    const loose = getNetwork(buildGraph(servers('devices'), 1), 'n').radius;
+    expect(dense).toBeLessThan(loose * 0.85);
+  });
+
+  test('spread scatters root networks away from the cloud and each other', ({ expect }) => {
+    const sites = Array.from({ length: 12 }, (_, index) => ({
+      id: `site-${index + 1}`,
+      kind: 'devices' as const,
+      nodes: [{ id: 'p', type: 'phone' as const }],
+    }));
+    const cloud = {
+      id: 'cloud',
+      kind: 'cloud' as const,
+      layout: { at: [0, 0] as const },
+      generate: { nodes: { type: 'server' as const, count: [30, 30] as const } },
+    };
+    const packed = buildGraph({ networks: [cloud, ...sites] }, 2);
+    const spread = buildGraph({ networks: [cloud, ...sites], layout: { spread: 8000, gap: 400 } }, 2);
+    const mean = (graph: Graph) =>
+      sites.reduce((sum, site) => sum + distance(getNetwork(graph, site.id).center, [0, 0]), 0) / sites.length;
+    expect(mean(spread)).toBeGreaterThan(mean(packed) + 2000);
+    const roots = spread.roots.map((path) => getNetwork(spread, path));
+    roots.forEach((a, i) =>
+      roots
+        .slice(i + 1)
+        .forEach((b) => expect(distance(a.center, b.center)).toBeGreaterThanOrEqual(a.radius + b.radius + 400)),
+    );
+  });
+});
+
+describe('belt and uniform distribution', () => {
+  const sites = Array.from({ length: 16 }, (_, index) => ({
+    id: `site-${index + 1}`,
+    kind: 'devices' as const,
+    nodes: [{ id: 'p', type: 'phone' as const }],
+  }));
+  const cloud = {
+    id: 'cloud',
+    kind: 'cloud' as const,
+    layout: { at: [0, 0] as const },
+    generate: {
+      nodes: { type: 'server' as const, count: [7, 7] as const },
+      networks: { template: 'region', count: [3, 3] as const, depth: 2 },
+    },
+  };
+  const template: NetworkTemplate = {
+    networks: [cloud, ...sites],
+    templates: { region: { id: 'region', kind: 'servers', generate: { nodes: { type: 'server', count: [3, 3] } } } },
+    layout: { gap: 600, spread: 2000 },
+  };
+
+  test('outer networks sit in a belt, evenly around the cloud', ({ expect }) => {
+    const graph = buildGraph(template, 4);
+    const cloudRadius = getNetwork(graph, 'cloud').radius;
+    const angles = sites
+      .map((site) => {
+        const network = getNetwork(graph, site.id);
+        const radial = distance(network.center, [0, 0]);
+        expect(radial - network.radius).toBeGreaterThanOrEqual(cloudRadius + 600 - 1e-6);
+        return Math.atan2(network.center[1], network.center[0]);
+      })
+      .sort((a, b) => a - b);
+    const gaps = angles.map((angle, index) =>
+      index === 0 ? angle + 2 * Math.PI - (angles[angles.length - 1] ?? 0) : angle - (angles[index - 1] ?? 0),
+    );
+    expect(Math.max(...gaps)).toBeLessThan(1.6 * ((2 * Math.PI) / sites.length));
+    expect(Math.min(...gaps)).toBeGreaterThan(0.4 * ((2 * Math.PI) / sites.length));
+  });
+
+  test('jitter 0 puts every outer network on one ring', ({ expect }) => {
+    const graph = buildGraph({ ...template, layout: { gap: 600, spread: 2000, jitter: 0 } }, 4);
+    const radials = sites.map((site) => distance(getNetwork(graph, site.id).center, [0, 0]));
+    expect(Math.max(...radials) - Math.min(...radials)).toBeLessThan(1);
+  });
+
+  test('jitter 0 keeps mixed-size networks on one ring even when the belt is narrow', ({ expect }) => {
+    const mixed = sites.map((site, index) => ({
+      ...site,
+      nodes: Array.from({ length: 1 + (index % 3) }, (_, k) => ({ id: `p${k}`, type: 'laptop' as const })),
+    }));
+    const graph = buildGraph(
+      { ...template, networks: [cloud, ...mixed], layout: { gap: 300, spread: 500, jitter: 0 } },
+      4,
+    );
+    const radials = mixed.map((site) => distance(getNetwork(graph, site.id).center, [0, 0]));
+    expect(Math.max(...radials) - Math.min(...radials)).toBeLessThan(1);
+    const roots = mixed.map((site) => getNetwork(graph, site.id));
+    roots.forEach((a, i) =>
+      roots
+        .slice(i + 1)
+        .forEach((b) => expect(distance(a.center, b.center)).toBeGreaterThanOrEqual(a.radius + b.radius + 300 - 1e-6)),
+    );
+  });
+
+  test('networks and servers inside the cloud spread across it', ({ expect }) => {
+    const graph = buildGraph(template, 4);
+    const network = getNetwork(graph, 'cloud');
+    const children = [
+      ...network.networks.map((path) => getNetwork(graph, path).center),
+      ...network.nodes.map((path) => getNode(graph, path).position),
+    ];
+    const mean = children.reduce((sum, center) => sum + distance(center, network.center), 0) / children.length;
+    expect(mean).toBeGreaterThan(network.radius * 0.45);
+    const outer = children.filter((center) => distance(center, network.center) > network.radius * 0.6).length;
+    expect(outer / children.length).toBeGreaterThanOrEqual(0.4);
+    const regions = network.networks.map((path) => distance(getNetwork(graph, path).center, network.center));
+    expect(Math.max(...regions)).toBeGreaterThan(network.radius * 0.45);
+  });
+});
