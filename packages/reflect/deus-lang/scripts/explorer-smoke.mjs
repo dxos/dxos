@@ -48,7 +48,8 @@ try {
 
   const opened = Date.now();
   await page.goto(`${site}/${project}/List.map`, { waitUntil: 'domcontentloaded', timeout: 300_000 });
-  const card = page.locator('pre', { hasText: 'def List.map' }).first();
+  // A project that mounts base shows it under its mount (D206).
+  const card = page.locator('pre', { hasText: /def (lib\.[\w-]+\.)?List\.map\b/ }).first();
   await card.waitFor({ timeout: 300_000 });
   checks.definition = Date.now() - opened;
   if (shots) {

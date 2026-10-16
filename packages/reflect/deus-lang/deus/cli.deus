@@ -1888,11 +1888,13 @@ def featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} 
 def featureFacts (dir : Text) (ns : Map Text Entry) : ({IO} Text) -> {IO, Throw Text} Result Text (List (Text, Text)) :=
   let tasks := Ref.new Option.none
   let documents := specDocuments ns
+  -- Built once: the explorer asks about every name a feature map links (D206).
+  let mounted := unmounted ns
   fun name =>
     match featureFact dir documents tasks name with
     | Option.some answer => answer
     | Option.none =>
-        match lookupMounted ns name with
+        match Option.orElse (Map.lookup name ns) (fun _ => Map.lookup name mounted) with
         | Option.none => Result.err (name ++ " is not in the codebase")
         | Option.some e =>
             let stub :=
@@ -2071,7 +2073,7 @@ def siteImage (u : Unit) : {IO, Throw Text} Text :=
     | Option.none => Throw.throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
   let files := List.map
     (fun f => home ++ "/" ++ f)
-    ["deus/builtins.deus", "deus/prelude.deus", "platform/web.deus", "platform/site.deus"]
+    ["deus/builtins.deus", "deus/prelude.deus", "deus/time.deus", "platform/web.deus", "platform/site.deus"]
   let result := batch Map.empty (fun _ => Option.none) (fun _ => Option.none) (checkTypes ()) (parseFiles files)
   match List.lookup "Site.serve" (Batch.entries result) with
   | Option.some (Entry.term h) =>

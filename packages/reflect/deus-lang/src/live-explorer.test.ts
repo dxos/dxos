@@ -4,6 +4,7 @@
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { describe, test } from 'vitest';
 
 import { appFiles, hubFiles } from '../platform/worker/gen/explorer-app.mjs';
@@ -177,6 +178,12 @@ describe('live explorer (D192)', () => {
       ]);
       // What the Worker read is kept as one snapshot, so a cold isolate starts from it.
       expect(readdirSync(join(bucket, 'toolchain', 'live'))).toContain('files.json.gz');
+      // It holds what this head's index read, so it never grows past one head's working set.
+      const snapshot = JSON.parse(
+        gunzipSync(readFileSync(join(bucket, 'toolchain', 'live', 'files.json.gz'))).toString(),
+      );
+      expect(snapshot.causal).toBe(head);
+      expect(snapshot.entries.map(([key]: [string]) => key)).toContain(`o${head}`);
       const change = await get(`/v1/toolchain/live/${head}/change/${head}.json`);
       expect(change.message).toBe(site(`change/${head}.json`).message);
     },

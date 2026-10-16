@@ -4015,6 +4015,7 @@ rt.named(Analytics$rows, "Analytics.rows");
 function Cli$featureFacts(dir, ns) {
   const tasks = rt.ap(rt.prims["Ref.new"], rt.con0("#Option", 0));
   const documents = Export$specDocuments(ns);
+  const mounted = Names$unmounted(ns);
   return rt.named((name) => {
   const t0 = Cli$featureFact(dir, documents, tasks, name);
   m1: {
@@ -4023,7 +4024,7 @@ function Cli$featureFacts(dir, ns) {
       return answer;
     }
     if (t0.tag === 0) {
-      const t2 = Names$lookupMounted(ns, name);
+      const t2 = lib$base$Option$orElse(lib$base$Map$lookup(name, ns), rt.named((v) => lib$base$Map$lookup(name, mounted), "Cli.featureFacts/\u03bb"));
       m3: {
         if (t2.tag === 0) {
           return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.ap(rt.prims["append"], name, " is not in the codebase")]);
@@ -6045,6 +6046,19 @@ function Analytics$fileName(t) {
 }
 rt.named(Analytics$fileName, "Analytics.fileName");
 
+function Names$unmounted(ns) {
+  const pairs = lib$base$List$filterMap(rt.named((pair) => {
+  if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
+    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Names$unmount(lib$base$fst(pair)), lib$base$snd(pair)])]);
+  } else {
+    return rt.con0("#Option", 0);
+  }
+}, "Names.unmounted/\u03bb"), lib$base$Map$toList(ns));
+  const counts = lib$base$List$foldl(rt.named((m, pair_1) => lib$base$Map$insert(lib$base$fst(pair_1), ((lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair_1), m), 0) + 1) | 0), m), "Names.unmounted/\u03bb"), lib$base$Set$empty(), pairs);
+  return lib$base$Map$fromList(lib$base$List$filter(rt.named((pair_2) => rt.equal(lib$base$Map$lookup(lib$base$fst(pair_2), counts), new rt.Con("#Option", 1, [1])), "Names.unmounted/\u03bb"), pairs));
+}
+rt.named(Names$unmounted, "Names.unmounted");
+
 function Cli$featureFact(dir, documents, tasks, name) {
   if (lib$base$Text$startsWith("task:", name)) {
     let all;
@@ -6116,25 +6130,6 @@ function Cli$featureFact(dir, documents, tasks, name) {
   }
 }
 rt.named(Cli$featureFact, "Cli.featureFact");
-
-function Names$lookupMounted(ns, name) {
-  const t0 = lib$base$Map$lookup(name, ns);
-  m1: {
-    if (t0.tag === 1) {
-      const e = t0.fields[0];
-      return new rt.Con("#Option", 1, [e]);
-    }
-    if (t0.tag === 0) {
-      if (lib$base$Text$startsWith("lib.", name)) {
-        return rt.con0("#Option", 0);
-      } else {
-        return lib$base$Map$lookup(name, Names$unmounted(ns));
-      }
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Names$lookupMounted, "Names.lookupMounted");
 
 function Resolve$isStub(core$) {
   for (;;) {
@@ -7424,19 +7419,6 @@ function Cli$vitestFact(cited) {
   }
 }
 rt.named(Cli$vitestFact, "Cli.vitestFact");
-
-function Names$unmounted(ns) {
-  const pairs = lib$base$List$filterMap(rt.named((pair) => {
-  if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
-    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Names$unmount(lib$base$fst(pair)), lib$base$snd(pair)])]);
-  } else {
-    return rt.con0("#Option", 0);
-  }
-}, "Names.unmounted/\u03bb"), lib$base$Map$toList(ns));
-  const counts = lib$base$List$foldl(rt.named((m, pair_1) => lib$base$Map$insert(lib$base$fst(pair_1), ((lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair_1), m), 0) + 1) | 0), m), "Names.unmounted/\u03bb"), lib$base$Set$empty(), pairs);
-  return lib$base$Map$fromList(lib$base$List$filter(rt.named((pair_2) => rt.equal(lib$base$Map$lookup(lib$base$fst(pair_2), counts), new rt.Con("#Option", 1, [1])), "Names.unmounted/\u03bb"), pairs));
-}
-rt.named(Names$unmounted, "Names.unmounted");
 
 function Resolve$stubOf(body) {
   m0: {

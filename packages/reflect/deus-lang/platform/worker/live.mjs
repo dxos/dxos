@@ -377,8 +377,9 @@ const render = async (env, ctx, project, causal, path) => {
   try {
     return await draw(env, files, project, causal, path);
   } finally {
-    // A cold isolate starts from the newest snapshot of what was read, so it fetches only what changed since.
-    if (files.texts.size > before) {
+    // A cold isolate starts from the newest snapshot of what the index read, so it fetches only what changed
+    // since; the index reads the head's whole working set, where a definition's page reads a sliver of it.
+    if (path[0] === 'index.json' && (files.texts.size > before || (files.loaded ?? 0) > files.touched.size)) {
       ctx.waitUntil(saveSnapshot(files));
     }
   }
@@ -456,13 +457,15 @@ const filesByProject = new Map();
 
 const filesAt = (bucket, project, causal) => {
   const known = filesByProject.get(project);
-  // Objects never change, so a new causal of the same project keeps everything read for the last one;
-  // metadata is rewritten in place (doc comments, a spec block's prose), so it is read again.
-  const texts = known?.texts ?? new Map();
-  if (known && known.causal !== causal) {
+  const same = known?.causal === causal;
+  // Objects never change, so a new causal of the same project keeps what the last one's pages read, and only
+  // that, so an isolate's memory follows one head rather than every head it has drawn; metadata is rewritten
+  // in place (doc comments, a spec block's prose), so it is read again.
+  const texts = same ? known.texts : new Map(known ? [...known.texts].filter(([key]) => known.touched.has(key)) : []);
+  if (known && !same) {
     dropMetadata(texts);
   }
-  const files = { bucket, project, causal, texts, missing: new Set() };
+  const files = { bucket, project, causal, texts, touched: same ? known.touched : new Set(), missing: new Set() };
   filesByProject.set(project, files);
   return files;
 };
@@ -608,6 +611,7 @@ const provider = (files) => ({
       return undefined;
     }
     const text = files.texts.get(key);
+    files.touched.add(key);
     if (text === undefined) {
       files.missing.add(key);
       return undefined;
@@ -881,6 +885,7 @@ const warm = async (files) => {
       files.texts.set(key, value);
     }
   }
+  files.loaded = entries.length;
 };
 
 /**
@@ -888,7 +893,8 @@ const warm = async (files) => {
  * short; metadata is kept with the causal it was read at and used only for that one.
  */
 const saveSnapshot = async (files) => {
-  const entries = [...files.texts].filter(([, value]) => value !== null);
+  // What this head's pages read, not everything earlier heads did, or the snapshot grows with every push.
+  const entries = [...files.texts].filter(([key, value]) => value !== null && files.touched.has(key));
   const body = await new Response(
     new Blob([JSON.stringify({ causal: files.causal, entries })]).stream().pipeThrough(new CompressionStream('gzip')),
   ).arrayBuffer();
