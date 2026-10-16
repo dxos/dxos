@@ -1,0 +1,101 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/reactivity/AtomRegistry';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
+import { Database, Filter, Ref } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
+
+import { SvgBuilder, makeBuilder } from '#model';
+import { Drawing, IllustratorCapabilities, IllustratorError } from '#types';
+
+import { UnknownDrawingVariantError } from '../util/load-drawing.ts';
+import convertHandler from './convert.ts';
+
+const SOURCE = 'flowchart LR\n  A[Client] --> B[Server]';
+
+// A stand-in for an editable renderer (plugin-excalidraw depends on this package, so it cannot be used here).
+const FAKE_SCHEMA = 'example.com/editable';
+
+const svgVariant: IllustratorCapabilities.DrawingVariant = { id: SVG_SCHEMA, label: 'svg', builder: SvgBuilder };
+const editableVariant: IllustratorCapabilities.DrawingVariant = {
+  id: FAKE_SCHEMA,
+  label: 'Editable',
+  builder: makeBuilder({ schema: FAKE_SCHEMA, handler: SvgHandler }),
+};
+
+const capabilities = () => {
+  const manager = CapabilityManager.make({ registry: Registry.make() });
+  for (const variant of [svgVariant, editableVariant]) {
+    manager.contribute({
+      interface: IllustratorCapabilities.VariantProvider,
+      implementation: variant,
+      module: variant.id,
+    });
+  }
+  return manager;
+};
+
+describe('convert', () => {
+  let builder: EchoTestBuilder;
+  let db: EchoDatabase;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+    ({ db } = await builder.createDatabase({ types: [Drawing.Drawing, Drawing.Canvas] }));
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const addSvgDrawing = async (): Promise<Drawing.Drawing> => {
+    const canvas = db.add(Drawing.makeCanvas({ schema: SVG_SCHEMA }));
+    SvgBuilder.apply(canvas, await MermaidEngine.compile(SOURCE));
+    return db.add(Drawing.make({ name: 'Imported', canvas }));
+  };
+
+  const run = (drawing: Drawing.Drawing, variant: string) =>
+    convertHandler
+      .handler({ drawing: Ref.make(drawing), variant })
+      .pipe(Effect.provideService(Capability.Service, capabilities()), Effect.provide(Database.layer(db)));
+
+  test('replays the scene onto a fresh canvas of the target variant and drops the old canvas', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const original = await drawing.canvas.load();
+    const before = SvgBuilder.read(original).scene.objects;
+
+    const result = await EffectEx.runPromise(run(drawing, FAKE_SCHEMA));
+
+    const canvas = await drawing.canvas.load();
+    expect(canvas.id).not.toBe(original.id);
+    expect(canvas.schema).toBe(FAKE_SCHEMA);
+    expect(result.scene.objects).toEqual(before);
+    expect(result.upserted).toEqual(before.map(({ id }) => id));
+    expect(editableVariant.builder.read(canvas).scene.objects).toEqual(before);
+    const canvases = await db.query(Filter.type(Drawing.Canvas)).run();
+    expect(canvases.map(({ id }) => id)).toEqual([canvas.id]);
+  });
+
+  test('fails on the variant the drawing already uses', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const error = await EffectEx.runPromise(Effect.flip(run(drawing, SVG_SCHEMA)));
+    expect(IllustratorError.SameVariant.is(error)).toBe(true);
+  });
+
+  test('fails on an unknown variant and leaves the drawing untouched', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const canvas = drawing.canvas.target;
+    const error = await EffectEx.runPromise(Effect.flip(run(drawing, 'unknown.example/1')));
+    expect(error).toBeInstanceOf(UnknownDrawingVariantError);
+    expect(drawing.canvas.target).toBe(canvas);
+  });
+});
