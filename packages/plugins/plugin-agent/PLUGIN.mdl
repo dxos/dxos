@@ -9,7 +9,7 @@ people in channels (Discord, freeq, local feeds) and Composer chats, interview t
 in the agent's brain, about the `Person` or `Organization` they name, and `Goal`s as ECHO objects.
 
 This document records what is built. Design intent lives in [`docs/DESIGN.md`](./docs/DESIGN.md)
-(architecture, EDGE gateway, identity) and [`docs/MEMORY.md`](./docs/MEMORY.md) (the memory graph and
+(architecture, EDGE gateway, identity) and [`docs/FACTS.md`](./docs/FACTS.md) (facts, profiles and
 the interview skill); items there that are not built are listed under "Not built" below rather than
 specified.
 
@@ -243,8 +243,8 @@ op recordFacts
 ```
 
 ```mdl
-op retrieveMemories
-  key: org.dxos.operation.agent.retrieveMemories
+op retrieveFacts
+  key: org.dxos.operation.agent.retrieveFacts
   desc: Returns the current facts about a subject (newest first) and the live goals it owns.
   input:
     subject?: Ref<Obj>              # all facts and goals if omitted
@@ -328,7 +328,7 @@ skill InterviewSkill
   contributes:
     - op:resolveEntity
     - op:recordFacts
-    - op:retrieveMemories
+    - op:retrieveFacts
     - op:suggestGoal
     - op:setGoalStatus
     - op:updateProfile
@@ -347,7 +347,7 @@ skill SupportSkill
   desc: Community support in a public channel; bound by the built-in Support mode.
   contributes:
     - op:resolveEntity
-    - op:retrieveMemories
+    - op:retrieveFacts
     - op:recordFacts
     - op:sendMessage
   instructions: >
@@ -523,7 +523,7 @@ feat F-4: Knowledge graph
   req F-4.3:
     when: a fact is recorded with supersedes
     then: the facts it names are no longer recalled
-  req F-4.4: op:retrieveMemories returns current facts only, filtered by subject and query, and the subject's live goals.
+  req F-4.4: op:retrieveFacts returns current facts only, filtered by subject and query, and the subject's live goals.
   req F-4.5: op:suggestGoal creates a proposed goal and rejects owners that are not people or organizations.
   req F-4.6: op:setGoalStatus confirms a goal by default.
   req F-4.7: op:updateProfile keeps one profile document per subject and rewrites it in place.
@@ -618,7 +618,7 @@ scenario T-8: Scripted interview fills the profile panel
 
 ## Not built
 
-Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does not implement:
+Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does not implement:
 
 - The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
@@ -747,7 +747,7 @@ test QA-2: Interview a person and confirm their goals
       note: NO `invoke` — model-driven.
     - name: See the proposed goals and facts
       do: Open Quinn's Properties panel.
-      invoke: [op:retrieveMemories] { subject: Ref($given.person) }
+      invoke: [op:retrieveFacts] { subject: Ref($given.person) }
       capture: proposed
       expect: |
         the panel has a "Goals" region listing the two goals, each "Proposed", and a "Facts" region
@@ -763,7 +763,7 @@ test QA-2: Interview a person and confirm their goals
       note: NO `invoke` — model-driven.
     - name: See the goals confirmed
       do: Look at Quinn's Properties panel again, without reopening it.
-      invoke: [op:retrieveMemories] { subject: Ref($given.person) }
+      invoke: [op:retrieveFacts] { subject: Ref($given.person) }
       capture: final
       expect: every goal in the Goals region now reads "Confirmed", and the same goals are listed
       assert: |

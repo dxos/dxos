@@ -33,14 +33,14 @@ These decide the shape of everything else.
 
 ## Model
 
-| Object            | What it is                                                                                                                       | Key                   | Where |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ----- |
-| **App**           | A registered Discord application: the DXOS app ("Kai"), or a team's own. Token held by KMS, never in a space.                    | application id        | EDGE  |
-| **Installation**  | An app installed in a guild, and the Discord user who installed it (linked to their DXOS identity).                              | (app, guild)          | EDGE  |
-| **Binding**       | A Discord channel mapped to an agent in a space, with who authorized each side.                                                  | (app, guild, channel) | EDGE  |
-| **Agent**         | The ECHO agent: instructions, skills, modes, memories. One agent may be bound to many channels and shares its state across them. | space, object id      | space |
-| **Chat**          | One conversation: a Discord thread or DM, under the agent (`ensureChannelChat`).                                                 | (channel, thread)     | space |
-| **Agent process** | The turn loop for one chat.                                                                                                      | chat                  | EDGE  |
+| Object            | What it is                                                                                                                    | Key                   | Where |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------- | ----- |
+| **App**           | A registered Discord application: the DXOS app ("Kai"), or a team's own. Token held by KMS, never in a space.                 | application id        | EDGE  |
+| **Installation**  | An app installed in a guild, and the Discord user who installed it (linked to their DXOS identity).                           | (app, guild)          | EDGE  |
+| **Binding**       | A Discord channel mapped to an agent in a space, with who authorized each side.                                               | (app, guild, channel) | EDGE  |
+| **Agent**         | The ECHO agent: instructions, skills, modes, facts. One agent may be bound to many channels and shares its state across them. | space, object id      | space |
+| **Chat**          | One conversation: a Discord thread or DM, under the agent (`ensureChannelChat`).                                              | (channel, thread)     | space |
+| **Agent process** | The turn loop for one chat.                                                                                                   | chat                  | EDGE  |
 
 The **Discord service** is today's per-app bot host generalized: one gateway connection per app across every guild it
 is in, a binding table instead of a single config, and tokens from KMS.
