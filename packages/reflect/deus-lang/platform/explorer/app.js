@@ -12,7 +12,7 @@ const KINDS = {
   type: { icon: 'T', label: 'type', plural: 'Types' },
   ability: { icon: 'A', label: 'ability', plural: 'Abilities' },
   term: { icon: 'ƒ', label: 'term', plural: 'Terms' },
-  test: { icon: '✓', label: 'test', plural: 'Tests' },
+  test: { icon: '⊨', label: 'test', plural: 'Tests' },
   theorem: { icon: '∀', label: 'theorem', plural: 'Theorems' },
   spec: { icon: 'S', label: 'spec', plural: 'Specs' },
 };
@@ -29,6 +29,38 @@ const escape = (text) =>
 const element = (id) => document.getElementById(id);
 
 const short = (hash) => (hash.startsWith('#') ? hash : `#${hash.slice(0, 8)}`);
+
+/** The toolchain's files in git, which spec documents link to by relative path. */
+const REPO_URL = 'https://github.com/dxos/dxos/blob/dm/agent-13-oct-x8ehi8-0y35ai/packages/reflect/deus-lang/';
+
+/** The project's decision log, where D96 and the other decision numbers are recorded. */
+const DECISIONS_URL = `${REPO_URL}docs/DECISIONS.md`;
+
+/** A relative link from a spec document to a file in git (`../../docs/spec/CORE.md`), on GitHub; spec files' own links are relative to `docs/spec/`. */
+const repoUrl = (target) => {
+  const path = target.replace(/^(?:\.\.?\/)+/, '');
+  return REPO_URL + (/^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`);
+};
+
+/** HTML with each decision number (D96) outside a link made a link to the decision log. */
+const decisionLinks = (html) => {
+  let inLink = 0;
+  return html
+    .split(/(<[^>]*>)/)
+    .map((part) => {
+      if (part.startsWith('<')) {
+        inLink += /^<a[\s>]/.test(part) ? 1 : part === '</a>' ? -1 : 0;
+        return part;
+      }
+      return inLink > 0
+        ? part
+        : part.replace(
+            /\bD(\d{1,4})\b/g,
+            `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
+          );
+    })
+    .join('');
+};
 
 const lastSegment = (name) => name.slice(name.lastIndexOf('.') + 1);
 
@@ -645,15 +677,18 @@ const typeOf = (sig) => (sig.includes(' : ') ? sig.slice(sig.indexOf(' : ') + 3)
 
 /** Inline doc markup: `code` spans, linked when they name a definition. */
 const inlineDoc = (text, namespace) =>
-  escape(text)
-    .replace(/`([^`]+)`/g, (_, code) => {
-      const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
-      return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${code}</code>`;
-    })
-    // `Syntax.Spec R-3` in a comment is the requirement it implements, so it links there.
-    .replace(/\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))(?:\s((?:R|A|L|F|QA)-\d+))?\b/g, (whole, doc, id) =>
-      isDocument(doc) ? docLink(doc, whole, id ?? '') : whole,
-    );
+  decisionLinks(
+    escape(text)
+      .replace(/`([^`]+)`/g, (_, code) => {
+        const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
+        return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${code}</code>`;
+      })
+      // `Syntax.Spec R-3` in a comment is the requirement it implements, so it links there.
+      .replace(
+        /\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))(?:\s((?:R|A|L|F|QA)-\d+))?\b/g,
+        (whole, doc, id) => (isDocument(doc) ? docLink(doc, whole, id ?? '') : whole),
+      ),
+  );
 
 /** A doc comment as HTML: paragraphs, bullet lists and indented code blocks. */
 const docHtml = (doc, namespace) => {
@@ -1094,7 +1129,17 @@ const priorityChip = (priority) =>
 
 /** A change's message as a row shows it: one line, and a long list of names cut to its start (the full text is the title). */
 const rowMessage = (message) => {
-  const line = String(message).split('\n')[0];
+  const line = String(message)
+    .split('\n')[0]
+    // A path from the machine that made the change means nothing here; its file name does (older changes kept them).
+    .replace(/(^|\s)(?:\/[\w.@~-]+)+\/([\w.@-]+)/g, '$1$2')
+    // A library's IRI is a name, not a page; its address is where the hub shows it.
+    .replace(/^(lib \w+ \S+ )(https:\/\/\S+)/, (_, head, iri) => head + addressOf(iri))
+    // `deus task set` names only the task's id; its title says which task it was.
+    .replace(/^task: set ([0-9a-f]{8}) (\w+)$/, (whole, id, field) => {
+      const task = index.tasks.find((candidate) => candidate.id === id);
+      return task ? `task ${id} ${field}: ${task.title}` : whole;
+    });
   return line.length > 140 ? `${line.slice(0, 137)}…` : line;
 };
 
@@ -1149,7 +1194,7 @@ const taskCard = (key, task) => {
   });
   return card(key, {
     iconHtml: '<span class="icon k-task" title="task">◎</span>',
-    title: escape(task.title),
+    title: withDecisions(task.title),
     prose: true,
     tag: stateChip(task.state),
     meta: `<span class="muted">${escape(task.id)}</span>`,
@@ -1552,6 +1597,10 @@ const GLOSSARY = [
   ],
   ['term', 'A value or a function. ƒ in the lists.'],
   [
+    'the glyphs in lists',
+    'T type · A ability · ƒ term · ⊨ test · ∀ theorem · S spec document · ▤ namespace · ◇ feature · ◎ task. A green dot after a test or theorem means it passes and a red dot that it fails; ✓ and ✗ head the check counts.',
+  ],
+  [
     'theorem',
     'A statement about code that is checked by test, by a decision procedure or by a proof, rather than only for one example.',
   ],
@@ -1595,12 +1644,8 @@ const GLOSSARY = [
   ],
 ];
 
-/** Escaped text with each decision number (D96) marked as what it is, for a reader who has not met the log. */
-const withDecisions = (text) =>
-  escape(text).replace(
-    /\bD(\d{1,4})\b/g,
-    '<abbr title="Decision $1 in the project\'s decision log (docs/DECISIONS.md)">D$1</abbr>',
-  );
+/** Escaped text with each decision number (D96) linked to the decision log, for a reader who has not met it. */
+const withDecisions = (text) => decisionLinks(escape(text));
 
 const glossaryCard = (key) =>
   card(key, {
@@ -1616,35 +1661,43 @@ const glossaryCard = (key) =>
 
 /** Inline markdown: `code` (linked when it names a definition), **bold**, *emphasis*, links, and requirement references. */
 const inlineMd = (text, namespace) =>
-  String(text)
-    .split(/(`[^`]+`)/)
-    .map((piece) => {
-      if (/^`[^`]+`$/.test(piece)) {
-        const code = piece.slice(1, -1);
-        if (isDocument(code)) {
-          return `<code>${docLink(code)}</code>`;
-        }
-        const entry = /^[\w.?-]+$/.test(code) ? resolve(code, namespace) : undefined;
-        if (!entry && (nodeAt(code)?.children.size ?? 0) > 0) {
-          return `<code><a class="ref" data-open="n:${escape(code)}">${escape(code)}</a></code>`;
-        }
-        return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${escape(code)}</code>`;
-      }
-      return escape(piece)
-        .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
-          const doc = /^(?:.*\/)?([A-Z][\w.]*)\.mdl$/.exec(target)?.[1];
-          if (doc && isDocument(doc)) {
-            return docLink(doc, label);
+  decisionLinks(
+    String(text)
+      .split(/(`[^`]+`)/)
+      .map((piece) => {
+        if (/^`[^`]+`$/.test(piece)) {
+          const code = piece.slice(1, -1);
+          if (isDocument(code)) {
+            return `<code>${docLink(code)}</code>`;
           }
-          return /^https?:/.test(target) ? `<a href="${target}" target="_blank" rel="noopener">${label}</a>` : label;
-        })
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
-        .replace(/\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))\s((?:R|A|L|F|QA)-\d+)/g, (whole, doc, id) =>
-          isDocument(doc) ? docLink(doc, `${doc} ${id}`, id) : whole,
-        );
-    })
-    .join('');
+          const entry = /^[\w.?-]+$/.test(code) ? resolve(code, namespace) : undefined;
+          if (!entry && (nodeAt(code)?.children.size ?? 0) > 0) {
+            return `<code><a class="ref" data-open="n:${escape(code)}">${escape(code)}</a></code>`;
+          }
+          return entry ? `<code>${defLink(entry.name, entry.hash, code)}</code>` : `<code>${escape(code)}</code>`;
+        }
+        return escape(piece)
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
+            const doc = /^(?:.*\/)?([A-Z][\w.]*)\.mdl$/.exec(target)?.[1];
+            if (doc && isDocument(doc)) {
+              return docLink(doc, label);
+            }
+            const href = /^https?:/.test(target)
+              ? target
+              : /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)
+                ? repoUrl(target)
+                : undefined;
+            // `target` comes from escaped text, so it is already safe in an attribute.
+            return href ? `<a href="${href}" target="_blank" rel="noopener">${label}</a>` : label;
+          })
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+          .replace(/\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))\s((?:R|A|L|F|QA)-\d+)/g, (whole, doc, id) =>
+            isDocument(doc) ? docLink(doc, `${doc} ${id}`, id) : whole,
+          );
+      })
+      .join(''),
+  );
 
 const tableHtml = (rows, namespace) => {
   const cells = (row) =>
@@ -2012,8 +2065,15 @@ const homeHtml = () => {
     (failing.length > 0
       ? `<p class="failing-checks"><span class="icon k-fail">✗</span> Failing: ${failing
           .slice(0, 6)
-          .map((entry) => defLink(entry.name, entry.hash))
-          .join(', ')}${failing.length > 6 ? ` and <a data-open="k:checks">${failing.length - 6} more</a>` : ''}</p>`
+          // Its summary says when a check fails on purpose, as `Sort.wrongClaim` does.
+          .map(
+            (entry) =>
+              defLink(entry.name, entry.hash) +
+              (entry.summary
+                ? ` <span class="muted">(${inlineDoc(entry.summary, namespaceOf(entry.name))})</span>`
+                : ''),
+          )
+          .join('; ')}${failing.length > 6 ? ` and <a data-open="k:checks">${failing.length - 6} more</a>` : ''}</p>`
       : '') +
     legendHtml() +
     '<div class="home-intro" data-home-intro></div>' +
@@ -2034,7 +2094,7 @@ const homeHtml = () => {
           `<ul class="rows library-list">${libs
             .map(
               (node) =>
-                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${node.count} definitions, mounted as <code>${escape(node.path)}</code></span><a class="more-link" hidden data-library="${escape(libraryHref(node).slice(1, -1))}" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
+                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${node.count} definitions in the release it pins, mounted as <code>${escape(node.path)}</code></span><a class="more-link" hidden data-library="${escape(libraryHref(node).slice(1, -1))}" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
             )
             .join('')}</ul>`,
         )

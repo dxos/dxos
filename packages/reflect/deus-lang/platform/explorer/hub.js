@@ -62,7 +62,7 @@ const renderTotals = (projects) => {
     ['task', '◎', 'open tasks', sum((project) => project.open)],
   ];
   element('hub-totals').innerHTML =
-    `<header class="home-header"><h1>DEUS codebases</h1><p class="muted">${count(sum((project) => project.definitions))} definitions in ${projects.length} project${projects.length === 1 ? '' : 's'} on this host. A library a project mounts counts in both.</p></header>` +
+    `<header class="home-header"><h1>DEUS codebases</h1><p class="muted">${count(sum((project) => project.own ?? project.definitions))} definitions in ${projects.length} project${projects.length === 1 ? '' : 's'} on this host, each counted in the project that defines it.</p></header>` +
     tiles(counts, (kind) => (kind === 'namespace' ? '#hub-projects' : '#'));
 };
 
@@ -75,6 +75,13 @@ const countLine = (project, home) =>
         `<a href="${escape(`${home}#k:${kind === 'task' ? 'tasks' : kind}`)}" title="${escape(label)}">${icon(kind, glyph)}<b>${count(value)}</b> ${escape(label)}</a>`,
     )
     .join('')}</p>`;
+
+/** Its own definitions, and those of the libraries it mounts, which count in their own projects. */
+const sizeOf = (project) => {
+  const own = project.own ?? project.definitions;
+  const mounted = (project.definitions ?? 0) - own;
+  return `${count(own)} definitions${mounted > 0 ? ` + ${count(mounted)} from libraries` : ''}`;
+};
 
 /** Until its feature map's introduction arrives, a project is described by what it is mostly made of. */
 const fallbackDescription = (project) =>
@@ -91,7 +98,7 @@ const renderProjects = (projects) => {
         return (
           `<a class="hub-project" href="${escape(home)}"><header><span class="hub-project-name">${escape(project.address)}</span>` +
           (project.branch ? `<span class="chip">${escape(project.branch)}</span>` : '') +
-          `<span class="muted hub-size">${project.drawing ? 'being drawn' : `${count(project.definitions)} definitions`}</span></header>` +
+          `<span class="muted hub-size">${project.drawing ? 'being drawn' : sizeOf(project)}</span></header>` +
           `<p class="hub-description" data-description="${escape(project.address)}">${escape(fallbackDescription(project))}</p>` +
           (project.historyCheck
             ? `<p class="hub-warning">⚠ Its head #${escape(project.historyCheck.causal.slice(0, 10))} does not descend from the head before it, #${escape(project.historyCheck.previous.slice(0, 10))}: a push dropped history. <code>deus heads</code> lists both and <code>deus restore</code> brings the names back.</p>`

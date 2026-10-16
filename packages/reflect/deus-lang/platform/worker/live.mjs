@@ -98,14 +98,16 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
 //
 
 /** Raised when a summary gains or changes a field, so summaries drawn before are drawn again once. */
-const SUMMARY_VERSION = 5;
+const SUMMARY_VERSION = 6;
 
 const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
 
 /** What the hub shows of a head: its counts by kind and its tasks, from its index (a few hundred bytes, not megabytes). */
 const summaryOfIndex = (index) => {
+  // A mounted library's definitions count in its own project, so the hub counts each definition once (D206).
+  const own = (index.names ?? []).filter((entry) => !entry.name.startsWith('lib.'));
   const kinds = {};
-  for (const entry of index.names ?? []) {
+  for (const entry of own) {
     kinds[entry.kind] = (kinds[entry.kind] ?? 0) + 1;
   }
   const meta = index.meta ?? {};
@@ -126,6 +128,7 @@ const summaryOfIndex = (index) => {
   return {
     branch: meta.branch,
     definitions: meta.definitions,
+    own: own.length,
     tasks: meta.tasks,
     open: meta.open,
     features: meta.features ?? 0,

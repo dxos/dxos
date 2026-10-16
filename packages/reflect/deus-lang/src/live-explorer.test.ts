@@ -355,13 +355,14 @@ describe('live explorer (D192)', () => {
         causal: shown.causal,
         branch: 'main',
         definitions: drawnIndex.meta.definitions,
+        own: drawnIndex.names.filter((entry: { name: string }) => !entry.name.startsWith('lib.')).length,
         tasks: drawnIndex.meta.tasks,
         open: drawnIndex.meta.open,
         features: drawnIndex.meta.features ?? 0,
         namespaces: expect.any(Array),
         // The pushed verdicts: `twoIsEven` ran before the push (D209).
         checks: { pass: 1, fail: 0 },
-        summaryVersion: 5,
+        summaryVersion: 6,
         kinds: expect.objectContaining({
           term: drawnIndex.names.filter((entry: { kind: string }) => entry.kind === 'term').length,
         }),
