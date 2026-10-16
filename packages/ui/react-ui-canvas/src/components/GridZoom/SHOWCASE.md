@@ -18,7 +18,7 @@ packages/apps/composer-app/autocue/showcase/pipeline.sh
 ```
 
 It records the showcase flow (`flow.mjs`, one 5s clip per plugin) and the committed flows (`committed.sh`), cuts the
-clips into `temp/showcase/clips`, lays out `temp/grid-zoom`, and records the composite to `temp/composite/composite.mp4`.
+clips into `temp/showcase/clips`, lays out `temp/grid-zoom`, and renders the composite to `temp/composite/composite.mp4` with `render.mjs`.
 
 The three tour demos are 10s cuts from the busiest step of these flows (the markdown cut starts 2s in, so it opens on
 text):
@@ -36,9 +36,15 @@ Every clip and every take of the composite follows these:
 3. **The sequence only.** Run `trim-static.mjs` (if at all) without `--ident`, `--intro` or `--outro`: no opening
    title and no end card.
 4. **No captions or titles.** Run the driver with `--captions off`, so a flow's step captions never appear.
+5. **The navtree shows.** Record clips at 1920x1080 and keep the whole app frame, sidebar included; never crop to the
+   plank.
+6. **Near-black between tiles.** The grid's ground and gutters are near black, in either theme.
+7. **Render the composite frame by frame.** `render.mjs` seeks the story's stepped mode and screenshots each frame at
+   exactly 60 fps. A live screencast of the story delivers about 25 fps at 1080p, so camera moves judder.
 
-The composite is recorded from the story in isolation with the controls hidden and the light theme:
-`/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story&args=controls:!false&globals=theme:light`.
+The composite is rendered from the story in isolation, stepped, with the controls hidden and the light theme:
+`/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story&args=controls:!false;stepped:!true&globals=theme:light`.
+Clips inside the tiles are live recordings, so their own motion runs at the screencast's rate.
 
 Clips are recorded headless with `--gpu on`, so 3D plugins render on the GPU, and without the action feed
 (`--overlay off`) or captions.
