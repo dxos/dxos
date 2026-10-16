@@ -100,7 +100,7 @@ const makeSheets = (): SheetsResult => {
   const salesReport = Sheet.make({
     name: 'Sales report',
     rows: 20,
-    columns: 10,
+    columns: 8,
     cells: {
       ...table('A', [
         ['Month', 'Linden', 'Field Notes', 'Late Shift'],
@@ -117,20 +117,14 @@ const makeSheets = (): SheetsResult => {
         ['Café', 33_000],
         ['Online', 25_000],
       ]),
-      ...table('I', [
-        ['Minute', 'Bean temp °C'],
-        ...[200, 110, 130, 148, 160, 172, 182, 191, 198, 204, 209, 213, 216].map((temp, minute) => [minute, temp]),
-      ]),
     },
     ranges: [
       ...headerRanges({ header: 'A1:D1', numeric: 'B1:D1' }),
       ...headerRanges({ header: 'F1:G1', numeric: 'G1' }),
-      ...headerRanges({ header: 'I1:J1', numeric: 'J1' }),
     ],
     charts: [
       { id: 'bags-sold', name: 'Bags sold by blend', range: 'A1:D7', type: 'bar', header: true, grid: true },
       { id: 'revenue-mix', name: 'Revenue by channel', range: 'F1:G4', type: 'pie', header: true },
-      { id: 'roast-curve', name: 'Roast curve — Linden', range: 'I1:J14', type: 'xy', header: true, grid: true },
     ],
   });
 
@@ -154,7 +148,7 @@ const table = (column: string, rows: (string | number)[][]): Record<string, Shee
     ),
   );
 
-/** Green-coffee inventory and the wholesale price list, both with live formulas, and a charted sales report. */
+/** Green-coffee inventory and the wholesale price list, both with live formulas, and a sales report charting bags sold and revenue. */
 export type SheetsResult = { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet; salesReport: Sheet.Sheet };
 
 export const Sheets: SampleSpace.Phase<SheetsResult> = SampleSpace.phase('sheets', {
