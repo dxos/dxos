@@ -85,10 +85,23 @@ function Explorer$liveChange(dir, causal) {
 rt.named(Explorer$liveChange, "Explorer.liveChange");
 
 function Explorer$liveDoc(s, d) {
-  if (lib$base$List$contains(d, Export$specDocuments(Explorer$Site$ns(s)))) {
-    return lib$base$Json$render(Explorer$docJson(s, d));
+  const documents = Export$specDocuments(Explorer$Site$ns(s));
+  const t0 = rt.ap(rt.prims["append"], lib$base$List$filter(rt.named((doc) => rt.equal(doc, d), "Explorer.liveDoc/\u03bb"), documents), lib$base$List$filter(rt.named((doc_1) => {
+  if (!rt.equal(doc_1, d)) {
+    return rt.equal(Names$unmount(doc_1), d);
   } else {
-    return "";
+    return false;
+  }
+}, "Explorer.liveDoc/\u03bb"), documents));
+  m1: {
+    if (t0.tag === 1) {
+      const found = t0.fields[0];
+      return lib$base$Json$render(Explorer$docJson(s, found));
+    }
+    if (t0.tag === 0) {
+      return "";
+    }
+    rt.nomatch(t0);
   }
 }
 rt.named(Explorer$liveDoc, "Explorer.liveDoc");
@@ -1043,11 +1056,6 @@ function Explorer$changePage(dir, causal) {
 }
 rt.named(Explorer$changePage, "Explorer.changePage");
 
-function lib$base$List$contains(x, xs) {
-  return lib$base$List$any(rt.named((y) => rt.equal(y, x), "lib.base.List.contains/\u03bb"), xs);
-}
-rt.named(lib$base$List$contains, "lib.base.List.contains");
-
 function Export$specDocuments(ns) {
   return lib$base$List$dedup(lib$base$List$sort(lib$base$List$filterMap(rt.named((pair) => {
   m0: {
@@ -1086,6 +1094,16 @@ function Explorer$Site$ns(v) {
   }
 }
 rt.named(Explorer$Site$ns, "Explorer.Site.ns");
+
+function Names$unmount(fqn) {
+  const rest = lib$base$Text$drop(4, fqn);
+  if (lib$base$Text$startsWith("lib.", fqn)) {
+    return lib$base$Text$drop(((rt.ap(rt.prims["Text.indexOf"], rest, ".", 0) + 1) | 0), rest);
+  } else {
+    return fqn;
+  }
+}
+rt.named(Names$unmount, "Names.unmount");
 
 function Explorer$docJson(s, d) {
   const text = Export$document(Explorer$Site$dir(s), Explorer$Site$ns(s), d);
@@ -2994,35 +3012,25 @@ function Explorer$atJson(dir, causal) {
 }
 rt.named(Explorer$atJson, "Explorer.atJson");
 
-function lib$base$List$any(p$, v$) {
-  for (;;) {
-    const p = p$, v = v$;
-    m0: {
-      if (v.tag === 0) {
-        return false;
-      }
-      if (v.tag === 1) {
-        const x = v.fields[0];
-        const rest = v.fields[1];
-        if (rt.ap(p, x)) {
-          return true;
-        } else {
-          p$ = p;
-          v$ = rest;
-          continue;
-        }
-      }
-      rt.nomatch(v);
-    }
-  }
-}
-rt.named(lib$base$List$any, "lib.base.List.any");
-
 function Export$documentOf(name) {
   const parts = rt.ap(rt.prims["Text.split"], name, ".");
   return rt.ap(rt.prims["Text.join"], ".", lib$base$List$take(((lib$base$List$length(parts) - 1) | 0), parts));
 }
 rt.named(Export$documentOf, "Export.documentOf");
+
+function lib$base$Text$drop(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+}
+rt.named(lib$base$Text$drop, "lib.base.Text.drop");
+
+function lib$base$Text$startsWith(prefix, t) {
+  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
+    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  } else {
+    return false;
+  }
+}
+rt.named(lib$base$Text$startsWith, "lib.base.Text.startsWith");
 
 function Export$document(dir, ns, d) {
   const blocks = lib$base$List$filterMap(rt.named((pair) => {
@@ -3676,20 +3684,6 @@ function Names$lastSegment(name) {
 }
 rt.named(Names$lastSegment, "Names.lastSegment");
 
-function lib$base$Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
-}
-rt.named(lib$base$Text$drop, "lib.base.Text.drop");
-
-function lib$base$Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
-  } else {
-    return false;
-  }
-}
-rt.named(lib$base$Text$startsWith, "lib.base.Text.startsWith");
-
 function Names$atLibraryRoot(fqn, name) {
   const rest = lib$base$Text$drop(4, fqn);
   const dot = rt.ap(rt.prims["Text.indexOf"], rest, ".", 0);
@@ -4029,7 +4023,7 @@ function Cli$featureFacts(dir, ns) {
       return answer;
     }
     if (t0.tag === 0) {
-      const t2 = lib$base$Map$lookup(name, ns);
+      const t2 = Names$lookupMounted(ns, name);
       m3: {
         if (t2.tag === 0) {
           return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.ap(rt.prims["append"], name, " is not in the codebase")]);
@@ -5180,6 +5174,30 @@ function Cli$madeAt(dir, causal) {
 }
 rt.named(Cli$madeAt, "Cli.madeAt");
 
+function lib$base$List$any(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return false;
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return true;
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(lib$base$List$any, "lib.base.List.any");
+
 function Mdl$render(b) {
   let head;
   const t0 = lib$base$Block$blockType(b);
@@ -6076,7 +6094,13 @@ function Cli$featureFact(dir, documents, tasks, name) {
   } else {
     if (lib$base$Text$startsWith("spec:", name)) {
       let r7;
-      if (lib$base$List$contains(lib$base$Text$drop(5, name), documents)) {
+      if (lib$base$List$any(rt.named((doc) => {
+      if (rt.equal(doc, lib$base$Text$drop(5, name))) {
+        return true;
+      } else {
+        return rt.equal(Names$unmount(doc), lib$base$Text$drop(5, name));
+      }
+    }, "Cli.featureFact/\u03bb"), documents)) {
         r7 = new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [rt.cons(new rt.Con("#Pair", 0, ["kind", "spec"]), rt.NIL)]);
       } else {
         r7 = new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.ap(rt.prims["append"], name, " is not in the codebase")]);
@@ -6092,6 +6116,25 @@ function Cli$featureFact(dir, documents, tasks, name) {
   }
 }
 rt.named(Cli$featureFact, "Cli.featureFact");
+
+function Names$lookupMounted(ns, name) {
+  const t0 = lib$base$Map$lookup(name, ns);
+  m1: {
+    if (t0.tag === 1) {
+      const e = t0.fields[0];
+      return new rt.Con("#Option", 1, [e]);
+    }
+    if (t0.tag === 0) {
+      if (lib$base$Text$startsWith("lib.", name)) {
+        return rt.con0("#Option", 0);
+      } else {
+        return lib$base$Map$lookup(name, Names$unmounted(ns));
+      }
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Names$lookupMounted, "Names.lookupMounted");
 
 function Resolve$isStub(core$) {
   for (;;) {
@@ -6110,6 +6153,11 @@ function Resolve$isStub(core$) {
   }
 }
 rt.named(Resolve$isStub, "Resolve.isStub");
+
+function lib$base$List$contains(x, xs) {
+  return lib$base$List$any(rt.named((y) => rt.equal(y, x), "lib.base.List.contains/\u03bb"), xs);
+}
+rt.named(lib$base$List$contains, "lib.base.List.contains");
 
 function Features$orphans(features) {
   const ids = lib$base$List$map(rt.named((f) => Feature$featureId(f), "Features.orphans/\u03bb"), features);
@@ -7376,6 +7424,19 @@ function Cli$vitestFact(cited) {
   }
 }
 rt.named(Cli$vitestFact, "Cli.vitestFact");
+
+function Names$unmounted(ns) {
+  const pairs = lib$base$List$filterMap(rt.named((pair) => {
+  if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
+    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Names$unmount(lib$base$fst(pair)), lib$base$snd(pair)])]);
+  } else {
+    return rt.con0("#Option", 0);
+  }
+}, "Names.unmounted/\u03bb"), lib$base$Map$toList(ns));
+  const counts = lib$base$List$foldl(rt.named((m, pair_1) => lib$base$Map$insert(lib$base$fst(pair_1), ((lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair_1), m), 0) + 1) | 0), m), "Names.unmounted/\u03bb"), lib$base$Set$empty(), pairs);
+  return lib$base$Map$fromList(lib$base$List$filter(rt.named((pair_2) => rt.equal(lib$base$Map$lookup(lib$base$fst(pair_2), counts), new rt.Con("#Option", 1, [1])), "Names.unmounted/\u03bb"), pairs));
+}
+rt.named(Names$unmounted, "Names.unmounted");
 
 function Resolve$stubOf(body) {
   m0: {

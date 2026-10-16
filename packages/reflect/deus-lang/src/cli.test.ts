@@ -286,6 +286,8 @@ describe('deus CLI', () => {
       0,
     );
     expect(deus('eval', 'twice 2', ...app).stdout).toBe('24\n');
+    // A primitive's type comes from the library's builtin, so `==` is still a Bool.
+    expect(deus('eval', '1 == 1', ...app).stdout).toBe('true\n');
 
     // Installing a newer release moves the project's code onto it, as `update` moves dependents (D206).
     const area4 = 'def area (s : Shape) : Int := match s with\n  | Shape.circle r => 4 * r * r\n';

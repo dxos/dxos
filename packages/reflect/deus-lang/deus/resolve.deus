@@ -179,6 +179,28 @@ def atLibraryRoot (fqn : Text) (name : Text) : Bool :=
   let dot := indexOf rest "." 0
   startsWith "lib." fqn && dot > 0 && Text.drop (dot + 1) rest == name
 
+/-- `name` in the project, or else in the one mounted library that has it: what a name written in a document means (D206). -/
+def lookupMounted (ns : Map Text Entry) (name : Text) : Option Entry :=
+  match Map.lookup name ns with
+  | Option.some e => Option.some e
+  | Option.none => if startsWith "lib." name then Option.none else Map.lookup name (unmounted ns)
+
+/-- The mounted libraries' names without their mount, those exactly one library has (D206). -/
+def unmounted (ns : Map Text Entry) : Map Text Entry :=
+  let pairs := filterMap
+    (fun pair => if startsWith "lib." (fst pair) then Option.some (unmount (fst pair), snd pair) else Option.none)
+    (Map.toList ns)
+  let counts := foldl
+    (fun m pair => Map.insert (fst pair) (getOr (Map.lookup (fst pair) m) 0 + 1) m)
+    Map.empty
+    pairs
+  Map.fromList (List.filter (fun pair => Map.lookup (fst pair) counts == Option.some 1) pairs)
+
+/-- `fqn` without its library mount: `List.map` for `List.map`; a project name unchanged. -/
+def unmount (fqn : Text) : Text :=
+  let rest := Text.drop 4 fqn
+  if startsWith "lib." fqn then Text.drop (indexOf rest "." 0 + 1) rest else fqn
+
 end Names
 
 /-- The result of compiling a batch of declarations. -/

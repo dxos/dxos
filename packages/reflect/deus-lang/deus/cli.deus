@@ -203,6 +203,26 @@ else
 --
 -- Commands: compiling.
 --
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
+
+--
+-- Commands: compiling.
+--
+--
+-- Commands: compiling.
+--
 /-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
 def compile (args : Args) : {IO, Throw Text} Unit :=
   let result := batch
@@ -1618,7 +1638,7 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
   source, and for a test or a theorem its verdict (checked now unless a result is cached). -/
 def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : Text) : {IO, Throw Text} List (Text, Text) :=
   let printer := MdlFacts.printer facts
-  match Map.lookup name ns with
+  match lookupMounted ns name with
   | Option.none => Throw.throw (name ++ " is not in the codebase")
   | Option.some e =>
       let h := Entry.hash e
@@ -1826,7 +1846,7 @@ def featureFact (dir : Text) (documents : List Text) (tasks : Ref (Option (Map T
   Option.some (match Map.lookup (Text.drop 5 name) all with
   | Option.some t => Result.ok [("kind", "task"), ("state", stateText t.state), ("title", Task.title t)]
   | Option.none => Result.err (name ++ " is not in the codebase"))
-else if startsWith "spec:" name then Option.some (if List.contains (Text.drop 5 name) documents then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase")) else if startsWith "vitest:" name then Option.some (vitestFact (Text.drop 7 name)) else Option.none
+else if startsWith "spec:" name then Option.some (if any (fun doc => doc == Text.drop 5 name || unmount doc == Text.drop 5 name) documents then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase")) else if startsWith "vitest:" name then Option.some (vitestFact (Text.drop 7 name)) else Option.none
 
 /-- `vitest:<file> > <test>` evidence: the file must declare that test; the suite runs it (Compile.Spec R-17). -/
 def vitestFact (cited : Text) : {IO} Result Text (List (Text, Text)) :=
@@ -1872,7 +1892,7 @@ def featureFacts (dir : Text) (ns : Map Text Entry) : ({IO} Text) -> {IO, Throw 
     match featureFact dir documents tasks name with
     | Option.some answer => answer
     | Option.none =>
-        match Map.lookup name ns with
+        match lookupMounted ns name with
         | Option.none => Result.err (name ++ " is not in the codebase")
         | Option.some e =>
             let stub :=

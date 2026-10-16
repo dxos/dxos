@@ -262,8 +262,8 @@ def eventsOf (s : Site) : {IO} (Json, Int) :=
 /-- Feature maps (D118) and how many features they hold; a map that cannot be read leaves the card empty. -/
 def featuresOfSite (s : Site) : {IO} (Json, Int) :=
   match try (fun _ =>
-    let docs := featureDocuments s.dir s.ns
-    (featuresJson s.dir s.ns docs, sum (List.map (fun d => List.length (fst (featuresOf s.dir s.ns d))) docs))) with
+    let docs := featureDocuments s.dir (Site.ns s)
+    (featuresJson s.dir (Site.ns s) docs, sum (List.map (fun d => List.length (fst (featuresOf s.dir (Site.ns s) d))) docs))) with
   | Result.ok pair => pair
   | Result.err _ => (Json.arr [], 0)
 
@@ -373,8 +373,12 @@ def docJson (s : Site) (d : Text) : {IO} Json :=
     ("props", Json.obj (List.map (fun p => (fst p, Json.str (snd p))) b.props))]
   Json.obj [("name", Json.str d), ("text", Json.str text), ("blocks", Json.arr (List.map blockJson (Mdl.parse text).blocks))]
 
-/-- The DEUS Worker's page of a spec document (D196), or "" when the codebase has no such document. -/
-def liveDoc (s : Site) (d : Text) : {IO} Text := if List.contains d (Export.specDocuments s.ns) then Json.render (docJson s d) else ""
+/-- The DEUS Worker's page of a spec document (D196), or "" when the codebase has no such document; `Array.Spec` finds a mounted library's (D206). -/
+def liveDoc (s : Site) (d : Text) : {IO} Text :=
+  let documents := Export.specDocuments s.ns
+  match List.filter (fun doc => doc == d) documents ++ List.filter (fun doc => doc != d && Names.unmount doc == d) documents with
+  | found :: _ => Json.render (docJson s found)
+  | [] => ""
 
 /-- The DEUS Worker's page of the definition a hash names (D192). -/
 def liveDef (s : Site) (h : Text) : {IO} Text := Json.render (defByHash s h)

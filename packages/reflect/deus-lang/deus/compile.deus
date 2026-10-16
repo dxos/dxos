@@ -469,22 +469,21 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
     finalMetas
     (reverse (Ref.get warnings))
 
-/--
-  The type of a primitive: builtins name each primitive's definition after it (`Int.add` is
-  `prim "Int.add"`), so the definition's signature is found by name, in the batch or the base.
--/
+/-- The type of a primitive: builtins name each primitive's definition after it (`Int.add` is
+  `prim "Int.add"`), so the definition's signature is found by name, in the batch or the base. -/
 def primTypes (pending : List Pending) (metaMap : Map Text Sexp) (base : Map Text Entry) (storeMeta : Text -> {Throw Text | r} Option Sexp) : Text -> {Throw Text | r} Option Sexp :=
-  let inBatch := Map.fromList (List.filterMap (fun p =>
+  let inBatch := Map.fromList (filterMap (fun p =>
     match p.core with
-    | Sexp.list [Sexp.sym "prim", Sexp.str name] => Option.map (fun sig => (name, sig)) (Codebase.metaField (Map.lookup ("@" ++ p.name) metaMap) "sig")
-    | _ => none) pending)
+    | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => Option.map (fun sig => (name, sig)) (metaField (Map.lookup ("@" ++ p.name) metaMap) "sig")
+    | _ => Option.none) pending)
+  let mounted := unmounted base
   fun name =>
     match Map.lookup name inBatch with
-    | some sig => some sig
-    | none =>
-      match Map.lookup name base with
-      | some (Entry.term h) => Codebase.metaField (storeMeta h) "sig"
-      | _ => none
+    | Option.some sig => Option.some sig
+    | Option.none =>
+        match Option.orElse (Map.lookup name base) (fun _ => Map.lookup name mounted) with
+        | Option.some (Entry.term h) => metaField (storeMeta h) "sig"
+        | _ => Option.none
 
 /-- Infers every pending definition's type, dependencies first; returns "@name" to scheme. -/
 def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Text -> {Throw Text | r} Option Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) (picks : Ref (Map Text Sexp)) : {Throw Text | r} Map Text Sexp :=
