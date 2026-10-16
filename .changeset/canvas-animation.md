@@ -10,3 +10,4 @@ The scene engine animates: composite objects, a timeline, and agent-written gene
 - `SceneView.Root exportable` publishes the clock for `scripts/render-story.mjs`, which now seeks it frame by frame; new `path` node type and `film` theme.
 - `@dxos/brand/paths` exports the DXOS lockup as path data (`DXOS_HORIZONTAL_LOCKUP`), which `DXOSHorizontalType` now draws from.
 - plugin-canvas adds an image shape (palette key `I`) linked by URL in its properties.
+- `FrameHeader` (the title, caption, counter and playback strip over a sequence of frames) moves into `@dxos/react-ui-canvas` from plugin-canvas's `SequenceHeader`.
