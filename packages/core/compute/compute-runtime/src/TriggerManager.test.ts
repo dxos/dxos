@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
@@ -20,7 +21,7 @@ import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Person } from '@dxos/types';
@@ -73,6 +74,7 @@ const TestLayer = (
 
 /** Trigger ids the remote manager was handed — reset per test that uses {@link recordingRemoteManager}. */
 const remoteInvocations: string[] = [];
+const remoteResets: string[] = [];
 
 /**
  * Stands in for `EdgeTriggerManager` (in `@dxos/edge-compute`, which cannot be imported here without a
@@ -85,9 +87,11 @@ const recordingRemoteManager: Layer.Layer<RemoteTriggerManager.Service, never, R
     const triggers = Atom.make<readonly Trigger.State[]>([]);
     registry.mount(triggers);
     remoteInvocations.length = 0;
+    remoteResets.length = 0;
     return {
       triggers,
       invokeTrigger: ({ trigger }) => Effect.sync(() => void remoteInvocations.push(trigger.id)),
+      resetTrigger: ({ trigger }) => Effect.sync(() => void remoteResets.push(trigger.id)),
     } satisfies RemoteTriggerManager.Manager;
   }),
 );
@@ -319,6 +323,68 @@ describe('TriggerManager', () => {
 
             expect(remoteInvocations).toEqual([]);
             expect(registry.get(dispatcher.state).invocations).toEqual([]);
+          }),
+        );
+      },
+      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
+    ),
+  );
+
+  it.effect(
+    'resetTrigger rewinds a local feed trigger to the start of its feed',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const feed = yield* Database.add(Feed.make({ name: 'source' }));
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        Obj.update(trigger, (trigger) => {
+          Annotation.set(trigger, Feed.CursorAnnotation, Feed.Cursor.make('7'));
+        });
+
+        yield* withMonitor((monitor) =>
+          Effect.gen(function* () {
+            yield* monitor.resetTrigger({ trigger });
+            expect(Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined)).toBe(Feed.START);
+            expect(remoteResets).toEqual([]);
+          }),
+        );
+      },
+      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
+    ),
+  );
+
+  it.effect(
+    'resetTrigger sends a remote feed trigger to the remote manager and refuses a non-feed trigger',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const feed = yield* Database.add(Feed.make({ name: 'source' }));
+        const remote = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          remote: true,
+          spec: Trigger.specFeed(feed),
+        });
+        const timer = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          remote: true,
+          spec: Trigger.specTimer('*/5 * * * *'),
+        });
+        yield* Database.add(remote);
+        yield* Database.add(timer);
+
+        yield* withMonitor((monitor) =>
+          Effect.gen(function* () {
+            yield* monitor.resetTrigger({ trigger: remote });
+            const error = yield* Effect.flip(monitor.resetTrigger({ trigger: timer }));
+            expect(error).toBeInstanceOf(Trigger.TriggerNotResettableError);
+            expect(remoteResets).toEqual([remote.id]);
           }),
         );
       },

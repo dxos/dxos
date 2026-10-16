@@ -847,6 +847,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               }
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
+              const batchSize = Trigger.feedBatchSize(spec);
 
               // Read only what follows the cursor, one page at a time: the cursor is pushed into the
               // index scan, so the cost of a tick is the size of the page rather than of the feed.
@@ -854,21 +855,22 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               for (;;) {
                 const chunk = yield* Feed.query(
                   feed,
-                  Query.select(Filter.feedCursor({ begin: cursor })).limit(concurrency),
+                  Query.select(Filter.feedCursor({ begin: cursor })).limit(concurrency * batchSize),
                 ).run.pipe(Effect.map((objects) => filterReadyFeedItems(objects, cursor)));
                 if (chunk.length === 0) {
                   break;
                 }
 
                 const invocationsThisIteration = yield* Effect.forEach(
-                  chunk,
-                  ({ item, cursor: itemCursor }) =>
+                  Array.chunksOf(chunk, batchSize),
+                  (batch) =>
                     this.invokeTrigger({
                       trigger,
                       event: {
                         feed: feedRef,
-                        item,
-                        cursor: itemCursor,
+                        item: Array.headNonEmpty(batch).item,
+                        items: batch.map(({ item }) => item),
+                        cursor: Array.lastNonEmpty(batch).cursor,
                       } satisfies TriggerEvent.FeedEvent,
                     }),
                   { concurrency: 'unbounded' },
@@ -1438,12 +1440,24 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 export const LEGACY_KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
 
 /**
+ * Rewinds a feed trigger to the start of its feed; the dispatcher's live query is keyed on the cursor,
+ * so the change itself wakes the trigger to read the feed again.
+ */
+export const resetFeedCursor = (trigger: Trigger.Trigger): void => {
+  Obj.update(trigger, (trigger) => {
+    Annotation.set(trigger, Feed.CursorAnnotation, Feed.START);
+    Obj.deleteKeys(trigger, LEGACY_KEY_FEED_CURSOR);
+  });
+};
+
+/**
  * The cursor a feed trigger has dispatched up to, or `undefined` when it has dispatched nothing.
  */
 const readFeedCursor = (trigger: Trigger.Trigger): Feed.Cursor | undefined => {
   const annotated = Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined);
   const stored = annotated ?? Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR).at(0)?.id;
-  return stored !== undefined ? Feed.Cursor.make(stored) : undefined;
+  // A reset stores `Feed.START`, which reads the feed from its first item like no cursor at all.
+  return stored !== undefined && stored !== Feed.START ? Feed.Cursor.make(stored) : undefined;
 };
 
 /**

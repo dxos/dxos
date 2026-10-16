@@ -19,6 +19,10 @@ asked.
   feed item per fact (so a fact can be forgotten on its own), each extraction pass closed by a marker;
   append-only apart from forgetting, with no second fact shape; the feeds are the record and the
   brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
+- **Extraction is a feed trigger:** any feed (mail, Discord, a chat, imported data) is mapped onto a
+  fact feed the agent owns by an extract operation a feed trigger runs; fact feeds written elsewhere
+  (another agent, an import, a person's corrections) are indexed the same way. Nothing new is built
+  to run it: the trigger carries the cursor, the batch size and where it runs.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
   group or agent), hierarchical (steps are sub-goals), carrying priority, a budget and optional
   instructions; a goal creates a concrete `Task` only for substantive, assignable work.
@@ -55,13 +59,13 @@ Source: [diagrams/brain-flows.dx](./diagrams/brain-flows.dx), rendered with plug
 
 **Facts flow (ingest).**
 
-1. A source — a chat turn, a document, a web page — is read by pipeline-rdf's extraction stages into
-   `RDF.Fact`s, attributed to the speaker, message and time; predicates are normalized
-   (`RDF.Predicate.normalize`).
-2. The `Fact`s are pushed to the agent's brain (`BrainService.push`) as they are — the only copy;
-   corrections are new facts. A chat's push also moves that chat's read cursor (`PushOptions.read`) to
-   the last message read, in the same call, so the cursor is kept exactly as long as the facts are.
-3. The brain writes the facts to its index (pipeline-rdf's SQLite schema: triples, entities for
+1. A source feed — a chat, a mailbox, a Discord channel, any data plugged in — is read by an extract
+   trigger (a feed trigger on the source, see "Extraction pipelines"): pipeline-rdf's extraction stages
+   turn each batch into `RDF.Fact`s, attributed to the speaker, message and time, with entities resolved
+   and predicates normalized (`RDF.Predicate.normalize`) in the same step.
+2. The `Fact`s are appended to the agent's fact feed for that source — the record; corrections are new
+   facts. The trigger's cursor moves past the batch only once its facts are appended.
+3. The brain follows its fact feeds (its own and external ones) and writes the facts to its index (pipeline-rdf's SQLite schema: triples, entities for
    `concerns`, full-text for `about`) and encodes them as Datalog relations (`Encoding`), mapping
    surface predicates onto the canonical `Vocabulary`.
 
@@ -123,17 +127,44 @@ derived index it can rebuild from scratch at any time. People can read, correct 
 Composer, and any runtime can append them, including offline. The cost is that evaluation lags an
 append by roughly one sync round.
 
-Facts live only in the agent's brain (2026-10-09). The earlier per-source annotation feeds in ECHO
-(`FactEntry` items closed by an `ExtractionPass` marker) are no longer written or read; feeds already
-in a space stay there unread, with no migration.
+Decided 2026-10-16, reversing 2026-10-09 ("facts live only in the agent's brain"). That decision kept
+the read cursor in the fact store so that losing the facts lost the cursor too. With the feeds as the
+record, each cursor sits with what it tracks instead, and clearing the index replays fact feeds rather
+than re-running the LLM over every source.
 
-- **The read cursor lives with the facts.** `FactStore` already keeps an ingest cursor per source; a
-  chat's push sets it (`PushOptions.read`) and `readSource` resumes from `BrainService.readThrough`.
-  A brain that loses its facts loses the cursor with them — the in-memory brain on reload, or a cleared
-  store — so the chat is read again from the start and the facts come back, rather than a cursor kept
-  elsewhere marking messages read whose facts are gone.
-- **Every source wakes watches.** A document or web page read with `ReadSource` is pushed like a chat
-  turn and its wakes are delivered; only the agent's own words are quiet.
+- **Two cursors, two owners.** The extraction cursor (source → facts) is the extract trigger's feed
+  cursor; the ingest cursor (facts → index) is the index's, per fact feed. A cleared index re-reads the
+  fact feeds; a reset extract trigger re-reads the source.
+- **Owned and external fact feeds.** The agent's extract triggers write its own fact feeds; any other
+  feed of `RDF.Fact` items — another agent's, an import, a person's corrections — is indexed the same
+  way. The index records the feed each fact came from, so rules and judgment can weigh it
+  (`according-to`).
+- **Every source wakes watches.** A fact appended from any source is indexed and its wakes delivered;
+  only the agent's own words are quiet.
+
+### Extraction pipelines
+
+An extraction pipeline is a feed trigger: its spec names the source feed, its runnable is the extract
+operation, and its input names the target fact feed and the extractor's options. Plugging in new data
+is creating one trigger; there is no pipeline runtime beside the trigger dispatchers.
+
+| Concern                 | Where it lives                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| Cursor (resume point)   | Local: the trigger's `Feed.CursorAnnotation`. EDGE: the space's `Scheduler` DO, per trigger      |
+| Backfill                | A trigger created over a feed that already has items reads it from the start, on EDGE as locally |
+| Batching                | `FeedSpec.batchSize`: N consecutive items per invocation as `event.items`, for thread context    |
+| Where it runs           | The trigger's `remote` flag                                                                      |
+| Re-extraction           | `Trigger.Manager.resetTrigger` rewinds the cursor; the new pass supersedes the old one by `pass` |
+| Entity resolution       | Inside the extract step, against the brain's known entities — not a second feed hop              |
+| Predicate normalization | Inside the extract step, against the ontology — not a second feed hop                            |
+
+Normalization stays inside the one step because a feed between extraction and normalization would
+need its own cursor, retries and replay for work that is cheap next to the LLM call it follows.
+
+Delivery is at-least-once and in feed order: a batch whose invocation fails is not skipped, and the
+cursor moves only past a batch that completed. Fact ids derive from the graph and the triple, so a
+replayed batch whose output is unchanged indexes nothing new; a re-run that extracts differently is a
+new pass, and the index retracts the old pass by its id.
 
 ### pipeline-rdf is the common type
 
@@ -198,7 +229,8 @@ Decided 2026-10-13 (formerly QUESTIONS.md 1 and 2):
   a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
 - **Memories are facts.** A memory is a graph of `<subject> dx:claim "content"` statements whose
   provenance carries its kind and origin (`Knowledge` in this package); a correction is a graph that
-  `supersedes` it and a mistake one that `retracts` it. Facts stay in the brain store, not ECHO feeds.
+  `supersedes` it and a mistake one that `retracts` it. Memories are appended to the agent's own fact feed
+  like any other fact.
 - Not yet built: linking an entity read before its object existed to that object (`owl:sameAs`), and
   predicates proposed by the extractor with their own descriptions (they are minted from the surface
   form).
@@ -219,12 +251,13 @@ non-canonical or misspelled predicate is a compile error rather than a silent mi
 | Index                                  | Where                                                                 |
 | -------------------------------------- | --------------------------------------------------------------------- |
 | Rule joins (hash per bound-column set) | In memory, `@dxos/datalog`                                            |
-| Facts, with a cursor per source        | SQLite (pipeline-rdf's schema), in the Durable Object and the browser |
+| Facts, with a cursor per fact feed     | SQLite (pipeline-rdf's schema), in the Durable Object and the browser |
 | Entities and aliases (`concerns`)      | SQLite `entities`                                                     |
 | Fact text (`about`)                    | SQLite FTS5; vectors later for meaning                                |
 
 On start the Durable Object loads base facts from SQLite into the engine, then evaluates incrementally
-as facts are pushed. Clearing a store clears its cursors too, so the agent's sources are read again.
+as fact feeds grow. Clearing the index clears its cursors too, so the fact feeds are read again; the
+sources are not re-extracted.
 
 ## Goals
 

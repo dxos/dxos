@@ -34,7 +34,7 @@ import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager.ts';
 import { credentialsLayerConfig } from '../services/credentials.ts';
-import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher.ts';
+import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher, resetFeedCursor } from './trigger-dispatcher.ts';
 import { TriggerStateStore } from './trigger-state-store.ts';
 
 /**
@@ -938,6 +938,64 @@ describe('TriggerDispatcher', () => {
         expect(resumed.length).toBe(1);
         expect(resumed[0].feedCursor).not.toBe(cursor);
         expect(Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR)).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
+    const decodeBatch = Schema.decodeUnknownSync(
+      Schema.Struct({ names: Schema.Array(Schema.Struct({ fullName: Schema.String })) }),
+    );
+
+    it.effect(
+      'delivers batchSize items per invocation, in feed order',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed, { batchSize: 2 }),
+          input: { names: '{{event.items}}' },
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(
+          feed,
+          ['Alice', 'Bob', 'Charlie'].map((fullName) => Obj.make(Person.Person, { fullName })),
+        );
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
+        const batches = results.map(({ result }) => {
+          invariant(Exit.isSuccess(result));
+          return decodeBatch(result.value).names.map(({ fullName }) => fullName);
+        });
+        expect(batches).toEqual([['Alice', 'Bob'], ['Charlie']]);
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] })).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a reset cursor reads the feed again from its first item',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [
+          Obj.make(Person.Person, { fullName: 'Alice' }),
+          Obj.make(Person.Person, { fullName: 'Bob' }),
+        ]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] })).toEqual([]);
+
+        resetFeedCursor(trigger);
+        yield* Database.flush();
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
       }, Effect.provide(TestLayer())),
     );
 

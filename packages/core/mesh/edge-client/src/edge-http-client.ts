@@ -687,6 +687,18 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
+   * Rewinds a feed trigger on the EDGE dispatcher to the start of its feed, so every item is delivered
+   * again. EDGE answers 409 for a trigger that is not a feed trigger.
+   */
+  public async resetTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call<{ reset: boolean }>(
+      ctx,
+      new URL(`/compute/functions/${spaceId}/triggers/${triggerId}/reset`, this.baseUrl),
+      { method: 'POST', auth: true },
+    );
+  }
+
+  /**
    * Returns the full list of triggers registered on a space's EDGE dispatcher, with per-trigger
    * runtime status. Polled by the remote trigger monitor to surface edge trigger state.
    *
