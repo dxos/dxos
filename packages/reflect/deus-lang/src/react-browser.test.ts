@@ -78,6 +78,21 @@ describe('DEUS × React in a browser', () => {
     await page.locator('.todos li').first().click();
     await expect.poll(() => page.locator('.todos li.done').count()).toBe(1);
     await expect.poll(() => page.locator('.todos .left').textContent()).toBe('3 of 4 left');
+
+    // Under the hood (React.Spec F-1 to F-3, Js.Spec F-1 to F-3): each hook, a JavaScript component, a fragment, the codecs.
+    const fact = (name: string) => page.locator(`[data-fact="${name}"]`).textContent();
+    await expect.poll(() => fact('useEffect')).toBe('useEffect: ran after the first render');
+    expect(await fact('useMemo')).toBe('useMemo: 1² + 2² + 3² + 4² = 30');
+    expect(await fact('useId')).toBe('useId: an id');
+    expect(await fact('useContext')).toBe('useContext: theme dark');
+    expect(await fact('codecs')).toBe('codecs: 6, 5, none, true');
+    expect(await fact('jsComponent')).toBe('JavaScript props');
+    expect(await fact('fragment')).toBe('one, two');
+    const rendered = Number(/rendered (\d+) times/.exec((await fact('useRef')) ?? '')?.[1]);
+    await page.click('.inside .rerender');
+    await expect.poll(() => fact('useState')).toBe('useState: 1 clicks');
+    // A ref keeps its value across renders without causing one.
+    await expect.poll(() => fact('useRef')).toBe(`useRef: rendered ${rendered + 1} times`);
     expect(errors).toEqual([]);
   });
 });
