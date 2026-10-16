@@ -371,6 +371,12 @@ const fadeNewBuckets = (hub: Block, arrival: (id: string) => number, frame: Fram
   };
 };
 
+/** `hub` with its well at `well` and its frame around that, keeping the frame's inset; its buckets as laid out. */
+const stretchHub = (hub: Block, well: Rect): Block => {
+  const inset = hub.well.x - hub.frame.x;
+  return { ...hub, well, frame: { ...hub.frame, x: well.x - inset, width: well.width + 2 * inset } };
+};
+
 /**
  * The frame with every molecule drawn part way back from where a relayout put it toward where it was: those in the hub
  * by the plan, those in a source or a sink by how far that block moved.
@@ -880,7 +886,11 @@ export const MoleculeOverlay = ({
   const { agents, apps, time } = frame;
   // The well stays whole while the clusters slide, so no seam shows where the buckets will part.
   const opening = hubMorph ? splitPhases(hubMorph.progress).open : 0;
-  const settled = relayout ? mixLayout(relayout.from, laidOut, growth) : laidOut;
+  const mixed = relayout ? mixLayout(relayout.from, laidOut, growth) : laidOut;
+  // The hub stretches edge by edge on the relayout's own schedule, rather than eased as one piece.
+  const settled = relayout
+    ? { ...mixed, hub: stretchHub(laidOut.hub, relayout.arrivals.well(relayout.progress)) }
+    : mixed;
   // Until the buckets start to open, the hub is drawn whole, however far the layout beside it has already split.
   const layout = hubMorph
     ? { ...settled, hub: opening > 0 ? morphBlock(hubMorph.from, { ...hubMorph, progress: opening }) : hubMorph.from }

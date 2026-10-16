@@ -71,12 +71,27 @@ const MORE_NAMES = [
   'Email',
   'Analytics',
   'Search',
+  'Contacts',
+  'Invoices',
+  'Orders',
+  'Inventory',
+  'Support',
+  'Surveys',
+  'Leads',
+  'Assets',
+  'Contracts',
+  'Payroll',
+  'Travel',
+  'Events',
 ];
 // Only hues the diagram has a colour for: any other would draw its source gray.
 const MORE_HUES = ['teal', 'amber', 'violet', 'sky', 'red', 'orange', 'green', 'blue', 'fuchsia'];
 
-/** How far each side extends: the same both ways, well past the view, so the growth reads as going on without end. */
-const REACH = { left: { buckets: 7, blocks: 8 }, right: { buckets: 7, blocks: 8 } };
+/**
+ * How far each side extends. The first four on each side arrive together, so the growth reads as even; the right runs on
+ * well beyond what the pan that follows can reach (ten seconds of it is about 1000 scene units, past half a screen).
+ */
+const REACH = { left: { buckets: 4, blocks: 4 }, right: { buckets: 22, blocks: 26 } };
 
 /** The new sources on one side, outward; each side draws its names and hues from its own end of the lists. */
 const moreSources = (side: 'left' | 'right'): SourceSpec[] =>
@@ -104,7 +119,8 @@ const moreSinks = (side: 'left' | 'right'): { label: string; app?: AppKind }[] =
   });
 
 /**
- * ECHO extended past the view equally on both sides, while all that was there keeps its place.
+ * ECHO extended past the view on both sides, evenly at first and then further to the right for the pan, while all that
+ * was there keeps its place.
  */
 const EXTENDED: DataFlowSpec = {
   ...APPS,

@@ -300,10 +300,6 @@ const BASE_SINKS = 4;
 /** How far a source's molecules spread across a partitioned hub, in bucket widths. */
 const NEAR_BUCKETS = 1.5;
 
-/** How much faster sources in the focus supply, and the share of traffic its sinks draw. */
-const FOCUS_BOOST = 2;
-const FOCUS_SHARE = 0.5;
-
 /** The messages a conversation opens with. */
 const OPENING_MESSAGES = 2;
 
@@ -1187,9 +1183,8 @@ export class DataFlowSimulation {
     const present = Array.from({ length: this.#agents }, (_, agent) => agent).filter(
       (agent) => this.#agentSince[agent] <= this.#time,
     );
-    // Mostly one in the focus, when any is, so what is on screen is where the activity is.
-    const focused = present.filter((agent) => this.#focused(this.#layout.sinks[agent]));
-    const pool = focused.length > 0 && this.#random() < FOCUS_SHARE ? focused : present;
+    // Only one on screen: what is out of view takes nothing.
+    const pool = present.filter((agent) => this.#focused(this.#layout.sinks[agent]));
     return pool.length > 0 ? pool[Math.floor(this.#random() * pool.length)] : undefined;
   }
 
@@ -1203,20 +1198,26 @@ export class DataFlowSimulation {
   }
 
   /**
-   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Sources in it supply `boost`
-   * times faster than normal on top of their usual rate (twice by default), and its apps and agents get a larger share of
-   * the traffic; unset, every block is treated alike.
+   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Only what is in it is active:
+   * its sources form molecules (`boost` times faster than normal on top of their usual rate), its buckets take them and
+   * sync on, and its apps and agents receive and write; what is off screen waits. Unset, everything is active.
    */
   focus(range: { left: number; right: number; boost?: number } | undefined): void {
-    this.#focus = range && { ...range, boost: range.boost ?? FOCUS_BOOST };
+    this.#focus = range && { ...range, boost: range.boost ?? 0 };
   }
 
+  /** Whether `block` is on screen (its centre is): with no focus set, everything is. */
   #focused(block: Block | undefined): boolean {
-    if (!this.#focus || !block) {
-      return false;
-    }
-    const centre = block.frame.x + block.frame.width / 2;
-    return centre >= this.#focus.left && centre <= this.#focus.right;
+    return block !== undefined && this.#inFocus(block.frame.x + block.frame.width / 2);
+  }
+
+  #inFocus(x: number): boolean {
+    return !this.#focus || (x >= this.#focus.left && x <= this.#focus.right);
+  }
+
+  /** Whether any part of `rect` is on screen: with no focus set, all of it is. */
+  #overlapsFocus(rect: Rect): boolean {
+    return !this.#focus || (rect.x + rect.width >= this.#focus.left && rect.x <= this.#focus.right);
   }
 
   /**
@@ -1276,15 +1277,16 @@ export class DataFlowSimulation {
 
   #spawn(): void {
     this.#layout.sources.forEach((source, index) => {
-      if (this.#time < this.#nextSpawn[index]) {
+      // Only a source on screen forms molecules; one off screen waits until the view reaches it.
+      if (this.#time < this.#nextSpawn[index] || !this.#focused(source)) {
         return;
       }
       // A source a relayout added comes up to speed fast, then supplies faster than the first ones did.
       const since = this.#sourceSince[index];
       const ramp =
         since === undefined ? 0 : SOURCE_BOOST * Math.min(1, Math.max(0, (this.#time - since) / SOURCE_RAMP));
-      // A source in the focus (the part of the diagram on screen) supplies faster still.
-      const boost = ramp + (this.#focused(this.#layout.sources[index]) ? (this.#focus?.boost ?? 0) : 0);
+      // While the view pans along it, what is on screen supplies faster still.
+      const boost = ramp + (this.#focus?.boost ?? 0);
       const interval = this.#options.interval / (1 + boost);
       this.#nextSpawn[index] = this.#time + between(this.#random, 0.7 * interval, 1.3 * interval);
       if (this.#waiting(index) >= this.#options.perSource * (1 + Math.round(boost))) {
@@ -1507,7 +1509,11 @@ export class DataFlowSimulation {
    */
   #nearBucket(buckets: readonly Rect[], x: number): Rect {
     const reach = NEAR_BUCKETS * (buckets[0]?.width ?? 1);
-    const weights = buckets.map((bucket) => Math.exp(-(((bucket.x + bucket.width / 2 - x) / reach) ** 2)));
+    // Only buckets on screen take molecules, unless none is (then any may).
+    const visible = buckets.some((bucket) => this.#overlapsFocus(bucket));
+    const weights = buckets.map((bucket) =>
+      !visible || this.#overlapsFocus(bucket) ? Math.exp(-(((bucket.x + bucket.width / 2 - x) / reach) ** 2)) : 0,
+    );
     let pick = this.#random() * weights.reduce((sum, weight) => sum + weight, 0);
     for (let index = 0; index < buckets.length; index++) {
       pick -= weights[index];
@@ -1747,7 +1753,8 @@ export class DataFlowSimulation {
       } else {
         this.#writeBack(body);
       }
-    } else if (body.zone === 'hub') {
+    } else if (body.zone === 'hub' && this.#inFocus(body.position.x)) {
+      // Only what settles in a bucket on screen syncs on.
       const agent = body.syncTo ?? this.#anyAgent();
       body.syncTo = undefined;
       if (agent !== undefined && !body.synced) {

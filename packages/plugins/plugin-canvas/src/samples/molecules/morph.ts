@@ -238,58 +238,75 @@ export const planMove = (
 
 /** When each thing a relayout adds arrives, as fractions of the relayout: when it starts to fade in, and for how long. */
 export type Arrivals = {
-  /** How far the hub has stretched toward its new size, by the relayout's progress. */
+  /** How far the moves of what was already there have got, by the relayout's progress. */
   growth: (progress: number) => number;
+  /** The hub's well at `progress`: its edges stretch outward at one speed, the longer side carrying on alone. */
+  well: (progress: number) => Rect;
   /** Each new bucket, source and sink by its id (a bucket's id is its index), and the window it fades in over. */
   windows: ReadonlyMap<string, { start: number; length: number }>;
 };
 
-/** The hub stretches over this first share of a relayout; agents then arrive, and sources after them. */
+/** The hub stretches evenly over this first share of a relayout, the longer side then carrying on to its end by its close. */
 const GROWTH = 0.3;
 const FADE = 0.15;
 const PHASES = { sinks: 0.2, sources: 0.45 } as const;
 const STAGGER = 0.4;
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+const clamp = (t: number) => Math.min(1, Math.max(0, t));
 
 /** How far a window has faded in at `progress`, eased. */
 export const arrived = (window: { start: number; length: number } | undefined, progress: number) =>
-  window ? ease(Math.min(1, Math.max(0, (progress - window.start) / window.length))) : 1;
+  window ? ease(clamp((progress - window.start) / window.length)) : 1;
 
 /**
- * The order a relayout brings in what it adds: the hub stretches first, each new bucket fading in once it has room;
- * then the agents, and last the sources, each set inner first on both sides at once, so the diagram fills outward.
+ * The order a relayout brings in what it adds: the hub stretches first, both edges at one speed until the shorter side
+ * is done, the longer then carrying on, and each new bucket fades in once the hub has room for it; then the agents, and
+ * last the sources, each side inner first, so the diagram fills outward evenly however much further one side runs.
  */
 export const planArrivals = (from: DataFlowLayout, to: DataFlowLayout): Arrivals => {
-  const centre = to.hub.frame.x + to.hub.frame.width / 2;
-  const windows = new Map<string, { start: number; length: number }>();
-  const stagger = (items: { id: string; frame: Rect }[], phase: number) => {
-    const distance = (item: { frame: Rect }) => Math.abs(item.frame.x + item.frame.width / 2 - centre);
-    const sorted = [...items].sort((a, b) => distance(a) - distance(b));
-    // Both sides arrive together, so a rank is shared by the pair at the same distance.
-    const ranks = Math.max(1, Math.ceil(sorted.length / 2));
-    sorted.forEach((item, index) => {
-      const rank = Math.floor(index / 2);
-      windows.set(item.id, { start: phase + (ranks > 1 ? (STAGGER * rank) / (ranks - 1) : 0), length: FADE });
-    });
+  const centre = from.hub.frame.x + from.hub.frame.width / 2;
+  const before = from.hub.well;
+  const after = to.hub.well;
+  const leftward = Math.max(0, before.x - after.x);
+  const rightward = Math.max(0, after.x + after.width - (before.x + before.width));
+  const even = Math.min(leftward, rightward);
+  // Each edge's distance out at `progress`: the even stretch over GROWTH, then the longer side on to its end.
+  const reach = (progress: number, extent: number) => {
+    const shared = ease(clamp(progress / GROWTH)) * even;
+    return extent <= even
+      ? Math.min(extent, ease(clamp(progress / GROWTH)) * extent)
+      : shared + (extent - even) * ease(clamp((progress - GROWTH) / (1 - GROWTH)));
   };
-  // A new bucket fades in only once the stretching hub has room for it: when the hub's edge has passed the bucket's
-  // outer side, found by stepping through the growth.
+  const well = (progress: number): Rect => {
+    const left = reach(progress, leftward);
+    const right = reach(progress, rightward);
+    return { ...after, x: before.x - left, width: before.width + left + right };
+  };
+
+  const windows = new Map<string, { start: number; length: number }>();
+  // Each side in its own order, inner first, so the two sides keep step for as far as the shorter one goes.
+  const stagger = (items: { id: string; frame: Rect }[], phase: number) => {
+    const offset = (item: { frame: Rect }) => item.frame.x + item.frame.width / 2 - centre;
+    const sides = [items.filter((item) => offset(item) < 0), items.filter((item) => offset(item) >= 0)].map((side) =>
+      side.sort((a, b) => Math.abs(offset(a)) - Math.abs(offset(b))),
+    );
+    const ranks = Math.max(1, ...sides.map((side) => side.length));
+    for (const side of sides) {
+      side.forEach((item, rank) => {
+        windows.set(item.id, { start: phase + (ranks > 1 ? (STAGGER * rank) / (ranks - 1) : 0), length: FADE });
+      });
+    }
+  };
+  // A new bucket fades in only once the stretching hub has room for it, found by stepping through the growth.
   const oldBuckets = from.hub.buckets?.length ?? 1;
-  const growth = (progress: number) => ease(Math.min(1, progress / GROWTH));
   (to.hub.buckets ?? []).slice(oldBuckets).forEach((bucket, index) => {
-    const leftward = bucket.x + bucket.width / 2 < centre;
     const fits = (progress: number) => {
-      const reach = growth(progress);
-      const left = from.hub.well.x + (to.hub.well.x - from.hub.well.x) * reach;
-      const right =
-        from.hub.well.x +
-        from.hub.well.width +
-        (to.hub.well.x + to.hub.well.width - from.hub.well.x - from.hub.well.width) * reach;
-      return leftward ? left <= bucket.x : right >= bucket.x + bucket.width;
+      const { x, width } = well(progress);
+      return bucket.x >= x && bucket.x + bucket.width <= x + width;
     };
     let start = 0;
-    while (start < GROWTH && !fits(start)) {
+    while (start < 1 && !fits(start)) {
       start += 0.005;
     }
     windows.set(`${oldBuckets + index}`, { start, length: FADE });
@@ -302,5 +319,5 @@ export const planArrivals = (from: DataFlowLayout, to: DataFlowLayout): Arrivals
     to.sources.filter((source) => !from.sources.some(({ id }) => id === source.id)),
     PHASES.sources,
   );
-  return { growth, windows };
+  return { growth: (progress) => ease(clamp(progress / GROWTH)), well, windows };
 };

@@ -238,6 +238,8 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * downward), taking the camera out of fit mode: a slow pan a host can start and stop, as in a presentation.
    */
   drift?: Point;
+  /** Called with the stretch of the scene in view (scene coordinates) whenever the camera or the view's size changes. */
+  onViewChange?: (view: Bounds) => void;
   /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
   theme?: string;
   /** The theme drawn when `theme` is unset; flat when this is unset too or unknown. */
@@ -283,6 +285,7 @@ const SceneViewRoot = ({
   refitKey,
   refitDuration,
   drift,
+  onViewChange,
   onThemeChange,
   onBackgroundGridChange,
   children,
@@ -489,6 +492,16 @@ const SceneViewRoot = ({
     timeout = setTimeout(fit, asked ? 0 : FIT_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [fitting, measured, sceneId, fitKey, refitDuration]);
+  useEffect(() => {
+    if (onViewChange && viewport.width > 0) {
+      onViewChange({
+        x: -camera.x,
+        y: -camera.y,
+        width: viewport.width / camera.zoom,
+        height: viewport.height / camera.zoom,
+      });
+    }
+  }, [onViewChange, camera, viewport]);
   // Keyed on the velocity's values, so a host passing a fresh object each render does not restart the pan.
   const driftX = drift?.x ?? 0;
   const driftY = drift?.y ?? 0;

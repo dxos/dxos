@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   type BackgroundGrid,
@@ -42,14 +42,7 @@ const DRIFT = { start: 40, top: 240, acceleration: 12 };
 
 const driftSpeedAt = (seconds: number) => Math.min(DRIFT.top, DRIFT.start + DRIFT.acceleration * seconds);
 
-/** How far the pan has gone after `seconds`: speeding up evenly, then at its top speed. */
-const driftDistanceAt = (seconds: number) => {
-  const rising = Math.min(seconds, (DRIFT.top - DRIFT.start) / DRIFT.acceleration);
-  return DRIFT.start * rising + (DRIFT.acceleration * rising * rising) / 2 + DRIFT.top * (seconds - rising);
-};
-
-/** How far past the hub's old edges the focus reaches (roughly the camera's margin), and how often it is moved. */
-const FOCUS_MARGIN = 160;
+/** How often the focus's boost is raised while the view pans. */
 const FOCUS_TICK = 250;
 
 /** How much busier than normal what is in view gets as the pan sets off, how fast that climbs per second, and its cap. */
@@ -187,31 +180,38 @@ export const DataFlowView = ({
   // Once a growing hub has passed the edges of the view, the view sets off rightward along it, and keeps going.
   const drifting =
     relayout !== undefined && relayout.from.hub.frame.width < layout.hub.frame.width && moved >= DRIFT_START;
-  // While the view pans (picking up speed as it goes), the stretch on screen is the simulation's focus: it starts as the
-  // hub as it was (what the camera framed) and slides along with the pan, so what is in view is where molecules are made
-  // and used.
+  // What is on screen is the simulation's focus, so only what can be seen is active. While the view pans (picking up
+  // speed as it goes), what is in view also grows busier the longer the pan runs.
   const [driftSpeed, setDriftSpeed] = useState(DRIFT.start);
+  const boostRef = useRef(0);
+  const viewRef = useRef<Bounds>(undefined);
+  const refocus = useCallback(() => {
+    const view = viewRef.current;
+    simulation.focus(view && { left: view.x, right: view.x + view.width, boost: boostRef.current });
+  }, [simulation]);
+  const handleViewChange = useCallback(
+    (view: Bounds) => {
+      viewRef.current = view;
+      refocus();
+    },
+    [refocus],
+  );
   useEffect(() => {
-    if (!drifting || !relayout) {
-      simulation.focus(undefined);
+    if (!drifting) {
+      boostRef.current = 0;
       setDriftSpeed(DRIFT.start);
+      refocus();
       return;
     }
-    const { frame } = relayout.from.hub;
     const started = performance.now();
     const timer = setInterval(() => {
       const seconds = (performance.now() - started) / 1000;
       setDriftSpeed(driftSpeedAt(seconds));
-      const travelled = driftDistanceAt(seconds);
-      simulation.focus({
-        left: frame.x - FOCUS_MARGIN + travelled,
-        right: frame.x + frame.width + FOCUS_MARGIN + travelled,
-        // The activity in view keeps building for as long as the pan runs.
-        boost: Math.min(FOCUS.top, FOCUS.start + FOCUS.rise * seconds),
-      });
+      boostRef.current = Math.min(FOCUS.top, FOCUS.start + FOCUS.rise * seconds);
+      refocus();
     }, FOCUS_TICK);
     return () => clearInterval(timer);
-  }, [drifting, relayout, simulation]);
+  }, [drifting, refocus]);
   useLayoutEffect(() => {
     const scene = createDataFlowScene(layout, revealed);
     registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
@@ -240,6 +240,7 @@ export const DataFlowView = ({
       // leaves it where it is, so a diagram that extends runs on past the edges of the view.
       refitDuration={REVEAL_MS}
       drift={drifting ? { x: driftSpeed, y: 0 } : undefined}
+      onViewChange={handleViewChange}
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
