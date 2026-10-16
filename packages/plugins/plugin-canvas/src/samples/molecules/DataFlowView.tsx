@@ -225,7 +225,8 @@ export const DataFlowView = ({
   useEffect(() => setGrid(initialGrid), [initialGrid]);
   const look = useMemo(() => resolveLook(defaultThemeRegistry, { theme }), [theme]);
   // The background spans the containers' frames, not the canvas nodes' wider bases, so its washes sit as they always did.
-  const field = useMemo(() => framesBounds(layout), [layout]);
+  // Continuous, it stays on the layout the view opened with: a layout that grows would otherwise slide the washes.
+  const field = useMemo(() => framesBounds(continuous ? origin : layout), [continuous, origin, layout]);
   // The containers are drawn by the overlay, in the theme's style set (glass for one the sample has no palette for).
   const overlayLook = LOOKS.find((candidate) => candidate === look.styleSet.id) ?? 'glass';
   return (

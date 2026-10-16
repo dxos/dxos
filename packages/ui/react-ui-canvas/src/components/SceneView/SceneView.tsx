@@ -140,6 +140,9 @@ import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
+/** The longest step a drifting view takes in one frame, in seconds, however long the frame was in coming. */
+const MAX_DRIFT_STEP = 0.1;
+
 /** Milliseconds the camera's zoom must hold still before the background grid fades back in. */
 const ZOOM_SETTLE = 250;
 
@@ -510,9 +513,12 @@ const SceneViewRoot = ({
       return;
     }
     exitFit();
-    let last = performance.now();
+    // Timed from one frame's timestamp to the next: a frame's timestamp is when it began, which can be before the effect
+    // that scheduled it ran, so measuring from `performance.now()` here would step backwards. Long gaps (a throttled
+    // background tab) are capped, so the view never leaps.
+    let last: number | undefined;
     let frame = requestAnimationFrame(function step(now) {
-      const seconds = (now - last) / 1000;
+      const seconds = last === undefined ? 0 : Math.min(MAX_DRIFT_STEP, Math.max(0, (now - last) / 1000));
       last = now;
       // The camera offsets the content, so the view moves right as it moves left.
       setCamera((camera) => panBy(camera, { x: -driftX * seconds, y: -driftY * seconds }));
