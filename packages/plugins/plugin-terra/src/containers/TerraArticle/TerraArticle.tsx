@@ -398,9 +398,12 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           <div className='absolute top-2 right-2 z-10'>
             <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
           </div>
-          <div className='absolute bottom-2 right-2 z-10'>
-            <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
-          </div>
+          {/* With no objects the panel is only a header, collapsed to a clipped strip. */}
+          {telemetry.length > 0 && (
+            <div className='absolute bottom-2 right-2 z-10'>
+              <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
+            </div>
+          )}
         </div>
       </Panel.Body>
     </Panel.Root>
