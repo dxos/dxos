@@ -14,5 +14,7 @@ export const TOKENS = `
     --autocue-band-fg: #fff;
     --autocue-band-muted: rgba(255, 255, 255, 0.7);
     --autocue-layer: 2147483647;
+    /* Fits a title and a subtitle line with the padding the driver's banner always had. */
+    --autocue-caption-height: 88px;
   }
 `;

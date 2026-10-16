@@ -47,7 +47,11 @@ export const FRAME_STYLES = `
   .header { padding: 16px 24px; }
   .header .title { font: 600 30px/1.2 var(--autocue-font); }
   .header .subtitle { font: 400 18px/1.35 var(--autocue-font); margin-top: 4px; color: var(--autocue-band-muted); }
-  .caption { padding: 16px 24px 18px; }
+  /* A fixed height, so a caption with or without a subtitle (or none, in layout) never moves the content. */
+  .caption { height: var(--autocue-caption-height); padding: 0 24px; display: flex; flex-direction: column;
+    justify-content: center; }
+  .frame.layout .caption[hidden] { display: flex; }
+  .caption .title, .caption .subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .caption .title { font: 600 20px/1.35 var(--autocue-font); }
   .caption .subtitle { font: 400 15px/1.35 var(--autocue-font); margin-top: 4px; color: var(--autocue-band-muted); }
 `;

@@ -56,6 +56,9 @@ const MockApp = ({ step }: { step: number }) => (
   </div>
 );
 
+/** The bar react-ui-canvas's toolbars sit in, so the story's controls match them. */
+const PANEL = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+
 type StoryProps = Pick<FrameProps, 'mode'> & {
   /** Milliseconds each caption holds while playing. */
   interval?: number;
@@ -75,20 +78,32 @@ const TakeStory = ({ mode, interval = 2_500 }: StoryProps) => {
   }, [playing, interval]);
 
   return (
-    <div className='flex flex-col dx-fill'>
-      <Toolbar.Root>
-        <Button.Root onClick={() => setPlaying((playing) => !playing)}>{playing ? 'Pause' : 'Play'}</Button.Root>
-        <Button.Root disabled={playing} onClick={() => setStep((step) => (step + 1) % STEPS.length)}>
-          Next
-        </Button.Root>
-        <span className='text-sm text-fg-muted'>
-          Step {step + 1} / {STEPS.length}
-        </span>
-      </Toolbar.Root>
-      <Frame mode={mode} header={HEADER} caption={STEPS[step]}>
-        <MockApp step={step} />
-      </Frame>
-    </div>
+    <Frame mode={mode} header={HEADER} caption={STEPS[step]}>
+      <MockApp step={step} />
+      {/* Floats above the caption band so the frame keeps the whole viewport, as it does in a recording. */}
+      <div className='fixed left-3 bottom-[100px] z-10'>
+        <Toolbar.Root classNames={PANEL}>
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={playing ? 'Pause' : 'Play'}
+            onClick={() => setPlaying((playing) => !playing)}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--caret-right--regular'
+            label='Next step'
+            disabled={playing}
+            onClick={() => setStep((step) => (step + 1) % STEPS.length)}
+          />
+          <span className='px-1 text-sm text-fg-muted tabular-nums' data-testid='frame-step'>
+            {step + 1} / {STEPS.length}
+          </span>
+        </Toolbar.Root>
+      </div>
+    </Frame>
   );
 };
 
@@ -97,7 +112,7 @@ const TakeStory = ({ mode, interval = 2_500 }: StoryProps) => {
  *
  * Test:
  * 1. The caption changes every 2.5s and is gone on the last step; the title band stays.
- * 2. Pause stops the script; Next steps it by hand.
+ * 2. The floating panel (bottom left): pause stops the script; next steps it by hand.
  * 3. Overlay pins both bands to the window edges over the app, as the driver paints them into a recorded page.
  */
 const meta: Meta<typeof TakeStory> = {
