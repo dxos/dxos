@@ -12,7 +12,7 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as AgentService from '@dxos/compute/AgentService';
 import type { Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import { RDF } from '@dxos/pipeline-rdf';
+import * as RDF from '@dxos/pipeline-rdf/types';
 import { ContentBlock } from '@dxos/types';
 
 import * as Trigger from './Trigger.ts';
@@ -42,6 +42,12 @@ export type WakeRequest = {
 
 /** The brain refused or could not be reached; the message says which. */
 export class BrainError extends BaseError.extend('BrainError', 'The agent brain failed.') {}
+
+/** An operation that writes or reads an agent's facts was given no agent: facts live in one agent's brain. */
+export class AgentRequiredError extends BaseError.extend(
+  'AgentRequiredError',
+  'Pass the agent whose brain holds the facts.',
+) {}
 
 /**
  * An event queued in a subscription's outbox: one wake of its rules (`@dxos/brain` `Evaluator`), with
@@ -78,6 +84,11 @@ export type PushOptions = {
    * loses its facts (the in-memory one, on reload) also forgets what it read, and the source is read again.
    */
   readonly read?: ReadCursor;
+  /**
+   * Stores the facts without evaluating any subscription, so bulk ingestion (a mailbox, a crawl) wakes nothing.
+   * EDGE's brain ignores it and evaluates as usual.
+   */
+  readonly storeOnly?: boolean;
 };
 
 /**

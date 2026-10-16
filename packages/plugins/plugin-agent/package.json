@@ -113,6 +113,16 @@
       "types": "./dist/types/src/types/AgentCompanion.d.ts",
       "import": "./dist/lib/AgentCompanion.mjs"
     },
+    "./BrainFactStore": {
+      "source": "./src/brain/BrainFactStore.ts",
+      "types": "./dist/types/src/brain/BrainFactStore.d.ts",
+      "import": "./dist/lib/BrainFactStore.mjs"
+    },
+    "./BrainMemory": {
+      "source": "./src/brain/BrainMemory.ts",
+      "types": "./dist/types/src/brain/BrainMemory.d.ts",
+      "import": "./dist/lib/BrainMemory.mjs"
+    },
     "./BrainService": {
       "source": "./src/types/BrainService.ts",
       "types": "./dist/types/src/types/BrainService.d.ts",

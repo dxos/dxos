@@ -8,12 +8,13 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
 
 import { factLine, toCompactFact } from './facts.ts';
+import { spaceFacts } from './space-facts.ts';
 
 export default BrainOperation.SummarizeSubject.pipe(
   Operation.withHandler(
@@ -39,21 +40,13 @@ const summarizePrompt = (subject: string, focus: string | undefined, lines: stri
 `;
 
 /**
- * Queries all facts mentioning the subject (as subject or object entity) and prompts the LLM for a
+ * Queries the space's agents for all facts mentioning the subject (as subject or object entity) and prompts the LLM for a
  * grounded, id-citing summary. Returns an empty summary when no facts match — the LLM is never
  * invoked without grounding. Named export so the flow is unit-testable without the operation runtime.
  */
-export const summarizeSubject = ({
-  subject,
-  focus,
-}: typeof BrainOperation.SummarizeSubject.input.Type): Effect.Effect<
-  typeof BrainOperation.SummarizeSubject.output.Type,
-  SemanticIndexError,
-  FactStore | AiService.AiService
-> =>
+export const summarizeSubject = ({ subject, focus }: typeof BrainOperation.SummarizeSubject.input.Type) =>
   Effect.gen(function* () {
-    const store = yield* FactStore;
-    const facts = yield* store.query({ entity: normalizeEntityId(subject) });
+    const facts = yield* spaceFacts({ entity: normalizeEntityId(subject) });
     if (facts.length === 0) {
       return { summary: '', factCount: 0, sources: [] };
     }
@@ -62,7 +55,7 @@ export const summarizeSubject = ({
     // can cite or open the underlying emails (PROV `attribution.source`), deduped, order preserved.
     const sources = [...new Set(facts.map((fact) => fact.attribution.source).filter(Boolean))];
     const lines = facts.map((fact) => factLine(toCompactFact(fact))).join('\n');
-    // LLM failures (provider error, 30s hang) are defects, not domain errors: the store query is the
+    // LLM failures (provider error, 30s hang) are defects, not domain errors: the brain query is the
     // recoverable part; a broken model configuration should surface loudly rather than as ''.
     const summary = yield* LanguageModel.generateText({ prompt: summarizePrompt(subject, focus, lines) }).pipe(
       Effect.provide(AiService.languageModel(SUMMARIZE_MODEL).pipe(Layer.orDie)),

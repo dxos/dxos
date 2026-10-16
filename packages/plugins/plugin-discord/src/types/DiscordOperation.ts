@@ -8,10 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
@@ -85,12 +87,16 @@ export const CrawlDiscordChannels = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.discord.crawlChannels'),
     name: 'Crawl Discord Channels',
-    description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
+    description: "Incrementally crawl Discord channels through the fact-extraction pipeline into an agent's brain.",
     icon: 'ph--bulldozer--regular',
   },
-  services: [Capability.Service, AiService.AiService, Credential.CredentialsService],
+  services: [Capability.Service, AiService.AiService, Credential.CredentialsService, BrainService.BrainService],
   input: Schema.Struct({
     connection: Ref.Ref(Connection.Connection),
+    // Optional in the schema so a call without one fails with `AgentRequiredError` rather than a decode error.
+    agent: Schema.optional(
+      Ref.Ref(Agent.Agent).annotate({ description: 'Agent whose brain receives the facts; required.' }),
+    ),
     channels: Schema.Array(Schema.String),
     descendThreads: Schema.optional(Schema.Boolean),
     maxDays: Schema.optional(Schema.Number),

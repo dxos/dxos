@@ -4,26 +4,36 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import { Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type RDF } from '@dxos/pipeline-rdf';
+import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { BrainCapabilities } from '#types';
+import { BrainOperationHandlerSet } from '#operations';
 
-import { makeFactStoreRegistry } from '../../capabilities/fact-store.ts';
 import { FactsCompanion } from './FactsCompanion.tsx';
 
-// A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
-// space, so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.
-const registry = makeFactStoreRegistry();
+// An in-memory brain contributed as the `BrainService` layer and seeded (below) for an agent in the story's space,
+// so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.
+const brain = BrainMemory.makeDetached();
+const brainSpec = LayerSpec.make({ affinity: 'application', requires: [], provides: [BrainService.BrainService] }, () =>
+  Layer.succeed(BrainService.BrainService, brain.service),
+);
 
 /** Minimal RDF fact fixture (subject —predicate→ object) for the viewer. */
 const fact = (id: string, subject: string, predicate: string, object: string): RDF.Fact => ({
@@ -49,15 +59,24 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      // Contribute the seeded registry directly so the companion resolves it without the full FactStore module.
-      capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
+      // The brain and the `ListFacts` handler the companion polls, without the rest of BrainPlugin.
+      capabilities: [
+        Capability.contribute(Capabilities.LayerSpec, brainSpec),
+        Capability.contribute(Capabilities.OperationHandler, BrainOperationHandlerSet.handlers),
+      ],
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
+              const agent = defaultSpace.db.add(
+                Obj.make(Agent.Agent, {
+                  name: 'Story agent',
+                  instructions: Ref.make(Instructions.make({ name: 'Story agent', text: '' })),
+                }),
+              );
+              yield* Effect.promise(() => EffectEx.runPromise(brain.service.push(agent.id, FACTS)));
             }),
         }),
         StorybookPlugin.make({}),

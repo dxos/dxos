@@ -6,14 +6,19 @@ import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
+import { Database } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
+import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 
 import { queryCompactFacts } from './query-facts.ts';
 import { summarizeSubject } from './summarize-subject.ts';
+import { AGENT_TYPES, addAgent, brainWithFacts } from './testing.ts';
 
 const makeFact = (options: {
   id: string;
@@ -44,12 +49,6 @@ const FACTS: RDF.Fact[] = [
   makeFact({ id: 'f-3', subject: 'bob', predicate: 'works-at', object: 'acme', confidence: 0.8 }),
 ];
 
-const seededStore = Effect.gen(function* () {
-  const store = yield* FactStore;
-  yield* store.putFacts(FACTS);
-  return store;
-});
-
 /** Stub `AiService` whose `generateText` echoes a canned response (summaries are not LLM-tested here). */
 const textAiService = (text: string): Layer.Layer<AiService.AiService> =>
   Layer.succeed(
@@ -65,14 +64,24 @@ const textAiService = (text: string): Layer.Layer<AiService.AiService> =>
     }),
   );
 
+let builder: EchoTestBuilder;
+let db: Database.Database;
+
+beforeEach(async () => {
+  builder = await new EchoTestBuilder().open();
+  ({ db } = await builder.createDatabase({ types: AGENT_TYPES }));
+});
+
+afterEach(async () => {
+  await builder.close();
+});
+
+/** The facts in the brain of the space's one agent, with the database the query reads the agents from. */
+const seeded = () => Layer.provideMerge(brainWithFacts(FACTS), Database.layer(db));
+
 describe('QueryFacts', () => {
   test('filters by entity across subject and object positions', async ({ expect }) => {
-    const facts = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        yield* seededStore;
-        return yield* queryCompactFacts({ entity: 'acme' });
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
-    );
+    const facts = await EffectEx.runPromise(queryCompactFacts({ entity: 'acme' }).pipe(Effect.provide(seeded())));
     expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-3']);
     // `works-at` is the seeded `schema:worksFor`, read back under its label.
     expect(facts[0]).toMatchObject({ subject: 'alice', predicate: 'works for', object: 'acme', factuality: 'CT+' });
@@ -81,25 +90,35 @@ describe('QueryFacts', () => {
   test('applies minConfidence and limit bounds', async ({ expect }) => {
     const { confident, bounded } = await EffectEx.runPromise(
       Effect.gen(function* () {
-        yield* seededStore;
         const confident = yield* queryCompactFacts({ entity: 'alice', minConfidence: 0.9 });
         const bounded = yield* queryCompactFacts({ limit: 1 });
         return { confident, bounded };
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(seeded())),
     );
     expect(confident.map((fact) => fact.id)).toEqual(['f-1']);
     expect(bounded).toHaveLength(1);
+  });
+
+  test("reads every agent's brain, each fact once", async ({ expect }) => {
+    const { service } = BrainMemory.makeDetached();
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* addAgent(service, FACTS.slice(0, 2));
+        yield* addAgent(service, FACTS.slice(1));
+        return yield* queryCompactFacts({});
+      }).pipe(
+        Effect.provide(Layer.provideMerge(Layer.succeed(BrainService.BrainService, service), Database.layer(db))),
+      ),
+    );
+    expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-2', 'f-3']);
   });
 });
 
 describe('SummarizeSubject', () => {
   test('grounds the summary on matched facts and reports factCount', async ({ expect }) => {
     const result = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        yield* seededStore;
-        return yield* summarizeSubject({ subject: 'Alice' });
-      }).pipe(
-        Effect.provide(Layer.provideMerge(FactStoreLive.layerMemory, textAiService('Alice works at Acme [f-1].'))),
+      summarizeSubject({ subject: 'Alice' }).pipe(
+        Effect.provide(Layer.merge(seeded(), textAiService('Alice works at Acme [f-1].'))),
       ),
     );
     expect(result.factCount).toBe(2);
@@ -111,13 +130,10 @@ describe('SummarizeSubject', () => {
 
   test('returns empty summary without invoking the LLM when no facts match', async ({ expect }) => {
     const result = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        yield* seededStore;
-        return yield* summarizeSubject({ subject: 'nobody' });
-      }).pipe(
+      summarizeSubject({ subject: 'nobody' }).pipe(
         Effect.provide(
-          Layer.provideMerge(
-            FactStoreLive.layerMemory,
+          Layer.merge(
+            seeded(),
             Layer.succeed(
               AiService.AiService,
               AiService.make({

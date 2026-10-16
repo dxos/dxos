@@ -7,11 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref } from '@dxos/echo';
-import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as RDF from '@dxos/pipeline-rdf/types';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as ReplyGeneration from '@dxos/plugin-inbox/ReplyGeneration';
 
@@ -19,25 +20,28 @@ import * as ReplyGeneration from '@dxos/plugin-inbox/ReplyGeneration';
 export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
 
 /**
- * Cursored fact extraction over a mailbox feed.
+ * Cursored fact extraction over a mailbox feed into one agent's brain.
  *
- * Lives in plugin-brain rather than plugin-inbox because brain owns everything it needs — the
- * `FactStore` it writes to, the settings that parameterize it, and the surfaces that read the result.
- * inbox owns the Mailbox and the feed cursor helpers, which this reaches through the plugin's public
- * API; nothing here inverts that.
+ * Lives in plugin-brain rather than plugin-inbox because brain owns the settings that parameterize it
+ * and the surfaces that read the result. inbox owns the Mailbox and the feed cursor helpers, which
+ * this reaches through the plugin's public API; nothing here inverts that.
  */
 export const AnalyzeMailbox = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.brain.analyzeMailbox'),
     name: 'Analyze Mailbox',
-    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
+    description: "Extracts RDF facts from every message in a mailbox feed into an agent's brain.",
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
+  services: [AiService.AiService, Database.Service, BrainService.BrainService, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are analyzed.',
     }),
+    // Optional in the schema so a routine saved without one fails with `AgentRequiredError` rather than a decode error.
+    agent: Schema.optional(
+      Ref.Ref(Agent.Agent).annotate({ description: 'Agent whose brain receives the facts; required.' }),
+    ),
     pageSize: Schema.optional(
       Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Number of messages processed per fact-store commit.',
@@ -83,10 +87,10 @@ export const QueryFacts = Operation.make({
     key: DXN.make('org.dxos.operation.brain.queryFacts'),
     name: 'Query Facts',
     description:
-      'Queries the space fact store (a semantic index of subject-predicate-object facts extracted from user content) with structured filters.',
+      "Queries the facts the space's agents know (subject-predicate-object facts extracted from user content) with structured filters.",
     icon: 'ph--brain--regular',
   },
-  services: [FactStore],
+  services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     subjectEntity: Schema.optional(
       Schema.String.annotate({ description: 'Entity slug the fact subject must match, e.g. "alice-smith".' }),
@@ -117,10 +121,10 @@ export const SummarizeSubject = Operation.make({
     key: DXN.make('org.dxos.operation.brain.summarizeSubject'),
     name: 'Summarize Subject',
     description:
-      'Composes a grounded summary of everything the space fact store knows about a subject (person, organization, topic), citing fact ids.',
+      "Composes a grounded summary of everything the space's agents know about a subject (person, organization, topic), citing fact ids.",
     icon: 'ph--brain--regular',
   },
-  services: [FactStore, AiService.AiService],
+  services: [Database.Service, BrainService.BrainService, AiService.AiService],
   input: Schema.Struct({
     subject: Schema.String.annotate({
       description: 'Entity slug or label to summarize, e.g. "Alice Smith" or "acme-corp".',
@@ -144,9 +148,9 @@ export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
 export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
 
 /**
- * Drafts a reply grounded on the thread and the facts the space knows about its participants.
+ * Drafts a reply grounded on the thread and the facts the space's agents know about its participants.
  *
- * Lives here rather than in plugin-inbox because it needs the `FactStore` brain owns. The surfaces
+ * Lives here rather than in plugin-inbox because it reads facts through the agents' brains. The surfaces
  * that offer it are inbox's, so it reaches them through `InboxCapabilities.ReplyGenerator` — the
  * dependency runs brain → inbox and a direct call from the surface would invert it.
  */
@@ -155,11 +159,26 @@ export const GenerateReply = Operation.make({
     key: DXN.make('org.dxos.operation.brain.generateReply'),
     name: 'Generate Reply',
     description:
-      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
+      "Drafts a reply to an email, grounded on the thread context and facts the space's agents know about the participants.",
     icon: 'ph--sparkle--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore],
+  services: [AiService.AiService, Database.Service, BrainService.BrainService],
   // The shared contract, so a surface can invoke whatever is contributed without naming this plugin.
   input: ReplyGeneration.Input,
   output: ReplyGeneration.Output,
+});
+
+/** Every fact the space's agents know, for surfaces that list them (the facts companion). */
+export const ListFacts = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.brain.listFacts'),
+    name: 'List Facts',
+    description: "Lists every fact the space's agents know.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, BrainService.BrainService],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    facts: Schema.Array(RDF.Fact),
+  }),
 });

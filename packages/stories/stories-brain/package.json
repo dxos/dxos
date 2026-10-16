@@ -31,6 +31,7 @@
     "@dxos/pipeline-discord": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-agent": "workspace:*",
     "@dxos/plugin-brain": "workspace:*",
     "@dxos/plugin-discord": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/fixtures": "workspace:*",

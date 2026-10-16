@@ -9,9 +9,12 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import * as BrainFactStore from '@dxos/plugin-agent/BrainFactStore';
+import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
@@ -156,5 +159,29 @@ describe('runFactPipeline', () => {
 
     expect(result.processed).toBe(2);
     expect(Cursor.parseKey(cursor.max)).toBe(Date.parse('2026-06-02T00:00:00.000Z'));
+  });
+
+  test("writes the facts into the agent's brain", async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Message.Message, Mailbox.Mailbox, Feed.Feed, Cursor.Cursor],
+    });
+
+    const mailbox = Mailbox.make({ name: 'Inbox' });
+    db.add(mailbox);
+    const feed = mailbox.feed.target;
+    invariant(feed, 'A new mailbox carries its feed.');
+    await db.appendToFeed(feed, [makeMessage('1', '2026-06-01T00:00:00.000Z')]);
+    await db.flush();
+
+    const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
+    const { service: brain } = BrainMemory.makeDetached();
+    const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
+      Effect.provide(Layer.succeed(FactStore, BrainFactStore.make(brain, 'kai'))),
+      Effect.provide(Database.layer(db)),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(result.facts).toBe(1);
+    expect(await EffectEx.runPromise(brain.query('kai', {}))).toHaveLength(1);
   });
 });

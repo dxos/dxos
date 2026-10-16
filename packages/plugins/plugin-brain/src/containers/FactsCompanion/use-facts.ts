@@ -2,55 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
-import * as EffectEx from '@dxos/effect/EffectEx';
-import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { type RDF } from '@dxos/pipeline-rdf';
 
-import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
+import { BrainOperation } from '#types';
 
 // Kept out of `FactsCompanion.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on
 // every edit.
 
-/**
- * Reads all facts from a store once. Extracted as a plain async function so the read path is
- * unit-testable without provisioning the full capability/render stack. Falls back to an empty list
- * on query failure so the surface never crashes on a malformed store.
- */
-export const queryFacts = (store: FactStoreApi): Promise<RDF.Fact[]> =>
-  EffectEx.runPromise(store.query({}).pipe(Effect.orElseSucceed((): RDF.Fact[] => [])));
+/** How often the facts are re-read: the brain has no change feed for its facts, as the agent's Knowledge panel polls too. */
+export const POLL_MS = 3_000;
 
 /**
- * Loads the facts for a space from the registry's shared in-memory store, re-querying whenever the
- * store mutates. The in-memory FactStore is not ECHO-reactive, so the registry's `subscribe` (fired
- * after `putFacts`/`clear`) is what keeps the view live as the analysis pipeline writes or a reset clears.
+ * The facts the space's agents know, re-read every {@link POLL_MS} while mounted. Each read schedules the next once it
+ * settles, so a slow read never overlaps a newer one; a failed read keeps the last facts shown.
  */
-export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefined): RDF.Fact[] => {
+export const useFacts = (spaceId: string | undefined): RDF.Fact[] => {
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   useEffect(() => {
+    setFacts([]);
     if (spaceId === undefined) {
-      setFacts([]);
       return;
     }
 
-    // Ignore a late resolve after unmount / space change so we never set state on a stale store.
     let cancelled = false;
-    const refresh = () =>
-      void queryFacts(registry.forSpace(spaceId)).then((result) => {
-        if (!cancelled) {
-          setFacts(result);
-        }
-      });
-
-    refresh();
-    const unsubscribe = registry.subscribe(spaceId, refresh);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const read = async () => {
+      const { data } = await invokePromise(BrainOperation.ListFacts, {}, { spaceId });
+      if (cancelled) {
+        return;
+      }
+      if (data) {
+        setFacts([...data.facts]);
+      }
+      timeout = setTimeout(() => void read(), POLL_MS);
+    };
+    void read();
     return () => {
       cancelled = true;
-      unsubscribe();
+      clearTimeout(timeout);
     };
-  }, [registry, spaceId]);
+  }, [invokePromise, spaceId]);
 
   return facts;
 };

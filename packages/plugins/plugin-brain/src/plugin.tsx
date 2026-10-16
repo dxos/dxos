@@ -5,7 +5,6 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
-  FactStore,
   MailboxProcessor,
   OperationHandler,
   PluginAsset,
@@ -19,10 +18,6 @@ import {
 import { meta } from '#meta';
 
 export const BrainPlugin = Plugin.define(meta).pipe(
-  // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
-  // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
-  // runs.
-  Plugin.addModule(FactStore),
   // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
   // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
   Plugin.addModule(MailboxProcessor),

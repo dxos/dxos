@@ -47,8 +47,6 @@ import {
   TranscriptionPipeline,
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
@@ -72,6 +70,7 @@ import {
 } from '../components/index.ts';
 import { PIPELINE_RUN, PipelineStoryContext } from '../modules/index.ts';
 import { StoryRole } from '../modules/index.ts';
+import { StoryBrain, StoryBrainPlugin } from '../testing/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const OWNER_EMAIL = 'alice@example.com';
@@ -153,7 +152,7 @@ type StoryArgs = { ai: AiConfig };
 
 const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
-  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const { facts: store } = Hooks.useCapability(StoryBrain);
   const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
   const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
@@ -181,7 +180,6 @@ const DefaultStory = ({ ai }: StoryArgs) => {
       // The space's brain: the predicates it learned in earlier runs, minting new ones in its own namespace.
       const ontology = spaceOntology(space.id);
       const program = Effect.gen(function* () {
-        const store = registry.forSpace(space.id);
         const learned = ontology.include(yield* store.predicates());
         // The space's people and organizations, so a mention of one is stored under its ECHO URI.
         const people = yield* Effect.promise(() => space.db.query(Filter.type(Person.Person)).run());
@@ -203,7 +201,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
           extractFactsStage({ ...extractOptions, ontology: learned, entities }),
           normalizeFactsStage({ ontology: learned, synonyms: SYNONYMS }),
           Pipeline.run({
-            // Stream facts into Brain's FactStore as each document is emitted (the output module reads
+            // Stream facts into the agent's brain as each document is emitted (the output module reads
             // them reactively), and advance the progress monitor.
             sink: (out) =>
               Effect.gen(function* () {
@@ -226,7 +224,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         ]);
       });
     },
-    [ai.preset, extractOptions, registry, space],
+    [ai.preset, extractOptions, store, space],
   );
 
   const runEmail = useCallback(
@@ -253,8 +251,8 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         ).then((messageFacts) => {
           collected.push(...messageFacts);
           handle.advance();
-          // Stream this message's facts into Brain's FactStore as it is processed, not only at the end.
-          void EffectEx.runPromise(registry.forSpace(space.id).putFacts(messageFacts));
+          // Stream this message's facts into the agent's brain as it is processed, not only at the end.
+          void EffectEx.runPromise(store.putFacts(messageFacts));
           return messageFacts;
         });
 
@@ -281,7 +279,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         ]);
       });
     },
-    [space, emails, ai.preset, extractOptions, registry],
+    [space, emails, ai.preset, extractOptions, store],
   );
 
   // Load the first `count` Enron messages from the dataset parquet (over HTTP) and make them the
@@ -362,7 +360,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
     }
     setStats([]);
     setDetails([]);
-    void EffectEx.runPromise(registry.forSpace(space.id).clear());
+    void EffectEx.runPromise(store.clear());
     const handle = progress.register(PIPELINE_RUN, {
       label: 'Pipeline run',
       onCancel: () => interruptRef.current?.(),
@@ -383,7 +381,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         handle.remove();
         interruptRef.current = null;
       });
-  }, [space, registry, progress, pipelineId, input, runRdf, runEmail, runTranscription]);
+  }, [space, store, progress, pipelineId, input, runRdf, runEmail, runTranscription]);
 
   const handleStop = useCallback(() => {
     progress.cancel(PIPELINE_RUN);
@@ -536,7 +534,7 @@ const meta = {
       SpacePlugin({}),
       MarkdownPlugin.make(),
       TranscriptionPlugin.make(),
-      BrainPlugin.make(),
+      StoryBrainPlugin(),
       ProgressPlugin.make(),
       StoryModulesPlugin(),
     ],
