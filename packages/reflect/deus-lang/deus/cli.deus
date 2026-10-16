@@ -1138,6 +1138,44 @@ def remote (args : Args) : {IO, Throw Text} Unit :=
 
 def remoteName (args : Args) : Text := Option.getOr (List.head? args.positional) "origin"
 
+/-- The host of the DEUS Worker the remote `name` names (`https://<host>/v1/<project>`), if it is one. -/
+def workerHost (dir : Text) (name : Text) : {IO} Option Text :=
+  let configured := Option.map trim (IO.readFile (dir ++ "/remotes/" ++ name ++ "/url"))
+  let url := getOr (Option.orElse configured (fun _ => defaultRemote dir name)) ""
+  if not (startsWith "https://" url) then Option.none
+  else
+    let rest := Text.drop 8 url
+    let slash := indexOf rest "/" 0
+    Option.some (if slash < 0 then rest else Text.take slash rest)
+
+/-- `deus link [name…] [--remote r] [--host h]`: the hosted explorer's page of each definition or
+  namespace, `https://<host>/@owner/project/Name`, or the project's page without names. The host is
+  the remote's (`origin` by default), so a link opens what was pushed there. -/
+def explorerLinks (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let place :=
+    match Project.read dir with
+    | Option.none => Throw.throw "this codebase has no project; run `deus project init @owner/project`"
+    | Option.some p =>
+        match Option.orElse (Address.parse p.projectIri) (fun _ => Address.ofIri p.projectIri) with
+        | Option.some a => Address.projectOf a
+        | Option.none => Throw.throw ("the project " ++ p.projectIri ++ " has no @owner/project address")
+  let remote := getOr (option args "remote") "origin"
+  let host :=
+    match Option.orElse (option args "host") (fun _ => workerHost dir remote) with
+    | Option.some h => h
+    | Option.none => Throw.throw ("the remote " ++ remote ++ " is not a DEUS Worker (https://<host>/v1/<project>); pass --host <host>")
+  -- A namespace has no entry of its own, so it is a name some entry lies under.
+  let isNamespace := fun name => List.any (fun pair => startsWith (name ++ ".") (fst pair)) (Map.toList ns)
+  let resolve := fun name =>
+    if Map.contains name ns || isNamespace name then name else fst (Cli.lookupName ns name)
+  let links := List.map (fun name => (name, Address.url host (Address.child place name))) (List.map resolve args.positional)
+  -- The project's page ends in `/`, so the app's relative files resolve inside the project.
+  let rows := if List.isEmpty links then [(Address.print place, Address.url host place ++ "/")] else links
+  Cli.output args (fun _ => Json.arr (List.map (fun row => Json.obj [("name", Json.str (fst row)), ("url", Json.str (snd row))]) rows))
+    (fun _ => Text.join "\n" (List.map snd rows))
+
 /-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. When the
   remote moved since the last pull, the current branch pulls it, merges it (`deus merge`, by source)
   and pushes again, up to three times; `--no-merge` fails instead. A push of the current branch first
@@ -2534,6 +2572,7 @@ def usage : Text :=
     "replication",
     "  remote add <name> <dir|url|r2://b/p> a remote: a directory, the DEUS Worker (https://<host>/v1/<project>),",
     "                                       or an R2 bucket and prefix",
+    "  link [name…] [--remote r|--host h]   explorer links for definitions and namespaces on the remote's Worker",
     "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks; refuses to drop",
     "                                       names no change deleted unless --allow-drop",
     "  heads [remote] [--branch b]          every head the remote claimed for the branch, newest first",
@@ -2592,7 +2631,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print Cli.usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
+      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)

@@ -229,5 +229,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 219 | 10-16 06:10 | 1h 00m | this commit | Live-site test suite in DEUS (D193): `deus test LiveSite --integration`, 13 tests over HTTP and in headless Chromium; `Json.parse`; builtin pages had no source on the live site (fixed); concurrent requests share one build |
 | 220 | 10-16 07:00 | 40m 00s | this commit | A queue consumer (`deus-live`) draws each pushed head's explorer: the index is stored about a minute after a push, so the first visitor gets it in under a second (task dc0e1ae8); LiveSite 13/13 |
 | 221 | 10-16 07:40 | 25m 00s | this commit | Time types (D194): `Duration`, `Instant`, `Clock` in `deus/time.deus`, 32-bit safe to year 9999; `Alarm.set` takes a `Duration`; field accessors show their note on the explorer |
+| 222 | 10-16 08:25 | 15m 00s | this commit | `deus link` prints explorer path links (task 99b72271); push measured at 9 s (task 672d80ad closed); LiveSite 14/14 after deploy 0e960d64 |
 
-Total from stage 1 to stage 221: 65h 21m.
+Total from stage 1 to stage 222: 65h 36m.

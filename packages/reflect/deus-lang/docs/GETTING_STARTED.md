@@ -322,11 +322,19 @@ deus explore --publish origin       # or uploads them beside a remote's bundles
 ```
 
 A remote can be a directory, the DEUS Worker (`deus remote add origin https://<host>/v1/<project>`), or
-an R2 bucket (`deus remote add origin r2://bucket/prefix`). `--publish` uploads the explorer beside
-the remote's bundles, and a republish uploads only the files that changed. From then on, every
-`deus push` to that remote refreshes it. The Worker in [`platform/worker/`](../platform/worker) serves
-the explorer of its `PREFIX` project at its root. The toolchain's own codebase, with its tasks, is
-published at <https://deus.dmytro-a80.workers.dev/>.
+an R2 bucket (`deus remote add origin r2://bucket/prefix`). The Worker in
+[`platform/worker/`](../platform/worker) draws each project's explorer itself from what was pushed, at
+`https://<host>/@owner/project/`, so a `deus push` is all it needs. For the other remotes, `--publish`
+uploads the explorer beside the remote's bundles, a republish uploads only the files that changed, and
+every later `deus push` refreshes it. The toolchain's own codebase, with its tasks, is at
+<https://deus.dmytro-a80.workers.dev/@dxos/toolchain/>.
+
+`deus link` prints a definition's or a namespace's page on the remote's Worker, to paste into a task or
+a review:
+
+```bash
+deus link List.map Cli              # https://<host>/@owner/project/List.map, …/Cli
+```
 
 ## Where to go next
 

@@ -65,7 +65,7 @@ with it.
 
 `~/.deus` is the toolchain codebase pulled from `origin` (the Worker): `deus init --empty`,
 `deus project init https://dxos.org/deus/toolchain`, `deus remote add origin …/v1/toolchain`, `deus pull origin`,
-`deus merge origin.main` (30 s). A push takes about a minute, most of it refreshing the explorer.
+`deus merge origin.main` (30 s). A push takes about 10 s; the Worker draws the explorer afterwards (D192).
 `~/.deus-2026-10-14` is this container's older local codebase, kept, not deleted.
 
 ## Container setup
@@ -99,7 +99,9 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-15 18:16 UTC, version 8a76fec2 (path links for names ending like a file).
+2026-10-16 08:20 UTC, version 0e960d64 (git 48af5281: field accessor pages show their note).
+
+A `deus push origin` takes about 10 s; the `deus-live` queue then draws every page in about 6 minutes.
 
 ## Budget guard (D190)
 
