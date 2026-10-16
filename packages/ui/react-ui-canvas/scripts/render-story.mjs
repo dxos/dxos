@@ -12,7 +12,7 @@
  * drives), not CSS transitions (which run on the compositor's own clock and would not be stepped).
  *
  * Usage:
- *   node scripts/render-story.mjs --story plugins-plugin-canvas-samples-dataflow--transition-extension \
+ *   node scripts/render-story.mjs --story plugins-plugin-canvas-samples-flow--transition-extension \
  *     [--seconds 20] [--fps 30|60] [--width 1920] [--height 1080] [--scale <device pixels per css pixel>] \
  *     [--globals theme:dark] [--url http://localhost:9010] [--out temp/<story>.mp4]
  *
@@ -43,9 +43,7 @@ const { values: options } = parseArgs({
 });
 
 if (!options.story) {
-  console.error(
-    '--story <storybook id> is required, e.g. plugins-plugin-canvas-samples-dataflow--transition-extension',
-  );
+  console.error('--story <storybook id> is required, e.g. plugins-plugin-canvas-samples-flow--transition-extension');
   process.exit(1);
 }
 

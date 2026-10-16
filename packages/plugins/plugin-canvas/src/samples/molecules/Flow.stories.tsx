@@ -55,7 +55,7 @@ const MORE_NAMES = [
   'Code',
   'CRM',
   'Files',
-  'Chat',
+  'Slack',
   'Tickets',
   'Sensors',
   'Billing',
@@ -208,7 +208,7 @@ const CHAPTERS: readonly Scene[] = [
  * 5. Untick `running` to freeze the frame; wheel and drag still pan and zoom the canvas.
  */
 const meta: Meta<DataFlowViewProps> = {
-  title: 'plugins/plugin-canvas/samples/DataFlow',
+  title: 'plugins/plugin-canvas/samples/Flow',
   render: (args) => <DataFlowView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   args: { spec: SPEC, running: true },
