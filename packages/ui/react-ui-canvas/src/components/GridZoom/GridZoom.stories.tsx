@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useViewport } from '../../hooks/index.ts';
-import { type Bounds } from '../../model/types.ts';
+import { type Bounds, type Camera } from '../../model/types.ts';
 import { easeInOut, fitBounds, interpolateCamera, screenBounds } from '../../utils/camera.ts';
 
 /** Clips are read from the gitignored `temp/grid-zoom/clip-NN.mp4` at the repo root; missing ones show a placeholder. */
@@ -23,11 +23,18 @@ type GridZoomProps = {
   rows: number;
   /** Scene-unit gap between tiles. */
   gap: number;
-  /** Zoom-out time, in ms. */
+  /** Tiles the camera visits in turn, each filling the view; unset is the centre tile and the two to its right. */
+  tour?: number[];
+  /** Time held on each toured tile, in ms. */
+  hold: number;
+  /** Time to pan from one toured tile to the next, in ms. */
+  pan: number;
+  /** Final zoom-out time, in ms. */
   duration: number;
-  /** Time held on the first tile before zooming out, in ms; unset holds for the length of the first tile's clip. */
-  hold?: number;
 };
+
+/** One leg of the camera's path: held on a tile (`focus`), or moving between two cameras. */
+type Shot = { ms: number; focus?: number; move?: (t: number) => Camera; camera?: Camera };
 
 type TileProps = {
   index: number;
@@ -72,17 +79,19 @@ const Tile = ({ index, bounds, onLoad }: TileProps) => {
 };
 
 /**
- * A grid of looping clips under one camera: it opens on the centre tile filling the view, plays that tile's clip once
- * through, then zooms out along `interpolateCamera`'s path until the whole grid fits.
+ * A grid of looping clips under one camera: it opens on a tile filling the view, holds while its clip plays, pans to
+ * each further tile of the tour in turn, then zooms out along `interpolateCamera`'s path until the whole grid fits.
  */
-const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
+const DefaultStory = ({ cols, rows, gap, tour: tourProp, hold, pan, duration }: GridZoomProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
-  const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   const [run, setRun] = useState(0);
-  // The first tile's clip, once loaded; `null` when that tile has no clip.
-  const [first, setFirst] = useState<HTMLVideoElement | null>();
-  const firstIndex = Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2);
+  const videos = useRef(new Map<number, HTMLVideoElement>());
+  // The tour starts once its first tile has loaded (or turned out to have no clip).
+  const [ready, setReady] = useState(false);
+  const centre = Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2);
+  const tour = useMemo(() => tourProp ?? [centre, centre + 1, centre + 2], [tourProp, centre]);
 
   const tiles = useMemo(
     () =>
@@ -94,44 +103,59 @@ const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
     [cols, rows, gap],
   );
 
-  const interpolate = useMemo(() => {
+  const shots = useMemo((): Shot[] => {
     if (viewport.width === 0) {
-      return undefined;
+      return [];
     }
-    const centre = tiles[firstIndex];
     const grid = {
       x: 0,
       y: 0,
       width: cols * TILE.width + (cols - 1) * gap,
       height: rows * TILE.height + (rows - 1) * gap,
     };
-    return interpolateCamera(fitBounds(centre, viewport), fitBounds(grid, viewport, gap), viewport);
-  }, [tiles, viewport, firstIndex, cols, rows, gap]);
+    const cameras = tour.filter((index) => tiles[index]).map((index) => fitBounds(tiles[index], viewport));
+    return tour.flatMap((focus, step): Shot[] => {
+      const from = cameras[step];
+      const last = step === cameras.length - 1;
+      const to = last ? fitBounds(grid, viewport, gap) : cameras[step + 1];
+      return [
+        { ms: hold, focus, camera: from },
+        { ms: last ? duration : pan, move: interpolateCamera(from, to, viewport) },
+      ];
+    });
+  }, [tiles, tour, viewport, cols, rows, gap, hold, pan, duration]);
+  const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
 
   useEffect(() => {
-    if (hold === undefined && first === undefined) {
+    if (!ready || shots.length === 0) {
       return;
     }
-    // Restart the first clip so the hold shows it from its beginning to its end.
-    if (first) {
-      first.currentTime = 0;
-      void first.play().catch(() => {});
-    }
-    const holdMs = hold ?? (first ? first.duration * 1_000 : 0);
     let frame = 0;
+    let focused: number | undefined;
     const start = performance.now();
     const tick = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start - holdMs) / duration));
-      setProgress(t);
-      if (t < 1) {
+      const time = Math.min(total, now - start);
+      setElapsed(time);
+      // Each toured clip restarts as the camera arrives, so its hold shows it from the beginning.
+      const focus = shotAt(shots, time).shot.focus;
+      if (focus !== undefined && focus !== focused) {
+        const video = videos.current.get(focus);
+        if (video) {
+          video.currentTime = 0;
+          void video.play().catch(() => {});
+        }
+      }
+      focused = focus;
+      if (time < total) {
         frame = requestAnimationFrame(tick);
       }
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run, duration, hold, first]);
+  }, [run, ready, shots, total]);
 
-  const camera = interpolate?.(easeInOut(progress));
+  const { shot, t } = shotAt(shots, elapsed);
+  const camera = shot?.camera ?? shot?.move?.(easeInOut(t));
 
   return (
     <div ref={ref} className='relative dx-fill overflow-hidden bg-black'>
@@ -142,7 +166,14 @@ const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
             key={index}
             index={index}
             bounds={screenBounds(camera, bounds)}
-            onLoad={index === firstIndex ? (video) => setFirst((current) => current ?? video ?? null) : undefined}
+            onLoad={(video) => {
+              if (video) {
+                videos.current.set(index, video);
+              }
+              if (index === tour[0]) {
+                setReady(true);
+              }
+            }}
           />
         ))}
       <div className='absolute top-2 left-2 w-fit'>
@@ -155,12 +186,25 @@ const DefaultStory = ({ cols, rows, gap, duration, hold }: GridZoomProps) => {
             onClick={() => setRun((run) => run + 1)}
           />
           <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
-            {Math.round(progress * 100)}% · {camera ? `${camera.zoom.toFixed(2)}×` : '—'}
+            {(elapsed / 1_000).toFixed(1)}s / {(total / 1_000).toFixed(0)}s ·{' '}
+            {camera ? `${camera.zoom.toFixed(2)}×` : '—'}
           </Toolbar.Text>
         </Toolbar.Root>
       </div>
     </div>
   );
+};
+
+/** The shot playing `time` ms into the path, and how far through it (0–1). */
+const shotAt = (shots: Shot[], time: number): { shot: Shot; t: number } => {
+  let start = 0;
+  for (const shot of shots) {
+    if (time < start + shot.ms) {
+      return { shot, t: (time - start) / shot.ms };
+    }
+    start += shot.ms;
+  }
+  return { shot: shots[shots.length - 1], t: 1 };
 };
 
 const meta: Meta<GridZoomProps> = {
@@ -174,5 +218,5 @@ export default meta;
 type Story = StoryObj<GridZoomProps>;
 
 export const Default: Story = {
-  args: { cols: 6, rows: 6, gap: 32, duration: 12_000 },
+  args: { cols: 6, rows: 6, gap: 32, hold: 10_000, pan: 1_500, duration: 12_000 },
 };
