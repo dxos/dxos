@@ -122,20 +122,58 @@ export const triple = (a, b, c) => {
 /** Functions passed to DEUS by handle, until the call that passed them ends (EMBEDDING.md, "Functions"). */
 const callbacks = new Map();
 let nextCallback = 0;
+/** The instance and handle of a DEUS function held in TypeScript (see `bindFunctions`). */
+const DEUS_FN = Symbol('DEUS function');
+/** The instance a call must run on, set on an argument that passes a DEUS function back. */
+const OWNER = Symbol('DEUS instance');
 /**
- * A TypeScript function of one parameter: it crosses as `{"$host": n}`, and each call DEUS makes of it
- * comes back as a `Host` request that the run answers with its result. A DEUS function does not come back.
+ * A function of one parameter. A TypeScript function crosses as `{"$host": n}`, and each call DEUS makes of it
+ * comes back as a `Host` request that the run answers with its result. A DEUS function crosses as `{"$fn": n}`
+ * and is called asynchronously on the instance that made it; passed back, it is that same function again.
  */
 export const fn = (param, result) => ({
   encode: (value) => {
+    const held = value[DEUS_FN];
+    if (held) {
+      const json = { $fn: held.handle };
+      Object.defineProperty(json, OWNER, { value: held.owner });
+      return json;
+    }
     const handle = nextCallback++;
     callbacks.set(handle, async (json) => result.encode(await value(param.decode(json))));
     return { $host: handle };
   },
   decode: (json) => {
-    throw new DeusDecodeError('a value, since a DEUS function cannot cross to TypeScript', json);
+    const raw = typeof json === 'function' ? json[DEUS_FN] && json : undefined;
+    if (!raw) {
+      throw new DeusDecodeError('a DEUS function', json);
+    }
+    const call = async (value) => result.decode(await raw(param.encode(value)));
+    call[DEUS_FN] = raw[DEUS_FN];
+    // The typed function keeps the raw one, whose collection releases the handle.
+    call.raw = raw;
+    return call;
   },
 });
+/** The one instance the DEUS functions `json` passes back belong to, if it passes any. */
+const ownerIn = (json) => {
+  const owners = new Set();
+  const visit = (value) => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (typeof value === 'object' && value !== null) {
+      if (value[OWNER]) {
+        owners.add(value[OWNER]);
+      }
+      (value.fields ?? []).forEach(visit);
+    }
+  };
+  visit(json);
+  if (owners.size > 1) {
+    throw new Error('a call passes DEUS functions from two instances, which cannot meet in one run');
+  }
+  return [...owners][0];
+};
 /** The handles of the functions `json` passes in, so a call can forget them when it ends. */
 const handlesIn = (json) =>
   Array.isArray(json)
@@ -205,6 +243,9 @@ const instance = (kernel) => {
   return {
     start: (image, entry, argument) => call(kernel.deus_start, [image, entry, JSON.stringify(argument)]),
     resume: (answer) => call(kernel.deus_resume, [JSON.stringify(answer)]),
+    apply: (handle, argument) =>
+      call((pointer, length) => kernel.deus_apply(handle, pointer, length), [JSON.stringify(argument)]),
+    release: (handle) => kernel.deus_release(handle),
   };
 };
 
@@ -239,37 +280,101 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
   };
   const io$ = answerIo(io, Date.now());
 
+  /** Answers each operation the run leaves unhandled until it ends; its value, or the failure thrown. */
+  const drive = async (kernel, first) => {
+    let result = first;
+    while (result.state === 'suspend') {
+      const answer =
+        result.ability === IO
+          ? io$
+          : result.ability === HOST
+            ? answerHost
+            : (abilities.get(result.ability) ?? abilities.get(result.hash));
+      if (!answer) {
+        throw new Error(`no handler for ${result.ability} operation ${result.op}`);
+      }
+      result = kernel.resume(await answer(result.op, result.args));
+    }
+    switch (result.state) {
+      case 'done':
+        return result.value;
+      case 'defect':
+        throw new DeusDefect(result.message, result.trace);
+      case 'exit':
+        throw new Error(`DEUS program exited with ${result.code}`);
+      default:
+        throw new Error(`DEUS kernel panic: ${result.message}`);
+    }
+  };
+
+  // An instance whose functions TypeScript holds stays out of the pool, runs one call at a time, and returns
+  // to the pool once every such function is collected.
+  const owners = new Map();
+  const ownerOf = (kernel) => {
+    let owner = owners.get(kernel);
+    if (!owner) {
+      owner = { kernel, live: 0, queue: Promise.resolve() };
+      owners.set(kernel, owner);
+    }
+    return owner;
+  };
+  const settle = (owner) => {
+    if (owner.live === 0 && !owner.busy) {
+      owners.delete(owner.kernel);
+      idle.push(owner.kernel);
+    }
+  };
+  const collected = new FinalizationRegistry(({ owner, handle }) => {
+    owner.kernel.release(handle);
+    owner.live--;
+    settle(owner);
+  });
+  /** `json` with each `{"$fn": n}` made a function that applies handle `n` on `owner`. */
+  const bindFunctions = (owner, json) => {
+    if (Array.isArray(json)) {
+      return json.map((item) => bindFunctions(owner, item));
+    }
+    if (typeof json !== 'object' || json === null) {
+      return json;
+    }
+    if (typeof json.$fn === 'number') {
+      const handle = json.$fn;
+      const raw = (argument) => exclusive(owner, () => drive(owner.kernel, owner.kernel.apply(handle, argument)));
+      raw[DEUS_FN] = { owner, handle };
+      owner.live++;
+      collected.register(raw, { owner, handle });
+      return raw;
+    }
+    return json.fields ? { ...json, fields: json.fields.map((item) => bindFunctions(owner, item)) } : json;
+  };
+  /** Runs `body` on `owner`'s instance after its earlier calls, binding the functions its value holds. */
+  const exclusive = (owner, body) => {
+    const turn = owner.queue.then(async () => {
+      owner.busy = true;
+      try {
+        return bindFunctions(owner, await body());
+      } finally {
+        owner.busy = false;
+        settle(owner);
+      }
+    });
+    owner.queue = turn.catch(() => {});
+    return turn;
+  };
+
   return {
     call: async (entry, argument) => {
-      const kernel = await take();
+      const owner = ownerIn(argument);
       try {
-        let result = kernel.start(image, entry, argument);
-        while (result.state === 'suspend') {
-          const answer =
-            result.ability === IO
-              ? io$
-              : result.ability === HOST
-                ? answerHost
-                : (abilities.get(result.ability) ?? abilities.get(result.hash));
-          if (!answer) {
-            throw new Error(`no handler for ${result.ability} operation ${result.op}`);
-          }
-          result = kernel.resume(await answer(result.op, result.args));
+        if (owner) {
+          return await exclusive(owner, () => drive(owner.kernel, owner.kernel.start(image, entry, argument)));
         }
-        switch (result.state) {
-          case 'done':
-            return result.value;
-          case 'defect':
-            throw new DeusDefect(result.message, result.trace);
-          case 'exit':
-            throw new Error(`DEUS program exited with ${result.code}`);
-          default:
-            throw new Error(`DEUS kernel panic: ${result.message}`);
-        }
+        const kernel = await take();
+        const fresh = ownerOf(kernel);
+        // The instance stays out of the pool until the call ends and its functions are collected.
+        return await exclusive(fresh, () => drive(kernel, kernel.start(image, entry, argument)));
       } finally {
-        // An abandoned run needs no cleanup: the instance's next `start` replaces it.
-        idle.push(kernel);
-        // A run's functions cannot outlive it: the next `start` resets every global that could hold one.
+        // A run's TypeScript functions cannot outlive it.
         handlesIn(argument).forEach((handle) => callbacks.delete(handle));
       }
     },

@@ -115,7 +115,12 @@ fn table(machine: &Machine, value: &Value, mutable: bool) -> Result<Rc<RefCell<T
 }
 
 /// The array in `value` and `index` checked against its length.
-fn array(machine: &Machine, value: &Value, index: &Value, name: &str) -> Result<(Rc<Version>, usize), Fail> {
+fn array(
+    machine: &Machine,
+    value: &Value,
+    index: &Value,
+    name: &str,
+) -> Result<(Rc<Version>, usize), Fail> {
     let i = int(machine, index)?;
     match value {
         Value::Array(version) => {

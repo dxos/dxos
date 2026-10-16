@@ -96,10 +96,11 @@ impl Version {
     /// A new version with `value` at `index`; this one keeps its contents.
     pub fn set(self: &Rc<Self>, index: usize, value: Value) -> Rc<Version> {
         Version::reroot(self);
-        let mut items = match std::mem::replace(&mut *self.node.borrow_mut(), Node::Root(Vec::new())) {
-            Node::Root(items) => items,
-            Node::Diff(..) => unreachable!("rerooted"),
-        };
+        let mut items =
+            match std::mem::replace(&mut *self.node.borrow_mut(), Node::Root(Vec::new())) {
+                Node::Root(items) => items,
+                Node::Diff(..) => unreachable!("rerooted"),
+            };
         let old = std::mem::replace(&mut items[index], value);
         let newer = Version::new(items);
         *self.node.borrow_mut() = Node::Diff(index, old, newer.clone());
@@ -125,14 +126,16 @@ impl Version {
         }
         // From the root back: each newer version becomes a diff to the older one, which takes the items.
         for older in path.into_iter().rev() {
-            let (index, value, newer) = match std::mem::replace(&mut *older.node.borrow_mut(), Node::Root(Vec::new())) {
-                Node::Diff(index, value, newer) => (index, value, newer),
-                Node::Root(_) => unreachable!("on the path"),
-            };
-            let mut items = match std::mem::replace(&mut *newer.node.borrow_mut(), Node::Root(Vec::new())) {
-                Node::Root(items) => items,
-                Node::Diff(..) => unreachable!("rerooted up to here"),
-            };
+            let (index, value, newer) =
+                match std::mem::replace(&mut *older.node.borrow_mut(), Node::Root(Vec::new())) {
+                    Node::Diff(index, value, newer) => (index, value, newer),
+                    Node::Root(_) => unreachable!("on the path"),
+                };
+            let mut items =
+                match std::mem::replace(&mut *newer.node.borrow_mut(), Node::Root(Vec::new())) {
+                    Node::Root(items) => items,
+                    Node::Diff(..) => unreachable!("rerooted up to here"),
+                };
             let current = std::mem::replace(&mut items[index], value);
             *newer.node.borrow_mut() = Node::Diff(index, current, older.clone());
             *older.node.borrow_mut() = Node::Root(items);
@@ -149,10 +152,12 @@ impl Drop for Version {
         };
         while let Some(version) = next {
             next = match Rc::try_unwrap(version) {
-                Ok(mut version) => match std::mem::replace(version.node.get_mut(), Node::Root(Vec::new())) {
-                    Node::Diff(_, _, newer) => Some(newer),
-                    Node::Root(_) => None,
-                },
+                Ok(mut version) => {
+                    match std::mem::replace(version.node.get_mut(), Node::Root(Vec::new())) {
+                        Node::Diff(_, _, newer) => Some(newer),
+                        Node::Root(_) => None,
+                    }
+                }
                 Err(_) => None,
             };
         }
@@ -424,7 +429,8 @@ pub fn equal(a: &Value, b: &Value) -> bool {
         }
         if let (Value::Array(x), Value::Array(y)) = (&a, &b) {
             let (left, right) = (x.snapshot(), y.snapshot());
-            return left.len() == right.len() && left.iter().zip(right.iter()).all(|(p, q)| equal(p, q));
+            return left.len() == right.len()
+                && left.iter().zip(right.iter()).all(|(p, q)| equal(p, q));
         }
         let (Value::Con(x), Value::Con(y)) = (&a, &b) else {
             return false;
@@ -560,7 +566,11 @@ pub fn show(symbols: &Symbols, value: &Value) -> String {
             }
         },
         Value::Array(version) => {
-            let items: Vec<String> = version.snapshot().iter().map(|item| show(symbols, item)).collect();
+            let items: Vec<String> = version
+                .snapshot()
+                .iter()
+                .map(|item| show(symbols, item))
+                .collect();
             format!("#[{}]", items.join(", "))
         }
         _ => "<function>".into(),

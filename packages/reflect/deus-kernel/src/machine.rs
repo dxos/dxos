@@ -728,6 +728,16 @@ impl Machine {
 
     pub fn call(&mut self, hash: &str, args: Vec<Value>) -> Result<Value, Fail> {
         let callee = self.ref_term(hash);
+        self.call_term(callee, args)
+    }
+
+    /// Evaluates the function value `func` (one an embedder held by handle) applied to `args`.
+    pub fn apply_value(&mut self, func: Value, args: Vec<Value>) -> Result<Value, Fail> {
+        let callee = self.constant(func, NONE_ID);
+        self.call_term(callee, args)
+    }
+
+    fn call_term(&mut self, callee: TermId, args: Vec<Value>) -> Result<Value, Fail> {
         if args.is_empty() {
             return self.run(callee, None);
         }

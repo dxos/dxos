@@ -33,15 +33,17 @@ images it was built to run.
 The module imports nothing. It exports one memory and six functions. All pointers and lengths are `i32`
 (wasm32 `usize`).
 
-| Export                                                         | Signature       | Meaning                                                                    |
-| -------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
-| `memory`                                                       | memory          | the kernel's linear memory; it grows, so views on it go stale after a call |
-| `deus_alloc(len)`                                              | `i32 → i32`     | reserves `len` bytes (at least 1) for input and returns their address      |
-| `deus_free(ptr, len)`                                          | `i32 i32 → ()`  | releases a block from `deus_alloc`; `len` must be the value passed to it   |
-| `deus_start(image, image_len, entry, entry_len, arg, arg_len)` | `i32 ×6 → i32`  | loads an image and calls an entry; returns the result's byte length        |
-| `deus_resume(answer, answer_len)`                              | `i32 i32 → i32` | answers the pending request; returns the result's byte length              |
-| `deus_output()`                                                | `→ i32`         | address of the last result                                                 |
-| `deus_output_len()`                                            | `→ i32`         | length of the last result (the same number the last call returned)         |
+| Export                                                         | Signature           | Meaning                                                                        |
+| -------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------ |
+| `memory`                                                       | memory              | the kernel's linear memory; it grows, so views on it go stale after a call     |
+| `deus_alloc(len)`                                              | `i32 → i32`         | reserves `len` bytes (at least 1) for input and returns their address          |
+| `deus_free(ptr, len)`                                          | `i32 i32 → ()`      | releases a block from `deus_alloc`; `len` must be the value passed to it       |
+| `deus_start(image, image_len, entry, entry_len, arg, arg_len)` | `i32 ×6 → i32`      | loads an image and calls an entry; returns the result's byte length            |
+| `deus_resume(answer, answer_len)`                              | `i32 i32 → i32`     | answers the pending request; returns the result's byte length                  |
+| `deus_apply(handle, argument, argument_len)`                   | `i32 i32 i32 → i32` | applies the function held as `handle` to the argument; returns as `deus_start` |
+| `deus_release(handle)`                                         | `i32 → ()`          | forgets the function held as `handle`                                          |
+| `deus_output()`                                                | `→ i32`             | address of the last result                                                     |
+| `deus_output_len()`                                            | `→ i32`             | length of the last result (the same number the last call returned)             |
 
 The linker also exports the globals `__data_end` and `__heap_base`. They are not part of the interface.
 
@@ -149,7 +151,7 @@ Values cross in both directions with one encoding.
 | `Unit`                                         | `null`                         |
 | `List a`                                       | an array of the elements       |
 | any other constructed value                    | `{"$":T,"tag":n,"fields":[…]}` |
-| a function, a `Ref` cell, a map, anything else | `{"$fn":true}` (output only)   |
+| a function, a `Ref` cell, a map, anything else | `{"$fn":n}`, a handle          |
 | a function the embedder passes in              | `{"$host":n}` (input only)     |
 
 In the object form, `T` names the value's type: the IRI the image declares for it with a
@@ -193,7 +195,13 @@ The kernel's JSON reader is lenient where a reader of its output never needs it 
   Other keys are ignored; with duplicate keys the first wins.
 - `"$"` is looked up among the image's IRIs and replaced by the type's hash. A name that is neither an IRI
   of the image nor a known hash is used as given, unchecked. `{"$":"#Bool","tag":1}` is `true`.
-- `{"$fn":true}` has no `"$"`, so a function can leave the kernel but never come back.
+- `{"$fn":n}` is the function the instance handed out under `n` (task f8c5aa01): the embedding kernel keeps
+  each function it writes until `deus_release(n)`, and reads `{"$fn":n}` back as that same value; a handle
+  it does not keep is a panic. `deus_apply(n, argument, length)` calls it on the idle instance and returns
+  as `deus_start`, suspensions included. Handles belong to one instance and live until it loads another
+  image. `deus bindings` returns such a function to TypeScript as an asynchronous function, keeps the
+  instance out of its pool while one is reachable (a `FinalizationRegistry` releases each), and runs a call
+  that passes one back on that instance.
 - `{"$host":n}` is a function of one argument that the embedder keeps under the number `n`. The program
   calls it as any function; each call performs operation 0 of `urn:deus:builtin:Host` (`#Host`) with the
   arguments `[n, x]`, which no program handles, so the run suspends and the embedder answers with the

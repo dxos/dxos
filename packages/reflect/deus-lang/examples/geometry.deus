@@ -5,6 +5,7 @@
   `Shapes.scale` is `Shapes.scale` in TypeScript; `firstOf` is polymorphic, so it takes the codec of its
   element type first: `firstOf(int, [7, 8])`. `scaledAreas` takes a TypeScript function, which may be
   asynchronous; DEUS calls it through the `Host` ability, so each call suspends the run (task 1474b99e).
+  `scaler` returns a DEUS function, which TypeScript calls asynchronously and may pass back (task f8c5aa01).
   src/bindings/bindings.test.ts drives it.
 -/
 
@@ -84,6 +85,12 @@ def firstOf (xs : List a) : Option a := List.head? xs
 
 /-- Each shape's area, passed through `f`. -/
 def scaledAreas (f : Int -> Int) (shapes : List Shape) : List Int := List.map (fun s => f (area s)) shapes
+
+/-- `x` times `k`. -/
+def times (k : Int) (x : Int) : Int := x * k
+
+/-- A function that multiplies by `k`: one parameter, since its body is not a lambda. -/
+def scaler (k : Int) : Int -> Int := times k
 
 namespace Shapes
 

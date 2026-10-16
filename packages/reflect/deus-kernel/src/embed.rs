@@ -11,11 +11,14 @@
 //! `{"state":"done","value":…}`, `{"state":"suspend","ability":…,"op":n,"args":[…]}`,
 //! `{"state":"defect","message":…,"trace":[…]}`, `{"state":"panic","message":…}` and
 //! `{"state":"exit","code":n}`.
+//!
+//! A DEUS function in a result or an operation's arguments leaves as `{"$fn":n}`. The instance keeps it until
+//! `deus_release(n)`, takes `{"$fn":n}` back as that function, and `deus_apply(n, argument)` calls it.
 
 use std::cell::RefCell;
 
 use crate::host::Host;
-use crate::json::{decode, encode, entry, iri_of, string};
+use crate::json::{decode_with, encode_with, entry, iri_of, string, Handles};
 use crate::machine::{Machine, Options};
 use crate::sexp::{read_all, Sexp};
 use crate::text::text;
@@ -74,6 +77,8 @@ thread_local! {
     static OUTPUT: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
     /// The image the machine was loaded from and its `main`, to reuse the machine for the same image.
     static LOADED: RefCell<Option<(Vec<u8>, String)>> = const { RefCell::new(None) };
+    /// The functions the embedder holds, which belong to the loaded machine.
+    static HANDLES: RefCell<Handles> = RefCell::new(Handles::default());
 }
 
 /// Allocates `len` bytes for the embedder to write input into.
@@ -112,10 +117,35 @@ unsafe fn input(pointer: *const u8, len: usize) -> String {
 }
 
 fn finish(machine: &mut Machine, result: Result<Value, Fail>) -> String {
+    HANDLES.with(|handles| finish_with(machine, result, &mut handles.borrow_mut()))
+}
+
+/// The value as JSON, keeping its functions as handles.
+fn encode(value: &Value, machine: &Machine, handles: &mut Handles) -> String {
+    encode_with(value, &machine.symbols, &machine.iris, Some(handles))
+}
+
+/// Decodes `text`, reading `{"$fn":n}` as the function the embedder holds.
+fn decode(text: &str, machine: &mut Machine) -> Result<Value, String> {
+    HANDLES.with(|handles| {
+        decode_with(
+            text,
+            &mut machine.symbols,
+            &machine.iris,
+            Some(&handles.borrow()),
+        )
+    })
+}
+
+fn finish_with(
+    machine: &mut Machine,
+    result: Result<Value, Fail>,
+    handles: &mut Handles,
+) -> String {
     let fields = match result {
         Ok(value) => vec![
             entry("state", "\"done\""),
-            entry("value", &encode(&value, &machine.symbols, &machine.iris)),
+            entry("value", &encode(&value, machine, handles)),
         ],
         Err(Fail::Suspend {
             ability,
@@ -124,7 +154,7 @@ fn finish(machine: &mut Machine, result: Result<Value, Fail>) -> String {
         }) => {
             let args: Vec<String> = args
                 .iter()
-                .map(|arg| encode(arg, &machine.symbols, &machine.iris))
+                .map(|arg| encode(arg, machine, handles))
                 .collect();
             let iri = iri_of(&ability, &machine.iris);
             vec![
@@ -190,6 +220,8 @@ pub unsafe extern "C" fn deus_start(
         }
         None => {
             LOADED.with(|loaded| *loaded.borrow_mut() = None);
+            // A new machine: the old one's functions are gone with it.
+            HANDLES.with(|handles| handles.borrow_mut().clear());
             Machine::new(
                 crate::prims::create(),
                 Box::new(EmbedHost),
@@ -229,7 +261,7 @@ pub unsafe extern "C" fn deus_start(
         if entry_hash.is_empty() {
             return Err(Fail::Panic("image has no (main \"hash\") form".into()));
         }
-        decode(&argument, &mut machine.symbols, &machine.iris).map_err(Fail::Panic)
+        decode(&argument, &mut machine).map_err(Fail::Panic)
     })();
     let json = match json {
         Ok(argument) => {
@@ -258,10 +290,51 @@ pub unsafe extern "C" fn deus_resume(answer: *const u8, answer_len: usize) -> us
                 entry("message", &string("no machine"))
             );
         };
-        let result = decode(&answer, &mut machine.symbols, &machine.iris)
+        let result = decode(&answer, machine)
             .map_err(Fail::Panic)
             .and_then(|value| machine.resume(value));
         finish(machine, result)
     });
     respond(json)
+}
+
+/// Applies the function the embedder holds as `handle` to the JSON value `argument`, on the machine that
+/// made it, which must be idle; returns as `deus_start`.
+///
+/// # Safety
+/// `argument` must address `argument_len` initialized bytes.
+#[no_mangle]
+pub unsafe extern "C" fn deus_apply(
+    handle: i32,
+    argument: *const u8,
+    argument_len: usize,
+) -> usize {
+    let argument = input(argument, argument_len);
+    let json = MACHINE.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        let Some(machine) = slot.as_mut() else {
+            return format!(
+                "{{{},{}}}",
+                entry("state", "\"panic\""),
+                entry("message", &string("no machine"))
+            );
+        };
+        let func = HANDLES.with(|handles| handles.borrow().get(handle));
+        let result = match func {
+            Some(func) => decode(&argument, machine)
+                .map_err(Fail::Panic)
+                .and_then(|value| machine.apply_value(func, vec![value])),
+            None => Err(Fail::Panic(format!(
+                "no function {handle}: released, or made by another instance"
+            ))),
+        };
+        finish(machine, result)
+    });
+    respond(json)
+}
+
+/// Forgets the function the embedder held as `handle`.
+#[no_mangle]
+pub extern "C" fn deus_release(handle: i32) {
+    HANDLES.with(|handles| handles.borrow_mut().release(handle));
 }

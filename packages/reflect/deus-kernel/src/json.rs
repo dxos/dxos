@@ -4,8 +4,9 @@
 
 //! Values as JSON, for embedders (a Cloudflare Worker, a browser): `Int` is a number, `Text` a
 //! string, `Bool` a boolean, `Unit` null, a list an array, and any other constructor
-//! `{"$": type, "tag": n, "fields": [...]}`. A DEUS function leaves as `{"$fn": true}` and cannot
-//! come back; an embedder's function `{"$host": n}` comes in as one the program calls through the
+//! `{"$": type, "tag": n, "fields": [...]}`. A DEUS function leaves as `{"$fn": n}`, a handle in the
+//! embedding's [`Handles`] that comes back as the same function (`{"$fn": true}` where nothing keeps
+//! handles); an embedder's function `{"$host": n}` comes in as one the program calls through the
 //! `#Host` ability (see [`HOST`]). A user type crosses by its IRI when the image names it (`iris`: hash → IRI), and a builtin
 //! (`#Option`) as `urn:deus:builtin:Option` (D68), so every identity an embedder sees is a URI.
 
@@ -40,14 +41,61 @@ fn identity_of(name: &str, hashes: &HashMap<String, String>) -> String {
     }
 }
 
+/// DEUS functions an embedder holds as `{"$fn": n}`: kept until it releases them, so a call can pass one
+/// back or apply it (`deus_apply`).
+#[derive(Default)]
+pub struct Handles {
+    values: HashMap<i32, Value>,
+    next: i32,
+}
+
+impl Handles {
+    /// Keeps `value` and returns its handle.
+    pub fn keep(&mut self, value: Value) -> i32 {
+        let handle = self.next;
+        self.next = self.next.wrapping_add(1);
+        self.values.insert(handle, value);
+        handle
+    }
+
+    pub fn get(&self, handle: i32) -> Option<Value> {
+        self.values.get(&handle).cloned()
+    }
+
+    pub fn release(&mut self, handle: i32) {
+        self.values.remove(&handle);
+    }
+
+    /// Forgets every handle, when the functions' machine is replaced.
+    pub fn clear(&mut self) {
+        self.values.clear();
+    }
+}
+
 /// Encodes a value; `symbols` names constructor types.
 pub fn encode(value: &Value, symbols: &Symbols, iris: &HashMap<String, String>) -> String {
+    encode_with(value, symbols, iris, None)
+}
+
+/// Encodes a value, keeping each function it holds in `handles`.
+pub fn encode_with(
+    value: &Value,
+    symbols: &Symbols,
+    iris: &HashMap<String, String>,
+    mut handles: Option<&mut Handles>,
+) -> String {
     let mut out = String::new();
-    write(value, symbols, iris, &mut out);
+    write(value, symbols, iris, &mut handles, &mut out);
     out
 }
 
-fn write(value: &Value, symbols: &Symbols, iris: &HashMap<String, String>, out: &mut String) {
+fn write(
+    value: &Value,
+    symbols: &Symbols,
+    iris: &HashMap<String, String>,
+    handles: &mut Option<&mut Handles>,
+    out: &mut String,
+) {
     match value {
         Value::Int(x) => out.push_str(&x.to_string()),
         Value::Bool(x) => out.push_str(if *x { "true" } else { "false" }),
@@ -59,7 +107,7 @@ fn write(value: &Value, symbols: &Symbols, iris: &HashMap<String, String>, out: 
                 if index > 0 {
                     out.push(',');
                 }
-                write(item, symbols, iris, out);
+                write(item, symbols, iris, handles, out);
             }
             out.push(']');
         }
@@ -75,11 +123,14 @@ fn write(value: &Value, symbols: &Symbols, iris: &HashMap<String, String>, out: 
                 if index > 0 {
                     out.push(',');
                 }
-                write(field, symbols, iris, out);
+                write(field, symbols, iris, handles, out);
             }
             out.push_str("]}");
         }
-        _ => out.push_str("{\"$fn\":true}"),
+        _ => match handles {
+            Some(handles) => out.push_str(&format!("{{\"$fn\":{}}}", handles.keep(value.clone()))),
+            None => out.push_str("{\"$fn\":true}"),
+        },
     }
 }
 
@@ -252,6 +303,7 @@ fn to_value(
     json: &Json,
     symbols: &mut Symbols,
     hashes: &HashMap<String, String>,
+    handles: Option<&Handles>,
 ) -> Result<Value, String> {
     Ok(match json {
         Json::Null => unit(),
@@ -261,7 +313,7 @@ fn to_value(
         Json::Array(items) => list_from(
             items
                 .iter()
-                .map(|item| to_value(item, symbols, hashes))
+                .map(|item| to_value(item, symbols, hashes, handles))
                 .collect::<Result<_, _>>()?,
         ),
         Json::Object(fields) if field(fields, "$host").is_some() => {
@@ -269,6 +321,17 @@ fn to_value(
                 return Err("json: \"$host\" needs a number".into());
             };
             host_function(crate::text::to_int32(*handle), symbols)
+        }
+        Json::Object(fields) if field(fields, "$fn").is_some() => {
+            let Some(Json::Number(handle)) = field(fields, "$fn") else {
+                return Err("json: \"$fn\" needs a number".into());
+            };
+            let handle = crate::text::to_int32(*handle);
+            handles
+                .and_then(|handles| handles.get(handle))
+                .ok_or_else(|| {
+                    format!("json: no function {handle}: released, or made by another instance")
+                })?
         }
         Json::Object(fields) => {
             let Some(Json::Text(name)) = field(fields, "$") else {
@@ -281,7 +344,7 @@ fn to_value(
             let values = match field(fields, "fields") {
                 Some(Json::Array(items)) => items
                     .iter()
-                    .map(|item| to_value(item, symbols, hashes))
+                    .map(|item| to_value(item, symbols, hashes, handles))
                     .collect::<Result<Fields, _>>()?,
                 _ => Fields::new(),
             };
@@ -319,6 +382,16 @@ pub fn decode(
     symbols: &mut Symbols,
     iris: &HashMap<String, String>,
 ) -> Result<Value, String> {
+    decode_with(text, symbols, iris, None)
+}
+
+/// Decodes a value; `{"$fn": n}` is the function `handles` keeps as `n`.
+pub fn decode_with(
+    text: &str,
+    symbols: &mut Symbols,
+    iris: &HashMap<String, String>,
+    handles: Option<&Handles>,
+) -> Result<Value, String> {
     let hashes: HashMap<String, String> = iris
         .iter()
         .map(|(hash, iri)| (iri.clone(), hash.clone()))
@@ -332,7 +405,7 @@ pub fn decode(
     if reader.peek().is_some() {
         return Err(format!("json: trailing input at {}", reader.pos));
     }
-    to_value(&json, symbols, &hashes)
+    to_value(&json, symbols, &hashes, handles)
 }
 
 /// A JSON object field `"name":<raw>`; the raw part is already JSON.
