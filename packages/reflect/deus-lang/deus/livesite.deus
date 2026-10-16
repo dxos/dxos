@@ -3,7 +3,8 @@
   they run only with `deus test LiveSite --integration` and are never cached. They check what a
   visitor and the app depend on: the page and app files, the live API's index, definition pages
   (plain, recursive-group members, builtins, a sample across the namespace), change pages, path
-  links and how fast a stored page answers. `$DEUS_SITE` picks another deployment.
+  links and how fast a stored page answers, and in headless Chromium what a visitor sees
+  (`scripts/explorer-smoke.mjs`). `$DEUS_SITE` picks another deployment.
 -/
 
 namespace LiveSite
@@ -34,26 +35,27 @@ def fetchPath (path : Text) (headers : List Text) : {IO} Reply :=
     Reply.mk (Option.getOr (Int.fromText code) 0) body (Option.getOr (Int.fromText whole) 0 * 1000 + Option.getOr (Int.fromText fraction) 0)
   | _ => Reply.mk 0 out 0
 
-/-- A JSON document from the live API, or `null` when it did not answer 200 with JSON. -/
-def jsonAt (path : Text) : {IO} Json :=
+/-- A JSON document from the live API; anything but a 200 with JSON fails the test with what came back. -/
+def jsonAt (path : Text) : {IO, Throw Text} Json :=
   let reply := fetchPath path []
-  if reply.httpStatus != 200 then Json.null
+  let failure := fun (why : Text) => Throw.throw ("GET " ++ path ++ ": " ++ why ++ " after " ++ Int.toText reply.elapsed ++ " ms: " ++ Text.take 300 reply.httpBody)
+  if reply.httpStatus != 200 then failure ("status " ++ Int.toText reply.httpStatus)
   else
     match Json.parse reply.httpBody with
     | Result.ok j => j
-    | Result.err _ => Json.null
+    | Result.err message => failure ("not JSON (" ++ message ++ ")")
 
 /-- The main branch's head the live API names now. -/
-def liveHead (u : Unit) : {IO} Text := Json.text (Json.get (jsonAt ("/v1/" ++ projectAddress ++ "/live/main")) "causal")
+def liveHead (u : Unit) : {IO, Throw Text} Text := Json.text (Json.get (jsonAt ("/v1/" ++ projectAddress ++ "/live/main")) "causal")
 
 /-- The live API at the current head. -/
-def liveApi (u : Unit) : {IO} Text := "/v1/" ++ projectAddress ++ "/live/" ++ liveHead ()
+def liveApi (u : Unit) : {IO, Throw Text} Text := "/v1/" ++ projectAddress ++ "/live/" ++ liveHead ()
 
 /-- A definition page's file name: builtin hashes such as `#Bool` are written `_Bool`. -/
 def pagePath (h : Text) : Text := if Text.startsWith "#" h then "_" ++ Text.drop 1 h else h
 
 /-- Whether the page of the name `name` (an entry of `names`) loads and describes it. -/
-def pageLoads (base : Text) (entry : Json) : {IO} Bool :=
+def pageLoads (base : Text) (entry : Json) : {IO, Throw Text} Bool :=
   let page := jsonAt (base ++ "/def/" ++ pagePath (Json.text (Json.get entry "hash")) ++ ".json")
   Json.text (Json.get page "hash") == Json.text (Json.get entry "hash") && not (Text.isEmpty (Json.text (Json.get page "html")))
 
@@ -92,7 +94,7 @@ test indexDescribesTheCodebase :=
   let meta := Json.get index "meta"
   let names := Json.items (Json.get index "names")
   let history := Json.items (Json.get meta "history")
-  Json.text (Json.get meta "projectAddress") == "https://dxos.org/deus/toolchain" && Json.text (Json.get meta "branch") == "main" &&
+  Json.text (Json.get meta "project") == "https://dxos.org/deus/toolchain" && Json.text (Json.get meta "branch") == "main" &&
     List.length names == Json.int (Json.get meta "definitions") && List.length names > 1000 &&
     List.any (fun e => Json.text (Json.get e "name") == "List.map") names &&
     not (List.isEmpty (Json.items (Json.get index "tasks"))) &&
@@ -143,5 +145,12 @@ test storedPagesAnswerQuickly :=
 test unknownPagesAreNotFound :=
   let base := liveApi ()
   (fetchPath (base ++ "/def/nothing.json") []).httpStatus == 404 && (fetchPath (base ++ "/elsewhere") []).httpStatus == 404 && (fetchPath "/v1/@nobody/nothing/live/main" []).httpStatus == 404
+
+@[integration]
+test browserShowsTheExplorer :=
+  -- What a visitor sees, in headless Chromium: the overview, then a path link's card, with no page error or failed request.
+  let script := Option.getOr (IO.getEnv "DEUS_HOME") "." ++ "/scripts/explorer-smoke.mjs"
+  let (code, out, _) := IO.exec "node" [script, siteUrl ()]
+  code == 0 && Text.contains "\"ok\":true" out
 
 end LiveSite

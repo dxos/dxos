@@ -226,5 +226,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 216 | 10-15 18:20 | 4h 40m | `81b23f7b` | Budget guard (D190): the $10 budget alert calls `deus-guard`, which cuts every other Worker's route and crons (drilled on a canary); explorer path links for names that end like a file (`List.map`); env key granted `@dxos/*` |
 | 217 | 10-15 18:30 | 10m 00s | this commit | Deletes keep a copy: the Worker moves deleted bundles and assets to the trash, directory remotes too, and `deus compact` deletes only once the remote lists every stratum it wrote; the deployed Worker checked live for the 426 epoch gate and the head log (D191, task 91357967) |
 | 218 | 10-15 19:40 | 1h 10m | this commit | Live explorer (D192): the Worker draws every page from the hosted codebase with the explorer's own DEUS code compiled to JS, serves the app itself, warms each pushed head; `deus push` to the Worker no longer publishes the site; `deus add` reads directories recursively; `@dxos/base` and `@dxos/examples` build from the toolchain with identical hashes |
+| 219 | 10-16 06:10 | 1h 00m | this commit | Live-site test suite in DEUS (D193): `deus test LiveSite --integration`, 13 tests over HTTP and in headless Chromium; `Json.parse`; builtin pages had no source on the live site (fixed); concurrent requests share one build |
 
-Total from stage 1 to stage 218: 63h 56m.
+Total from stage 1 to stage 219: 64h 56m.
