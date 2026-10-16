@@ -10,14 +10,25 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
-import { type Goal, type Knowledge } from '#types';
+import { type Goal } from '#types';
 
 export type ProfileGoal = Pick<Goal.Goal, 'id' | 'title' | 'description' | 'horizon' | 'status'>;
-export type ProfileMemory = Pick<Knowledge.Memory, 'id' | 'content' | 'kind' | 'origin' | 'observedAt'>;
+
+/** A fact about the subject, as one line. */
+export type ProfileFact = {
+  id: string;
+  /** Subject, predicate and object. */
+  text: string;
+  /** The predicate's label, which groups facts of one kind. */
+  predicate: string;
+  /** Whether the speaker said it or the agent concluded it, when recorded. */
+  origin?: 'stated' | 'inferred';
+  saidAt: string;
+};
 
 export type ProfileGraphProps = {
   goals: readonly ProfileGoal[];
-  memories: readonly ProfileMemory[];
+  facts: readonly ProfileFact[];
 };
 
 /** Icon per goal status, shared with the agent state panel. */
@@ -29,22 +40,10 @@ export const GOAL_ICONS: Record<Goal.Status, string> = {
   dropped: 'ph--x-circle--regular',
 };
 
-/** Icon per memory kind, shared with the agent state panel. */
-export const MEMORY_ICONS: Record<Knowledge.Kind, string> = {
-  fact: 'ph--info--regular',
-  preference: 'ph--heart--regular',
-  goal: 'ph--flag--regular',
-  commitment: 'ph--handshake--regular',
-  relationship: 'ph--users--regular',
-  event: 'ph--calendar--regular',
-  note: 'ph--note--regular',
-  directive: 'ph--gavel--regular',
-};
-
-/** What an agent knows about a person or team: their goals and the active memories about them. */
-export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
+/** What an agent knows about a person or team: their goals and the facts about them. */
+export const ProfileGraph = ({ goals, facts }: ProfileGraphProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  if (goals.length === 0 && memories.length === 0) {
+  if (goals.length === 0 && facts.length === 0) {
     return <Status.Empty>{t('profile-graph-empty.message')}</Status.Empty>;
   }
 
@@ -75,26 +74,26 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
           </section>
         </Layout.Flex>
       )}
-      {memories.length > 0 && (
+      {facts.length > 0 && (
         <Layout.Flex asChild column>
-          <section aria-label={t('profile-graph-memories.heading')}>
-            <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-memories.heading')}</h3>
+          <section aria-label={t('profile-graph-facts.heading')}>
+            <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-facts.heading')}</h3>
             <Listbox.Root
-              items={memories.map((memory) => ({
-                value: memory.id,
-                label: memory.content,
-                icon: MEMORY_ICONS[memory.kind],
+              items={facts.map((fact) => ({
+                value: fact.id,
+                label: fact.text,
+                icon: 'ph--graph--regular',
                 description: [
-                  t(`memory-kind-${memory.kind}.label`),
-                  t(`memory-origin-${memory.origin}.label`),
-                  new Date(memory.observedAt).toLocaleDateString(),
+                  fact.predicate,
+                  ...(fact.origin ? [t(`fact-origin-${fact.origin}.label`)] : []),
+                  new Date(fact.saidAt).toLocaleDateString(),
                 ].join(' · '),
               }))}
             >
               <Listbox.Viewport>
                 <Listbox.Content>
-                  {memories.map((memory) => (
-                    <Listbox.Item key={memory.id} id={memory.id} />
+                  {facts.map((fact) => (
+                    <Listbox.Item key={fact.id} id={fact.id} />
                   ))}
                 </Listbox.Content>
               </Listbox.Viewport>

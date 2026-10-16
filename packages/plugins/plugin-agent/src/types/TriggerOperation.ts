@@ -161,7 +161,7 @@ export const ResetBrain = Operation.make({
     key: DXN.make('org.dxos.operation.agent.resetBrain'),
     name: 'Reset brain',
     description:
-      "Wipes the agent's brain: its facts and memories, how far it has read each source, and its queued events. Watches stay.",
+      "Wipes the agent's brain: its facts, how far it has read each source, and its queued events. Watches stay.",
     icon: 'ph--trash--regular',
   },
   services: [Database.Service, BrainService.BrainService],

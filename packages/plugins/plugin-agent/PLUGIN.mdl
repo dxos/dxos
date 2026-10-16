@@ -5,8 +5,8 @@ version: 0.1.0
 ---
 
 Manages autonomous agents in a space: assistant `Agent` objects that converse with
-people in channels (Discord, freeq, local feeds) and Composer chats, interview them, and keep what they learn: memories
-as named graphs in the agent's brain, about the `Person` or `Organization` they name, and `Goal`s as ECHO objects.
+people in channels (Discord, freeq, local feeds) and Composer chats, interview them, and keep what they learn: facts
+in the agent's brain, about the `Person` or `Organization` they name, and `Goal`s as ECHO objects.
 
 This document records what is built. Design intent lives in [`docs/DESIGN.md`](./docs/DESIGN.md)
 (architecture, EDGE gateway, identity) and [`docs/MEMORY.md`](./docs/MEMORY.md) (the memory graph and
@@ -17,7 +17,7 @@ The plugin depends on `org.dxos.plugin.assistant` (which registers `Agent`, `Cha
 and renders the Agent article) and `org.dxos.plugin.thread`, whose channel operations carry every
 message the agent sends outside Composer. It knows no channel backend: Discord lives in
 plugin-discord as a `ChannelBackendProvider`. It ships a workerd variant with no React surfaces, so
-EDGE's operation service can host the agent and memory operations.
+EDGE's operation service can host the agent and knowledge operations.
 
 ## Extensions
 
@@ -88,24 +88,21 @@ type Relay
 ```
 
 ```mdl
-type Memory
+type RecordedFact
   desc: |
-    Not a stored ECHO type: one atomic, third-person claim about one or more entities, kept as a named
-    graph in the agent's brain (`Knowledge.toFacts` / `Knowledge.fromFacts`). The graph states
-    `<subject> dx:claim "content"` for each subject (keyed by its object URI), and a note's body as
-    `dx:hasNote`; its provenance carries kind, origin, confidence and time. Never overwritten: a
-    contradiction is a new graph that supersedes it, a mistake a graph that retracts it.
+    Not a stored ECHO type: one structured fact an agent records with op:recordFacts, stored in its brain as an
+    `RDF.Fact` in a named graph of its own, stated by the agent (`attribution.agent`), so a correction can
+    supersede it alone. The brain holds only facts: those read from sources and those the agent recorded.
   fields:
-    id: string                      # the graph IRI
-    content: string
-    kind: fact | preference | goal | commitment | relationship | event | note | directive
-    origin: stated | inferred       # default stated
-    confidence?: number             # 0..1, checked by recordMemory
-    observedAt: DateTime            # default now
-    status: active | superseded | retracted   # from the graphs that supersede or retract it
-    subjects: string[]              # entity keys: object URIs
-    source?: string                 # URI of the message or chat it came from
-    body?: string                   # a note's markdown
+    subject: Ref<Obj>               # stored as the entity's object URI, with its display name
+    predicate: string               # a seed predicate (RDF.Ontology.DEFAULT, less dx:claim and dx:hasNote) or a new one
+    predicateDescription?: string   # what a new predicate relates
+    object?: Ref<Obj>               # exactly one of object and value
+    value?: string                  # a literal object
+    quote?: string
+    origin?: stated | inferred      # default stated; factuality CT+ when stated, PR+ when inferred
+    confidence?: number             # 0..1
+    supersedes?: string[]           # graph IRIs of the facts it corrects
 ```
 
 ```mdl
@@ -129,8 +126,9 @@ type Profile
   desc: |
     Not a stored type — a `Markdown.Document` parented to the subject and linked to it by `ProfileOf`,
     rendered deterministically by `Profile.render` from the subject's live goals (sections Goals,
-    Proposed goals, Achieved goals; dropped omitted) and active memories grouped by kind (Facts,
-    Preferences, Aspirations, Commitments, Relationships, Events; inferred ones marked _(inferred)_).
+    Proposed goals, Achieved goals; dropped omitted) and the current facts about it, one section per
+    predicate (its ontology label), each line the object, or the whole fact when the subject is its
+    object; inferred ones are marked _(inferred)_.
     Regenerated, never edited as the source of truth.
 ```
 
@@ -205,7 +203,7 @@ op listAgents
   note: Lists all `Agent` objects, not only ones this plugin created.
 ```
 
-Memory operations (the Interview skill's tools).
+Knowledge operations (the Interview skill's tools).
 
 ```mdl
 op resolveEntity
@@ -227,55 +225,41 @@ op resolveEntity
 ```
 
 ```mdl
-op recordMemory
-  key: org.dxos.operation.agent.recordMemory
-  desc: Records one atomic third-person claim about the given subjects, as a named graph in the agent's brain.
+op recordFacts
+  key: org.dxos.operation.agent.recordFacts
+  desc: Records structured facts in the agent's brain, each stated by the agent.
   input:
     agent?: Ref<Agent>              # default: the space's only agent
-    content: string
-    kind: fact | preference | goal | commitment | relationship | event | note | directive
-    origin?: stated | inferred
-    subjects: Ref<Obj>[]            # at least one
-    confidence?: number             # 0..1
-    source?: Ref<Obj>
-    supersedes?: string             # the id of the memory this one corrects
-    body?: string                   # a note's markdown
-  output: { memory: string }        # the graph IRI
+    facts: RecordedFact[]           # at least one
+    source?: Ref<Obj>               # the message or chat they came from
+  output: { facts: string[] }       # the graph IRIs, in order
   errors:
-    AgentOperationError: no subjects, confidence outside 0..1, or no agent given in a space with several
+    AgentOperationError: no facts, a fact with neither or both of object and value, a prose predicate (claim, has note), confidence outside 0..1, or no agent given in a space with several
   effects: [echo:read, brain:write]
   requires: [Database.Service, BrainService]
-  note: Pushed as the agent's own words, so it wakes no watch.
-```
-
-```mdl
-op revokeMemories
-  key: org.dxos.operation.agent.revokeMemories
-  desc: Withdraws memories that were wrong, or all of the agent's memories.
-  input:
-    agent?: Ref<Agent>              # default: the space's only agent
-    memories?: string[]             # ids; all active memories if omitted
-  output: { forgotten: number }
-  effects: [echo:read, brain:write]
-  requires: [Database.Service, BrainService]
-  note: Each memory is retracted by a new graph, never deleted; Reset in the Knowledge panel calls it.
+  note: |
+    Pushed as the agent's own words (`quiet: [agent]`), so it wakes no watch. The predicate list is the tool's
+    `predicate` description; a predicate outside it is minted in the agent's brain namespace, as extraction mints it.
 ```
 
 ```mdl
 op retrieveMemories
   key: org.dxos.operation.agent.retrieveMemories
-  desc: Returns the active memories about a subject (newest first) and the live goals it owns.
+  desc: Returns the current facts about a subject (newest first) and the live goals it owns.
   input:
-    subject?: Ref<Obj>              # all memories and goals if omitted
-    query?: string                  # case-insensitive substring of content
+    subject?: Ref<Obj>              # all facts and goals if omitted
+    query?: string                  # every word must start a word of the fact or its quote
     limit?: number
   output: |
-    { memories: { memory: string, content, kind, origin, observedAt }[],
-      facts: { fact, quote?, speaker?, source, sourceName?, saidAt }[],
+    { queryMatched?: false,
+      facts: { id, fact, quote?, speaker?, source, sourceName?, saidAt }[],
       goals: { goal: Ref<Goal>, title, horizon, status }[] }
   effects: [echo:read, brain:read]
   requires: [Database.Service, BrainService]
-  note: Live goals are every status but `dropped`; ties in observedAt break on id.
+  note: |
+    Superseded, retracted and expired facts are left out, as are the free-text memory graphs a brain may still hold.
+    A fact's id is its graph IRI, which facts read from the same words share. Live goals are every status but
+    `dropped`.
 ```
 
 ```mdl
@@ -311,7 +295,7 @@ op setGoalStatus
 ```mdl
 op updateProfile
   key: org.dxos.operation.agent.updateProfile
-  desc: Rewrites the subject's profile document from its live goals and active memories.
+  desc: Rewrites the subject's profile document from its live goals and the current facts about it.
   input:
     subject: Ref<Obj>               # Person or Organization
   output: { document: Ref<Obj> }
@@ -343,7 +327,7 @@ skill InterviewSkill
   desc: Interviews a person to learn their role, goals, team and preferences, and records it.
   contributes:
     - op:resolveEntity
-    - op:recordMemory
+    - op:recordFacts
     - op:retrieveMemories
     - op:suggestGoal
     - op:setGoalStatus
@@ -352,8 +336,8 @@ skill InterviewSkill
     Authored in `src/skills/InterviewSkill.ts`. Start: state the purpose, resolve the person (name and
     handles), recall what is known and do not re-ask it, and — only if a checklist tool is available —
     track four topics (role, goals, team, preferences). During: one open question at a time, reflect
-    back, probe each goal (why, by when, obstacles, who), remember one claim per call with stated or
-    inferred origin, supersede contradictions, propose each goal. End: read the goals back, set each
+    back, probe each goal (why, by when, obstacles, who), record what it learns as facts (subject, listed
+    predicate, entity or value) with stated or inferred origin, supersede contradictions, propose each goal. End: read the goals back, set each
     answer's status (dropped for rejections), update the person's and any team's profile, summarise.
 ```
 
@@ -364,14 +348,14 @@ skill SupportSkill
   contributes:
     - op:resolveEntity
     - op:retrieveMemories
-    - op:recordMemory
+    - op:recordFacts
     - op:sendMessage
   instructions: >
     Authored in `src/skills/SupportSkill.ts`; also binds the relay operations (create, update). Resolve the
     asker and recall their setup and earlier answers first. A question gets the shortest correct answer, never
-    an invented command, API or link. A bug report gets the missing details asked for once, a summary, and an
-    "event" memory. A feature request gets a "note" memory and no promise. What it cannot answer it offers to
-    the team member whose expertise fits — the team and each member's areas are memories it recalls ("support
+    an invented command, API or link. A bug report gets the missing details asked for once, a summary, and a
+    "filed" fact. A feature request gets a "proposes" fact and no promise. What it cannot answer it offers to
+    the team member whose expertise fits — the team and each member's areas are facts it recalls ("support
     team"), not part of the skill — and relays only once the person agrees (security, data loss, billing and
     account access go at once), with the thread as the reply channel; with no fitting member, or an
     undelivered message, it says so rather than claim a handoff. Never asks for secrets, tells anyone who
@@ -400,11 +384,11 @@ node AgentsSection
 ```mdl
 component ProfileGraph
   desc: |
-    Two labelled regions, "Goals" (title; horizon · status) and "Memories" (content; kind · origin ·
+    Two labelled regions, "Goals" (title; horizon · status) and "Facts" (the fact; predicate · origin ·
     date), or "Nothing recorded yet." when both are empty.
   props:
     goals: Goal[]
-    memories: Memory[]
+    facts: { id, text, predicate, origin?, saidAt }[]
 ```
 
 ```mdl
@@ -444,8 +428,8 @@ component AgentActivityContainer
 ```mdl
 component ProfileProperties
   desc: |
-    ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and active
-    memories (a claim's subject is the subject's object URI), newest first. Memories are read from the
+    ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and the current
+    facts whose subject or object is the subject, newest first. Facts are read from the
     brains of the space's agents every 3s (EDGE's for an agent with a chat there); every Goal atom is
     subscribed, so status changes re-render without a membership change.
   props:
@@ -532,14 +516,14 @@ feat F-3: Agent channels and delivery
 ```
 
 ```mdl
-feat F-4: Memory graph
+feat F-4: Knowledge graph
 
   req F-4.1: op:resolveEntity matches a Person by handle first, then case-insensitively by name, and creates one only when nothing matches.
-  req F-4.2: op:recordMemory writes one named graph claiming the content about every subject, and rejects an empty subject list.
+  req F-4.2: op:recordFacts writes each fact in a named graph of its own, stated by the agent, and rejects an empty list, a fact without exactly one of object and value, and a prose predicate.
   req F-4.3:
-    when: a memory is recorded with supersedes, or withdrawn by op:revokeMemories
-    then: the old memory becomes superseded (or retracted) and is no longer recalled
-  req F-4.4: op:retrieveMemories returns active memories only, filtered by subject and query, and the subject's live goals.
+    when: a fact is recorded with supersedes
+    then: the facts it names are no longer recalled
+  req F-4.4: op:retrieveMemories returns current facts only, filtered by subject and query, and the subject's live goals.
   req F-4.5: op:suggestGoal creates a proposed goal and rejects owners that are not people or organizations.
   req F-4.6: op:setGoalStatus confirms a goal by default.
   req F-4.7: op:updateProfile keeps one profile document per subject and rewrites it in place.
@@ -548,10 +532,10 @@ feat F-4: Memory graph
 ```mdl
 feat F-5: Interview and profile panel
 
-  req F-5.1: An agent with the Interview skill resolves the interviewee, records memories and proposes goals as the conversation runs, and confirms goals at the end.
-  req F-5.2: A Person's or Organization's properties list its live goals and active memories.
+  req F-5.1: An agent with the Interview skill resolves the interviewee, records facts and proposes goals as the conversation runs, and confirms goals at the end.
+  req F-5.2: A Person's or Organization's properties list its live goals and the current facts about it.
   req F-5.3:
-    when: a goal's status or a memory's status changes
+    when: a goal's status changes or a fact is recorded
     then: the properties panel updates without reopening
 ```
 
@@ -592,21 +576,21 @@ scenario T-3: Channels belong to their agent   # ensure-channel-chat.test.ts
 scenario T-4: An interview builds the graph   # interview.test.ts
   # covers [F-4.1, F-4.2, F-4.3, F-4.4, F-4.5, F-4.6, F-4.7]
   when: resolve "Rich Burdon" with a discord handle, then by handle, then by "rich burdon"; resolve the
-    organization "Composer team"; remember three claims; propose two goals and confirm one; supersede
-    one memory; recall; update the profile twice
+    organization "Composer team"; record three facts; propose two goals and confirm one; supersede
+    one fact; recall; update the profile twice
   then:
     - the first resolve creates a Person; the other two return it
-    - recall returns the three active claims, not the superseded one, and both goals (confirmed, proposed)
-    - recall with query "STANDUPS" returns only the matching memory; the team recalls only the shared memory and no goals
+    - recall returns the three current facts, not the superseded one, and both goals (confirmed, proposed)
+    - recall with query "STANDUPS" returns only the matching fact; the team recalls only the fact relating it and no goals
     - both updateProfile calls return the same document, with exactly one ProfileOf
-    - the profile contains the name, the confirmed goal and the new claim, and not the superseded one
+    - the profile contains the name, the confirmed goal and the new fact under its predicate, and not the superseded one
 ```
 
 ```mdl
-scenario T-5: Invalid memory and goal input is rejected   # interview.test.ts
+scenario T-5: Invalid fact and goal input is rejected   # interview.test.ts
   # covers [F-4.2, F-4.5]
   then:
-    - recordMemory with no subjects fails with "at least one subject"
+    - recordFacts with no facts, with both object and value, or with the predicate "claim" fails
     - suggestGoal owned by a Text object fails with "people or organizations"
 ```
 
@@ -628,8 +612,8 @@ scenario T-8: Scripted interview fills the profile panel
   when: Rich introduces himself, states two goals, names the blocker, confirms both goals
   then:
     - the Goals region lists both goals and reads "Confirmed" twice
-    - the Memories region lists the three recorded claims
-    - the space holds one Person and two confirmed goals, and the agent's brain at least three memories
+    - the Facts region lists the recorded facts
+    - the space holds one Person and two confirmed goals, and the agent's brain at least three facts
 ```
 
 ## Not built
@@ -640,9 +624,9 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
   which exists any more, so Discord conversations do not reach the agent.
 - Real per-agent HALO identity and joined spaces.
-- Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
-  inferred memories); editing or retracting single memories in the UI (Reset retracts them all).
-- Required provenance: a memory's `source` is optional as built.
+- Runtime-assembled knowledge context at the start of each turn; consolidation (dedupe, promotion of
+  inferred facts); editing or retracting single facts in the UI (Reset wipes the brain).
+- Required provenance: a recorded fact's `source` is optional as built.
 - Linking an entity the extractor could not resolve to the object it names later (`owl:sameAs`):
   facts read before a Person existed keep their slug, which recall still matches by name.
 - The interview checklist on `Chat.tasks`: the skill uses a checklist only if a tool for it is bound.
@@ -719,7 +703,7 @@ test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
 ```mdl
 test QA-2: Interview a person and confirm their goals
   desc: |
-    The interview skill against a live model: the agent resolves the interviewee, records memories
+    The interview skill against a live model: the agent resolves the interviewee, records facts
     and proposes goals while the conversation runs, and confirming the read-back flips the goals to
     Confirmed in the Person's properties. The deterministic counterpart is the storybook play
     `stories-assistant` › Interview › TestInterviewScripted (scenario T-8), which scripts the model;
@@ -761,17 +745,17 @@ test QA-2: Interview a person and confirm their goals
       expect: |
         each turn asks one question and reflects back what it heard; the read-back names both goals
       note: NO `invoke` — model-driven.
-    - name: See the proposed goals and memories
+    - name: See the proposed goals and facts
       do: Open Quinn's Properties panel.
       invoke: [op:retrieveMemories] { subject: Ref($given.person) }
       capture: proposed
       expect: |
-        the panel has a "Goals" region listing the two goals, each "Proposed", and a "Memories" region
-        with at least one memory marked Stated
+        the panel has a "Goals" region listing the two goals, each "Proposed", and a "Facts" region
+        with at least one fact marked Stated
       assert: |
         return $result.goals.length >= 2
           && $result.goals.every((goal) => goal.status === 'proposed')
-          && $result.memories.some((memory) => memory.origin === 'stated');
+          && $result.facts.length > 0;
       note: Scoped to `$given.person`, whose name carries `$runId`, so goals left by an earlier run cannot count.
     - name: Confirm the goals
       do: Send "Yes, both are right."
@@ -789,13 +773,13 @@ test QA-2: Interview a person and confirm their goals
           && $result.goals.every((goal) => goal.status === 'confirmed');
       note: The panel must update in place (F-5.3); a refresh only after reopening is a failure of this step.
   after:
-    - name: Delete the interview's goals and memories
-      do: Delete the goals listed in Quinn's properties, and forget the memories.
+    - name: Delete the interview's goals and facts
+      do: Delete the goals listed in Quinn's properties, and reset the interviewer's knowledge.
       invoke: |
         org.dxos.operation.space.removeObjects { objects: $final.goals.map((row) => Obj(row.goal)) };
-        [op:revokeMemories] { agent: Ref($agent.agent), memories: $final.memories.map((row) => row.memory) }
+        org.dxos.operation.agent.resetBrain { agent: Ref($agent.agent) }
       expect: Quinn's properties read "Nothing recorded yet."
-      note: Memories are graphs in the agent's brain, so they are retracted rather than removed from the space.
+      note: Facts live in the agent's brain, so they are wiped with it rather than removed from the space.
     - name: Delete the person
       do: Delete Quinn.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($given.person)] }

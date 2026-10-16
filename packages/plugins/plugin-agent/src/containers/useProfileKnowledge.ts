@@ -11,12 +11,13 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import { type Organization, type Person } from '@dxos/types';
 
-import { Goal, Knowledge, Profile, TriggerOperation } from '#types';
+import { type ProfileFact } from '#components';
+import { BrainService, Goal, Profile, TriggerOperation } from '#types';
 
-import { entityKeys } from '../operations/knowledge.ts';
+import { entityKeys, isAbout } from '../operations/knowledge.ts';
 import { pollDelay } from './pollDelay.ts';
 
 /** How often the brains are re-read; neither brain has a change feed for its facts. */
@@ -77,19 +78,28 @@ const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): RDF.Fact[] => {
   return facts;
 };
 
-/** The live goals and active memories agents hold about a person or organization. */
+/** The live goals and the facts agents hold about a person or organization, newest first. */
 export const useProfileKnowledge = (
   subject: Person.Person | Organization.Organization,
-): { goals: Goal.Goal[]; memories: Knowledge.Memory[] } => {
+): { goals: Goal.Goal[]; facts: ProfileFact[] } => {
   const db = Obj.getDatabase(subject);
   const facts = useSpaceFacts(db);
   const allGoals = useQuery(db, Filter.type(Goal.Goal));
 
-  const memories = useMemo(() => {
+  const profileFacts = useMemo(() => {
     const keys = entityKeys(subject);
-    return Knowledge.fromFacts(facts)
-      .filter((memory) => memory.status === 'active' && Knowledge.isAbout(memory, keys))
-      .sort(Knowledge.byNewest);
+    // Two agents reading one source store the same fact; it is listed once.
+    const unique = [...new Map(BrainService.currentFacts(facts).map((fact) => [fact.id, fact])).values()];
+    return unique
+      .filter((fact) => isAbout(fact, keys))
+      .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime))
+      .map((fact): ProfileFact => ({
+        id: fact.id,
+        text: BrainService.factText(fact),
+        predicate: RDF.Ontology.DEFAULT.canonical(RDF.Mapping.predicateOf(fact))?.label ?? fact.assertion.predicate,
+        ...(fact.origin === 'stated' || fact.origin === 'inferred' ? { origin: fact.origin } : {}),
+        saidAt: fact.attribution.generatedAtTime,
+      }));
   }, [facts, subject]);
 
   // A query re-emits on membership only, so status changes (confirmed, dropped) need per-object subscriptions.
@@ -103,5 +113,5 @@ export const useProfileKnowledge = (
       }),
     [allGoals, subject.id],
   );
-  return { goals: useAtomValue(goalsAtom), memories };
+  return { goals: useAtomValue(goalsAtom), facts: profileFacts };
 };

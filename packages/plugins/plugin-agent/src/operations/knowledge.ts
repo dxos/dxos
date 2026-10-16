@@ -6,14 +6,15 @@ import * as Effect from 'effect/Effect';
 
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Knowledge } from '#types';
+import { BrainService } from '#types';
 
 import { AgentOperationError } from './errors.ts';
 import { personDid } from './members.ts';
 
-/** The agent whose brain records a memory: the one named, else the space's only agent. */
+/** The agent whose brain records a fact: the one named, else the space's only agent. */
 export const recordingAgent = Effect.fnUntraced(function* (ref: Ref.Ref<Agent.Agent> | undefined) {
   if (ref) {
     return yield* Database.load(ref);
@@ -83,7 +84,6 @@ export const spaceFacts = Effect.gen(function* () {
   return [...new Map(facts.flat().map((fact) => [fact.id, fact])).values()];
 });
 
-/** The memories the space's agents hold, newest first, with their statuses. */
-export const spaceMemories = spaceFacts.pipe(
-  Effect.map((facts) => Knowledge.fromFacts(facts).sort(Knowledge.byNewest)),
-);
+/** Whether the fact's subject or object is the entity, by any of the keys facts about it may use. */
+export const isAbout = (fact: RDF.Fact, keys: ReadonlySet<string>): boolean =>
+  [fact.assertion.subject, fact.assertion.object].some((term) => term.kind === 'entity' && keys.has(term.entity));
