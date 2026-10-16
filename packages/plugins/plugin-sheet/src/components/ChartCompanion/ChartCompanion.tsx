@@ -22,6 +22,11 @@ import { ChartSpec } from './types.ts';
 
 const DEFAULT_RANGE = 'A1:B5';
 
+// The list opens showing whole rows (a two-line row is 3.5rem) plus its block padding (py-1).
+const LIST_ROW_HEIGHT = 3.5;
+const LIST_PADDING = 0.5;
+const LIST_ROWS = 3;
+
 export type ChartCompanionProps = {
   /** Scopes the toolbar to the host plank's attention; without one it is always enabled. */
   attendableId?: string;
@@ -133,12 +138,17 @@ export const ChartCompanion = ({
         <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
       </Panel.Header>
       <Panel.Body asChild>
-        <Splitter.Root orientation='vertical' defaultSize={10} minSize={4} resizable>
+        <Splitter.Root
+          orientation='vertical'
+          defaultSize={LIST_ROWS * LIST_ROW_HEIGHT + LIST_PADDING}
+          minSize={LIST_ROW_HEIGHT + LIST_PADDING}
+          resizable
+        >
           <Splitter.Panel position='start' asChild>
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport>
                 <Listbox.Root items={items} value={selected} onValueChange={handleSelect}>
-                  <Listbox.Content aria-label={t('chart-list.label')} padBlock>
+                  <Listbox.Content aria-label={t('chart-list.label')} classNames='py-1'>
                     {items.map((item) => (
                       <Listbox.Item key={item.value} id={item.value} data-testid='chart-companion.item'>
                         <Listbox.ItemIcon icon={chartIcon(charts.find((chart) => chart.id === item.value)?.type)} />
