@@ -505,27 +505,31 @@ const SceneViewRoot = ({
       });
     }
   }, [onViewChange, camera, viewport]);
-  // Keyed on the velocity's values, so a host passing a fresh object each render does not restart the pan.
-  const driftX = drift?.x ?? 0;
-  const driftY = drift?.y ?? 0;
+  // The loop reads the velocity from a ref and restarts only as the pan starts or stops: a restart's first step is
+  // empty, so restarting on every change of speed would stall the view for a frame each time.
+  const driftRef = useRef<Point>({ x: 0, y: 0 });
+  driftRef.current = { x: drift?.x ?? 0, y: drift?.y ?? 0 };
+  const drifting = driftRef.current.x !== 0 || driftRef.current.y !== 0;
   useEffect(() => {
-    if (driftX === 0 && driftY === 0) {
+    if (!drifting) {
       return;
     }
     exitFit();
-    // Timed from one frame's timestamp to the next: a frame's timestamp is when it began, which can be before the effect
-    // that scheduled it ran, so measuring from `performance.now()` here would step backwards. Long gaps (a throttled
-    // background tab) are capped, so the view never leaps.
+    // Timed from one frame's callback to the next, read from the clock rather than the frame's timestamp, which a
+    // scheduler may round (a fake clock's frames fall on a 16 ms grid). Long gaps (a throttled background tab) are
+    // capped, so the view never leaps.
     let last: number | undefined;
-    let frame = requestAnimationFrame(function step(now) {
+    let frame = requestAnimationFrame(function step() {
+      const now = performance.now();
       const seconds = last === undefined ? 0 : Math.min(MAX_DRIFT_STEP, Math.max(0, (now - last) / 1000));
       last = now;
       // The camera offsets the content, so the view moves right as it moves left.
-      setCamera((camera) => panBy(camera, { x: -driftX * seconds, y: -driftY * seconds }));
+      const { x, y } = driftRef.current;
+      setCamera((camera) => panBy(camera, { x: -x * seconds, y: -y * seconds }));
       frame = requestAnimationFrame(step);
     });
     return () => cancelAnimationFrame(frame);
-  }, [driftX, driftY, exitFit, setCamera]);
+  }, [drifting, exitFit, setCamera]);
   // Dragging the canvas takes the camera over.
   useEffect(() => {
     if (drag?.kind === 'pan') {

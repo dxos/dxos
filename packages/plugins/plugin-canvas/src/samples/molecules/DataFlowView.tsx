@@ -37,10 +37,10 @@ const RELAYOUT_MS = 8000;
 
 /** How far into a growing relayout the hub has passed the edges of the view, and the pan that then sets off along it. */
 const DRIFT_START = 0.2;
-/** The pan's speed (scene units per second): it sets off slowly and gathers pace to its top speed. */
-const DRIFT = { start: 40, top: 240, acceleration: 12 };
+/** The pan's speed (scene units per second): it sets off slowly and keeps gathering pace. */
+const DRIFT = { start: 40, acceleration: 20 };
 
-const driftSpeedAt = (seconds: number) => Math.min(DRIFT.top, DRIFT.start + DRIFT.acceleration * seconds);
+const driftSpeedAt = (seconds: number) => DRIFT.start + DRIFT.acceleration * seconds;
 
 /** How often the focus's boost is raised while the view pans. */
 const FOCUS_TICK = 250;

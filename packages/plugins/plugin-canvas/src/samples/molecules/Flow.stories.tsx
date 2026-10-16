@@ -83,15 +83,27 @@ const MORE_NAMES = [
   'Payroll',
   'Travel',
   'Events',
+  'Feeds',
+  'Budgets',
+  'Vendors',
+  'Recipes',
+  'Projects',
+  'Media',
+  'Alerts',
+  'Metrics',
+  'Bookings',
+  'Docs',
+  'Polls',
+  'Grants',
 ];
 // Only hues the diagram has a colour for: any other would draw its source gray.
 const MORE_HUES = ['teal', 'amber', 'violet', 'sky', 'red', 'orange', 'green', 'blue', 'fuchsia'];
 
 /**
  * How far each side extends. The first four on each side arrive together, so the growth reads as even; the right runs on
- * well beyond what the pan that follows can reach (ten seconds of it is about 1000 scene units, past half a screen).
+ * well beyond what the pan that follows can reach (twelve seconds of it is under 2000 scene units, a fifth of the extension).
  */
-const REACH = { left: { buckets: 4, blocks: 4 }, right: { buckets: 22, blocks: 26 } };
+const REACH = { left: { buckets: 4, blocks: 4 }, right: { buckets: 32, blocks: 38 } };
 
 /** The new sources on one side, outward; each side draws its names and hues from its own end of the lists. */
 const moreSources = (side: 'left' | 'right'): SourceSpec[] =>
