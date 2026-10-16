@@ -501,6 +501,31 @@ test QA-1: Create a scene, add an object, and export it
       do: Right-click "QA Scene" in the navtree and choose Delete.
       expect: the row leaves the navtree and its plank closes
       note: NO invoke — no step captures a Scene reference to bind, per the test desc.
+
+test QA-2: Build a scene from templates
+  desc: |
+    The toolbar's object templates and the orbit camera: a primitive and two vehicle presets added to a new
+    scene, then a look around it. Human-only for the same reason as QA-1.
+  actors: human
+  status: unverified        # 2026-10-16, driven end to end by autocue/build-a-scene.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-spacetime is enabled (off by default)
+  steps:
+    - name: Create the scene
+      do: In the navtree, click + on the space and choose Spacetime (Scene).
+      expect: a Scene article opens showing a single default cube over a grid
+    - name: Add a sphere
+      do: In the toolbar's Object type menu choose Sphere, then click Add object.
+      expect: a sphere joins the scene
+      note: New objects are placed at the origin, so the sphere starts inside the cube.
+    - name: Add two vehicles
+      do: Choose Fire truck and add it, then Taxi and add it.
+      expect: both preset models appear in the scene
+    - name: Orbit the scene
+      do: Drag across the canvas and scroll to zoom in.
+      expect: the camera orbits the scene and moves closer
 ```
 
 ---

@@ -14,8 +14,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Select from '@dxos/react-ui/Select';
 import * as Tabs from '@dxos/react-ui/Tabs';
+import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
@@ -80,6 +80,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // The selected view tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
   const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { themeMode } = useThemeContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
@@ -233,6 +234,22 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     return () => clearTimeout(handle);
   }, [values, planetCache]);
 
+  // After the mount effect that creates the manager, and again whenever the app's theme changes.
+  useEffect(() => {
+    managerRef.current?.setThemeMode(themeMode);
+  }, [themeMode]);
+
+  // Selecting an object (in the telemetry list or on the map) turns the globe to it while the 3D view shows.
+  useEffect(() => {
+    if (view !== 'scene' || !selectedId) {
+      return;
+    }
+    const object = simEngineRef.current?.objects.find(({ definition }) => definition.id === selectedId);
+    if (object) {
+      managerRef.current?.lookAt(object.state.unit);
+    }
+  }, [selectedId, view]);
+
   useEffect(() => {
     // Debounced like the terrain regen above, but kept in its own effect so adding an object (which
     // only changes `definitions`) rebuilds the sim engine without re-rendering the planet mesh.
@@ -331,7 +348,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           },
           () => handleAddRandomObject(),
         )
-        .separator()
+        // Pushes the gizmo toggle to the end, beside the view tabs.
+        .separator('gap')
         .action(
           'toggle-gizmos',
           {
@@ -352,10 +370,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     <Panel.Root role={role}>
       <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
-          <div className='grow' />
-          {view === 'camera' && (
-            <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
-          )}
           <Tabs.Root
             orientation='horizontal'
             value={view}
@@ -388,12 +402,15 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           {view === 'map' && (
             <TerraMap objects={objects} config={values} selectedId={selectedId} onSelect={setSelectedId} />
           )}
-          <div className='absolute top-2 right-2 z-10'>
+          <div className='absolute top-2 left-2 z-10'>
             <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
           </div>
-          <div className='absolute bottom-2 right-2 z-10'>
-            <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
-          </div>
+          {/* With no objects the panel is only a header, collapsed to a clipped strip. */}
+          {telemetry.length > 0 && (
+            <div className='absolute bottom-2 right-2 z-10'>
+              <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
+            </div>
+          )}
         </div>
       </Panel.Body>
     </Panel.Root>
@@ -401,32 +418,3 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 };
 
 TerraArticle.displayName = 'TerraArticle';
-
-type CameraTargetSelectProps = {
-  definitions: readonly TerraObject.TerraObject[];
-  value?: string;
-  onChange: (id: string) => void;
-};
-
-/** Picks which object the chase camera rides. */
-const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  return (
-    <Select.Root
-      value={value ? [value] : []}
-      onValueChange={({ value: [value] }) => value && onChange(value)}
-      items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
-    >
-      <Select.Trigger
-        placeholder={t('camera-target.placeholder')}
-        data-testid='terra.toolbar.camera-target'
-        classNames='min-w-32'
-      />
-      <Select.Content>
-        {definitions.map((definition) => (
-          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
-        ))}
-      </Select.Content>
-    </Select.Root>
-  );
-};
