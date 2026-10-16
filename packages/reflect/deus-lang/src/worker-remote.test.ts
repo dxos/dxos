@@ -489,7 +489,12 @@ describe('replication API', () => {
     expect((await put(`packs/${bundle.name}`, new TextEncoder().encode('(bundle)'))).status).toBe(400);
     expect((await put(`files/packs/${bundle.name}`, pack.text)).status).toBe(201);
     expect((await put(`packs/${bundle.name}.idx`, pack.index.subarray(0, 1024 + 47))).status).toBe(400);
+    // The index completes the push, so the queue consumer is asked to draw the new head (D192).
+    const queued: { project: string }[] = [];
+    env.LIVE_QUEUE = { send: async (body) => void queued.push(body) };
     expect((await put(`packs/${bundle.name}.idx`, pack.index)).status).toBe(201);
+    expect(queued).toEqual([{ project: 'toolchain' }]);
+    env.LIVE_QUEUE = undefined;
     expect(await (await call('/v1/toolchain/files/packs/')).text()).toBe(`${bundle.name}\n${bundle.name}.idx\n`);
 
     // Lookups read ranges only: no whole pack or index is fetched.

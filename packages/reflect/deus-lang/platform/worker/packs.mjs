@@ -90,7 +90,8 @@ export const packs = async (request, env, ctx, project, rest) => {
     if (index) {
       await mergeCombined(env.BUCKET, project, [bundle]);
       // The pack completes a push: drawing the head's explorer now spares its first visitor the wait (D192).
-      ctx.waitUntil(warmLive(env, ctx, project));
+      // A queue consumer has minutes for it; without the queue (tests, local runs) the response's waitUntil tries.
+      ctx.waitUntil(env.LIVE_QUEUE ? env.LIVE_QUEUE.send({ project }) : warmLive(env, ctx, project));
     }
     return logged(json({ pack: rest[0], stored: true }, 201));
   }

@@ -50,6 +50,8 @@ export type Env = {
   GITHUB_API_URL?: string;
   BUCKET?: Bucket;
   DB?: Database;
+  /** `deus-live`: projects whose pushed head the queue consumer draws (D192). */
+  LIVE_QUEUE?: { send(body: { project: string }): Promise<void> };
 };
 
 export type InboxAsset = { hash: string; type: string; name: string };

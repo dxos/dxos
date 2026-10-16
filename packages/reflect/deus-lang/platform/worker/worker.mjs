@@ -15,6 +15,7 @@
 
 import { addressOfFolder, projectAt } from './address.mjs';
 import { appFiles } from './gen/explorer-app.mjs';
+import { warmLive } from './live.mjs';
 import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
@@ -25,6 +26,13 @@ const SESSION_COOKIE = 'deus_session';
 const STATE_COOKIE = 'deus_oauth_state';
 
 export default {
+  /** `deus-live`: a pushed head to draw (D192), sent when its pack's index lands. */
+  async queue(batch, env, ctx) {
+    for (const message of batch.messages) {
+      await warmLive(env, ctx, message.body.project);
+      message.ack();
+    }
+  },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     let base = '';

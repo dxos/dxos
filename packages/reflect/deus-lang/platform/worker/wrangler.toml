@@ -30,3 +30,14 @@ binding = "DB"
 database_name = "deus-auth"
 database_id = "bcc70fb6-81db-4506-8883-ffce92cb6333"
 migrations_dir = "migrations"
+
+# Drawing a pushed head's explorer (D192) outlasts the 30 s a response's waitUntil gets, so a queue
+# consumer, which may run for minutes, does it.
+[[queues.producers]]
+binding = "LIVE_QUEUE"
+queue = "deus-live"
+
+[[queues.consumers]]
+queue = "deus-live"
+max_batch_size = 1
+max_retries = 2
