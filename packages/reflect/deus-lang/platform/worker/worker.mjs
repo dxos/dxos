@@ -16,7 +16,7 @@
 import { addressOfFolder, projectAt } from './address.mjs';
 import { appFiles, hubFiles } from './gen/explorer-app.mjs';
 import { liveHead, warmLive, warmPages } from './live.mjs';
-import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
+import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
 const SESSION_DAYS = 7;
