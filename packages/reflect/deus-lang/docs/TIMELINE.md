@@ -244,5 +244,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 234 | 10-16 13:59 | 26m 00s | this commit | Third usability probe (docs/ux/2026-10-16-libraries-and-results.md) and its fixes: failing checks named on the overview, first-sentence summaries, short change messages, theorem pages state their proposition, glossary links the decision log |
 | 235 | 10-16 14:36 | 37m 00s | this commit | @dxos/web published (D211): the four projects of D189 exist; constructor patterns and builtins through library mounts; each project counts its own checks |
 | 236 | 10-16 14:40 | 4m 00s | this commit | Base closed over Pair and Defect, every project upgraded; api signatures compared up to variable renaming; Explorer.Spec and WasmEquality.Spec name every public definition; three tasks closed |
+| 237 | 10-16 14:52 | 12m 00s | this commit | Overviews count their own project; JIT journals fewer Ref writes (D212); short history lines in the CLI |
 
-Total from stage 1 to stage 236: 73h 20m.
+Total from stage 1 to stage 237: 73h 32m.
