@@ -4,7 +4,14 @@
 
 import { type PlotData, type PlotDatum, type PlotValue } from '../types.ts';
 
-const columnName = (index: number) => String.fromCharCode('A'.charCodeAt(0) + (index % 26));
+/** Spreadsheet column letters for a zero-based index: A–Z, then AA, AB, … (bijective base 26). */
+const columnName = (index: number): string => {
+  let name = '';
+  for (let remaining = index + 1; remaining > 0; remaining = Math.floor((remaining - 1) / 26)) {
+    name = String.fromCharCode('A'.charCodeAt(0) + ((remaining - 1) % 26)) + name;
+  }
+  return name;
+};
 
 const toNumber = (value: PlotValue): number | undefined => {
   if (typeof value === 'number') {

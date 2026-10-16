@@ -21,6 +21,11 @@ describe('toPlotData', () => {
   test('without a header the columns are lettered', ({ expect }) => {
     expect(toPlotData([[1, 2]]).columns).to.deep.eq(['A', 'B']);
   });
+
+  test('columns past Z continue as AA, AB', ({ expect }) => {
+    const columns = toPlotData([Array.from({ length: 28 }, () => 0)]).columns;
+    expect(columns.slice(24)).to.deep.eq(['Y', 'Z', 'AA', 'AB']);
+  });
 });
 
 describe('toPlotDatums', () => {
