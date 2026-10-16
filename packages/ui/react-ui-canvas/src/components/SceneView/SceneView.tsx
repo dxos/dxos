@@ -22,20 +22,27 @@ import React, {
   useState,
 } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
+import { type GeneratorCompiler } from '../../generator/compile.ts';
+import { type GeneratorSource } from '../../generator/types.ts';
 import {
   SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
   useChanging,
+  useClock,
   useRegistry,
   useSceneProjection,
   useViewport,
   useWheel,
 } from '../../hooks/index.ts';
+import { useGeneratorFrames } from '../../hooks/useGeneratorFrames.ts';
+import { animate } from '../../model/animate.ts';
 import {
   type Drag,
   type InspectorMode,
@@ -43,8 +50,9 @@ import {
   createSceneViewAtoms,
   isMoving,
 } from '../../model/atoms.ts';
+import { frameTimeAttribute, exposeClock as publishClock } from '../../model/clock.ts';
 import { keyAction } from '../../model/keys.ts';
-import { nodeDef } from '../../model/node-def.ts';
+import { nodeAnimatable, nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
   type Projection,
@@ -60,28 +68,44 @@ import {
 import { type SceneStore } from '../../model/store.ts';
 import {
   type BackgroundGrid,
+  PLAIN_BACKGROUND,
   type ThemeRegistry,
   defaultThemeRegistry,
   resolveBackground,
   resolveLook,
 } from '../../model/style-set.ts';
 import {
+  applyCameraKey,
+  cameraKey,
+  clampTime,
+  createTimeline,
+  keyTimes,
+  removeKey,
+  sampleCamera,
+  setKey,
+  timelineFps,
+} from '../../model/timeline.ts';
+import {
   type Bounds,
   type Camera,
   DEFAULT_GRID,
   type ElementId,
   type Endpoint,
+  type InstanceNode,
   type Intent,
   type Layer,
   type LayerId,
   type LinkId,
   MAJOR_GRID_RATIO,
   type Node,
+  type NodeId,
   type NodeType,
   type Point,
   type Scene,
   type SceneId,
+  type Timeline,
   isFrameNode,
+  isInstanceNode,
   isPointEndpoint,
 } from '../../model/types.ts';
 import {
@@ -96,6 +120,17 @@ import {
   zoomAt,
 } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
+import {
+  composeSelection,
+  compositeBounds,
+  compositeScenes,
+  copyComposite,
+  instanceCounts,
+  instancePorts,
+  renamePortLinks,
+  retargetInstance,
+  ungroupInstance,
+} from '../../utils/compose.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { groupIntoScene } from '../../utils/group.ts';
 import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
@@ -111,7 +146,7 @@ import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
-import { recordScenes, redo, undo } from '../../utils/undo.ts';
+import { recordScenes, recordStoreStep, redo, undo } from '../../utils/undo.ts';
 import { About, type AboutStat } from '../About/About.tsx';
 import {
   BackgroundField,
@@ -125,10 +160,12 @@ import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { LayersPanel } from '../Layers/Layers.tsx';
+import { ObjectsPanel } from '../Objects/Objects.tsx';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ThemeBar } from '../ThemeBar/ThemeBar.tsx';
+import { TimelineBar } from '../Timeline/Timeline.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { Dock, DockProvider } from './Dock.tsx';
 import { INSPECTOR_CLASSES, type InspectorDef, useInspector } from './Inspector.tsx';
@@ -139,9 +176,6 @@ import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
-
-/** The longest step a drifting view takes in one frame, in seconds, however long the frame was in coming. */
-const MAX_DRIFT_STEP = 0.1;
 
 /** Milliseconds the camera's zoom must hold still before the background grid fades back in. */
 const ZOOM_SETTLE = 250;
@@ -160,6 +194,9 @@ const LINK_HOVER_GRACE_MS = 150;
 
 /** How long a move's pointer rests before the shapes snap to where they will land. */
 const SETTLE_MS = 200;
+
+/** The first breadcrumb in isolation, which reads `Objects` and leads back out. */
+const OBJECTS_CRUMB = '\u0000objects';
 
 /**
  * The light scheme scoped on the canvas under a dark app: the theme's tokens resolve with `light-dark()` against the
@@ -257,8 +294,24 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   onThemeChange?: (theme: string | undefined) => void;
   /** Called when the theme bar picks a grid, or `undefined` to take the background's own. */
   onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
+  /** What Fit frames instead of the scene's shapes, e.g. a film's frame; the inset still applies. */
+  frame?: Bounds;
+  /**
+   * Publishes the view's clock for a frame renderer (`scripts/render-story.mjs`), which seeks it frame by frame and waits
+   * on `data-frame-time` (ANIMATION.md §7.2).
+   */
+  exportable?: boolean;
+  /** The generators the scene's generator nodes reference, by reference (ANIMATION.md §6.6). */
+  generators?: Readonly<Record<string, GeneratorSource>>;
+  /** Compiles a generator's source (`createEsbuildCompiler`); without it generator nodes draw nothing. */
+  compileGenerator?: GeneratorCompiler;
+  /** Starts the generator worker; without it generators run in the page. */
+  createGeneratorWorker?: () => Worker;
   children?: ReactNode;
 }>;
+
+/** No generators: what a view given none reads. */
+const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
 
 const SceneViewRoot = ({
   classNames,
@@ -291,6 +344,11 @@ const SceneViewRoot = ({
   onViewChange,
   onThemeChange,
   onBackgroundGridChange,
+  frame,
+  exportable,
+  generators = NO_GENERATORS,
+  compileGenerator,
+  createGeneratorWorker,
   children,
 }: SceneViewRootProps) => {
   const look = useMemo(() => {
@@ -310,8 +368,32 @@ const SceneViewRoot = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  const projection = useSceneProjection({ store, atoms, createProjection, projection: projectionProp });
+  const baseProjection = useSceneProjection({ store, atoms, createProjection, projection: projectionProp });
+  // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
+  const projection = useMemo(
+    () =>
+      animate(baseProjection, {
+        registry,
+        clock: atoms.clock,
+        autoKey: () => registry.get(atoms.autoKey),
+        animatable: (node) => nodeAnimatable(nodeRegistry, node),
+      }),
+    [baseProjection, registry, atoms, nodeRegistry],
+  );
   const scene = useAtomValue(projection.scene);
+  const baseScene = useAtomValue(baseProjection.scene);
+  const timeline = baseScene.timeline;
+  const time = useAtomValue(atoms.clock.time);
+  const generated = useGeneratorFrames({
+    scene: baseScene,
+    time,
+    sources: generators,
+    compile: compileGenerator,
+    createWorker: createGeneratorWorker,
+  });
+  const playing = useAtomValue(atoms.clock.playing);
+  const isolation = useAtomValue(atoms.isolation);
+  useClock(atoms.clock, { duration: timeline?.duration, loop: timeline?.loop });
   const visible = useMemo(() => visibleScene(scene), [scene]);
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
@@ -412,7 +494,16 @@ const SceneViewRoot = ({
     }
   }, [readonly, select]);
 
-  const { nameOf, portalTo, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory } = useSceneNavigation({
+  const {
+    nameOf,
+    portalTo,
+    bounds,
+    fitTarget: sceneFitTarget,
+    pushHistory,
+    drillIn: drillInto,
+    drillOut,
+    goHistory,
+  } = useSceneNavigation({
     registry,
     atoms,
     nodeRegistry,
@@ -431,6 +522,7 @@ const SceneViewRoot = ({
     setOpening,
     isAnimating,
   });
+  const fitTarget = frame ?? sceneFitTarget;
 
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
@@ -505,8 +597,9 @@ const SceneViewRoot = ({
       });
     }
   }, [onViewChange, camera, viewport]);
-  // The loop reads the velocity from a ref and restarts only as the pan starts or stops: a restart's first step is
-  // empty, so restarting on every change of speed would stall the view for a frame each time.
+  // The pan advances with the view's clock rather than a loop of its own (ANIMATION.md §2.1): while drifting the clock
+  // plays, and each tick moves the camera by the velocity times the time it advanced. The velocity is read from a ref,
+  // so a change of speed neither restarts anything nor loses a frame.
   const driftRef = useRef<Point>({ x: 0, y: 0 });
   driftRef.current = { x: drift?.x ?? 0, y: drift?.y ?? 0 };
   const drifting = driftRef.current.x !== 0 || driftRef.current.y !== 0;
@@ -515,27 +608,64 @@ const SceneViewRoot = ({
       return;
     }
     exitFit();
-    // Timed from one frame's callback to the next, read from the clock rather than the frame's timestamp, which a
-    // scheduler may round (a fake clock's frames fall on a 16 ms grid). Long gaps (a throttled background tab) are
-    // capped, so the view never leaps.
-    let last: number | undefined;
-    let frame = requestAnimationFrame(function step() {
-      const now = performance.now();
-      const seconds = last === undefined ? 0 : Math.min(MAX_DRIFT_STEP, Math.max(0, (now - last) / 1000));
-      last = now;
-      // The camera offsets the content, so the view moves right as it moves left.
-      const { x, y } = driftRef.current;
-      setCamera((camera) => panBy(camera, { x: -x * seconds, y: -y * seconds }));
-      frame = requestAnimationFrame(step);
+    const started = !registry.get(atoms.clock.playing);
+    registry.set(atoms.clock.playing, true);
+    let last = registry.get(atoms.clock.time);
+    const unsubscribe = registry.subscribe(atoms.clock.time, (time) => {
+      const seconds = time - last;
+      last = time;
+      if (seconds > 0) {
+        // The camera offsets the content, so the view moves right as it moves left.
+        const { x, y } = driftRef.current;
+        setCamera((camera) => panBy(camera, { x: -x * seconds, y: -y * seconds }));
+      }
     });
-    return () => cancelAnimationFrame(frame);
-  }, [drifting, exitFit, setCamera]);
+    return () => {
+      unsubscribe();
+      if (started) {
+        registry.set(atoms.clock.playing, false);
+      }
+    };
+  }, [drifting, exitFit, setCamera, registry, atoms.clock]);
+
+  // A camera track drives the camera as the clock moves (ANIMATION.md §5.5); keys hold the view's centre, so the same
+  // point is framed whatever the viewport's size.
+  const hasCameraTrack = sampleCamera(timeline, 0) !== undefined;
+  useLayoutEffect(() => {
+    const key = sampleCamera(timeline, time);
+    if (key && measured) {
+      setCamera((camera) => applyCameraKey(camera, key, viewport.width, viewport.height));
+    }
+  }, [timeline, time, measured, viewport.width, viewport.height, setCamera]);
+  useEffect(() => {
+    if (hasCameraTrack) {
+      exitFit();
+    }
+  }, [hasCameraTrack, exitFit]);
+
+  // Published for a frame renderer, which seeks the clock rather than faking the browser's (ANIMATION.md §7.2).
+  const timelineRef = useRef<Timeline | undefined>(timeline);
+  timelineRef.current = timeline;
+  useEffect(
+    () =>
+      exportable
+        ? publishClock(registry, atoms.clock, () => ({
+            duration: timelineRef.current?.duration ?? 0,
+            fps: timelineFps(timelineRef.current),
+          }))
+        : undefined,
+    [exportable, registry, atoms.clock],
+  );
+
   // Dragging the canvas takes the camera over.
   useEffect(() => {
     if (drag?.kind === 'pan') {
       exitFit();
+      if (hasCameraTrack) {
+        registry.set(atoms.clock.playing, false);
+      }
     }
-  }, [drag?.kind, exitFit]);
+  }, [drag?.kind, exitFit, hasCameraTrack, registry, atoms.clock]);
   // Fit frames the scene now and keeps it framed (fit mode) until the user pans or zooms.
   const enterFit = useCallback(() => {
     setFitting(true);
@@ -561,15 +691,295 @@ const SceneViewRoot = ({
         exitFit();
         cancelAnimation();
         touchNavigation();
+        // A camera the user moves during playback stops the camera track driving it.
+        if (hasCameraTrack) {
+          registry.set(atoms.clock.playing, false);
+        }
         if (event.ctrlKey || event.metaKey) {
           setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.01)));
         } else {
           setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
         }
       },
-      [setCamera, cancelAnimation, touchNavigation, exitFit],
+      [setCamera, cancelAnimation, touchNavigation, exitFit, hasCameraTrack, registry, atoms.clock],
     ),
   );
+
+  //
+  // Isolation (ANIMATION.md §4.3).
+  //
+
+  /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
+  const isolate = useCallback(
+    (composite: SceneId) => {
+      const definition = registry.get(store.scenes)[composite];
+      if (!definition) {
+        return;
+      }
+      const back = registry.get(atoms.isolation)?.back ?? {
+        path: registry.get(atoms.path),
+        camera: registry.get(atoms.camera),
+      };
+      registry.set(atoms.isolation, { composite, back });
+      exitFit();
+      select([]);
+      registry.set(atoms.path, [composite]);
+      const content = compositeBounds(definition);
+      if (content) {
+        setCamera(fitBounds(content, viewport, inset, NOMINAL_ZOOM));
+      }
+    },
+    [registry, store.scenes, atoms, exitFit, select, setCamera, viewport, inset],
+  );
+  const exitIsolation = useCallback(() => {
+    const current = registry.get(atoms.isolation);
+    if (!current) {
+      return;
+    }
+    registry.set(atoms.isolation, undefined);
+    select([]);
+    registry.set(atoms.path, current.back.path);
+    setCamera(current.back.camera);
+  }, [registry, atoms, select, setCamera]);
+  /** Opens a node: an instance in isolation, a frame by drilling in. */
+  const drillIn = useCallback(
+    (node: Node, animated?: boolean) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animated)),
+    [isolate, drillInto],
+  );
+  /** Backs out a level: out of isolation first. */
+  const back = useCallback(
+    () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),
+    [registry, atoms.isolation, exitIsolation, drillOut],
+  );
+
+  //
+  // Timeline.
+  //
+
+  const fps = timelineFps(timeline);
+  const seek = useCallback(
+    (t: number) => {
+      registry.set(atoms.clock.playing, false);
+      registry.set(atoms.clock.time, clampTime(registry.get(baseProjection.scene).timeline, t));
+    },
+    [registry, atoms.clock, baseProjection],
+  );
+  /** Keys the selected nodes' animatable properties at the playhead, as they are drawn there (`K`). */
+  const addKey = useCallback(() => {
+    const ids = [...registry.get(atoms.selection)];
+    const shown = registry.get(projection.scene);
+    const t = registry.get(atoms.clock.time);
+    let next = registry.get(baseProjection.scene).timeline ?? createTimeline();
+    for (const id of ids) {
+      const node = shown.nodes[id];
+      if (!node) {
+        continue;
+      }
+      for (const property of Object.keys(nodeAnimatable(nodeRegistry, node))) {
+        const value = property === 'opacity' ? (node.opacity ?? 1) : Reflect.get(node, property);
+        if (value !== undefined) {
+          next = setKey(next, id, property, { t, value });
+        }
+      }
+    }
+    baseProjection.apply({ kind: 'timeline', timeline: next });
+  }, [registry, atoms, projection, baseProjection, nodeRegistry]);
+  /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
+  const removeSelectedKeys = useCallback(() => {
+    const current = registry.get(baseProjection.scene).timeline;
+    if (!current) {
+      return;
+    }
+    const t = registry.get(atoms.clock.time);
+    const ids = registry.get(atoms.selection);
+    const tolerance = 0.5 / timelineFps(current);
+    let next = current;
+    for (const track of Object.values(current.tracks)) {
+      if (ids.has(track.target)) {
+        for (const key of track.keys.filter((key) => Math.abs(key.t - t) < tolerance)) {
+          next = removeKey(next, track.target, track.property, key.t);
+        }
+      }
+    }
+    if (next !== current) {
+      baseProjection.apply({ kind: 'timeline', timeline: next });
+    }
+  }, [registry, atoms, baseProjection]);
+  /** Stores the current camera at the playhead. */
+  const keyCamera = useCallback(() => {
+    const t = registry.get(atoms.clock.time);
+    const key = cameraKey(registry.get(atoms.camera), viewport.width, viewport.height);
+    let next = registry.get(baseProjection.scene).timeline ?? createTimeline();
+    for (const property of ['x', 'y', 'zoom'] as const) {
+      next = setKey(next, 'camera', property, { t, value: key[property] });
+    }
+    baseProjection.apply({ kind: 'timeline', timeline: next });
+  }, [registry, atoms, baseProjection, viewport.width, viewport.height]);
+  const timelineKeys = useMemo(
+    () => ({
+      active: timeline !== undefined,
+      togglePlay: () => {
+        const playing = registry.get(atoms.clock.playing);
+        if (!playing && registry.get(atoms.clock.time) >= (timeline?.duration ?? 0)) {
+          registry.set(atoms.clock.time, 0);
+        }
+        registry.set(atoms.clock.playing, !playing);
+      },
+      step: (frames: number) => seek(Math.round((registry.get(atoms.clock.time) + frames / fps) * fps) / fps),
+      jumpKey: (direction: 1 | -1) => {
+        const now = registry.get(atoms.clock.time);
+        const times = keyTimes(timeline, registry.get(atoms.selection));
+        const target = direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6);
+        if (target !== undefined) {
+          seek(target);
+        }
+      },
+      addKey,
+      removeKey: removeSelectedKeys,
+    }),
+    [timeline, registry, atoms, fps, seek, addKey, removeSelectedKeys],
+  );
+
+  //
+  // Composite objects (ANIMATION.md §4.2). Each action is one undo step; one that adds a scene records it with the step.
+  //
+
+  const objectActions = useMemo(() => {
+    const sceneId = () => registry.get(atoms.path).at(-1) ?? root;
+    /** Writes `scenes` into the store, applies `intents`, and records both as one undo step. */
+    const commit = (scenes: Record<SceneId, Scene>, intents: Intent[]) => {
+      const before = registry.get(store.scenes);
+      const model = baseProjection.snapshot();
+      registry.set(store.scenes, { ...before, ...scenes });
+      if (intents.length > 0) {
+        baseProjection.apply({ kind: 'batch', intents });
+      }
+      // A refused (or empty) batch recorded no step to attach the scenes to, so the change is a step of its own.
+      if (baseProjection.snapshot() === model) {
+        recordStoreStep(registry, atoms.undo, sceneId(), model, before);
+      } else {
+        recordScenes(registry, atoms.undo, sceneId(), before);
+      }
+    };
+    return {
+      /** Groups the selection as a new object, replaced by one instance of it. */
+      compose: () => {
+        const current = registry.get(baseProjection.scene);
+        const count = compositeScenes(registry.get(store.scenes)).length;
+        const instanceId = createId('instance');
+        const composition = composeSelection(current, registry.get(atoms.selection), {
+          compositeId: createId('object'),
+          instanceId,
+          name: `Object ${count + 1}`,
+          layer: activeLayer(current, registry.get(atoms.layer)),
+        });
+        if (!composition) {
+          return;
+        }
+        commit({ [composition.composite.id]: composition.composite }, composition.intents);
+        select([instanceId]);
+      },
+      /** Replaces an instance with its composite's nodes. */
+      ungroup: (id: NodeId) => {
+        const current = registry.get(baseProjection.scene);
+        const instance = current.nodes[id];
+        const composite =
+          instance && isInstanceNode(instance) ? registry.get(store.scenes)[instance.composite] : undefined;
+        if (!instance || !isInstanceNode(instance) || !composite) {
+          return;
+        }
+        const intents = ungroupInstance(current, instance, composite, createId);
+        baseProjection.apply({ kind: 'batch', intents });
+        select(intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : [])));
+      },
+      /** Points an instance at a copy of its composite, so editing one no longer edits the other. */
+      makeUnique: (id: NodeId) => {
+        const current = registry.get(baseProjection.scene);
+        const instance = current.nodes[id];
+        const composite =
+          instance && isInstanceNode(instance) ? registry.get(store.scenes)[instance.composite] : undefined;
+        if (!instance || !isInstanceNode(instance) || !composite) {
+          return;
+        }
+        const copy = copyComposite(composite, createId('object'), createId);
+        const unique = retargetInstance(instance, copy.composite.id, copy.rename);
+        commit({ [copy.composite.id]: copy.composite }, [
+          {
+            kind: 'update',
+            id,
+            values: { composite: unique.composite, overrides: unique.overrides, ports: unique.ports },
+          },
+          ...renamePortLinks(current, instance, unique),
+        ]);
+      },
+      /** Copies a composite's definition; no instance changes. */
+      duplicate: (composite: SceneId) => {
+        const definition = registry.get(store.scenes)[composite];
+        if (!definition) {
+          return;
+        }
+        const copy = copyComposite(definition, createId('object'), createId);
+        commit({ [copy.composite.id]: copy.composite }, []);
+      },
+      /** Places an instance of a composite at the centre of the view, at its own size. */
+      place: (composite: SceneId) => {
+        const definition = registry.get(store.scenes)[composite];
+        const content = definition && compositeBounds(definition);
+        if (!definition || !content || registry.get(atoms.isolation)) {
+          return;
+        }
+        const camera = registry.get(atoms.camera);
+        const center = screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 });
+        const frame = {
+          x: center.x - content.width / 2,
+          y: center.y - content.height / 2,
+          width: content.width,
+          height: content.height,
+        };
+        const current = registry.get(baseProjection.scene);
+        const instance: InstanceNode = {
+          type: 'instance',
+          id: createId('instance'),
+          z: topZ(Object.values(current.nodes)),
+          center,
+          size: { width: content.width, height: content.height },
+          composite,
+          ports: instancePorts(frame, definition),
+          layer: activeLayer(current, registry.get(atoms.layer)),
+        };
+        baseProjection.apply({ kind: 'create', node: instance });
+        select([instance.id]);
+      },
+      rename: (composite: SceneId, name: string) => {
+        const definition = registry.get(store.scenes)[composite];
+        if (definition) {
+          commit({ [composite]: { ...definition, name } }, []);
+        }
+      },
+      /** Removes a composite; with `instances`, every instance of it in the drawing too, else only an unused one. */
+      remove: (composite: SceneId, instances: boolean) => {
+        const before = registry.get(store.scenes);
+        if (!instances && (instanceCounts(before)[composite] ?? 0) > 0) {
+          return;
+        }
+        const { [composite]: _, ...rest } = before;
+        const scenes: Record<SceneId, Scene> = {};
+        for (const [id, scene] of Object.entries(rest)) {
+          const used = Object.values(scene.nodes).filter(
+            (node) => isInstanceNode(node) && node.composite === composite,
+          );
+          scenes[id] =
+            used.length > 0 ? reduceIntent(scene, { kind: 'delete', ids: used.map((node) => node.id) }) : scene;
+        }
+        if (registry.get(atoms.isolation)?.composite === composite) {
+          exitIsolation();
+        }
+        const model = baseProjection.snapshot();
+        registry.set(store.scenes, scenes);
+        recordStoreStep(registry, atoms.undo, sceneId(), model, before);
+      },
+    };
+  }, [registry, atoms, store.scenes, baseProjection, root, select, viewport, exitIsolation]);
 
   //
   // Navigation.
@@ -700,7 +1110,7 @@ const SceneViewRoot = ({
     onExitFit: exitFit,
     animateTo,
     drillIn,
-    drillOut,
+    drillOut: back,
     goHistory,
     major,
     copy,
@@ -709,6 +1119,7 @@ const SceneViewRoot = ({
     cancelDrag,
     removePoint,
     setTool,
+    timeline: timelineKeys,
   });
 
   // Shortcuts belong to the canvas itself: keys typed into a control the view hosts (the properties
@@ -1018,9 +1429,10 @@ const SceneViewRoot = ({
 
   const toolbarActions = useMemo<ToolbarActions>(
     () => ({
-      path,
-      nameOf,
-      onPath: (index) => drillOut(path.length - 1 - index),
+      // In isolation the crumbs read `Objects › <name>`, and the first leads back out.
+      path: isolation ? [OBJECTS_CRUMB, isolation.composite] : path,
+      nameOf: (id) => (id === OBJECTS_CRUMB ? 'Objects' : nameOf(id)),
+      onPath: (index) => (isolation ? index === 0 && exitIsolation() : drillOut(path.length - 1 - index)),
       fit: enterFit,
       fitting,
       zoomReset: () => zoomTo(NOMINAL_ZOOM),
@@ -1054,6 +1466,8 @@ const SceneViewRoot = ({
       path,
       nameOf,
       drillOut,
+      isolation,
+      exitIsolation,
       animateTo,
       fitTarget,
       enterFit,
@@ -1187,6 +1601,19 @@ const SceneViewRoot = ({
       themeGrid={themeGrid}
       onThemeChange={onThemeChange}
       onBackgroundGridChange={onBackgroundGridChange}
+      baseProjection={baseProjection}
+      timeline={timeline}
+      time={time}
+      playing={playing}
+      fps={fps}
+      seek={seek}
+      timelineKeys={timelineKeys}
+      keyCamera={keyCamera}
+      isolation={isolation}
+      isolate={isolate}
+      exitIsolation={exitIsolation}
+      objectActions={objectActions}
+      generated={generated}
     >
       <SceneLookContext.Provider value={look}>
         <DockProvider>
@@ -1292,8 +1719,24 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
     menu,
     closeMenu,
     menuAnchorRef,
-    look,
+    look: viewLook,
+    time,
+    isolation,
+    objectActions,
+    drillIn,
+    generated,
   } = useSceneViewContext('SceneView.Canvas');
+  // The one instance selected, which the element menu offers to edit, ungroup or make unique.
+  const selectedInstance = useMemo(() => {
+    const [only] = selection.size === 1 ? [...selection] : [];
+    const node = only === undefined ? undefined : displayScene.nodes[only];
+    return node && isInstanceNode(node) ? node : undefined;
+  }, [selection, displayScene]);
+  // In isolation a composite is drawn on a plain surface, as if inside its own frame (ANIMATION.md §4.3).
+  const look = useMemo(
+    () => (isolation ? { ...viewLook, background: { ...PLAIN_BACKGROUND, grid: viewLook.background.grid } } : viewLook),
+    [isolation, viewLook],
+  );
 
   // Handles and ports belong to what is drawn: a hidden layer's elements show none.
   const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
@@ -1356,6 +1799,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
       <div
         className={mx('absolute pointer-events-none', !measured && 'invisible')}
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
+        // The time the scene below was sampled at, committed with it: a frame renderer waits until it matches.
+        data-frame-time={frameTimeAttribute(time)}
       >
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
         {guides && !readonly && latticeOn && projection.lattice && (
@@ -1383,6 +1828,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
             // Routes follow the gutters in lattice mode, whether or not snap is on.
             lattice={latticeOn ? projection.lattice : undefined}
             cell={grid * MAJOR_GRID_RATIO}
+            generated={generated}
           />
         </div>
         {/* Read-only, nothing is edited, so no selection frame, handle or port is drawn. */}
@@ -1461,6 +1907,34 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
                 }}
                 item={{ value: 'Delete', label: 'Delete' }}
               />
+              <Menu.Separator />
+              <Menu.Item
+                data-testid='menu-compose'
+                disabled={!capabilities.create || !capabilities.delete}
+                onSelect={objectActions.compose}
+                item={{ value: 'Group as object', label: 'Group as object' }}
+              />
+              {selectedInstance && (
+                <>
+                  <Menu.Item
+                    data-testid='menu-edit-object'
+                    onSelect={() => drillIn(selectedInstance)}
+                    item={{ value: 'Edit object', label: 'Edit object' }}
+                  />
+                  <Menu.Item
+                    data-testid='menu-ungroup'
+                    disabled={!capabilities.create || !capabilities.delete}
+                    onSelect={() => objectActions.ungroup(selectedInstance.id)}
+                    item={{ value: 'Ungroup', label: 'Ungroup' }}
+                  />
+                  <Menu.Item
+                    data-testid='menu-make-unique'
+                    disabled={!capabilities.update}
+                    onSelect={() => objectActions.makeUnique(selectedInstance.id)}
+                    item={{ value: 'Make unique', label: 'Make unique' }}
+                  />
+                </>
+              )}
             </>
           )}
           {menu?.kind === 'canvas' && (
@@ -1681,12 +2155,21 @@ const LAYERS_INSPECTOR: InspectorDef = {
   float: 'empty',
 };
 
+// Docked beside the layers (ANIMATION.md §4.3).
+const OBJECTS_INSPECTOR: InspectorDef = {
+  id: 'objects',
+  title: 'Objects',
+  icon: 'ph--cube--regular',
+  order: 2,
+  float: 'never',
+};
+
 // The counts are a dock section only, so a floating or read-only view shows none.
 const ABOUT_INSPECTOR: InspectorDef = {
   id: 'about',
   title: 'About',
   icon: 'ph--info--regular',
-  order: 2,
+  order: 3,
   float: 'never',
 };
 
@@ -1777,6 +2260,148 @@ const SceneViewLayers = ({ classNames = INSPECTOR_CLASSES }: SceneViewLayersProp
 SceneViewLayers.displayName = 'SceneView.Layers';
 
 //
+// Objects
+//
+
+/** Thumbnail box of an object row, in px. */
+const THUMBNAIL = { width: 40, height: 24 };
+
+/** A composite drawn small, read-only, fitted into a row's thumbnail. */
+const ObjectThumbnail = ({ id }: { id: SceneId }) => {
+  const { store, nodeRegistry } = useSceneViewContext('SceneView.Objects');
+  const composite = useAtomValue(store.scene(id));
+  const content = composite && compositeBounds(composite);
+  if (!composite || !content) {
+    return null;
+  }
+  const scale = Math.min(THUMBNAIL.width / content.width, THUMBNAIL.height / content.height) * 0.85;
+  const x = THUMBNAIL.width / 2 - (content.x + content.width / 2) * scale;
+  const y = THUMBNAIL.height / 2 - (content.y + content.height / 2) * scale;
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0' }}
+    >
+      <SceneLayer store={store} scene={composite} registry={nodeRegistry} zoom={scale} depth={1} liveDepth={1} />
+    </div>
+  );
+};
+
+export type SceneViewObjectsProps = Util.ThemedClassName<{}>;
+
+/** The drawing's composite objects: a docked inspector beside the layers. */
+const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsProps) => {
+  const { store, capabilities, selection, displayScene, isolation, isolate, objectActions } =
+    useSceneViewContext('SceneView.Objects');
+  const scenes = useAtomValue(store.scenes);
+  const objects = useMemo(() => {
+    const counts = instanceCounts(scenes);
+    return compositeScenes(scenes).map((scene) => ({
+      id: scene.id,
+      name: scene.name ?? scene.id,
+      instances: counts[scene.id] ?? 0,
+    }));
+  }, [scenes]);
+  // The open composite, else the one an instance on the canvas draws.
+  const selected = useMemo(() => {
+    if (isolation) {
+      return isolation.composite;
+    }
+    const [only] = selection.size === 1 ? [...selection] : [];
+    const node = only === undefined ? undefined : displayScene.nodes[only];
+    return node && isInstanceNode(node) ? node.composite : undefined;
+  }, [isolation, selection, displayScene]);
+  const editable = capabilities.create === true && capabilities.delete === true;
+  return useInspector(
+    OBJECTS_INSPECTOR,
+    ({ docked, classNames: chrome, onDockedChange }) => (
+      <ObjectsPanel
+        classNames={chrome}
+        docked={docked}
+        onDockedChange={onDockedChange}
+        objects={objects}
+        selected={selected}
+        readonly={!editable}
+        onSelect={isolate}
+        onRename={objectActions.rename}
+        onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
+        onPlace={isolation ? undefined : objectActions.place}
+        onDuplicate={objectActions.duplicate}
+        onDelete={objectActions.remove}
+        thumbnail={(id) => <ObjectThumbnail id={id} />}
+      />
+    ),
+    classNames,
+  );
+};
+
+SceneViewObjects.displayName = 'SceneView.Objects';
+
+//
+// Timeline
+//
+
+export type SceneViewTimelineProps = SceneViewBarProps;
+
+/**
+ * The collapsed timeline bar (ANIMATION.md §5.8), over the bottom of the canvas: shown while the scene has a timeline;
+ * otherwise, while editing, an Animate control that gives it one.
+ */
+const SceneViewTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: SceneViewTimelineProps) => {
+  const {
+    registry,
+    atoms,
+    readonly,
+    capabilities,
+    baseProjection,
+    timeline,
+    time,
+    playing,
+    fps,
+    seek,
+    selection,
+    timelineKeys,
+  } = useSceneViewContext('SceneView.Timeline');
+  const autoKey = useAtomValue(atoms.autoKey);
+  const keys = useMemo(() => keyTimes(timeline, selection), [timeline, selection]);
+  if (!timeline) {
+    return readonly || !capabilities.update ? null : (
+      <div className={mx(barFrame, classNames)}>
+        <Toolbar.Root>
+          <Button.Root
+            variant='ghost'
+            icon='ph--film-strip--regular'
+            label='Animate'
+            data-testid='timeline-animate'
+            onClick={() => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })}
+          />
+        </Toolbar.Root>
+      </div>
+    );
+  }
+  return (
+    <div className={mx(barFrame, 'max-w-[calc(100%-2rem)]', classNames)}>
+      <TimelineBar
+        time={time}
+        duration={timeline.duration}
+        playing={playing}
+        fps={fps}
+        keys={keys}
+        autoKey={autoKey}
+        readonly={readonly || !capabilities.update}
+        onPlayingChange={(next) => registry.set(atoms.clock.playing, next)}
+        onTimeChange={seek}
+        onAutoKeyChange={(next) => registry.set(atoms.autoKey, next)}
+        onAddKey={selection.size > 0 ? timelineKeys.addKey : undefined}
+        onRemoveKey={selection.size > 0 ? timelineKeys.removeKey : undefined}
+      />
+    </div>
+  );
+};
+
+SceneViewTimeline.displayName = 'SceneView.Timeline';
+
+//
 // About
 //
 
@@ -1810,5 +2435,7 @@ export const SceneView = {
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
   Layers: SceneViewLayers,
+  Objects: SceneViewObjects,
+  Timeline: SceneViewTimeline,
   About: SceneViewAbout,
 };

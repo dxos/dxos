@@ -59,6 +59,21 @@ export const withUndo = (
   },
 });
 
+/**
+ * Records a step that changed the store's scenes without an intent (a renamed or removed composite): `model` is the
+ * projection's snapshot and `scenes` the store's scenes from before it.
+ */
+export const recordStoreStep = (
+  registry: Registry.AtomRegistry,
+  atom: Atom.Writable<UndoState>,
+  key: string,
+  model: unknown,
+  scenes: SceneMap,
+): void => {
+  const state = stateFor(registry, atom, key);
+  registry.set(atom, { key, past: [...state.past.slice(-(UNDO_LIMIT - 1)), { model, scenes }], future: [] });
+};
+
 /** Marks the step just recorded as one that also changed the store's scenes, which were `scenes` before it. */
 export const recordScenes = (
   registry: Registry.AtomRegistry,

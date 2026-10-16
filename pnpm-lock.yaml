@@ -9165,6 +9165,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
@@ -9213,7 +9216,16 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      esbuild-wasm:
+        specifier: 'catalog:'
+        version: 0.28.0
     devDependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
@@ -9229,6 +9241,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -22582,6 +22597,9 @@ importers:
       d3:
         specifier: 'catalog:'
         version: 7.9.0
+      esbuild-wasm:
+        specifier: 'catalog:'
+        version: 0.28.0
     devDependencies:
       '@dxos/log':
         specifier: workspace:*

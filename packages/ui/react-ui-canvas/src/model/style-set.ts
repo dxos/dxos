@@ -110,8 +110,8 @@ export type BackgroundGrid = Schema.Schema.Type<typeof BackgroundGrid>;
 export const Background = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  /** The canvas fill: the theme's base surface, or warm paper. */
-  surface: Schema.Literals(['base', 'paper']),
+  /** The canvas fill: the theme's base surface, warm paper, or the near-black of a film's frame. */
+  surface: Schema.Literals(['base', 'paper', 'film']),
   grid: BackgroundGrid,
   washes: Schema.Array(Wash),
   /** The field fades out towards its edges rather than ending at the scene's padded bounds. */
@@ -265,6 +265,9 @@ export const PAPER_BACKGROUND: Background = {
   grainHue: 'warm',
 };
 
+/** A film's ground: near-black, with nothing drawn on it, for a scene that is animated and exported. */
+export const FILM_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'film', name: 'Film', surface: 'film' };
+
 export const GLASS_NIGHT_THEME: Theme = {
   id: 'glass-night',
   name: 'Glass',
@@ -289,6 +292,9 @@ export const NIGHT_THEME: Theme = {
 
 export const OUTLINE_THEME: Theme = { id: 'outline', name: 'Outline', styleSet: 'outline', background: 'lines' };
 
+/** Flat shapes on the film ground, always dark: for titles and motion graphics. */
+export const FILM_THEME: Theme = { id: 'film', name: 'Film', styleSet: 'flat', background: 'film', mode: 'dark' };
+
 export const DEFAULT_STYLE_SETS: Readonly<Record<string, StyleSet>> = {
   flat: FLAT_STYLE_SET,
   outline: OUTLINE_STYLE_SET,
@@ -301,6 +307,7 @@ export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
   lines: LINES_BACKGROUND,
   glow: GLOW_BACKGROUND,
   paper: PAPER_BACKGROUND,
+  film: FILM_BACKGROUND,
 };
 
 export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
@@ -309,12 +316,13 @@ export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
   'paper': PAPER_THEME,
   'flat': FLAT_THEME,
   'outline': OUTLINE_THEME,
+  'film': FILM_THEME,
 };
 
 /** The ids of the built-ins, for pickers. */
-export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline'] as const;
+export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film'] as const;
 export const STYLE_SET_IDS = ['flat', 'outline', 'glass'] as const;
-export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper'] as const;
+export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper', 'film'] as const;
 
 //
 // Registry.

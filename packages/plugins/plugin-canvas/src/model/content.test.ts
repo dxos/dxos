@@ -28,6 +28,33 @@ import {
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
 
 describe('content', () => {
+  test('a composite scene and a timeline survive a write and a read', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    const timeline = {
+      duration: 3,
+      tracks: {
+        'a:opacity': {
+          target: 'a',
+          property: 'opacity',
+          keys: [
+            { t: 0, value: 0 },
+            { t: 1, value: 1 },
+          ],
+        },
+      },
+    };
+    writeScenes(content, {
+      root: { id: 'root', nodes: { a: { id: 'a', type: 'rect', ...box } }, links: {}, timeline },
+      object: { id: 'object', kind: 'composite', name: 'Object', nodes: {}, links: {} },
+    });
+    const scenes = readScenes(content);
+    expect(scenes.root.timeline).toEqual(timeline);
+    expect(scenes.object.kind).toBe('composite');
+    // A plain scene stores no kind.
+    expect(Reflect.get(content['scene:root'], 'sceneKind')).toBeUndefined();
+  });
+
   test('a new canvas keys its root scene once: `scene:root`', ({ expect }) => {
     const content: ContentMap = {};
     expect(seedContent(content)).toBe('root');

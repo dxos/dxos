@@ -22,6 +22,13 @@ export const DrawingVariant = Capability.lazyModule(
   () => import('./drawing-variant.ts'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const CanvasSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [CanvasCapabilities.Settings],

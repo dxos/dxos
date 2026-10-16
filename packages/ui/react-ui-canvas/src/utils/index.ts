@@ -5,6 +5,7 @@
 export * from './builder.ts';
 export * from './camera.ts';
 export * from './clipboard.ts';
+export * from './compose.ts';
 export * from './diagram.ts';
 export * from './dnd.ts';
 export * from './group.ts';
@@ -14,6 +15,7 @@ export * from './layers.ts';
 export * from './layout.ts';
 export * from './order.ts';
 export * from './parts.ts';
+export * from './path.ts';
 export * from './ports.ts';
 export * from './resize.ts';
 export * from './route.ts';
