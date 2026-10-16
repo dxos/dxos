@@ -155,7 +155,7 @@ const CHAPTERS: readonly Scene[] = [
   // The first two chapters share one stage: the monolithic agent's parts fade in over the running silos.
   {
     title: 'The Silo Problem',
-    caption: 'Each application keeps its own data, fed only by its own source.',
+    caption: 'Users rent their data split across multiple vendors.',
     spec: MONOLITH,
     options: APP_ACTIVITY,
     revealed: false,
@@ -166,18 +166,18 @@ const CHAPTERS: readonly Scene[] = [
   },
   {
     title: 'Monolithic Agents',
-    caption: 'One agent reaches into every source at once, beside the apps.',
+    caption: 'Users grant unrestricted access to their data.',
     spec: MONOLITH,
     options: { ...APP_ACTIVITY, warmup: 8 },
     grid: 'dots',
     stage: 'silos',
-    duration: 11,
+    duration: 10,
   },
   // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then extends past
   // the view on both sides.
   {
-    title: 'A shared ECHO',
-    caption: 'The sources feed one ECHO space, and the apps sync from it.',
+    title: 'Graph Database',
+    caption: 'Data is organized by context.',
     spec: APPS,
     // The apps open already holding content, so they are writing and syncing from the first frame.
     options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
@@ -185,11 +185,11 @@ const CHAPTERS: readonly Scene[] = [
     // From here on the background is plain, so the eye stays on ECHO.
     grid: 'none',
     stage: 'echo',
-    duration: 11,
+    duration: 10,
   },
   {
-    title: 'Spaces',
-    caption: 'ECHO splits into spaces along the natural breaks in its data.',
+    title: 'ECHO Spaces',
+    caption: 'ECHO enables users to partition data into secure workspaces.',
     spec: APPS,
     options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: true,
@@ -199,14 +199,13 @@ const CHAPTERS: readonly Scene[] = [
   },
   {
     title: 'Room to grow',
-    caption:
-      'ECHO extends past every edge: new spaces, apps, agents and sources join while all that was there runs on.',
+    caption: 'DXOS becomes the Enterprise Operating System.',
     spec: EXTENDED,
     options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 14,
+    duration: 15,
   },
 ];
 
