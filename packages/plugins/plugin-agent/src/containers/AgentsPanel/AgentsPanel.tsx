@@ -11,6 +11,7 @@ import { type PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -103,7 +104,13 @@ const entryOf = (space: AgentSpace.Space, all: readonly AgentSpace.Space[], view
     ? all.filter(
         (other) =>
           other.id !== space.id &&
-          other.members.get().some((member) => toPublicKey(member.identity?.identityKey)?.equals(agentKey) ?? false),
+          other.members
+            .get()
+            .some(
+              (member) =>
+                member.role !== SpaceMember_Role.REMOVED &&
+                (toPublicKey(member.identity?.identityKey)?.equals(agentKey) ?? false),
+            ),
       )
     : [];
   return {
