@@ -153,10 +153,6 @@ def binop (op : Text) : Option (Int, Bool) :=
 --
 -- Declarations.
 --
-
---
--- Declarations.
---
 def file (p : Parser) : {Throw Text} List Decl :=
   let rec go acc :=
     let t := peek p
@@ -343,10 +339,6 @@ def binder (p : Parser) : {Throw Text} List Binder :=
 --
 -- Types.
 --
-
---
--- Types.
---
 def ty (p : Parser) : {Throw Text} Ty :=
   let a := tyApp p
   if is p "->" && not (offside p) then
@@ -403,10 +395,6 @@ else
     else
       expect p ")"
       first)
-
---
--- Expressions.
---
 
 --
 -- Expressions.
@@ -621,10 +609,6 @@ def handleExpr (p : Parser) : {Throw Text} Expr :=
       go ret (OpArm.mk name ps k (armBody p col) pos :: ops)
   else Expr.handleWith b ret (reverse ops)
   go Option.none []
-
---
--- Patterns.
---
 
 --
 -- Patterns.

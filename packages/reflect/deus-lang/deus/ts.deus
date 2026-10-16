@@ -206,10 +206,6 @@ def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (i
 --
 -- Patterns.
 --
-
---
--- Patterns.
---
 def pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) :=
   match pat with
   | Sexp.list (Sexp.sym "pany" :: []) => ("_", env)

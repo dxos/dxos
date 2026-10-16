@@ -118,7 +118,9 @@ def build (table : Map Text Entry) : Names :=
   -- A mounted structure the project also has under its own name is the project's to name (D206).
   let shadowed := fun fqn =>
     let rest := Text.drop 4 fqn
-    startsWith "lib." fqn && Map.contains (Text.drop (indexOf rest "." 0 + 1) rest) table
+    startsWith "lib." fqn && (match Map.lookup (Text.drop (indexOf rest "." 0 + 1) rest) table with
+      | Option.some (Entry.type _ _ _) => true
+      | _ => false)
   let fieldOwners := groups (concatMap (fun pair =>
     match pair with
     | (fqn, Entry.type _ _ fields) => if shadowed fqn then [] else List.map (fun f => (f, fqn)) fields

@@ -21,6 +21,8 @@ structure Printer where
   fresh : Ref Int
   hints : Map Text (List Text)
   rules : Map Text Loaded
+  -- (namespace, key, full name): a library name the namespace's own name of that spelling would capture in a definition under it (D206).
+  shadows : List (Text, Text, Text)
 
 namespace Print
 
@@ -64,6 +66,13 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
         | (Option.some (Entry.term h), Option.some (_ :: [])) => Map.insert h f m2
         | _ => m2) m fields
     | _ => m) Map.empty (Map.toList ns)
+  let shadows := List.concatMap (fun pair =>
+    let (key, fqn) := pair
+    let shown := getOr (Map.lookup key display) fqn
+    if not (startsWith "lib." fqn) || startsWith "lib." shown then [] else
+      List.filterMap
+        (fun other => if not (startsWith "lib." other) && endsWith ("." ++ shown) other then Option.some (Text.take (Text.length other - Text.length shown - 1) other, key, fqn) else Option.none)
+        (getOr (Dict.lookup (Names.lastSegment fqn) bySegment) [])) (Map.toList index)
   -- Headers name types by their last segment and list a constructor's names; built here once, not per view.
   Printer.mk
     display
@@ -76,10 +85,14 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
     (Ref.new 0)
     Map.empty
     Map.empty
+    shadows
 
 /-- A printer in which `h` prints as `name`: a definition's references to itself keep the name it is viewed under, not an alias with the same hash. -/
 def withSelf (base : Printer) (h : Text) (name : Text) : Printer := Printer.mk
-  (Map.insert h name base.display)
+  (foldl (fun m shadow =>
+    let (space, key, full) := shadow
+    -- The definition's namespace is searched before the libraries', so there the library name prints in full.
+    if startsWith (space ++ ".") name then Map.insert key full m else m) (Map.insert h name base.display) base.shadows)
   base.fullNames
   base.typeNames
   base.fieldNames
@@ -89,6 +102,7 @@ def withSelf (base : Printer) (h : Text) (name : Text) : Printer := Printer.mk
   base.fresh
   base.hints
   base.rules
+  base.shadows
 
 /-- A printer sharing `base`'s name tables (built once per namespace) with its own locals. -/
 def withLocals (base : Printer) (locals : List Text) : Printer := Printer.mk
@@ -102,6 +116,7 @@ def withLocals (base : Printer) (locals : List Text) : Printer := Printer.mk
   (Ref.new 0)
   base.hints
   base.rules
+  base.shadows
 
 /-- A printer that shows parameter names before call arguments (D174); `hints` maps a callee (a hash, or `type#tag` for a constructor) to its parameter names. -/
 def withHints (base : Printer) (hints : Map Text (List Text)) : Printer := Printer.mk
@@ -115,6 +130,7 @@ def withHints (base : Printer) (hints : Map Text (List Text)) : Printer := Print
   base.fresh
   hints
   base.rules
+  base.shadows
 
 /-- Brackets an inlay hint in printed text; only `Highlight` reads it, so text meant to parse never carries one. -/
 def hintOpen : Text := Text.fromCode 1
@@ -508,10 +524,6 @@ def patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : (Text,
 --
 -- Types.
 --
-
---
--- Types.
---
 def ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
   match t with
   | Sexp.list (Sexp.sym "tref" :: Sexp.str iri :: []) => if startsWith "#" iri then Text.drop 1 iri else getOr (Map.lookup iri p.typeNames) iri
@@ -624,6 +636,7 @@ def withRules (base : Printer) (rules : Map Text Loaded) : Printer := Printer.mk
   base.fresh
   base.hints
   rules
+  base.shadows
 
 /-- A notation definition as the `notation` declaration it came from (Syntax.Spec R-9): a hole
   prints its category, and its precedence only when the parser would not settle on the same one. -/

@@ -695,10 +695,6 @@ def push (dir : Text) (ts : List EventType) : {Remote, IO, Throw Text} List (Tex
 --
 -- Counts, for the CLI and the explorer.
 --
-
---
--- Counts, for the CLI and the explorer.
---
 /-- Per event type: (type, pending rows, pushed rows). -/
 def counts (dir : Text) (ts : List EventType) : {IO} List (EventType, (Int, Int)) := List.map (fun t =>
   let (pending, pushed) := Analytics.rows dir t
@@ -772,10 +768,6 @@ def siteJson (dir : Text) (project : Text) (ns : Map Text Entry) (limit : Int) :
 --
 -- Recording from the toolchain. Analytics never fails the command that records.
 --
-
---
--- Recording from the toolchain. Analytics never fails the command that records.
---
 /-- Records an event of the type whose name ends in `.short`, if this codebase defines one; errors are dropped. -/
 def recordIf (dir : Text) (ts : List EventType) (short : Text) (who : Text) (values : List (Text, Cell)) : {IO} Unit := if IO.getEnv "DEUS_EVENTS" == Option.some "0" then () else
   match List.find (fun t => endsWith ("." ++ short) t.typeName || t.typeName == short) ts with
@@ -818,10 +810,6 @@ def recordWrites (dir : Text) (ns : Map Text Entry) (agent : Text) (via : Text) 
     "AgentWrote"
     agent
     [("definition", Cell.text (refTo project ns name)), ("agent", Cell.text agent), ("via", Cell.text via)])
-
---
--- Backfills from the codebase's own records.
---
 
 --
 -- Backfills from the codebase's own records.

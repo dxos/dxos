@@ -146,83 +146,6 @@ else
 --
 -- Commands: compiling.
 --
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
-
---
--- Commands: compiling.
---
---
--- Commands: compiling.
---
 /-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
 def compile (args : Args) : {IO, Throw Text} Unit :=
   let result := batch
@@ -542,10 +465,6 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
 --
 -- Commands: reading the codebase.
 --
-
---
--- Commands: reading the codebase.
---
 def ls (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
@@ -730,10 +649,6 @@ def deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
     args
     (fun _ => Json.obj [("name", Json.str name), (if reverse then "dependents" else "dependencies", Json.arr (List.map (fun x => Json.obj [("hash", Json.str x), ("name", Json.str (display x))]) found))])
     (fun _ => join "\n" (List.map display found))
-
---
--- Commands: names.
---
 
 --
 -- Commands: names.
@@ -1117,7 +1032,10 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
       let fresh := Set.fromList (filterMap
         (fun pair => if startsWith mount (fst pair) then Option.some (Entry.hash (snd pair)) else Option.none)
         (Map.toList mounted))
-      let ns := fst (propagate dir mounted subst fresh (checkTypes ()))
+      -- Other libraries are releases of their own: the upgrade moves this project's code, not theirs.
+      let others := Map.fromList (List.filter (fun pair => startsWith "lib." (fst pair) && not (startsWith mount (fst pair))) (Map.toList mounted))
+      let moved := fst (propagate dir (Map.fromList (List.filter (fun pair => not (Map.contains (fst pair) others)) (Map.toList mounted))) subst fresh (checkTypes ()))
+      let ns := foldl (fun m pair => Map.insert (fst pair) (snd pair) m) moved (Map.toList others)
       Project.write dir (match p with
       | Project.mk x0 x1 => Project.mk x0 (l :: List.filter (fun other => other.libName != name) p.libs))
       let causal := commit dir ns ("lib install " ++ name ++ " " ++ l.libIri ++ " @ " ++ short l.release)
@@ -1669,6 +1587,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : T
               base.fresh
               Map.empty
               Map.empty
+              []
             let decl := View.theoremDecl full name types prop proof
             let stop := indexOf decl " := " 0
             [("statement", trim (Text.drop

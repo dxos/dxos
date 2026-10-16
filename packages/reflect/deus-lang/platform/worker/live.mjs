@@ -569,6 +569,8 @@ const metasAt = async (files) => {
         if (!text) {
           throw new HttpError(503, `the metadata snapshot #${hash.slice(0, 10)} is in no pack yet`);
         }
+        // Read here rather than by the explorer's code, but this head's to keep all the same (D207).
+        files.touched.add(`o${hash}`);
         for (const item of itemsOf(text).slice(1)) {
           const [kind, ...rest] = itemsOf(item);
           if (kind === 'sub') {

@@ -175,10 +175,6 @@ def read (dir : Text) (h : Text) : {IO, Throw Text} Task :=
 --
 -- Snapshots.
 --
-
---
--- Snapshots.
---
 /-- The tasks snapshot of a history node: task id -> task hash. -/
 def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := snapshotAt dir c.tasks
 
@@ -291,10 +287,6 @@ def merge (dir : Text) (base : Map Text Text) (ours : Map Text Text) (theirs : M
           | Result.ok task => (Map.insert id (Codebase.put dir (Tasks.toSexp task)) merged, conflicts)
           | Result.err fields => (merged, conflicts ++ List.map (fun f => "task:" ++ id ++ "." ++ f) fields)
       | _ => (merged, conflicts ++ ["task:" ++ id])) (ours, []) ids
-
---
--- History.
---
 
 --
 -- History.

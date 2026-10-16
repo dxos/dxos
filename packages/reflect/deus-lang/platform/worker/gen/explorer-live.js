@@ -472,7 +472,7 @@ function lib$base$Map$fromList(pairs) {
 rt.named(lib$base$Map$fromList, "lib.base.Map.fromList");
 
 function Print$withHints(base, hints) {
-  return new rt.Con("7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), hints, Printer$rules(base)]);
+  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), hints, Printer$rules(base), Printer$shadows(base)]);
 }
 rt.named(Print$withHints, "Print.withHints");
 
@@ -546,7 +546,40 @@ function Print$printer(ns, locals) {
     rt.nomatch(pair_2);
   }
 }, "Print.printer/\u03bb"), lib$base$Set$empty(), lib$base$Map$toList(ns));
-  return new rt.Con("7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", 0, [display, index, typeNames, fieldNames, Types$declaredNames(ns), Codebase$namesByHash(ns), rt.ap(rt.prims["Ref.new"], locals), rt.ap(rt.prims["Ref.new"], 0), lib$base$Set$empty(), lib$base$Set$empty()]);
+  const shadows = lib$base$List$concatMap(rt.named((pair_3) => {
+  m8: {
+    if (pair_3.tag === 0) {
+      const key_1 = pair_3.fields[0];
+      const fqn_1 = pair_3.fields[1];
+      const shown = lib$base$Option$getOr(lib$base$Map$lookup(key_1, display), fqn_1);
+      let r9;
+      if (lib$base$not(lib$base$Text$startsWith("lib.", fqn_1))) {
+        r9 = true;
+      } else {
+        r9 = lib$base$Text$startsWith("lib.", shown);
+      }
+      if (r9) {
+        return rt.NIL;
+      } else {
+        return lib$base$List$filterMap(rt.named((other) => {
+          let r10;
+          if (lib$base$not(lib$base$Text$startsWith("lib.", other))) {
+            r10 = lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", shown), other);
+          } else {
+            r10 = false;
+          }
+          if (r10) {
+            return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [lib$base$Text$take(((((rt.ap(rt.prims["Text.length"], other) - rt.ap(rt.prims["Text.length"], shown)) | 0) - 1) | 0), other), new rt.Con("#Pair", 0, [key_1, fqn_1])])]);
+          } else {
+            return rt.con0("#Option", 0);
+          }
+        }, "Print.printer/\u03bb"), lib$base$Option$getOr(rt.ap(rt.prims["Dict.lookup"], Names$lastSegment(fqn_1), bySegment), rt.NIL));
+      }
+    }
+    rt.nomatch(pair_3);
+  }
+}, "Print.printer/\u03bb"), lib$base$Map$toList(index));
+  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [display, index, typeNames, fieldNames, Types$declaredNames(ns), Codebase$namesByHash(ns), rt.ap(rt.prims["Ref.new"], locals), rt.ap(rt.prims["Ref.new"], 0), lib$base$Set$empty(), lib$base$Set$empty(), shadows]);
 }
 rt.named(Print$printer, "Print.printer");
 
@@ -1520,6 +1553,7 @@ function Printer$display(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_1;
     }
     rt.nomatch(v);
@@ -1540,6 +1574,7 @@ function Printer$fullNames(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_2;
     }
     rt.nomatch(v);
@@ -1560,6 +1595,7 @@ function Printer$typeNames(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_3;
     }
     rt.nomatch(v);
@@ -1580,6 +1616,7 @@ function Printer$fieldNames(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_4;
     }
     rt.nomatch(v);
@@ -1600,6 +1637,7 @@ function Printer$declared(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_5;
     }
     rt.nomatch(v);
@@ -1620,6 +1658,7 @@ function Printer$namesByHash(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_6;
     }
     rt.nomatch(v);
@@ -1640,6 +1679,7 @@ function Printer$supply(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_7;
     }
     rt.nomatch(v);
@@ -1660,6 +1700,7 @@ function Printer$fresh(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_8;
     }
     rt.nomatch(v);
@@ -1680,6 +1721,7 @@ function Printer$rules(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_10;
     }
     rt.nomatch(v);
@@ -1687,19 +1729,49 @@ function Printer$rules(v) {
 }
 rt.named(Printer$rules, "Printer.rules");
 
+function Printer$shadows(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      const v_9 = v.fields[8];
+      const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
+      return v_11;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Printer$shadows, "Printer.shadows");
+
 function Names$build(table) {
   const entries = lib$base$Map$toList(table);
   const bySegment = Names$groups(lib$base$List$map(rt.named((pair) => new rt.Con("#Pair", 0, [Names$lastSegment(lib$base$fst(pair)), lib$base$fst(pair)]), "Names.build/\u03bb"), entries));
   const shadowed = rt.named((fqn) => {
   const rest = lib$base$Text$drop(4, fqn);
   if (lib$base$Text$startsWith("lib.", fqn)) {
-    return lib$base$Map$contains(lib$base$Text$drop(((rt.ap(rt.prims["Text.indexOf"], rest, ".", 0) + 1) | 0), rest), table);
+    const t0 = lib$base$Map$lookup(lib$base$Text$drop(((rt.ap(rt.prims["Text.indexOf"], rest, ".", 0) + 1) | 0), rest), table);
+    m1: {
+      if (t0.tag === 1 && t0.fields[0].tag === 2) {
+        return true;
+      }
+      if (true) {
+        return false;
+      }
+      rt.nomatch(t0);
+    }
   } else {
     return false;
   }
 }, "Names.build/\u03bb");
   const fieldOwners = Names$groups(lib$base$List$concatMap(rt.named((pair_1) => {
-  m0: {
+  m2: {
     if (pair_1.tag === 0 && pair_1.fields[1].tag === 2) {
       const fqn_1 = pair_1.fields[0];
       const fields = pair_1.fields[1].fields[2];
@@ -1809,6 +1881,97 @@ function Names$fieldOwners(v) {
   }
 }
 rt.named(Names$fieldOwners, "Names.fieldOwners");
+
+function lib$base$not(b) {
+  if (b) {
+    return false;
+  } else {
+    return true;
+  }
+}
+rt.named(lib$base$not, "lib.base.not");
+
+function lib$base$Text$startsWith(prefix, t) {
+  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
+    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  } else {
+    return false;
+  }
+}
+rt.named(lib$base$Text$startsWith, "lib.base.Text.startsWith");
+
+function lib$base$List$filterMap(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return lib$base$List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          const t1 = rt.ap(f, y);
+          m2: {
+            if (t1.tag === 1) {
+              const z = t1.fields[0];
+              acc$ = rt.cons(z, acc);
+              ys$ = rest;
+              continue;
+            }
+            if (t1.tag === 0) {
+              acc$ = acc;
+              ys$ = rest;
+              continue;
+            }
+            rt.nomatch(t1);
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(lib$base$List$filterMap, "lib.base.List.filterMap");
+
+function lib$base$Text$endsWith(suffix, t) {
+  const n = rt.ap(rt.prims["Text.length"], t);
+  const m = rt.ap(rt.prims["Text.length"], suffix);
+  if (rt.ap(rt.prims["le"], m, n)) {
+    return rt.equal(rt.ap(rt.prims["Text.slice"], t, ((n - m) | 0), n), suffix);
+  } else {
+    return false;
+  }
+}
+rt.named(lib$base$Text$endsWith, "lib.base.Text.endsWith");
+
+function lib$base$Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(lib$base$Text$take, "lib.base.Text.take");
+
+function Names$lastSegment(name) {
+  function go(i$) {
+    for (;;) {
+      const i = i$;
+      if ((i < 0)) {
+        return name;
+      } else {
+        if ((rt.ap(rt.prims["Text.code"], name, i) === 46)) {
+          return lib$base$Text$drop(((i + 1) | 0), name);
+        } else {
+          i$ = ((i - 1) | 0);
+          continue;
+        }
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, ((rt.ap(rt.prims["Text.length"], name) - 1) | 0));
+}
+rt.named(Names$lastSegment, "Names.lastSegment");
 
 function Types$declaredNames(ns) {
   return lib$base$Map$foldr(rt.named((name, e, acc) => {
@@ -2844,51 +3007,6 @@ function Codebase$Causal$snapshot(v) {
 }
 rt.named(Codebase$Causal$snapshot, "Codebase.Causal.snapshot");
 
-function lib$base$List$filterMap(f, xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return lib$base$List$reverse(acc);
-        }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          const t1 = rt.ap(f, y);
-          m2: {
-            if (t1.tag === 1) {
-              const z = t1.fields[0];
-              acc$ = rt.cons(z, acc);
-              ys$ = rest;
-              continue;
-            }
-            if (t1.tag === 0) {
-              acc$ = acc;
-              ys$ = rest;
-              continue;
-            }
-            rt.nomatch(t1);
-          }
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, rt.NIL, xs);
-}
-rt.named(lib$base$List$filterMap, "lib.base.List.filterMap");
-
-function lib$base$not(b) {
-  if (b) {
-    return false;
-  } else {
-    return true;
-  }
-}
-rt.named(lib$base$not, "lib.base.not");
-
 function lib$base$Text$isEmpty(t) {
   return (rt.ap(rt.prims["Text.length"], t) === 0);
 }
@@ -3022,15 +3140,6 @@ function lib$base$Text$drop(n, t) {
   return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
 }
 rt.named(lib$base$Text$drop, "lib.base.Text.drop");
-
-function lib$base$Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
-  } else {
-    return false;
-  }
-}
-rt.named(lib$base$Text$startsWith, "lib.base.Text.startsWith");
 
 function Export$document(dir, ns, d) {
   const blocks = lib$base$List$filterMap(rt.named((pair) => {
@@ -3581,11 +3690,6 @@ function lib$base$Sexp$readAll(t) {
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
-function lib$base$Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
-}
-rt.named(lib$base$Text$take, "lib.base.Text.take");
-
 function lib$base$Option$isSome(v) {
   m0: {
     if (v.tag === 0) {
@@ -3663,27 +3767,6 @@ function Names$groups(pairs) {
 }
 rt.named(Names$groups, "Names.groups");
 
-function Names$lastSegment(name) {
-  function go(i$) {
-    for (;;) {
-      const i = i$;
-      if ((i < 0)) {
-        return name;
-      } else {
-        if ((rt.ap(rt.prims["Text.code"], name, i) === 46)) {
-          return lib$base$Text$drop(((i + 1) | 0), name);
-        } else {
-          i$ = ((i - 1) | 0);
-          continue;
-        }
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, ((rt.ap(rt.prims["Text.length"], name) - 1) | 0));
-}
-rt.named(Names$lastSegment, "Names.lastSegment");
-
 function Names$atLibraryRoot(fqn, name) {
   const rest = lib$base$Text$drop(4, fqn);
   const dot = rt.ap(rt.prims["Text.indexOf"], rest, ".", 0);
@@ -3698,17 +3781,6 @@ function Names$atLibraryRoot(fqn, name) {
   }
 }
 rt.named(Names$atLibraryRoot, "Names.atLibraryRoot");
-
-function lib$base$Text$endsWith(suffix, t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
-  const m = rt.ap(rt.prims["Text.length"], suffix);
-  if (rt.ap(rt.prims["le"], m, n)) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, ((n - m) | 0), n), suffix);
-  } else {
-    return false;
-  }
-}
-rt.named(lib$base$Text$endsWith, "lib.base.Text.endsWith");
 
 function lib$base$List$foldr(f, init, xs) {
   return lib$base$List$foldl(rt.named((acc, x) => rt.ap(f, x, acc), "lib.base.List.foldr/\u03bb"), init, lib$base$List$reverse(xs));
@@ -7492,17 +7564,31 @@ function Cli$loadRule(dir, ns, name) {
 rt.named(Cli$loadRule, "Cli.loadRule");
 
 function Print$withRules(base, rules) {
-  return new rt.Con("7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), rules]);
+  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), rules, Printer$shadows(base)]);
 }
 rt.named(Print$withRules, "Print.withRules");
 
 function Print$withSelf(base, h, name) {
-  return new rt.Con("7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", 0, [lib$base$Map$insert(h, name, Printer$display(base)), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), Printer$rules(base)]);
+  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [lib$base$List$foldl(rt.named((m, shadow) => {
+  m0: {
+    if (shadow.tag === 0 && shadow.fields[1].tag === 0) {
+      const space = shadow.fields[0];
+      const key = shadow.fields[1].fields[0];
+      const full = shadow.fields[1].fields[1];
+      if (lib$base$Text$startsWith(rt.ap(rt.prims["append"], space, "."), name)) {
+        return lib$base$Map$insert(key, full, m);
+      } else {
+        return m;
+      }
+    }
+    rt.nomatch(shadow);
+  }
+}, "Print.withSelf/\u03bb"), lib$base$Map$insert(h, name, Printer$display(base)), Printer$shadows(base)), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), Printer$rules(base), Printer$shadows(base)]);
 }
 rt.named(Print$withSelf, "Print.withSelf");
 
 function Print$withLocals(base, locals) {
-  return new rt.Con("7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), rt.ap(rt.prims["Ref.new"], locals), rt.ap(rt.prims["Ref.new"], 0), Printer$hints(base), Printer$rules(base)]);
+  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), rt.ap(rt.prims["Ref.new"], locals), rt.ap(rt.prims["Ref.new"], 0), Printer$hints(base), Printer$rules(base), Printer$shadows(base)]);
 }
 rt.named(Print$withLocals, "Print.withLocals");
 
@@ -9070,6 +9156,7 @@ function Printer$hints(v) {
       const v_8 = v.fields[7];
       const v_9 = v.fields[8];
       const v_10 = v.fields[9];
+      const v_11 = v.fields[10];
       return v_9;
     }
     rt.nomatch(v);
@@ -13353,9 +13440,9 @@ export const raw = {
   liveChange: Explorer$liveChange,
   liveDoc: Explorer$liveDoc,
 };
-export const site = rt.exportFn(Explorer$site, [['text']], ['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]);
-export const liveIndex = rt.exportFn(Explorer$liveIndex, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]], ['text']);
-export const liveDef = rt.exportFn(Explorer$liveDef, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
+export const site = rt.exportFn(Explorer$site, [['text']], ['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules", "shadows"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['list', ['tuple', [['text'], ['text'], ['text']]]]]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]);
+export const liveIndex = rt.exportFn(Explorer$liveIndex, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules", "shadows"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['list', ['tuple', [['text'], ['text'], ['text']]]]]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]]], ['text']);
+export const liveDef = rt.exportFn(Explorer$liveDef, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules", "shadows"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['list', ['tuple', [['text'], ['text'], ['text']]]]]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
 export const liveChange = rt.exportFn(Explorer$liveChange, [['text'], ['text']], ['text']);
-export const liveDoc = rt.exportFn(Explorer$liveDoc, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "7ef99fb02c88bb76298b66d415d4c3946c486ac7af8be21a2058259c5678ee2a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw']]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
+export const liveDoc = rt.exportFn(Explorer$liveDoc, [['struct', "cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", ["dir", "project", "branch", "ns", "entries", "index", "namesByHash", "info", "depsOf", "dependents", "printer", "allTasks", "taskMap"], [['text'], ['text'], ['text'], ['raw'], ['list', ['tuple', [['text'], ['raw']]]], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['struct', "0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", ["display", "fullNames", "typeNames", "fieldNames", "declared", "namesByHash", "supply", "fresh", "hints", "rules", "shadows"], [['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['raw'], ['list', ['tuple', [['text'], ['text'], ['text']]]]]], ['list', ['struct', "df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", ["id", "title", "state", "priority", "assignee", "labels", "parent", "details", "links", "comments"], [['text'], ['text'], ['raw'], ['int'], ['text'], ['list', ['text']], ['text'], ['text'], ['list', ['raw']], ['list', ['struct', "e899d115c89ab4f937df3384df56d1a1ddf16b6898e549ff79c1df61d08dcaf4", ["author", "note", "written", "assets"], [['text'], ['text'], ['text'], ['list', ['struct', "41ab1fcea751065ddc27fe96163262f7cd90d2c2ffd9f979e62f303329f23e66", ["hash", "mediaType", "fileName"], [['text'], ['text'], ['text']]]]]]]]]], ['raw']]], ['text']], ['text']);
 //# sourceMappingURL=explorer-live.js.map

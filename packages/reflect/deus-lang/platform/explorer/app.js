@@ -1981,7 +1981,7 @@ const homeHtml = () => {
           `<ul class="rows library-list">${libs
             .map(
               (node) =>
-                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${node.count} definitions, mounted as <code>${escape(node.path)}</code></span><a class="more-link" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
+                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${node.count} definitions, mounted as <code>${escape(node.path)}</code></span><a class="more-link" hidden data-library="${escape(libraryHref(node).slice(1, -1))}" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
             )
             .join('')}</ul>`,
         )
@@ -2015,6 +2015,7 @@ const homeHtml = () => {
 
 /** What the overview shows once pages arrive: the feature map's introduction, and each spec document's title. */
 const fillHome = async (root) => {
+  void showLibraryLinks(root);
   const map = (index.areas ?? [])[0]?.document;
   const text = map ? ((await loadDoc(map))?.text ?? '') : '';
   const intro = docIntro(text);
@@ -2124,6 +2125,26 @@ const treeRows = (node, depth) => rowsOf(sortedChildren(node), depth);
 
 /** The mounted libraries (D206): the children of the tree's `lib` node, `lib.base` and the like. */
 const libraries = () => (index.tree.children.get('lib') ? sortedChildren(index.tree.children.get('lib')) : []);
+
+/**
+ * Shows each library's explorer link only when the hub lists that project: a mount's name is chosen at install,
+ * and the codebase's record of which project it came from does not reach the Worker.
+ */
+const showLibraryLinks = async (root) => {
+  const links = [...root.querySelectorAll('[data-library]')];
+  if (links.length === 0) {
+    return;
+  }
+  try {
+    const response = await fetch('/v1/_projects');
+    const listed = new Set(response.ok ? (await response.json()).map((project) => project.address) : []);
+    for (const link of links) {
+      link.hidden = !listed.has(link.dataset.library);
+    }
+  } catch {
+    // Without the hub's list (a local explorer), the links stay hidden rather than risk a dead one.
+  }
+};
 
 /** Where a library's own explorer is: its project under this project's owner, as `@dxos/base` beside `@dxos/toolchain`. */
 const libraryHref = (node) => `/${addressOf(index.meta.project).split('/')[0]}/${node.segment}/`;

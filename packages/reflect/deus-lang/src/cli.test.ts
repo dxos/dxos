@@ -304,9 +304,18 @@ describe('deus CLI', () => {
     deus('add', file('box.deus', 'def Box.size (n : Int) : Int := n\ndef Box.area (n : Int) : Int := n\n'), ...app);
     expect(deus('eval', 'size 5', ...app).stdout).toBe('5\n');
     expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
+    // Inside `Box`, a bare `area` is `Box.area`, so the library's prints in full and reads back the same.
+    deus('add', file('use.deus', 'def Box.useArea (s : Shape) : Int := lib.std.area s\n'), ...app);
+    const shown = deus('view', 'Box.useArea', ...app).stdout;
+    expect(shown).toContain(':= lib.std.area s');
+    expect(JSON.parse(deus('update', file('use2.deus', shown), '--json', ...app).stdout).updated).toEqual([]);
+    // A name the project binds otherwise is the project's to edit, even to the library's definition.
+    deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), ...app);
+    expect(JSON.parse(deus('update', file('own2.deus', area4), '--json', ...app).stdout).updated).toHaveLength(1);
+    expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
 
     const info = JSON.parse(deus('project', '--json', ...app).stdout);
-    expect([info.authority, info.owned, info.libs[0].iri]).toEqual(['example.org', 1, 'https://dxos.org/deus/std']);
+    expect([info.authority, info.libs[0].iri]).toEqual(['example.org', 'https://dxos.org/deus/std']);
 
     const minted = deus(
       'add',

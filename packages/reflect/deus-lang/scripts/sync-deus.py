@@ -38,6 +38,8 @@ DECL = re.compile(r'^(def|test|theorem|structure|inductive|ability)\s+([^\s(:]+)
 HEADER = re.compile(r'^-- (\S+ #[0-9a-f]+|: .*)$')
 # A library mounted in the codebase (`deus lib install`): `lib.<name>.` before its names.
 MOUNT = re.compile(r'(?<![\w.])lib\.[A-Za-z0-9_]+\.')
+# A text literal, escapes included.
+STRING = re.compile(r'"(?:\\.|[^"\\])*"')
 # Each flat name the codebase has only under a mount, with its mounted name.
 MOUNTED = {}
 
@@ -68,9 +70,10 @@ def blocks(path):
         match = DECL.match(line)
         if not match:
             continue
-        # A doc comment and attributes directly above belong to the declaration.
+        # Comments, a doc comment and attributes above belong to the declaration: `deus view` prints them with it,
+        # so leaving them would duplicate them on every write.
         above = index
-        while above > 0 and (lines[starts[above - 1]].startswith('/--') or lines[starts[above - 1]].startswith('@[')):
+        while above > 0 and lines[starts[above - 1]].startswith(('/--', '@[', '--')):
             above -= 1
         end = starts[index + 1]
         while end > start + 1 and lines[end - 1].strip() == '':
@@ -91,8 +94,41 @@ def source_of(view, namespace):
 
 
 def flat(text):
-    """`text` with library mounts dropped: deus/ holds a library's definitions beside the toolchain's, unprefixed (D206)."""
-    return MOUNT.sub('', text)
+    """`text` with library mounts dropped from its code: deus/ holds a library's definitions beside the toolchain's,
+    unprefixed (D206). Text literals and comments keep theirs, since they are part of the definition's hash or docs."""
+    out, code, block = [], [], 0
+
+    def emit():
+        out.append(MOUNT.sub('', ''.join(code)))
+        code.clear()
+
+    at = 0
+    while at < len(text):
+        if block:
+            end = text.find('-/', at)
+            end = len(text) if end < 0 else end + 2
+            out.append(text[at:end])
+            block, at = 0, end
+        elif text.startswith('/-', at):
+            emit()
+            block = 1
+        elif text.startswith('--', at):
+            emit()
+            end = text.find('\n', at)
+            end = len(text) if end < 0 else end
+            out.append(text[at:end])
+            at = end
+        elif text[at] == '"':
+            emit()
+            literal = STRING.match(text, at)
+            end = literal.end() if literal else len(text)
+            out.append(text[at:end])
+            at = end
+        else:
+            code.append(text[at])
+            at += 1
+    emit()
+    return ''.join(out)
 
 
 def views(names, codebase, seed=None):
