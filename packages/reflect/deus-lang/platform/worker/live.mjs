@@ -318,8 +318,19 @@ export const warmLive = async (env, ctx, project) => {
     // The overview links its head's change first.
     await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'change', `${head.causal}.json`]);
     await checkHistory(env, project, 'main', head.causal);
-    // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
     const names = JSON.parse(await response.text()).names ?? [];
+    // The overview asks for every spec document at once, so those pages are drawn before anyone opens it.
+    const documents = [
+      ...new Set(
+        names.filter((entry) => entry.kind === 'spec').map((entry) => entry.name.slice(0, entry.name.lastIndexOf('.'))),
+      ),
+    ];
+    for (const doc of documents) {
+      await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'doc', `${doc}.json`], {
+        drawn: true,
+      }).catch((error) => console.error(`drawing ${doc} failed`, error));
+    }
+    // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
     const chunks = [];
     for (let from = 0; from < names.length; from += PAGES_PER_CHUNK) {
       chunks.push({ body: { project, causal: head.causal, from, count: PAGES_PER_CHUNK } });

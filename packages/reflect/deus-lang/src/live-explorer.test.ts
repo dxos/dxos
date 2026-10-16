@@ -216,6 +216,8 @@ describe('live explorer (D192)', () => {
       };
       await deliver({ project: 'toolchain' });
       const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', head, 'index.json'), 'utf8'));
+      // The overview opens every spec document, so their pages are drawn with the index.
+      expect(readdirSync(join(bucket, 'toolchain', 'live', head, 'doc'))).toEqual(['Area.Spec.json']);
       const chunks = sent.filter((message) => message.body.causal === head);
       expect(chunks.length).toBe(Math.ceil(index.names.length / 200));
       for (const chunk of chunks) {
