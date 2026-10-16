@@ -65,15 +65,16 @@ const createPlot = (
   { label, ...size }: { width: number; height: number; label?: string },
 ): SVGSVGElement | HTMLElement => {
   const series = new Set(datums.map((datum) => datum.series));
-  // Ordinal scales sort by default; keep the sheet's row order.
+  // Ordinal scales sort by default; keep the sheet's row and column order.
   const keys = [...new Set(datums.map((datum) => datum.key))];
+  const seriesOrder = [...series];
   const options = {
     ...size,
     grid,
     marginLeft: MARGIN,
     marginBottom: MARGIN,
     style: { background: 'transparent', color: 'currentColor' },
-    color: { legend: series.size > 1 },
+    color: { legend: series.size > 1, domain: seriesOrder },
     y: { label: null },
   };
 
@@ -94,7 +95,7 @@ const createPlot = (
       return ObservablePlot.plot({
         ...options,
         ...(series.size > 1
-          ? { fx: { label: null, domain: keys, axis: 'bottom' }, x: { axis: null } }
+          ? { fx: { label: null, domain: keys, axis: 'bottom' }, x: { axis: null, domain: seriesOrder } }
           : { x: { label: null, domain: keys } }),
         marks: [
           ObservablePlot.ruleY([0]),
