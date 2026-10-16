@@ -168,6 +168,29 @@ const page = await context.newPage();
 // Installed before the page loads, so every timer it ever sets is on the fake clock. Time flows until paused below,
 // which lets storybook boot as it normally would.
 await page.clock.install({ time: 0 });
+// The fake clock fires animation frames on its own 16 ms grid, which drifts against a 1/fps step: a video frame now
+// and then holds two animation frames' motion. Once capture starts, frames are run here instead, exactly one per
+// video frame; until then the clock's own frames boot the page.
+await page.addInitScript(() => {
+  const fake = { request: window.requestAnimationFrame.bind(window), cancel: window.cancelAnimationFrame.bind(window) };
+  let queue = new Map();
+  let next = 0;
+  window.__manualFrames = false;
+  window.requestAnimationFrame = (callback) => {
+    if (!window.__manualFrames) {
+      return fake.request(callback);
+    }
+    queue.set(--next, callback);
+    return next;
+  };
+  window.cancelAnimationFrame = (id) => (id < 0 ? queue.delete(id) : fake.cancel(id));
+  window.__runFrame = () => {
+    const callbacks = [...queue.values()];
+    queue = new Map();
+    const now = performance.now();
+    callbacks.forEach((callback) => callback(now));
+  };
+});
 const query = new URLSearchParams({ id: options.story, viewMode: 'story', globals: options.globals });
 await page.goto(`${options.url}/iframe.html?${query}`);
 await page.waitForSelector('[data-testid="scene-view"]', { timeout: 120_000 });
@@ -179,6 +202,7 @@ if (mode) {
   });
 }
 await page.clock.pauseAt((await page.evaluate(() => Date.now())) + step);
+await page.evaluate(() => (window.__manualFrames = true));
 
 /** Lets the page finish the work a clock step started (React renders on message events, which the clock leaves real). */
 /** The frame the page last drew, if it marks one (`data-frame-time` on any element); undefined otherwise. */
@@ -200,6 +224,7 @@ const started = Date.now();
 for (let frame = 0; frame < frames; frame++) {
   const before = await drawn();
   await page.clock.runFor(step);
+  await page.evaluate(() => window.__runFrame());
   // React splits a large render into small tasks, so wait for the page to mark the new frame drawn; a few turns of the
   // event loop alone can leave the capture a frame behind on a busy frame, which shows as a stutter.
   if (before !== undefined) {
