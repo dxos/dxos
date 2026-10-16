@@ -87,9 +87,12 @@ test QA-2: Populate a planet and tour its views
     - name: Create five random objects
       do: Click the dice button five times.
       expect: five objects appear on the planet and move, and the telemetry panel lists five rows
-    - name: Spin the globe
-      do: Drag across the planet.
-      expect: the camera orbits the globe and the objects keep moving
+    - name: Show the rotation gizmos
+      do: Turn on the gizmo toggle beside the view tabs.
+      expect: each object shows its heading and orientation axes
+    - name: Slowly rotate and zoom in
+      do: Drag slowly across the planet while scrolling in.
+      expect: the camera orbits and closes on the globe, and the objects keep moving
     - name: Toggle the views
       do: Switch slowly between Map, Camera and 3D, holding each for a few seconds.
       expect: the map draws the same terrain and objects flat; the camera rides one object; 3D shows the globe

@@ -30,8 +30,11 @@ const visible = (locator, timeout = 1_500) =>
       () => false,
     );
 
-/** Orbits the camera with a slow horizontal drag across the canvas; the simulation itself is already running. */
-const spin = async (page, { dx = 700, ms = 4_000, steps = 80 } = {}) => {
+/**
+ * Orbits the camera with a slow horizontal drag across the canvas, and with `zoom` (wheel notches, negative to zoom in)
+ * spread over the drag dollies the camera at the same time; the simulation itself is already running.
+ */
+const spin = async (page, { dx = 700, ms = 4_000, steps = 80, zoom = 0 } = {}) => {
   const box = await page.locator('[data-testid="deck.plank"] canvas').last().boundingBox();
   const y = box.y + box.height / 2;
   const x = box.x + box.width / 2 - dx / 2;
@@ -39,6 +42,9 @@ const spin = async (page, { dx = 700, ms = 4_000, steps = 80 } = {}) => {
   await page.mouse.down();
   for (let i = 1; i <= steps; i++) {
     await page.mouse.move(x + (dx * i) / steps, y);
+    if (zoom !== 0) {
+      await page.mouse.wheel(0, (zoom * 40) / steps);
+    }
     await page.waitForTimeout(ms / steps);
   }
   await page.mouse.up();
@@ -104,12 +110,20 @@ export const steps = [
     },
   },
   {
-    name: 'Spin the globe',
-    narration: 'Spin the globe to follow them around.',
+    name: 'Show the rotation gizmos',
+    narration: 'Gizmos show each object’s heading and orientation.',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="terra.toolbar.toggle-gizmos"] >> nth=0', label: 'Gizmos' });
+      await page.waitForTimeout(BEAT * 1.5);
+    },
+  },
+  {
+    name: 'Slowly rotate and zoom in',
+    narration: 'Turn the globe and move in to follow them.',
     run: async ({ page }) => {
-      await spin(page);
+      await spin(page, { dx: 600, ms: 6_000, steps: 120, zoom: -12 });
       await page.waitForTimeout(BEAT);
-      await spin(page, { dx: 500, ms: 3_000 });
+      await spin(page, { dx: 400, ms: 5_000, steps: 100, zoom: -6 });
       await page.waitForTimeout(BEAT);
     },
   },
