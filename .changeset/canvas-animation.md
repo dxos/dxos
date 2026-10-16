@@ -8,3 +8,5 @@ The scene engine animates: composite objects, a timeline, and agent-written gene
 - Timeline: `Scene.timeline` of keyed tracks with easing, `sampleScene(scene, t)`, an animated projection that turns edits away from the start into keys, a per-view clock (`SceneViewAtoms.clock`), and `SceneView.Timeline` with space, `,` `.` `[` `]` and `K`.
 - Generators: a `generator` node runs agent-written code in a worker (`@dxos/react-ui-canvas/generator-worker`) at a fixed 120 Hz with seeded random, checkpoints and a step budget, drawing `Shape` lists; the motion library is `@dxos/react-ui-canvas/motion`.
 - `SceneView.Root exportable` publishes the clock for `scripts/render-story.mjs`, which now seeks it frame by frame; new `path` node type and `film` theme.
+- `@dxos/brand/paths` exports the DXOS lockup as path data (`DXOS_HORIZONTAL_LOCKUP`), which `DXOSHorizontalType` now draws from.
+- plugin-canvas adds an image shape (palette key `I`) linked by URL in its properties.

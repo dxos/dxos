@@ -529,10 +529,15 @@ generators follow in phase 2.
 ### 12.3 The end card
 
 `plugins/plugin-canvas/samples/EndCard` rebuilds the 3 s ident end card (`tools/ident` `EndCard`) as a canvas document.
-The logo is a composite of five path nodes (the mark and D, X, O, S from the brand SVG); the tagline, rule and call to
-action are nodes; every entrance is a key written through `canvas.setTimelineKey`; a shimmer of sparks over the mark is
-an agent-written stateful generator (`shimmer.generator.ts`) created, placed and inspected through the generator
-operations, bound to the logo instance (it fades with it) with its rate keyed from 0 to 14 by 0.6 s. Remotion's
-`Easing.out(Easing.back(1.6))` is approximated by `cubic-bezier(0.34, 1.56, 0.64, 1)`. Sharp Sans is licensed and not
-in the repo, so the text sets in the theme's face; its lines are placed by the glyph centres measured from the
-reference video.
+The logo is a composite of five path nodes (the mark and D, X, O, S from `@dxos/brand/paths`, the data
+`DXOSHorizontalType` draws); the tagline, rule and call to action are nodes; every entrance is a key written through
+`canvas.setTimelineKey`. Remotion's `Easing.out(Easing.back(1.6))` is approximated by `cubic-bezier(0.34, 1.56, 0.64,
+1)`. Sharp Sans is licensed and not in the repo, so the text sets in the theme's face; its lines are placed by the glyph
+centres measured from the reference video. The card carries no generator, matching the ident; generators are exercised
+by `generator.test.ts` and plugin-canvas `operations.test.ts`, and the view still runs any an agent adds.
+
+### 12.4 Image shapes
+
+plugin-canvas adds an `image` node type to the palette (key `I`): a picture linked by `src` (a web URL; anything else,
+such as a `javascript:` or `data:` URL in shared content, draws the placeholder), with a description and a fit
+(`contain`, `cover`, `fill`), all edited in the properties panel.

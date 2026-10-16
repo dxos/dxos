@@ -9197,6 +9197,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

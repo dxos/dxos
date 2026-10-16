@@ -148,6 +148,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/brand": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",

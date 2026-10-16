@@ -8,6 +8,7 @@
 // video's pixels with the origin at the frame's centre, so `EndCard`'s sizes and offsets carry over as they are.
 //
 
+import { DXOS_HORIZONTAL_LOCKUP, DXOS_LOCKUP_GLYPHS, type DXOSLockupGlyph } from '@dxos/brand/paths';
 import {
   type Bounds,
   type Easing,
@@ -22,8 +23,6 @@ import {
   instancePorts,
   pathBounds,
 } from '@dxos/react-ui-canvas/scene';
-
-import { LOGO_PATHS, type LogoGlyph } from './logo.ts';
 
 /** The video's frame in scene units. */
 export const FRAME: Bounds = { x: -960, y: -540, width: 1920, height: 1080 };
@@ -41,20 +40,22 @@ const BACK_OUT: Easing = { bezier: [0.34, 1.56, 0.64, 1] };
 
 /**
  * The lockup image is 340 px tall (`END_CARD.markHeight`) for a 2048x1024 view box, at the top of a column 15% down the
- * frame; its paths sit in a group scaled 0.64 and moved (62.03, 170.67). One artwork unit is this many scene units.
+ * frame; its paths sit in the lockup's group transform (`@dxos/brand/paths`). One artwork unit is this many scene units.
  */
-const ARTWORK_SCALE = (0.64 * 340) / 1024;
+const { transform } = DXOS_HORIZONTAL_LOCKUP;
 const IMAGE_SCALE = 340 / 1024;
-const ARTWORK_ORIGIN: Point = { x: -340 + 62.0285 * IMAGE_SCALE, y: 0.15 * 1080 - 540 + 170.667 * IMAGE_SCALE };
+const ARTWORK_SCALE = transform.scale * IMAGE_SCALE;
+const ARTWORK_ORIGIN: Point = {
+  x: -340 + transform.x * IMAGE_SCALE,
+  y: 0.15 * 1080 - 540 + transform.y * IMAGE_SCALE,
+};
 
 /** The logo scales about 50% across and 60% down its 680x340 box (`transformOrigin: '50% 60%'`). */
 const SCALE_ORIGIN: Point = { x: 0, y: 0.15 * 1080 + 340 * 0.6 - 540 };
 
-const GLYPHS: LogoGlyph[] = ['mark', 'D', 'X', 'O', 'S'];
-
 /** A glyph of the lockup as a path node, framed by its own outline. */
-const glyphNode = (glyph: LogoGlyph, index: number): PathNode => {
-  const d = LOGO_PATHS[glyph];
+const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
+  const d = DXOS_HORIZONTAL_LOCKUP.paths[glyph];
   const box = pathBounds(d) ?? { x: 0, y: 0, width: 1, height: 1 };
   return {
     type: 'path',
@@ -72,7 +73,7 @@ const glyphNode = (glyph: LogoGlyph, index: number): PathNode => {
 
 /** The logo's definition: a composite scene of the mark and the four letters. */
 export const logoComposite = (): Scene => {
-  const nodes = GLYPHS.map(glyphNode);
+  const nodes = DXOS_LOCKUP_GLYPHS.map(glyphNode);
   return {
     id: LOGO_OBJECT,
     name: 'DXOS logo',
@@ -213,25 +214,3 @@ export const endCardKeys = (): KeySpec[] => {
     ...entrance('url', LAYOUT.url, 1.05, 1.45, 18),
   ];
 };
-
-/** Where the shimmer generator is placed: over the mark, at the logo's resting size. */
-export const SHIMMER_BOUNDS: Bounds = (() => {
-  const { center, size } = logoAt(1);
-  return { x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.height, height: size.height };
-})();
-
-/** The shimmer's parameters schema: `target` names the logo instance. */
-export const SHIMMER_PARAMS = {
-  type: 'object',
-  properties: {
-    target: { 'type': 'string', 'x-binding': 'node', 'description': 'The logo instance.' },
-    rate: { type: 'number', description: 'Sparks born per second.' },
-    radius: { type: 'number', description: 'Mean spark radius.' },
-  },
-};
-
-/** The shimmer's rate, keyed: none until the mark lands, then a steady trickle. */
-export const shimmerKeys = (node: string): KeySpec[] => [
-  { target: node, property: 'params.rate', t: 0, value: 0 },
-  { target: node, property: 'params.rate', t: 0.6, value: 14, easing: OUT },
-];

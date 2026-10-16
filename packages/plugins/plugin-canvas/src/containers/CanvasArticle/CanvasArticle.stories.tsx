@@ -162,3 +162,40 @@ export const ObjectFrame: Story = {
     await waitFor(() => expect(surfaceOf('section')?.querySelector('.cm-editor')).not.toBeNull(), { timeout: 10_000 });
   },
 };
+
+/**
+ * Image shapes, linked by URL in their properties.
+ *
+ * Test:
+ * 1. The palette offers the image tool (I).
+ * 2. An image with no URL, or one that is not a web link, shows the placeholder rather than following the link.
+ */
+export const Image: Story = {
+  decorators: withDrawing((_db, canvas) => {
+    const image = (id: string, x: number, src?: string) => ({
+      kind: 'node',
+      scene: rootOf(canvas.content),
+      node: {
+        id,
+        type: 'image',
+        z: `a${x}`,
+        center: { x, y: 0 },
+        size: { width: 4 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
+        ...(src ? { src } : {}),
+      },
+    });
+    Obj.update(canvas, (canvas) => {
+      canvas.content[nodeKey('empty')] = image('empty', -320);
+      canvas.content[nodeKey('unsafe')] = image('unsafe', 320, 'javascript:alert(1)');
+    });
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
+    // 1. The tool.
+    await expect(await canvas.findByTestId('palette-I')).toBeInTheDocument();
+    // 2. Placeholders, no image element.
+    await waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="image-placeholder"]')).toHaveLength(2));
+    await expect(canvasElement.querySelector('[data-testid="image-node"]')).toBeNull();
+  },
+};

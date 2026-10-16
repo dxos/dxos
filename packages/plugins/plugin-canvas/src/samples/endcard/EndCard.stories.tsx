@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { waitFor, within } from 'storybook/test';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Database, Obj, Ref } from '@dxos/echo';
@@ -27,23 +27,9 @@ import {
   useCanvasGenerators,
   useCanvasNodes,
 } from '../../containers/CanvasArticle/use-canvas-scene.ts';
-import shimmerSource from './shimmer.generator.ts?raw';
-import {
-  DURATION,
-  FRAME,
-  ROOT,
-  SHIMMER_BOUNDS,
-  SHIMMER_PARAMS,
-  endCardKeys,
-  logoComposite,
-  rootScene,
-  shimmerKeys,
-} from './spec.ts';
+import { DURATION, FRAME, ROOT, endCardKeys, logoComposite, rootScene } from './spec.ts';
 
 const END_CARD_NAME = 'End card';
-
-/** Where the story leaves the shimmer's check report, for whoever reads it (the agent reviewing the motion). */
-const CHECK_REPORT_KEY = '__DX_ENDCARD_CHECK__';
 
 /** The drawing as a person would have drawn it: the logo object and the text, at rest, with no timeline yet. */
 const seed = (db: Database.Database): Drawing.Drawing => {
@@ -57,40 +43,9 @@ const seed = (db: Database.Database): Drawing.Drawing => {
 
 type Invoke = ReturnType<typeof Hooks.useOperationInvoker>['invokePromise'];
 
-/**
- * What an agent does through the canvas operations (the canvas-generators skill): writes the shimmer generator, places
- * it over the mark, keys every entrance and the shimmer's rate, then checks the generator where it is placed.
- */
+/** What an agent does through the canvas operations: keys every entrance on the timeline (`canvas.setTimelineKey`). */
 const author = async (invoke: Invoke, drawing: Drawing.Drawing, spaceId: SpaceId) => {
-  const created = await invoke(
-    CanvasOperation.CreateGenerator,
-    {
-      name: 'Shimmer',
-      description: 'Sparks that rise and fade over the DXOS mark, fading with the logo.',
-      source: shimmerSource,
-      params: SHIMMER_PARAMS,
-    },
-    { spaceId },
-  );
-  if (created.error || !created.data || created.data.errors) {
-    throw new Error(`Shimmer did not compile: ${String(created.error ?? created.data?.errors)}`);
-  }
-  const { generator } = created.data;
-  const placed = await invoke(
-    CanvasOperation.AddGenerator,
-    {
-      drawing: Ref.make(drawing),
-      generator,
-      bounds: SHIMMER_BOUNDS,
-      params: { target: 'logo', rate: 0, radius: 2.4 },
-      seed: 7,
-    },
-    { spaceId },
-  );
-  if (placed.error || !placed.data) {
-    throw placed.error ?? new Error('Placing the shimmer failed.');
-  }
-  for (const key of [...endCardKeys(), ...shimmerKeys(placed.data.node)]) {
+  for (const key of endCardKeys()) {
     const keyed = await invoke(
       CanvasOperation.SetTimelineKey,
       { drawing: Ref.make(drawing), ...key, duration: DURATION },
@@ -100,12 +55,6 @@ const author = async (invoke: Invoke, drawing: Drawing.Drawing, spaceId: SpaceId
       throw keyed.error;
     }
   }
-  const checked = await invoke(
-    CanvasOperation.InspectGenerator,
-    { generator, drawing: Ref.make(drawing), node: placed.data.node, times: [0.5, 1, 1.5, 2, 2.5, 3] },
-    { spaceId },
-  );
-  Reflect.set(globalThis, CHECK_REPORT_KEY, checked.data ?? checked.error);
 };
 
 type FilmProps = { chrome: boolean };
@@ -192,6 +141,8 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
       {chrome && (
         <>
           <SceneView.Navigation />
+          <SceneView.Palette />
+          <SceneView.Actions />
           <SceneView.Timeline />
           <SceneView.Properties />
           <SceneView.Layers />
@@ -223,8 +174,7 @@ type Story = StoryObj<typeof meta>;
  *
  * Test:
  * 1. The operations author the card and the film view mounts, its clock exposed for export.
- * 2. Seeking to 2 s draws the scene and the shimmer's generator layer at 2 s.
- * 3. The shimmer checked out deterministic and within its step budget.
+ * 2. Seeking to 2 s draws the scene at 2 s.
  */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
@@ -241,30 +191,23 @@ export const Default: Story = {
       return (t: number) => typeof method === 'function' && Reflect.apply(method, exposed, [t]);
     });
 
-    // 2. Every layer draws the time it was asked for, the generator layer included.
+    // 2. Every layer draws the time it was asked for.
     seek(2);
     await waitFor(
       () => {
         const times = [...canvasElement.querySelectorAll('[data-frame-time]')].map((element) =>
           element.getAttribute('data-frame-time'),
         );
-        if (
-          !canvasElement.querySelector('[data-testid="generator-layer"]') ||
-          times.some((time) => time !== '2.0000')
-        ) {
+        if (times.length === 0 || times.some((time) => time !== '2.0000')) {
           throw new Error(`Not drawn at 2 s yet: ${times.join(', ')}`);
         }
       },
       { timeout: 20_000 },
     );
-
-    // 3. The check the authoring ran.
-    const report: unknown = Reflect.get(globalThis, CHECK_REPORT_KEY);
-    await expect(report).toMatchObject({ deterministic: true });
   },
 };
 
-/** The same document with the editor's chrome: the timeline bar, the objects panel and the layers. */
+/** The same document with the editor's chrome: the palette, the action and timeline bars, and the inspectors. */
 export const Editor: Story = {
   args: { chrome: true },
 };

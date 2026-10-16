@@ -7,4 +7,5 @@ export * from './compiler.ts';
 export * from './content.ts';
 export * from './handler.ts';
 export * from './frame-node.ts';
+export * from './image-node.ts';
 export * from './store.ts';

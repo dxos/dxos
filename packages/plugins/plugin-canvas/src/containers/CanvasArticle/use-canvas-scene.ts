@@ -18,10 +18,11 @@ import {
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 
-import { type BoundCanvasStore, CanvasFrameNode, bindCanvasStore } from '#model';
+import { type BoundCanvasStore, CanvasFrameNode, ImageNode, bindCanvasStore } from '#model';
 import { CanvasCapabilities, Generator } from '#types';
 
 import { CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
+import { ImageNodeView } from './ImageNodeView.tsx';
 
 /** The canvas's scene store, bound for the canvas's lifetime in this view; a new canvas rebinds. */
 export const useBoundCanvasStore = (canvas: Drawing.Canvas): BoundCanvasStore | undefined => {
@@ -52,6 +53,19 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
             component: CanvasFrameNodeView,
             toolbar: CanvasFrameToolbar,
             hostOpen,
+          },
+          image: {
+            name: 'Image',
+            icon: 'ph--image--regular',
+            key: 'I',
+            schema: ImageNode,
+            component: ImageNodeView,
+            create: (props) => ({ type: 'image', ...props }),
+            defaultSize: { width: 4, height: 3 },
+            resizable: true,
+            minSize: { width: 32, height: 32 },
+            // The picture is the shape: no fill or border unless the style asks for them.
+            bare: true,
           },
           ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
         },

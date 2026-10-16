@@ -67,6 +67,9 @@
       "path": "../../stories/storybook-testing"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
