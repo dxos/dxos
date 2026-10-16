@@ -405,7 +405,7 @@ node AgentsSection
   desc: |
     Settings › Agents, under the space's settings beside Members and Connections: the space's agents, each opening
     its article, and Add agent, which creates one with the name typed beside it ('' shows the placeholder "New agent")
-    through `capabilities/create-agent.ts` and opens it. `Agent` is not a user type, so agents are not listed with the
+    through `containers/AgentsSettings/create-agent.ts` and opens it. `Agent` is not a user type, so agents are not listed with the
     space's content and "Add to space" does not offer them.
   source: node:SpaceRoot
   subject: type:Agent
