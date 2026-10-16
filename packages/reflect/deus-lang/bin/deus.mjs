@@ -23,7 +23,11 @@ const native = nativeFor(process.env);
 // Theorem verdicts name the checker that reached them, so a toolchain change rechecks them (task 79f72c44).
 process.env.DEUS_IMAGE_HASH ??= seedHash();
 if (native.binary) {
-  const result = spawnSync(native.binary, process.argv.slice(2), { stdio: 'inherit' });
+  // `DEUS_KERNEL` tells the CLI it runs natively, so a test failure is confirmed on node (task d0d2915a).
+  const result = spawnSync(native.binary, process.argv.slice(2), {
+    stdio: 'inherit',
+    env: { ...process.env, DEUS_KERNEL: 'native' },
+  });
   process.exitCode = result.status ?? 1;
 } else {
   if (native.failed) {

@@ -403,6 +403,22 @@ def verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option Verdi
           Option.some v
   | _ => Option.none
 
+/-- A test's verdict, with a failure the native interpreter reached run again on the reference kernel (node) first:
+  natively a value is shown by how it is stored, not by its type, so a test of `show` can fail there and pass on node
+  (D146, task d0d2915a). The node run keeps its own verdict too. -/
+def confirmed (dir : Text) (name : Text) (integration : Bool) (v : Verdict) : {IO} Verdict :=
+  match (v, IO.getEnv "DEUS_KERNEL", IO.getEnv "DEUS_HOME") with
+  | (Verdict.fail _, Option.some "native", Option.some home) =>
+      if integration then v else
+        let (_, out, _) := IO.exec "env" ["DEUS_NATIVE=0", "DEUS_KERNEL=node", "node", home ++ "/bin/deus.mjs", "test", name, "--fresh", "--json", "--codebase", dir]
+        match Json.parse out with
+        | Result.ok rows =>
+            match List.find (fun r => Json.text (Json.get r "name") == name) (Json.items rows) with
+            | Option.some r => if Json.text (Json.get r "status") == "pass" then Verdict.pass (Json.text (Json.get r "evidence")) (Json.int (Json.get r "cases")) else v
+            | Option.none => v
+        | Result.err _ => v
+  | _ => v
+
 /-- Runs every test or theorem under a prefix; prints a report; exits 1 on failure. -/
 def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -437,7 +453,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
             match readObject dir h with
             | Option.some obj => if refuted then refutedVerdict (checkTheorem dir ns h obj) else checkTheorem dir ns h obj
             | Option.none => Verdict.fail "missing object"
-          else checkTest h integration
+          else confirmed dir name integration (checkTest h integration)
           if integration then () else if wantTheorems then rememberTheorem dir h v else remember dir h v
           (name, v, false)
     match outcome with

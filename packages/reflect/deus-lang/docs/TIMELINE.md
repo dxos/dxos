@@ -257,5 +257,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 247 | 10-16 19:10 | 25m 00s | this commit | pyarrow, DuckDB and an Iceberg catalog read pushed events in a test (Analytics.Spec R-6, task 1ad89782 waits on CI) |
 | 248 | 10-16 19:40 | 30m 00s | this commit | deus key list/new/revoke wraps the Worker key API (task 87c565cf); remote-test runs again |
 | 249 | 10-16 20:00 | 20m 00s | this commit | The hub tells a newcomer where to start; Rust kernel measured at 2x node (task 0fc41dc1 lowered) |
+| 250 | 10-16 20:35 | 35m 00s | this commit | A native test failure is confirmed on node before it is kept (D219, task d0d2915a); @dxos/web checks 19/19 |
 
-Total from stage 1 to stage 249: 78h 30m.
+Total from stage 1 to stage 250: 79h 05m.
