@@ -14,8 +14,8 @@ projects:
     summary: 'Canvas animation phases 1-2 (react-ui-canvas ANIMATION.md): composite objects (instance nodes, ObjectsPanel, isolation), a per-view clock, Scene.timeline with sampleScene and an animated projection that keys edits, a timeline bar, export by seeking the clock; then agent-written generators run in a sandboxed worker with plugin-canvas operations and a skill. Demo: the DXOS end card rebuilt as a canvas document.'
     tasks: .agents/projects/canvas-animation/TASKS.md
     design: packages/ui/react-ui-canvas/docs/ANIMATION.md
-    prs: []
-    resume: 'Branch claude/xenodochial-curran-41dcb3, stacked on #13992. Phase 1 model in progress.'
+    prs: [14007]
+    resume: 'Draft PR #14007 (stacked on #13992): phases 1-2 built, end card exported and compared (temp/anim). NEXT: review; follow-ups in TASKS.md (overrides UI, palette Objects group, bare-type style toggles in Properties, pinned-bundle export); phase 3.'
   - name: plugin-messenger
     status: active
     user: burdon

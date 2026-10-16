@@ -29,10 +29,11 @@ Design: `packages/ui/react-ui-canvas/docs/ANIMATION.md`. Stacked on PR #13992 (`
 - [x] End-card story (composite logo, keyed entrances, shimmer generator authored via operations)
 - [x] Export to `temp/`, comparison sheet against the ident MP4
 - [x] ANIMATION.md updated
-- [ ] Draft PR with video + sheet
+- [x] Draft PR with video + sheet (#14007)
 
 ## Follow-ups
 
+- [ ] Properties shows Fill/Border on for a bare type (instance, path, generator): resolve the type's bare default there too
 - [ ] Overrides editing UI (properties panel per inner node)
 - [ ] Palette "Objects" group; drag a row from the Objects panel onto the canvas
 - [ ] Export from a pinned production bundle rather than the dev storybook
