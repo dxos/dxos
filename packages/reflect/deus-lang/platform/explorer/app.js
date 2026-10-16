@@ -1312,11 +1312,13 @@ const buildCard = async (key) => {
       return change ? changeCard(key, change, events) : missingCard(key, `No change ${short(value)}`);
     }
     case 'k':
-      return value === 'events'
-        ? eventsCard(key, await loadEvents())
-        : value === 'features'
-          ? featuresCard(key, await loadFeatures())
-          : kindCard(key, value);
+      return value === 'glossary'
+        ? glossaryCard(key)
+        : value === 'events'
+          ? eventsCard(key, await loadEvents())
+          : value === 'features'
+            ? featuresCard(key, await loadFeatures())
+            : kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1467,7 +1469,89 @@ const areasOf = (maps) => {
 
 /** The legend of the kind icons, so a first visitor can read the lists. */
 const legendHtml = () =>
-  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task</p>`;
+  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · <a class="ref" data-open="k:glossary">New here? The glossary</a></p>`;
+
+/** Words the overview and the documents use that a newcomer may not know (task 8eec6c0d). */
+const GLOSSARY = [
+  [
+    'codebase',
+    'Where DEUS code lives instead of files: every definition stored by the hash of its content, with its names, history, specs, tests and tasks beside it.',
+  ],
+  [
+    'definition',
+    'One named thing in the codebase: a type, an ability, a term (a value or function), a test, a theorem, or a block of a spec document.',
+  ],
+  [
+    'hash',
+    "The SHA-256 of a definition's content. A name points at a hash, so renaming changes nothing, and a hash always means the same code. Shown short, like #a0acb612.",
+  ],
+  [
+    'namespace',
+    'The dotted prefix of names: List.map is map in the List namespace. Namespaces group definitions; they are not files.',
+  ],
+  [
+    'ability',
+    "A set of operations code may perform, such as IO or Storage, listed in a function's type as {IO}. A handler gives them meaning, so tests can run code that uses IO without touching the machine.",
+  ],
+  ['term', 'A value or a function. ƒ in the lists.'],
+  [
+    'theorem',
+    'A statement about code that is checked by test, by a decision procedure or by a proof, rather than only for one example.',
+  ],
+  [
+    'spec document',
+    'A document in the codebase (Address.Spec, Array.Spec) that says what a part does: prose, requirements (R-n), APIs (A-n) and laws (L-n), each linked to the tests or theorems that check it. `deus mdl` checks them.',
+  ],
+  ['requirement', 'A sentence a spec document commits to, R-1 and so on, naming in by: the tests that prove it.'],
+  [
+    'feature',
+    'A part of the product as the feature map lists it, with its status (planned, building, shipped), its spec documents, its main definitions and its tasks.',
+  ],
+  [
+    'change, causal, head',
+    "Each change to the codebase is a history node, also called a causal, named by its hash. A branch's head is its latest change; the explorer shows one head.",
+  ],
+  [
+    'prim',
+    'A primitive: a definition whose body is provided by the kernel that runs DEUS (prim "Array.set"), not written in DEUS.',
+  ],
+  [
+    'kernel',
+    'What evaluates compiled DEUS: in TypeScript (node and browsers), in Rust (native and wasm), and on Cloudflare Workers.',
+  ],
+  [
+    'seed',
+    'A compiled image of the toolchain checked into git, from which the toolchain compiles itself to the same bytes.',
+  ],
+  ['back end', 'A target the compiler emits besides the kernel: JavaScript, wasm or C.'],
+  [
+    'Perceus',
+    'A reference-counting scheme that frees memory exactly when the last reference goes and reuses it in place when a value is unique, as for the in-place arrays.',
+  ],
+  [
+    'R2, Worker, D1 (Cloudflare)',
+    'Cloudflare services the hosted codebase runs on: R2 stores packs of objects, the Worker serves the replication API and this explorer, the D1 database keeps API keys.',
+  ],
+  [
+    'D96 and other D-numbers',
+    "D followed by a number is an entry in the project's decision log (docs/DECISIONS.md in the repository), which records each choice and why.",
+  ],
+];
+
+/** Escaped text with each decision number (D96) marked as what it is, for a reader who has not met the log. */
+const withDecisions = (text) =>
+  escape(text).replace(
+    /\bD(\d{1,4})\b/g,
+    '<abbr title="Decision $1 in the project\'s decision log (docs/DECISIONS.md)">D$1</abbr>',
+  );
+
+const glossaryCard = (key) =>
+  card(key, {
+    iconHtml: '<span class="icon k-namespace">?</span>',
+    title: 'Glossary',
+    meta: `<span class="count">${GLOSSARY.length} terms</span>`,
+    body: `<dl class="glossary">${GLOSSARY.map(([term, meaning]) => `<dt>${escape(term)}</dt><dd>${inlineMd(meaning, '')}</dd>`).join('')}</dl>`,
+  });
 
 //
 // Markdown, enough for spec documents: headings, paragraphs, lists, tables, quotes and code.
@@ -1753,13 +1837,13 @@ const areaHtml = (area) => {
       .map((doc) => docLink(doc))
       .join('');
   return (
-    `<section class="area"><header>${featureStatus(area.feature.status)}<h4>${escape(area.feature.title)}</h4>${docs(area.feature)}</header>` +
+    `<section class="area"><header>${featureStatus(area.feature.status)}<h4>${withDecisions(area.feature.title)}</h4>${docs(area.feature)}</header>` +
     `<p class="area-about muted" data-area-about="${escape(area.feature.title)}"></p>` +
     (area.features.length > 0
       ? `<ul class="area-features">${area.features
           .map(
             (feature) =>
-              `<li>${featureStatus(feature.status)}<span class="feature-title">${escape(feature.title)}</span>${docs(feature)}</li>`,
+              `<li>${featureStatus(feature.status)}<span class="feature-title">${withDecisions(feature.title)}</span>${docs(feature)}</li>`,
           )
           .join('')}</ul>`
       : '') +
@@ -2163,13 +2247,15 @@ const titleOf = (key) => {
     return value;
   }
   if (key.startsWith('k:')) {
-    return value === 'checks'
-      ? 'Checks'
-      : value === 'events'
-        ? 'Events'
-        : value === 'features'
-          ? 'Features'
-          : (KINDS[value]?.plural ?? value);
+    return value === 'glossary'
+      ? 'Glossary'
+      : value === 'checks'
+        ? 'Checks'
+        : value === 'events'
+          ? 'Events'
+          : value === 'features'
+            ? 'Features'
+            : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };

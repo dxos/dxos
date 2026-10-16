@@ -2568,3 +2568,18 @@ pre.block-value {
 .area-about:empty {
   display: none;
 }
+
+.glossary {
+  margin: 0;
+  max-width: 80ch;
+}
+
+.glossary dt {
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.glossary dd {
+  margin: 2px 0 0;
+  line-height: 1.55;
+}
