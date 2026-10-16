@@ -7,7 +7,7 @@
 import { spawnSync } from 'node:child_process';
 import { dirname } from 'node:path';
 
-import { nativeFor, startNativeBuild } from '../scripts/native.mjs';
+import { nativeFor, seedHash, startNativeBuild } from '../scripts/native.mjs';
 
 // `deus build` finds the kernel sources and the node binary through these.
 process.env.DEUS_HOME ??= dirname(import.meta.dirname);
@@ -20,6 +20,8 @@ if (process.stdout.isTTY) {
 // A native build of the same seed runs every command 10 to 100 times faster (D171); until one
 // exists, the seed runs here and one is built in the background.
 const native = nativeFor(process.env);
+// Theorem verdicts name the checker that reached them, so a toolchain change rechecks them (task 79f72c44).
+process.env.DEUS_IMAGE_HASH ??= seedHash();
 if (native.binary) {
   const result = spawnSync(native.binary, process.argv.slice(2), { stdio: 'inherit' });
   process.exitCode = result.status ?? 1;

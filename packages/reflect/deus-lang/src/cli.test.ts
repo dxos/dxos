@@ -809,6 +809,31 @@ describe('deus CLI', () => {
     },
   );
 
+  test(
+    'a theorem is checked again when the checker changes, a test is not (task 79f72c44)',
+    { timeout: 120_000 },
+    ({ expect, onTestFinished }) => {
+      const c = ['--codebase', join(scratch, 'checker')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus('add', file('checker.deus', 'theorem plusZero : 1 + 0 == 1 := by rfl\ntest plusOne := 1 + 1 == 2\n'), ...c);
+      const before = process.env.DEUS_IMAGE_HASH;
+      onTestFinished(() => {
+        process.env.DEUS_IMAGE_HASH = before;
+      });
+      const cached = (command: string, name: string) =>
+        JSON.parse(deus(command, name, '--json', ...c).stdout)[0].cached;
+      process.env.DEUS_IMAGE_HASH = 'aaaaaaaaaaaaaaaa1111';
+      expect(cached('check', 'plusZero')).toBe(false);
+      expect(cached('check', 'plusZero')).toBe(true);
+      expect(cached('test', 'plusOne')).toBe(false);
+      // Another toolchain: the theorem's kept verdict was another prover's, the test's is still its own.
+      process.env.DEUS_IMAGE_HASH = 'bbbbbbbbbbbbbbbb2222';
+      expect(cached('check', 'plusZero')).toBe(false);
+      expect(cached('test', 'plusOne')).toBe(true);
+    },
+  );
+
   test('link prints the hosted explorer page of definitions and namespaces', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'links')];
     deus('init', '--empty', ...c);

@@ -929,7 +929,8 @@ const verdictHtml = (def) => {
       ? `<p class="verdict none">No result yet: results are kept where <code>deus ${def.kind === 'test' ? 'test' : 'check'} ${escape(def.name)}</code> ran, and none was pushed for this version.</p>`
       : '';
   }
-  const pass = def.verdict.match(/^\(pass "([^"]*)"\s*(\d+)?\)/);
+  // A theorem's verdict may name its checker after the case count (task 79f72c44).
+  const pass = def.verdict.match(/^\(pass "([^"]*)"\s*(\d+)?/);
   if (pass) {
     const cases = pass[2] ? ` · ${pass[2]} case${pass[2] === '1' ? '' : 's'}` : '';
     return `<p class="verdict pass">✓ ${def.kind === 'theorem' ? 'Proved' : 'Passes'} <span class="muted">${escape(pass[1])}${cases}</span></p>`;

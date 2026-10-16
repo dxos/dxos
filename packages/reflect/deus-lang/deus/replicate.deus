@@ -293,7 +293,7 @@ def push (dir : Text) (remote : Text) (branch : Text) (allowDrop : Bool) : {Remo
   -- A claimed head is on the remote with everything it reaches, so there is nothing to send but the
   -- packs of bundles that sessions before D173 pushed.
   if claimed then
-    packMissing dir seen
+    packMissing dir remote seen
     Option.none
   else if not (List.isEmpty behind) then Throw.throw (remote ++ " has " ++ branch ++ " changes this store lacks (#" ++
     Text.take 10 (getOr (head? behind) "") ++ "); run `deus pull " ++ remote ++ "` and `deus merge " ++ remote ++ "." ++ branch ++ "`, then push again") else
@@ -308,18 +308,27 @@ def push (dir : Text) (remote : Text) (branch : Text) (allowDrop : Bool) : {Remo
     Remote.put name text
     let s := Seen.mk name [(branch, head)] missing
     IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText s)
-    -- The bundle first: the Worker takes a pack only for a bundle it holds.
-    packMissing dir (seen ++ [s])
+    -- The bundle first: the Worker takes a pack only for a bundle it holds. Its pack is new, so it is
+    -- written without asking the remote which packs it has.
+    writePack dir s.bundleName s.claims [] s.hashes
+    writeKnown dir remote "packed" (Set.insert s.bundleName (readKnown dir remote "packed"))
+    packMissing dir remote seen
     Option.some name
 
-/-- Uploads the store's assets the remote lacks; returns how many. -/
-def pushAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
-  let there := Set.fromList (Remote.keys "assets")
-  let missing := List.filter (fun h => not (Set.contains h there)) (Assets.all dir)
-  forEach
-    missing
-    (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
-  List.length missing
+/-- Uploads the store's assets the remote lacks; returns how many. The remote is listed only when the store
+  has an asset not yet recorded as on it. -/
+def pushAssets (dir : Text) (remote : Text) : {Remote, IO, Throw Text} Int :=
+  let local := Assets.all dir
+  let known := readKnown dir remote "assets"
+  if List.all (fun h => Map.contains h known) local then 0
+  else
+    let there := Set.fromList (Remote.keys "assets")
+    let missing := List.filter (fun h => not (Set.contains h there)) local
+    forEach
+      missing
+      (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
+    writeKnown dir remote "assets" (List.foldl (fun m h => Set.insert h m) there local)
+    List.length missing
 
 /-- Downloads the remote's assets the store lacks; returns how many. -/
 def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
@@ -806,13 +815,29 @@ def packedNames (u : Unit) : {Remote} Map Text Unit := Set.fromList (filterMap
   (fun k => if endsWith ".idx" k then Option.some (Text.take (Text.length k - 4) k) else Option.none)
   (Remote.keys "packs"))
 
+/-- What this store knows `remote` holds, one name per line under `remotes/<remote>/<what>`, so a push lists
+  the remote only when it has something the record does not cover (task e5372857). -/
+def knownPath (dir : Text) (remote : Text) (what : Text) : Text := dir ++ "/remotes/" ++ remote ++ "/" ++ what
+
+def readKnown (dir : Text) (remote : Text) (what : Text) : {IO} Map Text Unit :=
+  Set.fromList (List.filter (fun n => not (Text.isEmpty n)) (Text.lines (getOr (IO.readFile (knownPath dir remote what)) "")))
+
+def writeKnown (dir : Text) (remote : Text) (what : Text) (names : Map Text Unit) : {IO} Unit :=
+  IO.writeFile (knownPath dir remote what) (Text.concat (List.map (fun n => n ++ "\n") (Set.toList names)))
+
 /-- Writes the packs (D173) of seen bundles the remote has none for; returns their names. A seen bundle's
-  objects are all in the store, and a hash it lists that the store lacks was never in the bundle either. -/
-def packMissing (dir : Text) (seen : List Seen) : {Remote, IO} List Text :=
-  let packed := packedNames ()
-  let todo := List.filter (fun s => not (Map.contains s.bundleName packed)) seen
-  forEach todo (fun s => writePack dir s.bundleName s.claims [] s.hashes)
-  List.map (fun s => s.bundleName) todo
+  objects are all in the store, and a hash it lists that the store lacks was never in the bundle either.
+  The remote's packs are listed only when a seen bundle is not yet recorded as packed. -/
+def packMissing (dir : Text) (remote : Text) (seen : List Seen) : {Remote, IO} List Text :=
+  let known := readKnown dir remote "packed"
+  let unknown := List.filter (fun s => not (Map.contains s.bundleName known)) seen
+  if List.isEmpty unknown then []
+  else
+    let packed := packedNames ()
+    let todo := List.filter (fun s => not (Map.contains s.bundleName packed)) unknown
+    forEach todo (fun s => writePack dir s.bundleName s.claims [] s.hashes)
+    writeKnown dir remote "packed" (List.foldl (fun m s => Set.insert s.bundleName m) known unknown)
+    List.map (fun s => s.bundleName) todo
 
 /-- A line bundle's lines after the header as (kind, key, rest). -/
 def bundleLines (text : Text) : List (Text, (Text, Text)) := filterMap (fun line =>

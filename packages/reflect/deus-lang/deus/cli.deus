@@ -1127,6 +1127,10 @@ def remote (args : Args) : {IO, Throw Text} Unit :=
   | ["add", name, url] =>
     if not (Codebase.validBranch name) then throw ("invalid remote name " ++ name)
     else
+      -- What this store recorded about the remote it named before is not true of a new one.
+      forEach ["packed", "assets"] (fun what =>
+        let path := Replicate.knownPath dir name what
+        if IO.exists path then IO.remove path else ())
       IO.writeFile (dir ++ "/remotes/" ++ name ++ "/url") (url ++ "\n")
       output args (fun _ => Json.obj [("remote", Json.str name), ("url", Json.str url)]) (fun _ => "Added remote " ++ name ++ " = " ++ url ++ ".")
   | [] =>
@@ -1186,7 +1190,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let branch := getOr (option args "branch") (currentBranch dir)
   let attempt := fun _ => withRemote dir name (fun _ =>
     let bundle := Replicate.push dir name branch (Cli.flag args "allow-drop")
-    pushAssets dir
+    pushAssets dir name
     bundle)
   let rec pushing tries :=
     match try attempt with
@@ -2030,7 +2034,7 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
   let listing := Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums) ++ version ++
     " HEAD\n"
   withRemote dir name (fun _ =>
-    pushAssets dir
+    pushAssets dir name
     Remote.writeAll (List.map (fun pair => (fst pair, getOr (IO.readFile (out ++ "/" ++ snd pair)) "")) uploads)
     if moved then Remote.writeAll [("site/HEAD", version)] else ()
     if List.isEmpty uploads && isSome published then () else Remote.writeAll [("site/SUMS", listing)])

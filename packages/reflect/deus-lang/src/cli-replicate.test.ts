@@ -354,4 +354,33 @@ describe('deus CLI replication', () => {
       expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
     },
   );
+
+  test(
+    'a push records what the remote holds, so the next one lists less; a new remote starts afresh',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'records')];
+      const remote = join(scratch, 'records-remote');
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus('remote', 'add', 'origin', remote, ...c);
+      expect(deus('push', ...c).code).toBe(0);
+      deus('add', file('records.deus', 'def recorded : Int := 1\n'), ...c);
+      expect(deus('push', ...c).code).toBe(0);
+      // Every bundle pushed is recorded as packed (task e5372857), and every pack is on the remote.
+      const packed = readFileSync(join(scratch, 'records', 'remotes', 'origin', 'packed'), 'utf8')
+        .trim()
+        .split('\n')
+        .sort();
+      const packs = readdirSync(join(remote, 'packs'))
+        .filter((name) => name.endsWith('.idx'))
+        .map((name) => name.slice(0, -4))
+        .sort();
+      expect(packed).toEqual(packs);
+      expect(packed).toHaveLength(2);
+      // Pointing the name at another remote forgets what was true of the old one.
+      deus('remote', 'add', 'origin', join(scratch, 'records-other'), ...c);
+      expect(existsSync(join(scratch, 'records', 'remotes', 'origin', 'packed'))).toBe(false);
+    },
+  );
 });

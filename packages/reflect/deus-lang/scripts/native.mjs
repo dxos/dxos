@@ -20,11 +20,17 @@ const cacheDir = (env, hash) => join(env.XDG_CACHE_HOME ?? join(homedir(), '.cac
  * The native CLI to run for the checked-in seed, or what to build when there is none: no build when
  * `DEUS_NATIVE=0`, under CI, with `DEUS_SEED` overriding the seed, or without a C compiler.
  */
+/** The SHA-256 of the seed image this checkout runs (of `$DEUS_SEED` when set), or undefined without one. */
+export const seedHash = (env = process.env) => {
+  const path = env.DEUS_SEED ?? seedPath;
+  return existsSync(path) ? createHash('sha256').update(readFileSync(path)).digest('hex') : undefined;
+};
+
 export const nativeFor = (env) => {
   if (env.DEUS_NATIVE === '0' || env.CI || env.DEUS_SEED || !existsSync(seedPath)) {
     return {};
   }
-  const hash = createHash('sha256').update(readFileSync(seedPath)).digest('hex');
+  const hash = seedHash(env);
   const dir = cacheDir(env, hash);
   const binary = join(dir, 'deus');
   if (existsSync(binary)) {

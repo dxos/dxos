@@ -28,9 +28,43 @@ def toSexp : Verdict -> Sexp
 
 def fromSexp (s : Sexp) : Verdict :=
   match s with
-  | Sexp.list [Sexp.sym "pass", Sexp.str evidence, Sexp.int cases] => Verdict.pass evidence cases
-  | Sexp.list [Sexp.sym "fail", Sexp.str reason] => Verdict.fail reason
+  | Sexp.list (Sexp.sym "pass" :: Sexp.str evidence :: Sexp.int cases :: _) => Verdict.pass evidence cases
+  | Sexp.list (Sexp.sym "fail" :: Sexp.str reason :: _) => Verdict.fail reason
   | _ => Verdict.unchecked
+
+/--
+  The checker that produces verdicts now: the first 16 hex digits of the toolchain image's hash, which the
+  launcher sets (`bin/deus.mjs`), or "" when unknown. A theorem's verdict depends on the prover, which its own
+  hash does not cover, so a verdict kept by another checker is checked again (task 79f72c44, Prove.Spec R-8).
+-/
+def checkerId (u : Unit) : {IO} Text := Text.take 16 (Option.getOr (IO.getEnv "DEUS_IMAGE_HASH") "")
+
+/-- The checker a kept verdict names, or "" for one kept before verdicts named it. -/
+def checkerOf (s : Sexp) : Text :=
+  Option.getOr (List.head? (List.filterMap (fun item =>
+    match item with
+    | Sexp.list [Sexp.sym "checker", Sexp.str id] => Option.some id
+    | _ => Option.none) (Sexp.args s))) ""
+
+/-- A theorem's kept verdict, when the checker that kept it is the one running, or either is unknown. -/
+def cachedTheorem (dir : Text) (h : Text) : {IO} Option Verdict :=
+  match IO.readFile (dir ++ "/results/" ++ h) with
+  | Option.none => Option.none
+  | Option.some text =>
+      let s := Sexp.read text
+      let now := checkerId ()
+      let kept := checkerOf s
+      -- A verdict kept before verdicts named their checker counts as another checker's.
+      if Text.isEmpty now || kept == now then Option.some (fromSexp s) else Option.none
+
+/-- Keeps a theorem's verdict with the checker that reached it. -/
+def rememberTheorem (dir : Text) (h : Text) (v : Verdict) : {IO} Unit :=
+  match v with
+  | Verdict.unchecked => ()
+  | _ =>
+      let checker := checkerId ()
+      let form := if Text.isEmpty checker then Check.toSexp v else Sexp.list (Sexp.asList (Check.toSexp v) ++ [Sexp.node "checker" [Sexp.str checker]])
+      IO.writeFile (dir ++ "/results/" ++ h) (Sexp.print form ++ "\n")
 
 def cached (dir : Text) (h : Text) : {IO} Option Verdict :=
   Option.map (fun t => fromSexp (Sexp.read t)) (IO.readFile (dir ++ "/results/" ++ h))
@@ -314,7 +348,7 @@ def hypothesesOf (body : Sexp) : List Sexp :=
 
 /-- A lemma's verdict, checking (and caching) it first if needed. -/
 def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
-  match Check.cached dir h with
+  match Check.cachedTheorem dir h with
   | Option.some v => v
   | Option.none =>
       match readObject dir h with
@@ -323,7 +357,7 @@ def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
           | Result.err message => Verdict.fail message
           | Result.ok _ =>
               let v := checkTheorem dir ns h obj
-              remember dir h v
+              rememberTheorem dir h v
               v
       | Option.none => Verdict.fail "missing lemma"
 
@@ -385,7 +419,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let started := IO.time ()
     -- An integration test talks to the real world, so its result is never reused.
     let outcome :=
-      match if integration || fresh then Option.none else Check.cached dir h with
+      match if integration || fresh then Option.none else if wantTheorems then Check.cachedTheorem dir h else Check.cached dir h with
       | Option.some v => (name, v, true)
       | Option.none =>
           Image.load (fetcher dir) [h]
@@ -394,7 +428,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
             | Option.some obj => checkTheorem dir ns h obj
             | Option.none => Verdict.fail "missing object"
           else checkTest h integration
-          if integration then () else remember dir h v
+          if integration then () else if wantTheorems then rememberTheorem dir h v else remember dir h v
           (name, v, false)
     match outcome with
     | (_, v, wasCached) =>
