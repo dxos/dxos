@@ -11,6 +11,7 @@ export * as AgentOperation from './AgentOperation.ts';
 export * as AgentPresence from './AgentPresence.ts';
 export * as AgentSettings from './AgentSettings.ts';
 export * as AgentSpace from './AgentSpace.ts';
+export * as BrainFacts from './BrainFacts.ts';
 export * as BrainService from './BrainService.ts';
 export * as EmailOperation from './EmailOperation.ts';
 export * as ChatParticipant from './ChatParticipant.ts';

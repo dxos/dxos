@@ -12,11 +12,16 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
-import { Database, Feed, Filter } from '@dxos/echo';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Instructions from '@dxos/compute/Instructions';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
+import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
@@ -26,14 +31,13 @@ import { Message } from '@dxos/types';
 import { type ModelVariant } from '../models.ts';
 import { HybridOperationHandlerSet, HybridSkill } from '../skills/hybrid-skill.ts';
 import { RagOperationHandlerSet, RagSkill } from '../skills/rag-skill.ts';
-import { factStoreLayer } from './fact-store.ts';
 import { subjectIndexLayer } from './subject-index.ts';
 import { vectorStoreLayer } from './vector.ts';
 
 /**
  * The skill configuration under test (each arm adds a retrieval layer on top of the source arm):
  * - `source` — baseline: only the Database skill (reads the ECHO space + feed).
- * - `facts`  — source + Brain skill (fact-store QueryFacts/SummarizeSubject tools).
+ * - `facts`  — source + Brain skill (QueryFacts/SummarizeSubject over the space agent's brain).
  * - `rag`    — source + RAG skill (vector-index snippet retrieval).
  * - `hybrid` — source + fact→source bridge: facts index into the actual source messages.
  */
@@ -44,7 +48,7 @@ const usesFactStore = (mode: SkillMode): boolean => mode === 'facts';
 export type AgentEvalConfig = {
   readonly variant: ModelVariant;
   readonly mode: SkillMode;
-  /** Facts injected into a `FactStore` for the Brain skill (used only when mode = 'facts'). */
+  /** Facts pushed into the space agent's brain for the Brain skill (used only when mode = 'facts'). */
   readonly facts: readonly RDF.Fact[];
   /** Messages seeded onto the feed (Database skill) and embedded into the vector index (RAG skill). */
   readonly messages: readonly Message.Message[];
@@ -62,7 +66,7 @@ export type AgentEvalResult = {
 
 /**
  * The reusable agent harness: configures a client (an ECHO space seeded with the message feed),
- * injects the retrieval backend the mode needs (a pre-computed `FactStore` for `brain`, a
+ * injects the retrieval backend the mode needs (an agent brain holding pre-computed facts for `facts`, a
  * vector-index `VectorStore` for `rag`), wires the AI service to the variant's model, enables the
  * chosen skills, submits the prompt, and returns the agent's response. Run the same prompt across
  * modes to isolate each skill's contribution.
@@ -83,8 +87,10 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
     ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),
   ];
+  // The Brain skill's tools read the brain of the space's only agent, added and seeded below.
+  const brain = BrainMemory.make(undefined).service;
   const modeServices = usesFactStore(config.mode)
-    ? factStoreLayer(config.facts)
+    ? Layer.succeed(BrainService.BrainService, brain)
     : config.mode === 'rag'
       ? vectorStoreLayer(config.messages)
       : config.mode === 'hybrid'
@@ -102,7 +108,7 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
     provider: config.variant.provider,
     skills,
     operationHandlers,
-    types: [Message.Message, Feed.Feed],
+    types: [Message.Message, Feed.Feed, Agent.Agent, Instructions.Instructions],
     extraServices,
     disableLlmMemoization: true,
     tracing: 'noop',
@@ -114,6 +120,12 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
     yield* Database.add(feed);
     yield* Feed.append(feed, [...config.messages]);
     yield* Database.flush();
+    if (usesFactStore(config.mode)) {
+      const holder = yield* Database.add(
+        Obj.make(Agent.Agent, { name: 'Brain', instructions: Ref.make(Instructions.make({ text: '' })) }),
+      );
+      yield* brain.push(AgentPresence.brainId(holder), config.facts, { storeOnly: true }).pipe(Effect.orDie);
+    }
 
     const agent = yield* AgentService.createSession({ skills });
     const start = performance.now();

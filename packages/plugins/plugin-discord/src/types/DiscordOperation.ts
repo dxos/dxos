@@ -8,10 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
@@ -77,9 +79,9 @@ export const SyncDiscordChannel = Operation.make({
 
 /**
  * Incremental crawl of a set of Discord channels (optionally descending threads) through the
- * `DiscordPipeline`: messages land in the session SQLite store, facts in the fact graph, and open
- * questions are attempted as targets drain. Separate from feed sync — nothing is written to ECHO.
- * Resumable: re-invoking continues from the per-target durable cursors.
+ * `DiscordPipeline`: messages land in the session SQLite store, facts in the named agent's brain (no
+ * agent named fails), and open questions are attempted as targets drain. Separate from feed sync —
+ * nothing is written to ECHO. Resumable: re-invoking continues from the per-target durable cursors.
  */
 export const CrawlDiscordChannels = Operation.make({
   meta: {
@@ -88,9 +90,11 @@ export const CrawlDiscordChannels = Operation.make({
     description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
     icon: 'ph--bulldozer--regular',
   },
-  services: [Capability.Service, AiService.AiService, Credential.CredentialsService],
+  services: [Capability.Service, AiService.AiService, Credential.CredentialsService, BrainService.BrainService],
   input: Schema.Struct({
     connection: Ref.Ref(Connection.Connection),
+    /** Agent whose brain holds the facts. */
+    agent: Schema.optional(Ref.Ref(Agent.Agent)),
     channels: Schema.Array(Schema.String),
     descendThreads: Schema.optional(Schema.Boolean),
     maxDays: Schema.optional(Schema.Number),

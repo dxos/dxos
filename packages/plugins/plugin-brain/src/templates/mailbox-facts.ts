@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
@@ -38,8 +39,8 @@ const PROJECT_INSTRUCTIONS = trim`
  *
  * The routine binds the operation directly rather than an instructions prompt, so the trigger loop
  * is deterministic — the extraction model runs inside the operation, not around it. Extracted facts
- * land in the space fact store keyed by provenance, so they are queryable by any session but are
- * not artifacts the project owns. Only applies to a Mailbox subject.
+ * land in the brain of the space's agent, bound at scaffold time; with no single agent the routine is
+ * left without one and fails until the user picks it. Only applies to a Mailbox subject.
  */
 export const mailboxFacts: ProjectCapabilities.Template = {
   id: 'org.dxos.project.mailboxFacts',
@@ -53,6 +54,7 @@ export const mailboxFacts: ProjectCapabilities.Template = {
         'Mailbox facts template requires a Mailbox subject.',
       );
       const mailbox = subject;
+      const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
 
       const project = Templates.scaffoldProject({
         name: name ?? `Mailbox Facts — ${mailbox.name ?? 'Mailbox'}`,
@@ -69,7 +71,7 @@ export const mailboxFacts: ProjectCapabilities.Template = {
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specTimer(DEFAULT_CRON),
-          input: { mailbox: Ref.make(mailbox) },
+          input: { mailbox: Ref.make(mailbox), ...(agents.length === 1 ? { agent: Ref.make(agents[0]) } : {}) },
         }),
       });
       Project.addRoutine(project, routine);

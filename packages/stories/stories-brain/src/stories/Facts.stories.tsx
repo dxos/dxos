@@ -8,22 +8,19 @@ import React, { useEffect, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type RDF } from '@dxos/pipeline-rdf';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { useSpaces } from '@dxos/react-client/echo';
 import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { FactsStoryContext } from '../modules/index.ts';
 import { StoryRole } from '../modules/index.ts';
-import { CrawlerStoresPlugin } from '../testing/index.ts';
+import { CrawlerStoresPlugin, StoryBrain, StoryBrainPlugin } from '../testing/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 /**
  * The columns of the Facts story, driven through `ModuleContainer`. The crawl/query/questions modules
- * produce facts into Brain's per-space `FactStore` (the Composer provider); the facts/entities modules
- * consume the shared display state. Facts live in the `FactStoreRegistry`; crawler-only stores come
- * from the story-local {@link CrawlerStoresPlugin}.
+ * produce facts into the story agent's brain ({@link StoryBrainPlugin}, written and read through
+ * `BrainService`); the facts/entities modules consume the shared display state. Crawler-only stores
+ * come from the story-local {@link CrawlerStoresPlugin}.
  */
 const CRAWL_LAYOUT: ModuleLayout = [
   [StoryRole.Crawl, StoryRole.Query, StoryRole.Questions],
@@ -36,20 +33,19 @@ const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
 
 /**
  * Owns the cross-module display state (current facts view + selected entity) and drives the layout.
- * `seed` pre-populates the space's `FactStore` (the no-crawl variant).
+ * `seed` pre-populates the agent's brain (the no-crawl variant).
  */
 const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fact[] }) => {
-  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const [space] = useSpaces();
+  const { store } = Hooks.useCapability(StoryBrain);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!seed || !space) {
+    if (!seed) {
       return;
     }
-    void EffectEx.runPromise(registry.forSpace(space.id).putFacts(seed)).then(() => setFacts(seed));
-  }, [seed, space, registry]);
+    void EffectEx.runPromise(store.putFacts(seed)).then(() => setFacts(seed));
+  }, [seed, store]);
 
   return (
     <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected }}>
@@ -89,7 +85,7 @@ const meta = {
   title: 'stories/stories-brain/Facts',
   render: DefaultStory,
   decorators: createStoryDecorators({
-    plugins: [SpacePlugin({}), BrainPlugin.make(), CrawlerStoresPlugin(), StoryModulesPlugin()],
+    plugins: [SpacePlugin({}), StoryBrainPlugin(), CrawlerStoresPlugin(), StoryModulesPlugin()],
   }),
   parameters: {
     layout: 'fullscreen',

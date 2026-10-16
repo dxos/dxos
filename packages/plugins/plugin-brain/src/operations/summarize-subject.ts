@@ -9,6 +9,9 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
+import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
@@ -17,8 +20,12 @@ import { factLine, toCompactFact } from './facts.ts';
 
 export default BrainOperation.SummarizeSubject.pipe(
   Operation.withHandler(
-    Effect.fn(function* (input) {
-      return yield* summarizeSubject(input);
+    Effect.fn(function* ({ agent: agentRef, ...input }) {
+      const agent = yield* BrainFacts.resolveAgent(agentRef);
+      const brain = yield* BrainService.BrainService;
+      return yield* summarizeSubject(input).pipe(
+        Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent))),
+      );
     }),
   ),
 );
@@ -46,7 +53,7 @@ const summarizePrompt = (subject: string, focus: string | undefined, lines: stri
 export const summarizeSubject = ({
   subject,
   focus,
-}: typeof BrainOperation.SummarizeSubject.input.Type): Effect.Effect<
+}: Omit<typeof BrainOperation.SummarizeSubject.input.Type, 'agent'>): Effect.Effect<
   typeof BrainOperation.SummarizeSubject.output.Type,
   SemanticIndexError,
   FactStore | AiService.AiService

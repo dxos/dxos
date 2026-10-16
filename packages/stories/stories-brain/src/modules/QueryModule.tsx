@@ -8,26 +8,19 @@ import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { type Space } from '@dxos/react-client/echo';
 
 import { DEFAULT_SPARQL, QueryPanel } from '../components/index.ts';
+import { StoryBrain } from '../testing/index.ts';
 import { useFactsStory } from './context.ts';
 
-/** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
+/**
+ * LEFT (middle): natural-language → SPARQL over the story agent's brain; results are the view. The SPARQL
+ * is parsed into a structured query, which the brain answers (`BrainService.query`) without raw SPARQL.
+ */
 export const QueryModule = () => {
-  const space = ToolkitHooks.useActiveSpace();
-  if (!space) {
-    return null;
-  }
-  return <QueryModuleContainer space={space} />;
-};
-
-const QueryModuleContainer = ({ space }: { space: Space }) => {
-  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const { store } = Hooks.useCapability(StoryBrain);
   const { setFacts } = useFactsStory();
 
   const [question, setQuestion] = useState('');
@@ -52,19 +45,19 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
   // Parse the SPARQL and run it over the store; the result set becomes the displayed view.
   const handleRun = useCallback(() => {
     guard(async () => {
-      const results = await EffectEx.runPromise(registry.forSpace(space.id).query(parseSparqlToQuery(query)));
+      const results = await EffectEx.runPromise(store.query(parseSparqlToQuery(query)));
       setFacts(results);
     });
-  }, [guard, registry, space.id, query, setFacts]);
+  }, [guard, store, query, setFacts]);
 
   // Reset the field and re-read all facts.
   const handleReset = useCallback(() => {
     guard(async () => {
       setQuery(DEFAULT_SPARQL);
-      const results = await EffectEx.runPromise(registry.forSpace(space.id).query({}));
+      const results = await EffectEx.runPromise(store.query({}));
       setFacts(results);
     });
-  }, [guard, registry, space.id, setFacts]);
+  }, [guard, store, setFacts]);
 
   return (
     <QueryPanel

@@ -4,10 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 
-import { queryFacts } from './use-facts.ts';
+import { mergeFacts } from './use-facts.ts';
 
 const mk = (over: Partial<RDF.Fact> & Pick<RDF.Fact, 'id'>): RDF.Fact => ({
   assertion: {
@@ -23,19 +22,13 @@ const mk = (over: Partial<RDF.Fact> & Pick<RDF.Fact, 'id'>): RDF.Fact => ({
   ...over,
 });
 
-describe('queryFacts', () => {
-  test('reads all facts from a seeded store', async ({ expect }) => {
-    const store = FactStoreLive.makeMemory();
-    await EffectEx.runPromise(store.putFacts([mk({ id: 'f1' })]));
-
-    const facts = await queryFacts(store);
-    expect(facts).toHaveLength(1);
-    expect(facts[0].assertion.predicate).toBe('travelsTo');
+describe('mergeFacts', () => {
+  test('keeps each fact once across brains', ({ expect }) => {
+    const facts = mergeFacts([[mk({ id: 'f1' }), mk({ id: 'f2' })], [mk({ id: 'f2' })], []]);
+    expect(facts.map(({ id }) => id)).toEqual(['f1', 'f2']);
   });
 
-  test('returns an empty list for an empty store', async ({ expect }) => {
-    const store = FactStoreLive.makeMemory();
-    const facts = await queryFacts(store);
-    expect(facts).toEqual([]);
+  test('is empty without brains', ({ expect }) => {
+    expect(mergeFacts([])).toEqual([]);
   });
 });

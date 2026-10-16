@@ -12,6 +12,10 @@ import { CrawlError } from '@dxos/crawler';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
+import { FactStore } from '@dxos/pipeline-rdf';
+import * as AgentPresence from '@dxos/plugin-agent/AgentPresence';
+import * as BrainFacts from '@dxos/plugin-agent/BrainFacts';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 
 import { DiscordOperation } from '#types';
 
@@ -19,16 +23,21 @@ import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services/i
 
 /**
  * Runs the crawl on the session crawl runtime (which owns the SQLite-backed stores) so state
- * persists across invocations; the ambient AiService and the per-run Discord source are provided
- * into that runtime explicitly.
+ * persists across invocations; the ambient AiService, the per-run Discord source and the agent's
+ * brain (as the pipeline's `FactStore`) are provided into that runtime explicitly.
+ *
+ * TODO(brain): an agent whose chats run on EDGE keeps its brain there, which the client's brain is not; route
+ *   these writes to EDGE's brain. Until then the crawl reaches only locally hosted agents.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannels> =
   DiscordOperation.CrawlDiscordChannels.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ connection, channels, descendThreads, maxDays, maxSteps, questions }) {
+      Effect.fn(function* ({ connection, agent: agentRef, channels, descendThreads, maxDays, maxSteps, questions }) {
         const connectionTarget = connection.target;
         const db = connectionTarget ? Obj.getDatabase(connectionTarget) : undefined;
         invariant(db, 'No database for connection ref — invoker did not provide Database.layer.');
+        const agent = yield* BrainFacts.requireAgent(agentRef).pipe(Effect.provide(Database.layer(db)));
+        const brain = yield* BrainService.BrainService;
 
         const ai = yield* AiService.AiService;
         // Captured here because the program runs on the crawl runtime, which lacks the operation's services.
@@ -56,7 +65,11 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
             },
             maxSteps !== undefined ? { maxSteps } : {},
           );
-        }).pipe(Effect.provide(sourceLayer), Effect.provideService(AiService.AiService, ai));
+        }).pipe(
+          Effect.provide(sourceLayer),
+          Effect.provideService(AiService.AiService, ai),
+          Effect.provideService(FactStore, BrainFacts.factStore(brain, AgentPresence.brainId(agent))),
+        );
 
         const summary = yield* Effect.tryPromise({
           try: () => getCrawlRuntime().runPromise(program),

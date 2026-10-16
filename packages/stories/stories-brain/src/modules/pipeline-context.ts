@@ -25,7 +25,7 @@ export const PIPELINE_RUN = 'brain.pipeline.run';
 /**
  * The Pipeline story's run-controller state, shared across its modules. Mirrors the props the three
  * panels consume: the run logic lives in the story-level provider; the modules are thin surfaces
- * reading their slice. NOTE what is *not* here: `facts` live in Brain's per-space `FactStore` (read
+ * reading their slice. NOTE what is *not* here: `facts` live in the story agent's brain (read
  * reactively by the output module); run status/progress lives in the `ProgressRegistry` (read via
  * `useProgressMonitor(PIPELINE_RUN)`); and `objects` is space-derived (read by the output module directly).
  */
