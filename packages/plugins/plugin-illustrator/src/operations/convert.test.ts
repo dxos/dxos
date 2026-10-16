@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
+import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -18,7 +18,7 @@ import { SvgBuilder, makeBuilder } from '#model';
 import { Drawing, IllustratorCapabilities, IllustratorError } from '#types';
 
 import { UnknownDrawingVariantError } from '../util/load-drawing.ts';
-import convertHandler from './convert.ts';
+import convertHandler, { bindArrowEnds } from './convert.ts';
 
 const SOURCE = 'flowchart LR\n  A[Client] --> B[Server]';
 
@@ -78,9 +78,9 @@ describe('convert', () => {
     const canvas = await drawing.canvas.load();
     expect(canvas.id).not.toBe(original.id);
     expect(canvas.schema).toBe(FAKE_SCHEMA);
-    expect(result.scene.objects).toEqual(before);
+    expect(result.scene.objects).toEqual(bindArrowEnds(before));
     expect(result.upserted).toEqual(before.map(({ id }) => id));
-    expect(editableVariant.builder.read(canvas).scene.objects).toEqual(before);
+    expect(editableVariant.builder.read(canvas).scene.objects).toEqual(bindArrowEnds(before));
     const canvases = await db.query(Filter.type(Drawing.Canvas)).run();
     expect(canvases.map(({ id }) => id)).toEqual([canvas.id]);
   });
@@ -97,5 +97,20 @@ describe('convert', () => {
     const error = await EffectEx.runPromise(Effect.flip(run(drawing, 'unknown.example/1')));
     expect(error).toBeInstanceOf(UnknownDrawingVariantError);
     expect(drawing.canvas.target).toBe(canvas);
+  });
+
+  test('binds each laid-out arrow end to the box it touches', async ({ expect }) => {
+    const { commands } = await EffectEx.runPromise(
+      Dsl.compile('group g {\n  node A\n  node B\n}\nnode C\nedge A -> B\nedge B -> C\n'),
+    );
+    const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+    const arrows = bindArrowEnds(objects).flatMap(({ elements }) =>
+      elements.flatMap((element) => (element.kind === 'arrow' ? [element] : [])),
+    );
+    // A node inside the group frame binds to the node, not the frame around it.
+    expect(arrows.map(({ from, to }) => [from, to])).toEqual([
+      ['A/box', 'B/box'],
+      ['B/box', 'C/box'],
+    ]);
   });
 });

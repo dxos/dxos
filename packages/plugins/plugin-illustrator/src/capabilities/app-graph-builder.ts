@@ -55,8 +55,13 @@ export default Capability.makeModule(
             const slug = variantSlug(variant);
             return AppGraphNode.makeAction({
               id: `convert-${slug}`,
+              // The handler runs against the drawing's own space, which the action context does not supply.
               data: () =>
-                Operation.invoke(DrawingOperation.Convert, { drawing: Ref.make(drawing), variant: variant.id }),
+                Operation.invoke(
+                  DrawingOperation.Convert,
+                  { drawing: Ref.make(drawing), variant: variant.id },
+                  { spaceId: Obj.getDatabase(drawing)?.spaceId },
+                ),
               properties: {
                 // Keyed per variant so a known renderer gets a translated label; others fall back.
                 label: [`edit-in-${slug}.label`, { ns: meta.profile.key, defaultValue: `Edit in ${variant.label}` }],

@@ -6,11 +6,65 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { Scene } from '@dxos/diagram';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { Drawing, DrawingOperation, IllustratorCapabilities, IllustratorError } from '#types';
 
 import { UnknownDrawingVariantError, resolveVariant } from '../util/load-drawing.ts';
+
+/** How far (canvas px) an arrow end may sit from a box outline and still count as touching it. */
+const TOUCH = 10;
+
+type Placed = { ref: string; x: number; y: number; w: number; h: number };
+
+const BOX_KINDS: ReadonlySet<string> = new Set(['rect', 'ellipse', 'diamond', 'triangle']);
+
+/** Distance from a point to a rectangle's outline, whether the point is inside it or not. */
+const outlineDistance = ({ x, y, w, h }: Placed, point: Scene.Point): number => {
+  const dx = Math.max(x - point.x, 0, point.x - (x + w));
+  const dy = Math.max(y - point.y, 0, point.y - (y + h));
+  const outside = Math.hypot(dx, dy);
+  return outside > 0 ? outside : Math.min(point.x - x, x + w - point.x, point.y - y, y + h - point.y);
+};
+
+/**
+ * Laid-out diagrams route arrows as fixed points, which an editor cannot keep attached to a moved box;
+ * naming the box each end touches lets the target variant bind the arrow so it follows.
+ */
+export const bindArrowEnds = (objects: readonly Scene.WorldObject[]): Scene.WorldObject[] => {
+  const place = (object: Scene.WorldObject, point: Scene.Point): Scene.Point => {
+    const scale = object.scale ?? 1;
+    return { x: (object.origin?.x ?? 0) + point.x * scale, y: (object.origin?.y ?? 0) + point.y * scale };
+  };
+  const boxes: Placed[] = objects.flatMap((object) =>
+    object.elements.flatMap((element) => {
+      if (!BOX_KINDS.has(element.kind) || !('w' in element) || !('h' in element) || !('x' in element)) {
+        return [];
+      }
+      const scale = object.scale ?? 1;
+      const { x, y } = place(object, { x: element.x, y: element.y });
+      return [{ ref: `${object.id}/${element.id}`, x, y, w: element.w * scale, h: element.h * scale }];
+    }),
+  );
+  // The smallest touching box wins, so an end on a node inside a group frame binds to the node.
+  const touching = (point: Scene.Point): string | undefined =>
+    boxes
+      .filter((box) => outlineDistance(box, point) <= TOUCH)
+      .sort((left, right) => left.w * left.h - right.w * right.h)[0]?.ref;
+
+  return objects.map((object) => ({
+    ...object,
+    elements: object.elements.map((element) => {
+      if (element.kind !== 'arrow') {
+        return element;
+      }
+      const from = element.from ?? (element.start ? touching(place(object, element.start)) : undefined);
+      const to = element.to ?? (element.end ? touching(place(object, element.end)) : undefined);
+      return { ...element, ...(from ? { from } : {}), ...(to ? { to } : {}) };
+    }),
+  }));
+};
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingOperation.Convert.pipe(
   Operation.withHandler(
@@ -33,7 +87,7 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
       );
       const { upserted } = to.builder.apply(
         target,
-        scene.objects.map((object) => ({ op: 'upsert-object' as const, object })),
+        bindArrowEnds(scene.objects).map((object) => ({ op: 'upsert-object' as const, object })),
       );
       Obj.update(drawing, (drawing) => {
         drawing.canvas = Ref.make(target);
