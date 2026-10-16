@@ -15,6 +15,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { meta } from '#meta';
 
 import { useBrainClock } from '../useBrainClock.ts';
+import { useIdentityRepair } from '../useIdentityRepair.ts';
 import { usePrivateChat } from '../usePrivateChat.ts';
 
 export type AgentPrivateChatProps = {
@@ -32,6 +33,7 @@ export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChat
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { chat, failed, retry } = usePrivateChat(agent);
   useBrainClock(agent);
+  useIdentityRepair(agent);
 
   const data = useMemo(() => (chat ? { subject: chat, attendableId } : undefined), [chat, attendableId]);
   if (data) {
