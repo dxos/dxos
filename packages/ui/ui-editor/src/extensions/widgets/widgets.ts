@@ -27,7 +27,7 @@ import {
   type WidgetType,
   keymap,
 } from '@codemirror/view';
-import { type SyntaxNodeRef } from '@lezer/common';
+import { type SyntaxNodeRef, type Tree } from '@lezer/common';
 import { type FunctionComponent, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
@@ -637,22 +637,19 @@ const scrollJumpMonitor = (() => {
 })();
 
 /**
- * Re-decorate once the whole document has parsed. `StateField.create` (and incremental rebuilds) only
- * see the syntax tree parsed so far, so a block past CodeMirror's initial background-parse window is
- * not decorated until some later transaction — previously it appeared only after the first edit. This
- * dispatches a one-shot rebuild when the full tree becomes available (re-armed on each edit).
+ * Re-decorate whenever a complete syntax tree replaces the one the decorations were built from.
+ * `StateField.create` (and incremental rebuilds) only see the tree parsed so far, and a parse that
+ * runs out of time skips the ranges outside the viewport, filling them in later as they scroll into
+ * view: both change the tree without a document change, which the field never sees.
  */
 const parseCompletionPlugin = ViewPlugin.fromClass(
   class {
-    #rebuiltForLength = -1;
+    #rebuiltFor: Tree | undefined;
 
     update(update: ViewUpdate) {
-      if (update.docChanged) {
-        this.#rebuiltForLength = -1;
-      }
-      const length = update.state.doc.length;
-      if (this.#rebuiltForLength !== length && syntaxTreeAvailable(update.state, length)) {
-        this.#rebuiltForLength = length;
+      const tree = syntaxTree(update.state);
+      if (tree !== this.#rebuiltFor && syntaxTreeAvailable(update.state, update.state.doc.length)) {
+        this.#rebuiltFor = tree;
         // Defer: cannot dispatch during an update.
         queueMicrotask(() => update.view.dispatch({ effects: widgetRebuildEffect.of(null) }));
       }

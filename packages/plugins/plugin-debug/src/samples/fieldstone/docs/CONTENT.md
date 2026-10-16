@@ -39,8 +39,9 @@ so reading one leads to the next.
     gateway is its own worker, not EDGE. With Architecture, its two subsections link the Composer and
     EDGE guides inline and embed the `composer-plugin` (Plugin Anatomy) and `edge-compute` drawings.
     Without it, the same text reads without the links and embeds.
-  - `decisions` Decision log, 8 entries: each names its deciders and links the doc it changed. With
-    projects, 2 entries link `artifacts.cacheDesign`.
+  - `decisions` Decision log, 8 entries: each names its deciders, links the docs it changed, and has
+    a context, the decision, two alternatives considered and its consequences. With projects, 2
+    entries link `artifacts.cacheDesign`.
 - Planning:
   - `roadmap` Q4 roadmap: embeds `roadmap`. With projects, links each project and embeds
     `taskSets.cache`.

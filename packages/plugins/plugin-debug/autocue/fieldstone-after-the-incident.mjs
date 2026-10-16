@@ -192,11 +192,13 @@ const scrollToText = async (page, text, { exact = false } = {}) => {
   for (let step = 0; step < 60; step++) {
     const at = (await target.isVisible().catch(() => false)) ? await target.boundingBox() : undefined;
     if (at && at.y < box.y + box.height * 0.5) {
-      return;
+      break;
     }
     await page.mouse.wheel(0, 160);
     await page.waitForTimeout(70);
   }
+  // Off the text, into the plank's empty margin: a pointer left on a link chip opens its preview.
+  await page.mouse.move(box.x + 24, box.y + box.height / 2);
 };
 
 export const steps = [
@@ -270,7 +272,8 @@ export const steps = [
       await caption(demo, 'The decision log');
       await open(demo, page, 'Decision log');
       await scrollToText(page, 'compare-and-set');
-      await page.waitForTimeout(BEAT * 2);
+      // A full entry: context, decision, alternatives and consequences.
+      await page.waitForTimeout(BEAT * 4);
     },
   },
 ];

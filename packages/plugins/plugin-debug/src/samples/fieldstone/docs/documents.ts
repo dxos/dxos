@@ -473,63 +473,133 @@ export const makeDocuments = Effect.fnUntraced(function* ({
     title: string;
     deciders: Person.Person[];
     changed: Markdown.Document[];
-    text: string;
+    context: string;
+    decision: string;
+    alternatives: string[];
+    consequences: string;
   }> = [
     {
       days: 120,
       title: 'Postgres stays the index store',
       deciders: [p.omar, p.june, p.astrid],
       changed: [architecture],
-      text: 'FoundationDB would scale further, but Postgres handles 40× our peak lookup rate and three of us can operate it.',
+      context:
+        'The index maps every action key to a blob digest: 2 billion rows, 30,000 lookups a second at peak. Load tests put the current Postgres primary at 40× that peak before latency moves.',
+      decision: 'Keep the index on Postgres, partitioned by tenant, with one read replica per region.',
+      alternatives: [
+        'FoundationDB: scales further, but nobody on the team has run it in production.',
+        'DynamoDB: no operations, but every lookup becomes a billed request and ties the index to AWS.',
+      ],
+      consequences:
+        'Three of us can operate the index today. We revisit at 10× the current peak, or if one tenant passes a quarter of all rows.',
     },
     {
       days: 98,
       title: 'Hot blobs move from S3 to R2',
       deciders: [p.felix, p.anika, p.astrid],
       changed: [architecture, vendors],
-      text: 'Egress was 60% of the AWS bill. S3 stays the origin so nothing lives only in R2.',
+      context:
+        'Egress was 60% of the AWS bill: CI runners in other clouds pulled the same hot blobs thousands of times a day.',
+      decision:
+        'Blobs read in the last 30 days are served from R2, which has no egress fees. S3 stays the origin, so nothing lives only in R2.',
+      alternatives: [
+        'CloudFront in front of S3: cuts egress by about half and adds a second CDN bill.',
+        'Move everything to R2: loses S3 lifecycle rules and the EU bucket enterprise trials ask for.',
+      ],
+      consequences:
+        'Two storage tiers to keep consistent, and a backfill job that copies on first read. AWS egress falls by about 90% at current traffic.',
     },
     {
       days: 82,
       title: 'Weekly on-call with a named secondary',
       deciders: [p.anika, p.astrid],
       changed: [runbook],
-      text: 'One week on, a 15-minute ack, and a secondary who is paged when the primary does not ack.',
+      context:
+        'Pages went to whoever was online in Slack. Two incidents last quarter waited more than an hour for someone to pick them up.',
+      decision:
+        'One engineer is primary for a week, with a 15-minute acknowledgement window. A named secondary is paged when the primary does not acknowledge.',
+      alternatives: [
+        'Daily rotation: shorter shifts, but nobody holds context across a multi-day incident.',
+        'An outside follow-the-sun service: costs more than an SRE hire and knows nothing about the index.',
+      ],
+      consequences:
+        'Everyone on the cache engine and the API joins the rotation after two shadow shifts. On-call weeks carry no sprint commitments.',
     },
     {
       days: 34,
       title: 'Index commits are compare-and-set on the digest',
       deciders: [p.omar, p.felix, p.anika],
       changed: [architecture, ...(projects ? [projects.artifacts.cacheDesign] : [])],
-      text: 'Last-writer-wins made two racing writers silently disagree. A second digest for a key is now rejected and logged.',
+      context:
+        'In the Okapi incident two runners uploaded different bytes under the same key. Last-writer-wins let the index and R2 disagree without any error.',
+      decision:
+        'An index commit names the digest it expects to replace. A second, different digest for an existing key is rejected, logged and alerted on.',
+      alternatives: [
+        'Keep last-writer-wins and verify on read: catches the problem only after a runner has downloaded the bytes.',
+        'Content-address keys by output digest: right in principle, but it changes the protocol for every client.',
+      ],
+      consequences:
+        'A rejected write now shows up as a cache miss for the second runner, not a silent overwrite. Alerting fires on more than 10 rejections in an hour.',
     },
     {
       days: 33,
       title: 'Toolchain variables are always in the action key',
       deciders: [p.omar, p.felix],
       changed: [postmortem, architecture, ...(projects ? [projects.artifacts.cacheDesign] : [])],
-      text: 'Declared inputs were not enough. A few extra misses are cheaper than one wrong byte.',
+      context:
+        'The key covered declared inputs only. Two runners with different compilers computed the same key, which is the root cause in the postmortem.',
+      decision:
+        'The CLI always hashes the compiler, its version and the target platform into the action key, whether or not the build declares them.',
+      alternatives: [
+        'Ask teams to declare their toolchain: the declaration was already there to forget.',
+        'Hash the whole environment: every runner image update would invalidate the cache.',
+      ],
+      consequences:
+        'About 2% more misses across the fleet in the first week, then back to baseline. Shipped in CLI 1.7.3; older CLIs get a warning and, from 1.8, are refused.',
     },
     {
       days: 28,
       title: 'Charge for storage, not seats',
       deciders: [p.lucia, p.june, p.astrid],
       changed: [pricing],
-      text: 'Storage is what costs us money and what customers can see in the dashboard.',
+      context:
+        'Seat pricing charged a 5-person team with a huge monorepo the same as 5 people with a tiny one. Storage is what costs us money.',
+      decision:
+        'Plans are priced by stored gigabytes, with lookups unmetered. The dashboard shows storage per project so customers can see what they pay for.',
+      alternatives: [
+        'Seats plus a storage overage: two numbers to explain on every sales call.',
+        'Per-lookup pricing: punishes the teams that use the cache the most.',
+      ],
+      consequences:
+        'Billing meters storage daily through Stripe. Existing seat customers keep their price for 12 months.',
     },
     {
       days: 21,
       title: 'Free tier is a hard 10 GB cap',
       deciders: [p.lucia, p.astrid],
       changed: [pricing],
-      text: 'No card on file means no overage. Hitting the cap turns writes off and keeps reads on.',
+      context: 'Free accounts with no card on file grew past 100 GB, and nothing could be billed.',
+      decision:
+        'Free accounts stop accepting writes at 10 GB and keep serving reads. There is no overage without a card.',
+      alternatives: [
+        'Evict the least-recently-used blobs: quietly turns hits into misses, and users blame the cache.',
+        'A soft cap with email warnings: what we had, and nobody upgraded.',
+      ],
+      consequences:
+        'The CLI prints the cap and an upgrade link when a write is refused. Support expects a short bump in tickets.',
     },
     {
       days: 9,
       title: 'Hire the SRE before the second cache engineer',
       deciders: [p.astrid, p.lucia],
       changed: [hiring],
-      text: 'The pager is the bigger risk to Cairn 1.8 than the index rewrite.',
+      context: 'Since the incident Anika has been primary or secondary for half of all on-call weeks.',
+      decision: 'The open SRE role is filled first. The second cache-engine role opens once the SRE starts.',
+      alternatives: [
+        'Hire both at once: the budget covers one until next quarter.',
+        'Cache engineer first: it speeds up the index rewrite and leaves the pager as it is.',
+      ],
+      consequences: 'The pager is the bigger risk to Cairn 1.8. The index rewrite slips about three weeks.',
     },
   ];
   const decisions = doc(
@@ -538,14 +608,26 @@ export const makeDocuments = Effect.fnUntraced(function* ({
     md(
       '# Decision log',
       '',
-      'One entry per decision that changed how Cairn is built or sold, newest last. An entry names who decided and the document it changed. Reversing a decision is a new entry.',
+      'One entry per decision that changed how Cairn is built or sold, newest last. An entry says why it came up, what was decided and what else was on the table, who decided, and the documents it changed. Reversing a decision is a new entry.',
       '',
-      ...decisionEntries.flatMap(({ days, title, deciders, changed, text }) => [
-        `## ${day(clock.daysAgo(days))}: ${title}`,
-        '',
-        `${text} Deciders: ${deciders.map(first).join(', ')}. Changed: ${changed.map((target) => link(target.name ?? '', target)).join(', ')}.`,
-        '',
-      ]),
+      ...decisionEntries.flatMap(
+        ({ days, title, deciders, changed, context, decision, alternatives, consequences }) => [
+          `## ${day(clock.daysAgo(days))}: ${title}`,
+          '',
+          `**Deciders:** ${deciders.map(first).join(', ')} · **Changed:** ${changed.map((target) => link(target.name ?? '', target)).join(', ')}`,
+          '',
+          `**Context.** ${context}`,
+          '',
+          `**Decision.** ${decision}`,
+          '',
+          '**Alternatives considered:**',
+          '',
+          ...alternatives.map((alternative) => `- ${alternative}`),
+          '',
+          `**Consequences.** ${consequences}`,
+          '',
+        ],
+      ),
     ),
   );
 
