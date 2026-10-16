@@ -79,6 +79,8 @@ export const warmLive = async (env, ctx, project) => {
       return;
     }
     const response = await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'index.json']);
+    // The overview links its head's change first.
+    await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'change', `${head.causal}.json`]);
     // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
     const names = JSON.parse(await response.text()).names ?? [];
     const chunks = [];
@@ -149,6 +151,11 @@ const draw = async (env, files, project, causal, path) => {
     if (!HASH.test(change)) {
       throw new HttpError(404, 'a change is named by its hash');
     }
+    // A change page diffs its namespace with its first parent's, which reads both trees node by node.
+    await fetchAll(files, [`o${change}`]);
+    const node = files.texts.get(`o${change}`);
+    const parent = node ? causalFields(node).parents[0] : undefined;
+    await Promise.all([prefetchTree(files, change), parent ? prefetchTree(files, parent) : undefined]);
     return run(files, () => explorer.raw.liveChange(ROOT, change));
   }
   const site = await siteOf(files);
@@ -436,4 +443,28 @@ const saveSnapshot = async (files) => {
     new Blob([JSON.stringify(entries)]).stream().pipeThrough(new CompressionStream('gzip')),
   ).arrayBuffer();
   await files.bucket.put(snapshotKey(files.project), body, { httpMetadata: { contentType: 'application/gzip' } });
+};
+
+/** Reads the namespace tree of history node `causal`, level by level: its nodes, not the definitions they name. */
+const prefetchTree = async (files, causal) => {
+  await fetchAll(files, [`o${causal}`]);
+  const node = files.texts.get(`o${causal}`);
+  const root =
+    node &&
+    parseSexp(node)
+      .slice(1)
+      .find((item) => Array.isArray(item) && item[0] === 'ns')?.[1]?.s;
+  let level = root ? [root] : [];
+  while (level.length > 0) {
+    await fetchAll(
+      files,
+      level.map((hash) => `o${hash}`),
+    );
+    level = level.flatMap((hash) => {
+      const text = files.texts.get(`o${hash}`);
+      return (text ? parseSexp(text).slice(1) : [])
+        .filter((item) => Array.isArray(item) && (item[0] === 'part' || item[0] === 'sub'))
+        .map((item) => item[item.length - 1].s);
+    });
+  }
 };

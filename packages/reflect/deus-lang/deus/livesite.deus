@@ -153,4 +153,21 @@ test browserShowsTheExplorer :=
   let (code, out, _) := IO.exec "node" [script, siteUrl ()]
   code == 0 && Text.contains "\"ok\":true" out
 
+/-- The browser check's timings for a project: (overview, definition) in milliseconds, or none when it failed. -/
+def browserTimings (project : Text) : {IO} Option (Int, Int) :=
+  let script := Option.getOr (IO.getEnv "DEUS_HOME") "." ++ "/scripts/explorer-smoke.mjs"
+  let (code, out, _) := IO.exec "env" ["DEUS_PROJECT=" ++ project, "node", script, siteUrl ()]
+  match Json.parse (Text.trim out) with
+  | Result.ok j =>
+    if code == 0 then some (Json.int (Json.get (Json.get j "checks") "overview"), Json.int (Json.get (Json.get j "checks") "definition")) else none
+  | Result.err _ => none
+
+@[integration]
+test explorersAreFast :=
+  -- A visitor waits under 3 s for the overview and for a definition card, on the toolchain and on base (D192).
+  List.all (fun project =>
+    match browserTimings project with
+    | some (overview, definition) => overview < 3000 && definition < 3000
+    | none => false) ["@dxos/toolchain", "@dxos/base"]
+
 end LiveSite

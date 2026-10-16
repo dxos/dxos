@@ -44,6 +44,8 @@ def remember (dir : Text) (h : Text) (v : Verdict) : {IO} Unit :=
 def guarded (h : Text) : Result Text a :=
   handle Result.ok (Code.run h) with
   | Defect.raise message -> _ => Result.err (message ++ Cli.defectTrace ())
+  -- A test that throws fails with its message; uncaught, it ended the whole run.
+  | Throw.throw message -> _ => Result.err ("threw " ++ message)
 
 /-- Evaluates a Core term (built by the checker) in the running machine. -/
 def evalCore (core : Sexp) : Result Text a :=
@@ -334,7 +336,7 @@ def checkTest (h : Text) (integration : Bool) : {IO} Verdict :=
   match outcome with
   | Result.ok true => Verdict.pass (if integration then "integration" else "test") 1
   | Result.ok _ => Verdict.fail "returned false"
-  | Result.err message => Verdict.fail ("defect: " ++ message)
+  | Result.err message => Verdict.fail (if Text.startsWith "threw " message then message else "defect: " ++ message)
 
 /-- Whether a definition carries an attribute, e.g. `@[integration]`. -/
 def hasAttr (dir : Text) (h : Text) (name : Text) : {IO} Bool :=

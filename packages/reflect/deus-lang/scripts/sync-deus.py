@@ -205,6 +205,20 @@ def unknown(codebase):
     return (*where, match.group(4))
 
 
+def rebuild_seed(codebase):
+    """Compiles deus/ into the seed when it differs from the committed one; the new seed must compile itself to itself."""
+    with tempfile.TemporaryDirectory(prefix='deus-sync-') as scratch:
+        image, again = Path(scratch) / 'seed.image', Path(scratch) / 'again.image'
+        deus('compile', str(SOURCES), '--main', 'Cli.main', '-o', str(image), codebase=codebase)
+        if SEED.exists() and image.read_bytes() == SEED.read_bytes():
+            return False
+        deus('compile', str(SOURCES), '--main', 'Cli.main', '-o', str(again), codebase=codebase, seed=image)
+        if image.read_bytes() != again.read_bytes():
+            sys.exit('the new seed does not compile itself to itself; deus/ is written, the seed is not')
+        shutil.copyfile(image, SEED)
+        return True
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
@@ -216,7 +230,11 @@ def main():
     else:
         names, deleted = compared(codebase)
     if not names and not deleted:
-        print('deus/ already compiles to the codebase\'s definitions; nothing to write.')
+        # deus/ can match the codebase while the seed predates it (deus/ edited, then `deus update` from it).
+        if rebuild_seed(codebase):
+            print('deus/ already compiles to the codebase\'s definitions; the seed was behind it and is rebuilt.')
+        else:
+            print('deus/ already compiles to the codebase\'s definitions, and the seed is its fixpoint; nothing to write.')
         return 0
 
     drop(set(deleted))
@@ -256,13 +274,7 @@ def main():
             path.write_text('\n'.join(lines))
             print(f'  = {found[0]}  ({path.name}:{line})')
 
-    with tempfile.TemporaryDirectory(prefix='deus-sync-') as scratch:
-        image, again = Path(scratch) / 'seed.image', Path(scratch) / 'again.image'
-        deus('compile', str(SOURCES), '--main', 'Cli.main', '-o', str(image), codebase=codebase)
-        deus('compile', str(SOURCES), '--main', 'Cli.main', '-o', str(again), codebase=codebase, seed=image)
-        if image.read_bytes() != again.read_bytes():
-            sys.exit('the new seed does not compile itself to itself; deus/ is written, the seed is not')
-        shutil.copyfile(image, SEED)
+    rebuild_seed(codebase)
     left, extra = compared(codebase)
     if left:
         sys.exit(f'deus/ still differs from the codebase in {len(left)} definitions, among them {", ".join(left[:5])}')

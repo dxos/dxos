@@ -13,6 +13,8 @@
 import { chromium } from '@playwright/test';
 
 const site = process.argv[2] ?? 'https://deus.dmytro-a80.workers.dev';
+// `@dxos/base` and its examples have `List.map` too, so the same checks fit every project built on base.
+const project = process.env.DEUS_PROJECT ?? '@dxos/toolchain';
 const shots = process.argv[3];
 const args = ['--no-sandbox'];
 // The cloud sandbox reaches HTTPS only through its proxy, with TLS 1.2 (cloud-sandbox skill).
@@ -33,8 +35,8 @@ try {
   });
 
   const started = Date.now();
-  await page.goto(`${site}/@dxos/toolchain/`, { waitUntil: 'domcontentloaded', timeout: 300_000 });
-  await page.waitForFunction(() => document.getElementById('project')?.textContent === '@dxos/toolchain', null, {
+  await page.goto(`${site}/${project}/`, { waitUntil: 'domcontentloaded', timeout: 300_000 });
+  await page.waitForFunction((expected) => document.getElementById('project')?.textContent === expected, project, {
     timeout: 300_000,
   });
   await page.getByText('definitions', { exact: false }).first().waitFor({ timeout: 300_000 });
@@ -44,7 +46,7 @@ try {
   }
 
   const opened = Date.now();
-  await page.goto(`${site}/@dxos/toolchain/List.map`, { waitUntil: 'domcontentloaded', timeout: 300_000 });
+  await page.goto(`${site}/${project}/List.map`, { waitUntil: 'domcontentloaded', timeout: 300_000 });
   const card = page.locator('pre', { hasText: 'def List.map' }).first();
   await card.waitFor({ timeout: 300_000 });
   checks.definition = Date.now() - opened;
