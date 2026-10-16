@@ -6,19 +6,24 @@ material: the data-flow sample in `packages/plugins/plugin-canvas/src/samples/mo
 
 ## 1. Goal
 
-Make the canvas an animation tool. A user should be able to build the data-flow film from the molecules sample
-without writing a story file. Three features get there:
+Make the canvas an animation tool in which an agent writes the hard parts. The data-flow film from the molecules
+sample should become a canvas document: nodes and composite objects laid out on the canvas, a timeline that keys
+the camera and properties, and generators an agent wrote for the motion no keyframe can express. Three features
+get there:
 
 1. **Composite objects.** Group selected nodes into a reusable object, clone it, and edit it on its own.
 2. **Timeline.** Give a scene a duration, set property values at points in time, and play the tweens between them.
-3. **Generators and motion.** Nodes whose content is produced by code from parameters and time, such as particles
-   flowing along links into containers.
+3. **Generators.** Code an agent writes and the canvas runs: a node whose content is computed from its parameters,
+   the scene and the time, such as molecules flowing from sources through channels into containers.
+
+Users are not expected to rebuild a generator's behaviour from UI controls. The UI places a generator, binds it to
+nodes, and keys its parameters on the timeline; the behaviour itself is code, written and revised by an agent.
 
 The rest of the engine stays as it is. Animation is a layer between the projection and the surface: the surface
 draws a scene sampled at a time, and intents made while the playhead is away from the start become keyframes.
 
 Not in scope for the first phases: audio, a curve (graph) editor, physics beyond what the molecules sample does,
-user scripting in the browser (§6.6), and multi-user editing of one timeline at once.
+a UI for building generators without code, and multi-user editing of one timeline at once.
 
 ## 2. What the molecules sample taught
 
@@ -31,8 +36,8 @@ each piece to the general mechanism that replaces it.
 | `CHAPTERS`, `DataFlowSequence`, `SequenceHeader`                                     | Titles, captions, chapter order, prev/next                          | Timeline markers (§5.6)                               |
 | `refitKey`, `refitDuration`, `drift`, `DRIFT` speed ramp                             | Move the camera                                                     | A camera track (§5.5)                                 |
 | `useTween`, `useRun` (`tween.ts`)                                                    | Fade and ease properties                                            | Tracks with keyframes and easing (§5.2)               |
-| `DataFlowSimulation` (`simulation.ts`): spawn, route, settle, hand-off, `agentReads` | Molecules that leave sources, travel channels and pack into buckets | Generators with emitters, paths and sinks (§6)        |
-| `Crystal` hex lattice                                                                | Pack bodies into a container                                        | A packing rule on a sink (§6.3)                       |
+| `DataFlowSimulation` (`simulation.ts`): spawn, route, settle, hand-off, `agentReads` | Molecules that leave sources, travel channels and pack into buckets | One agent-written flow generator (§6.3)               |
+| `Crystal` hex lattice                                                                | Pack bodies into a container                                        | Packing inside the flow generator (§6.3)              |
 | `morph.ts`: `planSplit`, `planMove`, `planArrivals`                                  | Change the layout while bodies are in flight                        | Generator transitions between keyed parameters (§6.5) |
 | `simulation.focus`, `#inFocus`                                                       | Spend work only on what is on screen                                | Viewport culling in the generator context (§6.4)      |
 | `MoleculeOverlay` SVG over `SceneView`, `data-frame-time`                            | Draw many small bodies cheaply; tell the recorder a frame is drawn  | A generator layer and a clock frame marker (§7)       |
@@ -58,16 +63,18 @@ Each of these cost a render or a fix in the sample. The design removes the cause
 
 ## 3. Decisions
 
-| #   | Decision                                                                                                       | Why                                                                                                                     |
-| --- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 1   | **A composite object is a scene.** Its definition is a scene in the store; its instances are `instance` nodes. | Scenes already nest, render as previews or live layers, and drill. A second container type would duplicate all of that. |
-| 2   | **Animation data lives on the scene**, as `Scene.timeline`.                                                    | The scene is the unit the store saves, the projection emits and the undo log covers. One scene, one timeline.           |
-| 3   | **Sampling is a pure function**, `sampleScene(scene, t) → Scene`.                                              | The surface, hit testing, the properties form and export all take a `Scene`. None of them learns about time.            |
-| 4   | **One clock per view**, an atom holding the time; nothing else reads `performance.now()` or rAF timestamps.    | §2.1 items 1 to 3.                                                                                                      |
-| 5   | **Editing at a time is an intent rewrite.** An animated projection turns a `move` at time t into a keyframe.   | Decision 11 of `DESIGN.md` already routes every edit through `apply`. The surface does not change.                      |
-| 6   | **Generators are node types** with a `GeneratorDef` on top of `NodeDef`.                                       | They get the palette, the properties form, ports, layers and selection for free.                                        |
-| 7   | **Generators are deterministic**: seeded random, fixed step, checkpoints.                                      | Playback, scrubbing and export must show the same frame for the same time.                                              |
-| 8   | **Export seeks the clock**; it does not fake the browser's.                                                    | §2.1 items 2 and 5. The page draws frame n because it was told t = n / fps.                                             |
+| #   | Decision                                                                                                       | Why                                                                                                                       |
+| --- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **A composite object is a scene.** Its definition is a scene in the store; its instances are `instance` nodes. | Scenes already nest, render as previews or live layers, and drill. A second container type would duplicate all of that.   |
+| 2   | **Animation data lives on the scene**, as `Scene.timeline`.                                                    | The scene is the unit the store saves, the projection emits and the undo log covers. One scene, one timeline.             |
+| 3   | **Sampling is a pure function**, `sampleScene(scene, t) → Scene`.                                              | The surface, hit testing, the properties form and export all take a `Scene`. None of them learns about time.              |
+| 4   | **One clock per view**, an atom holding the time; nothing else reads `performance.now()` or rAF timestamps.    | §2.1 items 1 to 3.                                                                                                        |
+| 5   | **Editing at a time is an intent rewrite.** An animated projection turns a `move` at time t into a keyframe.   | Decision 11 of `DESIGN.md` already routes every edit through `apply`. The surface does not change.                        |
+| 6   | **Generators are node types** with a `GeneratorDef` on top of `NodeDef`.                                       | They get the palette, the properties form, ports, layers and selection for free.                                          |
+| 7   | **Generators are deterministic**: seeded random, fixed step, checkpoints.                                      | Playback, scrubbing and export must show the same frame for the same time.                                                |
+| 9   | **Generators are agent-written code stored as data**: a `Generator` object holds the module source.            | An agent can create and revise one in a document without a plugin release; the canvas loads it like any other object.     |
+| 10  | **Generators run in a sandbox** and exchange plain data (`Shape` lists) with the canvas.                       | Code an agent wrote must not reach the DOM, the network or the space; a crash or a slow step must not take the view down. |
+| 8   | **Export seeks the clock**; it does not fake the browser's.                                                    | §2.1 items 2 and 5. The page draws frame n because it was told t = n / fps.                                               |
 
 ## 4. Composite objects
 
@@ -310,28 +317,32 @@ checkpoint steps from there. A parameter edit or a keyed parameter change invali
 `warmup` (the sample's option) becomes a negative start time: the generator steps from `-warmup` before t = 0 is
 shown.
 
-### 6.3 Emitters, paths and sinks
+### 6.3 Bindings and the flow generator
 
-The data flow is the first library of generators, built from the motions above. Each piece is an ordinary node
-role, so a user wires them on the canvas with links instead of writing a spec.
+A generator draws over other nodes, so its parameters can name them. A parameter annotated as a binding
+(`Schema.Array(NodeId).annotations({ binding: 'node' })`, or `'link'`) holds node or link ids, and the runtime
+resolves them through `ctx.scene` at each step, sampled at the same time. The generator reads their geometry and
+never stores it, so moving a bound node on the timeline moves what the generator does.
 
-| Piece       | Node                                       | Parameters                                                  | Sample equivalent                       |
-| ----------- | ------------------------------------------ | ----------------------------------------------------------- | --------------------------------------- |
-| **Emitter** | any node with an `emitter` behaviour       | rate, burst, the composite or shape to emit, hue            | sources, `#spawn`, `SOURCE_BOOST`       |
-| **Path**    | a link from an emitter                     | speed, spacing                                              | channels, `#route`                      |
-| **Sink**    | any container node with a `sink` behaviour | packing (`hex`, `grid`, `stack`), capacity, hand-off target | buckets, `Crystal`, `#handOff`          |
-| **Reader**  | a node linked from a sink                  | read rate, subset                                           | apps and agents, `upInterval`, `subset` |
+The data-flow film needs one stateful generator, ported from `simulation.ts` as a single module. Its parameters:
 
-A **behaviour** is a generator attached to an existing node rather than a node type of its own:
-`Node.behaviours?: { type: BehaviourType; params }[]`. One flow runtime per scene steps every behaviour together,
-because bodies pass between nodes. Behaviours appear in the properties panel as groups and their numeric parameters
-are animatable, so "apps write more often in chapter 3" is a key on the readers' rate.
+| Parameter                    | Kind                 | Sample equivalent                      |
+| ---------------------------- | -------------------- | -------------------------------------- |
+| `sources`, `readers`         | node bindings        | sources; apps and agents               |
+| `channels`                   | link bindings        | channels, `#route`                     |
+| `containers`                 | node bindings        | hub and buckets, `Crystal`, `#handOff` |
+| `rate`, `readRate`, `subset` | numbers (animatable) | `upInterval`, `subset`, `SOURCE_BOOST` |
+| `warmup`, `prefill`, `seed`  | numbers, flags       | the same options                       |
+
+The sources, apps, channels and containers are ordinary nodes, links and composite objects on the canvas. Numeric
+parameters are animatable, so "apps write more often in chapter 3" is a key on `readRate`. The packing, routing and
+hand-off rules stay inside the module, where the agent can change them.
 
 ### 6.4 Budgets and culling
 
 The sample keeps its frame time down by acting only on what is on screen (`simulation.focus`). The runtime gives
-each generator `ctx.viewport`, and the flow runtime skips spawning at emitters outside it and hands bodies off only
-between visible sinks. Off-screen work still steps state that is visible later, so culling must not change what an
+each generator `ctx.viewport`, and the flow generator skips spawning at sources outside it and hands bodies off only
+between visible containers. Off-screen work still steps state that is visible later, so culling must not change what an
 on-screen region shows; a generator declares `cull: 'spawn' | 'none'` to say which it can tolerate. A per-scene
 body cap (default 2000) drops the oldest settled bodies first.
 
@@ -339,18 +350,53 @@ body cap (default 2000) drops the oldest settled bodies first.
 
 When a keyed parameter or a container's geometry changes, a stateful generator receives `transition(state, from,
 to)` and moves its bodies itself; without one, bodies outside the new geometry fade out. The sample's three
-planners become the flow runtime's transition:
+planners become the flow generator's transition:
 
 - `planSplit` → a sink split into partitions: bodies move to the partition nearest them.
 - `planMove` → a sink moved or resized: bodies keep their lattice cell relative to the sink's edge.
 - `planArrivals` → sinks added: new sinks fade in as the container grows past them.
 
-### 6.6 Authoring custom generators
+### 6.6 Agent-written generators
 
-Phase 1 generators are TypeScript modules a plugin registers with its node types (`NodeDef` + `GeneratorDef`),
-so they are code-reviewed and run with the app's permissions. A user-authored generator, written in the canvas, is
-an open question (§10): it needs a sandbox (a worker with no DOM, whose `step` and `draw` exchange plain data) and a
-budget per step.
+An agent creates and revises generators; a user asks for one ("molecules that flow from these sources into ECHO
+and pack into a lattice"), places it, binds it and keys it.
+
+**The artifact.** A `Generator` is an ECHO object:
+
+```ts
+Generator = {
+  name: string;
+  description: string; // what it draws, for the agent and the palette
+  source: string; // one TypeScript module whose default export is a StatelessGenerator or StatefulGenerator
+  params: JsonSchema; // the parameter schema, with binding and animatable annotations
+  version: number; // bumped on each revision; checkpoints and caches key on it
+};
+```
+
+A scene places one with a `generator` node: `NodeBase & { type: 'generator'; generator: Ref<Generator>; params }`.
+Two nodes may share one `Generator` with different parameters, as two instances share a composite.
+
+**The runtime.** The canvas compiles the module once per version (esbuild-wasm, as the script plugin does) and runs
+it in a worker with no DOM, network or space access. The worker holds the generator's state; the view sends it the
+time, the parameters and the bound geometry, and receives a `Shape` list. Each step has a time budget (default 4 ms
+at the fixed rate); a generator over budget is paused and drawn with a warning, and a thrown error does the same.
+The module may import only the motion library (§6.1) and a small math and random kit the runtime supplies.
+
+**The agent's tools.** Operations in plugin-canvas, used through the operations skill:
+
+| Operation                        | Does                                                                                                                                                                                    |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas.generator.create/update` | Writes a `Generator`'s source and schema; compiles it and returns type or compile errors.                                                                                               |
+| `canvas.generator.check`         | Runs it headless for a span of time with given parameters; returns step timings, determinism (two runs from different checkpoints agree) and a contact sheet of frames at chosen times. |
+| `canvas.generator.place`         | Adds a `generator` node to a scene with parameters and bindings.                                                                                                                        |
+| `canvas.timeline.key`            | Keys a parameter, a property or the camera at a time.                                                                                                                                   |
+
+The contact sheet is what lets an agent judge motion without a human watching: it sees frames at, say, every second,
+and the step timings show whether the generator fits its budget. A skill (`canvas-generators`) documents the
+contract, the motion library and a worked example: the flow generator of §6.3.
+
+**Revision.** Each `update` bumps `version`; the canvas discards the generator's checkpoints and replays from the
+nearest earlier time. The ECHO history of the object is the generator's version history.
 
 ## 7. Rendering and export
 
@@ -385,20 +431,20 @@ Everything new is data on `Scene` and `Node`, so it saves where scenes save (`Ca
 
 - `Scene.kind` and `Scene.timeline`.
 - `Instance` nodes with `composite`, `overrides` and `time`.
-- `Node.behaviours`.
+- `generator` nodes with their `params`, and `Generator` objects with their source.
 
 Generator state, checkpoints and the clock are never stored. Older readers ignore the new optional fields; an
 `instance` node in a reader that does not know the type draws as a frame with its name, as any unknown type does.
 
 ## 9. Phases
 
-| Phase | Delivers                                                                                                                         | Proves                                                                                        |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 1     | Clock, `Timeline` model, `sampleScene`, animated projection, collapsed timeline bar, keys on `center`, `size`, `opacity`, camera | Key a node across two positions and play it; export it with the new renderer                  |
-| 2     | Composite scenes, `instance` node, group/ungroup/duplicate/make unique, `ObjectsPanel` with isolation view                       | Group three nodes, clone the object, edit the definition, see both change                     |
-| 3     | Generator runtime (stateless and stateful), checkpoints, `Shape` layer, motion library                                           | A looping orbit generator scrubs both ways and exports identically                            |
-| 4     | Flow behaviours (emitter, path, sink, reader) and transitions; markers and caption overlay; nested time                          | Rebuild chapters 1 to 5 of the data-flow film as a document; retire the sample's bespoke code |
-| 5     | Expanded timeline, easing editor, `animatable` annotations for host node types                                                   | A host plugin keys its own node type's properties                                             |
+| Phase | Delivers                                                                                                                              | Proves                                                                                               |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1     | Clock, `Timeline` model, `sampleScene`, animated projection, collapsed timeline bar, keys on `center`, `size`, `opacity`, camera      | Key a node across two positions and play it; export it with the new renderer                         |
+| 2     | Composite scenes, `instance` node, group/ungroup/duplicate/make unique, `ObjectsPanel` with isolation view                            | Group three nodes, clone the object, edit the definition, see both change                            |
+| 3     | `Generator` object, worker runtime with budgets, bindings, checkpoints, `Shape` layer, motion library; generator operations and skill | An agent writes a looping orbit generator from a prompt; it scrubs both ways and exports identically |
+| 4     | The flow generator (ported from `simulation.ts` and `morph.ts`), markers and caption overlay, nested time                             | Rebuild chapters 1 to 5 of the data-flow film as a document; retire the sample's bespoke code        |
+| 5     | Expanded timeline, easing editor, `animatable` annotations for host node types                                                        | A host plugin keys its own node type's properties                                                    |
 
 ## 10. Testing
 
@@ -418,6 +464,6 @@ Generator state, checkpoints and the clock are never stored. Older readers ignor
    enough?
 3. Is the timeline per scene enough, or does a document need one timeline across drills, so a film can zoom into a
    frame and keep playing?
-4. Should user-authored generators run in a worker sandbox, and what is the per-step budget?
-5. Should behaviours write anything back to ECHO (counts, last activity), or stay purely visual?
+4. Is a 4 ms step budget right for the worker, and does a generator need more than `Shape` lists back (for example, events that drive the timeline)?
+5. Should generators read live ECHO data (counts, activity) through bindings, or stay purely visual?
 6. Is export a Composer operation that runs on EDGE, or a local CLI only?
