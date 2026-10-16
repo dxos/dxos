@@ -49,6 +49,7 @@
     },
     "./SqlStorage": {
       "types": "./dist/types/src/platform/sql-storage-browser.d.ts",
+      "workerd": "./dist/lib/platform/sql-storage-workerd.mjs",
       "browser": "./dist/lib/platform/sql-storage-browser.mjs",
       "bun": "./dist/lib/platform/sql-storage-bun.mjs",
       "node": "./dist/lib/platform/sql-storage-node.mjs",
