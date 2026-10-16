@@ -44,6 +44,8 @@ with it.
   `GET /v1` lists the scopes (`push`, `compact`, `assets`, `inbox`, `site`, `events`, `admin`).
   Areas: `bundles`, `packs`, `objects`, `meta`, `names/<branch>/<Name>`, `headlog`, `files/<folder>`.
   Writes need `Authorization: Bearer deus_<id>_<secret>`.
+- **Queue `deus-live`**: a pack index upload sends `{ project }`; the Worker's `queue` handler draws that project's
+  head explorer (D192).
 - **Explorer**: `/@owner/project/` serves it; `/@dxos/toolchain/Cli.dispatch` opens that definition (D184).
 - **Toolchain codebase remote**: `deus remote add origin https://deus.dmytro-a80.workers.dev/v1/toolchain`.
 

@@ -227,5 +227,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 217 | 10-15 18:30 | 10m 00s | this commit | Deletes keep a copy: the Worker moves deleted bundles and assets to the trash, directory remotes too, and `deus compact` deletes only once the remote lists every stratum it wrote; the deployed Worker checked live for the 426 epoch gate and the head log (D191, task 91357967) |
 | 218 | 10-15 19:40 | 1h 10m | this commit | Live explorer (D192): the Worker draws every page from the hosted codebase with the explorer's own DEUS code compiled to JS, serves the app itself, warms each pushed head; `deus push` to the Worker no longer publishes the site; `deus add` reads directories recursively; `@dxos/base` and `@dxos/examples` build from the toolchain with identical hashes |
 | 219 | 10-16 06:10 | 1h 00m | this commit | Live-site test suite in DEUS (D193): `deus test LiveSite --integration`, 13 tests over HTTP and in headless Chromium; `Json.parse`; builtin pages had no source on the live site (fixed); concurrent requests share one build |
+| 220 | 10-16 07:00 | 40m 00s | this commit | A queue consumer (`deus-live`) draws each pushed head's explorer: the index is stored about a minute after a push, so the first visitor gets it in under a second (task dc0e1ae8); LiveSite 13/13 |
 
-Total from stage 1 to stage 219: 64h 56m.
+Total from stage 1 to stage 220: 64h 56m.
