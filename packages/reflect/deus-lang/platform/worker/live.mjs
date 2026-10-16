@@ -266,6 +266,7 @@ const page = (body) =>
 const render = async (env, ctx, project, causal, path) => {
   const files = filesAt(env.BUCKET, project, causal);
   await warm(files);
+  files.metas = await metasAt(files);
   const before = files.texts.size;
   try {
     return await draw(env, files, project, causal, path);
@@ -365,6 +366,105 @@ const dropMetadata = (texts) => {
   }
 };
 
+/**
+ * The items of a list's text, each as its own text, strings with their quotes:
+ * `(m "a" (meta (doc "x")))` gives `m`, `"a"` and `(meta (doc "x"))`.
+ */
+const itemsOf = (text) => {
+  const items = [];
+  let depth = 0;
+  let start = -1;
+  const close = (end) => {
+    if (start >= 0) {
+      items.push(text.slice(start, end));
+      start = -1;
+    }
+  };
+  for (let at = 0; at < text.length; at++) {
+    const char = text[at];
+    if (depth === 1 && start < 0 && !/[\s)]/.test(char)) {
+      start = at;
+    }
+    if (char === '"') {
+      for (at++; at < text.length && text[at] !== '"'; at++) {
+        if (text[at] === '\\') {
+          at++;
+        }
+      }
+      if (depth === 1) {
+        close(at + 1);
+      }
+    } else if (char === '(') {
+      depth++;
+    } else if (char === ')') {
+      depth--;
+      if (depth === 1) {
+        close(at + 1);
+      } else if (depth === 0) {
+        close(at);
+      }
+    } else if (depth === 1 && /\s/.test(char)) {
+      close(at);
+    }
+  }
+  return items;
+};
+
+/** Metadata snapshots read in this isolate, by `<project>@<causal>`; a few heads are drawn at a time. */
+const metasByCausal = new Map();
+const METAS_KEPT = 4;
+
+/**
+ * The metadata of the causal's own snapshot (D134), as a Map from a definition's hash to its metadata's
+ * text, or null for a history from before snapshots. The snapshot is objects, so it is right for that
+ * causal whenever it is read, unlike the bucket's latest copy of each definition's metadata.
+ */
+const metasAt = async (files) => {
+  const cacheKey = `${files.project}@${files.causal}`;
+  if (metasByCausal.has(cacheKey)) {
+    return metasByCausal.get(cacheKey);
+  }
+  await fetchAll(files, [`o${files.causal}`]);
+  const node = files.texts.get(`o${files.causal}`);
+  const root = node
+    ? parseSexp(node)
+        .slice(1)
+        .find((item) => Array.isArray(item) && item[0] === 'metas')?.[1]?.s
+    : undefined;
+  let metas = null;
+  if (root) {
+    metas = new Map();
+    // Two levels of sixteen-way nodes over leaves (`Codebase.putMetas`).
+    for (let level = [root]; level.length > 0;) {
+      await fetchAll(
+        files,
+        level.map((hash) => `o${hash}`),
+      );
+      const next = [];
+      for (const hash of level) {
+        const text = files.texts.get(`o${hash}`);
+        if (!text) {
+          throw new HttpError(503, `the metadata snapshot #${hash.slice(0, 10)} is in no pack yet`);
+        }
+        for (const item of itemsOf(text).slice(1)) {
+          const [kind, ...rest] = itemsOf(item);
+          if (kind === 'sub') {
+            next.push(JSON.parse(rest[1]));
+          } else if (kind === 'm') {
+            metas.set(JSON.parse(rest[0]), rest[1]);
+          }
+        }
+      }
+      level = next;
+    }
+  }
+  metasByCausal.set(cacheKey, metas);
+  if (metasByCausal.size > METAS_KEPT) {
+    metasByCausal.delete(metasByCausal.keys().next().value);
+  }
+  return metas;
+};
+
 /** The pack key a codebase path reads, or undefined for a path that is not an object or metadata. */
 const keyOf = (path) => {
   // Builtins are named `#Bool`, so their directory is `#B`, not two hex digits.
@@ -387,6 +487,11 @@ const provider = (files) => ({
     }
     if (path === `${ROOT}/project`) {
       return `(project (iri ${JSON.stringify(projectIri(files.project))}))\n`;
+    }
+    const meta = files.metas ? /^\/codebase\/meta\/([^/]+)$/.exec(path) : null;
+    if (meta) {
+      // A definition the snapshot does not name has no metadata at this causal.
+      return files.metas.get(meta[1]);
     }
     const key = keyOf(path);
     if (key === undefined) {
@@ -499,7 +604,8 @@ const prefetchNamespace = async (files) => {
   }
   const snapshots = ['tasks', 'comments'].map(field).filter(Boolean);
   await fetchAll(files, [
-    ...[...hashes].flatMap((hash) => [`o${hash}`, `m${hash}`]),
+    // With a metadata snapshot (`metasAt`), metadata is read from it instead.
+    ...[...hashes].flatMap((hash) => (files.metas ? [`o${hash}`] : [`o${hash}`, `m${hash}`])),
     ...snapshots.map((hash) => `o${hash}`),
   ]);
   // `Tasks.current` and `Comments.current` stop at the first item they lack, so every item is read now.

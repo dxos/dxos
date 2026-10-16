@@ -271,6 +271,26 @@ describe('live explorer (D192)', () => {
       await Promise.all(stored);
       expect(await liveHead()).toEqual({ branch: 'main', causal: head });
       expect(await appPage()).toContain(`/live/${head}"`);
+
+      // A change to a doc comment alone changes metadata, not the definition; the next head shows the new doc.
+      deus(
+        'update',
+        file('area.deus', '/-- The area a square covers. -/\ndef area (side : Int) : Int := side * side\n'),
+        ...c,
+      );
+      expect(deus('push', ...c).code).toBe(0);
+      const documented = readFileSync(join(scratch, 'codebase', 'branches', 'main'), 'utf8').trim();
+      expect(documented).not.toBe(head);
+      writeFileSync(join(bucket, 'toolchain', 'heads', 'main'), documented);
+      // A fresh binding, as an isolate that has not cached the pack index from before this push.
+      env.BUCKET = directoryBucket(bucket);
+      await (
+        await fetchPage(documented, area.hash)
+      ).settled;
+      const redrawn = JSON.parse(
+        readFileSync(join(bucket, 'toolchain', 'live', documented, 'def', `${area.hash}.json`), 'utf8'),
+      );
+      expect(redrawn.doc).toContain('The area a square covers.');
     },
   );
 
