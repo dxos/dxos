@@ -51,7 +51,10 @@ export type Env = {
   BUCKET?: Bucket;
   DB?: Database;
   /** `deus-live`: projects whose pushed head the queue consumer draws (D192). */
-  LIVE_QUEUE?: { send(body: { project: string }): Promise<void> };
+  LIVE_QUEUE?: {
+    send(body: { project: string }): Promise<void>;
+    sendBatch?(messages: { body: { project: string; causal: string; from: number; count: number } }[]): Promise<void>;
+  };
 };
 
 export type InboxAsset = { hash: string; type: string; name: string };
@@ -71,6 +74,11 @@ export type InboxRequest = {
 };
 
 declare const worker: {
+  queue(
+    batch: { messages: { body: object; ack(): void }[] },
+    env: Env,
+    ctx: { waitUntil(promise: Promise<unknown>): void },
+  ): Promise<void>;
   fetch(request: Request, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }): Promise<Response>;
 };
 export default worker;

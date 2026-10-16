@@ -75,11 +75,47 @@ export const live = async (request, env, ctx, project, rest) => {
 export const warmLive = async (env, ctx, project) => {
   try {
     const head = await readHead(env, project, 'main');
-    if (head) {
-      await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'index.json']);
+    if (!head) {
+      return;
+    }
+    const response = await live(new Request('https://warm.invalid/'), env, ctx, project, [head.causal, 'index.json']);
+    // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
+    const names = JSON.parse(await response.text()).names ?? [];
+    const chunks = [];
+    for (let from = 0; from < names.length; from += PAGES_PER_CHUNK) {
+      chunks.push({ body: { project, causal: head.causal, from, count: PAGES_PER_CHUNK } });
+    }
+    if (env.LIVE_QUEUE?.sendBatch && chunks.length > 0) {
+      for (let at = 0; at < chunks.length; at += 100) {
+        await env.LIVE_QUEUE.sendBatch(chunks.slice(at, at + 100));
+      }
     }
   } catch (error) {
     console.error('warming the live explorer failed', error);
+  }
+};
+
+/** Definition pages one queue message draws: well inside a consumer's CPU time once the site is built. */
+const PAGES_PER_CHUNK = 200;
+
+/** Draws the definition pages `from` to `from + count` of a causal's index, skipping those already stored. */
+export const warmPages = async (env, ctx, { project, causal, from, count }) => {
+  try {
+    const index = await env.BUCKET.get(`${project}/live/${causal}/index.json`);
+    if (!index) {
+      return;
+    }
+    const names = (JSON.parse(await index.text()).names ?? []).slice(from, from + count);
+    const pages = [
+      ...new Set(names.map((entry) => (entry.hash.startsWith('#') ? `_${entry.hash.slice(1)}` : entry.hash))),
+    ];
+    for (const page of pages) {
+      if (!(await env.BUCKET.head(`${project}/live/${causal}/def/${page}.json`))) {
+        await live(new Request('https://warm.invalid/'), env, ctx, project, [causal, 'def', `${page}.json`]);
+      }
+    }
+  } catch (error) {
+    console.error('drawing live explorer pages failed', error);
   }
 };
 

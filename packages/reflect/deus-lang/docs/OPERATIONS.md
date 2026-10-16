@@ -16,6 +16,18 @@ Update it when a fact changes. Never write a credential's value here, only where
 5. Flows that prevent data loss are core (D188).
 6. Deploying to the DEUS Cloudflare account (the one the Worker runs on) is allowed.
 
+## Safeguards against stopping (Dmytro, 2026-10-16)
+
+An agent here must never end a turn with work left. Three independent mechanisms:
+
+1. **Autonomous run**: `bash .claude/scripts/autonomous.sh set '<task>'` then `dod set '<checklist>'`. The Stop hook
+   (`.claude/hooks/autonomous-stop.sh`) blocks ending a turn up to three times per user turn while the run is on.
+   End it only with `autonomous.sh stop 'done: …'` after the definition of done is met, then start the next run.
+2. **30-minute reminder**: a `CronCreate` job (`13,43 * * * *`) re-reads this file and the user log. It lives only in
+   the session; recreate it after a restart (`CronList` shows none).
+3. **Hourly watchdog**: the server-side scheduled task "DEUS keep-working watchdog" (`trig_015N9KHteiPmwmnVtESon6Jw`)
+   fires into this session every hour even after a restart, and restarts 1 and 2 when they are gone.
+
 ## Credentials
 
 | What                                      | Where                                                                  | Reaches                                                                                                                                |

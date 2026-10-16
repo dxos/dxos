@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
@@ -123,6 +123,44 @@ describe('live explorer (D192)', () => {
       expect(readdirSync(join(bucket, 'toolchain', 'live'))).toContain('files.json.gz');
       const change = await get(`/v1/toolchain/live/${head}/change/${head}.json`);
       expect(change.message).toBe(site(`change/${head}.json`).message);
+    },
+  );
+
+  test(
+    'a pushed head is drawn by the queue: its index, then every definition page',
+    { timeout: 300_000 },
+    async ({ expect }) => {
+      const bucket = join(scratch, 'bucket');
+      const head = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
+      rmSync(join(bucket, 'toolchain', 'live', head), { recursive: true, force: true });
+      const sent: { body: { project: string; causal?: string } }[] = [];
+      const env = {
+        BUCKET: directoryBucket(bucket),
+        PREFIX: 'toolchain',
+        LIVE_QUEUE: {
+          send: async (body: { project: string }) => void sent.push({ body }),
+          sendBatch: async (messages: { body: { project: string; causal: string } }[]) => void sent.push(...messages),
+        },
+      } as Env;
+      const deliver = async (body: object) => {
+        const pending: Promise<unknown>[] = [];
+        let acked = false;
+        await worker.queue({ messages: [{ body, ack: () => (acked = true) }] }, env, {
+          waitUntil: (promise: Promise<unknown>) => pending.push(promise),
+        });
+        await Promise.all(pending);
+        expect(acked).toBe(true);
+      };
+      await deliver({ project: 'toolchain' });
+      const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', head, 'index.json'), 'utf8'));
+      const chunks = sent.filter((message) => message.body.causal === head);
+      expect(chunks.length).toBe(Math.ceil(index.names.length / 200));
+      for (const chunk of chunks) {
+        await deliver(chunk.body);
+      }
+      const drawn = readdirSync(join(bucket, 'toolchain', 'live', head, 'def'));
+      const pages = new Set(index.names.map((entry: { hash: string }) => `${entry.hash.replace(/^#/, '_')}.json`));
+      expect(new Set(drawn)).toEqual(pages);
     },
   );
 

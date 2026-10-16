@@ -647,3 +647,15 @@ and?
 ---
 
 the new explorer is unstable. create a test suite against live site in deus -- integration tests can access live resources, or you might have qa pipelines to test manually
+
+---
+
+why did yoi stop?
+
+---
+
+setup enough safeguards (hooks, alarms, watchers) so this doesnt happen again
+
+---
+
+and codebase still slow https://deus.dmytro-a80.workers.dev/@dxos/base/
