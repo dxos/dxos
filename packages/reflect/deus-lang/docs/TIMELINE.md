@@ -231,5 +231,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 221 | 10-16 07:40 | 25m 00s | this commit | Time types (D194): `Duration`, `Instant`, `Clock` in `deus/time.deus`, 32-bit safe to year 9999; `Alarm.set` takes a `Duration`; field accessors show their note on the explorer |
 | 222 | 10-16 08:25 | 15m 00s | this commit | `deus link` prints explorer path links (task 99b72271); push measured at 9 s (task 672d80ad closed); LiveSite 14/14 after deploy 0e960d64 |
 | 223 | 10-16 08:55 | 30m 00s | this commit | First visit after a push is fast (D195): the last drawn head and its pages stand in until the pushed head is drawn (overview 31 s → 1.3 s, definition 7.8 s → 0.9 s); the smoke script waits for the real overview; package tsc clean |
+| 224 | 10-16 09:20 | 40m 00s | this commit | QA flows run against a live server (`deus mdl --base`); Workers KV caches heads (60 s) and pages (7 days), every live request now at the 0.2 s round trip (D197); usability probe with a Haiku visitor |
+| 225 | 10-16 10:00 | 45m 00s | this commit | Guided explorer (D196): areas from the feature map, spec documents as pages with requirement evidence, namespaces grouped by area; metadata read from each head's snapshot, so prose edits reach the hosted explorer |
 
-Total from stage 1 to stage 223: 66h 06m.
+Total from stage 1 to stage 225: 67h 31m.

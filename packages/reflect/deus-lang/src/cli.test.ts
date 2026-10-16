@@ -776,6 +776,39 @@ describe('deus CLI', () => {
     },
   );
 
+  test(
+    'a field is picked by its receiver once the definition is inferred, in any compile order',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'fields')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const source = [
+        'structure Box where',
+        '  tasks : Int',
+        '',
+        'structure Crate where',
+        '  tasks : Text',
+        '',
+        '-- The lambda meets `a.tasks` before its use fixes `a` to a Box (task 51938ccc).',
+        'def sameTasks (xs : List Box) : Int :=',
+        '  let same := fun a b => a.tasks == b.tasks',
+        '  List.length (List.filter (fun x => same x x) xs)',
+        '',
+        'test pickedLate := sameTasks [Box.mk 1, Box.mk 2] == 2',
+        '',
+      ].join('\n');
+      expect(deus('add', file('fields.deus', source), ...c).code).toBe(0);
+      expect(JSON.parse(deus('test', 'pickedLate', '--json', ...c).stdout)).toMatchObject([
+        { name: 'pickedLate', status: 'pass' },
+      ]);
+      // A receiver nothing ever fixes is still ambiguous, and says how to resolve it.
+      const ambiguous = deus('add', file('ambiguous.deus', 'def tasksOf x := x.tasks\n'), ...c);
+      expect(ambiguous.code).not.toBe(0);
+      expect(ambiguous.stderr).toContain('ambiguous field tasks');
+    },
+  );
+
   test('link prints the hosted explorer page of definitions and namespaces', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'links')];
     deus('init', '--empty', ...c);

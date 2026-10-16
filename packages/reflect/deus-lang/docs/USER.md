@@ -684,3 +684,9 @@ first-time expirience is harsh:
 ---
 
 3. idea for testing: having small subagent like haiku explore the site without prompting and then you see how well it understood and how straightwforward the path was
+
+---
+
+I liked this being very top to convey the scale
+
+(with a screenshot of the overview's count tiles — types, abilities, terms, tests, theorems, specs, features, open tasks — and the kind legend, which D196 had moved below the namespaces)

@@ -142,6 +142,17 @@ test storedPagesAnswerQuickly :=
   again.httpStatus == 200 && again.elapsed < 5000
 
 @[integration]
+test specDocumentsReadAsDocuments :=
+  -- D196: a spec document is a page of prose and blocks, and the feature map behind the overview is one.
+  let doc := jsonAt (liveApi () ++ "/doc/Address.Spec.json")
+  let blocks := Json.items (Json.get doc "blocks")
+  let map := jsonAt (liveApi () ++ "/doc/Toolchain.Features.json")
+  Text.contains "# Addresses" (Json.text (Json.get doc "text")) &&
+    List.any (fun b => Json.text (Json.get b "type") == "req" && not (Text.isEmpty (Json.text (Json.get (Json.get b "props") "by")))) blocks &&
+    Text.contains "DEUS is a programming language" (Json.text (Json.get map "text")) &&
+    (fetchPath (liveApi () ++ "/doc/Nothing.Spec.json") []).httpStatus == 404
+
+@[integration]
 test unknownPagesAreNotFound :=
   let base := liveApi ()
   (fetchPath (base ++ "/def/nothing.json") []).httpStatus == 404 && (fetchPath (base ++ "/elsewhere") []).httpStatus == 404 && (fetchPath "/v1/@nobody/nothing/live/main" []).httpStatus == 404

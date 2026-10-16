@@ -345,6 +345,18 @@ structure TypeEnv (r : Effect) where
   prims : Text -> {Throw Text | r} Option Sexp
   -- The accessor chosen for each `(pick …)` key, which `Resolve.unpick` writes into the Core (R-8).
   picks : Ref (Map Text Sexp)
+  -- Field accesses whose receiver's type was still unknown, picked once the group is inferred (`settlePicks`).
+  deferred : Ref (List DeferredPick)
+
+/-- A field access met before its receiver's type was known: what `pickField` needs, and the type its result was given. -/
+structure DeferredPick where
+  pickedField : Text
+  pickKey : Text
+  pickOwners : Text
+  pickCandidates : List Sexp
+  pickReceiver : TType
+  pickResult : TType
+  pickRow : TRow
 
 /-- A definition's type: in this batch (monomorphic while its group is inferred), stored, or unknown. -/
 def globalType (u : Unifier) (env : TypeEnv {r}) (h : Text) : TType :=
@@ -426,8 +438,14 @@ def infer (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (locals : List TType) (ro
     TType.fn a inner result
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "pick" :: Sexp.str field :: Sexp.str key :: Sexp.str owners :: candidates) :: receiver :: rest) =>
     let tr := infer u env receiver locals row
-    let accessor := pickField u env field key owners candidates tr
-    let tf := call u (infer u env accessor locals row) tr row
+    let tf := match resolve u tr with
+      | TType.con _ _ => call u (infer u env (pickField u env field key owners candidates tr) locals row) tr row
+      | _ =>
+        -- The receiver's type may be fixed later in the group (`fun c => c.tasks` passed where a
+        -- `Causal` goes), so the field is picked then, whatever order the definitions compile in.
+        let result := freshType u
+        Ref.set env.deferred (DeferredPick.mk field key owners candidates tr result row :: Ref.get env.deferred)
+        result
     List.foldl (fun acc arg => call u acc (infer u env arg locals row) row) tf rest
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
     let callee := match f with
@@ -532,6 +550,30 @@ def pickField (u : Unifier) (env : TypeEnv {r}) (field : Text) (key : Text) (own
       c
     | _ => throw ("ambiguous field " ++ field ++ ": " ++ owners ++ ", and " ++ display u receiver ++ " is none of them")
   | _ => throw ("ambiguous field " ++ field ++ ": " ++ owners ++ " (annotate the receiver's type)")
+
+/--
+  Picks the deferred field accesses whose receivers now have a type, which can fix more receivers, until
+  none is left; one whose receiver is still unknown is the ambiguity `pickField` reports.
+-/
+def settlePicks (u : Unifier) (env : TypeEnv {r}) : {Throw Text | r} Unit :=
+  let known := fun (d : DeferredPick) =>
+    match resolve u d.pickReceiver with
+    | TType.con _ _ => true
+    | _ => false
+  let settle := fun (d : DeferredPick) =>
+    let accessor := pickField u env d.pickedField d.pickKey d.pickOwners d.pickCandidates d.pickReceiver
+    unify u d.pickResult (call u (infer u env accessor [] d.pickRow) d.pickReceiver d.pickRow)
+  let rec go (u2 : Unit) :=
+    let pending := List.reverse (Ref.get env.deferred)
+    if List.isEmpty pending then ()
+    else
+      let (ready, waiting) := List.partition known pending
+      Ref.set env.deferred (List.reverse waiting)
+      if List.isEmpty ready then List.forEach waiting settle
+      else
+        List.forEach ready settle
+        go ()
+  go ()
 
 /-- Checks a term against an expected type; a lambda takes its parameter and row from it. -/
 def checkAgainst (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (expected : TType) (locals : List TType) (row : TRow) : {Throw Text | r} Unit :=

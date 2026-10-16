@@ -56,9 +56,11 @@ with it.
   `GET /v1` lists the scopes (`push`, `compact`, `assets`, `inbox`, `site`, `events`, `admin`).
   Areas: `bundles`, `packs`, `objects`, `meta`, `names/<branch>/<Name>`, `headlog`, `files/<folder>`.
   Writes need `Authorization: Bearer deus_<id>_<secret>`.
+- **KV `deus-cache`** (`084c8df5e4bd4e8ab9b79e25b6d240fc`, binding `CACHE`): shown heads (`head:<project>:<branch>`, 60 s)
+  and drawn explorer pages (their bucket key, 7 days), read through (D197).
 - **Queue `deus-live`**: a pack index upload sends `{ project }`; the Worker's `queue` handler draws that project's
   head explorer (D192).
-- **Explorer**: `/@owner/project/` serves it; `/@dxos/toolchain/Cli.dispatch` opens that definition (D184).
+- **Explorer**: `/@owner/project/` serves it (D196: overview by area, spec documents as `#s:<Doc>` pages); `/@dxos/toolchain/Cli.dispatch` opens that definition (D184).
 - **Toolchain codebase remote**: `deus remote add origin https://deus.dmytro-a80.workers.dev/v1/toolchain`.
 
 ## Working copy
@@ -67,6 +69,11 @@ with it.
 `deus project init https://dxos.org/deus/toolchain`, `deus remote add origin …/v1/toolchain`, `deus pull origin`,
 `deus merge origin.main` (30 s). A push takes about 10 s; the Worker draws the explorer afterwards (D192).
 `~/.deus-2026-10-14` is this container's older local codebase, kept, not deleted.
+
+## Usability probe
+
+`node scripts/visit.mjs <url> [--click <text>]… [--shot f.png] [--scroll <css>]` shows a page as text. A Haiku
+agent given only that and the URL is the usability probe (Dmytro's idea); reports go to `docs/ux/`.
 
 ## Container setup
 
@@ -99,7 +106,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-16 09:00 UTC, version f8d82204 (D195: the last drawn head stands in after a push).
+2026-10-16 10:05 UTC, version 958f8a31 (D196: guided explorer; metadata from each head's snapshot).
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in
 about 6. Until the index is drawn, visitors see the head drawn last (D195; `live/shown/<branch>`, `live/drawn.json`).

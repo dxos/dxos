@@ -498,7 +498,7 @@ def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -
       Option.map (fun sig => ("@" ++ p.name, sig)) (Codebase.metaField (metaOf ("@" ++ p.name)) "sig")) members
     let groupSchemes := Ref.new (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) (Ref.get schemes) signed)
     let unsigned := Map.filter (fun key _ => not (Option.isSome (List.lookup key signed))) vars
-    let env := TypeEnv.mk objectOf metaOf (Ref.new unsigned) groupSchemes prims picks
+    let env := TypeEnv.mk objectOf metaOf (Ref.new unsigned) groupSchemes prims picks (Ref.new [])
     List.forEach members (fun p =>
       let key := "@" ++ p.name
       catch (fun _ =>
@@ -527,6 +527,9 @@ def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -
           Types.unify u t (Types.infer u env core [] (Types.freshRow u))
           if p.wrap == "test" then Types.unify u t Types.bool else ()) (fun e =>
           if warnOnly then Ref.set warnings ((p.name ++ ": " ++ e) :: Ref.get warnings) else throw (p.name ++ ": " ++ e)))
+    let names := Text.join ", " (List.map (fun p => p.name) members)
+    catch (fun _ => Types.settlePicks u env) (fun e =>
+      if warnOnly then Ref.set warnings ((names ++ ": " ++ e) :: Ref.get warnings) else throw (names ++ ": " ++ e))
     List.forEach members (fun p =>
       let key := "@" ++ p.name
       match Map.lookup key vars with

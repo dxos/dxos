@@ -925,7 +925,9 @@ const featuresCard = (key, maps) => {
 
 const verdictHtml = (def) => {
   if (!def.verdict) {
-    return def.kind === 'test' || def.kind === 'theorem' ? '<p class="verdict none">Not checked yet.</p>' : '';
+    return def.kind === 'test' || def.kind === 'theorem'
+      ? `<p class="verdict none">No result yet: results are kept where <code>deus ${def.kind === 'test' ? 'test' : 'check'} ${escape(def.name)}</code> ran, and none was pushed for this version.</p>`
+      : '';
   }
   const pass = def.verdict.match(/^\(pass "([^"]*)"\s*(\d+)?\)/);
   if (pass) {
@@ -955,6 +957,9 @@ const definitionCard = (key, def, events) => {
     actions: consoleButton(def),
     body:
       (def.doc ? `<div class="doc">${docHtml(def.doc, namespace)}</div>` : '') +
+      (specOf(def.name)
+        ? `<p class="aliases"><span class="label">Specified in</span>${docLink(specOf(def.name))}</p>`
+        : '') +
       verdictHtml(def) +
       `<pre class="source" data-namespace="${escape(namespace)}" data-self="${escape(def.hash)}">${sourceHtml(def)}</pre>` +
       (def.signature && def.kind !== 'type' && def.kind !== 'ability'
@@ -1352,11 +1357,28 @@ const linkSource = (root) => {
 const specDocuments = () =>
   [...new Set(index.names.filter((entry) => entry.kind === 'spec').map((entry) => namespaceOf(entry.name)))].sort();
 
-const isDocument = (name) => index.names.some((entry) => entry.kind === 'spec' && namespaceOf(entry.name) === name);
+/** The spec documents as a set, built once: comments and listings ask about every reference they show. */
+let documentNames;
+const isDocument = (name) => (documentNames ??= new Set(specDocuments())).has(name);
 
 /** A spec document's link; `anchor` names one of its blocks (`R-3`). */
 const docLink = (name, label = name, anchor = '') =>
   `<a class="ref doc-ref" data-open="s:${escape(name)}"${anchor ? ` data-anchor="${escape(anchor)}"` : ''}>${escape(label)}</a>`;
+
+/** The spec document a definition belongs to: the one its name is under, else the nearest `<Namespace>.Spec` above it. */
+const specOf = (name) => {
+  const parts = name.split('.');
+  for (let length = parts.length - 1; length > 0; length--) {
+    const prefix = parts.slice(0, length).join('.');
+    if (isDocument(prefix)) {
+      return prefix;
+    }
+    if (isDocument(`${prefix}.Spec`)) {
+      return `${prefix}.Spec`;
+    }
+  }
+  return undefined;
+};
 
 /** A spec document's page, `doc/<Doc>.json`. */
 const loadDoc = (name) => load(`doc/${name}.json`);
@@ -1615,7 +1637,11 @@ const evidenceHtml = (names, namespace) =>
     .map((name) => {
       const entry = resolve(name, namespace) ?? resolve(lastSegment(name), namespace);
       return entry
-        ? `<span class="evidence">${icon(entry.kind)}${defLink(entry.name, entry.hash, name)}${statusMark(entry.status)}</span>`
+        ? `<span class="evidence">${icon(entry.kind)}${defLink(entry.name, entry.hash, name)}${
+            entry.status
+              ? statusMark(entry.status)
+              : '<span class="muted" title="No result was pushed for this version">no result yet</span>'
+          }</span>`
         : `<span class="evidence missing" title="No definition by this name">${escape(name)}</span>`;
     })
     .join('');
@@ -1673,7 +1699,7 @@ const docCard = async (key, name) => {
   const proved = requirements.filter((block) => block.props?.by).length;
   const tests = index.names.filter((entry) => namespaceOf(entry.name) === name && entry.kind === 'test');
   const meta = [
-    requirements.length > 0 ? `${proved} of ${requirements.length} requirements proved` : '',
+    requirements.length > 0 ? `${proved} of ${requirements.length} requirements name their tests` : '',
     counted('api') > 0 ? `${counted('api')} api` : '',
     tests.length > 0 ? `${tests.length} tests` : '',
   ]
@@ -1793,6 +1819,18 @@ const homeHtml = () => {
     `<header class="home-header"><h1>${escape(addressOf(meta.project))}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
     } · ${meta.definitions} definitions · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
+    (checked.length > 0
+      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
+      : '') +
+    (meta.features > 0
+      ? `<li><a data-open="k:features" title="What the product is, feature by feature"><span class="icon k-feature">◇</span><b>${meta.features}</b><span>features</span></a></li>`
+      : '') +
+    (meta.events > 0
+      ? `<li><a data-open="k:events" title="What the analytics store recorded"><span class="icon k-event">◆</span><b>${meta.events}</b><span>events</span></a></li>`
+      : '') +
+    `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
+    legendHtml() +
     '<div class="home-intro" data-home-intro></div>' +
     (areas.length > 0
       ? section('Start here', areas.length, `<div class="areas">${areas.map(areaHtml).join('')}</div>`)
@@ -1806,18 +1844,6 @@ const homeHtml = () => {
         )
       : '') +
     section('Namespaces', namespaces.length, grouped) +
-    legendHtml() +
-    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
-    (checked.length > 0
-      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
-      : '') +
-    (meta.features > 0
-      ? `<li><a data-open="k:features" title="What the product is, feature by feature"><span class="icon k-feature">◇</span><b>${meta.features}</b><span>features</span></a></li>`
-      : '') +
-    (meta.events > 0
-      ? `<li><a data-open="k:events" title="What the analytics store recorded"><span class="icon k-event">◆</span><b>${meta.events}</b><span>events</span></a></li>`
-      : '') +
-    `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
     `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
     `<div>${section(
       'Open tasks',
@@ -2121,7 +2147,8 @@ const renderNow = async () => {
   const focus = keys.includes(ui.focus) ? ui.focus : keys[0];
   setFocus(focus, view === 'code' && focus !== undefined);
   showAnchor();
-  document.title = focus ? `${titleOf(focus)} · ${index.meta.project}` : index.meta.project;
+  const project = addressOf(index.meta.project);
+  document.title = focus ? `${titleOf(focus)} · ${project}` : project;
 };
 
 const titleOf = (key) => {

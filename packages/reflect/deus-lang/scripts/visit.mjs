@@ -46,11 +46,26 @@ const browser = await chromium.launch({
 });
 try {
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+  // The explorer draws a card after fetching its page, so the text is read once every card the address names is drawn.
+  const settled = () =>
+    page
+      .waitForFunction(
+        () => {
+          const keys = decodeURIComponent(location.hash.slice(1))
+            .split(',')
+            .filter((key) => /^[a-z]:./.test(key) && !key.startsWith('v:'));
+          return keys.every((key) => document.querySelector(`.card[data-key="${CSS.escape(key)}"]`));
+        },
+        null,
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
   await page.goto(url, { waitUntil: 'networkidle', timeout: 120_000 });
+  await settled();
   for (const text of clicks) {
     await page.getByText(text, { exact: true }).first().click({ timeout: 10_000 });
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
+    await settled();
   }
   if (scroll) {
     await page.locator(scroll).first().scrollIntoViewIfNeeded();
