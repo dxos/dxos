@@ -126,13 +126,19 @@ about 6. Until the index is drawn, visitors see the head drawn last (D195; `live
 - Drill: `curl -X POST -H "cf-webhook-auth: $WEBHOOK_SECRET" "https://deus-guard.dmytro-a80.workers.dev/drill?script=<a canary>"`;
   `GET /status` with the same header lists every Worker and whether its route is on. Never drill `deus`.
 
-## Open state (2026-10-15)
+## Open state (2026-10-16 20:45 UTC)
 
 - Projects on the Worker: `@dxos/base`, `@dxos/toolchain` (mounts base), `@dxos/examples` (mounts base) and `@dxos/web` (mounts base
   and toolchain; D206, D211). The toolchain is developed in `~/.deus`. To change a library: pull it into a scratch codebase, change it,
   push it, then `deus lib install <name> <that codebase>` in each project that mounts it; the upgrade propagates to dependents.
   `sync-deus.py` writes `lib.base.X` into deus/ as `X`. Web's code is `platform/js/` and `examples/` in git; update it into a pull of
   `@dxos/web`, not into the toolchain.
+- Edit the toolchain codebase-first: `deus update deus/<file>.deus` into `~/.deus`, then `scripts/sync-deus.py`, which
+  refuses to overwrite `deus/` edits the codebase lacks (D215). A change to `deus/cgen.deus`'s C runtime reaches
+  the native CLI only from the seed after it, since a build emits the runtime of the compiler running it.
+- Waiting on Dmytro: Basin (task c5955f97, creating Cloudflare resources), the inbox Worker secrets (729ad2b4),
+  and whether CI's Check workflow installs pyarrow, DuckDB and pyiceberg for `src/analytics-readers.test.ts`
+  (1ad89782). Without that Python, the test skips; `DEUS_PYTHON` names an interpreter that has them.
 - Its handoff names git commit `dcc624f0`, which is not on `origin/dm/agent-13-oct-x8ehi8-0y35ai` (head
   `cd8ee7ce`, 13:32 UTC). Find where it went before relying on it.
 - The coordinator session is archived. It was waiting on: where the explorer is published on R2, a go-ahead
