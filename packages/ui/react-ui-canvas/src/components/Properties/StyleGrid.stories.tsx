@@ -36,17 +36,19 @@ const DefaultStory = ({ indeterminate, readonly, theme: initialTheme }: StoryArg
           themeGrid={look.background.grid}
           onThemeChange={setTheme}
         />
-        <StyleGrid
-          look={look}
-          hue={hue}
-          tone={tone}
-          indeterminate={indeterminate}
-          readonly={readonly}
-          onValueChange={(choice) => {
-            setHue(choice.hue);
-            setTone(choice.tone);
-          }}
-        />
+        <div className='p-2'>
+          <StyleGrid
+            look={look}
+            hue={hue}
+            tone={tone}
+            indeterminate={indeterminate}
+            readonly={readonly}
+            onValueChange={(choice) => {
+              setHue(choice.hue);
+              setTone(choice.tone);
+            }}
+          />
+        </div>
       </div>
       <JsonHighlighter data={{ hue, tone, variant: styleVariant(look.styleSet, tone).name }} />
     </div>
