@@ -155,29 +155,29 @@ const CHAPTERS: readonly Scene[] = [
   // The first two chapters share one stage: the monolithic agent's parts fade in over the running silos.
   {
     title: 'The Silo Problem',
-    caption: 'Users rent their data split across multiple vendors.',
+    caption: 'Users rent their own data—split across multiple vendors.',
     spec: MONOLITH,
     options: APP_ACTIVITY,
     revealed: false,
     // Grid lines for the silos, dots once the agent arrives, and a plain field from ECHO on.
     grid: 'lines',
     stage: 'silos',
-    duration: 12,
+    duration: 10,
   },
   {
     title: 'Monolithic Agents',
-    caption: 'Users grant unrestricted access to their data.',
+    caption: 'Users grant agent unrestricted access to their data.',
     spec: MONOLITH,
     options: { ...APP_ACTIVITY, warmup: 8 },
     grid: 'dots',
     stage: 'silos',
-    duration: 12,
+    duration: 10,
   },
   // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then extends past
   // the view on both sides.
   {
-    title: 'Graph Database',
-    caption: 'Data is organized by context.',
+    title: 'ECHO Graph Database',
+    caption: 'Data is organized and indexed by context.',
     spec: APPS,
     // The apps open already holding content, so they are writing and syncing from the first frame.
     options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
@@ -185,27 +185,27 @@ const CHAPTERS: readonly Scene[] = [
     // From here on the background is plain, so the eye stays on ECHO.
     grid: 'none',
     stage: 'echo',
-    duration: 12,
+    duration: 10,
   },
   {
-    title: 'ECHO Spaces',
-    caption: 'ECHO enables users to partition data into secure workspaces.',
+    title: 'ECHO Hypergraph',
+    caption: 'Data is partitioned into secure workspaces.',
     spec: APPS,
     options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 12,
+    duration: 10,
   },
   {
-    title: 'Room to grow',
-    caption: 'DXOS becomes the Enterprise Operating System.',
+    title: 'Open and Extensible',
+    caption: 'DXOS is the Enterprise Operating System.',
     spec: EXTENDED,
     options: { ...APP_ACTIVITY, warmup: 16, prefill: true },
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 12,
+    duration: 20,
   },
 ];
 
