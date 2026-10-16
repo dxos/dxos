@@ -63,14 +63,16 @@ describe('undo', () => {
     if (!group) {
       return;
     }
-    const before = registry.get(store.scenes);
-    registry.set(store.scenes, { ...before, g: group.child });
+    registry.set(store.scenes, { ...registry.get(store.scenes), g: group.child });
     projection.apply({ kind: 'batch', intents: group.intents });
-    recordScenes(registry, atom, root, before);
+    recordScenes(registry, atom, root, { g: undefined });
+    // An edit to another scene after the step is not the step's to undo.
+    registry.set(store.scenes, { ...registry.get(store.scenes), other: { id: 'other', nodes: {}, links: {} } });
     expect(registry.get(projection.scene).nodes.g).toBeDefined();
 
     expect(undo(projection, registry, atom, root, store)).toBe(true);
     expect(registry.get(store.scenes).g).toBeUndefined();
+    expect(registry.get(store.scenes).other).toBeDefined();
     expect(registry.get(projection.scene).nodes['scene:r/a']).toBeDefined();
 
     expect(redo(projection, registry, atom, root, store)).toBe(true);

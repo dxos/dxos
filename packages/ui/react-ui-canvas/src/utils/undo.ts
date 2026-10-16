@@ -12,16 +12,23 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Projection } from '../model/projection.ts';
-import { type SceneMap, type SceneStore } from '../model/store.ts';
+import { type SceneStore } from '../model/store.ts';
+import { type Scene, type SceneId } from '../model/types.ts';
 
 /** Entries older than this are dropped rather than growing without bound. */
 export const UNDO_LIMIT = 100;
 
 /**
- * One undo step: the projection's snapshot from before it, and, for a step that also added or removed scenes (a
- * group into a new scene), the store's scenes from before it, so undo takes the new scene away and redo returns it.
+ * The scenes a step added or removed, each as it was before the step (`undefined`: it did not exist). Only those
+ * scenes, so undoing the step leaves edits to every other scene in place.
  */
-export type UndoEntry = { model: unknown; scenes?: SceneMap };
+export type ScenePatch = Readonly<Record<SceneId, Scene | undefined>>;
+
+/**
+ * One undo step: the projection's snapshot from before it, and, for a step that also added or removed scenes (a
+ * group into a new scene), those scenes from before it, so undo takes the new scene away and redo returns it.
+ */
+export type UndoEntry = { model: unknown; scenes?: ScenePatch };
 
 export type UndoState = {
   /** Which projection the snapshots belong to; a different one starts an empty log. */
@@ -59,12 +66,12 @@ export const withUndo = (
   },
 });
 
-/** Marks the step just recorded as one that also changed the store's scenes, which were `scenes` before it. */
+/** Marks the step just recorded as one that also added or removed the scenes of `scenes`, as they were before it. */
 export const recordScenes = (
   registry: Registry.AtomRegistry,
   atom: Atom.Writable<UndoState>,
   key: string,
-  scenes: SceneMap,
+  scenes: ScenePatch,
 ): void => {
   const state = stateFor(registry, atom, key);
   const last = state.past[state.past.length - 1];
@@ -80,10 +87,20 @@ const swap = (
   store: SceneStore | undefined,
   entry: UndoEntry,
 ): UndoEntry => {
-  const scenes = entry.scenes && store ? registry.get(store.scenes) : undefined;
+  const patch = entry.scenes;
+  const live = patch && store ? registry.get(store.scenes) : undefined;
+  const scenes = patch && live ? Object.fromEntries(Object.keys(patch).map((id) => [id, live[id]])) : undefined;
   const replaced: UndoEntry = { model: projection.snapshot(), ...(scenes ? { scenes } : {}) };
-  if (entry.scenes && store) {
-    registry.set(store.scenes, entry.scenes);
+  if (patch && live && store) {
+    const next: Record<SceneId, Scene> = { ...live };
+    for (const [id, scene] of Object.entries(patch)) {
+      if (scene) {
+        next[id] = scene;
+      } else {
+        delete next[id];
+      }
+    }
+    registry.set(store.scenes, next);
   }
   projection.restore(entry.model);
   return replaced;

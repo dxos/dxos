@@ -13,8 +13,10 @@ import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type ElementId, type Scene, type Size } from '../../model/types.ts';
 import { NOMINAL_ZOOM, fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
+import { visibleScene } from '../../utils/layers.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { toolForKey } from '../Palette/Palette.tsx';
+import { type CompoundActions } from './useCompoundActions.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneClipboard } from './useSceneClipboard.ts';
@@ -45,7 +47,8 @@ export type UseSceneKeysOptions = {
   onFit: () => void;
   /** The user moved the camera, which ends fit mode. */
   onExitFit: () => void;
-} & Pick<SceneCamera, 'animateTo'> &
+} & Pick<CompoundActions, 'canGroup' | 'canUngroup' | 'group' | 'ungroup'> &
+  Pick<SceneCamera, 'animateTo'> &
   Pick<SceneNavigation, 'drillIn' | 'drillOut' | 'goHistory'> &
   Pick<SceneSnap, 'major'> &
   Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &
@@ -76,6 +79,10 @@ export const useSceneKeys = ({
   onRedo,
   onFit,
   onExitFit,
+  canGroup,
+  canUngroup,
+  group,
+  ungroup,
   animateTo,
   drillIn,
   drillOut,
@@ -179,9 +186,25 @@ export const useSceneKeys = ({
           onRedo();
           event.preventDefault();
           break;
-        case 'selectAll':
-          select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+        case 'selectAll': {
+          // What is drawn: a hidden element selected unseen would go with a Delete.
+          const shown = visibleScene(scene);
+          select([...Object.keys(shown.nodes), ...Object.keys(shown.links)]);
           event.preventDefault();
+          break;
+        }
+        case 'group':
+          // The browser's own ⌘G finds the next match, so the chord is taken even when there is nothing to group.
+          event.preventDefault();
+          if (canGroup) {
+            group();
+          }
+          break;
+        case 'ungroup':
+          event.preventDefault();
+          if (canUngroup) {
+            ungroup();
+          }
           break;
         case 'snap':
           toggleSnap();
@@ -228,6 +251,10 @@ export const useSceneKeys = ({
       grid,
       major,
       setTool,
+      canGroup,
+      canUngroup,
+      group,
+      ungroup,
       toggleSnap,
       toggleGuides,
       toggleLattice,

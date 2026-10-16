@@ -70,7 +70,8 @@ import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
+// `hidden` too: a hidden element is not hit, so it could never be selected again to show it.
+const HIDDEN = ['id', 'type', 'z', 'hidden', 'ports', 'points', 'source', 'target'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea

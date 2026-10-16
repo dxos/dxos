@@ -6,14 +6,19 @@ import { type ExpectStatic, describe, test } from 'vitest';
 
 import { type Bounds, type Camera, type FrameNode } from '../model/types.ts';
 import {
+  ISOMETRIC_POSE,
   MAX_ZOOM,
   MIN_ZOOM,
+  cameraTransform,
   coverage,
   enterPortal,
   exitPortal,
   fitBounds,
+  isPresentation,
+  keepPose,
   portalFrame,
   sceneToScreen,
+  screenDeltaToScene,
   screenToScene,
   zoomAt,
 } from './camera.ts';
@@ -125,5 +130,41 @@ describe('camera', () => {
     // So a shape inside keeps its size through the drill-in: entering maps the zoom one to one.
     const camera = { x: 0, y: 0, zoom: 0.79 };
     expect(enterPortal(camera, portal, empty).zoom).toBeCloseTo(0.79);
+  });
+});
+
+describe('presentation camera', () => {
+  const viewport = { width: 800, height: 600 };
+
+  test('an unposed camera is the flat transform, and editable', ({ expect }) => {
+    const camera: Camera = { x: 10, y: 20, zoom: 2 };
+    expect(isPresentation(camera)).toBe(false);
+    expect(isPresentation({ ...camera, tilt: 0, spin: 0 })).toBe(false);
+    expect(cameraTransform(camera, viewport)).toBe('scale(2) translate(10px, 20px)');
+  });
+
+  test('a posed camera rotates about the viewport centre, in front of the flat transform', ({ expect }) => {
+    const camera: Camera = { x: 10, y: 20, zoom: 2, ...ISOMETRIC_POSE };
+    expect(isPresentation(camera)).toBe(true);
+    expect(cameraTransform(camera, viewport)).toBe(
+      'translate(400px, 300px) rotateX(55deg) rotateZ(-35deg) translate(-400px, -300px) scale(2) translate(10px, 20px)',
+    );
+  });
+
+  test('a screen delta inverts through zoom, tilt and spin', ({ expect }) => {
+    expect(screenDeltaToScene({ x: 0, y: 0, zoom: 2 }, { x: 10, y: 20 })).toEqual({ x: 5, y: 10 });
+    // Tilted 60°, the ground is foreshortened by half along y.
+    const tilted = screenDeltaToScene({ x: 0, y: 0, zoom: 1, tilt: 60 }, { x: 0, y: 10 });
+    expect(tilted.y).toBeCloseTo(20);
+    // Spun 90° clockwise, moving right on screen is moving up the scene.
+    const spun = screenDeltaToScene({ x: 0, y: 0, zoom: 1, spin: 90 }, { x: 10, y: 0 });
+    expect(spun.x).toBeCloseTo(0);
+    expect(spun.y).toBeCloseTo(-10);
+  });
+
+  test('a new camera without a pose keeps the current one; one with a pose sets it', ({ expect }) => {
+    const current: Camera = { x: 0, y: 0, zoom: 1, ...ISOMETRIC_POSE };
+    expect(keepPose(current, { x: 5, y: 5, zoom: 3 })).toEqual({ x: 5, y: 5, zoom: 3, ...ISOMETRIC_POSE });
+    expect(keepPose(current, { x: 5, y: 5, zoom: 3, tilt: 0, spin: 0 })).toMatchObject({ tilt: 0, spin: 0 });
   });
 });

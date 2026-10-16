@@ -43,7 +43,65 @@ export const panBy = (camera: Camera, delta: Point): Camera => ({
   y: camera.y + delta.y,
 });
 
-export const cameraTransform = (camera: Camera) => `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`;
+/** A camera's tilt and spin, in degrees; unset is zero (the top view). */
+export type CameraPose = { tilt: number; spin: number };
+
+/** Looking straight down: the editing view. */
+export const TOP_POSE: CameraPose = { tilt: 0, spin: 0 };
+
+/** The isometric presentation view. */
+export const ISOMETRIC_POSE: CameraPose = { tilt: 55, spin: -35 };
+
+export const cameraPose = (camera: Camera): CameraPose => ({ tilt: camera.tilt ?? 0, spin: camera.spin ?? 0 });
+
+/**
+ * Whether the camera is tilted or spun. `screenToScene` cannot invert that, so such a view is read-only: nothing that
+ * hit-tests the pointer (selection, drag, marquee, zoom at the pointer, auto-drill) runs while it is.
+ */
+export const isPresentation = (camera: Camera): boolean => {
+  const { tilt, spin } = cameraPose(camera);
+  return tilt !== 0 || spin !== 0;
+};
+
+/** `next` keeping `current`'s pose wherever it sets none, so a fit or zoom leaves a presentation view tilted. */
+export const keepPose = (current: Camera, next: Camera): Camera => {
+  const tilt = next.tilt ?? current.tilt;
+  const spin = next.spin ?? current.spin;
+  return { ...next, ...(tilt !== undefined ? { tilt } : {}), ...(spin !== undefined ? { spin } : {}) };
+};
+
+/** Below this, a tilt's cosine is treated as this, so a view seen edge-on still pans by a finite amount. */
+const MIN_TILT_COSINE = 0.1;
+
+/**
+ * A movement on screen as a movement in the scene: the ground plane is projected orthographically, so a delta inverts
+ * through the pose (tilt foreshortens y, spin rotates) and the zoom, though a point under the pointer does not.
+ */
+export const screenDeltaToScene = (camera: Camera, delta: Point): Point => {
+  const { tilt, spin } = cameraPose(camera);
+  const cosine = Math.cos((tilt * Math.PI) / 180);
+  const y = delta.y / (Math.sign(cosine || 1) * Math.max(MIN_TILT_COSINE, Math.abs(cosine)));
+  const angle = (spin * Math.PI) / 180;
+  return {
+    x: (Math.cos(angle) * delta.x + Math.sin(angle) * y) / camera.zoom,
+    y: (-Math.sin(angle) * delta.x + Math.cos(angle) * y) / camera.zoom,
+  };
+};
+
+/**
+ * The camera as one CSS transform with its origin at the viewport's top-left. A pose rotates the scene about the
+ * viewport's centre, orthographically (no perspective), which is what an isometric view is.
+ */
+export const cameraTransform = (camera: Camera, viewport?: Size) => {
+  const flat = `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`;
+  if (!isPresentation(camera)) {
+    return flat;
+  }
+  const { tilt, spin } = cameraPose(camera);
+  const cx = (viewport?.width ?? 0) / 2;
+  const cy = (viewport?.height ?? 0) / 2;
+  return `translate(${cx}px, ${cy}px) rotateX(${tilt}deg) rotateZ(${spin}deg) translate(${-cx}px, ${-cy}px) ${flat}`;
+};
 
 export const boundsCenter = (bounds: Bounds): Point => ({
   x: bounds.x + bounds.width / 2,
@@ -184,13 +242,28 @@ export const animateCamera = (
   fixedDuration?: number,
 ): (() => void) => {
   const interpolate = interpolateZoom(toView(from, viewport), toView(to, viewport));
-  const duration = fixedDuration ?? Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
+  const startPose = cameraPose(from);
+  const endPose = cameraPose(keepPose(from, to));
+  const posed = !(startPose.tilt === endPose.tilt && startPose.spin === endPose.spin) || isPresentation(from);
+  const pose = (t: number): Partial<CameraPose> =>
+    posed
+      ? {
+          tilt: startPose.tilt + (endPose.tilt - startPose.tilt) * t,
+          spin: startPose.spin + (endPose.spin - startPose.spin) * t,
+        }
+      : {};
+  const duration =
+    fixedDuration ??
+    // A change of pose alone has no distance for d3 to measure, so it takes the longest a move may.
+    (posed && interpolate.duration === 0
+      ? MAX_ANIMATION_MS
+      : Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration)));
   const start = performance.now();
   let frame = 0;
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / duration);
     const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-    apply(fromView(interpolate(eased), viewport));
+    apply({ ...fromView(interpolate(eased), viewport), ...pose(eased) });
     if (t < 1) {
       frame = requestAnimationFrame(tick);
     } else {

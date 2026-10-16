@@ -217,3 +217,45 @@ const childElements = (name: string, elementId: (suffix: string) => string, vari
       ];
   }
 };
+
+//
+// A small network, the shape an animation drives: a phone, an office network holding a desk of its own, and a cloud
+// of servers, each network a compound object. Ids are stable (`net:<name>`) so stories and tests can address them;
+// every box is on the major grid.
+//
+
+/** A device or server: a major cell square. */
+const device = (id: string, col: number, row: number, label: string) =>
+  SceneBuilder.rect(id, { x: cell(col), y: cell(row), width: cell(1), height: cell(1) }).properties({ label });
+
+/** A network of compound objects, nested two deep (the desk is inside the office). */
+export const createNetworkTree = (): SceneTree =>
+  SceneBuilder.scene('net:root', [
+    device('net:phone', -6, 0, 'Phone').properties({ style: { hue: 'violet' } }),
+    SceneBuilder.scene('net:office', [
+      device('net:laptop', 0, 0, 'Laptop'),
+      device('net:printer', 2, 0, 'Printer'),
+      SceneBuilder.scene('net:desk', [device('net:monitor', 0, 0, 'Monitor'), device('net:dock', 2, 0, 'Dock')])
+        .name('Desk')
+        .at({ x: cell(0), y: cell(2), width: cell(3), height: cell(1) })
+        .properties({ style: { hue: 'sky' } }),
+      SceneBuilder.link('smart', 'net:laptop', 'net:printer'),
+    ])
+      .name('Office')
+      .at({ x: cell(-3), y: cell(-1), width: cell(4), height: cell(3) })
+      .properties({ style: { hue: 'blue' } }),
+    SceneBuilder.scene('net:cloud', [
+      device('net:api', 0, 0, 'API'),
+      device('net:db', 2, 0, 'DB'),
+      device('net:queue', 4, 0, 'Queue'),
+      SceneBuilder.link('smart', 'net:api', 'net:db'),
+      SceneBuilder.link('smart', 'net:api', 'net:queue'),
+    ])
+      .name('Cloud')
+      .at({ x: cell(3), y: cell(-1), width: cell(5), height: cell(3) })
+      .properties({ style: { hue: 'red' } }),
+    SceneBuilder.link('line', 'net:phone', 'net:office').id('net:phone-office'),
+    SceneBuilder.link('line', 'net:office', 'net:cloud').id('net:office-cloud'),
+  ])
+    .name('Network')
+    .build();

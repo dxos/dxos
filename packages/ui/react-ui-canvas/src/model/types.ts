@@ -52,8 +52,17 @@ export const Bounds = Schema.Struct({
 });
 export type Bounds = Schema.Schema.Type<typeof Bounds>;
 
-/** screen = (scene + {x, y}) * zoom */
-export const Camera = Schema.Struct({ x: Schema.Number, y: Schema.Number, zoom: Schema.Number });
+/**
+ * screen = (scene + {x, y}) * zoom, then tilted about the X axis by `tilt` and spun about the view's normal by `spin`
+ * (degrees, about the viewport's centre). A tilted or spun camera is presentation only (`isPresentation`).
+ */
+export const Camera = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+  zoom: Schema.Number,
+  tilt: Schema.optional(Schema.Number),
+  spin: Schema.optional(Schema.Number),
+});
 export type Camera = Schema.Schema.Type<typeof Camera>;
 
 export type NodeId = string;
@@ -154,6 +163,8 @@ export const nodeBase = {
   /** Fractional z-order key (see `order.ts`). */
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
+  /** Not drawn or hit, nor are the links on it; the Objects panel shows and hides a compound object this way. */
+  hidden: Schema.optional(Schema.Boolean),
   center: NodeCenter,
   /** The frame is `size` centred on `center`, whatever the type draws inside it. */
   size: NodeSize,
@@ -294,6 +305,8 @@ const linkBase = {
   id: Schema.String,
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
+  /** Not drawn or hit. */
+  hidden: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
   /** End markers; an arrow at `end` reads as the link's direction. */

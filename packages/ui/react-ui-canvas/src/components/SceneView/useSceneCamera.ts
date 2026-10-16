@@ -7,13 +7,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { type useRegistry } from '../../hooks/index.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { type Camera, type ElementId, type Size } from '../../model/types.ts';
-import { animateCamera } from '../../utils/camera.ts';
+import { animateCamera, keepPose } from '../../utils/camera.ts';
 
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
 const NAVIGATION_SETTLE_MS = 150;
 
 export type SceneCamera = {
-  /** Write the camera, from a value or from its predecessor. */
+  /** Write the camera, from a value or from its predecessor; a value without a pose keeps the current one. */
   setCamera: (next: Camera | ((camera: Camera) => Camera)) => void;
   /** Animate to `target`, calling `done` when the last frame lands; `duration` fixes its length in ms. */
   animateTo: (target: Camera, done?: () => void, duration?: number) => void;
@@ -45,7 +45,8 @@ export const useSceneCamera = (
 ): SceneCamera => {
   const setCamera = useCallback(
     (next: Camera | ((camera: Camera) => Camera)) => {
-      registry.set(atoms.camera, typeof next === 'function' ? next(registry.get(atoms.camera)) : next);
+      const current = registry.get(atoms.camera);
+      registry.set(atoms.camera, keepPose(current, typeof next === 'function' ? next(current) : next));
     },
     [registry, atoms.camera],
   );

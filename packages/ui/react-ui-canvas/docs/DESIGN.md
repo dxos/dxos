@@ -294,6 +294,36 @@ resolved values in.
   else the live child scene while `depth < liveDepth`, and past it a title + node count (later: a rasterised
   thumbnail). Hysteresis of ±10% at the tile boundary.
 
+## 5b. Compound objects, presentation camera and overrides (built 2026-10-15)
+
+Spec: `agents/superpowers/specs/2026-10-15-canvas-animation-host-design.md`. These make the canvas a host for
+scripted network animations (plugin-animation) without the animation writing to the drawing.
+
+- **Compound object** = a frame onto a scene of the same store; no new node type. Its name is the child scene's
+  `name` (else the frame's `label`, else the scene id: `compoundName`). `groupIntoScene` makes one from a selection,
+  `ungroupScene` reverses it: the child's own bounds are centred on the frame as it is now and shrunk to fit, never
+  magnified, so the nodes land where the frame shows them; a link on the frame re-attaches to the child node nearest
+  its other end; a child another frame still opens stays, and its elements arrive with new ids. Both are one undo
+  step with the store's scenes (`useCompoundActions`). ⌘G groups, ⇧⌘G ungroups.
+- **Hidden**: nodes and links carry an optional `hidden`; `visibleScene` drops them (and the links on a hidden node)
+  as it drops a hidden layer's elements.
+- **Objects panel** (`SceneView.Objects`, a docked inspector): `compoundTree(scenes, root)` lists every compound
+  object from the root down, top first, each addressed by its frame path (the path a timeline's selectors use) and
+  carrying the scene path that shows it, so selecting or entering a nested object jumps the view there.
+- **Presentation camera**: `Camera` has optional `tilt` and `spin` (degrees; isometric `ISOMETRIC_POSE` = 55°, −35°).
+  `cameraTransform(camera, viewport)` rotates about the viewport's centre in front of the flat transform,
+  orthographically. A posed camera (`isPresentation`) is read-only: the view is `readonly`, any press pans
+  (`screenDeltaToScene` inverts a delta through the pose; a point is not inverted, so nothing hit-tests), wheel zoom
+  holds the view's centre, and auto drill is off. `setCamera` and `animateCamera` keep the current pose unless the
+  target sets one, so a fit leaves the view tilted. Portals draw their children with 2D transforms, so they stay in
+  the ground plane; the camera layer is `preserve-3d` only so a node that draws itself in 3D stands out of it.
+- **Overrides**: `createOverrideStore(store, overrides)` is a read-only store whose every scene is the stored one
+  with `applyOverrides` merging a frame's values over it — node `center`, `size`, `hidden`, `style`; link `hidden`,
+  `style`; layer `hidden` — keyed by scene id, so objects inside compound objects are driven too. It is a store, not
+  a projection, because portals read child scenes through `store.scene(id)`. Writes are dropped; show it in a
+  `readonly` view. Particles draw in `SceneView.Canvas`'s `overlay`, inside the camera layer, in root-scene
+  coordinates. The `SceneView/Override` story drives both from a clock atom.
+
 ## 6. Navigation
 
 | Gesture                                                                               | Effect                                                                         |

@@ -3,7 +3,8 @@
 //
 
 import { type SceneMap } from '../model/store.ts';
-import { type Scene, type SceneId, isFrameNode } from '../model/types.ts';
+import { type FrameNode, type NodeId, type Scene, type SceneId, isFrameNode } from '../model/types.ts';
+import { sortByZ } from './order.ts';
 
 /** A scene a scene shape may open, as the properties panel lists it. */
 export type SceneOption = { value: SceneId; label: string };
@@ -52,3 +53,60 @@ export const sceneOptions = (
     .map((scene) => ({ value: scene.id, label: scene.name ?? labels.get(scene.id) ?? scene.id }))
     .sort((left, right) => left.label.localeCompare(right.label));
 };
+
+/** A compound object: a frame onto a child scene, as the Objects panel lists it. */
+export type CompoundEntry = {
+  /** The frame ids from the root down to this frame: how the panel, and a timeline's selectors, address it. */
+  path: NodeId[];
+  /** The scene the frame is in. */
+  scene: SceneId;
+  /** The scenes from the root down to the one the frame is in: the view's path to show it. */
+  scenePath: SceneId[];
+  frame: FrameNode;
+  /** The scene the frame opens. */
+  child: SceneId;
+  name: string;
+  hidden: boolean;
+  /** The compound objects of the child scene; none when it opens a scene already on the path. */
+  children: CompoundEntry[];
+};
+
+/** What a compound object is called: its child scene's name, else the frame's label, else the scene id. */
+export const compoundName = (scenes: SceneMap, frame: FrameNode): string =>
+  scenes[frame.scene]?.name ?? frame.label ?? frame.scene;
+
+/**
+ * The compound objects of `root` as a tree, top first in each scene as they stack. A frame opening a scene missing
+ * from the store is listed without children; one opening a scene already on the path is listed but not followed.
+ */
+export const compoundTree = (scenes: SceneMap, root: SceneId): CompoundEntry[] => {
+  const walk = (id: SceneId, path: NodeId[], scenePath: SceneId[]): CompoundEntry[] => {
+    const scene = scenes[id];
+    if (!scene) {
+      return [];
+    }
+    const frames = sortByZ(Object.values(scene.nodes).filter(isFrameNode)).reverse();
+    return frames.map((frame) => {
+      const framePath = [...path, frame.id];
+      return {
+        path: framePath,
+        scene: id,
+        scenePath,
+        frame,
+        child: frame.scene,
+        name: compoundName(scenes, frame),
+        hidden: frame.hidden === true,
+        children: scenePath.includes(frame.scene) ? [] : walk(frame.scene, framePath, [...scenePath, frame.scene]),
+      };
+    });
+  };
+  return walk(root, [], [root]);
+};
+
+/** How many frames, in every scene of the store, open `id`. */
+export const frameCount = (scenes: SceneMap, id: SceneId): number =>
+  Object.values(scenes).reduce(
+    (count, scene) =>
+      count + Object.values(scene.nodes).filter((node) => isFrameNode(node) && node.scene === id).length,
+    0,
+  );

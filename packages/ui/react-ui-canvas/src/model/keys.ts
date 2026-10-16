@@ -34,6 +34,8 @@ export type KeyAction =
   | 'undo'
   | 'redo'
   | 'selectAll'
+  | 'group'
+  | 'ungroup'
   | 'snap'
   | 'guides'
   | 'lattice'
@@ -56,6 +58,8 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   undo: [{ key: 'z', meta: true, shift: false }],
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
+  group: [{ key: 'g', meta: true, shift: false }],
+  ungroup: [{ key: 'g', meta: true, shift: true }],
   // Not with Shift: Shift+G is the lattice toggle.
   snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],

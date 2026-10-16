@@ -80,6 +80,7 @@ const Editor = ({
       <SceneView.Palette />
       <SceneView.Properties />
       <SceneView.Layers />
+      <SceneView.Objects />
       <SceneView.About />
     </SceneView.Root>
   );

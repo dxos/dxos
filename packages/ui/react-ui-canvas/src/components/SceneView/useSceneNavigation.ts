@@ -26,6 +26,7 @@ import {
   enterPortal,
   exitPortal,
   fitBounds,
+  isPresentation,
   portalFrame,
 } from '../../utils/camera.ts';
 import { contentBounds } from '../../utils/hit.ts';
@@ -272,7 +273,8 @@ export const useSceneNavigation = ({
   // (or a frame that shrinks under a stationary camera) is measured against itself rather than an
   // absolute coverage.
   useEffect(() => {
-    if (isAnimating() || drag || viewport.width === 0) {
+    // Coverage is measured flat, which a posed camera is not.
+    if (isAnimating() || drag || viewport.width === 0 || isPresentation(camera)) {
       return;
     }
     const timer = setTimeout(() => {

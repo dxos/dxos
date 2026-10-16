@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: canvas-animation-host
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-15
+    summary: 'react-ui-canvas / plugin-canvas as a host for scripted network animations (plugin-animation): compound objects (frame + child scene, group/ungroup, hide, rename), an Objects panel, a read-only presentation camera (tilt/spin, isometric), and a read-only override store + overlay seam for per-frame values.'
+    tasks: .agents/projects/canvas-animation-host/TASKS.md
+    design: agents/superpowers/specs/2026-10-15-canvas-animation-host-design.md
+    prs: [13996]
+    resume: 'Draft PR #13996: T1-T11 built, review fixes applied, react-ui-canvas 179 + plugin-canvas 26 node tests and 6 story play tests green. NEXT: screenshots/demo once storybook :9009 serves this worktree, then run :lint :build :test-types and mark ready.'
   - name: plugin-messenger
     status: active
     user: burdon
