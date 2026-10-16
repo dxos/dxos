@@ -10,7 +10,7 @@ import { EntityId } from '@dxos/keys';
 import { RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, MemoryOperation, Profile } from '#types';
+import { AgentPresence, BrainService, MemoryOperation, Profile } from '#types';
 
 import { AgentOperationError } from './errors.ts';
 import { recordingAgent } from './knowledge.ts';
@@ -61,7 +61,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
       const agent = yield* recordingAgent(agentRef);
       const speaker = agentId(agent);
       // A predicate outside the seed vocabulary is minted where extraction mints it, so both share it.
-      const ontology = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id));
+      const ontology = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(AgentPresence.brainId(agent)));
       const now = new Date().toISOString();
       const facts = yield* Effect.forEach(
         recorded,
@@ -104,7 +104,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
       const placed = RDF.Graph.assign(facts, { ontology });
 
       // The agent's own words, so a watch never wakes on what it recorded.
-      yield* (yield* BrainService.BrainService).push(agent.id, placed, { quiet: [speaker] });
+      yield* (yield* BrainService.BrainService).push(AgentPresence.brainId(agent), placed, { quiet: [speaker] });
       return { facts: placed.map(RDF.Mapping.graphOf) };
     }),
   ),
