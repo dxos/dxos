@@ -138,18 +138,17 @@ body {
 }
 
 /*
- * On the light background the brand colours compete with the progress ring and status, so the mark
- * stays a faded monochrome silhouette for the whole load; hover still reveals it for inspection.
+ * On the light background a grey silhouette reads heavier than the brand colours, so the mark keeps its
+ * colours and is faded instead for the whole load; hover still shows it at full strength for inspection.
  */
 @media (prefers-color-scheme: light) {
   #boot-loader-mark,
   #boot-loader-disc[data-host-driven] #boot-loader-mark {
-    filter: grayscale(100%);
-    opacity: 0.2;
+    filter: grayscale(0%);
+    opacity: 0.5;
   }
 
   #boot-loader-disc #boot-loader-mark:hover {
-    filter: grayscale(0%);
     opacity: 1;
   }
 }
