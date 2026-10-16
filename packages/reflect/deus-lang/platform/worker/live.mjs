@@ -98,7 +98,7 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
 //
 
 /** Raised when a summary gains or changes a field, so summaries drawn before are drawn again once. */
-const SUMMARY_VERSION = 3;
+const SUMMARY_VERSION = 4;
 
 const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
 
@@ -131,11 +131,10 @@ const summaryOfIndex = (index) => {
     features: meta.features ?? 0,
     kinds,
     namespaces,
-    // The pushed verdicts of its tests and theorems (D209), so the hub shows a head whose checks fail.
-    checks: {
-      pass: (index.names ?? []).filter((entry) => entry.status === 'pass').length,
-      fail: (index.names ?? []).filter((entry) => entry.status === 'fail').length,
-    },
+    // Its tests and theorems, which the hub counts against the latest pushed results (D209).
+    checked: (index.names ?? [])
+      .filter((entry) => entry.kind === 'test' || entry.kind === 'theorem')
+      .map((entry) => entry.hash),
     summaryVersion: SUMMARY_VERSION,
     ...(map ? { featureMap: map } : {}),
   };
@@ -190,10 +189,17 @@ export const projectSummaries = async (env, ctx) => {
         remember(env, ctx, summaryKey(folder, shown.causal), summary, PAGE_TTL);
       }
       const check = await historyCheckOf(env.BUCKET, folder, shown.causal);
+      const { checked = [], ...parts } = JSON.parse(summary);
+      const results = await resultsOf(env.BUCKET, folder);
+      const verdicts = checked.map((hash) => results.get(hash) ?? '');
       return {
         address: addressOfFolder(folder) ?? folder,
         causal: shown.causal,
-        ...JSON.parse(summary),
+        ...parts,
+        checks: {
+          pass: verdicts.filter((verdict) => verdict.startsWith('(pass')).length,
+          fail: verdicts.filter((verdict) => verdict.startsWith('(fail')).length,
+        },
         ...(check && !check.ok ? { historyCheck: check } : {}),
       };
     }),

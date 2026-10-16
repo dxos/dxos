@@ -61,6 +61,28 @@ const LIVE_INDEX = {
 };
 
 let liveIndex;
+let liveResults;
+
+/**
+ * The project's pushed test and theorem results by hash (D209), read when the page opens: a head's pages
+ * were drawn with the results of their time, and a test run pushed since is newer.
+ */
+const pushedResults = () =>
+  (liveResults ??= fetch(live.replace(/\/live\/[^/]+$/, '/files/results/all'))
+    .then((response) => (response.ok ? response.text() : ''))
+    .catch(() => '')
+    .then(
+      (text) =>
+        new Map(
+          text
+            .split('\n')
+            .filter((line) => line.length > 65 && line[64] === ' ')
+            .map((line) => [line.slice(0, 64), line.slice(65)]),
+        ),
+    ));
+
+/** `pass` or `fail` for a verdict, as the drawn index says it (`Explorer.statusOf`). */
+const statusOf = (verdict) => (verdict.startsWith('(pass') ? 'pass' : verdict.startsWith('(fail') ? 'fail' : '');
 
 /** A file from the live API, or from the published files when the live API cannot answer. */
 const fromLive = async (path) => {
@@ -68,11 +90,23 @@ const fromLive = async (path) => {
     liveIndex ??= fetchJson(`${live}/index.json`);
     const index = await liveIndex;
     if (index) {
+      if (path === 'names.json') {
+        const results = await pushedResults();
+        for (const entry of index.names) {
+          const verdict = results.get(entry.hash);
+          if (verdict && (entry.kind === 'test' || entry.kind === 'theorem')) {
+            entry.status = statusOf(verdict);
+          }
+        }
+      }
       return index[LIVE_INDEX[path]];
     }
   } else if (path.startsWith('def/') || path.startsWith('change/') || path.startsWith('doc/')) {
     const page = await fetchJson(`${live}/${path}`);
     if (page !== undefined) {
+      if (path.startsWith('def/') && (page.kind === 'test' || page.kind === 'theorem')) {
+        page.verdict = (await pushedResults()).get(page.hash) ?? page.verdict;
+      }
       return page;
     }
   }
