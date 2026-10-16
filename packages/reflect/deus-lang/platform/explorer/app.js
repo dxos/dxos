@@ -2085,7 +2085,7 @@ const areaHtml = (area, hidden = false) => {
       ? `<ul class="area-features">${area.features
           .map(
             (feature) =>
-              `<li>${featureStatus(feature.status)}<span class="feature-title">${withDecisions(feature.title)}</span>${docs(feature)}</li>`,
+              `<li>${featureStatus(feature.status)}<span class="feature-title">${withDecisions(feature.title)}</span><span class="feature-docs">${docs(feature)}</span></li>`,
           )
           .join('')}</ul>`
       : '') +
@@ -2174,7 +2174,7 @@ const homeHtml = () => {
           )
           .join('') +
         (unplaced.length > 0
-          ? `<h4 class="group-title">Everything else</h4><ul class="namespace-grid">${unplaced.map(namespaceTile).join('')}</ul>`
+          ? `<details class="unplaced"><summary><h4 class="group-title">Everything else <span class="count">${unplaced.length}</span></h4></summary><ul class="namespace-grid">${unplaced.map(namespaceTile).join('')}</ul></details>`
           : '')
       : `<ul class="namespace-grid">${namespaces.map(namespaceTile).join('')}</ul>`;
   return (

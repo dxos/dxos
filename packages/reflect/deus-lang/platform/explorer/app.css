@@ -2455,13 +2455,15 @@ ul.features {
   vertical-align: middle;
 }
 
+/* Columns rather than a grid: areas differ in height, and a grid row is as tall as its tallest card. */
 .areas {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 12px;
+  columns: 320px;
+  column-gap: 12px;
 }
 
 .area {
+  break-inside: avoid;
+  margin-bottom: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -2493,9 +2495,23 @@ ul.features {
 
 .area-features li {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 8px;
+}
+
+.area-features .feature-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* A feature's spec chips stay at its right, stacking there, rather than wrapping under its title on a line alone. */
+.feature-docs {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 45%;
 }
 
 .area .doc-ref {
@@ -2513,6 +2529,24 @@ ul.features {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 8px;
+}
+
+.unplaced > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.unplaced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.unplaced > summary .group-title::before {
+  content: '▸ ';
+  color: var(--faint);
+}
+
+.unplaced[open] > summary .group-title::before {
+  content: '▾ ';
 }
 
 .group-title {
