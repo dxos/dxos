@@ -33,8 +33,18 @@ export const Plot = ({ classNames, data, options }: PlotProps) => {
       return;
     }
 
-    const plot = createPlot(datums, options, { width, height, label: data.columns[0] });
+    const label = data.columns[0];
+    let plot = createPlot(datums, options, { width, height, label });
     container.append(plot);
+
+    // A legend is laid out above an SVG of the full height, pushing the x axis out of view; redraw shorter.
+    const overflow = plot.getBoundingClientRect().height - height;
+    if (overflow > 0) {
+      plot.remove();
+      plot = createPlot(datums, options, { width, height: height - overflow, label });
+      container.append(plot);
+    }
+
     return () => plot.remove();
   }, [data, datums, options, width, height]);
 
@@ -61,7 +71,7 @@ const createPlot = (
     ...size,
     grid,
     marginLeft: MARGIN,
-    marginBottom: MARGIN / 2,
+    marginBottom: MARGIN,
     style: { background: 'transparent', color: 'currentColor' },
     color: { legend: series.size > 1 },
     y: { label: null },
@@ -84,7 +94,7 @@ const createPlot = (
       return ObservablePlot.plot({
         ...options,
         ...(series.size > 1
-          ? { fx: { label: null, domain: keys }, x: { axis: null } }
+          ? { fx: { label: null, domain: keys, axis: 'bottom' }, x: { axis: null } }
           : { x: { label: null, domain: keys } }),
         marks: [
           ObservablePlot.ruleY([0]),
