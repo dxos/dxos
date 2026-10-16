@@ -4,6 +4,7 @@
 
 export * as BrainSkill from './BrainSkill.ts';
 export * as ConversationSkill from './ConversationSkill.ts';
+export * as EmailSkill from './EmailSkill.ts';
 export * as GoalsSkill from './GoalsSkill.ts';
 export * as InterviewSkill from './InterviewSkill.ts';
 export * as ModesSkill from './ModesSkill.ts';

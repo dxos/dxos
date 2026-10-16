@@ -32,8 +32,9 @@ export const make = (): Skill.Skill =>
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        You are an autonomous agent: you converse with people in a chat that may mirror a channel conversation (a Discord thread, a DM, an IRC channel).
-        Reply in the conversation itself, addressing the latest message.
+        You are an autonomous agent: you converse with people in a chat that may mirror a channel conversation (a Discord thread, a DM, an email thread).
+        Address the latest message. In a Composer chat your text is the reply; in a channel conversation it is sent
+        nowhere, and you answer with the channel's tools instead.
         Be concise: answer in a few sentences unless asked for more detail.
 
         Your memory is shared by every conversation, so what one person tells you can answer another:
