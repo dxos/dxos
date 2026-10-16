@@ -92,6 +92,11 @@ export const SignPresentationRequest = Schema.Struct({
 });
 export interface SignPresentationRequest extends Schema.Schema.Type<typeof SignPresentationRequest> {}
 
+export const SyncToEdgeRequest = Schema.Struct({
+  timeout: Schema.optional(Schema.Number),
+});
+export interface SyncToEdgeRequest extends Schema.Schema.Type<typeof SyncToEdgeRequest> {}
+
 // TODO(wittjosiah): Align pluralization with other services.
 /**
  * Effect RPC definitions for `dxos.client.services.IdentityService`.
@@ -143,6 +148,12 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('createAuthCredential', {
     success: bufMessage(CredentialSchema),
+    error: serviceError,
+  }),
+  /** Resolves once the identity's HALO agrees with EDGE and its credentials are processed. */
+  Rpc.make('syncToEdge', {
+    payload: SyncToEdgeRequest,
+    success: Schema.Void,
     error: serviceError,
   }),
 ).prefix('IdentityService.') {}

@@ -92,5 +92,12 @@ export interface Halo {
    */
   queryCredentials(options?: { ids?: PublicKey[]; type?: string }): Credential[];
   writeCredentials(credentials: Credential[]): Promise<void>;
+
+  /**
+   * Resolves once this device's HALO agrees with EDGE and every credential it holds is visible to
+   * {@link queryCredentials}. Rejects on timeout, including while offline.
+   */
+  syncToEdge(options?: { timeout?: number }): Promise<void>;
+
   presentCredentials(options: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation>;
 }

@@ -39,6 +39,8 @@ import * as SqliteStorage from '../../SqliteStorage.ts';
 import { type CreateIdentityOptions } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
+const HALO_SYNC_TIMEOUT = 60_000;
+
 export class IdentityServiceImpl extends Resource implements IdentityService.Handlers {
   'constructor'(
     private readonly _identityManager: IdentityContract.Manager,
@@ -211,6 +213,17 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
           signingKey: identity.deviceKey,
           signer: this._keyring,
         });
+      },
+      catch: toServiceError,
+    });
+  }
+
+  ['IdentityService.syncToEdge']({ timeout }: IdentityService.SyncToEdgeRequest): Effect.Effect<void, BaseError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const identity = this._identityManager.identity;
+        invariant(identity, 'Identity not initialized.');
+        await identity.syncToEdge({ timeout: timeout ?? HALO_SYNC_TIMEOUT });
       },
       catch: toServiceError,
     });

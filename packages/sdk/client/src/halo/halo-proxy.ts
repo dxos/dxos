@@ -62,6 +62,9 @@ const toRecoverIdentityRequest = (args: RecoverIdentityArgs): RecoverIdentityReq
             : { case: 'external', value: args.external },
   });
 
+/** How long {@link HaloProxy.syncToEdge} waits by default. */
+const HALO_SYNC_TIMEOUT = 60_000;
+
 export class HaloProxy implements Halo {
   /** Subscriptions for overall lifecycle (reconnected event listener). */
   private readonly _subscriptions = new SubscriptionList();
@@ -453,6 +456,49 @@ export class HaloProxy implements Halo {
         credentials,
       },
       { timeout: RPC_TIMEOUT },
+    );
+  }
+
+  async syncToEdge({ timeout = HALO_SYNC_TIMEOUT }: { timeout?: number } = {}): Promise<void> {
+    if (!this._identity.get()) {
+      throw new ApiError({ message: 'Identity is not available.' });
+    }
+
+    await runServiceCall(
+      this._runtime,
+      this._serviceProvider.rpc,
+      'IdentityService.syncToEdge',
+      { timeout },
+      // The host gives up first, so its error is the one the caller sees.
+      { timeout: timeout + RPC_TIMEOUT },
+    );
+    // The host has processed every credential, but they reach this proxy over a separate stream.
+    await this._credentialsSettled();
+  }
+
+  /** Waits until the credential stream has delivered every credential the host holds now. */
+  private async _credentialsSettled(): Promise<void> {
+    const identity = this._identity.get();
+    invariant(identity, 'Identity is not available.');
+    const held = await new Promise<Credential[]>((resolve, reject) => {
+      const credentials: Credential[] = [];
+      subscribeStream(
+        this._runtime,
+        this._serviceProvider.rpc['SpacesService.queryCredentials']({
+          spaceKey: requirePublicKey(identity.spaceKey),
+          noTail: true,
+        }),
+        {
+          onData: (credential) => credentials.push(credential),
+          onError: reject,
+          onClose: () => resolve(credentials),
+        },
+      );
+    });
+    const ids = held.flatMap((credential) => toPublicKey(credential.id) ?? []);
+    await asyncTimeout(
+      this._credentialsChanged.waitForCondition(() => this.queryCredentials({ ids }).length >= ids.length),
+      RPC_TIMEOUT,
     );
   }
 

@@ -22,6 +22,7 @@ import {
   type IdentityRecoveryRevoked,
   type MemberProfile,
   type ServiceAccess,
+  type SettingsSpace,
   type SpaceDeleted,
   type SpaceGenesis,
   type SpaceInvitationNotice,
@@ -52,6 +53,7 @@ export type CredentialAssertion =
   | IdentityRecoveryRevoked
   | MemberProfile
   | ServiceAccess
+  | SettingsSpace
   | SpaceDeleted
   | SpaceGenesis
   | SpaceInvitationNotice
