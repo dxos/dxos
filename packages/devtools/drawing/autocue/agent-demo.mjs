@@ -125,11 +125,14 @@ export const steps = [
           await page.waitForTimeout(500);
         }
       }
+      const prompts = await page.evaluate(() => window.stage.prompts);
       await page.keyboard.type('/exit');
       await page.waitForTimeout(500);
       await page.keyboard.press('Enter');
-      await page.waitForTimeout(2_000);
-      await sh(page, 'clear', { beat: 300 });
+      // Claude prints its resume hint as it exits; clear only once the shell prompt is back after it.
+      await page.waitForFunction((count) => window.stage.prompts > count, prompts, { timeout: 30_000 });
+      await page.waitForTimeout(1_500);
+      await sh(page, 'clear', { beat: 500 });
     },
   },
   {
