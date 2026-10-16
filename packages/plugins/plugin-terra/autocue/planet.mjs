@@ -76,9 +76,19 @@ export const steps = [
   {
     name: 'Spin it',
     narration: 'Every planet is generated from a seed, so the same seed always gives the same world.',
-    run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="terra.toolbar.toggle-playing"] >> nth=0', label: 'Play' });
-      await page.waitForTimeout(BEAT * 3);
+    // The simulation already plays; the play toggle would pause it, so the globe is spun by orbiting the camera.
+    run: async ({ page }) => {
+      const box = await page.locator('[data-testid="deck.plank"] canvas').last().boundingBox();
+      const y = box.y + box.height / 2;
+      const x = box.x + box.width / 2 - 350;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (let i = 1; i <= 80; i++) {
+        await page.mouse.move(x + (700 * i) / 80, y);
+        await page.waitForTimeout(50);
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(BEAT);
     },
   },
   {
