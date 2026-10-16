@@ -238,42 +238,6 @@ export const OpenPrivateChat = Operation.make({
 });
 
 /**
- * Extracts the facts a batch of messages states into a fact feed: the runnable of an extraction pipeline's feed
- * trigger (`event.items`). Messages a recorded pass already covered for the same extractor are skipped, so a feed
- * imported from another deployment is not extracted again.
- */
-export const ExtractFacts = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.agent.extractFacts'),
-    name: 'Extract facts',
-    description: 'Extracts the facts a batch of messages states and appends them to a fact feed.',
-    icon: 'ph--funnel--regular',
-  },
-  services: [Database.Service, AiService.AiService],
-  input: Schema.Struct({
-    items: Schema.Array(Schema.Any).annotate({ description: 'The messages to read, in feed order (`event.items`).' }),
-    facts: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed the facts are appended to.' }),
-    source: Schema.String.annotate({
-      description:
-        'URL of the source the messages belong to, e.g. https://discord.com/channels/<guild>/<channel>; a fact cites `<source>/<message id>`.',
-    }),
-    idSource: Schema.optional(
-      Schema.String.annotate({
-        description: 'Foreign-key source holding each message id (default `discord.com`); ids are ordered integers.',
-      }),
-    ),
-    since: Schema.optional(Schema.String.annotate({ description: 'ISO time; earlier messages are skipped.' })),
-    until: Schema.optional(Schema.String.annotate({ description: 'ISO time; later messages are skipped.' })),
-    model: Schema.optional(Schema.String.annotate({ description: 'The extraction model.' })),
-  }),
-  output: Schema.Struct({
-    facts: Schema.Number.annotate({ description: 'Facts appended.' }),
-    read: Schema.Number.annotate({ description: 'Messages given to the extractor.' }),
-    skipped: Schema.Number.annotate({ description: 'Messages already covered, out of range, or without an id.' }),
-  }),
-});
-
-/**
  * Reads a source — a markdown document, text, chat transcript or web page — and pushes the RDF facts it
  * states to the agent's brain, delivering any watch they wake. A direct model call: no chat is created.
  * A chat is read incrementally: only the messages after the last read.

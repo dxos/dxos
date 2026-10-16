@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/DiscordMessage': 'src/DiscordMessage.ts',
     'ns/DiscordSource': 'src/DiscordSource.ts',
     'index': 'src/index.ts',
     'DiscordPlugin': 'src/DiscordPlugin.ts',

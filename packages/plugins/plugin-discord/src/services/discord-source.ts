@@ -3,74 +3,23 @@
 //
 
 import { DiscordREST } from 'dfx';
-import type { GuildChannelResponse, MessageResponse, MyGuildResponse, UserResponse } from 'dfx/types';
+import type { GuildChannelResponse, MessageResponse, MyGuildResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as Credential from '@dxos/compute/Credential';
-import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
+import { CrawlError, Source, type SourceApi, type Type } from '@dxos/crawler';
 import { type Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants.ts';
+import { DEFAULT_DAYS } from '../constants.ts';
+import { mapDiscordMessage, snowflakeForTimestamp, threadRefsOf } from './discord-message.ts';
 import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord.ts';
 
 const MESSAGE_PAGE_LIMIT = 100;
 const GUILD_PAGE_LIMIT = 200;
 const MAX_DAYS = 365 * 3;
-
-/** Discord message types we ingest: DEFAULT (0) and REPLY (19); everything else is a system event. */
-const isContentMessage = (raw: MessageResponse): boolean => {
-  const type = raw.type ?? 0;
-  return type === 0 || type === 19;
-};
-
-/**
- * Resolve Discord mention markup so raw snowflake ids never reach extraction: user mentions become
- * `@displayName`, custom emoji collapse to `:name:`, and channel/role mentions (whose names aren't
- * carried on the message) are dropped. Without this the extractor treats e.g. `<#837…>` as an entity.
- */
-const normalizeMentions = (content: string, mentions: ReadonlyArray<UserResponse>): string => {
-  const names = new Map(mentions.map((user) => [user.id, user.global_name || user.username]));
-  return content
-    .replace(/<@!?(\d+)>/g, (_match, id) => `@${names.get(id) ?? 'user'}`)
-    .replace(/<#\d+>/g, '')
-    .replace(/<@&\d+>/g, '')
-    .replace(/<a?:(\w+):\d+>/g, ':$1:')
-    .replace(/ {2,}/g, ' ')
-    .trim();
-};
-
-/**
- * Map a raw Discord message to a crawler message. Unlike the feed-sync path (which keeps only the
- * sender's display name), this preserves the author's stable `id` so the agent registry tokenizes by
- * user id, not name.
- */
-export const mapDiscordMessage = (raw: MessageResponse): Type.Message | undefined => {
-  if (!isContentMessage(raw)) {
-    return undefined;
-  }
-  const parentId =
-    (raw.type === 19
-      ? (raw.referenced_message?.id ?? raw.message_reference?.message_id)
-      : raw.referenced_message?.id) ?? undefined;
-  const displayName =
-    raw.author.global_name && raw.author.global_name.length > 0 ? raw.author.global_name : raw.author.username;
-  return {
-    id: raw.id,
-    text: normalizeMentions(raw.content ?? '', raw.mentions ?? []),
-    author: { id: raw.author.id, source: 'discord', username: raw.author.username, displayName },
-    createdAt: raw.timestamp,
-    ...(parentId ? { parentId } : {}),
-  };
-};
-
-/** Thread sub-channels spawned by messages in a page. */
-export const threadRefsOf = (raw: readonly MessageResponse[]): ThreadRef[] =>
-  raw.flatMap((message) =>
-    message.thread ? [{ threadId: message.thread.id, parentMessageId: message.id, name: message.thread.name }] : [],
-  );
 
 const initialCursor = (cursor: string | undefined, maxDays: number | undefined): string => {
   if (cursor) {

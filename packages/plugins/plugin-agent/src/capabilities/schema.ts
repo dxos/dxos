@@ -14,7 +14,6 @@ export default [
   AgentChannels.AgentChannels,
   AgentEmail.AgentEmail,
   FactFeed.FactItem,
-  FactFeed.ExtractionPass,
   Goal.Goal,
   Relay.Relay,
   Mode.Mode,
