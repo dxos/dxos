@@ -1,6 +1,6 @@
 # Showcase — Tasks
 
-_Resume: wait for #14026 to merge, then open the follow-up PR with the local commits (Terra fixes, Spacetime/Terra flows, empty-tour fix). Uncommitted: none. Last: Terra telemetry list on react-ui-list; Spacetime and Terra flows recorded._
+_Resume: upload the Terra-views and Spacetime videos (approve the 1Password prompt) and link them; then the phase 3 issues. Uncommitted: none. Last: #14026 merged; follow-up #14027 opened._
 
 ## Phase 1: GridZoom montage (PR #14026)
 
@@ -29,8 +29,9 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [x] **Chess flow** — `play-the-opening.mjs` (QA-1, published video).
 - [x] **Spacetime flow** — `build-a-scene.mjs` (QA-2).
 - [x] **GridZoom empty tour** — falls back to the default tour.
-- [ ] **Open the follow-up PR** once #14026 merges (its branch is locked in the merge queue).
-- [ ] **Upload the Terra views and Spacetime videos**; link them from `dx.config.ts` and DEMOS.md.
+- [x] **Open the follow-up PR** — #14027.
+- [ ] **Upload the Terra views and Spacetime videos**; link them from `dx.config.ts` and DEMOS.md. Trimmed in
+      `temp/terra-views` and `temp/spacetime`; the 1Password authorization timed out twice.
 - [ ] **Re-record the showcase clips** with the Terra fixes and the markdown flow's list fix; name the mermaid document.
 
 ## Phase 3: Open issues
