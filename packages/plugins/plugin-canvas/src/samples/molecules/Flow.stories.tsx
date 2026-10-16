@@ -162,7 +162,7 @@ const CHAPTERS: readonly Scene[] = [
     // Grid lines for the silos, dots once the agent arrives, and a plain field from ECHO on.
     grid: 'lines',
     stage: 'silos',
-    duration: 10,
+    duration: 12,
   },
   {
     title: 'Monolithic Agents',
@@ -171,7 +171,7 @@ const CHAPTERS: readonly Scene[] = [
     options: { ...APP_ACTIVITY, warmup: 8 },
     grid: 'dots',
     stage: 'silos',
-    duration: 10,
+    duration: 12,
   },
   // Chapters 3 to 5 share a stage too: the one ECHO space splits into three along its natural breaks, then extends past
   // the view on both sides.
@@ -185,7 +185,7 @@ const CHAPTERS: readonly Scene[] = [
     // From here on the background is plain, so the eye stays on ECHO.
     grid: 'none',
     stage: 'echo',
-    duration: 10,
+    duration: 12,
   },
   {
     title: 'ECHO Spaces',
@@ -195,7 +195,7 @@ const CHAPTERS: readonly Scene[] = [
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 10,
+    duration: 12,
   },
   {
     title: 'Room to grow',
@@ -205,7 +205,7 @@ const CHAPTERS: readonly Scene[] = [
     partitioned: true,
     grid: 'none',
     stage: 'echo',
-    duration: 15,
+    duration: 12,
   },
 ];
 
