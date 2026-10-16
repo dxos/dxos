@@ -897,7 +897,9 @@ const handlers = {
    * that are motion without content, like an agent working. A badge marks them, so the jump is not a lie.
    */
   speed: async (command) => {
-    const factor = Math.max(1, Math.round(command.factor ?? 1));
+    // A factor that is not a number would record as null and silently play at 1x under a broken badge.
+    const requested = Math.round(Number(command.factor ?? 1));
+    const factor = Number.isFinite(requested) ? Math.max(1, requested) : 1;
     speedChanges.push({ ms: Date.now() - started, factor });
     await page.evaluate(
       ({ id, factor }) => {

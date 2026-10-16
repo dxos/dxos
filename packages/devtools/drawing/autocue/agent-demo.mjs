@@ -261,7 +261,7 @@ const joinFromComposer = async (page) => {
   const exited = new Promise((resolve) => share.on('exit', resolve));
   try {
     const deadline = Date.now() + 120_000;
-    while (!/Invitation:\s*\S+/.test(output) && Date.now() < deadline) {
+    while (!/Invitation:\s*\S+/.test(output) && share.exitCode === null && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
     const invitation = /Invitation:\s*(\S+)/.exec(output)?.[1];
