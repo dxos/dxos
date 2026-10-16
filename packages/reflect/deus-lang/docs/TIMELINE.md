@@ -258,5 +258,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 248 | 10-16 19:40 | 30m 00s | this commit | deus key list/new/revoke wraps the Worker key API (task 87c565cf); remote-test runs again |
 | 249 | 10-16 20:00 | 20m 00s | this commit | The hub tells a newcomer where to start; Rust kernel measured at 2x node (task 0fc41dc1 lowered) |
 | 250 | 10-16 20:35 | 35m 00s | this commit | A native test failure is confirmed on node before it is kept (D219, task d0d2915a); @dxos/web checks 19/19 |
+| 251 | 10-16 21:05 | 30m 00s | this commit | Explorer fixes from a deeper probe: linkable search, canceled duplicate subtasks, code-labelled links, history count legend, spec blocks; native build cache pruned |
 
-Total from stage 1 to stage 250: 79h 05m.
+Total from stage 1 to stage 251: 79h 35m.

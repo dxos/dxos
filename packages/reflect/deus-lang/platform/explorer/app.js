@@ -14,7 +14,7 @@ const KINDS = {
   term: { icon: 'ƒ', label: 'term', plural: 'Terms' },
   test: { icon: '⊨', label: 'test', plural: 'Tests' },
   theorem: { icon: '∀', label: 'theorem', plural: 'Theorems' },
-  spec: { icon: 'S', label: 'spec', plural: 'Specs' },
+  spec: { icon: 'S', label: 'spec block', plural: 'Spec blocks' },
 };
 const KIND_ORDER = Object.keys(KINDS);
 const LIST_LIMIT = 24;
@@ -1185,7 +1185,9 @@ const kindCard = (key, kind) => {
 
 const taskCard = (key, task) => {
   const parent = index.tasks.find((other) => other.id === task.parent);
-  const children = index.tasks.filter((other) => other.parent === task.id);
+  // A canceled subtask (often a duplicate) is counted, not listed.
+  const children = index.tasks.filter((other) => other.parent === task.id && other.state !== 'canceled');
+  const canceled = index.tasks.filter((other) => other.parent === task.id && other.state === 'canceled').length;
   const links = task.links.map((link) => {
     if (link.change) {
       return `<li class="entry-row">${changeLink(link.change)}<span>${escape(link.message)}</span></li>`;
@@ -1219,7 +1221,8 @@ const taskCard = (key, task) => {
         ? section(
             'Subtasks',
             children.length,
-            `<ul class="rows">${children.map((child) => `<li class="entry-row">${stateChip(child.state)}${taskLink(child)}</li>`).join('')}</ul>`,
+            `<ul class="rows">${children.map((child) => `<li class="entry-row">${stateChip(child.state)}${taskLink(child)}</li>`).join('')}</ul>` +
+              (canceled > 0 ? `<p class="muted">and ${canceled} canceled</p>` : ''),
           )
         : '') +
       taskThread(task) +
@@ -1383,13 +1386,15 @@ const diffSummary = (entry) => {
   const lines = diffLines(entry.before.split('\n'), entry.after.split('\n'));
   const added = lines.filter(([mark]) => mark === '+').length;
   const removed = lines.filter(([mark]) => mark === '-').length;
-  return `<span class="diffstat">${added > 0 ? `<span class="plus">+${added}</span>` : ''}${removed > 0 ? `<span class="minus">−${removed}</span>` : ''}</span>`;
+  return `<span class="diffstat">${added > 0 ? `<span class="plus" title="${added} lines added">+${added}</span>` : ''}${removed > 0 ? `<span class="minus" title="${removed} lines removed">−${removed}</span>` : ''}</span>`;
 };
 
 const diffStat = (change) =>
-  `<span class="diffstat">${change.added.length > 0 ? `<span class="plus">+${change.added.length}</span>` : ''}${
-    change.changed.length > 0 ? `<span class="tilde">~${change.changed.length}</span>` : ''
-  }${change.removed.length > 0 ? `<span class="minus">−${change.removed.length}</span>` : ''}</span>`;
+  `<span class="diffstat">${change.added.length > 0 ? `<span class="plus" title="${change.added.length} definitions added">+${change.added.length}</span>` : ''}${
+    change.changed.length > 0
+      ? `<span class="tilde" title="${change.changed.length} definitions changed">~${change.changed.length}</span>`
+      : ''
+  }${change.removed.length > 0 ? `<span class="minus" title="${change.removed.length} definitions removed">−${change.removed.length}</span>` : ''}</span>`;
 
 const missingCard = (key, message) =>
   card(key, {
@@ -1605,7 +1610,7 @@ const GLOSSARY = [
   ['term', 'A value or a function. ƒ in the lists.'],
   [
     'the glyphs in lists',
-    'T type · A ability · ƒ term · ⊨ test · ∀ theorem · S spec document · ▤ namespace · ◇ feature · ◎ task. A green dot after a test or theorem means it passes and a red dot that it fails; ✓ and ✗ head the check counts.',
+    'T type · A ability · ƒ term · ⊨ test · ∀ theorem · S a spec block (a requirement, API or law of a spec document) · ▤ namespace · ◇ feature · ◎ task. A green dot after a test or theorem means it passes and a red dot that it fails; ✓ and ✗ head the check counts. In the history, +3 ~2 −1 count the definitions a change added, changed and removed.',
   ],
   [
     'theorem',
@@ -1670,8 +1675,25 @@ const glossaryCard = (key) =>
 const inlineMd = (text, namespace) =>
   decisionLinks(
     String(text)
-      .split(/(`[^`]+`)/)
+      // A link whose label is code (``[`deus/codebase.deus`](../../deus/codebase.deus)``) is one piece, not split at its backticks.
+      .split(/(\[`[^`]+`\]\([^)\s]+\)|`[^`]+`)/)
       .map((piece) => {
+        const codeLink = /^\[`([^`]+)`\]\(([^)\s]+)\)$/.exec(piece);
+        if (codeLink) {
+          const [, label, target] = codeLink;
+          const doc = /^(?:.*\/)?([A-Z][\w.]*)\.mdl$/.exec(target)?.[1];
+          if (doc && isDocument(doc)) {
+            return `<code>${docLink(doc, label)}</code>`;
+          }
+          const href = /^https?:/.test(target)
+            ? target
+            : /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)
+              ? repoUrl(target)
+              : undefined;
+          return href
+            ? `<code><a href="${escape(href)}" target="_blank" rel="noopener">${escape(label)}</a></code>`
+            : `<code>${escape(label)}</code>`;
+        }
         if (/^`[^`]+`$/.test(piece)) {
           const code = piece.slice(1, -1);
           if (isDocument(code)) {
@@ -2411,7 +2433,24 @@ const render = () => {
   return rendering;
 };
 
+/** `#q:<text>` opens the finder on that query, once: a link can share a search (`/#q:List.map`). */
+const openQuery = () => {
+  const fragment = decodeURIComponent(location.hash.slice(1));
+  const query = /(?:^|,)q:([^,]*)/.exec(fragment)?.[1];
+  if (query === undefined) {
+    return;
+  }
+  const rest = fragment
+    .split(',')
+    .filter((key) => !key.startsWith('q:'))
+    .join(',');
+  history.replaceState(null, '', rest ? `#${rest}` : location.pathname + location.search);
+  element('finder-input').value = query;
+  openFinder();
+};
+
 const renderNow = async () => {
+  openQuery();
   const { view, keys } = parseFragment();
   ui.view = view;
   for (const link of document.querySelectorAll('#views [data-view]')) {

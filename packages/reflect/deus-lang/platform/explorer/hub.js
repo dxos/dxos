@@ -10,9 +10,9 @@ const KINDS = [
   ['type', 'T', 'types'],
   ['ability', 'A', 'abilities'],
   ['term', 'ƒ', 'terms'],
-  ['test', '✓', 'tests'],
+  ['test', '⊨', 'tests'],
   ['theorem', '∀', 'theorems'],
-  ['spec', 'S', 'specs'],
+  ['spec', 'S', 'spec blocks'],
 ];
 
 const RESULTS = 60;
