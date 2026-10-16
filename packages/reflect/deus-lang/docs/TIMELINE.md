@@ -241,5 +241,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 231 | 10-16 12:21 | 90m 00s | this commit | The toolchain mounts @dxos/base as lib.base (D206): flat deus/, mount-aware resolution, printing, spec checks and explorer; the Worker's read cache bounded to one head after the snapshot grew past the memory limit (D207) |
 | 232 | 10-16 12:56 | 35m 00s | this commit | Libraries group in the explorer; spec pages drawn with the index; @dxos/examples on the refreshed base; review fixes (D208): namespace-aware printing of library names, sync keeps literals and comments, 129 duplicated comment lines removed |
 | 233 | 10-16 13:33 | 37m 00s | this commit | Results travel with a push and the hosted explorer and hub show pass/fail, kept current without a redraw (D209); @[refuted] soundness probes (D210); task links follow names into libraries; Rust kernel task re-scoped |
+| 234 | 10-16 13:59 | 26m 00s | this commit | Third usability probe (docs/ux/2026-10-16-libraries-and-results.md) and its fixes: failing checks named on the overview, first-sentence summaries, short change messages, theorem pages state their proposition, glossary links the decision log |
 
-Total from stage 1 to stage 233: 72h 13m.
+Total from stage 1 to stage 234: 72h 39m.

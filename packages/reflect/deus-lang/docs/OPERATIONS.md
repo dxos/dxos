@@ -107,7 +107,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-16 13:33 UTC, version 969eff1e (D209 results on the hub and explorer, D210 refuted probes).
+2026-10-16 13:59 UTC, version d2494246 (probe fixes after D210).
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in
 about 6. Until the index is drawn, visitors see the head drawn last (D195; `live/shown/<branch>`, `live/drawn.json`).
