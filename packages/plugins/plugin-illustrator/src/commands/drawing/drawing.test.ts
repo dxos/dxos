@@ -92,4 +92,37 @@ describe('dx drawing', () => {
       expect(picture(exported)).toEqual(picture(yield* fs.readFileString(report.file)));
     }).pipe(Effect.provide(CommandTestLayer), Effect.scoped, EffectEx.runPromise);
   });
+
+  test('a drawing.sh file, carrying only its source, imports as a drawing laid out from that source', async ({
+    expect,
+  }) => {
+    await Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const client = yield* ClientService;
+      yield* Effect.promise(() => client.addTypes([Drawing.Drawing, Drawing.Canvas]));
+      yield* Effect.promise(() => client.halo.createIdentity());
+      const space = yield* Effect.promise(() => client.spaces.create());
+      yield* Effect.promise(() => space.waitUntilReady());
+      const inSpace = Effect.provide(spaceLayer(Option.some(space.id)));
+
+      const dir = yield* fs.makeTempDirectoryScoped();
+      const file = path.join(dir, 'arch.dx.svg');
+      const svg = DxSvg.embed('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"></svg>', {
+        format: DxSvg.FORMAT,
+        version: 1,
+        name: 'arch',
+        source: { language: 'dsl', text: SOURCE },
+      });
+      yield* fs.writeFileString(file, svg);
+
+      yield* importDrawing({ file }).pipe(inSpace);
+      const imported = yield* lastOutput<{ id: string; name: string }>();
+      expect(imported.name).toBe('arch');
+
+      const out = path.join(dir, 'roundtrip.dx.svg');
+      yield* exportDrawing({ id: imported.id, out: Option.some(out) }).pipe(inSpace);
+      expect(yield* fs.readFileString(out)).toContain('SemanticEngine');
+    }).pipe(Effect.provide(CommandTestLayer), Effect.scoped, EffectEx.runPromise);
+  });
 });

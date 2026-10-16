@@ -4,24 +4,22 @@
 
 import React, { type MouseEvent, useId, useMemo } from 'react';
 
-import { Diagnostics, Scene } from '@dxos/diagram';
+import { Diagnostics, Scene, SvgFile } from '@dxos/diagram';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
-
-import { COLOR_CLASS, type Rect, partiallyRoundedRect, resolveScene, wrapLines } from '#model';
 
 const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
 const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
 
 type Point = Scene.Point;
 
-const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): Rect => {
+const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): SvgFile.Rect => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   return { x: x + element.x * scale, y: y + element.y * scale, w: element.w * scale, h: element.h * scale };
 };
 
-const center = (rect: Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
+const center = (rect: SvgFile.Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
 
 const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
 
@@ -29,7 +27,7 @@ const CHAR_EM = Diagnostics.CHAR_EM;
 
 const RADIUS = 8;
 
-const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
+const colorClass = (color?: Scene.Color) => (color ? SvgFile.COLOR_CLASS[color] : undefined);
 
 const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
@@ -66,7 +64,7 @@ const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) 
 };
 
 type BoxLabelProps = {
-  rect: Rect;
+  rect: SvgFile.Rect;
   text: string;
   weight: Scene.Weight;
 };
@@ -100,7 +98,7 @@ type MarkerIds = Record<Scene.Marker, string>;
 type ElementProps = {
   object: Scene.WorldObject;
   element: Scene.Element;
-  registry: Map<string, Rect>;
+  registry: Map<string, SvgFile.Rect>;
   markers: MarkerIds;
 };
 
@@ -140,7 +138,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
             style={style}
           />
         ) : element.corners === 'top' || element.corners === 'bottom' ? (
-          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} style={style} />
+          <path d={SvgFile.partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} style={style} />
         ) : (
           <rect
             x={rect.x}
@@ -199,7 +197,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const textWeight = element.weight ?? 's';
       const fontSize = FONT_SIZE(textWeight);
       const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
-      const lines = wrapLines(element.text, maxChars);
+      const lines = SvgFile.wrapLines(element.text, maxChars);
       return (
         <text
           x={anchor.x}
@@ -306,7 +304,7 @@ export type SceneSvgProps = Util.ThemedClassName<{
  * with the variant that holds the canvas.
  */
 export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
-  const { registry, viewBox } = useMemo(() => resolveScene(objects), [objects]);
+  const { registry, viewBox } = useMemo(() => SvgFile.resolveScene(objects), [objects]);
   // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
   const instanceId = useId();
   const markers: MarkerIds = {

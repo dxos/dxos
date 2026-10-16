@@ -4,4 +4,3 @@
 
 export * from './builder.ts';
 export * as DrawingFile from './drawing-file.ts';
-export * from './svg-markup.ts';

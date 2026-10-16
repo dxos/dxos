@@ -3,11 +3,12 @@
 //
 
 //
-// The static half of `SceneSvg` as plain strings: the same geometry, classes and markers, with no React, so a
-// headless caller (the `dx` CLI, render scripts) can write a scene to an SVG file.
+// A scene as SVG text: the geometry, classes and markers the illustrator's `SceneSvg` component draws, with no
+// React, so a headless caller (a CLI, a worker, a render script) can write a scene to a file.
 //
 
-import { Diagnostics, Scene } from '@dxos/diagram';
+import * as Diagnostics from './diagnostics.ts';
+import * as Scene from './scene.ts';
 
 const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
 const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;

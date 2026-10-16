@@ -12,9 +12,9 @@ import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
 import { CommandConfig, FormBuilder, formatBytes, print } from '@dxos/cli-util';
-import { Diagnostics, Dsl, type Scene } from '@dxos/diagram';
+import { Diagnostics, Dsl, type Scene, SvgFile } from '@dxos/diagram';
 
-import { DrawingFile, toSvgFile } from '#model';
+import { DrawingFile } from '#model';
 
 import { RenderError } from './util.ts';
 
@@ -32,7 +32,10 @@ const toDxSvg = ({
 }): string => {
   const sourceText = { language: 'dsl', text: source } as const;
   const { drawing, canvas } = DrawingFile.makeDrawing({ name, commands, source: sourceText });
-  return DrawingFile.toDxSvg(toSvgFile(objects), DrawingFile.toPayload({ drawing, canvas, source: sourceText }));
+  return DrawingFile.toDxSvg(
+    SvgFile.toSvgFile(objects),
+    DrawingFile.toPayload({ drawing, canvas, source: sourceText }),
+  );
 };
 
 export type RenderArgs = {
@@ -58,7 +61,7 @@ export const handler = Effect.fn(function* ({ file, out, plain }: RenderArgs) {
 
   const objects = Dsl.toScene(commands).objects;
   const report = Diagnostics.analyze(objects);
-  const svg = plain ? toSvgFile(objects) : toDxSvg({ name, source, commands, objects });
+  const svg = plain ? SvgFile.toSvgFile(objects) : toDxSvg({ name, source, commands, objects });
   const target = Option.getOrElse(out, () => path.join(path.dirname(file), `${name}${plain ? '.svg' : '.dx.svg'}`));
   yield* fs.writeFileString(target, svg);
 

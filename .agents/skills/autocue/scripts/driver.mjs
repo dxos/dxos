@@ -290,17 +290,17 @@ const showCaption = async (text, subtitle) => {
         'right:0',
         'bottom:0',
         'z-index:2147483647',
-        'padding:14px 20px',
+        'padding:16px 24px 18px',
         'background:rgba(17,17,17,0.92)',
         'color:#fff',
-        'font:600 16px/1.4 ui-sans-serif,system-ui,sans-serif',
+        'font:600 20px/1.35 ui-sans-serif,system-ui,sans-serif',
         'pointer-events:none',
         'text-align:center',
       ].join(';');
       banner.textContent = text;
       if (subtitle) {
         const line = document.createElement('div');
-        line.style.cssText = 'opacity:0.65;font-weight:400;font-size:13px;margin-top:4px';
+        line.style.cssText = 'opacity:0.7;font-weight:400;font-size:15px;margin-top:4px';
         line.textContent = subtitle;
         banner.appendChild(line);
       }

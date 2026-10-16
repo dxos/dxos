@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from './svg-markup.ts';
+import * as Dsl from './dsl/index.ts';
+import { toSvgFile } from './svg-file.ts';
 
 /** The marker ids an SVG element references, by attribute, with the per-instance prefix dropped. */
 const markerRefs = (svg: string, element: string, attribute: 'marker-start' | 'marker-end') =>

@@ -37,9 +37,11 @@
         color: var(--ink);
         overflow: hidden;
       }
+      /* The headline band shows only when a flow sets a title; step captions use the driver's banner, the
+         same one every autocue demo uses, so the stage leaves room for it at the bottom. */
       #title {
+        display: none;
         height: 150px;
-        display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
@@ -61,10 +63,17 @@
         font-size: 22px;
         color: #6b6b70;
       }
+      body.titled #title {
+        display: flex;
+      }
       #stage {
         display: flex;
         gap: 28px;
-        padding: 0 40px 40px;
+        padding: 40px 40px 104px;
+        height: 100%;
+      }
+      body.titled #stage {
+        padding-top: 0;
         height: calc(100% - 150px);
       }
       .window {
@@ -235,6 +244,7 @@
       window.stage = {
         title: (heading, subtitle = '') => {
           const element = document.getElementById('title');
+          document.body.classList.add('titled');
           element.style.opacity = 0;
           setTimeout(() => {
             // `*word*` marks the accented word.

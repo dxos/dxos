@@ -11,10 +11,10 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, FormBuilder, formatBytes, print, spaceLayer } from '@dxos/cli-util';
-import { SVG_SCHEMA } from '@dxos/diagram';
+import { SVG_SCHEMA, SvgFile } from '@dxos/diagram';
 import { Database, Filter } from '@dxos/echo';
 
-import { DrawingFile, SvgBuilder, toSvgFile } from '#model';
+import { DrawingFile, SvgBuilder } from '#model';
 import { Drawing } from '#types';
 
 import { ExportError } from './util.ts';
@@ -38,7 +38,7 @@ export const handler = Effect.fn(function* ({ id, out }: ExportArgs) {
   }
 
   const { scene } = SvgBuilder.read(canvas);
-  const svg = DrawingFile.toDxSvg(toSvgFile(scene.objects), DrawingFile.toPayload({ drawing, canvas }));
+  const svg = DrawingFile.toDxSvg(SvgFile.toSvgFile(scene.objects), DrawingFile.toPayload({ drawing, canvas }));
   const target = Option.getOrElse(out, () => `${(drawing.name ?? drawing.id).replace(/[^\w.-]+/g, '-')}.dx.svg`);
   yield* fs.writeFileString(target, svg);
 
