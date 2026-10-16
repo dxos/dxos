@@ -108,8 +108,9 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
 2026-10-17 UTC, version 5452c634 (D232: change pages queued ahead of definitions, lazy history diffstats, pack rules compiled from DEUS).
-`scripts/build-worker.mjs --live` also builds the demo and `gen/address.js`; run it after changing `examples/react`,
-`platform/js` or `deus/address.deus`, with `DEUS_CODEBASE` the toolchain codebase.
+`scripts/build-worker.mjs --live` also builds the demo, `gen/address.js`, and `gen/packs.js` and `gen/heads.js` from the
+`@dxos/worker` codebase (`DEUS_WORKER_CODEBASE`, default `~/.deus-worker`). Run it after changing `examples/react`,
+`platform/js`, `deus/address.deus` or `platform/worker/deus/`, with `DEUS_CODEBASE` the toolchain codebase.
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in
 about 6. Until the index is drawn, visitors see the head drawn last (D195; `live/shown/<branch>`, `live/drawn.json`).

@@ -244,16 +244,18 @@ const MAGIC = 'DEUSIX1\n';
 /**
  * Parses the combined index: `DEUSIX1\n`, a u32 byte length and that many bytes of pack names (one
  * per line; a record's ordinal is its pack's line), the fanout, then 48-byte records sorted by key
- * and kind: key (32), ordinal (u32), offset (u32), length (u32), kind (1), 3 zero bytes.
+ * and kind: key (32), ordinal (u32), offset (u32), length (u32), kind (1), 3 zero bytes. A corrupt
+ * one parses to undefined (`Worker.Packs.checkCombined`, in DEUS): reads then search each pack and
+ * the next merge rewrites it.
  */
 const parseCombined = (bytes, etag) => {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const namesLength = view.getUint32(8);
-  const names = new TextDecoder()
-    .decode(bytes.subarray(12, 12 + namesLength))
-    .split('\n')
-    .filter(Boolean);
-  const fanoutAt = 12 + namesLength;
+  const problem = deus.checkCombined(bytes);
+  if (problem !== undefined) {
+    console.warn(`combined index ignored: ${problem}`);
+    return undefined;
+  }
+  const fanoutAt = deus.combinedFanout(bytes);
+  const names = new TextDecoder().decode(bytes.subarray(12, fanoutAt)).split('\n').filter(Boolean);
   return {
     etag,
     names,
@@ -312,9 +314,11 @@ const combined = async (bucket, project) => {
 export const mergeCombined = async (bucket, project, bundles) => {
   for (let attempt = 0; attempt < 5; attempt++) {
     const object = await bucket.get(COMBINED(project));
-    const current = object
-      ? parseCombined(new Uint8Array(await new Response(object.body).arrayBuffer()), object.etag)
-      : { names: [], records: new Uint8Array(0) };
+    const current = (object &&
+      parseCombined(new Uint8Array(await new Response(object.body).arrayBuffer()), object.etag)) ?? {
+      names: [],
+      records: new Uint8Array(0),
+    };
     const todo = [...new Set(bundles)].filter((bundle) => !current.names.includes(bundle));
     if (todo.length === 0) {
       return current.names.length;

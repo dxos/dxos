@@ -1,0 +1,75 @@
+-- context: @dxos/worker/Worker
+/-
+  The Worker's head rules in DEUS (task 41714c0d, D167, DataSafety.Spec): what a push claims with its
+  `x-deus-claim` header and whether that claim may move the branch head. platform/worker/remote.mjs does the
+  reads and the conditional write; these decide.
+-/
+
+namespace Worker.Heads
+
+/-- A push's claim: the branch, the head it moves to, and the heads it builds on (none for a first push). -/
+structure Claim @"urn:deus:worker:Claim" where
+  branch : Text
+  head : Text
+  bases : List Text
+
+/-- A history node's hash: 64 lower-case hex digits. -/
+def isHash (t : Text) : Bool := Text.length t == 64 && List.all (fun c => isDigit c || (c >= 'a' && c <= 'f')) (Text.utf8 t)
+
+/-- A branch name: a letter or digit, then up to 99 letters, digits, `.`, `_`, `/` or `-`. -/
+def isBranch (t : Text) : Bool :=
+  match Text.utf8 t with
+  | first :: rest =>
+      (isDigit first || isAlpha first) && List.length rest <= 99
+        && List.all (fun c => isDigit c || isAlpha c || c == '.' || c == '_' || c == '/' || c == '-') rest
+  | [] => false
+
+/-- `<branch> <head> <base>[,<base>…]`, with `-` for no base; none when the header is anything else. -/
+def parseClaim (header : Text) : Option Claim :=
+  match Text.split header " " with
+  | [branch, head, bases] =>
+      let based := if bases == "-" then [] else Text.split bases ","
+      if isBranch branch && isHash head && List.all isHash based then
+        Option.some (Claim.mk branch head based)
+      else Option.none
+  | _ => Option.none
+
+/-- What a claim does to a branch whose head is `current`, given the data-safety epoch that head asks for
+  (`required`) and the one the pushing CLI has (`sent`):
+  - `same`: the head is already there, so a retried push succeeds without a write;
+  - `epoch`: the CLI is older than the codebase asks, and its merge may have lost data;
+  - `write`: the head builds on the current one (or the branch is new), so the conditional write may move it;
+  - `moved`: the head moved since the push's pull. -/
+def verdict (current : Option Text) (claim : Claim) (required : Int) (sent : Int) : Text :=
+  match current with
+  | Option.some head =>
+      if head == claim.head then "same"
+      else if sent < required then "epoch"
+      else if List.contains head claim.bases then "write"
+      else "moved"
+  | Option.none => if sent < required then "epoch" else "write"
+
+/-- A sample head for the tests. -/
+def headA : Text := Text.repeat 64 "a"
+
+/-- Another sample head. -/
+def headB : Text := Text.repeat 64 "b"
+
+test claimsParse :=
+  parseClaim ("main " ++ headA ++ " -") == Option.some (Claim.mk "main" headA [])
+    && parseClaim ("feature/x " ++ headB ++ " " ++ headA ++ "," ++ headA) == Option.some (Claim.mk "feature/x" headB [headA, headA])
+
+test badClaimsAreRefused :=
+  List.all (fun header => parseClaim header == Option.none)
+    ["", "main", "main " ++ headA, "-main " ++ headA ++ " -", "main " ++ headA ++ " " ++ headA ++ ",", "main " ++ headA ++ "  -",
+     "main " ++ Text.repeat 64 "A" ++ " -", Text.repeat 101 "m" ++ " " ++ headA ++ " -"]
+
+test verdictsKeepHeads :=
+  verdict (Option.some headA) (Claim.mk "main" headA []) 9 0 == "same"
+    && verdict (Option.some headA) (Claim.mk "main" headB [headA]) 2 1 == "epoch"
+    && verdict (Option.some headA) (Claim.mk "main" headB [headA]) 2 2 == "write"
+    && verdict (Option.some headA) (Claim.mk "main" headB []) 0 0 == "moved"
+    && verdict Option.none (Claim.mk "main" headB []) 0 0 == "write"
+    && verdict Option.none (Claim.mk "main" headB []) 1 0 == "epoch"
+
+end Worker.Heads

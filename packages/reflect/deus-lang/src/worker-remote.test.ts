@@ -561,6 +561,16 @@ describe('replication API', () => {
     expect((await put(`files/packs/${later.name}`, laterPack.text)).status).toBe(201);
     expect((await put(`packs/${later.name}.idx`, laterPack.index)).status).toBe(201);
     expect(await (await call(`/v1/toolchain/meta/${term}`)).text()).toBe('(meta (doc "newer"))');
+
+    // A corrupt combined index is refused rather than searched, and the next merge rewrites it
+    // (Worker.Packs.checkCombined).
+    expect(bucket.keys()).toContain('toolchain/packindex');
+    await bucket.put('toolchain/packindex', new TextEncoder().encode('DEUSIX1\n\xff\xff\xff\xff'));
+    expect(await (await call(`/v1/toolchain/objects/${term}`)).text()).toBe('(term "é ✓ \\"quoted\\"")');
+    expect(await (await call('/v1/toolchain/packs/', { method: 'POST', key })).json()).toEqual({ packs: 2 });
+    expect(await (await bucket.get('toolchain/packindex'))?.text()).toContain(later.name);
+    expect(await (await call(`/v1/toolchain/objects/${term}`)).text()).toBe('(term "é ✓ \\"quoted\\"")');
+    expect(await (await call(`/v1/toolchain/meta/${term}`)).text()).toBe('(meta (doc "newer"))');
   });
 
   test('projects are addressed as @owner/project, with the toolchain at its old URLs too (D184)', async ({

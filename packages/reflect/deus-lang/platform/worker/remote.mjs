@@ -8,6 +8,7 @@
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
 import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
+import * as heads from './gen/heads.js';
 import { live, projectSummaries } from './live.mjs';
 import { nameAt, names, objects, packs } from './packs.mjs';
 
@@ -27,9 +28,6 @@ export const RESULTS = 'results';
 export const SCOPES = ['push', 'compact', ...FOLDERS, 'admin'];
 
 const KEY = /^Bearer deus_([0-9a-f]{16})_([0-9a-f]{64})$/;
-
-/** `x-deus-claim: <branch> <new head> <base>[,<base>…]`, `-` for no base; branch names as `deus branch` allows. */
-const CLAIM = /^([A-Za-z0-9][A-Za-z0-9._/-]{0,99}) ([0-9a-f]{64}) (-|[0-9a-f]{64}(?:,[0-9a-f]{64})*)$/;
 
 export class HttpError extends Error {
   constructor(status, message) {
@@ -192,19 +190,20 @@ const moveHead = async (request, env, project, logged) => {
       ? undefined
       : json({ error: 'a push must name the head it builds on (x-deus-claim); update deus by merging #13952' }, 428);
   }
-  const match = CLAIM.exec(header);
-  if (!match) {
+  // The claim and what it may do are `Worker.Heads.parseClaim` and `verdict`, in DEUS (platform/worker/deus/heads.deus).
+  const claim = heads.parseClaim(header);
+  if (!claim) {
     throw new HttpError(400, 'x-deus-claim is `<branch> <head> <base>[,<base>…]`');
   }
-  const [, branch, head, baseList] = match;
-  const bases = baseList === '-' ? [] : baseList.split(',');
+  const { branch, head } = claim;
   const current = await readHead(env, project, branch);
-  if (current?.causal === head) {
+  const required = current && current.causal !== head ? await requiredEpoch(env.BUCKET, project, current.causal) : 0;
+  const sent = Number(request.headers.get('x-deus-epoch') ?? '0') || 0;
+  const verdict = heads.verdict(current?.causal, claim, required, sent);
+  if (verdict === 'same') {
     return undefined;
   }
-  const required = current ? await requiredEpoch(env.BUCKET, project, current.causal) : 0;
-  const sent = Number(request.headers.get('x-deus-epoch') ?? '0') || 0;
-  if (sent < required) {
+  if (verdict === 'epoch') {
     return json(
       {
         error: `${branch} needs a deus with data-safety epoch ${required} (Safety.epoch) or newer, and this one has ${sent}: its merge or push may lose data; update deus by merging #13952, then push again`,
@@ -213,7 +212,7 @@ const moveHead = async (request, env, project, logged) => {
       426,
     );
   }
-  if ((!current || bases.includes(current.causal)) && (await writeHead(env, project, branch, head, current))) {
+  if (verdict === 'write' && (await writeHead(env, project, branch, head, current))) {
     await logHead(env, project, branch, head, current?.causal, logged.keyId);
     return undefined;
   }
@@ -286,7 +285,7 @@ const headLog = async (request, env, project, rest) => {
     .filter((segment) => segment !== '')
     .map(decodeURIComponent)
     .join('/');
-  if (!CLAIM.test(`${branch} ${'0'.repeat(64)} -`)) {
+  if (!heads.isBranch(branch)) {
     throw new HttpError(404, 'the head log is read as /headlog/<branch>');
   }
   return lines((await listAll(env.BUCKET, headLogKey(project, branch))).filter((name) => LOGGED.test(name)));

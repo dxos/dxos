@@ -84,6 +84,8 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'build',
           'Worker.Packs.parseRange',
           'Worker.Packs.checkIndex',
+          'Worker.Packs.checkCombined',
+          'Worker.Packs.combinedFanout',
           'Worker.Packs.search',
           'Worker.Packs.newestAt',
           '-o',
@@ -92,8 +94,24 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         ],
         { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
       );
+      execFileSync(
+        'node',
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
+          'Worker.Heads.parseClaim',
+          'Worker.Heads.isBranch',
+          'Worker.Heads.verdict',
+          '-o',
+          join(gen, 'heads.js'),
+          '--js',
+        ],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
     } else {
-      console.warn(`no @dxos/worker codebase at ${workerCodebase}, so gen/packs.js is left as it is`);
+      console.warn(
+        `no @dxos/worker codebase at ${workerCodebase}, so gen/packs.js and gen/heads.js are left as they are`,
+      );
     }
     // The todo app (examples/react), built as `examples/react/build.sh` builds it and served at /demo/todo/,
     // so a visitor sees DEUS components running beside their source.

@@ -48,18 +48,43 @@ def parseRange (header : Text) : Option Range := if not (startsWith "bytes=" hea
       | _ => Option.none
   | _ => Option.none
 
-/-- What is wrong with a pack index, if anything: it is 1024 fanout bytes and 48-byte records, and the fanout is a
-  non-decreasing count that ends at the number of records. -/
+/-- What is wrong with the fanout at byte `start` of `bytes`, if anything: a non-decreasing count that ends at
+  `records`, the number of records after it. -/
+def fanoutProblem (bytes : Js) (start : Int) (records : Int) : Option Text :=
+  let rec walk byte previous :=
+    if byte == 256 then
+      if previous != records then Option.some "the fanout does not count the records" else Option.none
+    else
+      let count := Worker.Bytes.u32 bytes (start + byte * 4)
+      if count < previous then Option.some "the fanout decreases" else walk (byte + 1) count
+  walk 0 0
+
+/-- What is wrong with a pack index, if anything: it is 1024 fanout bytes and 48-byte records, and the fanout counts
+  the records. -/
 def checkIndex (bytes : Js) : Option Text :=
   let size := Worker.Bytes.length bytes
-  if size < fanout || (size - fanout) % record != 0 then Option.some "an index is 1024 fanout bytes and 48-byte records" else
-    let rec walk byte previous :=
-      if byte == 256 then
-        if previous != (size - fanout) / record then Option.some "the fanout does not count the records" else Option.none
-      else
-        let count := Worker.Bytes.u32 bytes (byte * 4)
-        if count < previous then Option.some "the fanout decreases" else walk (byte + 1) count
-    walk 0 0
+  if size < fanout || (size - fanout) % record != 0 then Option.some "an index is 1024 fanout bytes and 48-byte records"
+  else fanoutProblem bytes 0 ((size - fanout) / record)
+
+/-- The bytes a combined index starts with: `DEUSIX1` and a newline. -/
+def magic : List Int := [68, 69, 85, 83, 73, 88, 49, 10]
+
+/-- Where the fanout of a combined index starts: after the magic, a u32 byte length and that many bytes of pack
+  names. -/
+def combinedFanout (bytes : Js) : Int := 12 + Worker.Bytes.u32 bytes 8
+
+/-- What is wrong with a combined index, if anything: the magic, the pack names, 1024 fanout bytes and 48-byte
+  records, and the fanout counts the records. A corrupt one is refused rather than searched as garbage. -/
+def checkCombined (bytes : Js) : Option Text :=
+  let size := Worker.Bytes.length bytes
+  if size < 12 || not (List.all (fun (at, byte) => Worker.Bytes.u8 bytes at == byte) (zip (range 0 8) magic)) then
+    Option.some "a combined index starts with DEUSIX1"
+  else
+    let start := combinedFanout bytes
+    -- `start` is 32-bit arithmetic, so a name length past 2³¹ wraps below 12.
+    if start < 12 || start > size || size - start < fanout || (size - start - fanout) % record != 0 then
+      Option.some "a combined index is a header, pack names, 1024 fanout bytes and 48-byte records"
+    else fanoutProblem bytes start ((size - start - fanout) / record)
 
 /-- How the 32-byte key of the record at byte `at` of `records` orders against `key`: negative, zero or positive. -/
 def compareKey (records : Js) (at : Int) (key : Js) : Int := Worker.Bytes.compare records at key 0 32

@@ -54,32 +54,59 @@ function Worker$Packs$checkIndex(bytes) {
   if (r0) {
     return new rt.Con("#Option", 1, ["an index is 1024 fanout bytes and 48-byte records"]);
   } else {
-    function walk(byte$, previous$) {
-      for (;;) {
-        const byte = byte$, previous = previous$;
-        if ((byte === 256)) {
-          if (!rt.equal(previous, rt.div(((size - Worker$Packs$fanout()) | 0), Worker$Packs$record()))) {
-            return new rt.Con("#Option", 1, ["the fanout does not count the records"]);
-          } else {
-            return rt.con0("#Option", 0);
-          }
-        } else {
-          const count = Worker$Bytes$u32(bytes, Math.imul(byte, 4));
-          if (rt.ap(rt.prims["lt"], count, previous)) {
-            return new rt.Con("#Option", 1, ["the fanout decreases"]);
-          } else {
-            byte$ = ((byte + 1) | 0);
-            previous$ = count;
-            continue;
-          }
-        }
-      }
-    }
-    rt.named(walk, "walk");
-    return rt.ap(walk, 0, 0);
+    return Worker$Packs$fanoutProblem(bytes, 0, rt.div(((size - Worker$Packs$fanout()) | 0), Worker$Packs$record()));
   }
 }
 rt.named(Worker$Packs$checkIndex, "Worker.Packs.checkIndex");
+
+function Worker$Packs$checkCombined(bytes) {
+  const size = Worker$Bytes$length(bytes);
+  let r0;
+  if ((size < 12)) {
+    r0 = true;
+  } else {
+    r0 = not(List$all(rt.named((v) => {
+    m1: {
+      if (v.tag === 0) {
+        const at = v.fields[0];
+        const byte = v.fields[1];
+        return rt.equal(Worker$Bytes$u8(bytes, at), byte);
+      }
+      rt.nomatch(v);
+    }
+  }, "Worker.Packs.checkCombined/\u03bb"), List$zip(List$range(0, 8), Worker$Packs$magic())));
+  }
+  if (r0) {
+    return new rt.Con("#Option", 1, ["a combined index starts with DEUSIX1"]);
+  } else {
+    const start = Worker$Packs$combinedFanout(bytes);
+    let r2;
+    if ((start < 12)) {
+      r2 = true;
+    } else {
+      if (rt.ap(rt.prims["gt"], start, size)) {
+        r2 = true;
+      } else {
+        if (rt.ap(rt.prims["lt"], ((size - start) | 0), Worker$Packs$fanout())) {
+          r2 = true;
+        } else {
+          r2 = (rt.mod(((((size - start) | 0) - Worker$Packs$fanout()) | 0), Worker$Packs$record()) !== 0);
+        }
+      }
+    }
+    if (r2) {
+      return new rt.Con("#Option", 1, ["a combined index is a header, pack names, 1024 fanout bytes and 48-byte records"]);
+    } else {
+      return Worker$Packs$fanoutProblem(bytes, start, rt.div(((((size - start) | 0) - Worker$Packs$fanout()) | 0), Worker$Packs$record()));
+    }
+  }
+}
+rt.named(Worker$Packs$checkCombined, "Worker.Packs.checkCombined");
+
+function Worker$Packs$combinedFanout(bytes) {
+  return ((12 + Worker$Bytes$u32(bytes, 8)) | 0);
+}
+rt.named(Worker$Packs$combinedFanout, "Worker.Packs.combinedFanout");
 
 function Worker$Packs$search(records, first, last, key, kind) {
   function go(low$, high$) {
@@ -235,14 +262,32 @@ const Worker$Packs$fanout = rt.lazy("Worker.Packs.fanout", () => 1024);
 
 const Worker$Packs$record = rt.lazy("Worker.Packs.record", () => 48);
 
-const Worker$Bytes$u32 = rt.importFn(rt, "js.u32At", [['raw'], ['int']], ['int'], "Worker.Bytes.u32");
-
-function Worker$Packs$compareKey(records, at, key) {
-  return Worker$Bytes$compare(records, at, key, 0, 32);
+function Worker$Packs$fanoutProblem(bytes, start, records) {
+  function walk(byte$, previous$) {
+    for (;;) {
+      const byte = byte$, previous = previous$;
+      if ((byte === 256)) {
+        if (!rt.equal(previous, records)) {
+          return new rt.Con("#Option", 1, ["the fanout does not count the records"]);
+        } else {
+          return rt.con0("#Option", 0);
+        }
+      } else {
+        const count = Worker$Bytes$u32(bytes, ((start + Math.imul(byte, 4)) | 0));
+        if (rt.ap(rt.prims["lt"], count, previous)) {
+          return new rt.Con("#Option", 1, ["the fanout decreases"]);
+        } else {
+          byte$ = ((byte + 1) | 0);
+          previous$ = count;
+          continue;
+        }
+      }
+    }
+  }
+  rt.named(walk, "walk");
+  return rt.ap(walk, 0, 0);
 }
-rt.named(Worker$Packs$compareKey, "Worker.Packs.compareKey");
-
-const Worker$Bytes$u8 = rt.importFn(rt, "js.byteAt", [['raw'], ['int']], ['int'], "Worker.Bytes.u8");
+rt.named(Worker$Packs$fanoutProblem, "Worker.Packs.fanoutProblem");
 
 function List$all(p$, v$) {
   for (;;) {
@@ -268,6 +313,63 @@ function List$all(p$, v$) {
 }
 rt.named(List$all, "List.all");
 
+const Worker$Bytes$u8 = rt.importFn(rt, "js.byteAt", [['raw'], ['int']], ['int'], "Worker.Bytes.u8");
+
+function List$zip(xs, ys) {
+  function go(acc$, l$, r$) {
+    for (;;) {
+      const acc = acc$, l = l$, r = r$;
+      const t0 = new rt.Con("#Pair", 0, [l, r]);
+      m1: {
+        if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[1].tag === 1) {
+          const x = t0.fields[0].fields[0];
+          const xt = t0.fields[0].fields[1];
+          const y = t0.fields[1].fields[0];
+          const yt = t0.fields[1].fields[1];
+          acc$ = rt.cons(new rt.Con("#Pair", 0, [x, y]), acc);
+          l$ = xt;
+          r$ = yt;
+          continue;
+        }
+        if (t0.tag === 0) {
+          return List$reverse(acc);
+        }
+        rt.nomatch(t0);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs, ys);
+}
+rt.named(List$zip, "List.zip");
+
+function List$range(lo, hi) {
+  function go(acc$, i$) {
+    for (;;) {
+      const acc = acc$, i = i$;
+      if (rt.ap(rt.prims["lt"], i, lo)) {
+        return acc;
+      } else {
+        acc$ = rt.cons(i, acc);
+        i$ = ((i - 1) | 0);
+        continue;
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, ((hi - 1) | 0));
+}
+rt.named(List$range, "List.range");
+
+const Worker$Packs$magic = rt.lazy("Worker.Packs.magic", () => rt.cons(68, rt.cons(69, rt.cons(85, rt.cons(83, rt.cons(73, rt.cons(88, rt.cons(49, rt.cons(10, rt.NIL)))))))));
+
+const Worker$Bytes$u32 = rt.importFn(rt, "js.u32At", [['raw'], ['int']], ['int'], "Worker.Bytes.u32");
+
+function Worker$Packs$compareKey(records, at, key) {
+  return Worker$Bytes$compare(records, at, key, 0, 32);
+}
+rt.named(Worker$Packs$compareKey, "Worker.Packs.compareKey");
+
 function Text$isDigit(c) {
   if ((c >= 48)) {
     return (c <= 57);
@@ -281,16 +383,44 @@ const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib
 
 const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
 
+function List$reverse(xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return acc;
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(y, acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$reverse, "List.reverse");
+
 const Worker$Bytes$compare = rt.importFn(rt, "js.compareBytes", [['raw'], ['int'], ['raw'], ['int'], ['int']], ['int'], "Worker.Bytes.compare");
 
 export const raw = {
   parseRange: Worker$Packs$parseRange,
   checkIndex: Worker$Packs$checkIndex,
+  checkCombined: Worker$Packs$checkCombined,
+  combinedFanout: Worker$Packs$combinedFanout,
   search: Worker$Packs$search,
   newestAt: Worker$Packs$newestAt,
 };
 export const parseRange = rt.exportFn(Worker$Packs$parseRange, [['text']], ['option', ['struct', "0db43407430129facb6ea96aab1aa9c7c9cf43de3aa011a110164cad13eacbf0", ["offset", "length"], [['int'], ['option', ['int']]]]]);
 export const checkIndex = rt.exportFn(Worker$Packs$checkIndex, [['raw']], ['option', ['text']]);
+export const checkCombined = rt.exportFn(Worker$Packs$checkCombined, [['raw']], ['option', ['text']]);
+export const combinedFanout = rt.exportFn(Worker$Packs$combinedFanout, [['raw']], ['int']);
 export const search = rt.exportFn(Worker$Packs$search, [['raw'], ['int'], ['int'], ['raw'], ['int']], ['int']);
 export const newestAt = rt.exportFn(Worker$Packs$newestAt, [['raw'], ['int'], ['int'], ['int'], ['raw'], ['int']], ['int']);
 //# sourceMappingURL=packs.js.map
