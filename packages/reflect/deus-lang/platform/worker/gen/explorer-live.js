@@ -2312,7 +2312,13 @@ function Analytics$counts(dir, ts) {
 rt.named(Analytics$counts, "Analytics.counts");
 
 function Cli$featureDocuments(dir, ns) {
-  return lib$base$List$filter(rt.named((d) => lib$base$not(lib$base$List$isEmpty(lib$base$fst(Cli$featuresOf(dir, ns, d)))), "Cli.featureDocuments/\u03bb"), Export$specDocuments(ns));
+  return lib$base$List$filter(rt.named((d) => {
+  if (lib$base$not(lib$base$Text$startsWith("lib.", d))) {
+    return lib$base$not(lib$base$List$isEmpty(lib$base$fst(Cli$featuresOf(dir, ns, d))));
+  } else {
+    return false;
+  }
+}, "Cli.featureDocuments/\u03bb"), Export$specDocuments(ns));
 }
 rt.named(Cli$featureDocuments, "Cli.featureDocuments");
 

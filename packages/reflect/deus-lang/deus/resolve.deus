@@ -145,11 +145,18 @@ def lookup (names : Names) (name : Text) (scope : Scope) (want : Entry -> Bool) 
         match prefix with
         | [] => Option.none
         | _ :: rest => chain rest
+  -- An opened namespace a mounted library holds is opened there too: `none` is `lib.base.Option.none` (D206).
+  let mountedOpen := fun opened =>
+    match List.filterMap probe (List.filter
+      (fun fqn => startsWith "lib." fqn && Names.unmount fqn == opened)
+      (getOr (Dict.lookup (lastSegment name) names.bySegment) [])) with
+    | hit :: [] => Option.some hit
+    | _ => Option.none
   let rec viaOpens os :=
     match os with
     | [] => Option.none
     | o :: rest =>
-        match probe (o ++ "." ++ name) with
+        match Option.orElse (probe (o ++ "." ++ name)) (fun _ => mountedOpen (o ++ "." ++ name)) with
         | Option.some hit => Option.some hit
         | Option.none => viaOpens rest
   match chain (reverse (Scope.ns scope)) with

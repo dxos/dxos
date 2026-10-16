@@ -98,7 +98,7 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
 //
 
 /** Raised when a summary gains or changes a field, so summaries drawn before are drawn again once. */
-const SUMMARY_VERSION = 4;
+const SUMMARY_VERSION = 5;
 
 const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
 
@@ -133,7 +133,7 @@ const summaryOfIndex = (index) => {
     namespaces,
     // Its tests and theorems, which the hub counts against the latest pushed results (D209).
     checked: (index.names ?? [])
-      .filter((entry) => entry.kind === 'test' || entry.kind === 'theorem')
+      .filter((entry) => (entry.kind === 'test' || entry.kind === 'theorem') && !entry.name.startsWith('lib.'))
       .map((entry) => entry.hash),
     summaryVersion: SUMMARY_VERSION,
     ...(map ? { featureMap: map } : {}),

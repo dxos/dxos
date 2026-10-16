@@ -128,10 +128,11 @@ about 6. Until the index is drawn, visitors see the head drawn last (D195; `live
 
 ## Open state (2026-10-15)
 
-- `@dxos/base` and `@dxos/examples` are published (2026-10-16, task 86743973): https://deus.dmytro-a80.workers.dev/@dxos/base/
-  and /@dxos/examples/. The toolchain mounts base as `lib.base` and no longer holds those names itself (D206). Change a
-  base definition in a pull of `@dxos/base`, push it, then `deus lib install base <that codebase>` in `~/.deus`: the
-  upgrade propagates to the toolchain's dependents. `sync-deus.py` writes `lib.base.X` into deus/ as `X`.
+- Projects on the Worker: `@dxos/base`, `@dxos/toolchain` (mounts base), `@dxos/examples` (mounts base) and `@dxos/web` (mounts base
+  and toolchain; D206, D211). The toolchain is developed in `~/.deus`. To change a library: pull it into a scratch codebase, change it,
+  push it, then `deus lib install <name> <that codebase>` in each project that mounts it; the upgrade propagates to dependents.
+  `sync-deus.py` writes `lib.base.X` into deus/ as `X`. Web's code is `platform/js/` and `examples/` in git; update it into a pull of
+  `@dxos/web`, not into the toolchain.
 - Its handoff names git commit `dcc624f0`, which is not on `origin/dm/agent-13-oct-x8ehi8-0y35ai` (head
   `cd8ee7ce`, 13:32 UTC). Find where it went before relying on it.
 - The coordinator session is archived. It was waiting on: where the explorer is published on R2, a go-ahead

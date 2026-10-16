@@ -301,6 +301,13 @@ describe('deus CLI', () => {
     expect(deus('eval', 'twice 2', ...app).stdout).toBe('24\n');
     // A primitive's type comes from the library's builtin, so `==` is still a Bool.
     expect(deus('eval', '1 == 1', ...app).stdout).toBe('true\n');
+    // A bare constructor in a pattern finds the library's (`none` is `lib.std.Option.none`), not a fresh variable.
+    deus(
+      'add',
+      file('isnone.deus', 'def isNone (o : Option Int) : Bool := match o with\n  | none => true\n  | _ => false\n'),
+      ...app,
+    );
+    expect(deus('eval', 'isNone (some 1)', ...app).stdout).toBe('false\n');
 
     // Installing a newer release moves the project's code onto it, as `update` moves dependents (D206).
     const area4 = 'def area (s : Shape) : Int := match s with\n  | Shape.circle r => 4 * r * r\n';
@@ -310,7 +317,7 @@ describe('deus CLI', () => {
 
     // The library's own source, updated into the project, stays the library's: deus/ holds both (D206).
     expect(deus('update', file('shape3.deus', area4), ...app).code).toBe(0);
-    expect(JSON.parse(deus('project', '--json', ...app).stdout).owned).toBe(1);
+    expect(JSON.parse(deus('project', '--json', ...app).stdout).owned).toBe(2);
     // A suffix the project and a library share names the project's; a library's root name, the library's.
     deus('update', file('size.deus', 'def Shape.size (s : Shape) : Int := 1\n'), ...std);
     expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);

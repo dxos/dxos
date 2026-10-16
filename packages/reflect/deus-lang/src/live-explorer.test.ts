@@ -361,7 +361,7 @@ describe('live explorer (D192)', () => {
         namespaces: expect.any(Array),
         // The pushed verdicts: `twoIsEven` ran before the push (D209).
         checks: { pass: 1, fail: 0 },
-        summaryVersion: 4,
+        summaryVersion: 5,
         kinds: expect.objectContaining({
           term: drawnIndex.names.filter((entry: { kind: string }) => entry.kind === 'term').length,
         }),

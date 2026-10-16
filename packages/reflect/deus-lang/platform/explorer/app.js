@@ -1962,7 +1962,8 @@ const homeHtml = () => {
   const counts = KIND_ORDER.map((kind) => [kind, index.names.filter((entry) => entry.kind === kind).length]).filter(
     ([, count]) => count > 0,
   );
-  const checked = index.names.filter((entry) => entry.status);
+  // A project's checks are its own; a mounted library's are counted in its own project.
+  const checked = index.names.filter((entry) => entry.status && !entry.name.startsWith('lib.'));
   const failing = checked.filter((entry) => entry.status === 'fail');
   const top = sortedChildren(index.tree);
   const namespaces = top.filter((node) => node.children.size > 0 && node.path !== 'lib');

@@ -1227,7 +1227,8 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   match branchHead dir (name ++ "." ++ branch) with
   | Option.some h => requireEpoch dir h "push to"
   | Option.none => ()
-  let checked := if branch == currentBranch dir && not (Cli.flag args "no-check") then touchedSpecs dir name branch else []
+  -- A mounted library's documents are checked where they are written, against that project's tasks.
+  let checked := if branch == currentBranch dir && not (Cli.flag args "no-check") then List.filter (fun d => not (startsWith "lib." d)) (touchedSpecs dir name branch) else []
   let failed := if List.isEmpty checked then [] else
     let ns := Codebase.current dir
     List.filter
@@ -1732,7 +1733,8 @@ def checkDoc (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map 
 
 /-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
 def checkSpecs (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
-  let wanted := if List.isEmpty documents then facts.documents else documents
+  -- A mounted library's documents are checked in its own project, against its own tasks; naming one still checks it.
+  let wanted := if List.isEmpty documents then List.filter (fun d => not (startsWith "lib." d)) facts.documents else documents
   let orderOf := fun h =>
     match metaField (readMeta dir h) "order" with
     | Option.some (Sexp.int k) => k
@@ -1835,7 +1837,7 @@ def featureFacts (dir : Text) (ns : Map Text Entry) : ({IO} Text) -> {IO, Throw 
             Result.ok ([("kind", Entry.kind e)] ++ (if stub then [("implemented", "false")] else []))
 
 /-- The spec documents that hold `feature` blocks. -/
-def featureDocuments (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} List Text := List.filter (fun d => not (List.isEmpty (fst (featuresOf dir ns d)))) (specDocuments ns)
+def featureDocuments (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} List Text := List.filter (fun d => not (startsWith "lib." d) && not (List.isEmpty (fst (featuresOf dir ns d)))) (specDocuments ns)
 
 /-- Problems that span the map (unparsed blocks, orphans) followed by each feature's own. -/
 def featureNotes (facts : Text -> {IO, Throw Text} Result Text (List (Text, Text))) (fs : List Feature) (bad : List Text) : {IO, Throw Text} List Text :=
