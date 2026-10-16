@@ -230,5 +230,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 220 | 10-16 07:00 | 40m 00s | this commit | A queue consumer (`deus-live`) draws each pushed head's explorer: the index is stored about a minute after a push, so the first visitor gets it in under a second (task dc0e1ae8); LiveSite 13/13 |
 | 221 | 10-16 07:40 | 25m 00s | this commit | Time types (D194): `Duration`, `Instant`, `Clock` in `deus/time.deus`, 32-bit safe to year 9999; `Alarm.set` takes a `Duration`; field accessors show their note on the explorer |
 | 222 | 10-16 08:25 | 15m 00s | this commit | `deus link` prints explorer path links (task 99b72271); push measured at 9 s (task 672d80ad closed); LiveSite 14/14 after deploy 0e960d64 |
+| 223 | 10-16 08:55 | 30m 00s | this commit | First visit after a push is fast (D195): the last drawn head and its pages stand in until the pushed head is drawn (overview 31 s → 1.3 s, definition 7.8 s → 0.9 s); the smoke script waits for the real overview; package tsc clean |
 
-Total from stage 1 to stage 222: 65h 36m.
+Total from stage 1 to stage 223: 66h 06m.
