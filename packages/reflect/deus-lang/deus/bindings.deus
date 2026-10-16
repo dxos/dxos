@@ -108,7 +108,10 @@ def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text 
       | Option.some v => v
       | Option.none => Throw.throw ("unknown type parameter " ++ Int.toText i)
   | Sexp.list (Sexp.sym "tvar" :: Sexp.str v :: []) => if List.contains (generic v) vars then generic v else Throw.throw ("polymorphic in " ++ v ++ " where no codec for it is passed")
-  | Sexp.list (Sexp.sym "tfun" :: _) => Throw.throw "takes or returns a function"
+  | Sexp.list (Sexp.sym "tfun" :: _) =>
+      match Bindings.arrows t with
+      | (a :: [], b, _) => "(value: " ++ Bindings.tsType cx vars a ++ ") => " ++ Bindings.tsType cx vars b ++ " | Promise<" ++ Bindings.tsType cx vars b ++ ">"
+      | _ => Throw.throw "takes a function of more than one parameter"
   | _ =>
       match applied t with
       | Option.some ("#Int", []) => "number"
@@ -121,6 +124,13 @@ def tsType (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text 
           "]"
       | Option.some (iri, args) => if isBuiltin iri then Throw.throw ("no TypeScript form for " ++ iri) else userName cx iri ++ Ts.generics (List.map (Bindings.tsType cx vars) args)
       | Option.none => Throw.throw ("no TypeScript form for " ++ Sexp.print t)
+
+/-- Whether `t` is or holds a function type. -/
+def hasFunction (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list (Sexp.sym "tfun" :: _) => true
+  | Sexp.list items => List.any Bindings.hasFunction items
+  | _ => false
 
 /-- `(a, (b, c))` flattens to three items, as DEUS writes `(a, b, c)`; longer tuples nest in the last. -/
 def tupleItems (a : Sexp) (b : Sexp) : List Sexp :=
@@ -159,6 +169,10 @@ def codec (cx : Bindings.Cx) (vars : List Text) (t : Sexp) : {Throw Text} Text :
       | Option.some v => codecVar v
       | Option.none => Throw.throw ("unknown type parameter " ++ Int.toText i)
   | Sexp.list (Sexp.sym "tvar" :: Sexp.str v :: []) => if List.contains (generic v) vars then codecVar (generic v) else Throw.throw ("no codec for " ++ v)
+  | Sexp.list (Sexp.sym "tfun" :: _) =>
+      match Bindings.arrows t with
+      | (a :: [], b, _) => "$rt.fn(" ++ Bindings.codec cx vars a ++ ", " ++ Bindings.codec cx vars b ++ ")"
+      | _ => Throw.throw "takes a function of more than one parameter"
   | _ =>
       match applied t with
       | Option.some ("#Int", []) => "$rt.int"
@@ -407,6 +421,8 @@ def analyze (cx : Bindings.Cx) (meta : Text -> {IO} Option Sexp) (fetch : Text -
         | Option.some s => s
         | Option.none => Throw.throw "has no type"
   let (types, result, effs) := Bindings.arrows scheme
+  -- A TypeScript function can cross into DEUS, but a DEUS function cannot come back out (task 1474b99e).
+  if Bindings.hasFunction result then Throw.throw "returns a function" else ()
   List.map (tsType cx (typeVarsOf (result :: types))) (result :: types)
   let effects := filterMap effectOf effs
   List.map (fun e => abilityName cx (fst e)) effects

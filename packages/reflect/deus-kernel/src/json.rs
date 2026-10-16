@@ -4,8 +4,9 @@
 
 //! Values as JSON, for embedders (a Cloudflare Worker, a browser): `Int` is a number, `Text` a
 //! string, `Bool` a boolean, `Unit` null, a list an array, and any other constructor
-//! `{"$": type, "tag": n, "fields": [...]}`. Functions cross as `{"$fn": true}` and cannot come
-//! back. A user type crosses by its IRI when the image names it (`iris`: hash → IRI), and a builtin
+//! `{"$": type, "tag": n, "fields": [...]}`. A DEUS function leaves as `{"$fn": true}` and cannot
+//! come back; an embedder's function `{"$host": n}` comes in as one the program calls through the
+//! `#Host` ability (see [`HOST`]). A user type crosses by its IRI when the image names it (`iris`: hash → IRI), and a builtin
 //! (`#Option`) as `urn:deus:builtin:Option` (D68), so every identity an embedder sees is a URI.
 
 use std::collections::HashMap;
@@ -263,6 +264,12 @@ fn to_value(
                 .map(|item| to_value(item, symbols, hashes))
                 .collect::<Result<_, _>>()?,
         ),
+        Json::Object(fields) if field(fields, "$host").is_some() => {
+            let Some(Json::Number(handle)) = field(fields, "$host") else {
+                return Err("json: \"$host\" needs a number".into());
+            };
+            host_function(crate::text::to_int32(*handle), symbols)
+        }
         Json::Object(fields) => {
             let Some(Json::Text(name)) = field(fields, "$") else {
                 return Err("json: an object needs \"$\" (its constructor's type)".into());
@@ -287,6 +294,23 @@ fn to_value(
             }
         }
     })
+}
+
+/// The ability through which a program calls a function its embedder passed in.
+pub const HOST: &str = "#Host";
+
+/// The embedder's function `handle`: applied to `x`, it performs operation 0 of `#Host` with `[handle, x]`,
+/// which no program handles, so the run suspends and the embedder answers with the function's result.
+fn host_function(handle: i32, symbols: &mut Symbols) -> Value {
+    let call = Value::OpFn(std::rc::Rc::new(OpFn {
+        ability: symbols.intern(HOST),
+        index: 0,
+        arity: 2,
+    }));
+    Value::Pap(std::rc::Rc::new(Pap {
+        func: call,
+        args: [Value::Int(handle)].into_iter().collect(),
+    }))
 }
 
 /// Decodes a value.

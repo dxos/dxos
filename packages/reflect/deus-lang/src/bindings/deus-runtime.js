@@ -119,6 +119,41 @@ export const triple = (a, b, c) => {
   };
 };
 
+/** Functions passed to DEUS by handle, until the call that passed them ends (EMBEDDING.md, "Functions"). */
+const callbacks = new Map();
+let nextCallback = 0;
+/**
+ * A TypeScript function of one parameter: it crosses as `{"$host": n}`, and each call DEUS makes of it
+ * comes back as a `Host` request that the run answers with its result. A DEUS function does not come back.
+ */
+export const fn = (param, result) => ({
+  encode: (value) => {
+    const handle = nextCallback++;
+    callbacks.set(handle, async (json) => result.encode(await value(param.decode(json))));
+    return { $host: handle };
+  },
+  decode: (json) => {
+    throw new DeusDecodeError('a value, since a DEUS function cannot cross to TypeScript', json);
+  },
+});
+/** The handles of the functions `json` passes in, so a call can forget them when it ends. */
+const handlesIn = (json) =>
+  Array.isArray(json)
+    ? json.flatMap(handlesIn)
+    : typeof json === 'object' && json !== null
+      ? typeof json.$host === 'number'
+        ? [json.$host]
+        : (json.fields ?? []).flatMap(handlesIn)
+      : [];
+const HOST = 'urn:deus:builtin:Host';
+/** Answers a `Host` request: calls the function its handle names with the argument. */
+const answerHost = async (op, values) => {
+  const call = callbacks.get(values[0]);
+  if (op !== 0 || !call) {
+    throw new Error(`no function for Host request ${op} with handle ${JSON.stringify(values[0])}`);
+  }
+  return call(values[1] ?? null);
+};
 /** The arguments of a function of several parameters, as the right-nested pair its adapter matches. */
 export const args = (values) =>
   values.reduceRight((rest, value) => (rest === undefined ? value : make(PAIR, 0, [value, rest])), undefined) ?? null;
@@ -210,7 +245,12 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
       try {
         let result = kernel.start(image, entry, argument);
         while (result.state === 'suspend') {
-          const answer = result.ability === IO ? io$ : (abilities.get(result.ability) ?? abilities.get(result.hash));
+          const answer =
+            result.ability === IO
+              ? io$
+              : result.ability === HOST
+                ? answerHost
+                : (abilities.get(result.ability) ?? abilities.get(result.hash));
           if (!answer) {
             throw new Error(`no handler for ${result.ability} operation ${result.op}`);
           }
@@ -229,6 +269,8 @@ export const loadModule = async ({ wasm, image, abilities, io = {} }) => {
       } finally {
         // An abandoned run needs no cleanup: the instance's next `start` replaces it.
         idle.push(kernel);
+        // A run's functions cannot outlive it: the next `start` resets every global that could hold one.
+        handlesIn(argument).forEach((handle) => callbacks.delete(handle));
       }
     },
   };

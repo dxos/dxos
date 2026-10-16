@@ -34,7 +34,12 @@ export declare class DeusDecodeError extends Error {
 }
 
 /** A DEUS value as it crosses the embedding boundary (EMBEDDING.md, "Values as JSON"). */
-export type Json = null | boolean | number | string | readonly Json[] | Con;
+export type Json = null | boolean | number | string | readonly Json[] | Con | HostFunction;
+
+/** A TypeScript function passed to DEUS, by its handle; DEUS calls it through the `Host` ability. */
+export interface HostFunction {
+  readonly $host: number;
+}
 
 /** A constructed value: `$` names its type (an IRI or a hash), `tag` its constructor. */
 export interface Con {
@@ -65,6 +70,8 @@ export declare const list: <T>(item: Codec<T>) => Codec<readonly T[]>;
 export declare const option: <T>(item: Codec<T>) => Codec<T | undefined>;
 export declare const pair: <A, B>(first: Codec<A>, second: Codec<B>) => Codec<readonly [A, B]>;
 export declare const triple: <A, B, C>(a: Codec<A>, b: Codec<B>, c: Codec<C>) => Codec<readonly [A, B, C]>;
+/** A TypeScript function of one parameter passed to DEUS; a DEUS function does not come back. */
+export declare const fn: <A, B>(param: Codec<A>, result: Codec<B>) => Codec<(value: A) => Awaitable<B>>;
 export declare const args: (values: readonly Json[]) => Json;
 export declare const kernelNextTo: (moduleUrl: string) => Promise<BufferSource>;
 

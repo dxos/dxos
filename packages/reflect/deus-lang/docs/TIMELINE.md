@@ -250,5 +250,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 240 | 10-16 16:06 | 8m 00s | this commit | Host IO drops its arguments in the native interpreter; counted wasm is the C back end (D214), task cf0e3937 closed with sort measurements |
 | 241 | 10-16 16:20 | 14m 00s | this commit | sync-deus.py stops before overwriting deus/ edits the codebase lacks (D215) |
 | 242 | 10-16 16:44 | 24m 00s | this commit | deus update reports prose-only spec edits (task 51a62879); CGen.Spec checks the C back end, so every subsystem has a checked spec (task 1ab6c044) |
+| 243 | 10-16 17:20 | 36m 00s | this commit | TypeScript callbacks cross into DEUS through the Host ability (D216); Bindings.Spec R-12 |
 
-Total from stage 1 to stage 242: 75h 24m.
+Total from stage 1 to stage 243: 76h 00m.

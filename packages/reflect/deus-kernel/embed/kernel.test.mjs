@@ -100,3 +100,24 @@ test('a second start on the same image reuses its code but not its state', async
   assert.deepEqual(kernel.start('(def "main" (lam (int 7))) (main "main")'), { state: 'done', value: 7 });
   assert.deepEqual(kernel.start(counter, 'main'), { state: 'done', value: 1 });
 });
+
+test('a function the embedder passes in is called through the Host ability', async () => {
+  const kernel = await createKernel(
+    readFileSync(join(crate, 'target/wasm32-unknown-unknown/release/deus_kernel.wasm')),
+  );
+  // `main f` is `f (f 20) + 1`: each call of `f` suspends with its handle and argument.
+  const twice = '(def "main" (lam (app (prim "Int.add") (app (var 0) (app (var 0) (int 20))) (int 1)))) (main "main")';
+  const calls = [];
+  const result = await run(kernel, twice, {
+    argument: { $host: 7 },
+    handle: async (ability, op, args) => {
+      calls.push([ability, op, args]);
+      return args[1] * 2;
+    },
+  });
+  assert.deepEqual(result, { state: 'done', value: 81 });
+  assert.deepEqual(calls, [
+    ['urn:deus:builtin:Host', 0, [7, 20]],
+    ['urn:deus:builtin:Host', 0, [7, 40]],
+  ]);
+});

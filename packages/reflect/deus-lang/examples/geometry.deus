@@ -3,7 +3,8 @@
   its `.d.ts` whose functions call these on the wasm kernel. TypeScript answers the `Log` ability;
   the `Throw Text` that `ratio` performs rejects with `DeusThrow` unless TypeScript answers it too.
   `Shapes.scale` is `Shapes.scale` in TypeScript; `firstOf` is polymorphic, so it takes the codec of its
-  element type first: `firstOf(int, [7, 8])`.
+  element type first: `firstOf(int, [7, 8])`. `scaledAreas` takes a TypeScript function, which may be
+  asynchronous; DEUS calls it through the `Host` ability, so each call suspends the run (task 1474b99e).
   src/bindings/bindings.test.ts drives it.
 -/
 
@@ -80,6 +81,9 @@ def greet (u : Unit) : {IO} Text :=
   "greeted"
 
 def firstOf (xs : List a) : Option a := List.head? xs
+
+/-- Each shape's area, passed through `f`. -/
+def scaledAreas (f : Int -> Int) (shapes : List Shape) : List Int := List.map (fun s => f (area s)) shapes
 
 namespace Shapes
 

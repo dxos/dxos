@@ -37,7 +37,7 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 const consumer = `
 import {
   area, configure, DeusDefect, DeusThrow, firstOf, greet, insert, load, lookup, mean, move, paint, ratio,
-  Shape, Shapes, sorted, stats, total, Tree, type Point,
+  scaledAreas, Shape, Shapes, sorted, stats, total, Tree, type Point,
 } from './geometry.js';
 import { int, text } from './deus-runtime.js';
 
@@ -111,6 +111,13 @@ export const run = async (logged: string[], printed: string[]) => {
     none: await firstOf(text, []),
     // @ts-expect-error a list of numbers is no list of text.
     wrong: await firstOf(text, [1]).catch(() => 'refused'),
+    // A TypeScript function crosses into DEUS; an asynchronous one suspends the run on each call.
+    scaledAreas: await scaledAreas(async (value) => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      return value * 10;
+    }, shapes),
+    // @ts-expect-error the function takes a number.
+    wrongCallback: await scaledAreas((value: string) => value.length, shapes).catch(() => 'refused'),
   };
 };
 `;
@@ -127,7 +134,7 @@ describe('deus bindings', () => {
     expect(generated.stderr).toBe('');
     expect(generated.code).toBe(0);
     const report = JSON.parse(generated.stdout);
-    expect(report.exported).toHaveLength(13);
+    expect(report.exported).toHaveLength(14);
     expect(report.types).toBe(join(out, 'geometry.d.ts'));
     expect(readFileSync(join(out, 'geometry.d.ts'), 'utf8')).toContain(
       'export declare function area(s: Shape): Promise<number>;',
@@ -195,6 +202,8 @@ describe('deus bindings', () => {
       first: 7,
       none: undefined,
       wrong: expect.anything(),
+      scaledAreas: [120, 120],
+      wrongCallback: expect.anything(),
     });
     expect(logged).toEqual(['summing 2 shapes', 'summing 0 shapes']);
     expect(printed).toEqual(['hello from DEUS\n']);

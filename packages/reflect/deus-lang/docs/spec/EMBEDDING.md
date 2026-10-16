@@ -150,6 +150,7 @@ Values cross in both directions with one encoding.
 | `List a`                                       | an array of the elements       |
 | any other constructed value                    | `{"$":T,"tag":n,"fields":[…]}` |
 | a function, a `Ref` cell, a map, anything else | `{"$fn":true}` (output only)   |
+| a function the embedder passes in              | `{"$host":n}` (input only)     |
 
 In the object form, `T` names the value's type: the IRI the image declares for it with a
 `(type "hash" "iri")` form, otherwise the type's hash. Builtin types use their `#` IRI: `#Option`
@@ -193,6 +194,10 @@ The kernel's JSON reader is lenient where a reader of its output never needs it 
 - `"$"` is looked up among the image's IRIs and replaced by the type's hash. A name that is neither an IRI
   of the image nor a known hash is used as given, unchecked. `{"$":"#Bool","tag":1}` is `true`.
 - `{"$fn":true}` has no `"$"`, so a function can leave the kernel but never come back.
+- `{"$host":n}` is a function of one argument that the embedder keeps under the number `n`. The program
+  calls it as any function; each call performs operation 0 of `urn:deus:builtin:Host` (`#Host`) with the
+  arguments `[n, x]`, which no program handles, so the run suspends and the embedder answers with the
+  function's result. `deus bindings` passes TypeScript callbacks this way (`$rt.fn`, task 1474b99e).
 - A string escape `\uXXXX` is one UTF-16 code unit; an unknown escape such as `\x` stands for the
   character itself.
 
