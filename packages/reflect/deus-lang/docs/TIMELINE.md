@@ -235,5 +235,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 225 | 10-16 10:00 | 45m 00s | this commit | Guided explorer (D196): areas from the feature map, spec documents as pages with requirement evidence, namespaces grouped by area; metadata read from each head's snapshot, so prose edits reach the hosted explorer |
 | 226 | 10-16 09:15 | 25m 00s | this commit | Feature areas regrouped as Dmytro reads them, with tags and a filtered overview (D199); glossary; compile-order-independent field picks (D198) |
 | 227 | 10-16 09:40 | 25m 00s | this commit | Hub at `/` (D200): global counters, the project list with each project's counts, search across every project |
+| 228 | 10-16 09:55 | 15m 00s | this commit | Hub cards with descriptions and one line of counts; push checks: each pushed head verified to descend from the previous one (D201) |
+| 229 | 10-16 10:25 | 30m 00s | this commit | Pushes 16 s → 6 s (D202); theorem verdicts keyed by their checker (D203); change authors replicate (D204) |
+| 230 | 10-16 10:50 | 25m 00s | this commit | React app driven in Chromium (task b2404fd2); task cards show their code; QA flows in a browser (D205) |
 
-Total from stage 1 to stage 227: 68h 21m.
+Total from stage 1 to stage 230: 69h 31m.
