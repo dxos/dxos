@@ -12,14 +12,13 @@ import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import { IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
+import { IdentityDid, type SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { EdgeCallFailedError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { AgentOperation, AgentPresence, AgentSpace } from '#types';
 
-import { AdmitAgentError, admitAgent, isMember, mayAdmitAgent } from './admit-agent.ts';
 import { makeAgent } from './create-agent.ts';
 
 /** What an agent's presence starts from: the URI of its home agent, which names its brain, and what it is called. */
@@ -78,11 +77,11 @@ export class InviteRefusedError extends BaseError.extend(
 ) {}
 
 /** The identity EDGE minted for an agent's brain. */
-export type AgentIdentity = { identityDid: IdentityDid; identityKey: PublicKey; label: string };
+type AgentIdentity = { identityDid: IdentityDid; label: string };
 
 /** `GET /compute/brain/:agent`, as far as the invitation reads it. */
 const BrainInfo = Schema.Struct({
-  identity: Schema.Struct({ identityDid: IdentityDid, identityKey: Schema.String, label: Schema.String }),
+  identity: Schema.Struct({ identityDid: IdentityDid, label: Schema.String }),
 });
 
 /**
@@ -102,16 +101,7 @@ const identityOf = Effect.fnUntraced(function* (did: IdentityDid | undefined) {
     Effect.flatMap((answer) =>
       Schema.decodeUnknownEffect(BrainInfo)(answer).pipe(Effect.mapError((cause) => new InviteRefusedError({ cause }))),
     ),
-    Effect.flatMap(({ identity }) =>
-      Effect.try({
-        try: (): AgentIdentity => ({
-          identityDid: identity.identityDid,
-          identityKey: PublicKey.fromHex(identity.identityKey),
-          label: identity.label,
-        }),
-        catch: (cause) => new InviteRefusedError({ cause }),
-      }),
-    ),
+    Effect.map(({ identity }): AgentIdentity => identity),
     Effect.catchIf(
       (error) => error.cause instanceof EdgeCallFailedError && error.cause.status === 404,
       () => Effect.succeed(undefined),
@@ -122,10 +112,8 @@ const identityOf = Effect.fnUntraced(function* (did: IdentityDid | undefined) {
 });
 
 /**
- * The agent the ref names, as an invitee, and the identity EDGE minted for it: read from the agent where the client
- * reaches its space, otherwise from the agent's own space, which its admins are members of and which records its home
- * and name but not its instructions. Either way the agent's DID is EDGE's, and its own space is read only where the
- * identity EDGE names owns it.
+ * The agent the ref names, read where the client reaches its space, otherwise from the agent's own space (its home and
+ * name, not its instructions); either way with the DID EDGE confirms.
  */
 const resolveInvitee = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agent>) {
   const client = Option.getOrUndefined(yield* Capability.getOption(ClientCapabilities.Client));
@@ -134,7 +122,7 @@ const resolveInvitee = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agen
   if (!client || spaces.some((space) => space.id === spaceId)) {
     const invitee = yield* inviteeOf(yield* Database.load(agentRef));
     const identity = yield* identityOf(invitee.did);
-    return { invitee: { ...invitee, did: identity?.identityDid ?? invitee.did }, identity };
+    return { ...invitee, did: identity?.identityDid ?? invitee.did };
   }
 
   const self = toPublicKey(client.halo.identity.get()?.identityKey);
@@ -146,7 +134,7 @@ const resolveInvitee = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agen
     return yield* Effect.fail(new InviteRefusedError());
   }
   const invitee: Invitee = { home: agentRef.uri, name: recorded?.name ?? identity.label, did: identity.identityDid };
-  return { invitee, identity };
+  return invitee;
 });
 
 /**
@@ -168,32 +156,14 @@ const registerSpace = Effect.fnUntraced(function* (did: IdentityDid | undefined,
   });
 });
 
-/** The client's view of the space the invitation is into, and who the client is; none without a client. */
-const memberSpace = Effect.fnUntraced(function* (spaceId: SpaceId) {
-  const client = Option.getOrUndefined(yield* Capability.getOption(ClientCapabilities.Client));
-  const space = client?.spaces.get(spaceId);
-  const self = toPublicKey(client?.halo.identity.get()?.identityKey);
-  return space && self ? { space, self } : undefined;
-});
-
 const handler: Operation.WithHandler<typeof AgentOperation.InviteAgent> = AgentOperation.InviteAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef }) {
-      const { invitee, identity } = yield* resolveInvitee(agentRef);
+      const invitee = yield* resolveInvitee(agentRef);
       const { db } = yield* Database.Service;
-      const here = yield* memberSpace(db.spaceId);
-      const admits = identity !== undefined && here !== undefined && !isMember(here.space, identity.identityKey);
-      // A member who may not admit the agent is refused before EDGE puts the brain in the space. Any later failure
-      // fails the invitation, and adding the agent again repeats each step safely: EDGE records the space once, an
-      // admission skips a current member, and the presence is made only where there is none.
-      if (admits && !mayAdmitAgent(here.space, here.self)) {
-        return yield* Effect.fail(new AdmitAgentError());
-      }
+      // Both steps are idempotent, so adding the agent again after a failure completes the invitation.
       if (AgentPresence.locate(invitee.home)?.spaceId !== db.spaceId) {
         yield* registerSpace(invitee.did, db.spaceId);
-      }
-      if (admits) {
-        yield* admitAgent(here.space, identity.identityKey, invitee.name);
       }
       const { agent, created } = yield* inviteAgent(invitee);
       return { agent: Ref.make(agent), created };

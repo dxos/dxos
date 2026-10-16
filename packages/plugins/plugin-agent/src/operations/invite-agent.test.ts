@@ -13,7 +13,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Hypergraph, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -26,7 +26,7 @@ import { AgentOperationHandlerSet } from '#operations';
 import { AgentPresence, type AgentSpace, BrainService, Goal, MemoryOperation, Mode, TriggerOperation } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
-import { admittedInvitees, invitees } from '../capabilities/agent-admission.ts';
+import { admittedHomes } from '../capabilities/agent-admission.ts';
 import { baseInstructions } from '../instructions.ts';
 import { makeAgent } from './create-agent.ts';
 import { pushFacts } from './deliver.ts';
@@ -149,36 +149,20 @@ describe('Inviting an agent into another space', () => {
     expect(AgentPresence.brainId(presence)).toBe(did);
   });
 
-  test('an admitted agent the member administers is put to work only where it is not yet', async ({ expect }) => {
-    const home = await peer.createDatabase();
-    const other = await peer.createDatabase();
+  test('only an admitted agent the member administers is put to work, and not in its own space', ({ expect }) => {
     const did = IdentityDid.random();
-    const agent = await inSpace(home)(makeAgent({ name: 'Kai', did }));
-    const uri = Obj.getURI(agent);
+    const home = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
+    const identityKey = PublicKey.random();
     /** The agent's own space, whose members are its admins. */
     const own = SpaceId.random();
-    const administered: AgentSpace.Summary[] = [{ spaceId: own, name: 'Kai', did, home: uri }];
-    const all = () =>
-      peer.client.graph.query(Query.select(Filter.type(Agent.Agent)).from('all-accessible-spaces')).run();
+    const other = SpaceId.random();
+    const administered: AgentSpace.Summary[] = [{ spaceId: own, name: 'Kai', did, home, identityKey }];
 
-    expect(invitees(administered, await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
-    expect(invitees([], await all(), other.spaceId)).toEqual([]);
-    // Neither where it lives nor in its own space.
-    expect(invitees(administered, await all(), home.spaceId)).toEqual([]);
-    expect(invitees(administered, await all(), own)).toEqual([]);
-    // A space minted before EDGE recorded the home: the home agent with the agent's DID stands in for the record.
-    expect(invitees([{ spaceId: own, did }], await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
-
-    // Only an agent the space just admitted is put to work there.
-    const identityKey = PublicKey.random();
-    const withKey = [{ ...administered[0], identityKey }];
-    expect(admittedInvitees(withKey, [identityKey], await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
-    expect(admittedInvitees(withKey, [PublicKey.random()], await all(), other.spaceId)).toEqual([]);
-    expect(admittedInvitees(administered, [identityKey], await all(), other.spaceId)).toEqual([]);
-
-    // Once it has a presence there, neither it nor the presence is offered again.
-    await invite(other, agent);
-    expect(invitees(administered, await all(), other.spaceId)).toEqual([]);
+    expect(admittedHomes(administered, [identityKey], other)).toEqual([home]);
+    expect(admittedHomes(administered, [PublicKey.random()], other)).toEqual([]);
+    expect(admittedHomes([], [identityKey], other)).toEqual([]);
+    expect(admittedHomes(administered, [identityKey], own)).toEqual([]);
+    expect(admittedHomes([{ ...administered[0], home: undefined }], [identityKey], other)).toEqual([]);
   });
 
   test("an admin who cannot reach the agent's home adds it from what the agent's own space records", async ({

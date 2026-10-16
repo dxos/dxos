@@ -282,6 +282,8 @@ export const InviteAgent = Operation.make({
     description:
       "Invites an agent from another space into this one; it keeps one brain across the spaces it is in. Only the agent's admins may, which EDGE enforces.",
     icon: 'ph--user-plus--regular',
+    // Invoked by AgentAdmission after the members panel admits the agent, never by a model.
+    skipRegistry: true,
   },
   services: [Database.Service, Hypergraph.Service, Capability.Service],
   input: Schema.Struct({
