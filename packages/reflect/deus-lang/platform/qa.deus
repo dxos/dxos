@@ -27,7 +27,8 @@
   `deus mdl` runs the steps in order in `Web.simulateMany`, so a flow is deterministic and needs
   no server; the first step that fails is reported with what it got. `deus mdl --base <url>` sends
   the same steps to a running server instead (`deus serve`, a built `--server`, or a deployed
-  Worker), each to its actor's object as `?actor=<name>`.
+  Worker), each to its actor's object as `?actor=<name>`; with `--browser` each GET opens in headless
+  Chromium and the step judges the page as rendered, after its scripts ran.
 -/
 
 namespace Qa
@@ -113,13 +114,24 @@ def send (base : Text) (actor : Text) (req : Request) : {IO} Response :=
   let status := Option.getOr (Option.bind (List.last? lines) Int.fromText) 0
   Response.mk status (if status == 0 then err else Text.join "\n" (List.take (List.length lines - 1) lines)) []
 
-/-- Runs `steps` in order against the server at `base` and returns the first failure, or "" when every step holds. -/
-def live (base : Text) (steps : List (Text, Text, Request, Int -> Text -> Response -> Bool)) : {IO} Text :=
+/-- A GET of `req` opened in headless Chromium (`scripts/qa-browser.mjs`): the status, and the page as rendered. -/
+def visit (base : Text) (actor : Text) (req : Request) : {IO} Response :=
+  let separator := if Text.contains "?" req.url then "&" else "?"
+  let home := Option.getOr (IO.getEnv "DEUS_HOME") "."
+  let node := Option.getOr (IO.getEnv "DEUS_NODE") "node"
+  let (_, out, err) := IO.exec node [home ++ "/scripts/qa-browser.mjs", base ++ req.url ++ separator ++ "actor=" ++ actor]
+  let lines := Text.lines out
+  let status := Option.getOr (Option.bind (List.head? lines) Int.fromText) 0
+  Response.mk status (if Text.isEmpty out then err else Text.join "\n" (List.drop 1 lines)) []
+
+/-- Runs `steps` in order against the server at `base` and returns the first failure, or "" when every step
+  holds; with `browser`, each GET is opened in a browser. -/
+def live (base : Text) (browser : Bool) (steps : List (Text, Text, Request, Int -> Text -> Response -> Bool)) : {IO} Text :=
   let rec go rest :=
     match rest with
     | [] => ""
     | (label, actor, req, holds) :: more =>
-      let response := send base actor req
+      let response := if browser && req.verb == "GET" then visit base actor req else send base actor req
       -- Status 0 is no answer at all, which no step's default `status < 400` should accept.
       if response.status != 0 && holds response.status response.content response then go more
       else label ++ " failed: " ++ req.verb ++ " " ++ req.url ++ " answered " ++ Int.toText response.status ++ " " ++ excerpt response.content
@@ -142,7 +154,7 @@ def check (b : Block) : {MdlHost} List Text :=
       if List.isEmpty runnable then []
       else
         let runner := match MdlHost.setting "base" with
-          | some base => "Qa.live " ++ literal base
+          | some base => "Qa.live " ++ literal base ++ (if Option.isSome (MdlHost.setting "browser") then " true" else " false")
           | none => "Qa.simulate " ++ handler
         match MdlHost.run (runner ++ " [" ++ Text.join ", " runnable ++ "]") with
         | Result.err message => [message]

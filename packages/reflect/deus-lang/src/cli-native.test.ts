@@ -466,6 +466,9 @@ describe('deus CLI native back ends', () => {
       // The QA flows `deus mdl` runs in simulation hold against the real server too.
       const flows = deus('mdl', join(root, 'examples/notes.mdl'), '--base', notes, '--json', ...c);
       expect(JSON.parse(flows.stdout).map((row: { status: string }) => row.status)).toEqual(['ok', 'ok']);
+      // In a browser too: each GET is the page as Chromium renders it (task 6719ed0e).
+      const browsed = deus('mdl', join(root, 'examples/notes.mdl'), '--base', notes, '--browser', '--json', ...c);
+      expect(JSON.parse(browsed.stdout).map((row: { status: string }) => row.status)).toEqual(['ok', 'ok']);
       const unreachable = deus('mdl', join(root, 'examples/notes.mdl'), '--base', 'http://127.0.0.1:9', '--json', ...c);
       expect(unreachable.code).not.toBe(0);
       expect(JSON.parse(unreachable.stdout)[0].problems[0]).toContain('QA-1.1');
