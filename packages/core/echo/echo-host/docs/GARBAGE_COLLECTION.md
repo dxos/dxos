@@ -312,10 +312,39 @@ A remote peer applying the replicated change reclaims the storage but does not
 prune its own working set — same root url, and only a root-url change triggers
 the client's reconciliation today. Its view corrects on reload.
 
+## Retired documents
+
+A document that cannot be loaded (Automerge's WASM heap runs out of memory
+inflating it) would stall every start that reaches it, on every peer. The host
+handles it without reading it:
+
+1. **Quarantine.** `AutomergeHost` listens for `document-load-failed` (a DXOS
+   patch on automerge-repo; the repo otherwise swallows the error and leaves
+   the load waiting forever). An out-of-memory failure records the document in
+   `automerge_quarantine` with reason `load-failed`: loads resolve as
+   unavailable, nothing replicates or advertises it, and the record survives a
+   restart. Other failures are only logged, since they may not repeat.
+2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
+   index (the last indexed JSON of each of its objects) into a replacement whose
+   id is derived from the original, so peers retiring concurrently converge on
+   one document. It re-points the objects' links and records
+   `retired[<documentId>] = { replacedBy }` in the space directory. History is
+   dropped. When the index lacks any of the objects, the document stays
+   quarantined and is not retired.
+3. **Wipe, everywhere.** Every peer that sees a `retired` entry in a space's
+   directory quarantines the document with reason `retired` and wipes its index
+   rows and bytes without loading it. The directory naming the document is the
+   attribution: loading it to read `access.spaceId` is what retirement avoids.
+
+The `retired` map is append-only and stays in the directory, so a peer that
+syncs late, or restarts mid-wipe, still finishes the wipe.
+
 ## Safety & invariants
 
 - **Attribution before deletion.** A document is only wiped when its
-  `access.spaceId` matches the target space. No global/cross-space sweep.
+  `access.spaceId` matches the target space, or when the space's own directory
+  lists it under `retired` (see [Retired documents](#retired-documents)). No
+  global/cross-space sweep.
 - **Reachability is computed from the synced directory**, so a document still
   referenced by any live object (including via branches) is never wiped.
 - **Unpositioned tombstones are never acted on** (step 4) — this is the guard

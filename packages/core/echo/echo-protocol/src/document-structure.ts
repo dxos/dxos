@@ -139,11 +139,26 @@ export interface DatabaseDirectory {
   branches?: SpaceBranchRegistry;
 
   /**
+   * Documents this space replaced because they could not be loaded, keyed by document id. Synced, so every
+   * peer stops loading the document and wipes its copy without reading it; the space's own directory
+   * naming the document is what attributes it to the space.
+   */
+  retired?: { [documentId: string]: RetiredDocument };
+
+  /**
    * @deprecated
    * For backward compatibility.
    */
   experimental_spaceKey?: string;
 }
+
+/**
+ * @see DatabaseDirectory.retired
+ */
+export type RetiredDocument = {
+  /** Url of the document now holding the retired document's objects. */
+  replacedBy: string | RawString;
+};
 
 /**
  * @see DatabaseDirectory.branches
@@ -218,6 +233,11 @@ export const DatabaseDirectory = Object.freeze({
   getBranches: (doc: DatabaseDirectory, rootObjectId: EntityId): Record<string, BranchRecord> | undefined => {
     return doc.branches?.[rootObjectId];
   },
+
+  /**
+   * @returns Ids of the documents this space retired; see {@link DatabaseDirectory.retired}.
+   */
+  getRetiredDocumentIds: (doc: DatabaseDirectory): string[] => Object.keys(doc.retired ?? {}),
 
   /**
    * @returns All branch document urls referenced anywhere in the registry. Used by the host to

@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import {
   type AnyDocumentId,
   type AutomergeUrl,
   type DocumentId,
   interpretAsDocumentId,
   isValidAutomergeUrl,
+  isValidDocumentId,
+  stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -36,7 +39,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { countWork } from '@dxos/util';
+import { countWork, defaultMap } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -56,6 +59,7 @@ import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
+import { type IndexedObject, makeReplacementDirectory, replacementDocumentId } from './document-retirement.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
@@ -193,6 +197,12 @@ export class EchoHost extends Resource {
 
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
+
+  /** The latest retirement pass per space; passes are chained so two never write one space's directory at once. */
+  readonly #retirements = new Map<SpaceId, Promise<void>>();
+
+  /** Retired documents wiped this session, since every later directory change still lists them. */
+  readonly #wipedDocuments = new Set<DocumentId>();
 
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
@@ -426,6 +436,17 @@ export class EchoHost extends Resource {
         const departed = previous ? this.#departedDocuments(previous, e) : [];
         if (departed.length > 0 || e.previousRootId) {
           this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
+      }
+
+      // A directory change can carry another peer's retirement, and a newly opened space can link a document
+      // quarantined on an earlier start.
+      this.#scheduleRetirement(e.spaceId);
+    });
+    this._automergeHost.documentQuarantined.on(this._ctx, ({ reason }) => {
+      if (reason === 'load-failed') {
+        for (const spaceId of this._spaceStateManager.spaceIds) {
+          this.#scheduleRetirement(spaceId);
         }
       }
     });
@@ -846,6 +867,142 @@ export class EchoHost extends Resource {
       removedIndexEntries,
       purgedFeedBlocks: 0,
     };
+  }
+
+  /** Queues a retirement pass for a space behind the one already running. Failures are logged, not propagated. */
+  #scheduleRetirement(spaceId: SpaceId): void {
+    const previous = this.#retirements.get(spaceId) ?? Promise.resolve();
+    const next = previous
+      .then(() => this.#retireDocuments(spaceId))
+      .catch((err) => {
+        if (!this._ctx.disposed) {
+          log.warn('document retirement failed', { spaceId, err });
+        }
+      });
+    this.#retirements.set(spaceId, next);
+  }
+
+  /**
+   * Retirement, in both directions. Documents the space directory has retired are wiped without being read —
+   * the share of every peer. Linked documents this host could not load are rebuilt from the index and retired
+   * in the directory — the share of the peer that hit the failure.
+   */
+  async #retireDocuments(spaceId: SpaceId): Promise<void> {
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    const directory = root?.doc();
+    if (!root || !directory) {
+      return;
+    }
+
+    await this.#wipeRetiredDocuments(spaceId, DatabaseDirectory.getRetiredDocumentIds(directory));
+
+    const unloadable = new Map<DocumentId, string[]>();
+    for (const [objectId, link] of Object.entries(directory.links ?? {})) {
+      const url = link.toString();
+      if (!isValidAutomergeUrl(url)) {
+        continue;
+      }
+      const documentId = interpretAsDocumentId(url);
+      const quarantine = this._automergeHost.quarantinedDocuments.get(documentId);
+      if (quarantine?.reason === 'load-failed' && directory.retired?.[documentId] === undefined) {
+        defaultMap(unloadable, documentId, () => []).push(objectId);
+      }
+    }
+    for (const [documentId, objectIds] of unloadable) {
+      await this.#retireDocument(spaceId, root, documentId, objectIds);
+    }
+  }
+
+  /**
+   * Replaces a document that cannot be loaded with one rebuilt from the index, then records the retirement in
+   * the space directory, which every peer acts on. The history is dropped; the objects keep the state the index
+   * last saw. Left quarantined, and not retired, while the index lacks any of the document's objects.
+   */
+  async #retireDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+  ): Promise<void> {
+    const indexed = await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen({ self: this }, function* () {
+        const metas = (yield* this.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds })).filter(
+          (meta) => meta.documentId === documentId,
+        );
+        const snapshots = new Map(
+          (yield* this.indexEngine.querySnapshotsJSON(metas.map((meta) => meta.recordId))).map(
+            ({ recordId, snapshot }) => [recordId, snapshot],
+          ),
+        );
+        return metas.flatMap((meta): IndexedObject[] => {
+          const json = snapshots.get(meta.recordId);
+          return json ? [{ objectId: meta.objectId, json, createdAt: meta.createdAt }] : [];
+        });
+      }),
+    );
+    const missing = objectIds.filter((objectId) => !indexed.some((object) => object.objectId === objectId));
+    if (missing.length > 0) {
+      log.warn('unloadable document kept quarantined: the index has no state for some of its objects', {
+        spaceId,
+        documentId,
+        missing,
+      });
+      return;
+    }
+
+    const replacementId = await replacementDocumentId(documentId);
+    const replacementUrl = stringifyAutomergeUrl(replacementId);
+    const directory = makeReplacementDirectory({ spaceId, spaceKey: root.getSpaceKey(), objects: indexed });
+    const replacement = A.change(A.init<DatabaseDirectory>(), (draft) => Object.assign(draft, directory));
+    using _replacement = await this._automergeHost.createDoc<DatabaseDirectory>(replacement, {
+      preserveHistory: true,
+      documentId: replacementId,
+    });
+    root.change((draft) => {
+      draft.links ??= {};
+      for (const objectId of objectIds) {
+        draft.links[objectId] = new A.RawString(replacementUrl);
+      }
+      draft.retired ??= {};
+      draft.retired[documentId] = { replacedBy: new A.RawString(replacementUrl) };
+    });
+    await this._automergeHost.flush(this._ctx, { documentIds: [root.documentId, replacementId] });
+    log.info('retired a document that could not be loaded', {
+      spaceId,
+      documentId,
+      replacementId,
+      objects: objectIds.length,
+    });
+
+    await this.#wipeRetiredDocuments(spaceId, [documentId]);
+  }
+
+  /**
+   * Wipes documents the space directory retired, without reading them: the directory naming them is the
+   * attribution, since loading one is what retirement exists to avoid. Idempotent.
+   */
+  async #wipeRetiredDocuments(spaceId: SpaceId, documentIds: readonly string[]): Promise<void> {
+    const retired = documentIds.filter(
+      (documentId): documentId is DocumentId => isValidDocumentId(documentId) && !this.#wipedDocuments.has(documentId),
+    );
+    if (retired.length === 0) {
+      return;
+    }
+    for (const documentId of retired) {
+      await this._automergeHost.quarantineDocument(documentId, { reason: 'retired' });
+    }
+    // Index rows first: the indexer finds documents through them, so one outliving its bytes would be read again.
+    await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.deleteObjects({ spaceId, documentIds: retired, objects: [] }),
+    );
+    for (const documentId of retired) {
+      await this._automergeHost.removeDocument(documentId);
+      this.#wipedDocuments.add(documentId);
+    }
+    log('wiped retired documents', { spaceId, documents: retired.length });
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */

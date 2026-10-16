@@ -26,6 +26,7 @@ import {
   type SubductionPolicy,
   initSubduction,
   interpretAsDocumentId,
+  stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
@@ -57,8 +58,10 @@ import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
 import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
+import { DocumentQuarantinedError, isOutOfMemoryError } from './quarantine.ts';
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { type QuarantineReason, type QuarantineRecord, SqliteQuarantineStore } from './sqlite-quarantine-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
@@ -245,6 +248,13 @@ export class AutomergeHost extends Resource {
 
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
+  readonly #quarantineStore = new SqliteQuarantineStore();
+
+  /** Documents this host never loads, replicates or serves; see {@link quarantineDocument}. */
+  readonly #quarantined = new Map<DocumentId, QuarantineRecord>();
+
+  /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
+  public readonly documentQuarantined = new Event<QuarantineRecord>();
 
   private _syncTask: DeferredTask | undefined = undefined;
   /**
@@ -409,6 +419,12 @@ export class AutomergeHost extends Resource {
     // Tables must exist before the Repo constructor calls loadRange() on the storage adapter.
     await RuntimeProvider.runPromise(this._runtime)(this.migrate);
 
+    // Read before the Repo exists, so nothing can start loading a document that broke an earlier start.
+    for (const record of await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.list())) {
+      this.#quarantined.set(record.documentId, record);
+    }
+    const denylist = [...this.#quarantined.keys()].map((documentId) => stringifyAutomergeUrl(documentId));
+
     // `Repo` unconditionally constructs a Subduction `SubductionSource` (with a fresh
     // `MemorySigner` when none is injected) regardless of whether we register any
     // `subductionAdapters`. That source's signer needs the Subduction WASM module
@@ -425,6 +441,7 @@ export class AutomergeHost extends Resource {
         shareConfig: this._shareConfig,
         subductionPolicy: this._subductionPolicy,
         storage: this._storage,
+        denylist,
         network: [],
         signer: this._signer,
         subductionAdapters: [
@@ -485,9 +502,25 @@ export class AutomergeHost extends Resource {
         peerId: this._peerId as PeerId,
         shareConfig: this._shareConfig,
         storage: this._storage,
+        denylist,
         network: [this._echoNetworkAdapter],
       });
     }
+
+    // A source that cannot apply a document only marks itself unavailable, so a load waiting on the document would
+    // wait forever while every retry fails the same way; out of memory is the failure that always repeats.
+    Event.wrap<{ documentId: DocumentId; error: unknown; source: string }>(this._repo, 'document-load-failed').on(
+      this._ctx,
+      ({ documentId, error, source }) => {
+        if (!isOutOfMemoryError(error)) {
+          log.warn('document load failed', { documentId, source, error });
+          return;
+        }
+        this.quarantineDocument(documentId, { reason: 'load-failed', error }).catch((err) =>
+          log.error('failed to quarantine document', { documentId, err }),
+        );
+      },
+    );
 
     // Here, and awaited: the Repo constructs its engine without loading any tree, and nothing can
     // attach a document or start a sync round until `open()` returns, so a rewrite the migrations
@@ -654,7 +687,10 @@ export class AutomergeHost extends Resource {
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
   get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
-    return this._storage.migrate.pipe(Effect.andThen(this._headsStore.migrate));
+    return this._storage.migrate.pipe(
+      Effect.andThen(this._headsStore.migrate),
+      Effect.andThen(this.#quarantineStore.migrate),
+    );
   }
 
   get peerId(): PeerId {
@@ -740,10 +776,14 @@ export class AutomergeHost extends Resource {
    * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *
-   * Returns null when `fetchFromNetwork: false` and the document is not on disk.
+   * Returns null when `fetchFromNetwork: false` and the document is not on disk, and when the document is
+   * quarantined — including one quarantined while this call waits on it.
    */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocumentLease<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
+    if (this.isQuarantined(documentId)) {
+      return null;
+    }
     // Leased before the wait, so the document cannot be evicted between becoming ready and the
     // caller receiving it.
     const lease = this.acquireDoc<T>(documentId);
@@ -752,6 +792,11 @@ export class AutomergeHost extends Resource {
       const result = await this._loadLeasedDoc(ctx, lease, opts);
       settled = result !== null;
       return result;
+    } catch (err) {
+      if (err instanceof DocumentQuarantinedError) {
+        return null;
+      }
+      throw err;
     } finally {
       if (!settled) {
         lease[Symbol.dispose]();
@@ -772,7 +817,64 @@ export class AutomergeHost extends Resource {
       typeof documentId !== 'string' || !(documentId.includes('#') || documentId.includes('/')),
       'A lease cannot be taken on a heads-pinned or path-scoped URL.',
     );
-    return this._leases.acquire<T>(interpretAsDocumentId(documentId));
+    const id = interpretAsDocumentId(documentId);
+    // Leasing faults the document in, which is the load the quarantine exists to prevent.
+    if (this.#quarantined.has(id)) {
+      throw new DocumentQuarantinedError(id);
+    }
+    return this._leases.acquire<T>(id);
+  }
+
+  /** Whether the host refuses to load the document; see {@link quarantineDocument}. */
+  isQuarantined(documentId: AnyDocumentId): boolean {
+    return this.#quarantined.has(interpretAsDocumentId(documentId));
+  }
+
+  /** Documents the host refuses to load, with why. */
+  get quarantinedDocuments(): ReadonlyMap<DocumentId, QuarantineRecord> {
+    return this.#quarantined;
+  }
+
+  /**
+   * Stops loading, replicating and serving a document, persistently: a document that cannot be loaded would
+   * otherwise stall every start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
+   * {@link removeDocument}.
+   */
+  async quarantineDocument(
+    documentId: DocumentId,
+    { reason, error }: { reason: QuarantineReason; error?: unknown },
+  ): Promise<void> {
+    const existing = this.#quarantined.get(documentId);
+    if (existing) {
+      // Retirement is terminal, so it supersedes the load failure that led to it.
+      if (reason === 'retired' && existing.reason !== 'retired') {
+        const record: QuarantineRecord = { ...existing, reason };
+        this.#quarantined.set(documentId, record);
+        await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.add(record));
+      }
+      return;
+    }
+    const record: QuarantineRecord = {
+      documentId,
+      reason,
+      error: error === undefined ? undefined : String(error),
+      quarantinedAt: Date.now(),
+    };
+    // Registered before the write, so a load arriving meanwhile is already refused.
+    this.#quarantined.set(documentId, record);
+    await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.add(record));
+
+    this._replicationLeases.get(documentId)?.[Symbol.dispose]();
+    this._replicationLeases.delete(documentId);
+    this._leases.forget(documentId);
+    this._documentsToSync.delete(documentId);
+    this._documentsToRequest.delete(documentId);
+    this._headsUpdates.delete(documentId);
+    // Detaches every source, so none retries the load.
+    await this._repo.removeFromCache(documentId);
+
+    log.warn('quarantined document', { documentId, reason, error: record.error });
+    this.documentQuarantined.emit(record);
   }
 
   /** Documents currently leased — what the host holds because something is using it. */
@@ -917,8 +1019,18 @@ export class AutomergeHost extends Resource {
     if (peeked.state === 'failed') {
       return Promise.reject(peeked.error);
     }
+    if (this.#quarantined.has(progress.documentId)) {
+      return Promise.reject(new DocumentQuarantinedError(progress.documentId));
+    }
     return new Promise<DocHandle<T>>((resolve, reject) => {
-      const unsubscribe = progress.subscribe((state) => {
+      const unsubscribeQuarantine = this.documentQuarantined.on(({ documentId }) => {
+        // A failed load leaves the query `'unavailable'`, which this wait would otherwise sit through forever.
+        if (documentId === progress.documentId) {
+          unsubscribe();
+          reject(new DocumentQuarantinedError(documentId));
+        }
+      });
+      const unsubscribeProgress = progress.subscribe((state) => {
         if (state.state === 'ready' && isLoaded(state)) {
           unsubscribe();
           resolve(state.handle);
@@ -928,6 +1040,10 @@ export class AutomergeHost extends Resource {
         }
         // `'unavailable'` and `'loading'` are non-terminal — keep waiting.
       });
+      const unsubscribe = () => {
+        unsubscribeQuarantine();
+        unsubscribeProgress();
+      };
       signal?.addEventListener('abort', () => {
         unsubscribe();
         reject(signal.reason instanceof Error ? signal.reason : new Error('Wait for document aborted.'));
@@ -992,7 +1108,10 @@ export class AutomergeHost extends Resource {
     // listener; a throttled save already scheduled still runs, and the flush is what makes it a
     // no-op, since its heads then match the last save.
     if (this._repo.handles[documentId]) {
-      await this._repo.flush([documentId]);
+      // A quarantined document's handle holds at most a partial load, which must not be saved over its bytes.
+      if (!this.#quarantined.has(documentId)) {
+        await this._repo.flush([documentId]);
+      }
       await this._repo.removeFromCache(documentId);
     }
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
@@ -1203,7 +1322,12 @@ export class AutomergeHost extends Resource {
     authorizePut: async (_requestor, _author, sedimentreeId) => {
       // Intentionally permissive — see class-level comment above. Logged because this is the
       // only signal that a peer actually delivered changes for a document.
-      log.verbose('subduction authorizePut', { documentId: sedimentreeIdToDocumentId(sedimentreeId) });
+      const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+      log.verbose('subduction authorizePut', { documentId });
+      // Sticky, which is what a quarantine wants: the pushed bytes would only be loaded again.
+      if (this.#quarantined.has(documentId)) {
+        throw new DocumentQuarantinedError(documentId);
+      }
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
       const allowed: SedimentreeId[] = [];
@@ -1238,6 +1362,9 @@ export class AutomergeHost extends Resource {
     const subductionPeerIdHex = subductionPeerId.toString();
     const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
     const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+    if (this.#quarantined.has(documentId)) {
+      return false;
+    }
     if (!repoPeerId) {
       // Default-allow on the unbound-peer race; logged because it bypasses the share policy.
       log.verbose('subduction share probe: peer not bound, allowing', { documentId, subductionPeerIdHex });
@@ -1515,7 +1642,9 @@ export class AutomergeHost extends Resource {
   /**
    * Update the local collection state based on the locally stored document heads.
    */
-  async updateLocalCollectionState(collectionId: string, documentIds: DocumentId[]): Promise<void> {
+  async updateLocalCollectionState(collectionId: string, allDocumentIds: DocumentId[]): Promise<void> {
+    // Never advertised: a peer would replicate the document to us or ask us to serve it.
+    const documentIds = allDocumentIds.filter((documentId) => !this.#quarantined.has(documentId));
     const heads = await this.getHeads(documentIds);
     const documents: Record<DocumentId, Heads> = Object.fromEntries(
       heads.map((heads, index) => [documentIds[index], heads ?? []]),
@@ -1660,7 +1789,10 @@ export class AutomergeHost extends Resource {
     }
 
     // An advertised document is in sync, but a sync round costs little and delivers the change if it is new.
-    const toReplicate = [...different, ...advertised, ...missingOnRemote, ...missingOnLocal];
+    // A mesh peer's diff is symmetric, so it can still offer a document this host quarantined.
+    const toReplicate = [...different, ...advertised, ...missingOnRemote, ...missingOnLocal].filter(
+      (documentId) => !this.#quarantined.has(documentId),
+    );
     const differentSet = new Set([...different, ...advertised]);
 
     if (toReplicate.length === 0) {
@@ -1803,7 +1935,7 @@ export class AutomergeHost extends Resource {
    * reports it whenever no source can serve the document *yet*), so it cannot be the release signal.
    */
   private _leaseUntilSettled(documentId: DocumentId): void {
-    if (this._replicationLeases.has(documentId)) {
+    if (this._replicationLeases.has(documentId) || this.#quarantined.has(documentId)) {
       return;
     }
     const lease = this.acquireDoc(documentId);
