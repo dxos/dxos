@@ -242,5 +242,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 232 | 10-16 12:56 | 35m 00s | this commit | Libraries group in the explorer; spec pages drawn with the index; @dxos/examples on the refreshed base; review fixes (D208): namespace-aware printing of library names, sync keeps literals and comments, 129 duplicated comment lines removed |
 | 233 | 10-16 13:33 | 37m 00s | this commit | Results travel with a push and the hosted explorer and hub show pass/fail, kept current without a redraw (D209); @[refuted] soundness probes (D210); task links follow names into libraries; Rust kernel task re-scoped |
 | 234 | 10-16 13:59 | 26m 00s | this commit | Third usability probe (docs/ux/2026-10-16-libraries-and-results.md) and its fixes: failing checks named on the overview, first-sentence summaries, short change messages, theorem pages state their proposition, glossary links the decision log |
+| 235 | 10-16 14:36 | 37m 00s | this commit | @dxos/web published (D211): the four projects of D189 exist; constructor patterns and builtins through library mounts; each project counts its own checks |
 
-Total from stage 1 to stage 234: 72h 39m.
+Total from stage 1 to stage 235: 73h 16m.
