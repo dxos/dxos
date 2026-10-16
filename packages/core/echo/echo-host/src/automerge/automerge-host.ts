@@ -27,7 +27,14 @@ import {
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
+import {
+  type CommitId,
+  type MemorySigner,
+  type SedimentreeId,
+  SignedFragment,
+  SignedLooseCommit,
+  type Subduction,
+} from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -1567,33 +1574,85 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * The advertised documents storage cannot vouch for: a document whose every head beyond ours is a stored change
-   * is confirmed and dropped, so it is neither loaded nor synced.
+   * The advertised documents storage cannot vouch for. A head beyond ours is confirmed only when storage holds it and
+   * everything beneath it, down to a head of ours or the first change, which is what loading the document would apply.
    */
   private async _unconfirmedInStorage(
     documentIds: DocumentId[],
     localState: CollectionState,
     remoteState: CollectionState,
   ): Promise<DocumentId[]> {
-    const changes = documentIds.flatMap((documentId) => {
-      const local = new Set(localState.documents[documentId] ?? []);
-      const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
-      return (remoteState.documents[documentId] ?? [])
-        .filter((head) => !local.has(head) && !this._hasLocalChange(documentId, head))
-        .map((hash) => ({ documentId, sedimentreeId, hash }));
-    });
-    const unconfirmed = new Set<DocumentId>();
-    for (const { documentId, sedimentreeId, hash } of changes) {
-      const held =
-        (await this._storage.load([SUBDUCTION_PREFIX, 'commits', sedimentreeId, hash])) !== undefined ||
-        (await this._storage.load([SUBDUCTION_PREFIX, 'fragments', sedimentreeId, hash])) !== undefined;
-      if (held) {
-        this._confirmChange(documentId, hash);
+    const unconfirmed: DocumentId[] = [];
+    for (const documentId of documentIds) {
+      const local = localState.documents[documentId] ?? [];
+      const beyond = (remoteState.documents[documentId] ?? []).filter(
+        (head) => !local.includes(head) && !this._hasLocalChange(documentId, head),
+      );
+      if (beyond.length === 0) {
+        continue;
+      }
+      const isStored = await this._storedHistory(documentId, local);
+      if (beyond.every(isStored)) {
+        for (const head of beyond) {
+          this._confirmChange(documentId, head);
+        }
       } else {
-        unconfirmed.add(documentId);
+        unconfirmed.push(documentId);
       }
     }
-    return documentIds.filter((documentId) => unconfirmed.has(documentId));
+    return unconfirmed;
+  }
+
+  /** Whether storage holds a change and its whole history, read from the document's Subduction records. */
+  private async _storedHistory(documentId: DocumentId, heads: readonly string[]): Promise<(hash: string) => boolean> {
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    const families = ['commits', 'fragments'] as const;
+    const records = await Promise.all(
+      families.map((family) => this._storage.loadRange([SUBDUCTION_PREFIX, family, sedimentreeId])),
+    );
+    const beneath = new Map<string, string[]>();
+    families.forEach((family, index) => {
+      for (const { key, data } of records[index]) {
+        if (key.length === 4 && data) {
+          try {
+            beneath.set(key[3], recordDependencies(family, data));
+          } catch (err) {
+            log.warn('unreadable subduction record', { documentId, family, err });
+          }
+        }
+      }
+    });
+
+    const known = new Map<string, boolean>(heads.map((head) => [head, true]));
+    return (hash) => {
+      const stack = [hash];
+      const visiting = new Set<string>();
+      while (stack.length > 0) {
+        const current = stack[stack.length - 1];
+        if (known.has(current)) {
+          stack.pop();
+          continue;
+        }
+        const dependencies = this._hasLocalChange(documentId, current) ? [] : beneath.get(current);
+        if (dependencies === undefined) {
+          known.set(current, false);
+          stack.pop();
+          continue;
+        }
+        const pending = dependencies.filter((dependency) => !known.has(dependency));
+        if (pending.length > 0 && !visiting.has(current)) {
+          visiting.add(current);
+          stack.push(...pending);
+          continue;
+        }
+        known.set(
+          current,
+          dependencies.every((dependency) => known.get(dependency) === true),
+        );
+        stack.pop();
+      }
+      return known.get(hash) === true;
+    };
   }
 
   private _confirmChange(documentId: DocumentId, changeHash: string): void {
@@ -1948,6 +2007,36 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
     };
     lease.on('change', onChange);
   });
+};
+
+/** What a stored Subduction record's change rests on: a loose commit's parents, or a fragment's boundary. */
+const recordDependencies = (family: 'commits' | 'fragments', data: Uint8Array): string[] => {
+  const toHex = (ids: CommitId[]) =>
+    ids.map((id) => {
+      try {
+        return id.toHexString();
+      } finally {
+        id.free();
+      }
+    });
+  if (family === 'commits') {
+    const signed = SignedLooseCommit.tryDecode(data);
+    const commit = signed.payload;
+    try {
+      return toHex(commit.parents);
+    } finally {
+      commit.free();
+      signed.free();
+    }
+  }
+  const signed = SignedFragment.tryDecode(data);
+  const fragment = signed.payload;
+  try {
+    return toHex(fragment.boundary);
+  } finally {
+    fragment.free();
+    signed.free();
+  }
 };
 
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */

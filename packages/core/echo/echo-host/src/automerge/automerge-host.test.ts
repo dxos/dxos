@@ -10,6 +10,7 @@ import {
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
+import { CommitId, SedimentreeId } from '@automerge/automerge-subduction';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -21,7 +22,7 @@ import { range } from '@dxos/util';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { TestReplicationNetwork } from '../testing/index.ts';
-import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
+import { AutomergeHost, type RootDocumentSpaceKeyProvider, documentIdToSedimentreeIdHex } from './automerge-host.ts';
 import { type EchoNetworkAdapter } from './echo-network-adapter.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 import { waitForEviction } from './subduction-test-utils.ts';
@@ -466,7 +467,7 @@ describe('AutomergeHost', () => {
 
   // Confirmations live in memory, so after a restart only storage can vouch for a head a remote lists beside
   // ours, as EDGE lists fragment heads beside commit tips.
-  test("after a restart a remote head stored as one of the document's changes is confirmed without a load", async () => {
+  test('after a restart a remote head is confirmed without a load only when storage holds its whole history', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const openHost = async () => {
@@ -491,6 +492,24 @@ describe('AutomergeHost', () => {
     handle.change((doc: any) => {
       doc.value = 2;
     });
+    // Subduction stores a change it receives before its parent arrives, and the document cannot apply it.
+    const orphanParent = A.change(A.clone(handle.doc()), (doc: any) => {
+      doc.value = 3;
+    });
+    const orphan = A.change(A.clone(orphanParent), (doc: any) => {
+      doc.value = 4;
+    });
+    const [orphanHead] = A.getHeads(orphan);
+    handle[Symbol.dispose]();
+    await waitForEviction(expect, writer, documentId);
+    await (
+      await writer.subduction
+    ).storeCommit(
+      SedimentreeId.fromBytes(Buffer.from(documentIdToSedimentreeIdHex(documentId), 'hex')),
+      CommitId.fromHexString(orphanHead),
+      A.getHeads(orphanParent).map((head) => CommitId.fromHexString(head)),
+      A.getLastLocalChange(orphan)!,
+    );
     await writer.flush(Context.default());
     await writer.close();
 
@@ -515,6 +534,7 @@ describe('AutomergeHost', () => {
     };
 
     expect(await loadsAfter([localHead, ancestorHead])).toEqual(0);
+    expect(await loadsAfter([localHead, orphanHead])).toEqual(1);
     expect(await loadsAfter([localHead, missingHead])).toEqual(1);
   });
 
