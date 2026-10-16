@@ -32,6 +32,8 @@ export const make = (): Skill.Skill =>
         Discord messages reach you with a header such as
         \`[discord #general; channel 111; thread 222; message 222; from @rich (333); addressed: mentioned]\`.
         Nothing you write is posted to Discord: you act only through these tools, and doing nothing is a choice.
+        When you answer a question or request, deliver it with ${tool(DiscordAgentOperation.Reply)} or
+        ${tool(DiscordAgentOperation.DirectMessage)}; an answer you only write out never reaches anyone.
 
         - ${tool(DiscordAgentOperation.Reply)}: post a message. To answer in the conversation, pass the header's
           \`thread\` (started on your first post there), or its \`channel\` when it names no thread (a thread you are
