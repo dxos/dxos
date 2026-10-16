@@ -292,8 +292,10 @@ def metaJson (s : Site) (console : Bool) (events : Int) (features : Int) : {IO, 
   references linked, dependencies, dependents, verdict and tasks. -/
 def defJson (s : Site) (name : Text) (e : Entry) : {IO} Json :=
   let h := Entry.hash e
+  -- A library's definition reads as its library wrote it; the page's name still says where it is mounted (D206).
+  let shown := Names.unmount name
   let source :=
-    match try (fun _ => viewEntryWith s.printer s.dir s.ns name e false) with
+    match try (fun _ => viewEntryWith s.printer s.dir s.ns shown e false) with
     | Result.ok text =>
       let body := join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
       -- A field accessor is only its header's note (`-- a field of structure …`), which is then what the page shows.
@@ -301,7 +303,7 @@ def defJson (s : Site) (name : Text) (e : Entry) : {IO} Json :=
     | Result.err message => "-- " ++ message
   -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
   let tsSource :=
-    match try (fun _ => viewEntryIn s.printer s.dir s.ns name e "ts") with
+    match try (fun _ => viewEntryIn s.printer s.dir s.ns shown e "ts") with
     | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (Text.lines text))
     | Result.err message => "// " ++ message
   let deps := List.filter (fun d => Map.contains d s.index && d != h) (getOr (Map.lookup h s.depsOf) [])
@@ -315,7 +317,7 @@ def defJson (s : Site) (name : Text) (e : Entry) : {IO} Json :=
   Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
     Json.str
     (List.filter (fun other => other != name) (getOr (Map.lookup h s.namesByHash) [])))), ("signature", Json.str (match e with
-    | Entry.theorem _ => statementOf source name
+    | Entry.theorem _ => statementOf source shown
     | _ => if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (Explorer.verdictOf s.dir h)), ("tasks", Json.arr (List.map
     (fun t => Json.obj [("id", Json.str (Task.id t)), ("title", Json.str (Task.title t)), ("state", Json.str (stateText t.state))])
     (about s.taskMap name h)))]

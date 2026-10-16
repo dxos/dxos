@@ -2842,8 +2842,9 @@ rt.named(Comments$current, "Comments.current");
 
 function Explorer$defJson(s, name, e) {
   const h = Entry$hash(e);
+  const shown = Names$unmount(name);
   let source;
-  const t0 = lib$base$try(rt.named((v) => Cli$viewEntryWith(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), name, e, false), "Explorer.defJson/\u03bb"));
+  const t0 = lib$base$try(rt.named((v) => Cli$viewEntryWith(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), shown, e, false), "Explorer.defJson/\u03bb"));
   m1: {
     if (t0.tag === 0) {
       const text = t0.fields[0];
@@ -2863,7 +2864,7 @@ function Explorer$defJson(s, name, e) {
     rt.nomatch(t0);
   }
   let tsSource;
-  const t2 = lib$base$try(rt.named((v_1) => Cli$viewEntryIn(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), name, e, "ts"), "Explorer.defJson/\u03bb"));
+  const t2 = lib$base$try(rt.named((v_1) => Cli$viewEntryIn(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), shown, e, "ts"), "Explorer.defJson/\u03bb"));
   m3: {
     if (t2.tag === 0) {
       const text_1 = t2.fields[0];
@@ -2896,7 +2897,7 @@ function Explorer$defJson(s, name, e) {
   let r8;
   m9: {
     if (e.tag === 6) {
-      r8 = Explorer$statementOf(source, name);
+      r8 = Explorer$statementOf(source, shown);
       break m9;
     }
     if (true) {
@@ -9318,11 +9319,11 @@ function Print$splitSig(sig$, n$) {
 }
 rt.named(Print$splitSig, "Print.splitSig");
 
-function Ts$generics(names) {
-  if (lib$base$List$isEmpty(names)) {
+function Ts$generics(args) {
+  if (lib$base$List$isEmpty(args)) {
     return "";
   } else {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", names)), ">");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "<", rt.ap(rt.prims["Text.join"], ", ", args)), ">");
   }
 }
 rt.named(Ts$generics, "Ts.generics");
