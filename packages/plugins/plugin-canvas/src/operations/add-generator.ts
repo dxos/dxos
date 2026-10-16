@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { type GeneratorNode, topZ } from '@dxos/react-ui-canvas/scene';
+import { type GeneratorNode, topZ } from '@dxos/react-ui-canvas/headless';
 
-import { putNodeRecord } from '#model';
 import { CanvasOperation, Generator } from '#types';
 
+import { putNodeRecord } from '../model/content.ts';
 import { loadScene } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = CanvasOperation.AddGenerator.pipe(

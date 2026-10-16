@@ -30,7 +30,7 @@ import {
   elementLayer,
   isFrameNode,
   sortByZ,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas/headless';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`

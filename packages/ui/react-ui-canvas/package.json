@@ -32,6 +32,11 @@
       "source": "./src/generator/worker.ts",
       "types": "./dist/types/src/generator/worker.d.ts",
       "import": "./dist/lib/generator-worker.mjs"
+    },
+    "./headless": {
+      "source": "./src/headless.ts",
+      "types": "./dist/types/src/headless.d.ts",
+      "import": "./dist/lib/headless.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

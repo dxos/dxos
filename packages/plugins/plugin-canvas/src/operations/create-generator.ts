@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 
-import { generatorCompiler } from '#model';
 import { CanvasOperation, Generator } from '#types';
+
+import { generatorCompiler } from '../model/compiler.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.CreateGenerator> = CanvasOperation.CreateGenerator.pipe(
   Operation.withHandler(

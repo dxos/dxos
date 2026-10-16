@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { createTimeline, setKey, trackId } from '@dxos/react-ui-canvas/scene';
+import { createTimeline, setKey, trackId } from '@dxos/react-ui-canvas/headless';
 
-import { putTimeline } from '#model';
 import { CanvasOperation } from '#types';
 
+import { putTimeline } from '../model/content.ts';
 import { CanvasElementNotFoundError, loadScene } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.SetTimelineKey> = CanvasOperation.SetTimelineKey.pipe(

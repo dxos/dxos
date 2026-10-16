@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { type GeneratorSource } from '@dxos/react-ui-canvas/scene';
+import { type GeneratorSource } from '@dxos/react-ui-canvas/headless';
 
 /** The skill an agent loads to write generators. */
 export const SKILL_KEY = 'org.dxos.skill.canvasGenerators';

@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type GeneratorNode, type Scene, checkGenerator } from '@dxos/react-ui-canvas/scene';
+import { type GeneratorNode, type Scene, checkGenerator } from '@dxos/react-ui-canvas/headless';
 
-import { generatorCompiler } from '#model';
 import { CanvasOperation, Generator } from '#types';
 
+import { generatorCompiler } from '../model/compiler.ts';
 import { loadScene } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.InspectGenerator> = CanvasOperation.InspectGenerator.pipe(

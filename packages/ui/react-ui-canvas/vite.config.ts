@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'motion': 'src/generator/motion.ts',
+    'headless': 'src/headless.ts',
     'generator-worker': 'src/generator/worker.ts',
   },
   jsx: 'react',
