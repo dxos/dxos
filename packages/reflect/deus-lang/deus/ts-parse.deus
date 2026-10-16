@@ -6,10 +6,24 @@
 
 namespace TsParse
 
-/-- The source as the DEUS lexer reads it: `//` lines dropped, `/** … */` as a doc comment, `#[` as `@[`. -/
+/-- The source as the DEUS lexer reads it: `//` lines dropped, `/** … */` as a doc comment, `#[` as `@[`; text
+  inside a string literal is left as it is. -/
 def prepare (source : Text) : Text :=
   let lines := List.filter (fun l => not (startsWith "//" (Text.trim l))) (Text.lines source)
-  Text.replace "#[" "@[" (Text.replace "*/" "-/" (Text.replace "/**" "/--" (Text.join "\n" lines)))
+  let text := Text.join "\n" lines
+  let n := Text.length text
+  let rec go i inString acc :=
+    if i >= n then Text.concat (reverse acc) else
+      let c := Text.code text i
+      if inString then
+        if c == '\\' && i + 1 < n then go (i + 2) true (Text.slice text i (i + 2) :: acc)
+        else go (i + 1) (c != '"') (Text.slice text i (i + 1) :: acc)
+      else if c == '"' then go (i + 1) true ("\"" :: acc)
+      else if Text.slice text i (i + 3) == "/**" then go (i + 3) false ("/--" :: acc)
+      else if Text.slice text i (i + 2) == "*/" then go (i + 2) false ("-/" :: acc)
+      else if Text.slice text i (i + 2) == "#[" then go (i + 2) false ("@[" :: acc)
+      else go (i + 1) false (Text.slice text i (i + 1) :: acc)
+  go 0 false []
 
 /-- Whether the next token is the word or symbol `w`, whatever kind the lexer gave it. -/
 def at (p : Parser) (w : Text) : Bool :=
@@ -452,8 +466,18 @@ def decl (p : Parser) : {Throw Text} Decl :=
         skip p
         let args := commaList p ")" (fun _ => TsParse.ty p)
         word p ":"
-        let result := TsParse.ty p
-        List.foldr (fun a r => Ty.arrow a r Option.none) result args
+        -- A row after the result belongs to the last arrow, as `op : A -> {E} B` stores it.
+        let result := TsParse.tyAtom p
+        let effects := if at p "uses" then
+          skip p
+          Option.some (TsParse.row p)
+        else Option.none
+        let rec build xs :=
+          match xs with
+          | [] => result
+          | x :: [] => Ty.arrow x result effects
+          | x :: more => Ty.arrow x (build more) Option.none
+        build args
       else
         word p ":"
         TsParse.ty p

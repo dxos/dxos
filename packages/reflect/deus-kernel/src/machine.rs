@@ -734,7 +734,8 @@ impl Machine {
     }
 
     pub fn call(&mut self, hash: &str, args: Vec<Value>) -> Result<Value, Fail> {
-        let callee = self.ref_term(hash);
+        // One REF term per hash, as `Code.run` keeps them, so repeated calls do not grow the node table.
+        let callee = self.run_ref(hash);
         self.call_term(callee, args)
     }
 

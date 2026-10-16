@@ -9,18 +9,6 @@ import { cliHarness } from './cli-harness.ts';
 
 const { root, scratch, file, deus } = cliHarness('cli-elab-');
 
-// The types a notation is stored as, which the toolchain's codebase has and a fresh one does not.
-const notationTypes = `inductive Syntax.Part @"urn:deus:syntax:Part" where
-  | lit (text : Text)
-  | hole (index : Int) (category : Text) (prec : Int) (repeat : Text)
-  | again (index : Int)
-structure Syntax.Notation a @"urn:deus:syntax:Notation" where
-  category : Text
-  precedence : Int
-  parts : List Syntax.Part
-  expansion : a
-`;
-
 const elaborators = `namespace Unroll
 def double (n : Int) : Int := n * 2
 
@@ -49,7 +37,6 @@ describe('elaborators', () => {
     expect(deus('init', ...c).code).toBe(0);
     // Elaborators build Core as `Sexp`, the toolchain's own type, which a codebase adds like any file.
     expect(deus('add', join(root, 'deus/sexp.deus'), ...c).code).toBe(0);
-    expect(deus('add', file('notation.deus', notationTypes), ...c).code).toBe(0);
 
     const sameBatch = deus(
       'add',
@@ -111,7 +98,7 @@ end Bad
     process.env.DEUS_HOME = root;
     const c = ['--codebase', join(scratch, 'raw')];
     expect(deus('init', ...c).code).toBe(0);
-    expect(deus('add', file('notation-raw.deus', notationTypes), ...c).code).toBe(0);
+    // `init` adds the types a notation is stored as, so any codebase can declare one.
     const rule = 'namespace M\nnotation say := "<say>" w:raw "</say>" => w\n';
     expect(deus('add', file('say.deus', `${rule}end M\n`), ...c).code).toBe(0);
     const said = (text: string) => {

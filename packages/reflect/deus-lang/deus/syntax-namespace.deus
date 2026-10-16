@@ -9,13 +9,6 @@ structure Loaded @"urn:deus:syntax:Loaded" where
   ruleParts : List Part
   ruleTemplate : Option Sexp
 
-/-- Something a notation reads (Syntax.Spec): literal text, a hole of a category (`repeat` is `""`,
-  `"*"` or `",*"`), or a hole read again, which must read the same text. -/
-inductive Part @"urn:deus:syntax:Part" where
-  | lit (text : Text)
-  | hole (index : Int) (category : Text) (prec : Int) (repeat : Text)
-  | again (index : Int)
-
 /-- The namespaces a source file opens or declares, whose notations the parser may need (R-3). -/
 def namespacesNamed (source : Text) : List Text :=
   let lines := List.map trim (Text.lines source)

@@ -343,6 +343,48 @@ a review:
 deus link List.map Cli              # https://<host>/@owner/project/List.map, …/Cli
 ```
 
+## Recipe 6: Your own syntax, and a TypeScript view
+
+A `notation` adds syntax to a namespace; the stored definition is the plain term it stands for, so writing
+with or without it gives one hash, and `deus view` prints it the way it was written
+([Syntax.Spec](https://deus.dmytro-a80.workers.dev/@dxos/toolchain/#s:Syntax.Spec)):
+
+```deus
+namespace Shapes
+notation pair := "<<" a ", " b ">>" => (a, b)
+def origin : (Int, Int) := <<0, 0>>
+end Shapes
+```
+
+A `raw` hole reads text as written, which is how JSX text between tags works in `@dxos/web`
+(`<p>Hello, <b>{name}</b>!</p>`). `@[elab]` makes a notation's expansion a function the compiler runs at each
+use: it gets each hole as Core (a `Sexp`; `deus add deus/sexp.deus` brings the type) and returns the Core the use
+stores, or throws. Add an elaborator before the code that uses it:
+
+```deus
+namespace Unroll
+def double (n : Int) : Int := n * 2
+
+def applied (k : Int) (f : Sexp) (x : Sexp) : Sexp := if k <= 0 then x else Sexp.list [Sexp.sym "app", f, applied (k - 1) f x]
+
+@[elab]
+notation times := "times!(" k:num ", " f ", " x ")" =>
+  match k with
+  | Sexp.list [Sexp.sym "int", Sexp.int n] => applied n f x
+  | _ => throw "times! takes a number"
+end Unroll
+```
+
+Then `def eight : Int := times!(3, double, 1)` stores `double (double (double 1))`.
+
+Every definition also reads as TypeScript-like code (`switch`, `const`, arrow functions, `#[a, b]` tuples), and
+that text reads back:
+
+```bash
+deus view Tour.area --dialect ts > area.ts
+deus update area.ts --dialect ts      # Nothing changed: the same hash, comments kept
+```
+
 ## Where to go next
 
 - `deus help` lists every command.

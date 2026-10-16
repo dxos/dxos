@@ -359,9 +359,12 @@ export const warmLive = async (env, ctx, project) => {
       .filter((change) => !change.imported && change.causal !== head.causal)
       .slice(0, RECENT_CHANGES)
       .map((change) => change.causal);
+    // Before the definition pages: the queue takes one message at a time, so these would otherwise wait for all of them.
+    const changeChunks = [];
     for (let at = 0; at < recent.length; at += CHANGES_PER_CHUNK) {
-      chunks.push({ body: { project, causal: head.causal, changes: recent.slice(at, at + CHANGES_PER_CHUNK) } });
+      changeChunks.push({ body: { project, causal: head.causal, changes: recent.slice(at, at + CHANGES_PER_CHUNK) } });
     }
+    chunks.unshift(...changeChunks);
     if (env.LIVE_QUEUE?.sendBatch && chunks.length > 0) {
       for (let at = 0; at < chunks.length; at += 100) {
         await env.LIVE_QUEUE.sendBatch(chunks.slice(at, at + 100));
@@ -384,7 +387,10 @@ export const warmPages = async (env, ctx, { project, causal, from, count, change
   try {
     if (changes) {
       for (const change of changes) {
-        await live(new Request('https://warm.invalid/'), env, ctx, project, [causal, 'change', `${change}.json`]);
+        // One change that fails to draw leaves the others to draw.
+        await live(new Request('https://warm.invalid/'), env, ctx, project, [causal, 'change', `${change}.json`]).catch(
+          (error) => console.error(`drawing change ${change} failed`, error),
+        );
       }
       return;
     }

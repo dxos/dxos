@@ -64,6 +64,7 @@ describe('browser kernel', () => {
     const fs = memory({
       '/deus/deus/builtins.deus': readFileSync(join(home, 'deus/builtins.deus'), 'utf8'),
       '/deus/deus/prelude.deus': readFileSync(join(home, 'deus/prelude.deus'), 'utf8'),
+      '/deus/deus/notation.deus': readFileSync(join(home, 'deus/notation.deus'), 'utf8'),
       '/work/hello.deus': 'namespace Hello\n\ndef main (u : Unit) : {IO} Unit := IO.print "hello\\n"\n',
     });
     const seed = readFileSync(join(home, 'seed/deus.image'), 'utf8');

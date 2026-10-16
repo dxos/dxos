@@ -37,6 +37,7 @@ const walk = (dir, into, prefix) => {
 const files = {
   '/deus/deus/builtins.deus': readFileSync(join(home, 'deus/builtins.deus'), 'utf8'),
   '/deus/deus/prelude.deus': readFileSync(join(home, 'deus/prelude.deus'), 'utf8'),
+  '/deus/deus/notation.deus': readFileSync(join(home, 'deus/notation.deus'), 'utf8'),
   '/work/hello.deus': [
     'namespace Hello',
     '',

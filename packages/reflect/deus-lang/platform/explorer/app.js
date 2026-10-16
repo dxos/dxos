@@ -1217,6 +1217,7 @@ const requirementsByEvidence = async () => {
   );
   const by = (requirement) => requirement.block.props?.by ?? '';
   return {
+    missing: docs.filter(({ page }) => !page).map(({ name }) => name),
     inCodebase: requirements.filter((requirement) => by(requirement) && !by(requirement).startsWith('vitest:')),
     inVitest: requirements.filter((requirement) => by(requirement).startsWith('vitest:')),
     unproved: requirements.filter((requirement) => !by(requirement)),
@@ -1224,7 +1225,7 @@ const requirementsByEvidence = async () => {
 };
 
 /** The checks, failing first, and what they cover: which requirements they prove and which they cannot see. */
-const checksCard = (key, { inCodebase, inVitest, unproved }) => {
+const checksCard = (key, { missing, inCodebase, inVitest, unproved }) => {
   const row = ({ doc, block }) =>
     `<li class="entry-row">${docLink(doc, `${doc} ${block.id}`, block.id)}<span class="muted">${escape(block.title)}</span></li>`;
   const section = (title, note, requirements) =>
@@ -1234,6 +1235,9 @@ const checksCard = (key, { inCodebase, inVitest, unproved }) => {
   const coverage =
     '<section class="checks-coverage"><p>The count is this codebase\'s tests and theorems, as last pushed. ' +
     `${inCodebase.length} requirements are proved by them; these are not:</p>` +
+    (missing.length > 0
+      ? `<p class="muted">${missing.length} spec documents could not be loaded, so their requirements are not counted: ${missing.map((name) => docLink(name)).join(', ')}.</p>`
+      : '') +
     section(
       'Proved by the vitest suite',
       'Run by CI on the git repository (<code>vitest:</code> evidence), so their results are not on this site.',
@@ -2337,6 +2341,7 @@ const renderHistory = async () => {
         });
     }
   };
+  historyObserver?.disconnect();
   const seen = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -2347,7 +2352,11 @@ const renderHistory = async () => {
     pump();
   });
   view.querySelectorAll('[data-stat]').forEach((slot) => seen.observe(slot));
+  historyObserver = seen;
 };
+
+/** The observer of the History view drawn last, replaced when it is drawn again. */
+let historyObserver;
 
 //
 // Namespace tree.

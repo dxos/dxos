@@ -174,7 +174,9 @@ def init (args : Args) : {IO, Throw Text} Unit :=
     match (Cli.flag args "empty", IO.getEnv "DEUS_HOME") with
     | (false, Option.some home) =>
         addOrUpdate (Args.mk
-          [home ++ "/deus/builtins.deus", home ++ "/deus/prelude.deus"]
+          ([home ++ "/deus/builtins.deus", home ++ "/deus/prelude.deus"] ++
+            -- An embedded file system (the browser console) may carry only the two above.
+            List.filter (fun path => IO.exists path) [home ++ "/deus/notation.deus"])
           (Map.fromList [("codebase", dir), ("message", "standard library"), ("quiet", "true")])) false
         true
     | _ => false
@@ -387,9 +389,16 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     (fun _ => batch ns (fun h => readObject dir h) (fun h => readMeta dir h) (checkTypes ()) parsed)
     (fun e => Throw.throw (nameCallee ns e))
   -- The TypeScript-like dialect prints no comments, number spellings or notations, so a definition it leaves
-  -- unchanged keeps what the codebase knows of how it was written.
+  -- unchanged keeps those from the codebase; its doc and the rest come from the text, which prints them.
+  let written := ["lead", "notes", "spellings", "notations"]
+  let merged := fun (pair : (Text, Sexp)) =>
+    match (readMeta dir (fst pair), snd pair) with
+    | (Option.some (Sexp.list (Sexp.sym "meta" :: stored)), Sexp.list (Sexp.sym "meta" :: fresh)) =>
+        (fst pair, Sexp.list (Sexp.sym "meta" :: (List.filter (fun f => not (List.contains (Sexp.head f) written)) fresh ++
+          List.filter (fun f => List.contains (Sexp.head f) written) stored)))
+    | _ => pair
   let batch := if getOr (option args "dialect") "deus" == "deus" then compiled else
-    Batch.mk (Batch.objects compiled) (Batch.entries compiled) (List.filter (fun pair => isNone (readMeta dir (fst pair))) (Batch.metas compiled)) (Batch.warnings compiled)
+    Batch.mk (Batch.objects compiled) (Batch.entries compiled) (List.map merged (Batch.metas compiled)) (Batch.warnings compiled)
   Cli.warn batch
   let libs :=
     match Project.read dir with

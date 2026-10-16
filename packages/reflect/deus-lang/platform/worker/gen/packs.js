@@ -191,7 +191,11 @@ rt.named(Text$drop, "Text.drop");
 function Worker$Packs$digits(t) {
   let r0;
   if (not(Text$isEmpty(t))) {
-    r0 = List$all(rt.named((c) => Text$isDigit(c), "Worker.Packs.digits/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+    if ((rt.ap(rt.prims["Text.length"], t) <= 9)) {
+      r0 = List$all(rt.named((c) => Text$isDigit(c), "Worker.Packs.digits/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+    } else {
+      r0 = false;
+    }
   } else {
     r0 = false;
   }

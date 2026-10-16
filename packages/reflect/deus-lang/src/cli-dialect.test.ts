@@ -42,4 +42,32 @@ describe('the TypeScript-like dialect', () => {
     expect(edited.stdout).toContain('~ Tour.area');
     expect(deus('eval', 'Tour.area (Shape.circle 1)', ...c).stdout.trim()).toBe('4');
   });
+
+  test('keeps rows, string literals and docs as written', { timeout: 240_000 }, ({ expect }) => {
+    process.env.DEUS_HOME = root;
+    const c = ['--codebase', join(scratch, 'second')];
+    expect(deus('init', ...c).code).toBe(0);
+    const source = [
+      'namespace R',
+      '/-- An effect. -/',
+      'ability Eff (e : Type) where',
+      '  boom : e -> {IO} Unit',
+      '/-- Doubles. -/',
+      'def d (x : Int) : Int := x * 2',
+      'def s : Text := "a #[ b */ c /** d"',
+      'end R',
+      '',
+    ].join('\n');
+    expect(deus('add', file('r.deus', source), ...c).code).toBe(0);
+    const printed = ['R.Eff', 'R.d', 'R.s']
+      .map((name) => deus('view', name, '--dialect', 'ts', ...c).stdout)
+      .join('\n');
+    expect(printed).toContain('/** An effect. */');
+    expect(deus('update', file('r.ts', printed), '--dialect', 'ts', ...c).stdout.trim()).toBe('Nothing changed.');
+    // A doc edited in the dialect lands, though the definition's hash does not change.
+    expect(
+      deus('update', file('r2.ts', printed.replace('Doubles.', 'Twice.')), '--dialect', 'ts', ...c).stdout,
+    ).toContain('R.d (metadata)');
+    expect(deus('view', 'R.d', ...c).stdout).toContain('/-- Twice. -/');
+  });
 });

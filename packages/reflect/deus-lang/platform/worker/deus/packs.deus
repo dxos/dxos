@@ -34,8 +34,9 @@ structure Range @"urn:deus:worker:Range" where
   offset : Int
   length : Option Int
 
-/-- Digits only, as a number; none when `t` is empty or holds anything else. -/
-def digits (t : Text) : Option Int := if not (Text.isEmpty t) && List.all (fun c => Text.isDigit c) (Text.utf8 t) then Int.fromText t else Option.none
+/-- Digits only, as a number; none when `t` is empty, holds anything else, or passes nine digits, which an `Int`
+  (32 bits) could wrap: such a range reads the whole file, as one the Worker does not understand. -/
+def digits (t : Text) : Option Int := if not (Text.isEmpty t) && Text.length t <= 9 && List.all (fun c => Text.isDigit c) (Text.utf8 t) then Int.fromText t else Option.none
 
 /-- `bytes=<first>-[<last>]` as a range; other forms (suffixes, several ranges) read the whole file. -/
 def parseRange (header : Text) : Option Range := if not (startsWith "bytes=" header) then Option.none else

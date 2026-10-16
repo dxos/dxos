@@ -375,7 +375,7 @@ def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj 
         let lines := List.map (fun pair =>
           let (f, t) := pair
           "  " ++ f ++ ": " ++ Ts.ty p t 0 ++ ";") (zip fields (List.drop 1 types))
-        decorator iri name ++ "interface " ++ name ++ Ts.generics names ++ " {\n" ++ join "\n" lines ++
+        Ts.docComment (Option.map asText (metaField meta "doc")) ++ decorator iri name ++ "interface " ++ name ++ Ts.generics names ++ " {\n" ++ join "\n" lines ++
           "\n}"
       else
         let ctorNames := filterMap (fun pair =>
@@ -392,7 +392,7 @@ def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj 
             | fieldName => fieldName ++ ": " ++ Ts.ty p (snd pair) 3
           let args := List.map field (mapIndexed (fun i t => (i, t)) fieldTypes)
           "  | " ++ cname ++ (if List.isEmpty args then "" else "(" ++ join ", " args ++ ")")) ctors
-        decorator iri name ++ "type " ++ name ++ Ts.generics names ++ " =" ++
+        Ts.docComment (Option.map asText (metaField meta "doc")) ++ decorator iri name ++ "type " ++ name ++ Ts.generics names ++ " =" ++
           (if List.isEmpty lines then " never;" else "\n" ++ join "\n" lines ++ ";")
   | _ => Sexp.print obj
 
@@ -415,7 +415,7 @@ def abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (o
             | (args, result) => "  " ++ oname ++ "(" ++ join ", " (List.map (fun x => Ts.ty p x 3) args) ++ "): " ++
                 Ts.ty p result 0 ++ ";"
         | _ => "  " ++ oname ++ ";") ops
-      decorator iri name ++ "ability " ++ name ++ Ts.generics names ++ " {\n" ++ join "\n" lines ++
+      Ts.docComment (Option.map asText (metaField meta "doc")) ++ decorator iri name ++ "ability " ++ name ++ Ts.generics names ++ " {\n" ++ join "\n" lines ++
         "\n}"
   | _ => Sexp.print obj
 
