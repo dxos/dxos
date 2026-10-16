@@ -30,8 +30,8 @@ const MEMBER = /^[0-9a-f]{64}\.[0-9]{1,6}$/;
 /** Passes a run may take before it gives up: each one fetches everything the last one missed. */
 const MAX_PASSES = 30;
 
-/** `/v1/<project>/live/…`. */
-export const live = async (request, env, ctx, project, rest) => {
+/** `/v1/<project>/live/…`; `drawn` waits for this head's own page rather than answering with an earlier head's. */
+export const live = async (request, env, ctx, project, rest, { drawn = false } = {}) => {
   if (request.method !== 'GET') {
     throw new HttpError(405, 'method not allowed');
   }
@@ -60,15 +60,64 @@ export const live = async (request, env, ctx, project, rest) => {
   if (stored) {
     return page(stored.body);
   }
-  // One render per page at a time; a request for a page being drawn waits for it.
+  // One render per page at a time; a request for a page being drawn waits for it, and the request that
+  // starts it stores it.
   let rendering = drawing.get(key);
   if (!rendering) {
     rendering = render(env, ctx, project, causal, more).finally(() => drawing.delete(key));
     drawing.set(key, rendering);
+    ctx.waitUntil(
+      rendering
+        .then((text) => env.BUCKET.put(key, text, { httpMetadata: { contentType: 'application/json' } }))
+        .catch((error) => console.error(`drawing ${key} failed`, error)),
+    );
   }
-  const text = await rendering;
-  ctx.waitUntil(env.BUCKET.put(key, text, { httpMetadata: { contentType: 'application/json' } }));
-  return page(text);
+  if (more[0] === 'def' && !drawn) {
+    // A definition's source is fixed by its hash, so an earlier head's page differs only in who uses it;
+    // a visitor gets that at once while this head's page is drawn, instead of waiting for a cold build.
+    const earlier = await earlierPage(env, project, causal, more[1]);
+    if (earlier) {
+      return new Response(earlier.body, {
+        headers: {
+          'content-type': 'application/json',
+          'cache-control': 'public, max-age=60',
+          'x-deus-drawn-at': earlier.causal,
+        },
+      });
+    }
+  }
+  return page(await rendering);
+};
+
+/** The heads whose index was drawn, newest first, so a page missing at one head can come from the last. */
+const drawnKey = (project) => `${project}/live/drawn.json`;
+const DRAWN_KEPT = 8;
+
+const recordDrawn = async (bucket, project, causal) => {
+  const stored = await bucket.get(drawnKey(project));
+  const known = stored ? JSON.parse(await stored.text()) : [];
+  if (known[0] !== causal) {
+    const drawn = [causal, ...known.filter((other) => other !== causal)].slice(0, DRAWN_KEPT);
+    await bucket.put(drawnKey(project), JSON.stringify(drawn), { httpMetadata: { contentType: 'application/json' } });
+  }
+};
+
+/** `page` as the newest earlier drawn head has it, or undefined. */
+const earlierPage = async (env, project, causal, page) => {
+  const stored = await env.BUCKET.get(drawnKey(project));
+  if (!stored) {
+    return undefined;
+  }
+  const drawn = JSON.parse(await stored.text());
+  const at = drawn.indexOf(causal);
+  // Two earlier heads at most: a page absent from both is new or long unvisited, and is drawn instead.
+  for (const other of drawn.slice(at + 1, at + 3)) {
+    const found = await env.BUCKET.get(`${project}/live/${other}/def/${page}`);
+    if (found) {
+      return { causal: other, body: found.body };
+    }
+  }
+  return undefined;
 };
 
 /** Draws the main branch head's index, so it is in the bucket before anyone asks; failures are only logged. */
@@ -113,7 +162,10 @@ export const warmPages = async (env, ctx, { project, causal, from, count }) => {
     ];
     for (const page of pages) {
       if (!(await env.BUCKET.head(`${project}/live/${causal}/def/${page}.json`))) {
-        await live(new Request('https://warm.invalid/'), env, ctx, project, [causal, 'def', `${page}.json`]);
+        // One page at a time, each drawn here: a consumer drawing pages in parallel would exhaust its memory.
+        await live(new Request('https://warm.invalid/'), env, ctx, project, [causal, 'def', `${page}.json`], {
+          drawn: true,
+        });
       }
     }
   } catch (error) {
@@ -166,6 +218,7 @@ const draw = async (env, files, project, causal, path) => {
     await env.BUCKET.put(chainKey(project, causal), JSON.stringify(chain), {
       httpMetadata: { contentType: 'application/json' },
     });
+    await recordDrawn(env.BUCKET, project, causal);
     return text;
   }
   const name = path[1].slice(0, -'.json'.length);

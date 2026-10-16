@@ -39,7 +39,8 @@ try {
   await page.waitForFunction((expected) => document.getElementById('project')?.textContent === expected, project, {
     timeout: 300_000,
   });
-  await page.getByText('definitions', { exact: false }).first().waitFor({ timeout: 300_000 });
+  // The overview's own columns, not text the page's chrome also has (the search box says "definitions").
+  await page.locator('.home-columns').first().waitFor({ timeout: 300_000 });
   checks.overview = Date.now() - started;
   if (shots) {
     await page.screenshot({ path: `${shots}/overview.png` });

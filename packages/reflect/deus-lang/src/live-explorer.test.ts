@@ -164,6 +164,47 @@ describe('live explorer (D192)', () => {
     },
   );
 
+  test(
+    "a definition's page at a head not drawn yet is the last head's, while the head's own is drawn",
+    { timeout: 300_000 },
+    async ({ expect }) => {
+      const bucket = join(scratch, 'bucket');
+      const c = ['--codebase', join(scratch, 'codebase')];
+      const before = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
+      deus('add', file('cube.deus', 'def cube (side : Int) : Int := side * area side\n'), '--message', 'cube', ...c);
+      expect(deus('push', ...c).code).toBe(0);
+      const head = readFileSync(join(scratch, 'codebase', 'branches', 'main'), 'utf8').trim();
+      writeFileSync(join(bucket, 'toolchain', 'heads', 'main'), head);
+      const env = { BUCKET: directoryBucket(bucket), PREFIX: 'toolchain' } as Env;
+      const fetchPage = async (causal: string, hash: string) => {
+        const pending: Promise<unknown>[] = [];
+        const response = await worker.fetch(
+          new Request(`https://deus.test/v1/toolchain/live/${causal}/def/${hash}.json`),
+          env,
+          {
+            waitUntil: (promise: Promise<unknown>) => pending.push(promise),
+          },
+        );
+        return { response, settled: Promise.all(pending) };
+      };
+      const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', before, 'index.json'), 'utf8'));
+      const area = index.names.find((entry: { name: string }) => entry.name === 'area');
+      const earlier = readFileSync(join(bucket, 'toolchain', 'live', before, 'def', `${area.hash}.json`), 'utf8');
+
+      const first = await fetchPage(head, area.hash);
+      expect(first.response.headers.get('x-deus-drawn-at')).toBe(before);
+      expect(first.response.headers.get('cache-control')).toBe('public, max-age=60');
+      expect(await first.response.text()).toBe(earlier);
+      await first.settled;
+      // This head's page was drawn meanwhile, and it knows the new user.
+      const own = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', head, 'def', `${area.hash}.json`), 'utf8'));
+      expect(own.users.map((user: { name: string }) => user.name)).toContain('cube');
+      const second = await fetchPage(head, area.hash);
+      expect(second.response.headers.get('x-deus-drawn-at')).toBeNull();
+      expect(await second.response.json()).toEqual(own);
+    },
+  );
+
   test('the Worker ships the explorer app as platform/explorer has it', ({ expect }) => {
     // `node scripts/build-worker.mjs` rewrites the module after the app changes.
     for (const name of ['index.html', 'app.js', 'app.css'] as const) {
