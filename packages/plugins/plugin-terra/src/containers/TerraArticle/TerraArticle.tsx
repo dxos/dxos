@@ -16,6 +16,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
 import * as Tabs from '@dxos/react-ui/Tabs';
+import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
@@ -80,6 +81,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // The selected view tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
   const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { themeMode } = useThemeContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
@@ -232,6 +234,11 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     }, 150);
     return () => clearTimeout(handle);
   }, [values, planetCache]);
+
+  // After the mount effect that creates the manager, and again whenever the app's theme changes.
+  useEffect(() => {
+    managerRef.current?.setThemeMode(themeMode);
+  }, [themeMode]);
 
   useEffect(() => {
     // Debounced like the terrain regen above, but kept in its own effect so adding an object (which

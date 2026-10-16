@@ -21,8 +21,11 @@ import { type Planet } from './generate-planet.ts';
 import { type Vec3 } from './noise.ts';
 import { palette } from './palette.ts';
 
-// Neutral space backdrop; theme-derived background is the container's concern.
-const BACKGROUND_COLOR = new Color4(0.043, 0.051, 0.071, 1);
+/** The scene's backdrop per theme: near-black space in dark mode, a mid-gray in light mode so the scene sits in the light UI. */
+const BACKGROUND_COLORS = {
+  dark: new Color4(0.043, 0.051, 0.071, 1),
+  light: new Color4(0.5, 0.5, 0.5, 1),
+} as const;
 
 const clampChannel = (value: number): number => Math.min(1, Math.max(0, value));
 
@@ -106,11 +109,16 @@ export class SceneManager {
   #lastPointerX = 0;
   #lastPointerY = 0;
 
+  /** Matches the scene's backdrop to the app's theme. */
+  setThemeMode(mode: 'light' | 'dark'): void {
+    this.#scene.clearColor = BACKGROUND_COLORS[mode];
+  }
+
   constructor(canvas: HTMLCanvasElement) {
     this.#canvas = canvas;
     this.#engine = new Engine(canvas, true, { adaptToDeviceRatio: true });
     this.#scene = new Scene(this.#engine);
-    this.#scene.clearColor = BACKGROUND_COLOR;
+    this.#scene.clearColor = BACKGROUND_COLORS.dark;
 
     this.#camera = new ArcRotateCamera('camera', Math.PI * 0.6, Math.PI * 0.42, 6.5, Vector3.Zero(), this.#scene);
     this.#camera.attachControl(canvas, true);
