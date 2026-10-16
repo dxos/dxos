@@ -33,7 +33,7 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
                 trailing={<Icon.Icon icon='ph--arrow-right--regular' />}
                 onClick={() => onEventClick?.(event)}
               >
-                <Card.Text>{event.title ?? event.description ?? ''}</Card.Text>
+                <Card.Text truncate>{event.title ?? event.description ?? ''}</Card.Text>
               </Card.Row>
             ))}
         </Card.Section>
@@ -49,7 +49,7 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
                 trailing={<Icon.Icon icon='ph--arrow-right--regular' />}
                 onClick={() => onEventClick?.(event)}
               >
-                <Card.Text>{event.title ?? event.description ?? ''}</Card.Text>
+                <Card.Text truncate>{event.title ?? event.description ?? ''}</Card.Text>
               </Card.Row>
             ))}
         </Card.Section>
