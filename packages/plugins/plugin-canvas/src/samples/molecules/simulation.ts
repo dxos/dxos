@@ -782,7 +782,7 @@ export class DataFlowSimulation {
   #time = 0;
   #serial = 0;
   /** The stretch of the diagram on screen, where activity is stepped up; unset, none is singled out. */
-  #focus?: { left: number; right: number };
+  #focus?: { left: number; right: number; boost: number };
   /** Most molecules the hub holds: the option's figure, scaled up as a relayout adds buckets, so new ones crowd none out. */
   #hubCapacity = 0;
   /** When each source a relayout added came into play, by source; the first sources have none. */
@@ -1199,15 +1199,16 @@ export class DataFlowSimulation {
    */
   #upInterval(): number {
     const sinks = Math.max(1, this.#layout.sinks.length / BASE_SINKS);
-    return this.#options.upInterval / sinks / (this.#focus ? 1 + FOCUS_BOOST : 1);
+    return this.#options.upInterval / sinks / (1 + (this.#focus?.boost ?? 0));
   }
 
   /**
-   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Sources in it supply faster
-   * and its apps and agents get more of the traffic; unset, every block is treated alike.
+   * Sets the focus: the stretch of the diagram, from `left` to `right`, that is on screen. Sources in it supply, and the
+   * apps write, `boost` times faster than normal on top of their usual rate (twice by default), and its apps and agents
+   * get more of the traffic; unset, every block is treated alike.
    */
-  focus(range: { left: number; right: number } | undefined): void {
-    this.#focus = range;
+  focus(range: { left: number; right: number; boost?: number } | undefined): void {
+    this.#focus = range && { ...range, boost: range.boost ?? FOCUS_BOOST };
   }
 
   #focused(block: Block | undefined): boolean {
@@ -1283,7 +1284,7 @@ export class DataFlowSimulation {
       const ramp =
         since === undefined ? 0 : SOURCE_BOOST * Math.min(1, Math.max(0, (this.#time - since) / SOURCE_RAMP));
       // A source in the focus (the part of the diagram on screen) supplies faster still.
-      const boost = ramp + (this.#focused(this.#layout.sources[index]) ? FOCUS_BOOST : 0);
+      const boost = ramp + (this.#focused(this.#layout.sources[index]) ? (this.#focus?.boost ?? 0) : 0);
       const interval = this.#options.interval / (1 + boost);
       this.#nextSpawn[index] = this.#time + between(this.#random, 0.7 * interval, 1.3 * interval);
       if (this.#waiting(index) >= this.#options.perSource * (1 + Math.round(boost))) {

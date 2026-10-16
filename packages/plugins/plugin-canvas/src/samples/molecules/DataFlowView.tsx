@@ -52,6 +52,9 @@ const driftDistanceAt = (seconds: number) => {
 const FOCUS_MARGIN = 160;
 const FOCUS_TICK = 250;
 
+/** How much busier than normal what is in view gets as the pan sets off, how fast that climbs per second, and its cap. */
+const FOCUS = { start: 2, rise: 0.5, top: 8 };
+
 /** The rectangle every shown block's frame lies in. */
 const framesBounds = (layout: DataFlowLayout): Bounds | undefined => {
   const frames = [...layout.sources, layout.hub, ...layout.sinks]
@@ -203,6 +206,8 @@ export const DataFlowView = ({
       simulation.focus({
         left: frame.x - FOCUS_MARGIN + travelled,
         right: frame.x + frame.width + FOCUS_MARGIN + travelled,
+        // The activity in view keeps building for as long as the pan runs.
+        boost: Math.min(FOCUS.top, FOCUS.start + FOCUS.rise * seconds),
       });
     }, FOCUS_TICK);
     return () => clearInterval(timer);
