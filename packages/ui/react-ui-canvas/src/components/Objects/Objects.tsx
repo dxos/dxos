@@ -33,15 +33,15 @@ export type ObjectsPanelProps = Util.ThemedClassName<{
   onDuplicate?: (id: SceneId) => void;
   /** Removes a composite; with `instances`, the instances of it too. */
   onDelete?: (id: SceneId, instances: boolean) => void;
-  /** A small picture of a composite, drawn at the row's start. */
+  /** A small picture of a composite, drawn after its name. */
   thumbnail?: (id: SceneId) => ReactNode;
   docked?: boolean;
   onDockedChange?: (docked: boolean) => void;
 }>;
 
 /**
- * The drawing's composite objects (ANIMATION.md §4.3), built like `LayersPanel`: a row per composite with a thumbnail,
- * its name (renamed in place on a double-click) and its number of instances. Selecting a row opens the composite in
+ * The drawing's composite objects (ANIMATION.md §4.3), built like `LayersPanel`: a row per composite with a drag handle,
+ * its name (renamed in place on a double-click), a thumbnail and its number of instances. Selecting a row opens the composite in
  * isolation. The toolbar groups the canvas selection as an object, places, duplicates and deletes.
  */
 export const ObjectsPanel = ({
@@ -127,12 +127,7 @@ export const ObjectsPanel = ({
                     // opens the object directly.
                     onClick={() => onSelect?.(entry.id)}
                   >
-                    <span
-                      aria-hidden
-                      className='relative shrink-0 w-10 h-6 overflow-hidden rounded-xs border border-separator'
-                    >
-                      {thumbnail?.(entry.id)}
-                    </span>
+                    <OrderedList.DragHandle />
                     <Editable.Root
                       classNames='dx-listbox-item-text'
                       value={entry.name}
@@ -156,6 +151,13 @@ export const ObjectsPanel = ({
                         onKeyDown={(event) => event.stopPropagation()}
                       />
                     </Editable.Root>
+                    {/* After the name: the leading slot is the row's drag handle, as in the layers. */}
+                    <span
+                      aria-hidden
+                      className='relative shrink-0 w-10 h-6 overflow-hidden rounded-xs border border-separator'
+                    >
+                      {thumbnail?.(entry.id)}
+                    </span>
                     <span className='shrink-0 px-2 text-sm tabular-nums text-fg-muted' title='Instances'>
                       {entry.instances}
                     </span>
