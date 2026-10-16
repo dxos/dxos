@@ -9,22 +9,22 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 
 ## Partials
 
-| Partial             | Spec                                                       | Code        |
-| ------------------- | ---------------------------------------------------------- | ----------- |
-| Architecture        | `plugin-canvas/src/samples/architecture/CONTENT.md`        | built       |
-| Bramble             | `plugin-onboarding/src/samples/bramble/CONTENT.md`         | built       |
-| Fieldstone team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | not written |
-| Fieldstone inbox    | `plugin-debug/src/samples/fieldstone/inbox-crm/CONTENT.md` | not written |
-| Fieldstone projects | `plugin-debug/src/samples/fieldstone/projects/CONTENT.md`  | not written |
-| Fieldstone docs     | `plugin-debug/src/samples/fieldstone/docs/CONTENT.md`      | not written |
+| Partial             | Spec                                                       | Code         |
+| ------------------- | ---------------------------------------------------------- | ------------ |
+| Architecture        | `plugin-canvas/src/samples/architecture/CONTENT.md`        | `partial.ts` |
+| Bramble             | `plugin-onboarding/src/samples/bramble/CONTENT.md`         | `partial.ts` |
+| Fieldstone team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | `partial.ts` |
+| Fieldstone inbox    | `plugin-debug/src/samples/fieldstone/inbox-crm/CONTENT.md` | `partial.ts` |
+| Fieldstone projects | `plugin-debug/src/samples/fieldstone/projects/CONTENT.md`  | `partial.ts` |
+| Fieldstone docs     | `plugin-debug/src/samples/fieldstone/docs/CONTENT.md`      | `partial.ts` |
 
 ## Templates
 
-| Template          | Partials                                      |
-| ----------------- | --------------------------------------------- |
-| DXOS Architecture | Architecture                                  |
-| Bramble           | Bramble                                       |
-| Fieldstone Labs   | team, inbox-crm, projects, docs (not written) |
+| Template          | Code                                                          | Partials                                      |
+| ----------------- | ------------------------------------------------------------- | --------------------------------------------- |
+| DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture                                  |
+| Bramble           | `plugin-onboarding/src/samples/bramble/BrambleSpace.ts`       | Bramble                                       |
+| Fieldstone Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, Architecture |
 
 ## Changing a sample space
 
@@ -40,6 +40,9 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 1. Write a `CONTENT.md` in a new directory next to the plugin's other samples. Copy the header and
    sections from an existing spec. To build on another partial, list it under `Requires`.
 2. Ask an agent to generate the partial and a template that applies it.
+
+A template may apply partials from other packages. The package that owns the partial exports it
+through a `samples` subpath and must be public.
 
 An agent can also draft the spec from a description: "Write a content spec for a law firm with a
 client inbox and matter tracking." Review the draft before asking for code.

@@ -11,15 +11,17 @@ Human-facing overview and the list of partials: `packages/sdk/app-toolkit/src/sa
   source of truth for that content, and it is complete: every decision the code depends on is
   written in it.
 - A **partial** is the code generated from one content spec. It lives in the spec's directory and
-  exports one `Partial`, typed as the builder's `SampleSpace.Phase<Provides, Requires>`.
+  exports one `Partial: SampleSpace.Partial<Provides, Requires>`, made with `SampleSpace.partial`.
 - A **template** is code only. It imports partials, applies them in order, and offers the result
   through `SampleSpace.makeTemplate`.
 
 Bramble (`plugin-onboarding/src/samples/bramble/`) and Architecture
 (`plugin-canvas/src/samples/architecture/`) are each one partial with a template that applies only
-it. Their code predates the `Partial` export: convert it the next time you regenerate either one.
-Fieldstone (`plugin-debug/src/samples/fieldstone/`) is one template built from four partials in
-`team/`, `inbox-crm/`, `projects/` and `docs/`.
+it. The Fieldstone template (`plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`) applies the
+four partials in `team/`, `inbox-crm/`, `projects/` and `docs/`, plus Architecture. A partial used
+outside its package is exported through a `samples` subpath (`@dxos/plugin-canvas/samples`), and
+its package must be public, since `scripts/check-public-dependencies.mjs` fails a public package
+that depends on a private one.
 
 The builder API is `@dxos/app-toolkit/SampleSpace` (`packages/sdk/app-toolkit/src/sample/SampleSpace.ts`).
 
@@ -66,17 +68,22 @@ Run these steps in order whenever a spec is new or its `## Contents` changes.
 2. **Seeds.** For each `## Contents` subsection, write one file of seed tables keyed by the spec's
    keys, plus the effect that builds them. Import the required partials' `Provides` types; their
    seeds stay theirs. Done when every key in the spec appears in a seed table.
-3. **The partial.** In the directory's `index.ts`, export
-   `Partial: SampleSpace.Phase<Provides, Requires>`. Its `schemas` cover every type the spec names.
-   `Requires` holds the required partials' `Provides`, with optional partials as optional fields.
-   `Provides` holds exactly the header's keys.
-4. **The test.** Write one suite for the partial that builds it with `buildArchive` and asserts
-   every bullet under `## Checks`, using `histogram` for counts. Done when each Check bullet maps to
+3. **The partial.** In `partial.ts`, export `Partial` made with `SampleSpace.partial(name, { phases,
+schemas, run })`, and re-export it with `Provides` from `index.ts`. Its `schemas` cover every type
+   the spec names; types of its internal `phases` are added for it. `Requires` holds the required
+   partials' `Provides`, and optional partials as optional fields typed structurally with only what
+   the partial reads. `Provides` holds exactly the header's keys. Read time from the
+   `SampleSpace.Clock` service, never a module-level clock, because the template sets the reference
+   date.
+4. **The test.** Write one suite in `partial.test.ts` that builds the partial and its required
+   partials with `buildArchive` and asserts every bullet under `## Checks`, using `histogram` for
+   counts. Archives keep feed content under a separate `feeds` key; `histogram` counts both. Checks
+   that need an optional partial belong in the template's test. Done when each Check bullet maps to
    an assertion.
 5. **The template.** Add the partial to its template's phase map, in `Requires` order. In `build`,
-   pass each partial's `Provides` into the next one's `Requires`, then add the root collections. A
-   new template gets `makeTemplate` and an entry in the plugin's `capabilities/space-templates.ts`.
-   Keep the content lazy: `composer-app:check-boot-budget` must not move.
+   pass each partial's `Provides` into the next one's `Requires`. A new template gets `make`,
+   `makeTemplate`, a test, and an entry in the plugin's `capabilities/space-templates.ts`. Keep the
+   content lazy: `composer-app:check-boot-budget` must not move.
 6. **The flows.** Walk every `## Flows` entry in the running app with the `composer-qa` or
    `composer-debug` skill. Report each flow you could not walk as not verified.
 7. **The header.** Update `Code` and `Used by` to name the files and templates that now exist, and

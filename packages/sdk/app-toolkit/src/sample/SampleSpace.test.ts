@@ -104,6 +104,21 @@ describe('definition', () => {
   });
 });
 
+describe('partial', () => {
+  test('registers its internal phases schemas through the definition that applies it', ({ expect }) => {
+    const Contacts = SampleSpace.partial('contacts', {
+      phases: { organizations: Organizations, people: People },
+      run: (_: void, phases) => Effect.flatMap(phases.organizations(), phases.people),
+    });
+    const contacts = SampleSpace.make({
+      space: { name: 'Contacts' },
+      phases: { contacts: Contacts },
+      build: (phases) => phases.contacts(),
+    });
+    expect(contacts.schemas).toEqual([Collection.Collection, Organization.Organization, Person.Person]);
+  });
+});
+
 describe('makeTemplate', () => {
   test('takes its name, icon and hue from the definition', ({ expect }) => {
     const template = SampleSpace.makeTemplate({ id: 'com.example.template', definition });

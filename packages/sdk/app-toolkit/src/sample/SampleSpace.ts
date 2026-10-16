@@ -338,6 +338,32 @@ export type PhaseMap = Record<string, Phase<any, any>>;
 /** The `run` functions of a phase map, as handed to a definition's `build`. */
 export type PhaseRunners<Phases extends PhaseMap> = { readonly [K in keyof Phases]: Phases[K]['run'] };
 
+/**
+ * The content one `CONTENT.md` spec describes, applied as a single phase. Templates compose
+ * partials; a partial's own phases stay internal to it.
+ */
+export type Partial<A, In = void> = Phase<A, In>;
+
+/** Defines a partial from its internal phases; its schemas are theirs plus any it declares itself. */
+export const partial = <A, In = void, Phases extends PhaseMap = {}>(
+  name: string,
+  options: {
+    readonly phases?: Phases;
+    readonly schemas?: ReadonlyArray<Type.AnyEntity>;
+    readonly run: (input: In, phases: PhaseRunners<Phases>) => Effect.Effect<A, SampleSpaceError, Services>;
+  },
+): Partial<A, In> => {
+  const phases = options.phases ?? ({} as Phases);
+  const runners = Object.fromEntries(
+    Object.entries(phases).map(([key, phase]) => [key, phase.run]),
+  ) as PhaseRunners<Phases>;
+  return {
+    name,
+    schemas: [...new Set([...(options.schemas ?? []), ...Object.values(phases).flatMap((phase) => phase.schemas)])],
+    run: (input) => options.run(input, runners),
+  };
+};
+
 export type SpaceOptions = {
   readonly name: string;
   /** An `iconValues` name (`stack`), not its Phosphor spelling, so the icon picker can produce it too. */
