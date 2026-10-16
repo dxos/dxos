@@ -28,7 +28,7 @@ export const make = (brain: BrainService.Service, agent: string): FactStoreApi =
   // The brain keeps no ontology graph, so the minted predicates are read off the facts that use them.
   predicates: () =>
     brain.query(agent, {}).pipe(
-      Effect.map((facts) => RDF.Ontology.DEFAULT.include(RDF.Graph.mintedPredicates(facts)).entries),
+      Effect.map((facts) => [...RDF.Ontology.DEFAULT.include(RDF.Graph.mintedPredicates(facts)).entries]),
       Effect.mapError(toIndexError),
     ),
   query: ({ minConfidence, ...query }) =>
