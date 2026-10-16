@@ -15,7 +15,7 @@
 
 import { addressOfFolder, projectAt } from './address.mjs';
 import { appFiles } from './gen/explorer-app.mjs';
-import { warmLive, warmPages } from './live.mjs';
+import { shownHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, readHead as readBranchHead, remoteApi } from './remote.mjs';
 
 const MAX_AGE = 60;
@@ -192,7 +192,11 @@ const page = async (env, version, base) => {
 /** The live explorer API of the project's main branch at its head (D192), or undefined before its first push. */
 const liveApi = async (env) => {
   const head = await readBranchHead(env, prefix(env), 'main');
-  return head && `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${head.causal}`;
+  if (!head) {
+    return undefined;
+  }
+  const { causal } = await shownHead(env, prefix(env), 'main', head);
+  return `/v1/${addressOfFolder(prefix(env)) ?? prefix(env)}/live/${causal}`;
 };
 
 /** The app's page, reading the codebase through `api`; its files are the Worker's own. */

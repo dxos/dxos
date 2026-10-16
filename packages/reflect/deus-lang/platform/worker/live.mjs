@@ -98,7 +98,7 @@ const SHOWN_GRACE_MS = 5 * 60_000;
  * The head a visitor is shown: the branch's head once its index is drawn, and until then, for a few minutes
  * after the push, the head drawn last, since drawing a new index in a cold isolate takes half a minute.
  */
-const shownHead = async (env, project, branch, head) => {
+export const shownHead = async (env, project, branch, head) => {
   if (await env.BUCKET.head(`${project}/live/${head.causal}/index.json`)) {
     return { branch, causal: head.causal };
   }

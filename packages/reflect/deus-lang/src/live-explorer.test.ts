@@ -199,6 +199,9 @@ describe('live explorer (D192)', () => {
         ).json();
       // Until the queue draws the new head's index, the explorer shows the head it drew last.
       expect(await liveHead()).toEqual({ branch: 'main', causal: before, drawing: head });
+      const appPage = async () =>
+        (await worker.fetch(new Request('https://deus.test/'), env, { waitUntil: () => {} })).text();
+      expect(await appPage()).toContain(`/live/${before}"`);
       const index = JSON.parse(readFileSync(join(bucket, 'toolchain', 'live', before, 'index.json'), 'utf8'));
       const area = index.names.find((entry: { name: string }) => entry.name === 'area');
       const earlier = readFileSync(join(bucket, 'toolchain', 'live', before, 'def', `${area.hash}.json`), 'utf8');
@@ -221,6 +224,7 @@ describe('live explorer (D192)', () => {
       expect(drawn.status).toBe(200);
       await Promise.all(stored);
       expect(await liveHead()).toEqual({ branch: 'main', causal: head });
+      expect(await appPage()).toContain(`/live/${head}"`);
     },
   );
 
