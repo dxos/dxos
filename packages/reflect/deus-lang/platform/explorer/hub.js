@@ -45,6 +45,15 @@ const countsOf = (project) => [
   ['task', '◎', 'open tasks', project.open ?? 0],
 ];
 
+/** How many of a project's checked tests and theorems pass, from the results its pushes carry (D209); none when none were pushed. */
+const checksLine = (project, home) => {
+  const { pass = 0, fail = 0 } = project.checks ?? {};
+  if (pass + fail === 0) {
+    return '';
+  }
+  return `<a class="hub-checks${fail > 0 ? ' failing' : ''}" href="${escape(`${home}#k:checks`)}" title="Checked tests and theorems, failing first">${icon(fail > 0 ? 'fail' : 'test', fail > 0 ? '✗' : '✓')}<b>${count(pass)}/${count(pass + fail)}</b> checks pass</a>`;
+};
+
 const renderTotals = (projects) => {
   const sum = (pick) => projects.reduce((total, project) => total + (pick(project) ?? 0), 0);
   const counts = [
@@ -59,7 +68,7 @@ const renderTotals = (projects) => {
 
 /** A project's counts as one quiet line of small labelled numbers, each opening that list in its explorer. */
 const countLine = (project, home) =>
-  `<p class="hub-counts">${countsOf(project)
+  `<p class="hub-counts">${checksLine(project, home)}${countsOf(project)
     .filter(([kind, , , value]) => value > 0 || kind !== 'task')
     .map(
       ([kind, glyph, label, value]) =>

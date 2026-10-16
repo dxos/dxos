@@ -98,7 +98,7 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
 //
 
 /** Raised when a summary gains or changes a field, so summaries drawn before are drawn again once. */
-const SUMMARY_VERSION = 2;
+const SUMMARY_VERSION = 3;
 
 const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
 
@@ -131,6 +131,11 @@ const summaryOfIndex = (index) => {
     features: meta.features ?? 0,
     kinds,
     namespaces,
+    // The pushed verdicts of its tests and theorems (D209), so the hub shows a head whose checks fail.
+    checks: {
+      pass: (index.names ?? []).filter((entry) => entry.status === 'pass').length,
+      fail: (index.names ?? []).filter((entry) => entry.status === 'fail').length,
+    },
     summaryVersion: SUMMARY_VERSION,
     ...(map ? { featureMap: map } : {}),
   };

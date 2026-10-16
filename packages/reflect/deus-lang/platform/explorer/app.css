@@ -2748,6 +2748,12 @@ pre.block-value {
   font-weight: 600;
 }
 
+/* A project whose pushed checks fail says so in its count line (D209). */
+.hub-counts a.hub-checks.failing,
+.hub-counts a.hub-checks.failing b {
+  color: var(--fail);
+}
+
 .hub-counts .icon {
   transform: scale(0.85);
 }
