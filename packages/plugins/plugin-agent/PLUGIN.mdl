@@ -416,6 +416,18 @@ node AgentsSection
     identity and its own space when it mints them.
 ```
 
+```mdl
+node AccountAgents
+  desc: |
+    The account's Agents panel (`dxos:account/agents`, URL key `agents`), one of the account's panels beside
+    plugin-client's. Its `position` is `Position.last`, so the panel is listed after them.
+  source: dxos:account
+  properties:
+    label: Agents
+    icon: ph--robot--regular
+  article: surface:AccountAgents
+```
+
 ## Components
 
 ```mdl
@@ -460,6 +472,32 @@ component AgentActivityContainer
     agent: Agent
   actions:
     select(chat) → org.dxos.operation.appToolkit.open
+```
+
+```mdl
+component AgentList
+  desc: |
+    The agents the viewer administers (components/AgentList), laid out as the contacts book lays out people: per
+    agent, a robot avatar in the agent's hue, its name ("Unnamed agent" when it has none), a chip per space the agent
+    is a member of that the viewer is too, its own space first, each opening that space, "Admins: …" with the viewer
+    marked "(you)", and its DID with a copy button. A filter keeps the agents whose name or DID contains it. With none,
+    a line saying how to get one.
+  props:
+    agents: { spaceId: string, spaces: { id: string, name?: string }[], name: string, identityKey?: string, did?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
+    filter?: string
+  emits:
+    onOpen(spaceId: string)
+```
+
+```mdl
+component AgentsPanel
+  desc: |
+    Container (containers/AgentsPanel) wiring AgentList to the client, as the contacts book's container does: a search
+    field once there is more than one agent, then `AgentSpace.administeredBy` over the client's spaces, re-read
+    whenever the spaces, the identity or an agent space's members change. Each row's name and DID are the agent's own
+    member's, which its genesis names after the agent.
+  actions:
+    open(spaceId) → org.dxos.operation.appToolkit.switchWorkspace
 ```
 
 ```mdl
@@ -509,12 +547,19 @@ surface OrganizationProfileGraph
   position: last
 ```
 
+```mdl
+surface AccountAgents
+  desc: Matched on the panel's path literal, `dxos:account/agents`, not a type.
+  role: article
+  component: component:AgentsPanel
+```
+
 ## Features
 
 ```mdl
 feat F-1: Agents
 
-  req F-1.1: The space's AI group lists every Agent in an Agents section; + creates an autonomous agent.
+  req F-1.1: A space's Settings › Agents lists every Agent in the space; Add agent creates an autonomous agent.
   req F-1.2:
     when: op:createAgent runs
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
@@ -591,6 +636,10 @@ feat F-7: An agent's own space
   req F-7.2: An agent with an identity is a member of the shared space it is created in: op:ensureIdentity admits its identity there as an editor named after the agent. Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership.
   req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. EDGE names the identity and the agent's space after the agent's name at that moment, and renaming the agent later renames neither. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
   req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
+  req F-7.5: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is an admin of. It asks nothing of EDGE.
+  req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as admitting it to a space, takes it from EDGE instead.
+  req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5): each one's name, its admins with the viewer marked, and a chip per space it is a member of that the viewer is too, its own space first, each switching to that space. It stays current as spaces and their members change.
+  req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space.
 ```
 
 ## Acceptance
@@ -704,6 +753,16 @@ scenario T-11: Agent identities follow the setting   # create-agent.test.ts
     - the second takes the DID EDGE answered with, from one provisioning request
 ```
 
+```mdl
+scenario T-12: Agent spaces list their admins   # AgentSpace.test.ts
+  # covers [F-7.5, F-7.6, F-7.8]
+  given: an agent space owned by the agent, with an admin, an editor and a reader; an agent space the identity was removed from; an untagged space
+  then:
+    - agentOf is the owner, and the admins are the admin and the editor, not the reader
+    - the identity administers only the first space, and a reader of it none
+    - administeredAgents reads the name, DID, identity key and home URI an open agent space records, and only the DID and identity key of one still opening
+```
+
 ## Not built
 
 Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does not implement:
@@ -727,7 +786,7 @@ invocable operation, an agent binding (`invoke`). Report failures by test and st
 ```mdl
 test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
   desc: |
-    The primary journey: an agent from the Agents section, a Discord-backed channel picked as one of
+    The primary journey: an agent from Settings › Agents, a Discord-backed channel picked as one of
     its channels, and the bot control round-trip to EDGE through plugin-thread's generic channel
     operations. Run against a local EDGE with a deliberately invalid bot token, so the gateway cannot
     connect and the status must carry the gateway's error — a "Connected" banner here is a defect.
@@ -755,11 +814,11 @@ test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
   steps:
     - name: Create the agent
       do: |
-        In the navtree, open the space's AI group, click + on the Agents section ("Add agent"), and
-        rename the new "New agent" to "QA: Interlocutor $runId".
+        Open the space's Settings › Agents, type "QA: Interlocutor $runId" beside Add agent, and click
+        Add agent.
       invoke: [op:createAgent] { name: "QA: Interlocutor $runId" }
       capture: agent
-      expect: the agent appears under Agents with that name
+      expect: the agent appears in Settings › Agents with that name
     - name: Give the agent the channel
       do: Open the agent's Activity companion and pick "QA: discord $runId" under Channels.
       expect: |
@@ -811,10 +870,10 @@ test QA-2: Interview a person and confirm their goals
       no invocation to `capture` it from
   before:
     - name: Create the interviewer
-      do: Click + on the Agents section and rename the new agent "QA: Interviewer $runId".
+      do: In Settings › Agents, type "QA: Interviewer $runId" beside Add agent and click Add agent.
       invoke: [op:createAgent] { name: "QA: Interviewer $runId" }
       capture: agent
-      expect: the agent appears under Agents
+      expect: the agent appears in Settings › Agents
   steps:
     - name: Open the agent's chat
       do: Click "QA: Interviewer $runId", then open its chat in the Assistant companion.
@@ -897,10 +956,10 @@ test QA-3: Two people, one agent — a watch fires across private chats
       and serves a live model — ABORT without one
   steps:
     - name: Alice creates a space and an agent
-      do: Alice creates a space "Launch room", then clicks + on the AI group's Agents section.
+      do: Alice creates a space "Launch room", then clicks Add agent in its Settings › Agents.
       invoke: [op:createAgent] { name: "" }
       capture: agent
-      expect: the agent appears under Agents and its article opens Alice's private chat
+      expect: the agent appears in Settings › Agents and its article opens Alice's private chat
     - name: Alice invites Bob; Bob joins
       do: Alice opens Members, creates a single-use invitation; Bob joins with the code and the auth code.
       expect: Bob's navtree shows "Launch room" with the same agent under Agents

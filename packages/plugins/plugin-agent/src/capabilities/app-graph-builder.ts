@@ -14,15 +14,20 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Agent from '@dxos/assistant/Agent';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Order, Query } from '@dxos/echo';
+import * as Account from '@dxos/plugin-client/Account';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { AgentCompanion } from '#types';
+import { AgentCapabilities, AgentCompanion } from '#types';
 
 import { AGENTS_SECTION_ID, AGENTS_SECTION_TYPE } from '../constants.ts';
+import { AGENTS_PANEL, AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read reactively, so the Agents panel comes and goes with the setting.
+    const settingsCapabilityAtom = yield* Capability.atom(AgentCapabilities.Settings);
     const extensions = yield* Effect.all([
       // Agents are managed in space settings, like connections, rather than listed with the space's content.
       AppGraphBuilder.createExtension({
@@ -99,6 +104,32 @@ export default Capability.makeModule(
               data: AgentCompanion.BRAIN_STORE,
             }),
           ]),
+      }),
+      // The agents the identity administers, after the account's other panels, while the plugin's setting creates agents
+      // with identities.
+      AppGraphBuilder.createExtension({
+        id: 'accountAgents',
+        url: { key: AGENTS_PANEL, kind: 'singleton', path: [] },
+        match: (node) => (node.id === Account.workspacePath ? Option.some(node) : Option.none()),
+        connector: (_node, get) => {
+          const [settingsAtom] = get(settingsCapabilityAtom);
+          if (!(settingsAtom && get(settingsAtom).identities)) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            AppGraphNode.make({
+              id: AGENTS_PANEL,
+              data: AGENTS_PANEL_PATH,
+              type: meta.profile.key,
+              properties: {
+                position: Position.last,
+                label: ['agents-panel.label', { ns: meta.profile.key }],
+                icon: 'ph--robot--regular',
+                testId: 'agentPlugin.agents',
+              },
+            }),
+          ]);
+        },
       }),
     ]);
 
