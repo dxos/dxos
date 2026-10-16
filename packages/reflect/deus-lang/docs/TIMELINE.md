@@ -238,5 +238,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 228 | 10-16 09:55 | 15m 00s | this commit | Hub cards with descriptions and one line of counts; push checks: each pushed head verified to descend from the previous one (D201) |
 | 229 | 10-16 10:25 | 30m 00s | this commit | Pushes 16 s → 6 s (D202); theorem verdicts keyed by their checker (D203); change authors replicate (D204) |
 | 230 | 10-16 10:50 | 25m 00s | this commit | React app driven in Chromium (task b2404fd2); task cards show their code; QA flows in a browser (D205) |
+| 231 | 10-16 12:21 | 90m 00s | this commit | The toolchain mounts @dxos/base as lib.base (D206): flat deus/, mount-aware resolution, printing, spec checks and explorer; the Worker's read cache bounded to one head after the snapshot grew past the memory limit (D207) |
 
-Total from stage 1 to stage 230: 69h 31m.
+Total from stage 1 to stage 231: 71h 01m.
