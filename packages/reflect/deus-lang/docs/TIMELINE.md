@@ -270,5 +270,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 260 | 10-17 04:20 | 1h 10m | this commit | The TypeScript-like dialect parses back to the same hashes (D227, task be4c4645) |
 | 261 | 10-17 05:20 | 1h 00m | this commit | Adversarial review of D224–D226 fixed (D228) |
 | 262 | 10-17 06:10 | 50m 00s | this commit | History loads lazily and recent changes are pre-drawn; task ids link; the dialect reads types back (D229) |
+| 263 | 10-17 06:40 | 30m 00s | this commit | The checks card shows what the count covers: requirements by codebase checks, the vitest suite, or nothing yet (task ae6b7fff) |
 
-Total from stage 1 to stage 262: 88h 40m.
+Total from stage 1 to stage 263: 89h 10m.

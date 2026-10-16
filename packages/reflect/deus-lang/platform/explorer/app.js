@@ -1206,6 +1206,47 @@ const kindCard = (key, kind) => {
   });
 };
 
+/**
+ * Every requirement of every spec document, by what proves it: checks in the codebase (`deus test`, `deus check`),
+ * the vitest suite (`vitest:` evidence, which CI runs and this site does not see), or nothing yet.
+ */
+const requirementsByEvidence = async () => {
+  const docs = await Promise.all(specDocuments().map(async (name) => ({ name, page: await load(`doc/${name}.json`) })));
+  const requirements = docs.flatMap(({ name, page }) =>
+    (page?.blocks ?? []).filter((block) => block.type === 'req').map((block) => ({ doc: name, block })),
+  );
+  const by = (requirement) => requirement.block.props?.by ?? '';
+  return {
+    inCodebase: requirements.filter((requirement) => by(requirement) && !by(requirement).startsWith('vitest:')),
+    inVitest: requirements.filter((requirement) => by(requirement).startsWith('vitest:')),
+    unproved: requirements.filter((requirement) => !by(requirement)),
+  };
+};
+
+/** The checks, failing first, and what they cover: which requirements they prove and which they cannot see. */
+const checksCard = (key, { inCodebase, inVitest, unproved }) => {
+  const row = ({ doc, block }) =>
+    `<li class="entry-row">${docLink(doc, `${doc} ${block.id}`, block.id)}<span class="muted">${escape(block.title)}</span></li>`;
+  const section = (title, note, requirements) =>
+    requirements.length === 0
+      ? ''
+      : `<h4 class="group-title">${escape(title)} <span class="count">${requirements.length}</span></h4><p class="muted">${note}</p><ul class="rows">${requirements.map(row).join('')}</ul>`;
+  const coverage =
+    '<section class="checks-coverage"><p>The count is this codebase\'s tests and theorems, as last pushed. ' +
+    `${inCodebase.length} requirements are proved by them; these are not:</p>` +
+    section(
+      'Proved by the vitest suite',
+      'Run by CI on the git repository (<code>vitest:</code> evidence), so their results are not on this site.',
+      inVitest,
+    ) +
+    section('Proved by nothing yet', 'Known gaps, each tracked in its spec document.', unproved) +
+    '</section>';
+  const base = kindCard(key, 'checks');
+  // Inside the card's content, after the list of checks.
+  const end = base.lastIndexOf('</div></article>');
+  return end < 0 ? base + coverage : base.slice(0, end) + coverage + base.slice(end);
+};
+
 const taskCard = (key, task) => {
   const parent = index.tasks.find((other) => other.id === task.parent);
   // A canceled subtask (often a duplicate) is counted, not listed.
@@ -1455,7 +1496,9 @@ const buildCard = async (key) => {
           ? eventsCard(key, await loadEvents())
           : value === 'features'
             ? featuresCard(key, await loadFeatures())
-            : kindCard(key, value);
+            : value === 'checks'
+              ? checksCard(key, await requirementsByEvidence())
+              : kindCard(key, value);
     default:
       return missingCard(key, key);
   }
