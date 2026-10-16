@@ -19,6 +19,7 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.EnsureParticipantChat.pipe(Operation.lazyHandler(() => import('./ensure-participant-chat.ts'))),
   AgentOperation.OpenPrivateChat.pipe(Operation.lazyHandler(() => import('./open-private-chat.ts'))),
   AgentOperation.ReadSource.pipe(Operation.lazyHandler(() => import('./read-source.ts'))),
+  AgentOperation.ExtractFacts.pipe(Operation.lazyHandler(() => import('./extract-facts.ts'))),
   ModeOperation.ListModes.pipe(Operation.lazyHandler(() => import('./list-modes.ts'))),
   ModeOperation.SwitchMode.pipe(Operation.lazyHandler(() => import('./switch-mode.ts'))),
   MemoryOperation.ResolveEntity.pipe(Operation.lazyHandler(() => import('./resolve-entity.ts'))),

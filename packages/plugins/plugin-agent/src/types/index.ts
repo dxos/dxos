@@ -9,6 +9,7 @@ export * as AgentMailbox from './AgentMailbox.ts';
 export * as AgentOperation from './AgentOperation.ts';
 export * as BrainService from './BrainService.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
+export * as FactFeed from './FactFeed.ts';
 export * as Goal from './Goal.ts';
 export * as Knowledge from './Knowledge.ts';
 export * as MemoryOperation from './MemoryOperation.ts';

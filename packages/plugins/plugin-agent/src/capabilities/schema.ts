@@ -4,7 +4,7 @@
 
 import { ProfileOf } from '@dxos/types';
 
-import { AgentChannels, AgentEmail, Goal, Mode, Relay } from '#types';
+import { AgentChannels, AgentEmail, FactFeed, Goal, Mode, Relay } from '#types';
 
 /**
  * Agent, Chat and HasSubject are registered by plugin-assistant, which this plugin depends on;
@@ -13,6 +13,8 @@ import { AgentChannels, AgentEmail, Goal, Mode, Relay } from '#types';
 export default [
   AgentChannels.AgentChannels,
   AgentEmail.AgentEmail,
+  FactFeed.FactItem,
+  FactFeed.ExtractionPass,
   Goal.Goal,
   Relay.Relay,
   Mode.Mode,

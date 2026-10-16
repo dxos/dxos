@@ -90,6 +90,8 @@ export type WriteSerializedSpaceArchiveOptions = {
   space: ExportableSpace;
   echoHost: EchoHost;
   exportedBy?: IdentityDid;
+  /** Export only these feeds: their `Feed` objects and messages, and no other object. */
+  feedIds?: readonly string[];
 };
 
 /**
@@ -103,7 +105,7 @@ export type WriteSerializedSpaceArchiveOptions = {
 export const writeSerializedSpaceArchive = async (
   options: WriteSerializedSpaceArchiveOptions,
 ): Promise<SpacesService.SpaceArchive> => {
-  const { space, echoHost, exportedBy } = options;
+  const { space, echoHost, exportedBy, feedIds } = options;
 
   const rootUrl = space.automergeSpaceState.lastEpoch?.assertion.automergeRoot;
   assertState(rootUrl, 'Space does not have a root URL');
@@ -124,6 +126,11 @@ export const writeSerializedSpaceArchive = async (
       continue;
     }
     collectObjectsFromDoc(lease.doc(), objects);
+  }
+
+  if (feedIds) {
+    const selected = new Set(feedIds);
+    objects.splice(0, objects.length, ...objects.filter((obj) => selected.has(obj.id)));
   }
 
   // Export queue/feed messages for every Feed object in the space.
@@ -239,7 +246,7 @@ const exportFeedData = async (
   return feeds;
 };
 
-const collectFeedMessages = async (
+export const collectFeedMessages = async (
   echoHost: EchoHost,
   spaceId: SpaceId,
   feedId: EntityId,
