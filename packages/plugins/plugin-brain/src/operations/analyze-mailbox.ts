@@ -12,6 +12,8 @@ import { Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import * as BrainFactStore from '@dxos/plugin-agent/BrainFactStore';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
@@ -20,19 +22,24 @@ import { BrainOperation } from '#types';
 /**
  * Thin mailbox wrapper over the feed-generic `runFactPipeline` (in `@dxos/pipeline-email`): resolves
  * the Mailbox to its backing feed and persisted progress cursor, builds the extract closure from the
- * injected `AiService`, and runs the cursored fact pipeline. All facts/feed machinery is
- * mailbox-agnostic; only the input shape (`Ref<Mailbox>`) and the feed/cursor lookup are
- * mailbox-specific.
+ * injected `AiService`, and runs the cursored fact pipeline into the named agent's brain. All
+ * facts/feed machinery is mailbox-agnostic; only the input shape (`Ref<Mailbox>`) and the feed/cursor
+ * lookup are mailbox-specific.
  */
 const handler = BrainOperation.AnalyzeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
+      agent: agentRef,
       pageSize = BrainOperation.DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE,
       model,
       provider,
       strict,
     }) {
+      if (!agentRef) {
+        return yield* Effect.fail(new BrainService.AgentRequiredError());
+      }
+      const agent = yield* Database.load(agentRef);
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
       const cursor = yield* FeedCursor.findOrCreateAnalyzeCursor(mailbox);
@@ -77,7 +84,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
         pageSize,
         extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
-      });
+      }).pipe(Effect.provide(BrainFactStore.layer(agent.id)));
       reportStatus({ message: Progress.STATUS_COMPLETE });
       return result;
     }),

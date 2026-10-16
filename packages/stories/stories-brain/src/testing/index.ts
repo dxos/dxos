@@ -5,6 +5,7 @@
 export * from './crawler-stores.ts';
 export * from './discord-fixture.ts';
 export * from './semantic-facts.ts';
+export * from './story-brain.ts';
 
 // NOTE: `./modules` (the ModuleContainer surface registration) is intentionally NOT re-exported here:
 // the module components import `CrawlerStores` back through this barrel, so re-exporting the

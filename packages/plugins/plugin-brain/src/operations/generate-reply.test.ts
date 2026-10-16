@@ -13,11 +13,12 @@ import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { generateReply, replySubject } from './generate-reply.ts';
+import { AGENT_TYPES, brainWithFacts } from './testing.ts';
 
 const makeMessage = (sender: string, subject: string, text: string, created: string) =>
   Obj.make(Message.Message, {
@@ -75,7 +76,9 @@ describe('generateReply', () => {
   });
 
   test('grounds the draft on thread context and participant facts', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Message.Message, Mailbox.Mailbox, Feed.Feed] });
+    const { db } = await builder.createDatabase({
+      types: [Message.Message, Mailbox.Mailbox, Feed.Feed, ...AGENT_TYPES],
+    });
     const mailbox = Mailbox.make({ name: 'Inbox' });
     db.add(mailbox);
     const feed = mailbox.feed.target!;
@@ -89,13 +92,9 @@ describe('generateReply', () => {
 
     const ai = capturingAiService('Here are the Q2 numbers.');
     const result = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const store = yield* FactStore;
-        yield* store.putFacts([ALICE_FACT]);
-        return yield* generateReply({ mailbox, message: thread[0] });
-      }).pipe(
+      generateReply({ mailbox, message: thread[0] }).pipe(
         Effect.provide(
-          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+          Layer.mergeAll(brainWithFacts([ALICE_FACT]), ai.layer).pipe(Layer.provideMerge(Database.layer(db))),
         ),
       ),
     );
@@ -111,8 +110,10 @@ describe('generateReply', () => {
     expect(ai.prompts[0]).toContain('works for');
   });
 
-  test('drafts without facts when the store is empty', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Message.Message, Mailbox.Mailbox, Feed.Feed] });
+  test('drafts without facts when the brain is empty', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Message.Message, Mailbox.Mailbox, Feed.Feed, ...AGENT_TYPES],
+    });
     const mailbox = Mailbox.make({ name: 'Inbox' });
     db.add(mailbox);
     const feed = mailbox.feed.target!;
@@ -123,9 +124,7 @@ describe('generateReply', () => {
     const ai = capturingAiService('Sure, ask away.');
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
-        Effect.provide(
-          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
-        ),
+        Effect.provide(Layer.mergeAll(brainWithFacts(), ai.layer).pipe(Layer.provideMerge(Database.layer(db)))),
       ),
     );
 

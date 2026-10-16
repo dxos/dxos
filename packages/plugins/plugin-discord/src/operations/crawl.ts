@@ -12,6 +12,9 @@ import { CrawlError } from '@dxos/crawler';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
+import { FactStore } from '@dxos/pipeline-rdf';
+import * as BrainFactStore from '@dxos/plugin-agent/BrainFactStore';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 
 import { DiscordOperation } from '#types';
 
@@ -19,20 +22,25 @@ import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services/i
 
 /**
  * Runs the crawl on the session crawl runtime (which owns the SQLite-backed stores) so state
- * persists across invocations; the ambient AiService and the per-run Discord source are provided
- * into that runtime explicitly.
+ * persists across invocations; the ambient AiService, the per-run Discord source and the target
+ * agent's brain (as the pipeline's `FactStore`) are provided into that runtime explicitly.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannels> =
   DiscordOperation.CrawlDiscordChannels.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ connection, channels, descendThreads, maxDays, maxSteps, questions }) {
+      Effect.fn(function* ({ connection, agent: agentRef, channels, descendThreads, maxDays, maxSteps, questions }) {
+        if (!agentRef) {
+          return yield* Effect.fail(new BrainService.AgentRequiredError());
+        }
         const connectionTarget = connection.target;
         const db = connectionTarget ? Obj.getDatabase(connectionTarget) : undefined;
         invariant(db, 'No database for connection ref — invoker did not provide Database.layer.');
+        const agent = yield* Database.load(agentRef).pipe(Effect.provide(Database.layer(db)));
 
         const ai = yield* AiService.AiService;
         // Captured here because the program runs on the crawl runtime, which lacks the operation's services.
         const credentials = yield* Credential.CredentialsService;
+        const brain = yield* BrainService.BrainService;
         const sourceLayer = discordSourceLayerFromConnection(connection).pipe(
           Layer.provide(Database.layer(db)),
           Layer.provide(Layer.succeed(Credential.CredentialsService, credentials)),
@@ -56,7 +64,11 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
             },
             maxSteps !== undefined ? { maxSteps } : {},
           );
-        }).pipe(Effect.provide(sourceLayer), Effect.provideService(AiService.AiService, ai));
+        }).pipe(
+          Effect.provide(sourceLayer),
+          Effect.provideService(AiService.AiService, ai),
+          Effect.provideService(FactStore, BrainFactStore.make(brain, agent.id)),
+        );
 
         const summary = yield* Effect.tryPromise({
           try: () => getCrawlRuntime().runPromise(program),

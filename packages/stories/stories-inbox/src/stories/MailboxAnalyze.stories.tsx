@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
@@ -17,6 +18,9 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -24,9 +28,10 @@ import * as KvsStore from '@dxos/effect/KvsStore';
 import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as BrainMemory from '@dxos/plugin-agent/BrainMemory';
+import * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainOperation from '@dxos/plugin-brain/BrainOperation';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
@@ -91,6 +96,9 @@ const TRACKED_SENDER_RE = /@(kirkconsult\.com|sequoia\.com)$/i;
 /** Investor domains for the Investor Conversations pipeline (fixture VCs + the demo seed's). */
 const INVESTOR_DOMAINS = ['backed.vc', 'blueyard.com', 'dispersion.xyz', 'sequoia.com'];
 
+/** The brain the analysis writes facts into: an in-memory one for the agent `onInit` adds, with no agent host. */
+const storyBrain = BrainMemory.makeDetached();
+
 /** Role token for the story-local process module, referenced by the `ModuleContainer` layout. */
 const ProcessRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.process');
 
@@ -122,6 +130,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const client = useClient();
   const identity = useIdentity();
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
+  const [agent] = useQuery(space.db, Filter.type(Agent.Agent));
   const feed = mailbox?.feed?.target;
   const messages = useQuery(
     space.db,
@@ -143,7 +152,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const relations = useQuery(space.db, Filter.type(ExtractedFrom.ExtractedFrom));
 
   const [invoker] = Hooks.useCapabilities(Capabilities.OperationInvoker);
-  const [factStores] = Hooks.useCapabilities(BrainCapabilities.FactStoreRegistry);
 
   const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
   // Every invoker run is a process emitting `status.update` trace events; the progress sink projects
@@ -175,16 +183,13 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
       {
-        // Clears the shared FactStore (not ECHO-reactive, so the count is zeroed explicitly).
+        // Resets the agent's brain (not ECHO-reactive, so the count is zeroed explicitly).
         id: 'reset-facts',
         label: 'Facts',
         run: async () => {
-          await EffectEx.runPromise(
-            factStores
-              .forSpace(space.id)
-              .clear()
-              .pipe(Effect.orElseSucceed(() => undefined)),
-          );
+          if (agent) {
+            await EffectEx.runPromise(storyBrain.service.reset(agent.id).pipe(Effect.orElseSucceed(() => undefined)));
+          }
           setFacts(0);
           return { reset: 'facts' };
         },
@@ -216,7 +221,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
     ];
-  }, [space, client, invoker, mailbox, factStores]);
+  }, [space, client, invoker, mailbox, agent]);
 
   const handleReset = useCallback(
     async (reset: StoryAction) => {
@@ -342,18 +347,15 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           ),
       },
       {
-        // Fact analysis against local Ollama; the in-memory FactStore is not ECHO-reactive, so the
+        // Fact analysis against local Ollama into the agent's brain, which is not ECHO-reactive, so the
         // count is polled while the run commits per page, then refreshed once at the end.
         id: 'analyze',
         label: 'BrainOperation.AnalyzeMailbox',
         run: async () => {
           const refresh = async () => {
-            const stored = await EffectEx.runPromise(
-              factStores
-                .forSpace(space.id)
-                .query({})
-                .pipe(Effect.orElseSucceed(() => [])),
-            );
+            const stored = agent
+              ? await EffectEx.runPromise(storyBrain.service.query(agent.id, {}).pipe(Effect.orElseSucceed(() => [])))
+              : [];
             setFacts(stored.length);
           };
           const timer = setInterval(() => void refresh(), 500);
@@ -362,6 +364,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
               BrainOperation.AnalyzeMailbox,
               {
                 mailbox: Ref.make(mailbox),
+                ...(agent ? { agent: Ref.make(agent) } : {}),
                 model: OLLAMA_MODEL,
                 provider: Provider.ollama.id,
                 strict: false,
@@ -444,7 +447,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
     ];
-  }, [space, client, invoker, mailbox, messages, projects, factStores]);
+  }, [space, client, invoker, mailbox, messages, projects, agent]);
 
   const [actionId, setActionId] = useState('scan');
 
@@ -579,6 +582,19 @@ const StoryProcessPlugin = Plugin.define(
         ]),
       ]),
   }),
+  // The agent brain `AnalyzeMailbox` writes into, without the agent runtime AgentPlugin's brain needs.
+  Plugin.addModule(
+    Capability.inlineModule('StoryBrain', { provides: [Capabilities.LayerSpec] }, () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.LayerSpec,
+          LayerSpec.make({ affinity: 'application', requires: [], provides: [BrainService.BrainService] }, () =>
+            Layer.succeed(BrainService.BrainService, storyBrain.service),
+          ),
+        ),
+      ]),
+    ),
+  ),
   // The mailbox→project pipelines (Projects button) without activating the full ProjectsPlugin.
   Plugin.addModule(
     Capability.inlineModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
@@ -630,6 +646,8 @@ const meta = {
     setupEvents: [ActivationEvents.Startup],
     types: [
       AccessToken.AccessToken,
+      Agent.Agent,
+      Instructions.Instructions,
       Booking.Booking,
       Connection.Connection,
       Cursor.Cursor,
@@ -649,6 +667,13 @@ const meta = {
     ],
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
+      // The agent whose brain the analysis fills; the mailbox processor picks the space's only agent.
+      space.db.add(
+        Obj.make(Agent.Agent, {
+          name: 'Analyst',
+          instructions: Ref.make(Instructions.make({ name: 'Analyst', text: '' })),
+        }),
+      );
       await space.db.flush();
 
       switch (args.seed) {

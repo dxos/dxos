@@ -4,26 +4,24 @@ name: BrainPlugin
 version: 0.1.0
 ---
 
-The Facts layer for Composer: a per-space semantic index of RDF `Fact` tuples (subject / predicate /
-object with factuality, attribution, and provenance) extracted from user content by upstream
-pipelines (e.g. `plugin-inbox`'s `EnrichMailbox` over a mailbox feed).
+The Facts layer for Composer: operations and surfaces over the RDF `Fact` tuples (subject /
+predicate / object with factuality, attribution, and provenance) that the space's agents know.
 
-The plugin owns the provider side of the `FactStore` seam defined in `@dxos/pipeline-rdf`: it
-contributes a shared per-space `FactStoreRegistry` plus a space-affinity operation `LayerSpec` that
-provides the `FactStore` service to any operation declaring it. Consumers (such as `plugin-inbox`'s
-`EnrichMailbox` and `GenerateReply`) depend only on the `FactStore` `Context.Tag` from
-`@dxos/pipeline-rdf` — never on this plugin's package — so the store implementation can move from
-in-memory to a persistent backend without touching consumers.
+The plugin keeps no fact store of its own. Facts live in each agent's brain (`BrainService` from
+`plugin-agent`, one store per agent): `AnalyzeMailbox` writes a mailbox's facts into the brain of the
+agent it is given, and the read operations query the brains of every agent in the space, each fact
+once. In the client that brain is plugin-agent's in-memory `BrainMemory`, so only facts of agents
+hosted in this app are visible here; an EDGE-hosted agent's brain is not reached (roadmap).
 
-On top of the store, the plugin contributes:
+On top of the agents' brains, the plugin contributes:
 
 - Two visible operations, `QueryFacts` and `SummarizeSubject`, exposed to the assistant through the
   `org.dxos.skill.brain` skill. Skill instructions describe HOW to use the tools (entity-slug
   conventions, confidence filtering, iterative narrowing) — task-specific behavior lives in the
   operations themselves.
 - A `FactsCompanion` surface rendering the plugin's `FactViewer` component over the
-  space's facts as a companion to article subjects, with an entity/predicate filter and an empty
-  state when no facts relate to the subject.
+  facts the space's agents know (polled through `ListFacts`) as a companion to article subjects,
+  with an entity/predicate filter and an empty state when no facts relate to the subject.
 
 ## Extensions
 
@@ -87,32 +85,21 @@ type SummaryResult
     factCount: number          # Number of facts the summary drew from
 ```
 
-```mdl
-type FactStoreRegistry
-  desc: |
-    Contributed capability (BrainCapabilities.FactStoreRegistry). One shared FactStore
-    instance per space, created lazily; layerFor wraps the same instance so operation
-    layers and direct consumers (React components) observe identical state.
-  fields:
-    forSpace: (spaceId) => FactStoreApi
-    layerFor: (spaceId) => Layer<FactStore>
-```
-
 ## Operations
 
 ```mdl
 op queryFacts
   key: org.dxos.operation.brain.queryFacts
   desc: |
-    Runs a structured SemanticQuery against the space FactStore and returns compact
+    Runs a structured query against the brains of the space's agents and returns compact
     facts for LLM consumption. Visible; listed as a tool of the brain skill.
   input:
     query: SemanticQueryInput
   output: { facts: CompactFact[] }
-  requires: [FactStore]
-  effects: [factstore:read]
+  requires: [Database, BrainService]
+  effects: [brain:read]
   errors:
-    SemanticIndexError: the underlying triple-store query failed
+    BrainError: an agent's brain refused the query or could not be reached
 ```
 
 ```mdl
@@ -127,11 +114,40 @@ op summarizeSubject
     subject: string            # Entity slug or label (normalized to slug before query)
     focus?: string             # Optional angle, e.g. "commitments", "recent activity"
   output: SummaryResult
-  requires: [FactStore, AiService]
-  effects: [factstore:read, llm]
+  requires: [Database, BrainService, AiService]
+  effects: [brain:read, llm]
   errors:
-    SemanticIndexError: the underlying triple-store query failed
+    BrainError: an agent's brain refused the query or could not be reached
   note: Returns { summary: '', factCount: 0 } when no facts match; never invents content.
+```
+
+```mdl
+op analyzeMailbox
+  key: org.dxos.operation.brain.analyzeMailbox
+  desc: |
+    Cursored fact extraction over a mailbox feed into the named agent's brain. Facts are
+    pushed store-only, so bulk ingestion wakes none of the agent's subscriptions.
+  input:
+    mailbox: Ref<Mailbox>
+    agent?: Ref<Agent>         # Required; optional in the schema so a missing one is a typed error
+    pageSize?: number
+  output: { processed: number, facts: number }
+  requires: [AiService, Database, BrainService, TraceService]
+  effects: [brain:write, echo:write, llm]
+  errors:
+    AgentRequiredError: no agent was given
+  note: |
+    The mailbox processor and the Mailbox Facts template pass the space's only agent; with
+    none or several the processor skips the pass and the template's routine has no agent.
+```
+
+```mdl
+op listFacts
+  key: org.dxos.operation.brain.listFacts
+  desc: Every fact the brains of the space's agents hold, each once. Read by FactsCompanion.
+  output: { facts: Fact[] }
+  requires: [Database, BrainService]
+  effects: [brain:read]
 ```
 
 ## Components
@@ -141,13 +157,13 @@ component FactsCompanion
   desc: |
     Companion surface over an article subject rendering the space's facts via the FactViewer
     component (src/components/FactViewer, exported via ./components).
-    Facts are read from the shared per-space store (FactStoreRegistry.forSpace). v0 shows
-    all space facts (the store is per-space, matching its granularity) with FactViewer's
-    text filter; subject-scoped filtering by source DXN is roadmap.
+    Facts are read through ListFacts, re-read every few seconds (the brain has no change
+    feed). v0 shows all facts of the space's agents with FactViewer's text filter;
+    subject-scoped filtering by source DXN is roadmap.
   props:
     subject: Obj.Any           # The companioned ECHO object
   state:
-    facts: Fact[]              # Loaded from the store; refreshed on store writes
+    facts: Fact[]              # Loaded through ListFacts; polled
     filter: string             # Entity/predicate text filter (FactViewer built-in)
   slots: {}
   emits: {}
@@ -156,25 +172,23 @@ component FactsCompanion
 ## Features
 
 ```mdl
-feat F-1: Per-space FactStore provisioning
+feat F-1: Facts live in the agents' brains
 
   req F-1.1:
     when: the plugin activates
-    then: a single FactStoreRegistry is contributed (BrainCapabilities.FactStoreRegistry)
-          together with a space-affinity LayerSpec providing FactStore
+    then: it contributes no fact store; its operations declare BrainService
 
   req F-1.2:
-    when: forSpace(spaceId) is called repeatedly for the same space
-    then: the same FactStore instance is returned (lazily created on first use)
+    when: AnalyzeMailbox runs without an agent
+    then: it fails with AgentRequiredError before reading the mailbox
 
   req F-1.3:
-    when: an operation declaring the FactStore service runs with a space context
-    then: the LayerSpec injects the registry's store for that space — the SAME instance
-          forSpace returns, so UI reads observe operation writes
+    when: AnalyzeMailbox runs with an agent
+    then: the facts land in that agent's brain, stored without waking its subscriptions
 
   req F-1.4:
-    when: the store backend changes (in-memory → persistent)
-    then: no consumer changes: only the registry's store construction is touched
+    when: the agent is hosted on EDGE
+    then: the facts reach EDGE's brain, which its Knowledge panel reads
     tags: [roadmap]
 ```
 
@@ -200,44 +214,37 @@ feat F-2: Assistant access via the brain skill
 feat F-3: FactViewer companion surface
 
   req F-3.1:
-    when: an article subject is companioned in a space with a FactStore
+    when: an article subject is companioned in a space with an agent
     then: the FactsCompanion surface is available and renders FactViewer over the
           space's facts
 
   req F-3.2:
-    when: the space store has no facts
+    when: the space's agents know no facts
     then: an empty state is shown (no error)
 ```
 
 ```mdl
-feat F-4: Consumers resolve FactStore through the seam
+feat F-4: Readers query the agents' brains
 
   req F-4.1:
-    when: plugin-inbox's EnrichMailbox indexes a mailbox feed
-    then: facts land in the store this plugin provides for that space (no
-          plugin-inbox → plugin-brain package dependency)
-
-  req F-4.2:
-    when: plugin-inbox's GenerateReply drafts a reply
-    then: it queries the same per-space store for facts about the message's
-          participants
+    when: QueryFacts, SummarizeSubject or GenerateReply reads facts
+    then: it queries the brain of every agent in the space and keeps each fact once
 ```
 
 ## Acceptance
 
 ```mdl
-scenario T-1: Registry instance identity
-  given: a FactStoreRegistry
-  when: forSpace('a') is called twice and forSpace('b') once
+scenario T-1: Facts written through the brain
+  given: a mailbox feed and an agent with an in-memory brain
+  when: the fact pipeline runs into that agent's brain
   then:
-    - both 'a' calls return the same instance
-    - 'b' returns a distinct instance
-    - layerFor('a') provides the instance forSpace('a') returned
+    - the agent's brain holds the extracted facts
+    - none of the agent's subscriptions woke
 ```
 
 ```mdl
 scenario T-2: QueryFacts returns matching facts
-  given: a memory FactStore seeded with facts about alice (subject) and acme (object)
+  given: an agent whose in-memory brain holds facts about alice (subject) and acme (object)
   when: QueryFacts runs with { entity: 'alice' } and with { minConfidence: 0.9 }
   then:
     - the entity query returns facts where alice is subject or object
@@ -247,7 +254,7 @@ scenario T-2: QueryFacts returns matching facts
 
 ```mdl
 scenario T-3: SummarizeSubject grounds on facts
-  given: a memory FactStore seeded with facts about a person, and a memoized LLM
+  given: an agent whose in-memory brain holds facts about a person, and a stub LLM
   when: SummarizeSubject runs with that subject
   then:
     - factCount equals the number of matched facts
@@ -257,17 +264,17 @@ scenario T-3: SummarizeSubject grounds on facts
 
 ```mdl
 scenario T-4: FactsCompanion rendering
-  given: a space store with facts (storybook)
+  given: a space agent whose brain holds facts (storybook)
   when: FactsCompanion renders over a subject
   then:
     - FactViewer shows the facts grouped by subject
-    - with an empty store the empty state renders
+    - with an empty brain the empty state renders
 ```
 
 ```mdl
-scenario T-5: Enrich → query integration (lives in plugin-inbox)
-  given: a mailbox feed with messages and the brain-provided store
-  when: EnrichMailbox runs, then QueryFacts for a participant entity
+scenario T-5: Analyze → query integration
+  given: a mailbox feed with messages and a space agent
+  when: AnalyzeMailbox runs for that agent, then QueryFacts for a participant entity
   then: facts extracted from the messages are returned
 ```
 
@@ -276,22 +283,22 @@ scenario T-5: Enrich → query integration (lives in plugin-inbox)
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
-This plugin has no create operation of its own — facts land in the store via upstream pipelines
-(`plugin-inbox`'s `EnrichMailbox`), never through a user gesture this plugin owns — so there is
+This plugin has no create operation of its own — facts land in an agent's brain via pipelines
+(`AnalyzeMailbox`, the agent's own reading), never through a user gesture this plugin owns — so there is
 nothing for `before`/`test` to create and nothing for `after` to undo. `queryFacts` and
 `summarizeSubject` are both agent-invocable read operations (`op@1.1`, keys below).
 
 ```mdl
 test QA-1: Query and summarize facts already in the store
-  desc: The plugin's own surface — QueryFacts and SummarizeSubject against a pre-populated FactStore.
+  desc: The plugin's own surface — QueryFacts and SummarizeSubject against a space agent's pre-populated brain.
   actors: both
   covers: [F-2.1, F-2.3, F-3.1, T-2, T-3]
   status: unverified
   given:
     - an identity exists
-    - space: a space is open whose FactStore already holds facts about entity "alice-smith" —
-      seeded by a prior plugin-inbox EnrichMailbox run (see F-4.1); this plugin has no operation
-      that creates a fact itself
+    - space: a space is open whose agent's brain already holds facts about entity "alice-smith" —
+      seeded by a prior AnalyzeMailbox run (see F-1.3); this plugin has no operation that creates
+      a fact itself
   steps:
     - name: Query facts about the entity
       do: (no direct UI for a structured query — this is the assistant path; a human instead opens

@@ -44,6 +44,9 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/assistant-toolkit"
     },
     {
@@ -81,6 +84,9 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../plugins/plugin-agent"
     },
     {
       "path": "../../plugins/plugin-brain"

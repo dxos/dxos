@@ -17,6 +17,8 @@ import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
 
+import { factAgent } from '../operations/fact-agent.ts';
+
 /** Chats get the brain (fact query/summarize) and inbox (read mail) skills. */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.brain', 'org.dxos.skill.inbox'] as const;
 
@@ -38,7 +40,7 @@ const PROJECT_INSTRUCTIONS = trim`
  *
  * The routine binds the operation directly rather than an instructions prompt, so the trigger loop
  * is deterministic — the extraction model runs inside the operation, not around it. Extracted facts
- * land in the space fact store keyed by provenance, so they are queryable by any session but are
+ * land in the space agent's brain keyed by provenance, so they are queryable by any session but are
  * not artifacts the project owns. Only applies to a Mailbox subject.
  */
 export const mailboxFacts: ProjectCapabilities.Template = {
@@ -62,14 +64,16 @@ export const mailboxFacts: ProjectCapabilities.Template = {
       });
 
       // Deterministic operation action: the trigger fires AnalyzeMailbox directly with the mailbox
-      // ref baked in at scaffold time; the persisted cursor makes re-runs incremental.
+      // ref baked in at scaffold time; the persisted cursor makes re-runs incremental. Without a
+      // single agent in the space the routine has none, and its runs fail until one is set.
+      const agent = factAgent(mailbox);
       const routine = Wire.makeRoutine({
         name: 'Analyze Mailbox',
         spec: { kind: 'runnable', runnable: Ref.fromURI(BrainOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specTimer(DEFAULT_CRON),
-          input: { mailbox: Ref.make(mailbox) },
+          input: { mailbox: Ref.make(mailbox), ...(agent ? { agent: Ref.make(agent) } : {}) },
         }),
       });
       Project.addRoutine(project, routine);

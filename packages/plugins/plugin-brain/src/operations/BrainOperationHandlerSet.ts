@@ -14,4 +14,5 @@ export const handlers = OperationHandlerSet.lazy([
   BrainOperation.QueryFacts.pipe(Operation.lazyHandler(() => import('./query-facts.ts'))),
   BrainOperation.SummarizeSubject.pipe(Operation.lazyHandler(() => import('./summarize-subject.ts'))),
   BrainOperation.GenerateReply.pipe(Operation.lazyHandler(() => import('./generate-reply.ts'))),
+  BrainOperation.ListFacts.pipe(Operation.lazyHandler(() => import('./list-facts.ts'))),
 ]);

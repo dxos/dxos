@@ -139,7 +139,9 @@ export const make = (
       if (options?.read) {
         yield* store.setCursor(options.read.source, options.read.through).pipe(Effect.mapError(toError));
       }
-      return entries.length === 0 ? 0 : enqueue(evaluator(agent).push(entries, { at: now(), quiet: options?.quiet }));
+      return entries.length === 0 || options?.storeOnly
+        ? 0
+        : enqueue(evaluator(agent).push(entries, { at: now(), quiet: options?.quiet }));
     }),
     tick: (agent) => Effect.sync(() => enqueue(evaluator(agent).tick(now()))),
     nextDueAt: (agent) =>
@@ -217,6 +219,15 @@ export const make = (
 
   return { service, triggers, facts };
 };
+
+/** A host with no agent sessions to wake. */
+const detachedAgents: AgentService.Service = {
+  getSession: () => Effect.die(new Error('This brain has no agent host to wake a chat in.')),
+  hydrate: () => Effect.void,
+};
+
+/** A brain with no agent host: it stores, queries and evaluates facts, but cannot wake a chat. */
+export const makeDetached = (options?: MakeOptions): BrainMemory => make(detachedAgents, options);
 
 /** {@link make} as a layer over the host's `AgentService`. */
 export const layer: Layer.Layer<BrainService.BrainService, never, AgentService.AgentService> = Layer.effect(

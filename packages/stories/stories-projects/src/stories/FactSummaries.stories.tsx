@@ -13,7 +13,7 @@ import { ModuleContainer, createDecorators, storyParameters } from '../testing/i
 const MAILBOX_NAME = 'Work';
 const TEMPLATE_ID = 'org.dxos.project.mailboxFacts';
 
-/** Owns `org.dxos.skill.brain`, the per-space FactStore, and the mailbox toolbar's `Analyze` action. */
+/** Owns `org.dxos.skill.brain`, the fact operations, and the mailbox toolbar's `Analyze` action. */
 const plugins = [BrainPlugin.make()];
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -33,7 +33,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * A project whose memory is the space fact store. Its starter routine is an *operation* action, not
+ * A project whose memory is the space agent's brain. Its starter routine is an *operation* action, not
  * a prompt: the trigger fires `AnalyzeMailbox` directly with the mailbox baked into its input, so
  * extraction runs as a deterministic pipeline with no model in the trigger loop. Chats in the
  * project then answer "where things stand" questions from the extracted facts via the brain skill,

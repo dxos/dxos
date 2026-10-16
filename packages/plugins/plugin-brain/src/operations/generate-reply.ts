@@ -10,12 +10,15 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import type * as BrainService from '@dxos/plugin-agent/BrainService';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { DraftMessage, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
+
+import { spaceFacts } from './space-facts.ts';
 
 /** Raised when the LLM reply generation fails (provider error or timeout). */
 export class GenerateReplyError extends Data.TaggedClass('GenerateReplyError')<{ cause: unknown }> {}
@@ -74,9 +77,9 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
 
 /**
  * Drafts a grounded reply: gathers the message's thread (same normalized subject) from the mailbox
- * feed, looks up facts about the participants in the space fact store, and prompts the LLM for a
+ * feed, looks up what the space's agents know about the participants, and prompts the LLM for a
  * reply body. Accepts either the message to reply to or a reply draft (resolved via `inReplyTo`).
- * Fact lookup degrades to none on store failure — a reply can always be drafted; LLM failure surfaces
+ * Fact lookup degrades to none on brain failure — a reply can always be drafted; LLM failure surfaces
  * as a typed {@link GenerateReplyError} so callers can recover (e.g. fall back to an empty draft).
  * Named export so the flow is unit-testable without the operation runtime.
  */
@@ -86,7 +89,7 @@ export const generateReply = (options: {
 }): Effect.Effect<
   { subject: string; body: string },
   GenerateReplyError,
-  FactStore | AiService.AiService | Database.Service
+  BrainService.BrainService | AiService.AiService | Database.Service
 > =>
   Effect.gen(function* () {
     const { mailbox } = options;
@@ -120,16 +123,15 @@ export const generateReply = (options: {
       .join('\n---\n');
 
     // Facts about the participants (sender + thread senders), deduped, bounded. Advisory: a failing
-    // store must not block drafting.
-    const store = yield* FactStore;
+    // brain must not block drafting.
     const participants = [
       ...new Set([senderLabel(message), ...thread.map(senderLabel)].filter((label) => label !== undefined)),
     ];
     const factsById = new Map<string, RDF.Fact>();
     for (const participant of participants) {
-      const facts = yield* store
-        .query({ entity: normalizeEntityId(participant) })
-        .pipe(Effect.orElseSucceed((): RDF.Fact[] => []));
+      const facts = yield* spaceFacts({ entity: normalizeEntityId(participant) }).pipe(
+        Effect.orElseSucceed((): RDF.Fact[] => []),
+      );
       for (const fact of facts) {
         factsById.set(fact.id, fact);
       }
