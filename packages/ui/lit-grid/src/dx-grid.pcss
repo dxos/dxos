@@ -158,8 +158,46 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          --grid-cell-surface: var(--color-grid-selection-surface);
+          /* The selection tint is translucent, so it is layered over the grid surface rather than the host behind it. */
+          --grid-cell-surface:
+            linear-gradient(var(--color-grid-selection-surface), var(--color-grid-selection-surface)),
+            var(--color-grid-surface);
           --grid-cell-fg: var(--color-grid-selection-fg);
+
+          /*
+           * Outline the selected range: each edge cell draws its outer sides. Like the focus ring it reaches
+           * back over the neighbours' right/bottom lines, so the outline sits on grid lines on all four sides.
+           */
+          &[data-selection-edge]::before {
+            content: '';
+            position: absolute;
+            inset-inline-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            inset-block-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            inset-inline-end: 0;
+            inset-block-end: 0;
+            z-index: 1;
+            pointer-events: none;
+            border: 0 solid var(--color-grid-selection-border);
+          }
+          &[data-selection-edge~='top']::before {
+            border-block-start-width: var(--dx-grid-focus-indicator-width);
+          }
+          &[data-selection-edge~='bottom']::before {
+            border-block-end-width: var(--dx-grid-focus-indicator-width);
+          }
+          &[data-selection-edge~='start']::before {
+            border-inline-start-width: var(--dx-grid-focus-indicator-width);
+          }
+          &[data-selection-edge~='end']::before {
+            border-inline-end-width: var(--dx-grid-focus-indicator-width);
+          }
+          /* The plane clips at its first column and row, where there is no neighbour line to reach over. */
+          &[aria-colindex='0']::before {
+            inset-inline-start: 0;
+          }
+          &[aria-rowindex='0']::before {
+            inset-block-start: 0;
+          }
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible,
@@ -228,6 +266,19 @@
 
             background: var(--grid-cell-surface);
             color: var(--grid-cell-fg);
+          }
+
+          /* The plane clips at its first column and row, where there is no neighbour line to reach over. */
+          &[aria-colindex='0'] > .dx-grid__cell__content {
+            inset-inline-start: 0;
+            min-inline-size: 100%;
+            padding-inline-start: var(--dx-grid-cell-content-padding-inline);
+          }
+
+          &[aria-rowindex='0'] > .dx-grid__cell__content {
+            inset-block-start: 0;
+            block-size: 100%;
+            padding-block-start: var(--dx-grid-cell-content-padding-block);
           }
 
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
