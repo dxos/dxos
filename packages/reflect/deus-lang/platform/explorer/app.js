@@ -1116,8 +1116,9 @@ const kindCard = (key, kind) => {
     return missingCard(key, `No kind ${kind}`);
   }
   const rank = { fail: 0, pass: 2 };
+  // The project's own, as the overview's tiles count them; a library's are listed in its own explorer.
   const entries = index.names
-    .filter((entry) => (isChecks ? Boolean(entry.status) : entry.kind === kind))
+    .filter((entry) => !entry.name.startsWith('lib.') && (isChecks ? Boolean(entry.status) : entry.kind === kind))
     .sort((a, b) => (isChecks ? (rank[a.status] ?? 1) - (rank[b.status] ?? 1) : 0) || a.name.localeCompare(b.name));
   const failing = entries.filter((entry) => entry.status === 'fail').length;
   return card(key, {
@@ -1959,11 +1960,12 @@ const docRow = (name) => {
 
 const homeHtml = () => {
   const meta = index.meta;
-  const counts = KIND_ORDER.map((kind) => [kind, index.names.filter((entry) => entry.kind === kind).length]).filter(
+  // A project's counts and checks are its own; a mounted library's are counted in its own project (D206).
+  const own = index.names.filter((entry) => !entry.name.startsWith('lib.'));
+  const counts = KIND_ORDER.map((kind) => [kind, own.filter((entry) => entry.kind === kind).length]).filter(
     ([, count]) => count > 0,
   );
-  // A project's checks are its own; a mounted library's are counted in its own project.
-  const checked = index.names.filter((entry) => entry.status && !entry.name.startsWith('lib.'));
+  const checked = own.filter((entry) => entry.status);
   const failing = checked.filter((entry) => entry.status === 'fail');
   const top = sortedChildren(index.tree);
   const namespaces = top.filter((node) => node.children.size > 0 && node.path !== 'lib');
@@ -1972,7 +1974,7 @@ const homeHtml = () => {
   const roots = top.filter((node) => node.entry && node.children.size === 0).map((node) => node.entry);
   const open = index.tasks.filter((task) => task.state === 'todo' || task.state === 'doing');
   const areas = index.areas ?? [];
-  const docs = specDocuments();
+  const docs = specDocuments().filter((doc) => !doc.startsWith('lib.'));
   const placed = new Set(areas.flatMap((area) => area.namespaces));
   const unplaced = namespaces.filter((node) => !placed.has(node.path));
   const grouped =
