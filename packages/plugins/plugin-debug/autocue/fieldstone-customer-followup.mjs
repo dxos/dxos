@@ -34,6 +34,26 @@ const CONTACT = 'Nadia Petrov';
 /** Nadia's reply, by the start of its body. */
 const REPLY = 'Read it twice';
 const EVENT = 'Okapi alerting follow-up';
+/** The reference date, the week the vignette is set in: Wednesday 14 October 2026, as [year, month, day]. */
+const WEEK = [2026, 9, 14];
+
+/** The grid cell's selector for `date`; `data-date` is local midnight as UTC, so match on the local date. */
+const daySelector = async (page, [year, month, day]) => {
+  const value = await page.evaluate(
+    ([year, month, day]) =>
+      [...document.querySelectorAll('[data-testid="deck.plank"] [data-date]')]
+        .map((element) => element.getAttribute('data-date'))
+        .find((iso) => {
+          const date = new Date(iso);
+          return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day;
+        }),
+    [year, month, day],
+  );
+  if (!value) {
+    throw new Error('reference date not in the calendar grid');
+  }
+  return `[data-testid="deck.plank"] [data-date="${value}"]`;
+};
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -132,8 +152,36 @@ export const steps = [
     },
   },
   {
+    name: 'Look at the week',
+    narration:
+      'Astrid runs engineering at Fieldstone. Her calendar holds the whole year: standups, one-on-ones, customers, an offsite.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'Astrid’s calendar: the whole year, then this week');
+      await demo.click({ selector: node('Fieldstone'), label: 'Fieldstone calendar' });
+      await page
+        .locator('[data-testid="deck.plank"] [data-date]')
+        .first()
+        .waitFor({ state: 'visible', timeout: 15_000 });
+      const day = await daySelector(page, WEEK);
+      const grid = page.locator(day).first();
+      await page.waitForTimeout(BEAT);
+      // Down through the coming months and back, so the viewer sees how far the calendar runs.
+      const box = await grid.boundingBox();
+      await page.mouse.move(box.x, box.y + 200, { steps: 8 });
+      for (const delta of [240, -240]) {
+        for (let step = 0; step < 14; step++) {
+          await page.mouse.wheel(0, delta);
+          await page.waitForTimeout(80);
+        }
+        await page.waitForTimeout(BEAT / 2);
+      }
+      await demo.click({ selector: day, label: 'This week' });
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
     name: 'Find the thread',
-    narration: 'Astrid runs engineering at Fieldstone. Five weeks ago Okapi hit a cache-corruption incident.',
+    narration: 'Five weeks ago Okapi, a customer, hit a cache-corruption incident.',
     run: async ({ demo, page }) => {
       await caption(demo, 'Okapi’s incident, five weeks back in the inbox');
       await demo.click({ selector: node('Inbox'), label: 'Inbox' });

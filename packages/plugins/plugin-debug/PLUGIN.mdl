@@ -311,6 +311,10 @@ test QA-4: Fieldstone — a customer asks for one more thing
     - plugin-debug is enabled (dev-only default)
     - space: a space created from the "Fieldstone Labs" template, open, with the navtree expanded
   steps:
+    - name: Look at the week
+      do: Open the Fieldstone calendar, scroll the month grid through the coming months and back, then pick the reference date (Wednesday 14 October 2026).
+      expect: a year of days ringed for their events; the event list moves to that week's standups, one-on-ones and customer calls
+      note: The grid's highlighted "today" is the wall clock's, not the template's reference date.
     - name: Find the thread
       do: Open the Inbox and scroll back to "Okapi cache-corruption postmortem".
       expect: the thread, five weeks old, with eight messages
