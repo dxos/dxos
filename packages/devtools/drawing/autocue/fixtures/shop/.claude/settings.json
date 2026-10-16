@@ -10,5 +10,6 @@
       "Bash(find:*)",
       "Bash(grep:*)"
     ]
-  }
+  },
+  "disableAllHooks": true
 }

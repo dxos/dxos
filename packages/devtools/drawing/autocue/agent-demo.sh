@@ -12,7 +12,9 @@ DEMO_ROOT="$(cd "$DEMO_HERE/../../../.." && pwd)"
 
 DEMO_BIN="$(mktemp -d)"
 ln -s "$DEMO_ROOT/packages/devtools/drawing/bin/drawing.js" "$DEMO_BIN/drawing"
-ln -s "$DEMO_ROOT/packages/devtools/cli/bin/dx" "$DEMO_BIN/dx"
+# A wrapper, not a symlink: `bin/dx` locates its sources from its own path.
+printf '#!/bin/bash\nexec "%s" "$@"\n' "$DEMO_ROOT/packages/devtools/cli/bin/dx" > "$DEMO_BIN/dx"
+chmod +x "$DEMO_BIN/dx"
 export PATH="$DEMO_BIN:$PATH"
 # Started from inside an agent session, the take would otherwise inherit its child-session marker.
 unset CLAUDE_CODE_CHILD_SESSION
