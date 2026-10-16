@@ -16,6 +16,9 @@ import { toPlotDatums } from '../../util/index.ts';
 const MARGIN = 40;
 const MIN_SIZE = MARGIN * 2;
 
+// Plot's tip box defaults to a white fill, while its text follows the theme's currentColor.
+const TIP = { fill: 'var(--color-modal-surface)', stroke: 'var(--color-separator)' };
+
 export type PlotProps = ThemedClassName<{
   data: PlotData;
   options: PlotOptions;
@@ -100,8 +103,8 @@ const createPlot = (
         marks: [
           ObservablePlot.ruleY([0]),
           series.size > 1
-            ? ObservablePlot.barY(datums, { fx: 'key', x: 'series', y: 'value', fill: 'series', tip: true })
-            : ObservablePlot.barY(datums, { x: 'key', y: 'value', fill: 'series', tip: true }),
+            ? ObservablePlot.barY(datums, { fx: 'key', x: 'series', y: 'value', fill: 'series', tip: TIP })
+            : ObservablePlot.barY(datums, { x: 'key', y: 'value', fill: 'series', tip: TIP }),
         ],
       });
   }
