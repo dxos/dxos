@@ -3570,6 +3570,9 @@ const onClick = (event) => {
   } else if (data.dialect) {
     setDialect(data.dialect);
   } else if (data.home !== undefined) {
+    if (window.matchMedia('(max-width: 760px)').matches && target.closest('#sidebar')) {
+      document.body.classList.add('no-sidebar');
+    }
     writeFragment('code', []);
   } else if (data.run) {
     shellCommand(data.run, data.next);
@@ -3922,6 +3925,8 @@ const main = async () => {
   element('project').title = meta.project;
   openPathLink();
   element('branch').textContent = meta.branch;
+  // A phone's top bar has no room for the project, so the namespace drawer names it.
+  element('sidebar-project').textContent = `${addressOf(meta.project)} · ${meta.branch}`;
   element('open-count').textContent = meta.open > 0 ? String(meta.open) : '';
   if (index.tree.children.size < 12) {
     for (const child of index.tree.children.values()) {

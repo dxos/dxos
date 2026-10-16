@@ -955,7 +955,12 @@ export const importValue = (module, path, desc, name) => lazy(name, () => fromJs
 
 /** A JavaScript function for an exported DEUS function. */
 export const exportFn = (fn, params, result) =>
-  fixed(params.length, (...args) => toJs(result, entered(() => fn(...params.map((param, i) => fromJs(param, args[i]))))));
+  fixed(params.length, (...args) =>
+    toJs(
+      result,
+      entered(() => fn(...params.map((param, i) => fromJs(param, args[i])))),
+    ),
+  );
 
 /**
  * Runs `start` as a call from JavaScript: under no DEUS handlers, with the caller's handlers current again when it

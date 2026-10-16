@@ -1851,7 +1851,18 @@ ul.rows {
   max-width: 560px;
 }
 
+#sidebar-project {
+  display: none;
+}
+
 @media (max-width: 760px) {
+  #sidebar-project {
+    display: block;
+    padding: 12px 16px 4px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+
   #topbar {
     gap: 8px;
     padding: 0 8px;
