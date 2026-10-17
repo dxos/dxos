@@ -2093,11 +2093,36 @@ const glossaryCard = (key) =>
 //
 
 /** Inline markdown: `code` (linked when it names a definition), **bold**, *emphasis*, links, and requirement references. */
+/**
+ * Text split into code spans, code-labelled links and the prose between them. A span opens with a run of backticks
+ * and closes with a run of the same length (CommonMark), so `` ` ```deus ` `` is the code ```` ```deus ````.
+ */
+const inlinePieces = (text) => {
+  const pieces = [];
+  // A link whose label is code (``[`deus/codebase.deus`](../../deus/codebase.deus)``) is one piece, not split at its backticks.
+  const token = /\[`[^`]+`\]\([^)\s]+\)|(?<!`)(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g;
+  let from = 0;
+  for (const match of text.matchAll(token)) {
+    pieces.push(text.slice(from, match.index), match[0]);
+    from = match.index + match[0].length;
+  }
+  pieces.push(text.slice(from));
+  return pieces.filter((piece) => piece !== '');
+};
+
+/** The code a code span holds, without its backticks and the one space each side may pad it with; undefined for prose. */
+const codeSpan = (piece) => {
+  const fence = /^`+/.exec(piece)?.[0];
+  if (!fence || piece.length <= fence.length * 2 || !piece.endsWith(fence)) {
+    return undefined;
+  }
+  const code = piece.slice(fence.length, -fence.length);
+  return /^ .*[^ ].* $/s.test(code) ? code.slice(1, -1) : code;
+};
+
 const inlineMd = (text, namespace) =>
   decisionLinks(
-    String(text)
-      // A link whose label is code (``[`deus/codebase.deus`](../../deus/codebase.deus)``) is one piece, not split at its backticks.
-      .split(/(\[`[^`]+`\]\([^)\s]+\)|`[^`]+`)/)
+    inlinePieces(String(text))
       .map((piece) => {
         const codeLink = /^\[`([^`]+)`\]\(([^)\s]+)\)$/.exec(piece);
         if (codeLink) {
@@ -2106,17 +2131,16 @@ const inlineMd = (text, namespace) =>
           if (doc && isDocument(doc)) {
             return `<code>${docLink(doc, label)}</code>`;
           }
-          const href = /^https?:/.test(target)
-            ? target
-            : /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)
-              ? repoUrl(target)
-              : undefined;
-          return href
-            ? `<code><a href="${escape(href)}" target="_blank" rel="noopener">${escape(label)}</a></code>`
+          if (/^https?:/.test(target)) {
+            return `<code><a href="${escape(target)}" target="_blank" rel="noopener">${escape(label)}</a></code>`;
+          }
+          return /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)
+            ? `<code>${fileLink(target, escape(label))}</code>`
             : `<code>${escape(label)}</code>`;
         }
-        if (/^`[^`]+`$/.test(piece)) {
-          const code = piece.slice(1, -1);
+        const span = codeSpan(piece);
+        if (span !== undefined) {
+          const code = span;
           if (isDocument(code)) {
             return `<code>${docLink(code)}</code>`;
           }
@@ -3950,7 +3974,10 @@ const choose = (hit) => {
     return;
   }
   closeOverlays();
-  open(hit.task ? `t:${hit.task.id}` : hit.namespace ? `n:${hit.namespace.path}` : `d:${hit.entry.hash}`);
+  // A document is found to be read, so it opens as text rather than as its `Embed.text` definition.
+  const reading =
+    hit.entry?.name.startsWith('Docs.') && embedded(hit.entry.name) ? `k:doc:${hit.entry.name}` : undefined;
+  open(hit.task ? `t:${hit.task.id}` : hit.namespace ? `n:${hit.namespace.path}` : (reading ?? `d:${hit.entry.hash}`));
 };
 
 //
