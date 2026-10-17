@@ -5,16 +5,23 @@
 import { type DocumentId, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { AutomergeHost } from './automerge-host.ts';
-import { DocumentQuarantinedError, isOutOfMemoryError } from './quarantine.ts';
+import {
+  AutomergeHost,
+  DocumentQuarantinedError,
+  OVERSIZED_DOCUMENT_CHANGES,
+  OVERSIZED_DOCUMENT_OPS,
+  isOutOfMemoryError,
+  oversizeLevel,
+} from './automerge-host.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
@@ -48,7 +55,7 @@ describe('isOutOfMemoryError', () => {
 });
 
 describe('AutomergeHost quarantine', () => {
-  test('refuses to load a quarantined document, across a restart', async () => {
+  test('refuses to load a quarantined document for the life of the host', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
 
@@ -61,32 +68,28 @@ describe('AutomergeHost quarantine', () => {
     await before.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
     expect(await before.loadDoc(Context.default(), documentId)).toBeNull();
     expect(() => before.acquireDoc(documentId)).toThrow(DocumentQuarantinedError);
-    await before.close();
-
-    const after = await openHost(runtime);
-    expect(after.isQuarantined(documentId)).toBe(true);
-    expect(after.quarantinedDocuments.get(documentId)).toMatchObject({
+    expect(before.quarantinedDocuments.get(documentId)).toMatchObject({
       reason: 'load-failed',
       error: String(OUT_OF_MEMORY),
     });
-    expect(await after.loadDoc(Context.default(), documentId)).toBeNull();
+    await before.close();
+
+    // The space directories are the durable record; a host on its own forgets.
+    const after = await openHost(runtime);
+    expect(after.isQuarantined(documentId)).toBe(false);
   });
 
-  test('retiring a document that failed to load supersedes the failure, across a restart', async () => {
+  test('retiring a document that failed to load supersedes the failure', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const documentId = randomDocumentId();
 
-    const before = await openHost(runtime);
-    await before.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
-    await before.quarantineDocument(documentId, { reason: 'retired' });
+    const host = await openHost(runtime);
+    await host.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
+    await host.quarantineDocument(documentId, { reason: 'retired' });
     // A later load failure never demotes a retirement.
-    await before.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
-    expect(before.quarantinedDocuments.get(documentId)?.reason).toBe('retired');
-    await before.close();
-
-    const after = await openHost(runtime);
-    expect(after.quarantinedDocuments.get(documentId)).toMatchObject({
+    await host.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
+    expect(host.quarantinedDocuments.get(documentId)).toMatchObject({
       reason: 'retired',
       error: String(OUT_OF_MEMORY),
     });
@@ -199,5 +202,98 @@ describe('AutomergeHost quarantine', () => {
     const documents = Object.keys(host.getLocalCollectionState(collectionId)?.documents ?? {});
     expect(documents).toContain(kept);
     expect(documents).not.toContain(quarantined);
+  });
+});
+describe('oversizeLevel', () => {
+  test('is below zero within both limits', () => {
+    expect(oversizeLevel({ changes: 0, ops: 0 })).toBe(-1);
+    expect(oversizeLevel({ changes: OVERSIZED_DOCUMENT_CHANGES - 1, ops: OVERSIZED_DOCUMENT_OPS - 1 })).toBe(-1);
+  });
+
+  test('counts doublings past whichever limit is exceeded further', () => {
+    expect(oversizeLevel({ changes: OVERSIZED_DOCUMENT_CHANGES, ops: 0 })).toBe(0);
+    expect(oversizeLevel({ changes: 0, ops: OVERSIZED_DOCUMENT_OPS * 2 })).toBe(1);
+    expect(oversizeLevel({ changes: OVERSIZED_DOCUMENT_CHANGES * 3, ops: OVERSIZED_DOCUMENT_OPS })).toBe(1);
+  });
+
+  test('flags the cursor that ran out of memory, which had few changes and many ops', () => {
+    expect(oversizeLevel({ changes: 156, ops: 45_722_122 })).toBe(5);
+  });
+});
+
+describe('AutomergeHost oversized documents', () => {
+  test('warns when a saved document passes the op limit, and again only when it doubles', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await host.open();
+    onTestFinished(async () => {
+      await host.close();
+    });
+    const warn = vi.spyOn(log, 'warn');
+    onTestFinished(() => warn.mockRestore());
+    const reportedOps = () =>
+      warn.mock.calls.flatMap(([message, context]: unknown[]) =>
+        message === 'oversized automerge document' &&
+        typeof context === 'object' &&
+        context !== null &&
+        'ops' in context
+          ? [context.ops]
+          : [],
+      );
+
+    using _small = await host.createDoc<{ text: string }>({ text: 'small' });
+    // One op per character, so this string alone passes the op limit.
+    using large = await host.createDoc<{ text: string; edits?: number }>({
+      text: 'x'.repeat(OVERSIZED_DOCUMENT_OPS + 100_000),
+    });
+    await host.flush(Context.default());
+    expect(reportedOps()).toEqual([OVERSIZED_DOCUMENT_OPS + 100_001]);
+
+    large.change((doc) => {
+      doc.edits = 1;
+    });
+    await host.flush(Context.default());
+    expect(reportedOps()).toHaveLength(1);
+
+    // Replacing the whole string re-inserts every character, the growth pattern this warning exists to catch.
+    large.change((doc) => {
+      doc.text = `${doc.text}y`;
+    });
+    await host.flush(Context.default());
+    expect(reportedOps()).toHaveLength(2);
+  });
+
+  test('warns when an oversized document is loaded from disk, however it is loaded', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const before = new AutomergeHost({ runtime });
+    await before.open();
+    const created = await before.createDoc<{ text: string }>({ text: 'x'.repeat(OVERSIZED_DOCUMENT_OPS + 100_000) });
+    await before.flush(Context.default());
+    const documentId = created.documentId;
+    created[Symbol.dispose]();
+    await before.close();
+
+    const warn = vi.spyOn(log, 'warn');
+    onTestFinished(() => warn.mockRestore());
+    const host = new AutomergeHost({ runtime });
+    await host.open();
+    onTestFinished(async () => {
+      await host.close();
+    });
+    // A bare lease, as the indexer takes, rather than `loadDoc`.
+    using lease = host.acquireDoc<{ text: string }>(documentId);
+    await expect.poll(() => lease.doc()?.text?.length).toBe(OVERSIZED_DOCUMENT_OPS + 100_000);
+    expect(
+      warn.mock.calls.filter(
+        ([message, context]: unknown[]) =>
+          message === 'oversized automerge document' &&
+          typeof context === 'object' &&
+          context !== null &&
+          'documentId' in context &&
+          context.documentId === documentId,
+      ),
+    ).toHaveLength(1);
   });
 });

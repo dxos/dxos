@@ -158,7 +158,15 @@ export interface DatabaseDirectory {
 export type RetiredDocument = {
   /** Url of the document now holding the retired document's objects. */
   replacedBy: string | RawString;
+  /**
+   * Why it was retired: `load-failed` (it ran Automerge out of memory) or `history` (its history outgrew its state).
+   * Written as a plain, non-CRDT string; readers treat an unknown or missing value as `load-failed`.
+   */
+  reason?: string | RawString;
 };
+
+/** Why a space directory retired a document; see {@link RetiredDocument.reason}. */
+export type RetirementReason = 'load-failed' | 'history';
 
 /**
  * @see DatabaseDirectory.branches
@@ -238,10 +246,13 @@ export const DatabaseDirectory = Object.freeze({
    * @returns The documents this space retired, each with the url of its replacement; see
    * {@link DatabaseDirectory.retired}.
    */
-  getRetiredDocuments: (doc: DatabaseDirectory): { documentId: string; replacedBy: string }[] =>
-    Object.entries(doc.retired ?? {}).map(([documentId, { replacedBy }]) => ({
+  getRetiredDocuments: (
+    doc: DatabaseDirectory,
+  ): { documentId: string; replacedBy: string; reason: RetirementReason }[] =>
+    Object.entries(doc.retired ?? {}).map(([documentId, { replacedBy, reason }]) => ({
       documentId,
       replacedBy: String(replacedBy),
+      reason: String(reason) === 'history' ? 'history' : 'load-failed',
     })),
 
   /**

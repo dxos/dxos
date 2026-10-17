@@ -23,8 +23,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId, URI } from '@dxos/keys';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { buildReplacementDocument, replacementDocumentId } from './document-retirement.ts';
-import { EchoHost } from './echo-host.ts';
+import { EchoHost, buildReplacementDocument, replacementDocumentId } from './echo-host.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
 const OUT_OF_MEMORY = new RangeError('error inflating document chunk ops: out of memory');
@@ -148,6 +147,9 @@ describe('document retirement', () => {
       .toBe(replacementUrl);
     const directory = await readDirectory(root.documentId);
     expect(directory.links?.['obj-bloated']?.toString()).toBe(replacementUrl);
+    // A plain string, not a CRDT text: a reason is written once and only ever read whole.
+    expect(directory.retired?.[documentId]?.reason).toBeInstanceOf(A.RawString);
+    expect(String(directory.retired?.[documentId]?.reason)).toBe('load-failed');
 
     // The replacement carries the object as the index last saw it.
     const replacement = await readDirectory(replacementId);
@@ -324,16 +326,17 @@ describe('concurrent retirement', () => {
       objects: { 'obj-a': { system: {}, meta: { keys: [] }, data: { title, count: 1 } } },
     });
     const same = directory('Same');
-    const reordered: DatabaseDirectory = { objects: same.objects, access: same.access, version: same.version };
 
     const first = await buildReplacementDocument(documentId, same);
-    const second = await buildReplacementDocument(documentId, reordered);
+    const second = await buildReplacementDocument(documentId, structuredClone(same));
     const other = await buildReplacementDocument(documentId, directory('Other'));
     expect(A.save(second)).toEqual(A.save(first));
     expect(A.getHeads(other)).not.toEqual(A.getHeads(first));
     // Merging two identical rebuilds adds nothing; merging differing ones keeps a single value per key.
     expect(A.getHistory(A.merge(A.clone(first), second))).toHaveLength(1);
-    expect(A.merge(A.clone(first), other).objects?.['obj-a']).toBeDefined();
+    const merged = A.merge(A.clone(first), other);
+    expect(A.getHistory(merged)).toHaveLength(2);
+    expect(A.merge(A.clone(other), first).objects).toEqual(merged.objects);
   });
 });
 
@@ -396,7 +399,8 @@ describe('history retirement', () => {
     const rootId = root.documentId;
     await before.close();
 
-    const host = await openHost(root.url);
+    const rootUrl = root.url;
+    const host = await openHost(rootUrl);
     // The load from disk is what reports the document's size.
     expect(await host.loadDoc(Context.default(), documentId)).not.toBeNull();
     const readRoot = async () => {
@@ -404,20 +408,28 @@ describe('history retirement', () => {
       invariant(handle, 'Root is not loadable.');
       return handle.doc();
     };
-    return { host, documentId, readRoot };
+    return { host, documentId, readRoot, reopen: () => openHost(rootUrl) };
   };
 
   test('rebuilds a cursor whose history outgrew its state, from its own current state', async () => {
-    const { host, documentId, readRoot } = await bloatAndRestart(CURSOR_TYPE);
+    const { host, documentId, readRoot, reopen } = await bloatAndRestart(CURSOR_TYPE);
     const replacementId = await replacementDocumentId(documentId);
     await expect
       .poll(async () => (await readRoot())?.retired?.[documentId]?.replacedBy.toString(), { timeout: 10_000 })
       .toBe(stringifyAutomergeUrl(replacementId));
+    expect(String((await readRoot())?.retired?.[documentId]?.reason)).toBe('history');
 
     const replacement = await host.loadDoc<DatabaseDirectory>(Context.default(), replacementId);
     invariant(replacement, 'Replacement is not loadable.');
     expect(replacement.doc()?.objects?.['obj-cursor']?.data).toEqual({ state: '5'.repeat(30_000) });
     expect(A.stats(replacement.doc()).numOps).toBeLessThan(40_000);
+
+    // Nothing but the space directory records the retirement, and it is enough to keep the document out.
+    await host.close();
+    const after = await reopen();
+    const afterAutomergeHost = after['_automergeHost'];
+    await expect.poll(() => afterAutomergeHost.quarantinedDocuments.get(documentId)?.reason).toBe('retired');
+    expect(await after.loadDoc(Context.default(), documentId)).toBeNull();
   });
 
   test('leaves a bloated document of any other type alone', async () => {

@@ -320,24 +320,28 @@ handles it without reading it:
 
 1. **Quarantine.** `AutomergeHost` listens for `document-load-failed` (a DXOS
    patch on automerge-repo; the repo otherwise swallows the error and leaves
-   the load waiting forever). An out-of-memory failure records the document in
-   `automerge_quarantine` with reason `load-failed`: loads resolve as
-   unavailable, nothing replicates or advertises it, and the record survives a
-   restart. Other failures are only logged, since they may not repeat.
+   the load waiting forever). An out-of-memory failure quarantines the document
+   for the life of the host: loads resolve as unavailable, and nothing
+   replicates or advertises it. Other failures are only logged, since they may
+   not repeat.
 2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
    index (the last indexed JSON of each of its objects) into a replacement whose
    id is derived from the original, so peers retiring concurrently converge on
    one document. It re-points the objects' links and records
-   `retired[<documentId>] = { replacedBy }` in the space directory. History is
+   `retired[<documentId>] = { replacedBy, reason }` in the space directory, the
+   reason (`load-failed` or `history`) as a plain, non-CRDT string. History is
    dropped. When the index lacks any of the objects, the document stays
-   quarantined and is not retired.
+   quarantined and is not retired; after a restart it fails to load once more
+   before it is quarantined again.
 3. **Wipe, everywhere.** Every peer that sees a `retired` entry in a space's
    directory quarantines the document with reason `retired` and wipes its index
    rows and bytes without loading it. The directory naming the document is the
    attribution: loading it to read `access.spaceId` is what retirement avoids.
 
-The `retired` map is append-only and stays in the directory, so a peer that
-syncs late, or restarts mid-wipe, still finishes the wipe.
+The space directory is the only durable record: there is no local quarantine
+table. The `retired` map is append-only and stays in the directory, so every
+open re-quarantines its documents, and a peer that syncs late, or restarts
+mid-wipe, still finishes the wipe.
 
 ### Documents whose history outgrew their state
 
@@ -364,9 +368,9 @@ same way, before it stops loading:
 - **Replacement already delivered.** A peer that already holds the replacement
   reuses it rather than importing a second history over it.
 - **Lost entries.** Two peers that each create the `retired` map concurrently
-  leave only one map in the merge. Every quarantine record of a retirement keeps
-  its space and replacement, and each retirement pass writes back any entry the
-  directory lacks.
+  leave only one map in the merge. Each host remembers the retirements it wrote
+  or saw this session, and each retirement pass (the merged change re-points
+  links, so it triggers one) writes back any entry the directory lacks.
 
 ## Safety & invariants
 

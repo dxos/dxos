@@ -27,7 +27,6 @@ import {
   type SubductionPolicy,
   initSubduction,
   interpretAsDocumentId,
-  stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
@@ -55,23 +54,67 @@ import {
   subsetRemoteToLocal,
 } from './collection-synchronizer.ts';
 import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
-import {
-  type DocumentSize,
-  OVERSIZED_DOCUMENT_CHANGES,
-  OVERSIZED_DOCUMENT_OPS,
-  oversizeLevel,
-} from './document-size.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
 import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
-import { DocumentQuarantinedError, isOutOfMemoryError } from './quarantine.ts';
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
-import { type QuarantineReason, type QuarantineRecord, SqliteQuarantineStore } from './sqlite-quarantine-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
+
+/**
+ * Why a document is quarantined: its bytes could not be loaded, or a space directory retired it.
+ */
+export type QuarantineReason = 'load-failed' | 'retired';
+
+export type QuarantineRecord = {
+  documentId: DocumentId;
+  reason: QuarantineReason;
+  /** The load error, for a document quarantined because it could not be loaded. */
+  error?: string;
+  quarantinedAt: number;
+};
+
+/**
+ * Raised to a caller waiting on, or leasing, a document the host has quarantined.
+ */
+export class DocumentQuarantinedError extends Error {
+  constructor(readonly documentId: DocumentId) {
+    super(`Document is quarantined: ${documentId}`);
+    this.name = 'DocumentQuarantinedError';
+  }
+}
+
+/**
+ * Whether a load failed because the document cannot fit in Automerge's WASM heap — `error inflating document chunk
+ * ops: out of memory` from `loadIncremental`, or the heap refusing to grow. Every load of such a document fails the
+ * same way, while any other error (a storage read, malformed bytes) may not repeat.
+ */
+export const isOutOfMemoryError = (error: unknown): boolean =>
+  error instanceof Error &&
+  /out of memory|maximum memory size exceeded|could not allocate memory|allocation failed/i.test(error.message);
+
+/** Changes (commits) past which a document is reported as oversized. */
+export const OVERSIZED_DOCUMENT_CHANGES = 1_000_000;
+
+/**
+ * Ops past which a document is reported as oversized. Checked alongside changes because a few huge changes
+ * bloat a document as surely as many small ones: the 45.7M-op cursor that ran out of memory had 156 changes.
+ */
+export const OVERSIZED_DOCUMENT_OPS = 1_000_000;
+
+export type DocumentSize = { changes: number; ops: number };
+
+/**
+ * How many times over the limits a document is, as a doubling level: 0 at the limit, 1 at twice it, and so on;
+ * -1 while it is within both limits. Reporting only when the level rises keeps the warning to one per doubling.
+ */
+export const oversizeLevel = ({ changes, ops }: DocumentSize): number => {
+  const ratio = Math.max(changes / OVERSIZED_DOCUMENT_CHANGES, ops / OVERSIZED_DOCUMENT_OPS);
+  return ratio < 1 ? -1 : Math.floor(Math.log2(ratio));
+};
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -255,9 +298,11 @@ export class AutomergeHost extends Resource {
 
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
-  readonly #quarantineStore = new SqliteQuarantineStore();
 
-  /** Documents this host never loads, replicates or serves; see {@link quarantineDocument}. */
+  /**
+   * Documents this host never loads, replicates or serves; see {@link quarantineDocument}. Held in memory only: the
+   * space directories' `retired` maps are the durable record, and re-quarantine their documents on every open.
+   */
   readonly #quarantined = new Map<DocumentId, QuarantineRecord>();
 
   /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
@@ -432,11 +477,6 @@ export class AutomergeHost extends Resource {
     // Tables must exist before the Repo constructor calls loadRange() on the storage adapter.
     await RuntimeProvider.runPromise(this._runtime)(this.migrate);
 
-    // Read before the Repo exists, so nothing can start loading a document that broke an earlier start.
-    for (const record of await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.list())) {
-      this.#quarantined.set(record.documentId, record);
-    }
-    const denylist = [...this.#quarantined.keys()].map((documentId) => stringifyAutomergeUrl(documentId));
     // Storage and Subduction each inflate a document independently, so the second must see the quarantine the
     // first one's failure raised rather than spend another minute failing the same way.
     const isLoadBlocked = (documentId: DocumentId) => this.#quarantined.has(documentId);
@@ -457,7 +497,6 @@ export class AutomergeHost extends Resource {
         shareConfig: this._shareConfig,
         subductionPolicy: this._subductionPolicy,
         storage: this._storage,
-        denylist,
         isLoadBlocked,
         network: [],
         signer: this._signer,
@@ -519,7 +558,6 @@ export class AutomergeHost extends Resource {
         peerId: this._peerId as PeerId,
         shareConfig: this._shareConfig,
         storage: this._storage,
-        denylist,
         isLoadBlocked,
         network: [this._echoNetworkAdapter],
       });
@@ -716,10 +754,7 @@ export class AutomergeHost extends Resource {
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
   get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
-    return this._storage.migrate.pipe(
-      Effect.andThen(this._headsStore.migrate),
-      Effect.andThen(this.#quarantineStore.migrate),
-    );
+    return this._storage.migrate.pipe(Effect.andThen(this._headsStore.migrate));
   }
 
   get peerId(): PeerId {
@@ -865,31 +900,19 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Stops loading, replicating and serving a document, persistently: a document that cannot be loaded would
-   * otherwise stall every start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
+   * Stops loading, replicating and serving a document for the life of this host: one that cannot be loaded would
+   * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
    * {@link removeDocument}.
    */
   async quarantineDocument(
     documentId: DocumentId,
-    {
-      reason,
-      error,
-      spaceId,
-      replacedBy,
-    }: { reason: QuarantineReason; error?: unknown; spaceId?: string; replacedBy?: string },
+    { reason, error }: { reason: QuarantineReason; error?: unknown },
   ): Promise<void> {
     const existing = this.#quarantined.get(documentId);
     if (existing) {
       // Retirement is terminal, so it supersedes the load failure that led to it.
-      if (reason === 'retired' && (existing.reason !== 'retired' || (replacedBy && !existing.replacedBy))) {
-        const record: QuarantineRecord = {
-          ...existing,
-          reason,
-          spaceId: existing.spaceId ?? spaceId,
-          replacedBy: existing.replacedBy ?? replacedBy,
-        };
-        this.#quarantined.set(documentId, record);
-        await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.add(record));
+      if (reason === 'retired') {
+        this.#quarantined.set(documentId, { ...existing, reason });
       }
       return;
     }
@@ -898,12 +921,8 @@ export class AutomergeHost extends Resource {
       reason,
       error: error === undefined ? undefined : String(error),
       quarantinedAt: Date.now(),
-      spaceId,
-      replacedBy,
     };
-    // Registered before the write, so a load arriving meanwhile is already refused.
     this.#quarantined.set(documentId, record);
-    await RuntimeProvider.runPromise(this._runtime)(this.#quarantineStore.add(record));
 
     this._replicationLeases.get(documentId)?.[Symbol.dispose]();
     this._replicationLeases.delete(documentId);
