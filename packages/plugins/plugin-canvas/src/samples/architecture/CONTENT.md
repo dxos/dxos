@@ -35,7 +35,7 @@ and link them.
   `composer-compute`, Edge → `edge`.
 - `edge` has three groups: Clients, Gateway, Services. Its drill-downs: Router → `edge-router`, Db →
   `edge-db`, Compute → `edge-compute`, Hub → `edge-hub`.
-- A drill-down box is a frame whose `object` is a Ref to the child drawing. The deepest path is
+- A drill-down box is a frame whose `link.object` is a Ref to the child drawing. The deepest path is
   `composer` → `edge` → `edge-db` → `edge-subduction`.
 - Boxes may carry a `ref` to a repository path, for example `packages/sdk/app-framework`.
 - 3 `Markdown.Document`:

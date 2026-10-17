@@ -243,17 +243,17 @@ its prototype chain's, and throws on an unknown prototype, a cycle, or a type le
 registry, the palette or the scene schema, so lookups stay one record read. Schemas compose the same way by
 spreading the prototype's field set (`boxFields`) into each type's struct.
 
-| Prototype / type | Declares                                                                                                                          |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                       |
-| `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                          |
-| `frame`          | `extends: 'box'`; its schema adds `scene` and `contents`, its view adds the child scene and an open control, `openable`, 512x256. |
+| Prototype / type | Declares                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                            |
+| `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                               |
+| `frame`          | `extends: 'box'`; its schema adds `scene` and `link.contents`, its view adds the child scene and an open control, `openable`, 512x256. |
 
 The frame is a box: a centred label, the type's ports, and a zoom-in control (react-ui `Button`,
-top-right) that drills in like a double-click. `contents` chooses the body: the child scene (preview, then
+top-right) that drills in like a double-click. `link.contents` chooses the body: the child scene (preview, then
 live, decision 10) or the label. Unset, it shows the child while there is no label, so an unnamed frame
 still reads as its contents and naming one turns it into a plain box. A host may give a frame other content
-(plugin-canvas: a referenced ECHO object as a `Surface`) by replacing its component; `NodeDef.hostOpen`
+(plugin-canvas: a referenced ECHO object, `link.object`, as a `Surface`) by replacing its component; `NodeDef.hostOpen`
 then lets the host open such a node itself, and auto-drill passes it by.
 
 **Instance prototypes (designed, not built; TASKS "Object classes and prototypes").** A node may name a

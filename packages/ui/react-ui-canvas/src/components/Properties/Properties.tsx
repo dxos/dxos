@@ -145,7 +145,7 @@ const formValues = (
         layer: elementLayer(element, layers),
         style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
-        ...(isFrameNode(element) ? { contents: showsContents(element) } : {}),
+        ...(isFrameNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };
 
 /**

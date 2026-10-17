@@ -14,7 +14,16 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { resizeNode } from '../utils/shapes.ts';
 import { type Clock } from './clock.ts';
 import { type Projection } from './projection.ts';
-import { BASE_ANIMATABLE, createTimeline, getPath, hasTrack, sampleScene, setKey } from './timeline.ts';
+import {
+  BASE_ANIMATABLE,
+  createTimeline,
+  getPath,
+  hasTrack,
+  removePath,
+  sampleScene,
+  setKey,
+  setPath,
+} from './timeline.ts';
 import { type AnimatableKind, type Intent, type Node, type NodeValues, type Scene, type Timeline } from './types.ts';
 
 export type AnimateOptions = {
@@ -22,7 +31,7 @@ export type AnimateOptions = {
   clock: Clock;
   /** Whether an edit away from t = 0 keys the property (on by default, ANIMATION.md §5.4). */
   autoKey?: () => boolean;
-  /** The animatable properties of a node's type; the shared ones (`center`, `size`, `opacity`) by default. */
+  /** The animatable properties of a node's type; the shared ones (`center`, `size`, `style.opacity`) by default. */
   animatable?: (node: Node) => Readonly<Record<string, AnimatableKind>>;
 };
 
@@ -66,6 +75,30 @@ export const rewriteIntent = (
 
   const key = (node: Node, property: string, value: unknown) => {
     timeline = setKey(timeline ?? createTimeline(), node.id, property, { t, value });
+  };
+
+  /**
+   * `value` of `property` (a struct such as `style`) with each keyed field inside it written back as the base holds
+   * it: a changed one is keyed instead, and an unchanged one is the sampled value, which must not reach the base.
+   */
+  const keyNested = (node: Node, property: string, value: unknown): unknown => {
+    if (typeof value !== 'object' || value === null) {
+      return value;
+    }
+    let next: unknown = value;
+    for (const path of Object.keys(animatable(node))) {
+      if (!path.startsWith(`${property}.`) || !keys(node, path)) {
+        continue;
+      }
+      const field = path.slice(property.length + 1);
+      const edited = getPath(value, field);
+      if (edited !== undefined && getPath(node, path) !== edited) {
+        key(node, path, edited);
+      }
+      const base = getPath(scene.nodes[node.id], path);
+      next = base === undefined ? removePath(next, field) : setPath(next, field, base);
+    }
+    return next;
   };
 
   const visit = (intent: Intent): void => {
@@ -125,7 +158,7 @@ export const rewriteIntent = (
           if (keys(node, property) && getPath(node, property) !== value) {
             key(node, property, value);
           } else {
-            values[property] = value;
+            values[property] = keyNested(node, property, value);
           }
         }
         if (Object.keys(values).length > 0) {

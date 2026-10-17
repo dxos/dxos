@@ -38,6 +38,7 @@ const SCENE: Scene = (() => {
     SceneBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', style: { hue: 'teal' } }),
     SceneBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
     SceneBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
+    SceneBuilder.scene('f').at(box(400, 200)).properties({ label: 'Frame', layer: 'diagram' }),
     SceneBuilder.link('curve', 'a', 'b')
       .id('ab')
       .properties({ layer: 'diagram', style: { lineStyle: 'dashed' } }),
@@ -96,6 +97,20 @@ export const Mixed: Story = { args: { select: ['a', 'ab'] } };
 
 /** A note on its own layer. */
 export const Note: Story = { args: { select: ['n'] } };
+
+/** A frame: its Link section, with how it shows what it links to. */
+export const Frame: Story = { args: { select: ['f'] } };
+
+/** A frame groups what it links to under one Link section. */
+export const FrameTest: Story = {
+  args: { select: ['f'] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. The Link section shows; a labelled frame reads as not showing its contents.
+    await expect(await canvas.findByText('Link')).toBeInTheDocument();
+    await expect(await canvas.findByLabelText('Show contents')).not.toBeChecked();
+  },
+};
 
 /** The layer selector lists the scene's layers top first and shows the element's own. */
 export const Test: Story = {

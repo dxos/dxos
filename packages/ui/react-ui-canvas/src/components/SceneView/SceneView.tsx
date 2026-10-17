@@ -75,10 +75,12 @@ import {
   resolveLook,
 } from '../../model/style-set.ts';
 import {
+  OPACITY_PATH,
   applyCameraKey,
   cameraKey,
   clampTime,
   createTimeline,
+  getPath,
   keyTimes,
   removeKey,
   sampleCamera,
@@ -146,6 +148,7 @@ import { topZ } from '../../utils/order.ts';
 import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
+import { classedNode } from '../../utils/style.ts';
 import { recordScenes, recordStoreStep, redo, undo } from '../../utils/undo.ts';
 import { About, type AboutStat } from '../About/About.tsx';
 import {
@@ -779,21 +782,24 @@ const SceneViewRoot = ({
     const ids = [...registry.get(atoms.selection)];
     const shown = registry.get(projection.scene);
     const t = registry.get(atoms.clock.time);
+    const styles = store.styles ? registry.get(store.styles) : undefined;
     let next = registry.get(baseProjection.scene).timeline ?? createTimeline();
     for (const id of ids) {
       const node = shown.nodes[id];
       if (!node) {
         continue;
       }
+      // As drawn: a class's opacity is the node's until it sets its own.
+      const drawn = classedNode(node, styles);
       for (const property of Object.keys(nodeAnimatable(nodeRegistry, node))) {
-        const value = property === 'opacity' ? (node.opacity ?? 1) : Reflect.get(node, property);
+        const value = getPath(drawn, property) ?? (property === OPACITY_PATH ? 1 : undefined);
         if (value !== undefined) {
           next = setKey(next, id, property, { t, value });
         }
       }
     }
     baseProjection.apply({ kind: 'timeline', timeline: next });
-  }, [registry, atoms, projection, baseProjection, nodeRegistry]);
+  }, [registry, atoms, projection, baseProjection, nodeRegistry, store.styles]);
   /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
   const removeSelectedKeys = useCallback(() => {
     const current = registry.get(baseProjection.scene).timeline;

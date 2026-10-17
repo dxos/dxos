@@ -43,7 +43,7 @@ export const INSTRUCTIONS = trim`
      sheet (an SVG of the frames) to judge the motion. Revise and check again until it reads as asked.
   3. canvas.addGenerator to put it in a drawing's scene, binding node or link ids in its parameters.
   4. canvas.setTimelineKey to key numeric parameters (property "params.<name>"), node properties (center, size,
-     opacity) or the camera (x, y: the scene point at the view centre; zoom) over time.
+     style.opacity) or the camera (x, y: the scene point at the view centre; zoom) over time.
 
   ## The module
 

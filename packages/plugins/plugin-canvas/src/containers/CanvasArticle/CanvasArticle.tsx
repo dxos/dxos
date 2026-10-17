@@ -161,7 +161,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
           !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
       );
       return {
-        ...(locked ? { object: { readonly: true } } : {}),
+        ...(locked ? { 'link.object': { readonly: true } } : {}),
         ...(linked ? { scene: { hidden: true } } : {}),
         ...(surfaced ? {} : { role: { hidden: true } }),
       };

@@ -78,7 +78,8 @@ describe('loadDiagramSet', () => {
       for (const [box, target] of Object.entries(drills)) {
         const record = content[nodeKey(elementId(box, 'box'))];
         const node = isNodeRecord(record) ? record.node : undefined;
-        const object: unknown = node && Reflect.get(node, 'object');
+        const link: unknown = node && Reflect.get(node, 'link');
+        const object: unknown = typeof link === 'object' && link !== null ? Reflect.get(link, 'object') : undefined;
         const child = drawings.get(target);
         // A stored reference is local to the space, so the object id is what names the drawing.
         expect({ parent, box, target: Ref.isRef(object) ? object.uri.split('/').at(-1) : undefined }).toEqual({
