@@ -156,6 +156,26 @@ on import.
    statement of the same fact and would drift exactly like the old
    `parentTask`/`tasks` pair did.
 
+## UX
+
+Storybook: `plugins/plugin-projects/components/FeatureCard` and `…/FeatureMap`
+(`packages/plugins/plugin-projects/src/components/FeatureCard/`). They render a
+plain view model (`feature.ts`), so the UX can be judged before the schema lands.
+
+- **Card.** Header: stage icon, name, block id (`F-3`). One tag row: the stage,
+  then the derived signals, problems first. Then a coverage line
+  ("1 of 3 requirements tested"), an open-task line with its milestones, and a
+  "Depends on" section with one row per dependency, labelled with its plugin
+  when it is in another spec. Clicking a row selects that feature.
+- **Expanded card.** Adds the description, each requirement with a covered or
+  uncovered mark, and the implementing tasks.
+- **Map.** One column per spec, with stage counts in the column header.
+  Selecting a card labels the features it needs ("Needed by selection") and
+  the features that need it ("Needs selection") and fades the rest, so a chain
+  reads across plugins without drawing edges. Clicking the selected card again
+  clears it.
+- Stage and every signal carry an icon and a word, never colour alone.
+
 ## Prototype scope
 
 1. Add `key`/`kind`/`repo`/`path` to `Spec`; add `Feature` and `Implements`; add
