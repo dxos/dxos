@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
@@ -17,7 +18,7 @@ import * as KvsStore from '@dxos/effect/KvsStore';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { resolveAppSettings, resolveSettingsSpace } from '../../util/index.ts';
+import { catchNonInterrupt, resolveAppSettings, resolveSettingsSpace } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
 import { type Store } from './reconciler.ts';
 import { Sync } from './sync.ts';
@@ -60,111 +61,145 @@ export default Capability.makeModule(
       return [];
     }
 
-    const space = yield* resolveSettingsSpace(client);
-    let settings = yield* resolveAppSettings(space);
     // This device's pins. One per device, so the key names no device.
     const device = KvsStore.make({
       key: 'org.dxos.app-toolkit.settings-scope',
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,
     });
-    const store = makeStore(() => settings, device, registry);
-    const sync = new Sync(store);
-
-    //
-    // Bindings. Plugin settings arrive over the session as plugins lazily activate, so that set
-    // follows the capability list; the other two exist from the start.
-    //
-
-    const bound = new Set<string>();
-    const bindSettings = (entries: readonly AppCapabilities.Settings[]) => {
-      for (const entry of entries.filter((entry) => !bound.has(entry.prefix))) {
-        bound.add(entry.prefix);
-        sync.bind(pluginSettings(entry, registry));
-      }
-    };
-
-    const contributed = manager.capabilities.atom(AppCapabilities.Settings);
-    bindSettings(registry.get(contributed));
-    sync.bind(pluginSet(manager, registry));
-    sync.bind(installedPlugins());
-
-    //
-    // Republish on any change, from either half of the store.
-    //
 
     // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
-    const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
-    const readPinned = () => structuredClone(store.read().local);
-    const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
-    const pinned = Atom.make<AppSettings.DeviceSettings>(readPinned()).pipe(Atom.keepAlive);
+    const unsynced = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
+    const pinned = Atom.make<AppSettings.DeviceSettings>(structuredClone(registry.get(device))).pipe(Atom.keepAlive);
 
-    const refresh = () => {
-      registry.set(unsynced, readUnsynced());
-      registry.set(pinned, readPinned());
-      sync.pull();
-    };
+    // Set once the settings space is open; until then the actions have nothing to act on.
+    let bound: { store: Store; sync: Sync } | undefined;
+    const unsubscribe: (() => void)[] = [];
 
-    //
-    // Follow the annotation. Devices that each created an object settle on the one it names, so a
-    // device switches to it and reseeds, republishing what only it holds.
-    //
+    const bind = Effect.gen(function* () {
+      const space = yield* resolveSettingsSpace(client);
+      let settings = yield* resolveAppSettings(space);
+      const store = makeStore(() => settings, device, registry);
+      const sync = new Sync(store);
 
-    const follow = () => {
-      const ref = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined);
-      void ref?.load().then(
-        (next) => {
-          const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
-            Option.getOrUndefined,
-          );
-          if (next.id === settings.id || named?.uri !== ref.uri) {
-            return;
-          }
+      //
+      // Bindings. Plugin settings arrive over the session as plugins lazily activate, so that set
+      // follows the capability list; the other two exist from the start.
+      //
 
-          unsubscribeSettings();
-          settings = next;
-          unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
-          sync.seed();
-          refresh();
-        },
-        (error) => log.catch(error),
+      const boundPrefixes = new Set<string>();
+      const bindSettings = (entries: readonly AppCapabilities.Settings[]) => {
+        for (const entry of entries.filter((entry) => !boundPrefixes.has(entry.prefix))) {
+          boundPrefixes.add(entry.prefix);
+          sync.bind(pluginSettings(entry, registry));
+        }
+      };
+
+      const contributed = manager.capabilities.atom(AppCapabilities.Settings);
+      bindSettings(registry.get(contributed));
+      sync.bind(pluginSet(manager, registry));
+      sync.bind(installedPlugins());
+
+      //
+      // Republish on any change, from either half of the store.
+      //
+
+      const refresh = () => {
+        registry.set(unsynced, [...AppSettings.getUnsynced(store.read())]);
+        registry.set(pinned, structuredClone(store.read().local));
+        sync.pull();
+      };
+
+      //
+      // Follow the annotation. Devices that each created an object settle on the one it names, so a
+      // device switches to it and reseeds, republishing what only it holds.
+      //
+
+      const follow = () => {
+        const ref = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined);
+        void ref?.load().then(
+          (next) => {
+            const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+              Option.getOrUndefined,
+            );
+            if (next.id === settings.id || named?.uri !== ref.uri) {
+              return;
+            }
+
+            unsubscribeSettings();
+            settings = next;
+            unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+            sync.seed();
+            refresh();
+          },
+          (error) => log.catch(error),
+        );
+      };
+
+      const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
+      let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+
+      unsubscribe.push(
+        registry.subscribe(contributed, bindSettings),
+        Obj.subscribe(space.properties, follow),
+        registry.subscribe(device, refresh),
+        () => unsubscribeSettings(),
       );
-    };
+      bound = { store, sync };
+      refresh();
+    });
 
-    const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
-    let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
-
-    const unsubscribe = [
-      registry.subscribe(contributed, bindSettings),
-      Obj.subscribe(space.properties, follow),
-      registry.subscribe(device, refresh),
-      () => unsubscribeSettings(),
-    ];
-
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        unsubscribe.forEach((fn) => fn());
-        sync.dispose();
+    // Off the activation path: a settings space slow to open (e.g. during a reindex after an upgrade)
+    // must not fail the plugin's activation. A failed attempt subscribes nothing, so it just runs again.
+    const bindFiber = Effect.runFork(
+      Effect.gen(function* () {
+        while (!bound) {
+          yield* bind.pipe(catchNonInterrupt('settings sync bootstrap failed, retrying'));
+          if (!bound) {
+            yield* Effect.sleep('1 second');
+          }
+        }
       }),
     );
+
+    yield* Effect.addFinalizer(() =>
+      Effect.gen(function* () {
+        yield* Fiber.interrupt(bindFiber);
+        unsubscribe.forEach((fn) => fn());
+        bound?.sync.dispose();
+      }),
+    );
+
+    const whenBound = (action: string, fn: (bound: { store: Store; sync: Sync }) => void) => {
+      if (!bound) {
+        log.warn('settings sync not ready', { action });
+        return;
+      }
+      fn(bound);
+    };
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
       unsynced,
       pinned,
-      takeLocal: (namespace) => {
-        const freeze = sync.freezes(namespace);
-        store.update((draft) => AppSettings.takeLocal(draft, namespace, sync.local(namespace), { freeze }));
-      },
-      rejoinAccount: (namespace, options) => {
-        store.update((draft) => AppSettings.rejoinAccount(draft, namespace, sync.local(namespace), options));
-      },
-      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, sync.local(namespace)),
-      pinKey: (namespace, key) => {
-        store.update((draft) => AppSettings.pinKey(draft, namespace, key));
-      },
-      unpinKey: (namespace, key) => {
-        store.update((draft) => AppSettings.unpinKey(draft, namespace, key));
-      },
+      takeLocal: (namespace) =>
+        whenBound('takeLocal', ({ store, sync }) => {
+          const freeze = sync.freezes(namespace);
+          store.update((draft) => AppSettings.takeLocal(draft, namespace, sync.local(namespace), { freeze }));
+        }),
+      rejoinAccount: (namespace, options) =>
+        whenBound('rejoinAccount', ({ store, sync }) => {
+          store.update((draft) => AppSettings.rejoinAccount(draft, namespace, sync.local(namespace), options));
+        }),
+      conflicts: (namespace) =>
+        bound ? AppSettings.conflictingKeys(bound.store.read(), namespace, bound.sync.local(namespace)) : [],
+      pinKey: (namespace, key) =>
+        whenBound('pinKey', ({ store }) => {
+          store.update((draft) => AppSettings.pinKey(draft, namespace, key));
+        }),
+      unpinKey: (namespace, key) =>
+        whenBound('unpinKey', ({ store }) => {
+          store.update((draft) => AppSettings.unpinKey(draft, namespace, key));
+        }),
     });
   }),
 );

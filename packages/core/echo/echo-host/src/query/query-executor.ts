@@ -470,6 +470,8 @@ type QueryScopes = {
   queueIds: Set<EntityId> | null;
   typenames: Set<string> | null;
   objectIds: Set<EntityId> | null;
+  /** True when a select reads feed rows: a feed scope, or a space scope that includes all feeds. */
+  readsFeeds: boolean;
 };
 
 /**
@@ -487,6 +489,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
     queueIds: null,
     typenames: null,
     objectIds: null,
+    readsFeeds: false,
   };
 
   for (const step of flattenSqlSteps(plan.steps)) {
@@ -506,6 +509,9 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         // Extract queueIds from feed-scoped entries and derive spaceIds from them.
         const feedScopesForExtract = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
         const hasIncludeAllFeeds = spaceScopes.some((s) => s.includeAllFeeds === true);
+        if (feedScopesForExtract.length > 0 || hasIncludeAllFeeds) {
+          scopes.readsFeeds = true;
+        }
         if (feedScopesForExtract.length > 0 && !hasIncludeAllFeeds) {
           let parseFailed = false;
           const derivedQueueIds = new Set<EntityId>();
@@ -759,6 +765,16 @@ export class QueryExecutor extends Resource {
 
   get selectsById(): boolean {
     return this.#scopes.isSimple && this.#scopes.objectIds !== null;
+  }
+
+  /** Spaces the query reads; null when unconstrained or when the plan is too complex to bound. */
+  get spaceIds(): ReadonlySet<SpaceId> | null {
+    return this.#scopes.isSimple ? this.#scopes.spaceIds : null;
+  }
+
+  /** Whether the query can read feed rows; assumed for a plan too complex to bound. */
+  get readsFeeds(): boolean {
+    return !this.#scopes.isSimple || this.#scopes.readsFeeds;
   }
 
   async getResults(): Promise<QueryService.QueryResult[]> {

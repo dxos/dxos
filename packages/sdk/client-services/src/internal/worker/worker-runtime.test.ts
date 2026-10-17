@@ -9,8 +9,10 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { EchoHostService } from '@dxos/echo-host';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { WorkerRuntimeStartError } from '@dxos/protocols';
+import { type DataService } from '@dxos/protocols/rpc';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { MIGRATIONS_TABLE } from '../../migrations/metadata/index.ts';
@@ -59,5 +61,49 @@ describe('WorkerRuntime', () => {
     expect(shutdownRequested).toBe(false);
     // Work the half-built stack scheduled would run here; against closed storage it raises unhandled errors.
     await sleep(200);
+  });
+
+  test('reports the index migrations it runs before the runtime is ready', async () => {
+    const statuses: DataService.IndexStatus[] = [];
+    await EffectEx.runPromise(
+      makeWorkerRuntime({
+        configProvider: Effect.succeed(new Config({})),
+        sqliteLayer: layerMemory,
+        onIndexStatus: (status) => statuses.push(status),
+      }).pipe(
+        // Recorded as the runtime finishes starting, before anything it serves could ask.
+        Effect.tap(() => Effect.sync(() => expect(statuses.some((status) => status.phase === 'migrating')).toBe(true))),
+        Effect.scoped,
+      ),
+    );
+    expect(statuses.at(-1)?.phase).toBe('idle');
+  });
+
+  test('stops reporting index status once ready', async () => {
+    // A total no real migration count reaches.
+    const MIGRATED_AFTER_READY = 999;
+    const statuses: DataService.IndexStatus[] = [];
+    await EffectEx.runPromise(
+      makeWorkerRuntime({
+        configProvider: Effect.succeed(new Config({})),
+        sqliteLayer: layerMemory,
+        onIndexStatus: (status) => statuses.push(status),
+      }).pipe(
+        // A migration moving after `ready`.
+        Effect.tap((runtime) =>
+          runtime
+            .stack()
+            .getServiceResolver()
+            .resolve(EchoHostService, {})
+            .pipe(
+              Effect.orDie,
+              Effect.map((echoHost) => echoHost.indexStatus.setMigrating(1, MIGRATED_AFTER_READY)),
+            ),
+        ),
+        Effect.scoped,
+      ),
+    );
+    expect(statuses.length).toBeGreaterThan(0);
+    expect(statuses.some((status) => status.total === MIGRATED_AFTER_READY)).toBe(false);
   });
 });

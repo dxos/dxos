@@ -44,6 +44,18 @@ export const HubHttpClient = Capability.lazyModule(
   },
   () => import('./hub-http-client.ts'),
 );
+export const BootGate = Capability.lazyModule(
+  'BootGate',
+  {
+    // Must be contributed before startup completes: the boot loader dismisses once it does.
+    activatesOn: ActivationEvents.Startup,
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [Capabilities.BootGate],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./boot-gate.ts'),
+);
+
 export const Client = Capability.lazyModule(
   'Client',
   {
@@ -81,6 +93,16 @@ export const IdentityLifecycle = Capability.lazyModule(
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
+export const IndexProgress = Capability.lazyModule(
+  'IndexProgress',
+  {
+    // ProgressRegistry is read optionally in the body, so a host without plugin-progress loses only the meter.
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./index-progress.ts'),
+);
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {

@@ -3,6 +3,8 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
@@ -36,6 +38,7 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -88,6 +91,10 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _indexStatusUpdate = new Event<DataService.IndexStatus | null>();
+  private readonly _indexStatus = MulticastObservable.from(this._indexStatusUpdate, null);
+  private readonly _indexActivityUpdate = new Event<DataService.IndexActivity>();
+  private readonly _indexActivity = MulticastObservable.from(this._indexActivityUpdate, {});
   private readonly _fatalErrorUpdate = new Event<Error | null>();
   private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
@@ -162,6 +169,9 @@ export class Client {
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
+    // The ECHO client outlives re-initialization, so its status is forwarded once.
+    this._echoClient.indexStatusUpdated.on((status) => this._indexStatusUpdate.emit(status));
+    this._echoClient.indexActivityUpdated.on((activity) => this._indexActivityUpdate.emit(activity));
   }
 
   [inspect.custom](): string {
@@ -220,6 +230,20 @@ export class Client {
   /**
    * Client services system status.
    */
+  /**
+   * What the ECHO index is doing (migrating, rebuilding, idle), for a boot screen or progress
+   * indicator. Reported by the worker while the client opens, then streamed from the host;
+   * `null` until the host first reports.
+   */
+  get indexStatus(): MulticastObservable<DataService.IndexStatus | null> {
+    return this._indexStatus;
+  }
+
+  /** Index work queries answer through, such as catch-up and the full-text index, for a progress indicator. */
+  get indexActivity(): MulticastObservable<DataService.IndexActivity> {
+    return this._indexActivity;
+  }
+
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
   }
@@ -434,6 +458,13 @@ export class Client {
       const rpc = services.rpc;
       this._echoClient._updateServices({ dataService: rpc, queryService: rpc, feedService: rpc });
       await this._echoClient._notifyReconnect();
+    });
+    // Reported while the services open, before the host's index status stream can be reached.
+    services.hostStatus?.on((status) => {
+      const decoded = Schema.decodeUnknownOption(DataService.IndexStatus)(status);
+      if (Option.isSome(decoded)) {
+        this._indexStatusUpdate.emit(decoded.value);
+      }
     });
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })

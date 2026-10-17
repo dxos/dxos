@@ -205,4 +205,36 @@ describe('ObjectSnapshotIndex', () => {
       }
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'counts missing snapshots only in the requested spaces and sources',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      // One feed object in space A has no snapshot; space A's document object and space B's object do.
+      const [spaceA, spaceB] = [SpaceId.random(), SpaceId.random()];
+      const make = (spaceId: SpaceId, source: 'document' | 'feed'): IndexerObject => ({
+        spaceId,
+        queueId: source === 'feed' ? EntityId.random() : null,
+        queueNamespace: source === 'feed' ? 'trace' : null,
+        documentId: source === 'document' ? EntityId.random() : null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON },
+      });
+      const indexed = [make(spaceA, 'document'), make(spaceB, 'feed')];
+      const orphan = make(spaceA, 'feed');
+      yield* metaIndex.update([...indexed, orphan]);
+      yield* metaIndex.lookupRecordIds(indexed);
+      yield* store.update(indexed);
+
+      expect(yield* store.countMissingSnapshots()).toBe(1);
+      expect(yield* store.countMissingSnapshots({ spaceIds: [spaceA] })).toBe(1);
+      expect(yield* store.countMissingSnapshots({ spaceIds: [spaceB] })).toBe(0);
+      expect(yield* store.countMissingSnapshots({ spaceIds: [spaceA], feeds: false })).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
 });

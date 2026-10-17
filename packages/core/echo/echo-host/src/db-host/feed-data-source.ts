@@ -134,14 +134,16 @@ export class FeedDataSource implements IndexDataSource {
           continue;
         }
 
-        // Empty string cursor means "start from beginning".
+        // An empty cursor starts before the first block. It is spelled as an insertion-id cursor rather
+        // than omitted, because a read with no cursor pages by position, and the cursor it hands back
+        // (the last block's insertion id) would skip every block inserted earlier but positioned later.
         const currentCursor =
           typeof cursor.cursor === 'string' && cursor.cursor !== ''
             ? FeedProtocol.FeedCursor.make(cursor.cursor)
-            : undefined;
+            : FeedProtocol.FeedCursor.make(`${yield* this._feedStore.getServerToken(cursor.spaceId)}|-1`);
 
         try {
-          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor ?? null, remainingLimit]);
+          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor, remainingLimit]);
           const result =
             this.#passReads?.get(readKey) ??
             (yield* this._feedStore.query({

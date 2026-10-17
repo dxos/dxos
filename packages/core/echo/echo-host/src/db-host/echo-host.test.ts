@@ -13,13 +13,13 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type QueryService } from '@dxos/protocols/rpc';
 
 import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
@@ -68,6 +68,271 @@ describe('EchoHost.updateIndexes', () => {
       host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [written] }),
     );
     expect(rows.map((row) => row.objectId)).toEqual([written]);
+  });
+});
+
+describe('EchoHost index status', () => {
+  test('reports migrations while it applies them, then idle', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new EchoHost({ runtime });
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+
+    const migrating = statuses.filter((status) => status.phase === 'migrating');
+    expect(migrating[0]).toMatchObject({ done: 0 });
+    expect(migrating.at(-1)?.done).toBe(migrating[0].total);
+    expect(host.indexStatus.current.phase).toBe('idle');
+  });
+
+  test('reports a rebuild after the snapshot cursors are reset, and idle once it drains', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const spaceId = SpaceId.random();
+    const first = new EchoHost({ runtime });
+    await first.open(Context.default());
+    for (let i = 0; i < 3; i++) {
+      await first.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceId },
+        objects: { [EntityId.random()]: EntityStructure.makeObject({ type: TEST_TYPE, data: {} }) },
+        links: {},
+      });
+    }
+    await RuntimeProvider.runPromise(runtime)(
+      first.feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          data: new Uint8Array([123, 125]),
+        },
+      ]),
+    );
+    await first.flush(Context.default());
+    await first.updateIndexes();
+    expect(first.indexStatus.current.phase).toBe('idle');
+    await first.close();
+
+    // As a cursor-resetting migration leaves the index on the next boot.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE indexName = 'objectSnapshot'`;
+      }),
+    );
+
+    const host = new EchoHost({ runtime });
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+    // The objects' documents; the trace block's space is not one of the host's.
+    expect(statuses.find((status) => status.phase === 'indexing')).toEqual({ phase: 'indexing', done: 0, total: 3 });
+
+    await host.updateIndexes();
+    await expect.poll(() => host.indexStatus.current.phase).toBe('idle');
+  });
+
+  test('reports catch-up on indexed documents whose heads moved on, without changing the status', async () => {
+    // Every pass counts, rather than one a second.
+    const { host, saveObject } = await setup({ indexRecountInterval: 0 });
+    // Enough for three passes of 50.
+    const objectIds = Array.from({ length: 110 }, () => EntityId.random());
+    const handles = [];
+    for (const objectId of objectIds) {
+      handles.push(await saveObject(objectId));
+    }
+    await host.updateIndexes();
+
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    const activities: DataService.IndexActivity[] = [];
+    host.indexStatus.activityUpdated.on((activity) => {
+      activities.push(activity);
+    });
+    handles.forEach((handle, index) =>
+      handle.change((doc) => {
+        doc.objects![objectIds[index]].data.title = 'edited';
+      }),
+    );
+    await host.flush(Context.default());
+    await host.updateIndexes();
+
+    // The catch-up lane's values; full-text flushes also move the activity.
+    const catchUps = activities
+      .map((activity) => activity.catchUp)
+      .filter((catchUp, index, all) => index === 0 || JSON.stringify(catchUp) !== JSON.stringify(all[index - 1]));
+    expect(catchUps).toEqual([{ done: 0, total: 60 }, { done: 50, total: 60 }, undefined]);
+    expect(statuses).toEqual([]);
+  });
+
+  test('counts the stored feed blocks of its spaces as the rebuild when it opens', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const first = new EchoHost({ runtime });
+    await first.open(Context.default());
+    // A persisted space; its empty root still gets a cursor once read.
+    const root = await first.createSpaceRoot(Context.default(), PublicKey.random());
+    const spaceId = root.doc()!.access!.spaceId!;
+    await RuntimeProvider.runPromise(runtime)(
+      first.feedStore.appendLocal(
+        Array.from({ length: 60 }, () => ({
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          data: EchoFeedCodec.encode({ id: EntityId.random() }),
+        })),
+      ),
+    );
+    await first.flush(Context.default());
+    await first.updateIndexes();
+    await first.close();
+    // As a migration that resets the feed cursors leaves them.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE sourceName = 'queue'`;
+      }),
+    );
+
+    const host = new EchoHost({ runtime });
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+    expect(statuses.find((status) => status.phase === 'indexing')).toEqual({ phase: 'indexing', done: 0, total: 60 });
+  });
+
+  test('full-text flushes run one at a time, so one run reports the lane', async () => {
+    const { host, runtime, saveObjects } = await setup({
+      indexTransactionLimits: { maxObjects: 4 },
+      indexRecountInterval: 0,
+    });
+    await saveObjects(12);
+    await host.updateIndexes({ secondaryIndexes: true });
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE sourceName = 'index'`;
+      }),
+    );
+
+    const activities: DataService.IndexActivity[] = [];
+    host.indexStatus.activityUpdated.on((activity) => {
+      activities.push(activity);
+    });
+    const [first, second] = await Promise.all([host.updateSecondaryIndexes(), host.updateSecondaryIndexes()]);
+
+    expect([first, second]).toEqual([12, 0]);
+    expect(activities).toEqual([{ fullText: { done: 0, total: 8 } }, { fullText: { done: 4, total: 8 } }, {}]);
+  });
+
+  test('a failed full-text flush leaves no full-text lane', async () => {
+    const { host, saveObjects } = await setup({ indexTransactionLimits: { maxObjects: 2 }, indexRecountInterval: 0 });
+    await saveObjects(6);
+    await host.updateIndexes();
+    const activities: DataService.IndexActivity[] = [];
+    host.indexStatus.activityUpdated.on((activity) => {
+      activities.push(activity);
+    });
+    // The first batch reports the lane, and the second fails.
+    const update = host.indexEngine.updateSecondaryIndexes.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'updateSecondaryIndexes')
+      .mockImplementationOnce(update)
+      .mockReturnValue(Effect.die(new Error('flush failed')));
+    await expect(host.updateSecondaryIndexes()).rejects.toThrow('flush failed');
+    expect(activities.some((activity) => activity.fullText)).toBe(true);
+    expect(host.indexStatus.activity.fullText).toBeUndefined();
+  });
+
+  test('a full-text flush on a closed host reads nothing', async () => {
+    const { host } = await setup();
+    await host.close();
+    const count = vi.spyOn(host.indexEngine, 'countSecondaryBacklog');
+    const update = vi.spyOn(host.indexEngine, 'updateSecondaryIndexes');
+    await expect(host.updateSecondaryIndexes()).resolves.toBe(0);
+    expect(count).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  test('reports a full-text rebuild until it ends, without changing the status', async () => {
+    const { host, runtime, saveObjects } = await setup({
+      indexTransactionLimits: { maxObjects: 4 },
+      indexRecountInterval: 0,
+    });
+    await saveObjects(12);
+    await host.updateIndexes({ secondaryIndexes: true });
+    // As renaming the full-text index leaves it.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE sourceName = 'index'`;
+      }),
+    );
+
+    const statuses: DataService.IndexStatus[] = [];
+    host.indexStatus.updated.on((status) => {
+      statuses.push(status);
+    });
+    const activities: DataService.IndexActivity[] = [];
+    host.indexStatus.activityUpdated.on((activity) => {
+      activities.push(activity);
+    });
+    await host.updateSecondaryIndexes();
+
+    expect(activities).toEqual([{ fullText: { done: 0, total: 8 } }, { fullText: { done: 4, total: 8 } }, {}]);
+    expect(statuses).toEqual([]);
+  });
+
+  test('the data service streams the current status, then each change', async () => {
+    const { host } = await setup();
+    const received: DataService.IndexStatus[] = [];
+    const fiber = Effect.runFork(
+      Stream.runForEach(host.dataService['DataService.subscribeIndexStatus'](), (status) =>
+        Effect.sync(() => received.push(status)),
+      ),
+    );
+    onTestFinished(() => {
+      void EffectEx.runPromise(Fiber.interrupt(fiber));
+    });
+
+    await expect.poll(() => received).toEqual([{ phase: 'idle', done: 0, total: 0 }]);
+    await host.indexStatus.opened(async () => ({ documents: 5, blocks: 0, catchUp: 0 }));
+    await expect.poll(() => received.at(-1)).toEqual({ phase: 'indexing', done: 0, total: 5 });
+  });
+
+  test('the data service streams the current activity, then each change', async () => {
+    const { host } = await setup({ indexRecountInterval: 0 });
+    const received: DataService.IndexActivity[] = [];
+    const fiber = Effect.runFork(
+      Stream.runForEach(host.dataService['DataService.subscribeIndexActivity'](), (activity) =>
+        Effect.sync(() => received.push(activity)),
+      ),
+    );
+    onTestFinished(() => {
+      void EffectEx.runPromise(Fiber.interrupt(fiber));
+    });
+
+    await expect.poll(() => received).toEqual([{}]);
+    await host.indexStatus.afterFullTextBatch(async () => 3);
+    await expect.poll(() => received.at(-1)).toEqual({ fullText: { done: 0, total: 3 } });
   });
 });
 
@@ -188,6 +453,39 @@ describe('EchoHost query service', () => {
     await answered;
 
     expect(executed).toEqual(['answered']);
+  });
+
+  // After an upgrade resets the snapshot cursors, the reindex can run for minutes; a query over a
+  // space's objects answers from the snapshot rows already stored instead of waiting it out, even
+  // when a feed row elsewhere has no snapshot.
+  test('a one-shot query answers from stored snapshots while a cursor reset reindexes', async () => {
+    const { host, runtime, spaceId, saveObject, saveObjects } = await setup({ queryExecutor: 'sql' });
+    await saveObjects(3);
+    await host.updateIndexes();
+
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE indexName = 'objectSnapshot' AND sourceName = 'automerge'`;
+        yield* sql`
+          INSERT INTO objectMeta (objectId, queueId, queueNamespace, spaceId, entityKind, typeDXN, deleted, version)
+          VALUES (${EntityId.random()}, ${EntityId.random()}, 'trace', ${spaceId}, 'object', ${TEST_TYPE.toString()}, 0, 0)
+        `;
+      }),
+    );
+
+    // The reindex never finishes: every pass from here on blocks.
+    const releasePasses = new Trigger();
+    onTestFinished(() => {
+      releasePasses.wake();
+    });
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
+      Effect.promise(() => releasePasses.wait()).pipe(Effect.andThen(update(ctx, source, opts))),
+    );
+    await saveObject(EntityId.random());
+
+    expect(await asyncTimeout(countQueryResults(host, spaceId), 2_000)).toBe(3);
   });
 });
 
@@ -427,7 +725,9 @@ const idLookupRequest = (
   query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
 });
 
-const setup = async (options: Pick<EchoHostProps, 'indexTransactionLimits' | 'queryExecutor'> = {}) => {
+const setup = async (
+  options: Pick<EchoHostProps, 'indexTransactionLimits' | 'indexRecountInterval' | 'queryExecutor'> = {},
+) => {
   const { runtime, dispose } = createTestSqliteRuntime();
   const host = new EchoHost({ runtime, ...options });
   await host.open(Context.default());

@@ -5,6 +5,7 @@
 import { type Context, ContextDisposedError } from '@dxos/context';
 
 import { TimeoutError } from './errors.ts';
+import { type ReadOnlyEvent } from './events.ts';
 
 /**
  * Times out after delay.
@@ -73,6 +74,31 @@ export const asyncTimeout = async <T>(promise: Promise<T>, timeout: number, err?
 
   return await Promise.race([promise, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
+  });
+};
+
+/**
+ * Like {@link asyncTimeout}, except each `progress` event restarts the deadline: the wait fails only
+ * after `timeout` ms without progress, so work that keeps reporting (a worker migrating a large
+ * database) is not cut off for taking long.
+ */
+export const timeoutUnlessProgress = <T>(
+  promise: Promise<T>,
+  timeout: number,
+  progress: ReadOnlyEvent<any>,
+  err?: Error | string,
+): Promise<T> => {
+  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
+  return new Promise<T>((resolve, reject) => {
+    let timeoutId = setTimeout(() => reject(throwable), timeout);
+    const unsubscribe = progress.on(() => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => reject(throwable), timeout);
+    });
+    void promise.then(resolve, reject).finally(() => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    });
   });
 };
 
