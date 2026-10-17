@@ -42,4 +42,29 @@ test segmentsStayInTheirFolder :=
 
 test resultsArePushed := scopeOf "results" == "push" && scopeOf "assets" == "assets" && isFolder "results" && not (isFolder "heads")
 
+/-- Which handler answers `/v1/<project>/<area>/<rest>`, and the path it is given: `bundles`, `packs`, `objects`
+  (for `objects` and `meta`), `names`, `live`, `headlog` or `files` (whose path starts with its folder), or "" for
+  none. `files/packs` is the packs, which `Remote.keys`, `download` and `upload` reach through the files API. -/
+structure Dispatch @"urn:deus:worker:Dispatch" where
+  handler : Text
+  path : List Text
+
+/-- The handler for `area` and the path after it (`Dispatch`). -/
+def dispatch (area : Text) (rest : List Text) : Dispatch :=
+  if List.contains area ["bundles", "packs", "names", "live", "headlog"] then Dispatch.mk area rest
+  else if area == "objects" || area == "meta" then Dispatch.mk "objects" rest
+  else if area == "files" then
+    match rest with
+    | "packs" :: after => Dispatch.mk "packs" after
+    | folder :: _ => if isFolder folder then Dispatch.mk "files" rest else Dispatch.mk "" []
+    | [] => Dispatch.mk "" []
+  else Dispatch.mk "" []
+
+test areasFindTheirHandlers :=
+  dispatch "bundles" ["0-a"] == Dispatch.mk "bundles" ["0-a"] && dispatch "meta" ["h"] == Dispatch.mk "objects" ["h"]
+    && dispatch "objects" [] == Dispatch.mk "objects" [] && dispatch "files" ["packs", "k"] == Dispatch.mk "packs" ["k"]
+    && dispatch "files" ["assets", "x"] == Dispatch.mk "files" ["assets", "x"] && dispatch "files" ["heads"] == Dispatch.mk "" []
+    && dispatch "files" [] == Dispatch.mk "" [] && dispatch "headlog" ["main"] == Dispatch.mk "headlog" ["main"]
+    && dispatch "trash" ["x"] == Dispatch.mk "" [] && dispatch "" [] == Dispatch.mk "" []
+
 end Worker.Paths

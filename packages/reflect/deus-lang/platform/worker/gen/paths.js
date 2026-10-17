@@ -95,6 +95,46 @@ function Worker$Paths$scopeOf(folder) {
 }
 rt.named(Worker$Paths$scopeOf, "Worker.Paths.scopeOf");
 
+function Worker$Paths$dispatch(area, rest) {
+  if (List$contains(area, rt.cons("bundles", rt.cons("packs", rt.cons("names", rt.cons("live", rt.cons("headlog", rt.NIL))))))) {
+    return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, [area, rest]);
+  } else {
+    let r0;
+    if ((area === "objects")) {
+      r0 = true;
+    } else {
+      r0 = (area === "meta");
+    }
+    if (r0) {
+      return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, ["objects", rest]);
+    } else {
+      if ((area === "files")) {
+        m1: {
+          if (rest.tag === 1 && rest.fields[0] === "packs") {
+            const after = rest.fields[1];
+            return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, ["packs", after]);
+          }
+          if (rest.tag === 1) {
+            const folder = rest.fields[0];
+            if (Worker$Paths$isFolder(folder)) {
+              return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, ["files", rest]);
+            } else {
+              return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, ["", rt.NIL]);
+            }
+          }
+          if (rest.tag === 0) {
+            return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, ["", rt.NIL]);
+          }
+          rt.nomatch(rest);
+        }
+      } else {
+        return new rt.Con("8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", 0, ["", rt.NIL]);
+      }
+    }
+  }
+}
+rt.named(Worker$Paths$dispatch, "Worker.Paths.dispatch");
+
 function List$all(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -225,9 +265,11 @@ export const raw = {
   isSegment: Worker$Paths$isSegment,
   isFolder: Worker$Paths$isFolder,
   scopeOf: Worker$Paths$scopeOf,
+  dispatch: Worker$Paths$dispatch,
 };
 export const isBundle = rt.exportFn(Worker$Paths$isBundle, [['text']], ['bool']);
 export const isSegment = rt.exportFn(Worker$Paths$isSegment, [['text']], ['bool']);
 export const isFolder = rt.exportFn(Worker$Paths$isFolder, [['text']], ['bool']);
 export const scopeOf = rt.exportFn(Worker$Paths$scopeOf, [['text']], ['text']);
+export const dispatch = rt.exportFn(Worker$Paths$dispatch, [['text'], ['list', ['text']]], ['struct', "8e605224220199b9de196064c89839bd0d7c880efae28d051bdc619bd92b4c8e", ["handler", "path"], [['text'], ['list', ['text']]]]);
 //# sourceMappingURL=paths.js.map

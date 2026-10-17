@@ -147,6 +147,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'Worker.Paths.isSegment',
           'Worker.Paths.isFolder',
           'Worker.Paths.scopeOf',
+          'Worker.Paths.dispatch',
           '-o',
           join(gen, 'paths.js'),
           '--js',

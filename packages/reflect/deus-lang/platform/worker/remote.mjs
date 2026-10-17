@@ -57,30 +57,23 @@ export const remoteApi = async (request, env, ctx, url) => {
   if (!env.BUCKET) {
     throw new HttpError(503, 'this worker has no bucket');
   }
-  if (area === 'bundles') {
-    return bundles(request, env, ctx, project, rest);
-  }
-  if (area === 'packs') {
-    return packs(request, env, ctx, project, rest);
-  }
-  if (area === 'objects' || area === 'meta') {
-    return objects(request, env, project, area, rest);
-  }
-  if (area === 'names') {
-    return names(request, env, project, rest);
-  }
-  if (area === 'live') {
-    return live(request, env, ctx, project, rest);
-  }
-  if (area === 'headlog') {
-    return headLog(request, env, project, rest);
-  }
-  if (area === 'files' && rest[0] === 'packs') {
-    // `Remote.keys`, `download` and `upload` reach packs through the files API the CLI already speaks.
-    return packs(request, env, ctx, project, rest.slice(1));
-  }
-  if (area === 'files' && paths.isFolder(rest[0] ?? '')) {
-    return files(request, env, ctx, project, rest[0], rest.slice(1));
+  // Which handler answers the area is `Worker.Paths.dispatch`, in DEUS (platform/worker/deus/paths.deus).
+  const { handler, path } = paths.dispatch(area ?? '', rest);
+  switch (handler) {
+    case 'bundles':
+      return bundles(request, env, ctx, project, path);
+    case 'packs':
+      return packs(request, env, ctx, project, path);
+    case 'objects':
+      return objects(request, env, project, area, path);
+    case 'names':
+      return names(request, env, project, path);
+    case 'live':
+      return live(request, env, ctx, project, path);
+    case 'headlog':
+      return headLog(request, env, project, path);
+    case 'files':
+      return files(request, env, ctx, project, path[0], path.slice(1));
   }
   throw new HttpError(404, 'not found');
 };
