@@ -244,16 +244,23 @@ export const DatabaseDirectory = Object.freeze({
 
   /**
    * @returns The documents this space retired, each with the url of its replacement; see
-   * {@link DatabaseDirectory.retired}.
+   * {@link DatabaseDirectory.retired}. An entry with no replacement is skipped, since any peer (or EDGE) may read a
+   * directory another peer wrote.
    */
   getRetiredDocuments: (
     doc: DatabaseDirectory,
   ): { documentId: string; replacedBy: string; reason: RetirementReason }[] =>
-    Object.entries(doc.retired ?? {}).map(([documentId, { replacedBy, reason }]) => ({
-      documentId,
-      replacedBy: String(replacedBy),
-      reason: String(reason) === 'history' ? 'history' : 'load-failed',
-    })),
+    Object.entries(doc.retired ?? {}).flatMap(([documentId, entry]) =>
+      entry?.replacedBy == null
+        ? []
+        : [
+            {
+              documentId,
+              replacedBy: String(entry.replacedBy),
+              reason: String(entry.reason) === 'history' ? 'history' : 'load-failed',
+            },
+          ],
+    ),
 
   /**
    * @returns All branch document urls referenced anywhere in the registry. Used by the host to
