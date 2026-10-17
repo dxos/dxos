@@ -157,6 +157,9 @@
       "path": "packages/devtools/drawing/tsconfig.json"
     },
     {
+      "path": "packages/apps/drawing-app/tsconfig.json"
+    },
+    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
