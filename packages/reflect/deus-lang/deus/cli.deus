@@ -1111,6 +1111,21 @@ def didYouMean (name : Text) (names : List Text) : Text :=
   | [] => ""
   | near => "; did you mean " ++ join " or " (List.take 3 near) ++ "?"
 
+/-- The usage lines of one command, with the lines that continue them; for a command it does not know, the nearest. -/
+def commandHelp (command : Text) : Text :=
+  let lines := Text.split Cli.usage "\n"
+  let starts := fun line => startsWith ("  " ++ command ++ " ") line || line == "  " ++ command
+  let rec pick rest taking acc :=
+    match rest with
+    | [] => reverse acc
+    | line :: more =>
+        if starts line then pick more true (line :: acc)
+        else if taking && startsWith "                    " line then pick more true (line :: acc)
+        else pick more false acc
+  match pick lines false [] with
+  | [] => Cli.unknownCommand command
+  | found => "usage: deus " ++ command ++ " …  (`deus help` lists every command)\n" ++ join "\n" found
+
 /-- What `deus <command>` says for a command it does not know: the nearest ones, not the whole usage. -/
 def unknownCommand (command : Text) : Text :=
   match nearest command commands with
@@ -2499,7 +2514,7 @@ def applyFields (args : Args) (tasks : Map Text Task) (t : Task) : {Throw Text} 
   and `unlink <id> <name>`. `deus update … --closes <id>` closes a task with the change that fixed it. -/
 def task (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
-  let author := getOr (option args "by") (getOr (IO.getEnv "USER") "someone")
+  let author := getOr (option args "by") (getOr (IO.getEnv "DEUS_AUTHOR") (getOr (IO.getEnv "USER") "someone"))
   let tasks := Tasks.current dir
   let saved := fun t message =>
     -- `--by` names who made the change, as it does for `update`, so history shows task work too.
@@ -2631,7 +2646,7 @@ else
 /-- `deus comment <name|change:h> <text…>` (D82): a comment on a definition or a change, kept in the codebase. -/
 def comment (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
-  let author := getOr (option args "by") (getOr (IO.getEnv "USER") "someone")
+  let author := getOr (option args "by") (getOr (IO.getEnv "DEUS_AUTHOR") (getOr (IO.getEnv "USER") "someone"))
   match args.positional with
   | given :: words =>
       let subject := subjectOf dir given
@@ -2832,7 +2847,10 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print Cli.usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then Cli.branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
+      -- `--help` shows the command's usage and runs nothing (a `push --help` must not push); `run` passes its own on.
+      if command != "run" && Cli.flag args "help" then IO.print (Cli.commandHelp command ++ "\n")
+      else if command == "help" && not (List.isEmpty rest) then IO.print (Cli.commandHelp (getOr (head? rest) "") ++ "\n")
+      else if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then Cli.branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "key" then keyCommand args else if command == "help" then IO.print Cli.usage else die (Cli.unknownCommand command)

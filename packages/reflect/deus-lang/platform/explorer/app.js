@@ -683,12 +683,15 @@ const changeLink = (causal, label = short(causal)) =>
 
 /** A type, with its type names linked: `Text -> {IO} List Int`. */
 const typeHtml = (text, namespace) =>
-  escape(text).replace(/\b([A-Z][\w]*(?:\.[A-Za-z_][\w?]*)*)/g, (word) => {
-    const entry = resolve(word, namespace);
-    return entry
-      ? `<a class="ref ty" data-open="d:${escape(entry.hash)}" data-hash="${escape(entry.hash)}">${word}</a>`
-      : `<span class="ty">${word}</span>`;
-  });
+  escape(text)
+    .replace(/\b([A-Z][\w]*(?:\.[A-Za-z_][\w?]*)*)/g, (word) => {
+      const entry = resolve(word, namespace);
+      return entry
+        ? `<a class="ref ty" data-open="d:${escape(entry.hash)}" data-hash="${escape(entry.hash)}">${word}</a>`
+        : `<span class="ty">${word}</span>`;
+    })
+    // A narrow screen wraps a type after an arrow, never inside one.
+    .replaceAll('-&gt;', '<span class="arrow">-&gt;</span><wbr>');
 
 /** `name : type`, highlighted. */
 const signatureHtml = (sig, namespace) => {
@@ -705,7 +708,9 @@ const typeOf = (sig) => (sig.includes(' : ') ? sig.slice(sig.indexOf(' : ') + 3)
 const inlineDoc = (text, namespace) =>
   decisionLinks(
     escape(text)
-      .replace(/`([^`]+)`/g, (_, code) => {
+      // A double-backtick span (``a `b` c``) may hold backticks; a single one may not.
+      .replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, doubled, single) => {
+        const code = doubled ?? single;
         const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
         return entry
           ? `<code>${defLink(entry.name, entry.hash, code)}</code>`
@@ -739,18 +744,28 @@ const docHtml = (doc, namespace) => {
         );
         return `<pre class="doc-code">${escape(blockLines.map((line) => line.slice(pad)).join('\n'))}</pre>`;
       }
-      if (blockLines.every((line) => /^\s*[-*] /.test(line) || /^\s{2,}/.test(line))) {
+      // A list, bulleted or numbered, may follow a line that leads into it ("Steps:") in the same block.
+      const ITEM = /^\s*(?:[-*]|\d+\.) /;
+      const first = blockLines.findIndex((line) => ITEM.test(line));
+      const lead = first < 0 ? blockLines : blockLines.slice(0, first);
+      const rest = first < 0 ? [] : blockLines.slice(first);
+      const paragraph = (part) => `<p>${inlineDoc(part.map((line) => line.trim()).join(' '), namespace)}</p>`;
+      if (rest.length > 0) {
         const items = [];
-        for (const line of blockLines) {
-          if (/^\s*[-*] /.test(line)) {
-            items.push(line.replace(/^\s*[-*] /, ''));
+        for (const line of rest) {
+          if (ITEM.test(line)) {
+            items.push(line.replace(ITEM, ''));
           } else {
             items[items.length - 1] += ` ${line.trim()}`;
           }
         }
-        return `<ul>${items.map((item) => `<li>${inlineDoc(item, namespace)}</li>`).join('')}</ul>`;
+        const tag = /^\s*\d+\. /.test(rest[0]) ? 'ol' : 'ul';
+        return (
+          (lead.length > 0 ? paragraph(lead) : '') +
+          `<${tag}>${items.map((item) => `<li>${inlineDoc(item, namespace)}</li>`).join('')}</${tag}>`
+        );
       }
-      return `<p>${inlineDoc(blockLines.map((line) => line.trim()).join(' '), namespace)}</p>`;
+      return paragraph(lead);
     })
     .join('');
 };
@@ -1231,7 +1246,7 @@ const requirementsByEvidence = async () => {
 /** The checks, failing first, and what they cover: which requirements they prove and which they cannot see. */
 const checksCard = (key, { missing, inCodebase, inVitest, unproved }) => {
   const row = ({ doc, block }) =>
-    `<li class="entry-row">${docLink(doc, `${doc} ${block.id}`, block.id)}<span class="muted">${escape(block.title)}</span></li>`;
+    `<li class="entry-row">${docLink(doc, `${doc} ${block.id}`, block.id)}<span class="muted">${inlineDoc(block.title, doc)}</span></li>`;
   const section = (title, note, requirements) =>
     requirements.length === 0
       ? ''
@@ -1479,20 +1494,46 @@ const missingCard = (key, message, suggestions = []) =>
         : ''),
   });
 
+/** How many edits (insert, delete, change, or swap two neighbours) turn `a` into `b`. */
+const editDistance = (a, b) => {
+  const rows = [...Array(a.length + 1)].map((_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) {
+    rows[0][j] = j;
+  }
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        rows[i][j] = Math.min(rows[i][j], rows[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return rows[a.length][b.length];
+};
+
 /**
- * Up to five definitions a link to a name the project lacks probably meant: names in the same namespace that start
- * as its last part does (a typo usually comes late), then what the finder offers for that part.
+ * Up to five definitions a link to a name the project lacks probably meant: names within two edits of it (a swapped
+ * pair counts as one), nearest first and its own namespace first, then what the finder offers for its last part.
  */
 const closeNames = (name) => {
-  const last = lastSegment(name);
   const namespace = namespaceOf(name);
-  const start = last.slice(0, 3).toLowerCase();
-  const near = index.names.filter(
-    (entry) => namespaceOf(entry.name) === namespace && lastSegment(entry.name).toLowerCase().startsWith(start),
-  );
-  const found = search(last)
-    .filter((hit) => hit.entry)
-    .map((hit) => hit.entry);
+  const near = index.names
+    .filter((entry) => Math.abs(entry.name.length - name.length) <= 2)
+    .map((entry) => ({ entry, distance: editDistance(name, entry.name) }))
+    .filter((pair) => pair.distance <= 2)
+    .sort(
+      (a, b) =>
+        a.distance - b.distance ||
+        (namespaceOf(b.entry.name) === namespace) - (namespaceOf(a.entry.name) === namespace),
+    )
+    .map((pair) => pair.entry);
+  const found =
+    near.length > 0
+      ? []
+      : search(lastSegment(name))
+          .filter((hit) => hit.entry)
+          .map((hit) => hit.entry);
   return [...new Map([...near, ...found].map((entry) => [entry.hash, entry])).values()].slice(0, 5);
 };
 
@@ -1952,10 +1993,18 @@ const namesIn = (value) =>
 
 /** A property's value with every definition it names linked. */
 const valueHtml = (value, namespace) =>
-  escape(value).replace(/\b([A-Za-z_][\w?]*(?:\.[A-Za-z_][\w?-]*)+)\b/g, (word) => {
-    const entry = resolve(word, namespace);
-    return entry ? defLink(entry.name, entry.hash, word) : word;
-  });
+  decisionLinks(
+    escape(value)
+      // `vitest:<file> > <test>` evidence opens the test file in the repository.
+      .replace(
+        /vitest:([\w./-]+)/g,
+        (_, path) => `vitest:<a href="${repoUrl(path)}" target="_blank" rel="noopener">${path}</a>`,
+      )
+      .replace(/\b([A-Za-z_][\w?]*(?:\.[A-Za-z_][\w?-]*)+)\b/g, (word) => {
+        const entry = resolve(word, namespace);
+        return entry ? defLink(entry.name, entry.hash, word) : word;
+      }),
+  );
 
 /** The definitions a block's `by:` names, with whether each passes: the evidence for a requirement. */
 const evidenceHtml = (names, namespace) =>

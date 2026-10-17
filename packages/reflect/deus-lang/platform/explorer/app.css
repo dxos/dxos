@@ -658,6 +658,15 @@ a.ref .ty {
   font-weight: 600;
 }
 
+.arrow {
+  white-space: nowrap;
+}
+
+td code {
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
 .verdict {
   display: flex;
   gap: 8px;
@@ -1933,6 +1942,11 @@ ul.rows {
     display: none;
   }
 
+  /* A type wraps after its arrows rather than running off the card. */
+  .inferred {
+    white-space: normal;
+  }
+
   /* A phone shows the whole name, which is what was matched, and the signature under it. */
   .result {
     flex-wrap: wrap;
@@ -2942,4 +2956,12 @@ pre.block-value {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+/* A touch screen has no keyboard to press `/`, arrows or esc on. */
+@media (pointer: coarse) {
+  .finder-help,
+  .finder-trigger kbd {
+    display: none;
+  }
 }
