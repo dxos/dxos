@@ -1,5 +1,12 @@
 # @dxos/introspect-mcp
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/introspect@0.15.0
+  - @dxos/introspect-tools@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

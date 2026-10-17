@@ -107,3 +107,6 @@ export type BotStatus = Schema.Schema.Type<typeof BotStatus>;
 
 /** `ConnectionStatus.state` when EDGE runs this bot from a different config object. */
 export const OTHER_CONFIG_STATE = 'other-config';
+
+// The Kai app id is how a config left blank, or a panel outside plugin-discord, names the EDGE-hosted bot.
+export { KAI_APPLICATION_IDS, kaiApplicationId } from '../constants.ts';

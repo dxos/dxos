@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="drawing.sh — edit a diagram on a canvas." />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
+    <title>drawing.sh</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Paints the system background before the bundle loads, so dark mode does not flash white. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #fafafa;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #0a0a0a;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="contents"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

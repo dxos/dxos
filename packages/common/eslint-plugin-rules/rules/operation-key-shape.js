@@ -44,6 +44,7 @@ const VERBS = new Set([
   'close',
   'collect',
   'complete',
+  'configure',
   'connect',
   'convert',
   'copy',

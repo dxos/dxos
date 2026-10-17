@@ -4,7 +4,7 @@
 
 import React, { Children, type PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import * as ScrollArea from '../../next/components/ScrollArea/ScrollArea.tsx';
+import * as ScrollArea from '../../components/ScrollArea/ScrollArea.tsx';
 import { composable } from '../../util/slots.ts';
 import { usePx } from '../../util/usePx.ts';
 import { Grid, type GridLength } from '../Grid/Grid.tsx';

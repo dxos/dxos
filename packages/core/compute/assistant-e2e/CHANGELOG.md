@@ -1,5 +1,57 @@
 # @dxos/assistant-e2e
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [b7504c9]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ed1039a]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/agent-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/plugin-inbox@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/plugin-assistant@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/plugin-sandbox@0.15.0
+  - @dxos/plugin-testing@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/keys@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

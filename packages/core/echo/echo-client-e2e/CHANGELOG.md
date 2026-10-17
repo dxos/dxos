@@ -1,5 +1,56 @@
 # @dxos/echo-client-e2e
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [ad1686c]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [0858217]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [460bbc3]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [6d8c4ee]
+- Updated dependencies [7b47951]
+- Updated dependencies [d98e8b9]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [629c159]
+  - @dxos/echo-host@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/index-core@0.15.0
+  - @dxos/echo-panproto@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/test-utils@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/random@0.15.0
+  - @dxos/perf-harness@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

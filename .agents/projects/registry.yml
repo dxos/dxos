@@ -836,8 +836,8 @@ projects:
     host: burdon-mbp-2141
     created: 2026-09-28
     summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
-    tasks: packages/ui/react-ui/src/next/TASKS.md
-    design: packages/ui/react-ui/src/next/DESIGN.md
+    tasks: packages/ui/react-ui/docs/TASKS.md
+    design: packages/ui/react-ui/docs/DESIGN.md
     prs: [13502, 13504, 13512]
     resume: '#13512 OPEN: Phase 4 steps 0-4 (Field follow-ups, Next.Panel, popup size inheritance, Next.Listbox, DragHandle/DropIndicator/DragPreview) + AUDIT.md §6 decision points. NEXT: react-ui-list/next (Listbox, OrderedList) with plugin-registry pilot; then answer AUDIT §6 open points and start react-ui-form/next core.'
 

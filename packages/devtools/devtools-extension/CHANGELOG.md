@@ -1,5 +1,33 @@
 # @dxos/devtools-extension
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [1eaa8b4]
+- Updated dependencies [019891d]
+- Updated dependencies [5bbc891]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [55bdf55]
+- Updated dependencies [37edd53]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui@0.15.0
+  - @dxos/devtools@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

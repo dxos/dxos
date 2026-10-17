@@ -211,7 +211,7 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
         {/* The rail's height, like a plank's `Pane.Toolbar`, so the toolbars below line up across the deck. */}
         <Toolbar.Root size='lg' style={iconSize(5)} classNames='h-(--dx-rail-content) dx-header-surface'>
           <Button.Root
-            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
+            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0 ms-1'
             label={Theme.toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
             iconOnly

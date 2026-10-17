@@ -1,0 +1,76 @@
+# @dxos/stories-agent
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [6897df1]
+- Updated dependencies [36d45ee]
+- Updated dependencies [278f49c]
+- Updated dependencies [3b03db7]
+- Updated dependencies [0507be5]
+- Updated dependencies [5490cbc]
+- Updated dependencies [36f4894]
+- Updated dependencies [a941f0d]
+- Updated dependencies [d071b94]
+- Updated dependencies [a6195f2]
+- Updated dependencies [0880591]
+- Updated dependencies [c205da8]
+- Updated dependencies [f3dc87f]
+- Updated dependencies [5387dc8]
+- Updated dependencies [191dd14]
+- Updated dependencies [bc72a37]
+- Updated dependencies [3bd183a]
+- Updated dependencies [2a28b3a]
+- Updated dependencies [a6cba78]
+- Updated dependencies [9b93ba2]
+- Updated dependencies [20611d2]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [1f72729]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [35030a7]
+- Updated dependencies [55bdf55]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/plugin-agent@0.15.0
+  - @dxos/plugin-discord@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/crawler@0.15.0
+  - @dxos/plugin-assistant@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/plugin-thread@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-debug@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/log@0.15.0
