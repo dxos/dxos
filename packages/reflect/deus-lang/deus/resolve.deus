@@ -322,7 +322,7 @@ def tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty) : {Thro
         | Option.some (_, Entry.ability _ iri) => Compile.node "tref" [Compile.s iri]
         | _ =>
             let c := code name 0
-            if c >= 'a' && c <= 'z' then Compile.node "tvar" [Compile.s name] else Throw.throw ("unknown type " ++ name)
+            if c >= 'a' && c <= 'z' then Compile.node "tvar" [Compile.s name] else Throw.throw ("unknown type " ++ name ++ ": no type or ability has that name here or in a mounted library; add the file that declares it, or `deus lib install` its project")
       if List.isEmpty args then head else Compile.node "tapp" (head :: List.map go args)
 
 --

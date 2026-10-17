@@ -393,7 +393,11 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
     match item.decl with
     | Decl.defn _ binders type body arms doc attributes pos =>
         let params := List.map (fun b => Pat.id b.binder [] pos) binders
-        let sig := Compile.signature names (bodyScope item) binders type
+        -- A type in a signature carries no position of its own, so its errors take the definition's.
+        let sig :=
+          match try (fun _ => Compile.signature names (bodyScope item) binders type) with
+          | Result.ok sexp => sexp
+          | Result.err message => Resolve.failAt ctx pos message
         let named := lambda ctx params (fun locals =>
           match (body, arms) with
           | (Option.some e, _) => Resolve.expr ctx e locals

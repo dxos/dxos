@@ -496,7 +496,13 @@ def ls (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let prefix := getOr (head? args.positional) ""
-  let rows := List.filter (fun pair => startsWith prefix (fst pair)) (Map.toList ns)
+  let own := List.filter (fun pair => startsWith prefix (fst pair)) (Map.toList ns)
+  -- A name resolves through a library's mount (`lib.base.Sexp` for `Sexp`), so the listing shows those too.
+  let mounted := if Text.isEmpty prefix || startsWith "lib." prefix then [] else List.filter (fun pair =>
+    match Text.split (fst pair) "." with
+    | "lib" :: _ :: rest => startsWith prefix (join "." rest)
+    | _ => false) (Map.toList ns)
+  let rows := own ++ mounted
   let width := foldl (fun w p => if Text.length (fst p) > w then Text.length (fst p) else w) 0 rows
   let colour := enabled ()
   let paint := fun code t => if colour then Highlight.esc ++ "[" ++ code ++ "m" ++ t ++ Highlight.esc ++ "[0m" else t
