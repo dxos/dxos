@@ -9,8 +9,11 @@
     },
     {
       "name": "composer-app",
-      "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-app:serve", "--", "--port", "5180", "--strictPort"],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5180 --strictPort"
+      ],
       "port": 5180,
       "autoPort": true
     },
