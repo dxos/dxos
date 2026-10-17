@@ -2846,6 +2846,19 @@ pre.block-value {
   color: var(--fg);
 }
 
+/* A project's top bar drops its name on a phone, but the hub's only other item is the search, so it keeps the brand. */
+@media (max-width: 760px) {
+  .hub-page #project {
+    display: inline;
+  }
+
+  .hub-page #hub-search {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
+
 .hub {
   flex: 1;
   overflow-y: auto;

@@ -217,6 +217,9 @@ const nodeAt = (path) => {
   return node;
 };
 
+/** A count as the hub writes it, grouped by thousands (`3,153`). */
+const number = (value) => Number(value).toLocaleString('en-US');
+
 const sortedChildren = (node) => [...node.children.values()].sort((a, b) => a.segment.localeCompare(b.segment));
 
 /** Whether every definition under `node` is a mounted library's, as the prelude a new codebase starts with is. */
@@ -2258,10 +2261,10 @@ const homeHtml = () => {
     '<article class="home">' +
     `<header class="home-header"><h1>${escape(addressOf(meta.project))}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
-    } · ${meta.definitions} definitions${mounted > 0 ? ` (${mounted} from libraries)` : ''} · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
-    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
+    } · ${number(meta.definitions)} definitions${mounted > 0 ? ` (${number(mounted)} from libraries)` : ''} · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${number(count)}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
-      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
+      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${number(checked.length - failing.length)}/${number(checked.length)}</b><span>checks pass</span></a></li>`
       : '') +
     (meta.features > 0
       ? `<li><a data-open="k:features" title="What the product is, feature by feature"><span class="icon k-feature">◇</span><b>${meta.features}</b><span>features</span></a></li>`
@@ -2303,7 +2306,7 @@ const homeHtml = () => {
           `<ul class="rows library-list">${libs
             .map(
               (node) =>
-                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${node.count} definitions in the release it pins, mounted as <code>${escape(node.path)}</code></span><a class="more-link" hidden data-library="${escape(libraryHref(node).slice(1, -1))}" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
+                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${number(node.count)} definitions in the release it pins, mounted as <code>${escape(node.path)}</code></span><a class="more-link" hidden data-library="${escape(libraryHref(node).slice(1, -1))}" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
             )
             .join('')}</ul>`,
         )
