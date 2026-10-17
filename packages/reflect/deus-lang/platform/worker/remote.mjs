@@ -248,7 +248,7 @@ export const requiredEpoch = async (bucket, project, causal) => {
   if (found === null) {
     return 0;
   }
-  const epoch = Number(/^\(term \(int (\d+)\)\)$/.exec(found?.text ?? '')?.[1] ?? 0);
+  const epoch = heads.epochOf(found?.text ?? '');
   known.set(key, epoch);
   return epoch;
 };

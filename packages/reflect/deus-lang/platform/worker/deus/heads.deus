@@ -103,6 +103,17 @@ test logEntriesAreNamed :=
   isLogged ("1760000000000-" ++ headA) && not (isLogged ("176000000000-" ++ headA)) && not (isLogged "1760000000000-x")
     && not (isLogged ("1760000000000-" ++ headA ++ "-" ++ headA)) && padded 13 "42" == "0000000000042"
 
+/-- The data-safety epoch a `Safety.epoch` term's stored text asks for (`(term (int 3))`), or 0 for any other text:
+  a codebase that states no epoch asks for none (DataSafety.Spec). -/
+def epochOf (text : Text) : Int :=
+  match Sexp.readAll text with
+  | [Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "int", Sexp.int n]]] => if n < 0 then 0 else n
+  | _ => 0
+
+test epochsRead :=
+  epochOf "(term (int 3))" == 3 && epochOf "(term (text \"3\"))" == 0 && epochOf "" == 0 && epochOf "(term (int -2))" == 0
+    && epochOf "(term (int 3)) (x)" == 0
+
 /-- A sample head for the tests. -/
 def headA : Text := Text.repeat 64 "a"
 

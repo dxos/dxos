@@ -198,6 +198,25 @@ async function Worker$Heads$logHead(bucket, project, branch, causal, previous, k
 }
 rt.named(Worker$Heads$logHead, "Worker.Heads.logHead");
 
+function Worker$Heads$epochOf(text) {
+  const t0 = lib$base$Sexp$readAll(text);
+  m1: {
+    if (t0.tag === 1 && t0.fields[0].tag === 3 && t0.fields[0].fields[0].tag === 1 && t0.fields[0].fields[0].fields[0].tag === 1 && t0.fields[0].fields[0].fields[0].fields[0] === "term" && t0.fields[0].fields[0].fields[1].tag === 1 && t0.fields[0].fields[0].fields[1].fields[0].tag === 3 && t0.fields[0].fields[0].fields[1].fields[0].fields[0].tag === 1 && t0.fields[0].fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t0.fields[0].fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "int" && t0.fields[0].fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t0.fields[0].fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 0 && t0.fields[0].fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0 && t0.fields[0].fields[0].fields[1].fields[1].tag === 0 && t0.fields[1].tag === 0) {
+      const n = t0.fields[0].fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
+      if ((n < 0)) {
+        return 0;
+      } else {
+        return n;
+      }
+    }
+    if (true) {
+      return 0;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$epochOf, "Worker.Heads.epochOf");
+
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
     return List$all(rt.named((c) => {
@@ -404,6 +423,218 @@ function Worker$Heads$padded(width, t) {
 }
 rt.named(Worker$Heads$padded, "Worker.Heads.padded");
 
+function lib$base$Sexp$readAll(t) {
+  const n = rt.ap(rt.prims["Text.length"], t);
+  function readString(i$, start$, acc$) {
+    for (;;) {
+      const i = i$, start = start$, acc = acc$;
+      const c = rt.ap(rt.prims["Text.code"], t, i);
+      if ((c === (-1))) {
+        return rt.ap(rt.prims["defect"], "sexp: unterminated string");
+      } else {
+        if ((c === 34)) {
+          return new rt.Con("#Pair", 0, [rt.ap(rt.prims["Text.concat"], List$reverse(rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc))), ((i + 1) | 0)]);
+        } else {
+          if ((c === 92)) {
+            const e = rt.ap(rt.prims["Text.code"], t, ((i + 1) | 0));
+            const piece = rt.ap(rt.prims["Text.slice"], t, start, i);
+            if ((e === 110)) {
+              i$ = ((i + 2) | 0);
+              start$ = ((i + 2) | 0);
+              acc$ = rt.cons("\n", rt.cons(piece, acc));
+              continue;
+            } else {
+              if ((e === 116)) {
+                i$ = ((i + 2) | 0);
+                start$ = ((i + 2) | 0);
+                acc$ = rt.cons("\u0009", rt.cons(piece, acc));
+                continue;
+              } else {
+                if ((e === 114)) {
+                  i$ = ((i + 2) | 0);
+                  start$ = ((i + 2) | 0);
+                  acc$ = rt.cons("\u000d", rt.cons(piece, acc));
+                  continue;
+                } else {
+                  if ((e === 117)) {
+                    const code = ((((((Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 2) | 0))), 4096) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 3) | 0))), 256)) | 0) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 4) | 0))), 16)) | 0) + lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 5) | 0)))) | 0);
+                    i$ = ((i + 6) | 0);
+                    start$ = ((i + 6) | 0);
+                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], code), rt.cons(piece, acc));
+                    continue;
+                  } else {
+                    i$ = ((i + 2) | 0);
+                    start$ = ((i + 2) | 0);
+                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], e), rt.cons(piece, acc));
+                    continue;
+                  }
+                }
+              }
+            }
+          } else {
+            i$ = ((i + 1) | 0);
+            start$ = start;
+            acc$ = acc;
+            continue;
+          }
+        }
+      }
+    }
+  }
+  rt.named(readString, "readString");
+  function atomEnd(i_1$) {
+    for (;;) {
+      const i_1 = i_1$;
+      if (lib$base$Sexp$isDelimiter(rt.ap(rt.prims["Text.code"], t, i_1))) {
+        return i_1;
+      } else {
+        i_1$ = ((i_1 + 1) | 0);
+        continue;
+      }
+    }
+  }
+  rt.named(atomEnd, "atomEnd");
+  function go(i_2$, stack$, done$) {
+    for (;;) {
+      const i_2 = i_2$, stack = stack$, done = done$;
+      const c_1 = rt.ap(rt.prims["Text.code"], t, i_2);
+      if (rt.ap(rt.prims["ge"], i_2, n)) {
+        m0: {
+          if (stack.tag === 0) {
+            return List$reverse(done);
+          }
+          if (true) {
+            return rt.ap(rt.prims["defect"], "sexp: unbalanced (");
+          }
+          rt.nomatch(stack);
+        }
+      } else {
+        let r1;
+        if ((c_1 === 32)) {
+          r1 = true;
+        } else {
+          if ((c_1 === 10)) {
+            r1 = true;
+          } else {
+            if ((c_1 === 9)) {
+              r1 = true;
+            } else {
+              r1 = (c_1 === 13);
+            }
+          }
+        }
+        if (r1) {
+          i_2$ = ((i_2 + 1) | 0);
+          stack$ = stack;
+          done$ = done;
+          continue;
+        } else {
+          if ((c_1 === 59)) {
+            const j = rt.ap(rt.prims["Text.indexOf"], t, "\n", i_2);
+            let r2;
+            if ((j < 0)) {
+              r2 = n;
+            } else {
+              r2 = j;
+            }
+            i_2$ = r2;
+            stack$ = stack;
+            done$ = done;
+            continue;
+          } else {
+            if ((c_1 === 40)) {
+              i_2$ = ((i_2 + 1) | 0);
+              stack$ = rt.cons(rt.NIL, stack);
+              done$ = done;
+              continue;
+            } else {
+              if ((c_1 === 41)) {
+                m3: {
+                  if (stack.tag === 0) {
+                    return rt.ap(rt.prims["defect"], "sexp: unbalanced )");
+                  }
+                  if (stack.tag === 1) {
+                    const top = stack.fields[0];
+                    const rest = stack.fields[1];
+                    const t4 = lib$base$Sexp$push(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [List$reverse(top)]), rest, done);
+                    m5: {
+                      if (t4.tag === 0) {
+                        const stack2 = t4.fields[0];
+                        const done2 = t4.fields[1];
+                        i_2$ = ((i_2 + 1) | 0);
+                        stack$ = stack2;
+                        done$ = done2;
+                        continue;
+                      }
+                      rt.nomatch(t4);
+                    }
+                  }
+                  rt.nomatch(stack);
+                }
+              } else {
+                if ((c_1 === 34)) {
+                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  m7: {
+                    if (t6.tag === 0) {
+                      const value = t6.fields[0];
+                      const j_1 = t6.fields[1];
+                      const t8 = lib$base$Sexp$push(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [value]), stack, done);
+                      m9: {
+                        if (t8.tag === 0) {
+                          const stack2_1 = t8.fields[0];
+                          const done2_1 = t8.fields[1];
+                          i_2$ = j_1;
+                          stack$ = stack2_1;
+                          done$ = done2_1;
+                          continue;
+                        }
+                        rt.nomatch(t8);
+                      }
+                    }
+                    rt.nomatch(t6);
+                  }
+                } else {
+                  const j_2 = rt.ap(atomEnd, i_2);
+                  const atom = rt.ap(rt.prims["Text.slice"], t, i_2, j_2);
+                  let form;
+                  const t10 = rt.ap(rt.prims["Int.fromText"], atom);
+                  m11: {
+                    if (t10.tag === 1) {
+                      const value_1 = t10.fields[0];
+                      form = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [value_1]);
+                      break m11;
+                    }
+                    if (t10.tag === 0) {
+                      form = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, [atom]);
+                      break m11;
+                    }
+                    rt.nomatch(t10);
+                  }
+                  const t12 = lib$base$Sexp$push(form, stack, done);
+                  m13: {
+                    if (t12.tag === 0) {
+                      const stack2_2 = t12.fields[0];
+                      const done2_2 = t12.fields[1];
+                      i_2$ = j_2;
+                      stack$ = stack2_2;
+                      done$ = done2_2;
+                      continue;
+                    }
+                    rt.nomatch(t12);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, 0, rt.NIL, rt.NIL);
+}
+rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
+
 function List$any(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -454,6 +685,99 @@ function Text$repeat(n, t) {
 }
 rt.named(Text$repeat, "Text.repeat");
 
+function List$reverse(xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return acc;
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(y, acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$reverse, "List.reverse");
+
+function lib$base$Sexp$hexValue(c) {
+  let r0;
+  if ((c >= 48)) {
+    r0 = (c <= 57);
+  } else {
+    r0 = false;
+  }
+  if (r0) {
+    return ((c - 48) | 0);
+  } else {
+    let r1;
+    if ((c >= 97)) {
+      r1 = (c <= 102);
+    } else {
+      r1 = false;
+    }
+    if (r1) {
+      return ((((c - 97) | 0) + 10) | 0);
+    } else {
+      return ((((c - 65) | 0) + 10) | 0);
+    }
+  }
+}
+rt.named(lib$base$Sexp$hexValue, "lib.base.Sexp.hexValue");
+
+function lib$base$Sexp$isDelimiter(c) {
+  if ((c === 32)) {
+    return true;
+  } else {
+    if ((c === 10)) {
+      return true;
+    } else {
+      if ((c === 9)) {
+        return true;
+      } else {
+        if ((c === 13)) {
+          return true;
+        } else {
+          if ((c === 40)) {
+            return true;
+          } else {
+            if ((c === 41)) {
+              return true;
+            } else {
+              return (c === (-1));
+            }
+          }
+        }
+      }
+    }
+  }
+}
+rt.named(lib$base$Sexp$isDelimiter, "lib.base.Sexp.isDelimiter");
+
+function lib$base$Sexp$push(form, stack, done) {
+  m0: {
+    if (stack.tag === 0) {
+      return new rt.Con("#Pair", 0, [stack, rt.cons(form, done)]);
+    }
+    if (stack.tag === 1) {
+      const top = stack.fields[0];
+      const rest = stack.fields[1];
+      return new rt.Con("#Pair", 0, [rt.cons(rt.cons(form, top), rest), done]);
+    }
+    rt.nomatch(stack);
+  }
+}
+rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
+
 function List$replicate(n, x) {
   function go(acc$, k$) {
     for (;;) {
@@ -481,6 +805,7 @@ export const raw = {
   headLogKey: Worker$Heads$headLogKey,
   isLogged: Worker$Heads$isLogged,
   logHead: Worker$Heads$logHead,
+  epochOf: Worker$Heads$epochOf,
 };
 export const parseClaim = rt.exportFn(Worker$Heads$parseClaim, [['text']], ['option', ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]]]);
 export const isBranch = rt.exportFn(Worker$Heads$isBranch, [['text']], ['bool']);
@@ -490,4 +815,5 @@ export const writeHead = rt.exportAsync(Worker$Heads$writeHead, [['raw'], ['text
 export const headLogKey = rt.exportFn(Worker$Heads$headLogKey, [['text'], ['text']], ['text']);
 export const isLogged = rt.exportFn(Worker$Heads$isLogged, [['text']], ['bool']);
 export const logHead = rt.exportAsync(Worker$Heads$logHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']], ['option', ['text']]], ['unit']);
+export const epochOf = rt.exportFn(Worker$Heads$epochOf, [['text']], ['int']);
 //# sourceMappingURL=heads.js.map
