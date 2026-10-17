@@ -3,14 +3,14 @@ import * as rt from "./deus-runtime.mjs";
 rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "urn:deus:js:Async", ["await"]);
 rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "urn:deus:Throw", ["throw"]);
 
-async function Worker$Names$entryAt(lookup, snapshot, name) {
+async function Worker$Names$resolve(lookup, causal, name) {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await Worker$Names$entryWith(rt.named(async (h) => {
+  return rt.resumed($stack, await Worker$Names$resolveWith(rt.named(async (h) => {
   const $stack = rt.handlers();
   return Option$map(lib$web$Js$toText, lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(lookup, h)))));
-}, "Worker.Names.entryAt/\u03bb"), snapshot, name));
+}, "Worker.Names.resolve/\u03bb"), causal, name));
 }
-rt.named(Worker$Names$entryAt, "Worker.Names.entryAt");
+rt.named(Worker$Names$resolve, "Worker.Names.resolve");
 
 async function Worker$Names$serve(request, rest, readHead, nameAt) {
   const $stack = rt.handlers();
@@ -57,45 +57,50 @@ async function Worker$Names$serve(request, rest, readHead, nameAt) {
 }
 rt.named(Worker$Names$serve, "Worker.Names.serve");
 
-async function Worker$Names$entryWith(read, snapshot, name) {
+async function Worker$Names$resolveWith(read, causal, name) {
   const $stack = rt.handlers();
-  const t0 = rt.resumed($stack, await _try$wait(rt.named(async (v) => {
-  const $stack = rt.handlers();
-  return rt.resumed($stack, await lib$toolchain$Codebase$lookupFormWith$wait(rt.named(async (h) => {
-    const $stack = rt.handlers();
-    return Option$map(lib$base$Sexp$read, rt.resumed($stack, await rt.ap(read, h)));
-  }, "Worker.Names.entryWith/\u03bb"), snapshot, name));
-}, "Worker.Names.entryWith/\u03bb")));
+  const without = rt.named((outcome, message) => new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, [outcome, message, "", "", "", false]), "Worker.Names.resolveWith/\u03bb");
+  const t0 = rt.resumed($stack, await rt.ap(read, causal));
   m1: {
-    if (t0.tag === 0 && t0.fields[0].tag === 1) {
-      const form = t0.fields[0].fields[0];
-      let hash;
-      const t2 = lib$base$Sexp$args(form);
-      m3: {
-        if (t2.tag === 1 && t2.fields[0].tag === 2) {
-          const h_1 = t2.fields[0].fields[0];
-          hash = h_1;
-          break m3;
-        }
-        if (true) {
-          hash = "";
-          break m3;
-        }
-        rt.nomatch(t2);
-      }
-      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [true, lib$base$Sexp$print(form), hash, ""]);
-    }
-    if (t0.tag === 0 && t0.fields[0].tag === 0) {
-      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [false, "", "", ""]);
+    if (t0.tag === 0) {
+      return rt.ap(without, "missing", rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "the head ", causal), " is in no pack yet"));
     }
     if (t0.tag === 1) {
-      const problem = t0.fields[0];
-      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [false, "", "", problem]);
+      const node = t0.fields[0];
+      const snapshot = lib$toolchain$Codebase$Causal$snapshot(lib$toolchain$Codebase$causalFromSexp(lib$base$Sexp$read(node)));
+      if (Text$isEmpty(snapshot)) {
+        return rt.ap(without, "unbound", "");
+      } else {
+        const found = rt.resumed($stack, await Worker$Names$entryWith(read, snapshot, name));
+        if (not(Text$isEmpty(Worker$Names$Lookup$missing(found)))) {
+          return rt.ap(without, "missing", Worker$Names$Lookup$missing(found));
+        } else {
+          if (not(Worker$Names$Lookup$bound(found))) {
+            return rt.ap(without, "unbound", "");
+          } else {
+            if (Text$isEmpty(Worker$Names$Lookup$hash(found))) {
+              return new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, ["found", "", Worker$Names$Lookup$entry(found), "", "", false]);
+            } else {
+              const t2 = rt.resumed($stack, await rt.ap(read, Worker$Names$Lookup$hash(found)));
+              m3: {
+                if (t2.tag === 1) {
+                  const text = t2.fields[0];
+                  return new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, ["found", "", Worker$Names$Lookup$entry(found), Worker$Names$Lookup$hash(found), text, true]);
+                }
+                if (t2.tag === 0) {
+                  return new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, ["found", "", Worker$Names$Lookup$entry(found), Worker$Names$Lookup$hash(found), "", false]);
+                }
+                rt.nomatch(t2);
+              }
+            }
+          }
+        }
+      }
     }
     rt.nomatch(t0);
   }
 }
-rt.named(Worker$Names$entryWith, "Worker.Names.entryWith");
+rt.named(Worker$Names$resolveWith, "Worker.Names.resolveWith");
 
 function Option$map(f, v) {
   m0: {
@@ -219,82 +224,30 @@ rt.named(Worker$Http$json, "Worker.Http.json");
 
 const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
 
-function _try(body) {
-  return rt.handle([
-  ["f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, rt.ABORT, (e, v) => new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [e])]
-], (x) => new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [x]), () => rt.ap(body, undefined));
-}
-rt.named(_try, "try");
-
-function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
-  for (;;) {
-    const read = read$, h = h$, name = name$;
-    const items = lib$toolchain$Codebase$nodeItemsWith(read, h);
-    const entry = List$head$p(List$filterMap(rt.named((item) => {
+function lib$toolchain$Codebase$Causal$snapshot(v) {
   m0: {
-    if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "n" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
-      const n = item.fields[0].fields[1].fields[0].fields[0];
-      const e = item.fields[0].fields[1].fields[1].fields[0];
-      if (rt.equal(n, name)) {
-        return new rt.Con("#Option", 1, [e]);
-      } else {
-        return rt.con0("#Option", 0);
-      }
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      return v_1;
     }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(item);
-  }
-}, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
-    const t1 = new rt.Con("#Pair", 0, [entry, lib$toolchain$Codebase$splitName(name)]);
-    m2: {
-      if (t1.tag === 0 && t1.fields[0].tag === 1) {
-        const e_1 = t1.fields[0].fields[0];
-        return new rt.Con("#Option", 1, [e_1]);
-      }
-      if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1 && t1.fields[1].fields[0].tag === 0) {
-        const seg = t1.fields[1].fields[0].fields[0];
-        const rest = t1.fields[1].fields[0].fields[1];
-        const t4 = List$head$p(List$filterMap(rt.named((item_1) => {
-      m3: {
-        if (item_1.tag === 3 && item_1.fields[0].tag === 1 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[0].fields[0] === "sub" && item_1.fields[0].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].fields[1].tag === 0) {
-          const s = item_1.fields[0].fields[1].fields[0].fields[0];
-          const child = item_1.fields[0].fields[1].fields[1].fields[0].fields[0];
-          if (rt.equal(s, seg)) {
-            return new rt.Con("#Option", 1, [child]);
-          } else {
-            return rt.con0("#Option", 0);
-          }
-        }
-        if (true) {
-          return rt.con0("#Option", 0);
-        }
-        rt.nomatch(item_1);
-      }
-    }, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
-        m5: {
-          if (t4.tag === 1) {
-            const child_1 = t4.fields[0];
-            read$ = read;
-            h$ = child_1;
-            name$ = rest;
-            continue;
-          }
-          if (t4.tag === 0) {
-            return rt.con0("#Option", 0);
-          }
-          rt.nomatch(t4);
-        }
-      }
-      if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      rt.nomatch(t1);
-    }
+    rt.nomatch(v);
   }
 }
-rt.named(lib$toolchain$Codebase$lookupFormWith, "lib.toolchain.Codebase.lookupFormWith");
+rt.named(lib$toolchain$Codebase$Causal$snapshot, "lib.toolchain.Codebase.Causal.snapshot");
+
+function lib$toolchain$Codebase$causalFromSexp(form) {
+  const field = rt.named((key) => Option$getOr(List$find(rt.named((x) => rt.equal(lib$base$Sexp$head(x), key), "lib.toolchain.Codebase.causalFromSexp/\u03bb"), lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])), "lib.toolchain.Codebase.causalFromSexp/\u03bb");
+  const first = rt.named((key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))), "lib.toolchain.Codebase.causalFromSexp/\u03bb");
+  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
+}
+rt.named(lib$toolchain$Codebase$causalFromSexp, "lib.toolchain.Codebase.causalFromSexp");
 
 function lib$base$Sexp$read(t) {
   const t0 = lib$base$Sexp$readAll(t);
@@ -311,24 +264,115 @@ function lib$base$Sexp$read(t) {
 }
 rt.named(lib$base$Sexp$read, "lib.base.Sexp.read");
 
-function lib$base$Sexp$args(s) {
-  m0: {
-    if (s.tag === 3 && s.fields[0].tag === 1) {
-      const rest = s.fields[0].fields[1];
-      return rest;
+function Text$isEmpty(t) {
+  return (rt.ap(rt.prims["Text.length"], t) === 0);
+}
+rt.named(Text$isEmpty, "Text.isEmpty");
+
+async function Worker$Names$entryWith(read, snapshot, name) {
+  const $stack = rt.handlers();
+  const t0 = rt.resumed($stack, await _try$wait(rt.named(async (v) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await lib$toolchain$Codebase$lookupFormWith$wait(rt.named(async (h) => {
+    const $stack = rt.handlers();
+    return Option$map(lib$base$Sexp$read, rt.resumed($stack, await rt.ap(read, h)));
+  }, "Worker.Names.entryWith/\u03bb"), snapshot, name));
+}, "Worker.Names.entryWith/\u03bb")));
+  m1: {
+    if (t0.tag === 0 && t0.fields[0].tag === 1) {
+      const form = t0.fields[0].fields[0];
+      let hash;
+      const t2 = lib$base$Sexp$args(form);
+      m3: {
+        if (t2.tag === 1 && t2.fields[0].tag === 2) {
+          const h_1 = t2.fields[0].fields[0];
+          hash = h_1;
+          break m3;
+        }
+        if (true) {
+          hash = "";
+          break m3;
+        }
+        rt.nomatch(t2);
+      }
+      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [true, lib$base$Sexp$print(form), hash, ""]);
     }
-    if (true) {
-      return rt.NIL;
+    if (t0.tag === 0 && t0.fields[0].tag === 0) {
+      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [false, "", "", ""]);
     }
-    rt.nomatch(s);
+    if (t0.tag === 1) {
+      const problem = t0.fields[0];
+      return new rt.Con("2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", 0, [false, "", "", problem]);
+    }
+    rt.nomatch(t0);
   }
 }
-rt.named(lib$base$Sexp$args, "lib.base.Sexp.args");
+rt.named(Worker$Names$entryWith, "Worker.Names.entryWith");
 
-function lib$base$Sexp$print(s) {
-  return rt.ap(rt.prims["Text.concat"], List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
+function not(b) {
+  if (b) {
+    return false;
+  } else {
+    return true;
+  }
 }
-rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
+rt.named(not, "not");
+
+function Worker$Names$Lookup$missing(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Names$Lookup$missing, "Worker.Names.Lookup.missing");
+
+function Worker$Names$Lookup$bound(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Names$Lookup$bound, "Worker.Names.Lookup.bound");
+
+function Worker$Names$Lookup$hash(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Names$Lookup$hash, "Worker.Names.Lookup.hash");
+
+function Worker$Names$Lookup$entry(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Names$Lookup$entry, "Worker.Names.Lookup.entry");
 
 function List$reverse(xs) {
   function go(acc$, ys$) {
@@ -356,11 +400,6 @@ rt.named(List$reverse, "List.reverse");
 
 const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
 
-function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
-}
-rt.named(Text$isEmpty, "Text.isEmpty");
-
 function Worker$Http$response(body, status, headers) {
   const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
@@ -369,31 +408,89 @@ rt.named(Worker$Http$response, "Worker.Http.response");
 
 const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
 
-function lib$toolchain$Codebase$nodeItemsWith(read, h) {
-  const t0 = rt.ap(read, h);
-  m1: {
-    if (t0.tag === 0) {
-      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing namespace #", h)]);
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
     }
-    if (t0.tag === 1) {
-      const form = t0.fields[0];
-      return List$concatMap(rt.named((item) => {
-      m2: {
-        if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
-          const child = item.fields[0].fields[1].fields[0].fields[0];
-          return lib$toolchain$Codebase$nodeItemsWith(read, child);
-        }
-        if (true) {
-          return rt.cons(item, rt.NIL);
-        }
-        rt.nomatch(item);
-      }
-    }, "lib.toolchain.Codebase.nodeItemsWith/\u03bb"), lib$base$Sexp$args(form));
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
     }
-    rt.nomatch(t0);
+    rt.nomatch(o);
   }
 }
-rt.named(lib$toolchain$Codebase$nodeItemsWith, "lib.toolchain.Codebase.nodeItemsWith");
+rt.named(Option$getOr, "Option.getOr");
+
+function List$find(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return new rt.Con("#Option", 1, [x]);
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$find, "List.find");
+
+function lib$base$Sexp$head(s) {
+  m0: {
+    if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1) {
+      const h = s.fields[0].fields[0].fields[0];
+      return h;
+    }
+    if (true) {
+      return "";
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$head, "lib.base.Sexp.head");
+
+function lib$base$Sexp$args(s) {
+  m0: {
+    if (s.tag === 3 && s.fields[0].tag === 1) {
+      const rest = s.fields[0].fields[1];
+      return rest;
+    }
+    if (true) {
+      return rt.NIL;
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$args, "lib.base.Sexp.args");
+
+function lib$base$Sexp$asText(s) {
+  m0: {
+    if (s.tag === 2) {
+      const value = s.fields[0];
+      return value;
+    }
+    if (s.tag === 1) {
+      const name = s.fields[0];
+      return name;
+    }
+    if (true) {
+      return rt.ap(rt.prims["defect"], rt.ap(rt.prims["append"], "sexp: expected text, got ", lib$base$Sexp$print(s)));
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$asText, "lib.base.Sexp.asText");
 
 function List$head$p(v) {
   m0: {
@@ -408,58 +505,6 @@ function List$head$p(v) {
   }
 }
 rt.named(List$head$p, "List.head?");
-
-function List$filterMap(f, xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return List$reverse(acc);
-        }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          const t1 = rt.ap(f, y);
-          m2: {
-            if (t1.tag === 1) {
-              const z = t1.fields[0];
-              acc$ = rt.cons(z, acc);
-              ys$ = rest;
-              continue;
-            }
-            if (t1.tag === 0) {
-              acc$ = acc;
-              ys$ = rest;
-              continue;
-            }
-            rt.nomatch(t1);
-          }
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, rt.NIL, xs);
-}
-rt.named(List$filterMap, "List.filterMap");
-
-function lib$toolchain$Codebase$splitName(name) {
-  const i = rt.ap(rt.prims["Text.indexOf"], name, ".", 1);
-  let r0;
-  if ((i < 1)) {
-    r0 = true;
-  } else {
-    r0 = rt.ap(rt.prims["ge"], ((i + 1) | 0), rt.ap(rt.prims["Text.length"], name));
-  }
-  if (r0) {
-    return rt.con0("#Option", 0);
-  } else {
-    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Text$take(i, name), Text$drop(((i + 1) | 0), name)])]);
-  }
-}
-rt.named(lib$toolchain$Codebase$splitName, "lib.toolchain.Codebase.splitName");
 
 function lib$base$Sexp$readAll(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -673,55 +718,87 @@ function lib$base$Sexp$readAll(t) {
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
-function lib$base$Sexp$emit(s, acc) {
+function _try(body) {
+  return rt.handle([
+  ["f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, rt.ABORT, (e, v) => new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [e])]
+], (x) => new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [x]), () => rt.ap(body, undefined));
+}
+rt.named(_try, "try");
+
+function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
+  for (;;) {
+    const read = read$, h = h$, name = name$;
+    const items = lib$toolchain$Codebase$nodeItemsWith(read, h);
+    const entry = List$head$p(List$filterMap(rt.named((item) => {
   m0: {
-    if (s.tag === 0) {
-      const n = s.fields[0];
-      return rt.cons(rt.ap(rt.prims["Int.toText"], n), acc);
+    if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "n" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
+      const n = item.fields[0].fields[1].fields[0].fields[0];
+      const e = item.fields[0].fields[1].fields[1].fields[0];
+      if (rt.equal(n, name)) {
+        return new rt.Con("#Option", 1, [e]);
+      } else {
+        return rt.con0("#Option", 0);
+      }
     }
-    if (s.tag === 1) {
-      const name = s.fields[0];
-      return rt.cons(name, acc);
+    if (true) {
+      return rt.con0("#Option", 0);
     }
-    if (s.tag === 2) {
-      const value = s.fields[0];
-      return rt.cons(lib$base$Sexp$quote(value), acc);
-    }
-    if (s.tag === 3) {
-      const items = s.fields[0];
-      function go(first$, rest$, acc2$) {
-        for (;;) {
-          const first = first$, rest = rest$, acc2 = acc2$;
-          m1: {
-            if (rest.tag === 0) {
-              return rt.cons(")", acc2);
-            }
-            if (rest.tag === 1) {
-              const x = rest.fields[0];
-              const xs = rest.fields[1];
-              let r2;
-              if (first) {
-                r2 = acc2;
-              } else {
-                r2 = rt.cons(" ", acc2);
-              }
-              const t3 = lib$base$Sexp$emit(x, r2);
-              first$ = false;
-              rest$ = xs;
-              acc2$ = t3;
-              continue;
-            }
-            rt.nomatch(rest);
+    rt.nomatch(item);
+  }
+}, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
+    const t1 = new rt.Con("#Pair", 0, [entry, lib$toolchain$Codebase$splitName(name)]);
+    m2: {
+      if (t1.tag === 0 && t1.fields[0].tag === 1) {
+        const e_1 = t1.fields[0].fields[0];
+        return new rt.Con("#Option", 1, [e_1]);
+      }
+      if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1 && t1.fields[1].fields[0].tag === 0) {
+        const seg = t1.fields[1].fields[0].fields[0];
+        const rest = t1.fields[1].fields[0].fields[1];
+        const t4 = List$head$p(List$filterMap(rt.named((item_1) => {
+      m3: {
+        if (item_1.tag === 3 && item_1.fields[0].tag === 1 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[0].fields[0] === "sub" && item_1.fields[0].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].fields[1].tag === 0) {
+          const s = item_1.fields[0].fields[1].fields[0].fields[0];
+          const child = item_1.fields[0].fields[1].fields[1].fields[0].fields[0];
+          if (rt.equal(s, seg)) {
+            return new rt.Con("#Option", 1, [child]);
+          } else {
+            return rt.con0("#Option", 0);
           }
         }
+        if (true) {
+          return rt.con0("#Option", 0);
+        }
+        rt.nomatch(item_1);
       }
-      rt.named(go, "go");
-      return rt.ap(go, true, items, rt.cons("(", acc));
+    }, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
+        m5: {
+          if (t4.tag === 1) {
+            const child_1 = t4.fields[0];
+            read$ = read;
+            h$ = child_1;
+            name$ = rest;
+            continue;
+          }
+          if (t4.tag === 0) {
+            return rt.con0("#Option", 0);
+          }
+          rt.nomatch(t4);
+        }
+      }
+      if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      rt.nomatch(t1);
     }
-    rt.nomatch(s);
   }
 }
-rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
+rt.named(lib$toolchain$Codebase$lookupFormWith, "lib.toolchain.Codebase.lookupFormWith");
+
+function lib$base$Sexp$print(s) {
+  return rt.ap(rt.prims["Text.concat"], List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
+}
+rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
 
 function fst(p) {
   m0: {
@@ -748,21 +825,6 @@ rt.named(snd, "snd");
 const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
 
 const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
-
-function List$concatMap(f, xs) {
-  return List$concat(List$map(f, xs));
-}
-rt.named(List$concatMap, "List.concatMap");
-
-function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
-}
-rt.named(Text$take, "Text.take");
-
-function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
-}
-rt.named(Text$drop, "Text.drop");
 
 function lib$base$Sexp$hexValue(c) {
   let r0;
@@ -832,6 +894,149 @@ function lib$base$Sexp$push(form, stack, done) {
   }
 }
 rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
+
+function lib$toolchain$Codebase$nodeItemsWith(read, h) {
+  const t0 = rt.ap(read, h);
+  m1: {
+    if (t0.tag === 0) {
+      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing namespace #", h)]);
+    }
+    if (t0.tag === 1) {
+      const form = t0.fields[0];
+      return List$concatMap(rt.named((item) => {
+      m2: {
+        if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
+          const child = item.fields[0].fields[1].fields[0].fields[0];
+          return lib$toolchain$Codebase$nodeItemsWith(read, child);
+        }
+        if (true) {
+          return rt.cons(item, rt.NIL);
+        }
+        rt.nomatch(item);
+      }
+    }, "lib.toolchain.Codebase.nodeItemsWith/\u03bb"), lib$base$Sexp$args(form));
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(lib$toolchain$Codebase$nodeItemsWith, "lib.toolchain.Codebase.nodeItemsWith");
+
+function List$filterMap(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          const t1 = rt.ap(f, y);
+          m2: {
+            if (t1.tag === 1) {
+              const z = t1.fields[0];
+              acc$ = rt.cons(z, acc);
+              ys$ = rest;
+              continue;
+            }
+            if (t1.tag === 0) {
+              acc$ = acc;
+              ys$ = rest;
+              continue;
+            }
+            rt.nomatch(t1);
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$filterMap, "List.filterMap");
+
+function lib$toolchain$Codebase$splitName(name) {
+  const i = rt.ap(rt.prims["Text.indexOf"], name, ".", 1);
+  let r0;
+  if ((i < 1)) {
+    r0 = true;
+  } else {
+    r0 = rt.ap(rt.prims["ge"], ((i + 1) | 0), rt.ap(rt.prims["Text.length"], name));
+  }
+  if (r0) {
+    return rt.con0("#Option", 0);
+  } else {
+    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Text$take(i, name), Text$drop(((i + 1) | 0), name)])]);
+  }
+}
+rt.named(lib$toolchain$Codebase$splitName, "lib.toolchain.Codebase.splitName");
+
+function lib$base$Sexp$emit(s, acc) {
+  m0: {
+    if (s.tag === 0) {
+      const n = s.fields[0];
+      return rt.cons(rt.ap(rt.prims["Int.toText"], n), acc);
+    }
+    if (s.tag === 1) {
+      const name = s.fields[0];
+      return rt.cons(name, acc);
+    }
+    if (s.tag === 2) {
+      const value = s.fields[0];
+      return rt.cons(lib$base$Sexp$quote(value), acc);
+    }
+    if (s.tag === 3) {
+      const items = s.fields[0];
+      function go(first$, rest$, acc2$) {
+        for (;;) {
+          const first = first$, rest = rest$, acc2 = acc2$;
+          m1: {
+            if (rest.tag === 0) {
+              return rt.cons(")", acc2);
+            }
+            if (rest.tag === 1) {
+              const x = rest.fields[0];
+              const xs = rest.fields[1];
+              let r2;
+              if (first) {
+                r2 = acc2;
+              } else {
+                r2 = rt.cons(" ", acc2);
+              }
+              const t3 = lib$base$Sexp$emit(x, r2);
+              first$ = false;
+              rest$ = xs;
+              acc2$ = t3;
+              continue;
+            }
+            rt.nomatch(rest);
+          }
+        }
+      }
+      rt.named(go, "go");
+      return rt.ap(go, true, items, rt.cons("(", acc));
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
+
+function List$concatMap(f, xs) {
+  return List$concat(List$map(f, xs));
+}
+rt.named(List$concatMap, "List.concatMap");
+
+function Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(Text$take, "Text.take");
+
+function Text$drop(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+}
+rt.named(Text$drop, "Text.drop");
 
 function lib$base$Sexp$quote(t) {
   if (lib$base$Sexp$plain(t)) {
@@ -1135,9 +1340,9 @@ async function List$map$wait(f, xs) {
 rt.named(List$map$wait, "List.map");
 
 export const raw = {
-  entryAt: Worker$Names$entryAt,
+  resolve: Worker$Names$resolve,
   serve: Worker$Names$serve,
 };
-export const entryAt = rt.exportAsync(Worker$Names$entryAt, [['fn', [['text']], ['raw']], ['text'], ['text']], ['struct', "2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", ["bound", "entry", "hash", "missing"], [['bool'], ['text'], ['text'], ['text']]]);
+export const resolve = rt.exportAsync(Worker$Names$resolve, [['fn', [['text']], ['raw']], ['text'], ['text']], ['struct', "ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", ["outcome", "message", "entry", "hash", "text", "hasText"], [['text'], ['text'], ['text'], ['text'], ['text'], ['bool']]]);
 export const serve = rt.exportAsync(Worker$Names$serve, [['raw'], ['list', ['text']], ['fn', [['text']], ['raw']], ['fn', [['text'], ['text']], ['raw']]], ['raw']);
 //# sourceMappingURL=names.js.map

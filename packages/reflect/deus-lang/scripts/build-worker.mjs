@@ -130,7 +130,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         [
           join(root, 'bin/deus.mjs'),
           'build',
-          'Worker.Names.entryAt',
+          'Worker.Names.resolve',
           'Worker.Names.serve',
           '-o',
           join(gen, 'names.js'),

@@ -335,6 +335,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 325 | 10-19 14:20 | 20m 00s | 3107f68933 | Review fixes for D298–D300: names decodes only GET paths; tests pin the head moves, epoch reads and the D1 copy |
 | 326 | 10-19 14:50 | 30m 00s | b441fb1202 | The push gate (claim, epoch, 428/400/426/409) is DEUS, tested without a request (D301) |
 | 327 | 10-19 15:10 | 20m 00s | b7c02e4abe | The `/v1` area dispatch is DEUS (D302) |
-| 328 | 10-19 15:40 | 30m 00s | this commit | A sync with nothing to do answers in 0.1 s, not 4 s (D303) |
+| 328 | 10-19 15:40 | 30m 00s | 1f7828948c | A sync with nothing to do answers in 0.1 s, not 4 s (D303) |
+| 329 | 10-19 16:10 | 30m 00s | this commit | Name resolution at a history node is DEUS (D304) |
 
-Total from stage 1 to stage 328: 138h 00m.
+Total from stage 1 to stage 329: 138h 30m.

@@ -27,9 +27,38 @@ def entryWith (read : Text -> {Js.Async} Option Text) (snapshot : Text) (name : 
   | Result.ok Option.none => Lookup.mk false "" "" ""
   | Result.err problem => Lookup.mk false "" "" problem
 
-/-- `entryWith` reading objects through `lookup` (in JavaScript, a hash to a promise of its text or `undefined`). -/
-def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} Lookup :=
-  entryWith (fun h => Option.map Js.toText (Js.toOption (Js.Async.await (lookup h)))) snapshot name
+/-- What a name holds at a history node: `outcome` is `found` (with the entry, the hash it names and that object's
+  text, when the packs hold it), `unbound`, or `missing` (a 404, `message` saying which node the packs lack). -/
+structure Resolved @"urn:deus:worker:Resolved" where
+  outcome : Text
+  message : Text
+  entry : Text
+  hash : Text
+  text : Text
+  hasText : Bool
+
+/-- `name` in the namespace of history node `causal`, reading object texts through `read`: the node names its
+  snapshot by the toolchain's own rule (`Codebase.causalFromSexp`), and the walk is `entryWith`. -/
+def resolveWith (read : Text -> {Js.Async} Option Text) (causal : Text) (name : Text) : {Js.Async} Resolved :=
+  let without := fun outcome message => Resolved.mk outcome message "" "" "" false
+  match read causal with
+  | Option.none => without "missing" ("the head " ++ causal ++ " is in no pack yet")
+  | Option.some node =>
+      let snapshot := (Codebase.causalFromSexp (Sexp.read node)).snapshot
+      if Text.isEmpty snapshot then without "unbound" ""
+      else
+        let found := entryWith read snapshot name
+        if not (Text.isEmpty found.missing) then without "missing" found.missing
+        else if not found.bound then without "unbound" ""
+        else if Text.isEmpty found.hash then Resolved.mk "found" "" found.entry "" "" false
+        else
+          match read found.hash with
+          | Option.some text => Resolved.mk "found" "" found.entry found.hash text true
+          | Option.none => Resolved.mk "found" "" found.entry found.hash "" false
+
+/-- `resolveWith` reading objects through `lookup` (in JavaScript, a hash to a promise of its text or `undefined`). -/
+def resolve (lookup : Text -> Js) (causal : Text) (name : Text) : {Js.Async} Resolved :=
+  resolveWith (fun h => Option.map Js.toText (Js.toOption (Js.Async.await (lookup h)))) causal name
 
 /-- What a name lookup answers: what `name` holds at `head`, the head of `branch`, or why not. -/
 inductive Answer (a : Type) where
@@ -79,6 +108,17 @@ def serve (request : Js) (rest : List Text) (readHead : Text -> Js) (nameAt : Te
 /-- Two namespace nodes in memory: `Top` at the root, and `Lib.inner` in the node the root's `Lib` names. -/
 def sampleObjects : List (Text, Text) :=
   [("root", "(ns (n \"Top\" (term \"h1\")) (sub \"Lib\" \"lib\"))"), ("lib", "(ns (n \"inner\" (term \"h2\" (meta \"m2\"))))")]
+
+test namesResolveAtAHistoryNode :=
+  Worker.Http.offline (fun _ =>
+    let objects := ("node", "(causal (ns \"root\") (parents) (msg \"m\"))") :: ("h2", "(term (lit 2))") :: sampleObjects
+    let at := fun store name => resolveWith (fun h => List.lookup h store) "node" name
+    at objects "Lib.inner" == Resolved.mk "found" "" "(term \"h2\" (meta \"m2\"))" "h2" "(term (lit 2))" true
+      && at objects "Top" == Resolved.mk "found" "" "(term \"h1\")" "h1" "" false
+      && at objects "Nope" == Resolved.mk "unbound" "" "" "" "" false
+      && at (List.drop 1 objects) "Top" == Resolved.mk "missing" "the head node is in no pack yet" "" "" "" false
+      && at (List.filter (fun pair => fst pair != "lib") objects) "Lib.inner" == Resolved.mk "missing" "missing namespace #lib" "" "" "" false
+      && at [("node", "(causal (ns \"\") (parents) (msg \"first\"))")] "Top" == Resolved.mk "unbound" "" "" "" "" false)
 
 test namesResolveAtABranchHead :=
   Worker.Http.offline (fun _ =>

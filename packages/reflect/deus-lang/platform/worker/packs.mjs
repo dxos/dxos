@@ -474,8 +474,6 @@ export const parseSexp = (text) => {
   return value();
 };
 
-const fieldOf = (form, name) => form.find((item) => Array.isArray(item) && item[0] === name);
-
 /** `/v1/<project>/names/<branch>/<Name>`: the entry, hash and text of a name at the branch's head (`Worker.Names.serve`). */
 export const names = (request, env, project, rest) =>
   nameRules.serve(
@@ -490,16 +488,8 @@ export const names = (request, env, project, rest) =>
  * when it has none; throws a 404 when the node is in no pack yet.
  */
 export const nameAt = async (bucket, project, causal, name) => {
-  const node = await lookup(bucket, project, causal, 1);
-  if (node === undefined) {
-    throw new HttpError(404, `the head ${causal} is in no pack yet`);
-  }
-  const snapshot = fieldOf(parseSexp(node).slice(1), 'ns')?.[1]?.s;
-  if (!snapshot) {
-    return undefined;
-  }
-  // The walk is the toolchain's own `Codebase.lookupNameWith`, compiled from DEUS (`Worker.Names.entryAt`). It reads
-  // a node's parts one by one, so the reader fetches them all in one batch as soon as their node arrives.
+  // What the name holds is `Worker.Names.resolve`, in DEUS, walking by the toolchain's own `Codebase.lookupFormWith`.
+  // The walk reads a node's parts one by one, so the reader fetches them all in one batch as soon as their node arrives.
   const read = new Map();
   const reader = (hash) => {
     if (!read.has(hash)) {
@@ -527,16 +517,12 @@ export const nameAt = async (bucket, project, causal, name) => {
     }
     return read.get(hash);
   };
-  const found = await nameRules.entryAt(reader, snapshot, name);
-  if (found.missing) {
-    throw new HttpError(404, found.missing);
+  const found = await nameRules.resolve(reader, causal, name);
+  if (found.outcome === 'missing') {
+    throw new HttpError(404, found.message);
   }
-  if (!found.bound) {
+  if (found.outcome === 'unbound') {
     return undefined;
   }
-  return {
-    entry: found.entry,
-    hash: found.hash,
-    text: found.hash ? ((await lookup(bucket, project, found.hash, 1)) ?? null) : null,
-  };
+  return { entry: found.entry, hash: found.hash, text: found.hasText ? found.text : null };
 };
