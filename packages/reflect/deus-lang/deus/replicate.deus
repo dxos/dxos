@@ -361,18 +361,35 @@ def pushResults (dir : Text) (remote : Text) : {Remote, IO, Throw Text} Int :=
     writeKnown dir remote "results" (Set.fromList [digest])
     List.length changed
 
-/-- Downloads the remote's assets the store lacks; returns how many. -/
+/-- The SHA-256 of each of `files` by path, from one `sha256sum` (or `shasum -a 256`) run over all of them. -/
+def sha256Files (files : List Text) : {IO} Map Text Text :=
+  let digests := fun (result : (Int, Text, Text)) =>
+    match result with
+    | (0, out, _) => Option.some (Map.fromList (List.filterMap (fun line =>
+        let i := Text.indexOf line "  " 0
+        if i == 64 then Option.some (Text.drop 66 line, Text.take 64 line) else Option.none) (Text.lines out)))
+    | _ => Option.none
+  if List.isEmpty files then Map.empty
+  else Option.getOr (Option.orElse (digests (IO.exec "sha256sum" files)) (fun _ => digests (IO.exec "shasum" (["-a", "256"] ++ files)))) Map.empty
+
+/-- Downloads the remote's assets the store lacks; returns how many. One curl run fetches them all, one checksum run
+  checks them and one `mv` keeps the good ones: three processes per asset took most of a fresh pull (D293). -/
 def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
   let missing := List.filter (fun h => Assets.isHash h && not (Assets.has dir h)) (Remote.keys "assets")
-  IO.mkdirp (dir ++ "/assets")
-  List.length (List.filter (fun h =>
-    let staged := Assets.path dir h ++ ".tmp"
-    if Remote.download ("assets/" ++ h) staged && sha256File staged == h then
-      IO.exec "mv" [staged, Assets.path dir h]
-      true
-    else
-      IO.exec "rm" ["-f", staged]
-      false) missing)
+  if List.isEmpty missing then 0
+  else
+    let staged := dir ++ "/assets.pull"
+    IO.mkdirp staged
+    IO.mkdirp (dir ++ "/assets")
+    let fetched := Remote.downloadAll (List.map (fun h => ("assets/" ++ h, staged ++ "/" ++ h)) missing)
+    let got := List.map snd (List.filter fst (zip fetched missing))
+    let digests := sha256Files (List.map (fun h => staged ++ "/" ++ h) got)
+    let good := List.filter (fun h => Map.lookup (staged ++ "/" ++ h) digests == Option.some h) got
+    if List.isEmpty good then () else
+      IO.exec "mv" (List.map (fun h => staged ++ "/" ++ h) good ++ [dir ++ "/assets/"])
+      ()
+    IO.exec "rm" ["-rf", staged]
+    List.length good
 
 def isBoundary (level : Int) (h : Text) : Bool := Text.startsWith (Text.repeat level "0") h
 

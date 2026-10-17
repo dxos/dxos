@@ -68,7 +68,7 @@ with it.
 
 `~/.deus` is the toolchain codebase pulled from `origin` (the Worker): `deus init --empty`,
 `deus project init https://dxos.org/deus/toolchain`, `deus remote add origin …/v1/toolchain`, `deus pull origin`,
-`deus merge origin.main` (30 s). A push takes about 10 s; the Worker draws the explorer afterwards (D192).
+`deus merge origin.main` (the pull takes about 30 s since D293). A push takes about 10 s; the Worker draws the explorer afterwards (D192).
 `~/.deus-2026-10-14` is this container's older local codebase, kept, not deleted.
 
 ## Running tests fast (D281)
