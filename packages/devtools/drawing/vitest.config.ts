@@ -9,5 +9,6 @@ import { createConfig } from '../../../vitest.base.config.ts';
 
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-  node: true,
+  // `site/` is its own workspace package with its own suite.
+  node: { exclude: ['site/**'] },
 });

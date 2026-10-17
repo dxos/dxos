@@ -160,6 +160,9 @@
       "path": "packages/apps/drawing-app/tsconfig.json"
     },
     {
+      "path": "packages/devtools/drawing/site/tsconfig.json"
+    },
+    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
