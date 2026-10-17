@@ -23,16 +23,44 @@
     />
     <style>
       :root {
+        color-scheme: light dark;
         --paper: #f4f6f8;
         --sheet: #ffffff;
         --ink: #18202b;
         --muted: #5e6875;
         --grid: #dce2ea;
         --route: #2f4bff;
-        --tint: #e9edff;
-        --tint-2: #e6f4ef;
+        --accent: #2f4bff;
+        --accent-hover: #2238e0;
+        --on-accent: #ffffff;
+        --string: #0f7a5c;
+        --emerald: #0f9b72;
+        --console: #18202b;
+        --console-muted: #8b96a6;
+        --selection: #d9e0ff;
+        --active-line: #f3f5fb;
+        --danger: #c2341b;
         --sans: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
         --mono: 'Martian Mono', ui-monospace, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #0d1015;
+          --sheet: #141920;
+          --ink: #e4e8ee;
+          --muted: #98a2b0;
+          --grid: #252d38;
+          --route: #8091ff;
+          --accent: #4a5fff;
+          --accent-hover: #6274ff;
+          --string: #5fd3a8;
+          --emerald: #4cc69a;
+          --console: #05070a;
+          --console-muted: #6c7888;
+          --selection: #2b3566;
+          --active-line: #19202a;
+          --danger: #ff8a73;
+        }
       }
       * {
         box-sizing: border-box;
@@ -57,7 +85,7 @@
         border-radius: 4px;
       }
       .wrap {
-        max-width: 1180px;
+        max-width: 1280px;
         margin: 0 auto;
         padding: 0 32px;
       }
@@ -114,7 +142,7 @@
         display: flex;
         align-items: stretch;
         max-width: 560px;
-        background: var(--ink);
+        background: var(--console);
         color: #fff;
         border-radius: 10px;
         font-family: var(--mono);
@@ -128,19 +156,19 @@
       }
       .install code::before {
         content: '$ ';
-        color: #8b96a6;
+        color: var(--console-muted);
       }
       .install button {
         font: 500 14px var(--sans);
-        color: #fff;
-        background: var(--route);
+        color: var(--on-accent);
+        background: var(--accent);
         border: 0;
         border-radius: 0 10px 10px 0;
         padding: 0 20px;
         cursor: pointer;
       }
       .install button:hover {
-        background: #2238e0;
+        background: var(--accent-hover);
       }
       .alt {
         margin: 14px 0 0;
@@ -154,42 +182,174 @@
         color: var(--ink);
       }
 
-      /* The drafting sheet: source on the left, the laid-out drawing on its grid on the right. */
+      /* The drafting sheet: the source in an editor on the left, the live drawing on its grid on the right. */
       .sheet {
         display: grid;
-        grid-template-columns: minmax(260px, 370px) 1fr;
+        grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
         background: var(--sheet);
         border: 1px solid var(--grid);
         border-radius: 14px;
         overflow: hidden;
         margin: 8px 0 96px;
       }
-      .source {
-        border-right: 1px solid var(--grid);
+      .source,
+      .output {
         display: flex;
         flex-direction: column;
+        min-width: 0;
+      }
+      .source {
+        border-right: 1px solid var(--grid);
       }
       .tab {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 48px;
         font-family: var(--mono);
         font-size: 12px;
         color: var(--muted);
-        padding: 14px 20px;
+        padding: 8px 12px 8px 20px;
         border-bottom: 1px solid var(--grid);
       }
-      pre {
-        margin: 0;
-        padding: 18px 20px;
-        font-family: var(--mono);
-        font-size: 11.5px;
-        line-height: 1.8;
-        overflow-x: auto;
+      .tab b {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      .action {
+        font: 500 13px var(--sans);
+        color: var(--ink);
+        text-decoration: none;
+        border: 1px solid var(--grid);
+        border-radius: 8px;
+        padding: 6px 12px;
+        background: var(--sheet);
+        white-space: nowrap;
+      }
+      a.action:hover {
+        border-color: var(--route);
+        color: var(--route);
+      }
+      .action.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--on-accent);
+      }
+      .action.primary:hover {
+        background: var(--accent-hover);
+        border-color: var(--accent-hover);
+        color: var(--on-accent);
+      }
+      /* Not a <button disabled>: a disabled control takes no hover or focus, so its tooltip would never show. */
+      .action[aria-disabled='true'] {
+        position: relative;
+        color: var(--muted);
+        cursor: not-allowed;
+      }
+      .action[aria-disabled='true']::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        z-index: 1;
+        width: max-content;
+        max-width: 240px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: var(--console);
+        color: #fff;
+        font: 400 12px/1.4 var(--sans);
+        white-space: normal;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.12s;
+      }
+      .action[aria-disabled='true']:hover::after,
+      .action[aria-disabled='true']:focus-visible::after {
+        opacity: 1;
+      }
+      .editor {
         flex: 1;
+        min-height: 0;
+        position: relative;
+      }
+      pre.fallback {
+        margin: 0;
+        padding: 16px 20px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.85;
+        overflow-x: auto;
       }
       .kw {
         color: var(--route);
       }
       .str {
-        color: #0f7a5c;
+        color: var(--string);
+      }
+
+      /* The editor: CodeMirror reads the DXOS theme's tokens, here mapped onto the page palette. */
+      .editor {
+        --color-fg: var(--ink);
+        --color-fg-muted: var(--muted);
+        --color-fg-subtle: var(--muted);
+        --color-separator: var(--grid);
+        --color-base-surface: var(--sheet);
+        --color-modal-surface: var(--sheet);
+        --color-current-surface: var(--selection);
+        --color-cm-cursor: var(--route);
+        --color-cm-selection: var(--selection);
+        --color-cm-focused-selection: var(--selection);
+        --color-cm-active-line: var(--active-line);
+        --color-placeholder: var(--muted);
+        --color-scrollbar-thumb: var(--grid);
+        --color-accent-text: var(--route);
+        --surface-bg: var(--sheet);
+        display: flex;
+      }
+      .editor > div {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+      }
+      .editor .cm-editor {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        color: var(--ink);
+        font-size: 12px;
+      }
+      .editor .cm-scroller {
+        font-family: var(--mono);
+        padding: 12px 0;
+      }
+      .editor .cm-content {
+        padding-right: 16px;
+      }
+      .editor .cm-gutter.cm-lineNumbers .cm-gutterElement {
+        min-width: 32px;
+        font-size: 11px;
+        padding-right: 8px;
+      }
+      .editor .text-accent {
+        color: var(--route);
+      }
+      .editor .text-fg-subtle {
+        color: var(--muted);
+      }
+      .editor .cm-tooltip {
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 13px;
+      }
+      .editor .cm-lintRange-error {
+        background-image: none;
+        text-decoration: underline wavy var(--danger);
       }
       .run {
         border-top: 1px solid var(--grid);
@@ -198,30 +358,57 @@
         font-size: 12px;
         line-height: 1.8;
         color: var(--muted);
+        min-height: 112px;
       }
       .run b {
         color: var(--ink);
         font-weight: 500;
       }
+      .run .note {
+        display: block;
+      }
+      .run .error {
+        color: var(--danger);
+      }
+      .output[aria-busy='true'] .run b::after {
+        content: ' …';
+      }
+
+      /*
+       * The layout grid the engine places boxes on. One cell is the engine's layout unit (32 scene units) at the
+       * size the drawing is shown, so every box edge lands on a line: the pitch is the widest whole pixel at which
+       * the drawing's --cols cells fit, the build snaps the drawing to an odd number of cells, and centring both
+       * the grid and the drawing then lines them up.
+       */
       .canvas {
-        position: relative;
-        padding: 20px 12px;
+        flex: 1;
+        container-type: inline-size;
+        display: flex;
+        overflow-x: auto;
+        background: var(--sheet);
+      }
+      .stage {
+        --pitch: 20px;
+        --pitch: clamp(12px, round(down, calc(100cqw / (var(--cols) + 2)), 1px), 28px);
+        flex: 1 0 auto;
+        width: max(100%, calc((var(--cols) + 2) * var(--pitch)));
         display: flex;
         align-items: center;
         justify-content: center;
-        /* The layout grid the engine places boxes on, with the gutters arrows route through. */
-        background-color: var(--sheet);
+        padding: var(--pitch) 0;
         background-image:
           linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-        background-size: 32px 32px;
-        background-position: -1px -1px;
+        background-size: var(--pitch) var(--pitch);
+        background-position: center;
       }
-      .canvas svg {
-        width: 100%;
-        height: auto;
+      .stage svg {
+        flex: none;
+        width: calc(var(--cols) * var(--pitch));
+        height: calc(var(--rows) * var(--pitch));
+        overflow: visible;
       }
 
-      /* Diagram theming: the renderer's classes, in this page's palette. */
+      /* Diagram theming: the renderer's classes, in this page's palette, so both colour schemes follow. */
       .diagram {
         color: var(--ink);
         font-family: var(--sans);
@@ -242,6 +429,9 @@
       .diagram .stroke-none {
         stroke: none;
       }
+      .diagram .fill-neutral-100 {
+        fill: var(--paper);
+      }
       .diagram .fill-neutral-800 {
         fill: var(--ink);
       }
@@ -256,7 +446,7 @@
         color: var(--route);
       }
       .diagram .text-emerald-500 {
-        color: #0f9b72;
+        color: var(--emerald);
       }
       .diagram line,
       .diagram polyline,
@@ -391,14 +581,14 @@
         display: inline-block;
         margin-top: 28px;
         padding: 13px 22px;
-        background: var(--route);
-        color: #fff;
+        background: var(--accent);
+        color: var(--on-accent);
         text-decoration: none;
         border-radius: 10px;
         font-weight: 500;
       }
       .cta:hover {
-        background: #2238e0;
+        background: var(--accent-hover);
       }
       footer {
         border-top: 1px solid var(--grid);
@@ -426,12 +616,15 @@
           border-right: 0;
           border-bottom: 1px solid var(--grid);
         }
+        .editor {
+          max-height: 320px;
+        }
+        .tab {
+          padding-left: 16px;
+        }
         ol.steps,
         .relations {
           grid-template-columns: 1fr;
-        }
-        .canvas {
-          padding: 16px;
         }
         .install code {
           white-space: normal;
@@ -456,7 +649,8 @@
           <h1>Diagrams your agent can draw.</h1>
           <p class="lede">
             Install the skill and ask for a diagram. Your agent writes a few lines of text; drawing places the boxes,
-            routes every arrow around them and hands back an SVG with zero crossings.
+            routes every arrow around them and hands back an SVG with zero crossings. Try it below: edit the text and
+            the drawing follows.
           </p>
           <div class="install">
             <code id="install-command">npx skills add dxos/dxos --skill drawing</code>
@@ -468,13 +662,32 @@
           </p>
         </div>
 
-        <div class="sheet" aria-label="A diagram source and the drawing it produces">
+        <div class="sheet" id="playground" aria-label="A diagram source and the drawing it produces">
           <div class="source">
-            <div class="tab">arch.dx — written by the agent</div>
-            <pre>{{SOURCE}}</pre>
-            <div class="run">{{REPORT}}</div>
+            <div class="tab">
+              <span><b>arch.dx</b> — edit it</span>
+            </div>
+            <div class="editor" id="editor"><pre class="fallback">{{SOURCE}}</pre></div>
           </div>
-          <div class="canvas">{{HERO}}</div>
+          <div class="output" id="output">
+            <div class="tab">
+              <span><b>arch.dx.svg</b></span>
+              <span class="actions">
+                <a
+                  class="action"
+                  id="open-in-composer"
+                  role="link"
+                  aria-disabled="true"
+                  tabindex="0"
+                  data-tooltip="Coming soon: open the drawing in Composer and keep editing it on a canvas."
+                  >Open in Composer</a
+                >
+                <a class="action primary" id="download" href="arch.dx.svg" download="arch.dx.svg">Download</a>
+              </span>
+            </div>
+            <div class="canvas">{{HERO}}</div>
+            <div class="run" id="report" aria-live="polite">{{REPORT}}</div>
+          </div>
         </div>
 
         <section id="how">
@@ -541,17 +754,6 @@
         <a href="https://dxos.org">dxos.org</a>
       </footer>
     </div>
-    <script>
-      const copy = document.getElementById('copy');
-      copy.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(document.getElementById('install-command').textContent);
-          copy.textContent = 'Copied';
-        } catch {
-          copy.textContent = 'Select and copy';
-        }
-        setTimeout(() => (copy.textContent = 'Copy'), 1600);
-      });
-    </script>
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
