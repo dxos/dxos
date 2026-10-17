@@ -359,9 +359,30 @@ def expectedFailure (proving : Bool) (v : Verdict) : Verdict :=
         else "passed, but it is @[expectFail]")
   | Verdict.unchecked => Verdict.unchecked
 
+/-- Whether a kept verdict was reached under `@[expectFail]`: a failure kept as its pass. -/
+def flipped (v : Verdict) : Bool :=
+  match v with
+  | Verdict.pass evidence _ => evidence == "refused" || evidence == "expected failure"
+  | _ => false
+
+/-- A kept verdict, when it was reached under the expectation the check has now: the attribute is not in the hash, so a
+  verdict kept before it was added or after it was removed is checked again (D287). -/
+def reusable (expected : Bool) (kept : Option Verdict) : Option Verdict :=
+  match kept with
+  | Option.some v => if flipped v == expected then Option.some v else Option.none
+  | Option.none => Option.none
+
+test keptVerdictsFollowTheExpectation :=
+  Option.isNone (reusable false (Option.some (Verdict.pass "expected failure" 0)))
+    && Option.isNone (reusable false (Option.some (Verdict.pass "refused" 0)))
+    && Option.isSome (reusable true (Option.some (Verdict.pass "refused" 0)))
+    && Option.isNone (reusable true (Option.some (Verdict.fail "returned false")))
+    && Option.isSome (reusable false (Option.some (Verdict.fail "returned false")))
+    && Option.isSome (reusable false (Option.some (Verdict.pass "test" 1)))
+
 /-- A lemma's verdict, checking (and caching) it first if needed; an `@[expectFail]` claim is never one. -/
 def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict := if expectsFailure dir h then Verdict.fail "it is @[expectFail], a claim the prover must refuse" else
-  match cachedTheorem dir h with
+  match reusable false (cachedTheorem dir h) with
   | Option.some v => v
   | Option.none =>
       match readObject dir h with
@@ -396,13 +417,15 @@ def verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option Verdi
   | Entry.theorem h => Option.some (lemmaVerdict dir ns h)
   | Entry.test h =>
       let integration := hasAttr dir h "integration"
-      match if integration then Option.none else Check.cached dir h with
+      let expected := expectsFailure dir h
+      match if integration then Option.none else reusable expected (Check.cached dir h) with
       | Option.some v => Option.some v
       | Option.none =>
-          let v :=
+          let tested :=
             match try (fun _ => Image.load (fetcher dir) [h]) with
             | Result.err message => Verdict.fail message
             | Result.ok _ => checkTest h integration
+          let v := if expected then expectedFailure false tested else tested
           if integration then () else remember dir h v
           Option.some v
   | _ => Option.none
@@ -446,13 +469,13 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let (name, e) := pair
     let h := Entry.hash e
     let integration := not wantTheorems && hasAttr dir h "integration"
-    -- A kept verdict may predate the attribute, which leaves the hash as it was; these few are checked every time.
+    -- A kept verdict may predate the attribute, which leaves the hash as it was, so `reusable` compares the two.
     let expected := expectsFailure dir h
     let started := IO.time ()
     -- An integration test talks to the real world, so its result is never reused.
     let outcome :=
-      match if integration || fresh || expected then Option.none
-        else if wantTheorems then cachedTheorem dir h else Check.cached dir h with
+      match if integration || fresh then Option.none
+        else reusable expected (if wantTheorems then cachedTheorem dir h else Check.cached dir h) with
       | Option.some v => (name, v, true)
       | Option.none =>
           Image.load (fetcher dir) [h]

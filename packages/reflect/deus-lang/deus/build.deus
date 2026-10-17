@@ -55,8 +55,7 @@ def executable (image : Text) (out : Text) (artifacts : Text) : {IO, Throw Failu
   if IO.exists cached then
     let _ := tool "cp" [cached, out]
     ()
-  else if IO.exists shared then
-    let _ := tool "cp" [shared, out]
+  else if IO.exists shared && fst3 (IO.exec "cp" [shared, out]) == 0 then
     IO.mkdirp artifacts
     let _ := tool "cp" [out, cached]
     ()
@@ -64,10 +63,7 @@ def executable (image : Text) (out : Text) (artifacts : Text) : {IO, Throw Failu
     buildExecutable image out home node
     IO.mkdirp artifacts
     let _ := tool "cp" [out, cached]
-    IO.mkdirp (ccCacheDir ())
-    let _ := tool "cp" [out, shared ++ ".tmp"]
-    let _ := tool "mv" [shared ++ ".tmp", shared]
-    ()
+    keep out shared
 
 def buildExecutable (image : Text) (out : Text) (home : Text) (node : Text) : {IO, Throw Failure} Unit :=
   let work := out ++ ".build"
@@ -122,22 +118,32 @@ def cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
       | Option.none => "-O2"
     let (program, flags) := if Text.endsWith ".wasm" out then (Option.getOr (IO.getEnv "WASM_CC") "clang", ["--target=wasm32", level, "-mtail-call", "-nostdlib", "-Wl,--no-entry"])
       else (Option.getOr (IO.getEnv "CC") "cc", [level, "-DDEUS_MAIN"])
-    -- The same C, compiler (and its version) and flags give the same program, so a build of unchanged code copies the one made before.
-    let version :=
-      match IO.exec program ["--version"] with
+    -- The same C, compiler (its version and the machine it targets) and flags give the same program, so a build of
+    -- unchanged code copies the one made before.
+    let asked := fun option =>
+      match IO.exec program [option] with
       | (0, text, _) => text
       | _ => ""
-    let cached := ccCacheDir () ++ "/" ++ Text.sha256 (Text.join "\n" (program :: version :: flags) ++ "\n" ++ source)
-    if IO.exists cached then
-      let _ := tool "cp" [cached, out]
-      ()
+    let cached := ccCacheDir () ++ "/" ++ Text.sha256 (Text.join "\n" (program :: asked "--version" :: asked "-dumpmachine" :: flags) ++ "\n" ++ source)
+    if IO.exists cached && fst3 (IO.exec "cp" [cached, out]) == 0 then ()
     else
       let _ := tool program (flags ++ ["-o", out, out ++ ".c"])
-      IO.mkdirp (ccCacheDir ())
-      -- Copied under a temporary name and renamed, so a concurrent build never copies half a program.
-      let _ := tool "cp" [out, cached ++ ".tmp"]
-      let _ := tool "mv" [cached ++ ".tmp", cached]
+      keep out cached
       ()
+
+/-- The first of three. -/
+def fst3 (triple : (a, b, c)) : a :=
+  let (first, _, _) := triple
+  first
+
+/-- Copies `out` into the build cache as `cached`, under a name of its own first and renamed, so a concurrent build of
+  the same program never copies half of it; the cache only saves time, so a failure here is ignored. -/
+def keep (out : Text) (cached : Text) : {IO} Unit :=
+  let staged := cached ++ "." ++ Text.take 16 (Text.sha256 (out ++ IO.wallClock ())) ++ ".tmp"
+  IO.mkdirp (ccCacheDir ())
+  let copied := fst3 (IO.exec "cp" [out, staged])
+  let _ := if copied == 0 then IO.exec "mv" [staged, cached] else IO.exec "rm" ["-f", staged]
+  ()
 
 /-- Where built programs (compiled C, standalone executables) are kept by the hash of what made them: `$DEUS_CC_CACHE`,
   else `$XDG_CACHE_HOME/deus/cc` or `~/.cache/deus/cc`. -/

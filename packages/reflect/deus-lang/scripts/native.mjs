@@ -50,7 +50,7 @@ export const nativeFor = (env) => {
   if (existsSync(failed)) {
     return { failed };
   }
-  if (spawnSync('cc', ['--version'], { stdio: 'ignore' }).status !== 0) {
+  if (spawnSync(env.CC ?? 'cc', ['--version'], { stdio: 'ignore' }).status !== 0) {
     return {};
   }
   return { build: { dir, binary } };
@@ -110,6 +110,18 @@ const build = (dir) => {
       env: { ...process.env, DEUS_NATIVE: '0' },
     });
   try {
+    // The build is kept under the seed's hash, so it must be of the code the seed is: deus/ has to compile to it.
+    execFileSync(
+      process.execPath,
+      [join(home, 'bin/deus.mjs'), 'compile', join(home, 'deus'), '--main', 'Cli.main', '-o', join(dir, 'check.image')],
+      {
+        stdio: ['ignore', 'ignore', 'pipe'],
+        env: { ...process.env, DEUS_NATIVE: '0' },
+      },
+    );
+    if (!readFileSync(join(dir, 'check.image')).equals(readFileSync(seedPath))) {
+      throw new Error('deus/ does not compile to the seed; run scripts/sync-deus.py');
+    }
     deus('init', '--empty');
     deus('add', join(home, 'deus'));
     deus('build', 'Cli.main', '-o', join(dir, 'deus.c'), '--c');
@@ -126,6 +138,7 @@ const build = (dir) => {
     writeFileSync(join(dir, 'failed.log'), `${error.message}\n${error.stderr ?? ''}`);
   } finally {
     rmSync(join(dir, 'deus.c'), { force: true });
+    rmSync(join(dir, 'check.image'), { force: true });
     rmSync(join(dir, 'deus.tmp'), { force: true });
     rmSync(dirname(codebase), { recursive: true, force: true });
     rmSync(join(dir, 'lock'), { force: true });

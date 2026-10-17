@@ -64,7 +64,12 @@ export const cliHarness = (prefix: string) => {
           DEUS_IMAGE_HASH: process.env.DEUS_IMAGE_HASH ?? imageHash,
         },
       });
-      return { code: run.status ?? 1, stdout: run.stdout, stderr: run.stderr };
+      if (run.error) {
+        throw run.error;
+      }
+      // A crash is not an ordinary failure: a signal reads as its own code, never as an exit status a test expects.
+      const code = run.status ?? (run.signal ? `signal ${run.signal}` : 'no status');
+      return { code, stdout: run.stdout ?? '', stderr: run.stderr ?? '' };
     }
     return deusNode(...args);
   };

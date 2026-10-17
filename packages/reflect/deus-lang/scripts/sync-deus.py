@@ -85,7 +85,8 @@ def repo_name(path):
 # definitions), generated (the seed, gen/), the documents above, nor the frozen legacy/ tree. Embedded, `deus export
 # --files` writes them back, so a checkout can be rebuilt from the codebase (task 86d7b02a, D279).
 def repo_files():
-    listed = subprocess.run(['git', 'ls-files'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    listed = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split('\0')
+    listed = [path for path in listed if path]
     return [ROOT / path for path in listed if not re.match(r'(deus|seed|docs|legacy)/|.*/gen/', path)]
 
 
@@ -378,9 +379,11 @@ def embed_files(codebase):
     for file, name in EMBEDDED:
         sha = hashlib.sha256((ROOT / file).read_bytes()).hexdigest()
         shown = together if together.returncode == 0 else deus('view', name, codebase=codebase, check=False)
-        # A definition embedded before D279 names only the file, not its path, so `deus export --files` cannot place it.
-        if sha not in shown.stdout or f'Embedded from {file} (deus embed)' not in shown.stdout:
-            deus('embed', file, '--as', name, '--quiet', codebase=codebase)
+        # The doc records the path (D279) and whether the file is executable (D287), so `deus export --files` restores both.
+        executable = os.access(ROOT / file, os.X_OK)
+        doc = f'Embedded from {file} (deus embed, executable).' if executable else f'Embedded from {file} (deus embed).'
+        if sha not in shown.stdout or doc not in shown.stdout:
+            deus('embed', file, '--as', name, '--quiet', *(['--executable'] if executable else []), codebase=codebase)
             print(f'  embedded {file} as {name}')
 
 

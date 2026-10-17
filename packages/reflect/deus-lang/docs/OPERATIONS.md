@@ -80,6 +80,25 @@ with it.
 - `DEUS_TEST_KERNEL=node` forces the seed on node, which is what CI tests. A test that checks a back end against the
   reference kernel uses the harness's `deusNode` (the native interpreter's `show` differs on data, task 7f42cca0).
 - Run one file with `npx vitest run src/<file>.test.ts`; long runs go in the background.
+- `deus test` and `deus check` print `slowest:` on stderr when a check took over a second, and `--json` gives each
+  check's `ms` (D285). `deus build --c` keeps compiled programs in `~/.cache/deus/cc` by the hash of their C (D282).
+
+## Writing pure tests (D283, D286)
+
+- A test runs in the simulator (`Sim.run`): an in-memory file system, a counting clock, a seeded `Random`, and the
+  file tools the CLI shells out to (`cp`, `mv`, `rm`, `install`, `gzip`); anything else exits 127. Its verdict is
+  kept by hash, so it costs nothing until what it reaches changes.
+- Run real commands against simulated stores: `Codebase.Spec.inStore` (one store) or `Replicate.Spec.twoStores`
+  (two), `Replicate.Spec.cli dir [args] (fun x => Cli.push x)`, `Replicate.Spec.sharedRemote a b` (a directory
+  remote both use), `Replicate.Spec.commitSource dir "def …"` and `DataSafety.Spec.refusedWith` for a refusal.
+- A command that ends in `IO.exit` (a failing `deus test`) cannot run in a simulation; check one level down
+  (`Check.checkTest`, `Check.remember`).
+- `@[expectFail]` marks a test or theorem meant to fail; it passes while it fails (D280).
+- Tests that only belong to the codebase (spec tests) are added with `deus add <file>` from a scratch file; spec
+  documents are changed by `deus view X.Spec > f.mdl`, editing, and `deus update f.mdl`.
+- A definition of a mounted library (`lib.base.*`, such as `Sim`) is changed in that library's own codebase
+  (`~/.deus-base`: pull, update, push), then `deus lib install base ~/.deus-base` in `~/.deus`; `deus update` refuses
+  it in the toolchain (D284).
 
 ## Usability probe
 
