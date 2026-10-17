@@ -658,15 +658,61 @@ const metasAt = async (files) => {
   }
   await fetchAll(files, [`o${files.causal}`]);
   const node = files.texts.get(`o${files.causal}`);
-  const root = node
-    ? parseSexp(node)
-        .slice(1)
-        .find((item) => Array.isArray(item) && item[0] === 'metas')?.[1]?.s
-    : undefined;
+  const fields = node ? parseSexp(node).slice(1) : [];
+  const root = fields.find((item) => Array.isArray(item) && item[0] === 'metas')?.[1]?.s;
+  const ns = fields.find((item) => Array.isArray(item) && item[0] === 'ns')?.[1]?.s;
   let metas = null;
+  if (!root && ns) {
+    // From D290 each entry names its metadata object, `(n "name" (term "<hash>" (meta "<object>")))`, and no
+    // separate snapshot exists; a head an older CLI wrote has neither, and reads each definition's latest copy.
+    const refs = new Map();
+    for (let level = [ns]; level.length > 0;) {
+      await fetchAll(
+        files,
+        level.map((hash) => `o${hash}`),
+      );
+      const next = [];
+      for (const hash of level) {
+        const text = files.texts.get(`o${hash}`);
+        if (!text) {
+          throw new HttpError(503, `the namespace node #${hash.slice(0, 10)} is in no pack yet`);
+        }
+        files.touched.add(`o${hash}`);
+        for (const item of itemsOf(text).slice(1)) {
+          const [kind, ...rest] = itemsOf(item);
+          if (kind === 'part') {
+            next.push(JSON.parse(rest[0]));
+          } else if (kind === 'sub') {
+            next.push(JSON.parse(rest[1]));
+          } else if (kind === 'n') {
+            const [, hash, ...more] = itemsOf(rest[1]);
+            const ref = more.map(itemsOf).find((field) => field[0] === 'meta')?.[1];
+            if (hash && ref) {
+              refs.set(JSON.parse(hash), JSON.parse(ref));
+            }
+          }
+        }
+      }
+      level = next;
+    }
+    if (refs.size > 0) {
+      metas = new Map();
+      await fetchAll(
+        files,
+        [...new Set(refs.values())].map((ref) => `o${ref}`),
+      );
+      for (const [hash, ref] of refs) {
+        const text = files.texts.get(`o${ref}`);
+        if (text) {
+          files.touched.add(`o${ref}`);
+          metas.set(hash, text.trim());
+        }
+      }
+    }
+  }
   if (root) {
     metas = new Map();
-    // Sixteen-way nodes over leaves, as deep as `Codebase.putMetas` wrote them (two levels before D288, three after).
+    // A snapshot from before D290: sixteen-way nodes over leaves, two levels deep before D288 and three after.
     for (let level = [root]; level.length > 0;) {
       await fetchAll(
         files,

@@ -754,6 +754,7 @@ What is this embed export for
 ---
 
 Pause for a sec to brainstorm with me
+
 1. Why is codebase so large
 2. Can't we drop ts kernel for rust or native C
 3. Is test caching working well enough where we can write a bunch of tests while keeping iteration speed high?
@@ -761,3 +762,52 @@ Pause for a sec to brainstorm with me
 ---
 
 4. How does unison codebase handle name mapping, esp progress with commits renaming a bunch of definitions via hashes
+
+---
+
+1. What do vitest tests do?
+2. I don't believe we have hundreds of megabytes of docs. What's really taking up space
+
+---
+
+Would you please stop doing things
+
+---
+
+Okay now let's brain storm - what is in the metadata and why is it getting overridden
+
+---
+
+Why do they change though on commits?
+
+---
+
+Is it all because of embedding?
+
+---
+
+Actually please measure and tell and compare this to unisons approach
+
+---
+
+How does unison do it
+
+---
+
+Explain the tradeoff
+
+---
+
+Evaluate what changes are happening most often to make cascades cheaper. For example it's okay that type changes together with impl and param renames are rare.
+We wanna optimize for making transitive cascade costs low. Draw from unison expertise.
+
+Also: 1. Don't embed plain files into codebase just for the sake of it. Especially decision log and the status. I still want to keep file embedding functionality. Work without git is mainly around porting everything to Deus. 2. Run vitest less often so it does impact experience. Focus on cached Deus tests. 3. Bring native backends up to capabilities of js and make them faster. 4. Focus on making codebase as fast and efficient as possible - single most impactful thing. How about predictable fixed width layout for images and binary encoding to compress as much as possible.
+
+Now start working autonomously
+
+---
+
+I'm assuming you can compile the cli with C backend so it's really fast
+Maybe add magic and version to codebase files
+Exclude everything from embedding
+Or okay, you decide, but I'd prefer to exclude as much as possible

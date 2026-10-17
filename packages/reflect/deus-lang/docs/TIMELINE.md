@@ -320,6 +320,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 310 | 10-19 00:30 | 30m 00s | e556d6bd12 | add/update refuse to shadow a mounted library's definition; test and check report their slowest checks (D284, D285) |
 | 311 | 10-19 01:00 | 30m 00s | 9f7f838d8b | The sync path's safety guards are pure tests: silent drops, new failures, a newer epoch (D286) |
 | 312 | 10-19 02:00 | 1h 00m | b4aa430d08 | Review fixes: kept verdicts follow @[expectFail], a safer build cache, export --files keeps the executable bit (D287) |
-| 313 | 10-19 03:00 | 1h 00m | this commit | Metadata snapshots use a three-level trie: a one-doc commit writes 7.5 KB of metadata, not 22-45 KB (D288) |
+| 313 | 10-19 03:00 | 1h 00m | 2cf46f4e9e | Metadata snapshots use a three-level trie: a one-doc commit writes 7.5 KB of metadata, not 22-45 KB (D288) |
+| 314 | 10-19 05:00 | 2h 00m | this commit | Metadata rides namespace entries: an update's rehashed dependents share their metadata, 11.9 MB of history instead of 292 MB; only six platform files are embedded (D289, D290) |
 
-Total from stage 1 to stage 313: 126h 50m.
+Total from stage 1 to stage 314: 128h 50m.

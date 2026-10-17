@@ -60,6 +60,13 @@ def hash : Entry -> Text
   | Entry.theorem h => h
   | Entry.spec h => h
 
+/-- Whether the entry's hash is its own, so metadata belongs to it: a constructor or operation names its type's. -/
+def ownsMeta (e : Entry) : Bool :=
+  match e with
+  | ctor _ _ _ => false
+  | op _ _ _ => false
+  | _ => true
+
 def isValue (e : Entry) : Bool :=
   match e with
   | term _ => true

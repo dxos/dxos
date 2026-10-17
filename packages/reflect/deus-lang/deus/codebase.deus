@@ -65,7 +65,7 @@ def put (dir : Text) (form : Sexp) : {IO} Text :=
 def readMeta (dir : Text) (h : Text) : {IO} Option Sexp :=
   Option.map Sexp.read (IO.readFile (dir ++ "/meta/" ++ h))
 
-/-- Writes `h`'s metadata and notes `h` for the next commit's metadata snapshot (`recordMetas`). -/
+/-- Writes `h`'s metadata and notes `h` for the next commit, which stores it as an object its entries name (`metaRefs`). -/
 def writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
   writeMetaFile dir h form
   IO.appendFile (dir ++ "/metas.dirty") (h ++ "\n")
@@ -82,75 +82,66 @@ def writeProvenance (dir : Text) (causal : Text) (form : Sexp) : {IO} Unit :=
 
 def writeMetaFile (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
 
-/-- The metadata snapshot after `previous`: the hashes written since the last commit, with their
-  files' current metadata (D134). A history without one starts it from every hash `ns` names. -/
-def recordMetas (dir : Text) (ns : Map Text Entry) (previous : Text) : {IO, Throw Text} Text :=
+/-- The hashes whose metadata was written since the last commit (`writeMeta`). -/
+def dirtyMetas (dir : Text) : {IO} Map Text Unit :=
+  match IO.readFile (dir ++ "/metas.dirty") with
+  | Option.some text => Set.fromList (List.filter (fun line => not (Text.isEmpty line)) (Text.split text "\n"))
+  | Option.none => Map.empty
+
+/-- Forgets the hashes `dirtyMetas` noted, once a commit has recorded them. -/
+def clearDirtyMetas (dir : Text) : {IO} Unit :=
   let path := dir ++ "/metas.dirty"
-  let dirty :=
-    match IO.readFile path with
-    | Option.some text => List.filter (fun line => not (Text.isEmpty line)) (Text.split text "\n")
-    | Option.none => []
-  let hashes := dedup (sort (if Text.isEmpty previous then dirty ++ List.map (fun pair => Entry.hash (snd pair)) (Map.toList ns) else dirty))
-  let root := putMetas dir previous (filterMap (fun h => Option.map (fun m => (h, m)) (readMeta dir h)) hashes)
   if IO.exists path then IO.remove path else ()
-  root
 
-/-- The character of `h` that picks its node at `level` of a metadata snapshot. -/
-def metaKey (h : Text) (level : Int) : Text := Text.slice h level (level + 1)
+/-- `h`'s metadata stored as an object of its own, and that object's hash; none without metadata. Identical metadata
+  is one object, so a dependent an update rehashes shares its predecessor's (D290). -/
+def putMetaObject (dir : Text) (h : Text) : {IO} Option Text := Option.map (fun form => Codebase.put dir form) (readMeta dir h)
 
-/-- `items` grouped by `key`, in key order. -/
-def groupBy (key : a -> Text) (items : List a) : List (Text, List a) :=
-  Map.toList (List.foldl (fun m x => Map.insert (key x) (x :: Option.getOr (Map.lookup (key x) m) []) m) Map.empty items)
+/-- The metadata object of each hash `ns` names, for a snapshot: `previous`'s (hash, metadata object) pairs where the
+  metadata is unchanged since, and a new object for each hash written since the last commit or not in `previous`. -/
+def metaRefs (dir : Text) (ns : Map Text Entry) (previous : Map Text Text) : {IO} Map Text Text :=
+  let dirty := dirtyMetas dir
+  Map.foldr (fun _ e refs =>
+    let h := Entry.hash e
+    if not (Entry.ownsMeta e) || Map.contains h refs then refs
+    else
+      match (if Set.contains h dirty then Option.none else Map.lookup h previous) with
+      | Option.some ref => Map.insert h ref refs
+      | Option.none =>
+          match putMetaObject dir h with
+          | Option.some ref => Map.insert h ref refs
+          | Option.none => refs) Map.empty ns
 
-def putMetaNode (dir : Text) (subs : Map Text Text) : {IO} Text := Codebase.put dir (Sexp.node
-  "metas"
-  (List.map
-    (fun pair => Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (snd pair)])
-    (Map.toList subs)))
+/-- A snapshot's (hash, metadata object) pairs, from the `(meta "<hash>")` its entries carry (D290). -/
+def snapshotMetaRefs (dir : Text) (snapshot : Text) : {IO, Throw Text} Map Text Text :=
+  let rec go node acc := foldl (fun m item =>
+    match item with
+    | Sexp.list (Sexp.sym "sub" :: _ :: Sexp.str child :: []) => go child m
+    | Sexp.list (Sexp.sym "n" :: _ :: entry :: []) =>
+        match Codebase.entryMetaRef entry with
+        | Option.some ref => Map.insert (Entry.hash (Entry.fromSexp entry)) ref m
+        | Option.none => m
+    | _ => m) acc (nodeItems dir node)
+  if Text.isEmpty snapshot then Map.empty else go snapshot Map.empty
 
-/-- How many sixteen-way levels sit above a metadata snapshot's leaves: three, so a leaf holds about one in 4,096 of the
-  hashes and a commit that touches a few dozen scattered hashes rewrites a few kilobytes (D288); two levels made each
-  leaf about 45 KB, and 82% of the codebase was rewritten leaves. -/
-def metaDepth : Int := 3
+/-- The metadata object an entry form names: its trailing `(meta "<hash>")`. -/
+def entryMetaRef (entry : Sexp) : Option Text :=
+  List.head? (List.filterMap (fun item =>
+    match item with
+    | Sexp.list [Sexp.sym "meta", Sexp.str ref] => Option.some ref
+    | _ => Option.none) (Sexp.args entry))
 
-/-- A node's entries when it is a leaf, or its children by key when it is not; both empty for `""`. -/
-def metaNode (dir : Text) (h : Text) : {IO, Throw Text} (Map Text Text, List (Text, Sexp)) :=
-  if Text.isEmpty h then (Map.empty, [])
+/-- A history node's (hash, metadata): from its snapshot's entries (D290), or from the separate snapshot an older
+  history node names (D134). A metadata object missing here, as an older CLI's push leaves, falls back to the file. -/
+def metasOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Sexp :=
+  if not (Text.isEmpty c.metas) then readMetas dir c.metas
   else
-    match readObject dir h with
-    | some form =>
-        let items := Sexp.args form
-        let subs := Map.fromList (List.filterMap (fun item =>
-          match item with
-          | Sexp.list [Sexp.sym "sub", Sexp.str k, Sexp.str child] => some (k, child)
-          | _ => none) items)
-        let entries := List.filterMap (fun item =>
-          match item with
-          | Sexp.list [Sexp.sym "m", Sexp.str k, meta] => some (k, meta)
-          | _ => none) items
-        (subs, entries)
-    | none => throw ("missing metadata snapshot #" ++ h)
+    Map.fromList (filterMap (fun pair =>
+      match Option.orElse (readObject dir (snd pair)) (fun _ => readMeta dir (fst pair)) with
+      | Option.some form => Option.some (fst pair, form)
+      | Option.none => Option.none) (Map.toList (snapshotMetaRefs dir c.snapshot)))
 
-/-- The node at `level` that `old` was, with `changes` (hash, metadata; a later one wins) written over it; its hash. A
-  leaf found above the leaf level, as an older layout wrote, is split into the levels below it. -/
-def putMetaTrie (dir : Text) (old : Text) (level : Int) (changes : List (Text, Sexp)) : {IO, Throw Text} Text :=
-  if level >= metaDepth then
-    let leaf := List.foldl (fun m c => Map.insert (fst c) (snd c) m) (if Text.isEmpty old then Map.empty else readMetas dir old) changes
-    Codebase.put dir (Sexp.node "metas" (List.map (fun pair => Sexp.node "m" [Sexp.str (fst pair), snd pair]) (Map.toList leaf)))
-  else
-    let (subs, carried) := metaNode dir old
-    let all := carried ++ changes
-    let groups := groupBy (fun c => metaKey (fst c) level) all
-    putMetaNode dir (List.foldl
-      (fun m group => Map.insert (fst group) (putMetaTrie dir (Option.getOr (Map.lookup (fst group) m) "") (level + 1) (List.reverse (snd group))) m)
-      subs
-      groups)
-
-/-- A metadata snapshot `previous` with `changes` (hash, metadata) written over it; its root hash. -/
-def putMetas (dir : Text) (previous : Text) (changes : List (Text, Sexp)) : {IO, Throw Text} Text :=
-  if List.isEmpty changes then previous else putMetaTrie dir previous 0 changes
-
-/-- A metadata snapshot's (hash, metadata) pairs; empty for `""`. -/
+/-- A metadata snapshot's (hash, metadata) pairs, as history before D290 recorded them; empty for `""`. -/
 def readMetas (dir : Text) (root : Text) : {IO, Throw Text} Map Text Sexp :=
   let rec go h acc :=
     match readObject dir h with
@@ -254,19 +245,28 @@ def putNode (dir : Text) (items : List (Text, Sexp)) (depth : Int) : {IO} Text :
 /-- Stores a namespace as a tree split at each name's first dot (D72): `List.map` is `map` in the
   `List` node, which its parent names by hash, and wide nodes split into parts. Changing one
   definition rewrites only the nodes on its path, so history grows by the change rather than by
-  the whole namespace. Returns the root hash. -/
-def putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
+  the whole namespace. Each entry whose hash has metadata in `refs` (hash to metadata object) carries `(meta "<hash>")`
+  after its fields, as Unison keeps a definition's metadata on its namespace entry (D290): an update that rehashes
+  dependents rewrites these nodes anyway, and their unchanged metadata is the same object. Returns the root hash. -/
+def putNamespace (dir : Text) (ns : Map Text Entry) (refs : Map Text Text) : {IO} Text :=
   let split := Map.foldr (fun name e acc =>
     let (leaves, groups) := acc
     match splitName name with
     | Option.some (seg, rest) => (leaves, Map.insert seg (Map.insert rest e (getOr (Map.lookup seg groups) Map.empty)) groups)
     | Option.none => ((name, e) :: leaves, groups)) ([], Map.empty) ns
   let (leaves, groups) := split
+  let withMeta := fun (e : Entry) =>
+    match (Entry.ownsMeta e, Map.lookup (Entry.hash e) refs) with
+    | (true, Option.some ref) =>
+        match Entry.toSexp e with
+        | Sexp.list items => Sexp.list (items ++ [Sexp.node "meta" [Sexp.str ref]])
+        | form => form
+    | _ => Entry.toSexp e
   let entries := List.map
-    (fun pair => (fst pair, Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)]))
+    (fun pair => (fst pair, Sexp.node "n" [Sexp.str (fst pair), withMeta (snd pair)]))
     leaves
   let subs := List.map
-    (fun pair => (fst pair, Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (Codebase.putNamespace dir (snd pair))]))
+    (fun pair => (fst pair, Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (Codebase.putNamespace dir (snd pair) refs)]))
     (Map.toList groups)
   putNode dir (entries ++ subs) 0
 
@@ -483,12 +483,13 @@ def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text
   let branch := currentBranch dir
   let parent := headOf dir branch
   let previous := readCausal dir parent
-  let snapshot := putNamespace dir ns
-  let metas := recordMetas dir ns (Causal.metas previous)
-  if snapshot == previous.snapshot && metas == Causal.metas previous then parent else
+  -- A history node from before D290 names no metadata on its entries, so the first commit after it stores every hash's.
+  let snapshot := putNamespace dir ns (metaRefs dir ns (snapshotMetaRefs dir previous.snapshot))
+  clearDirtyMetas dir
+  if snapshot == previous.snapshot && Text.isEmpty (Causal.metas previous) then parent else
     let c := Codebase.put
       dir
-      (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads metas (Codebase.now ())))
+      (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads "" (Codebase.now ())))
     setBranch dir branch c
     c
 
@@ -563,7 +564,7 @@ def init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then Throw.th
   IO.mkdirp (dir ++ "/results")
   IO.mkdirp (dir ++ "/provenance")
   IO.mkdirp (dir ++ "/cache")
-  let snapshot := putNamespace dir Map.empty
+  let snapshot := putNamespace dir Map.empty Map.empty
   let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" "" "" "" "" ""))
   setBranch dir "main" c
   IO.writeFile (dir ++ "/HEAD") "main\n"
@@ -651,7 +652,7 @@ def migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
                 dir
                 (Codebase.rewrite form (Map.fromList (List.map (fun l => (l, node l)) links)))) (Tasks.snapshotOf dir c))
         let moved := Codebase.put dir (causalToSexp (Causal.mk
-          (putNamespace dir (readNamespace dir c.snapshot))
+          (putNamespace dir (readNamespace dir c.snapshot) (snapshotMetaRefs dir c.snapshot))
           parents
           c.message
           tasks
@@ -786,6 +787,7 @@ def dependencies (form : Sexp) : List Text :=
     | Sexp.list [Sexp.sym "ref", Sexp.str h] => h :: acc
     | Sexp.list [Sexp.sym "sub", Sexp.str _, Sexp.str h] => h :: acc
     | Sexp.list [Sexp.sym "part", Sexp.str h] => h :: acc
+    | Sexp.list [Sexp.sym "meta", Sexp.str h] => h :: acc
     | Sexp.list (Sexp.sym "con" :: Sexp.str h :: _) => if Text.startsWith "#" h then acc else h :: acc
     | Sexp.list (Sexp.sym "pcon" :: Sexp.str h :: rest) => List.foldl (fun a y => go y a) (if Text.startsWith "#" h then acc else h :: acc) rest
     | Sexp.list (Sexp.sym "op" :: Sexp.str h :: _) => if Text.startsWith "#" h then acc else h :: acc
@@ -811,10 +813,8 @@ def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw 
   let ours := headOf dir branch
   let theirs := headOf dir other
   if ours == theirs || Set.contains theirs (ancestors dir ours) then MergeResult.upToDate else if Set.contains ours (ancestors dir theirs) then
-    applyMetas dir (mergeMetas
-      (readMetas dir (Causal.metas (readCausal dir ours)))
-      (readMetas dir (Causal.metas (readCausal dir ours)))
-      (readMetas dir (Causal.metas (readCausal dir theirs))))
+    let oursMetas := metasOf dir (readCausal dir ours)
+    applyMetas dir (mergeMetas oursMetas oursMetas (metasOf dir (readCausal dir theirs)))
     setBranch dir branch theirs
     MergeResult.fastForward theirs
   else
@@ -873,16 +873,17 @@ def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw 
         let lost := Safety.lostInMerge baseNs oursNs theirsNs ns
         if List.isEmpty lost then () else Throw.throw ("merging " ++ other ++ " would drop names neither side deleted: " ++
           Safety.listed lost ++ "; nothing was merged")
-        let snapshot := putNamespace dir ns
         let baseMetas :=
           match base with
-          | Option.some b => readMetas dir (Causal.metas b)
+          | Option.some b => metasOf dir b
           | Option.none => Map.empty
-        let metas := mergeMetas
-          baseMetas
-          (readMetas dir (Causal.metas oursNode))
-          (readMetas dir (Causal.metas theirsNode))
+        let metas := mergeMetas baseMetas (metasOf dir oursNode) (metasOf dir theirsNode)
         applyMetas dir metas
+        let snapshot := putNamespace dir ns (Map.fromList (filterMap (fun pair =>
+          let h := Entry.hash (snd pair)
+          match Map.lookup h metas with
+          | Option.some form => Option.some (h, Codebase.put dir form)
+          | Option.none => Option.none) (Map.toList ns)))
         let c := Codebase.put dir (causalToSexp (Causal.mk
           snapshot
           [ours, theirs]
@@ -890,7 +891,7 @@ def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw 
           (Tasks.putSnapshot dir merged)
           ""
           comments
-          (putMetas dir "" (Map.toList metas))
+          ""
           (Codebase.now ())))
         setBranch dir branch c
         MergeResult.merged c (reverse changed)

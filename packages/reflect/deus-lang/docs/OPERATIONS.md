@@ -79,7 +79,10 @@ with it.
   minutes later. Until then tests run the seed on node, as CI always does.
 - `DEUS_TEST_KERNEL=node` forces the seed on node, which is what CI tests. A test that checks a back end against the
   reference kernel uses the harness's `deusNode` (the native interpreter's `show` differs on data, task 7f42cca0).
-- Run one file with `npx vitest run src/<file>.test.ts`; long runs go in the background.
+- DEUS tests carry coverage in the dev loop: `deus test <Prefix>` runs in about a second because verdicts are cached
+  by hash, so write a pure test (below) before reaching for vitest. Run vitest only for the files that exercise what
+  changed (`npx vitest run src/<file>.test.ts`, in the background): a kernel, a back end, the Worker, a browser. The
+  whole suite is for before a push that touches those, and CI runs it anyway (Dmytro, 2026-10-17).
 - `deus test` and `deus check` print `slowest:` on stderr when a check took over a second, and `--json` gives each
   check's `ms` (D285). `deus build --c` keeps compiled programs in `~/.cache/deus/cc` by the hash of their C (D282).
 
