@@ -14,8 +14,8 @@ projects:
     summary: 'Plan to reimplement ECHO in Rust as one wasm binary (automerge + subduction + ECHO) with TypeScript bindings behind the current API: a language-neutral spec with TS as the reference, then host, EDGE and client ports. Includes a spike linking automerge, samod-core and subduction into one 2.88 MB module.'
     tasks: .agents/projects/echo-rust/TASKS.md
     design: .agents/projects/echo-rust/DESIGN.md
-    prs: []
-    resume: 'Plan written (DESIGN.md, SPEC-PLAN.md, TASKS.md, spike/). NEXT: answer DESIGN.md open questions 1-4, then phase 0 (text and history module, conformance harness).'
+    prs: [14036]
+    resume: 'Draft PR #14036: plan written (DESIGN.md, SPEC-PLAN.md, TASKS.md, spike/). NEXT: answer DESIGN.md open questions 1-4, then phase 0 (text and history module, conformance harness).'
   - name: autocue-ui
     status: active
     user: burdon
