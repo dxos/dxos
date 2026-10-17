@@ -30,11 +30,11 @@
      *
      * Adjust a family by changing its factor, not by editing offsets — those are the dark contract.
      */
-    --dx-attenuate-state: 0.5;
+    --dx-attenuate-state: 0.65;
     --dx-attenuate-well: 0.5;
     --dx-attenuate-separator: 0.75;
     --dx-attenuate-separator-line: 0.45;
-    --dx-attenuate-bar: 1;
+    --dx-attenuate-bar: 1.36;
     --dx-attenuate-placeholder: 1;
     --dx-attenuate-scrollbar: 1;
     touch-action: pan-x pan-y;
