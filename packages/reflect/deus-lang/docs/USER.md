@@ -746,3 +746,14 @@ Increasing the area we can cover with pure tests by introducing simulators that 
 Approach perf with critical thinking focusing on highest impact optimizations.
 Increase coverage of pure tests, especially for critical dev and codebase paths
 Sort.wrongClaim - perhaps add "expect fail" syntax
+
+---
+
+What is this embed export for
+
+---
+
+Pause for a sec to brainstorm with me
+1. Why is codebase so large
+2. Can't we drop ts kernel for rust or native C
+3. Is test caching working well enough where we can write a bunch of tests while keeping iteration speed high?
