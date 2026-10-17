@@ -23,10 +23,12 @@ def serve (request : Js) (bucket : Js) (project : Text) (folder : Text) (rest : 
       match Worker.R2.get bucket key with
       | Option.none => Worker.Http.problem 404 "not found"
       | Option.some object =>
+          -- An asset named by its SHA-256 never changes, so a browser keeps it; anything else may be written again.
+          let cache := if folder == "assets" && Worker.Heads.isHash name then "public, max-age=31536000, immutable" else "no-store"
           Worker.Http.response
             (Js.get object "body")
             200
-            [("content-type", Worker.R2.contentType object), ("cache-control", "no-store"), ("x-content-type-options", "nosniff")]
+            [("content-type", Worker.R2.contentType object), ("cache-control", cache), ("x-content-type-options", "nosniff")]
     else if verb == "PUT" then
       let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
       let type := Option.getOr (Worker.Http.header request "content-type") "application/octet-stream"

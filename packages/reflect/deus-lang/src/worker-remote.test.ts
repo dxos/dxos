@@ -420,6 +420,10 @@ describe('replication API', () => {
     // An asset is what a comment or task attaches, so deleting one keeps a copy in the trash.
     const assets = await insertKey(db, ['assets']);
     await call('/v1/toolchain/files/assets/shot', { method: 'PUT', body: 'png', key: assets });
+    // An asset named by its hash is cached for good; any other name may be written again.
+    expect((await call('/v1/toolchain/files/assets/shot')).headers.get('cache-control')).toBe('no-store');
+    await call(`/v1/toolchain/files/assets/${hash('7')}`, { method: 'PUT', body: 'png', key: assets });
+    expect((await call(`/v1/toolchain/files/assets/${hash('7')}`)).headers.get('cache-control')).toContain('immutable');
     expect((await call('/v1/toolchain/files/assets/shot', { method: 'DELETE', key: assets })).status).toBe(200);
     expect((await call('/v1/toolchain/files/assets/shot')).status).toBe(404);
     expect(await (await bucket.get('toolchain/trash/assets/shot'))?.text()).toBe('png');

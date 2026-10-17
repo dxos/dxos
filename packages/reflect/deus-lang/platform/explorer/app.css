@@ -224,6 +224,10 @@ h3 {
   font-size: 9px;
 }
 
+.k-decision {
+  --k: var(--k-theorem);
+}
+
 .k-fail {
   --k: var(--fail);
 }

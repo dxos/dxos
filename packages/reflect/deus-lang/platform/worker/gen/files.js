@@ -32,7 +32,19 @@ async function Worker$Files$serve(request, bucket, project, folder, rest, author
           }
           if (t1.tag === 1) {
             const object = t1.fields[0];
-            return Worker$Http$response(lib$web$Js$get(object, "body"), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", Worker$R2$contentType(object)]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.cons(new rt.Con("#Pair", 0, ["x-content-type-options", "nosniff"]), rt.NIL))));
+            let cache;
+            let r3;
+            if ((folder === "assets")) {
+              r3 = Worker$Heads$isHash(name);
+            } else {
+              r3 = false;
+            }
+            if (r3) {
+              cache = "public, max-age=31536000, immutable";
+            } else {
+              cache = "no-store";
+            }
+            return Worker$Http$response(lib$web$Js$get(object, "body"), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", Worker$R2$contentType(object)]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", cache]), rt.cons(new rt.Con("#Pair", 0, ["x-content-type-options", "nosniff"]), rt.NIL))));
           }
           rt.nomatch(t1);
         }
@@ -193,6 +205,25 @@ async function Worker$R2$get(bucket, key) {
   return lib$web$Js$toOption(rt.resumed($stack, await lib$web$Js$method(bucket, "get", rt.cons(lib$web$Js$text(key), rt.NIL))));
 }
 rt.named(Worker$R2$get, "Worker.R2.get");
+
+function Worker$Heads$isHash(t) {
+  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+    return List$all(rt.named((c) => {
+    if (Text$isDigit(c)) {
+      return true;
+    } else {
+      if ((c >= 97)) {
+        return (c <= 102);
+      } else {
+        return false;
+      }
+    }
+  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } else {
+    return false;
+  }
+}
+rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
 function Worker$Http$response(body, status, headers) {
   const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));

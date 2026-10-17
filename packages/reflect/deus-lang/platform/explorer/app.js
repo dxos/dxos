@@ -51,6 +51,9 @@ const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/
 /** The task with id `id` in the loaded codebase, if any. */
 const taskById = (id) => index.tasks?.find((task) => task.id === id);
 
+/** Whether decisions open as cards: the hosted site reads the codebase's copy of the log (`Docs.decisions`). */
+const decisionsInCodebase = () => live !== undefined && index.byName.has('Docs.decisions');
+
 /** HTML with each decision number (D96) and task id outside a link or code made a link; a one-digit decision is too short to tell from Cloudflare's D1. */
 const decisionLinks = (html) => {
   let inside = 0;
@@ -66,7 +69,9 @@ const decisionLinks = (html) => {
         : part
             .replace(
               /\bD(\d{2,4})\b/g,
-              `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
+              decisionsInCodebase()
+                ? `<a class="decision" data-open="x:D$1" title="Decision $1 in the project's decision log">D$1</a>`
+                : `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
             )
             // A task id in prose ("depends on b09507db") opens the task; a definition's short hash stays text.
             .replace(/\b[0-9a-f]{8}\b/g, (id) => {
@@ -654,7 +659,7 @@ const decoded = (text) => {
 const parseFragment = () => {
   const keys = decoded(location.hash.slice(1))
     .split(',')
-    .filter((key) => /^[dtcnvks]:./.test(key));
+    .filter((key) => /^[dtcnvksx]:./.test(key));
   const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
   return { view, keys: keys.filter((key) => !key.startsWith('v:')) };
 };
@@ -1588,6 +1593,57 @@ const closeNames = (name) => {
   return [...new Map([...near, ...found].map((entry) => [entry.hash, entry])).values()].slice(0, 5);
 };
 
+/** The decision log as the codebase holds it (`Docs.decisions`), by number, read once through the replication API. */
+let decisionLog;
+
+const loadDecisions = () =>
+  (decisionLog ??= (async () => {
+    const entry = index.byName.get('Docs.decisions');
+    const base = live?.replace(/\/live\/[^/]+$/, '');
+    if (!entry || !base) {
+      return new Map();
+    }
+    const object = await fetchText(`${base}/objects/${entry.hash}`);
+    const sha = /\(text "([0-9a-f]{64})"\)/.exec(object ?? '')?.[1];
+    return sha ? decisionsOf((await fetchText(`${base}/files/assets/${sha}`)) ?? '') : new Map();
+  })().catch(() => new Map()));
+
+/**
+ * The rows of a decision log, `| D<n> | decision | alternatives | why |`, by number. A cell may hold ` | ` itself (an
+ * mdl list), so the last two cells are the alternatives and the reason and the decision is everything between.
+ */
+const decisionsOf = (text) =>
+  new Map(
+    text
+      .split('\n')
+      .filter((line) => /^\| D\d+ \|/.test(line))
+      .map((line) => {
+        const cells = line.slice(2, line.endsWith(' |') ? -2 : undefined).split(' | ');
+        return [
+          cells[0],
+          {
+            id: cells[0],
+            decision: cells.slice(1, Math.max(2, cells.length - 2)).join(' | '),
+            alternatives: cells.length > 3 ? cells[cells.length - 2] : '',
+            why: cells.length > 2 ? cells[cells.length - 1] : '',
+          },
+        ];
+      }),
+  );
+
+const decisionCard = (key, row) =>
+  card(key, {
+    iconHtml: '<span class="icon k-decision" title="decision">D</span>',
+    title: escape(row.id),
+    prose: true,
+    body:
+      `<div class="doc">${mdHtml(row.decision, '')}</div>` +
+      (row.alternatives
+        ? section('Alternatives', undefined, `<div class="doc">${mdHtml(row.alternatives, '')}</div>`)
+        : '') +
+      (row.why ? section('Why', undefined, `<div class="doc">${mdHtml(row.why, '')}</div>`) : ''),
+  });
+
 const buildCard = async (key) => {
   const value = key.slice(2);
   switch (key[0]) {
@@ -1600,6 +1656,10 @@ const buildCard = async (key) => {
         element('dialects').hidden = false;
       }
       return def ? definitionCard(key, def, events) : missingCard(key, `No definition ${short(value)}`);
+    }
+    case 'x': {
+      const row = (await loadDecisions()).get(value);
+      return row ? decisionCard(key, row) : missingCard(key, `No decision ${value} in this codebase`);
     }
     case 'n':
       return namespaceCard(key, value);
@@ -2945,7 +3005,7 @@ const titleOf = (key) => {
   if (key.startsWith('t:')) {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
   }
-  if (key.startsWith('s:')) {
+  if (key.startsWith('s:') || key.startsWith('x:')) {
     return value;
   }
   if (key.startsWith('k:')) {
