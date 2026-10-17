@@ -1,0 +1,54 @@
+-- context: @dxos/worker/Worker
+/-
+  The explorer's write requests as `deus inbox` reads them (task 41714c0d, D85): one canonical S-expression per
+  request, `(request (kind "comment") (by "…") … (assets (asset "<sha>" "<type>" "<name>") …))`, printed and read by
+  the toolchain's own `Sexp`, so the Worker and the CLI cannot disagree on escapes.
+-/
+
+namespace Worker.Inbox
+
+/-- The fields a request carries, in the order they are written. -/
+def fields : List Text := ["kind", "by", "at", "subject", "note", "title", "details", "link", "labels", "task"]
+
+/-- `request` (a JavaScript object) as the text `deus inbox` reads; a field that is `undefined` is left out. -/
+def text (request : Js) : Text :=
+  let present := List.filter (fun key => Js.typeOf (Js.get request key) != "undefined") fields
+  let items := List.map (fun key => Sexp.list [Sexp.sym key, Sexp.str (Js.toText (Js.get request key))]) present
+  let assets := Option.getOr (Option.map Js.toList (Js.toOption (Js.get request "assets"))) []
+  let asset := fun a => Sexp.list [Sexp.sym "asset", Sexp.str (Js.toText (Js.get a "hash")), Sexp.str (Js.toText (Js.get a "type")), Sexp.str (Js.toText (Js.get a "name"))]
+  Sexp.print (Sexp.list (Sexp.sym "request" :: items ++ [Sexp.list (Sexp.sym "assets" :: List.map asset assets)]))
+
+/-- A field's value: a string or a bare word. -/
+def value (s : Sexp) : Option Text :=
+  match s with
+  | Sexp.str t => Option.some t
+  | Sexp.sym t => Option.some t
+  | _ => Option.none
+
+/-- The request `source` holds, as a JavaScript object with its fields and `assets` (`{hash, type, name}` each). -/
+def request (source : Text) : Js :=
+  let items :=
+    match Sexp.readAll source with
+    | Sexp.list (_ :: rest) :: _ => rest
+    | _ => []
+  let asset := fun a =>
+    match a with
+    | Sexp.list [_, hash, type, name] =>
+        Option.some (Js.obj [("hash", Js.text (Option.getOr (value hash) "")), ("type", Js.text (Option.getOr (value type) "")), ("name", Js.text (Option.getOr (value name) ""))])
+    | _ => Option.none
+  let assets := concatMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "assets" :: listed) => filterMap asset listed
+    | _ => []) items
+  let pairs := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "assets" :: _) => Option.none
+    | Sexp.list (Sexp.sym key :: v :: _) => Option.map (fun t => (key, Js.text t)) (value v)
+    | _ => Option.none) items
+  Js.obj (("assets", Js.list assets) :: pairs)
+
+test requestsRoundTrip :=
+  Sexp.print (Sexp.list [Sexp.sym "note", Sexp.str "a \"b\"\n"]) == "(note \"a \\\"b\\\"\\n\")"
+    && value (Sexp.sym "comment") == Option.some "comment" && value (Sexp.int 1) == Option.none
+
+end Worker.Inbox

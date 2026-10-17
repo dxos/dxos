@@ -198,6 +198,19 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         [
           join(root, 'bin/deus.mjs'),
           'build',
+          'Worker.Inbox.text',
+          'Worker.Inbox.request',
+          '-o',
+          join(gen, 'inbox.js'),
+          '--js',
+        ],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
+      execFileSync(
+        'node',
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
           'Worker.KeyAdmin.serve',
           'Worker.KeyAdmin.mint',
           '-o',

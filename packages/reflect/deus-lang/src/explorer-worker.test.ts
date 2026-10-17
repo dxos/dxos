@@ -201,12 +201,12 @@ describe('explorer worker', () => {
       kind: 'task',
       by: 'github:o',
       at: 't',
-      title: 'tab\there \\ "q"\u0001',
-      assets: [{ hash: 'h', type: 'image/png', name: 'a.png' }],
+      title: 'tab\there \\ "q"\u0001 é ✓ 😀',
+      assets: [{ hash: 'h', type: 'image/png', name: 'shot (1).png' }],
     };
     const text = requestToSexp(request);
     expect(text).toBe(
-      '(request (kind "task") (by "github:o") (at "t") (title "tab\\there \\\\ \\"q\\"\\u0001") (assets (asset "h" "image/png" "a.png")))',
+      '(request (kind "task") (by "github:o") (at "t") (title "tab\\there \\\\ \\"q\\"\\u0001 é ✓ 😀") (assets (asset "h" "image/png" "shot (1).png")))',
     );
     expect(sexpToRequest(text)).toEqual(request);
   });

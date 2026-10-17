@@ -16,6 +16,7 @@
 import { addressOfFolder, projectAt } from './address.mjs';
 import { demoFiles } from './gen/demo-todo.mjs';
 import { appFiles, hubFiles } from './gen/explorer-app.mjs';
+import * as inbox from './gen/inbox.js';
 import * as routes from './gen/routes.js';
 import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
@@ -556,94 +557,13 @@ const pending = async (env) => {
 };
 
 //
-// The request format `deus inbox` reads: one S-expression (docs/spec/CORE.md strings).
+// The request format `deus inbox` reads: one S-expression, printed and read by the toolchain's `Sexp` in DEUS
+// (`Worker.Inbox`, platform/worker/deus/inbox.deus), so the Worker and the CLI agree on every escape.
 //
 
-const FIELDS = ['kind', 'by', 'at', 'subject', 'note', 'title', 'details', 'link', 'labels', 'task'];
+export const requestToSexp = (request) => inbox.text(request);
 
-export const requestToSexp = (request) => {
-  const fields = FIELDS.filter((key) => request[key] !== undefined).map((key) => `(${key} ${quote(request[key])})`);
-  const assets = (request.assets ?? []).map((a) => `(asset ${quote(a.hash)} ${quote(a.type)} ${quote(a.name)})`);
-  return `(request ${fields.join(' ')} (assets${assets.map((a) => ` ${a}`).join('')}))`;
-};
-
-/** A string as Core text prints it: `"`, `\` and control characters escaped. */
-export const quote = (value) =>
-  // oxlint-disable-next-line no-control-regex -- matching control characters is the point: they are escaped.
-  `"${String(value).replace(/[\\"\u0000-\u001f\u007f]/g, (char) => {
-    if (char === '"' || char === '\\') {
-      return `\\${char}`;
-    }
-    if (char === '\n') {
-      return '\\n';
-    }
-    if (char === '\t') {
-      return '\\t';
-    }
-    if (char === '\r') {
-      return '\\r';
-    }
-    return `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`;
-  })}"`;
-
-export const sexpToRequest = (source) => {
-  const [form] = parseSexp(source);
-  const request = { assets: [] };
-  for (const item of Array.isArray(form) ? form.slice(1) : []) {
-    if (Array.isArray(item) && item[0] === 'assets') {
-      request.assets = item.slice(1).map(([, hash, type, name]) => ({ hash, type, name }));
-    } else if (Array.isArray(item) && typeof item[1] === 'string') {
-      request[item[0]] = item[1];
-    }
-  }
-  return request;
-};
-
-/** Lists become arrays, symbols and strings both become strings: enough to read back a request. */
-const parseSexp = (source) => {
-  const stack = [[]];
-  let index = 0;
-  while (index < source.length) {
-    const char = source[index];
-    if (char === '(') {
-      stack.push([]);
-      index++;
-    } else if (char === ')') {
-      const done = stack.pop();
-      stack[stack.length - 1].push(done);
-      index++;
-    } else if (char === '"') {
-      let value = '';
-      index++;
-      while (index < source.length && source[index] !== '"') {
-        if (source[index] === '\\') {
-          const next = source[index + 1];
-          if (next === 'u') {
-            value += String.fromCharCode(parseInt(source.slice(index + 2, index + 6), 16));
-            index += 6;
-            continue;
-          }
-          value += next === 'n' ? '\n' : next === 't' ? '\t' : next === 'r' ? '\r' : next;
-          index += 2;
-        } else {
-          value += source[index++];
-        }
-      }
-      stack[stack.length - 1].push(value);
-      index++;
-    } else if (/\s/.test(char)) {
-      index++;
-    } else {
-      let end = index;
-      while (end < source.length && !/[\s()"]/.test(source[end])) {
-        end++;
-      }
-      stack[stack.length - 1].push(source.slice(index, end));
-      index = end;
-    }
-  }
-  return stack[0];
-};
+export const sexpToRequest = (source) => inbox.request(source);
 
 //
 // Helpers.
