@@ -431,6 +431,7 @@ describe('replication API', () => {
     expect((await call('/v1/toolchain/files/results/all', { method: 'PUT', body: 'x', key: site })).status).toBe(403);
     const pusher = await insertKey(db, ['push']);
     expect((await call('/v1/toolchain/files/results/all', { method: 'PUT', body: 'x', key: pusher })).status).toBe(201);
+    expect((await call('/v1/toolchain/files/results/all')).headers.get('cache-control')).toBe('public, max-age=60');
     // The explorer of PREFIX reads the same files; `/` itself is the host's front page (D200).
     const page = await call('/index.html');
     expect(await page.text()).toBe('index.html');

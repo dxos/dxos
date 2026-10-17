@@ -42,7 +42,11 @@ async function Worker$Files$serve(request, bucket, project, folder, rest, author
             if (r3) {
               cache = "public, max-age=31536000, immutable";
             } else {
-              cache = "no-store";
+              if ((folder === "results")) {
+                cache = "public, max-age=60";
+              } else {
+                cache = "no-store";
+              }
             }
             return Worker$Http$response(lib$web$Js$get(object, "body"), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", Worker$R2$contentType(object)]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", cache]), rt.cons(new rt.Con("#Pair", 0, ["x-content-type-options", "nosniff"]), rt.NIL))));
           }
