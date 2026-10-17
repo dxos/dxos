@@ -18,6 +18,7 @@
     "@dxos/diagram": "workspace:*",
     "@dxos/drawing": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@lezer/highlight": "catalog:",
