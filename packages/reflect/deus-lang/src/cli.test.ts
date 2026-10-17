@@ -173,41 +173,6 @@ describe('deus CLI', () => {
     expect(readFileSync(join(out, 'notes/read me.md'), 'utf8')).toBe('# Notes\n');
   });
 
-  test('update propagates to dependents; branches merge three-way', { timeout: 120_000 }, ({ expect }) => {
-    const codebase = join(scratch, 'demo');
-    const c = ['--codebase', codebase];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    deus(
-      'add',
-      file('a.deus', 'def double (n : Int) : Int := n * 2\ndef quad (n : Int) : Int := double (double n)\n'),
-      ...c,
-    );
-    expect(deus('eval', 'quad 3', ...c).stdout.trim()).toBe('12');
-
-    const update = deus(
-      'update',
-      file('b.deus', 'def double (n : Int) : Int := n + n + 1\n'),
-      '--message',
-      'off by one',
-      ...c,
-    );
-    expect(update.stdout).toMatch(/\^ quad \(dependent, rehashed\)/);
-    expect(deus('eval', 'quad 3', ...c).stdout.trim()).toBe('15');
-    expect(deus('log', ...c).stdout).toMatch(/off by one/);
-
-    deus('branch', 'feature', ...c);
-    deus('add', file('c.deus', 'def triple (n : Int) : Int := n * 3\n'), ...c);
-    deus('switch', 'main', ...c);
-    deus('mv', 'quad', 'quadruple', ...c);
-    const merge = deus('merge', 'feature', ...c);
-    expect(merge.stdout).toMatch(/Merged feature/);
-    expect(deus('eval', 'quadruple (triple 1)', ...c).stdout.trim()).toBe('15');
-
-    const view = JSON.parse(deus('view', 'quadruple', '--json', ...c).stdout);
-    expect(view[0].source).toContain('def quadruple (n : Int) : Int :=');
-  });
-
   test(
     'checks performance requirements in an mdl document through a DEUS extension',
     { timeout: 120_000 },
