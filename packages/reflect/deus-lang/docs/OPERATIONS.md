@@ -101,9 +101,9 @@ with it.
 - `@[expectFail]` marks a test or theorem meant to fail; it passes while it fails (D280).
 - Tests that only belong to the codebase (spec tests) are added with `deus add <file>` from a scratch file; spec
   documents are changed by `deus view X.Spec > f.mdl`, editing, and `deus update f.mdl`.
-- A definition of a mounted library (`lib.base.*`, such as `Sim`) is changed in that library's own codebase
-  (`~/.deus-base`: pull, update, push), then `deus lib install base ~/.deus-base` in `~/.deus`; `deus update` refuses
-  it in the toolchain (D284).
+- A definition of a mounted library (`lib.base.*`, such as `Sim`) is changed with `deus lib update base deus/sim.deus`
+  in `~/.deus`: it pulls the library into `cache/libs/base`, updates the file there, pushes the library and installs
+  the new release (D296). `deus update` refuses it in the toolchain (D284).
 
 ## Usability probe
 

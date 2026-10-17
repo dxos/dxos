@@ -326,6 +326,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 316 | 10-19 07:00 | 1h 00m | 4aa84a492e | `bin/deus` starts the native CLI without node: commands take 10-60 ms instead of 60-150 ms; `deus migrate` keeps entries without metadata unchanged (D292) |
 | 317 | 10-19 08:00 | 1h 00m | 9aaba5af9d | A fresh pull takes 28 s, not 206 s: assets fetched, checked and moved in one batch, tools started with posix_spawnp (D293) |
 | 318 | 10-19 09:00 | 1h 00m | 167b5e0b2c | Stores record their layout (`DEUS codebase 2`); a binary layout measured at 11% saved, so not taken (D294) |
-| 319 | 10-19 10:00 | 1h 00m | this commit | Review fixes: read-only stores open, assets checked in batches of 500 per run folder, bin/deus through symlinks (D295) |
+| 319 | 10-19 10:00 | 1h 00m | d4218b5bb3 | Review fixes: read-only stores open, assets checked in batches of 500 per run folder, bin/deus through symlinks (D295) |
+| 320 | 10-19 11:00 | 30m 00s | this commit | `deus lib update <name> <file…>` changes a mounted library in one step (D296) |
 
-Total from stage 1 to stage 319: 133h 50m.
+Total from stage 1 to stage 320: 134h 20m.

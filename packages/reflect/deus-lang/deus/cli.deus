@@ -1174,7 +1174,40 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
         args
         (fun _ => Json.obj [("lib", Json.str name), ("iri", Json.str l.libIri), ("release", Json.str l.release), ("causal", Json.str causal)])
         (fun _ => "Installed lib." ++ name ++ " = " ++ l.libIri ++ " @ " ++ short l.release ++ ".")
-  | _ => Throw.throw "usage: deus lib install <name> <codebase> [--branch <branch>]"
+  | "update" :: name :: files => Cli.libUpdate dir name files args
+  | _ => Throw.throw "usage: deus lib install <name> <codebase> [--branch <branch>] | deus lib update <name> <file…> [--url <remote>]"
+
+/-- `deus lib update <name> <file…>`: one step for what took a scratch pull, an update, a push and an install (task
+  aad450d3). The library's own copy in `cache/libs/<name>` is brought to its remote's head, changed, pushed, and
+  installed from. -/
+def libUpdate (dir : Text) (name : Text) (files : List Text) (args : Args) : {IO, Throw Text} Unit :=
+  if List.isEmpty files then Throw.throw "usage: deus lib update <name> <file…> [--url <library remote>]"
+  else
+    let mounted :=
+      match Project.read dir with
+      | Option.some p => List.find (fun l => l.libName == name) p.libs
+      | Option.none => Option.none
+    let l :=
+      match mounted with
+      | Option.some l => l
+      | Option.none => Throw.throw ("this codebase mounts no lib." ++ name ++ "; `deus lib install " ++ name ++ " <codebase>` first")
+    let url :=
+      match option args "url" with
+      | Option.some given => given
+      | Option.none => Cli.libraryUrl dir l.libIri
+    let cache := Cli.pullLibrary dir name url args
+    let there := fun positional => Args.mk positional (Map.insert "codebase" cache (Map.remove "json" args.options))
+    Cli.merge (there ["origin.main"])
+    addOrUpdate (there files) true
+    Cli.push (there [])
+    Cli.lib (Args.mk ["install", name, cache] (Map.remove "url" args.options))
+
+/-- Where the library with IRI `iri` is pushed: beside this codebase's `origin`, as `<host>/v1/<iri>`. -/
+def libraryUrl (dir : Text) (iri : Text) : {IO, Throw Text} Text :=
+  let origin := Text.trim (Option.getOr (IO.readFile (dir ++ "/remotes/origin/url")) "")
+  let at := Text.indexOf origin "/v1/" 0
+  if at < 0 then Throw.throw ("cannot tell where lib " ++ iri ++ " is pushed from origin " ++ (if Text.isEmpty origin then "(none)" else origin) ++ "; pass --url")
+  else Text.take (at + 4) origin ++ iri
 
 --
 -- Commands: replication.
