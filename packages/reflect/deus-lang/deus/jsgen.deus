@@ -541,8 +541,17 @@ def holdsFunction (t : Sexp) : Bool :=
   | Sexp.list items => List.any holdsFunction items
   | _ => false
 
+/-- Whether `h` is an async definition that `n` arguments apply whole: the call is awaited where it is made, so it
+  hands on its result, not a function that waits. -/
+def wholeAsyncCall (ctx : JsCtx) (h : Text) (n : Int) : Bool :=
+  match Dict.lookup h ctx.jxMod.jmDefs with
+  | Option.some d => d.jdAsync && (match d.jdKind with
+      | JsKind.fn arity => n >= arity
+      | _ => false)
+  | Option.none => false
+
 /-- Whether `e` holds, anywhere in it, a function that is known to wait: a lambda that may wait or an async
-  definition. -/
+  definition, other than one called whole. -/
 def holdsWaiting (ctx : JsCtx) (e : Sexp) : Bool :=
   match e with
   | Sexp.list (Sexp.sym "lam" :: _) => maybeWaits ctx e
@@ -550,6 +559,9 @@ def holdsWaiting (ctx : JsCtx) (e : Sexp) : Bool :=
       match Dict.lookup h ctx.jxMod.jmDefs with
       | Option.some d => d.jdAsync
       | Option.none => false
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
+      if wholeAsyncCall ctx h (List.length args) then List.any (JsGen.holdsWaiting ctx) args
+      else List.any (JsGen.holdsWaiting ctx) (Sexp.list [Sexp.sym "ref", Sexp.str h] :: args)
   | Sexp.list items => List.any (JsGen.holdsWaiting ctx) items
   | _ => false
 

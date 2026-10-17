@@ -1,0 +1,42 @@
+-- context: @dxos/worker/Worker
+/-
+  The files beside a project's bundles (task 41714c0d, D164): assets, the explorer's inbox and site, analytics events
+  and pushed results, under `/v1/<project>/files/<folder>/`. Reads are open; a write or delete needs a key with the
+  folder's scope (`Worker.Paths.scopeOf`).
+-/
+
+namespace Worker.Files
+
+/-- Answers `/v1/<project>/files/<folder>/<rest>` for `request`, on the R2 `bucket`. `authorize scope` checks the
+  request's key for `scope`, as remote.mjs's `authorize` does: a promise of the function a write's response passes
+  through to be audited, rejected with the 401 or 403 when the key may not. -/
+def serve (request : Js) (bucket : Js) (project : Text) (folder : Text) (rest : List Text) (authorize : Text -> Js) : {Js.Async} Js :=
+  let under := project ++ "/" ++ folder ++ "/"
+  let verb := Worker.Http.method request
+  if rest == [] || rest == [""] then
+    if verb == "GET" then Worker.Http.lines (Worker.R2.listAll bucket under) else Worker.Http.problem 405 "method not allowed"
+  else if not (List.all Worker.Paths.isSegment rest) then Worker.Http.problem 400 "invalid key"
+  else
+    let name := Text.join "/" rest
+    let key := under ++ name
+    if verb == "GET" then
+      match Worker.R2.get bucket key with
+      | Option.none => Worker.Http.problem 404 "not found"
+      | Option.some object =>
+          Worker.Http.response
+            (Js.get object "body")
+            200
+            [("content-type", Worker.R2.contentType object), ("cache-control", "no-store"), ("x-content-type-options", "nosniff")]
+    else if verb == "PUT" then
+      let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
+      let type := Option.getOr (Worker.Http.header request "content-type") "application/octet-stream"
+      let _ := Worker.R2.put bucket key (Worker.R2.bytes (Js.Async.await (Js.method request "arrayBuffer" []))) type
+      Js.call logged [Worker.Http.json (Js.obj [("key", Js.text name), ("stored", Js.bool true)]) 201]
+    else if verb == "DELETE" then
+      let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
+      -- Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.
+      let _ := if folder == "site" then Worker.R2.delete bucket key else Worker.R2.toTrash bucket project folder name
+      Js.call logged [Worker.Http.json (Js.obj [("key", Js.text name), ("deleted", Js.bool true)]) 200]
+    else Worker.Http.problem 405 "method not allowed"
+
+end Worker.Files

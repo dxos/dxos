@@ -62,6 +62,7 @@ describe('Js.Async on the js target', () => {
       '  handle waitTwice 60 with',
       '  | Tag.tag v -> k => k "secret-of-A"',
       'def bareTag (u : Unit) : {Tag} Text := Tag.tag ()',
+      'def countDoubled (xs : List Int) : {Js.Async} Int := List.length (doubled xs)',
       'end Wait',
       '',
     ].join('\n');
@@ -82,6 +83,7 @@ describe('Js.Async on the js target', () => {
       'Wait.both',
       'Wait.heldA',
       'Wait.bareTag',
+      'Wait.countDoubled',
       '-o',
       out,
       '--js',
@@ -117,6 +119,8 @@ describe('Js.Async on the js target', () => {
     await new Promise((resolve) => setTimeout(resolve, 25));
     expect(() => wait.bareTag()).toThrow(/unhandled ability/);
     expect(await held).toBe('secret-of-A');
+    // An async call made whole inside another call's argument is awaited there; it passes no waiting function on.
+    expect(await wait.countDoubled([1, 2, 3])).toBe(3);
 
     // Applied only in part, the variant would not be awaited, so that is refused.
     const refused = deus('build', 'Wait.partial', '-o', join(scratch, 'partial.mjs'), '--js', ...c);

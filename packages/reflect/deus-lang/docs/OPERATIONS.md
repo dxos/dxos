@@ -108,7 +108,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
 2026-10-18 UTC, version c7d99a10 (D251: Back keeps the reading position, the prelude groups apart; D249: the push compare-and-swap in DEUS; D248: key checks).
-`scripts/build-worker.mjs --live` also builds the demo, `gen/address.js`, and `gen/packs.js`, `gen/heads.js` and `gen/keys.js` from the
+`scripts/build-worker.mjs --live` also builds the demo, `gen/address.js`, and `gen/packs.js`, `gen/heads.js`, `gen/keys.js`, `gen/names.js`, `gen/paths.js`, `gen/routes.js` and `gen/files.js` from the
 `@dxos/worker` codebase (`DEUS_WORKER_CODEBASE`, default `~/.deus-worker`). Run it after changing `examples/react`,
 `platform/js`, `deus/address.deus` or `platform/worker/deus/`, with `DEUS_CODEBASE` the toolchain codebase.
 

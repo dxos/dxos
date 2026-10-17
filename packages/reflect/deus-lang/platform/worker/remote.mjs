@@ -8,6 +8,7 @@
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
 import { isGrantable, projectAt } from './address.mjs';
+import * as filesApi from './gen/files.js';
 import * as heads from './gen/heads.js';
 import * as keys from './gen/keys.js';
 import * as paths from './gen/paths.js';
@@ -275,70 +276,15 @@ const headLog = async (request, env, project, rest) => {
 // Files beside the bundles: assets, the explorer's inbox and site, analytics events.
 //
 
-const files = async (request, env, ctx, project, folder, rest) => {
-  const under = `${project}/${folder}/`;
-  if (rest.length === 0 || (rest.length === 1 && rest[0] === '')) {
-    if (request.method !== 'GET') {
-      throw new HttpError(405, 'method not allowed');
-    }
-    return lines(await listAll(env.BUCKET, under));
-  }
-  if (!rest.every((segment) => paths.isSegment(segment))) {
-    throw new HttpError(400, 'invalid key');
-  }
-  const key = under + rest.join('/');
-  if (request.method === 'GET') {
-    const object = await env.BUCKET.get(key);
-    if (!object) {
-      throw new HttpError(404, 'not found');
-    }
-    return new Response(object.body, {
-      headers: {
-        'content-type': object.httpMetadata?.contentType ?? 'application/octet-stream',
-        'cache-control': 'no-store',
-        'x-content-type-options': 'nosniff',
-      },
-    });
-  }
-  if (request.method === 'PUT') {
-    const logged = await authorize(request, env, ctx, paths.scopeOf(folder), project);
-    const type = request.headers.get('content-type') ?? 'application/octet-stream';
-    await env.BUCKET.put(key, new Uint8Array(await request.arrayBuffer()), { httpMetadata: { contentType: type } });
-    return logged(json({ key: rest.join('/'), stored: true }, 201));
-  }
-  if (request.method === 'DELETE') {
-    const logged = await authorize(request, env, ctx, paths.scopeOf(folder), project);
-    // Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.
-    if (folder === 'site') {
-      await env.BUCKET.delete(key);
-    } else {
-      await toTrash(env.BUCKET, project, folder, rest.join('/'));
-    }
-    return logged(json({ key: rest.join('/'), deleted: true }));
-  }
-  throw new HttpError(405, 'method not allowed');
-};
+/** `/v1/<project>/files/<folder>/…` is `Worker.Files.serve`, in DEUS (platform/worker/deus/files.deus). */
+const files = (request, env, ctx, project, folder, rest) =>
+  filesApi.serve(request, env.BUCKET, project, folder, rest, (scope) => authorize(request, env, ctx, scope, project));
 
 /**
  * Deletes `<project>/<folder>/<name>` by moving it to `<project>/trash/<folder>/<name>`, which no client
- * can write or delete; R2 has no rename, so it is a copy, then the delete.
+ * can write or delete (`Worker.R2.toTrash`).
  */
-export const toTrash = async (bucket, project, folder, name) => {
-  const key = `${project}/${folder}/${name}`;
-  const object = await bucket.get(key);
-  if (!object) {
-    return;
-  }
-  await bucket.put(
-    `${project}/trash/${folder}/${name}`,
-    new Uint8Array(await new Response(object.body).arrayBuffer()),
-    {
-      httpMetadata: object.httpMetadata,
-      customMetadata: { deletedAt: String(Date.now()) },
-    },
-  );
-  await bucket.delete(key);
-};
+export const toTrash = (bucket, project, folder, name) => filesApi.toTrash(bucket, project, folder, name);
 
 /** The folders directly under `prefix` (`toolchain/`, `dxos/`), following R2's pages. */
 export const listFolders = async (bucket, prefix) => {
@@ -352,17 +298,8 @@ export const listFolders = async (bucket, prefix) => {
   return folders.sort();
 };
 
-/** Every key under `prefix`, without it, following R2's pages. */
-export const listAll = async (bucket, prefix) => {
-  const keys = [];
-  let cursor;
-  do {
-    const page = await bucket.list({ prefix, cursor });
-    keys.push(...page.objects.map((object) => object.key.slice(prefix.length)));
-    cursor = page.truncated ? page.cursor : undefined;
-  } while (cursor);
-  return keys.sort();
-};
+/** Every key under `prefix`, without it, in order, following R2's pages (`Worker.R2.listAll`). */
+export const listAll = (bucket, prefix) => filesApi.listAll(bucket, prefix);
 
 //
 // API keys (D1).

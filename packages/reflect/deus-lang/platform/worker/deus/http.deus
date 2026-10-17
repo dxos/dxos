@@ -1,0 +1,35 @@
+-- context: @dxos/worker/Worker
+/-
+  The HTTP side of the Worker's DEUS handlers (task 41714c0d): reading a request and making the responses the
+  replication API answers with, over `Js` (D237).
+-/
+
+namespace Worker.Http
+
+/-- A request's method, `GET` or `PUT` and so on. -/
+def method (request : Js) : Text := Js.toText (Js.get request "method")
+
+/-- A request header, or none. -/
+def header (request : Js) (name : Text) : Option Text :=
+  Option.map Js.toText (Js.toOption (Js.method (Js.get request "headers") "get" [Js.text name]))
+
+/-- A response: `body`, `status` and `headers`. -/
+def response (body : Js) (status : Int) (headers : List (Text, Text)) : Js :=
+  let named := Js.obj (List.map (fun pair => (fst pair, Js.text (snd pair))) headers)
+  Js.construct (Js.global "Response") [body, Js.obj [("status", Js.int status), ("headers", named)]]
+
+/-- `value` as JSON, never cached. -/
+def json (value : Js) (status : Int) : Js :=
+  response (Js.text (Js.stringify value)) status [("content-type", "application/json"), ("cache-control", "no-store")]
+
+/-- An error answer, `{"error": message}`, as worker.mjs answers an `HttpError`. -/
+def problem (status : Int) (message : Text) : Js := json (Js.obj [("error", Js.text message)]) status
+
+/-- A listing: one name per line, which the CLI reads without a JSON parser. -/
+def lines (names : List Text) : Js :=
+  response
+    (Js.text (Text.concat (List.map (fun name => name ++ "\n") names)))
+    200
+    [("content-type", "text/plain; charset=utf-8"), ("cache-control", "no-store")]
+
+end Worker.Http
