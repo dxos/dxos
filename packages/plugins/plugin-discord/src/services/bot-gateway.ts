@@ -13,7 +13,7 @@ import type * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 
 import { DiscordChannel } from '#types';
 
-import { DiscordChannelError } from '../errors.ts';
+import { type DiscordBotAccessError, DiscordChannelError, toBotRequestError } from '../errors.ts';
 
 /** Resolves the EDGE client that signs bot-route requests with the user's identity. */
 export type EdgeClientResolver = Effect.Effect<EdgeHttpClient, DiscordChannelError, Capability.Service>;
@@ -37,11 +37,11 @@ export const callBot: (
   edge: EdgeHttpClient,
   applicationId: string,
   args: EdgeRequestArgs,
-) => Effect.Effect<DiscordChannel.BotStatus, DiscordChannelError> = Effect.fnUntraced(
+) => Effect.Effect<DiscordChannel.BotStatus, DiscordChannelError | DiscordBotAccessError> = Effect.fnUntraced(
   function* (edge, applicationId, args) {
     const data = yield* Effect.tryPromise({
       try: () => edge.request(Context.default(), discordBotPath(applicationId), args),
-      catch: (cause) => new DiscordChannelError({ message: 'EDGE Discord bot request failed.', cause }),
+      catch: toBotRequestError,
     });
     return yield* Schema.decodeUnknownEffect(DiscordChannel.BotStatus)(data).pipe(
       Effect.mapError(
@@ -76,15 +76,11 @@ export const callBotRoute = <A, I>(
   route: string,
   args: EdgeRequestArgs,
   schema: Schema.Codec<A, I>,
-): Effect.Effect<A, DiscordChannelError> =>
+): Effect.Effect<A, DiscordChannelError | DiscordBotAccessError> =>
   Effect.gen(function* () {
     const data = yield* Effect.tryPromise({
       try: () => edge.request(Context.default(), `${discordBotPath(applicationId)}${route}`, args),
-      catch: (cause) =>
-        new DiscordChannelError({
-          message: cause instanceof Error ? cause.message : 'EDGE Discord bot request failed.',
-          cause,
-        }),
+      catch: toBotRequestError,
     });
     return yield* Schema.decodeUnknownEffect(schema)(data).pipe(
       Effect.mapError((cause) => new DiscordChannelError({ message: `Unexpected answer from ${route}.`, cause })),
