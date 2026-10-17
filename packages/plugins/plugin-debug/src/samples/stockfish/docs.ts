@@ -55,7 +55,7 @@ visible as a tool call in the transcript.
 export type DocsResult = { brief: Markdown.Document };
 
 /** The project's brief: the requirement the first task designs against. */
-export const Docs: SampleSpace.Phase<DocsResult> = SampleSpace.phase('docs', {
+export const Docs: SampleSpace.Partial<DocsResult> = SampleSpace.partial('docs', {
   schemas: [Markdown.Document],
   run: () =>
     Effect.gen(function* () {

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useRef } from 'react';
+import React, { type MouseEvent, useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -15,39 +15,40 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { Attention } from '@dxos/react-ui-attention/types';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
   const { invoke } = Hooks.useOperationInvoker();
-  // Card.Action's onClick carries no event, so resolve the origin plank from the card element itself.
-  const cardRef = useRef<HTMLDivElement>(null);
   const [{ image, emails = [], organization: organizationRef }] = useObject(subject);
   const [organizationName] = useObject(organizationRef, 'name');
 
-  const handleOrganizationClick = useCallback(() => {
-    const organization = organizationRef?.target;
-    if (!organization) {
-      return;
-    }
+  const handleOrganizationClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      // The row sits inside cards that are themselves clickable (e.g., Kanban); keep the click to the row.
+      event.stopPropagation();
+      const organization = organizationRef?.target;
+      if (!organization) {
+        return;
+      }
 
-    const pivotId = cardRef.current ? Attention.getRootAttendableId(cardRef.current) : undefined;
-    return Effect.gen(function* () {
-      const organizationPath = GraphPath.getObjectPathFromObject(organization);
-      const db = Obj.getDatabase(organization);
-      yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      yield* invoke(LayoutOperation.Open, {
-        subject: [organizationPath],
-        pivotId,
-        disposition: 'add',
-        workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
-      });
-    }).pipe(EffectEx.runAndForwardErrors);
-  }, [invoke, organizationRef]);
+      const pivotId = Attention.getRootAttendableId(event.currentTarget);
+      return Effect.gen(function* () {
+        const organizationPath = GraphPath.getObjectPathFromObject(organization);
+        const db = Obj.getDatabase(organization);
+        yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+        yield* invoke(LayoutOperation.Open, {
+          subject: [organizationPath],
+          pivotId,
+          disposition: 'add',
+          workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
+        });
+      }).pipe(EffectEx.runAndForwardErrors);
+    },
+    [invoke, organizationRef],
+  );
 
   return (
-    <Card.Body ref={cardRef}>
+    <Card.Body>
       {image && (
         <Card.Row>
           <Avatar.Root
@@ -61,13 +62,12 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
         </Card.Row>
       )}
       {organizationName && (
-        <Card.Action icon='ph--buildings--regular' label={organizationName} onClick={handleOrganizationClick} />
+        <Card.Row icon='ph--buildings--regular' onClick={handleOrganizationClick}>
+          <Card.Text truncate>{organizationName}</Card.Text>
+        </Card.Row>
       )}
       {emails.length > 0 && (
-        <Card.Row>
-          <Layout.Block>
-            <Icon.Icon icon='ph--at--regular' />
-          </Layout.Block>
+        <Card.Row icon='ph--at--regular'>
           <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>

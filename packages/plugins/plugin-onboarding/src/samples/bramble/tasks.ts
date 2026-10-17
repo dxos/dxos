@@ -280,7 +280,7 @@ const makeLedger = (seed: LedgerSeed, people: PersonMap): Ledger => {
  */
 export type TaskSetsResult = Record<LedgerKey, Ledger>;
 
-export const TaskSets: SampleSpace.Phase<TaskSetsResult, PersonMap> = SampleSpace.phase('taskSets', {
+export const TaskSets: SampleSpace.Partial<TaskSetsResult, PersonMap> = SampleSpace.partial('taskSets', {
   schemas: [TaskSet.TaskSet, Task.Task, Milestone.Milestone],
   run: (people: PersonMap) =>
     Effect.gen(function* () {

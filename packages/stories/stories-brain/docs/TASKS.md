@@ -23,6 +23,28 @@ folders, message actions, contact affordances, summarization UI — structured a
 PRs, plus a manual test plan. THIS file keeps the model-ladder / FINDINGS / Topics research it was
 created for. Do not add inbox surface work here.
 
+## Brain evals + fact-graph visualization (2026-10-12)
+
+Branch `claude/plugin-brain-evals-viz-643a0c`. Not a registry project; tracked here.
+
+### Decisions
+
+- Evals are vitest in `pipeline-rdf`, replaying recorded responses via `@dxos/ai/testing` `LanguageModelFixture`
+  so they run in CI; live-only judge evals stay in `stories-brain`.
+- The labeled corpus lives in `pipeline-rdf/src/testing` (stories-brain and react-ui-rdf stories import it;
+  pipeline-rdf cannot depend on stories-brain).
+- Recording uses `DX_ANTHROPIC_API_KEY` from the edge repo's rendered `.env` (from its `.env.tpl`).
+- Visualizations live in `react-ui-rdf`.
+
+### Tasks
+
+- [ ] Choose corpus sources (under discussion).
+- [ ] E1 extraction eval — per-fact P/R/F1 plus entity, attribution and factuality accuracy on labeled threads.
+- [ ] E2 memory eval — facts from thread history vs held-out incoming message; recall@k / MRR of relevant facts.
+- [ ] E3 model ladder — E1 + E2 per model, recorded per model, results JSON.
+- [ ] V1 `FactGraph` — force-directed whole-store graph (`react-ui-graph` `Graph`), factuality-coloured edges.
+- [ ] V2 gold-vs-predicted overlay (TP/FP/FN) + stories over the corpus.
+
 ## Priorities (triaged with the user 2026-08-13)
 
 Work this order. Items not listed are P2 — real, but not this push.

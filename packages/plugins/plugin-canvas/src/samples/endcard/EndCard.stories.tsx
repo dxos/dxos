@@ -1,0 +1,213 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { waitFor, within } from 'storybook/test';
+
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { type Database, Obj, Ref } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import { useSpaces } from '@dxos/react-client/echo';
+import { EXPOSED_CLOCK_KEY, SceneView, createSceneViewAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { Loading } from '@dxos/react-ui/testing';
+import { createStoryDecorators } from '@dxos/storybook-testing';
+
+import { generatorCompiler, seedContent, updateCanvasRecord, writeScenes } from '#model';
+import { CanvasPlugin } from '#plugin';
+import { translations } from '#translations';
+import { Canvas, CanvasOperation, Generator } from '#types';
+
+import {
+  createGeneratorWorker,
+  useBoundCanvasStore,
+  useCanvasGenerators,
+  useCanvasNodes,
+} from '../../containers/CanvasArticle/use-canvas-scene.ts';
+import { DURATION, FRAME, ROOT, endCardKeys, logoComposite, rootScene } from './spec.ts';
+
+const END_CARD_NAME = 'End card';
+
+/** The drawing as a person would have drawn it: the logo object and the text, at rest, with no timeline yet. */
+const seed = (db: Database.Database): Drawing.Drawing => {
+  const content = {};
+  seedContent(content, ROOT);
+  writeScenes(content, { [ROOT]: rootScene(), [logoComposite().id]: logoComposite() });
+  updateCanvasRecord(content, { theme: 'film' });
+  const canvas = db.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));
+  return db.add(Drawing.make({ name: END_CARD_NAME, canvas }));
+};
+
+type Invoke = ReturnType<typeof Hooks.useOperationInvoker>['invokePromise'];
+
+/** What an agent does through the canvas operations: keys every entrance on the timeline (`canvas.setTimelineKey`). */
+const author = async (invoke: Invoke, drawing: Drawing.Drawing, spaceId: SpaceId) => {
+  for (const key of endCardKeys()) {
+    const keyed = await invoke(
+      CanvasOperation.SetTimelineKey,
+      { drawing: Ref.make(drawing), ...key, duration: DURATION },
+      { spaceId },
+    );
+    if (keyed.error) {
+      throw keyed.error;
+    }
+  }
+};
+
+type FilmProps = { chrome: boolean };
+
+/**
+ * A fresh end card in the client's newest space, seeded once per mount: the client may outlive the page (its services
+ * in a shared worker), so a drawing from an earlier load is never reused.
+ */
+const useEndCard = () => {
+  const spaces = useSpaces();
+  const [drawing, setDrawing] = useState<Drawing.Drawing>();
+  useEffect(() => {
+    // Seeded once, into whichever space is newest then; everything after reads the drawing's own database.
+    const space = spaces[spaces.length - 1];
+    if (space && !drawing) {
+      setDrawing(seed(space.db));
+    }
+  }, [spaces, drawing]);
+  return { db: drawing ? Obj.getDatabase(drawing) : undefined, drawing };
+};
+
+/** The end card authored, then shown as a film: the 1920x1080 frame fitted to the view, playing from the start. */
+const Film = ({ chrome }: FilmProps) => {
+  const { db, drawing } = useEndCard();
+  const canvas = drawing?.canvas.target;
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [authored, setAuthored] = useState(false);
+  const [failure, setFailure] = useState<string>();
+  // Authoring edits the canvas, which re-runs the queries above: it starts once.
+  const startedRef = useRef(false);
+  useEffect(() => {
+    if (!db || !drawing || !canvas || startedRef.current) {
+      return;
+    }
+    startedRef.current = true;
+    void author(invokePromise, drawing, db.spaceId)
+      .then(() => setAuthored(true))
+      .catch((error) => setFailure(error instanceof Error ? error.message : String(error)));
+  }, [db, drawing, canvas, invokePromise]);
+
+  if (failure) {
+    return <p data-testid='endcard-failure'>{failure}</p>;
+  }
+  if (!db || !canvas || !authored) {
+    return <Loading />;
+  }
+  return <FilmView db={db} canvas={canvas} chrome={chrome} />;
+};
+
+type FilmViewProps = FilmProps & { db: Database.Database; canvas: Drawing.Canvas };
+
+const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
+  const registry = useRegistry();
+  const bound = useBoundCanvasStore(canvas);
+  const nodes = useCanvasNodes();
+  const generators = useCanvasGenerators(db);
+  const atoms = useMemo(() => (bound ? createSceneViewAtoms(bound.root) : undefined), [bound]);
+  // Plays once from the start; a frame renderer seeks instead, which pauses it.
+  useEffect(() => {
+    if (atoms) {
+      registry.set(atoms.clock.playing, true);
+    }
+  }, [registry, atoms]);
+  if (!bound || !atoms) {
+    return <Loading />;
+  }
+  return (
+    <SceneView.Root
+      store={bound.store}
+      root={bound.root}
+      atoms={atoms}
+      nodes={nodes}
+      theme='film'
+      frame={FRAME}
+      margin={0}
+      readonly={!chrome}
+      exportable
+      generators={generators}
+      compileGenerator={generatorCompiler}
+      createGeneratorWorker={createGeneratorWorker}
+      initialDisplay={{ snap: false, fit: true }}
+    >
+      <SceneView.Canvas />
+      {chrome && (
+        <>
+          <SceneView.Navigation />
+          <SceneView.Palette />
+          <SceneView.Actions />
+          <SceneView.Timeline />
+          <SceneView.Properties />
+          <SceneView.Layers />
+          <SceneView.Objects />
+        </>
+      )}
+    </SceneView.Root>
+  );
+};
+
+const meta: Meta<FilmProps> = {
+  title: 'plugins/plugin-canvas/samples/EndCard',
+  render: (args) => <Film {...args} />,
+  args: { chrome: false },
+  decorators: createStoryDecorators({
+    types: [Drawing.Drawing, Drawing.Canvas, Generator.Generator],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+  }),
+  parameters: { layout: 'fullscreen', translations },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/**
+ * The DXOS end card (tools/autocue `EndCard`, 3 s) as a canvas document, authored through the canvas operations and
+ * exported with `scripts/render-story.mjs`, which seeks the exposed clock.
+ *
+ * Test:
+ * 1. The operations author the card and the film view mounts, its clock exposed for export.
+ * 2. Seeking to 2 s draws the scene at 2 s.
+ */
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. Authored and mounted (the first compile loads esbuild's binary).
+    await canvas.findByTestId('scene-view', undefined, { timeout: 60_000 });
+    const seek = await waitFor(() => {
+      const exposed: unknown = Reflect.get(globalThis, EXPOSED_CLOCK_KEY);
+      const method: unknown =
+        typeof exposed === 'object' && exposed !== null ? Reflect.get(exposed, 'seek') : undefined;
+      if (typeof method !== 'function') {
+        throw new Error('The scene clock is not exposed yet.');
+      }
+      return (t: number) => typeof method === 'function' && Reflect.apply(method, exposed, [t]);
+    });
+
+    // 2. Every layer draws the time it was asked for.
+    seek(2);
+    await waitFor(
+      () => {
+        const times = [...canvasElement.querySelectorAll('[data-frame-time]')].map((element) =>
+          element.getAttribute('data-frame-time'),
+        );
+        if (times.length === 0 || times.some((time) => time !== '2.0000')) {
+          throw new Error(`Not drawn at 2 s yet: ${times.join(', ')}`);
+        }
+      },
+      { timeout: 20_000 },
+    );
+  },
+};
+
+/** The same document with the editor's chrome: the palette, the action and timeline bars, and the inspectors. */
+export const Editor: Story = {
+  args: { chrome: true },
+};

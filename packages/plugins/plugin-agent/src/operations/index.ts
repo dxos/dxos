@@ -18,6 +18,7 @@ import {
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
   AgentOperation.CreateEmailChannel.pipe(Operation.lazyHandler(() => import('./create-email-channel.ts'))),
+  AgentOperation.EnsureIdentity.pipe(Operation.lazyHandler(() => import('./ensure-identity.ts'))),
   AgentOperation.EnsureChannelChat.pipe(Operation.lazyHandler(() => import('./ensure-channel-chat.ts'))),
   AgentOperation.ListAgents.pipe(Operation.lazyHandler(() => import('./list-agents.ts'))),
   AgentOperation.ListSkills.pipe(Operation.lazyHandler(() => import('./list-skills.ts'))),
@@ -25,6 +26,7 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.ResetSkill.pipe(Operation.lazyHandler(() => import('./reset-skill.ts'))),
   AgentOperation.EnsureParticipantChat.pipe(Operation.lazyHandler(() => import('./ensure-participant-chat.ts'))),
   AgentOperation.OpenPrivateChat.pipe(Operation.lazyHandler(() => import('./open-private-chat.ts'))),
+  AgentOperation.InviteAgent.pipe(Operation.lazyHandler(() => import('./invite-agent.ts'))),
   AgentOperation.ReadSource.pipe(Operation.lazyHandler(() => import('./read-source.ts'))),
   AgentOperation.AddFactFeed.pipe(Operation.lazyHandler(() => import('./add-fact-feed.ts'))),
   AgentOperation.RemoveFactFeed.pipe(Operation.lazyHandler(() => import('./remove-fact-feed.ts'))),

@@ -11,14 +11,14 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
 import { Docs } from './docs.ts';
-import { ProjectPhase } from './project.ts';
+import { ProjectPartial } from './project.ts';
 import { Tasks } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
-const phases = {
+const partials = {
   docs: Docs,
   tasks: Tasks,
-  project: ProjectPhase,
+  project: ProjectPartial,
 };
 
 /**
@@ -31,16 +31,16 @@ const phases = {
  * guessing who to call — and in holding them against the log, which contradicts two of them. That is
  * the evaluation: does the retro recommend what the evidence supports, or what the loudest note says.
  */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     space: { name: 'Incident 0516 retrospective', icon: 'stethoscope', hue: 'rose' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const docs = yield* phases.docs();
-        const tasks = yield* phases.tasks();
-        yield* phases.project({ docs, tasks });
+        const docs = yield* partials.docs();
+        const tasks = yield* partials.tasks();
+        yield* partials.project({ docs, tasks });
 
         // The root holds collections only; the project and its tasks surface through their own containers.
         yield* SampleSpace.collection('Sources', [

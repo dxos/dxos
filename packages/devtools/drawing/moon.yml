@@ -1,0 +1,18 @@
+layer: library
+language: typescript
+tags:
+  - ts-compile
+  - ts-test
+tasks:
+  # Renders the landing page's diagrams with this package's CLI and writes `site/dist/index.html`.
+  site:
+    command: node site/build.mjs
+    deps:
+      - ~:build
+    inputs:
+      - site/**/*
+    outputs:
+      - site/dist
+    options:
+      cache: false
+      runInCI: false

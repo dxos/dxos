@@ -205,6 +205,7 @@ export class CollectionSynchronizer extends Resource {
       perCollectionState.interestedPeers.delete(peerId);
       perCollectionState.lastQueried.delete(peerId);
       perCollectionState.lastBroadcast.delete(peerId);
+      perCollectionState.syncedVerdicts.delete(peerId);
     }
   }
 
@@ -262,14 +263,24 @@ export class CollectionSynchronizer extends Resource {
     if (!remoteState) {
       return false;
     }
+    const verdict = perCollectionState.syncedVerdicts.get(peerId);
+    if (verdict && verdict.local === perCollectionState.localState && verdict.remote === remoteState) {
+      return verdict.synced;
+    }
 
     const localState = perCollectionState.localState ?? { documents: {} };
-    return isDiffEmpty(
+    const synced = isDiffEmpty(
       diffCollectionStateForPeer(localState, remoteState, {
         isEdgePeer: isEdgePeerId(peerId),
         hasLocalChange: this._hasLocalChange,
       }),
     );
+    perCollectionState.syncedVerdicts.set(peerId, {
+      local: perCollectionState.localState,
+      remote: remoteState,
+      synced,
+    });
+    return synced;
   }
 
   private _diffCollectionState(collectionId: string, peerId: PeerId, trigger: SyncSpanTrigger) {
@@ -420,6 +431,7 @@ export class CollectionSynchronizer extends Resource {
       interestedPeers: new Set(),
       lastQueried: new Map(),
       lastBroadcast: new Map(),
+      syncedVerdicts: new Map(),
     }));
   }
 
@@ -479,13 +491,14 @@ type PerCollectionState = {
   interestedPeers: Set<PeerId>;
   lastQueried: Map<PeerId, number>;
   lastBroadcast: Map<PeerId, number>;
+  syncedVerdicts: Map<PeerId, { local: CollectionState | undefined; remote: CollectionState; synced: boolean }>;
 };
 
 export type CollectionState = {
   /**
    * DocumentId -> Heads.
    */
-  documents: Record<DocumentId, Heads>;
+  readonly documents: Readonly<Record<DocumentId, Heads>>;
 };
 
 export type CollectionStateDiff = {
@@ -523,9 +536,26 @@ type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
-/** Same documents and heads, as sets; exact because a head added beside a shared one is a change. */
-export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean =>
-  isDiffEmpty(diffCollectionState(left, right, { exact: true }));
+export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean => {
+  let unmatched = 0;
+  for (const documentId in left.documents) {
+    const heads = left.documents[documentId as DocumentId];
+    if (heads.length === 0) {
+      continue;
+    }
+    const other = right.documents[documentId as DocumentId];
+    if (!other || !headsEqual(heads, other)) {
+      return false;
+    }
+    unmatched++;
+  }
+  for (const documentId in right.documents) {
+    if (right.documents[documentId as DocumentId].length > 0) {
+      unmatched--;
+    }
+  }
+  return unmatched === 0;
+};
 
 /**
  * Strip entries whose heads array is empty before sending a CollectionState
@@ -642,6 +672,9 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
 };
 
 const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
+  if (a.length === b.length && a.every((head, index) => head === b[index])) {
+    return true;
+  }
   const aset = new Set(a);
   const bset = new Set(b);
   return aset.size === bset.size && [...bset].every((head) => aset.has(head));
@@ -661,14 +694,19 @@ const advertisesMissingChange = (
 };
 
 const validateCollectionState = (state: CollectionState) => {
-  Object.entries(state.documents).forEach(([documentId, heads]) => {
+  for (const documentId in state.documents) {
     if (!isValidDocumentId(documentId as DocumentId)) {
       throw new Error(`Invalid documentId: ${documentId}`);
     }
-    if (Array.isArray(heads) && heads.some((head) => typeof head !== 'string')) {
-      throw new Error(`Invalid heads: ${heads}`);
+    const heads = state.documents[documentId as DocumentId];
+    if (Array.isArray(heads)) {
+      for (const head of heads) {
+        if (typeof head !== 'string') {
+          throw new Error(`Invalid heads: ${heads}`);
+        }
+      }
     }
-  });
+  }
 };
 
 const isValidDocumentId = (documentId: DocumentId) => {

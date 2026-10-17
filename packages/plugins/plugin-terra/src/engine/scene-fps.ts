@@ -61,11 +61,12 @@ export class SceneFpsWidget {
     text.fontSize = 18;
     text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     text.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-    text.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+    // Bottom-left, clear of the config panel at the top-left and the telemetry panel at the bottom-right.
+    text.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     text.width = '160px';
     text.height = '32px';
     text.paddingLeft = '16px';
-    text.paddingTop = '16px';
+    text.paddingBottom = '16px';
     return text;
   }
 }

@@ -33,7 +33,7 @@ export type PaletteGroup = { name: string; entries: Entry[]; collapsible: boolea
 /** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
 const nodeGroups = (nodes: NodeRegistry): PaletteGroup[] => {
   const groups = new Map<string, Entry[]>();
-  for (const def of Object.values(nodes)) {
+  for (const def of Object.values(nodes).filter((def) => def.palette !== false)) {
     const name = def.group ?? '';
     groups.set(name, [
       ...(groups.get(name) ?? []),

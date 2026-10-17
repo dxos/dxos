@@ -85,6 +85,7 @@ const VERBS = new Set([
   'insert',
   'inspect',
   'install',
+  'invite',
   'invoke',
   'join',
   'label',

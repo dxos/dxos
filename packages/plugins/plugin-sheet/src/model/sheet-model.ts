@@ -355,6 +355,13 @@ export class SheetModel extends Resource {
   }
 
   /**
+   * Get array of computed values from the engine.
+   */
+  getValues(range: CellRange): CellScalarValue[][] {
+    return this._iterRange(range, (cell) => this.getValue(cell));
+  }
+
+  /**
    * Gets the regular or computed value from the engine.
    */
   getValue(cell: CellAddress): CellScalarValue {
