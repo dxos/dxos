@@ -54,6 +54,8 @@ EMBEDDED = [
     ('src/bindings/deus-runtime.d.ts', 'Bindings.runtimeDts'),
     # The decision log, which the hosted explorer opens decision by decision (D261).
     ('docs/DECISIONS.md', 'Docs.decisions'),
+    # The getting-started guide, which the hosted explorer shows as a card (D265).
+    ('docs/GETTING_STARTED.md', 'Docs.gettingStarted'),
 ]
 
 

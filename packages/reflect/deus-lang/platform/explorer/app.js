@@ -52,7 +52,7 @@ const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/
 const taskById = (id) => index.tasks?.find((task) => task.id === id);
 
 /** Whether decisions open as cards: the hosted site reads the codebase's copy of the log (`Docs.decisions`). */
-const decisionsInCodebase = () => live !== undefined && index.byName.has('Docs.decisions');
+const decisionsInCodebase = () => embedded('Docs.decisions');
 
 /** HTML with each decision number (D96) and task id outside a link or code made a link; a one-digit decision is too short to tell from Cloudflare's D1. */
 const decisionLinks = (html) => {
@@ -1593,24 +1593,44 @@ const closeNames = (name) => {
   return [...new Map([...near, ...found].map((entry) => [entry.hash, entry])).values()].slice(0, 5);
 };
 
-/** The decision log as the codebase holds it (`Docs.decisions`), by number, read once through the replication API. */
+/** Texts the codebase embeds (`Docs.decisions`, `Docs.gettingStarted`), each read once through the replication API. */
+const embeddedTexts = new Map();
+
+/** The text the codebase embeds under `name`, or undefined; a failed read is tried again by the next caller. */
+const loadEmbedded = (name) => {
+  if (!embeddedTexts.has(name)) {
+    const reading = (async () => {
+      const entry = index.byName.get(name);
+      const base = live?.replace(/\/live\/[^/]+$/, '');
+      if (!entry || !base) {
+        return undefined;
+      }
+      // The term's object names the embedded file by its SHA-256, which the files API serves.
+      const object = await fetchText(`${base}/objects/${entry.hash}`);
+      const sha = /\(text "([0-9a-f]{64})"\)/.exec(object ?? '')?.[1];
+      return sha ? fetchText(`${base}/files/assets/${sha}`) : undefined;
+    })().catch(() => {
+      embeddedTexts.delete(name);
+      return undefined;
+    });
+    embeddedTexts.set(name, reading);
+  }
+  return embeddedTexts.get(name);
+};
+
+/** Whether the hosted site can show a text the codebase embeds, rather than link to it on GitHub. */
+const embedded = (name) => live !== undefined && index.byName.has(name);
+
 let decisionLog;
 
-const loadDecisions = () =>
-  (decisionLog ??= (async () => {
-    const entry = index.byName.get('Docs.decisions');
-    const base = live?.replace(/\/live\/[^/]+$/, '');
-    if (!entry || !base) {
-      return new Map();
-    }
-    const object = await fetchText(`${base}/objects/${entry.hash}`);
-    const sha = /\(text "([0-9a-f]{64})"\)/.exec(object ?? '')?.[1];
-    return sha ? decisionsOf((await fetchText(`${base}/files/assets/${sha}`)) ?? '') : new Map();
-  })().catch(() => {
-    // A failed read is tried again by the next card rather than kept as an empty log.
-    decisionLog = undefined;
-    return new Map();
-  }));
+/** The decision log by number, parsed once per text read. */
+const loadDecisions = async () => {
+  const text = await loadEmbedded('Docs.decisions');
+  if (decisionLog?.text !== text) {
+    decisionLog = { text, rows: decisionsOf(text ?? '') };
+  }
+  return decisionLog.rows;
+};
 
 /**
  * The rows of a decision log, `| D<n> | decision | alternatives | why |`, by number. A cell may hold ` | ` itself (an
@@ -1638,6 +1658,21 @@ const decisionsOf = (text) =>
         ];
       }),
   );
+
+/** The getting-started guide (`docs/GETTING_STARTED.md`, embedded as `Docs.gettingStarted`), read in place. */
+const guideCard = (key, text) => {
+  if (text === undefined) {
+    return missingCard(key, 'The guide did not load');
+  }
+  const [first, ...rest] = text.split('\n');
+  const title = /^# (.*)$/.exec(first)?.[1] ?? 'Getting started';
+  return card(key, {
+    iconHtml: '<span class="icon k-decision" title="guide">?</span>',
+    title: inlineMd(title, ''),
+    prose: true,
+    body: `<div class="doc">${mdHtml(/^# /.test(first) ? rest.join('\n') : text, '')}</div>`,
+  });
+};
 
 const decisionCard = (key, row) =>
   card(key, {
@@ -1684,13 +1719,15 @@ const buildCard = async (key) => {
     case 'k':
       return value === 'glossary'
         ? glossaryCard(key)
-        : value === 'events'
-          ? eventsCard(key, await loadEvents())
-          : value === 'features'
-            ? featuresCard(key, await loadFeatures())
-            : value === 'checks'
-              ? checksCard(key, await requirementsByEvidence())
-              : kindCard(key, value);
+        : value === 'guide'
+          ? guideCard(key, await loadEmbedded('Docs.gettingStarted'))
+          : value === 'events'
+            ? eventsCard(key, await loadEvents())
+            : value === 'features'
+              ? featuresCard(key, await loadFeatures())
+              : value === 'checks'
+                ? checksCard(key, await requirementsByEvidence())
+                : kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1841,7 +1878,7 @@ const areasOf = (maps) => {
 
 /** The legend of the kind icons, so a first visitor can read the lists. */
 const legendHtml = () =>
-  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · <a class="ref" data-open="k:glossary">New here? The glossary</a></p>`;
+  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · New here? ${embedded('Docs.gettingStarted') ? '<a class="ref" data-open="k:guide">The guide</a>' : `<a class="ref" href="${REPO_URL}docs/GETTING_STARTED.md" target="_blank" rel="noopener">The guide</a>`} and <a class="ref" data-open="k:glossary">the glossary</a></p>`;
 
 /** Words the overview and the documents use that a newcomer may not know (task 8eec6c0d). */
 const GLOSSARY = [
@@ -3110,13 +3147,15 @@ const titleOf = (key) => {
   if (key.startsWith('k:')) {
     return value === 'glossary'
       ? 'Glossary'
-      : value === 'checks'
-        ? 'Checks'
-        : value === 'events'
-          ? 'Events'
-          : value === 'features'
-            ? 'Features'
-            : (KINDS[value]?.plural ?? value);
+      : value === 'guide'
+        ? 'Getting started'
+        : value === 'checks'
+          ? 'Checks'
+          : value === 'events'
+            ? 'Events'
+            : value === 'features'
+              ? 'Features'
+              : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };
