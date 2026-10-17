@@ -274,3 +274,60 @@ Four frames from each video, evenly spaced: check each shows its plugin working,
 ### voxel (dark)
 
 ![voxel dark](../../../temp/showcase/overnight/clips/dark/voxel.png)
+
+## Review
+
+One entry per flow (light and dark together); add comments under each.
+
+- **board**
+  -
+- **canvas**
+  -
+- **chess**
+  -
+- **code**
+  -
+- **composer**
+  -
+- **conductor**
+  -
+- **excalidraw**
+  -
+- **explorer**
+  -
+- **handpan**
+  -
+- **illustrator**
+  -
+- **kanban**
+  -
+- **map**
+  -
+- **markdown**
+  -
+- **mermaid**
+  -
+- **presenter**
+  -
+- **projects**
+  -
+- **script**
+  -
+- **sequencer**
+  -
+- **sheet**
+  -
+- **spacetime**
+  -
+- **table**
+  -
+- **tasks**
+  -
+- **terra**
+  -
+- **tldraw**
+  -
+- **uml**
+  -
+- **voxel**
+  -

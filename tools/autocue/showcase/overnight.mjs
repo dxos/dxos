@@ -419,6 +419,12 @@ writeFileSync(
     'Four frames from each video, evenly spaced: check each shows its plugin working, not a blank or wrong plank.',
     '',
     ...frames,
+    '## Review',
+    '',
+    'One entry per flow (light and dark together); add comments under each.',
+    '',
+    ...[...new Set(results.map((result) => result.name))].sort().flatMap((name) => [`- **${name}**`, '  - ']),
+    '',
   ].join('\n'),
 );
 log(
