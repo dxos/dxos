@@ -757,3 +757,7 @@ Pause for a sec to brainstorm with me
 1. Why is codebase so large
 2. Can't we drop ts kernel for rust or native C
 3. Is test caching working well enough where we can write a bunch of tests while keeping iteration speed high?
+
+---
+
+4. How does unison codebase handle name mapping, esp progress with commits renaming a bunch of definitions via hashes
