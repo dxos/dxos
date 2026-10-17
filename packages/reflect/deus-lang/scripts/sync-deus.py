@@ -344,6 +344,29 @@ def embed_files(codebase):
             print(f'  embedded {file} as {name}')
 
 
+def memo_path(codebase):
+    """Where a sync that found nothing to do records the inputs it checked (`inputs`)."""
+    return codebase / 'cache' / 'sync-deus-noop'
+
+
+def inputs(codebase):
+    """What decides whether deus/ compiles to the codebase and the seed is its fixpoint: deus/'s files, the head of the
+    codebase's branch, and the seed. While none changes, the answer cannot, so a repeated sync skips the ~3 s of
+    compiling deus/ twice to find it again."""
+    import hashlib
+    digest = hashlib.sha256()
+    for path in sorted(SOURCES.glob('*.deus')):
+        digest.update(path.name.encode() + b'\0' + hashlib.sha256(path.read_bytes()).digest())
+    try:
+        branch = (codebase / 'HEAD').read_text().strip()
+        head = (codebase / 'branches' / branch).read_text().strip()
+    except OSError:
+        return None
+    digest.update(f'\0{branch}\0{head}\0'.encode())
+    digest.update(hashlib.sha256(SEED.read_bytes()).digest() if SEED.exists() else b'no seed')
+    return digest.hexdigest()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--codebase', default=os.environ.get('DEUS_CODEBASE', str(Path.home() / '.deus')))
@@ -352,6 +375,10 @@ def main():
     args = parser.parse_args()
     codebase = Path(args.codebase)
     embed_files(codebase)
+    checked = None if args.names else inputs(codebase)
+    if checked is not None and memo_path(codebase).exists() and memo_path(codebase).read_text().strip() == checked:
+        print('deus/ already compiles to the codebase\'s definitions, and the seed is its fixpoint; nothing to write.')
+        return 0
     if args.names:
         names, deleted = list(args.names), []
     else:
@@ -363,6 +390,11 @@ def main():
             print('deus/ already compiles to the codebase\'s definitions; the seed was behind it and is rebuilt.')
         else:
             print('deus/ already compiles to the codebase\'s definitions, and the seed is its fixpoint; nothing to write.')
+        # Read again: rebuilding the seed changes one of the inputs.
+        settled = inputs(codebase)
+        if settled is not None:
+            memo_path(codebase).parent.mkdir(parents=True, exist_ok=True)
+            memo_path(codebase).write_text(settled + '\n')
         return 0
 
     edited = [] if args.overwrite else unsynced(set(names) | set(deleted), codebase)

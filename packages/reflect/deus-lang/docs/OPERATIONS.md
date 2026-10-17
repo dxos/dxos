@@ -172,7 +172,8 @@ about 6. Until the index is drawn, visitors see the head drawn last (D195; `live
   `sync-deus.py` writes `lib.base.X` into deus/ as `X`. Web's code is `platform/js/` and `examples/` in git; update it into a pull of
   `@dxos/web`, not into the toolchain.
 - Edit the toolchain codebase-first: `deus update deus/<file>.deus` into `~/.deus`, then `scripts/sync-deus.py`, which
-  refuses to overwrite `deus/` edits the codebase lacks (D215). A change to `deus/cgen.deus`'s C runtime reaches
+  refuses to overwrite `deus/` edits the codebase lacks (D215). Run again with nothing changed, it answers in ~0.1 s
+  (D303). A change to `deus/cgen.deus`'s C runtime reaches
   the native CLI only from the seed after it, since a build emits the runtime of the compiler running it.
 - Waiting on Dmytro: Basin (task c5955f97, creating Cloudflare resources), the inbox Worker secrets (729ad2b4),
   and whether CI's Check workflow installs pyarrow, DuckDB and pyiceberg for `src/analytics-readers.test.ts`
