@@ -32,6 +32,7 @@ export type CanvasDrawingProps = {
 
 /** The tone the reference diagrams' boxes take: the style set's second (index 1). */
 const DIAGRAM_BOX_TONE = 1;
+
 /** Adds a canvas drawing built from scene commands to `db`. */
 export const addCanvasDrawing = (
   db: Database.Database,
