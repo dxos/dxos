@@ -5,14 +5,26 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SequenceHeader, type SequenceHeaderProps } from './SequenceHeader.tsx';
 
+random.seed(123);
+
 const SCENES = [
-  { title: 'The Silo Problem', caption: 'Each application keeps its own data, fed only by its own source.' },
-  { title: 'Monolithic Agents', caption: 'One agent reaches into every source at once, beside the apps.' },
-  { title: 'A shared ECHO', caption: 'The sources feed one ECHO space, and the apps sync from it.' },
+  {
+    title: 'The Decentralized Operating System',
+    caption: random.lorem.paragraph(),
+  },
+  {
+    title: 'The ECHO Hypergraph',
+    caption: random.lorem.paragraph(),
+  },
+  {
+    title: 'The OS for your Agents',
+    caption: random.lorem.paragraph(),
+  },
 ];
 
 /** Steps through a few scenes' titles, so previous, next and play can be tried. */

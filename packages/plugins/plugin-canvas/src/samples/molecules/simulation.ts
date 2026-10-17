@@ -98,6 +98,8 @@ export type Body = {
   read?: boolean;
   /** For a hub molecule due to sync, the agent its copy goes to (otherwise a random one at hand-off). */
   syncTo?: number;
+  /** With `threads`, the conversation it belongs to: its colour, and the hub bucket it collects in. */
+  thread?: number;
 };
 
 /** A bond across molecules: how a docked molecule attaches to the edge of the lattice. */
@@ -115,7 +117,7 @@ export type Frame = {
 };
 
 /** One piece of an application's content, made from a molecule that flowed in: its source's colour, and when it came. */
-export type AppItem = { hue: string; source: number; since: number };
+export type AppItem = { hue: string; source: number; since: number; thread?: number };
 
 export type SimulationOptions = {
   seed?: number;
@@ -153,9 +155,16 @@ export type SimulationOptions = {
   warmup?: number;
   /** Which hub molecules sync to the sink; every third by default. */
   subset?: (body: Body) => boolean;
+  /**
+   * Colours molecules by conversation rather than by source: each molecule joins one of these threads at random, takes
+   * its hue, and collects in the hub bucket of the same index, so a bucket gathers one thread from every source.
+   */
+  threads?: readonly string[];
 };
 
-const DEFAULTS: Required<Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup'>> = {
+const DEFAULTS: Required<
+  Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup' | 'threads'>
+> = {
   interval: 1.4,
   perSource: 2,
   speed: 240,
@@ -781,6 +790,7 @@ export class DataFlowSimulation {
   #focus?: { left: number; right: number; boost: number };
   /** Most molecules the hub holds: the option's figure, scaled up as a relayout adds buckets, so new ones crowd none out. */
   #hubCapacity = 0;
+  #threads?: readonly string[];
   /** When each source a relayout added came into play, by source; the first sources have none. */
   readonly #sourceSince: (number | undefined)[] = [];
 
@@ -1037,9 +1047,10 @@ export class DataFlowSimulation {
 
   constructor(
     layout: DataFlowLayout,
-    { seed, subset, spawnAgents, prefill, warmup = 0, ...options }: SimulationOptions = {},
+    { seed, subset, spawnAgents, prefill, warmup = 0, threads, ...options }: SimulationOptions = {},
   ) {
     this.#layout = layout;
+    this.#threads = threads;
     this.#options = { ...DEFAULTS, ...options };
     this.#hubCapacity = this.#options.hubCapacity;
     this.#spawnAgents = spawnAgents;
@@ -1127,7 +1138,7 @@ export class DataFlowSimulation {
           const slot = Math.floor(this.#time * FLICKER_RATE);
           const blinking = body.blink !== undefined && slot >= body.blink && slot < body.blink + 2 * BLINKS;
           body.opacity = blinking && slot % 2 === 1 ? 0.3 : 1;
-          if (body.zone === 'hub') {
+          if (body.zone === 'hub' && !this.#threads) {
             // Once settled, a hub molecule loses its source's colour: in the hub, data is just data.
             body.tint = Math.min(1, Math.max(0, (body.age - TINT_DELAY) / TINT_TIME));
           }
@@ -1305,8 +1316,7 @@ export class DataFlowSimulation {
           id,
           serial,
           molecule,
-          hue: source.hue,
-          source: index,
+          ...this.#colour(index),
           zone: 'source',
           phase: 'forming',
           position: home.root,
@@ -1445,8 +1455,7 @@ export class DataFlowSimulation {
       id: `m${serial}`,
       serial,
       molecule: generateMolecule(this.#random),
-      hue: this.#layout.sources[source].hue,
-      source,
+      ...this.#colour(source),
       zone: 'source',
       phase: 'forming',
       position: snap(sinkGrid, this.#freeSpot(sink.well)),
@@ -1503,6 +1512,31 @@ export class DataFlowSimulation {
     }
   }
 
+  /** A molecule from `source`: its source's colour, or with `threads` a thread at random and that thread's colour. */
+  #colour(source: number): { hue: string; source: number; thread?: number } {
+    if (!this.#threads?.length) {
+      return { hue: this.#layout.sources[source].hue, source };
+    }
+    const thread = Math.floor(this.#random() * this.#threads.length);
+    return { hue: this.#threads[thread], source, thread };
+  }
+
+  /** The hub bucket a threaded molecule collects in: one bucket per thread, in order. */
+  #threadBucket(body: Body): Rect | undefined {
+    const { buckets } = this.#layout.hub;
+    return body.thread === undefined || !buckets?.length ? undefined : buckets[body.thread % buckets.length];
+  }
+
+  /** `aim` moved over a threaded molecule's bucket, so a write rising into the hub lands with the rest of its thread. */
+  #threadAim(body: Body, aim: Point): Point {
+    const bucket = this.#threadBucket(body);
+    if (!bucket) {
+      return aim;
+    }
+    const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
+    return { x: bucket.x + bucket.width * (0.5 + spread / 2), y: aim.y };
+  }
+
   /**
    * A bucket at random, weighted to those near `x` (where a source's channel meets the hub): each source feeds the
    * buckets around it, so an extended hub's far buckets fill from their own sources and none near the middle starves.
@@ -1534,7 +1568,7 @@ export class DataFlowSimulation {
     // beneath it; the aims crowd toward the middle, so the lattice keeps clear of the walls.
     const { bounds, origin } = this.#layout.hubGrid;
     const { buckets } = this.#layout.hub;
-    const region = buckets ? this.#nearBucket(buckets, channel.to.x) : bounds;
+    const region = buckets ? (this.#threadBucket(body) ?? this.#nearBucket(buckets, channel.to.x)) : bounds;
     const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
     const aim = { x: region.x + region.width * (0.5 + spread / 2), y: origin.y };
     const well = this.#wellGate(`well-source-${body.source}`);
@@ -1723,9 +1757,9 @@ export class DataFlowSimulation {
         app.reserved.delete(body.slot);
         // A conversation takes it as a new message at the end; any other app fills the slot it was given.
         if (this.#layout.sinks[body.agent ?? 0]?.app === 'messaging') {
-          this.#post(body.agent ?? 0, body.hue, body.source);
+          this.#post(body.agent ?? 0, body.hue, body.source, body.thread);
         } else {
-          app.items[body.slot] = { hue: body.hue, source: body.source, since: this.#time };
+          app.items[body.slot] = { hue: body.hue, source: body.source, since: this.#time, thread: body.thread };
         }
       }
       body.phase = 'leaving';
@@ -1821,7 +1855,7 @@ export class DataFlowSimulation {
     const top = sink.well.y + this.#layout.hubGrid.spacing;
     const aim = { x: channel.from.x, y: lane };
     const well = this.#wellGate(`well-sink-${agent}`);
-    const sent = this.#send(copy, 'hub', aim, (target) => {
+    const sent = this.#send(copy, 'hub', this.#threadAim(copy, aim), (target) => {
       const span = laneGate('bottom', channel.from.x, target.x, 'up');
       return [
         { point: { x: start.x, y: top }, gate: well },
@@ -1850,7 +1884,7 @@ export class DataFlowSimulation {
         if (this.#random() < 0.65) {
           const source = Math.floor(this.#random() * sources.length);
           const fresh = this.#random() < 1 / 7;
-          app.items[slot] = { hue: sources[source].hue, source, since: fresh ? 0 : -60 };
+          app.items[slot] = { ...this.#colour(source), since: fresh ? 0 : -60 };
         }
       });
     });
@@ -1865,7 +1899,7 @@ export class DataFlowSimulation {
         return undefined;
       }
       const source = Math.floor(this.#random() * sources.length);
-      return { hue: sources[source].hue, source, since: -60 };
+      return { ...this.#colour(source), since: -60 };
     });
     return { slots, items, reserved: new Set<number>() };
   }
@@ -1874,7 +1908,7 @@ export class DataFlowSimulation {
    * Adds a message to the end of conversation `agent`; once it is full, the two oldest scroll off the top first, so
    * every message keeps its side (they alternate left and right).
    */
-  #post(agent: number, hue: string, source: number): void {
+  #post(agent: number, hue: string, source: number, thread?: number): void {
     const app = this.#apps[agent];
     if (!app) {
       return;
@@ -1885,7 +1919,7 @@ export class DataFlowSimulation {
       app.items.push(undefined, undefined);
       next = app.items.length - 2;
     }
-    app.items[next] = { hue, source, since: this.#time };
+    app.items[next] = { hue, source, since: this.#time, thread };
   }
 
   /** The middle of an application's frame: molecules flowing in or out pass behind the app to and from here. */
@@ -2079,7 +2113,7 @@ export class DataFlowSimulation {
     }
     // What a conversation sends is a message of its own; any other app lights up the content it sends.
     if (sink.app === 'messaging') {
-      this.#post(agent, item.hue, item.source);
+      this.#post(agent, item.hue, item.source, item.thread);
     } else {
       item.since = this.#time;
     }
@@ -2099,6 +2133,7 @@ export class DataFlowSimulation {
       molecule,
       hue: item.hue,
       source: item.source,
+      thread: item.thread,
       zone: 'source',
       phase: 'forming',
       position: { x: centreOf.x - middle.x, y: centreOf.y - middle.y },
@@ -2106,7 +2141,7 @@ export class DataFlowSimulation {
       authored: true,
     });
     const aim = { x: channel.from.x, y: lane };
-    const sent = this.#send(body, 'hub', aim, (target) => {
+    const sent = this.#send(body, 'hub', this.#threadAim(body, aim), (target) => {
       const span = laneGate('bottom', channel.from.x, target.x, 'up');
       return [
         { point: channel.to, gate },
