@@ -52,6 +52,9 @@ export class FeedDataSource implements IndexDataSource {
    */
   #passReads: Map<string, FeedProtocol.QueryResponse> | undefined;
 
+  /** Feeds already reported as re-read: an empty feed's cursor is never rewritten, so every pass meets it again. */
+  readonly #restartedFeeds = new Set<string>();
+
   constructor(options: FeedDataSourceOptions) {
     this._feedStore = options.feedStore;
     this._runtime = options.runtime;
@@ -135,10 +138,24 @@ export class FeedDataSource implements IndexDataSource {
         }
 
         // Empty string cursor means "start from beginning".
-        const currentCursor =
+        const storedCursor =
           typeof cursor.cursor === 'string' && cursor.cursor !== ''
             ? FeedProtocol.FeedCursor.make(cursor.cursor)
             : undefined;
+        // The store fails a read from a cursor it did not issue, which would fail every pass; the index is
+        // derived, so reading the feed again from the start is safe.
+        const currentCursor =
+          storedCursor && (yield* this._feedStore.isCursorCurrent(cursor.spaceId, storedCursor))
+            ? storedCursor
+            : undefined;
+        const feedKey = `${cursor.spaceId}|${cursor.resourceId}`;
+        if (storedCursor && !currentCursor && !this.#restartedFeeds.has(feedKey)) {
+          this.#restartedFeeds.add(feedKey);
+          log.warn('feed index cursor was issued by another store, reading the feed again', {
+            spaceId: cursor.spaceId,
+            feedNamespace: cursor.resourceId,
+          });
+        }
 
         try {
           const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor ?? null, remainingLimit]);

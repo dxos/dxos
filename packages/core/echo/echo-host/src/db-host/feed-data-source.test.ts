@@ -103,4 +103,21 @@ describe('FeedDataSource', () => {
       expect(result).toEqual({ objects: [], cursors: [], more: false });
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  // A stored cursor the store did not issue failed the whole pass, and with it the host.
+  it.effect('reads a feed again from the start when its cursor carries another token', () =>
+    Effect.gen(function* () {
+      const { source, append } = yield* setup;
+      yield* append(FeedProtocol.WellKnownNamespaces.data, 2);
+      const first = yield* source.getChangedObjects(Context.default(), [], { limit: 50 });
+
+      const foreign = first.cursors.map((cursor) => ({
+        ...cursor,
+        cursor: String(cursor.cursor).replace(/^[^|]*/, 'foreign'),
+      }));
+      const next = yield* source.getChangedObjects(Context.default(), foreign, { limit: 50 });
+      expect(next.objects.map((object) => object.queueNamespace)).toEqual(['data', 'data']);
+      expect(next.cursors).toEqual(first.cursors);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
