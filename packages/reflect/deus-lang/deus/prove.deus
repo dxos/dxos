@@ -744,10 +744,14 @@ def constructors (pr : Prover) (type : Sexp) : {IO} Option (Text, List (Int, Lis
       | Option.none => Option.none
   | _ => Option.none
 
+/-- A new variable named after `base`: its own name with a fresh number (`xs'3`), the number of a name made here before
+  replaced rather than added to, so goals read `xs'7`, not `xs1357`; the `'` keeps it from any name a user wrote. -/
 def freshName (pr : Prover) (base : Text) : Text :=
   let k := Ref.get pr.counter
   Ref.set pr.counter (k + 1)
-  base ++ Int.toText k
+  let mark := Text.indexOf base "'" 0
+  let stem := if mark > 0 && List.all isDigit (Text.utf8 (Text.drop (mark + 1) base)) then Text.take mark base else base
+  stem ++ "'" ++ Int.toText k
 
 /-- Structural induction (`withIh`) or case analysis on a variable. -/
 def induct (pr : Prover) (g : Goal) (name : Text) (withIh : Bool) : {IO} Option (List Goal) :=
