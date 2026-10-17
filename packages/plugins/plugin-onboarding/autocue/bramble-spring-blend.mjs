@@ -6,7 +6,7 @@
  * Bramble story: Kai locks the Spring Blend. A wholesale customer's feedback leads to her contact, the
  * cupping on the calendar, the launch project, the roasts, and the protocol the blend is judged by.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-14
  * @app composer-app bundled dev build, served by `vite preview` on :4187
  *
  * Built and served from `packages/apps/composer-app`:

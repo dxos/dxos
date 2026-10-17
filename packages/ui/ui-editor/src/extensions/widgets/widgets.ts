@@ -8,7 +8,7 @@
 // host renders portals from, widget state and context effects, and bookmark navigation. What is
 // matched is a matcher's business: `xmlTags` claims XML elements, `objectLinks` object links.
 
-import { ensureSyntaxTree, syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import {
   type EditorState,
   type Extension,
@@ -27,7 +27,7 @@ import {
   type WidgetType,
   keymap,
 } from '@codemirror/view';
-import { type SyntaxNodeRef, type Tree } from '@lezer/common';
+import { type SyntaxNodeRef } from '@lezer/common';
 import { type FunctionComponent, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
@@ -435,7 +435,7 @@ type WidgetDecorationSet = {
   notifier: WidgetNotifier;
 };
 
-/** Ceiling on parsing ahead of the background parser; past it `parseCompletionPlugin` rebuilds. */
+/** Ceiling on parsing ahead of the background parser; past it `parseProgressPlugin` rebuilds. */
 const PARSE_BUDGET = 50;
 
 /**
@@ -637,22 +637,26 @@ const scrollJumpMonitor = (() => {
 })();
 
 /**
- * Re-decorate whenever a complete syntax tree replaces the one the decorations were built from.
- * `StateField.create` (and incremental rebuilds) only see the tree parsed so far, and a parse that
- * runs out of time skips the ranges outside the viewport, filling them in later as they scroll into
- * view: both change the tree without a document change, which the field never sees.
+ * Re-decorate whenever the syntax tree changes. `StateField.create` (and incremental rebuilds) see
+ * only the tree parsed so far: background parsing extends it later, and a parse that runs out of time
+ * skips ranges outside the viewport and parses them as they scroll in, neither with a document change.
+ * Edits rebuild too: the incremental merge duplicates a widget appended after the last one (see the
+ * `xml-tags` invariant tests), and this rebuild settles it. Rebuilds within one task coalesce.
  */
-const parseCompletionPlugin = ViewPlugin.fromClass(
+const parseProgressPlugin = ViewPlugin.fromClass(
   class {
-    #rebuiltFor: Tree | undefined;
+    #pending = false;
 
     update(update: ViewUpdate) {
-      const tree = syntaxTree(update.state);
-      if (tree !== this.#rebuiltFor && syntaxTreeAvailable(update.state, update.state.doc.length)) {
-        this.#rebuiltFor = tree;
-        // Defer: cannot dispatch during an update.
-        queueMicrotask(() => update.view.dispatch({ effects: widgetRebuildEffect.of(null) }));
+      if (this.#pending || syntaxTree(update.startState) === syntaxTree(update.state)) {
+        return;
       }
+      this.#pending = true;
+      // Defer: cannot dispatch during an update.
+      queueMicrotask(() => {
+        this.#pending = false;
+        update.view.dispatch({ effects: widgetRebuildEffect.of(null) });
+      });
     }
   },
 );
@@ -795,7 +799,7 @@ export const widgetsCore: Extension = [
   widgetStateMapStateField,
   widgetDecorationsField,
   widgetUpdatePlugin,
-  parseCompletionPlugin,
+  parseProgressPlugin,
   navigationEffectPlugin,
   keyHandlers,
   scrollJumpMonitor,

@@ -69,9 +69,9 @@ Run these steps in order whenever a spec is new or its `## Contents` changes.
    keys, plus the effect that builds them. Import the required partials' `Provides` types; their
    seeds stay theirs. Done when every key in the spec appears in a seed table.
 3. **The partial.** In `partial.ts`, export `Partial` made with `SampleSpace.partial(name, { partials,
-schemas, run })`, and re-export it with `Provides` from `index.ts`. Its `schemas` cover every type
-   the spec names; types of the smaller partials it composes are added for it. `Requires` holds the required
-   partials' `Provides`, and optional partials as optional fields typed structurally with only what
+schemas, run })`. When another directory applies it, re-export it with `Provides` from `index.ts`.
+   Its `schemas` cover every type the spec names; types of the smaller partials it composes are added
+   for it. `Requires` holds the required partials' `Provides`, and optional partials as optional fields typed structurally with only what
    the partial reads. `Provides` holds exactly the header's keys. Read time from the
    `SampleSpace.Clock` service, never a module-level clock, because the template sets the reference
    date.

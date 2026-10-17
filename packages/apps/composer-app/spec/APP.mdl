@@ -951,7 +951,7 @@ suite editor: The markdown plugin's own contract, run at app level
 ```
 
 ```mdl
-test QA-13: Bramble — Kai locks the Spring Blend
+test QA-14: Bramble — Kai locks the Spring Blend
   desc: |
     A story demo of the Bramble template: Kai Chen, head roaster, is six weeks from launching a new
     espresso blend, and every step answers one question, whether the Spring Blend is ready. A
