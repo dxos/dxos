@@ -467,14 +467,6 @@ export class IndexEngine {
   }
 
   /**
-   * Delete index rows for garbage-collected documents and objects: whole documents (all their
-   * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
-   * (by record id) into the snapshot store and the FTS and reverse-ref indexes, and drops the
-   * tracker cursors for wiped documents. See `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
-   *
-   * @returns Number of `objectMeta` rows deleted.
-   */
-  /**
    * The ids among `documentIds` the index holds under a space other than `spaceId`: the indexer attributes a document
    * to the spaces whose directories link it, so these belong to another space too.
    */
@@ -485,6 +477,14 @@ export class IndexEngine {
     return this.#objectMetaIndex.queryDocumentsIndexedElsewhere(query);
   }
 
+  /**
+   * Delete index rows for garbage-collected documents and objects: whole documents (all their
+   * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
+   * (by record id) into the snapshot store and the FTS and reverse-ref indexes, and drops the
+   * tracker cursors for wiped documents. See `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
   deleteObjects(opts: {
     spaceId: SpaceId;
     documentIds: readonly string[];
