@@ -144,7 +144,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
         title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
       />
       <Card.Body>
-        <EventDetails event={event} title={false} maxAttendees={8} />
+        <EventDetails event={event} title={false} description maxAttendees={3} />
       </Card.Body>
     </CardTile.Root>
   );

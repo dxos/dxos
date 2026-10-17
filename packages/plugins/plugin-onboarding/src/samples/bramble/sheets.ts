@@ -151,7 +151,7 @@ const table = (column: string, rows: (string | number)[][]): Record<string, Shee
 /** Green-coffee inventory and the wholesale price list, both with live formulas, and a sales report charting bags sold and revenue. */
 export type SheetsResult = { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet; salesReport: Sheet.Sheet };
 
-export const Sheets: SampleSpace.Phase<SheetsResult> = SampleSpace.phase('sheets', {
+export const Sheets: SampleSpace.Partial<SheetsResult> = SampleSpace.partial('sheets', {
   schemas: [Sheet.Sheet],
   run: () =>
     Effect.gen(function* () {
