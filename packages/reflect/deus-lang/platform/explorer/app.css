@@ -1,31 +1,32 @@
 :root {
+  /* Text tokens reach WCAG AA (4.5:1) on the surface and the sidebar, where small text sits. */
   --bg: #f4f5f7;
   --surface: #ffffff;
   --sidebar: #fbfbfc;
   --fg: #1c1e24;
-  --muted: #6a6f7b;
-  --faint: #9aa0ab;
+  --muted: #585d68;
+  --faint: #6b7280;
   --line: #e3e5ea;
   --hover: #eef0f4;
-  --accent: #4c6ef5;
+  --accent: #3b5bdb;
   --accent-soft: #edf1ff;
   --code: #f7f8fa;
   --kw: #b0306f;
   --str: #2f8a4a;
   --ty: #2463b4;
-  --cm: #8a8f99;
-  --pass: #2f9e44;
+  --cm: #707682;
+  --pass: #237a35;
   --fail: #e03131;
-  --todo: #868e96;
-  --doing: #e67700;
-  --done: #2f9e44;
+  --todo: #707682;
+  --doing: #b35900;
+  --done: #237a35;
   --canceled: #adb5bd;
-  --k-term: #4c6ef5;
+  --k-term: #3b5bdb;
   --k-type: #7048e8;
   --k-ability: #d6336c;
-  --k-test: #2f9e44;
-  --k-theorem: #0c8599;
-  --k-spec: #e67700;
+  --k-test: #237a35;
+  --k-theorem: #0b7285;
+  --k-spec: #b35900;
   --k-namespace: #868e96;
   --shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.06);
   --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
@@ -720,9 +721,11 @@ td code {
   display: none;
 }
 
-.rehashed {
-  margin-left: auto;
-  font-size: 12px;
+.rehashed-group > summary {
+  margin: 6px 0 2px;
+  padding: 3px 6px;
+  font-size: 12.5px;
+  cursor: pointer;
 }
 
 .diff > summary .diffstat {
@@ -741,8 +744,11 @@ td code {
 
 .diff-view .line {
   display: block;
-  min-width: max-content;
-  padding: 0 14px 0 0;
+  /* Long lines wrap under their text, so the +/- gutter stays a column of its own and nothing scrolls sideways. */
+  padding: 0 14px 0 26px;
+  text-indent: -26px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .diff-view .fold {
@@ -1958,6 +1964,19 @@ ul.rows {
     white-space: normal;
   }
 
+  /* A long name breaks between its segments, so its status mark stays on its line; a flex row would wrap the mark. */
+  .entry-row:has(> .row-sig) {
+    display: grid;
+    grid-template-columns: auto minmax(0, max-content) auto 1fr;
+    column-gap: 8px;
+  }
+
+  .entry-row:has(> .row-sig) > .row-sig,
+  .entry-row:has(> .row-sig) > .row-summary {
+    grid-column: 2 / -1;
+    padding-left: 0;
+  }
+
   .row-sig::before {
     content: '';
   }
@@ -2745,6 +2764,13 @@ pre.block-value {
   white-space: pre-wrap;
 }
 
+/* A line that wraps (a long signature on a phone) continues indented, so it does not read as the next line. */
+pre.block-value .value-line {
+  display: block;
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
 .evidence {
   display: inline-flex;
   align-items: center;
@@ -3003,4 +3029,33 @@ pre.block-value {
   .finder-trigger kbd {
     display: none;
   }
+}
+
+/* Keyboard users: a visible ring wherever focus goes, and a way past the header and the namespace tree. */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#main:focus-visible {
+  outline: none;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
 }

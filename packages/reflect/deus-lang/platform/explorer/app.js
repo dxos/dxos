@@ -803,8 +803,11 @@ const entryLink = (entry, label = entry.name) =>
     ? docLink(namespaceOf(entry.name), label, lastSegment(entry.name))
     : defLink(entry.name, entry.hash, label);
 
+/** A link whose text may break after each `.`, so a long name wraps between its segments rather than inside one. */
+const breakable = (link) => link.replace(/>([^<]*)<\/a>$/, (_, text) => `>${text.replaceAll('.', '.<wbr>')}</a>`);
+
 const entryRow = (entry, label = entry.name) =>
-  `<li class="entry-row">${icon(entry.kind)}${entryLink(entry, label)}${statusMark(entry.status)}` +
+  `<li class="entry-row">${icon(entry.kind)}${breakable(entryLink(entry, label))}${statusMark(entry.status)}` +
   (entry.sig
     ? `<code class="row-sig" title="${escape(entry.sig)}">${typeHtml(typeOf(entry.sig), namespaceOf(entry.name))}</code>`
     : '') +
@@ -1349,7 +1352,10 @@ const changeCard = (key, change, events) => {
   const added = change.added.map((ref) => refRow({ name: ref.name, hash: current(ref.name, ref.hash) }));
   // A dependent rehashed by `deus update` prints the same as before; edited names come first, with their diffs.
   const edited = change.changed.filter((entry) => entry.before !== undefined && entry.before !== entry.after);
-  const changed = [...edited, ...change.changed.filter((entry) => !edited.includes(entry))].map((entry) => {
+  const isRehashed = (entry) => entry.before !== undefined && entry.before === entry.after;
+  // Rehashed dependents can number in the dozens beside one real edit, so they fold into one group after the rest.
+  const rehashed = change.changed.filter(isRehashed);
+  const changedRow = (entry) => {
     const now = index.byName.get(entry.name);
     const row =
       `${icon(now?.kind ?? 'term')}${defLink(entry.name, current(entry.name, entry.hash))}` +
@@ -1358,10 +1364,18 @@ const changeCard = (key, change, events) => {
       return `<li class="entry-row">${row}</li>`;
     }
     if (entry.before === entry.after) {
-      return `<li class="entry-row">${row}<span class="muted rehashed">rehashed: a dependency changed</span></li>`;
+      return `<li class="entry-row">${row}</li>`;
     }
     return `<li><details class="diff"${edited.length <= 6 ? ' open' : ''}><summary class="entry-row">${row}${diffSummary(entry)}</summary>${diffHtml(entry.before, entry.after)}</details></li>`;
-  });
+  };
+  const changed = [...edited, ...change.changed.filter((entry) => !edited.includes(entry) && !isRehashed(entry))].map(
+    changedRow,
+  );
+  const changedBody =
+    (changed.length > 0 ? rowList(changed) : '') +
+    (rehashed.length > 0
+      ? `<details class="rehashed-group"><summary class="muted">${plural(rehashed.length, 'definition')} rehashed because a dependency changed</summary>${rowList(rehashed.map(changedRow))}</details>`
+      : '');
   const removed = change.removed.map(
     (name) => `<li class="entry-row"><span class="icon">−</span><code>${escape(name)}</code></li>`,
   );
@@ -1377,7 +1391,7 @@ const changeCard = (key, change, events) => {
     meta: `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}${hashChip(change.causal)}`,
     body:
       (added.length > 0 ? section('Added', added.length, rowList(added)) : '') +
-      (changed.length > 0 ? section('Changed', changed.length, rowList(changed)) : '') +
+      (change.changed.length > 0 ? section('Changed', change.changed.length, changedBody) : '') +
       (removed.length > 0 ? section('Removed', removed.length, rowList(removed)) : '') +
       (tasks.length > 0 ? section('Tasks', tasks.length, `<ul class="rows">${tasks.join('')}</ul>`) : '') +
       (added.length + changed.length + removed.length + tasks.length === 0
@@ -1499,15 +1513,18 @@ const diffSummary = (entry) => {
   const lines = diffLines(entry.before.split('\n'), entry.after.split('\n'));
   const added = lines.filter(([mark]) => mark === '+').length;
   const removed = lines.filter(([mark]) => mark === '-').length;
-  return `<span class="diffstat">${added > 0 ? `<span class="plus" title="${added} lines added">+${added}</span>` : ''}${removed > 0 ? `<span class="minus" title="${removed} lines removed">−${removed}</span>` : ''}</span>`;
+  return `<span class="diffstat">${added > 0 ? `<span class="plus" title="${plural(added, 'line')} added">+${added}</span>` : ''}${removed > 0 ? `<span class="minus" title="${plural(removed, 'line')} removed">−${removed}</span>` : ''}</span>`;
 };
 
+/** `1 definition`, `2 definitions`. */
+const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
 const diffStat = (change) =>
-  `<span class="diffstat">${change.added.length > 0 ? `<span class="plus" title="${change.added.length} definitions added">+${change.added.length}</span>` : ''}${
+  `<span class="diffstat">${change.added.length > 0 ? `<span class="plus" title="${plural(change.added.length, 'definition')} added">+${change.added.length}</span>` : ''}${
     change.changed.length > 0
-      ? `<span class="tilde" title="${change.changed.length} definitions changed">~${change.changed.length}</span>`
+      ? `<span class="tilde" title="${plural(change.changed.length, 'definition')} changed">~${change.changed.length}</span>`
       : ''
-  }${change.removed.length > 0 ? `<span class="minus" title="${change.removed.length} definitions removed">−${change.removed.length}</span>` : ''}</span>`;
+  }${change.removed.length > 0 ? `<span class="minus" title="${plural(change.removed.length, 'definition')} removed">−${change.removed.length}</span>` : ''}</span>`;
 
 const missingCard = (key, message, suggestions = []) =>
   card(key, {
@@ -2058,7 +2075,11 @@ const blockHtml = (doc, block) => {
       ([key, value]) =>
         `<div class="block-prop"><span class="block-key">${escape(key)}</span>` +
         (value.includes('\n')
-          ? `<pre class="block-value">${valueHtml(value.replace(/^\n/, ''), namespace)}</pre>`
+          ? `<pre class="block-value">${value
+              .replace(/^\n/, '')
+              .split('\n')
+              .map((line) => `<span class="value-line">${valueHtml(line, namespace)}</span>`)
+              .join('')}</pre>`
           : `<span class="block-value">${valueHtml(value, namespace)}</span>`) +
         '</div>',
     )
@@ -2584,7 +2605,7 @@ const rowsOf = (children, depth) =>
         const expanded = ui.expanded.has(child.path);
         return (
           `<div class="tree-node" data-path="${escape(child.path)}"><div class="tree-row folder" ${pad}>` +
-          `<button class="caret${expanded ? ' open' : ''}" data-toggle="${escape(child.path)}" aria-label="Expand">▸</button>` +
+          `<button class="caret${expanded ? ' open' : ''}" data-toggle="${escape(child.path)}" aria-label="${escape(child.path)}" aria-expanded="${expanded}">▸</button>` +
           (child.entry
             ? `<a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}" title="${escape(child.entry.name)}">${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a>`
             : `<a data-open="n:${escape(child.path)}" data-tree-key="n:${escape(child.path)}" title="${escape(child.path)}">${folderIcon}<span class="label">${escape(child.segment)}</span></a>`) +
@@ -2615,7 +2636,9 @@ const toggleFolder = (path, expand) => {
     return;
   }
   next ? ui.expanded.add(path) : ui.expanded.delete(path);
-  node.querySelector(':scope > .tree-row .caret').classList.toggle('open', next);
+  const caret = node.querySelector(':scope > .tree-row .caret');
+  caret.classList.toggle('open', next);
+  caret.setAttribute('aria-expanded', String(next));
   const depth = path.split('.').length;
   node.querySelector(':scope > .tree-children').innerHTML = next ? treeRows(nodeAt(path), depth) : '';
 };
@@ -2722,6 +2745,23 @@ const openQuery = () => {
 /** A definition key names a hash, a member of one (`<hash>.<n>`) or a builtin (`#Int`); anything else is a name. */
 const DEFINITION_HASH = /^([0-9a-f]{64}(\.[0-9]+)?|#.+)$/;
 
+/** The shortened hashes the explorer shows (`#9e80c8a9`): eight or more hex digits, short of a whole hash. */
+const SHORT_HASH = /^[0-9a-f]{8,63}$/;
+
+/** The one hash among `hashes` that starts with `prefix`, or undefined when none or several do. */
+const uniquePrefix = (hashes, prefix) => {
+  let found;
+  for (const hash of hashes) {
+    if (hash.startsWith(prefix)) {
+      if (found !== undefined) {
+        return undefined;
+      }
+      found = hash;
+    }
+  }
+  return found;
+};
+
 /** `#d:<name>` opens the definition of that name, so a link can be written by hand (`/#d:Cli.main`); the fragment
  * is rewritten to the hash, which every other link uses. A name the project lacks is left for the card to report. */
 const canonicalNames = () => {
@@ -2729,7 +2769,19 @@ const canonicalNames = () => {
   let changed = false;
   const keys = raw.map((key) => {
     const value = decoded(key.slice(2));
-    const entry = key.startsWith('d:') && !DEFINITION_HASH.test(value) ? named(value) : undefined;
+    if (key.startsWith('c:') && SHORT_HASH.test(value)) {
+      const full = uniquePrefix(
+        index.meta.history.map((change) => change.causal),
+        value,
+      );
+      changed ||= full !== undefined;
+      return full ? `c:${full}` : key;
+    }
+    const entry =
+      key.startsWith('d:') && !DEFINITION_HASH.test(value)
+        ? (named(value) ??
+          (SHORT_HASH.test(value) ? index.byHash.get(uniquePrefix(index.byHash.keys(), value) ?? '') : undefined))
+        : undefined;
     changed ||= entry !== undefined;
     return entry ? `d:${entry.hash}` : key;
   });
@@ -2743,8 +2795,20 @@ const renderNow = async () => {
   canonicalNames();
   const { view, keys } = parseFragment();
   ui.view = view;
+  // The tab names what the reader is looking at: a task's card belongs to Tasks and a change's to History.
+  const shown = keys.includes(ui.focus) ? ui.focus : keys[0];
+  const tab =
+    view !== 'code'
+      ? view === 'graph'
+        ? 'code'
+        : view
+      : shown?.startsWith('t:')
+        ? 'tasks'
+        : shown?.startsWith('c:')
+          ? 'history'
+          : 'code';
   for (const link of document.querySelectorAll('#views [data-view]')) {
-    link.classList.toggle('active', link.dataset.view === (view === 'graph' ? 'code' : view));
+    link.classList.toggle('active', link.dataset.view === tab);
   }
   element('layouts').hidden = view !== 'code' && view !== 'graph';
   for (const button of document.querySelectorAll('#layouts [data-view]')) {
@@ -3298,6 +3362,17 @@ const matchPositions = (text, query) => {
   return positions;
 };
 
+/** Whether the letters of `part` appear in `word` in order. */
+const isSubsequence = (part, word) => {
+  let at = 0;
+  for (const char of word) {
+    if (char === part[at]) {
+      at++;
+    }
+  }
+  return at === part.length;
+};
+
 const nameScore = (name, query) => {
   const lower = name.toLowerCase();
   const last = lastSegment(lower);
@@ -3321,6 +3396,16 @@ const nameScore = (name, query) => {
   if (inName >= 0) {
     return 600 - inName * 0.5 - lower.length * 0.2;
   }
+  // `lst.mp` abbreviates `List.map` part by part: each part's letters in order within the segment it lines up with.
+  const parts = query.split('.');
+  const segments = lower.split('.');
+  if (parts.length > 1 && parts.length <= segments.length) {
+    const tail = segments.slice(segments.length - parts.length);
+    if (parts.every((part, i) => part.length > 0 && isSubsequence(part, tail[i]))) {
+      const prefixes = parts.filter((part, i) => tail[i][0] === part[0]).length;
+      return 500 + prefixes * 20 - lower.length * 0.2;
+    }
+  }
   const positions = matchPositions(name, query);
   if (!positions) {
     return -1;
@@ -3336,7 +3421,7 @@ const highlight = (text, positions) => {
   return [...text].map((char, i) => (marks.has(i) ? `<mark>${escape(char)}</mark>` : escape(char))).join('');
 };
 
-const finder = { results: [], selected: 0 };
+const finder = { results: [], selected: 0, opener: undefined };
 
 const search = (raw) => {
   const query = raw.trim();
@@ -3378,6 +3463,19 @@ const search = (raw) => {
         score: 400 - at,
         positions: at >= 0 ? Array.from({ length: lower.length }, (_, i) => at + i) : [],
       });
+    }
+  }
+  if (hits.length === 0 && lower.length >= 3) {
+    // A typo matches nothing above, so names within two edits are offered, the whole name or its last part.
+    for (const entry of index.names) {
+      const name = entry.name.toLowerCase();
+      const last = lastSegment(name);
+      // Two edits change a length by at most two, which spares most names the distance itself.
+      const near = (text) => (Math.abs(text.length - lower.length) <= 2 ? editDistance(text, lower) : 3);
+      const edits = Math.min(near(name), near(last));
+      if (edits <= 2) {
+        hits.push({ entry, score: 200 - edits * 50 - name.length * 0.1, positions: [] });
+      }
     }
   }
   return hits.sort((a, b) => b.score - a.score).slice(0, 60);
@@ -3429,6 +3527,10 @@ const renderFinder = () => {
 };
 
 const openFinder = () => {
+  // Closing gives focus back to what opened the finder, so a keyboard user carries on from where they were.
+  if (element('finder').hidden) {
+    finder.opener = document.activeElement;
+  }
   element('finder').hidden = false;
   const input = element('finder-input');
   input.select();
@@ -3439,7 +3541,11 @@ const openFinder = () => {
 };
 
 const closeOverlays = () => {
+  const reopen = !element('finder').hidden && finder.opener instanceof HTMLElement && finder.opener !== document.body;
   element('finder').hidden = true;
+  if (reopen && finder.opener.isConnected) {
+    finder.opener.focus();
+  }
   element('shortcuts').hidden = true;
   element('task-dialog').hidden = true;
 };
@@ -4100,6 +4206,7 @@ const main = async () => {
     }
   });
   window.addEventListener('hashchange', render);
+  element('skip').addEventListener('click', () => element('main').focus());
   rememberScroll();
   // The finder opens on ⌘K or Ctrl+K; the help names the one this keyboard has.
   if (!/Mac|iPhone|iPad/.test(navigator.platform)) {

@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="app.css" />
   </head>
   <body>
+    <button id="skip" class="skip-link">Skip to content</button>
     <header id="topbar">
       <button
         id="menu"
@@ -66,7 +67,7 @@
         <div class="sidebar-title">Namespaces</div>
         <div id="tree" role="tree"></div>
       </aside>
-      <main id="main">
+      <main id="main" tabindex="-1">
         <section id="workspace"></section>
         <section id="graph-view" aria-label="Graph of the open definitions" hidden></section>
         <section id="tasks-view" hidden></section>

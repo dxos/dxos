@@ -1,0 +1,68 @@
+---
+id: org.dxos.deus.features.worker
+name: Worker.Features
+version: 1.0
+---
+
+# The DEUS Worker: feature map
+
+This project is the Cloudflare Worker that hosts DEUS codebases, written in DEUS and compiled to JavaScript by the
+js target (task 41714c0d). It answers `deus push` and `deus pull`, keeps each branch head safe under concurrent
+pushes, checks API keys, and serves this explorer. Every request handler of the replication API is DEUS; the
+JavaScript around it in `platform/worker/` wires the platform, keeps the pack lookups' caches and draws the explorer's
+pages. It mounts the toolchain, `@dxos/base` and `@dxos/web`, whose `Js` library reaches JavaScript.
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `feature` | `org.dxos.deus.feature@1.0` |
+
+## Replication
+
+What `deus push` and `deus pull` talk to, under `/v1/@owner/project`: bundles, packs, files beside them, and the
+branch heads a push moves.
+
+```mdl
+feature W-1: Replication API
+  status: shipped
+  tags: home
+  defs: Worker.Bundles.serve | Worker.PackFiles.serve | Worker.Files.serve | Worker.Objects.serve | Worker.Names.serve
+```
+
+```mdl
+feature W-2: Branch heads move by compare-and-swap, and every move is logged
+  status: shipped
+  parent: W-1
+  defs: Worker.Heads.moveHead | Worker.Heads.verdict | Worker.Heads.serveLog
+```
+
+```mdl
+feature W-3: Pack indexes answer a lookup with a binary search
+  status: shipped
+  parent: W-1
+  defs: Worker.Packs.search | Worker.Packs.checkIndex | Worker.Packs.checkCombined
+```
+
+## Access
+
+Who may write: API keys, their scopes and projects, and the admin API that mints and revokes them.
+
+```mdl
+feature W-4: API keys
+  status: shipped
+  tags: home
+  defs: Worker.Keys.judge | Worker.Keys.parseKey | Worker.KeyAdmin.serve | Worker.KeyAdmin.mint
+```
+
+## Platform
+
+Typed bindings for what a Worker reaches: the R2 bucket, the D1 database, HTTP, Web Crypto, and the routes a request
+can take.
+
+```mdl
+feature W-5: Platform bindings
+  status: shipped
+  tags: home
+  defs: Worker.R2.listAll | Worker.D1.first | Worker.Http.response | Worker.Crypto.sha256 | Worker.Routes.route | Worker.Paths.isSegment
+```
