@@ -1,5 +1,19 @@
 # @dxos/plugin-computer
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/plugin-projects@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

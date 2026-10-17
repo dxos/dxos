@@ -1,5 +1,31 @@
 # @dxos/app-framework
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/operation@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/debug@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/web-context@0.15.1
+  - @dxos/web-context-react@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/protocols@0.15.1
+  - @dxos/react-error-boundary@0.15.1
+  - @dxos/react-hooks@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

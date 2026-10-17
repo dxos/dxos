@@ -1,5 +1,16 @@
 # @dxos/drawing-site
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/react-ui-editor@0.15.1
+  - @dxos/ui-editor@0.15.1
+  - @dxos/diagram@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/drawing@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

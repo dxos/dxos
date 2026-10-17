@@ -1,5 +1,37 @@
 # @dxos/plugin-deck
 
+## 0.15.1
+
+### Patch Changes
+
+- 2f76f26: A tab, labelled button or other filled control at either end of a `Toolbar` now starts one gap in from the edge, in line with a list's icon column; plank and complementary headers start their leading control 4px in and the companion header 8px in; and a tab that shows its label only when selected keeps its icon in place as selection changes.
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-attention@0.15.1
+  - @dxos/plugin-observability@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-attention@0.15.1
+  - @dxos/react-ui-dnd@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-menu@0.15.1
+  - @dxos/react-ui-mosaic@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/plugin-graph@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/react-focus@0.15.1
+  - @dxos/react-hooks@0.15.1
+  - @dxos/ui-theme@0.15.1
+  - @dxos/ui-types@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

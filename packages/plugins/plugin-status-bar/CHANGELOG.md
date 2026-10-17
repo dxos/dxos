@@ -1,5 +1,18 @@
 # @dxos/plugin-status-bar
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/plugin-deck@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

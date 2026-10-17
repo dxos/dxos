@@ -1,5 +1,18 @@
 # @dxos/env-tests
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo-client@0.15.1
+  - @dxos/assistant@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/assistant-toolkit@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/conductor@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

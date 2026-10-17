@@ -1,5 +1,14 @@
 # @dxos/link
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/schema@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/pipeline@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

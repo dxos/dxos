@@ -1,5 +1,24 @@
 # @dxos/observability
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/client-protocol@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/log-store-idb@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/tracing@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

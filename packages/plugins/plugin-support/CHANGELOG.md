@@ -1,5 +1,41 @@
 # @dxos/plugin-support
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/plugin-deck@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-space@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/plugin-attention@0.15.1
+  - @dxos/plugin-client@0.15.1
+  - @dxos/plugin-observability@0.15.1
+  - @dxos/plugin-status-bar@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/brand@0.15.1
+  - @dxos/react-ui-attention@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-markdown@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/echo-react@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/halo-react@0.15.1
+  - @dxos/debug@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/react-focus@0.15.1
+  - @dxos/react-hooks@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

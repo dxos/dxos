@@ -1,5 +1,23 @@
 # @dxos/client-protocol
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo-client@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/worker-framework@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/credentials@0.15.1
+  - @dxos/rpc@0.15.1
+  - @dxos/rpc-tunnel@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

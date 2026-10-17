@@ -1,5 +1,63 @@
 # @dxos/plugin-script
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/devtools@0.15.1
+  - @dxos/assistant@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-space@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/assistant-toolkit@0.15.1
+  - @dxos/plugin-chess@0.15.1
+  - @dxos/plugin-client@0.15.1
+  - @dxos/plugin-explorer@0.15.1
+  - @dxos/plugin-game@0.15.1
+  - @dxos/plugin-markdown@0.15.1
+  - @dxos/plugin-routine@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-attention@0.15.1
+  - @dxos/react-ui-dnd@0.15.1
+  - @dxos/react-ui-editor@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-menu@0.15.1
+  - @dxos/react-ui-mosaic@0.15.1
+  - @dxos/react-ui-query@0.15.1
+  - @dxos/react-ui-syntax-highlighter@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/edge-compute@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/echo-doc@0.15.1
+  - @dxos/echo-react@0.15.1
+  - @dxos/client-protocol@0.15.1
+  - @dxos/schema@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ui-editor@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/echo-query@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/halo@0.15.1
+  - @dxos/halo-react@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/protocols@0.15.1
+  - @dxos/react-hooks@0.15.1
+  - @dxos/ui@0.15.1
+  - @dxos/ui-theme@0.15.1
+  - @dxos/ui-types@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

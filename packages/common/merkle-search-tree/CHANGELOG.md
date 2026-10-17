@@ -1,5 +1,12 @@
 # @dxos/merkle-search-tree
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/invariant@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

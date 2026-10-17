@@ -1,5 +1,15 @@
 # @dxos/timeframe
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/debug@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

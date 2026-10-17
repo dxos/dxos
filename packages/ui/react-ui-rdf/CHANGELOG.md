@@ -1,5 +1,17 @@
 # @dxos/react-ui-rdf
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/react-ui-graph@0.15.1
+  - @dxos/react-ui-list@0.15.1
+  - @dxos/pipeline-rdf@0.15.1
+  - @dxos/ui-theme@0.15.1
+  - @dxos/ui-types@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

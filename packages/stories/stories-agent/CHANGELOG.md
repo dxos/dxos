@@ -1,5 +1,30 @@
 # @dxos/stories-agent
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/assistant@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/plugin-agent@0.15.1
+  - @dxos/plugin-assistant@0.15.1
+  - @dxos/plugin-discord@0.15.1
+  - @dxos/plugin-thread@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-debug@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/crawler@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

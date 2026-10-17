@@ -1,5 +1,23 @@
 # @dxos/react-ui
 
+## 0.15.1
+
+### Patch Changes
+
+- 2f76f26: A tab, labelled button or other filled control at either end of a `Toolbar` now starts one gap in from the edge, in line with a list's icon column; plank and complementary headers start their leading control 4px in and the companion header 8px in; and a tab that shows its label only when selected keeps its icon in place as selection changes.
+- @dxos/async@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/i18n@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/lit-ui@0.15.1
+  - @dxos/react-error-boundary@0.15.1
+  - @dxos/react-focus@0.15.1
+  - @dxos/react-hooks@0.15.1
+  - @dxos/ui-theme@0.15.1
+  - @dxos/ui-types@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes

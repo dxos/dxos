@@ -1,5 +1,67 @@
 # @dxos/cli
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo-client@0.15.1
+  - @dxos/assistant@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/halo-adapter-client@0.15.1
+  - @dxos/plugin-space@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/assistant-toolkit@0.15.1
+  - @dxos/plugin-assistant@0.15.1
+  - @dxos/plugin-chess@0.15.1
+  - @dxos/plugin-client@0.15.1
+  - @dxos/plugin-connector@0.15.1
+  - @dxos/plugin-file@0.15.1
+  - @dxos/plugin-game@0.15.1
+  - @dxos/plugin-illustrator@0.15.1
+  - @dxos/plugin-inbox@0.15.1
+  - @dxos/plugin-kanban@0.15.1
+  - @dxos/plugin-map@0.15.1
+  - @dxos/plugin-markdown@0.15.1
+  - @dxos/plugin-observability@0.15.1
+  - @dxos/plugin-projects@0.15.1
+  - @dxos/plugin-registry@0.15.1
+  - @dxos/plugin-review@0.15.1
+  - @dxos/plugin-routine@0.15.1
+  - @dxos/plugin-sample@0.15.1
+  - @dxos/plugin-script@0.15.1
+  - @dxos/plugin-table@0.15.1
+  - @dxos/plugin-tasks@0.15.1
+  - @dxos/plugin-transcription@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/agent-code-mode@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/edge-compute@0.15.1
+  - @dxos/mcp-server@0.15.1
+  - @dxos/plugin-google@0.15.1
+  - @dxos/plugin-jmap@0.15.1
+  - @dxos/client-protocol@0.15.1
+  - @dxos/schema@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/observability@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/cli-util@0.15.1
+  - @dxos/introspect@0.15.1
+  - @dxos/halo@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/effect-atom-solid@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/random@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

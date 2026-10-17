@@ -1,5 +1,14 @@
 # @dxos/brain
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/pipeline-rdf@0.15.1
+  - @dxos/datalog@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

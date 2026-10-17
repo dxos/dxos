@@ -1,5 +1,45 @@
 # @dxos/app-toolkit
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/migrations@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/react-ui-attention@0.15.1
+  - @dxos/react-ui-list@0.15.1
+  - @dxos/react-ui-menu@0.15.1
+  - @dxos/react-ui-syntax-highlighter@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/client-protocol@0.15.1
+  - @dxos/schema@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/i18n@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/progress@0.15.1
+  - @dxos/credentials@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/protocols@0.15.1
+  - @dxos/react-focus@0.15.1
+  - @dxos/ui-theme@0.15.1
+  - @dxos/ui-types@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes

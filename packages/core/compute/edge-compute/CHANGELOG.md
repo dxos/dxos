@@ -1,5 +1,26 @@
 # @dxos/edge-compute
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/functions-runtime-cloudflare@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/crypto@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

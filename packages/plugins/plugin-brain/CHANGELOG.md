@@ -1,5 +1,29 @@
 # @dxos/plugin-brain
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-inbox@0.15.1
+  - @dxos/plugin-projects@0.15.1
+  - @dxos/plugin-routine@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-rdf@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/pipeline-email@0.15.1
+  - @dxos/schema@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/pipeline-rdf@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes
