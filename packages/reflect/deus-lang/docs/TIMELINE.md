@@ -312,6 +312,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 302 | 10-18 19:30 | 30m 00s | 6989dd0ff6 | All 386 checks pass on the hosted overview; the finder opens documents; code spans follow CommonMark (D274) |
 | 303 | 10-18 19:45 | 15m 00s | b152c885ac | The native self-builds run in a test file of their own (D275) |
 | 304 | 10-18 20:15 | 30m 00s | d50bc55044 | Attachment rules in DEUS (Worker.Writes); review fixes for D268-D275 (D276) |
-| 305 | 10-18 20:45 | 30m 00s | this commit | Embedded documents are named Docs.*Md so none shadows a definition; embed changes say what they embedded (D277) |
+| 305 | 10-18 20:45 | 30m 00s | 2e9562f30b | Embedded documents are named Docs.*Md so none shadows a definition; embed changes say what they embedded (D277) |
+| 306 | 10-18 21:00 | 15m 00s | this commit | sync-deus checks its embeds in one view: 7.9 s to 4.2 s when nothing changed (D278) |
 
-Total from stage 1 to stage 305: 120h 35m.
+Total from stage 1 to stage 306: 120h 50m.

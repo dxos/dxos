@@ -344,9 +344,12 @@ def rebuild_seed(codebase):
 def embed_files(codebase):
     """Embeds each of EMBEDDED whose text changed since the codebase last embedded it."""
     import hashlib
+    # One view of every embedded name, rather than one process each; a name the codebase lacks fails the whole view,
+    # and then each is viewed alone.
+    together = deus('view', *(name for _, name in EMBEDDED), codebase=codebase, check=False)
     for file, name in EMBEDDED:
         sha = hashlib.sha256((ROOT / file).read_bytes()).hexdigest()
-        shown = deus('view', name, codebase=codebase, check=False)
+        shown = together if together.returncode == 0 else deus('view', name, codebase=codebase, check=False)
         if sha not in shown.stdout:
             deus('embed', file, '--as', name, '--quiet', codebase=codebase)
             print(f'  embedded {file} as {name}')
