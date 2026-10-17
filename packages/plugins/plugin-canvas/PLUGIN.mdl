@@ -96,7 +96,7 @@ test QA-2: Draw a nested architecture diagram of composer-app
 
 test QA-3: Showcase clip
   desc: |
-    The 20s showcase clip: Open the Composer architecture drawing from the DXOS Architecture space and drill into a box. Recorded light at 60 fps with no ident, captions or
+    The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: canvas` step.
   actors: human
   status: unverified        # driven by autocue/showcase.mjs
@@ -106,11 +106,14 @@ test QA-3: Showcase clip
     - plugin-canvas enabled
   steps:
     - name: Create the space from its template
-      do: Open the app menu, choose Create space, pick DXOS Architecture, and click Create.
-      expect: the space opens with its architecture drawings
-    - name: Drill into a box
-      do: Open the Composer drawing, pan it, and double-click the Framework box.
-      expect: the box opens the App Framework diagram beneath it
+      do: Open the app menu, choose Create space, pick DXOS Architecture, and open the Composer drawing.
+      expect: the drawing opens
+    - name: Read a shape
+      do: Select the React UI box and scroll its Properties panel.
+      expect: the box is selected and its properties show
+    - name: Rename it
+      do: Turn off read-only, double-click the box, and type React components.
+      expect: the box shows its new label
 ```
 
 ```mdl

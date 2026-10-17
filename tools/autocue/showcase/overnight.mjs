@@ -30,7 +30,7 @@
  */
 
 import { execFileSync, spawn } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -144,6 +144,35 @@ const record = async (file, take, port, theme) => {
   return { ok, error };
 };
 
+/**
+ * The dark demo's source: the take from its `clip:` step on, with the timeline shifted to match. The setup before it
+ * is preparation (a template space, a closed companion), and showing it would put a companion's open-and-close on
+ * camera. Falls back to the whole take when the cut fails, so a demo is still made.
+ */
+const demoCut = async (take, name) => {
+  const timelineFile = path.join(take, 'timeline.json');
+  const timeline = JSON.parse(readFileSync(timelineFile, 'utf8'));
+  const start = timeline.steps?.find((step) => step.text === `clip: ${name}`)?.ms;
+  if (start === undefined) {
+    return path.join(take, 'session.webm');
+  }
+  const dir = path.join(take, 'demo');
+  mkdirSync(dir, { recursive: true });
+  const cut = await run('ffmpeg', [
+    ...['-v', 'error', '-y', '-ss', String(start / 1000), '-i', path.join(take, 'session.webm')],
+    ...['-vf', 'scale=1920:1080:flags=lanczos', '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-cpu-used', '8'],
+    ...['-crf', '30', '-b:v', '0', '-an', path.join(dir, 'session.webm')],
+  ]);
+  if (cut.code !== 0) {
+    return path.join(take, 'session.webm');
+  }
+  const steps = (timeline.steps ?? [])
+    .filter((step) => step.ms >= start - 50)
+    .map((step) => ({ ...step, ms: Math.max(0, step.ms - start) }));
+  writeFileSync(path.join(dir, 'timeline.json'), JSON.stringify({ ...timeline, steps }, null, 2));
+  return path.join(dir, 'session.webm');
+};
+
 /** Turns a take into its variant's video: the cut clip (light) or the trimmed, bookended demo (dark). */
 const finish = async (theme, take, name, ms) => {
   const out = path.join(CLIPS, theme, `${name}.mp4`);
@@ -160,7 +189,7 @@ const finish = async (theme, take, name, ms) => {
         ])
       : await run(process.execPath, [
           path.join(ROOT, '.agents/skills/autocue/scripts/trim-static.mjs'),
-          ...['--in', path.join(take, 'session.webm'), '--out', path.join(CLIPS, theme, `${name}.webm`)],
+          ...['--in', await demoCut(take, name), '--out', path.join(CLIPS, theme, `${name}.webm`)],
           ...['--ident', 'composer', '--theme', 'dark', '--mp4', '--fps', '30', '--duration', 'off', '--upload', 'off'],
         ]);
   if (done.code !== 0 || !existsSync(out)) {

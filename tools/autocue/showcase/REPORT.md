@@ -81,9 +81,15 @@ conductor    handpan      kanban       map          mermaid      sequencer
 
 Notes
 
+- [ ] in light mode, mid-gray gap between frames
+
 ## Frames
 
 Four frames from each video, evenly spaced: check each shows its plugin working, not a blank or wrong plank.
+
+Notes (all)
+
+- [ ] Show mouse pointer
 
 ### composer
 
@@ -110,6 +116,9 @@ Notes
 
 Notes
 
+- [ ] Start from space template: DXOS Architecture
+- [ ] Select a shape and scroll the properties panel
+- [ ] Change the text of one of the shapes
 - [ ]
 
 ### chess
@@ -181,7 +190,8 @@ Notes
 
 Notes
 
-- [ ]
+- [ ] Start from space template: DXOS Architecture
+- [ ] Select kanban
 
 ### map
 
@@ -199,7 +209,11 @@ Notes
 
 Notes
 
-- [ ]
+- [ ] Start from space template: DXOS Architecture
+- [ ] Select sentence in paragraph and add comment
+- [ ] Select another sentence in another paragraph and add a comment for "@kai" to add a markdown diagram
+- [ ] Go to the bottom and insert an inline object: Canvas diagram
+- [ ] Zoom into diagram
 
 ### mermaid
 
@@ -226,7 +240,8 @@ Notes
 
 Notes
 
-- [ ]
+- [ ] Select first project (task properties should open)
+- [ ] Check first project then click send to agent (gantt panel should open)
 
 ### script
 

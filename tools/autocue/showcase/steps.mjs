@@ -226,3 +226,39 @@ export const showcase = ({ name, caption, plugins, setup, clip, ms = SHORT_MS })
     },
   },
 ];
+
+/** Selects `text` in the open editor (one evaluate, so the offset cannot go stale) and scrolls it into view. */
+export const selectText = (page, text) =>
+  page.evaluate(async (text) => {
+    const deadline = performance.now() + 15_000;
+    for (;;) {
+      const view = globalThis.composer?.editorView;
+      const pos = view?.state.doc.toString().indexOf(text) ?? -1;
+      if (view && pos >= 0) {
+        view.dispatch({ selection: { anchor: pos, head: pos + text.length }, scrollIntoView: true });
+        view.focus();
+        return;
+      }
+      if (performance.now() > deadline) {
+        throw new Error(`text not found in the editor: ${text}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }, text);
+
+/** Selects `text` in the open document and comments on it, as write-and-link does. */
+export const comment = async (page, text, body) => {
+  await selectText(page, text);
+  const add = page.locator('[data-testid="deck.plank"] [data-testid="comments.comment.add"]').first();
+  await add.waitFor({ state: 'visible' });
+  await page.waitForFunction((element) => !element.disabled, await add.elementHandle(), { timeout: 10_000 });
+  await add.click();
+  // The new thread quotes the selection; an earlier thread can still be the current one.
+  const thread = page.locator(`[data-testid=thread]:has-text(${JSON.stringify(text.slice(0, 24))})`).last();
+  const reply = thread.locator('[data-testid="thread.reply"] [role="textbox"]');
+  await reply.first().waitFor({ state: 'visible', timeout: 10_000 });
+  await reply.first().click();
+  await page.keyboard.type(body, { delay: 45 });
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1_200);
+};
