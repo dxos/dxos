@@ -876,9 +876,10 @@ export class AutomergeHost extends Resource {
     if (this.#quarantined.has(documentId)) {
       return;
     }
+    // Settled apart so one failed read does not hide the ops in the others.
     const recordsUnder = async (...prefixes: string[][]): Promise<Uint8Array[]> =>
-      (await Promise.all(prefixes.map((prefix) => this._storage.loadRange(prefix))))
-        .flat()
+      (await Promise.allSettled(prefixes.map((prefix) => this._storage.loadRange(prefix))))
+        .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
         .flatMap(({ data }) => (data ? [data] : []));
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     // Either store may hold the whole document, so each is counted on its own rather than summed.

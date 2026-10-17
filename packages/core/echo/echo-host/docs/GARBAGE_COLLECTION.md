@@ -362,7 +362,9 @@ objects inline in the space root are never retired.
    not repeat. Once the heap is full every load fails, so the host first counts
    the document's ops from its stored chunks, without loading it, and
    quarantines it only at `QUARANTINE_MIN_OPS` (100K) or more; a smaller
-   document is a bystander and is only logged.
+   document is a bystander and is only logged. The classical store and the
+   Subduction store are counted apart, since either may hold the whole
+   document, and the larger count decides.
 2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
    index (the last indexed JSON of each of its objects) into a replacement whose
    id is derived from the original, so peers retiring concurrently converge on

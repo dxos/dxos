@@ -15,7 +15,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { AutomergeHost } from './automerge-host.ts';
+import { AutomergeHost, documentIdToSedimentreeIdHex } from './automerge-host.ts';
 import { DocumentQuarantinedError } from './errors.ts';
 import {
   OVERSIZED_DOCUMENT_CHANGES,
@@ -26,6 +26,7 @@ import {
   oversizeLevel,
 } from './quarantine.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
+import { SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
 const OUT_OF_MEMORY = new RangeError('error inflating document chunk ops: out of memory');
@@ -221,6 +222,23 @@ describe('AutomergeHost quarantine', () => {
     expect(host.quarantinedDocuments.get(large.documentId)?.reason).toBe('load-failed');
     expect(host.isQuarantined(small.documentId)).toBe(false);
     expect(host.isQuarantined(malformed)).toBe(false);
+  });
+
+  test('counts a document held only by the Subduction store', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = await openHost(runtime);
+    const documentId = randomDocumentId();
+    const changes = A.getAllChanges(A.from({ text: 'x'.repeat(QUARANTINE_MIN_OPS) }));
+    await Promise.all(
+      changes.map((change, index) =>
+        host.storage.save([SUBDUCTION_PREFIX, 'blobs', documentIdToSedimentreeIdHex(documentId), `${index}`], change),
+      ),
+    );
+
+    host['_repo'].emit('document-load-failed', { documentId, error: OUT_OF_MEMORY, source: 'subduction' });
+
+    await expect.poll(() => host.isQuarantined(documentId)).toBe(true);
   });
 
   test('a document whose stored bytes cannot be applied reports the failure from storage', async () => {
