@@ -4,129 +4,188 @@ rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "
 
 async function Worker$Bundles$serve(request, bucket, project, rest, verify, authorize, moveHead) {
   const $stack = rt.handlers();
-  const folder = rt.ap(rt.prims["append"], project, "/bundles/");
-  const verb = Worker$Http$method(request);
+  const logged = rt.ap(rt.prims["Ref.new"], lib$web$Js$undefined());
+  const reply = rt.resumed($stack, await Worker$Bundles$answer(Worker$Bundles$r2Store(bucket, project), Worker$Http$method(request), rest, verify, rt.named(async (v) => {
+  const $stack = rt.handlers();
+  return Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(request, "arrayBuffer", rt.NIL)));
+}, "Worker.Bundles.serve/\u03bb"), rt.named(async (scope) => {
+  const $stack = rt.handlers();
+  return rt.ap(rt.prims["Ref.set"], logged, rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, scope))));
+}, "Worker.Bundles.serve/\u03bb"), rt.named(async (v_1) => {
+  const $stack = rt.handlers();
+  return lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(moveHead, rt.ap(rt.prims["Ref.get"], logged)))));
+}, "Worker.Bundles.serve/\u03bb")));
+  m0: {
+    if (reply.tag === 0) {
+      const names = reply.fields[0];
+      return Worker$Http$lines(names);
+    }
+    if (reply.tag === 1) {
+      const body = reply.fields[0];
+      return Worker$Http$response(body, 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/gzip"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "public, max-age=31536000, immutable"]), rt.NIL)));
+    }
+    if (reply.tag === 2) {
+      const name = reply.fields[0];
+      const field = reply.fields[1];
+      const value = reply.fields[2];
+      const status = reply.fields[3];
+      return lib$web$Js$call(rt.ap(rt.prims["Ref.get"], logged), rt.cons(Worker$Bundles$report(name, field, value, status), rt.NIL));
+    }
+    if (reply.tag === 3) {
+      const status_1 = reply.fields[0];
+      const message = reply.fields[1];
+      return Worker$Http$problem(status_1, message);
+    }
+    if (reply.tag === 4) {
+      const refusal = reply.fields[0];
+      return lib$web$Js$call(rt.ap(rt.prims["Ref.get"], logged), rt.cons(refusal, rt.NIL));
+    }
+    rt.nomatch(reply);
+  }
+}
+rt.named(Worker$Bundles$serve, "Worker.Bundles.serve");
+
+const lib$web$Js$undefined = rt.importValue(rt, "js.undefined", ['raw'], "lib.web.Js.undefined");
+
+async function Worker$Bundles$answer(store, verb, rest, verify, body, authorize, moveHead) {
+  const $stack = rt.handlers();
   m0: {
     if (rest.tag === 0) {
-      if ((verb === "GET")) {
-        return Worker$Http$lines(rt.resumed($stack, await Worker$R2$listAll(bucket, folder)));
-      } else {
-        return Worker$Http$problem(405, "method not allowed");
-      }
+      return rt.resumed($stack, await Worker$Bundles$listing(store, verb));
     }
     if (rest.tag === 1 && rest.fields[0] === "" && rest.fields[1].tag === 0) {
-      if ((verb === "GET")) {
-        return Worker$Http$lines(rt.resumed($stack, await Worker$R2$listAll(bucket, folder)));
-      } else {
-        return Worker$Http$problem(405, "method not allowed");
-      }
+      return rt.resumed($stack, await Worker$Bundles$listing(store, verb));
     }
     if (rest.tag === 1 && rest.fields[1].tag === 0) {
       const name = rest.fields[0];
       if (not(Worker$Paths$isBundle(name))) {
-        return Worker$Http$problem(404, "not a bundle name");
+        return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [404, "not a bundle name"]);
       } else {
-        const key = rt.ap(rt.prims["append"], folder, name);
         if ((verb === "GET")) {
-          const t1 = rt.resumed($stack, await Worker$R2$get(bucket, key));
+          const t1 = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$read(store)), name));
           m2: {
             if (t1.tag === 0) {
-              return Worker$Http$problem(404, "no such bundle");
+              return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [404, "no such bundle"]);
             }
             if (t1.tag === 1) {
-              const object = t1.fields[0];
-              return Worker$Http$response(lib$web$Js$get(object, "body"), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/gzip"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "public, max-age=31536000, immutable"]), rt.NIL)));
+              const found = t1.fields[0];
+              return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 1, [found]);
             }
             rt.nomatch(t1);
           }
         } else {
           if ((verb === "PUT")) {
-            const logged = rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, "push")));
-            const bytes = Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(request, "arrayBuffer", rt.NIL)));
-            if (rt.resumed($stack, await Worker$R2$exists(bucket, key))) {
-              return lib$web$Js$call(logged, rt.cons(Worker$Bundles$report(name, "stored", false, 200), rt.NIL));
-            } else {
-              let problem;
-              if (not(verify)) {
-                problem = rt.con0("#Option", 0);
-              } else {
-                const t3 = rt.resumed($stack, await Worker$Crypto$gunzip(bytes));
-                m4: {
-                  if (t3.tag === 0) {
-                    problem = Worker$Bundles$pushProblem(name, rt.con0("#Option", 0));
-                    break m4;
-                  }
-                  if (t3.tag === 1) {
-                    const inflated = t3.fields[0];
-                    problem = Worker$Bundles$pushProblem(name, new rt.Con("#Option", 1, [rt.resumed($stack, await Worker$Crypto$sha256(inflated))]));
-                    break m4;
-                  }
-                  rt.nomatch(t3);
-                }
-              }
-              m5: {
-                if (problem.tag === 1 && problem.fields[0].tag === 0) {
-                  const status = problem.fields[0].fields[0];
-                  const message = problem.fields[0].fields[1];
-                  return Worker$Http$problem(status, message);
-                }
-                if (problem.tag === 0) {
-                  const t6 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(moveHead, logged))));
-                  m7: {
-                    if (t6.tag === 1) {
-                      const refused = t6.fields[0];
-                      return lib$web$Js$call(logged, rt.cons(refused, rt.NIL));
-                    }
-                    if (t6.tag === 0) {
-                      rt.resumed($stack, await Worker$R2$put(bucket, key, bytes, "application/gzip"));
-                      return lib$web$Js$call(logged, rt.cons(Worker$Bundles$report(name, "stored", true, 201), rt.NIL));
-                    }
-                    rt.nomatch(t6);
-                  }
-                }
-                rt.nomatch(problem);
-              }
-            }
+            return rt.resumed($stack, await Worker$Bundles$push(store, name, verify, body, authorize, moveHead));
           } else {
             if ((verb === "DELETE")) {
-              const logged_1 = rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, "compact")));
-              rt.resumed($stack, await Worker$R2$toTrash(bucket, project, "bundles", name));
-              return lib$web$Js$call(logged_1, rt.cons(Worker$Bundles$report(name, "deleted", true, 200), rt.NIL));
+              rt.resumed($stack, await rt.ap(authorize, "compact"));
+              rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$trash(store)), name));
+              return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 2, [name, "deleted", true, 200]);
             } else {
-              return Worker$Http$problem(405, "method not allowed");
+              return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [405, "method not allowed"]);
             }
           }
         }
       }
     }
     if (true) {
-      return Worker$Http$problem(404, "not a bundle name");
+      return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [404, "not a bundle name"]);
     }
     rt.nomatch(rest);
   }
 }
-rt.named(Worker$Bundles$serve, "Worker.Bundles.serve");
+rt.named(Worker$Bundles$answer, "Worker.Bundles.answer");
+
+function Worker$Bundles$r2Store(bucket, project) {
+  const folder = rt.ap(rt.prims["append"], project, "/bundles/");
+  return new rt.Con("e78d22915bc95521d8894bee0819412613104fe0d219c8520b45c5b0e256865e", 0, [rt.named(async (v) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$R2$listAll(bucket, folder));
+}, "Worker.Bundles.r2Store/\u03bb"), rt.named(async (name) => {
+  const $stack = rt.handlers();
+  const t0 = rt.resumed($stack, await Worker$R2$get(bucket, rt.ap(rt.prims["append"], folder, name)));
+  m1: {
+    if (t0.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (t0.tag === 1) {
+      const object = t0.fields[0];
+      return new rt.Con("#Option", 1, [lib$web$Js$get(object, "body")]);
+    }
+    rt.nomatch(t0);
+  }
+}, "Worker.Bundles.r2Store/\u03bb"), rt.named(async (name_1) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$R2$exists(bucket, rt.ap(rt.prims["append"], folder, name_1)));
+}, "Worker.Bundles.r2Store/\u03bb"), rt.named(async (name_2, bytes) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$R2$put(bucket, rt.ap(rt.prims["append"], folder, name_2), bytes, "application/gzip"));
+}, "Worker.Bundles.r2Store/\u03bb"), rt.named(async (name_3) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$R2$toTrash(bucket, project, "bundles", name_3));
+}, "Worker.Bundles.r2Store/\u03bb"), rt.named(async (bytes_1) => {
+  const $stack = rt.handlers();
+  const t2 = rt.resumed($stack, await Worker$Crypto$gunzip(bytes_1));
+  m3: {
+    if (t2.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (t2.tag === 1) {
+      const inflated = t2.fields[0];
+      return new rt.Con("#Option", 1, [rt.resumed($stack, await Worker$Crypto$sha256(inflated))]);
+    }
+    rt.nomatch(t2);
+  }
+}, "Worker.Bundles.r2Store/\u03bb")]);
+}
+rt.named(Worker$Bundles$r2Store, "Worker.Bundles.r2Store");
 
 function Worker$Http$method(request) {
   return lib$web$Js$toText(lib$web$Js$get(request, "method"));
 }
 rt.named(Worker$Http$method, "Worker.Http.method");
 
+function Worker$R2$bytes(buffer) {
+  return lib$web$Js$construct(lib$web$Js$global("Uint8Array"), rt.cons(buffer, rt.NIL));
+}
+rt.named(Worker$R2$bytes, "Worker.R2.bytes");
+
+const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
+
+const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
+
 function Worker$Http$lines(names) {
   return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(rt.named((name) => rt.ap(rt.prims["append"], name, "\n"), "Worker.Http.lines/\u03bb"), names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
-async function Worker$R2$listAll(bucket, prefix) {
-  const $stack = rt.handlers();
-  return rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, rt.con0("#Option", 0)));
+function Worker$Http$response(body, status, headers) {
+  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
-rt.named(Worker$R2$listAll, "Worker.R2.listAll");
+rt.named(Worker$Http$response, "Worker.Http.response");
+
+const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
+
+function Worker$Bundles$report(name, field, value, status) {
+  return Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["bundle", lib$web$Js$text(name)]), rt.cons(new rt.Con("#Pair", 0, [field, lib$web$Js$bool(value)]), rt.NIL))), status);
+}
+rt.named(Worker$Bundles$report, "Worker.Bundles.report");
 
 function Worker$Http$problem(status, message) {
   return Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["error", lib$web$Js$text(message)]), rt.NIL)), status);
 }
 rt.named(Worker$Http$problem, "Worker.Http.problem");
+
+async function Worker$Bundles$listing(store, verb) {
+  const $stack = rt.handlers();
+  if ((verb === "GET")) {
+    return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 0, [rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$names(store)), undefined))]);
+  } else {
+    return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [405, "method not allowed"]);
+  }
+}
+rt.named(Worker$Bundles$listing, "Worker.Bundles.listing");
 
 function not(b) {
   if (b) {
@@ -165,75 +224,98 @@ function Worker$Paths$isBundle(name) {
 }
 rt.named(Worker$Paths$isBundle, "Worker.Paths.isBundle");
 
+async function Worker$Bundles$Store$read(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Bundles$Store$read, "Worker.Bundles.Store.read");
+
+async function Worker$Bundles$push(store, name, verify, body, authorize, moveHead) {
+  const $stack = rt.handlers();
+  rt.resumed($stack, await rt.ap(authorize, "push"));
+  const sent = rt.resumed($stack, await rt.ap(body, undefined));
+  if (rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$holds(store)), name))) {
+    return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 2, [name, "stored", false, 200]);
+  } else {
+    let problem;
+    if (verify) {
+      problem = Worker$Bundles$pushProblem(name, rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$digest(store)), sent)));
+    } else {
+      problem = rt.con0("#Option", 0);
+    }
+    m0: {
+      if (problem.tag === 1 && problem.fields[0].tag === 0) {
+        const status = problem.fields[0].fields[0];
+        const message = problem.fields[0].fields[1];
+        return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [status, message]);
+      }
+      if (problem.tag === 0) {
+        const t1 = rt.resumed($stack, await rt.ap(moveHead, undefined));
+        m2: {
+          if (t1.tag === 1) {
+            const refusal = t1.fields[0];
+            return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 4, [refusal]);
+          }
+          if (t1.tag === 0) {
+            rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$write(store)), name, sent));
+            return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 2, [name, "stored", true, 201]);
+          }
+          rt.nomatch(t1);
+        }
+      }
+      rt.nomatch(problem);
+    }
+  }
+}
+rt.named(Worker$Bundles$push, "Worker.Bundles.push");
+
+async function Worker$Bundles$Store$trash(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      return v_5;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Bundles$Store$trash, "Worker.Bundles.Store.trash");
+
+async function Worker$R2$listAll(bucket, prefix) {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, rt.con0("#Option", 0)));
+}
+rt.named(Worker$R2$listAll, "Worker.R2.listAll");
+
 async function Worker$R2$get(bucket, key) {
   const $stack = rt.handlers();
   return lib$web$Js$toOption(rt.resumed($stack, await lib$web$Js$method(bucket, "get", rt.cons(lib$web$Js$text(key), rt.NIL))));
 }
 rt.named(Worker$R2$get, "Worker.R2.get");
 
-function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
-  return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
-}
-rt.named(Worker$Http$response, "Worker.Http.response");
-
 const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
-
-function Worker$R2$bytes(buffer) {
-  return lib$web$Js$construct(lib$web$Js$global("Uint8Array"), rt.cons(buffer, rt.NIL));
-}
-rt.named(Worker$R2$bytes, "Worker.R2.bytes");
-
-const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
 
 async function Worker$R2$exists(bucket, key) {
   const $stack = rt.handlers();
   return not(lib$web$Js$isNull(rt.resumed($stack, await lib$web$Js$method(bucket, "head", rt.cons(lib$web$Js$text(key), rt.NIL)))));
 }
 rt.named(Worker$R2$exists, "Worker.R2.exists");
-
-const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
-
-function Worker$Bundles$report(name, field, value, status) {
-  return Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["bundle", lib$web$Js$text(name)]), rt.cons(new rt.Con("#Pair", 0, [field, lib$web$Js$bool(value)]), rt.NIL))), status);
-}
-rt.named(Worker$Bundles$report, "Worker.Bundles.report");
-
-async function Worker$Crypto$gunzip(bytes) {
-  const $stack = rt.handlers();
-  const stream = lib$web$Js$method(lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("Blob"), rt.cons(lib$web$Js$list(rt.cons(bytes, rt.NIL)), rt.NIL)), "stream", rt.NIL), "pipeThrough", rt.cons(lib$web$Js$construct(lib$web$Js$global("DecompressionStream"), rt.cons(lib$web$Js$text("gzip"), rt.NIL)), rt.NIL));
-  const read = lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(stream, rt.NIL)), "arrayBuffer", rt.NIL);
-  const buffer = rt.resumed($stack, await lib$web$Js$method(read, "then", rt.cons(lib$web$Js$fn(rt.named((value) => value, "Worker.Crypto.gunzip/\u03bb")), rt.cons(lib$web$Js$fn(rt.named((v) => lib$web$Js$null(), "Worker.Crypto.gunzip/\u03bb")), rt.NIL))));
-  return Option$map(Worker$R2$bytes, lib$web$Js$toOption(buffer));
-}
-rt.named(Worker$Crypto$gunzip, "Worker.Crypto.gunzip");
-
-function Worker$Bundles$pushProblem(name, digest) {
-  m0: {
-    if (digest.tag === 0) {
-      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "a bundle is sent gzipped"])]);
-    }
-    if (digest.tag === 1) {
-      const digest_1 = digest.fields[0];
-      if (rt.equal(new rt.Con("#Option", 1, [digest_1]), List$get$p(rt.ap(rt.prims["Text.split"], name, "-"), 1))) {
-        return rt.con0("#Option", 0);
-      } else {
-        return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "the bundle does not hash to its name"])]);
-      }
-    }
-    rt.nomatch(digest);
-  }
-}
-rt.named(Worker$Bundles$pushProblem, "Worker.Bundles.pushProblem");
-
-async function Worker$Crypto$sha256(bytes) {
-  const $stack = rt.handlers();
-  const digest = rt.resumed($stack, await lib$web$Js$method(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("crypto", rt.cons("subtle", rt.NIL))), "digest", rt.cons(lib$web$Js$text("SHA-256"), rt.cons(bytes, rt.NIL))));
-  return Worker$Crypto$hex(Worker$R2$bytes(digest));
-}
-rt.named(Worker$Crypto$sha256, "Worker.Crypto.sha256");
-
-const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
 
 async function Worker$R2$put(bucket, key, body, contentType) {
   const $stack = rt.handlers();
@@ -264,7 +346,30 @@ async function Worker$R2$toTrash(bucket, project, folder, name) {
 }
 rt.named(Worker$R2$toTrash, "Worker.R2.toTrash");
 
+async function Worker$Crypto$gunzip(bytes) {
+  const $stack = rt.handlers();
+  const stream = lib$web$Js$method(lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("Blob"), rt.cons(lib$web$Js$list(rt.cons(bytes, rt.NIL)), rt.NIL)), "stream", rt.NIL), "pipeThrough", rt.cons(lib$web$Js$construct(lib$web$Js$global("DecompressionStream"), rt.cons(lib$web$Js$text("gzip"), rt.NIL)), rt.NIL));
+  const read = lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(stream, rt.NIL)), "arrayBuffer", rt.NIL);
+  const buffer = rt.resumed($stack, await lib$web$Js$method(read, "then", rt.cons(lib$web$Js$fn(rt.named((value) => value, "Worker.Crypto.gunzip/\u03bb")), rt.cons(lib$web$Js$fn(rt.named((v) => lib$web$Js$null(), "Worker.Crypto.gunzip/\u03bb")), rt.NIL))));
+  return Option$map(Worker$R2$bytes, lib$web$Js$toOption(buffer));
+}
+rt.named(Worker$Crypto$gunzip, "Worker.Crypto.gunzip");
+
+async function Worker$Crypto$sha256(bytes) {
+  const $stack = rt.handlers();
+  const digest = rt.resumed($stack, await lib$web$Js$method(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("crypto", rt.cons("subtle", rt.NIL))), "digest", rt.cons(lib$web$Js$text("SHA-256"), rt.cons(bytes, rt.NIL))));
+  return Worker$Crypto$hex(Worker$R2$bytes(digest));
+}
+rt.named(Worker$Crypto$sha256, "Worker.Crypto.sha256");
+
 const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
+
+const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
+
+function lib$web$Js$global(name) {
+  return lib$web$Js$get(lib$web$Js$globalThis(), name);
+}
+rt.named(lib$web$Js$global, "lib.web.Js.global");
 
 const lib$web$Js$text = rt.importFn(rt, "js.as.text", [['text']], ['raw'], "lib.web.Js.text");
 
@@ -292,26 +397,55 @@ function List$map(f, xs) {
 }
 rt.named(List$map, "List.map");
 
-async function Worker$R2$listFrom(bucket, prefix, cursor) {
-  const $stack = rt.handlers();
-  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.listFrom/\u03bb"), cursor), rt.NIL);
-  const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
-  const skip = rt.ap(rt.prims["Text.length"], prefix);
-  const keys = List$map(rt.named((object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))), "Worker.R2.listFrom/\u03bb"), lib$web$Js$toList(lib$web$Js$get(page, "objects")));
-  if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
-    return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
-  } else {
-    return keys;
+const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
+
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
   }
 }
-rt.named(Worker$R2$listFrom, "Worker.R2.listFrom");
+rt.named(fst, "fst");
+
+function snd(p) {
+  m0: {
+    if (p.tag === 0) {
+      const y = p.fields[1];
+      return y;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(snd, "snd");
+
+const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
 
 function Worker$Http$json(value, status) {
   return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$json, "Worker.Http.json");
 
-const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
+const lib$web$Js$bool = rt.importFn(rt, "js.as.bool", [['bool']], ['raw'], "lib.web.Js.bool");
+
+async function Worker$Bundles$Store$names(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Bundles$Store$names, "Worker.Bundles.Store.names");
 
 function List$all(p$, v$) {
   for (;;) {
@@ -365,40 +499,104 @@ function Worker$Heads$isHash(t) {
 }
 rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
-function fst(p) {
+async function Worker$Bundles$Store$holds(v) {
+  const $stack = rt.handlers();
   m0: {
-    if (p.tag === 0) {
-      const x = p.fields[0];
-      return x;
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      return v_3;
     }
-    rt.nomatch(p);
+    rt.nomatch(v);
   }
 }
-rt.named(fst, "fst");
+rt.named(Worker$Bundles$Store$holds, "Worker.Bundles.Store.holds");
 
-function snd(p) {
+function Worker$Bundles$pushProblem(name, digest) {
   m0: {
-    if (p.tag === 0) {
-      const y = p.fields[1];
-      return y;
+    if (digest.tag === 0) {
+      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "a bundle is sent gzipped"])]);
     }
-    rt.nomatch(p);
+    if (digest.tag === 1) {
+      const digest_1 = digest.fields[0];
+      if (rt.equal(new rt.Con("#Option", 1, [digest_1]), List$get$p(rt.ap(rt.prims["Text.split"], name, "-"), 1))) {
+        return rt.con0("#Option", 0);
+      } else {
+        return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "the bundle does not hash to its name"])]);
+      }
+    }
+    rt.nomatch(digest);
   }
 }
-rt.named(snd, "snd");
+rt.named(Worker$Bundles$pushProblem, "Worker.Bundles.pushProblem");
 
-const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
-
-function lib$web$Js$global(name) {
-  return lib$web$Js$get(lib$web$Js$globalThis(), name);
+async function Worker$Bundles$Store$digest(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      return v_6;
+    }
+    rt.nomatch(v);
+  }
 }
-rt.named(lib$web$Js$global, "lib.web.Js.global");
+rt.named(Worker$Bundles$Store$digest, "Worker.Bundles.Store.digest");
 
-const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
+async function Worker$Bundles$Store$write(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Bundles$Store$write, "Worker.Bundles.Store.write");
+
+async function Worker$R2$listFrom(bucket, prefix, cursor) {
+  const $stack = rt.handlers();
+  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.listFrom/\u03bb"), cursor), rt.NIL);
+  const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
+  const skip = rt.ap(rt.prims["Text.length"], prefix);
+  const keys = List$map(rt.named((object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))), "Worker.R2.listFrom/\u03bb"), lib$web$Js$toList(lib$web$Js$get(page, "objects")));
+  if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
+    return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+  } else {
+    return keys;
+  }
+}
+rt.named(Worker$R2$listFrom, "Worker.R2.listFrom");
 
 const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib.web.Js.isNull");
 
-const lib$web$Js$bool = rt.importFn(rt, "js.as.bool", [['bool']], ['raw'], "lib.web.Js.bool");
+function lib$web$Js$path(o, keys) {
+  return List$foldl(lib$web$Js$get, o, keys);
+}
+rt.named(lib$web$Js$path, "lib.web.Js.path");
+
+const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
+
+async function Worker$R2$delete(bucket, key) {
+  const $stack = rt.handlers();
+  rt.resumed($stack, await lib$web$Js$method(bucket, "delete", rt.cons(lib$web$Js$text(key), rt.NIL)));
+  return undefined;
+}
+rt.named(Worker$R2$delete, "Worker.R2.delete");
 
 const lib$web$Js$list = rt.importFn(rt, "js.as.list", [['list', ['raw']]], ['raw'], "lib.web.Js.list");
 
@@ -420,48 +618,10 @@ function Option$map(f, v) {
 }
 rt.named(Option$map, "Option.map");
 
-function List$get$p(xs$, i$) {
-  for (;;) {
-    const xs = xs$, i = i$;
-    m0: {
-      if (xs.tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      if (xs.tag === 1) {
-        const x = xs.fields[0];
-        const rest = xs.fields[1];
-        if ((i === 0)) {
-          return new rt.Con("#Option", 1, [x]);
-        } else {
-          xs$ = rest;
-          i$ = ((i - 1) | 0);
-          continue;
-        }
-      }
-      rt.nomatch(xs);
-    }
-  }
-}
-rt.named(List$get$p, "List.get?");
-
-function lib$web$Js$path(o, keys) {
-  return List$foldl(lib$web$Js$get, o, keys);
-}
-rt.named(lib$web$Js$path, "lib.web.Js.path");
-
-const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
-
 function Worker$Crypto$hex(bytes) {
   return rt.ap(rt.prims["Text.concat"], List$map(rt.named((at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)), "Worker.Crypto.hex/\u03bb"), List$range(0, Worker$Bytes$length(bytes))));
 }
 rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
-
-async function Worker$R2$delete(bucket, key) {
-  const $stack = rt.handlers();
-  rt.resumed($stack, await lib$web$Js$method(bucket, "delete", rt.cons(lib$web$Js$text(key), rt.NIL)));
-  return undefined;
-}
-rt.named(Worker$R2$delete, "Worker.R2.delete");
 
 function List$reverse(xs) {
   function go(acc$, ys$) {
@@ -487,6 +647,32 @@ function List$reverse(xs) {
 }
 rt.named(List$reverse, "List.reverse");
 
+const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
+
+function List$get$p(xs$, i$) {
+  for (;;) {
+    const xs = xs$, i = i$;
+    m0: {
+      if (xs.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (xs.tag === 1) {
+        const x = xs.fields[0];
+        const rest = xs.fields[1];
+        if ((i === 0)) {
+          return new rt.Con("#Option", 1, [x]);
+        } else {
+          xs$ = rest;
+          i$ = ((i - 1) | 0);
+          continue;
+        }
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$get$p, "List.get?");
+
 function Option$getOr(o, fallback) {
   m0: {
     if (o.tag === 0) {
@@ -509,8 +695,6 @@ rt.named(Text$drop, "Text.drop");
 const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
 
 const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
-
-const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
 
 function List$foldl(f$, init$, xs$) {
   for (;;) {

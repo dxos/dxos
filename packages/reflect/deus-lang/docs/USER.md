@@ -811,3 +811,8 @@ I'm assuming you can compile the cli with C backend so it's really fast
 Maybe add magic and version to codebase files
 Exclude everything from embedding
 Or okay, you decide, but I'd prefer to exclude as much as possible
+
+---
+
+Keep
+Working autonomously
