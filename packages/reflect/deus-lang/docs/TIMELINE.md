@@ -304,6 +304,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 294 | 10-18 14:30 | 30m 00s | b899b50fd3 | The explorer's write requests are printed and read by the toolchain's Sexp in DEUS (D266) |
 | 295 | 10-18 15:00 | 30m 00s | a29ce2a00c | What the explorer may write is checked in DEUS (Worker.Writes) (D267) |
 | 296 | 10-18 16:00 | 1h 00m | a48e5d6a7a | Definition cards: dark contrast, Operations/Constructors labels, test verdict wording, type docs as prose, long headers one parameter per line (D268) |
-| 297 | 10-18 16:45 | 45m 00s | this commit | Phones keep the hash and the dialect switch; long lists page 100 rows at a time; law rows show their theorem's verdict (D269) |
+| 297 | 10-18 16:45 | 45m 00s | 9e8520574b | Phones keep the hash and the dialect switch; long lists page 100 rows at a time; law rows show their theorem's verdict (D269) |
+| 298 | 10-18 17:15 | 30m 00s | this commit | Definition cards lift their tests out of "Used by" into "Checked by"; the explorer gets a browser test (D270) |
 
-Total from stage 1 to stage 297: 116h 35m.
+Total from stage 1 to stage 298: 117h 05m.

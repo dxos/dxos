@@ -823,7 +823,8 @@ const breakable = (link) => link.replace(/>([^<]*)<\/a>$/, (_, text) => `>${text
 
 const entryRow = (entry, label = entry.name) =>
   `<li class="entry-row">${icon(entry.kind)}${breakable(entryLink(entry, label))}${statusMark(entry.status)}` +
-  (entry.sig
+  // A test is always `Bool`, so its row shows its mark and summary without the type.
+  (entry.sig && !(entry.kind === 'test' && typeOf(entry.sig).trim() === 'Bool')
     ? `<code class="row-sig" title="${escape(entry.sig)}">${typeHtml(typeOf(entry.sig), namespaceOf(entry.name))}</code>`
     : '') +
   (entry.summary
@@ -1163,6 +1164,16 @@ const sourceHtml = (def) => {
 const aliasLabel = (def) =>
   def.kind === 'ability' ? 'Operations' : def.kind === 'type' ? 'Constructors' : 'Also named';
 
+/** The tests and theorems that use a definition, with their marks, lifted out of a "Used by" list that may run to hundreds. */
+const checkedByHtml = (def) => {
+  const checks = def.users.filter((ref) => CHECK_KINDS.has(index.byHash.get(ref.hash)?.kind ?? ''));
+  return checks.length === 0
+    ? ''
+    : section('Checked by', checks.length, rowList(checks.map(refRow)), checks.length <= LIST_LIMIT);
+};
+
+const CHECK_KINDS = new Set(['test', 'theorem']);
+
 const definitionCard = (key, def, events) => {
   const namespace = namespaceOf(def.name);
   const entry = index.byHash.get(def.hash);
@@ -1207,6 +1218,7 @@ const definitionCard = (key, def, events) => {
         : '') +
       subjectThread(`def:${def.name}`) +
       eventsSection(events, def.hash) +
+      checkedByHtml(def) +
       `<div class="relations">${section('Depends on', def.deps.length, rowList(def.deps.map(refRow), 'Nothing in this codebase.'), def.deps.length <= LIST_LIMIT)}` +
       `${section('Used by', def.users.length, rowList(def.users.map(refRow), 'No definition uses it.'), def.users.length <= LIST_LIMIT)}</div>` +
       (entry ? '' : '<p class="muted">This hash no longer has a name on this branch.</p>'),
