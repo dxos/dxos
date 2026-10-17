@@ -17,16 +17,14 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
 
 - [ ] **Run Composer** from this worktree: `moon run composer-app:serve` (http://localhost:5173), signed in, light
       theme (Settings › Appearance), the notices dismissed, and the plugins in the shot list enabled.
-- [ ] **Size the browser** to match the automated recordings (a 1920x1080 page at 2x), with 1 pt to spare on each
-      side so the window's own 1 px edge falls outside the crop:
-  - Open DevTools (⌥⌘I), dock it at the bottom at its smallest (73 px); it keeps the window's rounded bottom corners
-    off the page.
-  - With the Window Resizer extension, set the viewport to **1922x1155** (the page plus DevTools).
-  - Check in the console: `innerWidth + 'x' + innerHeight` prints **1922x1082**. Keep the zoom at 100% (⌘0). The
-    display must be at least 1922 points wide (an external monitor).
+- [ ] **Pin the page size**: `node tools/autocue/showcase/pin.mjs --url <composer url>` starts Chrome in its own
+      persistent profile (`~/.dxos/showcase-chrome`) and pins the page to exactly **1920x1080 at 2x**, the same as the
+      automated recordings, without opening DevTools. The page sits in a larger window, so the window's rounded
+      corners and 1 px edge fall outside it. Leave it running while you record; Ctrl-C releases the pin. The profile
+      is separate from your everyday Chrome, so set up (or create from a template) the spaces you record in it once.
 - [ ] **Set up Screen Studio** (once per session):
-  - Record the window and crop to **1920x1080 at (1, 88)** in window points: 87 pt of tab strip and address bar, plus
-    the 1 pt edge on each side. On a 2x display that captures the page at 3840x2160, as autocue does.
+  - Record the window and crop to **1920x1080 at the page's top-left**: (0, 87) in window points, below the tab strip
+    and address bar. On a 2x display that captures the page at 3840x2160, as autocue does.
   - Background: _None_ (no wallpaper), padding 0, corner radius 0, shadow off, inset 0, so the export is the app only.
   - Cursor: small size, click effects off; hide it for screenshots. Auto-zoom: off for grid shots (a tile is too small
     to read a zoom); optional and subtle for the tour shots.
