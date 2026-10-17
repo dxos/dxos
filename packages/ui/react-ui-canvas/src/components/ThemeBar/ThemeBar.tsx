@@ -11,6 +11,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { shortcutFor } from '../../model/keys.ts';
 import {
   type BackgroundGrid,
   type LookTone,
@@ -101,6 +102,9 @@ export type ThemeBarProps = Util.ThemedClassName<{
   onGridChange?: (grid: BackgroundGrid | undefined) => void;
   /** The grid the theme's background draws, so picking it again clears the override. */
   themeGrid: BackgroundGrid;
+  /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
+  guides?: boolean;
+  onGuidesToggle?: () => void;
 }>;
 
 /** The theme picker, and the grid drawn over its background. */
@@ -113,6 +117,8 @@ export const ThemeBar = ({
   themeGrid,
   onThemeChange,
   onGridChange,
+  guides,
+  onGuidesToggle,
 }: ThemeBarProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
@@ -169,5 +175,19 @@ export const ThemeBar = ({
         onClick={() => onGridChange?.(option.grid === themeGrid ? undefined : option.grid)}
       />
     ))}
+    {onGuidesToggle && (
+      <>
+        <Toolbar.Separator variant='line' />
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--frame-corners--regular'
+          label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
+          classNames={mx(guides && 'bg-primary-500/20')}
+          data-testid='toolbar-guides'
+          onClick={onGuidesToggle}
+        />
+      </>
+    )}
   </Toolbar.Root>
 );

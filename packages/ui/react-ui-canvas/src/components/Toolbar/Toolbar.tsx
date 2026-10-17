@@ -38,8 +38,6 @@ export type ToolbarActions = {
   zoomOut: () => void;
   snap: boolean;
   toggleSnap: () => void;
-  guides: boolean;
-  toggleGuides: () => void;
   /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; absent elsewhere. */
   lattice?: boolean;
   toggleLattice?: () => void;
@@ -161,15 +159,6 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
-      />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--frame-corners--regular'
-        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
-        classNames={mx(actions.guides && 'bg-primary-500/20')}
-        data-testid='toolbar-guides'
-        onClick={actions.toggleGuides}
       />
       {actions.toggleLattice && (
         <Button.Root

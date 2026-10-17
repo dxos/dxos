@@ -109,5 +109,7 @@ export const Test: Story = {
     await expect(layer).toHaveTextContent('Notes');
     // 3. The font row shows the face, unset reading as the body face.
     await expect(await canvas.findByRole('combobox', { name: 'Font' })).toHaveTextContent('Default');
+    // 4. Opacity is a shape property.
+    await expect(await canvas.findByLabelText('Opacity')).toBeInTheDocument();
   },
 };

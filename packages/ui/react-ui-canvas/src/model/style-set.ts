@@ -168,7 +168,7 @@ export const CLASSIC_STYLE_SET: StyleSet = {
 };
 
 const FLAT_SHAPE = {
-  borderWidth: 1,
+  borderWidth: 2,
   borderStyle: 'solid',
   radius: 'md',
   roundedRadius: 'xl',

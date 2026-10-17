@@ -696,9 +696,19 @@ const SceneViewRoot = ({
           registry.set(atoms.clock.playing, false);
         }
         if (event.ctrlKey || event.metaKey) {
+          // A trackpad pinch: small deltas, so a steeper rate.
           setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.01)));
-        } else {
+        } else if (event.shiftKey) {
           setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
+        } else {
+          // Wheel up and down zoom about the pointer; a sideways scroll still pans.
+          setCamera((camera) =>
+            zoomAt(
+              panBy(camera, { x: -event.deltaX / camera.zoom, y: 0 }),
+              pointer,
+              camera.zoom * Math.exp(-event.deltaY * 0.002),
+            ),
+          );
         }
       },
       [setCamera, cancelAnimation, touchNavigation, exitFit, hasCameraTrack, registry, atoms.clock],
@@ -1440,8 +1450,6 @@ const SceneViewRoot = ({
       zoomOut: () => zoomBy(1 / ZOOM_STEP),
       snap: snapEnabled,
       toggleSnap,
-      guides,
-      toggleGuides,
       // Only a lattice scene has a lattice to snap to.
       ...(projection.lattice ? { lattice: latticeOn, toggleLattice } : {}),
       debug,
@@ -1550,6 +1558,7 @@ const SceneViewRoot = ({
       grid={grid}
       snapEnabled={snapEnabled}
       guides={guides}
+      toggleGuides={toggleGuides}
       latticeOn={latticeOn}
       selection={selection}
       hover={hover}
@@ -2012,7 +2021,7 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 
 /** The theme picker and the grid over its background, at the bottom right. */
 const SceneViewTheme = ({ classNames = 'bottom-2 right-2' }: SceneViewBarProps) => {
-  const { look, themes, themeOverride, themeGrid, onThemeChange, onBackgroundGridChange } =
+  const { look, themes, themeOverride, themeGrid, guides, toggleGuides, onThemeChange, onBackgroundGridChange } =
     useSceneViewContext('SceneView.Theme');
   return (
     <div className={mx(barFrame, classNames)}>
@@ -2024,6 +2033,8 @@ const SceneViewTheme = ({ classNames = 'bottom-2 right-2' }: SceneViewBarProps) 
         themeGrid={themeGrid}
         onThemeChange={onThemeChange}
         onGridChange={onBackgroundGridChange}
+        guides={guides}
+        onGuidesToggle={toggleGuides}
       />
     </div>
   );
