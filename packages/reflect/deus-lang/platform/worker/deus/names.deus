@@ -15,11 +15,9 @@ structure Lookup @"urn:deus:worker:NameLookup" where
   hash : Text
   missing : Text
 
-/-- `name` in the namespace snapshot `snapshot`, reading objects through `lookup` (in JavaScript, a hash to a promise
-  of its text or `undefined`). -/
-def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} Lookup :=
-  let read := fun h => Option.map (fun text => Sexp.read (Js.toText text)) (Js.toOption (Js.Async.await (lookup h)))
-  match try (fun _ => Codebase.lookupFormWith read snapshot name) with
+/-- `name` in the namespace snapshot `snapshot`, reading object texts through `read`. -/
+def entryWith (read : Text -> {Js.Async} Option Text) (snapshot : Text) (name : Text) : {Js.Async} Lookup :=
+  match try (fun _ => Codebase.lookupFormWith (fun h => Option.map Sexp.read (read h)) snapshot name) with
   | Result.ok (Option.some form) =>
       let hash :=
         match Sexp.args form with
@@ -29,25 +27,74 @@ def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} L
   | Result.ok Option.none => Lookup.mk false "" "" ""
   | Result.err problem => Lookup.mk false "" "" problem
 
-/-- Answers `/v1/<project>/names/<branch>/<Name>` for `request`: the entry, hash and text of a name at the branch's
-  head. `readHead branch` gives a promise of the head (`{causal}`) or `undefined`; `nameAt causal name` a promise of
-  `{entry, hash, text}` or `undefined`, rejected with a 404 while the head is in no pack yet. -/
-def serve (request : Js) (rest : List Text) (readHead : Text -> Js) (nameAt : Text -> Text -> Js) : {Js.Async} Js :=
-  if Worker.Http.method request != "GET" then Worker.Http.problem 405 "method not allowed"
+/-- `entryWith` reading objects through `lookup` (in JavaScript, a hash to a promise of its text or `undefined`). -/
+def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} Lookup :=
+  entryWith (fun h => Option.map Js.toText (Js.toOption (Js.Async.await (lookup h)))) snapshot name
+
+/-- What a name lookup answers: what `name` holds at `head`, the head of `branch`, or why not. -/
+inductive Answer (a : Type) where
+  | named (name : Text) (branch : Text) (head : Text) (found : a)
+  | problem (status : Int) (message : Text)
+
+/-- Answers `verb` on `/names/<branch>/<Name>` (`path`, decoded), without a request, so tests run it over heads and
+  namespaces in memory (task 019e7afe). `headOf branch` is the branch's head, and `nameAt head name` what the name
+  holds there. -/
+def answer (verb : Text) (path : List Text) (headOf : Text -> {Js.Async} Option Text) (nameAt : Text -> Text -> {Js.Async} Option a) : {Js.Async} Answer a :=
+  if verb != "GET" then Answer.problem 405 "method not allowed"
   else
-    match List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) rest with
+    match path with
     | [branch, name] =>
-        if Text.isEmpty branch || Text.isEmpty name then Worker.Http.problem 404 "a name is looked up as /names/<branch>/<Name>"
+        if Text.isEmpty branch || Text.isEmpty name then Answer.problem 404 "a name is looked up as /names/<branch>/<Name>"
         else
-          match Js.toOption (Js.Async.await (readHead branch)) with
-          | Option.none => Worker.Http.problem 404 ("no branch " ++ branch)
-          | Option.some head =>
-              let causal := Js.toText (Js.get head "causal")
-              match Js.toOption (Js.Async.await (nameAt causal name)) with
-              | Option.none => Worker.Http.problem 404 ("no " ++ name ++ " on " ++ branch)
-              | Option.some found =>
-                  let named := Js.obj [("name", Js.text name), ("branch", Js.text branch), ("head", Js.text causal)]
-                  Worker.Http.json (Js.method (Js.global "Object") "assign" [named, found]) 200
-    | _ => Worker.Http.problem 404 "a name is looked up as /names/<branch>/<Name>"
+          match headOf branch with
+          | Option.none => Answer.problem 404 ("no branch " ++ branch)
+          | Option.some causal =>
+              match nameAt causal name with
+              | Option.none => Answer.problem 404 ("no " ++ name ++ " on " ++ branch)
+              | Option.some found => Answer.named name branch causal found
+    | _ => Answer.problem 404 "a name is looked up as /names/<branch>/<Name>"
+
+/-- Answers `/v1/<project>/names/<branch>/<Name>` for `request` (`answer`): the entry, hash and text of a name at the
+  branch's head. `readHead branch` gives a promise of the head (`{causal}`) or `undefined`; `nameAt causal name` a
+  promise of `{entry, hash, text}` or `undefined`, rejected with a 404 while the head is in no pack yet. -/
+def serve (request : Js) (rest : List Text) (readHead : Text -> Js) (nameAt : Text -> Text -> Js) : {Js.Async} Js :=
+  let path := List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) rest
+  let reply :=
+    answer
+      (Worker.Http.method request)
+      path
+      (fun branch =>
+        match Js.toOption (Js.Async.await (readHead branch)) with
+        | Option.none => Option.none
+        | Option.some head => Option.some (Js.toText (Js.get head "causal")))
+      (fun causal name => Js.toOption (Js.Async.await (nameAt causal name)))
+  match reply with
+  | Answer.problem status message => Worker.Http.problem status message
+  | Answer.named name branch causal found =>
+      let named := Js.obj [("name", Js.text name), ("branch", Js.text branch), ("head", Js.text causal)]
+      Worker.Http.json (Js.method (Js.global "Object") "assign" [named, found]) 200
+
+/-- Two namespace nodes in memory: `Top` at the root, and `Lib.inner` in the node the root's `Lib` names. -/
+def sampleObjects : List (Text, Text) :=
+  [("root", "(ns (n \"Top\" (term \"h1\")) (sub \"Lib\" \"lib\"))"), ("lib", "(ns (n \"inner\" (term \"h2\" (meta \"m2\"))))")]
+
+test namesResolveAtABranchHead :=
+  Worker.Http.offline (fun _ =>
+    let lookup := fun objects verb path =>
+      answer
+        verb
+        path
+        (fun branch => if branch == "main" then Option.some "root" else Option.none)
+        (fun causal name =>
+          let found := entryWith (fun h => List.lookup h objects) causal name
+          if found.bound || not (Text.isEmpty found.missing) then Option.some found else Option.none)
+    lookup sampleObjects "GET" ["main", "Top"] == Answer.named "Top" "main" "root" (Lookup.mk true "(term \"h1\")" "h1" "")
+      && lookup sampleObjects "GET" ["main", "Lib.inner"] == Answer.named "Lib.inner" "main" "root" (Lookup.mk true "(term \"h2\" (meta \"m2\"))" "h2" "")
+      && lookup sampleObjects "GET" ["main", "Lib.outer"] == Answer.problem 404 "no Lib.outer on main"
+      && lookup sampleObjects "GET" ["dev", "Top"] == Answer.problem 404 "no branch dev"
+      && lookup sampleObjects "GET" ["main"] == Answer.problem 404 "a name is looked up as /names/<branch>/<Name>"
+      && lookup sampleObjects "GET" ["", "Top"] == Answer.problem 404 "a name is looked up as /names/<branch>/<Name>"
+      && lookup sampleObjects "PUT" ["main", "Top"] == Answer.problem 405 "method not allowed"
+      && lookup (List.take 1 sampleObjects) "GET" ["main", "Lib.inner"] == Answer.named "Lib.inner" "main" "root" (Lookup.mk false "" "" "missing namespace #lib"))
 
 end Worker.Names

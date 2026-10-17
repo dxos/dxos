@@ -330,6 +330,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 320 | 10-19 11:00 | 30m 00s | ee7a94c764 | `deus lib update <name> <file…>` changes a mounted library in one step (D296) |
 | 321 | 10-19 12:00 | 30m 00s | 911879f65f | The Worker's bundle push rule is a pure, tested function: the first slice of the Cloudflare simulator (D297) |
 | 322 | 10-19 13:00 | 30m 00s | e0d02b9407 | The Worker answers the bundles API over a storage record, tested against a store in memory (D298) |
-| 323 | 10-19 13:30 | 30m 00s | this commit | Branch heads move over a storage record, with the race of two pushes tested in memory (D299) |
+| 323 | 10-19 13:30 | 30m 00s | 8880372b22 | Branch heads move over a storage record, with the race of two pushes tested in memory (D299) |
+| 324 | 10-19 14:00 | 30m 00s | this commit | Name lookups answer over a head and a namespace reader, tested in memory (D300) |
 
-Total from stage 1 to stage 323: 135h 50m.
+Total from stage 1 to stage 324: 136h 20m.
