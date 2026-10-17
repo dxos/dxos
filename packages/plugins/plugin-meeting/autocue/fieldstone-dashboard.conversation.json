@@ -1,0 +1,63 @@
+{
+  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user; the others are simulated participants. heygen.mjs casts stock avatars and voices into <out>/cast.json unless a participant sets avatarId/voiceId.",
+  "leadIn": 3,
+  "gap": 0.4,
+  "tail": 3,
+  "participants": {
+    "astrid": {
+      "name": "Astrid Holm",
+      "role": "Engineering Manager",
+      "look": "woman, late 30s, short dark hair, navy sweater, home office with bookshelves",
+      "voice": "female"
+    },
+    "lucia": {
+      "name": "Lucía Ferreira",
+      "role": "Product Manager",
+      "look": "woman, early 30s, long dark hair, mustard cardigan, studio with posters",
+      "voice": "female"
+    },
+    "ben": {
+      "name": "Ben Achterberg",
+      "role": "Product Designer",
+      "look": "man, late 20s, curly hair, glasses, grey hoodie, room with whiteboard",
+      "voice": "male"
+    },
+    "tomas": {
+      "name": "Tomás Vidal",
+      "role": "Frontend Engineer",
+      "look": "man, 40s, short beard, light blue shirt, office meeting pod",
+      "voice": "male"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "astrid",
+      "text": "Thanks for jumping on. Today we scope the Cairn dashboard as a Composer plugin. Lucía, what do customers need first?"
+    },
+    {
+      "speaker": "lucia",
+      "text": "Cache hit rate per repo, and which builds missed. Okapi asked for exactly that twice last month."
+    },
+    {
+      "speaker": "ben",
+      "text": "I sketched it as a plank: a hit-rate chart across the top, and a table of recent builds underneath."
+    },
+    {
+      "speaker": "tomas",
+      "text": "The table can be a live query over build records, so it updates the moment Builder pushes a run."
+    },
+    {
+      "speaker": "lucia",
+      "text": "Can we flag the slowest misses? That's the conversation we want to have with customers."
+    },
+    { "speaker": "ben", "text": "Sure. A red badge on any miss over a minute, linking straight to its trace." },
+    {
+      "speaker": "tomas",
+      "text": "I'll have Builder draft the query, and I can show a first cut in storybook on Thursday."
+    },
+    {
+      "speaker": "astrid",
+      "text": "Great. Ben shares the sketch today, Tomás builds the plank, and Lucía checks it with Okapi. Thanks, everyone."
+    }
+  ]
+}
