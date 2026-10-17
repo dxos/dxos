@@ -1495,6 +1495,9 @@ ul.rows {
 
 .timeline-row .diffstat {
   margin-left: auto;
+  /* Room for the counts before they arrive, so the message does not shrink under the reader's eye. */
+  min-width: 7em;
+  text-align: right;
 }
 
 .timeline-row.imported {
@@ -1551,6 +1554,7 @@ ul.rows {
   .timeline-row .diffstat,
   .timeline-row.imported .chip {
     margin-left: 0;
+    min-width: 0;
   }
 
   .timeline-row .diffstat:empty {

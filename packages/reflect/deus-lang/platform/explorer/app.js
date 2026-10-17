@@ -2571,16 +2571,17 @@ const renderHistory = async () => {
     }
   };
   historyObserver?.disconnect();
+  // The row is watched, not its slot: a phone hides the empty slot, and a hidden element is never seen.
   const seen = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
         seen.unobserve(entry.target);
-        pending.push(entry.target);
+        pending.push(entry.target.querySelector('[data-stat]'));
       }
     }
     pump();
   });
-  view.querySelectorAll('[data-stat]').forEach((slot) => seen.observe(slot));
+  view.querySelectorAll('[data-stat]').forEach((slot) => seen.observe(slot.closest('li')));
   historyObserver = seen;
 };
 
