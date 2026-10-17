@@ -56,8 +56,23 @@ async function Worker$Files$serve(request, bucket, project, folder, rest, author
         if ((verb === "PUT")) {
           const logged = rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, Worker$Paths$scopeOf(folder))));
           const type = Option$getOr(Worker$Http$header(request, "content-type"), "application/octet-stream");
-          rt.resumed($stack, await Worker$R2$put(bucket, key, Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(request, "arrayBuffer", rt.NIL))), type));
-          return lib$web$Js$call(logged, rt.cons(Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["key", lib$web$Js$text(name)]), rt.cons(new rt.Con("#Pair", 0, ["stored", lib$web$Js$bool(true)]), rt.NIL))), 201), rt.NIL));
+          const bytes = Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(request, "arrayBuffer", rt.NIL)));
+          let r4;
+          if ((folder === "assets")) {
+            if (Worker$Heads$isHash(name)) {
+              r4 = !rt.equal(rt.resumed($stack, await Worker$Crypto$sha256(bytes)), name);
+            } else {
+              r4 = false;
+            }
+          } else {
+            r4 = false;
+          }
+          if (r4) {
+            return Worker$Http$problem(400, "an asset named by a SHA-256 must hash to its name");
+          } else {
+            rt.resumed($stack, await Worker$R2$put(bucket, key, bytes, type));
+            return lib$web$Js$call(logged, rt.cons(Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["key", lib$web$Js$text(name)]), rt.cons(new rt.Con("#Pair", 0, ["stored", lib$web$Js$bool(true)]), rt.NIL))), 201), rt.NIL));
+          }
         } else {
           if ((verb === "DELETE")) {
             const logged_1 = rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, Worker$Paths$scopeOf(folder))));
@@ -290,6 +305,20 @@ function Worker$Http$header(request, name) {
 }
 rt.named(Worker$Http$header, "Worker.Http.header");
 
+function Worker$R2$bytes(buffer) {
+  return lib$web$Js$construct(lib$web$Js$global("Uint8Array"), rt.cons(buffer, rt.NIL));
+}
+rt.named(Worker$R2$bytes, "Worker.R2.bytes");
+
+const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
+
+async function Worker$Crypto$sha256(bytes) {
+  const $stack = rt.handlers();
+  const digest = rt.resumed($stack, await lib$web$Js$method(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("crypto", rt.cons("subtle", rt.NIL))), "digest", rt.cons(lib$web$Js$text("SHA-256"), rt.cons(bytes, rt.NIL))));
+  return Worker$Crypto$hex(Worker$R2$bytes(digest));
+}
+rt.named(Worker$Crypto$sha256, "Worker.Crypto.sha256");
+
 async function Worker$R2$put(bucket, key, body, contentType) {
   const $stack = rt.handlers();
   const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text(contentType)]), rt.NIL))]), rt.NIL));
@@ -297,13 +326,6 @@ async function Worker$R2$put(bucket, key, body, contentType) {
   return undefined;
 }
 rt.named(Worker$R2$put, "Worker.R2.put");
-
-function Worker$R2$bytes(buffer) {
-  return lib$web$Js$construct(lib$web$Js$global("Uint8Array"), rt.cons(buffer, rt.NIL));
-}
-rt.named(Worker$R2$bytes, "Worker.R2.bytes");
-
-const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
 
 const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
 
@@ -470,6 +492,11 @@ function Option$map(f, v) {
 }
 rt.named(Option$map, "Option.map");
 
+function Worker$Crypto$hex(bytes) {
+  return rt.ap(rt.prims["Text.concat"], List$map(rt.named((at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)), "Worker.Crypto.hex/\u03bb"), List$range(0, Worker$Bytes$length(bytes))));
+}
+rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
+
 const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
 
 function Text$drop(n, t) {
@@ -525,6 +552,39 @@ function List$reverse(xs) {
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
+
+function Worker$Crypto$hexByte(byte) {
+  const digit = rt.named((n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)), "Worker.Crypto.hexByte/\u03bb");
+  return rt.ap(rt.prims["append"], rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
+}
+rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
+
+const Worker$Bytes$u8 = rt.importFn(rt, "js.byteAt", [['raw'], ['int']], ['int'], "Worker.Bytes.u8");
+
+function List$range(lo, hi) {
+  function go(acc$, i$) {
+    for (;;) {
+      const acc = acc$, i = i$;
+      if (rt.ap(rt.prims["lt"], i, lo)) {
+        return acc;
+      } else {
+        acc$ = rt.cons(i, acc);
+        i$ = ((i - 1) | 0);
+        continue;
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, ((hi - 1) | 0));
+}
+rt.named(List$range, "List.range");
+
+function Worker$Bytes$length(bytes) {
+  return lib$web$Js$toInt(lib$web$Js$get(bytes, "length"));
+}
+rt.named(Worker$Bytes$length, "Worker.Bytes.length");
+
+const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib.web.Js.toInt");
 
 export const raw = {
   serve: Worker$Files$serve,

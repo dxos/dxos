@@ -422,8 +422,17 @@ describe('replication API', () => {
     await call('/v1/toolchain/files/assets/shot', { method: 'PUT', body: 'png', key: assets });
     // An asset named by its hash is cached for good; any other name may be written again.
     expect((await call('/v1/toolchain/files/assets/shot')).headers.get('cache-control')).toBe('no-store');
-    await call(`/v1/toolchain/files/assets/${hash('7')}`, { method: 'PUT', body: 'png', key: assets });
-    expect((await call(`/v1/toolchain/files/assets/${hash('7')}`)).headers.get('cache-control')).toContain('immutable');
+    const png = await sha256(new TextEncoder().encode('png'));
+    expect((await call(`/v1/toolchain/files/assets/${png}`, { method: 'PUT', body: 'png', key: assets })).status).toBe(
+      201,
+    );
+    expect((await call(`/v1/toolchain/files/assets/${png}`)).headers.get('cache-control')).toContain('immutable');
+    // A hash name promises the bytes, so other bytes under it are refused.
+    const spoofed = await call(`/v1/toolchain/files/assets/${hash('7')}`, { method: 'PUT', body: 'png', key: assets });
+    expect([spoofed.status, (await spoofed.json()).error]).toEqual([
+      400,
+      'an asset named by a SHA-256 must hash to its name',
+    ]);
     expect((await call('/v1/toolchain/files/assets/shot', { method: 'DELETE', key: assets })).status).toBe(200);
     expect((await call('/v1/toolchain/files/assets/shot')).status).toBe(404);
     expect(await (await bucket.get('toolchain/trash/assets/shot'))?.text()).toBe('png');

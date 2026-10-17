@@ -298,6 +298,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 288 | 10-18 11:15 | 30m 00s | 078b74538f | The task board filters by text and by label; History's change counts load on a phone (D260) |
 | 289 | 10-18 12:00 | 45m 00s | 6913fb246b | The decision log lives in the codebase too, and the hosted explorer opens a decision as a card (D261) |
 | 290 | 10-18 12:30 | 30m 00s | 5608870674 | The namespace tree is one Tab stop with arrow keys: the content is 11 Tab presses away, not 234 (D262) |
-| 291 | 10-18 12:45 | 15m 00s | this commit | Pushed test results may be a minute old in a browser, so a repeat visit skips 150 kB (D263) |
+| 291 | 10-18 12:45 | 15m 00s | 6492938c92 | Pushed test results may be a minute old in a browser, so a repeat visit skips 150 kB (D263) |
+| 292 | 10-18 13:30 | 45m 00s | this commit | Fixes from an adversarial review of D251–D263: decisions D1–D99 open, queue batches fit Cloudflare's cap, hash-named assets are checked, scroll positions no longer block a new card (D264) |
 
-Total from stage 1 to stage 291: 112h 35m.
+Total from stage 1 to stage 292: 113h 20m.

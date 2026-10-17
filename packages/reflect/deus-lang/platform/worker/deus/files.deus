@@ -36,8 +36,13 @@ def serve (request : Js) (bucket : Js) (project : Text) (folder : Text) (rest : 
     else if verb == "PUT" then
       let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
       let type := Option.getOr (Worker.Http.header request "content-type") "application/octet-stream"
-      let _ := Worker.R2.put bucket key (Worker.R2.bytes (Js.Async.await (Js.method request "arrayBuffer" []))) type
-      Js.call logged [Worker.Http.json (Js.obj [("key", Js.text name), ("stored", Js.bool true)]) 201]
+      let bytes := Worker.R2.bytes (Js.Async.await (Js.method request "arrayBuffer" []))
+      -- Browsers keep an asset named by a hash for good, so its bytes must be the ones the name promises.
+      if folder == "assets" && Worker.Heads.isHash name && Worker.Crypto.sha256 bytes != name then
+        Worker.Http.problem 400 "an asset named by a SHA-256 must hash to its name"
+      else
+        let _ := Worker.R2.put bucket key bytes type
+        Js.call logged [Worker.Http.json (Js.obj [("key", Js.text name), ("stored", Js.bool true)]) 201]
     else if verb == "DELETE" then
       let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
       -- Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.

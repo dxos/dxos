@@ -234,10 +234,8 @@ describe('live explorer (D192)', () => {
       expect(readdirSync(join(bucket, 'toolchain', 'live', head, 'doc'))).toEqual(['Area.Spec.json']);
       const chunks = sent.filter((message) => message.body.causal === head && message.body.from !== undefined);
       expect(chunks.length).toBe(Math.ceil(index.names.length / 200));
-      // Pages no earlier head has go first (here, with no earlier head, all of them), before the sweep over the index.
-      const firstFresh = sent.findIndex((message) => message.body.causal === head && message.body.hashes !== undefined);
-      expect(firstFresh).toBeGreaterThanOrEqual(0);
-      expect(firstFresh).toBeLessThan(sent.indexOf(chunks[0]));
+      // With no earlier head every page is fresh, so the sweep alone draws them, each once.
+      expect(sent.some((message) => message.body.hashes !== undefined)).toBe(false);
       for (const chunk of chunks) {
         await deliver(chunk.body);
       }

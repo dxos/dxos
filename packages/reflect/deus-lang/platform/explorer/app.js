@@ -1606,7 +1606,11 @@ const loadDecisions = () =>
     const object = await fetchText(`${base}/objects/${entry.hash}`);
     const sha = /\(text "([0-9a-f]{64})"\)/.exec(object ?? '')?.[1];
     return sha ? decisionsOf((await fetchText(`${base}/files/assets/${sha}`)) ?? '') : new Map();
-  })().catch(() => new Map()));
+  })().catch(() => {
+    // A failed read is tried again by the next card rather than kept as an empty log.
+    decisionLog = undefined;
+    return new Map();
+  }));
 
 /**
  * The rows of a decision log, `| D<n> | decision | alternatives | why |`, by number. A cell may hold ` | ` itself (an
@@ -1616,9 +1620,13 @@ const decisionsOf = (text) =>
   new Map(
     text
       .split('\n')
-      .filter((line) => /^\| D\d+ \|/.test(line))
+      .filter((line) => /^\| D\d+ +\|/.test(line))
       .map((line) => {
-        const cells = line.slice(2, line.endsWith(' |') ? -2 : undefined).split(' | ');
+        // The table is padded to its widest cell, so `| D1   |` has spaces before the bar.
+        const cells = line
+          .slice(2, line.endsWith(' |') ? -2 : undefined)
+          .split(' | ')
+          .map((cell) => cell.trim());
         return [
           cells[0],
           {
@@ -2919,7 +2927,16 @@ const entryId = () => {
 
 const rememberScroll = () => {
   const main = element('main');
-  main.addEventListener('scroll', () => scrolls.set(entryId(), main.scrollTop), { passive: true });
+  // Only an entry that has been shown keeps a position: the scrolls a render causes on its way there do not count.
+  main.addEventListener(
+    'scroll',
+    () => {
+      if (typeof history.state?.entry === 'number') {
+        scrolls.set(history.state.entry, main.scrollTop);
+      }
+    },
+    { passive: true },
+  );
 };
 
 let rendering = Promise.resolve();
@@ -2938,7 +2955,7 @@ const openQuery = () => {
     return;
   }
   const rest = raw.filter((key) => !key.startsWith('q:')).join(',');
-  history.replaceState(null, '', rest ? `#${rest}` : location.pathname + location.search);
+  history.replaceState(history.state, '', rest ? `#${rest}` : location.pathname + location.search);
   element('finder-input').value = decoded(query.slice(2));
   openFinder();
 };
@@ -2987,7 +3004,7 @@ const canonicalNames = () => {
     return entry ? `d:${entry.hash}` : key;
   });
   if (changed) {
-    history.replaceState(null, '', `#${keys.join(',')}`);
+    history.replaceState(history.state, '', `#${keys.join(',')}`);
   }
 };
 
@@ -3024,7 +3041,11 @@ const renderNow = async () => {
   } else if (view === 'history') {
     void renderHistory();
   } else if (view === 'graph') {
-    void renderGraph(keys);
+    renderGraph(keys).catch((error) => {
+      console.error(error);
+      element('graph-view').innerHTML =
+        '<div class="graph-empty"><h2>The graph could not be drawn</h2><p class="muted">Its pages did not load; try again in a moment.</p></div>';
+    });
   }
 
   const workspace = element('workspace');
@@ -3064,11 +3085,12 @@ const renderNow = async () => {
     void fillHome(workspace);
   }
   const focus = keys.includes(ui.focus) ? ui.focus : keys[0];
-  const saved = scrolls.get(entryId());
+  const saved = scrolls.get(history.state?.entry);
   setFocus(focus, view === 'code' && focus !== undefined && saved === undefined);
   if (saved !== undefined) {
     element('main').scrollTop = saved;
   }
+  entryId();
   showAnchor();
   const project = addressOf(index.meta.project);
   document.title = focus ? `${titleOf(focus)} · ${project}` : project;
@@ -3323,9 +3345,13 @@ const renderGraph = async (keys) => {
           view.querySelector('.graph-loading')?.remove();
           view.insertAdjacentHTML('beforeend', '<p class="graph-loading muted">Drawing the graph…</p>');
         }, 300);
-  const data = await graphData(keys);
-  clearTimeout(loading);
-  view.querySelector('.graph-loading')?.remove();
+  let data;
+  try {
+    data = await graphData(keys);
+  } finally {
+    clearTimeout(loading);
+    view.querySelector('.graph-loading')?.remove();
+  }
   if (parseFragment().view !== 'graph') {
     return;
   }
@@ -4322,7 +4348,7 @@ const openPathLink = () => {
   }
   const entry = named(match[2]);
   const key = entry ? `d:${entry.hash}` : `n:${match[2]}`;
-  history.replaceState(null, '', `${match[1]}#${encodeURIComponent(key)}`);
+  history.replaceState(history.state, '', `${match[1]}#${encodeURIComponent(key)}`);
 };
 
 /** The fragment that opens `key` alone: a link's `href`, so it can be focused, opened in a new tab and copied. */

@@ -2296,8 +2296,9 @@ def build (args : Args) : {IO, Throw Text} Unit :=
           | _ => Throw.throw (name ++ " is not a term")) args.positional
         if List.isEmpty roots then Throw.throw "usage: deus build <name…> -o <file.js> --js" else ()
         -- A module exports each name by its last segment, and JavaScript refuses to load one that exports a name twice.
-        match List.find (fun name => List.length (List.filter (fun other => lastSegment other == lastSegment name) args.positional) > 1) args.positional with
-        | Option.some name => Throw.throw (Text.join " and " (List.filter (fun other => lastSegment other == lastSegment name) args.positional) ++
+        let exported := fun name => mangle (lastSegment name)
+        match List.find (fun name => List.length (List.filter (fun other => exported other == exported name) args.positional) > 1) args.positional with
+        | Option.some name => Throw.throw (Text.join " and " (List.filter (fun other => exported other == exported name) args.positional) ++
             " would both be exported as " ++ mangle (lastSegment name) ++ "; build them into separate modules")
         | Option.none => ()
         writeJs dir ns (fun h => readObject dir h) (fun h => readMeta dir h) roots out

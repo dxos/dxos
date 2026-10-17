@@ -352,7 +352,8 @@ export const warmLive = async (env, ctx, project) => {
     // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one. Pages
     // the last drawn head lacks go first: an earlier head stands in for every other page while the queue works.
     const before = await previousNames(env.BUCKET, project, head.causal);
-    const fresh = names.filter((entry) => !before.has(entry.hash));
+    // With no earlier head every page is fresh, and the sweep below already draws them all.
+    const fresh = before.size === 0 ? [] : names.filter((entry) => !before.has(entry.hash));
     const chunks = [];
     for (let from = 0; from < fresh.length; from += PAGES_PER_CHUNK) {
       chunks.push({
@@ -378,13 +379,37 @@ export const warmLive = async (env, ctx, project) => {
     }
     chunks.unshift(...changeChunks);
     if (env.LIVE_QUEUE?.sendBatch && chunks.length > 0) {
-      for (let at = 0; at < chunks.length; at += 100) {
-        await env.LIVE_QUEUE.sendBatch(chunks.slice(at, at + 100));
+      for (const batch of queueBatches(chunks)) {
+        await env.LIVE_QUEUE.sendBatch(batch);
       }
     }
   } catch (error) {
     console.error('warming the live explorer failed', error);
   }
+};
+
+/**
+ * `messages` in batches a queue accepts in one `sendBatch`: at most 100 messages and 256 kB, kept under 200 kB here.
+ * A message of 200 hashes is about 13 kB, so a hundred of them would be refused whole and nothing drawn.
+ */
+const queueBatches = (messages) => {
+  const batches = [];
+  let batch = [];
+  let size = 0;
+  for (const message of messages) {
+    const bytes = JSON.stringify(message.body).length + 100;
+    if (batch.length > 0 && (batch.length === 100 || size + bytes > 200_000)) {
+      batches.push(batch);
+      batch = [];
+      size = 0;
+    }
+    batch.push(message);
+    size += bytes;
+  }
+  if (batch.length > 0) {
+    batches.push(batch);
+  }
+  return batches;
 };
 
 /** The definition hashes of the newest drawn head before `causal`, or none when there is no such head. */
