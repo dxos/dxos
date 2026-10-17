@@ -18,6 +18,8 @@ const KINDS = {
 };
 const KIND_ORDER = Object.keys(KINDS);
 const LIST_LIMIT = 24;
+/** Rows each "Show more" adds to a list. */
+const LIST_PAGE = 100;
 
 const escape = (text) =>
   String(text ?? '')
@@ -837,14 +839,24 @@ const refRow = (ref) => {
     : `<li class="entry-row"><span class="icon">·</span>${defLink(ref.name, ref.hash)}</li>`;
 };
 
-/** A list that shows the first rows and expands to all of them. */
-const rowList = (rows, empty = 'None.') =>
-  rows.length === 0
-    ? `<p class="muted">${empty}</p>`
-    : `<ul class="rows">${rows.slice(0, LIST_LIMIT).join('')}</ul>` +
-      (rows.length > LIST_LIMIT
-        ? `<ul class="rows more" hidden>${rows.slice(LIST_LIMIT).join('')}</ul><button class="link-button" data-more>Show ${rows.length - LIST_LIMIT} more</button>`
-        : '');
+/** A list that shows the first rows and expands a page at a time, so a definition used by hundreds stays quick to open. */
+const rowList = (rows, empty = 'None.') => {
+  if (rows.length === 0) {
+    return `<p class="muted">${empty}</p>`;
+  }
+  const pages = [];
+  for (let start = LIST_LIMIT; start < rows.length; start += LIST_PAGE) {
+    pages.push(`<ul class="rows more" hidden>${rows.slice(start, start + LIST_PAGE).join('')}</ul>`);
+  }
+  return (
+    `<ul class="rows">${rows.slice(0, LIST_LIMIT).join('')}</ul>${pages.join('')}` +
+    (pages.length > 0 ? `<button class="link-button" data-more>${moreLabel(rows.length - LIST_LIMIT)}</button>` : '')
+  );
+};
+
+/** The label of a list's "more" button: the next page, and how many remain after it. */
+const moreLabel = (remaining) =>
+  remaining > LIST_PAGE ? `Show ${LIST_PAGE} more of ${number(remaining)}` : `Show ${number(remaining)} more`;
 
 const section = (title, count, body, openByDefault = true) =>
   `<details class="section"${openByDefault ? ' open' : ''}><summary><h3>${title}${count === undefined ? '' : ` <span class="count">${count}</span>`}</h3></summary>${body}</details>`;
@@ -1735,7 +1747,9 @@ const buildCard = async (key) => {
       }
       const [def, events] = await Promise.all([load(pagePath(value)), loadEvents()]);
       if (def?.ts !== undefined) {
-        element('dialects').hidden = false;
+        for (const switcher of document.querySelectorAll('#dialects, #sidebar-dialects')) {
+          switcher.hidden = false;
+        }
       }
       return def ? definitionCard(key, def, events) : missingCard(key, `No definition ${short(value)}`);
     }
@@ -2226,13 +2240,16 @@ const blockHtml = (doc, block) => {
     .map(
       ([key, value]) =>
         `<div class="block-prop"><span class="block-key">${escape(key)}</span>` +
-        (value.includes('\n')
-          ? `<pre class="block-value">${value
-              .replace(/^\n/, '')
-              .split('\n')
-              .map((line) => `<span class="value-line">${valueHtml(line, namespace)}</span>`)
-              .join('')}</pre>`
-          : `<span class="block-value">${valueHtml(value, namespace)}</span>`) +
+        // A law's `theorem:` is its evidence, so it carries the same pass or fail mark as `by:`.
+        (key === 'theorem' && namesIn(value).length > 0
+          ? `<span class="block-value">${evidenceHtml(namesIn(value), namespace)}</span>`
+          : value.includes('\n')
+            ? `<pre class="block-value">${value
+                .replace(/^\n/, '')
+                .split('\n')
+                .map((line) => `<span class="value-line">${valueHtml(line, namespace)}</span>`)
+                .join('')}</pre>`
+            : `<span class="block-value">${valueHtml(value, namespace)}</span>`) +
         '</div>',
     )
     .join('');
@@ -4026,7 +4043,7 @@ const toggleFold = (key) => {
 };
 
 const showDialect = () => {
-  for (const button of document.querySelectorAll('#dialects [data-dialect]')) {
+  for (const button of document.querySelectorAll('[data-dialect]')) {
     button.classList.toggle('active', button.dataset.dialect === ui.dialect);
   }
 };
@@ -4101,8 +4118,27 @@ const onClick = (event) => {
       () => notify(data.copy),
     );
   } else if (data.more !== undefined) {
-    target.previousElementSibling.hidden = false;
-    target.remove();
+    // Only this list's pages: the run of hidden `ul.more` right before its button.
+    const pages = [];
+    for (
+      let page = target.previousElementSibling;
+      page?.matches('ul.rows.more[hidden]');
+      page = page.previousElementSibling
+    ) {
+      pages.unshift(page);
+    }
+    if (pages.length === 0) {
+      target.previousElementSibling.hidden = false;
+      target.remove();
+    } else {
+      pages[0].hidden = false;
+      const remaining = pages.slice(1).reduce((sum, page) => sum + page.children.length, 0);
+      if (remaining === 0) {
+        target.remove();
+      } else {
+        target.textContent = moreLabel(remaining);
+      }
+    }
   } else if (data.unfold !== undefined) {
     target.nextElementSibling.hidden = false;
     target.remove();

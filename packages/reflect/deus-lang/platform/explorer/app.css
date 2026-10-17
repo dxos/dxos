@@ -1884,7 +1884,8 @@ ul.rows {
   max-width: 560px;
 }
 
-#sidebar-project {
+#sidebar-project,
+#sidebar-dialects {
   display: none;
 }
 
@@ -1894,6 +1895,27 @@ ul.rows {
     padding: 12px 16px 4px;
     font-weight: 600;
     color: var(--fg);
+  }
+
+  /* The top bar has no room for the dialect switch on a phone, so the drawer carries it. */
+  #sidebar-dialects:not([hidden]) {
+    display: inline-flex;
+    margin: 4px 16px 8px;
+  }
+
+  /* The hash and dates go on a line under the title, so a phone can still copy a hash. */
+  .card > header {
+    flex-wrap: wrap;
+  }
+
+  .card-meta {
+    order: 10;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .card-meta .hash-chip {
+    min-height: 32px;
   }
 
   #topbar {
@@ -1911,8 +1933,7 @@ ul.rows {
   #new-task,
   #report,
   .wide-only,
-  .finder-trigger span,
-  .card-meta {
+  .finder-trigger span {
     display: none;
   }
 
