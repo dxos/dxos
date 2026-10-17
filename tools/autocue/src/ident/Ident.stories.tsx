@@ -13,10 +13,10 @@ import { loadBrandFont } from './fonts.ts';
 import { IdentPlayer } from './IdentPlayer.tsx';
 import { PROVOCATIONS } from './provocations.ts';
 import { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
-import { type IdentProps, TAILWIND_COLOR_NAMES } from './theme.tsx';
+import { type IdentProps, TAILWIND_HUES } from './theme.tsx';
 
-/** The theme's main colour (none), then every Tailwind colour. */
-const LOGO_COLORS = ['', ...TAILWIND_COLOR_NAMES];
+/** The theme's main colour (none), then each hue, shaded by theme (400 dark, 600 light). */
+const LOGO_COLORS = ['', ...TAILWIND_HUES];
 
 type CardId = 'opening' | 'composer' | 'outro' | 'provocation';
 
@@ -66,7 +66,7 @@ const IdentStory = ({ card, size = '16x10', theme, logoColor, provocationId = 'P
  * Test:
  * 1. Each card loops at the chosen size (16x10, 16x9, 9x16, 1x1, 4x5), letterboxed in the theme's ground.
  * 2. Theme light draws off-black on off-white; the Composer rings keep their brand colours.
- * 3. Logo colour recolours the DXOS mark (and the Composer wordmark); on the outro the rule takes the same colour.
+ * 3. Logo colour (a hue, shaded 400 in dark and 600 in light) recolours the DXOS mark (and the Composer wordmark); on the outro the rule takes the same colour.
  * 4. Provocation steps through P01-P14 in the 10s or 30s cut.
  */
 const meta: Meta<typeof IdentStory> = {

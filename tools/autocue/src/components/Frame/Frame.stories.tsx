@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { ComposerIntro, EndOnly, OpenOnly, TAILWIND_COLOR_NAMES, TIMING, loadBrandFont } from '../../ident/cards.ts';
+import { ComposerIntro, EndOnly, OpenOnly, TAILWIND_HUES, TIMING, loadBrandFont } from '../../ident/cards.ts';
 import { IdentPlayer } from '../../ident/IdentPlayer.tsx';
 import { type FrameSize, type FrameText } from './create-frame.ts';
 import { Frame, type FrameProps } from './Frame.tsx';
@@ -160,7 +160,7 @@ const OPENINGS = {
 type IdentStoryProps = StoryProps & {
   /** The opening card: the DXOS title, or the Composer logo (`--ident composer`). */
   opening?: keyof typeof OPENINGS;
-  /** A Tailwind colour for the ident's logo (and the outro's rule), as `trim-static.mjs --logo-color` takes. */
+  /** A Tailwind hue for the ident's logo (and the outro's rule), as `trim-static.mjs --logo-color` takes. */
   logoColor?: string;
 };
 
@@ -249,6 +249,6 @@ export const Ident: StoryObj<typeof IdentStory> = {
   args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
   argTypes: {
     opening: { control: 'inline-radio', options: Object.keys(OPENINGS) },
-    logoColor: { control: 'select', options: ['', ...TAILWIND_COLOR_NAMES] },
+    logoColor: { control: 'select', options: ['', ...TAILWIND_HUES] },
   },
 };

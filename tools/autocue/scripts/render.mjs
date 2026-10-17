@@ -17,7 +17,7 @@ import fs from 'node:fs';
 //   moon run autocue:render-first-run                # only provocations marked firstRun
 //   moon run autocue:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
 //   moon run autocue:render -- --version 2           # file suffix _v02
-//   moon run autocue:render -- --id END --theme light --logo-color sky-400   # file suffix _light_sky-400
+//   moon run autocue:render -- --id END --theme light --logo-color sky   # file suffix _light_sky
 //
 // Set REMOTION_BROWSER to a Chrome/Chromium path to skip Remotion's browser download.
 import path from 'node:path';

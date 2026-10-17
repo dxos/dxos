@@ -582,10 +582,11 @@ sandbox `apt-get update` first: the preinstalled index is stale and the install 
 `--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
 `tools/autocue` (Remotion, `src/ident/`). They are rendered into `tools/autocue/out/` on first use, which needs `pnpm install`
 and the licensed Sharp Sans font in `tools/autocue/public/fonts/` (without it they render in a fallback face).
-The ident is rendered in the format nearest the recording's aspect ratio (`16x10` for the default 1280×800
-viewport, `16x9` for 1920×1080), so it fills the frame. `--theme light` renders it off-black on off-white to match a
-light recording, and `--logo-color <tailwind>` (e.g. `sky-400`) colours the logo and the end card's rule; preview
-both in storybook `tools/autocue/Ident`. `--ident composer` opens on the Composer logo instead.
+The ident is rendered in the format nearest the recording's aspect ratio (`16x10` for the default 1280×800 viewport,
+`16x9` for 1920×1080), so it fills the frame. `--theme light` renders it off-black on off-white to match a light
+recording, and `--logo-color <hue>` colours the logo and the end card's rule with a Tailwind hue (`sky`, `rose`, …),
+shaded `-400` in dark and `-600` in light; preview both in storybook `tools/autocue/Ident`. `--ident composer` opens
+on the Composer logo instead.
 `--intro <video>` / `--outro <video>` bookend with any other clip, letterboxed to the recording's frame. Their
 audio is dropped, and chapters and captions are shifted past the intro.
 

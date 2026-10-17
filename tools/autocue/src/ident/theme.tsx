@@ -12,7 +12,7 @@ export type IdentTheme = 'dark' | 'light';
 /** The props every ident composition takes, from `render.mjs --theme / --logo-color` or a `Player`'s `inputProps`. */
 export type IdentProps = {
   theme?: IdentTheme;
-  /** A Tailwind colour name for the logo, e.g. `sky-400`, `white`; defaults to the theme's main colour. */
+  /** A Tailwind hue for the logo (`sky`), shaded `-400` in dark and `-600` in light; defaults to the theme's main. */
   logoColor?: string;
 };
 
@@ -37,40 +37,28 @@ const PALETTES: Record<IdentTheme, Omit<Palette, 'logo'>> = {
   },
 };
 
-/** A Tailwind colour by name (`sky-400`, `white`); throws on a name the palette lacks, so a typo fails the render. */
-export const tailwindColor = (name: string): string => {
-  const flat = (colors as Record<string, unknown>)[name];
-  if (typeof flat === 'string') {
-    return flat;
-  }
-  const split = name.lastIndexOf('-');
-  const scale = (colors as Record<string, unknown>)[name.slice(0, split)];
-  const value =
-    split > 0 && scale && typeof scale === 'object'
-      ? (scale as Record<string, unknown>)[name.slice(split + 1)]
-      : undefined;
-  if (typeof value !== 'string') {
-    throw new Error(`unknown Tailwind colour: ${name}`);
-  }
-  return value;
-};
+/** The one shade a logo hue takes in each theme: light on the dark ground, darker on the light one for contrast. */
+const HUE_SHADE = { dark: '400', light: '600' } as const;
 
-/** Every Tailwind colour `tailwindColor` accepts: `white`, `black`, and each `<hue>-<shade>`. */
-export const TAILWIND_COLOR_NAMES: string[] = Object.entries(colors).flatMap(([hue, value]) =>
-  typeof value === 'string'
-    ? ['white', 'black'].includes(hue)
-      ? [hue]
-      : []
-    : Object.keys(value).map((shade) => `${hue}-${shade}`),
+/** Tailwind's hues (`sky`, `rose`, …), each a scale of shades. */
+const SCALES = new Map(
+  Object.entries(colors).flatMap(([hue, value]) => (typeof value === 'object' ? [[hue, value] as const] : [])),
 );
+
+export const TAILWIND_HUES: string[] = [...SCALES.keys()];
 
 export const palette = ({ theme = 'dark', logoColor }: IdentProps = {}): Palette => {
   const base = PALETTES[theme];
   if (!logoColor) {
     return { ...base, logo: base.main };
   }
+  const scale = SCALES.get(logoColor);
+  // Thrown rather than ignored, so a misspelt hue fails the render instead of drawing the default.
+  if (!scale) {
+    throw new Error(`unknown Tailwind hue: ${logoColor} (expected one of ${TAILWIND_HUES.join(', ')})`);
+  }
   // The end card's rule is the logo's accent, so a coloured logo takes it along.
-  const logo = tailwindColor(logoColor);
+  const logo = scale[HUE_SHADE[theme]];
   return { ...base, logo, accent: logo };
 };
 
