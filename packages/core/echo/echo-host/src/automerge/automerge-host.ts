@@ -57,9 +57,9 @@ import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
+import { DocumentQuarantinedError } from './errors.ts';
 import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
 import {
-  DocumentQuarantinedError,
   type DocumentSize,
   OVERSIZED_DOCUMENT_CHANGES,
   OVERSIZED_DOCUMENT_OPS,
@@ -842,7 +842,7 @@ export class AutomergeHost extends Resource {
     const id = interpretAsDocumentId(documentId);
     // Leasing faults the document in, which is the load the quarantine exists to prevent.
     if (this.#quarantined.has(id)) {
-      throw new DocumentQuarantinedError(id);
+      throw new DocumentQuarantinedError({ context: { documentId: id } });
     }
     return this._leases.acquire<T>(id);
   }
@@ -1038,14 +1038,14 @@ export class AutomergeHost extends Resource {
       return Promise.reject(peeked.error);
     }
     if (this.#quarantined.has(progress.documentId)) {
-      return Promise.reject(new DocumentQuarantinedError(progress.documentId));
+      return Promise.reject(new DocumentQuarantinedError({ context: { documentId: progress.documentId } }));
     }
     return new Promise<DocHandle<T>>((resolve, reject) => {
       const unsubscribeQuarantine = this.documentQuarantined.on(({ documentId }) => {
         // A failed load leaves the query `'unavailable'`, which this wait would otherwise sit through forever.
         if (documentId === progress.documentId) {
           unsubscribe();
-          reject(new DocumentQuarantinedError(documentId));
+          reject(new DocumentQuarantinedError({ context: { documentId } }));
         }
       });
       const unsubscribeProgress = progress.subscribe((state) => {
@@ -1344,7 +1344,7 @@ export class AutomergeHost extends Resource {
       log.verbose('subduction authorizePut', { documentId });
       // Sticky, which is what a quarantine wants: the pushed bytes would only be loaded again.
       if (this.#quarantined.has(documentId)) {
-        throw new DocumentQuarantinedError(documentId);
+        throw new DocumentQuarantinedError({ context: { documentId } });
       }
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {

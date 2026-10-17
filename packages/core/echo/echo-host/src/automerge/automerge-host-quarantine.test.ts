@@ -15,13 +15,8 @@ import { log } from '@dxos/log';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { AutomergeHost } from './automerge-host.ts';
-import {
-  DocumentQuarantinedError,
-  OVERSIZED_DOCUMENT_CHANGES,
-  OVERSIZED_DOCUMENT_OPS,
-  isOutOfMemoryError,
-  oversizeLevel,
-} from './quarantine.ts';
+import { DocumentQuarantinedError } from './errors.ts';
+import { OVERSIZED_DOCUMENT_CHANGES, OVERSIZED_DOCUMENT_OPS, isOutOfMemoryError, oversizeLevel } from './quarantine.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
