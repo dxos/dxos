@@ -92,17 +92,26 @@ if (!options.in || !existsSync(options.in)) {
 }
 const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
 
+/** The ident's formats (`tools/ident/src/brand.ts` `FORMATS`) by aspect ratio. */
+const IDENT_FORMATS = { '16x9': 16 / 9, '16x10': 16 / 10, '9x16': 9 / 16, '1x1': 1, '4x5': 4 / 5 };
+
+/** The ident format nearest the recording's aspect ratio, so the bookends fill the frame instead of being padded. */
+const identFormat = (width, height) =>
+  Object.entries(IDENT_FORMATS).reduce((best, entry) =>
+    Math.abs(Math.log(entry[1] / (width / height))) < Math.abs(Math.log(best[1] / (width / height))) ? entry : best,
+  )[0];
+
 /**
- * The DXOS ident's opening title and end card, rendered by `tools/ident` into its `out/` on first use.
+ * The DXOS ident's opening title and end card in `format`, rendered by `tools/ident` into its `out/` on first use.
  */
-const ident = (id) => {
+const ident = (id, format) => {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/ident');
   const dir = path.join(root, 'out', id);
-  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x9_v01.mp4`), so find it rather than spell it.
+  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it.
   const find = () =>
     existsSync(dir)
       ? readdirSync(dir)
-          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith('_16x9_v01.mp4'))
+          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith(`_${format}_v01.mp4`))
           .map((name) => path.join(dir, name))[0]
       : undefined;
   // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
@@ -116,8 +125,8 @@ const ident = (id) => {
   );
   let file = find();
   if (!file || statSync(file).mtimeMs < newest) {
-    console.error(`rendering ${id} ident…`);
-    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', '16x9'], {
+    console.error(`rendering ${id} ident (${format})…`);
+    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', format], {
       cwd: root,
       stdio: ['ignore', 'ignore', 'inherit'],
     });
@@ -129,18 +138,6 @@ const ident = (id) => {
   }
   return file;
 };
-if (options.ident) {
-  // `--ident composer` opens on the Composer logo instead of the DXOS title.
-  options.intro ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN');
-  options.outro ??= ident('END');
-}
-for (const clip of [options.intro, options.outro]) {
-  if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
-    console.error(`no such clip: ${clip}`);
-    process.exit(1);
-  }
-}
-
 /** Geometry and duration come off ffmpeg's stderr, so the script needs no ffprobe. */
 const probe = async (file) => {
   const proc = spawn(FFMPEG, ['-hide_banner', '-i', file]);
@@ -163,6 +160,19 @@ const { width, height, seconds } = await probe(options.in).catch((error) => {
   console.error(`cannot read ${options.in}: ${error.message.split('\n')[0]}`);
   process.exit(1);
 });
+
+if (options.ident) {
+  // `--ident composer` opens on the Composer logo instead of the DXOS title.
+  const format = identFormat(width, height);
+  options.intro ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN', format);
+  options.outro ??= ident('END', format);
+}
+for (const clip of [options.intro, options.outro]) {
+  if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
+    console.error(`no such clip: ${clip}`);
+    process.exit(1);
+  }
+}
 
 /**
  * `--duration <min>-<max>` (default 45-60 seconds, bookends included) picks the still-frame cap instead of a
@@ -395,8 +405,9 @@ decoder.stderr.pipe(process.stderr);
 encoder.stderr.pipe(process.stderr);
 
 /**
- * Pipes a whole clip into the encoder at the demo's size and rate. Letterboxed rather than cropped, so a
- * 16:9 ident inside a 16:10 recording keeps its edges; video only, since the recording has no audio.
+ * Pipes a whole clip into the encoder at the demo's size and rate. The ident is rendered at the recording's aspect
+ * ratio; any other clip (`--intro` / `--outro`) is letterboxed rather than cropped. Video only, since the recording
+ * has no audio.
  */
 const bookend = async (clip) => {
   const proc = spawn(FFMPEG, [
