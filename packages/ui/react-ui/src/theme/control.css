@@ -366,6 +366,11 @@
     margin: var(--dx-control-inset);
     padding-inline: 0;
   }
+  /* A tab that drops its label when unselected keeps the square's cell and icon offset, so selecting it never moves its icon. */
+  [role='tablist']:has(> .dx-button[data-square]) > .dx-button:not([data-square]) {
+    margin-inline: var(--dx-control-inset);
+    padding-inline-start: calc((var(--dx-control-size) - var(--dx-control-icon)) / 2);
+  }
   /* In a Block the cell is the Block's (it centres its child), so the button's own inset would be counted twice. */
   .dx-block > .dx-button[data-square] {
     margin: 0;

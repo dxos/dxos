@@ -157,7 +157,8 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         role='tablist'
         align='center'
         gap='xs'
-        classNames={['flex-1 overflow-x-auto scrollbar-none', classNames]}
+        // The first tab's cell inset is the toolbar's padding already, so its visible edge lands on the header's.
+        classNames={['flex-1 overflow-x-auto scrollbar-none -ms-(--dx-control-inset)', classNames]}
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label, testId }) => (
