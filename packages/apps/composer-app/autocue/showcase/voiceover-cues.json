@@ -1,0 +1,43 @@
+[
+  { "at": 0, "text": "This is Composer… by DXOS." },
+  {
+    "at": 6,
+    "text": "Composer is an open-source super-app framework. Your documents, spreadsheets, boards, mail and AI agents live together in one workspace, and every byte of it belongs to you."
+  },
+  {
+    "at": 18,
+    "text": "Invite someone, and you're editing together in real time. Every change is stored on your own device first, in ECHO, Composer's local-first database, and synced through a mesh of Cloudflare Durable Objects at the edge, close to every user."
+  },
+  {
+    "at": 40,
+    "text": "Everything you see is a plugin. Types, views, operations, even the agent's skills are contributed by plugins. Switch them on, swap them out, or write your own."
+  },
+  {
+    "at": 55,
+    "text": "Here's a table. Add a kanban board over the same records, and it's not a copy: both are views over one graph. Move a card, and the table updates. Familiar SaaS tools, minus the silos."
+  },
+  {
+    "at": 80,
+    "text": "Agents work in your documents the way your colleagues do. Mention Kai in a comment, and it rewrites the passage in place. Ask the assistant to research a topic, and it writes the section, with its sources."
+  },
+  {
+    "at": 98,
+    "text": "Model calls route through Cloudflare's AI Gateway, to frontier models or to open models on Workers AI. You choose."
+  },
+  {
+    "at": 108,
+    "text": "Projects go further. Describe a plugin, and an agent plans the work, writes the code and tests it in a Cloudflare Sandbox. Here it is, installed: a world clock that wasn't part of Composer this morning."
+  },
+  {
+    "at": 133,
+    "text": "Your inbox lives here too. Gmail syncs into your space, so agents can summarize a thread, draft a reply, or turn a request into a project."
+  },
+  {
+    "at": 155,
+    "text": "And this film? It was made in Composer. The script, the storyboard and the voice-over are objects in a Studio space, and the screen recordings were driven by an agent, step by step."
+  },
+  {
+    "at": 174,
+    "text": "Composer. One app for sovereign AI, extensible by design, built on Cloudflare. Open source, at composer.space."
+  }
+]

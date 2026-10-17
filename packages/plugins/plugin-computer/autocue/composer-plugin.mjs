@@ -306,10 +306,13 @@ export const prepare = async ({ demo, page }, { codingDev }) => {
       }
     }
     await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Coding (Dev)', hud: false });
-    const toggle = page.locator('input[id="org.dxos.plugin.computer-input"]');
-    await toggle.waitFor({ state: 'visible', timeout: 10_000 });
-    if (!(await toggle.isChecked())) {
-      await toggle.click();
+    // The switch's input is visually hidden; the visible control is its root.
+    const toggle = page.locator(
+      '[data-scope="switch"][data-part="root"]:has(input[role="switch"][aria-label="Coding (Dev)"])',
+    );
+    await toggle.first().waitFor({ state: 'visible', timeout: 10_000 });
+    if (!(await toggle.first().locator('input').isChecked())) {
+      await toggle.first().click();
     }
     await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
   }
@@ -451,16 +454,16 @@ export const steps = [
 
       // The project opens as a folder in the navtree, so the viewer sees what it holds as the run fills it.
       // Matched on the row's own heading: a parent item's text includes its children's.
-      const row = `[data-testid="deck.sidebar"] [data-part="branch-control"]:has(> * > [data-testid="treeItem.heading"] span:text-is("${PROJECT_TITLE}"))`;
+      const row = `[data-testid="deck.sidebar"] [data-part="branch-control"]:has(> [data-testid="treeItem.heading"]:text-is("${PROJECT_TITLE}"))`;
       await page.locator(row).first().waitFor({ state: 'attached', timeout: 10_000 });
       if ((await page.locator(row).first().getAttribute('data-state')) !== 'open') {
         if (!(await page.locator(row).first().isVisible())) {
           await demo.click({ selector: 'button:visible:has-text("Open sidebar")', label: 'Open sidebar' });
         }
         // The toggle stays disabled until the project's children have loaded.
-        const toggle = `${row} >> [data-testid="treeItem.toggle"] >> nth=0`;
+        const toggle = `${row} >> [data-part="branch-trigger"] >> nth=0`;
         await page
-          .locator(`${row} >> [data-testid="treeItem.toggle"]:not([disabled])`)
+          .locator(`${row} >> [data-part="branch-trigger"]:not([data-disabled])`)
           .first()
           .waitFor({ timeout: 15_000 });
         await demo.click({ selector: toggle, label: 'Open project' });
